@@ -7,12 +7,12 @@ import os
 import spack.cmd
 import spack.deptypes as dt
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
 from spack import build_environment, traverse
 from spack.cmd.common import arguments
-from spack.context import Context
+from spack.enums import Context
+from spack.util import tty
 from spack.util.environment import dump_environment, pickle_environment
 
 

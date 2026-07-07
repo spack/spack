@@ -6,6 +6,7 @@
 We try to maintain compatibility with RPM's version semantics
 where it makes sense.
 """
+
 import os
 import pathlib
 
@@ -15,7 +16,7 @@ import spack.concretize
 import spack.package_base
 import spack.spec
 import spack.version
-from spack.llnl.util.filesystem import working_dir
+from spack.util.filesystem import working_dir
 from spack.version import (
     ClosedOpenRange,
     EmptyRangeError,
@@ -934,7 +935,7 @@ def test_git_versions_without_explicit_reference(
 
 def test_total_order_versions_and_ranges():
     # The set of version ranges and individual versions are comparable, which is used in
-    # VersionList. The comparsion across types is based on default version comparsion
+    # VersionList. The comparison across types is based on default version comparison
     # of StandardVersion, GitVersion.ref_version, and ClosedOpenRange.lo.
 
     # StandardVersion / GitVersion (at equal ref version)

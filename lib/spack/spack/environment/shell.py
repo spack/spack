@@ -9,9 +9,9 @@ import spack.config
 import spack.repo
 import spack.schema.environment
 import spack.store
-import spack.util as tty
-from spack.llnl.util.tty.color import colorize
+from spack.util import tty
 from spack.util.environment import EnvironmentModifications
+from spack.util.tty.color import colorize
 
 
 def activate_commands(env, view: Optional[str] = None):
@@ -164,7 +164,7 @@ def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
             "Environment view is broken due to a missing package or repo.\n",
             "  To activate without views enabled, activate with:\n",
             "    spack env activate -V {0}\n".format(env.name),
-            "  To remove it and resolve the issue, " "force concretize with the command:\n",
+            "  To remove it and resolve the issue, force concretize with the command:\n",
             "    spack -e {0} concretize --force".format(env.name),
         )
 

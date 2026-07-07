@@ -13,13 +13,13 @@ from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, 
 
 import spack.cmd
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.paths
 import spack.platforms
-from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
-from spack.llnl.util.tty.colify import colify
-from spack.main import section_descriptions
+from spack.main import SpackArgumentParser, section_descriptions
+from spack.util import tty
+from spack.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
+from spack.util.tty.colify import colify
 
 description = "list available spack commands"
 section = "config"
@@ -196,9 +196,7 @@ class BashCompletionWriter(ArgparseWriter):
         assert not (cmd.positionals and cmd.subcommands)  # one or the other
 
         # We only care about the arguments/flags, not the help messages
-        positionals: Tuple[str, ...] = ()
-        if cmd.positionals:
-            positionals, _, _, _ = zip(*cmd.positionals)
+        positionals = cmd.positionals or ()
         optionals, _, _, _, _ = zip(*cmd.optionals)
         subcommands: Tuple[str, ...] = ()
         if cmd.subcommands:
@@ -237,12 +235,12 @@ class BashCompletionWriter(ArgparseWriter):
         return "}\n"
 
     def body(
-        self, positionals: Sequence[str], optionals: Sequence[str], subcommands: Sequence[str]
+        self, positionals: Sequence, optionals: Sequence[str], subcommands: Sequence[str]
     ) -> str:
         """Return the body of the function.
 
         Args:
-            positionals: List of positional arguments.
+            positionals: List of positional argument tuples (name, choices, nargs, help).
             optionals: List of optional arguments.
             subcommands: List of subcommand parsers.
 
@@ -272,20 +270,30 @@ class BashCompletionWriter(ArgparseWriter):
     {self.optionals(optionals)}
 """
 
-    def positionals(self, positionals: Sequence[str]) -> str:
+    def positionals(self, positionals: Sequence) -> str:
         """Return the syntax for reporting positional arguments.
 
         Args:
-            positionals: List of positional arguments.
+            positionals: List of positional argument tuples (name, choices, nargs, help).
 
         Returns:
             Syntax for positional arguments.
         """
-        # If match found, return function name
-        for positional in positionals:
+        for name, choices, nargs, help in positionals:
+            # Check for a predefined subroutine mapping
             for key, value in _positional_to_subroutine.items():
-                if positional.startswith(key):
+                if name.startswith(key):
                     return value
+
+            # Use choices if available
+            if choices is not None:
+                if isinstance(choices, dict):
+                    choices = sorted(choices.keys())
+                elif isinstance(choices, (set, frozenset)):
+                    choices = sorted(choices)
+                else:
+                    choices = sorted(choices)
+                return 'SPACK_COMPREPLY="{}"'.format(" ".join(str(c) for c in choices))
 
         # If no matches found, return empty list
         return 'SPACK_COMPREPLY=""'
@@ -688,8 +696,7 @@ def subcommands(args: Namespace, out: IO) -> None:
         args: Command-line arguments.
         out: File object to write to.
     """
-    parser = spack.main.make_argument_parser()
-    spack.main.add_all_commands(parser)
+    parser = get_all_spack_commands(out)
     writer = SubcommandWriter(parser.prog, out, args.aliases)
     writer.write(parser)
 
@@ -735,8 +742,7 @@ def rst(args: Namespace, out: IO) -> None:
         out: File object to write to.
     """
     # create a parser with all commands
-    parser = spack.main.make_argument_parser()
-    spack.main.add_all_commands(parser)
+    parser = get_all_spack_commands(out)
 
     # extract cross-refs of the form `_cmd-spack-<cmd>:` from rst files
     documented_commands: Set[str] = set()
@@ -774,6 +780,20 @@ def names(args: Namespace, out: IO) -> None:
     colify(commands, output=out)
 
 
+def get_all_spack_commands(out: IO) -> SpackArgumentParser:
+    is_tty = hasattr(out, "isatty") and out.isatty()
+    # Argparse python 3.14 adds a default color argument that
+    # adds color control characters to argparse output
+    # that breaks expected output format from spack formatters
+    # when written to non tty IO
+    # If 3.14 and newer and not tty, disable color
+    parser = spack.main.make_argument_parser(
+        **({"color": False} if sys.version_info[:2] >= (3, 14) and not is_tty else {})
+    )
+    spack.main.add_all_commands(parser)
+    return parser
+
+
 @formatter
 def bash(args: Namespace, out: IO) -> None:
     """Bash tab-completion script.
@@ -782,9 +802,7 @@ def bash(args: Namespace, out: IO) -> None:
         args: Command-line arguments.
         out: File object to write to.
     """
-    parser = spack.main.make_argument_parser()
-    spack.main.add_all_commands(parser)
-
+    parser = get_all_spack_commands(out)
     aliases_config = spack.config.get("config:aliases")
     if aliases_config:
         aliases = ";".join(f"{key}:{val}" for key, val in aliases_config.items())
@@ -796,9 +814,7 @@ def bash(args: Namespace, out: IO) -> None:
 
 @formatter
 def fish(args, out):
-    parser = spack.main.make_argument_parser()
-    spack.main.add_all_commands(parser)
-
+    parser = get_all_spack_commands(out)
     writer = FishCompletionWriter(parser.prog, out, args.aliases)
     writer.write(parser)
 
@@ -830,7 +846,7 @@ def _commands(parser: ArgumentParser, args: Namespace) -> None:
 
     # check header first so we don't open out files unnecessarily
     if args.header and not os.path.exists(args.header):
-        tty.die(f"No such file: '{args.header}'")
+        args.subparser.error(f"no such file: '{args.header}'")
 
     if args.update:
         tty.msg(f"Updating file: {args.update}")
@@ -868,7 +884,7 @@ def commands(parser: ArgumentParser, args: Namespace) -> None:
     """
     if args.update_completion:
         if args.format != "names" or any([args.aliases, args.update, args.header]):
-            tty.die("--update-completion can only be specified alone.")
+            args.subparser.error("--update-completion can only be specified alone")
 
         # this runs the command multiple times with different arguments
         update_completion(parser, args)

@@ -23,6 +23,7 @@ __all__ = [
     "host",
     "by_name",
     "reset",
+    "using_libc_compatibility",
 ]
 
 #: The "real" platform of the host running Spack. This should not be changed
@@ -45,6 +46,11 @@ class _PickleableCallable:
 
     def __call__(self):
         return self.return_value
+
+
+def using_libc_compatibility() -> bool:
+    """Returns True if we are using libc compatibility on this platform."""
+    return host().name == "linux"
 
 
 @contextlib.contextmanager

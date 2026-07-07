@@ -7,7 +7,6 @@ import argparse
 import spack.cmd
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.traverse
 from spack.cmd.common import arguments
 
@@ -54,9 +53,11 @@ def fetch(parser, args):
             else:
                 specs = env.all_specs()
             if specs == []:
-                tty.die("No uninstalled specs in environment. Did you run `spack concretize` yet?")
+                args.subparser.error(
+                    "no uninstalled specs in environment. Did you run `spack concretize` yet?"
+                )
         else:
-            tty.die("fetch requires at least one spec argument")
+            args.subparser.error("requires at least one spec argument")
 
     if args.dependencies or args.missing:
         to_be_fetched = spack.traverse.traverse_nodes(specs, key=spack.traverse.by_dag_hash)

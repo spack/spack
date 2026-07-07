@@ -5,6 +5,7 @@
 """
 This test checks the binary packaging infrastructure
 """
+
 import argparse
 import os
 import pathlib
@@ -16,7 +17,6 @@ from collections import OrderedDict
 import pytest
 
 import spack.binary_distribution
-import spack.cmd.buildcache as buildcache
 import spack.cmd.mirror
 import spack.concretize
 import spack.config
@@ -26,12 +26,13 @@ import spack.package_base
 import spack.stage
 import spack.util.gpg
 import spack.util.url as url_util
+from spack.cmd import buildcache
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
-from spack.llnl.util import filesystem as fs
-from spack.llnl.util.filesystem import readlink, symlink
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import _macho_find_paths, relocate_links, relocate_text
+from spack.util import filesystem as fs
+from spack.util.filesystem import readlink, symlink
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
@@ -117,7 +118,7 @@ def test_buildcache(mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_c
         args = parser.parse_args(["keys", "-f"])
         buildcache.buildcache(parser, args)
 
-        args = parser.parse_args(["keys", "-i", "-t"])
+        args = parser.parse_args(["keys", "-y", "-i", "-t"])
         buildcache.buildcache(parser, args)
 
 

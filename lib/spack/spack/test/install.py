@@ -16,13 +16,13 @@ import spack.config
 import spack.database
 import spack.error
 import spack.installer
-import spack.llnl.util.filesystem as fs
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.package_base
 import spack.patch
 import spack.repo
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack import binary_distribution
 from spack.error import InstallError

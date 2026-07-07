@@ -73,7 +73,7 @@ install. When given the option of adjusting your ``PATH``, choose the
 ``Git from the command line and also from 3rd-party software`` option. This will
 automatically update your ``PATH`` variable to include the ``git`` command.
 Certain Spack commands expect ``git`` to be part of the ``PATH``. If this step
-is not performed properly, certain Spack comands will not work.
+is not performed properly, certain Spack commands will not work.
 
 If your Spack installation needs to be modified, repaired, or uninstalled,
 you can do any of these things by rerunning ``Spack.exe``.

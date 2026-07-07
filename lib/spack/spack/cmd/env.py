@@ -17,19 +17,17 @@ import spack.cmd.common.arguments
 import spack.cmd.modules
 import spack.config
 import spack.environment as ev
-import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.generate_env_scripts as generate_script
 import spack.tengine
 import spack.util.filesystem as fs
-import spack.util.string
 from spack.cmd.common import arguments
-from spack.llnl.util.filesystem import islink, symlink
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import cescape, colorize
+from spack.environment import depfile
 from spack.traverse import traverse_nodes
-from spack.util import tty
+from spack.util import string, tty
 from spack.util.filesystem import islink, symlink
+from spack.util.tty.colify import colify
+from spack.util.tty.color import cescape, colorize
 
 description = "manage environments"
 section = "environments"
@@ -127,7 +125,8 @@ def env_create(args):
     )
 
     # Generate views, only really useful for environments created from spack.lock files.
-    env.regenerate_views()
+    if args.envfile:
+        env.regenerate_views()
 
 
 def _env_create(
@@ -573,7 +572,7 @@ def _env_untrack_or_remove(
     else:
         env_names_to_remove = known_env_names
 
-    # initalize all environments with valid spack.yaml configs
+    # initialize all environments with valid spack.yaml configs
     all_valid_envs = get_valid_envs(all_env_names)
 
     # build a task list of environments and bad env names to remove
@@ -595,7 +594,7 @@ def _env_untrack_or_remove(
                     envs_to_remove.remove(remove_env)
 
     # ask the user if they really want to remove the known environments
-    # force should do the same as yes to all here following the symantics of rm
+    # force should do the same as yes to all here following the semantics of rm
     if not (yes_to_all or force) and (envs_to_remove or bad_env_names_to_remove):
         environments = spack.util.string.plural(
             len(env_names_to_remove), "environment", show_n=False
@@ -623,7 +622,7 @@ def _env_untrack_or_remove(
             real_env_path = os.path.realpath(env.path)
             os.unlink(env.path)
             tty.msg(
-                f"Sucessfully untracked environment '{name}', "
+                f"Successfully untracked environment '{name}', "
                 "but it can still be found at:\n\n"
                 f"        {real_env_path}\n"
             )
@@ -643,7 +642,7 @@ def _env_untrack_or_remove(
     # Following the design of linux rm we should exit with a status of 1
     # anytime we cannot delete every environment the user asks for.
     # However, we should still process all the environments we know about
-    # and delete them instead of failing on the first unknown enviornment.
+    # and delete them instead of failing on the first unknown environment.
     if len(removed_env_names) < len(known_env_names):
         sys.exit(1)
 
@@ -901,7 +900,7 @@ def env_loads_setup_parser(subparser):
 
 
 def env_loads(args):
-    env = spack.cmd.require_active_env(cmd_name="env loads")
+    env = spack.cmd.require_active_env(args.subparser)
 
     # Set the module types that have been selected
     module_type = args.module_type
@@ -1075,7 +1074,7 @@ def env_depfile_setup_parser(subparser):
 
 def env_depfile(args):
     # Currently only make is supported.
-    spack.cmd.require_active_env(cmd_name="env depfile")
+    spack.cmd.require_active_env(args.subparser)
 
     env = ev.active_environment()
 
@@ -1140,6 +1139,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
             description=spack.cmd.doc_dedented(setup_parser_cmd),
             help=spack.cmd.doc_first_line(setup_parser_cmd),
         )
+        subsubparser.set_defaults(subparser=subsubparser)
         setup_parser_cmd(subsubparser)
 
 

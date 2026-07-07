@@ -23,30 +23,15 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     setattr(setup_parser, "parser", subparser)
     subparsers = subparser.add_subparsers(help="GPG sub-commands")
 
-    verify = subparsers.add_parser("verify", help=gpg_verify.__doc__)
-    arguments.add_common_arguments(verify, ["installed_spec"])
-    verify.add_argument("signature", type=str, nargs="?", help="the signature file")
-    verify.set_defaults(func=gpg_verify)
-
     trust = subparsers.add_parser("trust", help=gpg_trust.__doc__)
-    trust.add_argument("keyfile", type=str, help="add a key to the trust store")
-    trust.set_defaults(func=gpg_trust)
+    trust.add_argument("keyfile", type=str, help="add a keyfile to the trust store")
+    arguments.add_common_arguments(trust, ["yes_to_all"])
+    trust.set_defaults(func=gpg_trust, subparser=trust)
 
     untrust = subparsers.add_parser("untrust", help=gpg_untrust.__doc__)
     untrust.add_argument("--signing", action="store_true", help="allow untrusting signing keys")
     untrust.add_argument("keys", nargs="+", type=str, help="remove keys from the trust store")
-    untrust.set_defaults(func=gpg_untrust)
-
-    sign = subparsers.add_parser("sign", help=gpg_sign.__doc__)
-    sign.add_argument(
-        "--output", metavar="DEST", type=str, help="the directory to place signatures"
-    )
-    sign.add_argument("--key", metavar="KEY", type=str, help="the key to use for signing")
-    sign.add_argument(
-        "--clearsign", action="store_true", help="if specified, create a clearsign signature"
-    )
-    arguments.add_common_arguments(sign, ["installed_spec"])
-    sign.set_defaults(func=gpg_sign)
+    untrust.set_defaults(func=gpg_untrust, subparser=untrust)
 
     create = subparsers.add_parser("create", help=gpg_create.__doc__)
     create.add_argument("name", type=str, help="the name to use for the new key")
@@ -71,18 +56,25 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         dest="secret",
         help="export the private key to a file",
     )
-    create.set_defaults(func=gpg_create)
+    create.set_defaults(func=gpg_create, subparser=create)
 
-    list = subparsers.add_parser("list", help=gpg_list.__doc__)
-    list.add_argument("--trusted", action="store_true", default=True, help="list trusted keys")
-    list.add_argument(
+    glist = subparsers.add_parser("list", help=gpg_list.__doc__)
+    glist.add_argument(
+        "--fmt",
+        "-f",
+        action="store",
+        help="Format to list keys with (default (gpg), colons, keys, <key format string>)",
+    )
+    glist.add_argument("--trusted", action="store_true", default=True, help="list trusted keys")
+    glist.add_argument(
         "--signing", action="store_true", help="list keys which may be used for signing"
     )
-    list.set_defaults(func=gpg_list)
+    glist.set_defaults(func=gpg_list, subparser=glist)
 
     init = subparsers.add_parser("init", help=gpg_init.__doc__)
     init.add_argument("--from", metavar="DIR", type=str, dest="import_dir", help=argparse.SUPPRESS)
-    init.set_defaults(func=gpg_init)
+    arguments.add_common_arguments(init, ["yes_to_all"])
+    init.set_defaults(func=gpg_init, subparser=init)
 
     export = subparsers.add_parser("export", help=gpg_export.__doc__)
     export.add_argument("location", type=str, help="where to export keys")
@@ -90,7 +82,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "keys", nargs="*", help="the keys to export (all public keys if unspecified)"
     )
     export.add_argument("--secret", action="store_true", help="export secret keys")
-    export.set_defaults(func=gpg_export)
+    export.set_defaults(func=gpg_export, subparser=export)
 
     publish = subparsers.add_parser("publish", help=gpg_publish.__doc__)
 
@@ -125,7 +117,24 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     publish.add_argument(
         "keys", nargs="*", help="keys to publish (all public keys if unspecified)"
     )
-    publish.set_defaults(func=gpg_publish)
+    publish.set_defaults(func=gpg_publish, subparser=publish)
+
+    # Deprecated
+    verify = subparsers.add_parser("verify", help=gpg_verify.__doc__)
+    arguments.add_common_arguments(verify, ["installed_spec"])
+    verify.add_argument("signature", type=str, nargs="?", help="the signature file")
+    verify.set_defaults(func=gpg_verify, subparser=verify)
+
+    sign = subparsers.add_parser("sign", help=gpg_sign.__doc__)
+    sign.add_argument(
+        "--output", metavar="DEST", type=str, help="the directory to place signatures"
+    )
+    sign.add_argument("--key", metavar="KEY", type=str, help="the key to use for signing")
+    sign.add_argument(
+        "--clearsign", action="store_true", help="if specified, create a clearsign signature"
+    )
+    arguments.add_common_arguments(sign, ["installed_spec"])
+    sign.set_defaults(func=gpg_sign, subparser=sign)
 
 
 def gpg_create(args):
@@ -140,6 +149,7 @@ def gpg_create(args):
     if args.export or args.secret:
         new_sec_keys = set(spack.util.gpg.signing_keys())
         new_keys = new_sec_keys.difference(old_sec_keys)
+        new_keys = [str(k) for k in new_keys]
 
     if args.export:
         spack.util.gpg.export_keys(args.export, new_keys)
@@ -151,36 +161,18 @@ def gpg_export(args):
     """export a gpg key, optionally including secret key"""
     keys = args.keys
     if not keys:
-        keys = spack.util.gpg.signing_keys()
+        keys = [str(k) for k in spack.util.gpg.signing_keys()]
     spack.util.gpg.export_keys(args.location, keys, args.secret)
 
 
 def gpg_list(args):
     """list keys available in the keyring"""
-    spack.util.gpg.list(args.trusted, args.signing)
-
-
-def gpg_sign(args):
-    """sign a package"""
-    key = args.key
-    if key is None:
-        keys = spack.util.gpg.signing_keys()
-        if len(keys) == 1:
-            key = keys[0]
-        elif not keys:
-            raise RuntimeError("no signing keys are available")
-        else:
-            raise RuntimeError("multiple signing keys are available; please choose one")
-    output = args.output
-    if not output:
-        output = args.spec[0] + ".asc"
-    # TODO: Support the package format Spack creates.
-    spack.util.gpg.sign(key, " ".join(args.spec), output, args.clearsign)
+    spack.util.gpg.glist(args.trusted, args.signing, args.fmt)
 
 
 def gpg_trust(args):
     """add a key to the keyring"""
-    spack.util.gpg.trust(args.keyfile)
+    spack.util.gpg.trust(args.keyfile, yes_to_all=args.yes_to_all)
 
 
 def gpg_init(args):
@@ -193,21 +185,12 @@ def gpg_init(args):
         for filename in filenames:
             if not filename.endswith(".key"):
                 continue
-            spack.util.gpg.trust(os.path.join(root, filename))
+            spack.util.gpg.trust(os.path.join(root, filename), yes_to_all=args.yes_to_all)
 
 
 def gpg_untrust(args):
     """remove a key from the keyring"""
     spack.util.gpg.untrust(args.signing, *args.keys)
-
-
-def gpg_verify(args):
-    """verify a signed package"""
-    # TODO: Support the package format Spack creates.
-    signature = args.signature
-    if signature is None:
-        signature = args.spec[0] + ".asc"
-    spack.util.gpg.verify(signature, " ".join(args.spec))
 
 
 def gpg_publish(args):
@@ -226,6 +209,22 @@ def gpg_publish(args):
         spack.binary_distribution._url_push_keys(
             mirror, keys=args.keys, tmpdir=tmpdir, update_index=args.update_index
         )
+
+
+def gpg_sign(args):
+    """sign a package"""
+    args.subparser.error(
+        "This command has been deprecated as it no longer applies to any supported build cache. "
+        "Use `gpg --detach-sign` instead"
+    )
+
+
+def gpg_verify(args):
+    """verify a signed package"""
+    args.subparser.error(
+        "This command has been deprecated as it no longer applies to any supported build cache. "
+        "Use `gpg --verify` instead"
+    )
 
 
 def gpg(parser, args):

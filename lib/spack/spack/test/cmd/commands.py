@@ -65,7 +65,7 @@ def test_subcommands():
 
 
 def test_alias_overrides_builtin(mutable_config: spack.config.Configuration, capfd):
-    """Test that spack commands cannot be overriden by aliases."""
+    """Test that spack commands cannot be overridden by aliases."""
     mutable_config.set("config:aliases", {"install": "find"})
     cmd, args = spack.main.resolve_alias("install", ["install", "-v"])
     assert cmd == "install" and args == ["install", "-v"]
@@ -199,6 +199,14 @@ def test_bash_completion():
     assert "_spack_compiler_add() {" in out2
 
 
+def test_bash_completion_choices():
+    """Test that bash completion includes choices for positional arguments."""
+    out = commands("--format=bash")
+
+    # `spack env view` has a positional `action` with choices
+    assert 'SPACK_COMPREPLY="disable enable regenerate"' in out
+
+
 def test_fish_completion():
     """Test the fish completion writer."""
     out1 = commands("--format=fish")
@@ -297,4 +305,15 @@ def test_updated_completion_scripts(shell, tmp_path: pathlib.Path):
 
     commands("--aliases", "--format", shell, "--header", header, "--update", new_script)
 
-    assert filecmp.cmp(old_script, new_script), msg
+    if not filecmp.cmp(old_script, new_script):
+        # If there is a diff, something is wrong: in that case output what the diff is.
+        import difflib
+
+        with open(old_script, "r", encoding="utf-8") as f1, open(
+            new_script, "r", encoding="utf-8"
+        ) as f2:
+            l1 = f1.readlines()
+            l2 = f2.readlines()
+        diff = difflib.unified_diff(l1, l2, fromfile=old_script, tofile=new_script)
+        msg += "\nDiff failure:\n\n" + "".join(diff)
+        raise AssertionError(msg)

@@ -11,10 +11,9 @@ import urllib.parse
 import urllib.request
 from typing import Optional
 
-import spack.llnl.util.tty as tty
 import spack.util.crypto
-from spack.llnl.util.filesystem import copy, join_path, mkdirp
-from spack.util.path import canonicalize_path
+from spack.util import tty
+from spack.util.filesystem import copy, join_path, mkdirp
 from spack.util.url import validate_scheme
 
 
@@ -60,27 +59,23 @@ def fetch_remote_text_file(url: str, dest_dir: str) -> str:
     return fetch_url_text(raw_url, dest_dir=dest_dir)
 
 
-def local_path(raw_path: str, sha256: str, dest: Optional[str] = None) -> str:
+def local_path(path: str, sha256: str, dest: Optional[str] = None) -> str:
     """Determine the actual path and, if remote, stage its contents locally.
 
     Args:
-        raw_path: raw path with possible variables needing substitution
+        path: the resolved configuration path
         sha256: the expected sha256 if the file is remote
         dest: destination path
 
-    Returns: resolved, normalized local path
+    Returns: normalized local path
 
     Raises:
         ValueError: missing or mismatched arguments, unsupported URL scheme
     """
-    if not raw_path:
+    if not path:
         raise ValueError("path argument is required to cache remote files")
 
     file_schemes = ["", "file"]
-
-    # Allow paths (and URLs) to contain spack config/environment variables,
-    # etc.
-    path = canonicalize_path(raw_path)
 
     # Save off the Windows drive of the canonicalized path (since now absolute)
     # to ensure recognized by URL parsing as a valid file "scheme".
@@ -92,6 +87,8 @@ def local_path(raw_path: str, sha256: str, dest: Optional[str] = None) -> str:
 
     # Path isn't remote so return normalized, absolute path with substitutions.
     if url.scheme in file_schemes:
+        if path.startswith("file://"):
+            return os.path.normpath(path[7:])
         return os.path.normpath(path)
 
     # If scheme is not valid, path is not a supported url.
@@ -100,9 +97,9 @@ def local_path(raw_path: str, sha256: str, dest: Optional[str] = None) -> str:
         if url.scheme in ("http", "https", "ftp"):
             if not dest:
                 raise ValueError("Requires the destination argument to cache remote files")
-            assert os.path.isabs(
-                dest
-            ), f"Remote file destination '{dest}' must be an absolute path"
+            assert os.path.isabs(dest), (
+                f"Remote file destination '{dest}' must be an absolute path"
+            )
 
             # Stage the remote configuration file
             tmpdir = tempfile.mkdtemp()
@@ -127,22 +124,22 @@ def local_path(raw_path: str, sha256: str, dest: Optional[str] = None) -> str:
 
                 cache_path = join_path(dest_dir, os.path.basename(staged_path))
                 copy(staged_path, cache_path)
-                tty.debug(f"Cached {raw_path} in {cache_path}")
+                tty.debug(f"Cached {path} in {cache_path}")
 
                 # Stash the associated URL to aid with debugging
                 with open(join_path(dest_dir, "source_url.txt"), "w", encoding="utf-8") as f:
-                    f.write(f"{raw_path}\n")
+                    f.write(f"{path}\n")
 
                 return cache_path
 
             except ValueError as err:
-                tty.warn(f"Unable to cache {raw_path}: {str(err)}")
+                tty.warn(f"Unable to cache {path}: {str(err)}")
                 raise
 
             finally:
                 shutil.rmtree(tmpdir)
 
-        raise ValueError(f"Unsupported URL scheme ({url.scheme}) in {raw_path}")
+        raise ValueError(f"Unsupported URL scheme ({url.scheme}) in {path}")
 
     else:
-        raise ValueError(f"Invalid URL scheme ({url.scheme}) in {raw_path}")
+        raise ValueError(f"Invalid URL scheme ({url.scheme}) in {path}")

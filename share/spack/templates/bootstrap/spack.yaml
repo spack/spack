@@ -33,5 +33,15 @@ spack:
       require: "+wheel"
 
   concretizer:
-    reuse: false
+    reuse: true
     unify: true
+    targets:
+      granularity: generic
+      host_compatible: false
+
+  mirrors::
+{% for mirror in bootstrap_mirrors %}
+    {{mirror}}:
+      url: https://binaries.spack.io/releases/v2026.03/{{mirror}}
+      signed: true
+{% endfor %}

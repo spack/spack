@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes to analyze the input of a solve, and provide information to set up the ASP problem"""
+
 import collections
 from typing import Dict, List, NamedTuple, Set, Tuple, Union
 
@@ -16,8 +17,8 @@ import spack.repo
 import spack.spec
 import spack.store
 from spack.error import SpackError
-from spack.llnl.util import lang, tty
 from spack.spec import EMPTY_SPEC
+from spack.util import lang, tty
 
 
 class PossibleGraph(NamedTuple):
@@ -268,7 +269,7 @@ class StaticAnalysis(NoStaticAnalysis):
         configuration: spack.config.Configuration,
         repo: spack.repo.RepoPath,
         store: spack.store.Store,
-        binary_index: spack.binary_distribution.BinaryCacheIndex,
+        binary_index: spack.binary_distribution.BinaryIndexCache,
     ):
         self.store = store
         self.binary_index = binary_index
@@ -458,9 +459,9 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         )
         self._possible_virtuals.update(virtuals)
         self._link_run_virtuals.update(virtuals)
-        for x in self._link_run:
+        if self._link_run:
             reals, virtuals, _ = self.possible_graph.possible_dependencies(
-                x, allowed_deps=dt.BUILD, transitive=False, strict_depflag=True
+                *self._link_run, allowed_deps=dt.BUILD, transitive=False, strict_depflag=True
             )
             self._possible_virtuals.update(virtuals)
             self._direct_build.update(reals)
@@ -482,7 +483,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         gen.newline()
 
         gen.h2("Packages with multiple possible nodes (build-tools)")
-        default = spack.config.CONFIG.get("concretizer:duplicates:max_dupes:default", 2)
+        default = spack.config.CONFIG.get("concretizer:duplicates:max_dupes:default", 1)
         duplicates = spack.config.CONFIG.get("concretizer:duplicates:max_dupes", {})
         for package_name in sorted(self.possible_dependencies() & build_tools):
             max_dupes = duplicates.get(package_name, default)
@@ -491,13 +492,8 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
                 gen.fact(fn.multiple_unification_sets(package_name))
         gen.newline()
 
-        gen.h2("Maximum number of nodes (link-run virtuals)")
-        for package_name in sorted(self._link_run_virtuals):
-            gen.fact(fn.max_dupes(package_name, 1))
-        gen.newline()
-
-        gen.h2("Maximum number of nodes (other virtuals)")
-        for package_name in sorted(self.possible_virtuals() - self._link_run_virtuals):
+        gen.h2("Maximum number of nodes (virtuals)")
+        for package_name in sorted(self.possible_virtuals()):
             max_dupes = duplicates.get(package_name, default)
             gen.fact(fn.max_dupes(package_name, max_dupes))
         gen.newline()

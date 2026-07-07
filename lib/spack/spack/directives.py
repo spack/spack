@@ -39,6 +39,7 @@ package class as first argument::
     def _execute_example_directive(pkg, arg1, arg2):
         # modify pkg.example based on arg1 and arg2
 """
+
 import collections
 import collections.abc
 import os
@@ -50,11 +51,11 @@ from typing import Any, Callable, List, Optional, Tuple, Type, Union
 import spack.deptypes as dt
 import spack.error
 import spack.fetch_strategy
-import spack.llnl.util.tty.color
 import spack.package_base
 import spack.patch
 import spack.spec
 import spack.util.crypto
+import spack.util.tty.color
 import spack.variant
 from spack.dependency import Dependency
 from spack.directives_meta import DirectiveError, directive, get_spec
@@ -247,7 +248,7 @@ def _execute_version(pkg: PackageType, ver: Union[str, int], kwargs: dict):
         and not pkg.has_code
     ):
         raise VersionChecksumError(
-            f"{pkg.name}: Checksums not allowed in no-code packages " f"(see '{ver}' version)."
+            f"{pkg.name}: Checksums not allowed in no-code packages (see '{ver}' version)."
         )
 
     if not isinstance(ver, (int, str)):
@@ -411,8 +412,7 @@ def _execute_redistribute(
         return
     elif (source is True) or (binary is True):
         raise DirectiveError(
-            "Source/binary distribution are true by default, they can only "
-            "be explicitly disabled."
+            "Source/binary distribution are true by default, they can only be explicitly disabled."
         )
 
     if source is None:
@@ -697,7 +697,7 @@ def variant(
 
 def _format_error(msg, pkg, name):
     msg += " @*r{{[{0}, variant '{1}']}}"
-    return spack.llnl.util.tty.color.colorize(msg.format(pkg.name, name))
+    return spack.util.tty.color.colorize(msg.format(pkg.name, name))
 
 
 def _execute_variant(

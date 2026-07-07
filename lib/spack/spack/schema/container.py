@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for the ``container`` subsection of Spack environments."""
+
 from typing import Any, Dict
 
 _stages_from_dockerhub = {

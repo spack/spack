@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/modules.py
    :lines: 16-
 """
+
 from typing import Any, Dict
 
 import spack.schema.environment
@@ -67,15 +68,13 @@ module_file_configuration = {
             "additionalKeysAreSpecs": True,
             "additionalProperties": {"type": "string"},  # key
         },
-        "environment": {
-            **spack.schema.environment.definition,
-            "description": "Custom environment variable modifications to apply in this module "
-            "file",
-        },
+        "environment": spack.schema.environment.ref_env_modifications,
     },
 }
 
-projections_scheme = spack.schema.projections.properties["projections"]
+ref_module_file_configuration = {"$ref": "#/definitions/module_file_configuration"}
+
+projections_scheme = {"$ref": "#/definitions/projections"}
 
 common_props = {
     "verbose": {
@@ -125,54 +124,52 @@ common_props = {
         "description": "Custom directory structure and naming convention for module files using "
         "projection format",
     },
-    "all": {
-        **module_file_configuration,
-        "description": "Default configuration applied to all module files in this module set",
+    "all": ref_module_file_configuration,
+    "hierarchical": {
+        "type": "boolean",
+        "description": "Organize module files in a hierarchical way",
+    },
+    "core_compilers": {
+        **array_of_strings,
+        "description": "List of core compilers that are always available at the top level of "
+        "the module hierarchy",
+    },
+    "hierarchy": {
+        **array_of_strings,
+        "description": "List of packages to use for building the module hierarchy "
+        "(typically compilers and MPI implementations)",
+    },
+    "core_specs": {
+        **array_of_strings,
+        "description": "List of specs that should be placed in the core level of the module "
+        "hierarchy regardless of dependencies",
+    },
+    "filter_hierarchy_specs": {
+        "type": "object",
+        "description": "Filter which specs are included at different levels of the module "
+        "hierarchy based on spec matching",
+        "additionalKeysAreSpecs": True,
+        "additionalProperties": array_of_strings,
     },
 }
 
 tcl_configuration = {
     "type": "object",
     "default": {},
-    "description": "Configuration for TCL module files compatible with Environment Modules and "
+    "description": "Configuration for Tcl module files compatible with Environment Modules and "
     "Lmod",
     "additionalKeysAreSpecs": True,
     "properties": {**common_props},
-    "additionalProperties": module_file_configuration,
+    "additionalProperties": ref_module_file_configuration,
 }
 
 lmod_configuration = {
     "type": "object",
     "default": {},
-    "description": "Configuration for Lua module files compatible with Lmod hierarchical module "
-    "system",
+    "description": "Configuration for Lua module files compatible with Lmod system",
     "additionalKeysAreSpecs": True,
-    "properties": {
-        **common_props,
-        "core_compilers": {
-            **array_of_strings,
-            "description": "List of core compilers that are always available at the top level of "
-            "the Lmod hierarchy",
-        },
-        "hierarchy": {
-            **array_of_strings,
-            "description": "List of packages to use for building the Lmod module hierarchy "
-            "(typically compilers and MPI implementations)",
-        },
-        "core_specs": {
-            **array_of_strings,
-            "description": "List of specs that should be placed in the core level of the Lmod "
-            "hierarchy regardless of dependencies",
-        },
-        "filter_hierarchy_specs": {
-            "type": "object",
-            "description": "Filter which specs are included at different levels of the Lmod "
-            "hierarchy based on spec matching",
-            "additionalKeysAreSpecs": True,
-            "additionalProperties": array_of_strings,
-        },
-    },
-    "additionalProperties": module_file_configuration,
+    "properties": {**common_props},
+    "additionalProperties": ref_module_file_configuration,
 }
 
 module_config_properties = {
@@ -190,7 +187,7 @@ module_config_properties = {
         "type": "object",
         "description": "Custom root directories for different module file types",
         "properties": {
-            "tcl": {"type": "string", "description": "Root directory for TCL module files"},
+            "tcl": {"type": "string", "description": "Root directory for Tcl module files"},
             "lmod": {"type": "string", "description": "Root directory for Lmod module files"},
         },
     },
@@ -203,11 +200,11 @@ module_config_properties = {
     },
     "lmod": {
         **lmod_configuration,
-        "description": "Configuration for Lmod hierarchical module system",
+        "description": "Configuration for Lua module files compatible with Lmod",
     },
     "tcl": {
         **tcl_configuration,
-        "description": "Configuration for TCL module files compatible with Environment Modules",
+        "description": "Configuration for Tcl module files compatible with Environment Modules",
     },
     "prefix_inspections": {
         "type": "object",
@@ -259,5 +256,10 @@ schema = {
     "title": "Spack module file configuration file schema",
     "type": "object",
     "additionalProperties": False,
+    "definitions": {
+        "module_file_configuration": module_file_configuration,
+        "projections": spack.schema.projections.projections,
+        "env_modifications": spack.schema.environment.env_modifications,
+    },
     "properties": properties,
 }

@@ -21,6 +21,13 @@ CLAUDE.md
 !/etc/spack/site/README.md
 
 ###########################
+# Coding agent state
+###########################
+.claude/
+.gemini/
+.codex/
+
+###########################
 # Python-specific ignores #
 ###########################
 

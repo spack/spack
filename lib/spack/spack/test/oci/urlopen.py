@@ -15,6 +15,7 @@ from urllib.request import Request
 import pytest
 
 import spack.mirrors.mirror
+import spack.util.web
 from spack.oci.image import Digest, ImageReference, default_config, default_manifest
 from spack.oci.oci import (
     copy_missing_layers,
@@ -365,8 +366,8 @@ def test_registry_with_short_lived_bearer_tokens():
         ("GET", "/v2/"),  # 2: retry with bearer token
         ("GET", "/v2/"),  # 3: with incorrect bearer token
         ("GET", "/v2/"),  # 4: retry with new bearer token
-        ("GET", "/v2/"),  # 5: with recyled correct bearer token
-        ("GET", "/v2/"),  # 6: with recyled correct bearer token
+        ("GET", "/v2/"),  # 5: with recycled correct bearer token
+        ("GET", "/v2/"),  # 6: with recycled correct bearer token
     ]
 
 
@@ -743,14 +744,11 @@ class BrokenServer(DummyServer):
         ("https://example.com/not-found/", 3, True, 1),
     ],
 )
-def test_retry(url, max_retries, expect_failure, expect_requests):
+def test_retry(url, max_retries, expect_failure, expect_requests, mock_sleep):
     server = BrokenServer("example.com")
     urlopen = create_opener(server).open
-    sleep_time = []
-    dont_sleep = lambda t: sleep_time.append(t)  # keep track of sleep times
-
     try:
-        response = default_retry(urlopen, retries=max_retries, sleep=dont_sleep)(url)
+        response = default_retry(urlopen, spack.util.web.Retry(total=max_retries))(url)
     except urllib.error.HTTPError as e:
         if not expect_failure:
             assert False, f"Unexpected HTTPError: {e}"
@@ -760,7 +758,7 @@ def test_retry(url, max_retries, expect_failure, expect_requests):
         assert response.status == 200
 
     assert len(server.requests) == expect_requests
-    assert sleep_time == [2**i for i in range(expect_requests - 1)]
+    assert mock_sleep.times == [2**i for i in range(expect_requests - 1)]
 
 
 def test_list_tags():

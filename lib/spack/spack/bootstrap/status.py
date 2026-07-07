@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Query the status of bootstrapping on this machine"""
+
 import sys
 from typing import List, Optional, Sequence, Tuple, Union
 
@@ -10,14 +11,7 @@ import spack.util.executable
 from ._common import _executables_in_store, _python_import, _try_import_from_store
 from .config import ensure_bootstrap_configuration
 from .core import clingo_root_spec, gnupg_root_spec, patchelf_root_spec
-from .environment import (
-    BootstrapEnvironment,
-    black_root_spec,
-    flake8_root_spec,
-    isort_root_spec,
-    mypy_root_spec,
-    pytest_root_spec,
-)
+from .environment import BootstrapEnvironment, mypy_root_spec, pytest_root_spec, ruff_root_spec
 
 ExecutablesType = Union[str, Sequence[str]]
 RequiredResponseType = Tuple[bool, Optional[str]]
@@ -126,20 +120,16 @@ def _development_requirements() -> List[RequiredResponseType]:
             env.load()
 
     return [
-        _required_executable(
-            "isort", isort_root_spec(), _missing("isort", "required for style checks", False)
-        ),
-        _required_executable(
-            "mypy", mypy_root_spec(), _missing("mypy", "required for style checks", False)
-        ),
-        _required_executable(
-            "flake8", flake8_root_spec(), _missing("flake8", "required for style checks", False)
-        ),
-        _required_executable(
-            "black", black_root_spec(), _missing("black", "required for code formatting", False)
-        ),
         _required_python_module(
             "pytest", pytest_root_spec(), _missing("pytest", "required to run unit-test", False)
+        ),
+        _required_executable(
+            "ruff",
+            ruff_root_spec(),
+            _missing("ruff", "required for code checking/formatting", False),
+        ),
+        _required_executable(
+            "mypy", mypy_root_spec(), _missing("mypy", "required for type checks", False)
         ),
     ]
 

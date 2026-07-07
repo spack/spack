@@ -340,3 +340,35 @@ def test_external_node_completion(
     # Assert all nodes have the namespace set
     for node in spack.traverse.traverse_nodes(parser.all_specs()):
         assert node.namespace is not None
+
+
+@pytest.mark.regression("52179")
+def test_external_spec_single_valued_variant_type_is_corrected():
+    """Tests that an external spec string including a single-valued variant is parsed correctly."""
+    externals_dict = [
+        {"spec": "dual-cmake-autotools@1.0 build_system=autotools", "prefix": "/usr/dual"}
+    ]
+    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    specs = parser.all_specs()
+    assert len(specs) == 1
+    spec = specs[0]
+
+    # Single-valued variants return the value, not a tuple of values
+    build_system_value = spec.variants["build_system"].value
+    assert build_system_value == "autotools", (
+        f"Expected 'autotools' but got {build_system_value!r} "
+        f"(type: {type(build_system_value).__name__})"
+    )
+
+
+@pytest.mark.regression("52179")
+def test_external_spec_multi_valued_variant_is_not_changed():
+    """Tests that multi-valued variants in external specs are preserved as they are, even if the
+    definition in package.py says otherwise.
+    """
+    # Package.py prescribes a single-valued variant in this case
+    externals_dict = [{"spec": "variant-values@1.0 v=foo,bar", "prefix": "/usr/variant-values"}]
+    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    specs = parser.all_specs()
+    assert len(specs) == 1
+    assert specs[0].variants["v"].value == ("bar", "foo")

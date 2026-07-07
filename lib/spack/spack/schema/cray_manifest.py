@@ -10,6 +10,7 @@ external entries in packages configuration).
 This does not specify a configuration - it is an input format
 that is consumed and transformed into Spack DB records.
 """
+
 from typing import Any, Dict
 
 properties: Dict[str, Any] = {

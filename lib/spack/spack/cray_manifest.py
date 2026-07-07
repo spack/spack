@@ -15,14 +15,14 @@ import spack.cmd
 import spack.compilers.config
 import spack.deptypes as dt
 import spack.error
-import spack.hash_types as hash_types
-import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+from spack import hash_types
 from spack.detection.path import ExecutablesFinder
 from spack.schema.cray_manifest import schema as manifest_schema
+from spack.util import tty
 
 #: Cray systems can store a Spack-compatible description of system
 #: packages here.

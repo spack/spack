@@ -256,7 +256,7 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
             "history": [
                 {
                     "created": "2015-10-31T22:22:54.690851953Z",
-                    "created_by": "/bin/sh -c #(nop) ADD file:a3bc1e842b69636f9df5256c49c5374fb4eef1e281fe3f282c65fb853ee171c5 in /",
+                    "created_by": "/bin/sh -c #(nop) ADD file:a3bc1e842b69636f9df5256c49c5374fb4eef1e281fe3f282c65fb853ee171c5 in /",  # noqa: E501
                 }
             ],
         }

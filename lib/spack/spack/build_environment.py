@@ -14,7 +14,7 @@ There are two parts to the build environment:
    This is how things are set up when install() is called.  Spack
    takes advantage of each package being in its own module by adding a
    bunch of command-like functions (like configure(), make(), etc.) in
-   the package's module scope.  Ths allows package writers to call
+   the package's module scope.  This allows package writers to call
    them all directly in Package.install() without writing 'self.'
    everywhere.  No, this isn't Pythonic.  Yes, it makes the code more
    readable and more like the shell script from which someone is
@@ -48,13 +48,13 @@ from itertools import chain
 from multiprocessing.connection import Connection
 from typing import (
     Any,
+    BinaryIO,
     Callable,
     Dict,
     List,
     Optional,
     Sequence,
     Set,
-    TextIO,
     Tuple,
     Type,
     Union,
@@ -68,7 +68,6 @@ import spack.compilers.libraries
 import spack.config
 import spack.deptypes as dt
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.multimethod
 import spack.package_base
 import spack.paths
@@ -80,14 +79,12 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.util.executable
+import spack.util.module_cmd
 from spack import traverse
-from spack.context import Context
+from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
-from spack.llnl.string import plural
-from spack.llnl.util.filesystem import join_path, symlink
-from spack.llnl.util.lang import dedupe, stable_partition
-from spack.llnl.util.tty.color import cescape, colorize
+from spack.util import tty
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
@@ -100,8 +97,11 @@ from spack.util.environment import (
     validate,
 )
 from spack.util.executable import Executable
+from spack.util.filesystem import join_path, symlink
+from spack.util.lang import dedupe, stable_partition
 from spack.util.log_parse import make_log_context, parse_log_events
-from spack.util.module_cmd import load_module
+from spack.util.string import plural
+from spack.util.tty.color import cescape, colorize
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -200,9 +200,9 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str] = ...,
-        error: Union[Optional[TextIO], str] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: Union[Optional[BinaryIO], str] = ...,
+        error: Union[Optional[BinaryIO], str] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> None: ...
 
@@ -219,9 +219,9 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
+        input: Optional[BinaryIO] = ...,
         output: Union[Type[str], Callable] = ...,
-        error: Union[Optional[TextIO], str, Type[str], Callable] = ...,
+        error: spack.util.executable.OutType = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
 
@@ -238,8 +238,8 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str, Type[str], Callable] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: spack.util.executable.OutType = ...,
         error: Union[Type[str], Callable] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
@@ -364,6 +364,12 @@ def clean_environment():
         "FCLIBS",  # Fortran variables
         "LDFLAGS",
         "LIBS",  # linker variables
+        "CUDAFLAGS",
+        "CUDA_PATH",
+        "CUDACXX",
+        "CUDAHOSTCXX",
+        "CUDAARCHS",
+        "CUDA_NVCC_EXECUTABLE",  # CUDA variables
     ]
     for v in build_system_vars:
         env.unset(v)
@@ -498,7 +504,7 @@ def set_wrapper_variables(pkg, env):
         env.set("CCACHE_DISABLE", "1")
 
     # Gather information about various types of dependencies
-    rpath_hashes = set(s.dag_hash() for s in get_rpath_deps(pkg))
+    rpath_hashes = {s.dag_hash() for s in get_rpath_deps(pkg)}
     link_deps = pkg.spec.traverse(root=False, order="topo", deptype=dt.LINK)
     external_link_deps, nonexternal_link_deps = stable_partition(link_deps, lambda d: d.external)
 
@@ -788,9 +794,9 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     tty.debug("setup_package: adding compiler wrappers paths")
     env_by_name = env_mods.group_by_name()
     for x in env_by_name["SPACK_COMPILER_WRAPPER_PATH"]:
-        assert isinstance(
-            x, PrependPath
-        ), "unexpected setting used for SPACK_COMPILER_WRAPPER_PATH"
+        assert isinstance(x, PrependPath), (
+            "unexpected setting used for SPACK_COMPILER_WRAPPER_PATH"
+        )
         env_mods.prepend_path("PATH", x.value)
 
     # Check whether we want to force RPATH or RUNPATH
@@ -841,7 +847,7 @@ class EnvironmentVisitor:
     def __init__(self, *roots: spack.spec.Spec, context: Context):
         # For the roots (well, marked specs) we follow different edges
         # than for their deps, depending on the context.
-        self.root_hashes = set(s.dag_hash() for s in roots)
+        self.root_hashes = {s.dag_hash() for s in roots}
 
         if context == Context.BUILD:
             # Drop direct run deps in build context
@@ -986,7 +992,7 @@ class SetupContext:
         self.external: List[Tuple[spack.spec.Spec, UseMode]]
         self.nonexternal: List[Tuple[spack.spec.Spec, UseMode]]
         # Reverse so we go from leaf to root
-        self.nodes_in_subdag = set(id(s) for s, _ in specs_with_type)
+        self.nodes_in_subdag = {id(s) for s, _ in specs_with_type}
 
         # Split into non-external and external, maintaining topo order per group.
         self.external, self.nonexternal = stable_partition(
@@ -1130,7 +1136,7 @@ def load_external_modules(context: SetupContext) -> None:
     for spec, _ in context.external:
         external_modules = spec.external_modules or []
         for external_module in external_modules:
-            load_module(external_module)
+            spack.util.module_cmd.load_module(external_module)
 
 
 def _setup_pkg_and_run(
@@ -1667,7 +1673,7 @@ def _make_child_error(msg, module, name, traceback, log, log_type, context):
 
 
 def write_log_summary(out, log_type, log, last=None):
-    errors, warnings = parse_log_events(log)
+    errors, warnings, _ = parse_log_events(log)
     nerr = len(errors)
     nwar = len(warnings)
 

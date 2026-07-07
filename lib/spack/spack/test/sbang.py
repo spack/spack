@@ -5,6 +5,7 @@
 """\
 Test that Spack's shebang filtering works correctly.
 """
+
 import filecmp
 import os
 import pathlib
@@ -16,10 +17,10 @@ import tempfile
 import pytest
 
 import spack.config
-import spack.hooks.sbang as sbang
-import spack.llnl.util.filesystem as fs
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
+from spack.hooks import sbang
 from spack.util.executable import which
 
 if sys.platform != "win32":
@@ -111,7 +112,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.luajit_shebang)
 
-        # Luajit occuring in text, not in shebang
+        # Luajit occurring in text, not in shebang
         self.luajit_textbang = os.path.join(self.tempdir, "luajit_in_text")
         with open(self.luajit_textbang, "w", encoding="utf-8") as f:
             f.write(short_line)
@@ -126,7 +127,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.node_shebang)
 
-        # Node occuring in text, not in shebang
+        # Node occurring in text, not in shebang
         self.node_textbang = os.path.join(self.tempdir, "node_in_text")
         with open(self.node_textbang, "w", encoding="utf-8") as f:
             f.write(short_line)
@@ -141,7 +142,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.php_shebang)
 
-        # php occuring in text, not in shebang
+        # php occurring in text, not in shebang
         self.php_textbang = os.path.join(self.tempdir, "php_in_text")
         with open(self.php_textbang, "w", encoding="utf-8") as f:
             f.write(short_line)
@@ -280,9 +281,7 @@ all:
     read: world
     write: group
     group: {0}
-""".format(
-            group_name
-        )
+""".format(group_name)
     )
     spack.config.set("packages", conf, scope="user")
 
@@ -334,7 +333,7 @@ def run_test_install_sbang(group):
     assert sbang_path.startswith(spack.store.STORE.unpadded_root)
     assert not os.path.exists(sbang_bin_dir)
 
-    sbang.install_sbang()
+    spack.store.STORE.install_sbang()
     check_sbang_installation(group)
 
     # put an invalid file in for sbang
@@ -342,11 +341,11 @@ def run_test_install_sbang(group):
     with open(sbang_path, "w", encoding="utf-8") as f:
         f.write("foo")
 
-    sbang.install_sbang()
+    spack.store.STORE.install_sbang()
     check_sbang_installation(group)
 
     # install again and make sure sbang is still fine
-    sbang.install_sbang()
+    spack.store.STORE.install_sbang()
     check_sbang_installation(group)
 
 

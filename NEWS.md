@@ -1,3 +1,6 @@
+## Package API v2.5
+- Added `cuda-lang` and `hip-lang` as language virtuals (analogous to `c`, `cxx`, `fortran`).
+
 ## Package API v2.4
 - Added the `%%` sigil to spec syntax, to propagate compiler preferences.
 

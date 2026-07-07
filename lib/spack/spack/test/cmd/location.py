@@ -13,8 +13,8 @@ import spack.main
 import spack.paths
 import spack.repo
 import spack.stage
-from spack.llnl.util.filesystem import mkdirp
 from spack.main import SpackCommand
+from spack.util.filesystem import mkdirp
 
 # Everything here uses (or can use) the mock config and database.
 pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_database")]
@@ -71,14 +71,19 @@ def test_location_source_dir_missing():
 
 
 @pytest.mark.parametrize(
-    "options",
-    [([]), (["--source-dir", "mpileaks"]), (["--env", "missing-env"]), (["spec1", "spec2"])],
+    "options,expected_code",
+    [
+        ([], 2),
+        (["--source-dir", "mpileaks"], 1),
+        (["--env", "missing-env"], 1),
+        (["spec1", "spec2"], 2),
+    ],
 )
-def test_location_cmd_error(options):
+def test_location_cmd_error(options, expected_code):
     """Ensure the proper error is raised with problematic location options."""
     with pytest.raises(spack.main.SpackCommandError) as e:
         location(*options)
-    assert e.value.code == 1
+    assert e.value.code == expected_code
 
 
 def test_location_env_exists(mutable_mock_env_path):
@@ -102,6 +107,80 @@ def test_location_env_missing():
     error = "==> Error: no such environment: '%s'" % missing_env_name
     out = location("--env", missing_env_name, fail_on_error=False).strip()
     assert out == error
+
+
+def test_location_active_view(mutable_mock_env_path, monkeypatch):
+    """Tests spack location --view for the active view."""
+    mutable_mock_env_path.mkdir()
+    view_path = os.path.abspath(mutable_mock_env_path / "path" / "to" / "view")
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+      specs: []
+      view:
+        viewname:
+          root: {view_path}
+      concretizer:
+        unify: True
+    """
+    )
+    e = ev.Environment(mutable_mock_env_path)
+    monkeypatch.setenv(ev.spack_env_view_var, "viewname")
+    with e:
+        assert location("--view").strip() == view_path
+
+
+def test_location_no_active_view(mutable_mock_env_path):
+    """Tests spack location --env without active view."""
+    mutable_mock_env_path.mkdir()
+    view_path = os.path.abspath(mutable_mock_env_path / "path" / "to" / "view")
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+      specs: []
+      view:
+        viewname:
+          root: {view_path}
+      concretizer:
+        unify: True
+    """
+    )
+    e = ev.Environment(mutable_mock_env_path)
+    error = "==> Error: no active view in the current environment"
+    with e:
+        out = location("--view", fail_on_error=False).strip()
+        assert out == error
+
+
+def test_location_view_exists(mutable_mock_env_path):
+    """Tests spack location --view <name> for an existing view."""
+    mutable_mock_env_path.mkdir()
+    view_path = os.path.abspath(mutable_mock_env_path / "path" / "to" / "view")
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+      specs: []
+      view:
+        viewname:
+          root: {view_path}
+      concretizer:
+        unify: True
+    """
+    )
+    e = ev.Environment(mutable_mock_env_path)
+    with e:
+        assert location("--view", "viewname").strip() == view_path
+
+
+def test_location_view_missing(mutable_mock_env_path):
+    """Tests spack location --env <view> with missing view."""
+    e = ev.create("example", with_view=True)
+    e.write()
+    missing_view_name = "missing-view"
+    error = "==> Error: no such view in the current environment: '%s'" % missing_view_name
+    with e:
+        out = location("--view", missing_view_name, fail_on_error=False).strip()
+        assert out == error
 
 
 @pytest.mark.db
@@ -135,12 +214,13 @@ def test_location_paths_options(option, expected):
 
 @pytest.mark.parametrize(
     "specs,expected",
-    [([], "You must supply a spec."), (["spec1", "spec2"], "Too many specs.  Supply only one.")],
+    [([], "requires a spec"), (["spec1", "spec2"], "too many specs, supply only one")],
 )
 def test_location_spec_errors(specs, expected):
     """Tests spack location with bad spec options."""
-    error = "==> Error: %s" % expected
-    assert location(*specs, fail_on_error=False).strip() == error
+    output = location(*specs, fail_on_error=False)
+    assert expected in output
+    assert location.returncode == 2
 
 
 @pytest.mark.db

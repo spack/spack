@@ -169,7 +169,9 @@ def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 def test_compiler_find_path_order(no_packages_yaml, working_env, compilers_dir):
-    """Ensure that we look for compilers in the same order as PATH, when there are duplicates"""
+    """When the same compiler version is found in two PATH directories, only the first
+    entry in PATH is kept and a warning is emitted for the duplicate.
+    """
     new_dir = compilers_dir / "first_in_path"
     new_dir.mkdir()
     for name in ("gcc-8", "g++-8", "gfortran-8"):
@@ -177,13 +179,14 @@ def test_compiler_find_path_order(no_packages_yaml, working_env, compilers_dir):
     # Set PATH to have the new folder searched first
     os.environ["PATH"] = f"{str(new_dir)}:{str(compilers_dir)}"
 
-    compiler("find", "--scope=site")
+    with pytest.warns(UserWarning, match="gcc@"):
+        compiler("find", "--scope=site")
 
     compilers = spack.compilers.config.all_compilers(scope="site")
     gcc = [x for x in compilers if x.satisfies("gcc@8.4")]
 
-    # Ensure we found both duplicates
-    assert len(gcc) == 2
+    # Duplicate is dropped. Only the first entry in PATH is kept
+    assert len(gcc) == 1
     assert gcc[0].extra_attributes["compilers"] == {
         "c": str(new_dir / "gcc-8"),
         "cxx": str(new_dir / "g++-8"),

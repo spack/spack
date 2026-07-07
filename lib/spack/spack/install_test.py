@@ -12,27 +12,28 @@ import re
 import shutil
 import sys
 from collections import Counter, OrderedDict
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import spack.config
 import spack.error
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.log
-import spack.package_base
 import spack.paths
 import spack.repo
 import spack.report
 import spack.spec
 import spack.util.executable
-import spack.util.path
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
+import spack.util.tty.log
 from spack.error import InstallError
-from spack.llnl.string import plural
-from spack.llnl.util.lang import nullcontext
-from spack.llnl.util.tty.color import colorize
 from spack.spec import Spec
+from spack.util import tty
+from spack.util.lang import nullcontext
 from spack.util.prefix import Prefix
+from spack.util.string import plural
+from spack.util.tty.color import colorize
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 #: Stand-alone test failure info type
 TestFailureType = Tuple[BaseException, str]
@@ -48,7 +49,7 @@ spack_install_test_log = "install-time-test-log.txt"
 
 
 ListOrStringType = Union[str, List[str]]
-LogType = Union[spack.llnl.util.tty.log.nixlog, spack.llnl.util.tty.log.winlog]
+LogType = spack.util.tty.log.threadlog
 
 PackageObjectOrClass = Union[
     "spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]
@@ -96,7 +97,7 @@ def get_test_stage_dir() -> str:
     Returns:
         absolute path to the configured test stage root or, if none, the default test stage path
     """
-    return spack.util.path.canonicalize_path(
+    return spack.config.canonicalize_path(
         spack.config.get("config:test_stage", spack.paths.default_test_path)
     )
 
@@ -205,7 +206,7 @@ def print_message(logger: LogType, msg: str, verbose: bool = False):
     """Print the message to the log, optionally echoing.
 
     Args:
-        logger: instance of the output logger (e.g. nixlog or winlog)
+        logger: instance of the output logger (a ``threadlog``)
         msg: message being output
         verbose: ``True`` displays verbose output, ``False`` suppresses
             it (``False`` is default)
@@ -280,10 +281,12 @@ class PackageTest:
 
     @property
     def logger(self) -> Optional[LogType]:
-        """The current logger or, if none, sets to one."""
-        if not self._logger:
-            self._logger = spack.llnl.util.tty.log.log_output(self.test_log_file)
+        """The current logger, set up by ``test_logger``.
 
+        ``threadlog`` redirects fds 1/2 in ``__enter__``, so it must only be constructed via
+        ``test_logger``. Callers (``test_part``, ``print_message``) always run inside an active
+        ``test_logger`` region, so ``self._logger`` is set.
+        """
         return self._logger
 
     @contextlib.contextmanager
@@ -299,8 +302,8 @@ class PackageTest:
         fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
-        with spack.llnl.util.tty.log.log_output(
-            self.test_log_file, verbose, append=True
+        with spack.util.tty.log.threadlog(
+            self.test_log_file, echo=verbose, append=True
         ) as self._logger:
             with self.logger.force_echo():  # type: ignore[union-attr]
                 tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))
@@ -474,9 +477,9 @@ def test_part(
 
     wdir = "." if work_dir is None else work_dir
     tester = pkg.tester
-    assert test_name and test_name.startswith(
-        "test_"
-    ), f"Test name must start with 'test_' but {test_name} was provided"
+    assert test_name and test_name.startswith("test_"), (
+        f"Test name must start with 'test_' but {test_name} was provided"
+    )
 
     title = "test: {}: {}".format(test_name, purpose or "unspecified purpose")
     with fs.working_dir(wdir, create=True):
@@ -509,9 +512,7 @@ def test_part(
 
             if exc_type is spack.util.executable.ProcessError or exc_type is TypeError:
                 iostr = io.StringIO()
-                write_log_summary(
-                    iostr, "test", tester.test_log_file, last=1
-                )  # type: ignore[assignment]
+                write_log_summary(iostr, "test", tester.test_log_file, last=1)  # type: ignore[assignment]
                 m = iostr.getvalue()
             else:
                 # We're below the package context, so get context from
@@ -570,7 +571,7 @@ def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec
         shutil.copytree(data_source, data_dir)
 
 
-def test_function_names(pkg: PackageObjectOrClass, add_virtuals: bool = False) -> List[str]:
+def test_function_names(pkg: "PackageObjectOrClass", add_virtuals: bool = False) -> List[str]:
     """Grab the names of all non-empty test functions.
 
     Args:
@@ -589,7 +590,7 @@ def test_function_names(pkg: PackageObjectOrClass, add_virtuals: bool = False) -
 
 
 def test_functions(
-    pkg: PackageObjectOrClass, add_virtuals: bool = False
+    pkg: "PackageObjectOrClass", add_virtuals: bool = False
 ) -> List[Tuple[str, Callable]]:
     """Grab all non-empty test functions.
 
@@ -604,12 +605,7 @@ def test_functions(
     Raises:
         ValueError: occurs if pkg is not a package class
     """
-    instance = isinstance(pkg, spack.package_base.PackageBase)
-    if not (instance or issubclass(pkg, spack.package_base.PackageBase)):  # type: ignore[arg-type]
-        raise ValueError(f"Expected a package (class), not {pkg} ({type(pkg)})")
-
-    pkg_cls = pkg.__class__ if instance else pkg
-    classes = [pkg_cls]
+    classes = [pkg if isinstance(pkg, type) else pkg.__class__]
     if add_virtuals:
         vpkgs = virtuals(pkg)
         for vname in vpkgs:
@@ -863,8 +859,7 @@ class TestSuite:
     def content_hash(self) -> str:
         """The hash used to uniquely identify the test suite."""
         if not self._hash:
-            json_text = sjson.dump(self.to_dict())
-            assert json_text is not None, f"{__name__} unexpected value for 'json_text'"
+            json_text = sjson.dumps(self.to_dict())
             sha = hashlib.sha1(json_text.encode("utf-8"))
             b32_hash = base64.b32encode(sha.digest()).lower()
             b32_hash = b32_hash.decode("utf-8")

@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Create and run mock e2e tests for package detection."""
+
 import collections
 import contextlib
 import pathlib
@@ -11,8 +12,7 @@ from typing import Any, Deque, Dict, Generator, List, NamedTuple, Tuple
 import spack.platforms
 import spack.repo
 import spack.spec
-from spack.llnl.util import filesystem
-from spack.util import spack_yaml
+from spack.util import filesystem, spack_yaml
 
 from .path import by_path
 

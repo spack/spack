@@ -2,17 +2,87 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
-from typing import List, NamedTuple, Optional, Sequence, Tuple
+import warnings
+from typing import List, NamedTuple, Optional, Sequence, Tuple, Union
+
+import spack.vendor.archspec.cpu
 
 import spack.config
 import spack.error
 import spack.package_base
 import spack.repo
 import spack.spec
+import spack.spec_parser
 import spack.traverse
+import spack.util.spack_yaml
 from spack.enums import PropagationPolicy
-from spack.llnl.util import tty
+from spack.util import tty
 from spack.util.spack_yaml import get_mark_from_yaml_data
+
+
+def _mark_str(raw) -> str:
+    """Return a 'file:line: ' prefix from the YAML mark on *raw*, or empty string."""
+    mark = get_mark_from_yaml_data(raw)
+    if not mark:
+        return ""
+    if mark.line is None:
+        return f"{mark.name}: "
+    return f"{mark.name}:{mark.line + 1}: "
+
+
+def _check_unknown_virtuals_on_edges(raw_strs: List[str], specs: List["spack.spec.Spec"]) -> None:
+    """Raise if any edge in *specs* requires a virtual that does not exist in the repository."""
+    errors = []
+    for raw, spec in zip(raw_strs, specs):
+        for edge in spack.traverse.traverse_edges([spec], root=False):
+            for virtual in edge.virtuals:
+                if not spack.repo.PATH.is_virtual(virtual):
+                    errors.append(
+                        f"{_mark_str(raw)}'{virtual}' in '{raw}' is not a known virtual package"
+                    )
+    if not errors:
+        return
+    if len(errors) == 1:
+        raise spack.error.InvalidVirtualOnEdgeError(errors[0])
+    details = "\n".join(f"    {idx}. {msg}" for idx, msg in enumerate(errors, 1))
+    raise spack.error.InvalidVirtualOnEdgeError(
+        f"unknown virtuals have been detected in requirements:\n{details}"
+    )
+
+
+def _check_unknown_targets(
+    raw_strs: List[str], specs: List["spack.spec.Spec"], *, always_warn: bool = False
+) -> None:
+    """Either warns or raises for unknown concrete target names in a set of specs.
+
+    UserWarnings are emitted if *always_warn* is True or if there is at least one spec without
+    unknown targets. If all the specs have unknown targets raises an error.
+    """
+    specs_with_unknown_targets = [
+        (raw, spec)
+        for raw, spec in zip(raw_strs, specs)
+        if spec.architecture
+        and spec.architecture.target_concrete
+        and spec.target.name not in spack.vendor.archspec.cpu.TARGETS
+    ]
+    if not specs_with_unknown_targets:
+        return
+
+    errors = [
+        f"{_mark_str(raw)}'{spec}' contains unknown targets"
+        for raw, spec in specs_with_unknown_targets
+    ]
+    if len(errors) == 1:
+        msg = f"{errors[0]}. Run 'spack arch --known-targets' to see valid targets."
+    else:
+        details = "\n".join([f"{idx}. {part}" for idx, part in enumerate(errors, 1)])
+        msg = (
+            f"unknown targets have been detected in requirements\n{details}\n"
+            f"Run 'spack arch --known-targets' to see valid targets."
+        )
+    if not always_warn and len(specs_with_unknown_targets) == len(specs):
+        raise spack.error.SpecError(msg)
+    warnings.warn(msg)
 
 
 class RequirementKind(enum.Enum):
@@ -51,7 +121,7 @@ class RequirementRule(NamedTuple):
 def preference(
     pkg_name: str,
     constraint: spack.spec.Spec,
-    condition: spack.spec.Spec = spack.spec.Spec(),
+    condition: spack.spec.Spec = spack.spec.EMPTY_SPEC,
     origin: RequirementOrigin = RequirementOrigin.PREFER_YAML,
     kind: RequirementKind = RequirementKind.PACKAGE,
     message: Optional[str] = None,
@@ -75,7 +145,7 @@ def preference(
 def conflict(
     pkg_name: str,
     constraint: spack.spec.Spec,
-    condition: spack.spec.Spec = spack.spec.Spec(),
+    condition: spack.spec.Spec = spack.spec.EMPTY_SPEC,
     origin: RequirementOrigin = RequirementOrigin.CONFLICT_YAML,
     kind: RequirementKind = RequirementKind.PACKAGE,
     message: Optional[str] = None,
@@ -104,6 +174,14 @@ class RequirementParser:
         self.runtime_pkgs = spack.repo.PATH.packages_with_tags("runtime")
         self.compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
         self.preferences_from_input: List[Tuple[spack.spec.Spec, str]] = []
+        self.toolchains = configuration.get_config("toolchains")
+        self._warned_compiler_all: set = set()
+
+    def _parse_and_expand(self, string: str, *, named: bool = False) -> spack.spec.Spec:
+        result = parse_spec_from_yaml_string(string, named=named)
+        if self.toolchains:
+            spack.spec_parser.expand_toolchains(result, self.toolchains)
+        return result
 
     def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
         result = []
@@ -175,6 +253,9 @@ class RequirementParser:
     ) -> List[RequirementRule]:
         result = []
         for item in preferences:
+            if kind == RequirementKind.DEFAULT:
+                # Warn about %gcc type of preferences under `all`.
+                self._maybe_warn_compiler_in_all(item, "prefer")
             spec, condition, msg = self._parse_prefer_conflict_item(item)
             result.append(
                 preference(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
@@ -199,13 +280,16 @@ class RequirementParser:
     def _parse_prefer_conflict_item(self, item):
         # The item is either a string or an object with at least a "spec" attribute
         if isinstance(item, str):
-            spec = parse_spec_from_yaml_string(item)
-            condition = spack.spec.Spec()
+            spec = self._parse_and_expand(item)
+            condition = spack.spec.EMPTY_SPEC
             message = None
         else:
-            spec = parse_spec_from_yaml_string(item["spec"])
-            condition = spack.spec.Spec(item.get("when"))
+            spec = self._parse_and_expand(item["spec"])
+            when_str = item.get("when")
+            condition = self._parse_and_expand(when_str) if when_str else spack.spec.EMPTY_SPEC
             message = item.get("message")
+        raw_key = item if isinstance(item, str) else item.get("spec", item)
+        _check_unknown_targets([raw_key], [spec], always_warn=True)
         return spec, condition, message
 
     def _raw_yaml_data(self, pkg_name: str, *, section: str, virtual: bool = False):
@@ -246,13 +330,20 @@ class RequirementParser:
                     constraints = [constraints]
                     policy = "one_of"
 
+                if kind == RequirementKind.DEFAULT:
+                    # Warn about %gcc type of requirements under `all`.
+                    self._maybe_warn_compiler_in_all(constraints, "require")
+
                 # validate specs from YAML first, and fail with line numbers if parsing fails.
+                raw_strs = list(constraints)
                 constraints = [
-                    parse_spec_from_yaml_string(constraint, named=kind == RequirementKind.VIRTUAL)
-                    for constraint in constraints
+                    self._parse_and_expand(constraint, named=kind == RequirementKind.VIRTUAL)
+                    for constraint in raw_strs
                 ]
+                _check_unknown_targets(raw_strs, constraints)
+                _check_unknown_virtuals_on_edges(raw_strs, constraints)
                 when_str = requirement.get("when")
-                when = parse_spec_from_yaml_string(when_str) if when_str else spack.spec.Spec()
+                when = self._parse_and_expand(when_str) if when_str else spack.spec.EMPTY_SPEC
 
                 constraints = [
                     x
@@ -305,6 +396,58 @@ class RequirementParser:
             )
             return True
         return False
+
+    def _maybe_warn_compiler_in_all(self, items: Union[str, list, dict], section: str) -> None:
+        """Warn once if a packages:all: prefer/require entry has compiler dependencies."""
+        # Stick to single items, not complex one_of / any_of groups to keep things simple.
+        if isinstance(items, str):
+            spec_str = items
+        elif isinstance(items, dict) and "spec" in items and isinstance(items["spec"], str):
+            spec_str = items["spec"]
+        elif isinstance(items, list) and len(items) == 1 and isinstance(items[0], str):
+            spec_str = items[0]
+        else:
+            return
+        if spec_str in self._warned_compiler_all:
+            return
+        self._warned_compiler_all.add(spec_str)
+        suggestions = []
+        for edge in self._parse_and_expand(spec_str).edges_to_dependencies():
+            if edge.when != spack.spec.EMPTY_SPEC:
+                # Conditional dependencies are fine (includes toolchains after expansion).
+                continue
+            elif edge.virtuals:
+                # The case `%c,cxx=gcc` or similar.
+                keys = edge.virtuals
+                comment = ""
+            elif edge.spec.name in self.compiler_pkgs:
+                # Just a package `%gcc`.
+                keys = ("c",)
+                comment = "# For each language virtual (c, cxx, fortran, ...):\n"
+            else:
+                # Maybe %mpich or so? Just give a generic suggestion.
+                keys = ("<virtual>",)
+                comment = "# For each virtual:\n"
+            data = {"packages": {k: {section: [str(edge.spec)]} for k in keys}}
+            suggestion = spack.util.spack_yaml.dump(data).rstrip()
+            suggestions.append(f"{comment}{suggestion}")
+        if suggestions:
+            location = _mark_str(spec_str)
+            prefix = (
+                f"{location}'packages: all: {section}: [\"{spec_str}\"]' applies a dependency "
+                f"constraint to all packages"
+            )
+            suffix = "Consider instead:\n" + "\n".join(suggestions)
+            if section == "prefer":
+                warnings.warn(
+                    f"{prefix}. This can lead to unexpected concretizations. This was likely "
+                    f"intended as a preference for a provider of a (language) virtual. {suffix}"
+                )
+            else:
+                warnings.warn(
+                    f"{prefix}. This often leads to concretization errors. This was likely "
+                    f"intended as a requirement for a provider of a (language) virtual. {suffix}"
+                )
 
 
 def _split_edge_on_virtuals(edge: spack.spec.DependencySpec) -> List[spack.spec.Spec]:

@@ -8,6 +8,7 @@ rather than `spec_from_entry`, since the former does additional work to
 establish dependency relationships (and in general the manifest-parsing
 logic needs to consume all related specs in a single pass).
 """
+
 import json
 import pathlib
 
@@ -237,7 +238,7 @@ def generate_openmpi_entries(_common_arch, _common_compiler):
         parameters={"internal-hwloc": False, "fabrics": ["psm"], "missing_variant": True},
     )
 
-    return list(x.to_dict() for x in [openmpi, hwloc])
+    return [x.to_dict() for x in [openmpi, hwloc]]
 
 
 def test_generate_specs_from_manifest(generate_openmpi_entries):
@@ -245,7 +246,7 @@ def test_generate_specs_from_manifest(generate_openmpi_entries):
     including dependency references.
     """
     specs = entries_to_specs(generate_openmpi_entries)
-    (openmpi_spec,) = list(x for x in specs.values() if x.name == "openmpi")
+    (openmpi_spec,) = [x for x in specs.values() if x.name == "openmpi"]
     assert openmpi_spec["hwloc"]
 
 

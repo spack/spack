@@ -3,19 +3,20 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """This package contains code for creating environment modules, which can
-include Tcl non-hierarchical modules, Lua hierarchical modules, and others.
+include Tcl or Lua modules, and others.
 """
 
 import os
-from typing import Dict, Type
+from typing import Dict, Optional, Type
 
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.store
+from spack.util import tty
 
 from . import common
 from .common import BaseModuleFileWriter, disable_modules
+from .error import ModuleNotFoundError
 from .lmod import LmodModulefileWriter
 from .tcl import TclModulefileWriter
 
@@ -28,8 +29,12 @@ module_types: Dict[str, Type[BaseModuleFileWriter]] = {
 
 
 def get_module(
-    module_type, spec: spack.spec.Spec, get_full_path, module_set_name="default", required=True
-):
+    module_type: str,
+    spec: spack.spec.Spec,
+    get_full_path: bool,
+    module_set_name: str = "default",
+    required: bool = True,
+) -> Optional[str]:
     """Retrieve the module file for a given spec and module type.
 
     Retrieve the module file for the given spec if it is available. If the
@@ -66,11 +71,11 @@ def get_module(
         else:
             return module.use_name
     else:
-        writer = module_types[module_type](spec, module_set_name)
+        writer = module_types[module_type].from_spec(spec, module_set_name)
         if not os.path.isfile(writer.layout.filename):
             fmt_str = "{name}{@version}{/hash:7}"
             if not writer.conf.excluded:
-                raise common.ModuleNotFoundError(
+                raise ModuleNotFoundError(
                     "The module for package {} should be at {}, but it does not exist".format(
                         spec.format(fmt_str), writer.layout.filename
                     )

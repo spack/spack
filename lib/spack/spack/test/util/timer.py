@@ -5,12 +5,12 @@
 import json
 from io import StringIO
 
-import spack.util.timer as timer
+from spack.util import timer
 
 
 class Tick:
     """Timer that increments the seconds passed by 1
-    everytime tick is called."""
+    every time tick is called."""
 
     def __init__(self):
         self.time = 0.0

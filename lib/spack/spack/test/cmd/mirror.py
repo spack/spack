@@ -12,7 +12,7 @@ import spack.cmd.mirror
 import spack.concretize
 import spack.config
 import spack.environment as ev
-import spack.error
+import spack.mirrors.utils
 import spack.package_base
 import spack.spec
 import spack.util.git
@@ -241,10 +241,10 @@ def test_exclude_specs(mock_packages, config):
     )
 
     mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
-    expected_include = set(
+    expected_include = {
         spack.concretize.concretize_one(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
-    )
-    expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
+    }
+    expected_exclude = {spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"]}
     assert expected_include <= set(mirror_specs)
     assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
 
@@ -275,10 +275,10 @@ mpich@1.0
     args = MockMirrorArgs(specs=["mpich"], versions_per_spec="all", exclude_file=str(exclude_path))
 
     mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
-    expected_include = set(
+    expected_include = {
         spack.concretize.concretize_one(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
-    )
-    expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
+    }
+    expected_exclude = {spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"]}
     assert expected_include <= set(mirror_specs)
     assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
 
@@ -520,27 +520,19 @@ class TestMirrorCreate:
     @pytest.mark.parametrize(
         "cli_args,error_str",
         [
-            # Passed more than one among -f --all
+            (["create", "--file", "input.txt", "--all"], "cannot specify specs with a file if"),
+            (["create", "--file", "input.txt", "hdf5"], "cannot specify specs with a file AND"),
+            (["create"], "no packages were specified"),
             (
-                {"specs": None, "file": "input.txt", "all": True},
-                "cannot specify specs with a file if",
-            ),
-            (
-                {"specs": "hdf5", "file": "input.txt", "all": False},
-                "cannot specify specs with a file AND",
-            ),
-            ({"specs": None, "file": None, "all": False}, "no packages were specified"),
-            # Passed -n along with --all
-            (
-                {"specs": None, "file": None, "all": True, "versions_per_spec": 2},
+                ["create", "--all", "--versions-per-spec", "2"],
                 "cannot specify '--versions_per-spec'",
             ),
         ],
     )
     def test_error_conditions(self, cli_args, error_str):
-        args = MockMirrorArgs(**cli_args)
-        with pytest.raises(spack.error.SpackError, match=error_str):
-            spack.cmd.mirror.mirror_create(args)
+        output = mirror(*cli_args, fail_on_error=False)
+        assert error_str in output
+        assert mirror.returncode == 2
 
     @pytest.mark.parametrize(
         "cli_args,not_expected",
@@ -753,3 +745,20 @@ def test_git_provenance_relative_to_mirror(
 
     spec_head = spack.concretize.concretize_one(f"git-test-commit@main commit={head_commit}")
     assert spec_head.variants["commit"].value == head_commit
+
+
+@pytest.mark.usefixtures("mock_packages")
+def test_mirror_skip_placeholder_pkg(tmp_path: pathlib.Path):
+    """Test a placeholder package which should skip during mirror all"""
+    from spack.repo import PATH
+
+    spec = spack.spec.Spec("placeholder@1.5")
+    pkg_cls = PATH.get_pkg_class(spec.name)
+    pkg_obj = pkg_cls(spec)
+    mirror_cache = spack.mirrors.utils.get_mirror_cache(str(tmp_path))
+    mirror_stats = spack.mirrors.utils.MirrorStatsForOneSpec(spec)
+    result = spack.mirrors.utils.create_mirror_from_package_object(
+        pkg_obj, mirror_cache, mirror_stats
+    )
+    assert result is False
+    assert not mirror_stats.errors

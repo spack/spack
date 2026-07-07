@@ -18,10 +18,10 @@ import spack.platforms
 import spack.repo
 import spack.util.git
 from spack.fetch_strategy import GitFetchStrategy
-from spack.llnl.util.filesystem import mkdirp, touch, working_dir
 from spack.package_base import PackageBase
 from spack.spec import Spec
 from spack.stage import Stage
+from spack.util.filesystem import mkdirp, touch, working_dir
 from spack.variant import SingleValuedVariant
 from spack.version import Version
 
@@ -281,6 +281,9 @@ def test_get_full_repo(
         url = mock_git_repository.url
         commit = git_exe("ls-remote", url, t.revision, output=str).strip().split()[0]
         s.variants["commit"] = SingleValuedVariant("commit", commit)
+        if can_use_direct_commit:
+            path = mock_git_repository.path
+            git_exe("-C", path, "config", "uploadpack.allowReachableSHA1InWant", "true")
 
     with s.package.stage:
         with spack.config.override("config:verify_ssl", secure):
