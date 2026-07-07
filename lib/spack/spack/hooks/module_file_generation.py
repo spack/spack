@@ -7,7 +7,7 @@ from typing import Optional, Set
 import spack.config
 import spack.modules
 import spack.spec
-from spack.llnl.util import tty
+from spack.util import tty
 
 
 def _for_each_enabled(
@@ -22,7 +22,7 @@ def _for_each_enabled(
             continue
 
         for module_type in enabled:
-            generator = spack.modules.module_types[module_type](spec, name, explicit)
+            generator = spack.modules.module_types[module_type].from_spec(spec, name, explicit)
             try:
                 getattr(generator, method_name)()
             except RuntimeError as e:

@@ -19,8 +19,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
       with:
         python-version: '3.13'
     - name: Install Python Packages
@@ -36,20 +36,20 @@ jobs:
                -t=3.6- \
                -vvv \
                --exclude-regex lib/spack/spack/vendor \
-               lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos
+               lib/spack/spack/ bin/ var/spack/test_repos
     # Check that __slots__ are used properly
     - name: slotscheck
       run: |
-        ./bin/spack python -m slotscheck --exclude-modules="spack.test|spack.vendor" lib/spack/spack/
+        ./bin/spack python -m slotscheck --exclude-modules="spack.test|spack.vendor|spack.new_installer_windows" lib/spack/spack/
 
   # Run style checks on the files that have been changed
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 2
-    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
       with:
         python-version: '3.13'
     - name: Install Python packages

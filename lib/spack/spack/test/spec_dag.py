@@ -4,6 +4,7 @@
 """
 These tests check Spec DAG operations using dummy packages.
 """
+
 import pytest
 
 import spack.concretize
@@ -533,8 +534,8 @@ class TestSpecDag:
         assert orig._concrete == copy._concrete
 
         # ensure no shared nodes bt/w orig and copy.
-        orig_ids = set(id(s) for s in orig.traverse())
-        copy_ids = set(id(s) for s in copy.traverse())
+        orig_ids = {id(s) for s in orig.traverse()}
+        copy_ids = {id(s) for s in copy.traverse()}
         assert not orig_ids.intersection(copy_ids)
 
     def test_copy_concretized(self):
@@ -548,8 +549,8 @@ class TestSpecDag:
         assert orig._concrete == copy._concrete
 
         # ensure no shared nodes bt/w orig and copy.
-        orig_ids = set(id(s) for s in orig.traverse())
-        copy_ids = set(id(s) for s in copy.traverse())
+        orig_ids = {id(s) for s in orig.traverse()}
+        copy_ids = {id(s) for s in copy.traverse()}
         assert not orig_ids.intersection(copy_ids)
 
     def test_copy_through_spec_build_interface(self):
@@ -645,8 +646,8 @@ class TestSpecDag:
         """Ensure getting first n bits of a base32-encoded DAG hash works."""
 
         # RFC 4648 base32 decode table
-        b32 = dict((j, i) for i, j in enumerate("abcdefghijklmnopqrstuvwxyz"))
-        b32.update(dict((j, i) for i, j in enumerate("234567", 26)))
+        b32 = {j: i for i, j in enumerate("abcdefghijklmnopqrstuvwxyz")}
+        b32.update({j: i for i, j in enumerate("234567", 26)})
 
         # some package hashes
         tests = [
@@ -917,7 +918,7 @@ class TestSpecDag:
         edges_with_mpi = mpich.edges_from_dependents(virtuals=["mpi"])
         assert edges_with_mpi == edges_of_link_type
 
-        # Check a node dependend upon by 2 parents
+        # Check a node depended upon by 2 parents
         assert len(mpileaks["libelf"].edges_from_dependents(depflag=dt.LINK)) == 2
 
 

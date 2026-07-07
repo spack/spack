@@ -11,9 +11,10 @@ from typing import List, Optional, overload
 
 from spack.vendor.typing_extensions import Literal
 
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lang
 import spack.util.executable as exe
+import spack.util.filesystem as fs
+import spack.util.lang
+from spack.util.environment import EnvironmentModifications
 
 # regex for a commit version
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
@@ -26,7 +27,7 @@ def is_git_commit_sha(string: str) -> bool:
     return len(string) == 40 and bool(COMMIT_VERSION.match(string))
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def _find_git() -> Optional[str]:
     """Find the git executable in the system path."""
     return exe.which_string("git", required=False)
@@ -103,7 +104,16 @@ def git(required: bool = ...) -> Optional[GitExecutable]: ...
 
 
 def git(required: bool = False) -> Optional[GitExecutable]:
-    """Get a git executable. Raises CommandNotFoundError if ``required`` and git is not found."""
+    """Get a git executable.
+
+    The returned executable automatically unsets ``GIT_EXTERNAL_DIFF`` and ``GIT_DIFF_OPTS``
+    environment variables that can interfere with spack git diff operations.
+
+    Args:
+       required (bool): if True, raises CommandNotFoundError when git is not found
+
+    Returns: GitExecutable, or None if git is not found and required is False
+    """
     git_path = _find_git()
 
     if not git_path:
@@ -115,8 +125,15 @@ def git(required: bool = False) -> Optional[GitExecutable]:
 
     # If we're running under pytest, add this to ignore the fix for CVE-2022-39253 in
     # git 2.38.1+. Do this in one place; we need git to do this in all parts of Spack.
-    if git and "pytest" in sys.modules:
+    if "pytest" in sys.modules:
         git.add_default_arg("-c", "protocol.file.allow=always")
+
+    # Block environment variables that can interfere with git diff operations
+    # this can cause problems for spack ci verify-versions and spack repo show-version-updates
+    env_blocklist = EnvironmentModifications()
+    env_blocklist.unset("GIT_EXTERNAL_DIFF")
+    env_blocklist.unset("GIT_DIFF_OPTS")
+    git.add_default_envmod(env_blocklist)
 
     return git
 
@@ -321,8 +338,16 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
     if depth and protocol_supports_shallow_clone(url):
         fetch.extend(DEPTH(version, str(depth)))
 
-    fetch.extend([*FILTER_BLOB_NONE(version), url, ref])
-    cmds = [init, remote, config, fetch]
+    filter_args = FILTER_BLOB_NONE(version)
+    if filter_args:
+        fetch.extend(filter_args)
+    fetch.extend([url, ref])
+
+    partial_clone = ["config", "extensions.partialClone", "true"] if filter_args else None
+    if partial_clone is not None:
+        cmds = [init, partial_clone, remote, config, fetch]
+    else:
+        cmds = [init, remote, config, fetch]
     _exec_git_commands_unique_dir(git_exe, cmds, debug, dest)
 
 

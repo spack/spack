@@ -17,8 +17,8 @@ import spack.install_test
 import spack.repo
 import spack.store
 from spack.cmd.common import arguments
-from spack.llnl.util import tty
-from spack.llnl.util.tty import colify
+from spack.util import tty
+from spack.util.tty import colify
 
 from . import doc_dedented, doc_first_line
 
@@ -132,7 +132,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "Test results will be filtered by space-"
         "separated suite name(s) and installed\nspecs when provided.  "
         "If names are provided, then only results for those test\nsuites "
-        "will be shown.  If installed specs are provided, then ony results"
+        "will be shown.  If installed specs are provided, then only results"
         "\nmatching those specs will be shown."
     )
 
@@ -328,9 +328,9 @@ def _report_suite_results(test_suite, args, constraints):
             for s in spack.store.STORE.db.query(spec, installed=True):
                 specs[s.dag_hash()] = s
         specs = sorted(specs.values())
-        test_specs = dict((test_suite.test_pkg_id(s), s) for s in test_suite.specs if s in specs)
+        test_specs = {test_suite.test_pkg_id(s): s for s in test_suite.specs if s in specs}
     else:
-        test_specs = dict((test_suite.test_pkg_id(s), s) for s in test_suite.specs)
+        test_specs = {test_suite.test_pkg_id(s): s for s in test_suite.specs}
 
     if not test_specs:
         return

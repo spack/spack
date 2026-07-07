@@ -94,7 +94,7 @@ def hello_world(parser, args):
 
 @pytest.fixture(scope="function")
 def hello_world_cmd(hello_world_extension):
-    """Create and return an invokable "hello-world" extension command."""
+    """Create and return an invocable "hello-world" extension command."""
     yield spack.main.SpackCommand("hello-world")
 
 
@@ -143,9 +143,7 @@ def hello(parser, args):
         hello_folks()
     elif args.subcommand == 'global':
         print(global_message)
-""".format(
-                    ext_pname=extension.pname
-                ),
+""".format(ext_pname=extension.pname),
             )
 
             init_file = extension.main / "__init__.py"
@@ -237,7 +235,7 @@ def test_extension_naming(tmp_path: pathlib.Path, extension_path, expected_excep
     """
     # NOTE: if the directory is a valid extension directory name the "vacuous" test will
     # fail because it resolves to current working directory
-    import spack.llnl.util.filesystem as fs
+    import spack.util.filesystem as fs
 
     with fs.working_dir(str(tmp_path)):
         with spack.config.override("config:extensions", [extension_path]):

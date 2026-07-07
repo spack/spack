@@ -11,7 +11,7 @@ import re
 import sys
 from contextlib import contextmanager
 
-from spack.llnl.util import tty
+from spack.util import tty
 
 if sys.platform == "win32":
     import winreg
@@ -408,7 +408,7 @@ class InvalidKeyError(RegistryError):
 
 
 class InvalidRegistryOperation(RegistryError):
-    """A Runtime Error ecountered when a registry operation is invalid for
+    """A Runtime Error encountered when a registry operation is invalid for
     an indeterminate reason"""
 
     def __init__(self, name, e, *args, **kwargs):

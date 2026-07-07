@@ -7,15 +7,14 @@ import sys
 from typing import Dict, List, Optional
 
 import spack.cmd
-import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
 import spack.package_base
 import spack.spec
 import spack.store
-import spack.traverse as traverse
-from spack.cmd.common import arguments
-from spack.llnl.util import tty
-from spack.llnl.util.tty.colify import colify
+from spack import traverse
+from spack.cmd.common import arguments, confirmation
+from spack.util import tty
+from spack.util.tty.colify import colify
 
 from ..enums import InstallRecordStatus
 
@@ -192,7 +191,7 @@ def _remove_from_env(spec, env):
 def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
     # TODO: get rid of the call-sites that use this function,
     # so that we don't have to do a dance of list -> set -> list -> set
-    hashes_to_remove = set(s.dag_hash() for s in specs)
+    hashes_to_remove = {s.dag_hash() for s in specs}
 
     for s in traverse.traverse_nodes(
         specs, order="topo", direction="children", root=True, cover="nodes", deptype="all"
@@ -295,9 +294,9 @@ def uninstall_specs(args, specs):
 
 def uninstall(parser, args):
     if not args.specs and not args.all:
-        tty.die(
-            "uninstall requires at least one package argument.",
-            "  Use `spack uninstall --all` to uninstall ALL packages.",
+        args.subparser.error(
+            "requires at least one package argument\n"
+            "  use `spack uninstall --all` to uninstall ALL packages"
         )
 
     # [None] here handles the --all case by forcing all specs to be returned

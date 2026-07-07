@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
+
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Union
 
 import spack.error
@@ -219,7 +220,7 @@ class ProviderIndex:
     def copy(self):
         """Return a deep copy of this index."""
         clone = ProviderIndex(repository=self.repository)
-        clone.providers = self._transform(lambda vpkg, pset: (vpkg, set((p.copy() for p in pset))))
+        clone.providers = self._transform(lambda vpkg, pset: (vpkg, {p.copy() for p in pset}))
         return clone
 
     @staticmethod
@@ -245,7 +246,7 @@ class ProviderIndex:
             providers,
             lambda vpkg, plist: (
                 SpecfileLatest.from_node_dict(vpkg),
-                set(SpecfileLatest.from_node_dict(p) for p in plist),
+                {SpecfileLatest.from_node_dict(p) for p in plist},
             ),
         )
         return index
@@ -271,10 +272,10 @@ def _transform(providers, transform_fun, out_mapping_type=dict):
         else:
             return iter(mappings)
 
-    return dict(
-        (name, out_mapping_type([transform_fun(vpkg, pset) for vpkg, pset in mapiter(mappings)]))
+    return {
+        name: out_mapping_type([transform_fun(vpkg, pset) for vpkg, pset in mapiter(mappings)])
         for name, mappings in providers.items()
-    )
+    }
 
 
 class ProviderIndexError(spack.error.SpackError):

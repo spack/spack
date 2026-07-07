@@ -1703,7 +1703,7 @@ Spack allows you to specify this in the ``depends_on`` directive using version r
 
    depends_on("python@3.10:")
 
-In this case, the package requires Python 3.10 or newer.
+In this case, the package requires Python 3.10 or newer, as specified in the project's :file:`pyproject.toml`.
 
 Commonly, packages drop support for older versions of a dependency as they release new versions.
 In Spack you can conveniently add every backward compatibility rule as a separate line:
@@ -1770,6 +1770,22 @@ For example, if you need Boost 1.59.0 or newer, but there are known issues with 
 
    depends_on("boost@1.59.0:1.63,1.65.1,1.67.0:")
 
+or, if those particular versions are excluded due to bugs rather than removed and reintroduced features:
+
+.. code-block:: python
+
+   depends_on("boost@1.59.0:")
+   conflicts("^boost@1.64.0,1.65.0,1.66.0")
+
+Always specify version ranges with an open-world assumption:
+
+- all "ground truths" about exclusions and inclusions (e.g., versions with features added or removed) must satisfy the range, and
+- no potential but unknown versions are excluded from the range.
+
+This practice avoids overconstraining version ranges, which can lead to concretization errors, and ensures that every version in a package is *meaningful* and not just *incidental* (i.e., based on the version you happened to test).
+In the above example, the project has presumably documented (with pyproject.toml, CMakeLists.txt, or release notes) that ``@:1.58`` are incompatible, and it is known from testing that ``@1.67`` is compatible.
+It is *not* known whether future versions ``@1.68:`` are incompatible, so they must be included by the range.
+If and when future versions are known incompatible, the version range should be constrained with an upper bound.
 
 .. _dependency-types:
 

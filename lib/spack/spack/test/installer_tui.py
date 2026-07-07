@@ -3,18 +3,28 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests for the BuildStatus terminal UI in new_installer.py"""
 
-import io
-import os
 import sys
-from typing import List, Optional, Tuple
 
 import pytest
 
 if sys.platform == "win32":
     pytest.skip("No Windows support", allow_module_level=True)
 
+
+import functools
+import io
+import os
+from multiprocessing import Pipe
+from typing import List, Optional, Tuple
+
 import spack.new_installer as inst
 from spack.new_installer import BuildStatus
+from spack.new_installer_base import StdinReader
+
+
+def _fd_reader(fd: int) -> StdinReader:
+    """StdinReader reading from a raw fd, as PosixTerminalState.create_stdin_reader does."""
+    return StdinReader(functools.partial(os.read, fd, 1024))
 
 
 class MockConnection:
@@ -64,7 +74,13 @@ class SimpleTextIOWrapper(io.TextIOWrapper):
 
 
 def create_build_status(
-    is_tty: bool = True, terminal_cols: int = 80, terminal_rows: int = 24, total: int = 0
+    is_tty: bool = True,
+    terminal_cols: int = 80,
+    terminal_rows: int = 24,
+    total: int = 0,
+    verbose: bool = False,
+    filter_padding: bool = False,
+    color: Optional[bool] = None,
 ) -> Tuple[BuildStatus, List[float], SimpleTextIOWrapper]:
     """Helper function to create BuildStatus with mocked dependencies"""
     fake_stdout = SimpleTextIOWrapper(tty=is_tty)
@@ -83,6 +99,9 @@ def create_build_status(
         get_terminal_size=mock_get_terminal_size,
         get_time=mock_get_time,
         is_tty=is_tty,
+        verbose=verbose,
+        filter_padding=filter_padding,
+        color=color,
     )
 
     return status, time_values, fake_stdout
@@ -98,6 +117,27 @@ def add_mock_builds(status: BuildStatus, count: int) -> List[MockSpec]:
 
 class TestBasicStateManagement:
     """Test basic state management operations"""
+
+    def test_on_resize(self):
+        """Test that on_resize sets terminal_size_changed and update() fetches lazily"""
+        sizes = [os.terminal_size((80, 24))]
+        fake_stdout = SimpleTextIOWrapper(tty=True)
+        status = BuildStatus(
+            total=0, stdout=fake_stdout, get_terminal_size=lambda: sizes[-1], is_tty=True
+        )
+        # terminal_size_changed is True from __init__; terminal_size is placeholder
+        assert status.terminal_size_changed is True
+
+        # After on_resize the flag stays set and dirty is True
+        sizes.append(os.terminal_size((120, 40)))
+        status.on_resize()
+        assert status.terminal_size_changed is True
+        assert status.dirty is True
+
+        # The actual size is fetched lazily on the first update()
+        status.update()
+        assert status.terminal_size == os.terminal_size((120, 40))
+        assert status.terminal_size_changed is False
 
     def test_add_build(self):
         """Test that add_build adds builds correctly"""
@@ -145,6 +185,64 @@ class TestBasicStateManagement:
         assert status.builds[build_id].state == "failed"
         assert status.completed == 1
         assert status.builds[build_id].finished_time == fake_time[0] + inst.CLEANUP_TIMEOUT
+
+    def test_remove_build(self):
+        """Test that remove_build removes the build from the display."""
+        status, _, _ = create_build_status(total=2)
+        specs = add_mock_builds(status, 2)
+        build_id = specs[0].dag_hash()
+
+        status.dirty = False
+        status.remove_build(build_id)
+        assert build_id not in status.builds
+        assert len(status.builds) == 1
+        assert status.dirty is True
+
+    def test_remove_build_resets_tracked(self):
+        """Test that removing the tracked build resets tracking to overview mode."""
+        status, _, _ = create_build_status(total=1)
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+
+        status.tracked_build_id = build_id
+        status.overview_mode = False
+        status.remove_build(build_id)
+        assert status.tracked_build_id == ""
+        assert status.overview_mode is True
+
+    def test_parse_log_summary(self, tmp_path):
+        """Test that parse_log_summary parses the build log and stores the summary."""
+        status, _, _ = create_build_status()
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+
+        # Create a fake log file with an error
+        log_file = tmp_path / "build.log"
+        log_file.write_text("error: something went wrong\n")
+
+        status.builds[build_id].log_path = str(log_file)
+        status.parse_log_summary(build_id)
+        assert status.builds[build_id].log_summary is not None
+        assert "error" in status.builds[build_id].log_summary.lower()
+
+    def test_parse_log_summary_no_log_path(self):
+        """Test that parse_log_summary is a no-op when log_path is not set."""
+        status, _, _ = create_build_status()
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+
+        status.parse_log_summary(build_id)
+        assert status.builds[build_id].log_summary is None
+
+    def test_parse_log_summary_missing_file(self, tmp_path):
+        """Test that parse_log_summary is a no-op when log file doesn't exist."""
+        status, _, _ = create_build_status()
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+
+        status.builds[build_id].log_path = str(tmp_path / "nonexistent.log")
+        status.parse_log_summary(build_id)
+        assert status.builds[build_id].log_summary is None
 
     def test_update_progress(self):
         """Test that update_progress updates percentages"""
@@ -198,9 +296,10 @@ class TestOutputRendering:
         status.update_state(build_id, "finished")
 
         output = fake_stdout.getvalue()
+        assert "[+]" in output
         assert "mypackage" in output
         assert "1.0" in output
-        assert "finished" in output
+        assert "/fake/prefix/mypackage" in output  # prefix is shown for finished builds
         # Non-TTY output should not contain ANSI escape codes
         assert "\033[" not in output
 
@@ -267,9 +366,9 @@ class TestOutputRendering:
         status.update()
         output1 = fake_stdout.getvalue()
 
-        # Count newlines (\n) and cursor movements (\033[1E = move down 1 line)
+        # Count newlines (\n) and cursor movements (\033[1B\r = move down 1 line)
         newlines1 = output1.count("\n")
-        cursor_moves1 = output1.count("\033[1E")
+        cursor_moves1 = output1.count("\033[1B\r")
 
         # Initially all lines should be newlines (nothing in history yet)
         assert newlines1 > 0
@@ -291,7 +390,7 @@ class TestOutputRendering:
         output2 = fake_stdout.getvalue()
 
         newlines2 = output2.count("\n")
-        cursor_moves2 = output2.count("\033[1E")
+        cursor_moves2 = output2.count("\033[1B\r")
 
         # Should have newlines for the 2 finished builds persisted to history
         # and cursor movements for the active area (header + 3 active builds)
@@ -723,22 +822,41 @@ class TestLogFollowing:
         # Nothing should be printed since we're tracking pkg1, not pkg2
         assert fake_stdout.getvalue() == ""
 
-    def test_cannot_follow_failed_build(self):
-        """Test that navigation skips failed builds"""
+    def test_can_navigate_to_failed_build(self):
+        """Test that navigating to a failed build shows log summary and path"""
+        status, _, fake_stdout = create_build_status(total=3)
+        specs = add_mock_builds(status, 3)
+
+        # Mark the middle build as failed and set log info
+        status.update_state(specs[1].dag_hash(), "failed")
+        build_info = status.builds[specs[1].dag_hash()]
+        build_info.log_summary = "Error: something went wrong\n"
+        build_info.log_path = "/tmp/spack/pkg1.log"
+
+        # Navigate from pkg0 to next -- should land on failed pkg1
+        status.tracked_build_id = specs[0].dag_hash()
+        next_id = status._get_next(1)
+        assert next_id == specs[1].dag_hash()
+
+        # Actually navigate to it
+        status.next(1)
+        output = fake_stdout.getvalue()
+        assert "Log summary of pkg1" in output
+        assert "Error: something went wrong" in output
+        assert "/tmp/spack/pkg1.log" in output
+
+    def test_navigation_skips_finished_build(self):
+        """Test that navigation skips successfully finished builds"""
         status, _, _ = create_build_status(total=3)
         specs = add_mock_builds(status, 3)
 
-        # Mark the middle build as failed
-        status.update_state(specs[1].dag_hash(), "failed")
+        # Mark the middle build as finished (successful)
+        status.update_state(specs[1].dag_hash(), "finished")
 
-        # The failed build should have finished_time set
-        assert status.builds[specs[1].dag_hash()].finished_time is not None
-
-        # Try to get next build, should skip the failed one
+        # Try to get next build, should skip the finished one
         status.tracked_build_id = specs[0].dag_hash()
         next_id = status._get_next(1)
 
-        # Should skip pkg1 (failed) and return pkg2
         assert next_id == specs[2].dag_hash()
 
 
@@ -913,6 +1031,68 @@ class TestToggle:
         assert status.overview_mode is True
         assert status.tracked_build_id == ""
 
+    def test_partial_line_newline_on_toggle_and_next(self):
+        """Ensure newline is inserted before mode transitions when log doesn't end with newline."""
+        status, _, fake_stdout = create_build_status(total=2)
+        specs = add_mock_builds(status, 2)
+        build_a, build_b = specs[0].dag_hash(), specs[1].dag_hash()
+
+        # Follow a build, toggle back and forth between logs and overview mode, and receive logs
+        # that may or may not end with newlines.
+        status.next()
+        status.print_logs(build_a, b"checking for foo...")
+        status.toggle()
+        status.next()
+        status.print_logs(build_a, b"checking for bar... yes\n")
+        status.next(1)
+        status.print_logs(build_b, b"checking for baz...")
+        status.next(-1)
+
+        written = fake_stdout.getvalue()
+
+        # There shouldn't be any double newlines:
+        assert "\n\n" not in written
+
+        # All partial and newline-terminated logs should be present with appropriate newlines:
+        assert "checking for foo...\n" in written
+        assert "checking for bar... yes\n" in written
+        assert "checking for baz...\n" in written
+
+    @pytest.mark.parametrize("filter_padding", [True, False])
+    def test_print_logs_filters_padding(self, filter_padding):
+        """print_logs strips path-padding placeholders before writing to stdout."""
+        status, _, fake_stdout = create_build_status(filter_padding=filter_padding)
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+        log_output = b"--with-foo=/base/__spack_path_placeholder__/__spack_path_placeholder__/bin"
+
+        # track the build and print logs with the relevant path.
+        status.overview_mode = False
+        status.tracked_build_id = build_id
+        status.print_logs(build_id, log_output)
+        written = fake_stdout._buffer.getvalue()
+
+        if filter_padding:
+            assert written == b"--with-foo=/base/[padded-to-59-chars]/bin"
+        else:
+            assert written == log_output
+
+    @pytest.mark.parametrize("filter_padding", [True, False])
+    def test_prefix_padding_filter_in_status(self, filter_padding):
+        """Test that prefix in status indicator applies padding filter."""
+        padded_prefix = "/base/__spack_path_placeholder__/__spack_path_placeholder__/mypackage"
+        status, _, fake_stdout = create_build_status(is_tty=False, filter_padding=filter_padding)
+        spec = MockSpec("mypackage", "1.0", prefix=padded_prefix)
+        status.add_build(spec, explicit=True, control_w_conn=MockConnection())
+        build_id = spec.dag_hash()
+        status.update_state(build_id, "finished")
+        output = fake_stdout.getvalue()
+        common = f"[+] {spec.dag_hash(7)} {spec.name}@{spec.version}"
+        if filter_padding:
+            assert output == f"{common} /base/[padded-to-59-chars]/mypackage\n"
+        else:
+            assert output == f"{common} {padded_prefix}\n"
+
 
 class TestSearchFilteringIntegration:
     """Test search mode with display filtering"""
@@ -1048,6 +1228,23 @@ class TestEdgeCases:
         assert "Progress:" in output
         assert "0/0" in output
 
+    def test_no_header_with_finalize(self):
+        """Test that we don't print a header with finalize=True"""
+        status, _, fake_stdout = create_build_status(total=2, color=False)
+        spec_a, spec_b = add_mock_builds(status, 2)
+        status.update_state(spec_a.dag_hash(), "finished")
+        status.update_state(spec_b.dag_hash(), "failed")
+        status.update(finalize=True)
+
+        output = fake_stdout.getvalue()
+
+        # Should not contain header
+        assert "Progress:" not in output
+
+        # Should contain final status lines for both builds
+        assert f"[+] {spec_a.dag_hash(7)} {spec_a.name}@{spec_a.version}" in output
+        assert f"[x] {spec_b.dag_hash(7)} {spec_b.name}@{spec_b.version}" in output
+
     def test_all_builds_finished(self):
         """Test when all builds are finished"""
         status, fake_time, _ = create_build_status(total=2)
@@ -1080,3 +1277,260 @@ class TestEdgeCases:
 
         status.update_progress(build_id, 3, 3)
         assert status.builds[build_id].progress_percent == 100
+
+
+class TestBuildStatusVerbose:
+    """Tests for verbose non-TTY log tracking in BuildStatus."""
+
+    def test_verbose_tracks_first_build(self):
+        """First add_build() in verbose non-TTY mode sets tracked_build_id and enables echoing."""
+        bs, _, _ = create_build_status(is_tty=False, verbose=True, total=4)
+        spec = MockSpec("trivial-install-test-package", "1.0")
+
+        r_conn, w_conn = Pipe(duplex=False)
+
+        with r_conn, w_conn:
+            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
+
+            assert bs.tracked_build_id == spec.dag_hash()
+            written = os.read(r_conn.fileno(), 1)
+            assert written == b"1"
+
+    def test_verbose_does_not_track_when_already_tracking(self):
+        """Second add_build() while already tracking does not switch tracking."""
+        bs, _, _ = create_build_status(is_tty=False, verbose=True, total=4)
+        spec1 = MockSpec("pkg1", "1.0")
+        spec2 = MockSpec("pkg2", "1.0")
+
+        r1, w1 = Pipe(duplex=False)
+        r2, w2 = Pipe(duplex=False)
+        with r1, w1, r2, w2:
+            bs.add_build(spec1, explicit=True, control_w_conn=w1)
+            first_tracked = bs.tracked_build_id
+
+            bs.add_build(spec2, explicit=False, control_w_conn=w2)
+            assert bs.tracked_build_id == first_tracked
+            assert bs.tracked_build_id == spec1.dag_hash()
+
+            # Second build should not have received b"1"
+            assert not r2.poll(), "Second build should not be enabled"
+
+    def test_verbose_switches_on_finish(self):
+        """After the tracked build finishes, tracked_build_id is cleared."""
+        bs, _, _ = create_build_status(is_tty=False, verbose=True, total=4)
+        spec = MockSpec("trivial-install-test-package", "1.0")
+
+        r_conn, w_conn = Pipe(duplex=False)
+
+        with r_conn, w_conn:
+            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
+            assert bs.tracked_build_id == spec.dag_hash()
+
+            bs.update_state(spec.dag_hash(), "finished")
+            assert bs.tracked_build_id == ""
+
+    def test_verbose_print_logs_tracked(self):
+        """print_logs() for the tracked build writes to stdout."""
+        bs, _, stdout = create_build_status(is_tty=False, verbose=True, total=1)
+        spec = MockSpec("trivial-install-test-package", "1.0")
+
+        r_conn, w_conn = Pipe(duplex=False)
+
+        with r_conn, w_conn:
+            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
+            bs.print_logs(spec.dag_hash(), b"hello log\n")
+
+            stdout.flush()
+            assert stdout.buffer.getvalue() == b"hello log\n"
+
+    def test_verbose_print_logs_untracked(self):
+        """print_logs() for an untracked build discards data."""
+        bs, _, stdout = create_build_status(is_tty=False, verbose=True, total=2)
+        spec1 = MockSpec("pkg1", "1.0")
+        spec2 = MockSpec("pkg2", "1.0")
+
+        r1, w1 = Pipe(duplex=False)
+
+        with r1, w1:
+            bs.add_build(spec1, explicit=True, control_w_conn=w1)
+            bs.add_build(spec2, explicit=False, control_w_conn=None)
+
+            # Only spec1 is tracked; spec2 logs should be discarded
+            bs.print_logs(spec2.dag_hash(), b"ignored\n")
+
+            stdout.flush()
+            assert stdout.buffer.getvalue() == b""
+
+    def test_verbose_tty_no_effect(self):
+        """In TTY mode, add_build() does not set tracked_build_id automatically."""
+        bs, _, _ = create_build_status(is_tty=True, verbose=True, total=4)
+        spec = MockSpec("trivial-install-test-package", "1.0")
+
+        r_conn, w_conn = Pipe(duplex=False)
+
+        with r_conn, w_conn:
+            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
+            assert bs.tracked_build_id == ""
+
+
+class TestBuildStatusColor:
+    """Tests that BuildStatus respects the explicit color=True/False parameter."""
+
+    def test_non_tty_finished_color_true_emits_green(self):
+        """color=True in non-TTY mode: finished line has per-component ANSI colors."""
+        spec = MockSpec("pkg", "1.0")
+        status, _, stdout = create_build_status(is_tty=False, total=1, color=True)
+        status.add_build(spec, explicit=True)
+        status.update_state(spec.dag_hash(), "finished")
+        # green indicator, reset, dark-gray hash
+        assert stdout.getvalue().startswith("\033[32m[+]\033[0m \033[0;90m")
+
+    def test_non_tty_failed_color_true_emits_red(self):
+        """color=True in non-TTY mode: failed line has per-component ANSI colors."""
+        spec = MockSpec("pkg", "1.0")
+        status, _, stdout = create_build_status(is_tty=False, total=1, color=True)
+        status.add_build(spec, explicit=True)
+        status.update_state(spec.dag_hash(), "failed")
+        # red indicator, reset, dark-gray hash
+        assert stdout.getvalue().startswith("\033[31m[x]\033[0m \033[0;90m")
+
+    def test_non_tty_finished_color_false_no_ansi(self):
+        """color=False in non-TTY mode: finished line has no ANSI escape codes."""
+        spec = MockSpec("pkg", "1.0")
+        status, _, stdout = create_build_status(is_tty=False, total=1, color=False)
+        status.add_build(spec, explicit=True)
+        status.update_state(spec.dag_hash(), "finished")
+        assert "\033[" not in stdout.getvalue()
+
+
+class TestTargetJobs:
+    """Test set_jobs and its effect on the header."""
+
+    def test_set_jobs_marks_dirty(self):
+        """set_jobs with a new value should update target_jobs and mark dirty."""
+        status, _, _ = create_build_status()
+        status.dirty = False
+        status.set_jobs(3, 2)
+        assert status.actual_jobs == 3
+        assert status.target_jobs == 2
+        assert status.dirty is True
+        status.set_jobs(2, 2)
+        assert status.actual_jobs == 2
+        assert status.target_jobs == 2
+
+    def test_set_jobs_same_value_no_dirty(self):
+        """set_jobs with the same value should not mark dirty."""
+        status, _, _ = create_build_status()
+        status.set_jobs(5, 5)
+        status.dirty = False
+        status.set_jobs(5, 5)
+        assert status.dirty is False
+
+    def test_header_shows_target_jobs(self):
+        """The rendered header should contain the target_jobs count and the word 'jobs'."""
+        status, _, fake_stdout = create_build_status(total=1)
+        add_mock_builds(status, 1)
+        status.set_jobs(4, 4)
+        status.update()
+        output = fake_stdout.getvalue()
+        assert "4" in output
+        assert "jobs" in output
+
+    def test_header_shows_arrow_when_pending(self):
+        """When actual != target, the header should show 'actual=>target jobs'."""
+        status, _, fake_stdout = create_build_status(total=1)
+        add_mock_builds(status, 1)
+        status.set_jobs(4, 2)
+        status.update()
+        output = fake_stdout.getvalue()
+        assert "4=>2" in output
+
+
+class TestHeadlessMode:
+    """Test that headless mode suppresses terminal output."""
+
+    def test_update_suppressed_when_headless(self):
+        """update() should not write anything when headless is True."""
+        status, time_values, stdout = create_build_status(is_tty=True, total=1)
+        add_mock_builds(status, 1)
+        status.headless = True
+        time_values.append(10.0)
+        status.update()
+        assert stdout.getvalue() == ""
+
+    def test_print_logs_suppressed_when_headless(self):
+        """print_logs() should discard data when headless is True."""
+        status, _, stdout = create_build_status(is_tty=True, total=1)
+        specs = add_mock_builds(status, 1)
+        status.tracked_build_id = specs[0].dag_hash()
+        status.headless = True
+        status.print_logs(specs[0].dag_hash(), b"hello world\n")
+        assert stdout.getvalue() == ""
+
+    def test_update_state_non_tty_suppressed_when_headless(self):
+        """update_state() non-TTY output should be suppressed when headless."""
+        status, _, stdout = create_build_status(is_tty=False, total=1)
+        spec = MockSpec("pkg", "1.0")
+        status.add_build(spec, explicit=True)
+        status.headless = True
+        stdout.clear()
+        status.update_state(spec.dag_hash(), "finished")
+        assert stdout.getvalue() == ""
+
+    def test_update_works_after_headless_cleared(self):
+        """update() should work normally once headless is cleared."""
+        status, time_values, stdout = create_build_status(is_tty=True, total=1, color=False)
+        add_mock_builds(status, 1)
+        status.headless = True
+        time_values.append(10.0)
+        status.update()
+        assert stdout.getvalue() == ""
+        # Clear headless and verify output resumes
+        status.headless = False
+        status.dirty = True
+        status.update()
+        assert "[/] pkg0 pkg0@0.0 starting" in stdout.getvalue()
+
+
+class TestStdinReader:
+    def test_basic_ascii(self):
+        r, w = os.pipe()
+        try:
+            reader = _fd_reader(r)
+            os.write(w, b"abc")
+            assert reader.read() == "abc"
+        finally:
+            os.close(r)
+            os.close(w)
+
+    def test_ansi_stripping(self):
+        r, w = os.pipe()
+        try:
+            reader = _fd_reader(r)
+            os.write(w, b"hello\x1b[Aworld\x1b[B!")
+            assert reader.read() == "helloworld!"
+        finally:
+            os.close(r)
+            os.close(w)
+
+    def test_multibyte_utf8(self):
+        r, w = os.pipe()
+        try:
+            reader = _fd_reader(r)
+            encoded = "é".encode("utf-8")  # 0xc3 0xa9
+            os.write(w, encoded[:1])
+            # First read: incomplete char, decoder buffers it
+            result1 = reader.read()
+            os.write(w, encoded[1:])
+            result2 = reader.read()
+            assert result1 + result2 == "é"
+        finally:
+            os.close(r)
+            os.close(w)
+
+    def test_oserror_returns_empty(self):
+        r, w = os.pipe()
+        os.close(w)
+        os.close(r)
+        reader = _fd_reader(r)
+        assert reader.read() == ""

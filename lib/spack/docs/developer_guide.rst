@@ -197,13 +197,13 @@ Other Modules
 :mod:`spack.error`
   :class:`~spack.error.SpackError`, the base class for Spack's exception hierarchy.
 
-:mod:`spack.llnl.util.tty`
+:mod:`spack.util.tty`
   Basic output functions for all of the messages Spack writes to the terminal.
 
-:mod:`spack.llnl.util.tty.color`
+:mod:`spack.util.tty.color`
   Implements a color formatting syntax used by ``spack.tty``.
 
-:mod:`spack.llnl.util`
+:mod:`spack.util`
   In this package are a number of utility modules for the rest of Spack.
 
 .. _package-repositories:
@@ -431,7 +431,7 @@ For example, if you were to add this step to the Linux unit test CI, it would lo
        . share/spack/setup-env.sh
        spack bootstrap disable spack-install
        spack bootstrap now
-       spack -v solve zlib
+       spack -v spec --show opt,solutions zlib
    - name: Setup tmate session
      uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
    - name: Run unit tests
@@ -690,33 +690,28 @@ By running this command before and after the change, you can make sure that your
 Profiling
 ---------
 
-Spack has some limited built-in support for profiling, and can report statistics using standard Python timing tools.
-To use this feature, supply ``--profile`` to Spack on the command line, before any subcommands.
+To profile Spack, use Python's built-in `cProfile <https://docs.python.org/3/library/profile.html#module-cProfile>`_ module directly:
 
-.. _spack-p:
+.. code-block:: console
 
-``spack --profile``
-^^^^^^^^^^^^^^^^^^^
+   $ python3 -m cProfile -s cumtime bin/spack find
+   $ python3 -m cProfile -o profile.out bin/spack find
 
-``spack --profile`` output looks like this:
+.. _debugging-concretization:
 
-.. command-output:: spack --profile graph hdf5
-   :ellipsis: 25
+Debugging concretization
+------------------------
 
-<<<<<<< HEAD
-The bottom of the output shows the most time-consuming functions, slowest on top.
-The profiling support is from Python's built-in tool, `cProfile <https://docs.python.org/3/library/profile.html#module-cProfile>`_.
-=======
 When working on the ASP-based solver in ``lib/spack/spack/solver/``, it is often useful to inspect the raw facts and rules that clingo sees, and to run clingo directly outside of Spack.
 
 Generating ASP facts
 ^^^^^^^^^^^^^^^^^^^^
 
-The ``spack solve --show=asp`` flag dumps all ASP facts generated for a given spec to stdout:
+The ``spack spec --show=asp`` flag dumps all ASP facts generated for a given spec to stdout:
 
 .. code-block:: console
 
-   $ spack solve --show=asp zlib-ng > zlib.lp
+   $ spack spec --show=asp zlib-ng > zlib.lp
 
 The resulting file contains both the package facts (versions, variants, dependencies) and the problem-specific facts derived from the user's configuration.
 It can be fed directly to clingo alongside the solver rules.
@@ -760,14 +755,13 @@ If a solve takes a long time to finish, you can interrupt it with ``Ctrl+C``.
 The partial statistics printed on interrupt are still useful for diagnosing the bottleneck.
 
 Running the concretization test suite
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 After modifying any solver ``.lp`` file, verify correctness with:
 
 .. code-block:: console
 
    $ pytest -n 8 lib/spack/spack/test/concretization
->>>>>>> 11ec54bcc0 (Fix RST heading underlines in developer_guide.rst)
 
 .. _releases:
 

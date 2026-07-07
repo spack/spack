@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Set, unset or modify environment variables."""
+
 import collections
 import contextlib
 import inspect
@@ -17,12 +18,12 @@ import warnings
 from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Optional, Tuple, Union
 
 import spack.error
-from spack.llnl.path import path_to_os_path, system_path_filter
-from spack.llnl.util import tty
-from spack.llnl.util.lang import dedupe
+from spack.util import tty
+from spack.util.lang import dedupe
+from spack.util.path import path_to_os_path, system_path_filter
 
 # List is invariant, so List[str] is not a subtype of List[Union[str, pathlib.PurePath]].
-# Sequence is covariant, but because str itself is a subtype of Sequence[str], we cannot exlude it
+# Sequence is covariant, but because str itself is a subtype of Sequence[str], we cannot exclude it
 # in the type hint. So, use an awkward union type to allow (mixed) str and PurePath items.
 ListOfPaths = Union[List[str], List[pathlib.PurePath], List[Union[str, pathlib.PurePath]]]
 
@@ -158,7 +159,7 @@ def dump_environment(path: Path, environment: Optional[MutableMapping[str, str]]
 
     Args:
         path: path of the file to write
-        environment: environment to be writte. If None os.environ is used.
+        environment: environment to be written. If None os.environ is used.
     """
     use_env = environment or os.environ
     hidden_vars = {"PS1", "PWD", "OLDPWD", "TERM_SESSION_ID"}
@@ -1189,8 +1190,8 @@ def environment_after_sourcing_files(
         dump_environment_cmd = sys.executable + f' -E -c "{dump_cmd}"'
 
         # Try to source the file
-        source_file_arguments = " ".join(
-            [source_file, suppress_output, concatenate_on_success, dump_environment_cmd]
+        source_file_arguments = (
+            f"{source_file} {suppress_output} {concatenate_on_success} {dump_environment_cmd}"
         )
 
         # Popens argument processing can break command invocations

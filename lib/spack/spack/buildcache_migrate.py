@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import io
 import json
 import os
 import pathlib
@@ -12,14 +11,15 @@ from typing import NamedTuple
 import spack.binary_distribution
 import spack.database as spack_db
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
 import spack.util.crypto
+import spack.util.gpg
 import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.util import tty
 
 from .enums import InstallRecordStatus
 from .url_buildcache import (
@@ -104,8 +104,7 @@ def _migrate_spec(
 
     for meta_url in v2_metadata_urls:
         try:
-            _, _, meta_file = web_util.read_from_url(meta_url)
-            spec_contents = io.TextIOWrapper(meta_file, encoding="utf-8").read()
+            spec_contents = web_util.read_text(meta_url)
             v2_spec_url = meta_url
             break
         except (web_util.SpackWebError, OSError):
@@ -120,7 +119,7 @@ def _migrate_spec(
         # User asked for unsigned, if we found a signed specfile, just ignore
         # the signature
         if v2_spec_url.endswith(".sig"):
-            spec_dict = spack.spec.Spec.extract_json_from_clearsig(spec_contents)
+            spec_dict = spack.util.gpg.extract_json_from_clearsig(spec_contents)
         else:
             spec_dict = json.loads(spec_contents)
     else:
@@ -133,7 +132,7 @@ def _migrate_spec(
         if not try_verify(local_signed_pre_verify):
             return MigrateSpecResult(False, f"Failed to verify signature of {print_spec}")
         with open(local_signed_pre_verify, encoding="utf-8") as fd:
-            spec_dict = spack.spec.Spec.extract_json_from_clearsig(fd.read())
+            spec_dict = spack.util.gpg.extract_json_from_clearsig(fd.read())
 
     # Read out and remove the bits needed to rename and position the archive
     bcc = spec_dict.pop("binary_cache_checksum", None)
@@ -279,8 +278,7 @@ def migrate(
     contents = None
 
     try:
-        _, _, index_file = web_util.read_from_url(index_url)
-        contents = io.TextIOWrapper(index_file, encoding="utf-8").read()
+        contents = web_util.read_text(index_url)
     except (web_util.SpackWebError, OSError):
         raise MigrationException("Buildcache migration requires a buildcache index")
 
@@ -295,7 +293,7 @@ def migrate(
         specs_to_migrate = [
             s
             for s in db.query_local(installed=InstallRecordStatus.ANY)
-            # todo, make it easer to get install records associated with specs
+            # todo, make it easier to get install records associated with specs
             if not s.external and db._data[s.dag_hash()].in_buildcache
         ]
 

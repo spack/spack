@@ -7,10 +7,10 @@ import pytest
 
 import spack.cmd.uninstall
 import spack.environment
-import spack.llnl.util.tty as tty
 import spack.store
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand, SpackCommandError
+from spack.util import tty
 
 uninstall = SpackCommand("uninstall")
 install = SpackCommand("install")
@@ -257,7 +257,7 @@ class TestUninstallFromEnv:
 
             # The specs should still be in the environment, since
             # --remove was not specified
-            assert set(root.name for (root, _) in e1.concretized_specs()) == set(
+            assert {root.name for (root, _) in e1.concretized_specs()} == set(
                 ["diamond-link-left", "diamond-link-bottom"]
             )
 
@@ -268,7 +268,7 @@ class TestUninstallFromEnv:
         # have been uninstalled. The roots should be unchanged though.
         e2 = spack.environment.read("e2")
         with e2:
-            assert set(root.name for (root, _) in e2.concretized_specs()) == set(
+            assert {root.name for (root, _) in e2.concretized_specs()} == set(
                 ["diamond-link-right", "diamond-link-bottom"]
             )
             for _, concretized_spec in e2.concretized_specs():
@@ -296,7 +296,7 @@ class TestUninstallFromEnv:
         # (and e2 should be unchanged)
         e2 = spack.environment.read("e2")
         with e2:
-            assert set(root.name for (root, _) in e2.concretized_specs()) == set(
+            assert {root.name for (root, _) in e2.concretized_specs()} == set(
                 ["diamond-link-right", "diamond-link-bottom"]
             )
             for _, concretized_spec in e2.concretized_specs():
@@ -315,7 +315,7 @@ class TestUninstallFromEnv:
 
         # The environment should be unchanged and nothing should have been
         # uninstalled
-        assert set(root.name for (root, _) in e1.concretized_specs()) == set(
+        assert {root.name for (root, _) in e1.concretized_specs()} == set(
             ["diamond-link-left", "diamond-link-bottom"]
         )
         for _, concretized_spec in e1.concretized_specs():
@@ -340,7 +340,7 @@ class TestUninstallFromEnv:
 
         e2 = spack.environment.read("e2")
         with e2:
-            assert set(root.name for (root, _) in e2.concretized_specs()) == set(
+            assert {root.name for (root, _) in e2.concretized_specs()} == set(
                 ["diamond-link-right", "diamond-link-bottom"]
             )
             for _, concretized_spec in e2.concretized_specs():
@@ -362,12 +362,12 @@ class TestUninstallFromEnv:
             uninstall("-f", "-y", "--remove", "diamond-link-bottom")
             # diamond-link-bottom was removed from the list of roots (note that
             # it would still be installed since diamond-link-left depends on it)
-            assert set(x.name for x in e1.roots()) == set(["diamond-link-left"])
+            assert {x.name for x in e1.roots()} == set(["diamond-link-left"])
             assert dtdiamondleft.installed
 
         e2 = spack.environment.read("e2")
         with e2:
-            assert set(root.name for (root, _) in e2.concretized_specs()) == set(
+            assert {root.name for (root, _) in e2.concretized_specs()} == set(
                 ["diamond-link-right", "diamond-link-bottom"]
             )
             dtdiamondright = next(

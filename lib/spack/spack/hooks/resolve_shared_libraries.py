@@ -6,9 +6,9 @@ import io
 
 import spack.config
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.verify_libraries
-from spack.llnl.util.filesystem import visit_directory_tree
+from spack.util import tty
+from spack.util.filesystem import visit_directory_tree
 
 
 def post_install(spec, explicit):

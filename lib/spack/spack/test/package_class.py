@@ -19,11 +19,11 @@ import spack.concretize
 import spack.deptypes as dt
 import spack.error
 import spack.install_test
-import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.spec
 import spack.store
 import spack.subprocess_context
+import spack.util.filesystem as fs
 from spack.error import InstallError
 from spack.package_base import PackageBase
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
@@ -52,6 +52,9 @@ def mpileaks_possible_deps(mock_packages, mpi_names, compiler_names):
         "mpileaks": set(["callpath"] + mpi_names + compiler_names),
         "multi-provider-mpi": set(),
         "zmpi": set(["fake"] + compiler_names),
+        "compiler-with-deps": set(["binutils-for-test", "zlib"] + compiler_names),
+        "binutils-for-test": set(["zlib"] + compiler_names),
+        "zlib": set(),
     }
     return possible
 
@@ -85,6 +88,9 @@ def mpi_names(mock_inspector):
                 "mpileaks",
                 "gcc",
                 "llvm",
+                "compiler-with-deps",
+                "binutils-for-test",
+                "zlib",
                 "multi-provider-mpi",
                 "callpath",
                 "dyninst",

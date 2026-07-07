@@ -30,8 +30,6 @@ import spack.directives_meta
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
-import spack.llnl.util.filesystem as fsys
-import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.multimethod
@@ -45,6 +43,7 @@ import spack.url
 import spack.util.archive
 import spack.util.environment
 import spack.util.executable
+import spack.util.filesystem as fsys
 import spack.util.git
 import spack.util.naming
 import spack.util.path
@@ -53,14 +52,10 @@ import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
-from spack.llnl.util.filesystem import (
-    AlreadyExistsError,
-    find_all_shared_libraries,
-    islink,
-    symlink,
-)
-from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
+from spack.util import tty
+from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
+from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
@@ -303,7 +298,7 @@ class PackageMeta(
 
 
 def on_package_attributes(**attr_dict):
-    """Decorator: executes instance function only if object has attr valuses.
+    """Decorator: executes instance function only if object has attr values.
 
     Executes the decorated method only if at the moment of calling the
     instance has attributes that are equal to certain values.
@@ -320,9 +315,7 @@ def on_package_attributes(**attr_dict):
             has_all_attributes = all([hasattr(instance, key) for key in attr_dict])
             if has_all_attributes:
                 has_the_right_values = all(
-                    [
-                        getattr(instance, key) == value for key, value in attr_dict.items()
-                    ]  # NOQA: ignore=E501
+                    [getattr(instance, key) == value for key, value in attr_dict.items()]  # NOQA: ignore=E501
                 )
                 if has_the_right_values:
                     func(instance, *args, **kwargs)
@@ -359,7 +352,7 @@ class PackageViewMixin:
         Alternative implementations may allow some of the files to exist in
         the view (in this case they would be omitted from the results).
         """
-        return set(dst for dst in merge_map.values() if os.path.lexists(dst))
+        return {dst for dst in merge_map.values() if os.path.lexists(dst)}
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
@@ -412,7 +405,7 @@ def _by_subkey(
     """Convert a dict of dicts keyed by when/subkey into a dict of lists keyed by subkey.
 
     Optional Arguments:
-        when: if ``True``, don't discared the ``when`` specs; return a 2-level dictionary
+        when: if ``True``, don't discard the ``when`` specs; return a 2-level dictionary
             keyed by subkey and when spec.
     """
     # very hard to define this type to be conditional on `when`
@@ -863,7 +856,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def global_license_dir(cls):
         """Returns the directory where license files for all packages are stored."""
-        return spack.util.path.canonicalize_path(spack.config.get("config:license_dir"))
+        return spack.config.canonicalize_path(spack.config.get("config:license_dir"))
 
     @property
     def global_license_file(self):
@@ -924,7 +917,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def version(self):
         if not self.spec.versions.concrete:
             raise ValueError(
-                "Version requested for a package that" " does not have a concrete version."
+                "Version requested for a package that does not have a concrete version."
             )
         return self.spec.versions[0]
 
@@ -1124,15 +1117,22 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # if no version-bearing URLs can be found, try them raw
         if not urls:
-            default_url = getattr(self, "url", getattr(self, "urls", [None])[0])
+            default_url = getattr(self, "url", None)
+
+            if not default_url:
+                default_urls = getattr(self, "urls", None)
+
+                if isinstance(default_urls, list) and len(default_urls) > 0:
+                    default_url = default_urls[0]
 
             # if no exact match AND no class-level default, use the nearest URL
             if not default_url:
                 default_url = self.nearest_url(version)
 
-                # if there are NO URLs to go by, then we can't do anything
-                if not default_url:
-                    raise NoURLError(self.__class__)
+            # if there are NO URLs to go by, then we can't do anything
+            if not default_url:
+                raise NoURLError(self.__class__)
+
             urls.append(spack.url.substitute_version(default_url, self.url_version(version)))
 
         return urls
@@ -1211,7 +1211,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             link_format = spack.config.get("config:develop_stage_link")
             if not link_format:
                 link_format = "build-{arch}-{hash:7}"
-            stage_link = self.spec.format_path(link_format)
+            if link_format == "None":
+                stage_link = None
+            else:
+                stage_link = self.spec.format_path(link_format)
             source_stage = stg.DevelopStage(
                 stg.compute_stage_name(self.spec), dev_path, stage_link
             )
@@ -1466,7 +1469,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def intersects(self, spec: spack.spec.Spec) -> bool:
         """Context-ful intersection that takes into account package information.
 
-        By design, ``Spec.intersects()`` does not know anything about package metdata.
+        By design, ``Spec.intersects()`` does not know anything about package metadata.
         This avoids unnecessary package lookups and keeps things efficient where extra
         information is not needed, and it decouples ``Spec`` from ``PackageBase``.
 
@@ -1538,7 +1541,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def provided_virtual_names(cls):
         """Return sorted list of names of virtuals that can be provided by this package."""
         return sorted(
-            set(vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals))
+            {vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals)}
         )
 
     @property
@@ -1628,8 +1631,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         deprecated = spack.config.get("config:deprecated")
         if not deprecated and self.versions.get(self.version, {}).get("deprecated", False):
             tty.warn(
-                "{0} is deprecated and may be removed in a future Spack "
-                "release.".format(self.spec.format("{name}{@version}"))
+                "{0} is deprecated and may be removed in a future Spack release.".format(
+                    self.spec.format("{name}{@version}")
+                )
             )
 
             # Ask the user whether to install deprecated version if we're
@@ -2041,8 +2045,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         self.tester.stand_alone_tests(kwargs, timeout=timeout)
 
-    def unit_test_check(self) -> bool:
-        """Hook for unit tests to assert things about package internals.
+    def _unit_test_check(self) -> bool:
+        """Hook for Spack's own unit tests to assert things about package internals.
 
         Unit tests can override this function to perform checks after
         ``Package.install`` and all post-install hooks run, but before
@@ -2334,7 +2338,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Do not include Windows system libraries in the rpath interface
         # these libraries are handled automatically by VS/VCVARS and adding
         # Spack derived system libs into the link path or address space of a program
-        # can result in conflicting versions, which makes Spack packages less useable
+        # can result in conflicting versions, which makes Spack packages less usable
         if sys.platform == "win32":
             rpaths = [self.prefix.bin]
             rpaths.extend(
@@ -2445,7 +2449,11 @@ class WindowsSimulatedRPath:
                 new_pth = pathlib.Path(pth).parent
             else:
                 new_pth = pathlib.Path(pth)
-            path_is_in_prefix = new_pth.is_relative_to(self.base_modification_prefix)
+
+            path_is_in_prefix = (
+                self.base_modification_prefix == new_pth
+                or self.base_modification_prefix in new_pth.parents
+            )
             if not path_is_in_prefix:
                 raise RuntimeError(
                     f"Attempting to generate rpath symlink out of rpath context:\

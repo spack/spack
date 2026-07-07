@@ -5,21 +5,28 @@
 import argparse
 import os
 import shlex
+import sys
 import tempfile
 from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
 import spack
 import spack.caches
+import spack.ci
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.repo
+import spack.spec
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.git
-import spack.util.path
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.common import arguments
 from spack.error import SpackError
-from spack.llnl.util.tty import color
+from spack.util import tty
+from spack.util.tty import color
+from spack.version import StandardVersion
+
+from . import doc_dedented, doc_first_line
 
 description = "manage package source repositories"
 section = "config"
@@ -30,7 +37,9 @@ def setup_parser(subparser: argparse.ArgumentParser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="repo_command")
 
     # Create
-    create_parser = sp.add_parser("create", help=repo_create.__doc__)
+    create_parser = sp.add_parser(
+        "create", description=doc_dedented(repo_create), help=doc_first_line(repo_create)
+    )
     create_parser.add_argument("directory", help="directory to create the repo in")
     create_parser.add_argument(
         "namespace", help="name or namespace to identify packages in the repository"
@@ -46,7 +55,9 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     # List
-    list_parser = sp.add_parser("list", aliases=["ls"], help=repo_list.__doc__)
+    list_parser = sp.add_parser(
+        "list", aliases=["ls"], description=doc_dedented(repo_list), help=doc_first_line(repo_list)
+    )
     list_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
@@ -58,9 +69,14 @@ def setup_parser(subparser: argparse.ArgumentParser):
     output_group.add_argument(
         "--namespaces", action="store_true", help="show repository namespaces only"
     )
+    output_group.add_argument(
+        "--json", action="store_true", help="output repositories as machine-readable json records"
+    )
 
     # Add
-    add_parser = sp.add_parser("add", help=repo_add.__doc__)
+    add_parser = sp.add_parser(
+        "add", description=doc_dedented(repo_add), help=doc_first_line(repo_add)
+    )
     add_parser.add_argument(
         "path_or_repo", help="path or git repository of a Spack package repository"
     )
@@ -91,7 +107,9 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     # Set (modify existing repository configuration)
-    set_parser = sp.add_parser("set", help=repo_set.__doc__)
+    set_parser = sp.add_parser(
+        "set", description=doc_dedented(repo_set), help=doc_first_line(repo_set)
+    )
     set_parser.add_argument("namespace", help="namespace of a Spack package repository")
     set_parser.add_argument(
         "--destination", help="destination to clone git repository into", action="store"
@@ -111,7 +129,12 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     # Remove
-    remove_parser = sp.add_parser("remove", help=repo_remove.__doc__, aliases=["rm"])
+    remove_parser = sp.add_parser(
+        "remove",
+        description=doc_dedented(repo_remove),
+        help=doc_first_line(repo_remove),
+        aliases=["rm"],
+    )
     remove_parser.add_argument(
         "namespace_or_path", help="namespace or path of a Spack package repository"
     )
@@ -126,7 +149,9 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     # Migrate
-    migrate_parser = sp.add_parser("migrate", help=repo_migrate.__doc__)
+    migrate_parser = sp.add_parser(
+        "migrate", description=doc_dedented(repo_migrate), help=doc_first_line(repo_migrate)
+    )
     migrate_parser.add_argument(
         "namespace_or_path", help="path to a Spack package repository directory"
     )
@@ -143,7 +168,9 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     # Update
-    update_parser = sp.add_parser("update", help=repo_update.__doc__)
+    update_parser = sp.add_parser(
+        "update", description=doc_dedented(repo_update), help=doc_first_line(repo_update)
+    )
     update_parser.add_argument("names", nargs="*", default=[], help="repositories to update")
     update_parser.add_argument(
         "--remote",
@@ -166,6 +193,30 @@ def setup_parser(subparser: argparse.ArgumentParser):
     refspec.add_argument(
         "--commit", "-c", nargs="?", default=None, help="name of a commit to change to"
     )
+
+    # Show updates
+    show_version_updates_parser = sp.add_parser(
+        "show-version-updates", help=repo_show_version_updates.__doc__
+    )
+    show_version_updates_parser.add_argument(
+        "--no-manual-packages", action="store_true", help="exclude manual packages"
+    )
+    show_version_updates_parser.add_argument(
+        "--no-git-versions", action="store_true", help="exclude versions from git"
+    )
+    show_version_updates_parser.add_argument(
+        "--only-redistributable", action="store_true", help="exclude non-redistributable packages"
+    )
+    show_version_updates_parser.add_argument(
+        "--no-deprecated", action="store_true", help="exclude deprecated versions"
+    )
+    show_version_updates_parser.add_argument(
+        "repository", help="name or path of the repository to analyze"
+    )
+    show_version_updates_parser.add_argument(
+        "from_ref", help="git ref from which to start looking at changes"
+    )
+    show_version_updates_parser.add_argument("to_ref", help="git ref to end looking at changes")
 
 
 def repo_create(args):
@@ -207,7 +258,7 @@ def _add_repo(
             raise SpackError("The 'destination' argument is only valid for git repositories")
         elif paths:
             raise SpackError("The --paths flag is only valid for git repositories")
-        entry = spack.util.path.canonicalize_path(path_or_repo)
+        entry = spack.config.canonicalize_path(path_or_repo)
 
     descriptor = spack.repo.parse_config_descriptor(
         name or "<unnamed>", entry, lock=spack.repo.package_repository_lock()
@@ -276,14 +327,14 @@ def _remove_repo(namespace_or_path, scope):
         key = namespace_or_path
     else:
         # delete by namespace or path (requires constructing the repo)
-        canon_path = spack.util.path.canonicalize_path(namespace_or_path)
+        canon_path = spack.config.canonicalize_path(namespace_or_path)
         descriptors = spack.repo.RepoDescriptors.from_config(
             spack.repo.package_repository_lock(), spack.config.CONFIG, scope=scope
         )
         for name, descriptor in descriptors.items():
             descriptor.initialize(fetch=False)
 
-            # For now you cannot delete monorepos with multipe package repositories from config,
+            # For now you cannot delete monorepos with multiple package repositories from config,
             # hence "all" and not "any". We can improve this later if needed.
             if all(
                 r.namespace == namespace_or_path or r.root == canon_path
@@ -302,7 +353,11 @@ def _remove_repo(namespace_or_path, scope):
 
 
 def repo_list(args):
-    """show registered repositories and their namespaces"""
+    """show registered repositories and their namespaces
+
+    List all package repositories known to Spack. Repositories
+    can be local directories or remote git repositories.
+    """
     descriptors = spack.repo.RepoDescriptors.from_config(
         lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG, scope=args.scope
     )
@@ -320,25 +375,61 @@ def repo_list(args):
                 print(maybe_repo.namespace)
         return
 
-    # Default table format: collect all repository information for aligned output
+    # Collect all repository information
     repo_info = []
 
     for name, path, maybe_repo in _iter_repos_from_descriptors(descriptors):
         if isinstance(maybe_repo, spack.repo.Repo):
-            repo_info.append(
-                ("@g{[+]}", maybe_repo.namespace, maybe_repo.package_api_str, maybe_repo.root)
-            )
+            status = "installed"
+            namespace = maybe_repo.namespace
+            api = maybe_repo.package_api_str
+            repo_path = maybe_repo.root
         elif maybe_repo is None:  # Uninitialized Git-based repo case
-            repo_info.append(("@K{ - }", name, "", path))
+            status = "uninitialized"
+            namespace = name
+            api = ""
+            repo_path = path
         else:  # Exception/error case
-            repo_info.append(("@r{[-]}", name, "", f"{path}: {maybe_repo}"))
+            status = "error"
+            namespace = name
+            api = ""
+            repo_path = path
 
-    if repo_info:
-        max_namespace_width = max(len(namespace) for _, namespace, _, _ in repo_info) + 3
-        max_api_width = max(len(api) for _, _, api, _ in repo_info) + 3
+        # Add the repo info to our list
+        repo_info.append(
+            {
+                "name": name,
+                "namespace": namespace,
+                "path": repo_path,
+                "api_version": api,
+                "status": status,
+                "error": str(maybe_repo) if isinstance(maybe_repo, Exception) else None,
+            }
+        )
+
+    # Output in JSON format if requested
+    if args.json:
+        sjson.dump(repo_info, sys.stdout)
+        return
+
+    # Default table format with aligned output
+    formatted_repo_info = []
+    for repo in repo_info:
+        if repo["status"] == "installed":
+            status = "@g{[+]}"
+        elif repo["status"] == "uninitialized":
+            status = "@K{ - }"
+        else:  # error
+            status = "@r{[-]}"
+
+        formatted_repo_info.append((status, repo["namespace"], repo["api_version"], repo["path"]))
+
+    if formatted_repo_info:
+        max_namespace_width = max(len(namespace) for _, namespace, _, _ in formatted_repo_info) + 3
+        max_api_width = max(len(api) for _, _, api, _ in formatted_repo_info) + 3
 
         # Print aligned output
-        for status, namespace, api, path in repo_info:
+        for status, namespace, api, path in formatted_repo_info:
             cpath = color.cescape(path)
             color.cprint(
                 f"{status} {namespace:<{max_namespace_width}} {api:<{max_api_width}} {cpath}"
@@ -346,7 +437,7 @@ def repo_list(args):
 
 
 def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
-    """Get a repo by path or namespace"""
+    """get a repo by path or namespace"""
     try:
         return spack.repo.from_path(name_or_path)
     except spack.repo.RepoError:
@@ -490,7 +581,7 @@ def _iter_repos_from_descriptors(
             yield name, descriptor.repository, None  # None indicates remote descriptor
 
 
-def repo_update(args: Any) -> int:
+def repo_update(args):
     """update one or more package repositories"""
     descriptors = spack.repo.RepoDescriptors.from_config(
         spack.repo.package_repository_lock(), spack.config.CONFIG
@@ -560,12 +651,91 @@ def repo_update(args: Any) -> int:
                 )
 
             else:
-                tty.msg(f"{name}: Updated sucessfully.")
+                tty.msg(f"{name}: Updated successfully.")
 
     if active_flag:
         spack.config.set("repos", scope_repos, args.scope)
 
-    return 0
+
+def repo_show_version_updates(args):
+    """show version specs that were added between two commits"""
+    # Get the repository by name or path
+    repo = _get_repo(args.repository)
+
+    if repo is None:
+        tty.die(f"No such repository: {args.repository}")
+
+    # Get packages that were changed or added between the refs
+    pkgs = spack.repo.get_all_package_diffs("AC", repo, args.from_ref, args.to_ref)
+
+    # Filter out manual packages if requested
+    if args.no_manual_packages:
+        pkgs = {pkg_name for pkg_name in pkgs if not repo.get_pkg_class(pkg_name).manual_download}
+
+    if not pkgs:
+        tty.info("No packages were added or changed between the specified refs", stream=sys.stderr)
+        return 0
+
+    # Collect version specs that were added
+    specs_to_output = []
+
+    for pkg_name in pkgs:
+        pkg_cls = repo.get_pkg_class(pkg_name)
+        path = repo.filename_for_package_name(pkg_name)
+
+        # Get all versions with checksums or commits
+        version_to_checksum: Dict[StandardVersion, str] = {}
+        for version in pkg_cls.versions:
+            version_dict = pkg_cls.versions[version]
+            if "sha256" in version_dict:
+                version_to_checksum[version] = version_dict["sha256"]
+            elif "commit" in version_dict:
+                version_to_checksum[version] = version_dict["commit"]
+
+        # Find versions added between the refs
+        with fs.working_dir(os.path.dirname(path)):
+            added_checksums = spack.ci.filter_added_checksums(
+                version_to_checksum.values(), path, from_ref=args.from_ref, to_ref=args.to_ref
+            )
+            new_versions = [v for v, c in version_to_checksum.items() if c in added_checksums]
+
+        # Create specs for new versions
+        for version in new_versions:
+            version_spec = spack.spec.Spec(pkg_name)
+            version_spec.constrain(f"@={version}")
+            specs_to_output.append(version_spec)
+
+    # Filter out git versions if requested
+    if args.no_git_versions:
+        specs_to_output = [
+            spec
+            for spec in specs_to_output
+            if "commit" not in repo.get_pkg_class(spec.name).versions[spec.version]
+        ]
+
+    # Filter out non-redistributable packages if requested
+    if args.only_redistributable:
+        specs_to_output = [
+            spec
+            for spec in specs_to_output
+            if repo.get_pkg_class(spec.name).redistribute_source(spec)
+        ]
+
+    # Filter out deprecated versions if requested
+    if args.no_deprecated:
+        specs_to_output = [
+            spec
+            for spec in specs_to_output
+            if not repo.get_pkg_class(spec.name).versions[spec.version].get("deprecated", False)
+        ]
+
+    if not specs_to_output:
+        tty.info("No new package versions found between the specified refs", stream=sys.stderr)
+        return 0
+
+    # Output specs one per line
+    for spec in specs_to_output:
+        print(spec)
 
 
 def repo(parser, args):
@@ -579,4 +749,5 @@ def repo(parser, args):
         "rm": repo_remove,
         "migrate": repo_migrate,
         "update": repo_update,
+        "show-version-updates": repo_show_version_updates,
     }[args.repo_command](args)

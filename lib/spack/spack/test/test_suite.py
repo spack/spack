@@ -14,8 +14,8 @@ import spack.install_test
 import spack.spec
 import spack.util.executable
 from spack.install_test import TestStatus
-from spack.llnl.util.filesystem import touch
 from spack.util.executable import which
+from spack.util.filesystem import touch
 
 
 def _true(*args, **kwargs):
@@ -203,12 +203,6 @@ def test_test_function_names(mock_packages, install_mockery, virtuals, expected)
     spec = spack.concretize.concretize_one("mpich")
     tests = spack.install_test.test_function_names(spec.package, add_virtuals=virtuals)
     assert sorted(tests) == sorted(expected)
-
-
-def test_test_functions_fails():
-    """Confirm test_functions raises error if no package."""
-    with pytest.raises(ValueError, match="Expected a package"):
-        spack.install_test.test_functions(str)
 
 
 def test_test_functions_pkgless(mock_packages, install_mockery, ensure_debug, capfd):

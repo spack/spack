@@ -9,9 +9,9 @@ from typing import List
 
 import pytest
 
-import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.util.executable as ex
+import spack.util.filesystem as fs
 from spack.hooks.sbang import filter_shebangs_in_directory
 
 
@@ -32,9 +32,7 @@ def test_read_unicode(tmp_path: pathlib.Path, working_env):
             f.write(
                 """#!{0}
 print(u'\\xc3')
-""".format(
-                    sys.executable
-                )
+""".format(sys.executable)
             )
 
         # make it executable
@@ -163,3 +161,17 @@ def test_construct_from_pathlib(mock_executable):
     path = mock_executable("hello", output=f"echo {expected}\n")
     hello = ex.Executable(path)
     assert expected in hello(output=str)
+
+
+def test_exe_disallows_str_split_as_input(mock_executable):
+    path = mock_executable("hello", output="echo hi\n")
+    hello = ex.Executable(path)
+    with pytest.raises(ValueError):
+        hello(input=str.split)
+
+
+def test_exe_disallows_callable_as_output(mock_executable):
+    path = mock_executable("hello", output="echo hi\n")
+    hello = ex.Executable(path)
+    with pytest.raises(ValueError):
+        hello(output=lambda line: line)

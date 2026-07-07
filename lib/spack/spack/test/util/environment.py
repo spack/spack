@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test Spack's environment utility functions."""
+
 import os
 import pathlib
 import sys

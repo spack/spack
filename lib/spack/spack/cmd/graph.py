@@ -9,7 +9,7 @@ import spack.environment as ev
 import spack.store
 from spack.cmd.common import arguments
 from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_dot, static_graph_dot
-from spack.llnl.util import tty
+from spack.util import tty
 
 description = "generate graphs of package dependency relationships"
 section = "query"
@@ -51,16 +51,16 @@ in the lockfile.
         "-i", "--installed", action="store_true", help="graph specs from the DB"
     )
 
-    arguments.add_common_arguments(subparser, ["deptype", "specs"])
+    arguments.add_common_arguments(subparser, ["deptype", "long", "very_long", "specs"])
 
 
 def graph(parser, args):
     env = ev.active_environment()
     if args.installed and env:
-        tty.die("cannot use --installed with an active environment")
+        args.subparser.error("cannot use --installed with an active environment")
 
     if args.color and not args.dot:
-        tty.die("the --color option can be used only with --dot")
+        args.subparser.error("the --color option can be used only with --dot")
 
     if args.installed:
         if not args.specs:
@@ -86,9 +86,16 @@ def graph(parser, args):
         return
 
     if args.dot:
-        builder = SimpleDAG()
+        if args.very_long:
+            node_label_fmt = "{name}{@version}{/hash}"
+        elif args.long:
+            node_label_fmt = "{name}{@version}{/hash:7}"
+        else:
+            node_label_fmt = "{name}{@version}"
         if args.color:
-            builder = DAGWithDependencyTypes()
+            builder = DAGWithDependencyTypes(node_label_fmt)
+        else:
+            builder = SimpleDAG(node_label_fmt)
         graph_dot(specs, builder=builder, depflag=args.deptype)
         return
 

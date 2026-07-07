@@ -11,8 +11,7 @@ properties: Dict[str, Any] = {
         "additionalProperties": {
             "type": "object",
             "additionalProperties": False,
-            "description": "Name of a package to develop, with its spec and optional "
-            "source path",
+            "description": "Name of a package to develop, with its spec and optional source path",
             "required": ["spec"],
             "properties": {
                 "spec": {

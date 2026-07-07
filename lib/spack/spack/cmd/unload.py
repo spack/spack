@@ -69,8 +69,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def unload(parser, args):
     """unload spack packages from the user environment"""
     if args.specs and args.all:
-        raise spack.error.SpackError(
-            "Cannot specify specs on command line when unloading all specs with '--all'"
+        args.subparser.error(
+            "cannot specify specs on command line when unloading all specs with '--all'"
         )
 
     hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(os.pathsep)
