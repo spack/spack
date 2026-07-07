@@ -20,7 +20,6 @@ import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.generate_env_scripts as generate_script
-import spack.llnl.util.tty as tty
 import spack.tengine
 import spack.util.filesystem as fs
 import spack.util.string

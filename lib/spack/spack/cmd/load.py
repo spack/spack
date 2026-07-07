@@ -10,7 +10,7 @@ import spack.cmd
 import spack.cmd.common
 import spack.environment as ev
 import spack.hooks.generate_spec_scripts as generate_script
-import spack.llnl.util.tty as tty
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "add package to the user environment"

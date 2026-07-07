@@ -9,9 +9,9 @@ import sys
 import spack.cmd
 import spack.cmd.common
 import spack.hooks.generate_spec_scripts as generate_script
-import spack.llnl.util.tty as tty
 import spack.store
 import spack.user_environment as uenv
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "remove package from the user environment"

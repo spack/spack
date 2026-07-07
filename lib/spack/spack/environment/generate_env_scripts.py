@@ -6,8 +6,8 @@ import sys
 from datetime import datetime
 
 import spack.environment.shell
-import spack.llnl.util.tty as tty
 import spack.util.filesystem as fs
+import spack.util.tty as tty
 from spack.util.environment import EnvironmentModifications
 
 
