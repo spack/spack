@@ -903,8 +903,8 @@ def start_build(
 
 
 class BuildInfo:
-    """Plain data about a package being built: the payload of ``InstallerUI.add_build`` and the
-    per-build record of the terminal UI. Conceptually a dataclass."""
+    """Plain data about a package being built: the payload of ``InstallerUI.on_build_added`` and
+    the per-build record of the terminal UI. Conceptually a dataclass."""
 
     __slots__ = (
         "id",
@@ -976,11 +976,11 @@ class EventLoopController:
 
     def increase_jobs(self) -> None:
         self._jobserver.increase_parallelism()
-        self._installer.ui.set_jobs(self._jobserver.num_jobs, self._jobserver.target_jobs)
+        self._installer.ui.on_jobs_changed(self._jobserver.num_jobs, self._jobserver.target_jobs)
 
     def decrease_jobs(self) -> None:
         self._jobserver.decrease_parallelism()
-        self._installer.ui.set_jobs(self._jobserver.num_jobs, self._jobserver.target_jobs)
+        self._installer.ui.on_jobs_changed(self._jobserver.num_jobs, self._jobserver.target_jobs)
 
 
 class InstallerUI:
@@ -999,43 +999,45 @@ class InstallerUI:
         self.is_tty = False
         #: Whether the frontend renders to and reads keyboard input from the controlling
         #: terminal. If True, the event loop manages terminal state (cbreak mode, suspend/resume
-        #: signals, stdin registration) and feeds keyboard input to ``handle_input``.
+        #: signals, stdin registration) and feeds keyboard input to ``on_input``.
         self.reads_terminal_input = False
 
-    def add_build(self, info: BuildInfo) -> None:
+    def on_build_added(self, info: BuildInfo) -> None:
         """A build was started, or a spec was found installed by another process."""
 
-    def remove_build(self, build_id: str) -> None:
-        """A build was removed (e.g. after a binary cache miss before a source retry)."""
+    def on_build_removed(self, build_id: str) -> None:
+        """A build was removed after a binary cache miss; it is added back via
+        ``on_build_added`` once it is rescheduled as a source build."""
 
-    def update_state(self, build_id: str, state: str) -> None:
+    def on_state_changed(self, build_id: str, state: str) -> None:
         """A build transitioned to a new state (e.g. ``"staging"``, ``"finished"``)."""
 
-    def update_progress(self, build_id: str, current: int, total: int) -> None:
+    def on_progress(self, build_id: str, current: int, total: int) -> None:
         """Fetch progress of a build changed."""
 
-    def increase_total(self, count: int) -> None:
+    def on_total_increased(self, count: int) -> None:
         """The total number of scheduled builds increased (e.g. build dep expansion)."""
 
-    def print_logs(self, build_id: str, data: bytes) -> None:
+    def on_log_output(self, build_id: str, data: bytes) -> None:
         """Raw log output received from a build whose echoing is enabled."""
 
-    def print_failure_summaries(self, build_ids: List[str]) -> None:
-        """Installation is ending with failed builds; the frontend may print failure details."""
+    def on_finished(self, failures: List[str]) -> None:
+        """Installation finished; ``failures`` holds the build ids of failed builds (empty on
+        success). The frontend may print failure details."""
 
-    def set_jobs(self, actual: int, target: int) -> None:
+    def on_jobs_changed(self, actual: int, target: int) -> None:
         """The actual and/or target number of concurrent jobs changed."""
 
-    def set_blocked(self, blocked: bool) -> None:
+    def on_blocked_changed(self, blocked: bool) -> None:
         """Whether all pending builds are blocked by another Spack process."""
 
-    def handle_input(self, chars: str) -> None:
+    def on_input(self, chars: str) -> None:
         """Keyboard input received (only called for interactive frontends)."""
 
     def on_resize(self) -> None:
         """The terminal was resized (only called for interactive frontends)."""
 
-    def set_headless(self, headless: bool) -> None:
+    def on_headless_changed(self, headless: bool) -> None:
         """The process moved to the background (True) or foreground (False); the frontend should
         suppress rendering while headless. Called only through the terminal path."""
 
@@ -1113,7 +1115,7 @@ class TerminalUI(InstallerUI):
         self.terminal_size_changed = True
         self.dirty = True
 
-    def set_headless(self, headless: bool) -> None:
+    def on_headless_changed(self, headless: bool) -> None:
         if headless:
             # The display is invalidated: the shell may print over it while we're suspended or in
             # the background, so the next render must append instead of moving the cursor up.
@@ -1129,7 +1131,7 @@ class TerminalUI(InstallerUI):
             return None
         return SPINNER_INTERVAL
 
-    def add_build(self, info: BuildInfo) -> None:
+    def on_build_added(self, info: BuildInfo) -> None:
         """Add a new build to the display and mark the display as dirty."""
         info.start_time = int(self.get_time())
         self.builds[info.id] = info
@@ -1140,7 +1142,7 @@ class TerminalUI(InstallerUI):
             self.tracked_build_id = info.id
             self.controller.set_echo(info.id, True)
 
-    def remove_build(self, build_id: str) -> None:
+    def on_build_removed(self, build_id: str) -> None:
         """Remove a build from the display (e.g. after a binary cache miss before retry)."""
         self.builds.pop(build_id, None)
         if self.tracked_build_id == build_id:
@@ -1185,7 +1187,7 @@ class TerminalUI(InstallerUI):
         self.search_mode = True
         self.dirty = True
 
-    def handle_input(self, chars: str) -> None:
+    def on_input(self, chars: str) -> None:
         """Dispatch keyboard input to search, navigation, and parallelism actions."""
         for char in chars:
             overview = self.overview_mode
@@ -1270,7 +1272,7 @@ class TerminalUI(InstallerUI):
             self.stdout.flush()
             self.controller.set_echo(new_build_id, True)
 
-    def set_blocked(self, blocked: bool) -> None:
+    def on_blocked_changed(self, blocked: bool) -> None:
         """Set whether all pending builds are blocked by another Spack process."""
         if blocked == self.blocked:
             return
@@ -1289,7 +1291,7 @@ class TerminalUI(InstallerUI):
         self.stdout.write(f"\x1b]0;{term_title}\x07")
         self.stdout.flush()
 
-    def set_jobs(self, actual: int, target: int) -> None:
+    def on_jobs_changed(self, actual: int, target: int) -> None:
         """Set the actual and target number of jobs to run concurrently."""
         if actual == self.actual_jobs and target == self.target_jobs:
             return
@@ -1298,7 +1300,7 @@ class TerminalUI(InstallerUI):
         self.dirty = True
         self._update_terminal_title()
 
-    def update_state(self, build_id: str, state: str) -> None:
+    def on_state_changed(self, build_id: str, state: str) -> None:
         """Update the state of a package and mark the display as dirty."""
         build_info = self.builds[build_id]
         build_info.state = state
@@ -1343,17 +1345,17 @@ class TerminalUI(InstallerUI):
         if events:
             build_info.log_summary = make_log_context(events)
 
-    def print_failure_summaries(self, build_ids: List[str]) -> None:
+    def on_finished(self, failures: List[str]) -> None:
         """Write the stored log summaries of the failed builds to stderr."""
-        for build_id in build_ids:
+        for build_id in failures:
             build_info = self.builds.get(build_id)
             if build_info is not None and build_info.log_summary:
                 sys.stderr.write(build_info.log_summary)
 
-    def increase_total(self, count: int) -> None:
+    def on_total_increased(self, count: int) -> None:
         self.total += count
 
-    def update_progress(self, build_id: str, current: int, total: int) -> None:
+    def on_progress(self, build_id: str, current: int, total: int) -> None:
         """Update the progress of a package and mark the display as dirty."""
         percent = int((current / total) * 100)
         build_info = self.builds[build_id]
@@ -1504,7 +1506,7 @@ class TerminalUI(InstallerUI):
         else:
             buffer.write("\033[0m\033[K\033[1B\r")  # reset, clear to EOL, move to next line
 
-    def print_logs(self, build_id: str, data: bytes) -> None:
+    def on_log_output(self, build_id: str, data: bytes) -> None:
         if self.headless:
             return
         # Discard logs we are not following. Generally this should not happen as we tell the child
@@ -2245,9 +2247,9 @@ class PackageInstaller:
         self.ui = ui or TerminalUI(
             total=0, verbose=verbose, filter_padding=self.store.has_padding()
         )
-        self.ui.increase_total(len(self.build_graph.nodes))
+        self.ui.on_total_increased(len(self.build_graph.nodes))
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
-        self.ui.set_jobs(self.jobs, self.jobs)
+        self.ui.on_jobs_changed(self.jobs, self.jobs)
         if concurrent_packages is None:
             concurrent_packages_config = spack.config.get("config:concurrent_packages", 0)
             # The value 0 in config means no limit (other than self.jobs)
@@ -2299,7 +2301,7 @@ class PackageInstaller:
         if self.ui.reads_terminal_input and TerminalState.stdin_is_interactive():
             terminal = TerminalState(
                 selector,
-                on_headless=self.ui.set_headless,
+                on_headless=self.ui.on_headless_changed,
                 on_suspend=lambda: _signal_children(self.running_builds, signal.SIGSTOP),
                 on_resume=lambda: _signal_children(self.running_builds, signal.SIGCONT),
             )
@@ -2382,7 +2384,7 @@ class PackageInstaller:
                         self.ui.on_resize()
                     elif data == "jobserver" and not jobserver.has_target_parallelism():
                         jobserver._maybe_discard_tokens()
-                        self.ui.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+                        self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
 
                 current_time = time.monotonic()
                 for build_id in finished_builds:
@@ -2399,7 +2401,7 @@ class PackageInstaller:
                     self.pending_expansions.clear()
 
                 if stdin_ready and terminal is not None:
-                    self.ui.handle_input(terminal.read_input())
+                    self.ui.on_input(terminal.read_input())
 
                 # Try to expand build deps for cache-miss specs. This requires a read lock on the
                 # database, meaning that it can take several iterations of the event loop in case
@@ -2502,8 +2504,9 @@ class PackageInstaller:
                 except OSError:
                     pass
 
+        self.ui.on_finished([s.dag_hash() for s in failures])
+
         if failures:
-            self.ui.print_failure_summaries([s.dag_hash() for s in failures])
             lines = [f"{s}: {self.log_paths[s.dag_hash()]}" for s in failures]
             raise spack.error.InstallError(
                 "The following packages failed to install:\n" + "\n".join(lines)
@@ -2524,7 +2527,7 @@ class PackageInstaller:
         build = self.running_builds.pop(dag_hash)
         self.capacity += 1
         jobserver.release()
-        self.ui.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+        self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
         self._drain_child_output(build, selector)
         self._drain_child_state(build, selector)
         exitcode = build.close(selector)
@@ -2540,7 +2543,7 @@ class PackageInstaller:
             build.prefix_lock = None
             self.build_graph.enqueue_parents(dag_hash, self.pending_builds)
             self.next_database_write = current_time + DATABASE_WRITE_INTERVAL
-            self.ui.update_state(dag_hash, "finished")
+            self.ui.on_state_changed(dag_hash, "finished")
             return
 
         # When we don't have to do a db write, we can release the lock immediately.
@@ -2555,7 +2558,7 @@ class PackageInstaller:
             # Check if we can reschedule this as a source build after a build cache miss. If so,
             # return early without recording a failure.
             self.build_graph.force_source.add(dag_hash)
-            self.ui.remove_build(dag_hash)
+            self.ui.on_build_removed(dag_hash)
             if self.build_graph.has_unexpanded_build_deps(dag_hash):
                 self.pending_expansions.append(dag_hash)
             else:
@@ -2564,7 +2567,7 @@ class PackageInstaller:
             # Record a failure. In fail-fast mode, only record the first failure; subsequent
             # failures may be a consequence of us terminating other builds.
             failures.append(build.spec)
-            self.ui.update_state(dag_hash, "failed")
+            self.ui.on_state_changed(dag_hash, "failed")
 
     def _try_expand_build_deps(self) -> None:
         """Try to expand build deps for specs with cache misses. Non-blocking: returns immediately
@@ -2585,7 +2588,7 @@ class PackageInstaller:
                 self.binary_cache_for_spec[h] = (
                     spack.binary_distribution.BINARY_INDEX.find_by_hash(h)
                 )
-            self.ui.increase_total(len(newly_added))
+            self.ui.on_total_increased(len(newly_added))
             self.pending_expansions.clear()
 
     def _flush_db_if_due(
@@ -2670,12 +2673,12 @@ class PackageInstaller:
         # Specs installed by another process.
         for dag_hash, spec, lock in result.newly_installed:
             retained_read_locks.append(lock)
-            self.ui.add_build(self._build_info(spec, explicit=dag_hash in self.explicit))
-            self.ui.update_state(dag_hash, "finished")
+            self.ui.on_build_added(self._build_info(spec, explicit=dag_hash in self.explicit))
+            self.ui.on_state_changed(dag_hash, "finished")
         # Specs we can start building ourselves.
         for dag_hash, lock in result.to_start:
             self._start(selector, jobserver, dag_hash, lock)
-        self.ui.set_blocked(blocked and not self.running_builds)
+        self.ui.on_blocked_changed(blocked and not self.running_builds)
         return blocked
 
     def _effective_install_policy(self, dag_hash: str, is_root: bool) -> InstallPolicy:
@@ -2745,7 +2748,7 @@ class PackageInstaller:
         child_info.prefix_lock = prefix_lock
         self.running_builds[dag_hash] = child_info
         child_info.register_with_selector(selector, dag_hash)
-        self.ui.add_build(
+        self.ui.on_build_added(
             self._build_info(child_info.spec, explicit=explicit, log_path=child_info.log_path)
         )
         self.report_data.start_record(spec)
@@ -2795,7 +2798,7 @@ class PackageInstaller:
                 pass
             return False
 
-        self.ui.print_logs(child_info.spec.dag_hash(), data)
+        self.ui.on_log_output(child_info.spec.dag_hash(), data)
         return True
 
     def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
@@ -2847,9 +2850,9 @@ class PackageInstaller:
             except ValueError:
                 continue
             if "state" in message:
-                self.ui.update_state(dag_hash, message["state"])
+                self.ui.on_state_changed(dag_hash, message["state"])
             elif "progress" in message and "total" in message:
-                self.ui.update_progress(dag_hash, message["progress"], message["total"])
+                self.ui.on_progress(dag_hash, message["progress"], message["total"])
             elif "installed_from_binary_cache" in message:
                 child_info.spec.package.installed_from_binary_cache = True
 

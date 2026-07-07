@@ -92,7 +92,7 @@ class _NoopController:
     def decrease_jobs(self) -> None: ...
 
 
-def add_build(
+def on_build_added(
     tui: TerminalUI,
     build_id: str,
     *,
@@ -105,7 +105,7 @@ def add_build(
 ) -> None:
     """Add a build with plain data, defaulting name and prefix from the build id."""
     name = name if name is not None else build_id
-    tui.add_build(
+    tui.on_build_added(
         inst.BuildInfo(
             build_id,
             name=name,
@@ -122,7 +122,7 @@ def add_mock_builds(tui: TerminalUI, count: int) -> List[str]:
     """Helper function to add builds to a TerminalUI instance. Returns the build ids."""
     build_ids = [f"pkg{i}" for i in range(count)]
     for i, build_id in enumerate(build_ids):
-        add_build(tui, build_id, version=f"{i}.0")
+        on_build_added(tui, build_id, version=f"{i}.0")
     return build_ids
 
 
@@ -167,34 +167,34 @@ class TestBasicStateManagement:
         assert tui.terminal_size_changed is False
 
     def test_add_build(self):
-        """Test that add_build adds builds correctly"""
+        """Test that on_build_added adds builds correctly"""
         tui, _, _ = create_tui(total=2)
 
-        add_build(tui, "pkg1", explicit=True)
+        on_build_added(tui, "pkg1", explicit=True)
         assert len(tui.builds) == 1
         assert "pkg1" in tui.builds
         assert tui.builds["pkg1"].name == "pkg1"
         assert tui.builds["pkg1"].explicit is True
         assert tui.dirty is True
 
-        add_build(tui, "pkg2", version="2.0", explicit=False)
+        on_build_added(tui, "pkg2", version="2.0", explicit=False)
         assert len(tui.builds) == 2
         assert "pkg2" in tui.builds
         assert tui.builds["pkg2"].explicit is False
 
     def test_update_state_transitions(self):
-        """Test that update_state transitions states properly"""
+        """Test that on_state_changed transitions states properly"""
         tui, fake_time, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
 
         # Update to 'building' state
-        tui.update_state(build_id, "building")
+        tui.on_state_changed(build_id, "building")
         assert tui.builds[build_id].state == "building"
         assert tui.builds[build_id].progress_percent is None
         assert tui.completed == 0
 
         # Update to 'finished' state
-        tui.update_state(build_id, "finished")
+        tui.on_state_changed(build_id, "finished")
         assert tui.builds[build_id].state == "finished"
         assert tui.completed == 1
         assert tui.builds[build_id].finished_time == fake_time[0] + inst.CLEANUP_TIMEOUT
@@ -204,18 +204,18 @@ class TestBasicStateManagement:
         tui, fake_time, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
 
-        tui.update_state(build_id, "failed")
+        tui.on_state_changed(build_id, "failed")
         assert tui.builds[build_id].state == "failed"
         assert tui.completed == 1
         assert tui.builds[build_id].finished_time == fake_time[0] + inst.CLEANUP_TIMEOUT
 
     def test_remove_build(self):
-        """Test that remove_build removes the build from the display."""
+        """Test that on_build_removed removes the build from the display."""
         tui, _, _ = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
 
         tui.dirty = False
-        tui.remove_build(build_ids[0])
+        tui.on_build_removed(build_ids[0])
         assert build_ids[0] not in tui.builds
         assert len(tui.builds) == 1
         assert tui.dirty is True
@@ -227,7 +227,7 @@ class TestBasicStateManagement:
 
         tui.tracked_build_id = build_id
         tui.overview_mode = False
-        tui.remove_build(build_id)
+        tui.on_build_removed(build_id)
         assert tui.tracked_build_id == ""
         assert tui.overview_mode is True
 
@@ -241,7 +241,7 @@ class TestBasicStateManagement:
         log_file.write_text("error: something went wrong\n")
 
         tui.builds[build_id].log_path = str(log_file)
-        tui.update_state(build_id, "failed")
+        tui.on_state_changed(build_id, "failed")
         assert tui.builds[build_id].log_summary is not None
         assert "error" in tui.builds[build_id].log_summary.lower()
 
@@ -250,7 +250,7 @@ class TestBasicStateManagement:
         tui, _, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
 
-        tui.update_state(build_id, "failed")
+        tui.on_state_changed(build_id, "failed")
         assert tui.builds[build_id].log_summary is None
 
     def test_failed_state_missing_log_file(self, tmp_path):
@@ -259,26 +259,26 @@ class TestBasicStateManagement:
         [build_id] = add_mock_builds(tui, 1)
 
         tui.builds[build_id].log_path = str(tmp_path / "nonexistent.log")
-        tui.update_state(build_id, "failed")
+        tui.on_state_changed(build_id, "failed")
         assert tui.builds[build_id].log_summary is None
 
     def test_update_progress(self):
-        """Test that update_progress updates percentages"""
+        """Test that on_progress updates percentages"""
         tui, _, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
 
         # Update progress
-        tui.update_progress(build_id, 50, 100)
+        tui.on_progress(build_id, 50, 100)
         assert tui.builds[build_id].progress_percent == 50
         assert tui.dirty is True
 
         # Same percentage shouldn't mark dirty again
         tui.dirty = False
-        tui.update_progress(build_id, 50, 100)
+        tui.on_progress(build_id, 50, 100)
         assert tui.dirty is False
 
         # Different percentage should mark dirty
-        tui.update_progress(build_id, 75, 100)
+        tui.on_progress(build_id, 75, 100)
         assert tui.builds[build_id].progress_percent == 75
         assert tui.dirty is True
 
@@ -289,13 +289,13 @@ class TestBasicStateManagement:
 
         assert tui.completed == 0
 
-        tui.update_state(build_ids[0], "finished")
+        tui.on_state_changed(build_ids[0], "finished")
         assert tui.completed == 1
 
-        tui.update_state(build_ids[1], "failed")
+        tui.on_state_changed(build_ids[1], "failed")
         assert tui.completed == 2
 
-        tui.update_state(build_ids[2], "finished")
+        tui.on_state_changed(build_ids[2], "finished")
         assert tui.completed == 3
 
 
@@ -306,8 +306,8 @@ class TestOutputRendering:
         """Test that non-TTY mode prints simple state changes"""
         tui, _, fake_stdout = create_tui(is_tty=False)
 
-        add_build(tui, "mypackage")
-        tui.update_state("mypackage", "finished")
+        on_build_added(tui, "mypackage")
+        tui.on_state_changed("mypackage", "finished")
 
         output = fake_stdout.getvalue()
         assert "[+]" in output
@@ -391,11 +391,11 @@ class TestOutputRendering:
         # Now finish 2 builds and add 2 more
         fake_stdout.clear()
         fake_time[0] = inst.CLEANUP_TIMEOUT + 0.1
-        tui.update_state(build_ids[0], "finished")
-        tui.update_state(build_ids[1], "finished")
+        tui.on_state_changed(build_ids[0], "finished")
+        tui.on_state_changed(build_ids[1], "finished")
 
-        add_build(tui, "pkg3", version="3.0")
-        add_build(tui, "pkg4", version="4.0")
+        on_build_added(tui, "pkg3", version="3.0")
+        on_build_added(tui, "pkg4", version="4.0")
 
         # Second update: finished builds persist (newlines), active area updates (cursor moves)
         tui.render()
@@ -439,7 +439,7 @@ class TestTimeBasedBehavior:
 
         # Mark as finished
         fake_time[0] = 0.0
-        tui.update_state(build_id, "finished")
+        tui.on_state_changed(build_id, "finished")
 
         # Build should still be in active builds
         assert build_id in tui.builds
@@ -461,7 +461,7 @@ class TestTimeBasedBehavior:
 
         # Mark as failed
         fake_time[0] = 0.0
-        tui.update_state(build_id, "failed")
+        tui.on_state_changed(build_id, "failed")
 
         # Advance time past cleanup timeout
         fake_time[0] = inst.CLEANUP_TIMEOUT + 0.01
@@ -527,9 +527,9 @@ class TestSearchAndFilter:
         """Test that _is_displayed filters by package name"""
         tui, _, _ = create_tui(total=3)
 
-        add_build(tui, "package-foo")
-        add_build(tui, "package-bar")
-        add_build(tui, "other")
+        on_build_added(tui, "package-foo")
+        on_build_added(tui, "package-bar")
+        on_build_added(tui, "other")
 
         build1 = tui.builds["package-foo"]
         build2 = tui.builds["package-bar"]
@@ -557,8 +557,8 @@ class TestSearchAndFilter:
         """Test that _is_displayed filters by hash prefix"""
         tui, _, _ = create_tui(total=2)
 
-        add_build(tui, "abc123", name="pkg1")
-        add_build(tui, "def456", name="pkg2")
+        on_build_added(tui, "abc123", name="pkg1")
+        on_build_added(tui, "def456", name="pkg2")
 
         build1 = tui.builds["abc123"]
         build2 = tui.builds["def456"]
@@ -623,7 +623,7 @@ class TestNavigation:
 
         build_ids = ["package-a", "package-b", "other-c", "package-d"]
         for build_id in build_ids:
-            add_build(tui, build_id)
+            on_build_added(tui, build_id)
 
         # Filter to only "package-*"
         tui.search_term = "package"
@@ -647,7 +647,7 @@ class TestNavigation:
         build_ids = add_mock_builds(tui, 3)
 
         # Mark middle build as finished
-        tui.update_state(build_ids[1], "finished")
+        tui.on_state_changed(build_ids[1], "finished")
 
         # Navigate from first
         tui.tracked_build_id = build_ids[0]
@@ -662,7 +662,7 @@ class TestNavigation:
 
         # Mark both as finished
         for build_id in build_ids:
-            tui.update_state(build_id, "finished")
+            tui.on_state_changed(build_id, "finished")
 
         # Should return None since no unfinished builds
         result = tui._get_next(1)
@@ -674,7 +674,7 @@ class TestNavigation:
 
         build_ids = ["package-a", "package-b", "other-c"]
         for build_id in build_ids:
-            add_build(tui, build_id)
+            on_build_added(tui, build_id)
 
         # Start tracking "other-c"
         tui.tracked_build_id = build_ids[2]
@@ -773,7 +773,7 @@ class TestBuildInfo:
 
 
 class TestLogFollowing:
-    """Test log following and print_logs functionality"""
+    """Test log following and on_log_output functionality"""
 
     def test_print_logs_when_following(self):
         """Test that logs are printed when following a specific build"""
@@ -786,7 +786,7 @@ class TestLogFollowing:
 
         # Send some log data
         log_data = b"Building package...\nRunning tests...\n"
-        tui.print_logs(build_id, log_data)
+        tui.on_log_output(build_id, log_data)
 
         # Check that logs were echoed to stdout
         assert fake_stdout._buffer.getvalue() == log_data
@@ -801,7 +801,7 @@ class TestLogFollowing:
 
         # Try to print logs
         log_data = b"Should not be printed\n"
-        tui.print_logs(build_id, log_data)
+        tui.on_log_output(build_id, log_data)
 
         # Nothing should be printed
         assert fake_stdout.getvalue() == ""
@@ -817,7 +817,7 @@ class TestLogFollowing:
 
         # Try to print logs from the second build (not tracked)
         log_data = b"Logs from pkg2\n"
-        tui.print_logs(build_ids[1], log_data)
+        tui.on_log_output(build_ids[1], log_data)
 
         # Nothing should be printed since we're tracking pkg0, not pkg1
         assert fake_stdout.getvalue() == ""
@@ -828,7 +828,7 @@ class TestLogFollowing:
         build_ids = add_mock_builds(tui, 3)
 
         # Mark the middle build as failed and set log info
-        tui.update_state(build_ids[1], "failed")
+        tui.on_state_changed(build_ids[1], "failed")
         build_info = tui.builds[build_ids[1]]
         build_info.log_summary = "Error: something went wrong\n"
         build_info.log_path = "/tmp/spack/pkg1.log"
@@ -851,7 +851,7 @@ class TestLogFollowing:
         build_ids = add_mock_builds(tui, 3)
 
         # Mark the middle build as finished (successful)
-        tui.update_state(build_ids[1], "finished")
+        tui.on_state_changed(build_ids[1], "finished")
 
         # Try to get next build, should skip the finished one
         tui.tracked_build_id = build_ids[0]
@@ -942,7 +942,7 @@ class TestNavigationIntegration:
         [build_id] = add_mock_builds(tui, 1)
 
         # Mark as finished
-        tui.update_state(build_id, "finished")
+        tui.on_state_changed(build_id, "finished")
 
         # Try to navigate
         initial_mode = tui.overview_mode
@@ -1033,7 +1033,7 @@ class TestToggle:
         assert tui.tracked_build_id == build_ids[0]
 
         # Mark the tracked build as finished
-        tui.update_state(build_ids[0], "finished")
+        tui.on_state_changed(build_ids[0], "finished")
 
         # Should have toggled back to overview mode
         assert tui.overview_mode is True
@@ -1047,12 +1047,12 @@ class TestToggle:
         # Follow a build, toggle back and forth between logs and overview mode, and receive logs
         # that may or may not end with newlines.
         tui.next()
-        tui.print_logs(build_a, b"checking for foo...")
+        tui.on_log_output(build_a, b"checking for foo...")
         tui.toggle()
         tui.next()
-        tui.print_logs(build_a, b"checking for bar... yes\n")
+        tui.on_log_output(build_a, b"checking for bar... yes\n")
         tui.next(1)
-        tui.print_logs(build_b, b"checking for baz...")
+        tui.on_log_output(build_b, b"checking for baz...")
         tui.next(-1)
 
         written = fake_stdout.getvalue()
@@ -1067,7 +1067,7 @@ class TestToggle:
 
     @pytest.mark.parametrize("filter_padding", [True, False])
     def test_print_logs_filters_padding(self, filter_padding):
-        """print_logs strips path-padding placeholders before writing to stdout."""
+        """on_log_output strips path-padding placeholders before writing to stdout."""
         tui, _, fake_stdout = create_tui(filter_padding=filter_padding)
         [build_id] = add_mock_builds(tui, 1)
         log_output = b"--with-foo=/base/__spack_path_placeholder__/__spack_path_placeholder__/bin"
@@ -1075,7 +1075,7 @@ class TestToggle:
         # track the build and print logs with the relevant path.
         tui.overview_mode = False
         tui.tracked_build_id = build_id
-        tui.print_logs(build_id, log_output)
+        tui.on_log_output(build_id, log_output)
         written = fake_stdout._buffer.getvalue()
 
         if filter_padding:
@@ -1089,8 +1089,8 @@ class TestToggle:
         padded_prefix = "/base/__spack_path_placeholder__/__spack_path_placeholder__/mypackage"
         tui, _, fake_stdout = create_tui(is_tty=False, filter_padding=filter_padding)
         build_id = "mypackage"
-        add_build(tui, build_id, prefix=padded_prefix)
-        tui.update_state(build_id, "finished")
+        on_build_added(tui, build_id, prefix=padded_prefix)
+        tui.on_state_changed(build_id, "finished")
         output = fake_stdout.getvalue()
         common = f"[+] {build_id[:7]} mypackage@1.0"
         if filter_padding:
@@ -1106,10 +1106,10 @@ class TestSearchFilteringIntegration:
         """Test that search mode actually filters what's displayed"""
         tui, _, fake_stdout = create_tui(total=4)
 
-        add_build(tui, "package-foo")
-        add_build(tui, "package-bar", version="2.0")
-        add_build(tui, "other-thing", version="3.0")
-        add_build(tui, "package-baz", version="4.0")
+        on_build_added(tui, "package-foo")
+        on_build_added(tui, "package-bar", version="2.0")
+        on_build_added(tui, "other-thing", version="3.0")
+        on_build_added(tui, "package-baz", version="4.0")
 
         # Enter search mode and search for "package"
         tui.enter_search()
@@ -1141,7 +1141,7 @@ class TestSearchFilteringIntegration:
 
         build_ids = ["package-a", "other-b", "package-c", "other-d"]
         for build_id in build_ids:
-            add_build(tui, build_id)
+            on_build_added(tui, build_id)
 
         # Set search term to filter for "package"
         tui.search_term = "package"
@@ -1179,9 +1179,9 @@ class TestSearchFilteringIntegration:
         """Test that clearing search term shows all builds again"""
         tui, _, fake_stdout = create_tui(total=3)
 
-        add_build(tui, "package-a")
-        add_build(tui, "other-b", version="2.0")
-        add_build(tui, "package-c", version="3.0")
+        on_build_added(tui, "package-a")
+        on_build_added(tui, "other-b", version="2.0")
+        on_build_added(tui, "package-c", version="3.0")
 
         # Enter search and type something
         tui.enter_search()
@@ -1224,8 +1224,8 @@ class TestEdgeCases:
         """Test that we don't print a header with finalize=True"""
         tui, _, fake_stdout = create_tui(total=2, color=False)
         build_a, build_b = add_mock_builds(tui, 2)
-        tui.update_state(build_a, "finished")
-        tui.update_state(build_b, "failed")
+        tui.on_state_changed(build_a, "finished")
+        tui.on_state_changed(build_b, "failed")
         tui.render(finalize=True)
 
         output = fake_stdout.getvalue()
@@ -1244,7 +1244,7 @@ class TestEdgeCases:
 
         # Mark all as finished
         for build_id in build_ids:
-            tui.update_state(build_id, "finished")
+            tui.on_state_changed(build_id, "finished")
 
         # Advance time and update
         fake_time[0] = inst.CLEANUP_TIMEOUT + 0.01
@@ -1260,13 +1260,13 @@ class TestEdgeCases:
         [build_id] = add_mock_builds(tui, 1)
 
         # Test rounding
-        tui.update_progress(build_id, 1, 3)
+        tui.on_progress(build_id, 1, 3)
         assert tui.builds[build_id].progress_percent == 33  # int(100/3)
 
-        tui.update_progress(build_id, 2, 3)
+        tui.on_progress(build_id, 2, 3)
         assert tui.builds[build_id].progress_percent == 66  # int(200/3)
 
-        tui.update_progress(build_id, 3, 3)
+        tui.on_progress(build_id, 3, 3)
         assert tui.builds[build_id].progress_percent == 100
 
 
@@ -1274,24 +1274,24 @@ class TestTerminalUIVerbose:
     """Tests for verbose non-TTY log tracking in TerminalUI."""
 
     def test_verbose_tracks_first_build(self):
-        """First add_build() in verbose non-TTY mode sets tracked_build_id and enables echoing."""
+        """First on_build_added for verbose non-TTY sets tracked_build_id and enables echoing."""
         tui, _, _ = create_tui(is_tty=False, verbose=True, total=4)
         echo_calls = record_echo(tui)
 
-        add_build(tui, "trivial-install-test-package")
+        on_build_added(tui, "trivial-install-test-package")
 
         assert tui.tracked_build_id == "trivial-install-test-package"
         assert echo_calls == [("trivial-install-test-package", True)]
 
     def test_verbose_does_not_track_when_already_tracking(self):
-        """Second add_build() while already tracking does not switch tracking."""
+        """Second on_build_added() while already tracking does not switch tracking."""
         tui, _, _ = create_tui(is_tty=False, verbose=True, total=4)
         echo_calls = record_echo(tui)
 
-        add_build(tui, "pkg1")
+        on_build_added(tui, "pkg1")
         first_tracked = tui.tracked_build_id
 
-        add_build(tui, "pkg2", explicit=False)
+        on_build_added(tui, "pkg2", explicit=False)
         assert tui.tracked_build_id == first_tracked
         assert tui.tracked_build_id == "pkg1"
 
@@ -1302,41 +1302,41 @@ class TestTerminalUIVerbose:
         """After the tracked build finishes, tracked_build_id is cleared."""
         tui, _, _ = create_tui(is_tty=False, verbose=True, total=4)
 
-        add_build(tui, "trivial-install-test-package")
+        on_build_added(tui, "trivial-install-test-package")
         assert tui.tracked_build_id == "trivial-install-test-package"
 
-        tui.update_state("trivial-install-test-package", "finished")
+        tui.on_state_changed("trivial-install-test-package", "finished")
         assert tui.tracked_build_id == ""
 
     def test_verbose_print_logs_tracked(self):
-        """print_logs() for the tracked build writes to stdout."""
+        """on_log_output() for the tracked build writes to stdout."""
         tui, _, stdout = create_tui(is_tty=False, verbose=True, total=1)
 
-        add_build(tui, "trivial-install-test-package")
-        tui.print_logs("trivial-install-test-package", b"hello log\n")
+        on_build_added(tui, "trivial-install-test-package")
+        tui.on_log_output("trivial-install-test-package", b"hello log\n")
 
         stdout.flush()
         assert stdout.buffer.getvalue() == b"hello log\n"
 
     def test_verbose_print_logs_untracked(self):
-        """print_logs() for an untracked build discards data."""
+        """on_log_output() for an untracked build discards data."""
         tui, _, stdout = create_tui(is_tty=False, verbose=True, total=2)
 
-        add_build(tui, "pkg1")
-        add_build(tui, "pkg2", explicit=False)
+        on_build_added(tui, "pkg1")
+        on_build_added(tui, "pkg2", explicit=False)
 
         # Only pkg1 is tracked; pkg2 logs should be discarded
-        tui.print_logs("pkg2", b"ignored\n")
+        tui.on_log_output("pkg2", b"ignored\n")
 
         stdout.flush()
         assert stdout.buffer.getvalue() == b""
 
     def test_verbose_tty_no_effect(self):
-        """In TTY mode, add_build() does not set tracked_build_id automatically."""
+        """In TTY mode, on_build_added() does not set tracked_build_id automatically."""
         tui, _, _ = create_tui(is_tty=True, verbose=True, total=4)
         echo_calls = record_echo(tui)
 
-        add_build(tui, "trivial-install-test-package")
+        on_build_added(tui, "trivial-install-test-package")
         assert tui.tracked_build_id == ""
         assert echo_calls == []
 
@@ -1347,55 +1347,55 @@ class TestTerminalUIColor:
     def test_non_tty_finished_color_true_emits_green(self):
         """color=True in non-TTY mode: finished line has per-component ANSI colors."""
         tui, _, stdout = create_tui(is_tty=False, total=1, color=True)
-        add_build(tui, "pkg")
-        tui.update_state("pkg", "finished")
+        on_build_added(tui, "pkg")
+        tui.on_state_changed("pkg", "finished")
         # green indicator, reset, dark-gray hash
         assert stdout.getvalue().startswith("\033[32m[+]\033[0m \033[0;90m")
 
     def test_non_tty_failed_color_true_emits_red(self):
         """color=True in non-TTY mode: failed line has per-component ANSI colors."""
         tui, _, stdout = create_tui(is_tty=False, total=1, color=True)
-        add_build(tui, "pkg")
-        tui.update_state("pkg", "failed")
+        on_build_added(tui, "pkg")
+        tui.on_state_changed("pkg", "failed")
         # red indicator, reset, dark-gray hash
         assert stdout.getvalue().startswith("\033[31m[x]\033[0m \033[0;90m")
 
     def test_non_tty_finished_color_false_no_ansi(self):
         """color=False in non-TTY mode: finished line has no ANSI escape codes."""
         tui, _, stdout = create_tui(is_tty=False, total=1, color=False)
-        add_build(tui, "pkg")
-        tui.update_state("pkg", "finished")
+        on_build_added(tui, "pkg")
+        tui.on_state_changed("pkg", "finished")
         assert "\033[" not in stdout.getvalue()
 
 
 class TestTargetJobs:
-    """Test set_jobs and its effect on the header."""
+    """Test on_jobs_changed and its effect on the header."""
 
     def test_set_jobs_marks_dirty(self):
-        """set_jobs with a new value should update target_jobs and mark dirty."""
+        """on_jobs_changed with a new value should update target_jobs and mark dirty."""
         tui, _, _ = create_tui()
         tui.dirty = False
-        tui.set_jobs(3, 2)
+        tui.on_jobs_changed(3, 2)
         assert tui.actual_jobs == 3
         assert tui.target_jobs == 2
         assert tui.dirty is True
-        tui.set_jobs(2, 2)
+        tui.on_jobs_changed(2, 2)
         assert tui.actual_jobs == 2
         assert tui.target_jobs == 2
 
     def test_set_jobs_same_value_no_dirty(self):
-        """set_jobs with the same value should not mark dirty."""
+        """on_jobs_changed with the same value should not mark dirty."""
         tui, _, _ = create_tui()
-        tui.set_jobs(5, 5)
+        tui.on_jobs_changed(5, 5)
         tui.dirty = False
-        tui.set_jobs(5, 5)
+        tui.on_jobs_changed(5, 5)
         assert tui.dirty is False
 
     def test_header_shows_target_jobs(self):
         """The rendered header should contain the target_jobs count and the word 'jobs'."""
         tui, _, fake_stdout = create_tui(total=1)
         add_mock_builds(tui, 1)
-        tui.set_jobs(4, 4)
+        tui.on_jobs_changed(4, 4)
         tui.render()
         output = fake_stdout.getvalue()
         assert "4" in output
@@ -1405,7 +1405,7 @@ class TestTargetJobs:
         """When actual != target, the header should show 'actual=>target jobs'."""
         tui, _, fake_stdout = create_tui(total=1)
         add_mock_builds(tui, 1)
-        tui.set_jobs(4, 2)
+        tui.on_jobs_changed(4, 2)
         tui.render()
         output = fake_stdout.getvalue()
         assert "4=>2" in output
@@ -1424,21 +1424,21 @@ class TestHeadlessMode:
         assert stdout.getvalue() == ""
 
     def test_print_logs_suppressed_when_headless(self):
-        """print_logs() should discard data when headless is True."""
+        """on_log_output() should discard data when headless is True."""
         tui, _, stdout = create_tui(is_tty=True, total=1)
         build_ids = add_mock_builds(tui, 1)
         tui.tracked_build_id = build_ids[0]
         tui.headless = True
-        tui.print_logs(build_ids[0], b"hello world\n")
+        tui.on_log_output(build_ids[0], b"hello world\n")
         assert stdout.getvalue() == ""
 
     def test_update_state_non_tty_suppressed_when_headless(self):
-        """update_state() non-TTY output should be suppressed when headless."""
+        """on_state_changed() non-TTY output should be suppressed when headless."""
         tui, _, stdout = create_tui(is_tty=False, total=1)
-        add_build(tui, "pkg")
+        on_build_added(tui, "pkg")
         tui.headless = True
         stdout.clear()
-        tui.update_state("pkg", "finished")
+        tui.on_state_changed("pkg", "finished")
         assert stdout.getvalue() == ""
 
     def test_update_works_after_headless_cleared(self):
