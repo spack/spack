@@ -6,7 +6,7 @@
 
 Run with pytest::
 
-    pytest lib/spack/spack/test/util/lock.py
+    pytest lib/spack/spack/test/util/lock_unix.py
 
 You can use this to test whether your shared filesystem properly supports
 POSIX reader-writer locking with byte ranges through fcntl.
@@ -49,8 +49,6 @@ from spack.util.filesystem import getuid, touch, working_dir
 
 if sys.platform != "win32":
     import fcntl
-else:
-    import win32file
 
 
 #
@@ -1354,33 +1352,6 @@ def test_poll_lock_exception(tmp_path: pathlib.Path, monkeypatch, err_num, err_m
         lock.acquire_read()
 
         monkeypatch.setattr(fcntl, "lockf", _lockf)
-
-        if err_num in [errno.EAGAIN, errno.EACCES]:
-            assert not lock._poll_lock(lk.LockType.LOCK_EX)
-        else:
-            with pytest.raises(OSError, match=err_msg):
-                lock._poll_lock(lk.LockType.LOCK_EX)
-
-        monkeypatch.undo()
-        lock.release_read()
-
-
-@pytest.mark.skipif(sys.platform != "win32", reason="win32file only available on Windows")
-@pytest.mark.parametrize(
-    "err_num,err_msg", [(32, "Fake EACCES error analog"), (33, "Fake EAGAIN error analog")]
-)
-def test_poll_lock_exception_win(tmp_path: pathlib.Path, monkeypatch, err_num, err_msg):
-    """Test poll lock exception handling."""
-
-    def LockFileEx(hfile, int_, int1_, int2_, ol):
-        raise OSError(err_num, err_msg)
-
-    with working_dir(str(tmp_path)):
-        lockfile = "lockfile"
-        lock = lk.Lock(lockfile)
-        lock.acquire_read()
-
-        monkeypatch.setattr(win32file, "LockFileEx", LockFileEx)
 
         if err_num in [errno.EAGAIN, errno.EACCES]:
             assert not lock._poll_lock(lk.LockType.LOCK_EX)
