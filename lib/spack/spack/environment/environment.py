@@ -239,20 +239,19 @@ def activate(env, use_env_repo=False):
         if not isinstance(env, Environment):
             raise TypeError(f"`env` should be of type {Environment.__name__}")
 
-        # Record the active env (and its path, so config "$env" substitutions work) while the
-        # manifest's config scope is being prepared below and for the lifetime of the activation.
-        set_active_environment(env)
-
-        # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO due to
-        # config changes.
         install_tree_before = spack.config.get("config:install_tree")
         upstreams_before = spack.config.get("upstreams")
         repos_before = spack.config.get("repos")
+
+        # Record the active env (and its path, so config "$env" substitutions work)
+        set_active_environment(env)
         env.manifest.prepare_config_scope()
+
         install_tree_after = spack.config.get("config:install_tree")
         upstreams_after = spack.config.get("upstreams")
         repos_after = spack.config.get("repos")
 
+        # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO
         if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
             setattr(env, "store_token", spack.store.reinitialize())
 
