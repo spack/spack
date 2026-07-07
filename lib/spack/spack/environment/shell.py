@@ -6,10 +6,10 @@ import textwrap
 from typing import Optional
 
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.schema.environment
 import spack.store
+import spack.util as tty
 from spack.llnl.util.tty.color import colorize
 from spack.util.environment import EnvironmentModifications
 
