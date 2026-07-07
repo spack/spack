@@ -306,7 +306,7 @@ def run_mypy(file_list, args):
         os.path.join(spack.paths.prefix, "pyproject.toml"),
         "--show-error-codes",
     ]
-    mypy_arg_sets = [common_mypy_args + ["--package", "spack", "--package", "llnl"]]
+    mypy_arg_sets = [common_mypy_args + ["--package", "spack"]]
     if "SPACK_MYPY_CHECK_PACKAGES" in os.environ:
         mypy_arg_sets.append(
             common_mypy_args + ["--package", "packages", "--disable-error-code", "no-redef"]
