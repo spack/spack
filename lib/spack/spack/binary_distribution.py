@@ -2955,9 +2955,7 @@ class DefaultIndexHandler(IndexHandler):
             computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
             cache_entry.destroy()
 
-            # For now we only handle etags on http(s), since 304 error handling
-            # in s3:// is not there yet.
-            if urllib.parse.urlparse(self.url).scheme not in ("http", "https"):
+            if urllib.parse.urlparse(self.url).scheme not in ("http", "https", "s3"):
                 etag = None
             else:
                 etag = web_util.parse_etag(
@@ -2999,7 +2997,9 @@ class EtagIndexHandler(IndexHandler):
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
         manifest_url = cache_class.get_index_url(self.url, self.view)
         headers = {"User-Agent": web_util.SPACK_USER_AGENT}
-        if not force:
+        # For now we only handle etags on http(s), since 304 error handling
+        # in s3:// is not there yet. S3 ETag is used for push only.
+        if not force or urllib.parse.urlparse(self.url).scheme == "s3":
             headers.update({"If-None-Match": f'"{self.etag}"'})
 
         try:
