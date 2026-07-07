@@ -761,7 +761,7 @@ def list_url(url, recursive=False):
         if recursive:
             return list(_iter_s3_prefix(s3, url))
 
-        return list(set(key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)))
+        return list({key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)})
 
     elif url.scheme == "gs":
         gcs = GCSBucket(url)

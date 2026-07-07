@@ -246,7 +246,7 @@ packages:
 
     assert spack.config.get("config:dirty")
     python_reqs = spack.config.get("packages")["python"]["require"]
-    req_specs = set(x["spec"] for x in python_reqs)
+    req_specs = {x["spec"] for x in python_reqs}
     assert req_specs == set(["@3.11:", "+ssl", "+tk"])
 
 

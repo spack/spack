@@ -900,7 +900,7 @@ def test_query_unused_specs(mutable_database):
 
     def check_unused(roots, deptype, expected):
         unused = spack.store.STORE.db.unused_specs(root_hashes=roots, deptype=deptype)
-        assert set(u.name for u in unused) == set(expected)
+        assert {u.name for u in unused} == set(expected)
 
     default_dt = dt.LINK | dt.RUN
     check_unused(None, default_dt, ["cmake", "gcc", "compiler-wrapper"])
@@ -1169,7 +1169,7 @@ def test_db_all_hashes(database):
 
     # and make sure the hashes match
     with database.read_transaction():
-        assert set(s.dag_hash() for s in database.query()) == set(hashes)
+        assert {s.dag_hash() for s in database.query()} == set(hashes)
 
 
 def test_consistency_of_dependents_upon_remove(mutable_database):

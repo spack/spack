@@ -59,7 +59,7 @@ def parse_non_system_link_dirs(compiler_debug_output: str) -> List[str]:
     # exact match, while 'in_system_subdirectory' checks if a path contains
     # a system directory as a subdirectory
     link_dirs = filter_system_paths(link_dirs)
-    return list(p for p in link_dirs if not in_system_subdirectory(p))
+    return [p for p in link_dirs if not in_system_subdirectory(p)]
 
 
 def filter_non_existing_dirs(dirs):

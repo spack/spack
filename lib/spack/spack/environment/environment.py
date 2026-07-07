@@ -1517,7 +1517,7 @@ class Environment:
                 " specify a named list that is not a matrix"
             )
 
-        matches = list((idx, x) for idx, x in enumerate(list_to_change) if x.satisfies(match_spec))
+        matches = [(idx, x) for idx, x in enumerate(list_to_change) if x.satisfies(match_spec)]
         if len(matches) == 0:
             raise ValueError(
                 "There are no specs named {0} in {1}".format(match_spec.name, list_name)
@@ -3514,7 +3514,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         """Iterates on definitions, returning the active ones matching a given name."""
 
         def extract_name(_item):
-            names = list(x for x in _item if x != "when")
+            names = [x for x in _item if x != "when"]
             assert len(names) == 1, f"more than one name in {_item}"
             return names[0]
 

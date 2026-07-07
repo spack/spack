@@ -1526,7 +1526,7 @@ def _check_version_attributes(fetcher, pkg, version):
     This assumes that we have already determined the fetcher for the
     specific version using ``for_package_version()``
     """
-    all_optionals = set(a for s in all_strategies for a in s.optional_attrs)
+    all_optionals = {a for s in all_strategies for a in s.optional_attrs}
 
     args = pkg.versions[version]
     extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr, "no_cache"])

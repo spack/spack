@@ -763,11 +763,11 @@ class BuildRequest:
         # Save off dependency package ids for quick checks since traversals
         # are not able to return full dependents for all packages across
         # environment specs.
-        self.dependencies = set(
+        self.dependencies = {
             package_id(d)
             for d in self.pkg.spec.dependencies(deptype=self.get_depflags(self.pkg))
             if package_id(d) != self.pkg_id
-        )
+        }
 
     def __repr__(self) -> str:
         """Return a formal representation of the build request."""
@@ -969,17 +969,15 @@ class Task:
         # Be consistent wrt use of dependents and dependencies.  That is,
         # if use traverse for transitive dependencies, then must remove
         # transitive dependents on failure.
-        self.dependencies = set(
+        self.dependencies = {
             package_id(d)
             for d in self.pkg.spec.dependencies(deptype=self.request.get_depflags(self.pkg))
             if package_id(d) != self.pkg_id
-        )
+        }
 
         # List of uninstalled dependencies, which is used to establish
         # the priority of the task.
-        self.uninstalled_deps = set(
-            pkg_id for pkg_id in self.dependencies if pkg_id not in installed
-        )
+        self.uninstalled_deps = {pkg_id for pkg_id in self.dependencies if pkg_id not in installed}
 
         # Ensure key sequence-related properties are updated accordingly.
         self.attempts = attempts

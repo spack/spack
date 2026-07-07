@@ -500,7 +500,7 @@ class YamlFilesystemView(FilesystemView):
         to_deactivate_sorted = list()
         depmap = dict()
         for spec in to_deactivate:
-            depmap[spec] = set(d for d in spec.traverse(root=False) if d in to_deactivate)
+            depmap[spec] = {d for d in spec.traverse(root=False) if d in to_deactivate}
 
         while depmap:
             for spec in [s for s, d in depmap.items() if not d]:

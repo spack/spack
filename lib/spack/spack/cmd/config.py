@@ -358,7 +358,7 @@ def _config_basic_scope_types(scope, included):
 
 def config_scopes(args):
     """List configured scopes in descending order of precedence."""
-    included = list(i.name for s in spack.config.scopes().values() for i in s.included_scopes)
+    included = [i.name for s in spack.config.scopes().values() for i in s.included_scopes]
     active = [s.name for s in spack.config.CONFIG.active_scopes]
     scopes = [
         s

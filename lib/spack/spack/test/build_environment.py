@@ -421,7 +421,7 @@ def test_wrapper_variables(
         env_mods.apply_modifications()
 
         def normpaths(paths):
-            return list(os.path.normpath(p) for p in paths)
+            return [os.path.normpath(p) for p in paths]
 
         link_dir_var = os.environ["SPACK_LINK_DIRS"]
         assert normpaths(link_dir_var.split(":")) == normpaths(dep_lib_dirs)
@@ -482,8 +482,8 @@ dt-diamond-left:
     )
     # The external lib paths should be the last two entries of the list and
     # should not appear anywhere before the last two entries
-    assert set(os.path.normpath(x) for x in link_dirs[-2:]) == external_lib_paths
-    assert not (set(os.path.normpath(x) for x in link_dirs[:-2]) & external_lib_paths)
+    assert {os.path.normpath(x) for x in link_dirs[-2:]} == external_lib_paths
+    assert not ({os.path.normpath(x) for x in link_dirs[:-2]} & external_lib_paths)
 
 
 def test_parallel_false_is_not_propagating(default_mock_concretization):

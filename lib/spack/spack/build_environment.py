@@ -503,7 +503,7 @@ def set_wrapper_variables(pkg, env):
         env.set("CCACHE_DISABLE", "1")
 
     # Gather information about various types of dependencies
-    rpath_hashes = set(s.dag_hash() for s in get_rpath_deps(pkg))
+    rpath_hashes = {s.dag_hash() for s in get_rpath_deps(pkg)}
     link_deps = pkg.spec.traverse(root=False, order="topo", deptype=dt.LINK)
     external_link_deps, nonexternal_link_deps = stable_partition(link_deps, lambda d: d.external)
 
@@ -846,7 +846,7 @@ class EnvironmentVisitor:
     def __init__(self, *roots: spack.spec.Spec, context: Context):
         # For the roots (well, marked specs) we follow different edges
         # than for their deps, depending on the context.
-        self.root_hashes = set(s.dag_hash() for s in roots)
+        self.root_hashes = {s.dag_hash() for s in roots}
 
         if context == Context.BUILD:
             # Drop direct run deps in build context
@@ -991,7 +991,7 @@ class SetupContext:
         self.external: List[Tuple[spack.spec.Spec, UseMode]]
         self.nonexternal: List[Tuple[spack.spec.Spec, UseMode]]
         # Reverse so we go from leaf to root
-        self.nodes_in_subdag = set(id(s) for s, _ in specs_with_type)
+        self.nodes_in_subdag = {id(s) for s, _ in specs_with_type}
 
         # Split into non-external and external, maintaining topo order per group.
         self.external, self.nonexternal = stable_partition(

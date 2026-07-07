@@ -158,7 +158,7 @@ def loads(module_type, specs, args, out=None):
                 ]
             )
 
-    modules = list(
+    modules = [
         (
             spec,
             spack.modules.get_module(
@@ -170,7 +170,7 @@ def loads(module_type, specs, args, out=None):
             ),
         )
         for spec in specs
-    )
+    ]
 
     module_commands = {"tcl": "module load ", "lmod": "module load "}
 
@@ -234,7 +234,7 @@ def find(module_type, specs, args):
 
     if not all(modules):
         tty.warn(_missing_modules_warning)
-    modules = list(x for x in modules if x)
+    modules = [x for x in modules if x]
     print(" ".join(modules))
 
 
@@ -283,7 +283,7 @@ def refresh(module_type, specs, args):
         return
 
     if not args.upstream_modules:
-        specs = list(s for s in specs if not s.installed_upstream)
+        specs = [s for s in specs if not s.installed_upstream]
 
     if not args.yes_to_all:
         msg = "You are about to regenerate {types} module files for:\n"
