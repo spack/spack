@@ -119,9 +119,9 @@ class SetEcho(NamedTuple):
 
 
 class ChangeJobs(NamedTuple):
-    """Command that increments/decrements job server parallelism."""
+    """Command that increments/decrements job server tokens when positive/negative respectively."""
 
-    delta: Literal[-1, 1]
+    delta: int
 
 
 #: A command produced by the UI and executed by the event loop.
