@@ -921,7 +921,7 @@ def start_build(
 
 class BuildInfo:
     """Plain data about a package being built: the payload of ``InstallerUI.on_build_added`` and
-    the per-build record of the terminal UI. Conceptually a dataclass."""
+    the per-build record of the terminal UI."""
 
     __slots__ = (
         "id",
@@ -1007,8 +1007,10 @@ class InstallerUI:
         """Raw log output received from a build whose echoing is enabled."""
 
     def on_finished(self, failures: List[str]) -> None:
-        """Installation finished; ``failures`` holds the build ids of failed builds (empty on
-        success). The frontend may print failure details."""
+        """The whole installation finished. Called once at the end of the run, and is different
+        from ``on_state_changed(build_id, "finished")`` which is called after each successful
+        package installation. ``failures`` is a list of failed build ids (empty on success). The
+        frontend may print a failure summary."""
 
     def on_jobs_changed(self, actual: int, target: int) -> None:
         """The actual and/or target number of concurrent jobs changed."""
