@@ -112,19 +112,19 @@ InstallPolicy = Literal["auto", "cache_only", "source_only"]
 
 
 class SetEcho(NamedTuple):
-    """Command asking the event loop to enable/disable log forwarding from a build."""
+    """Command that enables/disables log forwarding from a build."""
 
     build_id: str
     echo: bool
 
 
 class ChangeJobs(NamedTuple):
-    """Command asking the event loop to change build parallelism by ``delta`` (+1 / -1)."""
+    """Command that increments/decrements job server parallelism."""
 
-    delta: int
+    delta: Literal[-1, 1]
 
 
-#: A command produced by the UI (view) and executed by the event loop.
+#: A command produced by the UI and executed by the event loop.
 UiCommand = Union[SetEcho, ChangeJobs]
 
 #: How often to update a spinner in seconds
@@ -971,10 +971,8 @@ class InstallerUI:
     """Interface between the installer event loop and a frontend. The methods are no-ops, which
     makes this class usable as a headless frontend.
 
-    The contract is single-threaded: notifications are invoked on the event loop thread, and the
-    frontend appends any resulting :data:`UiCommand` objects to ``self.commands`` from that thread.
-    A frontend running its own thread (e.g. a GUI) currently has no way to post commands into the
-    event loop."""
+    The event loop calls methods to notify the frontend of build events, and the frontend can
+    append to ``self.commands`` to request actions from the event loop."""
 
     def __init__(self) -> None:
         #: Whether the frontend renders interactively; determines the event loop wake interval.
@@ -2305,7 +2303,6 @@ class PackageInstaller:
                 blocked = self._schedule_builds(
                     selector, jobserver, retained_read_locks, database_actions
                 )
-                # Execute commands from scheduling (e.g. a verbose first-build echo) promptly.
                 if self.ui.commands:
                     self._run_ui_commands(jobserver)
                 self._flush_db_if_due(time.monotonic(), database_actions, retained_read_locks)
@@ -2406,8 +2403,7 @@ class PackageInstaller:
                 # select() timeout.
                 self._flush_db_if_due(current_time, database_actions, retained_read_locks)
 
-                # Execute commands the UI produced this iteration (input, toggle-on-finish, verbose
-                # echo) before the redraw, so their effect (e.g. the job counter) is painted now.
+                # Execute commands produced by the UI ahead of rendering.
                 if self.ui.commands:
                     self._run_ui_commands(jobserver)
 
@@ -2759,11 +2755,9 @@ class PackageInstaller:
         )
 
     def _run_ui_commands(self, jobserver: JobServerBase) -> None:
-        """Execute the commands the UI produced. Callers guard on a non-empty buffer, so the common
-        no-command iteration skips this call. The buffer is swapped out first so a command that
-        re-enters the UI cannot mutate the list we are iterating (any new command drains next
-        iteration)."""
-        commands, self.ui.commands = self.ui.commands, []
+        """Execute the commands produced by the UI."""
+        commands = self.ui.commands.copy()
+        self.ui.commands.clear()
         for cmd in commands:
             if isinstance(cmd, SetEcho):
                 self._set_echo(cmd.build_id, cmd.echo)
@@ -2775,8 +2769,7 @@ class PackageInstaller:
                 self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
 
     def _set_echo(self, build_id: str, echo: bool) -> None:
-        """Enable or disable log forwarding from a running build to this process. Executes a
-        :class:`SetEcho` command; the event loop owns the control channels and their lifetime."""
+        """Enable or disable log forwarding from a running build to this process."""
         child = self.running_builds.get(build_id)
         if child is None:
             return
