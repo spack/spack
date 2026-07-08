@@ -175,10 +175,6 @@ To automatically fix formatting and linting issues, use the ``--fix`` flag:
 
 #. It works regardless of what directory you are in.
 
-#. It automatically adds approved exemptions from style checks.
-   For example, URLs are often longer than 80 characters, so we exempt them from line length checks.
-   We also exempt lines that start with ``homepage =``, ``url =``, ``version()``, ``variant()``, ``depends_on()``, and ``extends()`` in ``package.py`` files.
-
 If all is well, you'll see something like this:
 
 .. code-block:: console
