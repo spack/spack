@@ -77,19 +77,8 @@ def create_tui(
         filter_padding=filter_padding,
         color=color,
     )
-    tui.controller = _NoopController()
 
     return tui, time_values, fake_stdout
-
-
-class _NoopController:
-    """No-op controller for view tests that don't inspect controller calls."""
-
-    def set_echo(self, build_id: str, echo: bool) -> None: ...
-
-    def increase_jobs(self) -> None: ...
-
-    def decrease_jobs(self) -> None: ...
 
 
 def on_build_added(
@@ -124,22 +113,6 @@ def add_mock_builds(tui: TerminalUI, count: int) -> List[str]:
     for i, build_id in enumerate(build_ids):
         on_build_added(tui, build_id, version=f"{i}.0")
     return build_ids
-
-
-def record_echo(tui: TerminalUI) -> List[Tuple[str, bool]]:
-    """Replace the tui's controller with one that records set_echo calls."""
-    calls: List[Tuple[str, bool]] = []
-
-    class Recorder:
-        def set_echo(self, build_id: str, echo: bool) -> None:
-            calls.append((build_id, echo))
-
-        def increase_jobs(self) -> None: ...
-
-        def decrease_jobs(self) -> None: ...
-
-    tui.controller = Recorder()
-    return calls
 
 
 class TestBasicStateManagement:
@@ -867,7 +840,6 @@ class TestNavigationIntegration:
         """Test that next() switches from overview mode to log-following mode"""
         tui, _, fake_stdout = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
-        echo_calls = record_echo(tui)
 
         # Start in overview mode
         assert tui.overview_mode is True
@@ -879,7 +851,7 @@ class TestNavigationIntegration:
         # Should have switched to log-following mode
         assert tui.overview_mode is False
         assert tui.tracked_build_id == build_ids[0]
-        assert echo_calls == [(build_ids[0], True)]
+        assert tui.commands == [inst.SetEcho(build_ids[0], True)]
 
         # Should have printed "Following logs" message
         output = fake_stdout.getvalue()
@@ -890,7 +862,6 @@ class TestNavigationIntegration:
         """Test that next() cycles through multiple builds"""
         tui, _, fake_stdout = create_tui(total=3)
         build_ids = add_mock_builds(tui, 3)
-        echo_calls = record_echo(tui)
 
         # Start following first build
         tui.next()
@@ -903,7 +874,10 @@ class TestNavigationIntegration:
         assert tui.tracked_build_id == build_ids[1]
         assert "pkg1" in fake_stdout.getvalue()
         # Echoing stopped for the previous build and started for the new one
-        assert echo_calls[-2:] == [(build_ids[0], False), (build_ids[1], True)]
+        assert tui.commands[-2:] == [
+            inst.SetEcho(build_ids[0], False),
+            inst.SetEcho(build_ids[1], True),
+        ]
 
         fake_stdout.clear()
 
@@ -996,7 +970,6 @@ class TestToggle:
         """Test that toggle() from log-following mode returns to overview"""
         tui, _, _ = create_tui(total=2)
         add_mock_builds(tui, 2)
-        echo_calls = record_echo(tui)
 
         # Switch to log-following mode first
         tui.next()
@@ -1020,7 +993,7 @@ class TestToggle:
         assert tui.active_area_rows == 0
         assert tui.dirty is True
         # Echoing was stopped for the previously tracked build
-        assert echo_calls[-1] == (tracked_id, False)
+        assert tui.commands[-1] == inst.SetEcho(tracked_id, False)
 
     def test_update_state_finished_triggers_toggle_when_tracking(self):
         """Test that finishing a tracked build triggers toggle back to overview"""
@@ -1276,17 +1249,15 @@ class TestTerminalUIVerbose:
     def test_verbose_tracks_first_build(self):
         """First on_build_added for verbose non-TTY sets tracked_build_id and enables echoing."""
         tui, _, _ = create_tui(is_tty=False, verbose=True, total=4)
-        echo_calls = record_echo(tui)
 
         on_build_added(tui, "trivial-install-test-package")
 
         assert tui.tracked_build_id == "trivial-install-test-package"
-        assert echo_calls == [("trivial-install-test-package", True)]
+        assert tui.commands == [inst.SetEcho("trivial-install-test-package", True)]
 
     def test_verbose_does_not_track_when_already_tracking(self):
         """Second on_build_added() while already tracking does not switch tracking."""
         tui, _, _ = create_tui(is_tty=False, verbose=True, total=4)
-        echo_calls = record_echo(tui)
 
         on_build_added(tui, "pkg1")
         first_tracked = tui.tracked_build_id
@@ -1296,7 +1267,7 @@ class TestTerminalUIVerbose:
         assert tui.tracked_build_id == "pkg1"
 
         # Echoing should not have been enabled for the second build
-        assert echo_calls == [("pkg1", True)]
+        assert tui.commands == [inst.SetEcho("pkg1", True)]
 
     def test_verbose_switches_on_finish(self):
         """After the tracked build finishes, tracked_build_id is cleared."""
@@ -1334,11 +1305,10 @@ class TestTerminalUIVerbose:
     def test_verbose_tty_no_effect(self):
         """In TTY mode, on_build_added() does not set tracked_build_id automatically."""
         tui, _, _ = create_tui(is_tty=True, verbose=True, total=4)
-        echo_calls = record_echo(tui)
 
         on_build_added(tui, "trivial-install-test-package")
         assert tui.tracked_build_id == ""
-        assert echo_calls == []
+        assert tui.commands == []
 
 
 class TestTerminalUIColor:

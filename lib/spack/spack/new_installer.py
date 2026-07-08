@@ -51,7 +51,7 @@ from typing import (
     cast,
 )
 
-from spack.vendor.typing_extensions import Literal, Protocol
+from spack.vendor.typing_extensions import Literal
 
 import spack.binary_distribution
 import spack.build_environment
@@ -109,6 +109,23 @@ if TYPE_CHECKING:
 
 #: Type for specifying installation source modes
 InstallPolicy = Literal["auto", "cache_only", "source_only"]
+
+
+class SetEcho(NamedTuple):
+    """Command asking the event loop to enable/disable log forwarding from a build."""
+
+    build_id: str
+    echo: bool
+
+
+class ChangeJobs(NamedTuple):
+    """Command asking the event loop to change build parallelism by ``delta`` (+1 / -1)."""
+
+    delta: int
+
+
+#: A command produced by the UI (view) and executed by the event loop.
+UiCommand = Union[SetEcho, ChangeJobs]
 
 #: How often to update a spinner in seconds
 SPINNER_INTERVAL = 0.1
@@ -950,49 +967,14 @@ class BuildInfo:
         self.log_summary: Optional[str] = None
 
 
-class LoopController(Protocol):
-    """The event-loop operations a frontend may invoke: toggling a build's log echo and changing
-    build parallelism. Implemented by the event loop, which owns the build channels and the
-    jobserver. This is the view->controller half of the frontend contract; a frontend calls these
-    only for state it does not own itself."""
-
-    def set_echo(self, build_id: str, echo: bool) -> None: ...
-
-    def increase_jobs(self) -> None: ...
-
-    def decrease_jobs(self) -> None: ...
-
-
-class EventLoopController:
-    """Concrete :class:`LoopController` wiring the view's actions to the event loop's jobserver
-    and build channels. Constructed once the jobserver exists (see PackageInstaller._installer)."""
-
-    def __init__(self, installer: "PackageInstaller", jobserver: JobServerBase) -> None:
-        self._installer = installer
-        self._jobserver = jobserver
-
-    def set_echo(self, build_id: str, echo: bool) -> None:
-        self._installer._set_echo(build_id, echo)
-
-    def increase_jobs(self) -> None:
-        self._jobserver.increase_parallelism()
-        self._installer.ui.on_jobs_changed(self._jobserver.num_jobs, self._jobserver.target_jobs)
-
-    def decrease_jobs(self) -> None:
-        self._jobserver.decrease_parallelism()
-        self._installer.ui.on_jobs_changed(self._jobserver.num_jobs, self._jobserver.target_jobs)
-
-
 class InstallerUI:
     """Interface between the installer event loop and a frontend. The methods are no-ops, which
     makes this class usable as a headless frontend.
 
     The contract is single-threaded: notifications are invoked on the event loop thread, and the
-    ``controller`` methods must be called from that thread as well. A frontend running its own
-    thread (e.g. a GUI) currently has no way to post calls into the event loop."""
-
-    #: Assigned by the event loop, used to communicate from the frontend to the event loop.
-    controller: LoopController
+    frontend appends any resulting :data:`UiCommand` objects to ``self.commands`` from that thread.
+    A frontend running its own thread (e.g. a GUI) currently has no way to post commands into the
+    event loop."""
 
     def __init__(self) -> None:
         #: Whether the frontend renders interactively; determines the event loop wake interval.
@@ -1001,6 +983,9 @@ class InstallerUI:
         #: terminal. If True, the event loop manages terminal state (cbreak mode, suspend/resume
         #: signals, stdin registration) and feeds keyboard input to ``on_input``.
         self.reads_terminal_input = False
+        #: Commands the frontend has produced for the event loop to execute. The loop drains this
+        #: once per iteration; a frontend appends to it instead of calling into the loop directly.
+        self.commands: List[UiCommand] = []
 
     def on_build_added(self, info: BuildInfo) -> None:
         """A build was started, or a spec was found installed by another process."""
@@ -1140,7 +1125,7 @@ class TerminalUI(InstallerUI):
         # only in non-TTY verbose mode.
         if self.verbose and not self.tracked_build_id:
             self.tracked_build_id = info.id
-            self.controller.set_echo(info.id, True)
+            self.commands.append(SetEcho(info.id, True))
 
     def on_build_removed(self, build_id: str) -> None:
         """Remove a build from the display (e.g. after a binary cache miss before retry)."""
@@ -1164,7 +1149,7 @@ class TerminalUI(InstallerUI):
             self.search_mode = False
             self.overview_mode = True
             self.dirty = True
-            self.controller.set_echo(self.tracked_build_id, False)
+            self.commands.append(SetEcho(self.tracked_build_id, False))
             self.tracked_build_id = ""
 
     def search_input(self, input: str) -> None:
@@ -1202,9 +1187,9 @@ class TerminalUI(InstallerUI):
             elif char == "p" or char == "N":
                 self.next(-1)
             elif char == "+":
-                self.controller.increase_jobs()
+                self.commands.append(ChangeJobs(1))
             elif char == "-":
-                self.controller.decrease_jobs()
+                self.commands.append(ChangeJobs(-1))
 
     def _is_displayed(self, build: BuildInfo) -> bool:
         """Returns true if the build matches the search term, or when no search term is set."""
@@ -1243,7 +1228,7 @@ class TerminalUI(InstallerUI):
 
         # Stop following the previous and start following the new build.
         if self.tracked_build_id:
-            self.controller.set_echo(self.tracked_build_id, False)
+            self.commands.append(SetEcho(self.tracked_build_id, False))
 
         self.tracked_build_id = new_build_id
 
@@ -1270,7 +1255,7 @@ class TerminalUI(InstallerUI):
             self.stdout.write(f"{prefix}==> Following logs of {new_build.name}{version_str}\n")
             self.log_ends_with_newline = True
             self.stdout.flush()
-            self.controller.set_echo(new_build_id, True)
+            self.commands.append(SetEcho(new_build_id, True))
 
     def on_blocked_changed(self, blocked: bool) -> None:
         """Set whether all pending builds are blocked by another Spack process."""
@@ -2291,10 +2276,6 @@ class PackageInstaller:
         jobserver = JobServer(self.jobs, os.environ.get("MAKEFLAGS", ""))
         selector = selectors.DefaultSelector()
 
-        # The view -> event loop half of the frontend contract (see LoopController): assigned here
-        # because the event loop owns the build channels and the jobserver.
-        self.ui.controller = EventLoopController(self, jobserver)
-
         # Terminal handling (cbreak, suspend/resume signals, stdin registration) is event loop
         # plumbing, enabled only for frontends that read the controlling terminal.
         terminal: Optional[BaseTerminalState] = None
@@ -2322,6 +2303,9 @@ class PackageInstaller:
                 blocked = self._schedule_builds(
                     selector, jobserver, retained_read_locks, database_actions
                 )
+                # Execute commands from scheduling (e.g. a verbose first-build echo) promptly.
+                if self.ui.commands:
+                    self._run_ui_commands(jobserver)
                 self._flush_db_if_due(time.monotonic(), database_actions, retained_read_locks)
 
             while (
@@ -2419,6 +2403,11 @@ class PackageInstaller:
                 # scheduling so that a final mark-explicit action does not wait for the next
                 # select() timeout.
                 self._flush_db_if_due(current_time, database_actions, retained_read_locks)
+
+                # Execute commands the UI produced this iteration (input, toggle-on-finish, verbose
+                # echo) before the redraw, so their effect (e.g. the job counter) is painted now.
+                if self.ui.commands:
+                    self._run_ui_commands(jobserver)
 
                 # Finally update the UI
                 self.ui.render()
@@ -2767,9 +2756,25 @@ class PackageInstaller:
             log_path=log_path,
         )
 
+    def _run_ui_commands(self, jobserver: JobServerBase) -> None:
+        """Execute the commands the UI produced. Callers guard on a non-empty buffer, so the common
+        no-command iteration skips this call. The buffer is swapped out first so a command that
+        re-enters the UI cannot mutate the list we are iterating (any new command drains next
+        iteration)."""
+        commands, self.ui.commands = self.ui.commands, []
+        for cmd in commands:
+            if isinstance(cmd, SetEcho):
+                self._set_echo(cmd.build_id, cmd.echo)
+            else:  # ChangeJobs
+                if cmd.delta > 0:
+                    jobserver.increase_parallelism()
+                else:
+                    jobserver.decrease_parallelism()
+                self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
+
     def _set_echo(self, build_id: str, echo: bool) -> None:
-        """Enable or disable log forwarding from a running build to this process. Backs the
-        controller's ``set_echo``; the event loop owns the control channels and their lifetime."""
+        """Enable or disable log forwarding from a running build to this process. Executes a
+        :class:`SetEcho` command; the event loop owns the control channels and their lifetime."""
         child = self.running_builds.get(build_id)
         if child is None:
             return
