@@ -175,6 +175,10 @@ To automatically fix formatting and linting issues, use the ``--fix`` flag:
 
 #. It works regardless of what directory you are in.
 
+#. It automatically adds approved exemptions from style checks.
+   For example, URLs are often longer than 99 characters, so we exempt them from line length checks.
+   We also exempt certain import-related checks in ``package.py`` files (e.g., ``from spack.package import *``).
+
 If all is well, you'll see something like this:
 
 .. code-block:: console
@@ -204,7 +208,7 @@ However, if you are not compliant with PEP 8, Ruff will report errors:
    ==> Running style checks on spack
    var/spack/repos/builtin/packages/netcdf/package.py:26:1: F401 'os' imported but unused
    var/spack/repos/builtin/packages/netcdf/package.py:61:1: E303 too many blank lines (2)
-   var/spack/repos/builtin/packages/netcdf/package.py:106:80: E501 line too long (92 > 79 characters)
+   var/spack/repos/builtin/packages/netcdf/package.py:106:100: E501 line too long (105 > 99 characters)
 
 Most of the error messages are straightforward, but if you do not understand what they mean, just ask questions about them when you submit your PR.
 The line numbers will change if you add or delete lines, so simply run ``spack style`` again to update them.
