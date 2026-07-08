@@ -101,7 +101,7 @@ def generate_script(shell_script_path: str, mods: str, comments: str):
         tty.error(f"Error generating to {shell_script_path}: {e}")
 
 
-def write_env_activate_script(env: spack.environment.Environment, view: str = "default"):
+def write_env_activate_script(env: "spack.environment.Environment", view: str = "default"):
     """Gets and writes the environment modifications for an activated environment to a
     cached shell script
 
