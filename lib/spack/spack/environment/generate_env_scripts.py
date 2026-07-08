@@ -101,7 +101,7 @@ def generate_script(shell_script_path: str, mods: str, comments: str):
         tty.error(f"Error generating to {shell_script_path}: {e}")
 
 
-def write_env_activate_script(env, view: str = "default"):
+def write_env_activate_script(env: spack.environment.Environment, view: str = "default"):
     """Gets and writes the environment modifications for an activated environment to a
     cached shell script
 
@@ -116,6 +116,8 @@ def write_env_activate_script(env, view: str = "default"):
     if sys.platform == "win32":
         shells_avail = ["bat", "pwsh"]
 
+    # ensure .env subdir actually exists as we'll be writing to it
+    env.ensure_env_directory_exists(dot_env=True)
     for shell in shells_avail:
         env_mods = EnvironmentModifications()
 
