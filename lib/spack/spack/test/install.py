@@ -6,6 +6,7 @@ import os
 import pathlib
 import shutil
 import sys
+from typing import Dict
 
 import pytest
 
@@ -724,23 +725,23 @@ def test_log_files_preserved_on_error(install_mockery, mock_fetch, installer_var
 def test_ensure_allowed_blocks_disallowed_deprecation(
     install_mockery, mutable_config: Configuration
 ):
-    """The shared scan flags a deprecated spec disallowed by the default policy."""
+    """Tests that the deprecation gate flags a deprecated spec not allowed by configuration."""
     # Concretize while deprecations are allowed, so the deprecated @2.0 is selected.
     with mutable_config.override("config:deprecated", True):
         spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
 
     # Under the default (strict) policy the pre-concretized spec is refused.
     with pytest.raises(spack.error.InstallError, match="deprecated"):
-        spack.deprecation.ensure_allowed([spec])
+        spack.deprecation.DeprecationGate().check([spec])
 
 
 def test_ensure_allowed_permits_configured_deprecation(
     install_mockery, mutable_config: Configuration
 ):
-    """The shared scan does not block deprecations allowed by configuration."""
+    """Tests that the deprecation gate lets go a deprecated spec allowed by configuration."""
     with mutable_config.override("config:deprecated", True):
         spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
-        spack.deprecation.ensure_allowed([spec])  # must not raise
+        spack.deprecation.DeprecationGate().check([spec])  # must not raise
 
 
 def test_ensure_allowed_exempts_externals(install_mockery, mutable_config: Configuration):
@@ -749,16 +750,20 @@ def test_ensure_allowed_exempts_externals(install_mockery, mutable_config: Confi
         spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
 
     # The spec is blocked by the strict default policy...
-    assert spack.deprecation.disallowed(spec) is not None
-    # ...unless it is external, in which case the scan does not raise.
+    assert spack.deprecation.disallowed(
+        spec, default_allowed=spack.deprecation.DeprecationSeverity.NONE
+    )
+    # ...unless it is external, in which case the gate does not raise.
     spec.external_path = "/opt/example"
-    spack.deprecation.ensure_allowed([spec])
+    spack.deprecation.DeprecationGate().check([spec])
 
 
 def test_installer_blocks_disallowed_deprecation(
     install_mockery, installer_variant, mutable_config: Configuration
 ):
-    """Both the old and new installer refuse a pre-concretized deprecated spec before building."""
+    """Tests that both the old and new installer refuse a pre-concretized deprecated spec
+    before building.
+    """
     with mutable_config.override("config:deprecated", True):
         spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
 
@@ -829,3 +834,74 @@ def test_built_build_dep_with_installed_deprecated_runtime_dep_is_blocked(
 
     with pytest.raises(spack.error.InstallError, match="deprecated"):
         spack.installer_dispatch.create_installer([spec.package]).install()
+
+
+def test_specs_to_deploy_selects_uninstalled_and_overwritten(install_mockery, mock_fetch):
+    """Tests that installer gates deprecations on specs that are not installed or that are being
+    overwritten, and drops already-installed specs that are not overwritten (e.g. kept only for
+    DB metadata updates).
+    """
+    installed = spack.concretize.concretize_one("pkg-c")
+    spack.installer_dispatch.create_installer([installed.package]).install()
+    assert installed.installed
+
+    uninstalled = spack.concretize.concretize_one("pkg-b")
+    assert not uninstalled.installed
+
+    candidates = [installed, uninstalled]
+
+    # Without overwrite, the already-installed spec is dropped and the uninstalled one is kept.
+    assert spack.deprecation.specs_to_deploy(candidates, set()) == [uninstalled]
+
+    # Marking the installed spec for overwrite puts it back into the deployed set.
+    assert spack.deprecation.specs_to_deploy(candidates, {installed.dag_hash()}) == candidates
+
+
+def test_deprecation_gate_checks_each_spec_once(install_mockery):
+    """Tests that the gate memoizes across calls, so a node shared by the runtime DAGs of several
+    specs (or revisited on a later call) is inspected exactly once.
+    """
+    spec = spack.concretize.concretize_one("mpileaks")
+
+    seen: Dict[str, int] = {}
+
+    def counting_policy(node):
+        seen[node.dag_hash()] = seen.get(node.dag_hash(), 0) + 1
+        return []
+
+    gate = spack.deprecation.DeprecationGate(policy=counting_policy)
+    gate.check([spec])
+    # Everything below was already visited by the first call
+    gate.check(list(spec.traverse(deptype=("link", "run"))))
+
+    assert seen, "expected the runtime DAG to be walked"
+    assert all(count == 1 for count in seen.values())
+
+
+def test_new_installer_gates_deprecated_build_dep_on_lazy_expansion(
+    install_mockery, tmp_path, mutable_config: Configuration
+):
+    """When a binary mirror is configured the new installer defers build deps out of the initial
+    build graph and expands them only after a build-cache miss. A deprecated node reachable solely
+    through such a lazily-expanded build spec must still be gated.
+    """
+    # A configured binary mirror makes has_mirrors True, which is what defers build deps. The
+    # mirror is never fetched here: the expansion is driven directly.
+    with mutable_config.override("mirrors", {"test-mirror": f"file://{tmp_path}"}):
+        with mutable_config.override("config:deprecated", True):
+            spec = spack.concretize.concretize_one("deprecated-buildtool-client")
+
+        # The gate is built here, under the strict default policy (deprecations disallowed).
+        installer = spack.new_installer.PackageInstaller([spec.package], dependencies_policy="auto")
+        # The build tool (which pulls in the deprecated runtime dep) is deferred, and the client's
+        # own runtime closure is clean, so the upfront check has nothing to complain about.
+        assert installer.has_mirrors
+        node_names = {s.name for s in installer.build_graph.nodes.values()}
+        assert "deprecated-buildtool" not in node_names
+        assert "deprecated-versions" not in node_names
+
+        # A build-cache miss on the client schedules its build deps for expansion. Expanding them
+        # brings in the deprecated node, which the gate must reject.
+        installer.pending_expansions.append(spec.dag_hash())
+        with pytest.raises(spack.error.InstallError, match="deprecated"):
+            installer._try_expand_build_deps()

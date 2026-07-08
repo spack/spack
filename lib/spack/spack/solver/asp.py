@@ -1418,6 +1418,9 @@ class SpackSolverSetup:
         # Set during the call to setup
         self.pkgs: Set[str] = set()
 
+        # packages:all deprecation fallback, computed once in setup and reused for every package
+        self.default_allowed_deprecation = DeprecationSeverity.NONE
+
         # list of unique libc specs targeted by compilers (or an educated guess if no compiler)
 
         # If true, we have to load the code for synthesizing splices
@@ -1495,7 +1498,7 @@ class SpackSolverSetup:
                 )
             self.gen.newline()
 
-        allowed = spack.deprecation.allowed_severity(pkg.name)
+        allowed = spack.deprecation.allowed_severity(pkg.name, self.default_allowed_deprecation)
         self.gen.fact(fn.pkg_fact(pkg.name, fn.allowed_deprecation_severity(allowed.value)))
 
     def config_compatible_os(self):
@@ -2781,8 +2784,10 @@ class SpackSolverSetup:
         )
         self.validate_and_define_versions_from_requirements(require_checksum=checksummed)
 
-        # Emit the one-time warning if the deprecated config:deprecated flag is relaxing policy
-        spack.deprecation.default_allowed_severity(warn_on_legacy=True)
+        # Compute the packages:all fallback once (and emit the one-time legacy warning here).
+        self.default_allowed_deprecation = spack.deprecation.default_allowed_severity(
+            warn_on_legacy=True
+        )
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
