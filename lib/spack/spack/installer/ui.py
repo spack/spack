@@ -488,10 +488,10 @@ class TerminalUI(InstallerUI):
         if not finalize and now < self.next_update:
             return
 
+        has_unfinished = any(pkg.finished_time is None for pkg in self.builds.values())
+
         # Only update the spinner if there are still running packages
-        if now >= self.next_spinner_update and any(
-            pkg.finished_time is None for pkg in self.builds.values()
-        ):
+        if has_unfinished and now >= self.next_spinner_update:
             self.spinner_index = (self.spinner_index + 1) % len(self.spinner_chars)
             self.dirty = True
             self.next_spinner_update = now + SPINNER_INTERVAL
@@ -557,7 +557,7 @@ class TerminalUI(InstallerUI):
             else:
                 self._println(buffer, f"{bold}Progress:{reset} {self.completed}/{self.total}")
 
-        if self.blocked and not any(pkg.finished_time is None for pkg in self.builds.values()):
+        if self.blocked and not has_unfinished:
             self._println(buffer, "Waiting for other Spack install process...")
 
         displayed_builds = (
