@@ -102,3 +102,36 @@ def test_coexistence_old_and_new_deprecation(mock_packages, mutable_config):
     # With deprecations allowed, @1.0 concretizes without error.
     with mutable_config.override("config:deprecated", True):
         assert concretize_one("deprecated-dual@1.0").satisfies("@1.0")
+
+
+def test_deprecation_scope_runtime_ignores_build_only_dep(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that with the default 'runtime' scope, a deprecated node reachable only through a
+    build edge is outside the checked closure, so concretization succeeds even though the node
+    is in the DAG.
+    """
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation_scope: runtime
+""")
+    spec = concretize_one("deprecated-buildtool-client")
+    assert spec.satisfies("@1.0")
+    # The deprecated node is present in the DAG, reachable only through the build edge.
+    assert any(s.satisfies("deprecated-versions@1.1.0") for s in spec.traverse())
+
+
+def test_deprecation_scope_all_gates_build_only_dep(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that with the 'all' scope, a deprecated node reachable only through a build edge
+    is gated.
+    """
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation_scope: all
+""")
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-buildtool-client")

@@ -1488,7 +1488,7 @@ class PackageInstaller:
         # Initializing all_dependencies to empty. This will be set later in _init_queue.
         self.all_dependencies: Dict[str, Set[str]] = {}
 
-        # Shared deprecation policy, applied to the runtime DAG of everything about to be deployed.
+        # Shared deprecation policy, applied to the DAG of everything about to be deployed.
         self._deprecation_gate = deprecation_gate or spack.deprecation.DeprecationGate()
 
         # Maximum number of concurrent packages to build
@@ -2349,15 +2349,9 @@ class PackageInstaller:
         return None
 
     def _check_deprecations(self) -> None:
-        """Refuse to deploy specs with a disallowed deprecation in their runtime graph."""
-        # A spec is overwritten if any build request marks it as such.
-        overwrite = {dag_hash for request in self.build_requests for dag_hash in request.overwrite}
-        specs = [task.pkg.spec for task in self.build_tasks.values()]
-        # Read the installed state of the whole batch under a single lock, for a consistent
-        # snapshot (the new installer likewise builds its graph inside a read transaction).
-        with spack.store.STORE.db.read_transaction():
-            to_deploy = spack.deprecation.specs_to_deploy(specs, overwrite)
-        self._deprecation_gate.check(to_deploy)
+        """Refuse to deploy specs with a disallowed deprecation in their DAG."""
+        roots = [request.pkg.spec for request in self.build_requests]
+        self._deprecation_gate.check(roots)
 
     def install(self) -> None:
         """Install the requested package(s) and/or associated dependencies."""

@@ -130,6 +130,15 @@ allowed_deprecation = {
     "default": "none",
 }
 
+deprecation_scope = {
+    "type": "string",
+    "description": "Which dependencies are checked against the deprecation policy. "
+    "'runtime' checks only the link/run closure of the requested packages; 'all' checks "
+    "every node in the DAG, including build dependencies of build dependencies.",
+    "enum": ["runtime", "all"],
+    "default": "runtime",
+}
+
 REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"
 
 #: Properties for inclusion in other schemas
@@ -198,6 +207,7 @@ properties: Dict[str, Any] = {
                     },
                     "variants": variants,
                     "allowed_deprecation_severity": allowed_deprecation,
+                    "deprecation_scope": deprecation_scope,
                 },
                 "deprecatedProperties": [
                     {
