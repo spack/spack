@@ -113,7 +113,7 @@ class TestBasicStateManagement:
     """Test basic state management operations"""
 
     def test_on_resize(self):
-        """Test that on_resize sets terminal_size_changed and update() fetches lazily"""
+        """Test that on_resize sets terminal_size_changed and render() fetches lazily"""
         sizes = [os.terminal_size((80, 24))]
         fake_stdout = SimpleTextIOWrapper(tty=True)
         tui = TerminalUI(
@@ -128,12 +128,12 @@ class TestBasicStateManagement:
         assert tui.terminal_size_changed is True
         assert tui.dirty is True
 
-        # The actual size is fetched lazily on the first update()
+        # The actual size is fetched lazily on the first render()
         tui.render()
         assert tui.terminal_size == os.terminal_size((120, 40))
         assert tui.terminal_size_changed is False
 
-    def test_add_build(self):
+    def test_on_build_added(self):
         """Test that on_build_added adds builds correctly"""
         tui, _, _ = create_tui(total=2)
 
@@ -149,7 +149,7 @@ class TestBasicStateManagement:
         assert "pkg2" in tui.builds
         assert tui.builds["pkg2"].explicit is False
 
-    def test_update_state_transitions(self):
+    def test_on_state_changed_transitions(self):
         """Test that on_state_changed transitions states properly"""
         tui, fake_time, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
@@ -166,7 +166,7 @@ class TestBasicStateManagement:
         assert tui.completed == 1
         assert tui.builds[build_id].finished_time == fake_time[0] + inst.CLEANUP_TIMEOUT
 
-    def test_update_state_failed(self):
+    def test_on_state_changed_failed(self):
         """Test that failed state increments completed counter"""
         tui, fake_time, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
@@ -176,7 +176,7 @@ class TestBasicStateManagement:
         assert tui.completed == 1
         assert tui.builds[build_id].finished_time == fake_time[0] + inst.CLEANUP_TIMEOUT
 
-    def test_remove_build(self):
+    def test_on_build_removed(self):
         """Test that on_build_removed removes the build from the display."""
         tui, _, _ = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
@@ -187,7 +187,7 @@ class TestBasicStateManagement:
         assert len(tui.builds) == 1
         assert tui.dirty is True
 
-    def test_remove_build_resets_tracked(self):
+    def test_on_build_removed_resets_tracked(self):
         """Test that removing the tracked build resets tracking to overview mode."""
         tui, _, _ = create_tui(total=1)
         [build_id] = add_mock_builds(tui, 1)
@@ -239,7 +239,7 @@ class TestBasicStateManagement:
         tui.on_finished([*build_ids, "unknown"])
         assert capsys.readouterr().err == "error: nope\n"
 
-    def test_update_progress(self):
+    def test_on_progress(self):
         """Test that on_progress updates percentages"""
         tui, _, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
@@ -309,7 +309,7 @@ class TestOutputRendering:
         assert "Progress:" in output
 
     def test_no_output_when_not_dirty(self):
-        """Test that update() skips rendering when not dirty"""
+        """Test that render() skips rendering when not dirty"""
         tui, _, fake_stdout = create_tui()
         add_mock_builds(tui, 1)
         tui.render()
@@ -322,8 +322,8 @@ class TestOutputRendering:
         tui.render()
         assert fake_stdout.getvalue() == ""
 
-    def test_update_throttling(self):
-        """Test that update() throttles redraws"""
+    def test_render_throttling(self):
+        """Test that render() throttles redraws"""
         tui, fake_time, fake_stdout = create_tui()
         add_mock_builds(tui, 1)
 
@@ -410,7 +410,7 @@ class TestTimeBasedBehavior:
         assert tui.spinner_index == (initial_index + 1) % len(tui.spinner_chars)
 
     def test_no_redraw_when_nothing_changed(self):
-        """update() renders nothing when the display is clean and the spinner is not due"""
+        """render() renders nothing when the display is clean and the spinner is not due"""
         tui, fake_time, fake_stdout = create_tui()
         add_mock_builds(tui, 1)
         tui.render()
@@ -1027,7 +1027,7 @@ class TestToggle:
         # Echoing was stopped for the previously tracked build
         assert tui.commands[-1] == inst.SetEcho(tracked_id, False)
 
-    def test_update_state_finished_triggers_toggle_when_tracking(self):
+    def test_on_state_changed_finished_triggers_toggle_when_tracking(self):
         """Test that finishing a tracked build triggers toggle back to overview"""
         tui, _, _ = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
@@ -1313,7 +1313,7 @@ class TestEdgeCases:
         assert len(tui.builds) == 0
         assert tui.completed == 2
 
-    def test_update_progress_rounds_correctly(self):
+    def test_on_progress_rounds_correctly(self):
         """Test that progress percentage rounding works"""
         tui, _, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
@@ -1427,7 +1427,7 @@ class TestTerminalUIColor:
 class TestTargetJobs:
     """Test on_jobs_changed and its effect on the header."""
 
-    def test_set_jobs_marks_dirty(self):
+    def test_on_jobs_changed_marks_dirty(self):
         """on_jobs_changed with a new value should update target_jobs and mark dirty."""
         tui, _, _ = create_tui()
         tui.dirty = False
@@ -1439,7 +1439,7 @@ class TestTargetJobs:
         assert tui.actual_jobs == 2
         assert tui.target_jobs == 2
 
-    def test_set_jobs_same_value_no_dirty(self):
+    def test_on_jobs_changed_same_value_no_dirty(self):
         """on_jobs_changed with the same value should not mark dirty."""
         tui, _, _ = create_tui()
         tui.on_jobs_changed(5, 5)
@@ -1484,8 +1484,8 @@ class TestHeadlessMode:
         assert tui.headless is False
         assert tui.dirty is True
 
-    def test_update_suppressed_when_headless(self):
-        """update() should not write anything when headless is True."""
+    def test_render_suppressed_when_headless(self):
+        """render() should not write anything when headless is True."""
         tui, time_values, stdout = create_tui(is_tty=True, total=1)
         add_mock_builds(tui, 1)
         tui.headless = True
@@ -1502,7 +1502,7 @@ class TestHeadlessMode:
         tui.on_log_output(build_ids[0], b"hello world\n")
         assert stdout.getvalue() == ""
 
-    def test_update_state_non_tty_suppressed_when_headless(self):
+    def test_on_state_changed_non_tty_suppressed_when_headless(self):
         """on_state_changed() non-TTY output should be suppressed when headless."""
         tui, _, stdout = create_tui(is_tty=False, total=1)
         on_build_added(tui, "pkg")
@@ -1511,8 +1511,8 @@ class TestHeadlessMode:
         tui.on_state_changed("pkg", "finished")
         assert stdout.getvalue() == ""
 
-    def test_update_works_after_headless_cleared(self):
-        """update() should work normally once headless is cleared."""
+    def test_render_works_after_headless_cleared(self):
+        """render() should work normally once headless is cleared."""
         tui, time_values, stdout = create_tui(is_tty=True, total=1, color=False)
         add_mock_builds(tui, 1)
         tui.headless = True
@@ -1538,7 +1538,7 @@ class TestHeadlessMode:
 class TestBlockedIndicator:
     """Test set_blocked and the blocked message in the overview."""
 
-    def test_set_blocked_marks_dirty_once(self):
+    def test_on_blocked_changed_marks_dirty_once(self):
         """set_blocked marks dirty on a change, but not when the value is unchanged."""
         tui, _, _ = create_tui()
         tui.dirty = False
