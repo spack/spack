@@ -7,14 +7,12 @@ import json
 import os
 import pathlib
 import signal
+import socket
 import sys
 import time
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 import pytest
-
-if sys.platform == "win32":
-    pytest.skip("No Windows support", allow_module_level=True)
 
 import spack.config
 import spack.deptypes as dt
@@ -47,9 +45,11 @@ from spack.new_installer_base import (
     NoopJobServer,
     ProcessExitNotifier,
 )
-from spack.new_installer_posix import PosixJobServer
 from spack.test.conftest import writable
 from spack.test.traverse import create_dag
+
+if sys.platform != "win32":
+    from spack.new_installer_posix import PosixJobServer
 
 
 @pytest.fixture
@@ -402,6 +402,7 @@ class TestScheduleBuilds:
         for _, _, lock in result.newly_installed:
             lock.release_read()
 
+    @pytest.mark.not_on_windows("Windows has no POSIX jobserver, only NoopJobServer")
     def test_no_jobserver_token_returns_empty(self, temporary_store, mock_packages):
         """When has_running_builds=True and no token is available, nothing is started."""
         spec = self._make_spec("trivial-install-test-package")
@@ -672,27 +673,27 @@ class Script(NamedTuple):
 class FakeBuild(ProcessExitNotifier):
     """A ``ProcessLike`` for builds that run in-process, without forking. It stays alive until
     finish() or terminate() is called (immediately at launch for non-hanging scripts). Doubles as
-    its own exit notifier: a pipe whose write end is closed when the build finishes."""
+    its own exit notifier: a socketpair (selectable on Windows too, like the production
+    WindowsSentinelBridge) whose write end is closed when the build finishes."""
 
     #: There is no real process (group) to signal.
     pid: Optional[int] = None
 
     def __init__(self, exitcode: int, channels: BuildChannels) -> None:
-        self._read, self._write = os.pipe()
+        self._read, self._write = socket.socketpair()
         self._exitcode = exitcode
         self.exitcode: Optional[int] = None
         self.terminated = False
         self.channels = channels
 
     @property
-    def fileobj(self) -> int:
+    def fileobj(self) -> socket.socket:
         return self._read
 
     def close(self) -> None:
-        # Idempotent: the event loop closes this object as notifier and as process.
-        if self._read >= 0:
-            os.close(self._read)
-            self._read = -1
+        # The event loop closes this object as notifier and as process; socket.close() is
+        # idempotent, so that is fine.
+        self._read.close()
 
     def finish(self) -> None:
         if self.exitcode is None:
@@ -700,7 +701,7 @@ class FakeBuild(ProcessExitNotifier):
             # EOF the state/output channels and make the exit notifier fire.
             self.channels.state_w.close()
             self.channels.output_w.close()
-            os.close(self._write)
+            self._write.close()
 
     def terminate(self) -> None:
         self.terminated, self._exitcode = True, -signal.SIGTERM
