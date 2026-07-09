@@ -981,8 +981,7 @@ class InstallerUI:
         #: terminal. If True, the event loop manages terminal state (cbreak mode, suspend/resume
         #: signals, stdin registration) and feeds keyboard input to ``on_input``.
         self.reads_terminal_input = False
-        #: Commands the frontend has produced for the event loop to execute. The loop drains this
-        #: once per iteration; a frontend appends to it instead of calling into the loop directly.
+        #: The frontend appends commands to this list to request actions from the event loop.
         self.commands: List[UiCommand] = []
 
     def on_build_added(self, info: BuildInfo) -> None:
@@ -2303,8 +2302,7 @@ class PackageInstaller:
                 blocked = self._schedule_builds(
                     selector, jobserver, retained_read_locks, database_actions
                 )
-                if self.ui.commands:
-                    self._run_ui_commands(jobserver)
+                self._run_ui_commands(jobserver)
                 self._flush_db_if_due(time.monotonic(), database_actions, retained_read_locks)
 
             while (
@@ -2404,8 +2402,7 @@ class PackageInstaller:
                 self._flush_db_if_due(current_time, database_actions, retained_read_locks)
 
                 # Execute commands produced by the UI ahead of rendering.
-                if self.ui.commands:
-                    self._run_ui_commands(jobserver)
+                self._run_ui_commands(jobserver)
 
                 # Finally update the UI
                 self.ui.render()
@@ -2756,8 +2753,9 @@ class PackageInstaller:
 
     def _run_ui_commands(self, jobserver: JobServerBase) -> None:
         """Execute the commands produced by the UI."""
-        commands = self.ui.commands.copy()
-        self.ui.commands.clear()
+        if not self.ui.commands:
+            return
+        commands, self.ui.commands = self.ui.commands, []
         for cmd in commands:
             if isinstance(cmd, SetEcho):
                 self._set_echo(cmd.build_id, cmd.echo)
