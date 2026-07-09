@@ -918,7 +918,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     assert expected_msg in out
 
 
-def test_cleanup_failed_err(install_mockery, tmp_path: pathlib.Path, monkeypatch, capfd):
+def test_cleanup_failed_err(install_mockery, monkeypatch, capfd):
     """Test _cleanup_failed exception path."""
     msg = "Fake release_write exception"
 
@@ -926,17 +926,17 @@ def test_cleanup_failed_err(install_mockery, tmp_path: pathlib.Path, monkeypatch
         raise RuntimeError(msg)
 
     installer = create_installer(["trivial-install-test-package"], {})
+    spec = installer.build_requests[0].pkg.spec
+    spack.store.STORE.failure_tracker.mark(spec)
 
     monkeypatch.setattr(lk.Lock, "release_write", _raise_except)
     pkg_id = "test"
-    with fs.working_dir(str(tmp_path)):
-        lock = lk.Lock("./test", default_timeout=1e-9, desc="test")
-        installer.failed[pkg_id] = lock
+    installer.failed[pkg_id] = spec
 
-        installer._cleanup_failed(pkg_id)
-        out = str(capfd.readouterr()[1])
-        assert "exception when removing failure tracking" in out
-        assert msg in out
+    installer._cleanup_failed(pkg_id)
+    out = str(capfd.readouterr()[1])
+    assert "exception when removing failure tracking" in out
+    assert msg in out
 
 
 def test_update_failed_no_dependent_task(install_mockery):

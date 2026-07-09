@@ -460,8 +460,8 @@ class FailureTracker:
         if locked:
             tty.warn(f"Removing failure marking despite lock for {spec.name}")
 
-        succeeded, lock = self.locker.clear(spec)
-        if succeeded and lock is not None:
+        _, lock = self.locker.clear(spec)
+        if lock is not None:
             lock.release_write()
 
         if self.persistent_mark(spec):
@@ -496,7 +496,7 @@ class FailureTracker:
             except OSError as exc:
                 tty.warn(f"Unable to remove failure marking file {fail_mark}: {str(exc)}")
 
-    def mark(self, spec: "spack.spec.Spec") -> lk.Lock:
+    def mark(self, spec: "spack.spec.Spec") -> None:
         """Marks a spec as failing to install.
 
         Args:
@@ -517,10 +517,16 @@ class FailureTracker:
             except lk.LockTimeoutError:
                 # Unlikely that another process failed to install at the same
                 # time but log it anyway.
+                self.locker.clear(spec)
                 tty.debug(f"PID {os.getpid()} failed to mark install failure for {spec.name}")
                 tty.warn(f"Unable to mark {spec.name} as failed.")
 
-        return self.locker.lock(spec)
+    def release(self, spec: "spack.spec.Spec") -> None:
+        """Releases and forgets the write lock taken by :meth:`mark`, keeping the persistent
+        failure mark, so that other processes can clear the failure once this one exits."""
+        _, lock = self.locker.clear(spec)
+        if lock is not None:
+            lock.release_write()
 
     def has_failed(self, spec: "spack.spec.Spec") -> bool:
         """Return True if the spec is marked as failed."""
