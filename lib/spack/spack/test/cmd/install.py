@@ -23,6 +23,7 @@ import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
 import spack.hooks.sbom_generate
+import spack.install_test
 import spack.installer
 import spack.package_base
 import spack.store
@@ -71,36 +72,6 @@ def test_install_package_and_dependency(
     assert 'tests="5"' in content
     assert 'failures="0"' in content
     assert 'errors="0"' in content
-
-
-def _check_runtests_none(pkg):
-    assert not pkg.run_tests
-
-
-def _check_runtests_dttop(pkg):
-    assert pkg.run_tests == (pkg.name == "dttop")
-
-
-def _check_runtests_all(pkg):
-    assert pkg.run_tests
-
-
-@pytest.mark.disable_clean_stage_check
-def test_install_runtests_notests(monkeypatch, mock_packages, install_mockery):
-    monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_none)
-    install("-v", "dttop")
-
-
-@pytest.mark.disable_clean_stage_check
-def test_install_runtests_root(monkeypatch, mock_packages, install_mockery):
-    monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_dttop)
-    install("--test=root", "dttop")
-
-
-@pytest.mark.disable_clean_stage_check
-def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
-    monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_all)
-    install("--test=all", "pkg-a")
 
 
 def test_install_package_already_installed(
@@ -1019,9 +990,11 @@ def test_install_empty_env(
         ("test-install-callbacks", "undefined-install-test"),
     ],
 )
-def test_installation_fail_tests(install_mockery, mock_fetch, name, method):
+def test_installation_fail_tests(install_mockery, mock_fetch, name, method, installer_variant):
     """Confirm build-time tests with unknown methods fail."""
     output = install("--test=root", "--no-cache", name, fail_on_error=False)
+
+    assert install.error is not None
 
     # Check that there is a single test failure reported
     assert output.count("TestFailure: 1 test failed") == 1
@@ -1030,8 +1003,30 @@ def test_installation_fail_tests(install_mockery, mock_fetch, name, method):
     assert output.count(method) == 2
     assert output.count("method not implemented") == 1
 
-    # Check that the path to the test log file is also output
-    assert "See test log for details" in output
+    if installer_variant == "old":
+        # Check that the path to the test log file is also output
+        assert "See test log for details" in output
+
+    # Check that the test log was written to the stage directory
+    pkg = spack.concretize.concretize_one(name).package
+    test_log = pathlib.Path(pkg.stage.path) / spack.install_test.spack_install_test_log
+    assert f"method not implemented [{method}]" in test_log.read_text()
+
+
+@pytest.mark.not_on_windows("Windows logger I/O operation on closed file when install fails")
+@pytest.mark.disable_clean_stage_check
+def test_install_tests_root_vs_all(install_mockery, mock_fetch, installer_variant):
+    """Confirm --test=all runs tests of dependencies and --test=root does not. The dependency
+    test-build-callbacks fails its build-time tests whenever they are run."""
+    output = install(
+        "--test=all", "--no-cache", "dependent-of-test-callbacks", fail_on_error=False
+    )
+    assert install.error is not None
+    assert output.count("TestFailure: 1 test failed") == 1
+    assert not spack.store.STORE.db.query("test-build-callbacks")
+
+    install("--test=root", "--no-cache", "dependent-of-test-callbacks")
+    assert spack.store.STORE.db.query("dependent-of-test-callbacks")
 
 
 # Unit tests should not be affected by the user's managed environments
@@ -1115,7 +1110,7 @@ def test_install_use_buildcache(
 @pytest.mark.not_on_windows("Windows logger I/O operation on closed file when install fails")
 @pytest.mark.regression("34006")
 @pytest.mark.disable_clean_stage_check
-def test_padded_install_runtests_root(install_mockery, mock_fetch):
+def test_padded_install_runtests_root(install_mockery, mock_fetch, installer_variant):
     spack.config.set("config:install_tree:padded_length", 255)
     output = install(
         "--verbose", "--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False

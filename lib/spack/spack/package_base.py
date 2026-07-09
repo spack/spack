@@ -2045,23 +2045,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         self.tester.stand_alone_tests(kwargs, timeout=timeout)
 
-    def _unit_test_check(self) -> bool:
-        """Hook for Spack's own unit tests to assert things about package internals.
-
-        Unit tests can override this function to perform checks after
-        ``Package.install`` and all post-install hooks run, but before
-        the database is updated.
-
-        The overridden function may indicate that the install procedure
-        should terminate early (before updating the database) by
-        returning :data:`False` (or any value such that ``bool(result)`` is
-        :data:`False`).
-
-        Return:
-            :data:`True` to continue, :data:`False` to skip ``install()``
-        """
-        return True
-
     @classmethod
     def inject_flags(cls: Type[Pb], name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """See :func:`spack.package.inject_flags`."""
