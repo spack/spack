@@ -11,13 +11,13 @@ import spack.cmd
 import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.reporters
 import spack.spec
 import spack.store
-from spack.llnl.util.lang import stable_partition
+from spack.util import tty
+from spack.util.lang import stable_partition
 from spack.util.pattern import Args
 
 __all__ = ["add_common_arguments"]
@@ -458,6 +458,7 @@ def install_status():
             "show install status of packages\n"
             "[+] installed       [^] installed in an upstream\n"
             " -  not installed   [-] missing dep of installed package\n"
+            "[b] available in a buildcache\n"
         ),
     )
 

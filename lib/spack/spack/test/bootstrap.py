@@ -16,7 +16,6 @@ import spack.config
 import spack.environment
 import spack.store
 import spack.util.executable
-import spack.util.path
 
 from .conftest import _true
 
@@ -88,7 +87,7 @@ def test_store_path_customization(config_value, expected, mutable_config):
 
     # Check the store path
     current = spack.bootstrap.config.store_path()
-    assert current == spack.util.path.canonicalize_path(expected)
+    assert current == spack.config.canonicalize_path(expected)
 
 
 def test_raising_exception_if_bootstrap_disabled(mutable_config):

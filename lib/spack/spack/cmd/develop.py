@@ -10,16 +10,15 @@ import spack.cmd
 import spack.config
 import spack.environment
 import spack.fetch_strategy
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.stage
-import spack.util.path
 import spack.version
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.util import tty
 
-description = "add a spec to an environment's dev-build information"
+description = "add a spec to an environment's develop: section"
 section = "environments"
 level = "long"
 
@@ -183,7 +182,7 @@ def update_env(
 
         # If we are automatically mutating the concrete specs for dev provenance, do so
         if apply_changes:
-            env.apply_develop(spec, _abs_code_path(env, spec, specified_path))
+            env.apply_develop([spec], [_abs_code_path(env, spec, specified_path)])
 
 
 def _clone(spec: spack.spec.Spec, abspath: str, force: bool = False):
@@ -205,7 +204,7 @@ def _abs_code_path(
     env: spack.environment.Environment, spec: spack.spec.Spec, path: Optional[str] = None
 ):
     src_path = path if path else spec.name
-    return spack.util.path.canonicalize_path(src_path, default_wd=env.path)
+    return spack.config.canonicalize_path(src_path, default_wd=env.path)
 
 
 def _dev_spec_generator(args, env):
@@ -215,11 +214,11 @@ def _dev_spec_generator(args, env):
     """
     if not args.spec:
         if args.clone is False:
-            raise SpackError("No spec provided to spack develop command")
+            args.subparser.error("no spec provided")
 
         for name, entry in env.dev_specs.items():
             path = entry.get("path", name)
-            abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
+            abspath = spack.config.canonicalize_path(path, default_wd=env.path)
             # Both old syntax `spack develop pkg@x` and new syntax `spack develop pkg@=x`
             # are currently supported.
             spec = spack.spec.parse_with_version_concrete(entry["spec"])
@@ -227,9 +226,9 @@ def _dev_spec_generator(args, env):
     else:
         specs = spack.cmd.parse_specs(args.spec)
         if (args.path or args.build_directory) and len(specs) > 1:
-            raise SpackError(
-                "spack develop requires at most one named spec when using the --path or"
-                " --build-directory arguments"
+            args.subparser.error(
+                "requires at most one named spec when using the --path or --build-directory "
+                "arguments"
             )
 
         for spec in specs:
@@ -252,7 +251,7 @@ def _dev_spec_generator(args, env):
 
 
 def develop(parser, args):
-    env = spack.cmd.require_active_env(cmd_name="develop")
+    env = spack.cmd.require_active_env(args.subparser)
 
     for spec, abspath in _dev_spec_generator(args, env):
         assure_concrete_spec(env, spec)

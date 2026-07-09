@@ -14,11 +14,12 @@ import spack.config
 import spack.error
 import spack.modules
 import spack.modules.common
+import spack.modules.error
 import spack.repo
 from spack.cmd import MultipleSpecsMatch, NoSpecMatches
 from spack.cmd.common import arguments
-from spack.llnl.util import filesystem, tty
-from spack.llnl.util.tty import color
+from spack.util import filesystem, tty
+from spack.util.tty import color
 
 description = "manipulate module files"
 section = "environment"
@@ -157,7 +158,7 @@ def loads(module_type, specs, args, out=None):
                 ]
             )
 
-    modules = list(
+    modules = [
         (
             spec,
             spack.modules.get_module(
@@ -169,7 +170,7 @@ def loads(module_type, specs, args, out=None):
             ),
         )
         for spec in specs
-    )
+    ]
 
     module_commands = {"tcl": "module load ", "lmod": "module load "}
 
@@ -228,12 +229,12 @@ def find(module_type, specs, args):
                 required=True,
             )
         )
-    except spack.modules.common.ModuleNotFoundError as e:
+    except spack.modules.error.ModuleNotFoundError as e:
         tty.die(e.message)
 
     if not all(modules):
         tty.warn(_missing_modules_warning)
-    modules = list(x for x in modules if x)
+    modules = [x for x in modules if x]
     print(" ".join(modules))
 
 
@@ -244,11 +245,13 @@ def rm(module_type, specs, args):
     check_module_set_name(args.module_set_name)
 
     module_cls = spack.modules.module_types[module_type]
-    module_exist = lambda x: os.path.exists(module_cls(x, args.module_set_name).layout.filename)
+    module_exist = lambda x: os.path.exists(
+        module_cls.from_spec(x, args.module_set_name).layout.filename
+    )
 
     specs_with_modules = [spec for spec in specs if module_exist(spec)]
 
-    modules = [module_cls(spec, args.module_set_name) for spec in specs_with_modules]
+    modules = [module_cls.from_spec(spec, args.module_set_name) for spec in specs_with_modules]
 
     if not modules:
         tty.die("No module file matches your query")
@@ -280,7 +283,7 @@ def refresh(module_type, specs, args):
         return
 
     if not args.upstream_modules:
-        specs = list(s for s in specs if not s.installed_upstream)
+        specs = [s for s in specs if not s.installed_upstream]
 
     if not args.yes_to_all:
         msg = "You are about to regenerate {types} module files for:\n"
@@ -297,7 +300,9 @@ def refresh(module_type, specs, args):
 
     # Skip unknown packages.
     writers = [
-        cls(spec, args.module_set_name) for spec in specs if spack.repo.PATH.exists(spec.name)
+        cls.from_spec(spec, args.module_set_name)
+        for spec in specs
+        if spack.repo.PATH.exists(spec.name)
     ]
 
     # Filter excluded packages early

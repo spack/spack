@@ -21,9 +21,9 @@ import spack.spec
 import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
-from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
 from spack.test.utilities import SpackCommandArgs
+from spack.util.filesystem import working_dir
 from spack.util.pattern import Bunch
 
 find = SpackCommand("find")
@@ -245,11 +245,7 @@ def test_find_format(database, config):
 
     output = find("--format", "{name}-{^mpi.name}-{hash:7}", "mpileaks")
     elements = output.strip().split("\n")
-    assert set(e[:-7] for e in elements) == {
-        "mpileaks-zmpi-",
-        "mpileaks-mpich-",
-        "mpileaks-mpich2-",
-    }
+    assert {e[:-7] for e in elements} == {"mpileaks-zmpi-", "mpileaks-mpich-", "mpileaks-mpich2-"}
 
     # hashes are in base32
     for e in elements:

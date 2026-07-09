@@ -42,7 +42,6 @@ from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Set, Tuple, Un
 
 from spack.vendor.typing_extensions import Literal
 
-import spack.binary_distribution as binary_distribution
 import spack.build_environment
 import spack.builder
 import spack.config
@@ -50,9 +49,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lock as lk
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.package_base
 import spack.package_prefs as prefs
@@ -60,14 +56,17 @@ import spack.repo
 import spack.report
 import spack.rewiring
 import spack.store
+import spack.util.filesystem as fs
+import spack.util.lock as lk
 import spack.util.path
-import spack.util.timer as timer
-from spack.llnl.string import ordinal
-from spack.llnl.util.lang import pretty_seconds
-from spack.llnl.util.tty.color import colorize
-from spack.llnl.util.tty.log import log_output, preserve_terminal_settings
+from spack import binary_distribution
 from spack.url_buildcache import BuildcacheEntryError
+from spack.util import timer, tty
 from spack.util.environment import EnvironmentModifications, dump_environment
+from spack.util.lang import pretty_seconds
+from spack.util.string import ordinal
+from spack.util.tty.color import colorize
+from spack.util.tty.log import log_output, preserve_terminal_settings
 
 if TYPE_CHECKING:
     import spack.spec
@@ -495,8 +494,11 @@ def _try_install_from_binary_cache(
         unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
         timer: timer to keep track of binary install phases.
     """
-    # Early exit if no binary mirrors are configured.
-    if not spack.mirrors.mirror.MirrorCollection(binary=True):
+    # Early exit if no binary mirror accepts this spec (select/exclude filters).
+    if not any(
+        m.matches_binary(pkg.spec, direction="fetch")
+        for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
+    ):
         return False
 
     tty.debug(f"Searching for binary cache of {package_id(pkg.spec)}")
@@ -760,11 +762,11 @@ class BuildRequest:
         # Save off dependency package ids for quick checks since traversals
         # are not able to return full dependents for all packages across
         # environment specs.
-        self.dependencies = set(
+        self.dependencies = {
             package_id(d)
             for d in self.pkg.spec.dependencies(deptype=self.get_depflags(self.pkg))
             if package_id(d) != self.pkg_id
-        )
+        }
 
     def __repr__(self) -> str:
         """Return a formal representation of the build request."""
@@ -966,17 +968,15 @@ class Task:
         # Be consistent wrt use of dependents and dependencies.  That is,
         # if use traverse for transitive dependencies, then must remove
         # transitive dependents on failure.
-        self.dependencies = set(
+        self.dependencies = {
             package_id(d)
             for d in self.pkg.spec.dependencies(deptype=self.request.get_depflags(self.pkg))
             if package_id(d) != self.pkg_id
-        )
+        }
 
         # List of uninstalled dependencies, which is used to establish
         # the priority of the task.
-        self.uninstalled_deps = set(
-            pkg_id for pkg_id in self.dependencies if pkg_id not in installed
-        )
+        self.uninstalled_deps = {pkg_id for pkg_id in self.dependencies if pkg_id not in installed}
 
         # Ensure key sequence-related properties are updated accordingly.
         self.attempts = attempts
@@ -1298,7 +1298,7 @@ class BuildTask(Task):
         self.record.succeed()
 
         # delete the temporary backup for an overwrite
-        # see spack.llnl.util.filesystem.restore_directory_transaction
+        # see spack.util.filesystem.restore_directory_transaction
         if self.install_action == InstallAction.OVERWRITE:
             shutil.rmtree(self.tmpdir, ignore_errors=True)
 
@@ -1309,7 +1309,7 @@ class BuildTask(Task):
             raise inner_exception
 
         # restore the overwrite directory from backup
-        # see spack.llnl.util.filesystem.restore_directory_transaction
+        # see spack.util.filesystem.restore_directory_transaction
         try:
             if os.path.exists(self.pkg.prefix):
                 shutil.rmtree(self.pkg.prefix)
@@ -2461,6 +2461,7 @@ class PackageInstaller:
 
         """
 
+        spack.store.STORE.install_sbang()
         self._init_queue()
         failed_build_requests = []
         install_status = InstallStatus(len(self.build_pq))

@@ -8,7 +8,6 @@ import pytest
 import spack.config
 import spack.environment as ev
 import spack.error
-import spack.solver.asp as asp
 import spack.store
 from spack.cmd import (
     CommandNameError,
@@ -20,6 +19,7 @@ from spack.cmd import (
     require_cmd_name,
     require_python_name,
 )
+from spack.solver import asp
 
 
 def test_require_python_name():

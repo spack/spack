@@ -382,9 +382,9 @@ def parse_pt_dynamic(f: BinaryIO, elf: ElfFile) -> None:
     string_table = retrieve_strtab(f, elf, elf.pt_dynamic_strtab_offset)
 
     if elf.has_needed:
-        elf.dt_needed_strs = list(
+        elf.dt_needed_strs = [
             parse_c_string(string_table, offset) for offset in elf.dt_needed_strtab_offsets
-        )
+        ]
 
     if elf.has_soname:
         elf.dt_soname_str = parse_c_string(string_table, elf.dt_soname_strtab_offset)

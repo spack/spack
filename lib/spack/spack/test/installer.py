@@ -20,18 +20,17 @@ import spack.error
 import spack.hooks
 import spack.installer as inst
 import spack.installer_dispatch
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lock as ulk
-import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
 import spack.report
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.lock as lk
 from spack.main import SpackCommand
 from spack.test.conftest import RepoBuilder
+from spack.util import tty
 
 
 def _mock_repo(root, namespace):
@@ -331,7 +330,7 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmp_path: pathlib.Path,
     installer = create_installer(["trivial-install-test-package"])
     spec = installer.build_requests[0].pkg.spec
 
-    monkeypatch.setattr(ulk.Lock, "acquire_read", _raise)
+    monkeypatch.setattr(lk.Lock, "acquire_read", _raise)
     with fs.working_dir(str(tmp_path)):
         with pytest.raises(RuntimeError):
             installer._ensure_locked("read", spec.package)
@@ -358,7 +357,7 @@ def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capfd):
         # Test "upgrade" of a read lock without read count to a write
         lock_type = "write"
         err = "Cannot upgrade lock"
-        with pytest.raises(ulk.LockUpgradeError, match=err):
+        with pytest.raises(lk.LockUpgradeError, match=err):
             installer._ensure_locked(lock_type, spec.package)
 
         out = str(capfd.readouterr()[1])
@@ -651,9 +650,9 @@ def false(*args, **kwargs):
     return False
 
 
-def test_rewire_task_no_tarball(monkeypatch, mock_packages):
-    spec = spack.concretize.concretize_one("splice-t")
-    dep = spack.concretize.concretize_one("splice-h+foo")
+def test_rewire_task_no_tarball(default_mock_concretization, monkeypatch):
+    spec = default_mock_concretization("splice-t")
+    dep = default_mock_concretization("splice-h+foo")
     out = spec.splice(dep)
 
     rewire_task = inst.RewireTask(out.package, inst.BuildRequest(out.package, {}))
@@ -664,14 +663,16 @@ def test_rewire_task_no_tarball(monkeypatch, mock_packages):
 
 
 @pytest.mark.parametrize("transitive", [True, False])
-def test_install_spliced(install_mockery, mock_fetch, monkeypatch, transitive):
+def test_install_spliced(install_mockery, mock_fetch, monkeypatch, transitive, installer_variant):
     """Test installing a spliced spec"""
     spec = spack.concretize.concretize_one("splice-t")
     dep = spack.concretize.concretize_one("splice-h+foo")
 
     # Do the splice.
     out = spec.splice(dep, transitive)
-    installer = create_installer([out], {"verbose": True, "fail_fast": True})
+    installer = spack.installer_dispatch.create_installer(
+        [out.package], verbose=True, fail_fast=True
+    )
     installer.install()
     for node in out.traverse():
         assert node.installed
@@ -679,19 +680,20 @@ def test_install_spliced(install_mockery, mock_fetch, monkeypatch, transitive):
 
 
 @pytest.mark.parametrize("transitive", [True, False])
-def test_install_spliced_build_spec_installed(install_mockery, mock_fetch, transitive):
+def test_install_spliced_build_spec_installed(
+    install_mockery, mock_fetch, transitive, installer_variant
+):
     """Test installing a spliced spec with the build spec already installed"""
     spec = spack.concretize.concretize_one("splice-t")
     dep = spack.concretize.concretize_one("splice-h+foo")
 
     # Do the splice.
     out = spec.splice(dep, transitive)
-    inst.PackageInstaller([out.build_spec.package]).install()
+    spack.installer_dispatch.create_installer([out.build_spec.package]).install()
 
-    installer = create_installer([out], {"verbose": True, "fail_fast": True})
-    installer._init_queue()
-    for _, task in installer.build_pq:
-        assert isinstance(task, inst.RewireTask if task.pkg.spec.spliced else inst.BuildTask)
+    installer = spack.installer_dispatch.create_installer(
+        [out.package], verbose=True, fail_fast=True
+    )
     installer.install()
     for node in out.traverse():
         assert node.installed
@@ -705,14 +707,22 @@ def test_install_spliced_build_spec_installed(install_mockery, mock_fetch, trans
     "root_str", ["splice-t^splice-h~foo", "splice-h~foo", "splice-vt^splice-a"]
 )
 def test_install_splice_root_from_binary(
-    mutable_mock_env_path, install_mockery, mock_fetch, temporary_mirror, transitive, root_str
+    mutable_mock_env_path,
+    install_mockery,
+    mock_fetch,
+    temporary_mirror,
+    transitive,
+    root_str,
+    installer_variant,
 ):
     """Test installing a spliced spec with the root available in binary cache"""
     # Test splicing and rewiring a spec with the same name, different hash.
     original_spec = spack.concretize.concretize_one(root_str)
     spec_to_splice = spack.concretize.concretize_one("splice-h+foo")
 
-    inst.PackageInstaller([original_spec.package, spec_to_splice.package]).install()
+    spack.installer_dispatch.create_installer(
+        [original_spec.package, spec_to_splice.package]
+    ).install()
 
     out = original_spec.splice(spec_to_splice, transitive)
 
@@ -729,7 +739,7 @@ def test_install_splice_root_from_binary(
     uninstall = SpackCommand("uninstall")
     uninstall("-ay")
 
-    inst.PackageInstaller([out.package], unsigned=True).install()
+    spack.installer_dispatch.create_installer([out.package], unsigned=True).install()
 
     assert len(spack.store.STORE.db.query()) == len(list(out.traverse()))
 
@@ -1392,12 +1402,11 @@ def test_print_install_test_log_failures(
     assert "See test results at" in out
 
 
-def test_fallback_to_old_installer_for_splicing(monkeypatch, mock_packages, mutable_config):
-    """Test that the old installer is used for spliced specs (unsupported in the new installer)"""
-    mutable_config.set("config:installer", "new")
-    spec = spack.concretize.concretize_one("splice-t")
-    dep = spack.concretize.concretize_one("splice-h+foo")
-    out = spec.splice(dep)
-    assert isinstance(
-        spack.installer_dispatch.create_installer([out.package]), inst.PackageInstaller
-    )
+@pytest.mark.disable_clean_stage_check
+def test_log_files_preserved_on_error(install_mockery, mock_fetch, installer_variant):
+    """Test that the log file is preserved when an install error occurs."""
+    pkg = spack.concretize.concretize_one("build-error").package
+    installer = spack.installer_dispatch.create_installer([pkg])
+    with pytest.raises(spack.error.InstallError):
+        installer.install()
+    assert os.path.exists(pkg.log_path)

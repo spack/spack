@@ -30,8 +30,6 @@ import spack.directives_meta
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
-import spack.llnl.util.filesystem as fsys
-import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.multimethod
@@ -45,6 +43,7 @@ import spack.url
 import spack.util.archive
 import spack.util.environment
 import spack.util.executable
+import spack.util.filesystem as fsys
 import spack.util.git
 import spack.util.naming
 import spack.util.path
@@ -53,14 +52,10 @@ import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
-from spack.llnl.util.filesystem import (
-    AlreadyExistsError,
-    find_all_shared_libraries,
-    islink,
-    symlink,
-)
-from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
+from spack.util import tty
+from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
+from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
@@ -357,7 +352,7 @@ class PackageViewMixin:
         Alternative implementations may allow some of the files to exist in
         the view (in this case they would be omitted from the results).
         """
-        return set(dst for dst in merge_map.values() if os.path.lexists(dst))
+        return {dst for dst in merge_map.values() if os.path.lexists(dst)}
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
@@ -861,7 +856,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def global_license_dir(cls):
         """Returns the directory where license files for all packages are stored."""
-        return spack.util.path.canonicalize_path(spack.config.get("config:license_dir"))
+        return spack.config.canonicalize_path(spack.config.get("config:license_dir"))
 
     @property
     def global_license_file(self):
@@ -1122,15 +1117,22 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # if no version-bearing URLs can be found, try them raw
         if not urls:
-            default_url = getattr(self, "url", getattr(self, "urls", [None])[0])
+            default_url = getattr(self, "url", None)
+
+            if not default_url:
+                default_urls = getattr(self, "urls", None)
+
+                if isinstance(default_urls, list) and len(default_urls) > 0:
+                    default_url = default_urls[0]
 
             # if no exact match AND no class-level default, use the nearest URL
             if not default_url:
                 default_url = self.nearest_url(version)
 
-                # if there are NO URLs to go by, then we can't do anything
-                if not default_url:
-                    raise NoURLError(self.__class__)
+            # if there are NO URLs to go by, then we can't do anything
+            if not default_url:
+                raise NoURLError(self.__class__)
+
             urls.append(spack.url.substitute_version(default_url, self.url_version(version)))
 
         return urls
@@ -1539,7 +1541,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def provided_virtual_names(cls):
         """Return sorted list of names of virtuals that can be provided by this package."""
         return sorted(
-            set(vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals))
+            {vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals)}
         )
 
     @property
@@ -2447,7 +2449,11 @@ class WindowsSimulatedRPath:
                 new_pth = pathlib.Path(pth).parent
             else:
                 new_pth = pathlib.Path(pth)
-            path_is_in_prefix = new_pth.is_relative_to(self.base_modification_prefix)
+
+            path_is_in_prefix = (
+                self.base_modification_prefix == new_pth
+                or self.base_modification_prefix in new_pth.parents
+            )
             if not path_is_in_prefix:
                 raise RuntimeError(
                     f"Attempting to generate rpath symlink out of rpath context:\

@@ -47,6 +47,7 @@ line is a spec for a particular installation of the mpileaks package.
 6. The architecture to build with.
 """
 
+import abc
 import collections
 import collections.abc
 import enum
@@ -62,6 +63,7 @@ import warnings
 from typing import (
     Any,
     Callable,
+    ClassVar,
     Dict,
     Iterable,
     List,
@@ -70,6 +72,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    Type,
     Union,
     overload,
 )
@@ -83,12 +86,6 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
-import spack.llnl.path
-import spack.llnl.string
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lang as lang
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as clr
 import spack.patch
 import spack.paths
 import spack.platforms
@@ -96,16 +93,22 @@ import spack.provider_index
 import spack.repo
 import spack.spec_parser
 import spack.traverse
+import spack.util.filesystem as fs
+import spack.util.gpg
 import spack.util.hash
+import spack.util.path
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.string
+import spack.util.tty.color as clr
 import spack.variant as vt
 import spack.version
 import spack.version as vn
 import spack.version.git_ref_lookup
+from spack.util import lang, tty
 
-from .enums import InstallRecordStatus, PropagationPolicy
+from .enums import PropagationPolicy
 
 __all__ = [
     "CompilerSpec",
@@ -154,7 +157,7 @@ IDENTIFIER_RE = r"\w[\w-]*"
 
 # Coloring of specs when using color output. Fields are printed with
 # different colors to enhance readability.
-# See spack.llnl.util.tty.color for descriptions of the color codes.
+# See spack.util.tty.color for descriptions of the color codes.
 COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
@@ -180,16 +183,6 @@ DISPLAY_FORMAT = (
     "{compilers}"
 )
 
-#: Regular expression to pull spec contents out of clearsigned signature
-#: file.
-CLEARSIGN_FILE_REGEX = re.compile(
-    (
-        r"^-----BEGIN PGP SIGNED MESSAGE-----"
-        r"\s+Hash:\s+[^\s]+\s+(.+)-----BEGIN PGP SIGNATURE-----"
-    ),
-    re.MULTILINE | re.DOTALL,
-)
-
 #: specfile format version. Must increase monotonically
 SPECFILE_FORMAT_VERSION = 5
 
@@ -205,6 +198,7 @@ class InstallStatus(enum.Enum):
     external = "@M{[e]}  "
     absent = "@K{ - }  "
     missing = "@r{[-]}  "
+    buildcache = "@g{[b]}  "
 
 
 # regexes used in spec formatting
@@ -948,9 +942,9 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
             else:
                 extra_other = set(other[flag_type]) - set(self[flag_type])
                 if extra_other:
-                    self[flag_type] = list(self[flag_type]) + list(
+                    self[flag_type] = list(self[flag_type]) + [
                         x for x in other[flag_type] if x in extra_other
-                    )
+                    ]
                     changed = True
 
                 # Next, if any flags in other propagate, we force them to propagate in our case
@@ -1335,7 +1329,7 @@ def tree(
 
     Args:
         color: if True, always colorize the tree. If False, don't colorize the tree. If None,
-            use the default from spack.llnl.tty.color
+            use the default from spack.util.tty.color
         depth: print the depth from the root
         hashes: if True, print the hash of each node
         hashlen: length of the hash to be printed
@@ -1649,7 +1643,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return spack.llnl.path.path_to_os_path(self._external_path)[0]
+        return spack.util.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -2233,7 +2227,7 @@ class Spec:
         return self._prefix
 
     def set_prefix(self, value: str) -> None:
-        self._prefix = spack.util.prefix.Prefix(spack.llnl.path.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
     def spec_hash(self, hash: ht.SpecHashDescriptor) -> str:
         """Utility method for computing different types of Spec hashes.
@@ -2303,73 +2297,6 @@ class Spec:
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
-
-    def _lookup_hash(self):
-        """Lookup just one spec with an abstract hash, returning a spec from the the environment,
-        store, or finally, binary caches."""
-        from spack.binary_distribution import BinaryCacheQuery
-        from spack.environment import active_environment
-        from spack.store import STORE
-
-        active_env = active_environment()
-
-        # First env, then store, then binary cache
-        matches = (
-            (active_env.all_matching_specs(self) if active_env else [])
-            or STORE.db.query(self, installed=InstallRecordStatus.ANY)
-            or BinaryCacheQuery(True)(self)
-        )
-
-        if not matches:
-            raise InvalidHashError(self, self.abstract_hash)
-
-        if len(matches) != 1:
-            raise AmbiguousHashError(
-                f"Multiple packages specify hash beginning '{self.abstract_hash}'.", *matches
-            )
-
-        return matches[0]
-
-    def lookup_hash(self):
-        """Given a spec with an abstract hash, return a copy of the spec with all properties and
-        dependencies by looking up the hash in the environment, store, or finally, binary caches.
-        This is non-destructive."""
-        if self.concrete or not any(node.abstract_hash for node in self.traverse()):
-            return self
-
-        spec = self.copy(deps=False)
-        # root spec is replaced
-        if spec.abstract_hash:
-            spec._dup(self._lookup_hash())
-            return spec
-
-        # Map the dependencies that need to be replaced
-        node_lookup = {
-            id(node): node._lookup_hash()
-            for node in self.traverse(root=False)
-            if node.abstract_hash
-        }
-
-        # Reconstruct dependencies
-        for edge in self.traverse_edges(root=False):
-            key = edge.parent.name
-            current_node = spec if key == spec.name else spec[key]
-            child_node = node_lookup.get(id(edge.spec), edge.spec.copy())
-            current_node._add_dependency(
-                child_node, depflag=edge.depflag, virtuals=edge.virtuals, direct=edge.direct
-            )
-
-        return spec
-
-    def replace_hash(self):
-        """Given a spec with an abstract hash, attempt to populate all properties and dependencies
-        by looking up the hash in the environment, store, or finally, binary caches.
-        This is destructive."""
-
-        if not any(node for node in self.traverse(order="post") if node.abstract_hash):
-            return
-
-        self._dup(self.lookup_hash())
 
     def to_node_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary representing the state of this Spec.
@@ -2609,8 +2536,12 @@ class Spec:
         return {"spec": {"_meta": {"version": SPECFILE_FORMAT_VERSION}, "nodes": node_list}}
 
     def node_dict_with_hashes(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
-        """Returns a node dict of this spec with the dag hash, and the provided hash (if not
-        the dag hash)."""
+        """Returns a dict of this spec with the dag hash, and optionally another hash or id.
+
+        Arguments:
+            hash: Optional other hash to include. If this is the dag hash, it's only included once.
+
+        """
         node = self.to_node_dict(hash)
         # All specs have at least a DAG hash
         node[ht.dag_hash.name] = self.dag_hash()
@@ -2628,7 +2559,10 @@ class Spec:
         return syaml.dump(self.to_dict(hash), stream=stream, default_flow_style=False)
 
     def to_json(self, stream=None, *, hash=ht.dag_hash, pretty=False):
-        return sjson.dump(self.to_dict(hash), stream=stream, pretty=pretty)
+        if stream is None:
+            return sjson.dumps(self.to_dict(hash), pretty=pretty)
+        sjson.dump(self.to_dict(hash), stream, pretty=pretty)
+        return None
 
     @staticmethod
     def from_specfile(path):
@@ -2812,19 +2746,17 @@ class Spec:
         Args:
             data: a nested dict/list data structure read from YAML or JSON.
         """
-        # Legacy specfile format
+        # Figure out the specfile format
         if isinstance(data["spec"], list):
-            spec = SpecfileV1.load(data)
-        elif int(data["spec"]["_meta"]["version"]) == 2:
-            spec = SpecfileV2.load(data)
-        elif int(data["spec"]["_meta"]["version"]) == 3:
-            spec = SpecfileV3.load(data)
-        elif int(data["spec"]["_meta"]["version"]) == 4:
-            spec = SpecfileV4.load(data)
+            version = 1
         else:
-            spec = SpecfileV5.load(data)
+            version = int(data["spec"]["_meta"]["version"])
 
-        # Any git version should
+        # get the right reader
+        reader = specfile_reader_for_version(version)
+        spec = reader.load(data)
+
+        # Handle git versions
         for s in spec.traverse():
             s.attach_git_version_lookup()
 
@@ -2854,13 +2786,6 @@ class Spec:
             raise sjson.SpackJSONError("error parsing JSON spec:", e) from e
 
     @staticmethod
-    def extract_json_from_clearsig(data):
-        m = CLEARSIGN_FILE_REGEX.search(data)
-        if m:
-            return sjson.load(m.group(1))
-        return sjson.load(data)
-
-    @staticmethod
     def from_signed_json(stream):
         """Construct a spec from clearsigned json spec file.
 
@@ -2871,7 +2796,7 @@ class Spec:
         if hasattr(stream, "read"):
             data = stream.read()
 
-        extracted_json = Spec.extract_json_from_clearsig(data)
+        extracted_json = spack.util.gpg.extract_json_from_clearsig(data)
         return Spec.from_dict(extracted_json)
 
     @staticmethod
@@ -2941,8 +2866,6 @@ class Spec:
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
-        if (not value) and self.concrete and self.installed:
-            return
         self._concrete = value
         self._validate_version()
         for variant in self.variants.values():
@@ -2976,9 +2899,7 @@ class Spec:
         # if set to false, clear out all hashes (set to None or remove attr)
         # may need to change references to respect None
         for s in self.traverse():
-            if (not value) and s.concrete and s.installed:
-                continue
-            elif not value:
+            if not value:
                 s.clear_caches()
             s._mark_root_concrete(value)
 
@@ -4649,7 +4570,7 @@ class Spec:
         Args:
             specs: List of specs to format.
             color: if True, always colorize the tree. If False, don't colorize the tree. If None,
-                use the default from spack.llnl.tty.color
+                use the default from spack.util.tty.color
             depth: print the depth from the root
             hashes: if True, print the hash of each node
             hashlen: length of the hash to be printed
@@ -4730,7 +4651,7 @@ class Spec:
         """Return set of virtuals provided by self in the context of root"""
         if root is self:
             # Could be using any virtual the package can provide
-            return set(v.name for v in self.package.virtuals_provided)
+            return {v.name for v in self.package.virtuals_provided}
 
         hashes = [s.dag_hash() for s in root.traverse()]
         in_edges = set(
@@ -4810,7 +4731,7 @@ class Spec:
                 for evaluating whether ``replacement`` is a match for each node of ``self``. See
                 ``Spec._splice_match`` and ``Spec._virtuals_provided`` for details.
         """
-        ids = set(id(s) for s in replacement.traverse())
+        ids = {id(s) for s in replacement.traverse()}
 
         # Sort all possible replacements by name and virtual for easy access later
         replacements_by_name = collections.defaultdict(list)
@@ -5321,9 +5242,9 @@ def substitute_abstract_variants(spec: Spec):
         spec.variants.substitute(new_variant)
 
     if unknown:
-        variants = spack.llnl.string.plural(len(unknown), "variant")
+        variants = spack.util.string.plural(len(unknown), "variant")
         raise vt.UnknownVariantError(
-            f"Tried to set {variants} {spack.llnl.string.comma_and(unknown)}. "
+            f"Tried to set {variants} {spack.util.string.comma_and(unknown)}. "
             f"{spec.name} has no such {variants}",
             unknown_variants=unknown,
         )
@@ -5385,8 +5306,42 @@ def reconstruct_virtuals_on_edges(spec: Spec) -> None:
             edge.update_virtuals(virtuals_to_add)
 
 
-class SpecfileReaderBase:
-    SPEC_VERSION: int
+DepSpecComponents = Tuple[str, str, List[str], str, Tuple[str, ...], bool]
+
+
+_SPECFILE_READERS: Dict[int, Type["SpecfileReaderBase"]] = {}
+
+
+def register_reader(cls: Type["SpecfileReaderBase"]) -> Type["SpecfileReaderBase"]:
+    """Register a SpecfileReaderBase subclass under its SPEC_VERSION."""
+    if "SPEC_VERSION" not in cls.__dict__:
+        raise TypeError(f"{cls.__name__} must define SPEC_VERSION to be registered")
+    _SPECFILE_READERS[cls.SPEC_VERSION] = cls
+    return cls
+
+
+class SpecfileReaderBase(abc.ABC):
+    SPEC_VERSION: ClassVar[int]
+
+    @classmethod
+    @abc.abstractmethod
+    def load(cls, data) -> Spec: ...
+
+    @classmethod
+    @abc.abstractmethod
+    def dependencies_from_node_dict(cls, node) -> List[DepSpecComponents]: ...
+
+    @classmethod
+    @abc.abstractmethod
+    def read_specfile_dep_specs(
+        cls, deps: Dict, hash_type: str = ht.dag_hash.name
+    ) -> List[DepSpecComponents]: ...
+
+    @classmethod
+    @abc.abstractmethod
+    def extract_build_spec_info_from_node_dict(
+        cls, node, hash_type=ht.dag_hash.name
+    ) -> Tuple[str, str, str]: ...
 
     @classmethod
     def from_node_dict(cls, node):
@@ -5469,7 +5424,7 @@ class SpecfileReaderBase:
         return Spec(f"{d['name']}@{vn.VersionList.from_dict(d)}")
 
     @classmethod
-    def _load(cls, data):
+    def _load(cls, data) -> Spec:
         """Construct a spec from JSON/YAML using the format version 2.
 
         This format is used in Spack v0.17, was introduced in
@@ -5480,10 +5435,12 @@ class SpecfileReaderBase:
         """
         # Current specfile format
         nodes = data["spec"]["nodes"]
-        hash_type = None
-        any_deps = False
+        if not nodes:
+            raise spack.error.SpecError("Spec dictionary contains no nodes.")
 
         # Pass 0: Determine hash type
+        hash_type = None
+        any_deps = False
         for node in nodes:
             for _, _, _, dhash_type, _, _ in cls.dependencies_from_node_dict(node):
                 any_deps = True
@@ -5498,51 +5455,59 @@ class SpecfileReaderBase:
                 "Spec dictionary contains malformed dependencies. Old format?"
             )
 
-        hash_dict = {}
-        root_spec_hash = None
+        specs_by_hash = wire_spec_nodes(nodes, hash_type, cls)
+        root_spec_hash = nodes[0][hash_type]
+        return specs_by_hash[root_spec_hash]
 
-        # Pass 1: Create a single lookup dictionary by hash
-        for i, node in enumerate(nodes):
-            node_hash = node[hash_type]
-            node_spec = cls.from_node_dict(node)
-            hash_dict[node_hash] = node
-            hash_dict[node_hash]["node_spec"] = node_spec
-            if i == 0:
-                root_spec_hash = node_hash
 
-        if not root_spec_hash:
-            raise spack.error.SpecError("Spec dictionary contains no nodes.")
+def wire_spec_nodes(
+    nodes: List[Dict], hash_type: str, reader: Type[SpecfileReaderBase]
+) -> Dict[str, Spec]:
+    """Given a list of spec node dicts, wire them together and return a dict keyed by hash.
 
-        # Pass 2: Finish construction of all DAG edges (including build specs)
-        for node_hash, node in hash_dict.items():
-            node_spec = node["node_spec"]
-            for _, dhash, dtype, _, virtuals, direct in cls.dependencies_from_node_dict(node):
-                node_spec._add_dependency(
-                    hash_dict[dhash]["node_spec"],
-                    depflag=dt.canonicalize(dtype),
-                    virtuals=virtuals,
-                    direct=direct,
+    This is the part of SpecfileV2 and onwards that wires up specs, based on hashes in
+    JSON spec data.
+
+    Raises:
+        MissingSpecHashError: if a node references a hash not present in ``nodes``.
+    """
+    # Pass 1: Create a single lookup dictionary by hash
+    specs_by_hash = {node[hash_type]: reader.from_node_dict(node) for node in nodes}
+
+    # Pass 2: Finish construction of all DAG edges (including build specs)
+    for node in nodes:
+        node_spec = specs_by_hash[node[hash_type]]
+
+        for dname, dhash, dtype, _, virtuals, direct in reader.dependencies_from_node_dict(node):
+            dep_spec = specs_by_hash.get(dhash)
+            if dep_spec is None:
+                raise MissingSpecHashError(
+                    f"node '{node['name']}' references missing dep hash {dname}/{dhash}"
                 )
-            if "build_spec" in node.keys():
-                _, bhash, _ = cls.extract_build_spec_info_from_node_dict(node, hash_type=hash_type)
-                node_spec._build_spec = hash_dict[bhash]["node_spec"]
+            node_spec._add_dependency(
+                dep_spec, depflag=dt.canonicalize(dtype), virtuals=virtuals, direct=direct
+            )
 
-        return hash_dict[root_spec_hash]["node_spec"]
+        if "build_spec" in node.keys():
+            bname, bhash, _ = reader.extract_build_spec_info_from_node_dict(
+                node, hash_type=hash_type
+            )
+            build_spec = specs_by_hash.get(bhash)
+            if build_spec is None:
+                raise MissingSpecHashError(
+                    f"node '{node['name']}' references missing build_spec hash {bname}/{bhash}"
+                )
+            node_spec._build_spec = build_spec
 
-    @classmethod
-    def extract_build_spec_info_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
-        raise NotImplementedError("Subclasses must implement this method.")
-
-    @classmethod
-    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
-        raise NotImplementedError("Subclasses must implement this method.")
+    return specs_by_hash
 
 
+@register_reader
 class SpecfileV1(SpecfileReaderBase):
     SPEC_VERSION = 1
 
     @classmethod
-    def load(cls, data):
+    def load(cls, data) -> Spec:
         """Construct a spec from JSON/YAML using the format version 1.
 
         Note: Version 1 format has no notion of a build_spec, and names are
@@ -5581,39 +5546,52 @@ class SpecfileV1(SpecfileReaderBase):
         return name, node
 
     @classmethod
-    def dependencies_from_node_dict(cls, node):
+    def dependencies_from_node_dict(cls, node) -> List[DepSpecComponents]:
         if "dependencies" not in node:
             return []
 
-        for t in cls.read_specfile_dep_specs(node["dependencies"]):
-            yield t
+        return cls.read_specfile_dep_specs(node["dependencies"])
 
     @classmethod
-    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
+    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name) -> List[DepSpecComponents]:
         """Read the DependencySpec portion of a YAML-formatted Spec.
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
         """
+        dspec_list: List[DepSpecComponents] = []
         for dep_name, elt in deps.items():
             if isinstance(elt, dict):
                 for h in ht.HASHES:
                     if h.name in elt:
                         dep_hash, deptypes = elt[h.name], elt["type"]
                         hash_type = h.name
-                        virtuals = []
+                        virtuals: Tuple[str, ...] = ()
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError("Couldn't parse dependency types in spec.")
-            yield dep_name, dep_hash, list(deptypes), hash_type, list(virtuals), True
+
+            dspec_list.append(
+                (dep_name, dep_hash, list(deptypes), hash_type, tuple(virtuals), True)
+            )
+
+        return dspec_list
+
+    @classmethod
+    def extract_build_spec_info_from_node_dict(
+        cls, node, hash_type=ht.dag_hash.name
+    ) -> Tuple[str, str, str]:
+        """Not used for SpecfileV1; raises NotImplementedError."""
+        raise NotImplementedError
 
 
+@register_reader
 class SpecfileV2(SpecfileReaderBase):
     SPEC_VERSION = 2
 
     @classmethod
-    def load(cls, data):
+    def load(cls, data) -> Spec:
         result = cls._load(data)
         reconstruct_virtuals_on_edges(result)
         return result
@@ -5623,11 +5601,11 @@ class SpecfileV2(SpecfileReaderBase):
         return node["name"], node
 
     @classmethod
-    def dependencies_from_node_dict(cls, node):
+    def dependencies_from_node_dict(cls, node) -> List[DepSpecComponents]:
         return cls.read_specfile_dep_specs(node.get("dependencies", []))
 
     @classmethod
-    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
+    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name) -> List[DepSpecComponents]:
         """Read the DependencySpec portion of a YAML-formatted Spec.
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
@@ -5651,7 +5629,7 @@ class SpecfileV2(SpecfileReaderBase):
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError("Couldn't parse dependency types in spec.")
-            result.append((dep_name, dep_hash, list(deptypes), hash_type, list(virtuals), direct))
+            result.append((dep_name, dep_hash, list(deptypes), hash_type, tuple(virtuals), direct))
         return result
 
     @classmethod
@@ -5668,10 +5646,12 @@ class SpecfileV2(SpecfileReaderBase):
         return build_spec_dict["name"], build_spec_dict[hash_type], hash_type
 
 
+@register_reader
 class SpecfileV3(SpecfileV2):
     SPEC_VERSION = 3
 
 
+@register_reader
 class SpecfileV4(SpecfileV2):
     SPEC_VERSION = 4
 
@@ -5685,10 +5665,11 @@ class SpecfileV4(SpecfileV2):
         return dep_hash, deptypes, hash_type, virtuals, direct
 
     @classmethod
-    def load(cls, data):
+    def load(cls, data) -> Spec:
         return cls._load(data)
 
 
+@register_reader
 class SpecfileV5(SpecfileV4):
     SPEC_VERSION = 5
 
@@ -5708,6 +5689,16 @@ class SpecfileV5(SpecfileV4):
 
 #: Alias to the latest version of specfiles
 SpecfileLatest = SpecfileV5
+
+
+def specfile_reader_for_version(version: int) -> Type[SpecfileReaderBase]:
+    """Get a SpecfileReader for the provided version, or raise an error."""
+    reader = _SPECFILE_READERS.get(version)
+
+    if not reader:
+        raise ValueError(f"Unknown Specfile version: {version}")
+
+    return reader
 
 
 class LazySpecCache(collections.defaultdict):
@@ -5884,7 +5875,7 @@ class InvalidDependencyError(spack.error.SpecError):
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super().__init__(
-            "Package {0} does not depend on {1}".format(pkg, spack.llnl.string.comma_or(deps))
+            "Package {0} does not depend on {1}".format(pkg, spack.util.string.comma_or(deps))
         )
 
 
@@ -6008,10 +5999,15 @@ class SpecMutationError(spack.error.SpecError):
     """Raised when a mutation is attempted with invalid attributes."""
 
 
+class MissingSpecHashError(spack.error.SpecError):
+    """Raised when a serialized spec node references a hash not present in a node list."""
+
+
 class _ImmutableSpec(Spec):
     """An immutable Spec that prevents a class of accidental mutations."""
 
     _mutable: bool
+    _str_cache: str
 
     def __init__(self, spec_like: Optional[str] = None) -> None:
         object.__setattr__(self, "_mutable", True)
@@ -6030,6 +6026,15 @@ class _ImmutableSpec(Spec):
     def add_dependency_edge(self, *args, **kwargs):
         assert self._mutable
         return super().add_dependency_edge(*args, **kwargs)
+
+    def __str__(self) -> str:
+        # Cache the str value of immutable specs as an optimization
+        try:
+            return self._str_cache
+        except AttributeError:
+            s = self._str(color=False)
+            object.__setattr__(self, "_str_cache", s)
+            return s
 
     def __setattr__(self, name, value) -> None:
         assert self._mutable

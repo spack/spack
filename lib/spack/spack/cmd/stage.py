@@ -8,10 +8,10 @@ import os
 import spack.cmd
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.traverse
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "expand downloaded archive in preparation for install"
 section = "build"
@@ -73,7 +73,7 @@ def stage(parser, args):
     if not args.specs:
         env = ev.active_environment()
         if not env:
-            tty.die("`spack stage` requires a spec or an active environment")
+            args.subparser.error("requires a spec or an active environment")
         return _stage_env(env, filter)
 
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
@@ -84,7 +84,7 @@ def stage(parser, args):
 
     # prevent multiple specs from extracting in the same folder
     if len(specs) > 1 and custom_path:
-        tty.die("`--path` requires a single spec, but multiple were provided")
+        args.subparser.error("--path requires a single spec, but multiple were provided")
 
     specs = spack.cmd.matching_specs_from_env(specs)
     for spec in specs:

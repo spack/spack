@@ -174,6 +174,19 @@ def assert_actionable_error(exc_info, *required_part: str) -> None:
             ["mvapich2", "file_systems", "the value 'auto' is mutually exclusive"],
             id="variant_disjoint_sets",
         ),
+        # "fortan" is not a known virtual (typo of "fortran"). The error must name the
+        # unknown virtual and quote the originating spec, and must not be a generic internal error.
+        pytest.param(
+            "zlib %c,cxx,fortan=gcc",
+            ["fortan", "zlib %c,cxx,fortan=gcc", "not a known virtual"],
+            id="unknown_virtual_on_edge",
+        ),
+        # Two unknown virtuals on the same edge: both must appear in the single error raised.
+        pytest.param(
+            "zlib %c,fortan,cxxxx=gcc",
+            ["fortan", "cxxxx", "zlib %c,cxxxx,fortan=gcc"],
+            id="two_unknown_virtuals_on_edge",
+        ),
     ],
 )
 def test_input_spec_driven_errors(
@@ -224,6 +237,22 @@ def test_input_spec_driven_errors(
             "libelf%gcc",
             ["libelf"],
             id="requirement_unsatisfied_generic",
+        ),
+        # A `require:` entry names a virtual that does not exist. The error must name the
+        # unknown virtual and quote the originating spec so the user can find and fix the
+        # config entry.
+        pytest.param(
+            {"packages:zlib": {"require": ["%[virtuals=fortan]gcc"]}},
+            "zlib",
+            ["fortan", "%[virtuals=fortan]gcc"],
+            id="unknown_virtual_in_requirement",
+        ),
+        # Two unknown virtuals in a single requirement spec: both must appear in the error.
+        pytest.param(
+            {"packages:zlib": {"require": ["%[virtuals=fortan,cxxxx]gcc"]}},
+            "zlib",
+            ["fortan", "cxxxx", "%[virtuals=fortan,cxxxx]gcc"],
+            id="two_unknown_virtuals_in_requirement",
         ),
     ],
 )

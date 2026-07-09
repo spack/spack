@@ -9,12 +9,12 @@ import shutil
 import spack
 import spack.cmd
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.util.git
 import spack.util.gpg
 from spack.cmd.common import arguments
-from spack.llnl.util.filesystem import working_dir
+from spack.util import tty
+from spack.util.filesystem import working_dir
 from spack.util.spack_yaml import syaml_dict
 
 description = "set up spack for our tutorial (WARNING: modifies config!)"
@@ -23,7 +23,7 @@ level = "long"
 
 
 # tutorial configuration parameters
-tutorial_branch = "releases/v1.1"
+tutorial_branch = "releases/v1.2"
 tutorial_mirror = "file:///mirror"
 tutorial_key = os.path.join(spack.paths.share_path, "keys", "tutorial.pub")
 

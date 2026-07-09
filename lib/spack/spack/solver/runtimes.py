@@ -1,18 +1,18 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import itertools
-from typing import Any, Dict, Set, Tuple
+from typing import Set, Tuple
 
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.config
+import spack.hash_lookup
 import spack.repo
 import spack.spec
 import spack.util.libc
 import spack.version
 
-from .core import SourceContext, fn, using_libc_compatibility
+from .core import SourceContext, fn
 from .versions import Provenance
 
 
@@ -166,6 +166,7 @@ class RuntimePropertyRecorder:
 
         imposed_spec = spack.spec.Spec(f"{self.current_package}{impose}")
         when_spec = spack.spec.Spec(f"{self.current_package}{when}")
+        when_spec = spack.hash_lookup.lookup_hash(when_spec)
 
         assert imposed_spec.versions.concrete, f"{impose} must have a concrete version"
 
@@ -255,52 +256,6 @@ class RuntimePropertyRecorder:
 
         self._setup.trigger_rules()
         self._setup.effect_rules()
-
-
-def _normalize_packages_yaml(packages_yaml: Dict[str, Any]) -> None:
-    for pkg_name in list(packages_yaml.keys()):
-        is_virtual = spack.repo.PATH.is_virtual(pkg_name)
-        if pkg_name == "all" or not is_virtual:
-            continue
-
-        # Remove the virtual entry from the normalized configuration
-        data = packages_yaml.pop(pkg_name)
-        is_buildable = data.get("buildable", True)
-        if not is_buildable:
-            for provider in spack.repo.PATH.providers_for(pkg_name):
-                entry = packages_yaml.setdefault(provider.name, {})
-                entry["buildable"] = False
-
-        externals = data.get("externals", [])
-
-        def keyfn(x):
-            return spack.spec.Spec(x["spec"]).name
-
-        for provider, specs in itertools.groupby(externals, key=keyfn):
-            entry = packages_yaml.setdefault(provider, {})
-            entry.setdefault("externals", []).extend(specs)
-
-
-def external_config_with_implicit_externals(
-    configuration: spack.config.Configuration,
-) -> Dict[str, Any]:
-    # Read packages.yaml and normalize it so that it will not contain entries referring to
-    # virtual packages.
-    packages_yaml = configuration.deepcopy_as_builtin("packages", line_info=True)
-    _normalize_packages_yaml(packages_yaml)
-
-    # Add externals for libc from compilers on Linux
-    if not using_libc_compatibility():
-        return packages_yaml
-
-    seen = set()
-    for compiler in spack.compilers.config.all_compilers_from(configuration):
-        libc = spack.compilers.libraries.CompilerPropertyDetector(compiler).default_libc()
-        if libc and libc not in seen:
-            seen.add(libc)
-            entry = {"spec": f"{libc}", "prefix": libc.external_path}
-            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
-    return packages_yaml
 
 
 def all_libcs() -> Set[spack.spec.Spec]:

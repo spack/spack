@@ -13,18 +13,15 @@ import pytest
 
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.filesystem as fs
+import spack.package_base
 import spack.platforms
 import spack.solver.asp
 import spack.spec
 import spack.spec_parser
+import spack.util.filesystem as fs
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
-from spack.environment.environment import (
-    EnvironmentManifestFile,
-    SpackEnvironmentViewError,
-    _error_on_nonempty_view_dir,
-)
+from spack.environment.environment import EnvironmentManifestFile
 from spack.environment.list import UndefinedReferenceError
 from spack.traverse import traverse_nodes
 
@@ -291,7 +288,12 @@ spack:
       link_type: symlink
 """,
             "./another-view",
-            {"root": "./another-view", "select": ["%gcc"], "link_type": "symlink"},
+            {
+                "root": "./another-view",
+                "select": ["%gcc"],
+                "link_type": "symlink",
+                "link_dirs": True,
+            },
         ),
         (
             """
@@ -305,7 +307,7 @@ spack:
       link_type: symlink
 """,
             True,
-            {"root": "./view-gcc", "select": ["%gcc"], "link_type": "symlink"},
+            {"root": "./view-gcc", "select": ["%gcc"], "link_type": "symlink", "link_dirs": True},
         ),
     ],
 )
@@ -355,34 +357,6 @@ def test_environment_pickle(tmp_path: pathlib.Path):
     obj = pickle.dumps(env1)
     env2 = pickle.loads(obj)
     assert isinstance(env2, ev.Environment)
-
-
-def test_error_on_nonempty_view_dir(tmp_path: pathlib.Path):
-    """Error when the target is not an empty dir"""
-    with fs.working_dir(str(tmp_path)):
-        os.mkdir("empty_dir")
-        os.mkdir("nonempty_dir")
-        with open(os.path.join("nonempty_dir", "file"), "wb"):
-            pass
-        os.symlink("empty_dir", "symlinked_empty_dir")
-        os.symlink("does_not_exist", "broken_link")
-        os.symlink("broken_link", "file")
-
-        # This is OK.
-        _error_on_nonempty_view_dir("empty_dir")
-
-        # This is not OK.
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("nonempty_dir")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("symlinked_empty_dir")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("broken_link")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("file")
 
 
 def test_can_add_specs_to_environment_without_specs_attribute(tmp_path: pathlib.Path, config):
@@ -882,14 +856,56 @@ def test_env_view_on_empty_dir_is_fine(tmp_path: pathlib.Path, config, temporary
     env.concretize()
     env.install_all(fake=True)
     env.regenerate_views()
-    assert view_dir.is_symlink()
+    assert list(view_dir.iterdir())  # view dir should not be empty after regeneration
 
 
-def test_env_view_on_non_empty_dir_errors(tmp_path: pathlib.Path, config, temporary_store):
-    """Tests that creating a view pointing to a non-empty dir errors."""
+def test_view_projection_path_is_final_after_regenerate(
+    tmp_path: pathlib.Path, config, temporary_store, monkeypatch
+):
+    """Paths embedded into file *contents* by ``add_files_to_view`` (e.g. shebangs,
+    ``pyvenv.cfg``) must reference the final view directory, not the temporary directory
+    the view is built in. Regression test for views being built in a sibling staging dir
+    and renamed into place, which left dangling staging paths baked into files."""
+
+    original = spack.package_base.PackageBase.add_files_to_view
+
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        original(self, view, merge_map, skip_if_exists=skip_if_exists)
+        # Emulate packages like python that bake the projection into file contents.
+        projection = view.get_projection_for_spec(self.spec)
+        with open(os.path.join(projection, f"{self.name}.projection"), "w", encoding="utf-8") as f:
+            f.write(projection)
+
+    monkeypatch.setattr(spack.package_base.PackageBase, "add_files_to_view", add_files_to_view)
+
     view_dir = tmp_path / "view"
-    view_dir.mkdir()
-    (view_dir / "file").write_text("")
+    env = ev.create_in_dir(tmp_path, with_view="view")
+    env.add("mpileaks")
+    env.concretize()
+    env.install_all(fake=True)
+    env.regenerate_views()
+
+    recorded = list(view_dir.glob("*.projection"))
+    assert recorded, "expected add_files_to_view to have written marker files"
+    for marker in recorded:
+        assert marker.read_text() == str(view_dir)
+
+    # No staging/backup siblings should be left behind after a successful regeneration.
+    assert not list(tmp_path.glob("view.new.*"))
+    assert not list(tmp_path.glob("view.old.*"))
+
+
+@pytest.mark.parametrize("as_file", [False, True], ids=["non_empty_dir", "plain_file"])
+def test_env_view_on_non_empty_dir_errors(
+    tmp_path: pathlib.Path, config, temporary_store, as_file: bool
+):
+    """Tests that creating a view pointing to a non-empty dir or plain file errors."""
+    view_dir = tmp_path / "view"
+    if as_file:
+        view_dir.write_text("")
+    else:
+        view_dir.mkdir()
+        (view_dir / "file").write_text("")
     env = ev.create_in_dir(tmp_path, with_view="view")
     env.add("mpileaks")
     env.concretize()
@@ -1010,7 +1026,7 @@ spack:
     with e.manifest.use_config():
         assert not spack.config.get("config:verify_ssl")
         python_reqs = spack.config.get("packages")["python"]["require"]
-        req_specs = set(x["spec"] for x in python_reqs)
+        req_specs = {x["spec"] for x in python_reqs}
         assert req_specs == set(["@3.11:"])
 
 
@@ -1197,6 +1213,27 @@ spack:
     assert mpileaks_clang.satisfies("%[virtuals=mpi] mpich")
     assert not mpileaks_clang.satisfies("%[virtuals=mpi] zmpi")
     assert mpileaks_clang["mpich"].satisfies("%[virtuals=fortran] gcc")
+
+
+def test_matrix_exclude_from_environment_manifest(tmp_path: pathlib.Path, mutable_config):
+    """Tests that matrix excludes are preserved when the environment manifest is read."""
+    spack_yaml = """
+spack:
+  definitions:
+  - packages: [foo, bar]
+  specs:
+  - matrix:
+    - [$packages]
+    exclude:
+    - "bar"
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+
+    e = ev.Environment(tmp_path)
+
+    assert e.manifest.user_specs() == [{"matrix": [["$packages"]], "exclude": ["bar"]}]
+    assert e.user_specs.specs == [spack.spec.Spec("foo")]
 
 
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])

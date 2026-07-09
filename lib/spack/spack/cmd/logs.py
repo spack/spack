@@ -12,9 +12,9 @@ import sys
 
 import spack.cmd
 import spack.spec
-import spack.util.compression as compression
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.util import compression
 
 description = "print out logs for packages"
 section = "query"
@@ -61,10 +61,10 @@ def logs(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
 
     if not specs:
-        raise SpackError("You must supply a spec.")
+        args.subparser.error("requires a spec")
 
     if len(specs) != 1:
-        raise SpackError("Too many specs. Supply only one.")
+        args.subparser.error("too many specs, supply only one")
 
     concrete_spec = spack.cmd.matching_spec_from_env(specs[0])
 

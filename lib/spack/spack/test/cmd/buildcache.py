@@ -26,8 +26,6 @@ import spack.spec
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import copy_tree, find, getuid
-from spack.llnl.util.lang import nullcontext
 from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,
@@ -36,6 +34,8 @@ from spack.url_buildcache import (
     check_mirror_for_layout,
     get_url_buildcache_class,
 )
+from spack.util.filesystem import copy_tree, find, getuid
+from spack.util.lang import nullcontext
 
 buildcache = spack.main.SpackCommand("buildcache")
 install = spack.main.SpackCommand("install")
@@ -487,6 +487,35 @@ def test_skip_no_redistribute(mock_packages, config):
     assert any(s.name == "no-redistribute-dependent" for s in filtered)
 
 
+def test_filter_specs_for_push_with_exclude(mock_packages, mutable_config):
+    """Test that _filter_specs_for_push excludes specs matching the mirror's exclude patterns."""
+    specs = [
+        spack.concretize.concretize_one("brillig"),
+        spack.concretize.concretize_one("canfail"),
+    ]
+    mirror = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "exclude_binary": ["brillig"]}
+    )
+    filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
+    assert not any(s.name == "brillig" for s in filtered)
+    assert any(s.name == "canfail" for s in filtered)
+
+
+def test_filter_specs_for_push_with_include(mock_packages, mutable_config):
+    """Test that _filter_specs_for_push only includes specs matching the mirror's include
+    patterns."""
+    specs = [
+        spack.concretize.concretize_one("brillig"),
+        spack.concretize.concretize_one("canfail"),
+    ]
+    mirror = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "include_binary": ["canfail"]}
+    )
+    filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
+    assert not any(s.name == "brillig" for s in filtered)
+    assert any(s.name == "canfail" for s in filtered)
+
+
 def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path: pathlib.Path, mutable_database):
     """When --fail-fast is passed, the push command should fail if it immediately finds an
     uninstalled dependency. Otherwise, failure to push one dependency shouldn't prevent the
@@ -511,6 +540,26 @@ def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path: pathlib.Path,
     specs = spack.binary_distribution.update_cache_and_get_specs()
 
     # everything but mpich should be pushed
+    mpileaks = mutable_database.query_local("mpileaks^mpich")[0]
+    assert set(specs) == {s for s in mpileaks.traverse() if s.name != "mpich"}
+
+
+def test_allow_missing_when_dep_not_installed(tmp_path: pathlib.Path, mutable_database):
+    """When --allow-missing is passed, the push command should push installed specs and skip specs
+    that are not installed without raising an error."""
+
+    mirror("add", "--unsigned", "my-mirror", str(tmp_path))
+
+    # Uninstall mpich so that its dependent mpileaks can't be pushed
+    for s in mutable_database.query_local("mpich"):
+        s.package.do_uninstall(force=True)
+
+    # There should be warnings but no errors
+    buildcache("push", "--update-index", "--allow-missing", "my-mirror", "mpileaks^mpich")
+
+    specs = spack.binary_distribution.update_cache_and_get_specs()
+
+    # Everything but mpich should be pushed
     mpileaks = mutable_database.query_local("mpileaks^mpich")[0]
     assert set(specs) == {s for s in mpileaks.traverse() if s.name != "mpich"}
 
@@ -616,7 +665,7 @@ def test_install_v2_layout(
     mirror("add", "my-mirror", str(test_mirror_path))
 
     # Trust original signing key (no-op if this is the unsigned pass)
-    buildcache("keys", "--install", "--trust")
+    buildcache("keys", "-y", "--install", "--trust")
 
     output = install("--fake", "--no-check-signature", "libdwarf")
 
@@ -691,7 +740,7 @@ def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_conf
 
     # Trust original signing key (since it's in the original layout location,
     # this is where the monkeypatched attribute is used)
-    output = buildcache("keys", "--install", "--trust")
+    output = buildcache("keys", "-y", "--install", "--trust")
 
     output = buildcache("migrate", "my-mirror")
 
@@ -1024,9 +1073,9 @@ def read_specs_in_index(mirror_directory, view):
         database -> installs -> hashes...
     """
     mirror_metadata = spack.binary_distribution.MirrorMetadata(
-        f"file://{mirror_directory}", spack.mirrors.mirror.SUPPORTED_LAYOUT_VERSIONS[0], view
+        f"file://{mirror_directory}", spack.mirrors.mirror.SUPPORTED_URL_LAYOUT_VERSIONS[0], view
     )
-    fetcher = spack.binary_distribution.DefaultIndexFetcher(mirror_metadata, None)
+    fetcher = spack.binary_distribution.DefaultIndexHandler(mirror_metadata, None)
     result = fetcher.conditional_fetch()
     db_dict = json.loads(result.data)
     return set([h for h in db_dict["database"]["installs"]])

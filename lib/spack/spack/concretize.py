@@ -12,10 +12,11 @@ import spack.compilers
 import spack.compilers.config
 import spack.config
 import spack.error
-import spack.llnl.util.tty as tty
+import spack.hash_lookup
 import spack.repo
 import spack.util.parallel
 from spack.spec import ArchSpec, CompilerSpec, Spec
+from spack.util import tty
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
 SpecPair = Tuple[Spec, Spec]
@@ -191,7 +192,12 @@ def concretize_separately(
 
     for j, (i, concrete, duration) in enumerate(
         spack.util.parallel.imap_unordered(
-            _concretize_task, args, processes=num_procs, debug=tty.is_debug(), maxtaskperchild=1
+            _concretize_task,
+            args,
+            processes=num_procs,
+            debug=tty.is_debug(),
+            maxtaskperchild=1,
+            serialize_env=True,
         )
     ):
         ret.append((i, concrete))
@@ -236,7 +242,7 @@ def concretize_one(
 
     if isinstance(spec, str):
         spec = Spec(spec)
-    spec = spec.lookup_hash()
+    spec = spack.hash_lookup.lookup_hash(spec)
 
     if spec.concrete:
         return spec.copy()

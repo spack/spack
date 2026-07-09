@@ -13,11 +13,11 @@ import spack
 import spack.config
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.paths
 import spack.platforms
 import spack.util.executable as exe
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.spack_yaml as syaml
 
@@ -246,7 +246,7 @@ packages:
 
     assert spack.config.get("config:dirty")
     python_reqs = spack.config.get("packages")["python"]["require"]
-    req_specs = set(x["spec"] for x in python_reqs)
+    req_specs = {x["spec"] for x in python_reqs}
     assert req_specs == set(["@3.11:", "+ssl", "+tk"])
 
 
@@ -339,3 +339,16 @@ include:
         assert mutable_config.get("config:debug") is expected
     except AssertionError:
         pytest.xfail("recursive includes are not processed in the expected order")
+
+
+@pytest.mark.regression("52664")
+def test_env_substitution_via_main_entrypoint(mutable_mock_env_path):
+    """Tests that an environment activated through the CLI entrypoint can substitute ``$env``"""
+    env = ev.create("test")
+    assert spack.config.CONFIG.env_path is None
+
+    # Just call a fast command
+    spack.main._main(["-e", "test", "config", "scopes"])
+
+    assert spack.config.CONFIG.env_path == env.path
+    assert spack.config.substitute_path_variables("$env/foo") == f"{env.path}/foo"

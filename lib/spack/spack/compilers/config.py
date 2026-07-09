@@ -15,14 +15,14 @@ import spack.config
 import spack.detection
 import spack.detection.path
 import spack.error
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lang
-import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
+import spack.util.filesystem as fs
+import spack.util.lang
 from spack.externals import ExternalSpecsParser, external_spec, extract_dicts_from_configuration
 from spack.operating_systems import windows_os
+from spack.util import tty
 from spack.util.environment import get_path
 
 #: Tag used to identify packages providing a compiler
@@ -197,7 +197,7 @@ class CompilerRemover:
                 def _partition_match(external_yaml):
                     return not external_spec(external_yaml).satisfies(match)
 
-                to_keep, to_remove = spack.llnl.util.lang.stable_partition(
+                to_keep, to_remove = spack.util.lang.stable_partition(
                     externals_config, _partition_match
                 )
                 if not to_remove:
@@ -264,11 +264,11 @@ class CompilerFactory:
         packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
 
         init_external_dicts = extract_dicts_from_configuration(packages_yaml)
-        init_external_dicts = list(
+        init_external_dicts = [
             x
             for x in init_external_dicts
             if spack.spec.Spec(x["spec"]).name in compiler_package_names
-        )
+        ]
 
         externals_dicts = []
         for current in init_external_dicts:

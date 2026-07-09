@@ -10,8 +10,8 @@ import pytest
 import spack.config
 import spack.util.url as url_util
 from spack.fetch_strategy import CacheURLFetchStrategy, NoCacheError
-from spack.llnl.util.filesystem import mkdirp
 from spack.stage import Stage
+from spack.util.filesystem import mkdirp
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])

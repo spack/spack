@@ -6,17 +6,19 @@ import json
 import os
 import pathlib
 import re
+import shutil
 
 import pytest
 
+import spack.cmd.config as config_cmd
 import spack.concretize
 import spack.config
 import spack.database
 import spack.environment as ev
-import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.schema.config
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
 
 config = spack.main.SpackCommand("config")
@@ -163,7 +165,7 @@ def test_config_scopes_path(mutable_config):
 
 
 def test_get_config_scope(mock_low_high_config):
-    assert config("get", "compilers").strip() == "compilers: {}"
+    assert config("get", "repos").strip() == "repos: {}"
 
 
 def test_get_config_roundtrip(mutable_config):
@@ -755,7 +757,7 @@ def test_config_with_group_shows_override_packages(cmd_str, tmp_path, mutable_co
 def test_config_with_group_requires_active_environment(cmd_str, mutable_config):
     """Tests that using groups outside an environment should give a clear error."""
     output = config(cmd_str, "--group=mygroup", "packages", fail_on_error=False)
-    assert config.returncode != 0
+    assert config.returncode == 2
     assert "--group requires an active environment" in output
 
 
@@ -765,5 +767,27 @@ def test_config_with_unknown_group_gives_clear_error(cmd_str, tmp_path, mutable_
     (tmp_path / "spack.yaml").write_text("spack:\n  specs:\n  - zlib\n")
     with ev.Environment(str(tmp_path)):
         output = config(cmd_str, "--group=nonexistent", "packages", fail_on_error=False)
-    assert config.returncode != 0
+    assert config.returncode == 1
     assert "'nonexistent' not found in" in output
+
+
+@pytest.mark.regression("52152")
+def test_config_edit_creates_scope_dir(mutable_config, working_env, monkeypatch):
+    """Tests that `spack config edit` can create the scope directory if it does not exist."""
+    scope_name = spack.config.default_modify_scope("config")
+    scope_dir = pathlib.Path(mutable_config.scopes[scope_name].path)
+
+    # Remove the scope directory to simulate a "fresh start" with no ~/.spack
+    shutil.rmtree(scope_dir)
+    assert not scope_dir.exists()
+
+    editor_called = []
+
+    def fake_editor(*args, **kwargs):
+        editor_called.extend(args)
+
+    monkeypatch.setattr(config_cmd, "editor", fake_editor)
+    config("edit", "config")
+
+    assert scope_dir.exists(), "scope directory should be created before invoking the editor"
+    assert editor_called, "editor should have been called"

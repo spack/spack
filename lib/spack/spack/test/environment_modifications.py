@@ -8,8 +8,8 @@ import sys
 
 import pytest
 
-import spack.util.environment as environment
 from spack.paths import spack_root
+from spack.util import environment
 from spack.util.environment import (
     AppendPath,
     EnvironmentModifications,

@@ -9,7 +9,7 @@ import pytest
 import spack.concretize
 import spack.deptypes as dt
 import spack.directives
-import spack.llnl.util.lang
+import spack.hash_types as ht
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -17,12 +17,13 @@ import spack.solver.asp
 import spack.spec
 import spack.spec_parser
 import spack.store
+import spack.util.lang
 import spack.variant
 import spack.version as vn
 from spack.enums import PropagationPolicy
 from spack.error import SpecError, UnsatisfiableSpecError
-from spack.llnl.util.tty.color import colorize
 from spack.spec import ArchSpec, DependencySpec, Spec, SpecFormatSigilError, SpecFormatStringError
+from spack.util.tty.color import colorize
 from spack.variant import (
     InvalidVariantValueError,
     MultipleValuesInExclusiveVariantError,
@@ -2311,7 +2312,7 @@ EMPTY_FLG = Spec().compiler_flags
 )
 def test_spec_canonical_comparison_form(spec, expected_tuplified):
     """Tests a few expected canonical comparison form of specs"""
-    assert spack.llnl.util.lang.tuplify(Spec(spec)._cmp_iter) == expected_tuplified
+    assert spack.util.lang.tuplify(Spec(spec)._cmp_iter) == expected_tuplified
 
 
 def test_comparison_after_breaking_hash_change():
@@ -2590,3 +2591,25 @@ def test_highlighting_spec_parts(spec_str, expected_fmt, default_mock_concretiza
         highlight_variant_fn=spack.package_base.non_default_variant,
     )
     assert expected in colorized_str
+
+
+@pytest.mark.parametrize("spec_str", ["mpileaks", "mpileaks ^zmpi"])
+def test_mark_concrete_roundtrip_preserves_hashes(spec_str, default_mock_concretization):
+    """Tests that clearing concreteness and re-finalizing a spec must preserve the DAG hash of the
+    root and of every transitive dependency.
+    """
+    s = default_mock_concretization(spec_str)
+
+    # Record the DAG hash of every node in the DAG (root and transitive dependencies).
+    original = {node.name: node.dag_hash() for node in s.traverse()}
+    # Sanity check: we are exercising more than the root node.
+    assert len(original) > 1
+
+    # Un-mark concrete: this clears the cached hashes on every node in the DAG.
+    s._mark_concrete(False)
+    assert all(getattr(node, ht.dag_hash.attr) is None for node in s.traverse())
+
+    # Re-finalize the DAG: the cleared hashes must recompute to the original values.
+    s._finalize_concretization()
+    roundtrip = {node.name: node.dag_hash() for node in s.traverse()}
+    assert roundtrip == original

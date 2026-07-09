@@ -6,8 +6,8 @@
 import pytest
 
 import spack.config
-import spack.tengine as tengine
-from spack.util.path import canonicalize_path
+from spack import tengine
+from spack.config import canonicalize_path
 
 
 class TestContext:

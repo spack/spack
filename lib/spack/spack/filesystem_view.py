@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import functools as ft
-import itertools
 import os
 import re
 import shutil
@@ -24,25 +23,25 @@ import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
-from spack.llnl.string import comma_or
-from spack.llnl.util import tty
-from spack.llnl.util.filesystem import (
+from spack.util import tty
+from spack.util.filesystem import (
     mkdirp,
     remove_dead_links,
     remove_empty_directories,
     symlink,
     visit_directory_tree,
 )
-from spack.llnl.util.lang import index_by, match_predicate
-from spack.llnl.util.link_tree import (
+from spack.util.lang import index_by, match_predicate
+from spack.util.link_tree import (
     ConflictingSpecsError,
     DestinationMergeVisitor,
     LinkTree,
     MergeConflictSummary,
+    MultiPrefixMerger,
     SingleMergeConflictError,
-    SourceMergeVisitor,
 )
-from spack.llnl.util.tty.color import colorize
+from spack.util.string import comma_or
+from spack.util.tty.color import colorize
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -165,12 +164,13 @@ class FilesystemView:
         ignore_conflicts: bool = False,
         verbose: bool = False,
         link_type: LinkType = "symlink",
+        link_dirs: bool = False,
     ):
         """
         Initialize a filesystem view under the given ``root`` directory with
         corresponding directory ``layout``.
 
-        Files are linked by method ``link`` (spack.llnl.util.filesystem.symlink by default).
+        Files are linked by method ``link`` (spack.util.filesystem.symlink by default).
         """
         self._root = root
         self.layout = layout
@@ -182,6 +182,7 @@ class FilesystemView:
         # Setup link function to include view
         self.link_type = link_type
         self._link = function_for_link_type(link_type)
+        self.link_dirs = link_dirs and link_type == "symlink"
 
     def link(self, src: str, dst: str, spec: Optional[spack.spec.Spec] = None) -> None:
         self._link(src, dst, self, spec)
@@ -499,7 +500,7 @@ class YamlFilesystemView(FilesystemView):
         to_deactivate_sorted = list()
         depmap = dict()
         for spec in to_deactivate:
-            depmap[spec] = set(d for d in spec.traverse(root=False) if d in to_deactivate)
+            depmap[spec] = {d for d in spec.traverse(root=False) if d in to_deactivate}
 
         while depmap:
             for spec in [s for s, d in depmap.items() if not d]:
@@ -714,13 +715,16 @@ class SimpleFilesystemView(FilesystemView):
         # Determine if the root is on a case-insensitive filesystem
         normalize_paths = is_folder_on_case_insensitive_filesystem(self._root)
 
-        visitor = SourceMergeVisitor(ignore=skip_list, normalize_paths=normalize_paths)
-
-        # Gather all the directories to be made and files to be linked
-        for spec in specs:
-            src_prefix = spec.package.view_source()
-            visitor.set_projection(self.get_relative_projection_for_spec(spec))
-            visit_directory_tree(src_prefix, visitor)
+        sources = [
+            (spec.package.view_source(), self.get_relative_projection_for_spec(spec))
+            for spec in specs
+        ]
+        visitor = MultiPrefixMerger(
+            sources,
+            ignore=skip_list,
+            normalize_paths=normalize_paths,
+            dir_symlink_optimization=self.link_dirs,
+        )
 
         # Check for conflicts in destination dir.
         visit_directory_tree(self._root, DestinationMergeVisitor(visitor))
@@ -754,21 +758,17 @@ class SimpleFilesystemView(FilesystemView):
         # Finally create the metadata dirs.
         self.link_metadata(specs)
 
-    def _source_merge_visitor_to_merge_map(self, visitor: SourceMergeVisitor):
+    def _source_merge_visitor_to_merge_map(self, visitor: MultiPrefixMerger):
         # For compatibility with add_files_to_view, we have to create a
         # merge_map of the form join(src_root, src_rel) => join(dst_root, dst_rel),
         # but our visitor.files format is dst_rel => (src_root, src_rel).
-        # We exploit that visitor.files is an ordered dict, and files per source
-        # prefix are contiguous.
-        source_root = lambda item: item[1][0]
-        per_source = itertools.groupby(visitor.files.items(), key=source_root)
-        return {
-            src_root: {
-                os.path.join(src_root, src_rel): os.path.join(self._root, dst_rel)
-                for dst_rel, (_, src_rel) in group
-            }
-            for src_root, group in per_source
-        }
+        merge_map: Dict[str, Dict[str, str]] = {}
+        for dst_rel, (src_root, src_rel) in visitor.files.items():
+            per_source = merge_map.get(src_root)
+            if per_source is None:
+                per_source = merge_map[src_root] = {}
+            per_source[os.path.join(src_root, src_rel)] = os.path.join(self._root, dst_rel)
+        return merge_map
 
     def relative_metadata_dir_for_spec(self, spec):
         return os.path.join(
@@ -778,15 +778,14 @@ class SimpleFilesystemView(FilesystemView):
         )
 
     def link_metadata(self, specs):
-        metadata_visitor = SourceMergeVisitor()
-
-        for spec in specs:
-            src_prefix = os.path.join(
-                spec.package.view_source(), spack.store.STORE.layout.metadata_dir
+        prefix_and_projection = [
+            (
+                os.path.join(spec.package.view_source(), spack.store.STORE.layout.metadata_dir),
+                self.relative_metadata_dir_for_spec(spec),
             )
-            proj = self.relative_metadata_dir_for_spec(spec)
-            metadata_visitor.set_projection(proj)
-            visit_directory_tree(src_prefix, metadata_visitor)
+            for spec in specs
+        ]
+        metadata_visitor = MultiPrefixMerger(prefix_and_projection)
 
         # Check for conflicts in destination dir.
         visit_directory_tree(self._root, DestinationMergeVisitor(metadata_visitor))
@@ -844,7 +843,7 @@ def get_spec_from_file(filename) -> Optional[spack.spec.Spec]:
 def colorize_root(root):
     colorize = ft.partial(tty.color.colorize, color=sys.stdout.isatty())
     pre, post = map(colorize, "@M[@. @M]@.".split())
-    return "".join([pre, root, post])
+    return f"{pre}{root}{post}"
 
 
 def colorize_spec(spec):

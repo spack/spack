@@ -19,11 +19,10 @@ import spack.cmd
 import spack.concretize
 import spack.environment as ev
 import spack.installer
-import spack.llnl.util.tty as tty
 import spack.store
 from spack.cmd.common import arguments
-from spack.error import SpackError
-from spack.llnl.util.filesystem import symlink
+from spack.util import tty
+from spack.util.filesystem import symlink
 
 from ..enums import InstallRecordStatus
 
@@ -94,7 +93,7 @@ def deprecate(parser, args):
     specs = spack.cmd.parse_specs(args.specs)
 
     if len(specs) != 2:
-        raise SpackError("spack deprecate requires exactly two specs")
+        args.subparser.error("requires exactly two specs")
 
     deprecate = spack.cmd.disambiguate_spec(
         specs[0],

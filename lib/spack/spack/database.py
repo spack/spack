@@ -54,10 +54,9 @@ except ImportError:
 
 import spack.deptypes as dt
 import spack.hash_types as ht
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
 import spack.spec
 import spack.traverse as tr
+import spack.util.filesystem as fs
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
@@ -67,6 +66,7 @@ from spack.directory_layout import (
     InconsistentInstallDirectoryError,
 )
 from spack.error import SpackError
+from spack.util import tty
 from spack.util.crypto import bit_length
 from spack.util.socket import _gethostname
 
@@ -657,6 +657,23 @@ class Database:
         """Get a read lock context manager for use in a ``with`` block."""
         return self._read_transaction_impl(self.lock, acquire=self._read)
 
+    def try_write_transaction(self) -> lk.TryWriteTransaction:
+        """Non-blocking variant of :meth:`write_transaction`: the context manager yields True if
+        the write lock was acquired (the database is re-read from disk on entry and written back on
+        exit, unless an exception occurred), or False if acquiring the lock would block, in which
+        case the body must skip its work."""
+        if not isinstance(self.lock, lk.Lock):
+            raise ForbiddenLockError("Cannot acquire a write lock on an upstream database")
+        return lk.TryWriteTransaction(self.lock, acquire=self._read, release=self._write)
+
+    def try_read_transaction(self) -> lk.TryReadTransaction:
+        """Non-blocking variant of :meth:`read_transaction`: the context manager yields True if the
+        read lock was acquired (the database is re-read from disk on entry), or False if acquiring
+        the lock would block, in which case the body must skip its work."""
+        if not isinstance(self.lock, lk.Lock):
+            raise ForbiddenLockError("Cannot acquire a read lock on an upstream database")
+        return lk.TryReadTransaction(self.lock, acquire=self._read)
+
     def _write_to_file(self, stream):
         """Write out the database in JSON format to the stream passed
         as argument.
@@ -666,9 +683,7 @@ class Database:
         self._ensure_parent_directories()
 
         # map from per-spec hash code to installation record.
-        installs = dict(
-            (k, v.to_dict(include_fields=self.record_fields)) for k, v in self._data.items()
-        )
+        installs = {k: v.to_dict(include_fields=self.record_fields) for k, v in self._data.items()}
 
         # database includes installation list and version.
 
@@ -689,7 +704,7 @@ class Database:
         try:
             sjson.dump(database, stream)
         except (TypeError, ValueError) as e:
-            raise sjson.SpackJSONError("error writing JSON database:", str(e))
+            raise sjson.SpackJSONError("error writing JSON database:", e)
 
     def _read_spec_from_dict(self, spec_reader, hash_key, installs, hash=ht.dag_hash):
         """Recursively construct a spec from a hash in a YAML database.
@@ -1800,7 +1815,7 @@ class Database:
                 )
             )
 
-        results = list(local_results) + list(x for x in upstream_results if x not in local_results)
+        results = list(local_results) + [x for x in upstream_results if x not in local_results]
         results.sort()  # type: ignore[call-arg,call-overload]
         return results
 
@@ -1857,7 +1872,7 @@ class Database:
 
         with self.read_transaction():
             roots = [rec.spec for key, rec in self._data.items() if root(key, rec)]
-            needed = set(id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype))
+            needed = {id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype)}
             return [
                 rec.spec
                 for rec in self._data.values()

@@ -35,16 +35,16 @@ import spack.environment
 import spack.environment as ev
 import spack.environment.environment
 import spack.error
-import spack.llnl.util.lang
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.colify
-import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.platforms
 import spack.solver.asp
 import spack.spec
 import spack.util.environment
+import spack.util.lang
 import spack.util.lock
+import spack.util.tty.colify
+from spack.util import tty
+from spack.util.tty import color
 
 from .enums import ConfigScopePriority
 
@@ -225,10 +225,10 @@ class SpackArgumentParser(argparse.ArgumentParser):
 
         def add_subcommand_group(title, commands):
             """Add informational help group for a specific subcommand set."""
-            cmd_set = set(c for c in commands)
+            cmd_set = set(commands)
 
             # make a dict of commands of interest
-            cmds = dict((a.dest, a) for a in self.actions if a.dest in cmd_set)
+            cmds = {a.dest: a for a in self.actions if a.dest in cmd_set}
 
             # add commands to a group in order, and add the group
             group = argparse._ArgumentGroup(self, title=title)
@@ -369,6 +369,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
                 help=module.description,
                 description=module.description,
             )
+            subparser.set_defaults(subparser=subparser)
             module.setup_parser(subparser)
 
         # return the callable function for the command
@@ -386,7 +387,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
     def _check_value(self, action, value):
         # converted value must be one of the choices (if specified)
         if action.choices is not None and value not in action.choices:
-            cols = spack.llnl.util.tty.colify.colified(sorted(action.choices), indent=4, tty=True)
+            cols = spack.util.tty.colify.colified(sorted(action.choices), indent=4, tty=True)
             msg = "invalid choice: %r choose from:\n%s" % (value, cols)
             raise argparse.ArgumentError(action, msg)
 
@@ -628,7 +629,7 @@ def _invoke_command(command, parser, args, unknown_args):
         return_val = command(parser, args, unknown_args)
     else:
         if unknown_args:
-            tty.die("unrecognized arguments: %s" % " ".join(unknown_args))
+            args.subparser.error("unrecognized arguments: %s" % " ".join(unknown_args))
         return_val = command(parser, args)
 
     # Allow commands to return and error code if they want
@@ -766,7 +767,7 @@ def _profile_wrapper(command, main_args, parser, args, unknown_args):
         stats.print_stats(nlines)
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def _compatible_sys_types():
     """Return a list of all the platform-os-target tuples compatible
     with the current host.
@@ -817,9 +818,9 @@ def print_setup_info(*info):
     other_spack_instances = spack.config.get("upstreams") or {}
     for install_properties in other_spack_instances.values():
         upstream_module_roots = install_properties.get("modules", {})
-        upstream_module_roots = dict(
-            (k, v) for k, v in upstream_module_roots.items() if k in module_to_roots
-        )
+        upstream_module_roots = {
+            k: v for k, v in upstream_module_roots.items() if k in module_to_roots
+        }
         for module_type, root in upstream_module_roots.items():
             module_to_roots[module_type].append(root)
 
@@ -996,7 +997,7 @@ def _main(argv=None):
         # do not call activate here, as it has a lot of expensive function calls to deal
         # with mutation of spack.config.CONFIG -- but we are still building the config.
         env.manifest.prepare_config_scope()
-        spack.environment.environment._active_environment = env
+        spack.environment.environment.set_active_environment(env)
 
     # add the environment
     if env:
@@ -1036,9 +1037,9 @@ def _main(argv=None):
     # set up a bootstrap context, if asked.
     # bootstrap context needs to include parsing the command, b/c things
     # like `ConstraintAction` and `ConfigSetAction` happen at parse time.
-    bootstrap_context = spack.llnl.util.lang.nullcontext()
+    bootstrap_context = spack.util.lang.nullcontext()
     if args.bootstrap:
-        import spack.bootstrap as bootstrap  # avoid circular imports
+        from spack import bootstrap  # avoid circular imports
 
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
@@ -1121,6 +1122,14 @@ def main(argv=None):
             the executable name. If None, parses from sys.argv.
 
     """
+    if (
+        sys.platform == "darwin"
+        and multiprocessing.get_start_method(allow_none=True) is None
+        and spack.config.get("config:installer") == "new"
+    ):
+        # Forkserver is significantly faster than spawn. This has to be configured once and early
+        # in the process.
+        multiprocessing.set_start_method("forkserver")
     # When using the forkserver start method, preload the following modules to improve startup
     # time of child processes.
     multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.new_installer"])

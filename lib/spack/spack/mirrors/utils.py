@@ -7,15 +7,15 @@ from collections import Counter
 
 import spack.caches
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
 import spack.version
 from spack.error import MirrorError
-from spack.llnl.util.filesystem import mkdirp
 from spack.mirrors.mirror import Mirror, MirrorCollection
 from spack.package import InstallError
+from spack.util import tty
+from spack.util.filesystem import mkdirp
 
 
 def get_all_versions(specs):

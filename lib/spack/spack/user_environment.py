@@ -8,9 +8,9 @@ import sys
 import spack.build_environment
 import spack.config
 import spack.spec
-import spack.util.environment as environment
 from spack import traverse
-from spack.context import Context
+from spack.enums import Context
+from spack.util import environment
 
 #: Environment variable name Spack uses to track individually loaded packages
 spack_loaded_hashes_var = "SPACK_LOADED_HASHES"

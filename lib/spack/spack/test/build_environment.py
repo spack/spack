@@ -23,12 +23,12 @@ import spack.util.environment
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
-from spack.context import Context
+from spack.enums import Context
 from spack.installer import PackageInstaller
-from spack.llnl.path import Path, convert_to_platform_path
-from spack.llnl.util.filesystem import HeaderList, LibraryList
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
+from spack.util.filesystem import HeaderList, LibraryList
+from spack.util.path import Path, convert_to_platform_path
 
 
 def os_pathsep_join(path, *pths):
@@ -421,7 +421,7 @@ def test_wrapper_variables(
         env_mods.apply_modifications()
 
         def normpaths(paths):
-            return list(os.path.normpath(p) for p in paths)
+            return [os.path.normpath(p) for p in paths]
 
         link_dir_var = os.environ["SPACK_LINK_DIRS"]
         assert normpaths(link_dir_var.split(":")) == normpaths(dep_lib_dirs)
@@ -482,8 +482,8 @@ dt-diamond-left:
     )
     # The external lib paths should be the last two entries of the list and
     # should not appear anywhere before the last two entries
-    assert set(os.path.normpath(x) for x in link_dirs[-2:]) == external_lib_paths
-    assert not (set(os.path.normpath(x) for x in link_dirs[:-2]) & external_lib_paths)
+    assert {os.path.normpath(x) for x in link_dirs[-2:]} == external_lib_paths
+    assert not ({os.path.normpath(x) for x in link_dirs[:-2]} & external_lib_paths)
 
 
 def test_parallel_false_is_not_propagating(default_mock_concretization):
@@ -840,6 +840,33 @@ def test_extra_rpaths_is_set(
         assert os.environ["SPACK_COMPILER_EXTRA_RPATHS"] == expected_rpaths
     else:
         assert "SPACK_COMPILER_EXTRA_RPATHS" not in os.environ
+
+
+@pytest.mark.parametrize(
+    "keep_werror,expected_keep,expected_replace",
+    [
+        ("all", "-Werror*", ""),
+        ("specific", None, "-Werror-|-Wno-error= -Werror|-Wno-error"),
+        ("none", "", "-Werror-|-Wno-error= -Werror|-Wno-error"),
+    ],
+)
+def test_add_werror_handling(keep_werror, expected_keep, expected_replace):
+    """`_add_werror_handling` translates the `config:flags:keep_werror` setting into the
+    SPACK_COMPILER_FLAGS_KEEP / SPACK_COMPILER_FLAGS_REPLACE env vars consumed by the
+    external compiler wrapper. Behavior of the wrapper itself is tested in the
+    spack-packages compiler-wrapper repo.
+    """
+    env = EnvironmentModifications()
+    spack.build_environment._add_werror_handling(keep_werror, env)
+
+    values = {m.name: m.value for m in env if m.name.startswith("SPACK_COMPILER_FLAGS_")}
+
+    if expected_keep is None:
+        # "specific" uses a set, so order of the two keep patterns is not stable
+        assert set(values["SPACK_COMPILER_FLAGS_KEEP"].split("|")) == {"-Werror-*", "-Werror=*"}
+    else:
+        assert values["SPACK_COMPILER_FLAGS_KEEP"] == expected_keep
+    assert values["SPACK_COMPILER_FLAGS_REPLACE"] == expected_replace
 
 
 class _TestProcess:

@@ -8,19 +8,20 @@ import shutil
 import sys
 from typing import List
 
+import spack.binary_distribution
 import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.installer_dispatch
-import spack.llnl.util.filesystem as fs
 import spack.paths
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
 from spack.installer import InstallPolicy
-from spack.llnl.string import plural
-from spack.llnl.util import tty
+from spack.util import tty
+from spack.util.string import plural
 
 description = "build and install packages"
 section = "build"
@@ -287,8 +288,8 @@ def _dump_log_on_error(e: InstallError):
             shutil.copyfileobj(log, sys.stderr)
 
 
-def _die_require_env():
-    msg = "install requires a package argument or active environment"
+def _die_require_env(parser):
+    msg = "requires a package argument or active environment"
     if "spack.yaml" in os.listdir(os.getcwd()):
         # There's a spack.yaml file in the working dir, the user may
         # have intended to use that
@@ -301,7 +302,7 @@ def _die_require_env():
             "  OR\n"
             "    spack --env . install"
         )
-    tty.die(msg)
+    parser.error(msg)
 
 
 def install(parser, args):
@@ -326,7 +327,7 @@ def install(parser, args):
     env = ev.active_environment()
 
     if not env and not args.spec:
-        _die_require_env()
+        _die_require_env(args.subparser)
 
     try:
         if env:
@@ -359,7 +360,9 @@ def _maybe_add_and_concretize(args, env, specs):
         concretized_specs = env.concretize(tests=tests)
         if concretized_specs:
             tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
-            ev.display_specs([concrete for _, concrete in concretized_specs])
+            spack.binary_distribution.load_buildcache_index()
+            status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+            ev.display_specs([concrete for _, concrete in concretized_specs], status_fn=status_fn)
 
         # save view regeneration for later, so that we only do it
         # once, as it can be slow.
@@ -431,7 +434,7 @@ def install_without_active_env(args, install_kwargs, reporter):
     concrete_specs = concrete_specs_from_cli(args, install_kwargs)
 
     if len(concrete_specs) == 0:
-        tty.die("The `spack install` command requires a spec to install.")
+        args.subparser.error("requires a spec")
 
     if args.overwrite:
         require_user_confirmation_for_overwrite(concrete_specs, args)

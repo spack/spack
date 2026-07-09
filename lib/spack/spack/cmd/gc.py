@@ -9,8 +9,8 @@ import spack.cmd.common.confirmation
 import spack.cmd.uninstall
 import spack.deptypes as dt
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.store
+from spack.util import tty
 
 description = "remove specs that are now no longer needed"
 section = "build"
@@ -101,7 +101,7 @@ def gc(parser, args):
 
         # limit search to constraint specs if provided
         if args.constraint:
-            hashes = set(spec.dag_hash() for spec in args.specs())
+            hashes = {spec.dag_hash() for spec in args.specs()}
             specs = [spec for spec in specs if spec.dag_hash() in hashes]
 
         if not specs:

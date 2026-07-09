@@ -5,7 +5,7 @@
 import sys
 from typing import Optional
 
-import spack.llnl.util.tty as tty
+from spack.util import tty
 
 #: at what level we should write stack traces or short error messages
 #: this is module-scoped because it needs to be set very early
@@ -114,6 +114,10 @@ class NoHeadersError(SpackError):
 
 class SpecError(SpackError):
     """Superclass for all errors that occur while constructing specs."""
+
+
+class InvalidVirtualOnEdgeError(SpecError):
+    """Raised when an edge requires a virtual that does not exist in the repository."""
 
 
 class UnsatisfiableSpecError(SpecError):

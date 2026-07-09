@@ -13,13 +13,13 @@ from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, 
 
 import spack.cmd
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.paths
 import spack.platforms
-from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
-from spack.llnl.util.tty.colify import colify
 from spack.main import SpackArgumentParser, section_descriptions
+from spack.util import tty
+from spack.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
+from spack.util.tty.colify import colify
 
 description = "list available spack commands"
 section = "config"
@@ -846,7 +846,7 @@ def _commands(parser: ArgumentParser, args: Namespace) -> None:
 
     # check header first so we don't open out files unnecessarily
     if args.header and not os.path.exists(args.header):
-        tty.die(f"No such file: '{args.header}'")
+        args.subparser.error(f"no such file: '{args.header}'")
 
     if args.update:
         tty.msg(f"Updating file: {args.update}")
@@ -884,7 +884,7 @@ def commands(parser: ArgumentParser, args: Namespace) -> None:
     """
     if args.update_completion:
         if args.format != "names" or any([args.aliases, args.update, args.header]):
-            tty.die("--update-completion can only be specified alone.")
+            args.subparser.error("--update-completion can only be specified alone")
 
         # this runs the command multiple times with different arguments
         update_completion(parser, args)

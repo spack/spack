@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from typing import IO, Dict, Iterator, Optional, Tuple, Union
 
 from spack.error import SpackError
-from spack.llnl.util.filesystem import rename
+from spack.util.filesystem import rename
 from spack.util.lock import Lock
 
 
@@ -114,7 +114,7 @@ class FileCache:
         self.root.mkdir(parents=True, exist_ok=True)
 
         self.lock_path = self.root / ".lock"
-        self._locks: Dict[Union[pathlib.Path, str], Lock] = {}
+        self._locks: Dict[str, Lock] = {}
         self.lock_timeout = timeout
 
     def destroy(self):

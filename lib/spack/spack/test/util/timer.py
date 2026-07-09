@@ -5,7 +5,7 @@
 import json
 from io import StringIO
 
-import spack.util.timer as timer
+from spack.util import timer
 
 
 class Tick:

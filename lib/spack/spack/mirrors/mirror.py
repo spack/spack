@@ -4,22 +4,52 @@
 import operator
 import os
 import urllib.parse
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+    overload,
+)
 
 import spack.config
-import spack.llnl.util.tty as tty
-import spack.util.path
-import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.error import MirrorError
 from spack.oci.image import is_oci_url
+from spack.util import tty
+
+if TYPE_CHECKING:
+    import spack.spec
 
 #: What schemes do we support
 supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci", "oci+http")
 
 #: The layout version spack can current install
-SUPPORTED_LAYOUT_VERSIONS = (3, 2)
+SUPPORTED_URL_LAYOUT_VERSIONS = (3, 2)
+BINARY_MEDIA_TYPE_VERSION = 2
+
+
+def _spec_matches_filters(spec: "spack.spec.Spec", include: List[str], exclude: List[str]) -> bool:
+    """Check if a spec matches include/exclude filters.
+
+    A spec is included when:
+    - include is empty, or spec matches at least one include pattern
+    - spec does not match any exclude pattern
+    """
+    if include and not any(spec.satisfies(s) for s in include):
+        return False
+
+    if exclude and any(spec.satisfies(e) for e in exclude):
+        return False
+
+    return True
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -32,7 +62,7 @@ def _url_or_path_to_url(url_or_path: str) -> str:
         return url_or_path
 
     # Otherwise we interpret it as path, and we should promote it to file:// URL.
-    return url_util.path_to_file_url(spack.util.path.canonicalize_path(url_or_path))
+    return url_util.path_to_file_url(spack.config.canonicalize_path(url_or_path))
 
 
 class Mirror:
@@ -44,27 +74,20 @@ class Mirror:
     to them. These two URLs are usually the same.
     """
 
-    def __init__(self, data: Union[str, dict], name: Optional[str] = None):
+    def __init__(self, data: Union[str, dict], name: Optional[str] = None) -> None:
         self._data = data
         self._name = name
 
     @staticmethod
-    def from_yaml(stream, name=None):
+    def from_yaml(stream: Union[str, IO[str]], name: Optional[str] = None) -> "Mirror":
         return Mirror(syaml.load(stream), name)
 
     @staticmethod
-    def from_json(stream, name=None):
-        try:
-            return Mirror(sjson.load(stream), name)
-        except Exception as e:
-            raise sjson.SpackJSONError("error parsing JSON mirror:", str(e)) from e
-
-    @staticmethod
-    def from_local_path(path: str):
+    def from_local_path(path: str) -> "Mirror":
         return Mirror(url_util.path_to_file_url(path))
 
     @staticmethod
-    def from_url(url: str):
+    def from_url(url: str) -> "Mirror":
         """Create an anonymous mirror by URL. This method validates the URL."""
         if urllib.parse.urlparse(url).scheme not in supported_url_schemes:
             raise ValueError(
@@ -73,27 +96,31 @@ class Mirror:
             )
         return Mirror(url)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Mirror):
             return NotImplemented
         return self._data == other._data and self._name == other._name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self._name}: {self.push_url} {self.fetch_url}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Mirror(name={self._name!r}, data={self._data!r})"
 
-    def to_json(self, stream=None):
-        return sjson.dump(self.to_dict(), stream)
+    @overload
+    def to_yaml(self, stream: None = ...) -> str: ...
 
-    def to_yaml(self, stream=None):
+    @overload
+    def to_yaml(self, stream: IO[str]) -> None: ...
+
+    def to_yaml(self, stream: Optional[IO[str]] = None) -> Optional[str]:
         return syaml.dump(self.to_dict(), stream)
 
-    def to_dict(self):
+    def to_dict(self) -> Union[str, dict]:
+        # Mirrors configured as a plain URL are stored as a string in the config schema
         return self._data
 
-    def display(self, max_len=0):
+    def display(self, max_len: int = 0) -> None:
         fetch, push = self.fetch_url, self.push_url
         # don't print the same URL twice
         url = fetch if fetch == push else f"fetch: {fetch} push: {push}"
@@ -102,15 +129,15 @@ class Mirror:
         print(f"{self.name: <{max_len}} [{source}{binary}] {url}")
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name or "<unnamed>"
 
     @property
-    def binary(self):
+    def binary(self) -> bool:
         return isinstance(self._data, str) or self._data.get("binary", True)
 
     @property
-    def source(self):
+    def source(self) -> bool:
         return isinstance(self._data, str) or self._data.get("source", True)
 
     @property
@@ -128,27 +155,39 @@ class Mirror:
             return False
         return self._data.get("autopush", False)
 
+    def include_binary(self, direction: str) -> List[str]:
+        return self._get_value("include_binary", direction) or []
+
+    def exclude_binary(self, direction: str) -> List[str]:
+        return self._get_value("exclude_binary", direction) or []
+
+    def matches_binary(self, spec: "spack.spec.Spec", direction: str) -> bool:
+        """Check if a spec passes this mirror's include/exclude buildcache filters."""
+        return _spec_matches_filters(
+            spec, self.include_binary(direction), self.exclude_binary(direction)
+        )
+
     @property
-    def fetch_url(self):
+    def fetch_url(self) -> str:
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("fetch")
 
     @property
-    def push_url(self):
-        """Get the valid, canonicalized fetch URL"""
+    def push_url(self) -> str:
+        """Get the valid, canonicalized push URL"""
         return self.get_url("push")
 
     @property
-    def fetch_view(self):
-        """Get the valid, canonicalized fetch URL"""
-        return self.get_view("fetch")
+    def fetch_view(self) -> Optional[str]:
+        """Get the fetch view"""
+        return self._get_value("view", direction="fetch")
 
     @property
-    def push_view(self):
-        """Get the valid, canonicalized fetch URL"""
-        return self.get_view("push")
+    def push_view(self) -> Optional[str]:
+        """Get the push view"""
+        return self._get_value("view", direction="push")
 
-    def ensure_mirror_usable(self, direction: str = "push"):
+    def ensure_mirror_usable(self, direction: str = "push") -> None:
         access_pair = self._get_value("access_pair", direction)
         access_token_variable = self._get_value("access_token_variable", direction)
 
@@ -183,20 +222,21 @@ class Mirror:
         # Only check the fetch configuration, the push configuration is whatever the latest
         # mirror version is which should support all configurable features.
 
-        # All configured mirrors support the latest version
-        supported_versions = [SUPPORTED_LAYOUT_VERSIONS[0]]
-        has_view = self.fetch_view is not None
-
         # Check if the mirror supports older layout versions
-        # OCI - Only return the newest version, the layout version is a dummy version since OCI
-        #       has its own layout.
+        # OCI - Return the tarball media type version, not the url layout version.
+        #       TODO: Clean up the distinction between these two versions
         # Views - Only versions >=3 support the views feature
-        if not is_oci_url(self.fetch_url) and not has_view:
-            supported_versions.extend(SUPPORTED_LAYOUT_VERSIONS[1:])
+        if is_oci_url(self.fetch_url):
+            return [BINARY_MEDIA_TYPE_VERSION]
 
+        # All configured mirrors support the latest version
+        supported_versions = [SUPPORTED_URL_LAYOUT_VERSIONS[0]]
+        has_view = self.fetch_view is not None
+        if not has_view:
+            supported_versions.extend(SUPPORTED_URL_LAYOUT_VERSIONS[1:])
         return supported_versions
 
-    def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool):
+    def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool) -> bool:
         # Only allow one to exist in the config
         if "access_token" in current_data and "access_token_variable" in new_data:
             current_data.pop("access_token")
@@ -226,6 +266,8 @@ class Mirror:
             "access_token_variable",
             "profile",
             "endpoint_url",
+            "select",
+            "exclude",
         ]
         if top_level:
             keys += ["binary", "source", "signed", "autopush"]
@@ -236,7 +278,7 @@ class Mirror:
                 changed = True
         return changed
 
-    def update(self, data: dict, direction: Optional[str] = None) -> bool:
+    def update(self, data: Dict[str, Any], direction: Optional[str] = None) -> bool:
         """Modify the mirror with the given data. This takes care
         of expanding trivial mirror definitions by URL to something more
         rich with a dict if necessary
@@ -300,7 +342,7 @@ class Mirror:
 
         return self._update_connection_dict(self._data[direction], data, top_level=False)
 
-    def _get_value(self, attribute: str, direction: str):
+    def _get_value(self, attribute: str, direction: str) -> Any:
         """Returns the most specific value for a given attribute (either push/fetch or global)"""
         if direction not in ("fetch", "push"):
             raise ValueError(f"direction must be either 'fetch' or 'push', not {direction}")
@@ -342,9 +384,6 @@ class Mirror:
 
         return _url_or_path_to_url(url)
 
-    def get_view(self, direction: str):
-        return self._get_value("view", direction)
-
     def get_credentials(self, direction: str) -> Dict[str, Any]:
         """Get the mirror credentials from the mirror config
 
@@ -379,9 +418,7 @@ class Mirror:
         tok = self._get_value("access_token_variable", direction)
         if tok:
             return os.environ.get(tok)
-        else:
-            return self._get_value("access_token", direction)
-        return None
+        return self._get_value("access_token", direction)
 
     def get_access_pair(self, direction: str) -> Optional[Tuple[str, str]]:
         pair = self._get_value("access_pair", direction)
@@ -406,8 +443,8 @@ class MirrorCollection(Mapping[str, Mirror]):
 
     def __init__(
         self,
-        mirrors=None,
-        scope=None,
+        mirrors: Optional[Mapping[str, Any]] = None,
+        scope: Optional[str] = None,
         binary: Optional[bool] = None,
         source: Optional[bool] = None,
         autopush: Optional[bool] = None,
@@ -444,30 +481,12 @@ class MirrorCollection(Mapping[str, Mirror]):
 
         self._mirrors = {m.name: m for m in mirrors if _filter(m)}
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, MirrorCollection):
+            return NotImplemented
         return self._mirrors == other._mirrors
 
-    def to_json(self, stream=None):
-        return sjson.dump(self.to_dict(True), stream)
-
-    def to_yaml(self, stream=None):
-        return syaml.dump(self.to_dict(True), stream)
-
-    # TODO: this isn't called anywhere
-    @staticmethod
-    def from_yaml(stream, name=None):
-        data = syaml.load(stream)
-        return MirrorCollection(data)
-
-    @staticmethod
-    def from_json(stream, name=None):
-        try:
-            d = sjson.load(stream)
-            return MirrorCollection(d)
-        except Exception as e:
-            raise sjson.SpackJSONError("error parsing JSON mirror collection:", str(e)) from e
-
-    def to_dict(self, recursive=False):
+    def to_dict(self, recursive: bool = False) -> Dict[str, Any]:
         return syaml.syaml_dict(
             sorted(
                 ((k, (v.to_dict() if recursive else v)) for (k, v) in self._mirrors.items()),
@@ -476,18 +495,20 @@ class MirrorCollection(Mapping[str, Mirror]):
         )
 
     @staticmethod
-    def from_dict(d):
+    def from_dict(d: Mapping[str, Any]) -> "MirrorCollection":
         return MirrorCollection(d)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Mirror:
         return self._mirrors[item]
 
-    def display(self):
+    def display(self) -> None:
+        if not self._mirrors:
+            return
         max_len = max(len(mirror.name) for mirror in self._mirrors.values())
         for mirror in self._mirrors.values():
             mirror.display(max_len)
 
-    def lookup(self, name_or_url):
+    def lookup(self, name_or_url: str) -> Mirror:
         """Looks up and returns a Mirror.
 
         If this MirrorCollection contains a named Mirror under the name
@@ -498,12 +519,12 @@ class MirrorCollection(Mapping[str, Mirror]):
         result = self.get(name_or_url)
 
         if result is None:
-            result = Mirror(fetch=name_or_url)
+            result = Mirror(name_or_url)
 
         return result
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._mirrors)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._mirrors)

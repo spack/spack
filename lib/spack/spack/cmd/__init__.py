@@ -11,28 +11,29 @@ import subprocess
 import sys
 import textwrap
 from collections import Counter
-from typing import Generator, List, Optional, Sequence, Union
+from typing import Callable, Container, Generator, List, Optional, Sequence, Union
 
 import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
-import spack.llnl.string
-import spack.llnl.util.tty as tty
+import spack.hash_lookup
 import spack.paths
 import spack.repo
 import spack.spec
 import spack.spec_parser
 import spack.store
-import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.llnl.util.filesystem import join_path
-from spack.llnl.util.lang import attr_setdefault, index_by
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import colorize
+import spack.util.string
+from spack import traverse
+from spack.util import tty
+from spack.util.filesystem import join_path
+from spack.util.lang import attr_setdefault, index_by
+from spack.util.tty.colify import colify
+from spack.util.tty.color import colorize
 
 from ..enums import InstallRecordStatus
 
@@ -213,7 +214,8 @@ def _concretize_spec_pairs(
     ):
         # Get all the concrete specs
         ret = [
-            concrete or (abstract if abstract.concrete else abstract.lookup_hash())
+            concrete
+            or (abstract if abstract.concrete else spack.hash_lookup.lookup_hash(abstract))
             for abstract, concrete in to_concretize
         ]
 
@@ -335,7 +337,7 @@ def ensure_single_spec_or_die(spec, matching_specs):
     format_string = (
         "{name}{@version}"
         "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
-        "{%compiler.name}{@compiler.version}"
+        "{compilers}"
     )
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
@@ -351,6 +353,28 @@ def gray_hash(spec, length):
         length = 32
     h = spec.dag_hash(length) if spec.concrete else "-" * length
     return colorize("@K{%s}" % h)
+
+
+def buildcache_status_fn(
+    available_hashes: Container[str],
+) -> Callable[["spack.spec.Spec"], "spack.spec.InstallStatus"]:
+    """Return a status_fn that marks not-installed specs present in a buildcache as [b].
+
+    Args:
+        available_hashes: any container supporting ``in`` lookups whose elements are dag hashes
+            known to be available in at least one buildcache.
+    """
+
+    def _status_fn(spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":
+        status = spec.install_status()
+        if (
+            status in (spack.spec.InstallStatus.absent, spack.spec.InstallStatus.missing)
+            and spec.dag_hash() in available_hashes
+        ):
+            return spack.spec.InstallStatus.buildcache
+        return status
+
+    return _status_fn
 
 
 def display_specs_as_json(specs, deps=False):
@@ -575,7 +599,7 @@ def print_how_many_pkgs(specs, pkg_type="", suffix=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % spack.llnl.string.plural(len(specs), pkg_type + " package") + suffix)
+    tty.msg("%s" % spack.util.string.plural(len(specs), pkg_type + " package") + suffix)
 
 
 def spack_is_git_repo():
@@ -639,29 +663,26 @@ def extant_file(f):
     return f
 
 
-def require_active_env(cmd_name):
-    """Used by commands to get the active environment
+def require_active_env(parser):
+    """Used by commands to get the active environment.
 
-    If an environment is not found, print an error message that says the calling
-    command *needs* an active environment.
+    If an environment is not found, calls ``parser.error()`` which prints usage and exits.
 
     Arguments:
-        cmd_name (str): name of calling command
+        parser: the subparser for the command (typically ``args.subparser``)
 
     Returns:
         (spack.environment.Environment): the active environment
     """
     env = ev.active_environment()
-
     if env:
         return env
-
-    tty.die(
-        "`spack %s` requires an environment" % cmd_name,
-        "activate an environment first:",
-        "    spack env activate ENV",
-        "or use:",
-        "    spack -e ENV %s ..." % cmd_name,
+    parser.error(
+        "requires an active environment\n"
+        "  activate an environment first:\n"
+        "      spack env activate ENV\n"
+        "  or use:\n"
+        "      spack -e ENV %s ..." % parser.prog.partition(" ")[2]
     )
 
 
