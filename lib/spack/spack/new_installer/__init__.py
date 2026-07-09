@@ -25,7 +25,7 @@ the build subprocess in :mod:`spack.new_installer.build`, the terminal UI in
 :mod:`spack.new_installer.ui`, and the build graph/scheduling in
 :mod:`spack.new_installer.schedule`. Shared low-level primitives are in
 :mod:`spack.new_installer.base`, with platform-specific implementations in
-:mod:`spack.new_installer.posix` and :mod:`spack.new_installer.windows`."""
+``spack.new_installer.posix`` and ``spack.new_installer.windows``."""
 
 from spack.new_installer.core import PackageInstaller
 
