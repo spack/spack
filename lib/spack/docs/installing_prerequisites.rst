@@ -72,3 +72,30 @@ Alternatively, the Xcode license can be accepted through the command line:
 .. code-block:: console
 
    $ sudo xcodebuild -license accept
+
+Fortran
+^^^^^^^
+
+Xcode provides the Apple Clang compilers, which support C and C++ but not Fortran.
+Many scientific packages, or their dependencies (for example MPI implementations), need a Fortran compiler.
+If you need one, you have two options.
+
+You can have Spack build a compiler for you:
+
+.. code-block:: console
+
+   $ spack install gcc
+
+Alternatively, you can install ``gfortran`` from another package manager, after which Spack will detect it as an external compiler:
+
+.. code-block:: console
+
+   $ brew install gcc
+   $ spack compiler find
+
+Once a Fortran compiler is available, Spack will use it automatically for packages that require Fortran.
+
+.. note::
+
+   Spack will not build a compiler on the fly to satisfy a Fortran dependency.
+   A compiler providing Fortran must already be installed or detected as external before concretizing such packages.
