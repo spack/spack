@@ -213,10 +213,14 @@ class TerminalUI(InstallerUI):
         self.terminal_size_changed: bool = True
         self.get_time = get_time
         self.is_tty = is_tty if is_tty is not None else stdout.isatty()
-        if color is not None:
-            self.color = color
+        if color is None:
+            color = spack.util.tty.color.get_color_when(stdout)
+        # ANSI escape codes used for rendering; empty strings when color is disabled.
+        if color:
+            self.red, self.green, self.cyan = "\033[31m", "\033[32m", "\033[0;36m"
+            self.gray, self.bold, self.reset = "\033[0;90m", "\033[1m", "\033[0m"
         else:
-            self.color = spack.util.tty.color.get_color_when(stdout)
+            self.red = self.green = self.cyan = self.gray = self.bold = self.reset = ""
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
@@ -361,9 +365,7 @@ class TerminalUI(InstallerUI):
 
         self.tracked_build_id = new_build_id
 
-        version_str = (
-            f"\033[0;36m@{new_build.version}\033[0m" if self.color else f"@{new_build.version}"
-        )
+        version_str = f"{self.cyan}@{new_build.version}{self.reset}"
         prefix = "" if self.log_ends_with_newline else "\n"
 
         if new_build.state == "failed":
@@ -542,13 +544,6 @@ class TerminalUI(InstallerUI):
         self.total_lines = 0
 
         if not finalize:
-            if self.color:
-                bold = "\033[1m"
-                reset = "\033[0m"
-                cyan = "\033[36m"
-            else:
-                bold = reset = cyan = ""
-
             if self.actual_jobs != self.target_jobs:
                 jobs_str = f"{self.actual_jobs}=>{self.target_jobs}"
             else:
@@ -557,6 +552,7 @@ class TerminalUI(InstallerUI):
                 f"Progress: {self.completed}/{self.total}  +/-: {jobs_str} jobs"
                 "  /: filter  v: logs  n/p: next/prev"
             )
+            bold, reset, cyan = self.bold, self.reset, self.cyan
             if long_header_len < max_width:
                 self._println(
                     buffer,
@@ -663,38 +659,32 @@ class TerminalUI(InstallerUI):
         else:
             indicator = f"[{self.spinner_chars[self.spinner_index]}]"
 
-        if self.color:
-            if build_info.state == "failed":
-                yield "\033[31m"  # red
-            elif build_info.state == "finished":
-                yield "\033[32m"  # green
+        gray, reset = self.gray, self.reset
+
+        if build_info.state == "failed":
+            yield self.red
+        elif build_info.state == "finished":
+            yield self.green
 
         yield indicator
-        if self.color:
-            yield "\033[0m"  # reset
+        yield reset
         yield " "
-        if self.color:
-            yield "\033[0;90m"  # dark gray
+        yield gray
         yield build_info.hash
-        if self.color:
-            yield "\033[0m"  # reset
+        yield reset
         yield " "
 
         # Package name in bold if explicit, default otherwise
         if build_info.explicit:
-            if self.color:
-                yield "\033[1m"
+            yield self.bold
             yield build_info.name
-            if self.color:
-                yield "\033[0m"  # reset
+            yield reset
         else:
             yield build_info.name
 
-        if self.color:
-            yield "\033[0;36m"  # cyan
+        yield self.cyan
         yield f"@{build_info.version}"
-        if self.color:
-            yield "\033[0m"  # reset
+        yield reset
 
         # progress or state
         if build_info.progress_percent is not None:
@@ -717,8 +707,6 @@ class TerminalUI(InstallerUI):
             else (now - build_info.start_time)
         )
         if elapsed > 0:
-            if self.color:
-                yield "\033[0;90m"  # dark gray
+            yield gray
             yield f" ({pretty_duration(elapsed)})"
-            if self.color:
-                yield "\033[0m"
+            yield reset
