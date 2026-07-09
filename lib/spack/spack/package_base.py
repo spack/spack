@@ -520,9 +520,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
        provide the constraints that are used as input to the concretizer.
 
     2. **Package instances**. Once instantiated with a concrete spec, a package can be passed to
-       the :py:class:`spack.installer.PackageInstaller`. It calls methods like :meth:`do_stage` on
-       the package instance, and it uses those to drive user-implemented methods like ``def patch``
-       and install phases like ``def configure`` and ``def install``.
+       the ``PackageInstaller``. It calls methods like :meth:`do_stage` on the package instance,
+       and it uses those to drive user-implemented methods like ``def patch`` and install phases
+       like ``def configure`` and ``def install``.
 
     Packages are imported from package repositories (see :py:mod:`spack.repo`).
 

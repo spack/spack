@@ -23,13 +23,13 @@ import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
 import spack.hooks.sbom_generate
-import spack.installer
+import spack.old_installer
 import spack.package_base
 import spack.store
 import spack.util.filesystem as fs
 from spack.error import SpackError, SpecSyntaxError
-from spack.installer import PackageInstaller
 from spack.main import SpackCommand
+from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.util import tty
 
@@ -47,7 +47,7 @@ def noop_install(monkeypatch):
     def noop(*args, **kwargs):
         pass
 
-    monkeypatch.setattr(spack.installer.PackageInstaller, "install", noop)
+    monkeypatch.setattr(spack.old_installer.PackageInstaller, "install", noop)
 
 
 def test_install_package_and_dependency(
@@ -424,7 +424,7 @@ def test_junit_output_with_failures(tmp_path: pathlib.Path, exc_typename, msg, i
 
 
 def _throw(task, exc_typename, exc_type, msg):
-    # Self is a spack.installer.Task
+    # Self is a spack.old_installer.Task
     exc_type = getattr(builtins, exc_typename)
     exc = exc_type(msg)
     task.fail(exc)
@@ -458,7 +458,7 @@ def test_junit_output_with_errors(
     monkeypatch,
 ):
     throw = _keyboard_error if expected_exc is KeyboardInterrupt else _runtime_error
-    monkeypatch.setattr(spack.installer.BuildTask, "complete", throw)
+    monkeypatch.setattr(spack.old_installer.BuildTask, "complete", throw)
 
     with fs.working_dir(str(tmp_path)):
         install(
@@ -1155,5 +1155,5 @@ def test_concurrent_packages_set_in_config(mutable_config, mock_packages):
     """Ensure that the number of concurrent packages is properly set from adding to config"""
     spack.config.set("config:concurrent_packages", 3)
     spec = spack.concretize.concretize_one("pkg-a")
-    installer = spack.installer.PackageInstaller([spec.package])
+    installer = spack.old_installer.PackageInstaller([spec.package])
     assert installer.concurrent_packages == 3

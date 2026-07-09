@@ -6,7 +6,7 @@ import pytest
 
 import spack.concretize
 import spack.deptypes as dt
-import spack.installer as inst
+import spack.old_installer as inst
 import spack.repo
 import spack.spec
 

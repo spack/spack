@@ -14,7 +14,7 @@ import spack.modules
 import spack.modules.lmod
 import spack.repo
 import spack.store
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 
 module = spack.main.SpackCommand("module")
 

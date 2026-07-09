@@ -17,8 +17,8 @@ import spack.modules.tcl
 import spack.package_base
 import spack.package_prefs
 import spack.repo
-from spack.installer import PackageInstaller
 from spack.modules.common import UpstreamModuleIndex
+from spack.old_installer import PackageInstaller
 from spack.util.filesystem import readlink
 
 pytestmark = [
