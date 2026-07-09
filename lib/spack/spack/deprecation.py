@@ -15,12 +15,13 @@ cannot drift.
 
 import functools
 import warnings
-from typing import TYPE_CHECKING, Callable, Iterable, List, NamedTuple, Optional, Set
+from typing import TYPE_CHECKING, Callable, Iterable, List, NamedTuple, Optional
 
 import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.repo
+import spack.traverse
 from spack.enums import DeprecationReason, DeprecationSeverity
 
 if TYPE_CHECKING:
@@ -116,28 +117,14 @@ class DeprecationGate:
             disallowed, default_allowed=default_allowed_severity()
         )
         self._deptypes = deptypes if deptypes is not None else deptypes_for_scope()
-        self._checked: Set[str] = set()
 
     def check(self, seeds: Iterable["spack.spec.Spec"]) -> None:
-        """Raises if the runtime DAG of any seed contains a disallowed deprecation."""
+        """Raises if the DAG reachable from any seed contains a disallowed deprecation."""
         violations: List[str] = []
-        stack = [s for s in seeds if s.dag_hash() not in self._checked]
-        while stack:
-            node = stack.pop()
-            key = node.dag_hash()
-            if key in self._checked:
-                continue
-
-            self._checked.add(key)
+        for node in spack.traverse.traverse_nodes(list(seeds), deptype=self._deptypes):
             found = self._policy(node)
             if found:
                 violations.append(self._format_violations(node, found))
-
-            stack.extend(
-                dep
-                for dep in node.dependencies(deptype=self._deptypes)
-                if dep.dag_hash() not in self._checked
-            )
 
         if violations:
             raise spack.error.InstallError(
