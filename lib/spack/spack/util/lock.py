@@ -16,8 +16,9 @@ import spack.error
 from spack.util import lang, tty
 from spack.util.string import plural
 
-IS_WINDOWS = sys.platform == "win32"
-if not IS_WINDOWS:
+if sys.platform == "win32":
+    from spack.util.lock_windows import WindowsBackend
+else:
     import fcntl
 
 
@@ -37,7 +38,7 @@ __all__ = [
     "DummyBackend",
 ]
 
-WHOLE_FILE_RANGE = 0xFFFFFFFF if IS_WINDOWS else 0
+WHOLE_FILE_RANGE = 0xFFFFFFFF if sys.platform == "win32" else 0
 
 
 ExitFnType = Callable[
@@ -163,7 +164,7 @@ class LockType:
     # Platform-native flag constants, merged directly onto LockType so backends and callers
     # share one vocabulary regardless of platform.
     LOCK_CATCH: Type[Exception]
-    if IS_WINDOWS:
+    if sys.platform == "win32":
         # From the Windows SDK (winbase.h): not exposed by ctypes, so hardcoded here.
         LOCK_SH = 0  # shared lock is the default (absence of the exclusive flag)
         LOCK_EX = 0x00000002  # LOCKFILE_EXCLUSIVE_LOCK
@@ -415,9 +416,6 @@ BackendType = GenericLockBackend
 
 def platform_lock_backend(path, start, length, debug) -> BackendType:
     """Per platform dispatch for lock backend implementation"""
-    if sys.platform == "win32":
-        from spack.util.lock_windows import WindowsBackend
-
         return WindowsBackend(path, start, length, debug=debug)
     else:
         return PosixBackend(path, start, length, debug=debug)
