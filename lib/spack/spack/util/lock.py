@@ -416,6 +416,7 @@ BackendType = GenericLockBackend
 
 def platform_lock_backend(path, start, length, debug) -> BackendType:
     """Per platform dispatch for lock backend implementation"""
+    if sys.platform == "win32":
         return WindowsBackend(path, start, length, debug=debug)
     else:
         return PosixBackend(path, start, length, debug=debug)
@@ -648,7 +649,7 @@ class Lock:
 
         No-op on Windows (Spawn only)
         """
-        if IS_WINDOWS:
+        if sys.platform == "win32":
             return
         if self._writes > 0:
             op = LockType.WRITE

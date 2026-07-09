@@ -9,22 +9,19 @@ spack.util.lock_windows._win_lock_file_ex): errors that mean "someone else holds
 be reported as a failed poll, not raised, while any other error is a real failure.
 """
 
+import ctypes
 import pathlib
 import sys
 
 import pytest
 
 import spack.util.lock as lk
+import spack.util.lock_windows as lkw
 from spack.util.filesystem import working_dir
 
 pytestmark = pytest.mark.skipif(
     sys.platform != "win32", reason="ctypes kernel32 bindings are Windows-only"
 )
-
-if sys.platform == "win32":
-    import ctypes
-
-    import spack.util.lock_windows as lkw
 
 
 @pytest.mark.parametrize("winerror", [32, 33])  # ERROR_SHARING_VIOLATION, ERROR_LOCK_VIOLATION
