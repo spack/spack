@@ -152,7 +152,6 @@ Style Tests
 ^^^^^^^^^^^^
 
 Spack uses `Ruff <https://docs.astral.sh/ruff/>`_ for code formatting and linting, and `mypy <https://mypy.readthedocs.io/en/stable/>`_ for type checking.
-Ruff enforces `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ conformance, which is a series of style guides for Python that provide suggestions for everything from variable naming to indentation.
 In order to limit the number of PRs that were mostly style changes, we decided to enforce PEP 8 conformance.
 Your PR needs to comply with PEP 8 in order to be accepted, and if it modifies the Spack library, it needs to successfully type-check with mypy as well.
 
