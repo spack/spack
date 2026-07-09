@@ -407,7 +407,7 @@ class TestTimeBasedBehavior:
         tui.render()
 
         # Spinner should have advanced
-        assert tui.spinner_index == (initial_index + 1) % len(tui.spinner_chars)
+        assert tui.spinner_index == (initial_index + 1) % len(inst.SPINNER_CHARS)
 
     def test_no_redraw_when_nothing_changed(self):
         """render() renders nothing when the display is clean and the spinner is not due"""
