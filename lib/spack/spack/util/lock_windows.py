@@ -3,13 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """LockFileEx-based lock backend for Windows, and the ctypes kernel32 bindings it needs.
-
-Split out from ``spack.util.lock`` because mypy (and other tools that type-check on a
-non-Windows platform, e.g. Read the Docs) resolve ``ctypes.windll``/``ctypes.wintypes`` against
-typeshed's Windows-only stubs, which don't exist for the assumed platform. Type checkers only
-skip unreachable code behind a literal ``sys.platform`` comparison, not a derived boolean, so
-gating an entire module this way (see ``spack.new_installer_windows`` for the same pattern) is
-what actually lets it be skipped.
 """
 
 import sys
@@ -26,7 +19,22 @@ from typing import Dict, List, Optional
 
 from spack.util import tty
 
-from .lock import FILE_TRACKER, DevIno, GenericLockBackend, LockType
+from .lock_common import FILE_TRACKER, DevIno, GenericLockBackend
+from .lock_common import LockType as _LockType
+
+
+class LockType(_LockType):
+    # From the Windows SDK (winbase.h): not exposed by ctypes, so hardcoded here.
+    LOCK_SH = 0  # shared lock is the default (absence of the exclusive flag)
+    LOCK_EX = 0x00000002  # LOCKFILE_EXCLUSIVE_LOCK
+    LOCK_NB = 0x00000001  # LOCKFILE_FAIL_IMMEDIATELY
+
+    @staticmethod
+    def to_module(tid):
+        lock = LockType.LOCK_SH
+        if tid == LockType.WRITE:
+            lock = LockType.LOCK_EX
+        return lock
 
 
 class _OVERLAPPED(ctypes.Structure):
@@ -168,7 +176,7 @@ class WindowsRangeLockTracker:
 
 
 #: Tracks real Windows byte-range locks held by this process, to make same-process,
-#: cross-handle lock requests behave like POSIX fcntl. Unused on POSIX.
+#: cross-handle lock requests behave like POSIX fcntl.
 WINDOWS_RANGE_LOCK_TRACKER = WindowsRangeLockTracker()
 
 
@@ -198,7 +206,7 @@ class WindowsBackend(GenericLockBackend):
       inode): a process can always freely take another lock, in any mode, on a range it already
       holds, via any file descriptor. Because every same-process backend for a range shares the
       same real handle and the same ``WindowsRangeLock``, a mode change made by any one of them
-      is immediately visible to all of them -- matching that semantics exactly, with no separate
+      is immediately visible to all of them, matching that semantics exactly, with no separate
       "anchor" handle to reason about.
 
     ``release()`` closes this backend's handle reference (via ``FILE_TRACKER``, closing the

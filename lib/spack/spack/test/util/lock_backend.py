@@ -613,7 +613,7 @@ def test_upgrade_read_to_write(private_lock_path):
     assert lock._writes == 0
     # On Windows, _unlock() closes the file handle so the file can be deleted
     # (Windows raises WinError 32 on unlink if any process has the file open).
-    if not lk.IS_WINDOWS:
+    if sys.platform != "win32":
         assert not lock.backend._file_ref.fh.closed  # recycle the file handle for next lock
 
 

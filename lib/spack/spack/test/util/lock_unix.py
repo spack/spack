@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Tests for behavior specific to ``spack.util.lock.PosixBackend`` (``fcntl``-based locking)
+"""Tests for behavior specific to ``spack.util.lock_posix.PosixBackend`` (``fcntl``-based locking)
 that can't be exercised through the shared, platform-neutral tests in ``lock_backend.py``.
 
 Run with pytest::
