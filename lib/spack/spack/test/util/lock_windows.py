@@ -9,19 +9,19 @@ spack.util.lock_windows._win_lock_file_ex): errors that mean "someone else holds
 be reported as a failed poll, not raised, while any other error is a real failure.
 """
 
-import ctypes
 import pathlib
 import sys
 
 import pytest
 
+if sys.platform != "win32":
+    pytest.skip("Windows-only tests", allow_module_level=True)
+
+import ctypes
+
 import spack.util.lock as lk
 import spack.util.lock_windows as lkw
 from spack.util.filesystem import working_dir
-
-pytestmark = pytest.mark.skipif(
-    sys.platform != "win32", reason="ctypes kernel32 bindings are Windows-only"
-)
 
 
 @pytest.mark.parametrize("winerror", [32, 33])  # ERROR_SHARING_VIOLATION, ERROR_LOCK_VIOLATION
@@ -37,7 +37,8 @@ def test_poll_lock_contended_win(tmp_path: pathlib.Path, monkeypatch, winerror):
         lock = lk.Lock("lockfile")
         lock.acquire_read()
 
-        monkeypatch.setattr(lkw._kernel32, "LockFileEx", fake_lock_file_ex)
+        kernel32 = lkw._kernel32  # type: ignore[has-type]
+        monkeypatch.setattr(kernel32, "LockFileEx", fake_lock_file_ex)
         assert not lock._poll_lock(lk.LockType.LOCK_EX)
         monkeypatch.undo()
 
@@ -56,7 +57,8 @@ def test_poll_lock_unexpected_error_win(tmp_path: pathlib.Path, monkeypatch):
         lock = lk.Lock("lockfile")
         lock.acquire_read()
 
-        monkeypatch.setattr(lkw._kernel32, "LockFileEx", fake_lock_file_ex)
+        kernel32 = lkw._kernel32  # type: ignore[has-type]
+        monkeypatch.setattr(kernel32, "LockFileEx", fake_lock_file_ex)
         with pytest.raises(OSError):
             lock._poll_lock(lk.LockType.LOCK_EX)
         monkeypatch.undo()
