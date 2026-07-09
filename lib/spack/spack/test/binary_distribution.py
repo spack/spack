@@ -1657,7 +1657,13 @@ def test_url_update_index_retries_on_push_failure(tmp_path, create_mock_index):
         def push_index(self, db):
             _Handler.push_count += 1
             if _Handler.push_count < 3:
-                raise Exception("Simulated 412 IfMatch mismatch")
+                raise urllib.error.HTTPError(
+                    "https://dummy.io/v3/manifest/index/index.manifest.json",
+                    412,
+                    "Precondition Failed",
+                    hdrs={},  # type: ignore[arg-type]
+                    fp=None,  # type: ignore[arg-type]
+                )
 
     mock_index, retry = create_mock_index(_Handler())
     metadata = MirrorMetadata("s3://mybucket/prefix", 3)
@@ -1668,19 +1674,52 @@ def test_url_update_index_retries_on_push_failure(tmp_path, create_mock_index):
     assert mock_index.update_calls == [metadata] * 3
 
 
+def test_url_update_index_fails_fast_on_non_retryable(tmp_path, create_mock_index):
+    """Tests that _url_update_index retries when push_index raises, eventually succeeding."""
+
+    class _Handler:
+        push_count = 0
+
+        def push_index(self, db):
+            _Handler.push_count += 1
+            raise ValueError("Deterministic bug")
+
+    mock_index, retry = create_mock_index(_Handler())
+    metadata = MirrorMetadata("s3://mybucket/prefix", 3)
+    with pytest.raises(GenerateIndexError):
+        spack.binary_distribution._url_update_index(metadata, str(tmp_path), retry=retry)
+
+    assert _Handler.push_count == 1
+    # We should call .update on every attempt, so each retry picks up a fresh etag
+    assert mock_index.update_calls == [metadata]
+
+
 def test_url_update_index_raises_after_retries_exhausted(tmp_path, create_mock_index):
     """Tests that _url_update_index raises GenerateIndexError when all retry attempts fail."""
 
     class _Handler:
+        push_count = 0
+
         def push_index(self, db):
-            raise Exception("412 IfMatch mismatch")
+            _Handler.push_count += 1
+            raise urllib.error.HTTPError(
+                "https://dummy.io/v3/manifest/index/index.manifest.json",
+                412,
+                "Precondition Failed",
+                hdrs={},  # type: ignore[arg-type]
+                fp=None,  # type: ignore[arg-type]
+            )
 
     create_mock_index(_Handler())
 
     metadata = MirrorMetadata("s3://mybucket/prefix", 3)
-    retry = web_util.Retry(total=5, backoff_factor=0, backoff_max=1)
+    mock_index, retry = create_mock_index(_Handler())
     with pytest.raises(GenerateIndexError):
         spack.binary_distribution._url_update_index(metadata, str(tmp_path), retry=retry)
+
+    assert _Handler.push_count == 5
+    # We should call .update on every attempt, so each retry picks up a fresh etag
+    assert mock_index.update_calls == [metadata] * 5
 
 
 @pytest.mark.parametrize(

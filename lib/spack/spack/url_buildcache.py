@@ -1233,9 +1233,12 @@ def get_entries_from_cache(url: str, component_type: BuildcacheComponent):
     callbacks.append(_entries_from_cache_fallback)
 
     for specs_from_cache_fn in callbacks:
-        file_to_mtime_mapping, read_fn = specs_from_cache_fn(url, component_type)
-        if file_to_mtime_mapping:
-            return file_to_mtime_mapping, read_fn
+        try:
+            file_to_mtime_mapping, read_fn = specs_from_cache_fn(url, component_type)
+            if file_to_mtime_mapping:
+                return file_to_mtime_mapping, read_fn
+        except:
+            continue
 
     raise ListMirrorSpecsError("Failed to get list of entries from {0}".format(url))
 

@@ -116,6 +116,23 @@ def is_transient_error(e: Exception) -> bool:
     return False
 
 
+def is_precondition_error(e: Exception) -> bool:
+    """Return True if HTTP/Boto3 error is related to a precondition error.
+
+    Examples of precontition errors:
+        HTTP status code 412
+        Boto error 'PreconditionFailed'
+    """
+    if isinstance(e, HTTPError) and 412 == e.code:
+        return True
+
+    # Handle boto errors types by string name to avoid import
+    if "PreconditionFailed" == type(e).__name__:
+        return True
+
+    return False
+
+
 _P = ParamSpec("_P")
 _R = TypeVar("_R")
 
@@ -434,7 +451,20 @@ def push_to_url(
             remote_path = remote_path[1:]
 
         s3 = get_s3_session(remote_url, method="push")
-        s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
+        if if_match:
+            # IfMatch is only supported by put_object which has additional limitations
+            if os.stat(local_file_path).st_size >= 5e9:
+                raise spack.error.SpackError(f"File too large (max. 5GB): {local_file_path}")
+
+            with open(local_file_path, "rb") as fd:
+                s3.put_object(
+                    Bucket=remote_url.netloc,
+                    Key=remote_path,
+                    Body=fd,
+                    **extra_args,
+                )
+        else:
+            s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
             os.remove(local_file_path)

@@ -114,6 +114,7 @@ from .url_buildcache import (
     get_valid_spec_file,
 )
 from .vendor.typing_extensions import TypedDict
+from .vendor.jsonschema.exceptions import ValidationError
 
 
 class BuildCacheDatabase(spack.database.Database):
@@ -751,11 +752,11 @@ def _read_specs(
         try:
             _, _, spec_hash = URLBuildcacheEntry.decompose_manifest_filename(file)
 
-        except IndexError:
+        except (IndexError, ValueError):
             # If unable to parse the spec information from the file name continue.
             warnings.warn(f"Malformed metadata file name detected {file}")
-            # _lazy_read_spec will still try to download the manifest, it is possible something odd
-            # happened and this is still a valid cache manifest.
+            # Could not parse the spec information from the manifest. Skip rather
+            # than abort the update.
             continue
 
         if not filter_fn(spec_hash):
@@ -804,7 +805,12 @@ def _lazy_read_spec(
         spec_dict = cache_entry.fetch_metadata()
         s = spack.spec.Spec.from_dict(spec_dict)
         return s
-    except OSError as e:
+    except Exception as e:
+        # If this is transient error raise to signal for retry. We don't want to
+        # exclude otherwise valid specs from the index.
+        if web_util.is_transient_error(e):
+            raise
+
         warnings.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
     finally:
         if cache_entry:
@@ -857,7 +863,10 @@ def _url_update_index(
 
         try:
             # Update the local cached index and spec list
-            BINARY_INDEX.update(mirror_metadata)
+            try:
+                BINARY_INDEX.update(mirror_metadata)
+            except (FetchCacheError, ValidationError):
+                warnings.warn("Failed to read the current build cache index.")
 
             # For appending Load the current state of the index from the cache into the database
             if append:
@@ -880,7 +889,11 @@ def _url_update_index(
             break
         except Exception as e:
             errmsg = f"Encountered a problem pushing package index to {mirror_metadata}"
-            if retry.is_last_attempt():
+            # Only attempt a retry if the error is possible to recover from.
+            # Transient network errors or precondition errors (ie. IfMatch conflict requires
+            # a refresh of the index and etag).
+            retryable = web_util.is_transient_error(e) or web_util.is_precondition_error(e)
+            if not retryable or retry.is_last_attempt():
                 raise GenerateIndexError(errmsg) from e
             else:
                 warnings.warn(errmsg)
