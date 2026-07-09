@@ -24,12 +24,57 @@ jobs:
       bootstrap: ${{ steps.filter.outputs.bootstrap }}
       core: ${{ steps.filter.outputs.core }}
       packages: ${{ steps.filter.outputs.packages }}
+    env:
+      DISALLOWED_COAUTHOR_EMAILS: |
+        noreply@anthropic.com
+        codex@openai.com
+        copilot@github.com
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-        if: ${{ github.event_name == 'push' || github.event_name == 'merge_group' }}
         with:
           fetch-depth: 0
-            # For pull requests it's not necessary to checkout the code
+      - name: Check Co-Authors
+        run: |
+          ret=0
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            COMMIT_RANGE="${{ github.event.pull_request.base.sha }}..HEAD"
+          else
+            COMMIT_RANGE="HEAD^1..HEAD"
+          fi
+
+          for commit in $(git rev-list "$COMMIT_RANGE")
+          do
+            coauthors=$(git log -1 --format="%B" "$commit" | grep -i "^Co-Authored-By:" | sed -nE 's/.*<([^>]+)>$/\1/p')
+            for email in $coauthors
+            do
+              if echo "$DISALLOWED_COAUTHOR_EMAILS" | grep -qiFx "$email"; then
+                echo "::error::AI Agent co-author with $email detected!"
+                echo ""
+                echo "====================================================================="
+                echo "ERROR: AI Agent Co-Author detected with email: $email"
+                echo "====================================================================="
+                echo ""
+                echo "Please use the 'Assisted-by' annotation instead of 'Co-Authored-By'"
+                echo "for AI agents, following the Linux Foundation's format:"
+                echo ""
+                echo "  Assisted-by: AGENT_NAME:MODEL_VERSION [TOOL1] [TOOL2]"
+                echo ""
+                echo "For more information, see:"
+                echo "  https://docs.kernel.org/process/coding-assistants.html"
+                echo "====================================================================="
+                echo ""
+                ret=1
+              fi
+            done
+          done
+          if [ "$ret" -eq 1 ]; then
+            echo "## :robot: :x: AI Agent Co-Author detected" >> $GITHUB_STEP_SUMMARY
+            echo "Please follow the Linux Foundation's [\`Assisted-by\`](https://docs.kernel.org/process/coding-assistants.html) format." >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "Assisted-by: AGENT_NAME:MODEL_VERSION [TOOL1] [TOOL2]" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          exit "$ret"
       - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4.0.1
         id: filter
         with:
