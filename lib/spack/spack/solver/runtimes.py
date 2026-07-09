@@ -15,10 +15,8 @@ import spack.version
 from .core import SourceContext, fn
 from .versions import Provenance
 
-#: Language virtuals a compiler may provide. A compiler's flags are injected into a dependent
-#: only when the compiler is actually used to compile it, i.e. the build edge provides one of
-#: these virtuals.
-COMPILER_LANGUAGES = ("c", "cxx", "fortran")
+#: Language virtuals wrapped by the compiler wrapper (same ones for which a flag exists)
+COMPILER_WRAPPER_LANGUAGES = ("c", "cxx", "fortran")
 
 
 class RuntimePropertyRecorder:
@@ -227,7 +225,7 @@ class RuntimePropertyRecorder:
 
         # Inject the flags only when the compiler is actually used to compile the dependent,
         # i.e. the build edge provides one of the language virtuals.
-        for language in COMPILER_LANGUAGES:
+        for language in COMPILER_WRAPPER_LANGUAGES:
             when_spec = spack.spec.Spec(f"%[deptypes=build virtuals={language}] {spec}")
             body_str, node_variable = self.rule_body_from(when_spec)
             for clause in head_clauses:

@@ -76,7 +76,7 @@ from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory
-from .runtimes import COMPILER_LANGUAGES, RuntimePropertyRecorder, all_libcs
+from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder, all_libcs
 from .versions import Provenance
 
 GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
@@ -3087,7 +3087,7 @@ class SpackSolverSetup:
         if should_mix is True:
             return
         # anything besides should_mix: true
-        for lang in COMPILER_LANGUAGES:
+        for lang in COMPILER_WRAPPER_LANGUAGES:
             self.gen.fact(fn.no_compiler_mixing(lang))
         # user specified an allow-list
         if isinstance(should_mix, list):
@@ -3113,7 +3113,7 @@ class SpackSolverSetup:
 
             # Add a dependency on the compiler wrapper
             compiler_str = f"{compiler.name} /{compiler.dag_hash()}"
-            for language in COMPILER_LANGUAGES:
+            for language in COMPILER_WRAPPER_LANGUAGES:
                 # Using compiler.name causes a bit of duplication, but that is taken care of by
                 # clingo during grounding.
                 recorder("*").depends_on(
