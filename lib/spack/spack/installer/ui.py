@@ -45,6 +45,9 @@ UiCommand = Union[SetEcho, ChangeJobs]
 #: How often to update a spinner in seconds
 SPINNER_INTERVAL = 0.1
 
+#: Characters the spinner cycles through
+SPINNER_CHARS = "|/-\\"
+
 #: How long to display finished packages before graying them out
 CLEANUP_TIMEOUT = 2.0
 
@@ -191,7 +194,6 @@ class TerminalUI(InstallerUI):
         self.completed = 0
         self.builds: Dict[str, BuildInfo] = {}
         self.finished_builds: List[BuildInfo] = []
-        self.spinner_chars = ["|", "/", "-", "\\"]
         self.spinner_index = 0
         self.dirty = True  # Start dirty to draw initial state
         self.active_area_rows = 0
@@ -492,7 +494,7 @@ class TerminalUI(InstallerUI):
 
         # Only update the spinner if there are still running packages
         if has_unfinished and now >= self.next_spinner_update:
-            self.spinner_index = (self.spinner_index + 1) % len(self.spinner_chars)
+            self.spinner_index = (self.spinner_index + 1) % len(SPINNER_CHARS)
             self.dirty = True
             self.next_spinner_update = now + SPINNER_INTERVAL
 
@@ -649,7 +651,7 @@ class TerminalUI(InstallerUI):
         elif static:
             indicator = "[ ]"
         else:
-            indicator = f"[{self.spinner_chars[self.spinner_index]}]"
+            indicator = f"[{SPINNER_CHARS[self.spinner_index]}]"
 
         gray, reset = self.gray, self.reset
 
