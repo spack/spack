@@ -1106,7 +1106,7 @@ def check_mirror_for_layout(mirror: spack.mirrors.mirror.Mirror):
             "    consider running 'spack buildcache migrate' or rebuilding the specs in \n"
             "    in this mirror."
         )
-        warnings.warn(msg)
+        tty.warn(msg)
 
 
 def _entries_from_cache_aws_cli(url: str, component_type: BuildcacheComponent):
@@ -1128,7 +1128,7 @@ def _entries_from_cache_aws_cli(url: str, component_type: BuildcacheComponent):
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     if not aws:
-        warnings.warn("Failed to use aws CLI to retrieve specs, falling back to parallel fetch")
+        tty.warn("Failed to use aws CLI to retrieve specs, falling back to parallel fetch")
         return file_list, read_fn
 
     def file_read_method(manifest_path: str) -> URLBuildcacheEntry:
@@ -1165,7 +1165,7 @@ def _entries_from_cache_aws_cli(url: str, component_type: BuildcacheComponent):
                     match.group(1), "%Y-%m-%d %H:%M:%S"
                 ).timestamp()
     except ProcessError as e:
-        warnings.warn(
+        tty.warn(
             "Failed to use aws s3 ls to retrieve spec list, falling back to parallel fetch"
         )
         raise e
@@ -1211,7 +1211,7 @@ def _entries_from_cache_fallback(url: str, component_type: BuildcacheComponent):
     except OSError as err:
         # If we got some kind of S3 (access denied or other connection error), the first non
         # boto-specific class in the exception is Exception.  Just print a warning and return
-        warnings.warn(f"Encountered problem listing packages at {url}: {err}")
+        tty.warn(f"Encountered problem listing packages at {url}: {err}")
 
     return filename_to_mtime, read_fn
 
