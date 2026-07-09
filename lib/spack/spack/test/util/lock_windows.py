@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Tests for the ctypes-based Windows locking internals in spack.util.lock.
+"""Tests for the ctypes-based Windows locking internals in spack.util.lock_windows.
 
 These exercise behavior specific to WindowsBackend's LockFileEx error handling (see
-spack.util.lock._win_lock_file_ex): errors that mean "someone else holds this lock" must be
-reported as a failed poll, not raised, while any other error is a real failure.
+spack.util.lock_windows._win_lock_file_ex): errors that mean "someone else holds this lock" must
+be reported as a failed poll, not raised, while any other error is a real failure.
 """
 
 import pathlib
@@ -24,6 +24,8 @@ pytestmark = pytest.mark.skipif(
 if sys.platform == "win32":
     import ctypes
 
+    import spack.util.lock_windows as lkw
+
 
 @pytest.mark.parametrize("winerror", [32, 33])  # ERROR_SHARING_VIOLATION, ERROR_LOCK_VIOLATION
 def test_poll_lock_contended_win(tmp_path: pathlib.Path, monkeypatch, winerror):
@@ -38,7 +40,7 @@ def test_poll_lock_contended_win(tmp_path: pathlib.Path, monkeypatch, winerror):
         lock = lk.Lock("lockfile")
         lock.acquire_read()
 
-        monkeypatch.setattr(lk._kernel32, "LockFileEx", fake_lock_file_ex)
+        monkeypatch.setattr(lkw._kernel32, "LockFileEx", fake_lock_file_ex)
         assert not lock._poll_lock(lk.LockType.LOCK_EX)
         monkeypatch.undo()
 
@@ -57,7 +59,7 @@ def test_poll_lock_unexpected_error_win(tmp_path: pathlib.Path, monkeypatch):
         lock = lk.Lock("lockfile")
         lock.acquire_read()
 
-        monkeypatch.setattr(lk._kernel32, "LockFileEx", fake_lock_file_ex)
+        monkeypatch.setattr(lkw._kernel32, "LockFileEx", fake_lock_file_ex)
         with pytest.raises(OSError):
             lock._poll_lock(lk.LockType.LOCK_EX)
         monkeypatch.undo()
