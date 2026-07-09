@@ -23,9 +23,9 @@ if sys.platform != "win32":
 
 from ctypes import wintypes
 
-import spack.new_installer_windows as _niw
-from spack.new_installer_base import StdinReader
-from spack.new_installer_windows import (
+import spack.new_installer.windows as _niw
+from spack.new_installer.base import StdinReader
+from spack.new_installer.windows import (
     ENABLE_ECHO_INPUT,
     ENABLE_EXTENDED_FLAGS,
     ENABLE_LINE_INPUT,

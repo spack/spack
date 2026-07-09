@@ -10,7 +10,7 @@ import pytest
 import spack.deptypes as dt
 import spack.error
 import spack.traverse
-from spack.new_installer import BuildGraph
+from spack.new_installer.schedule import BuildGraph
 from spack.spec import Spec
 from spack.store import Store
 

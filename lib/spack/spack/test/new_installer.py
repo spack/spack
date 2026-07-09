@@ -20,36 +20,34 @@ import spack.error
 import spack.spec
 import spack.store
 from spack.database import Database
-from spack.new_installer import (
-    OVERWRITE_GARBAGE_SUFFIX,
-    BinaryCacheMiss,
-    BuildGraph,
-    BuildRequest,
-    ChangeJobs,
-    ChildInfo,
-    ExitCode,
-    InstallerUI,
-    PackageInstaller,
-    PrefixPivoter,
-    ScheduleResult,
-    SetEcho,
-    _node_to_roots,
-    create_build_channels,
-    read_connection,
-    schedule_builds,
-    write_connection,
-)
-from spack.new_installer_base import (
+from spack.new_installer.base import (
     BuildChannels,
+    ExitCode,
     JobServerBase,
     NoopJobServer,
     ProcessExitNotifier,
 )
+from spack.new_installer.build import (
+    OVERWRITE_GARBAGE_SUFFIX,
+    BinaryCacheMiss,
+    BuildRequest,
+    ChildInfo,
+    PrefixPivoter,
+    create_build_channels,
+)
+from spack.new_installer.core import PackageInstaller, read_connection, write_connection
+from spack.new_installer.schedule import (
+    BuildGraph,
+    ScheduleResult,
+    _node_to_roots,
+    schedule_builds,
+)
+from spack.new_installer.ui import ChangeJobs, InstallerUI, SetEcho
 from spack.test.conftest import writable
 from spack.test.traverse import create_dag
 
 if sys.platform != "win32":
-    from spack.new_installer_posix import PosixJobServer
+    from spack.new_installer.posix import PosixJobServer
 
 
 @pytest.fixture

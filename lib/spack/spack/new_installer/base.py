@@ -17,8 +17,13 @@ import threading
 from multiprocessing.connection import Connection
 from typing import Any, Callable, NamedTuple, Optional, Union
 
+from spack.vendor.typing_extensions import Literal
+
 import spack.spec
 from spack.util.tty.log import redirect_stdio, restore_stdio
+
+#: Type for specifying installation source modes
+InstallPolicy = Literal["auto", "cache_only", "source_only"]
 
 # Inter-process communication type
 if sys.platform == "win32":
@@ -31,6 +36,16 @@ OUTPUT_BUFFER_SIZE = 32768
 
 #: Control byte that stops the tee thread
 TEE_STOP = b"2"
+
+
+class ExitCode:
+    SUCCESS = 0
+    BUILD_ERROR = 1
+    #: Exit code used by the child process to signal that the build was stopped at a phase boundary
+    STOPPED_AT_PHASE = 3
+    #: Exit code used by the child process to signal a binary cache miss (no source fallback)
+    BUILD_CACHE_MISS = 4
+
 
 #: How often the event loop should wake up to poll for a background-to-foreground transition
 #: while the terminal is headless (there is no signal for it).
@@ -236,7 +251,7 @@ class JobServerBase(abc.ABC):
 
     @abc.abstractmethod
     def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> JobserverInfo:
-        """Return the :class:`~spack.new_installer_base.JobserverInfo` to be passed to the child
+        """Return the :class:`~spack.new_installer.base.JobserverInfo` to be passed to the child
         process."""
 
     @abc.abstractmethod
