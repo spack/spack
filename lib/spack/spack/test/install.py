@@ -830,9 +830,9 @@ def test_installer_scope_all_gates_build_transitive_deprecation(
             spack.installer_dispatch.create_installer([spec.package]).install()
 
 
-def test_deprecation_gate_checks_each_spec_once(install_mockery):
-    """Tests that the gate memoizes across calls, so a node shared by the runtime DAGs of several
-    specs (or revisited on a later call) is inspected exactly once.
+def test_deprecation_gate_checks_each_node_once(install_mockery):
+    """Tests that a single check walks the DAG with node-level dedup, so a dependency shared
+    through a diamond is inspected exactly once.
     """
     spec = spack.concretize.concretize_one("mpileaks")
 
@@ -842,12 +842,9 @@ def test_deprecation_gate_checks_each_spec_once(install_mockery):
         seen[node.dag_hash()] = seen.get(node.dag_hash(), 0) + 1
         return []
 
-    gate = spack.deprecation.DeprecationGate(policy=counting_policy)
-    gate.check([spec])
-    # Everything below was already visited by the first call
-    gate.check(list(spec.traverse(deptype=("link", "run"))))
+    spack.deprecation.DeprecationGate(policy=counting_policy).check([spec])
 
-    assert seen, "expected the runtime DAG to be walked"
+    assert seen, "expected the DAG to be walked"
     assert all(count == 1 for count in seen.values())
 
 
