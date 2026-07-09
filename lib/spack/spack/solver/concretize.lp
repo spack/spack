@@ -411,18 +411,28 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
      pkg_fact(Package, version_has_commit(Version, Psha)),
      Vsha != Psha.
 
-% A deprecated() directive matching a selected non-external node is a concretization error when
-% its severity exceeds the configured threshold. Severity is an integer:
+% Which nodes are subject to the deprecation policy, per the global 'deprecation_scope':
+% 'all' checks every node in the DAG, 'runtime' only the link/run closure of the roots
+node_in_deprecation_scope(node(ID, Package)) :-
+    attr("node", node(ID, Package)), deprecation_scope("all").
+
+node_in_deprecation_scope(node(ID, Package)) :-
+    unification_set("root", node(ID, Package)), deprecation_scope("runtime").
+
+% A deprecated() directive matching a selected non-external node in scope is a concretization
+% error when its severity exceeds the configured threshold. Severity is an integer:
 % 0=none, 1=low, 2=medium, 3=high, 4=critical.
 error(1, "deprecated_error", Package, Reason, Severity, Allowed)
   :- pkg_fact(Package, deprecation_directive(CondID, Reason, Severity)),
      condition_holds(CondID, node(ID, Package)),
      not external(node(ID, Package)),
+     node_in_deprecation_scope(node(ID, Package)),
      pkg_fact(Package, allowed_deprecation_severity(Allowed)),
      Severity > Allowed.
 
 #defined deprecation_directive/3.
 #defined allowed_deprecation_severity/1.
+#defined deprecation_scope/1.
 
 %-----------------------------------------------------------------------------
 % Spec conditions and imposed constraints

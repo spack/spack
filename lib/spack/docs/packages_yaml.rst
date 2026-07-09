@@ -713,9 +713,8 @@ When a package uses the ``deprecated()`` directive (see :ref:`deprecate`), Spack
 Deprecations whose severity *exceeds* the threshold are refused: this is a concretization error, and also an install-time error for specs concretized earlier (for example from a lockfile).
 Those at or below the threshold are allowed silently and the deprecated version is treated like any other, with no warning and no penalty in the solve.
 
-At install time the check covers everything the command deploys: a spec is refused if its runtime (link and run) graph contains a disallowed deprecation, even when the deprecated dependency is already installed.
-This applies to build dependencies that are built by the command as well, since they are installed in the store like any other spec.
-Build dependencies that are *not* installed by the command, for example because they are already present or because their dependent comes from a build cache, are not checked.
+The install-time check is static and does not depend on local install status: a spec is refused if a disallowed deprecation is found in the checked closure of the requested packages, even when the deprecated dependency is already installed.
+The check runs once, upfront, so an install never fails halfway because a deprecated spec was discovered late.
 
 The threshold is set with ``allowed_deprecation_severity``, which accepts the values ``"none"``, ``"low"``, ``"medium"``, ``"high"``, and ``"critical"`` in increasing order of permissiveness.
 The default is ``"none"``, meaning every deprecation is a hard error unless the user explicitly relaxes it.
@@ -732,6 +731,18 @@ The setting can be applied globally under ``all:`` or overridden for a specific 
 
 In this example, ``low``-severity deprecations on any package are allowed silently, while ``medium`` and above remain errors.
 The per-package override for ``openssl`` reinstates the strictest threshold, so every deprecation on that package is an error regardless of the global setting.
+
+Which dependencies are checked is controlled by the global ``deprecation_scope`` setting, under ``all:`` only:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       deprecation_scope: runtime
+
+With the default ``"runtime"``, only the link and run closure of the requested packages is checked, which is the set of dependencies that end up in their runtime environment.
+With ``"all"``, every node in the DAG is checked, including build dependencies of build dependencies.
+The stricter ``"all"`` scope is technically more correct, since a compromised build tool can in principle affect its dependents, but it is also more likely to reject an install over a deprecation that has no effect on the produced binaries.
 
 .. _package_permissions:
 
