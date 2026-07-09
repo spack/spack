@@ -170,8 +170,8 @@ class WindowsRangeLock:
 
 class WindowsRangeLockTracker:
     """Tracks byte ranges the current process holds real Windows locks on, so that a second
-    ``Lock`` in the same process requesting an exactly overlapping range shares the *same* real lock
-    state instead of contending with its own process.
+    ``Lock`` in the same process requesting an exactly overlapping range shares the *same*
+    real lock state instead of contending with its own process.
 
     Windows ``LockFileEx`` locks are scoped to the specific *handle* that acquired them: two
     different handles regardless of process will compete for lock acquisition.
@@ -180,7 +180,7 @@ class WindowsRangeLockTracker:
     will cause same-process lock contention for the same lock, even with the same handle.
 
     Every ``WindowsBackend`` for a given range shares the exact same open file handle for the
-    underlying file, and this tracker records the one real lock ``mode`` currently held on 
+    underlying file, and this tracker records the one real lock ``mode`` currently held on
     a range in addition to a ref count, so we can accurately track lock usages and update/change
     the lock state for this handle/lock range as needed without contention.
     """
@@ -541,12 +541,12 @@ class WindowsBackend(GenericLockBackend):
 
     Like ``PosixBackend``, every ``WindowsBackend`` for a given file shares one open handle via
     the process-wide ``FILE_TRACKER`` (see ``GenericLockBackend._ensure_valid_handle``)
-    That alone would be unsafe for Windows locking: unlike ``fcntl``, ``LockFileEx``/``UnlockFileEx``
-    calls apply to whichever handle makes them, so two unrelated ``Lock`` objects sharing a handle 
-    will compete for the "same" lock, and potentially deadlock.
-    ``WINDOWS_RANGE_LOCK_TRACKER`` tracks locks themselves, not FH like FILE_TRACKER, including the handle,
-    locking style, and ref counts, so multiple lock attempts from the same process on the same range behave
-    more closely to posix locks.
+    That alone would be unsafe for Windows locking: unlike ``fcntl``,
+    ``LockFileEx``/``UnlockFileEx`` calls apply to whichever handle makes them, so two unrelated
+    ``Lock`` objects sharing a handle will compete for the "same" lock, and potentially deadlock.
+    ``WINDOWS_RANGE_LOCK_TRACKER`` tracks locks themselves, not FH like FILE_TRACKER, including the
+    handle, locking style, and ref counts, so multiple lock attempts from the same process on the
+    same range behavemore closely to posix locks.
 
     There are two other contexts in which Windows diverges from posix
 
@@ -589,7 +589,7 @@ class WindowsBackend(GenericLockBackend):
         self._gate = None
 
     def __del__(self) -> None:
-        # Guard against a Lock being dropped without an explicit release 
+        # Guard against a Lock being dropped without an explicit release
         # release properly (respecting shared-group bookkeeping) so a
         # later cleanup()/unlink() doesn't fail with WinError 32, and so we don't leave a
         # same-process WindowsRangeLock group permanently over-referenced.
@@ -686,9 +686,9 @@ class WindowsBackend(GenericLockBackend):
         ``LockFileEx`` has no atomic convert, and naively dropping the read and retaking
         exclusive would subject spack to races.
         Instead, take a "gate" lock first. Every write acquisition on this
-        range takes the same gate first, so while we hold the gate, no other same-process writer can be
-        mid-attempt, and only after actually dropping the read do we retake exclusive. If that
-        fails, restore the read, which we can guaruntee as we are still behind the gate.
+        range takes the same gate first, so while we hold the gate, no other same-process writer
+        can be mid-attempt, and only after actually dropping the read do we retake exclusive.
+        If that fails, restore the read, which we can guaruntee as we are still behind the gate.
 
         Note: on Windows the effective timeout for a blocking caller is up to 2x their requested
         timeout, because ``Lock._lock``'s retry loop calls this once per attempt, and each
@@ -735,11 +735,11 @@ class WindowsBackend(GenericLockBackend):
 
     def _downgrade_to_read(self) -> None:
         """Convert this range's held real exclusive lock to a shared lock, without ever fully
-        releasing it (so no other process can grab exclusive access in the gap caused by a lack of atomic
-        lock transitions).
+        releasing it (so no other process can grab exclusive access in the gap caused by a
+        lack of atomic lock transitions).
 
-        The win32 locking API has no atomic "convert" operation. But overlapping locks are allowed on
-        the same range from the same handle if the exclusive lock is taken first,
+        The win32 locking API has no atomic "convert" operation. But overlapping locks are allowed
+        on the same range from the same handle if the exclusive lock is taken first,
         and Windows removes locks in FIFO order. So, stack a shared lock on top of the exclusive
         one already held (this blocking call returns immediately, the handle already owns the
         range, so there's nothing to wait for), then remove one lock, which drops the older
