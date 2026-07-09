@@ -23,12 +23,14 @@ import tty
 import warnings
 from multiprocessing import Process
 from multiprocessing.connection import Connection
-from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union
 
 import spack.spec
 import spack.util.tty
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
+    SIGWINCH_EVENT,
+    STDIN_EVENT,
     TEE_STOP,
     BaseTerminalState,
     JobServerBase,
@@ -37,9 +39,6 @@ from spack.new_installer_base import (
     Tee,
 )
 from spack.util.tty.log import _is_background_tty, ignore_signal
-
-if TYPE_CHECKING:
-    from spack.new_installer import BuildStatus
 
 
 class PosixTerminalState(BaseTerminalState):
@@ -55,17 +54,15 @@ class PosixTerminalState(BaseTerminalState):
     def __init__(
         self,
         selector: selectors.BaseSelector,
-        build_status: "BuildStatus",
+        on_headless: Optional[Callable[[bool], None]] = None,
         on_suspend: Optional[Callable[[], None]] = None,
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
-        super().__init__(selector, build_status, on_suspend, on_resume)
+        super().__init__(selector, on_headless, on_suspend, on_resume)
         self.old_stdin_settings = termios.tcgetattr(sys.stdin)
         self.sigwinch_r = -1
         self.sigwinch_w = -1
-
-    def create_stdin_reader(self) -> StdinReader:
-        return StdinReader(functools.partial(os.read, sys.stdin.fileno(), 1024))
+        self.stdin_reader = StdinReader(functools.partial(os.read, sys.stdin.fileno(), 1024))
 
     def setup(self) -> None:
         """Set cbreak mode, register stdin and signal pipes in the selector."""
@@ -75,7 +72,7 @@ class PosixTerminalState(BaseTerminalState):
             self.sigwinch_r, self.sigwinch_w = os.pipe()
             os.set_blocking(self.sigwinch_r, False)
             os.set_blocking(self.sigwinch_w, False)
-            self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
+            self.selector.register(self.sigwinch_r, selectors.EVENT_READ, SIGWINCH_EVENT)
             self.old_sigwinch = signal.signal(signal.SIGWINCH, self._handle_sigwinch)
         else:
             self.old_sigwinch = None
@@ -83,7 +80,7 @@ class PosixTerminalState(BaseTerminalState):
         self.old_sigtstp = signal.signal(signal.SIGTSTP, self._handle_sigtstp)
 
         # Start correctly depending on whether we're foregrounded or backgrounded
-        self.build_status.headless = True
+        self._set_headless(True)
         if not _is_background_tty(sys.stdin):
             self.enter_foreground()
 
@@ -115,17 +112,15 @@ class PosixTerminalState(BaseTerminalState):
     def _handle_sigtstp(self, signum: int, frame: object) -> None:
         """Restore terminal before suspending, then re-install handler after resume."""
 
-        # Reset so the first redraw after resume doesn't overwrite the shell's
-        # prompt / "$ fg" line.
-        self.build_status.active_area_rows = 0
-
         # Restore terminal so the user's shell works normally while we're stopped.
         with ignore_signal(signal.SIGTTOU):
             termios.tcsetattr(sys.stdin, termios.TCSANOW, self.old_stdin_settings)
 
         # Force headless mode before suspending so that enter_foreground() doesn't
-        # exit early when we resume, ensuring terminal settings are re-applied.
-        self.build_status.headless = True
+        # exit early when we resume, ensuring terminal settings are re-applied. This also
+        # invalidates the display so the first redraw after resume doesn't overwrite the
+        # shell's prompt / "$ fg" line.
+        self._set_headless(True)
 
         # Actually suspend: reset to default handler then re-send SIGTSTP.
         if self.on_suspend is not None:
@@ -148,7 +143,7 @@ class PosixTerminalState(BaseTerminalState):
 
     def enter_foreground(self) -> None:
         """Restore interactive terminal mode."""
-        if not self.build_status.headless:
+        if not self.headless:
             return
 
         # We save old settings right before applying cbreak.
@@ -161,15 +156,14 @@ class PosixTerminalState(BaseTerminalState):
             tty.setcbreak(sys.stdin.fileno())
 
         if sys.stdin.fileno() not in self.selector.get_map():
-            self.selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
-        self.build_status.headless = False
-        self.build_status.dirty = True
+            self.selector.register(sys.stdin.fileno(), selectors.EVENT_READ, STDIN_EVENT)
+        self._set_headless(False)
 
     def enter_background(self) -> None:
         """Suppress output and stop reading stdin to avoid SIGTTIN/SIGTTOU."""
         if sys.stdin.fileno() in self.selector.get_map():
             self.selector.unregister(sys.stdin.fileno())
-        self.build_status.headless = True
+        self._set_headless(True)
 
     def handle_continue(self) -> None:
         """Detect whether the process is in the foreground or background and adjust accordingly."""
@@ -181,7 +175,7 @@ class PosixTerminalState(BaseTerminalState):
     def drain_sigwinch(self) -> None:
         os.read(self.sigwinch_r, 64)
 
-    def should_enter_foreground(self) -> bool:
+    def _should_enter_foreground(self) -> bool:
         return not _is_background_tty(sys.stdin)
 
 
@@ -245,13 +239,13 @@ class PosixTee(Tee):
 class PosixJobServer(JobServerBase):
     """Attach to an existing POSIX jobserver or create a FIFO-based one."""
 
-    def __init__(self, num_jobs: int) -> None:
-        super().__init__(num_jobs)
+    def __init__(self, num_jobs: int, makeflags: Optional[str] = None) -> None:
+        super().__init__(num_jobs, makeflags)
         #: Keep track of how many tokens Spack itself has acquired, which is used to release them.
         self.tokens_acquired = 0
         self.fifo_path: Optional[str] = None
         self.created = False
-        self._setup()
+        self._setup(makeflags)
         # Ensure that Executable()(...) in build processes ultimately inherit jobserver fds.
         os.set_inheritable(self.r, True)
         os.set_inheritable(self.w, True)
@@ -260,9 +254,9 @@ class PosixJobServer(JobServerBase):
         self.r_conn = Connection(self.r)
         self.w_conn = Connection(self.w)
 
-    def _setup(self) -> None:
+    def _setup(self, makeflags: Optional[str] = None) -> None:
 
-        fifo_config = get_jobserver_config()
+        fifo_config = get_jobserver_config(makeflags)
 
         if type(fifo_config) is str:
             # FIFO-based jobserver. Try to open the FIFO.
