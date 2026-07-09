@@ -416,6 +416,7 @@ class TerminalUI(InstallerUI):
 
     def on_state_changed(self, build_id: str, state: str) -> None:
         """Update the state of a package and mark the display as dirty."""
+        now = self.get_time()
         build_info = self.builds[build_id]
         build_info.state = state
         build_info.progress_percent = None
@@ -426,7 +427,6 @@ class TerminalUI(InstallerUI):
 
         if state in ("finished", "failed"):
             self.completed += 1
-            now = self.get_time()
             build_info.duration = now - build_info.start_time
             build_info.finished_time = now + CLEANUP_TIMEOUT
 
@@ -442,9 +442,7 @@ class TerminalUI(InstallerUI):
 
         # For non-TTY output, print state changes immediately
         if not self.is_tty and not self.headless:
-            line = "".join(
-                self._generate_line_components(build_info, static=True, now=self.get_time())
-            )
+            line = "".join(self._generate_line_components(build_info, static=True, now=now))
             self.stdout.write(line + "\n")
             self.stdout.flush()
 
