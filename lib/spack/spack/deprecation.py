@@ -71,6 +71,18 @@ def allowed_severity(pkg_name: str, default: DeprecationSeverity) -> Deprecation
     return DeprecationSeverity(override) if override is not None else default
 
 
+def deprecation_scope() -> str:
+    """Returns the global deprecation-check scope from ``packages:all:deprecation_scope``."""
+    packages_yaml = spack.config.CONFIG.get_config("packages")
+    return packages_yaml.get("all", {}).get("deprecation_scope", "runtime")
+
+
+def deptypes_for_scope(scope: Optional[str] = None) -> int:
+    """Return the dependency-type flag to traverse for a given deprecation scope."""
+    scope = scope if scope is not None else deprecation_scope()
+    return dt.ALL if scope == "all" else dt.LINK | dt.RUN
+
+
 def disallowed(
     spec: "spack.spec.Spec", *, default_allowed: DeprecationSeverity
 ) -> List[Violation]:
@@ -91,32 +103,19 @@ def disallowed(
     ]
 
 
-def creates_new_prefix(installed: bool, dag_hash: str, overwrite: Set[str]) -> bool:
-    """Whether installing a spec creates a fresh prefix: it is not already installed, or it is
-    being overwritten.
-    """
-    return not installed or dag_hash in overwrite
-
-
-def specs_to_deploy(
-    specs: List["spack.spec.Spec"], overwrite: Set[str]
-) -> List["spack.spec.Spec"]:
-    """Filters the specs in input down to those that will get a fresh prefix, preserving order."""
-    return [s for s in specs if creates_new_prefix(s.installed, s.dag_hash(), overwrite)]
-
-
 class DeprecationGate:
-    """Refuses to install specs whose runtime DAG contains a deprecation disallowed by
-    configuration.
-    """
+    """Refuses to install specs whose DAG contains a deprecation disallowed by configuration."""
 
     def __init__(
-        self, policy: Optional[Callable[["spack.spec.Spec"], List[Violation]]] = None
+        self,
+        policy: Optional[Callable[["spack.spec.Spec"], List[Violation]]] = None,
+        deptypes: Optional[int] = None,
     ) -> None:
         # Compute the packages:all fallback once here
         self._policy = policy or functools.partial(
             disallowed, default_allowed=default_allowed_severity()
         )
+        self._deptypes = deptypes if deptypes is not None else deptypes_for_scope()
         self._checked: Set[str] = set()
 
     def check(self, seeds: Iterable["spack.spec.Spec"]) -> None:
@@ -136,7 +135,7 @@ class DeprecationGate:
 
             stack.extend(
                 dep
-                for dep in node.dependencies(deptype=dt.LINK | dt.RUN)
+                for dep in node.dependencies(deptype=self._deptypes)
                 if dep.dag_hash() not in self._checked
             )
 
