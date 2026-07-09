@@ -1384,7 +1384,6 @@ class PackageInstaller:
         root_policy: InstallPolicy = "auto",
         dependencies_policy: InstallPolicy = "auto",
         create_reports: bool = False,
-        deprecation_gate: Optional[spack.deprecation.DeprecationGate] = None,
     ) -> None:
         """
         Arguments:
@@ -1487,9 +1486,6 @@ class PackageInstaller:
 
         # Initializing all_dependencies to empty. This will be set later in _init_queue.
         self.all_dependencies: Dict[str, Set[str]] = {}
-
-        # Shared deprecation policy, applied to the DAG of everything about to be deployed.
-        self._deprecation_gate = deprecation_gate or spack.deprecation.DeprecationGate()
 
         # Maximum number of concurrent packages to build
         self.max_active_tasks = self.concurrent_packages
@@ -2351,7 +2347,7 @@ class PackageInstaller:
     def _check_deprecations(self) -> None:
         """Refuse to deploy specs with a disallowed deprecation in their DAG."""
         roots = [request.pkg.spec for request in self.build_requests]
-        self._deprecation_gate.check(roots)
+        spack.deprecation.check_deprecations(roots)
 
     def install(self) -> None:
         """Install the requested package(s) and/or associated dependencies."""
