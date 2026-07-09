@@ -284,20 +284,20 @@ class TerminalUI(InstallerUI):
             self.commands.append(SetEcho(self.tracked_build_id, False))
             self.tracked_build_id = ""
 
-    def search_input(self, input: str) -> None:
+    def search_input(self, char: str) -> None:
         """Handle keyboard input when in search mode"""
-        if input in ("\r", "\n"):
+        if char in ("\r", "\n"):
             self.log_ends_with_newline = False
             self.next(1)
-        elif input == "\x1b":  # Escape
+        elif char == "\x1b":  # Escape
             self.search_mode = False
             self.search_term = ""
             self.dirty = True
-        elif input in ("\x7f", "\b"):  # Backspace
+        elif char in ("\x7f", "\b"):  # Backspace
             self.search_term = self.search_term[:-1]
             self.dirty = True
-        elif input.isprintable():
-            self.search_term += input
+        elif char.isprintable():
+            self.search_term += char
             self.dirty = True
 
     def enter_search(self) -> None:
