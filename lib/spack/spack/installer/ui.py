@@ -548,20 +548,16 @@ class TerminalUI(InstallerUI):
                 jobs_str = f"{self.actual_jobs}=>{self.target_jobs}"
             else:
                 jobs_str = str(self.target_jobs)
-            long_header_len = len(
-                f"Progress: {self.completed}/{self.total}  +/-: {jobs_str} jobs"
-                "  /: filter  v: logs  n/p: next/prev"
-            )
             bold, reset, cyan = self.bold, self.reset, self.cyan
-            if long_header_len < max_width:
-                self._println(
-                    buffer,
-                    f"{bold}Progress:{reset} {self.completed}/{self.total}"
-                    f"  {cyan}+{reset}/{cyan}-{reset}: "
-                    f"{jobs_str} jobs"
-                    f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
-                    f"  {cyan}n{reset}/{cyan}p{reset}: next/prev",
-                )
+            long_header = (
+                f"{bold}Progress:{reset} {self.completed}/{self.total}"
+                f"  {cyan}+{reset}/{cyan}-{reset}: "
+                f"{jobs_str} jobs"
+                f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
+                f"  {cyan}n{reset}/{cyan}p{reset}: next/prev"
+            )
+            if spack.util.tty.color.clen(long_header) < max_width:
+                self._println(buffer, long_header)
             else:
                 self._println(buffer, f"{bold}Progress:{reset} {self.completed}/{self.total}")
 
