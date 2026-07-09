@@ -445,7 +445,7 @@ class BaseConfiguration:
         """
         suffixes = []
         for constraint, suffix in self.conf.get("suffixes", {}).items():
-            if constraint in self.spec:
+            if self.spec.satisfies(constraint):
                 suffixes.append(suffix)
         suffixes = list(dedupe(suffixes))
         # For hidden modules we can always add a fixed length hash as suffix, since it guards
