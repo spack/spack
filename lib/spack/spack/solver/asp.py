@@ -1630,15 +1630,11 @@ class SpackSolverSetup:
 
         self.gen.newline()
 
-    def define_auto_variant(self, name: str, multi: bool):
+    def define_auto_variant(self, name: str, vtype: vt.VariantType):
         self.gen.h3(f"Special variant: {name}")
         vid = next(self._id_counter)
         self.gen.fact(fn.auto_variant(name, vid))
-        self.gen.fact(
-            fn.variant_type(
-                vid, vt.VariantType.MULTI.value if multi else vt.VariantType.SINGLE.value
-            )
-        )
+        self.gen.fact(fn.variant_type(vid, vtype.string))
 
     def variant_rules(self, pkg: Type[spack.package_base.PackageBase]):
         for name in pkg.variant_names():
@@ -3048,9 +3044,10 @@ class SpackSolverSetup:
         self.effect_rules()
 
         self.gen.h1("Special variants")
-        self.define_auto_variant("dev_path", multi=False)
-        self.define_auto_variant("commit", multi=False)
-        self.define_auto_variant("patches", multi=True)
+        self.define_auto_variant("dev_path", vtype=vt.VariantType.SINGLE)
+        self.define_auto_variant("commit", vtype=vt.VariantType.SINGLE)
+        self.define_auto_variant("patches", vtype=vt.VariantType.MULTI)
+        self.define_auto_variant("install_source", vtype=vt.VariantType.BOOL)
 
         self.gen.h1("Develop specs")
         # Inject dev_path from environment

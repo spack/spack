@@ -41,6 +41,7 @@ RESERVED_NAMES = {
     "branch",
     "commit",
     "dev_path",
+    "install_source",
     "namespace",
     "operating_system",
     "os",

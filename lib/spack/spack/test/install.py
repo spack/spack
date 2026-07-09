@@ -52,6 +52,44 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
     assert not spec.installed
 
 
+def _it_contains_the_source_i_expect(spec):
+    where_the_source_should_be = os.path.join(spec.prefix.share, spec.name, "src")
+    configure_path = fs.find_first(where_the_source_should_be, "configure")
+
+    if not configure_path:
+        return False, False
+
+    with open(configure_path, "r", encoding="utf-8") as f:
+        # mock_archive, used by mock_fetch, sets up the "source" for
+        # this package
+        return True, any(
+            line == "prefix=$(echo $1 | sed 's/--prefix=//')\n" for line in f.readlines()
+        )
+
+
+def test_install_source(install_mockery, mock_fetch, monkeypatch):
+    # Check that +install_source ensures that source files are placed in the
+    # install prefix
+    spec = spack.concretize.concretize_one("trivial-install-test-package +install_source")
+
+    PackageInstaller([spec.package], explicit=True).install()
+
+    assert _it_contains_the_source_i_expect(spec)[1]
+
+
+def test_install_source_dependency(install_mockery, mock_fetch, monkeypatch, mutable_config):
+    # Check that +install_source ensures that source files are placed in the
+    # install prefix; in this case +install_source is only enabled on a
+    # dependency - make sure that only the dependency installs source files.
+    spack.config.set(
+        "packages", {"trivial-install-test-package": {"require": [{"spec": "+install_source"}]}}
+    )
+    spec = spack.concretize.concretize_one("trivial-install-test-dependent")
+    PackageInstaller([spec.package], explicit=True).install()
+    assert _it_contains_the_source_i_expect(spec["trivial-install-test-package"])[1]
+    assert _it_contains_the_source_i_expect(spec) == (False, False)
+
+
 @pytest.mark.regression("11870")
 def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch):
     """Ensure that we can uninstall a package that has been deleted from the repo"""

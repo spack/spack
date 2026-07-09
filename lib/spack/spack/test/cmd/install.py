@@ -194,6 +194,7 @@ def test_install_output_on_python_error(mock_packages, mock_archive, mock_fetch,
     assert 'raise InstallError("Expected failure.")' in out
 
 
+# TODO: remove along with --source
 @pytest.mark.disable_clean_stage_check
 def test_install_with_source(
     mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant

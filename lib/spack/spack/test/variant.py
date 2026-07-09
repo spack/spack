@@ -879,6 +879,31 @@ def test_patches_variant():
     assert not Spec("patches:=abcdef").satisfies("patches:=abcdefghi")
 
 
+def test_install_source_variant(install_mockery, mock_fetch, monkeypatch, mutable_config):
+    """+install_source is a boolean auto variant: it is available for all specs, and when
+    unset should not be mentioned."""
+    import spack.config
+
+    spec1 = spack.concretize.concretize_one(
+        "trivial-install-test-dependent ^trivial-install-test-package+install_source"
+    )
+    # We don't want install_source to be mentioned at all, except on packages that
+    # set +install_source
+    assert not spec1.satisfies("+install_source")
+    assert not spec1.satisfies("~install_source")
+    assert spec1["trivial-install-test-package"].satisfies("+install_source")
+
+    # There have been complications around setting auto-variants via requirements
+    # (in particular compiler flags), so make sure to check requirements
+    spack.config.set(
+        "packages", {"trivial-install-test-package": {"require": [{"spec": "+install_source"}]}}
+    )
+    spec2 = spack.concretize.concretize_one("trivial-install-test-dependent")
+    assert not spec2.satisfies("+install_source")
+    assert not spec2.satisfies("~install_source")
+    assert spec2["trivial-install-test-package"].satisfies("+install_source")
+
+
 def test_constrain_narrowing():
     s = Spec("foo=*")
     assert s.variants["foo"].type == spack.variant.VariantType.MULTI
