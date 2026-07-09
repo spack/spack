@@ -29,6 +29,7 @@ from spack.new_installer_base import (
     SIGWINCH_EVENT,
     STDIN_EVENT,
     BaseTerminalState,
+    BuildChannels,
     ProcessExitNotifier,
     StdinReader,
     Tee,
@@ -193,6 +194,18 @@ class WindowsSentinelBridge(ProcessExitNotifier):
 
     def close(self) -> None:
         self.rsock.close()
+
+
+def create_build_channels() -> BuildChannels:
+    """Create the channel pairs of a build. The state and output read ends are non-blocking so
+    the selector-based loop never blocks. The worker's tee thread is stopped by closing the
+    control socket rather than through a write end."""
+    state_r, state_w = socket.socketpair()
+    output_r, output_w = socket.socketpair()
+    control_r, control_w = socket.socketpair()
+    output_r.setblocking(False)
+    state_r.setblocking(False)
+    return BuildChannels(state_r, state_w, output_r, output_w, control_r, control_w, None)
 
 
 class WindowsTee(Tee):

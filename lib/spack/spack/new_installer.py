@@ -28,16 +28,14 @@ import selectors
 import shlex
 import shutil
 import signal
-import socket
 import sys
 import tempfile
 import time
 import traceback
 from gzip import GzipFile
-from multiprocessing import Pipe, Process
+from multiprocessing import Process
 from typing import (
     TYPE_CHECKING,
-    Any,
     Callable,
     Dict,
     FrozenSet,
@@ -51,7 +49,7 @@ from typing import (
     cast,
 )
 
-from spack.vendor.typing_extensions import Literal
+from spack.vendor.typing_extensions import Literal, Protocol
 
 import spack.binary_distribution
 import spack.build_environment
@@ -83,6 +81,7 @@ from spack.new_installer_base import (
     FdInfo,
     IpcChannel,
     JobServerBase,
+    JobserverInfo,
     ProcessExitNotifier,
 )
 from spack.subprocess_context import GlobalStateMarshaler
@@ -96,13 +95,23 @@ if sys.platform == "win32":
     from spack.new_installer_windows import WindowsSentinelBridge as ExitNotifier
     from spack.new_installer_windows import WindowsTee as Tee
     from spack.new_installer_windows import WindowsTerminalState as TerminalState
-    from spack.new_installer_windows import make_state_stream, read_connection, write_connection
+    from spack.new_installer_windows import (
+        create_build_channels,
+        make_state_stream,
+        read_connection,
+        write_connection,
+    )
 else:
     from spack.new_installer_posix import PosixExitNotifier as ExitNotifier
     from spack.new_installer_posix import PosixJobServer as JobServer
     from spack.new_installer_posix import PosixTee as Tee
     from spack.new_installer_posix import PosixTerminalState as TerminalState
-    from spack.new_installer_posix import make_state_stream, read_connection, write_connection
+    from spack.new_installer_posix import (
+        create_build_channels,
+        make_state_stream,
+        read_connection,
+        write_connection,
+    )
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -201,6 +210,25 @@ class AddSpecAction(DatabaseAction):
         db._add(self.spec, explicit=self.explicit)
 
 
+class ProcessLike(Protocol):
+    """The part of the ``multiprocessing.Process`` interface the event loop relies on. Tests
+    provide synthetic implementations to exercise the loop without forking."""
+
+    @property
+    def pid(self) -> Optional[int]: ...
+
+    @property
+    def exitcode(self) -> Optional[int]: ...
+
+    def terminate(self) -> None: ...
+
+    def kill(self) -> None: ...
+
+    def is_alive(self) -> bool: ...
+
+    def join(self, timeout: Optional[float] = None) -> None: ...
+
+
 class ChildInfo:
     """Loop-side handle to a running build: the child process and its IPC channels. Owns the
     prefix write lock while the build runs; on success ownership transfers to the pending
@@ -220,7 +248,7 @@ class ChildInfo:
 
     def __init__(
         self,
-        proc: Process,
+        proc: ProcessLike,
         spec: spack.spec.Spec,
         output_r_conn: IpcChannel,
         state_r_conn: IpcChannel,
@@ -418,46 +446,42 @@ class PrefixPivoter:
         shutil.rmtree(path, ignore_errors=True)
 
 
+class BuildRequest(NamedTuple):
+    """Plain data describing a single build to be launched: the input of a build launcher."""
+
+    spec: spack.spec.Spec
+    explicit: bool
+    mirrors: List[spack.url_buildcache.MirrorMetadata]
+    unsigned: Optional[bool]
+    install_policy: InstallPolicy
+    dirty: bool
+    keep_stage: bool
+    restage: bool
+    keep_prefix: bool
+    skip_patch: bool
+    fake: bool
+    install_source: bool
+    run_tests: bool
+    log_path: str
+    stop_before: Optional[str]
+    stop_at: Optional[str]
+
+
 def worker_function(
-    spec: spack.spec.Spec,
-    explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorMetadata],
-    unsigned: Optional[bool],
-    install_policy: InstallPolicy,
-    dirty: bool,
-    keep_stage: bool,
-    restage: bool,
-    keep_prefix: bool,
-    skip_patch: bool,
-    fake: bool,
-    install_source: bool,
-    run_tests: bool,
+    request: BuildRequest,
     state: IpcChannel,
     parent: IpcChannel,
     tee_control_r: IpcChannel,
     tee_control_w: Optional[IpcChannel],
-    jobserver_info: Tuple[Optional[str], Any],
-    log_path: str,
+    jobserver_info: JobserverInfo,
     global_state: GlobalStateMarshaler,
-    stop_before: Optional[str] = None,
-    stop_at: Optional[str] = None,
 ):
     """
-    Function run in the build child process. Installs the specified spec, sending state updates
+    Function run in the build child process. Installs the requested spec, sending state updates
     and build output back to the parent process.
 
     Args:
-        spec: Spec to install
-        explicit: Whether the spec was explicitly requested by the user
-        mirrors: List of buildcache mirrors to try
-        unsigned: Whether to allow unsigned buildcache entries
-        install_policy: ``"auto"``, ``"cache_only"``, or ``"source_only"``
-        dirty: Whether to preserve user environment in the build environment
-        keep_stage: Whether to keep the build stage after installation
-        restage: Whether to restage the source before building
-        keep_prefix: Whether to keep a failed installation prefix
-        skip_patch: Whether to skip the patch phase
-        run_tests: Whether to run install-time tests for this package
+        request: Description of the build to perform
         state: Connection to send state updates to
         parent: Connection to send build output to
         tee_control_r: Read end of the control pipe; the parent sends echo on/off here
@@ -465,9 +489,9 @@ def worker_function(
         jobserver_info: MAKEFLAGS to set, so that the build process uses the POSIX jobserver, and
             opaque data only to be serialized (e.g. old style jobserver r/w pipes, only to be
             inherited in the build process)
-        log_path: Path to the log file to write build output to
         global_state: Global state to restore
     """
+    spec, log_path = request.spec, request.log_path
 
     # TODO: don't start a build for external packages
     if spec.external:
@@ -502,9 +526,8 @@ def worker_function(
 
     signal.signal(signal.SIGTERM, handle_sigterm)
 
-    makeflags, _ = jobserver_info
-    if makeflags is not None:
-        os.environ["MAKEFLAGS"] = makeflags
+    if jobserver_info.makeflags is not None:
+        os.environ["MAKEFLAGS"] = jobserver_info.makeflags
 
     # Save encodings before the Tee redirects fds 1/2 to the pipe. We need them to create the
     # line-buffered wrappers after the Tee starts.
@@ -536,26 +559,8 @@ def worker_function(
     exit_code = ExitCode.SUCCESS
 
     try:
-        with PrefixPivoter(spec.prefix, keep_prefix):
-            _install(
-                spec,
-                explicit,
-                mirrors,
-                unsigned,
-                install_policy,
-                dirty,
-                keep_stage,
-                restage,
-                skip_patch,
-                fake,
-                install_source,
-                state_stream,
-                log_path,
-                spack.store.STORE,
-                run_tests,
-                stop_before,
-                stop_at,
-            )
+        with PrefixPivoter(spec.prefix, request.keep_prefix):
+            _install(request, state_stream, spack.store.STORE)
     except spack.error.StopPhase:
         exit_code = ExitCode.STOPPED_AT_PHASE
     except ProcessError as e:
@@ -707,31 +712,16 @@ def _rewire_no_db(spec: spack.spec.Spec, explicit: bool) -> None:
 
 
 def _install(
-    spec: spack.spec.Spec,
-    explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorMetadata],
-    unsigned: Optional[bool],
-    install_policy: InstallPolicy,
-    dirty: bool,
-    keep_stage: bool,
-    restage: bool,
-    skip_patch: bool,
-    fake: bool,
-    install_source: bool,
-    state_stream: io.TextIOWrapper,
-    log_path: str,
-    store: spack.store.Store = spack.store.STORE,
-    run_tests: bool = False,
-    stop_before: Optional[str] = None,
-    stop_at: Optional[str] = None,
+    request: BuildRequest, state_stream: io.TextIOWrapper, store: spack.store.Store
 ) -> None:
     """Install a spec from build cache or source."""
+    spec, explicit, install_policy = request.spec, request.explicit, request.install_policy
 
     # Create the stage and log file before starting the tee thread.
     pkg = spec.package
-    pkg.run_tests = run_tests
+    pkg.run_tests = request.run_tests
 
-    if fake:
+    if request.fake:
         store.layout.create_install_directory(spec)
         _do_fake_install(pkg)
         spack.hooks.post_install(spec, explicit)
@@ -739,7 +729,7 @@ def _install(
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
-        if install_from_buildcache(mirrors, spec, unsigned, state_stream):
+        if install_from_buildcache(request.mirrors, spec, request.unsigned, state_stream):
             spack.hooks.post_install(spec, explicit)
             return
         elif install_policy == "cache_only":
@@ -757,15 +747,15 @@ def _install(
         raise BinaryCacheMiss(f"No binary available for {spec}")
 
     unmodified_env = os.environ.copy()
-    env_mods = spack.build_environment.setup_package(pkg, dirty=dirty)
+    env_mods = spack.build_environment.setup_package(pkg, dirty=request.dirty)
     store.layout.create_install_directory(spec)
 
     stage = pkg.stage
-    stage.keep = keep_stage
+    stage.keep = request.keep_stage
 
     # Then try a source build.
     with stage:
-        if restage:
+        if request.restage:
             stage.destroy()
         stage.create()
 
@@ -791,24 +781,25 @@ def _install(
             os.unlink(pkg.log_path)
         except OSError:
             pass
-        os.symlink(log_path, pkg.log_path)
+        os.symlink(request.log_path, pkg.log_path)
 
         send_state("staging", state_stream)
 
-        if not skip_patch:
+        if not request.skip_patch:
             pkg.do_patch()
         else:
             pkg.do_stage()
 
         os.chdir(stage.source_path)
 
-        if install_source and os.path.isdir(stage.source_path):
+        if request.install_source and os.path.isdir(stage.source_path):
             src_target = os.path.join(spec.prefix, "share", spec.name, "src")
             fs.install_tree(stage.source_path, src_target)
 
         spack.hooks.pre_install(spec)
 
         builder = spack.builder.create(pkg)
+        stop_before, stop_at = request.stop_before, request.stop_at
         if stop_before is not None and stop_before not in builder.phases:
             raise spack.error.InstallError(f"'{stop_before}' is not a valid phase for {pkg.name}")
         if stop_at is not None and stop_at not in builder.phases:
@@ -837,39 +828,10 @@ def _install(
         spack.hooks.post_install(spec, explicit)
 
 
-def start_build(
-    spec: spack.spec.Spec,
-    explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorMetadata],
-    unsigned: Optional[bool],
-    install_policy: InstallPolicy,
-    dirty: bool,
-    keep_stage: bool,
-    restage: bool,
-    keep_prefix: bool,
-    skip_patch: bool,
-    fake: bool,
-    install_source: bool,
-    run_tests: bool,
-    jobserver: JobServerBase,
-    log_path: str,
-    stop_before: Optional[str] = None,
-    stop_at: Optional[str] = None,
-) -> ChildInfo:
-    """Start a new build."""
-    # Set the read ends non-blocking so the selector-based loop never blocks.
-    if sys.platform == "win32":
-        state_r_conn, state_w_conn = socket.socketpair()
-        output_r_conn, output_w_conn = socket.socketpair()
-        control_r_conn, control_w_conn = socket.socketpair()
-        output_r_conn.setblocking(False)
-        state_r_conn.setblocking(False)
-    else:
-        state_r_conn, state_w_conn = Pipe(duplex=False)
-        output_r_conn, output_w_conn = Pipe(duplex=False)
-        control_r_conn, control_w_conn = Pipe(duplex=False)
-        os.set_blocking(output_r_conn.fileno(), False)
-        os.set_blocking(state_r_conn.fileno(), False)
+def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
+    """Start a new build in a child process."""
+    spec = request.spec
+    channels = create_build_channels()
 
     # Obtain the MAKEFLAGS to be set in the child process, and determine whether it's necessary
     # for the child process to inherit our jobserver fds.
@@ -881,39 +843,28 @@ def start_build(
     proc = Process(
         target=worker_function,
         args=(
-            spec,
-            explicit,
-            mirrors,
-            unsigned,
-            install_policy,
-            dirty,
-            keep_stage,
-            restage,
-            keep_prefix,
-            skip_patch,
-            fake,
-            install_source,
-            run_tests,
-            state_w_conn,
-            output_w_conn,
-            control_r_conn,
-            control_w_conn if sys.platform != "win32" else None,
+            request,
+            channels.state_w,
+            channels.output_w,
+            channels.control_r,
+            channels.tee_control_w,
             jobserver_details,
-            log_path,
             GlobalStateMarshaler(serialize_env=False),
-            stop_before,
-            stop_at,
         ),
     )
     proc.start()
 
     # The parent process does not need the write ends of the main pipes or the read end of control.
-    state_w_conn.close()
-    output_w_conn.close()
-    control_r_conn.close()
+    channels.close_child_ends()
 
     return ChildInfo(
-        proc, spec, output_r_conn, state_r_conn, control_w_conn, ExitNotifier(proc), log_path
+        proc,
+        spec,
+        channels.output_r,
+        channels.state_r,
+        channels.control_w,
+        ExitNotifier(proc),
+        request.log_path,
     )
 
 
@@ -2160,6 +2111,7 @@ class PackageInstaller:
         dependencies_policy: InstallPolicy = "auto",
         create_reports: bool = False,
         ui: Optional[InstallerUI] = None,
+        launcher: Callable[[BuildRequest, JobServerBase], ChildInfo] = start_build,
         store: Optional[spack.store.Store] = None,
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
@@ -2211,6 +2163,7 @@ class PackageInstaller:
         self.unsigned = unsigned
         self.dirty = dirty
         self.fake = fake
+        self.launcher = launcher
         self.restage = restage
         self.keep_stage = keep_stage
         self.skip_patch = skip_patch
@@ -2707,8 +2660,8 @@ class PackageInstaller:
                 os.close(log_fd)
                 self.log_paths[dag_hash] = log_path
 
-        child_info = start_build(
-            spec,
+        request = BuildRequest(
+            spec=spec,
             explicit=explicit,
             mirrors=self.binary_cache_for_spec[dag_hash],
             unsigned=self.unsigned,
@@ -2722,11 +2675,11 @@ class PackageInstaller:
             fake=self.fake,
             install_source=self.install_source,
             run_tests=run_tests,
-            jobserver=jobserver,
             log_path=self.log_paths[dag_hash],
             stop_before=self.stop_before if is_root else None,
             stop_at=self.stop_at if is_root else None,
         )
+        child_info = self.launcher(request, jobserver)
         child_info.prefix_lock = prefix_lock
         self.running_builds[dag_hash] = child_info
         child_info.register_with_selector(selector, dag_hash)
