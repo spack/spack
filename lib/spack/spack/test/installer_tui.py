@@ -26,7 +26,7 @@ class SimpleTextIOWrapper(io.TextIOWrapper):
     def __init__(self, tty: bool) -> None:
         self._buffer = io.BytesIO()
         self._tty = tty
-        super().__init__(self._buffer, encoding="utf-8", line_buffering=True)
+        super().__init__(self._buffer, encoding="utf-8", newline="", line_buffering=True)
 
     def isatty(self) -> bool:
         return self._tty
