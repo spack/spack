@@ -58,6 +58,7 @@ import spack.build_environment
 import spack.builder
 import spack.config
 import spack.database
+import spack.debug_install
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
@@ -416,6 +417,7 @@ def worker_function(
     skip_patch: bool,
     fake: bool,
     install_source: bool,
+    debuggable: bool,
     run_tests: bool,
     state: IpcChannel,
     parent: IpcChannel,
@@ -534,6 +536,7 @@ def worker_function(
                 skip_patch,
                 fake,
                 install_source,
+                debuggable,
                 state_stream,
                 log_path,
                 spack.store.STORE,
@@ -703,6 +706,7 @@ def _install(
     skip_patch: bool,
     fake: bool,
     install_source: bool,
+    debuggable: bool,
     state_stream: io.TextIOWrapper,
     log_path: str,
     store: spack.store.Store = spack.store.STORE,
@@ -740,6 +744,9 @@ def _install(
         # Binary cache was the only option; signal miss for force_source expansion.
         send_state("no binary available", state_stream)
         raise BinaryCacheMiss(f"No binary available for {spec}")
+
+    if debuggable:
+        setattr(pkg, "_debuggable_install", True)
 
     unmodified_env = os.environ.copy()
     env_mods = spack.build_environment.setup_package(pkg, dirty=dirty)
@@ -819,6 +826,10 @@ def _install(
                 raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
 
         _archive_build_metadata(pkg)
+
+        if debuggable:
+            spack.debug_install.install_debug_artifacts(pkg)
+
         spack.hooks.post_install(spec, explicit)
 
 
@@ -835,6 +846,7 @@ def start_build(
     skip_patch: bool,
     fake: bool,
     install_source: bool,
+    debuggable: bool,
     run_tests: bool,
     jobserver: JobServerBase,
     log_path: str,
@@ -878,6 +890,7 @@ def start_build(
             skip_patch,
             fake,
             install_source,
+            debuggable,
             run_tests,
             state_w_conn,
             output_w_conn,
@@ -2029,6 +2042,7 @@ class PackageInstaller:
         install_deps: bool = True,
         install_package: bool = True,
         install_source: bool = False,
+        debuggable: bool = False,
         keep_prefix: bool = False,
         keep_stage: bool = False,
         restage: bool = True,
@@ -2047,6 +2061,7 @@ class PackageInstaller:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
         self.install_source = install_source
+        self.debuggable = debuggable
         self.stop_at = stop_at
         self.stop_before = stop_before
         self.tests: Union[bool, List[str], Set[str]] = tests
@@ -2618,6 +2633,7 @@ class PackageInstaller:
             skip_patch=self.skip_patch,
             fake=self.fake,
             install_source=self.install_source,
+            debuggable=self.debuggable and is_root,
             run_tests=run_tests,
             jobserver=jobserver,
             log_path=self.log_paths[dag_hash],

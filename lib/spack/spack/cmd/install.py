@@ -48,16 +48,32 @@ def install_kwargs_from_args(args):
     else:
         default = "source_only"
 
+    # --debuggable requires compiling from source so that -ffile-prefix-map
+    # and -g are actually injected. A binary cache install produces binaries
+    # with wrong DWARF paths and no source files. Override root policy to
+    # source_only regardless of other cache flags. Dependencies may still
+    # come from cache since we are not trying to debug them.
+    if args.debuggable:
+        if args.cache_only or (pkg_use_bc == "only"):
+            tty.warn(
+                "--debuggable requires building from source; "
+                "overriding cache-only policy for the root package"
+            )
+        root_policy = "source_only"
+    else:
+        root_policy = cache_opt(pkg_use_bc, default)
+
     return {
         "fail_fast": args.fail_fast,
         "keep_prefix": args.keep_prefix,
         "keep_stage": args.keep_stage,
         "restage": not args.dont_restage,
         "install_source": args.install_source,
+        "debuggable": args.debuggable,
         "verbose": args.verbose or args.install_verbose,
         "fake": args.fake,
         "dirty": args.dirty,
-        "root_policy": cache_opt(pkg_use_bc, default),
+        "root_policy": root_policy,
         "dependencies_policy": cache_opt(dep_use_bc, default),
         "include_build_deps": args.include_build_deps,
         "stop_at": args.until,
@@ -176,6 +192,15 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         dest="install_source",
         help="install source files in prefix",
     )
+
+    subparser.add_argument(
+        "--debuggable",
+        action="store_true",
+        dest="debuggable",
+        default=False,
+        help="install source files in prefix AND remap DWARF debug symbols (implies --source)",
+    )
+
     arguments.add_common_arguments(subparser, ["no_checksum"])
     subparser.add_argument(
         "-v",
