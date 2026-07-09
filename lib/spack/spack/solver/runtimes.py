@@ -15,6 +15,11 @@ import spack.version
 from .core import SourceContext, fn
 from .versions import Provenance
 
+#: Language virtuals a compiler may provide. A compiler's flags are injected into a dependent
+#: only when the compiler is actually used to compile it, i.e. the build edge provides one of
+#: these virtuals.
+COMPILER_LANGUAGES = ("c", "cxx", "fortran")
+
 
 class RuntimePropertyRecorder:
     """An object of this class is injected in callbacks to compilers, to let them declare
@@ -209,9 +214,6 @@ class RuntimePropertyRecorder:
             self.reset()
             return
 
-        when_spec = spack.spec.Spec(f"%[deptypes=build] {spec}")
-        body_str, node_variable = self.rule_body_from(when_spec)
-
         node_placeholder = "XXX"
         flags = spec.extra_attributes["flags"]
         root_spec_str = f"{node_placeholder}"
@@ -222,12 +224,18 @@ class RuntimePropertyRecorder:
             root_spec, body=False, context=SourceContext(source="compiler")
         )
         self.rules.append(f"% Default compiler flags for {spec}\n")
-        for clause in head_clauses:
-            if clause.args[0] == "node":
-                continue
-            head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
-            rule = f"{head_str} :-\n{body_str}."
-            self.rules.append(rule)
+
+        # Inject the flags only when the compiler is actually used to compile the dependent,
+        # i.e. the build edge provides one of the language virtuals.
+        for language in COMPILER_LANGUAGES:
+            when_spec = spack.spec.Spec(f"%[deptypes=build virtuals={language}] {spec}")
+            body_str, node_variable = self.rule_body_from(when_spec)
+            for clause in head_clauses:
+                if clause.args[0] == "node":
+                    continue
+                head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
+                rule = f"{head_str} :-\n{body_str}."
+                self.rules.append(rule)
 
         self.reset()
 
