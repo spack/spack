@@ -265,8 +265,7 @@ class TerminalUI(InstallerUI):
         self.builds.pop(build_id, None)
         if self.tracked_build_id == build_id:
             self.tracked_build_id = ""
-            if not self.overview_mode:
-                self.overview_mode = True
+            self.overview_mode = True
         self.dirty = True
 
     def toggle(self) -> None:
@@ -356,8 +355,7 @@ class TerminalUI(InstallerUI):
 
         new_build = self.builds[new_build_id]
 
-        if self.overview_mode:
-            self.overview_mode = False
+        self.overview_mode = False
 
         # Stop following the previous and start following the new build.
         if self.tracked_build_id:
