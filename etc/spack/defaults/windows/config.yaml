@@ -1,5 +1,4 @@
 config:
-  locks: false
   build_stage::
     - '$user_cache_path/stage'
   stage_name: '{name}-{version}-{hash:7}'
