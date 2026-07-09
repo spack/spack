@@ -104,44 +104,45 @@ def disallowed(
     ]
 
 
-class DeprecationGate:
-    """Refuses to install specs whose DAG contains a deprecation disallowed by configuration."""
+def check_deprecations(
+    seeds: Iterable["spack.spec.Spec"],
+    *,
+    policy: Optional[Callable[["spack.spec.Spec"], List[Violation]]] = None,
+    deptypes: Optional[int] = None,
+) -> None:
+    """Raise if the DAG reachable from any seed contains a disallowed deprecation.
 
-    def __init__(
-        self,
-        policy: Optional[Callable[["spack.spec.Spec"], List[Violation]]] = None,
-        deptypes: Optional[int] = None,
-    ) -> None:
-        # Compute the packages:all fallback once here
-        self._policy = policy or functools.partial(
-            disallowed, default_allowed=default_allowed_severity()
+    Args:
+        seeds: the specs to check, together with the DAG reachable from them.
+        policy: maps a spec to its list of disallowed deprecations; defaults to the configured
+            ``packages`` policy.
+        deptypes: dependency types to traverse; defaults to the configured ``deprecation_scope``.
+    """
+    policy = policy or functools.partial(disallowed, default_allowed=default_allowed_severity())
+    deptypes = deptypes if deptypes is not None else deptypes_for_scope()
+
+    violations: List[str] = []
+    for node in spack.traverse.traverse_nodes(list(seeds), deptype=deptypes):
+        found = policy(node)
+        if found:
+            violations.append(_format_violations(node, found))
+
+    if violations:
+        raise spack.error.InstallError(
+            "the following specs are deprecated and cannot be installed:\n\n"
+            + "\n".join(violations)
+            + "\n\n    Relax 'packages:<name>:allowed_deprecation_severity' in your "
+            "configuration to install them anyway."
         )
-        self._deptypes = deptypes if deptypes is not None else deptypes_for_scope()
 
-    def check(self, seeds: Iterable["spack.spec.Spec"]) -> None:
-        """Raises if the DAG reachable from any seed contains a disallowed deprecation."""
-        violations: List[str] = []
-        for node in spack.traverse.traverse_nodes(list(seeds), deptype=self._deptypes):
-            found = self._policy(node)
-            if found:
-                violations.append(self._format_violations(node, found))
 
-        if violations:
-            raise spack.error.InstallError(
-                "the following specs are deprecated and cannot be installed:\n\n"
-                + "\n".join(violations)
-                + "\n\n    Relax 'packages:<name>:allowed_deprecation_severity' in your "
-                "configuration to install them anyway."
-            )
-
-    @staticmethod
-    def _format_violations(spec: "spack.spec.Spec", violations: List[Violation]) -> str:
-        lines = [f"    {spec.cshort_spec}"]
-        for constraint, reason, severity, allowed in violations:
-            spec_str = f"{spec.name}{constraint}" if str(constraint) else spec.name
-            lines.append(
-                f"        {spec_str} is deprecated (reason: {reason.value}, "
-                f"severity: {severity.name.lower()}); 'allowed_deprecation_severity' "
-                f"is '{allowed.name.lower()}'"
-            )
-        return "\n".join(lines)
+def _format_violations(spec: "spack.spec.Spec", violations: List[Violation]) -> str:
+    lines = [f"    {spec.cshort_spec}"]
+    for constraint, reason, severity, allowed in violations:
+        spec_str = f"{spec.name}{constraint}" if str(constraint) else spec.name
+        lines.append(
+            f"        {spec_str} is deprecated (reason: {reason.value}, "
+            f"severity: {severity.name.lower()}); 'allowed_deprecation_severity' "
+            f"is '{allowed.name.lower()}'"
+        )
+    return "\n".join(lines)

@@ -732,7 +732,7 @@ def test_ensure_allowed_blocks_disallowed_deprecation(
 
     # Under the default (strict) policy the pre-concretized spec is refused.
     with pytest.raises(spack.error.InstallError, match="deprecated"):
-        spack.deprecation.DeprecationGate().check([spec])
+        spack.deprecation.check_deprecations([spec])
 
 
 def test_ensure_allowed_permits_configured_deprecation(
@@ -741,7 +741,7 @@ def test_ensure_allowed_permits_configured_deprecation(
     """Tests that the deprecation gate lets go a deprecated spec allowed by configuration."""
     with mutable_config.override("config:deprecated", True):
         spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
-        spack.deprecation.DeprecationGate().check([spec])  # must not raise
+        spack.deprecation.check_deprecations([spec])  # must not raise
 
 
 def test_ensure_allowed_exempts_externals(install_mockery, mutable_config: Configuration):
@@ -755,7 +755,7 @@ def test_ensure_allowed_exempts_externals(install_mockery, mutable_config: Confi
     )
     # ...unless it is external, in which case the gate does not raise.
     spec.external_path = "/opt/example"
-    spack.deprecation.DeprecationGate().check([spec])
+    spack.deprecation.check_deprecations([spec])
 
 
 def test_installer_blocks_disallowed_deprecation(
@@ -842,7 +842,7 @@ def test_deprecation_gate_checks_each_node_once(install_mockery):
         seen[node.dag_hash()] = seen.get(node.dag_hash(), 0) + 1
         return []
 
-    spack.deprecation.DeprecationGate(policy=counting_policy).check([spec])
+    spack.deprecation.check_deprecations([spec], policy=counting_policy)
 
     assert seen, "expected the DAG to be walked"
     assert all(count == 1 for count in seen.values())
@@ -874,4 +874,4 @@ def test_new_installer_static_gate_sees_deferred_build_deps(
             # Yet the static gate, seeded from the requested root and walking the concrete spec,
             # still rejects the build-transitive deprecated node before any expansion happens.
             with pytest.raises(spack.error.InstallError, match="deprecated"):
-                installer._deprecation_gate.check(installer.roots)
+                spack.deprecation.check_deprecations(installer.roots)
