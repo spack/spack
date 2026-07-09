@@ -2798,7 +2798,7 @@ class DefaultIndexHandlerV2(IndexHandler):
 
             # For now we only handle etags on http(s), since 304 error handling
             # in s3:// is not there yet.
-            if urllib.parse.urlparse(self.url).scheme not in ("http", "https"):
+            if urllib.parse.urlparse(self.url).scheme not in ("http", "https", "s3"):
                 etag = None
             else:
                 etag = web_util.parse_etag(
@@ -2834,7 +2834,9 @@ class EtagIndexHandlerV2(IndexHandler):
         # Just do a conditional fetch immediately
         url = url_util.join(self.url, "build_cache", spack.database.INDEX_JSON_FILE)
         headers = {"User-Agent": web_util.SPACK_USER_AGENT}
-        if not force:
+        # For now we only handle etags on http(s), since 304 error handling
+        # in s3:// is not there yet. S3 ETag is used for push only.
+        if not (force or urllib.parse.urlparse(self.url).scheme == "s3"):
             headers.update({"If-None-Match": f'"{self.etag}"'})
 
         try:
@@ -2999,7 +3001,7 @@ class EtagIndexHandler(IndexHandler):
         headers = {"User-Agent": web_util.SPACK_USER_AGENT}
         # For now we only handle etags on http(s), since 304 error handling
         # in s3:// is not there yet. S3 ETag is used for push only.
-        if not force or urllib.parse.urlparse(self.url).scheme == "s3":
+        if not (force or urllib.parse.urlparse(self.url).scheme == "s3"):
             headers.update({"If-None-Match": f'"{self.etag}"'})
 
         try:

@@ -11,7 +11,6 @@ import os
 import re
 import shutil
 import urllib.parse
-import warnings
 from contextlib import closing, contextmanager
 from datetime import datetime
 from tempfile import TemporaryDirectory
@@ -1165,9 +1164,7 @@ def _entries_from_cache_aws_cli(url: str, component_type: BuildcacheComponent):
                     match.group(1), "%Y-%m-%d %H:%M:%S"
                 ).timestamp()
     except ProcessError as e:
-        tty.warn(
-            "Failed to use aws s3 ls to retrieve spec list, falling back to parallel fetch"
-        )
+        tty.warn("Failed to use aws s3 ls to retrieve spec list, falling back to parallel fetch")
         raise e
 
     return filename_to_mtime, read_fn

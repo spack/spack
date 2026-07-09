@@ -645,7 +645,8 @@ def test_v2_etag_fetching_404():
         fetcher.conditional_fetch()
 
 
-def test_v2_default_index_fetch_200():
+@pytest.mark.parametrize("url_scheme", ("s3", "https", "http", "gs"))
+def test_v2_default_index_fetch_200(url_scheme):
     index_json = '{"Hello": "World"}'
     index_json_hash = spack.binary_distribution.compute_hash(index_json)
 
@@ -670,14 +671,19 @@ def test_v2_default_index_fetch_200():
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
-        MirrorMetadata("https://www.example.com", 2), local_hash="outdated", urlopen=urlopen
+        MirrorMetadata(f"{url_scheme}://www.example.com", 2),
+        local_hash="outdated",
+        urlopen=urlopen,
     )
 
     result = fetcher.conditional_fetch()
 
     assert isinstance(result, spack.binary_distribution.FetchIndexResult)
     assert not result.fresh
-    assert result.etag == "59bcc3ad6775562f845953cf01624225"
+    if url_scheme == "gs":
+        assert result.etag is None
+    else:
+        assert result.etag == "59bcc3ad6775562f845953cf01624225"
     assert result.data == index_json
     assert result.hash == index_json_hash
 
@@ -1339,7 +1345,8 @@ def test_etag_fetching_404():
         fetcher.conditional_fetch()
 
 
-def test_default_index_fetch_200(mock_index):
+@pytest.mark.parametrize("url_scheme", ("s3", "https", "http", "gs"))
+def test_default_index_fetch_200(url_scheme, mock_index):
     # We fetch the manifest and then the index blob if the hash is outdated
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
@@ -1355,7 +1362,8 @@ def test_default_index_fetch_200(mock_index):
 
     fetcher = spack.binary_distribution.DefaultIndexHandler(
         spack.binary_distribution.MirrorMetadata(
-            "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+            f"{url_scheme}://www.example.com",
+            spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION,
         ),
         local_hash="outdated",
         urlopen=urlopen,
@@ -1366,7 +1374,10 @@ def test_default_index_fetch_200(mock_index):
     assert isinstance(result, spack.binary_distribution.FetchIndexResult)
     assert not result.fresh
     assert mock_index.fetched_blob()
-    assert result.etag == mock_index.manifest_etag
+    if url_scheme == "gs":
+        assert result.etag is None
+    else:
+        assert result.etag == mock_index.manifest_etag
     assert result.data == mock_index.index_contents
     assert result.hash == mock_index.index_hash
 
