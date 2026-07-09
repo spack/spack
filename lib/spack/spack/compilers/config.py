@@ -279,7 +279,6 @@ class CompilerFactory:
                     continue
                 valid_compiler_specs.append(spec_with_config.spec)
         return valid_compiler_specs
-      
 
     @staticmethod
     def from_legacy_yaml(compiler_dict: Dict[str, Any]) -> List[spack.spec.Spec]:
