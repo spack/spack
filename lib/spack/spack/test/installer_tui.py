@@ -1070,6 +1070,7 @@ class TestToggle:
         assert "checking for bar... yes\n" in written
         assert "checking for baz...\n" in written
 
+    @pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
     @pytest.mark.parametrize("filter_padding", [True, False])
     def test_print_logs_filters_padding(self, filter_padding):
         """on_log_output strips path-padding placeholders before writing to stdout."""
@@ -1088,6 +1089,7 @@ class TestToggle:
         else:
             assert written == log_output
 
+    @pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
     @pytest.mark.parametrize("filter_padding", [True, False])
     def test_prefix_padding_filter_in_status(self, filter_padding):
         """Test that prefix in status indicator applies padding filter."""
