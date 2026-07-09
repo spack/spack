@@ -11,7 +11,6 @@ Run with pytest::
 """
 
 import errno
-import fcntl
 import multiprocessing
 import pathlib
 import sys
@@ -28,6 +27,9 @@ from spack.test.util.lock_backend import (  # noqa: F401
 from spack.util.filesystem import getuid, touch, working_dir
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="fcntl is POSIX-only")
+
+if sys.platform != "win32":
+    import fcntl
 
 
 @pytest.mark.skipif(getuid() == 0, reason="user is root")

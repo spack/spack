@@ -540,8 +540,9 @@ def ignore_stage_files():
     Used to track which leftover files in the stage have been seen.
     """
     # to start with, ignore the .lock file at the stage root, and its Windows-only gate lock
-    # sidecar (see spack.util.lock.WindowsBackend._upgrade_to_write). Neither is ever explicitly
-    # unlinked for stage locks; they're only ever removed along with the whole stage directory.
+    # sidecar (see spack.util.lock_windows.WindowsBackend._upgrade_to_write). Neither is ever
+    # explicitly unlinked for stage locks; they're only ever removed along with the whole stage
+    # directory.
     return set([".lock", ".lock.gate_lock", spack.stage._source_path_subdir, "build_cache"])
 
 
