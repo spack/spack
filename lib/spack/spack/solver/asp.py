@@ -49,7 +49,6 @@ import spack.error
 import spack.externals_config
 import spack.hash_lookup
 import spack.hash_types as ht
-import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs
 import spack.platforms
@@ -69,6 +68,7 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.spec import EMPTY_SPEC
+from spack.util import tty
 from spack.util.lang import elide_list
 
 from .compat import default_clingo_control, make_error_control
@@ -427,7 +427,7 @@ class Result:
     def _compute_specs_from_answer_set(self):
         if not self.satisfiable:
             self._concrete_specs = []
-            self._unsolved_specs = list((x, None) for x in self.abstract_specs)
+            self._unsolved_specs = [(x, None) for x in self.abstract_specs]
             self._concrete_specs_by_input = {}
             return
 
@@ -773,10 +773,10 @@ class ErrorHandler:
             A list of strings describing the causes, formatted to display tree structure.
         """
         conditions: Dict[str, str] = dict(extract_args(self.full_model, "condition_reason"))
-        condition_causes: List[Tuple[Tuple[str, str], Tuple[str, str]]] = list(
+        condition_causes: List[Tuple[Tuple[str, str], Tuple[str, str]]] = [
             ((Effect, EID), (Cause, CID))
             for Effect, EID, Cause, CID in extract_args(self.full_model, "condition_cause")
-        )
+        ]
         return self._get_cause_tree(cause, conditions, condition_causes, set())
 
     def handle_error(self, msg, *args):
@@ -2870,20 +2870,23 @@ class SpackSolverSetup:
                 if s.concrete:
                     continue
 
-                deps = {
-                    edge.spec.name
-                    for edge in s.edges_to_dependencies()
-                    if edge.direct and edge.when == EMPTY_SPEC
-                }
-                if deps:
+                direct_edges = [
+                    e for e in s.edges_to_dependencies() if e.direct and e.when == EMPTY_SPEC
+                ]
+                deps = {edge.spec.name for edge in direct_edges}
+                # Virtuals on a direct edge, must be virtuals the node can actually depend on
+                required_virtuals = {virtual for edge in direct_edges for virtual in edge.virtuals}
+                if deps or required_virtuals:
                     graph = analyzer.possible_dependencies(
                         s, allowed_deps=dt.ALL, transitive=False
                     )
                     deps.difference_update(graph.real_pkgs, graph.virtuals)
-                    if deps:
+                    required_virtuals.difference_update(graph.virtuals)
+                    invalid = deps | required_virtuals
+                    if invalid:
                         start_str = f"'{root}'" if s == root else f"'{s}' in '{root}'"
                         raise UnsatisfiableSpecError(
-                            f"{start_str} cannot depend on {', '.join(deps)}"
+                            f"{start_str} cannot depend on {', '.join(sorted(invalid))}"
                         )
 
                 spack.spec.Spec.ensure_valid_variants(s)
@@ -3670,7 +3673,7 @@ def reorder_flags(specs: SpecDict) -> None:
         # For flags that are applied by dependents, put flags from parents
         # before children; we depend on the stability of traverse() to
         # achieve a stable flag order for flags introduced in this manner.
-        topo_order = list(s.name for s in spec.traverse(order="post", direction="parents"))
+        topo_order = [s.name for s in spec.traverse(order="post", direction="parents")]
 
         for flag_type in spec.compiler_flags.valid_compiler_flags():
             ordered_flags: List[str] = []
@@ -3718,12 +3721,12 @@ def reorder_flags(specs: SpecDict) -> None:
                 )
                 if grp_flags == from_compiler:
                     continue
-                as_compiler_flags = list(
+                as_compiler_flags = [
                     spack.spec.CompilerFlag(
                         x, propagate=grp.propagate, flag_group=grp.flag_group, source=grp.source
                     )
                     for x in grp_flags
-                )
+                ]
                 extend_flag_list(ordered_flags, as_compiler_flags)
 
             # 3. Now put cmd-line flags last
@@ -3783,7 +3786,7 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     # roots here, because the specs aren't complete, and the hash
     # function will loop forever.
     roots = [spec.root for spec in specs.values()]
-    roots = dict((id(r), r) for r in roots)
+    roots = {id(r): r for r in roots}
     for root in roots.values():
         spack.spec._inject_patches_variant(root)
 
@@ -4059,7 +4062,7 @@ class Solver:
                 # loop if we tried again
                 raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
 
-            input_specs = list(x for (x, y) in result.unsolved_specs)
+            input_specs = [x for (x, y) in result.unsolved_specs]
             for spec in result.specs:
                 reusable_specs.extend(spec.traverse())
 

@@ -73,8 +73,7 @@ import spack.util.hash
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.llnl.util import tty
-from spack.util import filesystem, lang
+from spack.util import filesystem, lang, tty
 from spack.util.cpus import cpus_available
 from spack.util.spack_yaml import get_mark_from_yaml_data
 
@@ -274,14 +273,8 @@ class DirectoryConfigScope(ConfigScope):
 
         try:
             filesystem.mkdirp(self.path)
-            fd, tmp = tempfile.mkstemp(dir=self.path, suffix=".tmp")
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as f:
-                    syaml.dump_config(data, stream=f, default_flow_style=False)
-                filesystem.rename(tmp, filename)
-            except Exception:
-                os.unlink(tmp)
-                raise
+            with filesystem.write_tmp_and_move(filename, encoding="utf-8") as f:
+                syaml.dump_config(data, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
 
@@ -417,16 +410,9 @@ class SingleFileScope(ConfigScope):
 
         validate(data_to_write, self.schema)
         try:
-            parent = os.path.dirname(self.path)
-            filesystem.mkdirp(parent)
-            fd, tmp = tempfile.mkstemp(dir=parent, suffix=".tmp")
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as f:
-                    syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
-                filesystem.rename(tmp, self.path)
-            except Exception:
-                os.unlink(tmp)
-                raise
+            filesystem.mkdirp(os.path.dirname(self.path))
+            with filesystem.write_tmp_and_move(self.path, encoding="utf-8") as f:
+                syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
@@ -1716,11 +1702,11 @@ def existing_scopes() -> List[ConfigScope]:
 
 
 def writable_scope_names() -> List[str]:
-    return list(x.name for x in writable_scopes())
+    return [x.name for x in writable_scopes()]
 
 
 def existing_scope_names() -> List[str]:
-    return list(x.name for x in existing_scopes())
+    return [x.name for x in existing_scopes()]
 
 
 def matched_config(cfg_path: str) -> List[Tuple[str, Any]]:
@@ -2421,7 +2407,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
 
     # Prepend the default, if provided, or current working directory.
     base = default_wd or os.getcwd()
-    import spack.llnl.util.tty as tty
+    from spack.util import tty
 
     tty.debug(f"Using working directory {base} as base for abspath")
     return os.path.normpath(os.path.join(base, path))

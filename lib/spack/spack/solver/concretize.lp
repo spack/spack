@@ -213,6 +213,10 @@ related(NodeA, NodeB) :- attr("closure", NodeA, NodeB, "linkrun").
 % In the "root" unification set only ID = 0 are allowed
 :- unification_set("root", node(ID, _)), ID != 0.
 
+% Build-set IDs are interchangeable labels, so forbid gaps to avoid churn when searching.
+build_set_used(ID) :- build_set_id(_, ID).
+:- build_set_used(ID), ID > 0, not build_set_used(ID-1).
+
 % In the "root" unification set we allow only packages from the link-run possible subDAG
 :- unification_set("root", node(_, Package)), not possible_in_link_run(Package), not virtual(Package).
 

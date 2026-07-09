@@ -7,10 +7,10 @@ import sys
 from typing import Dict, Iterable, List
 
 import spack.environment
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.colify as colify
 import spack.repo
 import spack.util.string
+from spack.util import tty
+from spack.util.tty import colify
 
 description = "show package tags and associated packages"
 section = "query"

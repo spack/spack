@@ -42,7 +42,6 @@ from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Set, Tuple, Un
 
 from spack.vendor.typing_extensions import Literal
 
-import spack.binary_distribution as binary_distribution
 import spack.build_environment
 import spack.builder
 import spack.config
@@ -50,7 +49,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.package_base
 import spack.package_prefs as prefs
@@ -61,13 +59,14 @@ import spack.store
 import spack.util.filesystem as fs
 import spack.util.lock as lk
 import spack.util.path
-import spack.util.timer as timer
-from spack.llnl.util.tty.color import colorize
-from spack.llnl.util.tty.log import log_output, preserve_terminal_settings
+from spack import binary_distribution
 from spack.url_buildcache import BuildcacheEntryError
+from spack.util import timer, tty
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.lang import pretty_seconds
 from spack.util.string import ordinal
+from spack.util.tty.color import colorize
+from spack.util.tty.log import log_output, preserve_terminal_settings
 
 if TYPE_CHECKING:
     import spack.spec
@@ -763,11 +762,11 @@ class BuildRequest:
         # Save off dependency package ids for quick checks since traversals
         # are not able to return full dependents for all packages across
         # environment specs.
-        self.dependencies = set(
+        self.dependencies = {
             package_id(d)
             for d in self.pkg.spec.dependencies(deptype=self.get_depflags(self.pkg))
             if package_id(d) != self.pkg_id
-        )
+        }
 
     def __repr__(self) -> str:
         """Return a formal representation of the build request."""
@@ -969,17 +968,15 @@ class Task:
         # Be consistent wrt use of dependents and dependencies.  That is,
         # if use traverse for transitive dependencies, then must remove
         # transitive dependents on failure.
-        self.dependencies = set(
+        self.dependencies = {
             package_id(d)
             for d in self.pkg.spec.dependencies(deptype=self.request.get_depflags(self.pkg))
             if package_id(d) != self.pkg_id
-        )
+        }
 
         # List of uninstalled dependencies, which is used to establish
         # the priority of the task.
-        self.uninstalled_deps = set(
-            pkg_id for pkg_id in self.dependencies if pkg_id not in installed
-        )
+        self.uninstalled_deps = {pkg_id for pkg_id in self.dependencies if pkg_id not in installed}
 
         # Ensure key sequence-related properties are updated accordingly.
         self.attempts = attempts

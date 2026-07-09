@@ -6,9 +6,9 @@ import argparse
 
 import spack.cmd
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.spec
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "remove specs from an environment's develop: section"
 section = "environments"
@@ -63,7 +63,7 @@ def undevelop(parser, args):
 
     updated_all_dev_specs = set(spack.config.get("develop"))
 
-    remove_spec_names = set(x.name for x in remove_specs)
+    remove_spec_names = {x.name for x in remove_specs}
     not_fully_removed = updated_all_dev_specs & remove_spec_names
 
     if not_fully_removed:

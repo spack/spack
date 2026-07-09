@@ -46,22 +46,22 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.projections as proj
 import spack.schema
 import spack.schema.environment
 import spack.spec
 import spack.store
-import spack.tengine as tengine
 import spack.user_environment
 import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.filesystem
 import spack.util.path
 import spack.util.spack_yaml as syaml
+from spack import tengine
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 from spack.enums import Context
+from spack.util import tty
 from spack.util.lang import Singleton, dedupe
 
 from .error import (
@@ -445,7 +445,7 @@ class BaseConfiguration:
         """
         suffixes = []
         for constraint, suffix in self.conf.get("suffixes", {}).items():
-            if constraint in self.spec:
+            if self.spec.satisfies(constraint):
                 suffixes.append(suffix)
         suffixes = list(dedupe(suffixes))
         # For hidden modules we can always add a fixed length hash as suffix, since it guards

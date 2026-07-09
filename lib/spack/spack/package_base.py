@@ -30,7 +30,6 @@ import spack.directives_meta
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
-import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.multimethod
@@ -54,6 +53,7 @@ from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.resource import Resource
+from spack.util import tty
 from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
 from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
@@ -352,7 +352,7 @@ class PackageViewMixin:
         Alternative implementations may allow some of the files to exist in
         the view (in this case they would be omitted from the results).
         """
-        return set(dst for dst in merge_map.values() if os.path.lexists(dst))
+        return {dst for dst in merge_map.values() if os.path.lexists(dst)}
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
@@ -1541,7 +1541,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def provided_virtual_names(cls):
         """Return sorted list of names of virtuals that can be provided by this package."""
         return sorted(
-            set(vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals))
+            {vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals)}
         )
 
     @property

@@ -15,7 +15,6 @@ import spack.config
 import spack.detection
 import spack.detection.path
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -23,6 +22,7 @@ import spack.util.filesystem as fs
 import spack.util.lang
 from spack.externals import ExternalSpecsParser, external_spec, extract_dicts_from_configuration
 from spack.operating_systems import windows_os
+from spack.util import tty
 from spack.util.environment import get_path
 
 #: Tag used to identify packages providing a compiler
@@ -279,6 +279,7 @@ class CompilerFactory:
                     continue
                 valid_compiler_specs.append(spec_with_config.spec)
         return valid_compiler_specs
+      
 
     @staticmethod
     def from_legacy_yaml(compiler_dict: Dict[str, Any]) -> List[spack.spec.Spec]:

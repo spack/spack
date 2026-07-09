@@ -8,7 +8,6 @@ import sys
 import urllib.parse
 from typing import List, Optional, Tuple
 
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.stage
 from spack.spec import Spec
@@ -19,6 +18,7 @@ from spack.url import (
     parse_name,
     parse_version,
 )
+from spack.util import tty
 from spack.util.editor import editor
 from spack.util.executable import which
 from spack.util.filesystem import mkdirp

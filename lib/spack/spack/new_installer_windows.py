@@ -4,6 +4,12 @@
 
 """Windows-specific terminal state, stdin reader, IPC channels, and job scheduling."""
 
+import sys
+
+if sys.platform != "win32":
+    # Also lets mypy skip this module when run on other platforms.
+    raise ImportError("spack.new_installer_windows can only be imported on Windows")
+
 import ctypes
 import functools
 import io
@@ -16,18 +22,18 @@ import threading
 import time
 from ctypes import wintypes
 from multiprocessing import Process
-from typing import TYPE_CHECKING, Callable, Optional, cast
+from typing import Callable, Optional
 
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
+    SIGWINCH_EVENT,
+    STDIN_EVENT,
     BaseTerminalState,
+    BuildChannels,
     ProcessExitNotifier,
     StdinReader,
     Tee,
 )
-
-if TYPE_CHECKING:
-    from spack.new_installer import BuildStatus
 
 # Windows console mode flags
 ENABLE_LINE_INPUT = 0x0002
@@ -54,26 +60,26 @@ class WindowsTerminalState(BaseTerminalState):
     def stdout_is_interactive(cls) -> bool:
         """Use GetConsoleMode so this works correctly through Windows Terminal's ConPTY."""
         mode = wintypes.DWORD()
-        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32 = ctypes.windll.kernel32
         handle = kernel32.GetStdHandle(-11)
         return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))
 
     @classmethod
     def stdin_is_interactive(cls) -> bool:
         mode = wintypes.DWORD()
-        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32 = ctypes.windll.kernel32
         handle = kernel32.GetStdHandle(-10)
         return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))
 
     def __init__(
         self,
         selector: selectors.BaseSelector,
-        build_status: "BuildStatus",
+        on_headless: Optional[Callable[[bool], None]] = None,
         on_suspend: Optional[Callable[[], None]] = None,
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
-        super().__init__(selector, build_status, on_suspend, on_resume)
-        self.kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        super().__init__(selector, on_headless, on_suspend, on_resume)
+        self.kernel32 = ctypes.windll.kernel32
         self.hStdin = self.kernel32.GetStdHandle(-10)
         self.hStdout = self.kernel32.GetStdHandle(-11)
         self.old_stdin_settings = wintypes.DWORD()
@@ -85,17 +91,15 @@ class WindowsTerminalState(BaseTerminalState):
         self.stdin_r.setblocking(False)
         self.sigwinch_r, self.sigwinch_w = socket.socketpair()
         self.sigwinch_r.setblocking(False)
-
-    def create_stdin_reader(self) -> StdinReader:
-        return StdinReader(functools.partial(self.stdin_r.recv, 1024))
+        self.stdin_reader = StdinReader(functools.partial(self.stdin_r.recv, 1024))
 
     def setup(self) -> None:
         # Enable VT100 ANSI escapes on stdout
         new_out_mode = self.old_stdout_settings.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING
         self.kernel32.SetConsoleMode(self.hStdout, new_out_mode)
 
-        self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
-        self.build_status.headless = True
+        self.selector.register(self.sigwinch_r, selectors.EVENT_READ, SIGWINCH_EVENT)
+        self._set_headless(True)
 
         self._running = True
         threading.Thread(target=self._input_thread, daemon=True).start()
@@ -118,7 +122,7 @@ class WindowsTerminalState(BaseTerminalState):
         self.kernel32.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)
 
     def enter_foreground(self) -> None:
-        if not self.build_status.headless:
+        if not self.headless:
             return
 
         self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
@@ -128,23 +132,22 @@ class WindowsTerminalState(BaseTerminalState):
         self.kernel32.SetConsoleMode(self.hStdin, new_in_mode)
 
         if self.stdin_is_interactive() and self.stdin_r.fileno() not in self.selector.get_map():
-            self.selector.register(self.stdin_r, selectors.EVENT_READ, "stdin")
+            self.selector.register(self.stdin_r, selectors.EVENT_READ, STDIN_EVENT)
 
-        self.build_status.headless = False
-        self.build_status.dirty = True
+        self._set_headless(False)
 
     def drain_sigwinch(self) -> None:
         self.sigwinch_r.recv(64)
 
     def _input_thread(self) -> None:
         while self._running:
-            if self.build_status.headless:
+            if self.headless:
                 time.sleep(0.1)
                 continue
-            if msvcrt.kbhit():  # type: ignore[attr-defined]
-                char = msvcrt.getwch()  # type: ignore[attr-defined]
+            if msvcrt.kbhit():
+                char = msvcrt.getwch()
                 if char in ("\x00", "\xe0"):
-                    msvcrt.getwch()  # type: ignore[attr-defined]
+                    msvcrt.getwch()
                     continue
                 try:
                     self.stdin_w.sendall(char.encode("utf-8"))
@@ -193,14 +196,26 @@ class WindowsSentinelBridge(ProcessExitNotifier):
         self.rsock.close()
 
 
+def create_build_channels() -> BuildChannels:
+    """Create the channel pairs of a build. The state and output read ends are non-blocking so
+    the selector-based loop never blocks. The worker's tee thread is stopped by closing the
+    control socket rather than through a write end."""
+    state_r, state_w = socket.socketpair()
+    output_r, output_w = socket.socketpair()
+    control_r, control_w = socket.socketpair()
+    output_r.setblocking(False)
+    state_r.setblocking(False)
+    return BuildChannels(state_r, state_w, output_r, output_w, control_r, control_w, None)
+
+
 class WindowsTee(Tee):
     """Tee for Windows: control and parent channels are sockets; stdout/stderr handles are
     redirected via SetStdHandle so the child process inherits the write end of the pipe."""
 
     def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
         _echo = False
-        control_r = cast(socket.socket, self.control_r)
-        parent_w = cast(socket.socket, self.parent)
+        control_r = self.control_r
+        parent_w = self.parent
 
         def _control_reader() -> None:
             nonlocal _echo
@@ -234,16 +249,16 @@ class WindowsTee(Tee):
             os.close(log_r)
 
     def _setup_handles(self) -> None:
-        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32 = ctypes.windll.kernel32
         self._saved_win32_stdout = kernel32.GetStdHandle(WIN_STD_OUTPUT_HANDLE)
         self._saved_win32_stderr = kernel32.GetStdHandle(WIN_STD_ERROR_HANDLE)
-        h_write = msvcrt.get_osfhandle(1)  # type: ignore[attr-defined]
-        os.set_handle_inheritable(h_write, True)  # type: ignore[attr-defined]
-        kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, h_write)  # type: ignore[attr-defined]
-        kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, h_write)  # type: ignore[attr-defined]
+        h_write = msvcrt.get_osfhandle(1)
+        os.set_handle_inheritable(h_write, True)
+        kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, h_write)
+        kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, h_write)
 
     def _restore_handles(self) -> None:
-        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32 = ctypes.windll.kernel32
         kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, self._saved_win32_stdout)
         kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, self._saved_win32_stderr)
 

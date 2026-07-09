@@ -36,8 +36,6 @@ import spack.error
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
 import spack.installer_dispatch
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as clr
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -52,6 +50,7 @@ import spack.util.hash
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.tty.color as clr
 import spack.variant as vt
 from spack import traverse
 from spack.config import substitute_path_variables
@@ -59,6 +58,7 @@ from spack.enums import ConfigScopePriority
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.spec_filter import SpecFilter
+from spack.util import tty
 from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import stable_partition
 from spack.util.link_tree import ConflictingSpecsError
@@ -216,6 +216,13 @@ def validate_env_name(name):
     return name
 
 
+def set_active_environment(env: Optional["Environment"]) -> None:
+    """Set or clear the active environment, keeping the "$env" config substitution in sync."""
+    global _active_environment
+    _active_environment = env
+    spack.config.CONFIG.env_path = env.path if env is not None else None
+
+
 def activate(env, use_env_repo=False):
     """Activate an environment.
 
@@ -227,29 +234,24 @@ def activate(env, use_env_repo=False):
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
     """
-    global _active_environment
-
     try:
-        _active_environment = env
-
         # Fail early to avoid ending in an invalid state
         if not isinstance(env, Environment):
-            raise TypeError("`env` should be of type {0}".format(Environment.__name__))
+            raise TypeError(f"`env` should be of type {Environment.__name__}")
 
-        # Record the env path so config "$env" substitutions work while the manifest's
-        # config scope is being prepared below (and for the lifetime of the activation).
-        spack.config.CONFIG.env_path = env.path
-
-        # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO due to
-        # config changes.
         install_tree_before = spack.config.get("config:install_tree")
         upstreams_before = spack.config.get("upstreams")
         repos_before = spack.config.get("repos")
+
+        # Record the active env (and its path, so config "$env" substitutions work)
+        set_active_environment(env)
         env.manifest.prepare_config_scope()
+
         install_tree_after = spack.config.get("config:install_tree")
         upstreams_after = spack.config.get("upstreams")
         repos_after = spack.config.get("repos")
 
+        # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO
         if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
             setattr(env, "store_token", spack.store.reinitialize())
 
@@ -263,15 +265,12 @@ def activate(env, use_env_repo=False):
 
         tty.debug(f"Using environment '{env.name}'")
     except Exception:
-        _active_environment = None
-        spack.config.CONFIG.env_path = None
+        set_active_environment(None)
         raise
 
 
 def deactivate():
     """Undo any configuration or repo settings modified by ``activate()``."""
-    global _active_environment
-
     if not _active_environment:
         return
 
@@ -291,8 +290,7 @@ def deactivate():
 
     tty.debug(f"Deactivated environment '{_active_environment.name}'")
 
-    _active_environment = None
-    spack.config.CONFIG.env_path = None
+    set_active_environment(None)
 
 
 def active_environment() -> Optional["Environment"]:
@@ -1519,7 +1517,7 @@ class Environment:
                 " specify a named list that is not a matrix"
             )
 
-        matches = list((idx, x) for idx, x in enumerate(list_to_change) if x.satisfies(match_spec))
+        matches = [(idx, x) for idx, x in enumerate(list_to_change) if x.satisfies(match_spec)]
         if len(matches) == 0:
             raise ValueError(
                 "There are no specs named {0} in {1}".format(match_spec.name, list_name)
@@ -3516,7 +3514,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         """Iterates on definitions, returning the active ones matching a given name."""
 
         def extract_name(_item):
-            names = list(x for x in _item if x != "when")
+            names = [x for x in _item if x != "when"]
             assert len(names) == 1, f"more than one name in {_item}"
             return names[0]
 

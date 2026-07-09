@@ -7,10 +7,10 @@ import argparse
 import spack.cmd
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.traverse
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "patch expanded sources in preparation for install"
 section = "build"

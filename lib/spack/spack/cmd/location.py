@@ -8,11 +8,11 @@ import os
 import spack.builder
 import spack.cmd
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.stage
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "print out locations of packages and spack directories"
 section = "query"

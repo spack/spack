@@ -50,21 +50,18 @@ import spack.error
 import spack.hash_types as ht
 import spack.hooks
 import spack.hooks.sbang
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
 import spack.paths
 import spack.platforms
-import spack.relocate as relocate
 import spack.spec
 import spack.stage
 import spack.store
 import spack.user_environment
 import spack.util.archive
 import spack.util.crypto
-import spack.util.file_cache as file_cache
 import spack.util.filesystem as fsys
 import spack.util.gpg
 import spack.util.lang
@@ -72,10 +69,9 @@ import spack.util.parallel
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack import traverse
+from spack import relocate, traverse
 from spack.oci.image import (
     Digest,
     ImageReference,
@@ -93,6 +89,7 @@ from spack.oci.oci import (
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.stage import Stage
+from spack.util import file_cache, timer, tty
 from spack.util.executable import which
 from spack.util.filesystem import mkdirp
 
@@ -797,7 +794,7 @@ def generate_key_index(mirror_url: str, tmpdir: str) -> None:
 
     target = os.path.join(tmpdir, "index.json")
 
-    index = {"keys": dict((fingerprint, {}) for fingerprint in sorted(set(fingerprints)))}
+    index: dict = {"keys": {fingerprint: {} for fingerprint in sorted(set(fingerprints))}}
     with open(target, "w", encoding="utf-8") as f:
         sjson.dump(index, f)
 
@@ -1929,7 +1926,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # the context of the relevant root spec. This ensures that the analog for a spec s is the spec
     # that s replaced when we spliced.
     relocation_specs = specs_to_relocate(spec)
-    build_spec_ids = set(id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD))
+    build_spec_ids = {id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)}
     for s in relocation_specs:
         analog = s
         if id(s) not in build_spec_ids:

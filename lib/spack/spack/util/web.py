@@ -34,8 +34,7 @@ import spack.util.executable
 import spack.util.parallel
 import spack.util.url
 import spack.util.url as url_util
-from spack.llnl.util import tty
-from spack.util import lang
+from spack.util import lang, tty
 from spack.util.filesystem import mkdirp, working_dir
 
 from .executable import CommandNotFoundError, Executable
@@ -762,7 +761,7 @@ def list_url(url, recursive=False):
         if recursive:
             return list(_iter_s3_prefix(s3, url))
 
-        return list(set(key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)))
+        return list({key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)})
 
     elif url.scheme == "gs":
         gcs = GCSBucket(url)

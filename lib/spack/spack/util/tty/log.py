@@ -18,23 +18,27 @@ import traceback
 from contextlib import contextmanager
 from multiprocessing.connection import Connection
 from threading import Thread
-from typing import IO, Callable, List, Optional, Tuple
+from typing import IO, Callable, Dict, List, Optional, TextIO, Tuple
 
-import spack.llnl.util.tty as tty
+from spack.util import tty
 
 if sys.platform == "win32":
-    import ctypes.wintypes as wintypes
     import msvcrt
+    from ctypes import wintypes
 
     kernel32 = ctypes.windll.kernel32
+    kernel32.GetStdHandle.argtypes = [wintypes.DWORD]
+    kernel32.GetStdHandle.restype = wintypes.HANDLE
+    kernel32.SetStdHandle.argtypes = [wintypes.DWORD, wintypes.HANDLE]
+
+    # https://docs.microsoft.com/en-us/windows/console/getstdhandle
+    WIN_STD_OUTPUT_HANDLE = -11
+    WIN_STD_ERROR_HANDLE = -12
 
 try:
     import termios
 except ImportError:
     termios = None  # type: ignore[assignment]
-
-# win32api constants
-DUPLICATE_SAME_ACCESS = 0x00000002
 
 esc, bell, lbracket, bslash, newline = r"\x1b", r"\x07", r"\[", r"\\", r"\n"
 # Ansi Control Sequence Introducers (CSI) are a well-defined format
@@ -346,9 +350,88 @@ def log_output(*args, **kwargs):
     (unix vs windows) log_output class
     """
     if sys.platform == "win32":
-        return winlog(*args, **kwargs)
+        return threadlog(*args, **kwargs)
     else:
         return nixlog(*args, **kwargs)
+
+
+@contextmanager
+def _force_echo(active: bool):
+    """Bracket a region with in-band ``xon``/``xoff`` so it is echoed even when echo is off.
+
+    We use these control characters rather than, say, a separate pipe, because they're in-band and
+    assured to appear exactly before and after the text we want to echo.
+    """
+    if not active:
+        raise RuntimeError("Can't call force_echo() outside log_output region!")
+    sys.stdout.write(xon)
+    sys.stdout.flush()
+    try:
+        yield
+    finally:
+        sys.stdout.write(xoff)
+        sys.stdout.flush()
+
+
+def redirect_stdio(write_fd: int) -> Dict[int, int]:
+    """Redirect the stdout/stderr file descriptors to ``write_fd``, returning the saved fds.
+
+    Flushes ``sys.stdout``/``sys.stderr`` first so anything buffered goes to the original
+    streams. ``sys.stdout`` and ``sys.stderr`` may have been replaced with file objects (e.g.
+    under pytest), so their file descriptors are redirected in addition to the original 1 and 2.
+    """
+    sys.stdout.flush()
+    sys.stderr.flush()
+    saved_fds = {}
+    for fd in {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}:
+        saved_fds[fd] = os.dup(fd)
+        os.dup2(write_fd, fd)
+    return saved_fds
+
+
+def restore_stdio(saved_fds: Dict[int, int]) -> None:
+    """Undo ``redirect_stdio``: flush and restore the original file descriptors."""
+    sys.stdout.flush()
+    sys.stderr.flush()
+    for fd, saved_fd in saved_fds.items():
+        os.dup2(saved_fd, fd)
+        os.close(saved_fd)
+
+
+def _process_line(
+    line: str,
+    log_file: IO[str],
+    stdout: TextIO,
+    echo: bool,
+    force_echo: bool,
+    filter_fn: Optional[Callable[[str], str]],
+) -> bool:
+    """Write one line of output to ``log_file``, echoing it to ``stdout`` if enabled.
+
+    In-band ``xon``/``xoff`` control characters are stripped from the line, and ansi escape
+    sequences are additionally stripped from what goes to ``log_file``. Flushing is left to the
+    caller. Returns the new force-echo state, as toggled by ``xon``/``xoff`` in ``line``.
+    """
+    # find control characters and strip them.
+    clean_line, num_controls = control.subn("", line)
+
+    # Echo to stdout if requested or forced.
+    if echo or force_echo:
+        output_line = filter_fn(clean_line) if filter_fn else clean_line
+        enc = stdout.encoding
+        if enc != "utf-8":
+            # On Python 3.6 and 3.7-3.14 with non-{utf-8,C} locale stdout may not be able to
+            # handle utf-8 output. We do an inefficient dance of re-encoding with errors
+            # replaced, so stdout.write does not raise.
+            output_line = output_line.encode(enc, "replace").decode(enc)
+        stdout.write(output_line)
+
+    # Stripped output to log file.
+    log_file.write(_strip(clean_line))
+
+    if num_controls > 0:
+        return force_echo_on(force_echo, control.findall(line))
+    return force_echo
 
 
 class nixlog:
@@ -364,14 +447,7 @@ class nixlog:
     """
 
     def __init__(
-        self,
-        filename: str,
-        echo=False,
-        debug=0,
-        buffer=False,
-        env=None,
-        filter_fn=None,
-        append=False,
+        self, filename: str, echo=False, debug=0, buffer=False, filter_fn=None, append=False
     ):
         """Create a new output log context manager.
 
@@ -466,23 +542,9 @@ class nixlog:
                 stdout_fd.close()
             read_fd.close()
 
-        # Flush immediately before redirecting so that anything buffered
-        # goes to the original stream
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-        # Now do the actual output redirection.
-        # We use OS-level file descriptors, as this
+        # Now do the actual output redirection. We use OS-level file descriptors, as this
         # redirects output for subprocesses and system calls.
-        self._redirected_fds = {}
-
-        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
-        # redirect their file descriptors in addition to the original fds 1 and 2.
-        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
-        for fd in fds:
-            self._redirected_fds[fd] = os.dup(fd)
-            os.dup2(self.write_fd.fileno(), fd)
-
+        self._redirected_fds = redirect_stdio(self.write_fd.fileno())
         self.write_fd.close()
 
         # Unbuffer stdout and stderr at the Python level
@@ -502,14 +564,8 @@ class nixlog:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # Flush any buffered output to the logger daemon.
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-        # restore previous output settings using the OS-level way
-        for fd, saved_fd in self._redirected_fds.items():
-            os.dup2(saved_fd, fd)
-            os.close(saved_fd)
+        # Flush buffered output to the logger daemon and restore the original fds.
+        restore_stdio(self._redirected_fds)
 
         # recover and store echo settings from the child before it dies
         try:
@@ -530,221 +586,136 @@ class nixlog:
 
         self._active = False  # safe to enter again
 
-    @contextmanager
     def force_echo(self):
         """Context manager to force local echo, even if echo is off."""
-        if not self._active:
-            raise RuntimeError("Can't call force_echo() outside log_output region!")
-
-        # This uses the xon/xoff to highlight regions to be echoed in the
-        # output. We us these control characters rather than, say, a
-        # separate pipe, because they're in-band and assured to appear
-        # exactly before and after the text we want to echo.
-        sys.stdout.write(xon)
-        sys.stdout.flush()
-        try:
-            yield
-        finally:
-            sys.stdout.write(xoff)
-            sys.stdout.flush()
+        return _force_echo(self._active)
 
 
-class StreamWrapper:
-    """Wrapper class to handle redirection of io streams"""
+def _thread_log_writer(
+    read_fd: int,
+    logfile: str,
+    stdout: io.TextIOWrapper,
+    append: bool,
+    echo: bool,
+    filter_fn: Optional[Callable],
+):
+    """Writer loop for the thread-based ``threadlog``. Reads lines from ``read_fd`` until EOF and
+    hands them to ``_process_line``. Runs in a thread, so it spawns no process."""
+    force_echo = False
+    read_file = os.fdopen(read_fd, "r", encoding="utf-8", errors="replace", buffering=1)
 
-    def __init__(self, sys_attr):
-        self.sys_attr = sys_attr
-        self.saved_stream = None
+    try:
+        with open(logfile, mode="a" if append else "w", encoding="utf-8") as log_file:
+            while True:
+                line = read_file.readline(4096)
+                if not line:
+                    break
+                force_echo = _process_line(line, log_file, stdout, echo, force_echo, filter_fn)
+                log_file.flush()
+                stdout.flush()
 
-        kernel32.SetStdHandle.argtypes = [wintypes.DWORD, wintypes.HANDLE]  # nStdHandle  # hHandle
-
-        kernel32.GetStdHandle.argtypes = [wintypes.DWORD]
-        kernel32.GetStdHandle.restype = wintypes.HANDLE
-
-        # https://docs.microsoft.com/en-us/windows/console/getstdhandle
-        if self.sys_attr == "stdout":
-            self.STD_HANDLE = -11
-        elif self.sys_attr == "stderr":
-            self.STD_HANDLE = -12
-        else:
-            raise KeyError(self.sys_attr)
-
-        self.saved_stream = getattr(sys, self.sys_attr)
-        self.std_fd = self.saved_stream.fileno()
-        self.saved_std_handle = kernel32.GetStdHandle(self.STD_HANDLE)
-        self.saved_stream_fd = os.dup(self.std_fd)
-        self.redirect_fd = None
-
-    def redirect_stream(self, writer):
-        """Redirect stdout to the given file descriptor."""
-        self.flush()
-        # Get fd for new stream
-        # new stream is file object
-        redirect_fd = writer.fileno()
-        # get windows file handle
-        redirect_h = msvcrt.get_osfhandle(redirect_fd)
-        # duplicate handle for local copy we own
-        dup_redirect_h = dup_fh(redirect_h)
-        self.redirect_fd = msvcrt.open_osfhandle(dup_redirect_h, os.O_WRONLY)
-        kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(dup_redirect_h))
-        os.dup2(self.redirect_fd, self.std_fd)
-        setattr(
-            sys,
-            self.sys_attr,
-            os.fdopen(
-                self.std_fd,
-                "w",
-                encoding="utf-8",
-                buffering=1,
-                errors="replace",
-                closefd=False,
-                newline="\n",
-            ),
-        )
-
-    def flush(self):
-        # get current system stream for the standard fd we're redirecting
-        sys_stream = getattr(sys, self.sys_attr)
-        try:
-            if sys_stream:
-                # Flush the system stream before redirection
-                sys_stream.flush()
-        except BaseException as e:
-            # swallow flush errors
-            tty.debug(f"Encountered error flushing stream: {e}")
-            pass
-
-    def close(self):
-        """Redirect back to the original system stream, and close stream"""
-        try:
-            self.flush()
-            if self.saved_stream_fd is not None:
-                # restore os handle
-                kernel32.SetStdHandle(self.STD_HANDLE, self.saved_std_handle)
-                # restore c fd
-                os.dup2(self.saved_stream_fd, self.std_fd)
-                # python level
-                setattr(sys, self.sys_attr, self.saved_stream)
-        finally:
-            if self.redirect_fd is not None:
-                os.close(self.redirect_fd)
-            if self.saved_stream_fd is not None:
-                os.close(self.saved_stream_fd)
+    except Exception as e:
+        tty.error(f"Exception in log writer thread! {e}", stream=stdout)
+        traceback.print_exc(file=stdout)
+    finally:
+        read_file.close()
+        stdout.close()
 
 
-class winlog:
-    """
-    Similar to nixlog, with underlying
-    functionality ported to support Windows.
+class threadlog:
+    """Thread-based logger that logs to a file and optionally echoes to the terminal.
 
-    Does not support the use of ``v`` toggling as nixlog does.
+    Keeps ``nixlog``'s in-band ``xon``/``xoff`` protocol -- which is what makes ``force_echo`` and
+    output ordering exact -- but runs the writer in a *thread* instead of a *process*, keeping the
+    logged code free of ``multiprocessing`` machinery (e.g. lazily started forkserver processes).
+    Unlike ``nixlog`` it does not read stdin for the ``v`` echo toggle; that is left to the
+    topmost logger.
     """
 
     def __init__(
         self, filename: str, echo=False, debug=0, buffer=False, filter_fn=None, append=False
     ):
-        self.debug = debug
+        self.filename = filename
         self.echo = echo
-        self.logfile = filename
-        self.stdout = StreamWrapper("stdout")
-        self.stderr = StreamWrapper("stderr")
-        self._active = False
-        self.old_stdout = sys.stdout
-        self.old_stderr = sys.stderr
-        self.append = append
+        self.debug = debug
+        self.buffer = buffer
         self.filter_fn = filter_fn
-        self.read_p, self.write_p = None, None
-        self._thread = None
+        self.append = append
+        self._active = False
 
     def __enter__(self):
         if self._active:
             raise RuntimeError("Can't re-enter the same log_output!")
 
-        read_fd, write_fd = os.pipe()
-        self.read_p = read_fd
-        self.write_p = os.fdopen(write_fd, "wb", buffering=0)
+        # Record parent color/debug settings before redirecting. Colorization depends on whether
+        # the *original* stdout is a TTY; the redirected stdout won't be, so force colorization.
+        self._saved_color = tty.color._force_color
+        forced_color = tty.color.get_color_when()
+        self._saved_debug = tty._debug
 
-        # Dup stdout so we can still write to it after redirection
-        original_stdout_fd = sys.stdout.fileno()
-        echo_writer = os.fdopen(os.dup(original_stdout_fd), "w", encoding="utf-8", newline="\n")
+        read_fd, write_fd = os.pipe()
+
+        # Dup the original stdout so the writer thread can still echo to the terminal after the
+        # redirection below replaces fds 1/2.
+        echo_writer = os.fdopen(os.dup(sys.stdout.fileno()), "w", encoding="utf-8", newline="\n")
 
         self._active = True
         self._thread = Thread(
-            target=self._background_reader,
-            args=(self.read_p, self.logfile, echo_writer, self.append, self.echo, self.filter_fn),
+            target=_thread_log_writer,
+            args=(read_fd, self.filename, echo_writer, self.append, self.echo, self.filter_fn),
         )
         self._thread.start()
-        # Redirect stdout and stderr to write to logfile
-        self.stderr.redirect_stream(self.write_p)
-        self.stdout.redirect_stream(self.write_p)
 
+        self._saved_fds = redirect_stdio(write_fd)
+        os.close(write_fd)
+
+        if sys.platform == "win32":
+            # Point the console std handles at the pipe too: native subprocesses inherit those
+            # rather than fds 1/2.
+            self._saved_handles = (
+                kernel32.GetStdHandle(WIN_STD_OUTPUT_HANDLE),
+                kernel32.GetStdHandle(WIN_STD_ERROR_HANDLE),
+            )
+            h_write = msvcrt.get_osfhandle(1)
+            os.set_handle_inheritable(h_write, True)
+            kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, h_write)
+            kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, h_write)
+            # Re-create sys.stdout/stderr now that their fds are pipes, so Python picks FileIO
+            # (WriteFile) rather than ConsoleIO (WriteConsoleW fails on pipe handles).
+            self._saved_streams = (sys.stdout, sys.stderr)
+            sys.stdout = os.fdopen(
+                sys.stdout.fileno(), "w", encoding="utf-8", buffering=1, closefd=False
+            )
+            sys.stderr = os.fdopen(
+                sys.stderr.fileno(), "w", encoding="utf-8", buffering=1, closefd=False
+            )
+
+        if not self.buffer:
+            sys.stdout = Unbuffered(sys.stdout)
+            sys.stderr = Unbuffered(sys.stderr)
+
+        tty.color.set_color_when(forced_color)
+        tty._debug = self.debug
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.stdout.close()
-        self.stderr.close()
-        self.write_p.close()
+        # Restoring the fds closes the last write ends of the pipe, so the writer thread reaches
+        # EOF and returns.
+        restore_stdio(self._saved_fds)
         self._thread.join()
+
+        if sys.platform == "win32":
+            kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, self._saved_handles[0])
+            kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, self._saved_handles[1])
+            sys.stdout, sys.stderr = self._saved_streams
+
+        tty.color._force_color = self._saved_color
+        tty._debug = self._saved_debug
         self._active = False
 
-    @contextmanager
     def force_echo(self):
         """Context manager to force local echo, even if echo is off."""
-        if not self._active:
-            raise RuntimeError("Can't call force_echo() outside log_output region!")
-        sys.stdout.write(xon)
-        sys.stdout.flush()
-        try:
-            yield
-        finally:
-            sys.stdout.write(xoff)
-            sys.stdout.flush()
-
-    @staticmethod
-    def _background_reader(
-        read_fd: int,
-        logfile: str,
-        stdout: io.TextIOWrapper,
-        append: bool,
-        echo: bool,
-        filter_fn: Optional[Callable],
-    ):
-        force_echo = False
-        write_mode = "a" if append else "w"
-        read_file = os.fdopen(read_fd, "r", encoding="utf-8", errors="replace", buffering=1)
-
-        def process_message(message):
-            nonlocal force_echo
-            clean_line, num_controls = control.subn("", message)
-            log_writer.write(_strip(clean_line))
-            log_writer.flush()
-            if echo or force_echo:
-                output = clean_line
-                if filter_fn:
-                    output = filter_fn(output)
-                enc = stdout.encoding
-                if enc != "utf-8":
-                    output = output.encode(enc, "replace").decode(enc)
-                stdout.write(output)
-                stdout.flush()
-            if num_controls > 0:
-                controls = control.findall(message)
-                force_echo = force_echo_on(force_echo, controls)
-
-        try:
-            with open(logfile, mode=write_mode, encoding="utf-8") as log_writer:
-                while True:
-                    line = read_file.readline(4096)
-                    if not line:
-                        break
-                    process_message(line)
-
-        except Exception as e:
-            tty.error(f"Exception in log writer thread! {e}", stream=stdout)
-            traceback.print_exc(file=stdout)
-        finally:
-            read_file.close()
-            stdout.close()
+        return _force_echo(self._active)
 
 
 def _writer_daemon(
@@ -866,29 +837,9 @@ def _writer_daemon(
                                 return
                             line_count += 1
 
-                            # find control characters and strip them.
-                            clean_line, num_controls = control.subn("", line)
-
-                            # Echo to stdout if requested or forced.
-                            if echo or force_echo:
-                                output_line = clean_line
-                                if filter_fn:
-                                    output_line = filter_fn(clean_line)
-                                enc = sys.stdout.encoding
-                                if enc != "utf-8":
-                                    # On Python 3.6 and 3.7-3.14 with non-{utf-8,C} locale stdout
-                                    # may not be able to handle utf-8 output. We do an inefficient
-                                    # dance of re-encoding with errors replaced, so stdout.write
-                                    # does not raise.
-                                    output_line = output_line.encode(enc, "replace").decode(enc)
-                                sys.stdout.write(output_line)
-
-                            # Stripped output to log file.
-                            log_file.write(_strip(clean_line))
-
-                            if num_controls > 0:
-                                controls = control.findall(line)
-                                force_echo = force_echo_on(force_echo, controls)
+                            force_echo = _process_line(
+                                line, log_file, sys.stdout, echo, force_echo, filter_fn
+                            )
 
                             if not _input_available(read_file):
                                 break
@@ -910,52 +861,6 @@ def _writer_daemon(
 
         # send echo value back to the parent so it can be preserved.
         control_fd.send(echo)
-
-
-if sys.platform == "win32":
-    # dont define this outside windows, otherwise mypy complains
-    # or we'd have to # type: ignore on basically every line of
-    # this method
-    def dup_fh(fh: int) -> int:
-        """Windows Only
-        Duplicates Windows file handles. Useful when
-        we need multiple references to a single file handle
-        that all can be closed independently
-
-        uses DuplicateHandle from the win32 api
-
-        Arguments:
-            fh: OS level file handle to be duplicated
-
-        Returns: integer representing the new, identical file handle
-        """
-        # Define function signatures for safety
-        kernel32.DuplicateHandle.argtypes = [
-            wintypes.HANDLE,  # hSourceProcessHandle
-            wintypes.HANDLE,  # hSourceHandle
-            wintypes.HANDLE,  # hTargetProcessHandle
-            ctypes.POINTER(wintypes.HANDLE),  # lpTargetHandle
-            wintypes.DWORD,  # dwDesiredAccess
-            wintypes.BOOL,  # bInheritHandle
-            wintypes.DWORD,  # dwOptions
-        ]
-        current_process = kernel32.GetCurrentProcess()
-        target_handle = wintypes.HANDLE()
-
-        success = kernel32.DuplicateHandle(
-            current_process,
-            wintypes.HANDLE(fh),
-            current_process,
-            ctypes.byref(target_handle),
-            0,
-            True,
-            DUPLICATE_SAME_ACCESS,
-        )
-
-        if not success or not target_handle.value:
-            raise ctypes.WinError()
-
-        return target_handle.value
 
 
 def force_echo_on(force_echo: bool, controls: List[str]):

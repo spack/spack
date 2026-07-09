@@ -7,10 +7,10 @@ import argparse
 import pytest
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.main
+from spack.cmd.common import arguments
 
 
 @pytest.fixture()

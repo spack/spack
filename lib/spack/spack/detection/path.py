@@ -16,15 +16,15 @@ import warnings
 from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
 
 import spack.error
-import spack.llnl.util.tty
 import spack.spec
 import spack.util.elf as elf_utils
 import spack.util.environment
-import spack.util.environment as environment
 import spack.util.filesystem
 import spack.util.lang
 import spack.util.ld_so_conf
 import spack.util.parallel
+import spack.util.tty
+from spack.util import environment
 
 from .common import (
     WindowsCompilerExternalPaths,
@@ -294,7 +294,7 @@ class Finder:
 
             if not specs:
                 files = ", ".join(_convert_to_iterable(items_in_prefix))
-                spack.llnl.util.tty.debug(
+                spack.util.tty.debug(
                     f"The following files in {candidate_path} were decidedly not "
                     f"part of the package {pkg.name}: {files}"
                 )
@@ -375,7 +375,7 @@ class ExecutablesFinder(Finder):
         result = executable_prefix(path)
         if not result:
             msg = f"no bin/ dir found in {path}. Cannot add it as a Spack package"
-            spack.llnl.util.tty.debug(msg)
+            spack.util.tty.debug(msg)
         return result
 
 
@@ -408,7 +408,7 @@ class LibrariesFinder(Finder):
         result = library_prefix(path)
         if not result:
             msg = f"no lib/ or lib64/ dir found in {path}. Cannot add it as a Spack package"
-            spack.llnl.util.tty.debug(msg)
+            spack.util.tty.debug(msg)
         return result
 
 
@@ -466,11 +466,11 @@ def by_path(
                         _, unqualified_name = partition_package_name(pkg_name)
                         result[unqualified_name].extend(detected)
                 except concurrent.futures.TimeoutError:
-                    spack.llnl.util.tty.debug(
+                    spack.util.tty.debug(
                         f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached"
                     )
                 except Exception:
-                    spack.llnl.util.tty.debug(
+                    spack.util.tty.debug(
                         f"[EXTERNAL DETECTION] Skipping {pkg_name}: {traceback.format_exc()}"
                     )
 

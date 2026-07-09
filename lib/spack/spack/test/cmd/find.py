@@ -245,11 +245,7 @@ def test_find_format(database, config):
 
     output = find("--format", "{name}-{^mpi.name}-{hash:7}", "mpileaks")
     elements = output.strip().split("\n")
-    assert set(e[:-7] for e in elements) == {
-        "mpileaks-zmpi-",
-        "mpileaks-mpich-",
-        "mpileaks-mpich2-",
-    }
+    assert {e[:-7] for e in elements} == {"mpileaks-zmpi-", "mpileaks-mpich-", "mpileaks-mpich2-"}
 
     # hashes are in base32
     for e in elements:

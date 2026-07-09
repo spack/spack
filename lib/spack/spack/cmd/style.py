@@ -9,8 +9,6 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.repo
 import spack.util.git
@@ -19,8 +17,10 @@ from spack.cmd.common.spec_strings import (
     _spec_str_default_handler,
     _spec_str_fix_handler,
 )
+from spack.util import tty
 from spack.util.executable import Executable, which
 from spack.util.filesystem import working_dir
+from spack.util.tty import color
 
 description = "runs source code style checks on spack"
 section = "developer"
@@ -306,7 +306,7 @@ def run_mypy(file_list, args):
         os.path.join(spack.paths.prefix, "pyproject.toml"),
         "--show-error-codes",
     ]
-    mypy_arg_sets = [common_mypy_args + ["--package", "spack", "--package", "llnl"]]
+    mypy_arg_sets = [common_mypy_args + ["--package", "spack"]]
     if "SPACK_MYPY_CHECK_PACKAGES" in os.environ:
         mypy_arg_sets.append(
             common_mypy_args + ["--package", "packages", "--disable-error-code", "no-redef"]

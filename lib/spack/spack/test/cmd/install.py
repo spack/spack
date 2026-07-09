@@ -24,7 +24,6 @@ import spack.error
 import spack.hash_types as ht
 import spack.hooks.sbom_generate
 import spack.installer
-import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.store
 import spack.util.filesystem as fs
@@ -32,6 +31,7 @@ from spack.error import SpackError, SpecSyntaxError
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 from spack.spec import Spec
+from spack.util import tty
 
 install = SpackCommand("install")
 env = SpackCommand("env")

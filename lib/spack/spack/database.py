@@ -54,7 +54,6 @@ except ImportError:
 
 import spack.deptypes as dt
 import spack.hash_types as ht
-import spack.llnl.util.tty as tty
 import spack.spec
 import spack.traverse as tr
 import spack.util.filesystem as fs
@@ -67,6 +66,7 @@ from spack.directory_layout import (
     InconsistentInstallDirectoryError,
 )
 from spack.error import SpackError
+from spack.util import tty
 from spack.util.crypto import bit_length
 from spack.util.socket import _gethostname
 
@@ -683,9 +683,7 @@ class Database:
         self._ensure_parent_directories()
 
         # map from per-spec hash code to installation record.
-        installs = dict(
-            (k, v.to_dict(include_fields=self.record_fields)) for k, v in self._data.items()
-        )
+        installs = {k: v.to_dict(include_fields=self.record_fields) for k, v in self._data.items()}
 
         # database includes installation list and version.
 
@@ -1817,7 +1815,7 @@ class Database:
                 )
             )
 
-        results = list(local_results) + list(x for x in upstream_results if x not in local_results)
+        results = list(local_results) + [x for x in upstream_results if x not in local_results]
         results.sort()  # type: ignore[call-arg,call-overload]
         return results
 
@@ -1874,7 +1872,7 @@ class Database:
 
         with self.read_transaction():
             roots = [rec.spec for key, rec in self._data.items() if root(key, rec)]
-            needed = set(id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype))
+            needed = {id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype)}
             return [
                 rec.spec
                 for rec in self._data.values()

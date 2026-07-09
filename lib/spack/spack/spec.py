@@ -86,8 +86,6 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as clr
 import spack.patch
 import spack.paths
 import spack.platforms
@@ -98,16 +96,17 @@ import spack.traverse
 import spack.util.filesystem as fs
 import spack.util.gpg
 import spack.util.hash
-import spack.util.lang as lang
 import spack.util.path
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.string
+import spack.util.tty.color as clr
 import spack.variant as vt
 import spack.version
 import spack.version as vn
 import spack.version.git_ref_lookup
+from spack.util import lang, tty
 
 from .enums import PropagationPolicy
 
@@ -158,7 +157,7 @@ IDENTIFIER_RE = r"\w[\w-]*"
 
 # Coloring of specs when using color output. Fields are printed with
 # different colors to enhance readability.
-# See spack.llnl.util.tty.color for descriptions of the color codes.
+# See spack.util.tty.color for descriptions of the color codes.
 COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
@@ -943,9 +942,9 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
             else:
                 extra_other = set(other[flag_type]) - set(self[flag_type])
                 if extra_other:
-                    self[flag_type] = list(self[flag_type]) + list(
+                    self[flag_type] = list(self[flag_type]) + [
                         x for x in other[flag_type] if x in extra_other
-                    )
+                    ]
                     changed = True
 
                 # Next, if any flags in other propagate, we force them to propagate in our case
@@ -1330,7 +1329,7 @@ def tree(
 
     Args:
         color: if True, always colorize the tree. If False, don't colorize the tree. If None,
-            use the default from spack.llnl.tty.color
+            use the default from spack.util.tty.color
         depth: print the depth from the root
         hashes: if True, print the hash of each node
         hashlen: length of the hash to be printed
@@ -2867,8 +2866,6 @@ class Spec:
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
-        if (not value) and self.concrete and self.installed:
-            return
         self._concrete = value
         self._validate_version()
         for variant in self.variants.values():
@@ -2902,9 +2899,7 @@ class Spec:
         # if set to false, clear out all hashes (set to None or remove attr)
         # may need to change references to respect None
         for s in self.traverse():
-            if (not value) and s.concrete and s.installed:
-                continue
-            elif not value:
+            if not value:
                 s.clear_caches()
             s._mark_root_concrete(value)
 
@@ -4575,7 +4570,7 @@ class Spec:
         Args:
             specs: List of specs to format.
             color: if True, always colorize the tree. If False, don't colorize the tree. If None,
-                use the default from spack.llnl.tty.color
+                use the default from spack.util.tty.color
             depth: print the depth from the root
             hashes: if True, print the hash of each node
             hashlen: length of the hash to be printed
@@ -4656,7 +4651,7 @@ class Spec:
         """Return set of virtuals provided by self in the context of root"""
         if root is self:
             # Could be using any virtual the package can provide
-            return set(v.name for v in self.package.virtuals_provided)
+            return {v.name for v in self.package.virtuals_provided}
 
         hashes = [s.dag_hash() for s in root.traverse()]
         in_edges = set(
@@ -4736,7 +4731,7 @@ class Spec:
                 for evaluating whether ``replacement`` is a match for each node of ``self``. See
                 ``Spec._splice_match`` and ``Spec._virtuals_provided`` for details.
         """
-        ids = set(id(s) for s in replacement.traverse())
+        ids = {id(s) for s in replacement.traverse()}
 
         # Sort all possible replacements by name and virtual for easy access later
         replacements_by_name = collections.defaultdict(list)

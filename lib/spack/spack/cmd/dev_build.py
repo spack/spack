@@ -12,9 +12,9 @@ import spack.cmd.common.arguments
 import spack.concretize
 import spack.config
 import spack.installer_dispatch
-import spack.llnl.util.tty as tty
 import spack.repo
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "build package from code in current working directory"
 section = "build"

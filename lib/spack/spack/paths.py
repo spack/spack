@@ -13,7 +13,7 @@ import os
 from pathlib import PurePath
 
 import spack.util.filesystem
-import spack.util.hash as hash
+from spack.util import hash
 
 #: This file lives in $prefix/lib/spack/spack/__file__
 prefix = str(PurePath(spack.util.filesystem.ancestor(__file__, 4)))

@@ -18,9 +18,8 @@ import spack.modules.error
 import spack.repo
 from spack.cmd import MultipleSpecsMatch, NoSpecMatches
 from spack.cmd.common import arguments
-from spack.llnl.util import tty
-from spack.llnl.util.tty import color
-from spack.util import filesystem
+from spack.util import filesystem, tty
+from spack.util.tty import color
 
 description = "manipulate module files"
 section = "environment"
@@ -159,7 +158,7 @@ def loads(module_type, specs, args, out=None):
                 ]
             )
 
-    modules = list(
+    modules = [
         (
             spec,
             spack.modules.get_module(
@@ -171,7 +170,7 @@ def loads(module_type, specs, args, out=None):
             ),
         )
         for spec in specs
-    )
+    ]
 
     module_commands = {"tcl": "module load ", "lmod": "module load "}
 
@@ -235,7 +234,7 @@ def find(module_type, specs, args):
 
     if not all(modules):
         tty.warn(_missing_modules_warning)
-    modules = list(x for x in modules if x)
+    modules = [x for x in modules if x]
     print(" ".join(modules))
 
 
@@ -284,7 +283,7 @@ def refresh(module_type, specs, args):
         return
 
     if not args.upstream_modules:
-        specs = list(s for s in specs if not s.installed_upstream)
+        specs = [s for s in specs if not s.installed_upstream]
 
     if not args.yes_to_all:
         msg = "You are about to regenerate {types} module files for:\n"

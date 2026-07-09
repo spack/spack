@@ -23,7 +23,6 @@ import spack.binary_distribution
 import spack.concretize
 import spack.config
 import spack.environment as ev
-import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirrors.mirror
 import spack.oci.image
@@ -37,6 +36,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.database import INDEX_JSON_FILE
+from spack.hooks import sbang
 from spack.installer import PackageInstaller
 from spack.spec import Spec
 from spack.url_buildcache import (

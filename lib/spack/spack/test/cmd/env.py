@@ -18,9 +18,7 @@ import spack.cmd.env
 import spack.concretize
 import spack.config
 import spack.environment as ev
-import spack.environment.depfile as depfile
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.modules
 import spack.modules.tcl
@@ -38,12 +36,14 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.env import _env_create
 from spack.config import substitute_path_variables
+from spack.environment import depfile
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
 from spack.test.conftest import RepoBuilder
 from spack.traverse import traverse_nodes
+from spack.util import tty
 from spack.util.executable import Executable
 from spack.util.filesystem import readlink
 from spack.util.lang import dedupe
@@ -1864,7 +1864,7 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
 
     test = ev.read("test")
     # Save this spec to check later if it is still in the env
-    (mpileaks_hash,) = list(x for x, y in test.specs_by_hash.items() if y.name == "mpileaks")
+    (mpileaks_hash,) = [x for x, y in test.specs_by_hash.items() if y.name == "mpileaks"]
     user_specs_before = test.user_specs
     user_spec_hashes_before = {x.hash for x in test.concretized_roots}
 
@@ -2123,12 +2123,12 @@ def test_env_include_concrete_envs_lockfile():
     with open(combined.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-    assert set(
+    assert {
         entry["hash"] for entry in lockfile_as_dict[ev.lockfile_include_key][test1.path]["roots"]
-    ) == set(test1.specs_by_hash)
-    assert set(
+    } == set(test1.specs_by_hash)
+    assert {
         entry["hash"] for entry in lockfile_as_dict[ev.lockfile_include_key][test2.path]["roots"]
-    ) == set(test2.specs_by_hash)
+    } == set(test2.specs_by_hash)
 
 
 def test_env_include_concrete_add_env():
@@ -4133,7 +4133,7 @@ def test_read_legacy_lockfile_and_reconcretize(
     assert len(test.specs_by_hash) == 2
 
     expected_versions = set([Version("0.5"), Version("1.0")])
-    current_versions = set(s["dtbuild1"].version for s in test.specs_by_hash.values())
+    current_versions = {s["dtbuild1"].version for s in test.specs_by_hash.values()}
     assert current_versions == expected_versions
 
 

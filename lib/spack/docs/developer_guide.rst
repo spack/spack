@@ -197,13 +197,13 @@ Other Modules
 :mod:`spack.error`
   :class:`~spack.error.SpackError`, the base class for Spack's exception hierarchy.
 
-:mod:`spack.llnl.util.tty`
+:mod:`spack.util.tty`
   Basic output functions for all of the messages Spack writes to the terminal.
 
-:mod:`spack.llnl.util.tty.color`
+:mod:`spack.util.tty.color`
   Implements a color formatting syntax used by ``spack.tty``.
 
-:mod:`spack.llnl.util`
+:mod:`spack.util`
   In this package are a number of utility modules for the rest of Spack.
 
 .. _package-repositories:
@@ -431,7 +431,7 @@ For example, if you were to add this step to the Linux unit test CI, it would lo
        . share/spack/setup-env.sh
        spack bootstrap disable spack-install
        spack bootstrap now
-       spack -v solve zlib
+       spack -v spec --show opt,solutions zlib
    - name: Setup tmate session
      uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
    - name: Run unit tests
@@ -707,11 +707,11 @@ When working on the ASP-based solver in ``lib/spack/spack/solver/``, it is often
 Generating ASP facts
 ^^^^^^^^^^^^^^^^^^^^
 
-The ``spack solve --show=asp`` flag dumps all ASP facts generated for a given spec to stdout:
+The ``spack spec --show=asp`` flag dumps all ASP facts generated for a given spec to stdout:
 
 .. code-block:: console
 
-   $ spack solve --show=asp zlib-ng > zlib.lp
+   $ spack spec --show=asp zlib-ng > zlib.lp
 
 The resulting file contains both the package facts (versions, variants, dependencies) and the problem-specific facts derived from the user's configuration.
 It can be fed directly to clingo alongside the solver rules.

@@ -17,7 +17,6 @@ from collections import OrderedDict
 import pytest
 
 import spack.binary_distribution
-import spack.cmd.buildcache as buildcache
 import spack.cmd.mirror
 import spack.concretize
 import spack.config
@@ -27,6 +26,7 @@ import spack.package_base
 import spack.stage
 import spack.util.gpg
 import spack.util.url as url_util
+from spack.cmd import buildcache
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
 from spack.paths import mock_gpg_keys_path

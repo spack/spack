@@ -17,10 +17,10 @@ import tempfile
 import pytest
 
 import spack.config
-import spack.hooks.sbang as sbang
 import spack.store
 import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
+from spack.hooks import sbang
 from spack.util.executable import which
 
 if sys.platform != "win32":

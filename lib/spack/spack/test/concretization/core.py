@@ -1101,11 +1101,11 @@ spack:
         concrete_specs = spack.concretize._concretize_specs_together(abstract_specs)
 
         # Check there's only one configuration of each package in the DAG
-        names = set(
+        names = {
             dep.name for spec in concrete_specs for dep in spec.traverse(deptype=("link", "run"))
-        )
+        }
         for name in names:
-            name_specs = set(spec[name] for spec in concrete_specs if name in spec)
+            name_specs = {spec[name] for spec in concrete_specs if name in spec}
             assert len(name_specs) == 1
 
         # Check that there's at least one Spec that satisfies the
@@ -1993,7 +1993,7 @@ spack:
         solver = spack.solver.asp.Solver()
         solver.reuse = False
 
-        simulate_unsolved_property = list((x, None) for x in specs)
+        simulate_unsolved_property = [(x, None) for x in specs]
         monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
         monkeypatch.setattr(spack.solver.asp.Result, "specs", list())
 
@@ -2449,7 +2449,7 @@ packages:
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
 
-        simulate_unsolved_property = list((x, None) for x in specs)
+        simulate_unsolved_property = [(x, None) for x in specs]
 
         monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
 
@@ -2460,6 +2460,7 @@ packages:
             solver.driver.solve(setup, specs, reuse=[])
 
     @pytest.mark.regression("43141")
+    @pytest.mark.regression("52567")
     @pytest.mark.parametrize(
         "spec_str,expected_match",
         [
@@ -2467,6 +2468,10 @@ packages:
             ("pkg-a ^foo", "since 'foo' does not exist"),
             # Request a compiler for a package that doesn't need it
             ("pkg-c %gcc", "cannot depend on gcc"),
+            # Request a compiler for a language the package doesn't use, while another
+            # compiler is requested for a language it does use. Only the unusable language
+            # must be reported.
+            ("pkg-b %c=gcc %fortran=llvm", "cannot depend on fortran"),
         ],
     )
     def test_errors_on_statically_checked_preconditions(self, spec_str, expected_match):
@@ -4451,8 +4456,8 @@ def test_result_roundtrip(mock_packages, config, specs):
     # to come back as exactly the same graph they were before.
     assert len(result.answers) == len(roundtrip.answers)
     for (_, _, lspecs), (_, _, rspecs) in zip(result.answers, roundtrip.answers):
-        lids = set(id(lspec) for lspec in spack.traverse.traverse_nodes(lspecs.values()))
-        rids = set(id(rspec) for rspec in spack.traverse.traverse_nodes(rspecs.values()))
+        lids = {id(lspec) for lspec in spack.traverse.traverse_nodes(lspecs.values())}
+        rids = {id(rspec) for rspec in spack.traverse.traverse_nodes(rspecs.values())}
         assert len(lids) == len(rids)
 
     assert roundtrip == result
@@ -4626,11 +4631,11 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
     spack.config.set("concretizer:concretization_cache:entry_limit", 1000)
 
     def names():
-        return set(
+        return {
             x.name
             for x in conc_cache_dir.iterdir()
             if (not x.is_dir() and not x.name.startswith("."))
-        )
+        }
 
     assert len(names()) == 0
 

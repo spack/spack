@@ -42,7 +42,6 @@ import spack
 import spack.caches
 import spack.config
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.patch
 import spack.paths
 import spack.provider_index
@@ -56,6 +55,7 @@ import spack.util.lock
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
+from spack.util import tty
 from spack.util.filesystem import working_dir
 from spack.util.lang import Singleton, ensure_unwrapped, memoized
 

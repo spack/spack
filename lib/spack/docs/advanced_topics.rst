@@ -141,8 +141,8 @@ This issue typically manifests with the error below:
      if self._enter() and self._acquire_fn:
    File "./spack/lib/spack/spack/database.py", line 608, in _enter
      return self._db.lock.acquire_read(self._timeout)
-   File "./spack/lib/spack/llnl/util/lock.py", line 103, in acquire_read
+   File "./spack/lib/spack/util/lock.py", line 103, in acquire_read
      self._lock(fcntl.LOCK_SH, timeout)   # can raise LockError.
-   File "./spack/lib/spack/llnl/util/lock.py", line 64, in _lock
+   File "./spack/lib/spack/util/lock.py", line 64, in _lock
      fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
    IOError: [Errno 38] Function not implemented

@@ -7,7 +7,7 @@ from typing import Optional, Set
 import spack.config
 import spack.modules
 import spack.spec
-from spack.llnl.util import tty
+from spack.util import tty
 
 
 def _for_each_enabled(

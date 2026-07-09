@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-import spack.llnl.util.tty as tty
+from spack.util import tty
 
 
 def test_get_timestamp(monkeypatch):

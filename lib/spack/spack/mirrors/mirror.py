@@ -19,11 +19,11 @@ from typing import (
 )
 
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.error import MirrorError
 from spack.oci.image import is_oci_url
+from spack.util import tty
 
 if TYPE_CHECKING:
     import spack.spec

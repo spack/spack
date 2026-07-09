@@ -11,8 +11,6 @@ from typing import List
 import spack.config
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.schema
 import spack.schema.env
 import spack.spec
@@ -21,8 +19,10 @@ import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify_table
+from spack.util import tty
 from spack.util.editor import editor
+from spack.util.tty import color
+from spack.util.tty.colify import colify_table
 
 description = "get and set configuration options"
 section = "config"
@@ -358,7 +358,7 @@ def _config_basic_scope_types(scope, included):
 
 def config_scopes(args):
     """List configured scopes in descending order of precedence."""
-    included = list(i.name for s in spack.config.scopes().values() for i in s.included_scopes)
+    included = [i.name for s in spack.config.scopes().values() for i in s.included_scopes]
     active = [s.name for s in spack.config.CONFIG.active_scopes]
     scopes = [
         s

@@ -21,7 +21,6 @@ import filecmp
 import os
 import pathlib
 import re
-import secrets
 import shutil
 import sys
 import uuid
@@ -36,8 +35,8 @@ import spack.paths
 import spack.spec
 import spack.util.lang
 import spack.util.path
-from spack.llnl.util import tty
 from spack.util import filesystem as fs
+from spack.util import tty
 
 #: default installation root, relative to the Spack install path
 DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
@@ -234,23 +233,13 @@ class Store:
         else:
             fs.set_install_permissions(bin_dir)
 
-        sbang_tmp_path = os.path.join(bin_dir, f".sbang.{secrets.token_hex(8)}.tmp")
-        # Open a randomized temporary file with O_EXCL to error on races. Outside the try-except
-        # to ensure we don't delete a file created by another process in the except block.
-        sbang_tmp_file = open(sbang_tmp_path, "xb")
-        try:
-            with open(spack.paths.sbang_script, "rb") as src, sbang_tmp_file as dst:
-                shutil.copyfileobj(src, dst)
-                os.fchmod(dst.fileno(), config_mode | 0o111)  # ensure executable
-                if group_name:
-                    os.fchown(dst.fileno(), -1, gid)
-            os.rename(sbang_tmp_path, sbang_path)
-        except BaseException:
-            try:
-                os.unlink(sbang_tmp_path)
-            except OSError:
-                pass
-            raise
+        with fs.write_tmp_and_move(sbang_path, mode="wb") as dst, open(
+            spack.paths.sbang_script, "rb"
+        ) as src:
+            shutil.copyfileobj(src, dst)
+            os.fchmod(dst.fileno(), config_mode | 0o111)  # ensure executable
+            if group_name:
+                os.fchown(dst.fileno(), -1, gid)
 
     def __reduce__(self):
         return Store, (

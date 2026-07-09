@@ -8,19 +8,19 @@ import sys
 from typing import List, Optional, Tuple
 
 import spack.binary_distribution
-import spack.cmd as cmd
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.repo
 import spack.solver.reuse
 import spack.spec
 import spack.store
 import spack.util.lang
+from spack import cmd
 from spack.cmd.common import arguments
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
-from spack.llnl.util.tty.color import colorize
+from spack.util import tty
+from spack.util.tty import color
+from spack.util.tty.color import colorize
 
 from ..enums import InstallRecordStatus
 

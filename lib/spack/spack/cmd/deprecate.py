@@ -19,9 +19,9 @@ import spack.cmd
 import spack.concretize
 import spack.environment as ev
 import spack.installer
-import spack.llnl.util.tty as tty
 import spack.store
 from spack.cmd.common import arguments
+from spack.util import tty
 from spack.util.filesystem import symlink
 
 from ..enums import InstallRecordStatus

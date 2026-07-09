@@ -13,8 +13,7 @@ from types import TracebackType
 from typing import IO, Callable, Dict, Generator, Optional, Tuple, Type, Union
 
 import spack.error
-from spack.llnl.util import tty
-from spack.util import lang
+from spack.util import lang, tty
 from spack.util.string import plural
 
 if sys.platform != "win32":
