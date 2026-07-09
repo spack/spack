@@ -3,18 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests for the TerminalUI terminal UI in new_installer.py"""
 
-import sys
-
-import pytest
-
-if sys.platform == "win32":
-    pytest.skip("No Windows support", allow_module_level=True)
-
-
 import functools
 import io
 import os
 from typing import List, Optional, Tuple
+
+import pytest
 
 import spack.new_installer as inst
 from spack.new_installer import TerminalUI
@@ -32,7 +26,7 @@ class SimpleTextIOWrapper(io.TextIOWrapper):
     def __init__(self, tty: bool) -> None:
         self._buffer = io.BytesIO()
         self._tty = tty
-        super().__init__(self._buffer, encoding="utf-8", line_buffering=True)
+        super().__init__(self._buffer, encoding="utf-8", newline="", line_buffering=True)
 
     def isatty(self) -> bool:
         return self._tty
@@ -119,7 +113,7 @@ class TestBasicStateManagement:
     """Test basic state management operations"""
 
     def test_on_resize(self):
-        """Test that on_resize sets terminal_size_changed and update() fetches lazily"""
+        """Test that on_resize sets terminal_size_changed and render() fetches lazily"""
         sizes = [os.terminal_size((80, 24))]
         fake_stdout = SimpleTextIOWrapper(tty=True)
         tui = TerminalUI(
@@ -134,12 +128,12 @@ class TestBasicStateManagement:
         assert tui.terminal_size_changed is True
         assert tui.dirty is True
 
-        # The actual size is fetched lazily on the first update()
+        # The actual size is fetched lazily on the first render()
         tui.render()
         assert tui.terminal_size == os.terminal_size((120, 40))
         assert tui.terminal_size_changed is False
 
-    def test_add_build(self):
+    def test_on_build_added(self):
         """Test that on_build_added adds builds correctly"""
         tui, _, _ = create_tui(total=2)
 
@@ -155,7 +149,7 @@ class TestBasicStateManagement:
         assert "pkg2" in tui.builds
         assert tui.builds["pkg2"].explicit is False
 
-    def test_update_state_transitions(self):
+    def test_on_state_changed_transitions(self):
         """Test that on_state_changed transitions states properly"""
         tui, fake_time, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
@@ -172,7 +166,7 @@ class TestBasicStateManagement:
         assert tui.completed == 1
         assert tui.builds[build_id].finished_time == fake_time[0] + inst.CLEANUP_TIMEOUT
 
-    def test_update_state_failed(self):
+    def test_on_state_changed_failed(self):
         """Test that failed state increments completed counter"""
         tui, fake_time, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
@@ -182,7 +176,7 @@ class TestBasicStateManagement:
         assert tui.completed == 1
         assert tui.builds[build_id].finished_time == fake_time[0] + inst.CLEANUP_TIMEOUT
 
-    def test_remove_build(self):
+    def test_on_build_removed(self):
         """Test that on_build_removed removes the build from the display."""
         tui, _, _ = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
@@ -193,7 +187,7 @@ class TestBasicStateManagement:
         assert len(tui.builds) == 1
         assert tui.dirty is True
 
-    def test_remove_build_resets_tracked(self):
+    def test_on_build_removed_resets_tracked(self):
         """Test that removing the tracked build resets tracking to overview mode."""
         tui, _, _ = create_tui(total=1)
         [build_id] = add_mock_builds(tui, 1)
@@ -235,7 +229,17 @@ class TestBasicStateManagement:
         tui.on_state_changed(build_id, "failed")
         assert tui.builds[build_id].log_summary is None
 
-    def test_update_progress(self):
+    def test_print_failure_summaries(self, capsys):
+        """print_failure_summaries writes stored summaries to stderr, skipping builds without a
+        summary and unknown build ids."""
+        tui, _, _ = create_tui()
+        build_ids = add_mock_builds(tui, 2)
+
+        tui.builds[build_ids[0]].log_summary = "error: nope\n"
+        tui.on_finished([*build_ids, "unknown"])
+        assert capsys.readouterr().err == "error: nope\n"
+
+    def test_on_progress(self):
         """Test that on_progress updates percentages"""
         tui, _, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
@@ -305,7 +309,7 @@ class TestOutputRendering:
         assert "Progress:" in output
 
     def test_no_output_when_not_dirty(self):
-        """Test that update() skips rendering when not dirty"""
+        """Test that render() skips rendering when not dirty"""
         tui, _, fake_stdout = create_tui()
         add_mock_builds(tui, 1)
         tui.render()
@@ -318,8 +322,8 @@ class TestOutputRendering:
         tui.render()
         assert fake_stdout.getvalue() == ""
 
-    def test_update_throttling(self):
-        """Test that update() throttles redraws"""
+    def test_render_throttling(self):
+        """Test that render() throttles redraws"""
         tui, fake_time, fake_stdout = create_tui()
         add_mock_builds(tui, 1)
 
@@ -404,6 +408,18 @@ class TestTimeBasedBehavior:
 
         # Spinner should have advanced
         assert tui.spinner_index == (initial_index + 1) % len(tui.spinner_chars)
+
+    def test_no_redraw_when_nothing_changed(self):
+        """render() renders nothing when the display is clean and the spinner is not due"""
+        tui, fake_time, fake_stdout = create_tui()
+        add_mock_builds(tui, 1)
+        tui.render()
+        fake_stdout.clear()
+
+        # Past the redraw throttle but before the next spinner advance, with no state changes
+        fake_time[0] = inst.SPINNER_INTERVAL * 0.6
+        tui.render()
+        assert fake_stdout.getvalue() == ""
 
     def test_finished_package_cleanup(self):
         """Test that finished packages are cleaned up after timeout"""
@@ -818,6 +834,22 @@ class TestLogFollowing:
         assert "Error: something went wrong" in output
         assert "/tmp/spack/pkg1.log" in output
 
+    def test_navigate_to_failed_build_without_summary(self):
+        """Navigating to a failed build with no parsed errors points at the full log."""
+        tui, _, fake_stdout = create_tui(total=2)
+        build_ids = add_mock_builds(tui, 2)
+
+        tui.on_state_changed(build_ids[1], "failed")
+        build_info = tui.builds[build_ids[1]]
+        assert build_info.log_summary is None  # no log file, so nothing was parsed
+        build_info.log_path = "/tmp/spack/pkg1.log"
+
+        tui.tracked_build_id = build_ids[0]
+        tui.next(1)
+        assert "No errors parsed from log, see full log: /tmp/spack/pkg1.log" in (
+            fake_stdout.getvalue()
+        )
+
     def test_navigation_skips_finished_build(self):
         """Test that navigation skips successfully finished builds"""
         tui, _, _ = create_tui(total=3)
@@ -995,7 +1027,7 @@ class TestToggle:
         # Echoing was stopped for the previously tracked build
         assert tui.commands[-1] == inst.SetEcho(tracked_id, False)
 
-    def test_update_state_finished_triggers_toggle_when_tracking(self):
+    def test_on_state_changed_finished_triggers_toggle_when_tracking(self):
         """Test that finishing a tracked build triggers toggle back to overview"""
         tui, _, _ = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
@@ -1038,6 +1070,7 @@ class TestToggle:
         assert "checking for bar... yes\n" in written
         assert "checking for baz...\n" in written
 
+    @pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
     @pytest.mark.parametrize("filter_padding", [True, False])
     def test_print_logs_filters_padding(self, filter_padding):
         """on_log_output strips path-padding placeholders before writing to stdout."""
@@ -1056,6 +1089,7 @@ class TestToggle:
         else:
             assert written == log_output
 
+    @pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
     @pytest.mark.parametrize("filter_padding", [True, False])
     def test_prefix_padding_filter_in_status(self, filter_padding):
         """Test that prefix in status indicator applies padding filter."""
@@ -1179,6 +1213,48 @@ class TestSearchFilteringIntegration:
         assert "package-c" in output
 
 
+class TestHandleInput:
+    """Test the on_input keyboard dispatch."""
+
+    def test_toggle_and_navigation_keys(self):
+        """'v' toggles log following, 'n'/'p' navigate, 'q' returns to overview."""
+        tui, _, _ = create_tui(total=3)
+        build_ids = add_mock_builds(tui, 3)
+
+        tui.on_input("v")
+        assert tui.overview_mode is False
+        assert tui.tracked_build_id == build_ids[0]
+
+        tui.on_input("n")
+        assert tui.tracked_build_id == build_ids[1]
+
+        tui.on_input("p")
+        assert tui.tracked_build_id == build_ids[0]
+
+        tui.on_input("q")
+        assert tui.overview_mode is True
+
+    def test_search_keys(self):
+        """'/' enters search mode; subsequent characters build the search term."""
+        tui, _, _ = create_tui(total=2)
+        add_mock_builds(tui, 2)
+
+        tui.on_input("/abc")
+        assert tui.search_mode is True
+        assert tui.search_term == "abc"
+
+        tui.on_input("\x1b")  # Escape exits search mode
+        assert tui.search_mode is False
+
+    def test_parallelism_keys(self):
+        """'+' and '-' produce ChangeJobs commands for the event loop."""
+        tui, _, _ = create_tui(total=1)
+        add_mock_builds(tui, 1)
+
+        tui.on_input("++-")
+        assert tui.commands == [inst.ChangeJobs(1), inst.ChangeJobs(1), inst.ChangeJobs(-1)]
+
+
 class TestEdgeCases:
     """Test edge cases and error conditions"""
 
@@ -1210,6 +1286,16 @@ class TestEdgeCases:
         assert f"[+] {build_a[:7]} pkg0@0.0" in output
         assert f"[x] {build_b[:7]} pkg1@1.0" in output
 
+    def test_finalize_forces_overview_mode(self):
+        """update(finalize=True) leaves log-following mode for the final render."""
+        tui, _, _ = create_tui(total=2)
+        add_mock_builds(tui, 2)
+        tui.next()
+        assert tui.overview_mode is False
+
+        tui.render(finalize=True)
+        assert tui.overview_mode is True
+
     def test_all_builds_finished(self):
         """Test when all builds are finished"""
         tui, fake_time, _ = create_tui(total=2)
@@ -1227,7 +1313,7 @@ class TestEdgeCases:
         assert len(tui.builds) == 0
         assert tui.completed == 2
 
-    def test_update_progress_rounds_correctly(self):
+    def test_on_progress_rounds_correctly(self):
         """Test that progress percentage rounding works"""
         tui, _, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
@@ -1341,7 +1427,7 @@ class TestTerminalUIColor:
 class TestTargetJobs:
     """Test on_jobs_changed and its effect on the header."""
 
-    def test_set_jobs_marks_dirty(self):
+    def test_on_jobs_changed_marks_dirty(self):
         """on_jobs_changed with a new value should update target_jobs and mark dirty."""
         tui, _, _ = create_tui()
         tui.dirty = False
@@ -1353,7 +1439,7 @@ class TestTargetJobs:
         assert tui.actual_jobs == 2
         assert tui.target_jobs == 2
 
-    def test_set_jobs_same_value_no_dirty(self):
+    def test_on_jobs_changed_same_value_no_dirty(self):
         """on_jobs_changed with the same value should not mark dirty."""
         tui, _, _ = create_tui()
         tui.on_jobs_changed(5, 5)
@@ -1384,8 +1470,22 @@ class TestTargetJobs:
 class TestHeadlessMode:
     """Test that headless mode suppresses terminal output."""
 
-    def test_update_suppressed_when_headless(self):
-        """update() should not write anything when headless is True."""
+    def test_on_headless_changed_transitions(self):
+        """on_headless_changed(True) invalidates the display area; on_headless_changed(False)
+        marks dirty."""
+        tui, _, _ = create_tui(is_tty=True)
+        tui.active_area_rows = 5
+        tui.on_headless_changed(True)
+        assert tui.headless is True
+        assert tui.active_area_rows == 0
+
+        tui.dirty = False
+        tui.on_headless_changed(False)
+        assert tui.headless is False
+        assert tui.dirty is True
+
+    def test_render_suppressed_when_headless(self):
+        """render() should not write anything when headless is True."""
         tui, time_values, stdout = create_tui(is_tty=True, total=1)
         add_mock_builds(tui, 1)
         tui.headless = True
@@ -1402,7 +1502,7 @@ class TestHeadlessMode:
         tui.on_log_output(build_ids[0], b"hello world\n")
         assert stdout.getvalue() == ""
 
-    def test_update_state_non_tty_suppressed_when_headless(self):
+    def test_on_state_changed_non_tty_suppressed_when_headless(self):
         """on_state_changed() non-TTY output should be suppressed when headless."""
         tui, _, stdout = create_tui(is_tty=False, total=1)
         on_build_added(tui, "pkg")
@@ -1411,8 +1511,8 @@ class TestHeadlessMode:
         tui.on_state_changed("pkg", "finished")
         assert stdout.getvalue() == ""
 
-    def test_update_works_after_headless_cleared(self):
-        """update() should work normally once headless is cleared."""
+    def test_render_works_after_headless_cleared(self):
+        """render() should work normally once headless is cleared."""
         tui, time_values, stdout = create_tui(is_tty=True, total=1, color=False)
         add_mock_builds(tui, 1)
         tui.headless = True
@@ -1424,6 +1524,85 @@ class TestHeadlessMode:
         tui.dirty = True
         tui.render()
         assert "[/] pkg0 pkg0@0.0 starting" in stdout.getvalue()
+
+    def test_refresh_interval_modes(self):
+        """Only an interactive, foreground terminal needs a periodic redraw tick."""
+        tui, _, _ = create_tui(is_tty=True)
+        assert tui.refresh_interval() == inst.SPINNER_INTERVAL
+        tui.headless = True
+        assert tui.refresh_interval() is None
+        non_tty, _, _ = create_tui(is_tty=False)
+        assert non_tty.refresh_interval() is None
+
+
+class TestBlockedIndicator:
+    """Test set_blocked and the blocked message in the overview."""
+
+    def test_on_blocked_changed_marks_dirty_once(self):
+        """set_blocked marks dirty on a change, but not when the value is unchanged."""
+        tui, _, _ = create_tui()
+        tui.dirty = False
+        tui.on_blocked_changed(True)
+        assert tui.blocked is True
+        assert tui.dirty is True
+
+        tui.dirty = False
+        tui.on_blocked_changed(True)
+        assert tui.dirty is False
+
+    def test_blocked_message_rendered(self):
+        """When blocked and nothing is running, the overview shows a waiting message."""
+        tui, _, fake_stdout = create_tui()
+        tui.on_blocked_changed(True)
+        tui.render()
+        assert "Waiting for other Spack install process" in fake_stdout.getvalue()
+
+
+class TestLineRendering:
+    """Test individual build-line components in the rendered output."""
+
+    def test_fetch_progress_rendered(self):
+        """A build with fetch progress shows a percentage instead of its state."""
+        tui, _, fake_stdout = create_tui(total=1)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.on_progress(build_id, 50, 100)
+        tui.render()
+        assert "fetching: 50%" in fake_stdout.getvalue()
+
+    def test_failed_line_shows_log_path(self):
+        """A failed build's line includes the path to its log file."""
+        tui, _, fake_stdout = create_tui(is_tty=False, total=1)
+        on_build_added(tui, "pkg", log_path="/tmp/pkg.log")
+        tui.on_state_changed("pkg", "failed")
+        assert "failed: /tmp/pkg.log" in fake_stdout.getvalue()
+
+    def test_external_indicator(self):
+        """External packages are rendered with the [e] indicator."""
+        tui, _, fake_stdout = create_tui(is_tty=False, total=1)
+        on_build_added(tui, "pkg", external=True)
+        tui.on_state_changed("pkg", "finished")
+        assert "[e]" in fake_stdout.getvalue()
+
+    def test_non_tty_running_build_static_indicator(self):
+        """Non-TTY state lines use the static [ ] indicator for builds still in progress, and
+        render implicit builds with a plain (non-bold) name."""
+        tui, _, fake_stdout = create_tui(is_tty=False, total=1, color=False)
+        on_build_added(tui, "pkg", explicit=False)
+        tui.on_state_changed("pkg", "installing")
+        line = fake_stdout.getvalue()
+        assert line.startswith("[ ] ")
+        assert "pkg@1.0" in line
+
+    def test_line_truncated_to_terminal_width(self):
+        """Build lines are cut off at the terminal width in the interactive overview."""
+        tui, _, fake_stdout = create_tui(total=1, terminal_cols=30, color=False)
+        on_build_added(tui, "pkg", prefix="/quite/long/prefix/path")
+        tui.on_state_changed("pkg", "finished")
+        tui.render()
+        output = fake_stdout.getvalue()
+        assert "pkg@1.0" in output
+        # The prefix would exceed the terminal width, so it is not rendered.
+        assert "/quite/long/prefix/path" not in output
 
 
 class TestStdinReader:
