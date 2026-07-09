@@ -2662,6 +2662,10 @@ class BuildProcessInstaller:
             if spack.package_base.PackageBase._verbose is not None:
                 self.echo = spack.package_base.PackageBase._verbose
 
+            # Store timer on package for access in phase callbacks
+            self.pkg._install_timer = self.timer
+            self.pkg._install_pre = self.pre
+
             # Run the pre-install hook in the child process after
             # the directory is created.
             spack.hooks.pre_install(self.pkg.spec)

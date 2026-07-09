@@ -358,9 +358,15 @@ class PackageTest:
             builder: builder for package being tested
             phase_name: the name of the build-time phase (e.g., ``build``, ``install``)
             method_names: phase-specific callback method names
+
+        Returns:
+            dict: Test counts with keys 'total', 'passed', 'failed', 'skipped'
         """
         verbose = tty.is_verbose()
         fail_fast = spack.config.get("config:fail_fast", False)
+
+        # Track initial counts to calculate what was added during this phase
+        initial_counts = dict(self.counts)
 
         with self.test_logger(verbose=verbose, externals=False) as logger:
             # Report running each of the methods in the build log
@@ -388,9 +394,19 @@ class PackageTest:
             if have_tests:
                 print_message(logger, "Completed testing", verbose)
 
-            # Raise any collected failures here
-            if self.test_failures:
-                raise TestFailure(self.test_failures)
+        # Calculate test counts for this phase (outside the logger context)
+        test_counts = {
+            "total": self.parts() - sum(initial_counts.values()),
+            "passed": self.counts[TestStatus.PASSED] - initial_counts.get(TestStatus.PASSED, 0),
+            "failed": self.counts[TestStatus.FAILED] - initial_counts.get(TestStatus.FAILED, 0),
+            "skipped": self.counts[TestStatus.SKIPPED] - initial_counts.get(TestStatus.SKIPPED, 0),
+        }
+
+        # Raise any collected failures here
+        if self.test_failures:
+            raise TestFailure(self.test_failures)
+
+        return test_counts
 
     def stand_alone_tests(self, kwargs, timeout: Optional[int] = None) -> None:
         """Run the package's stand-alone tests.
