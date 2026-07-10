@@ -17,6 +17,11 @@ import spack.util.crypto
 import spack.util.file_cache
 
 
+def _get_patch_by_name(pkg_cls, patch_filename):
+    """Helper to get a patch object by its filename from a package class."""
+    return next(p for patches in pkg_cls.patches.values() for p in patches if isinstance(p, spack.patch.FilePatch) and p.relative_path == patch_filename)
+
+
 def test_patch_index_update_packages_works(tmp_path, config):
     """Test that patch index automatically updates when a patch file changes.
 
@@ -63,12 +68,8 @@ class TestPkg(Package):
         repo_path = spack.repo.RepoPath(repo)
         pkg_cls = repo.get_pkg_class("test_pkg")
 
-        # Get the original patch hash
-        original_hash = None
-        for cond, patch_list in pkg_cls.patches.items():
-            for p in patch_list:
-                original_hash = p.sha256
-                break
+        # Get the original patch hash for fix.patch
+        original_hash = _get_patch_by_name(pkg_cls, "fix.patch").sha256
 
         # Build the patch index with the original hash
         patch_index = repo_path.get_patch_index(allow_stale=False)
@@ -109,11 +110,7 @@ class TestPkg(Package):
         pkg_cls2 = repo2.get_pkg_class("test_pkg")
 
         # Get the new hash (should be computed from modified file by fresh patch object)
-        new_hash = None
-        for cond, patch_list in pkg_cls2.patches.items():
-            for p in patch_list:
-                new_hash = p.sha256
-                break
+        new_hash = _get_patch_by_name(pkg_cls2, "fix.patch").sha256
 
         # Verify the hash actually changed
         assert new_hash != original_hash, "Patch hash should have changed after file modification"
