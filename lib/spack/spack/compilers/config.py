@@ -267,9 +267,9 @@ class CompilerFactory:
         external_parser = ExternalSpecsParser(init_external_dicts)
         valid_compiler_specs = []
         for name, external_specs_and_config in external_parser.specs_by_name.items():
+            if name not in compiler_package_names:
+                continue
             for spec_with_config in external_specs_and_config:
-                if name not in compiler_package_names:
-                    continue
                 if _EXTRA_ATTRIBUTES_KEY not in spec_with_config.config:
                     header = (
                         f"The external spec '{spec_with_config.config['spec']}'"
