@@ -138,7 +138,7 @@ class NullReportData(ReportData):
     Avoids creating InstallRecords and reading log files on every completed build."""
 
     def __init__(self) -> None:
-        pass
+        super().__init__(roots=[])
 
     def start_record(self, spec: spack.spec.Spec) -> None:
         pass
