@@ -54,6 +54,7 @@ HEADLESS_WAKE_INTERVAL = 1.0
 #: Selector data keys registered by the terminal and dispatched by the event loop
 STDIN_EVENT = "stdin"
 SIGWINCH_EVENT = "sigwinch"
+JOBSERVER_EVENT = "jobserver"
 
 
 class BuildChannels(NamedTuple):

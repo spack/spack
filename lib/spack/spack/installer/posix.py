@@ -28,6 +28,7 @@ from typing import Callable, Optional, Tuple, Union
 import spack.spec
 import spack.util.tty
 from spack.installer.base import (
+    JOBSERVER_EVENT,
     OUTPUT_BUFFER_SIZE,
     SIGWINCH_EVENT,
     STDIN_EVENT,
@@ -308,7 +309,7 @@ class PosixJobServer(JobServerBase):
 
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
         if wake and self.r not in selector.get_map():
-            selector.register(self.r, selectors.EVENT_READ, "jobserver")
+            selector.register(self.r, selectors.EVENT_READ, JOBSERVER_EVENT)
         elif not wake and self.r in selector.get_map():
             selector.unregister(self.r)
 
