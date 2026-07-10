@@ -556,20 +556,21 @@ def test_invalid_from_dict(mock_packages, config):
     with pytest.raises(spack.fetch_strategy.ChecksumError, match="sha256 checksum failed for"):
         spack.patch.from_dict(dictionary, mock_packages)
 
-  @pytest.mark.regression("52675")
-  def test_patch_lookup_for_shadowed_package(mock_packages, config, repo_builder):
-      """Patches must be looked up via the spec's fullname, so that a same-named
-      package in a higher-precedence repo doesn't shadow the patch owner."""
-      repo_builder.add_package("patch")
 
-      with spack.repo.use_repositories(repo_builder.root, override=False):
-          assert spack.repo.PATH.repo_for_pkg("patch").namespace == repo_builder.namespace
+@pytest.mark.regression("52675")
+def test_patch_lookup_for_shadowed_package(mock_packages, config, repo_builder):
+    """Patches must be looked up via the spec's fullname, so that a same-named
+    package in a higher-precedence repo doesn't shadow the patch owner."""
+    repo_builder.add_package("patch")
 
-          spec = spack.concretize.concretize_one("builtin_mock.patch@=1.0")
-          default = spack.concretize.concretize_one("patch")
-          assert spec.patches != default.patches
-          assert spec.namespace == "builtin_mock"
+    with spack.repo.use_repositories(repo_builder.root, override=False):
+        assert spack.repo.PATH.repo_for_pkg("patch").namespace == repo_builder.namespace
 
-          # raises SpecError if the lookup uses the bare name: the shadowing
-          # class's patch index has no such sha256
-          assert {p.sha256 for p in spec.patches} == {foo_sha256, baz_sha256}
+        spec = spack.concretize.concretize_one("builtin_mock.patch@=1.0")
+        default = spack.concretize.concretize_one("patch")
+        assert spec.patches != default.patches
+        assert spec.namespace == "builtin_mock"
+
+        # raises SpecError if the lookup uses the bare name: the shadowing
+        # class's patch index has no such sha256
+        assert {p.sha256 for p in spec.patches} == {foo_sha256, baz_sha256}
