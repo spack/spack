@@ -10,9 +10,9 @@ from typing import List, Optional, Tuple
 
 import pytest
 
-import spack.new_installer as inst
-from spack.new_installer import TerminalUI
-from spack.new_installer_base import StdinReader
+import spack.installer.ui as inst
+from spack.installer.base import StdinReader
+from spack.installer.ui import TerminalUI
 
 
 def _fd_reader(fd: int) -> StdinReader:

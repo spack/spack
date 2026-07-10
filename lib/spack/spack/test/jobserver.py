@@ -15,7 +15,7 @@ import pathlib
 import selectors
 import stat
 
-from spack.new_installer_posix import (
+from spack.installer.posix import (
     PosixJobServer,
     create_jobserver_fifo,
     get_jobserver_config,
