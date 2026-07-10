@@ -273,14 +273,14 @@ class PosixJobServer(JobServerBase):
 
         fifo_config = get_jobserver_config(makeflags)
 
-        if type(fifo_config) is str:
+        if isinstance(fifo_config, str):
             # FIFO-based jobserver. Try to open the FIFO.
             open_attempt = open_existing_jobserver_fifo(fifo_config)
             if open_attempt:
                 self.r, self.w = open_attempt
                 self.fifo_path = fifo_config
                 return
-        elif type(fifo_config) is tuple:
+        elif isinstance(fifo_config, tuple):
             # Old style pipe-based jobserver. Validate the fds before using them.
             r, w = fifo_config
             try:
@@ -408,8 +408,7 @@ def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str,
     matches = re.findall(r" --jobserver-[^=]+=([^ ]+)", makeflags)
     if not matches:
         return None
-    last_match: str = matches[-1]
-    assert isinstance(last_match, str)
+    last_match = matches[-1]
     if last_match.startswith("fifo:"):
         return last_match[5:]
     parts = last_match.split(",", 1)
