@@ -1487,7 +1487,8 @@ class SpackSolverSetup:
     def deprecation_rules(self, pkg):
         """Emit facts for deprecated() directives on pkg."""
         for constraint_spec, entries in pkg.deprecations.items():
-            msg = f"deprecated constraint {constraint_spec or pkg.name}"
+            constraint_str = str(constraint_spec) or pkg.name
+            msg = f"deprecated constraint {constraint_str}"
             condition_id = self.condition(constraint_spec, required_name=pkg.name, msg=msg)
             for reason, severity in entries:
                 self.gen.fact(

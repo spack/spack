@@ -281,7 +281,7 @@ class _Version(NamedTuple):
         pkg.versions[version] = kwargs
 
         if kwargs.get("deprecated", False):
-            _Deprecated(f"@{version}", "maintenance", "critical")(pkg)
+            _Deprecated(f"@={version}", "maintenance", "critical")(pkg)
 
 
 @directive("conflicts")

@@ -5,6 +5,7 @@ import pytest
 
 import spack.enums
 import spack.repo
+import spack.spec
 import spack.util.spack_yaml as syaml
 from spack.concretize import concretize_one
 from spack.solver.asp import UnsatisfiableSpecError
@@ -135,3 +136,13 @@ packages:
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-buildtool-client")
+
+
+def test_old_style_deprecation_uses_exact_version(mock_packages):
+    """Tests that version(..., deprecated=True) must map to an exact '@=X.Y' constraint, so that
+    the range '@X.Y' does not spuriously match a sub-version such as 'X.Y.Z'.
+    """
+    pkg_cls = spack.repo.PATH.get_pkg_class("deprecated-old-style")
+    (constraint,) = pkg_cls.deprecations  # only @1.0 is deprecated
+    assert spack.spec.Spec("deprecated-old-style@=1.0").satisfies(constraint)
+    assert not spack.spec.Spec("deprecated-old-style@=1.0.1").satisfies(constraint)

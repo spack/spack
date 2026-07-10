@@ -5163,16 +5163,6 @@ packages:
     assert mpileaks.satisfies("%c=gcc@12")
 
 
-def test_concrete_specs_skip_prechecks(config: Configuration, mock_packages):
-    """Tests that deprecated versions are blocked by default but allowed with config:deprecated."""
-    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="deprecated"):
-        spack.concretize.concretize_one("deprecated-versions@=1.1.0")
-
-    with config.override("config:deprecated", True):
-        concrete_spec = spack.concretize.concretize_one("deprecated-versions@=1.1.0")
-        assert concrete_spec.satisfies("deprecated-versions@=1.1.0")
-
-
 @pytest.mark.regression("51683")
 def test_activating_variant_for_conditional_language_dependency(config, mock_packages):
     """Tests that a dependency on a conditional language can be concretized, and that the solver
