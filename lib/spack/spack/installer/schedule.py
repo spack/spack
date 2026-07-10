@@ -9,6 +9,7 @@ expansion), :func:`schedule_builds` (per-spec lock acquisition and readiness sel
 overall design."""
 
 import abc
+import collections
 from typing import Dict, FrozenSet, List, NamedTuple, Optional, Set, Tuple, Union
 
 import spack.database
@@ -186,11 +187,13 @@ class BuildGraph:
             self.nodes.pop(key, None)
 
         # Check that all prefixes to be created are unique.
-        prefixes = [s.prefix for s in self.nodes.values() if not s.external]
-        if len(prefixes) != len(set(prefixes)):
+        prefix_counts = collections.Counter(
+            s.prefix for s in self.nodes.values() if not s.external
+        )
+        duplicate_prefixes = [p for p, count in prefix_counts.items() if count > 1]
+        if duplicate_prefixes:
             raise spack.error.InstallError(
-                "Install prefix collision: "
-                + ", ".join(p for p in prefixes if prefixes.count(p) > 1)
+                "Install prefix collision: " + ", ".join(duplicate_prefixes)
             )
 
         # If we're not installing dependencies, verify that all remaining nodes in the build graph
