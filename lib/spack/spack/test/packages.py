@@ -421,3 +421,16 @@ def test_spack_package_api_versioning():
     assert spack.package.__all__ == [
         symbol for symbols in spack.package.api.values() for symbol in symbols
     ]
+
+
+def test_deprecated_version_honors_directive(mock_packages):
+    """deprecated_version reflects the deprecated() directive, not only the legacy flag."""
+    # deprecated-with-reason flags @1.0 and @2.0 through the directive only (no deprecated=True).
+    pkg_cls = spack.repo.PATH.get_pkg_class("deprecated-with-reason")
+    assert spack.package_base.deprecated_version(pkg_cls, "1.0")
+    assert spack.package_base.deprecated_version(pkg_cls, "2.0")
+
+    # deprecated-dual deprecates only @1.0, so @2.0 must remain non-deprecated.
+    pkg_cls = spack.repo.PATH.get_pkg_class("deprecated-dual")
+    assert spack.package_base.deprecated_version(pkg_cls, "1.0")
+    assert not spack.package_base.deprecated_version(pkg_cls, "2.0")

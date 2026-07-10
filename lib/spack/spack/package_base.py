@@ -2746,7 +2746,11 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
         version = StandardVersion.from_string(version)
 
     details = pkg.versions.get(version)
-    return details is not None and details.get("deprecated", False)
+    if details is not None and details.get("deprecated", False):
+        return True
+
+    version_spec = spack.spec.Spec(f"@={version}")
+    return any(version_spec.satisfies(constraint) for constraint in pkg.deprecations)
 
 
 def preferred_version(
@@ -2763,7 +2767,7 @@ def preferred_version(
 
     def _version_order(version_info):
         version, info = version_info
-        deprecated_key = not info.get("deprecated", False)
+        deprecated_key = not deprecated_version(pkg, version)
         return (deprecated_key, *concretization_version_order(version_info))
 
     version, _ = max(pkg.versions.items(), key=_version_order)
