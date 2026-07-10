@@ -13,7 +13,6 @@ This module centralizes that policy so the concretization-time gate and the inst
 cannot drift.
 """
 
-import functools
 import warnings
 from typing import TYPE_CHECKING, Callable, Iterable, List, NamedTuple, Optional
 
@@ -37,17 +36,19 @@ class Violation(NamedTuple):
     allowed: DeprecationSeverity
 
 
-def default_allowed_severity(warn_on_legacy: bool = False) -> DeprecationSeverity:
+def _default_allowed_severity(
+    packages_yaml: dict, warn_on_legacy: bool = False
+) -> DeprecationSeverity:
     """Return the default allowed deprecation severity from ``packages:all``.
 
     Falls back to the legacy ``config:deprecated`` flag (mapped to ``critical``) and finally to
     ``none``, meaning every deprecation is disallowed.
 
     Args:
+        packages_yaml: the ``packages`` configuration.
         warn_on_legacy: emit a warning when the deprecated ``config:deprecated`` flag is
             what relaxes the policy.
     """
-    packages_yaml = spack.config.CONFIG.get_config("packages")
     severity_str = packages_yaml.get("all", {}).get("allowed_deprecation_severity")
     if severity_str is not None:
         return DeprecationSeverity(severity_str)
@@ -65,11 +66,44 @@ def default_allowed_severity(warn_on_legacy: bool = False) -> DeprecationSeverit
     return DeprecationSeverity.NONE
 
 
-def allowed_severity(pkg_name: str, default: DeprecationSeverity) -> DeprecationSeverity:
-    """Return the allowed deprecation severity for a package, honoring per-package overrides."""
-    pkg_cfg = spack.config.CONFIG.get_config("packages").get(pkg_name, {})
-    override = pkg_cfg.get("allowed_deprecation_severity")
-    return DeprecationSeverity(override) if override is not None else default
+class Policy(NamedTuple):
+    """Deprecation policy resolved from the ``packages`` configuration."""
+
+    packages_yaml: dict
+    default_allowed: DeprecationSeverity
+
+    @staticmethod
+    def from_config(warn_on_legacy: bool = False) -> "Policy":
+        """Build a policy from the current ``packages`` config, read once.
+
+        Args:
+            warn_on_legacy: emit a warning when the deprecated ``config:deprecated`` flag is
+                what relaxes the policy. Set only where the warning should fire once.
+        """
+        packages_yaml = spack.config.CONFIG.get_config("packages")
+        return Policy(packages_yaml, _default_allowed_severity(packages_yaml, warn_on_legacy))
+
+    def allowed_severity(self, pkg_name: str) -> DeprecationSeverity:
+        """Return the allowed severity for a package, honoring per-package overrides."""
+        override = self.packages_yaml.get(pkg_name, {}).get("allowed_deprecation_severity")
+        return DeprecationSeverity(override) if override is not None else self.default_allowed
+
+    def disallowed(self, spec: "spack.spec.Spec") -> List[Violation]:
+        """Returns the list of deprecation-policy violations for a spec. External specs are
+        exempted since they are not under Spack's control.
+        """
+        if spec.external:
+            return []
+
+        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+        allowed = self.allowed_severity(spec.name)
+        return [
+            Violation(constraint, reason, severity, allowed)
+            for constraint, entries in pkg_cls.deprecations.items()
+            if spec.satisfies(constraint)
+            for reason, severity in entries
+            if severity > allowed
+        ]
 
 
 def deprecation_scope() -> str:
@@ -82,26 +116,6 @@ def deptypes_for_scope(scope: Optional[str] = None) -> int:
     """Return the dependency-type flag to traverse for a given deprecation scope."""
     scope = scope if scope is not None else deprecation_scope()
     return dt.ALL if scope == "all" else dt.LINK | dt.RUN
-
-
-def disallowed(
-    spec: "spack.spec.Spec", *, default_allowed: DeprecationSeverity
-) -> List[Violation]:
-    """Returns the list of violations on deprecation policies for a given spec. External specs are
-    exempted since they are not under Spack's control.
-    """
-    if spec.external:
-        return []
-
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-    allowed = allowed_severity(spec.name, default_allowed)
-    return [
-        Violation(constraint, reason, severity, allowed)
-        for constraint, entries in pkg_cls.deprecations.items()
-        if spec.satisfies(constraint)
-        for reason, severity in entries
-        if severity > allowed
-    ]
 
 
 def check_deprecations(
@@ -118,7 +132,7 @@ def check_deprecations(
             ``packages`` policy.
         deptypes: dependency types to traverse; defaults to the configured ``deprecation_scope``.
     """
-    policy = policy or functools.partial(disallowed, default_allowed=default_allowed_severity())
+    policy = policy or Policy.from_config().disallowed
     deptypes = deptypes if deptypes is not None else deptypes_for_scope()
 
     violations: List[str] = []
