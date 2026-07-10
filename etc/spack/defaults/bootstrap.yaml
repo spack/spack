@@ -21,3 +21,5 @@ bootstrap:
     github-actions-v2: true
     github-actions-v0.6: true
     spack-install: true
+  dev:
+    enable_source: false

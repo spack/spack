@@ -519,14 +519,14 @@ Developer commands
 ``spack style``
 ^^^^^^^^^^^^^^^
 
-``spack style`` exists to help the developer check imports and style with mypy, Flake8, isort, and (soon) Black.
+``spack style`` exists to help the developer check imports and style with mypy and ruff (check and format).
 To run all style checks, simply do:
 
 .. code-block:: console
 
     $ spack style
 
-To run automatic fixes for isort, you can do:
+To run automatic fixes for ruff format and check, you can do:
 
 .. code-block:: console
 
@@ -534,6 +534,23 @@ To run automatic fixes for isort, you can do:
 
 You do not need any of these Python packages installed on your system for the checks to work!
 Spack will bootstrap install them from packages for your use.
+
+This process can be driven manually with:
+
+.. code-block:: console
+
+    $ spack bootstrap now --dev
+   
+By default, Spack's "development" bootstrap dependencies are set to install from the cache only.
+If for whatever reason you wish to allows for the options to build these dependencies from source, you can configure Spack to do so:
+
+.. code-block::console 
+
+    $ spack config add bootstrap:dev:enable_source:true
+
+.. note:: 
+    Spack defaults to bootstrapping development dependencies from binary due to the space and time required to build rust.
+    If you enable from source development dependency bootstrapping, be sure your home drive has sufficient storage and be aware the bootstrap may take some time to complete.
 
 ``spack unit-test``
 ^^^^^^^^^^^^^^^^^^^
