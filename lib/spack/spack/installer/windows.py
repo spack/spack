@@ -215,22 +215,8 @@ class WindowsTee(Tee):
     redirected via SetStdHandle so the child process inherits the write end of the pipe."""
 
     def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
-        _echo = False
-        control_r = self.control_r
-        parent_w = self.parent
-
-        def _control_reader() -> None:
-            nonlocal _echo
-            while True:
-                try:
-                    data = control_r.recv(1)
-                    if not data:
-                        break
-                    _echo = data == b"1"
-                except OSError:
-                    break
-
-        threading.Thread(target=_control_reader, daemon=True).start()
+        self._echo = False
+        threading.Thread(target=self._control_reader, daemon=True).start()
         try:
             with log_file:
                 while True:
@@ -242,13 +228,24 @@ class WindowsTee(Tee):
                         break
                     log_file.write(data)
                     log_file.flush()
-                    if _echo:
+                    if self._echo:
                         try:
-                            parent_w.sendall(data)
+                            self.parent.sendall(data)
                         except OSError:
                             pass
         finally:
             os.close(log_r)
+
+    def _control_reader(self) -> None:
+        """Enable or disable echoing based on control bytes sent by the parent."""
+        while True:
+            try:
+                data = self.control_r.recv(1)
+            except OSError:
+                break
+            if not data:
+                break
+            self._echo = data == b"1"
 
     def _setup_handles(self) -> None:
         kernel32 = ctypes.windll.kernel32
