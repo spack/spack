@@ -493,7 +493,13 @@ class PackageInstaller:
 
             try:
                 self.ui.render(finalize=True)
+            except Exception:
+                pass
+            try:
                 selector.close()
+            except Exception:
+                pass
+            try:
                 jobserver.close()
             except Exception:
                 pass
