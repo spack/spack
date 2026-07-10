@@ -519,14 +519,14 @@ Developer commands
 ``spack style``
 ^^^^^^^^^^^^^^^
 
-``spack style`` exists to help the developer check imports and style with mypy, Flake8, isort, and (soon) Black.
+``spack style`` exists to help the developer check imports and style with mypy and Ruff (for formatting and linting).
 To run all style checks, simply do:
 
 .. code-block:: console
 
     $ spack style
 
-To run automatic fixes for isort, you can do:
+To automatically fix formatting and linting issues, you can do:
 
 .. code-block:: console
 

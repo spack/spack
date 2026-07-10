@@ -3150,7 +3150,7 @@ complete -c spack -n '__fish_spack_using_command style' -s r -l root-relative -d
 complete -c spack -n '__fish_spack_using_command style' -s U -l no-untracked -f -a untracked
 complete -c spack -n '__fish_spack_using_command style' -s U -l no-untracked -d 'exclude untracked files from checks'
 complete -c spack -n '__fish_spack_using_command style' -s f -l fix -f -a fix
-complete -c spack -n '__fish_spack_using_command style' -s f -l fix -d 'format automatically if possible (e.g., with isort, black)'
+complete -c spack -n '__fish_spack_using_command style' -s f -l fix -d 'format and fix issues automatically (e.g., with ruff)'
 complete -c spack -n '__fish_spack_using_command style' -l root -r -f -a root
 complete -c spack -n '__fish_spack_using_command style' -l root -r -d 'style check a different spack instance'
 complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -f -a tool
