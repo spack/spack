@@ -15,6 +15,7 @@ import spack.concretize
 import spack.config
 import spack.database
 import spack.error
+import spack.installer_dispatch
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.old_installer
@@ -26,6 +27,7 @@ import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack import binary_distribution
 from spack.error import InstallError
+from spack.main import SpackCommand
 from spack.old_installer import PackageInstaller
 from spack.package_base import (
     PackageBase,
@@ -608,3 +610,95 @@ def test_install_from_binary_with_missing_patch_succeeds(
     ).install()
 
     assert temporary_store.db.query_local_by_spec_hash(s.dag_hash())
+
+
+@pytest.mark.parametrize("transitive", [True, False])
+def test_install_spliced(install_mockery, mock_fetch, monkeypatch, transitive, installer_variant):
+    """Test installing a spliced spec"""
+    spec = spack.concretize.concretize_one("splice-t")
+    dep = spack.concretize.concretize_one("splice-h+foo")
+
+    # Do the splice.
+    out = spec.splice(dep, transitive)
+    installer = spack.installer_dispatch.create_installer(
+        [out.package], verbose=True, fail_fast=True
+    )
+    installer.install()
+    for node in out.traverse():
+        assert spack.store.STORE.db.installed(node)
+        assert spack.store.STORE.db.installed(node.build_spec)
+
+
+@pytest.mark.parametrize("transitive", [True, False])
+def test_install_spliced_build_spec_installed(
+    install_mockery, mock_fetch, transitive, installer_variant
+):
+    """Test installing a spliced spec with the build spec already installed"""
+    spec = spack.concretize.concretize_one("splice-t")
+    dep = spack.concretize.concretize_one("splice-h+foo")
+
+    # Do the splice.
+    out = spec.splice(dep, transitive)
+    spack.installer_dispatch.create_installer([out.build_spec.package]).install()
+
+    installer = spack.installer_dispatch.create_installer(
+        [out.package], verbose=True, fail_fast=True
+    )
+    installer.install()
+    for node in out.traverse():
+        assert spack.store.STORE.db.installed(node)
+        assert spack.store.STORE.db.installed(node.build_spec)
+
+
+# Unit tests should not be affected by the user's managed environments
+@pytest.mark.not_on_windows("lacking windows support for binary installs")
+@pytest.mark.parametrize("transitive", [True, False])
+@pytest.mark.parametrize(
+    "root_str", ["splice-t^splice-h~foo", "splice-h~foo", "splice-vt^splice-a"]
+)
+def test_install_splice_root_from_binary(
+    mutable_mock_env_path,
+    install_mockery,
+    mock_fetch,
+    temporary_mirror,
+    transitive,
+    root_str,
+    installer_variant,
+):
+    """Test installing a spliced spec with the root available in binary cache"""
+    # Test splicing and rewiring a spec with the same name, different hash.
+    original_spec = spack.concretize.concretize_one(root_str)
+    spec_to_splice = spack.concretize.concretize_one("splice-h+foo")
+
+    spack.installer_dispatch.create_installer(
+        [original_spec.package, spec_to_splice.package]
+    ).install()
+
+    out = original_spec.splice(spec_to_splice, transitive)
+
+    buildcache = SpackCommand("buildcache")
+    buildcache(
+        "push",
+        "--unsigned",
+        "--update-index",
+        temporary_mirror,
+        str(original_spec),
+        str(spec_to_splice),
+    )
+
+    uninstall = SpackCommand("uninstall")
+    uninstall("-ay")
+
+    spack.installer_dispatch.create_installer([out.package], unsigned=True).install()
+
+    assert len(spack.store.STORE.db.query()) == len(list(out.traverse()))
+
+
+@pytest.mark.disable_clean_stage_check
+def test_log_files_preserved_on_error(install_mockery, mock_fetch, installer_variant):
+    """Test that the log file is preserved when an install error occurs."""
+    pkg = spack.concretize.concretize_one("build-error").package
+    installer = spack.installer_dispatch.create_installer([pkg])
+    with pytest.raises(spack.error.InstallError):
+        installer.install()
+    assert os.path.exists(pkg.log_path)

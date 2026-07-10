@@ -1,40 +1,37 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Tests for BuildGraph class in new_installer"""
+"""Tests for the installer.schedule module: BuildGraph and schedule_builds()."""
 
-from typing import Dict, List, Tuple, Union
+import sys
+import time
+from typing import Dict, List, Optional, Set, Tuple
 
 import pytest
 
+import spack.config
 import spack.deptypes as dt
 import spack.error
+import spack.spec
+import spack.store
 import spack.traverse
-from spack.installer.schedule import BuildGraph
+from spack.database import Database
+from spack.installer.base import ExitCode, JobServerBase, NoopJobServer
+from spack.installer.schedule import BuildGraph, ScheduleResult, _node_to_roots, schedule_builds
 from spack.spec import Spec
 from spack.store import Store
+from spack.test.conftest import writable
+from spack.test.installer.conftest import (
+    Script,
+    ScriptedLauncher,
+    _install,
+    _make_concrete,
+    _record,
+    create_dag,
+)
 
-
-def create_dag(
-    nodes: List[str], edges: List[Tuple[str, str, Union[dt.DepType, Tuple[dt.DepType, ...]]]]
-) -> Dict[str, Spec]:
-    """
-    Create a DAG of concrete specs, as a mapping from package name to Spec.
-
-    Arguments:
-        nodes: list of unique package names
-        edges: list of tuples (parent, child, deptype)
-    """
-    specs = {name: Spec(name) for name in nodes}
-    for parent, child, deptypes in edges:
-        depflag = deptypes if isinstance(deptypes, dt.DepFlag) else dt.canonicalize(deptypes)
-        specs[parent].add_dependency_edge(specs[child], depflag=depflag, virtuals=())
-
-    # Mark all specs as concrete
-    for spec in specs.values():
-        spec._mark_concrete()
-
-    return specs
+if sys.platform != "win32":
+    from spack.installer.posix import PosixJobServer
 
 
 def install_spec_in_db(spec: Spec, store: Store):
@@ -854,3 +851,388 @@ class TestExpandBuildDeps:
         assert b_hash in graph.child_to_parent[c_hash]
         # B should NOT be in pending (it still waits on C)
         assert b_hash not in pending
+
+
+class _FakeBuildGraph:
+    """Minimal stand-in for BuildGraph in schedule_builds unit tests.
+
+    Provides the two interface points that schedule_builds calls:
+      - .nodes  (dict: dag_hash -> Spec)
+      - .enqueue_parents(dag_hash, pending_builds)
+    """
+
+    def __init__(self, specs):
+        self.nodes = {spec.dag_hash(): spec for spec in specs}
+
+    def enqueue_parents(self, dag_hash, pending_builds):
+        """Remove dag_hash from nodes; no parents in these simple unit tests."""
+        self.nodes.pop(dag_hash, None)
+
+
+def _schedule(
+    pending: List[str],
+    build_graph,
+    store,
+    jobserver: Optional[JobServerBase] = None,
+    overwrite: Optional[Set[str]] = None,
+    overwrite_time: float = 0.0,
+    capacity: int = 2,
+    needs_jobserver_token: bool = False,
+    explicit: Optional[Set[str]] = None,
+) -> ScheduleResult:
+    """Call schedule_builds() with inert defaults, so tests spell out only what they are about."""
+    return schedule_builds(
+        pending,
+        build_graph,
+        store,
+        overwrite=overwrite or set(),
+        overwrite_time=overwrite_time,
+        capacity=capacity,
+        needs_jobserver_token=needs_jobserver_token,
+        jobserver=jobserver or NoopJobServer(num_jobs=2),
+        explicit=explicit or set(),
+    )
+
+
+class TestScheduleBuilds:
+    """Unit tests for the module-level schedule_builds() function."""
+
+    def _make_spec(self, name):
+        """Return a minimal concrete spec suitable for locking and DB queries."""
+        spec = spack.spec.Spec(name)
+        spec._mark_concrete()
+        return spec
+
+    def _mark_installed(self, spec, store):
+        """Create the install directory structure and register the spec in the DB as installed."""
+        store.layout.create_install_directory(spec)
+        store.db.add(spec, explicit=True)
+
+    def test_not_installed_no_running_starts_build(self, temporary_store, mock_packages):
+        """A fresh spec with no running builds is added to to_start."""
+        spec = self._make_spec("trivial-install-test-package")
+        pending = [spec.dag_hash()]
+        result = _schedule(pending, _FakeBuildGraph([spec]), temporary_store)
+        assert not result.blocked
+        assert len(result.to_start) == 1
+        assert result.to_start[0][0] == spec.dag_hash()
+        assert not result.newly_installed
+        assert not pending  # removed from the pending list
+        for _, lock in result.to_start:
+            lock.release_write()
+
+    def test_already_installed_yields_newly_installed(self, temporary_store, mock_packages):
+        """A spec already in the DB is returned in newly_installed, not in to_start."""
+        spec = self._make_spec("trivial-install-test-package")
+        self._mark_installed(spec, temporary_store)
+        pending = [spec.dag_hash()]
+        result = _schedule(pending, _FakeBuildGraph([spec]), temporary_store)
+        assert not result.blocked
+        assert not result.to_start
+        assert len(result.newly_installed) == 1
+        assert result.newly_installed[0][0] == spec.dag_hash()
+        assert not pending  # removed from the pending list
+        for _, _, lock in result.newly_installed:
+            lock.release_read()
+
+    @pytest.mark.not_on_windows("Windows has no POSIX jobserver, only NoopJobServer")
+    def test_no_jobserver_token_returns_empty(self, temporary_store, mock_packages):
+        """When has_running_builds=True and no token is available, nothing is started."""
+        spec = self._make_spec("trivial-install-test-package")
+        pending = [spec.dag_hash()]
+        # num_jobs=1 writes 0 tokens to the FIFO. Only the implicit token exists.
+        jobserver = PosixJobServer(num_jobs=1, makeflags="")
+        try:
+            result = _schedule(
+                pending,
+                _FakeBuildGraph([spec]),
+                temporary_store,
+                jobserver=jobserver,
+                needs_jobserver_token=True,
+            )
+            assert not result.blocked
+            assert not result.to_start
+            assert not result.newly_installed
+            assert len(pending) == 1
+        finally:
+            jobserver.close()
+
+    def test_all_locked_returns_blocked(self, temporary_store, mock_packages, monkeypatch):
+        """When all pending specs are locked externally, blocked_on_locks is True."""
+        spec = self._make_spec("trivial-install-test-package")
+        pending = [spec.dag_hash()]
+        # Pre-register the lock in the prefix_locker cache, then patch try_acquire to fail.
+        lock = temporary_store.prefix_locker.lock(spec)
+        monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
+        monkeypatch.setattr(lock, "try_acquire_read", lambda: False)
+        result = _schedule(pending, _FakeBuildGraph([spec]), temporary_store)
+        assert result.blocked
+        assert not result.to_start
+        assert not result.newly_installed
+        assert len(pending) == 1
+
+    def test_overwrite_installed_spec_is_started(self, temporary_store, mock_packages):
+        """A spec in the overwrite set is scheduled even when already installed."""
+        spec = self._make_spec("trivial-install-test-package")
+        self._mark_installed(spec, temporary_store)
+        pending = [spec.dag_hash()]
+        result = _schedule(
+            pending,
+            _FakeBuildGraph([spec]),
+            temporary_store,
+            overwrite={spec.dag_hash()},
+            overwrite_time=time.time() + 100,
+        )
+        assert not result.blocked
+        assert len(result.to_start) == 1
+        assert result.to_start[0][0] == spec.dag_hash()
+        assert not result.newly_installed
+        for _, lock in result.to_start:
+            lock.release_write()
+
+    def test_mixed_locked_unlocked(self, temporary_store, mock_packages, monkeypatch):
+        """Only the unlocked spec enters to_start when one spec is externally locked."""
+        spec_a = self._make_spec("trivial-install-test-package")
+        spec_b = self._make_spec("trivial-smoke-test")
+        pending = [spec_a.dag_hash(), spec_b.dag_hash()]
+        # Patch spec_a's lock to always fail, simulating an external write lock.
+        lock_a = temporary_store.prefix_locker.lock(spec_a)
+        monkeypatch.setattr(lock_a, "try_acquire_write", lambda: False)
+        monkeypatch.setattr(lock_a, "try_acquire_read", lambda: False)
+        result = _schedule(pending, _FakeBuildGraph([spec_a, spec_b]), temporary_store)
+        assert not result.blocked  # spec_b was schedulable
+        started_hashes = {h for h, _ in result.to_start}
+        assert spec_b.dag_hash() in started_hashes
+        assert spec_a.dag_hash() not in started_hashes
+        assert not result.newly_installed
+        for _, lock in result.to_start:
+            lock.release_write()
+
+    def test_write_locked_read_locked_installed_yields_newly_installed(
+        self, temporary_store, mock_packages, monkeypatch
+    ):
+        """Write lock fails but read lock succeeds and spec is installed: treated as done.
+
+        Simulates the case where another process finished building and downgraded its write lock
+        to a read lock. The spec should appear in newly_installed. blocked remains True because no
+        write lock was obtained, preventing the jobserver from firing unnecessarily.
+        """
+        spec = self._make_spec("trivial-install-test-package")
+        self._mark_installed(spec, temporary_store)
+        pending = [spec.dag_hash()]
+        lock = temporary_store.prefix_locker.lock(spec)
+        monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
+        result = _schedule(pending, _FakeBuildGraph([spec]), temporary_store)
+        assert result.blocked  # no write lock was obtained; jobserver should not fire
+        assert not result.to_start
+        assert len(result.newly_installed) == 1
+        dag_hash, installed_spec, lock = result.newly_installed[0]
+        assert dag_hash == spec.dag_hash()
+        assert installed_spec == spec
+        assert not pending  # spec was removed from pending
+        lock.release_read()
+
+    def test_write_locked_read_locked_not_installed_still_blocked(
+        self, temporary_store, mock_packages, monkeypatch
+    ):
+        """Write lock fails, read lock succeeds, but spec is not in DB: retry later.
+
+        Simulates the case where a concurrent process was killed mid-build. The read lock is
+        released and the spec stays in pending; blocked should remain True.
+        """
+        spec = self._make_spec("trivial-install-test-package")
+        pending = [spec.dag_hash()]
+        lock = temporary_store.prefix_locker.lock(spec)
+        monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
+        result = _schedule(pending, _FakeBuildGraph([spec]), temporary_store)
+        assert result.blocked
+        assert not result.to_start
+        assert not result.newly_installed
+        assert pending == [spec.dag_hash()]  # spec stays in pending for retry
+
+    def test_overwrite_handled_by_concurrent_process(self, temporary_store, mock_packages):
+        """When a spec in overwrite was installed AFTER overwrite_time, another process did it."""
+        spec = self._make_spec("trivial-install-test-package")
+        self._mark_installed(spec, temporary_store)  # installation_time = now()
+        pending = [spec.dag_hash()]
+        # the default overwrite_time=0.0 is earlier than now()
+        result = _schedule(
+            pending, _FakeBuildGraph([spec]), temporary_store, overwrite={spec.dag_hash()}
+        )
+        assert not result.blocked
+        assert not result.to_start
+        assert len(result.newly_installed) == 1
+        assert result.newly_installed[0][0] == spec.dag_hash()
+        for _, _, lock in result.newly_installed:
+            lock.release_read()
+
+    def test_installed_implicit_explicit_set_produces_db_update(
+        self, temporary_store, mock_packages
+    ):
+        """An installed-implicit spec in explicit set produces a DbUpdate."""
+        spec = self._make_spec("trivial-install-test-package")
+        temporary_store.layout.create_install_directory(spec)
+        temporary_store.db.add(spec, explicit=False)
+        pending = [spec.dag_hash()]
+        result = _schedule(
+            pending, _FakeBuildGraph([spec]), temporary_store, explicit={spec.dag_hash()}
+        )
+        assert len(result.to_mark_explicit) == 1
+        assert result.to_mark_explicit[0].spec is spec
+        assert len(result.newly_installed) == 1
+        for _, _, lock in result.newly_installed:
+            lock.release_read()
+
+    def test_missing_in_upstream_is_installed_locally(
+        self, upstream_and_downstream_db: Tuple[Database, Database], mock_packages
+    ):
+        """A spec that is referenced but not installed in an upstream database is scheduled for
+        a local build, with its prefix repointed to the local store."""
+        upstream_db, downstream_db = upstream_and_downstream_db
+        dep = self._make_spec("dependency-install")
+        parent = spack.spec.Spec("dependent-install")
+        parent._add_dependency(dep, depflag=dt.BUILD, virtuals=())
+        parent._mark_concrete()
+
+        # Register both specs in the upstream, then uninstall the dep: its record is kept as
+        # uninstalled because the parent still references it.
+        with writable(upstream_db):
+            upstream_db.add(parent, explicit=True)
+            upstream_db.remove(dep)
+
+        # Create a Store for schedule_builds based on the downstream database.
+        local_store = spack.store.Store(downstream_db.root, upstreams=[upstream_db])
+        upstream, record = local_store.db.query_by_spec_hash(dep.dag_hash())
+        assert upstream and record is not None and not record.installed
+
+        # Like BuildGraph, start out with the prefix from the upstream record.
+        assert upstream_db.layout
+        dep.set_prefix(upstream_db.layout.path_for_spec(dep))
+
+        result = _schedule([dep.dag_hash()], _FakeBuildGraph([dep]), local_store)
+        assert not result.blocked
+        assert [dag_hash for dag_hash, _ in result.to_start] == [dep.dag_hash()]
+        # The prefix was repointed from the upstream to the local store.
+        assert dep.prefix == local_store.layout.path_for_spec(dep)
+
+        # Cleanup
+        for _, lock in result.to_start:
+            lock.release_write()
+
+    def test_overwrite_prefix_mismatch_raises(self, temporary_store, mock_packages):
+        """An overwrite install cannot proceed when the spec prefix differs from the DB path."""
+        spec = self._make_spec("trivial-install-test-package")
+        self._mark_installed(spec, temporary_store)
+        spec.set_prefix("/some/other/prefix")
+        with pytest.raises(spack.error.InstallError, match="Prefix mismatch in overwrite"):
+            _schedule(
+                [spec.dag_hash()],
+                _FakeBuildGraph([spec]),
+                temporary_store,
+                overwrite={spec.dag_hash()},
+                overwrite_time=time.time() + 100,
+            )
+
+    def test_prefix_collision_raises(self, temporary_store, mock_packages):
+        """A spec cannot be scheduled into a prefix already occupied by another spec."""
+        installed = self._make_spec("trivial-install-test-package")
+        self._mark_installed(installed, temporary_store)
+        colliding = self._make_spec("trivial-smoke-test")
+        colliding.set_prefix(temporary_store.layout.path_for_spec(installed))
+        with pytest.raises(spack.error.InstallError, match="already exists"):
+            _schedule([colliding.dag_hash()], _FakeBuildGraph([colliding]), temporary_store)
+
+
+def test_cache_miss_expands_build_deps(temporary_store, mock_packages, mutable_config, tmp_path):
+    """A cache miss on a root with unexpanded build deps schedules those deps (growing the UI
+    total) and retries the root as source_only."""
+    spack.config.set("mirrors", {"local": {"url": (tmp_path / "mirror").as_uri(), "binary": True}})
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep], depflag=dt.BUILD)
+    launcher = ScriptedLauncher(
+        {root.name: [Script(exitcode=ExitCode.BUILD_CACHE_MISS), Script()], dep.name: Script()}
+    )
+    ui = _install(launcher, root)
+
+    assert [(r.spec.name, r.install_policy) for r in launcher.requests] == [
+        (root.name, "cache_only"),
+        (dep.name, "cache_only"),
+        (root.name, "source_only"),
+    ]
+    assert ("total_increased", 1) in ui.events
+    assert _record(temporary_store, dep) and _record(temporary_store, root)
+
+
+def test_nodes_to_roots():
+    """Independent roots don't reach each other's exclusive nodes."""
+    # A - B and C - D are disconnected graphs, A, B and C are "roots".
+    specs = create_dag(nodes=["A", "B", "C", "D"], edges=[("A", "B", "all"), ("C", "D", "all")])
+    a, b, c, d = specs["A"], specs["B"], specs["C"], specs["D"]
+    node_to_roots = _node_to_roots([a, b, c])
+    assert node_to_roots[a.dag_hash()] == frozenset([a.dag_hash()])
+    assert node_to_roots[b.dag_hash()] == frozenset([a.dag_hash(), b.dag_hash()])
+    assert node_to_roots[c.dag_hash()] == frozenset([c.dag_hash()])
+    assert node_to_roots[d.dag_hash()] == frozenset([c.dag_hash()])
+
+
+def test_nodes_to_roots_shared_dependency():
+    """A dependency shared by two roots is attributed to both."""
+    specs = create_dag(nodes=["A", "B", "C"], edges=[("A", "C", "all"), ("B", "C", "all")])
+    a, b, c = specs["A"], specs["B"], specs["C"]
+    node_to_roots = _node_to_roots([a, b])
+    assert node_to_roots[a.dag_hash()] == frozenset([a.dag_hash()])
+    assert node_to_roots[b.dag_hash()] == frozenset([b.dag_hash()])
+    assert node_to_roots[c.dag_hash()] == frozenset([a.dag_hash(), b.dag_hash()])
+
+
+def test_expand_build_deps_source_only_includes_nested_build_deps(temporary_store):
+    """When dependencies_policy is source_only, expand_build_deps must include BUILD deps of
+    dynamically added specs, not just LINK|RUN. Otherwise those specs attempt to build from source
+    without their build tools in the graph."""
+    # root --[build]--> build_tool --[build]--> nested_build_tool
+    #                              --[link]-->  lib_dep
+    specs = create_dag(
+        nodes=["root", "build_tool", "nested_build_tool", "lib_dep"],
+        edges=[
+            ("root", "build_tool", "build"),
+            ("build_tool", "nested_build_tool", "build"),
+            ("build_tool", "lib_dep", "link"),
+        ],
+    )
+    root = specs["root"]
+    for s in specs.values():
+        s._mark_concrete()
+
+    # Construct a BuildGraph with root_policy="auto" so root's build deps are deferred.
+    build_graph = BuildGraph(
+        specs=[root],
+        root_policy="auto",
+        dependencies_policy="source_only",
+        include_build_deps=False,
+        install_package=True,
+        install_deps=True,
+        store=temporary_store,
+    )
+
+    # The initial graph should contain only root (build deps deferred for "auto" policy).
+    assert root.dag_hash() in build_graph.nodes
+    assert specs["build_tool"].dag_hash() not in build_graph.nodes
+
+    # Simulate a cache miss: expand build deps for root.
+    pending = []
+    with temporary_store.db.read_transaction():
+        newly_added = build_graph.expand_build_deps(
+            [root.dag_hash()], pending, temporary_store.db, dependencies_policy="source_only"
+        )
+
+    added_hashes = set(newly_added)
+
+    # build_tool must be added (direct BUILD dep of root)
+    assert specs["build_tool"].dag_hash() in added_hashes
+
+    # lib_dep must be added (LINK dep of build_tool)
+    assert specs["lib_dep"].dag_hash() in added_hashes
+
+    # nested_build_tool must also be added (BUILD dep of build_tool). This is the bug: without the
+    # fix, expand_build_deps only traverses LINK|RUN, so nested_build_tool is missing.
+    assert specs["nested_build_tool"].dag_hash() in added_hashes
