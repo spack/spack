@@ -8,7 +8,7 @@ import sys
 
 if sys.platform == "win32":
     # Also lets mypy skip this module when run on Windows.
-    raise ImportError("spack.new_installer.posix cannot be imported on Windows")
+    raise ImportError("spack.installer.posix cannot be imported on Windows")
 
 import fcntl
 import functools
@@ -27,7 +27,7 @@ from typing import Callable, Optional, Tuple, Union
 
 import spack.spec
 import spack.util.tty
-from spack.new_installer.base import (
+from spack.installer.base import (
     OUTPUT_BUFFER_SIZE,
     SIGWINCH_EVENT,
     STDIN_EVENT,

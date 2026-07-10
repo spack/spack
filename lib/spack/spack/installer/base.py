@@ -251,7 +251,7 @@ class JobServerBase(abc.ABC):
 
     @abc.abstractmethod
     def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> JobserverInfo:
-        """Return the :class:`~spack.new_installer.base.JobserverInfo` to be passed to the child
+        """Return the :class:`~spack.installer.base.JobserverInfo` to be passed to the child
         process."""
 
     @abc.abstractmethod

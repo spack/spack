@@ -5,7 +5,7 @@
 
 Holds the :class:`BuildGraph` (the DAG of specs to install, with lazy build-dependency
 expansion), :func:`schedule_builds` (per-spec lock acquisition and readiness selection), and the
-:class:`DatabaseAction` hierarchy of pending DB writes. See :mod:`spack.new_installer` for the
+:class:`DatabaseAction` hierarchy of pending DB writes. See :mod:`spack.installer` for the
 overall design."""
 
 from typing import Dict, FrozenSet, List, NamedTuple, Optional, Set, Tuple, Union
@@ -17,7 +17,7 @@ import spack.spec
 import spack.store
 import spack.traverse
 import spack.util.lock
-from spack.new_installer.base import InstallPolicy, JobServerBase
+from spack.installer.base import InstallPolicy, JobServerBase
 
 
 class DatabaseAction:

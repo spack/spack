@@ -96,7 +96,7 @@ sphinx_apidoc(
         "_spack_root/lib/spack/spack/vendor",
         "_spack_root/lib/spack/spack/test",
         "_spack_root/lib/spack/spack/package.py",
-        "_spack_root/lib/spack/spack/new_installer/windows.py",
+        "_spack_root/lib/spack/spack/installer/windows.py",
         "_spack_root/lib/spack/spack/util/win_acl.py",
     ]
 )

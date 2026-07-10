@@ -4,7 +4,7 @@
 """Parent side of the new installer: the :class:`PackageInstaller` event loop.
 
 Runs the selector-based event loop that starts builds, forwards their output, applies UI
-commands, and flushes finished builds to the database. See :mod:`spack.new_installer` for the
+commands, and flushes finished builds to the database. See :mod:`spack.installer` for the
 overall design."""
 
 import json
@@ -29,7 +29,7 @@ import spack.url_buildcache
 import spack.util.filesystem as fs
 import spack.util.lock
 import spack.util.tty
-from spack.new_installer.base import (
+from spack.installer.base import (
     OUTPUT_BUFFER_SIZE,
     SIGWINCH_EVENT,
     STDIN_EVENT,
@@ -39,24 +39,24 @@ from spack.new_installer.base import (
     InstallPolicy,
     JobServerBase,
 )
-from spack.new_installer.build import BuildRequest, ChildInfo, start_build
-from spack.new_installer.schedule import (
+from spack.installer.build import BuildRequest, ChildInfo, start_build
+from spack.installer.schedule import (
     AddSpecAction,
     BuildGraph,
     DatabaseAction,
     _node_to_roots,
     schedule_builds,
 )
-from spack.new_installer.ui import BuildInfo, InstallerUI, SetEcho, TerminalUI
+from spack.installer.ui import BuildInfo, InstallerUI, SetEcho, TerminalUI
 
 if sys.platform == "win32":
-    from spack.new_installer.base import NoopJobServer as JobServer
-    from spack.new_installer.windows import WindowsTerminalState as TerminalState
-    from spack.new_installer.windows import read_connection, write_connection
+    from spack.installer.base import NoopJobServer as JobServer
+    from spack.installer.windows import WindowsTerminalState as TerminalState
+    from spack.installer.windows import read_connection, write_connection
 else:
-    from spack.new_installer.posix import PosixJobServer as JobServer
-    from spack.new_installer.posix import PosixTerminalState as TerminalState
-    from spack.new_installer.posix import read_connection, write_connection
+    from spack.installer.posix import PosixJobServer as JobServer
+    from spack.installer.posix import PosixTerminalState as TerminalState
+    from spack.installer.posix import read_connection, write_connection
 
 if TYPE_CHECKING:
     import spack.package_base

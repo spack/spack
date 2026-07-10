@@ -20,13 +20,13 @@ output to both a log file and the UI process (if the UI process has requested it
 runs an event loop to listen for control messages from the UI process (to enable/disable echoing
 of logs), and for output from the build process.
 
-The parent-side orchestrator :class:`PackageInstaller` lives in :mod:`spack.new_installer.core`,
-the build subprocess in :mod:`spack.new_installer.build`, the terminal UI in
-:mod:`spack.new_installer.ui`, and the build graph/scheduling in
-:mod:`spack.new_installer.schedule`. Shared low-level primitives are in
-:mod:`spack.new_installer.base`, with platform-specific implementations in
-``spack.new_installer.posix`` and ``spack.new_installer.windows``."""
+The parent-side orchestrator :class:`PackageInstaller` lives in :mod:`spack.installer.core`,
+the build subprocess in :mod:`spack.installer.build`, the terminal UI in
+:mod:`spack.installer.ui`, and the build graph/scheduling in
+:mod:`spack.installer.schedule`. Shared low-level primitives are in
+:mod:`spack.installer.base`, with platform-specific implementations in
+``spack.installer.posix`` and ``spack.installer.windows``."""
 
-from spack.new_installer.core import PackageInstaller
+from spack.installer.core import PackageInstaller
 
 __all__ = ["PackageInstaller"]

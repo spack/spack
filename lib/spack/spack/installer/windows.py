@@ -8,7 +8,7 @@ import sys
 
 if sys.platform != "win32":
     # Also lets mypy skip this module when run on other platforms.
-    raise ImportError("spack.new_installer.windows can only be imported on Windows")
+    raise ImportError("spack.installer.windows can only be imported on Windows")
 
 import ctypes
 import functools
@@ -24,7 +24,7 @@ from ctypes import wintypes
 from multiprocessing import Process
 from typing import Callable, Optional
 
-from spack.new_installer.base import (
+from spack.installer.base import (
     OUTPUT_BUFFER_SIZE,
     SIGWINCH_EVENT,
     STDIN_EVENT,

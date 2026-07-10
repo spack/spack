@@ -5,7 +5,7 @@
 
 This module holds everything that runs in (or directly manages) a single build's child process:
 the :func:`worker_function` entry point, the install steps it drives, and the loop-side
-:class:`ChildInfo` handle the parent uses to talk to the child. See :mod:`spack.new_installer`
+:class:`ChildInfo` handle the parent uses to talk to the child. See :mod:`spack.installer`
 for the overall design."""
 
 import glob
@@ -40,7 +40,7 @@ import spack.util.environment
 import spack.util.filesystem as fs
 import spack.util.lock
 import spack.util.tty
-from spack.new_installer.base import (
+from spack.installer.base import (
     ExitCode,
     FdInfo,
     InstallPolicy,
@@ -54,13 +54,13 @@ from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
 
 if sys.platform == "win32":
-    from spack.new_installer.windows import WindowsSentinelBridge as ExitNotifier
-    from spack.new_installer.windows import WindowsTee as Tee
-    from spack.new_installer.windows import create_build_channels, make_state_stream
+    from spack.installer.windows import WindowsSentinelBridge as ExitNotifier
+    from spack.installer.windows import WindowsTee as Tee
+    from spack.installer.windows import create_build_channels, make_state_stream
 else:
-    from spack.new_installer.posix import PosixExitNotifier as ExitNotifier
-    from spack.new_installer.posix import PosixTee as Tee
-    from spack.new_installer.posix import create_build_channels, make_state_stream
+    from spack.installer.posix import PosixExitNotifier as ExitNotifier
+    from spack.installer.posix import PosixTee as Tee
+    from spack.installer.posix import create_build_channels, make_state_stream
 
 if TYPE_CHECKING:
     import spack.package_base

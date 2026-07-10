@@ -5,7 +5,7 @@
 
 Defines the :class:`InstallerUI` frontend contract (a headless no-op base) and the interactive
 :class:`TerminalUI` implementation, plus the plain :class:`BuildInfo` record and the
-:data:`UiCommand` messages the UI produces for the event loop. See :mod:`spack.new_installer`
+:data:`UiCommand` messages the UI produces for the event loop. See :mod:`spack.installer`
 for the overall design."""
 
 import io
@@ -21,9 +21,9 @@ from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
 
 if sys.platform == "win32":
-    from spack.new_installer.windows import WindowsTerminalState as TerminalState
+    from spack.installer.windows import WindowsTerminalState as TerminalState
 else:
-    from spack.new_installer.posix import PosixTerminalState as TerminalState
+    from spack.installer.posix import PosixTerminalState as TerminalState
 
 
 class SetEcho(NamedTuple):
