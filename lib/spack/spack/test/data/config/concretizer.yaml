@@ -29,4 +29,6 @@ concretizer:
       llvm: 2
 
   concretization_cache:
-    enable: false
+    enable: true
+    url: {conc_cache_dir}
+    entry_limit: 20000

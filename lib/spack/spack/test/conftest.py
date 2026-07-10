@@ -936,6 +936,18 @@ def configuration_dir(tmp_path_factory: pytest.TempPathFactory, linux_os):
     modules_template = test_config / "modules.yaml"
     modules.write_text(modules_template.read_text().format(tcl_root, lmod_root))
 
+    # Use a concretization cache shared by all workers of this pytest invocation: the solver
+    # dominates test time, and about half of the ASP problems recur across tests. Under xdist
+    # each worker's basetemp is a subdirectory of the invocation's temp directory.
+    conc_cache_root = tmp_path_factory.getbasetemp()
+    if os.environ.get("PYTEST_XDIST_WORKER"):
+        conc_cache_root = conc_cache_root.parent
+    conc_cache_dir = conc_cache_root / "concretization-cache"
+    conc_cache_dir.mkdir(exist_ok=True)
+    concretizer = tmp_path / "site" / "concretizer.yaml"
+    concretizer_template = test_config / "concretizer.yaml"
+    concretizer.write_text(concretizer_template.read_text().format(conc_cache_dir=conc_cache_dir))
+
     for scope in ("spack", "user", "site", "system"):
         scope_path = tmp_path / scope
         scope_path.mkdir(exist_ok=True)
