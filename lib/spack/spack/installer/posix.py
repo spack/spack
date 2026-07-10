@@ -83,7 +83,7 @@ class PosixTerminalState(BaseTerminalState):
 
         # Start correctly depending on whether we're foregrounded or backgrounded
         self._set_headless(True)
-        if not _is_background_tty(sys.stdin):
+        if self._should_enter_foreground():
             self.enter_foreground()
 
     def teardown_input(self) -> None:
@@ -169,10 +169,10 @@ class PosixTerminalState(BaseTerminalState):
 
     def handle_continue(self) -> None:
         """Detect whether the process is in the foreground or background and adjust accordingly."""
-        if _is_background_tty(sys.stdin):
-            self.enter_background()
-        else:
+        if self._should_enter_foreground():
             self.enter_foreground()
+        else:
+            self.enter_background()
 
     def drain_sigwinch(self) -> None:
         os.read(self.sigwinch_r, 64)
