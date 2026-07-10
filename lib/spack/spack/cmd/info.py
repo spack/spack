@@ -603,7 +603,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
         for v in reversed(sorted(versions)):
             if pkg.has_code:
                 url = get_url(v)
-            if pkg.versions[v].get("deprecated", False):
+            if spack.package_base.deprecated_version(pkg, v):
                 deprecated.append((v, url))
             else:
                 safe.append((v, url))
