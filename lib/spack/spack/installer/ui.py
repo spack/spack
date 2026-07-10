@@ -45,6 +45,9 @@ UiCommand = Union[SetEcho, ChangeJobs]
 #: How often to update a spinner in seconds
 SPINNER_INTERVAL = 0.1
 
+#: Characters the spinner cycles through
+SPINNER_CHARS = "|/-\\"
+
 #: How long to display finished packages before graying them out
 CLEANUP_TIMEOUT = 2.0
 
@@ -191,7 +194,6 @@ class TerminalUI(InstallerUI):
         self.completed = 0
         self.builds: Dict[str, BuildInfo] = {}
         self.finished_builds: List[BuildInfo] = []
-        self.spinner_chars = ["|", "/", "-", "\\"]
         self.spinner_index = 0
         self.dirty = True  # Start dirty to draw initial state
         self.active_area_rows = 0
@@ -213,10 +215,14 @@ class TerminalUI(InstallerUI):
         self.terminal_size_changed: bool = True
         self.get_time = get_time
         self.is_tty = is_tty if is_tty is not None else stdout.isatty()
-        if color is not None:
-            self.color = color
+        if color is None:
+            color = spack.util.tty.color.get_color_when(stdout)
+        # ANSI escape codes used for rendering; empty strings when color is disabled.
+        if color:
+            self.red, self.green, self.cyan = "\033[31m", "\033[32m", "\033[0;36m"
+            self.gray, self.bold, self.reset = "\033[0;90m", "\033[1m", "\033[0m"
         else:
-            self.color = spack.util.tty.color.get_color_when(stdout)
+            self.red = self.green = self.cyan = self.gray = self.bold = self.reset = ""
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
@@ -261,8 +267,7 @@ class TerminalUI(InstallerUI):
         self.builds.pop(build_id, None)
         if self.tracked_build_id == build_id:
             self.tracked_build_id = ""
-            if not self.overview_mode:
-                self.overview_mode = True
+            self.overview_mode = True
         self.dirty = True
 
     def toggle(self) -> None:
@@ -281,20 +286,20 @@ class TerminalUI(InstallerUI):
             self.commands.append(SetEcho(self.tracked_build_id, False))
             self.tracked_build_id = ""
 
-    def search_input(self, input: str) -> None:
+    def search_input(self, char: str) -> None:
         """Handle keyboard input when in search mode"""
-        if input in ("\r", "\n"):
+        if char in ("\r", "\n"):
             self.log_ends_with_newline = False
             self.next(1)
-        elif input == "\x1b":  # Escape
+        elif char == "\x1b":  # Escape
             self.search_mode = False
             self.search_term = ""
             self.dirty = True
-        elif input in ("\x7f", "\b"):  # Backspace
+        elif char in ("\x7f", "\b"):  # Backspace
             self.search_term = self.search_term[:-1]
             self.dirty = True
-        elif input.isprintable():
-            self.search_term += input
+        elif char.isprintable():
+            self.search_term += char
             self.dirty = True
 
     def enter_search(self) -> None:
@@ -352,8 +357,7 @@ class TerminalUI(InstallerUI):
 
         new_build = self.builds[new_build_id]
 
-        if self.overview_mode:
-            self.overview_mode = False
+        self.overview_mode = False
 
         # Stop following the previous and start following the new build.
         if self.tracked_build_id:
@@ -361,9 +365,7 @@ class TerminalUI(InstallerUI):
 
         self.tracked_build_id = new_build_id
 
-        version_str = (
-            f"\033[0;36m@{new_build.version}\033[0m" if self.color else f"@{new_build.version}"
-        )
+        version_str = f"{self.cyan}@{new_build.version}{self.reset}"
         prefix = "" if self.log_ends_with_newline else "\n"
 
         if new_build.state == "failed":
@@ -416,6 +418,7 @@ class TerminalUI(InstallerUI):
 
     def on_state_changed(self, build_id: str, state: str) -> None:
         """Update the state of a package and mark the display as dirty."""
+        now = self.get_time()
         build_info = self.builds[build_id]
         build_info.state = state
         build_info.progress_percent = None
@@ -426,7 +429,6 @@ class TerminalUI(InstallerUI):
 
         if state in ("finished", "failed"):
             self.completed += 1
-            now = self.get_time()
             build_info.duration = now - build_info.start_time
             build_info.finished_time = now + CLEANUP_TIMEOUT
 
@@ -442,9 +444,7 @@ class TerminalUI(InstallerUI):
 
         # For non-TTY output, print state changes immediately
         if not self.is_tty and not self.headless:
-            line = "".join(
-                self._generate_line_components(build_info, static=True, now=self.get_time())
-            )
+            line = "".join(self._generate_line_components(build_info, static=True, now=now))
             self.stdout.write(line + "\n")
             self.stdout.flush()
 
@@ -490,11 +490,11 @@ class TerminalUI(InstallerUI):
         if not finalize and now < self.next_update:
             return
 
+        has_unfinished = any(pkg.finished_time is None for pkg in self.builds.values())
+
         # Only update the spinner if there are still running packages
-        if now >= self.next_spinner_update and any(
-            pkg.finished_time is None for pkg in self.builds.values()
-        ):
-            self.spinner_index = (self.spinner_index + 1) % len(self.spinner_chars)
+        if has_unfinished and now >= self.next_spinner_update:
+            self.spinner_index = (self.spinner_index + 1) % len(SPINNER_CHARS)
             self.dirty = True
             self.next_spinner_update = now + SPINNER_INTERVAL
 
@@ -542,34 +542,24 @@ class TerminalUI(InstallerUI):
         self.total_lines = 0
 
         if not finalize:
-            if self.color:
-                bold = "\033[1m"
-                reset = "\033[0m"
-                cyan = "\033[36m"
-            else:
-                bold = reset = cyan = ""
-
             if self.actual_jobs != self.target_jobs:
                 jobs_str = f"{self.actual_jobs}=>{self.target_jobs}"
             else:
                 jobs_str = str(self.target_jobs)
-            long_header_len = len(
-                f"Progress: {self.completed}/{self.total}  +/-: {jobs_str} jobs"
-                "  /: filter  v: logs  n/p: next/prev"
+            bold, reset, cyan = self.bold, self.reset, self.cyan
+            long_header = (
+                f"{bold}Progress:{reset} {self.completed}/{self.total}"
+                f"  {cyan}+{reset}/{cyan}-{reset}: "
+                f"{jobs_str} jobs"
+                f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
+                f"  {cyan}n{reset}/{cyan}p{reset}: next/prev"
             )
-            if long_header_len < max_width:
-                self._println(
-                    buffer,
-                    f"{bold}Progress:{reset} {self.completed}/{self.total}"
-                    f"  {cyan}+{reset}/{cyan}-{reset}: "
-                    f"{jobs_str} jobs"
-                    f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
-                    f"  {cyan}n{reset}/{cyan}p{reset}: next/prev",
-                )
+            if spack.util.tty.color.clen(long_header) < max_width:
+                self._println(buffer, long_header)
             else:
                 self._println(buffer, f"{bold}Progress:{reset} {self.completed}/{self.total}")
 
-        if self.blocked and not any(pkg.finished_time is None for pkg in self.builds.values()):
+        if self.blocked and not has_unfinished:
             self._println(buffer, "Waiting for other Spack install process...")
 
         displayed_builds = (
@@ -661,40 +651,34 @@ class TerminalUI(InstallerUI):
         elif static:
             indicator = "[ ]"
         else:
-            indicator = f"[{self.spinner_chars[self.spinner_index]}]"
+            indicator = f"[{SPINNER_CHARS[self.spinner_index]}]"
 
-        if self.color:
-            if build_info.state == "failed":
-                yield "\033[31m"  # red
-            elif build_info.state == "finished":
-                yield "\033[32m"  # green
+        gray, reset = self.gray, self.reset
+
+        if build_info.state == "failed":
+            yield self.red
+        elif build_info.state == "finished":
+            yield self.green
 
         yield indicator
-        if self.color:
-            yield "\033[0m"  # reset
+        yield reset
         yield " "
-        if self.color:
-            yield "\033[0;90m"  # dark gray
+        yield gray
         yield build_info.hash
-        if self.color:
-            yield "\033[0m"  # reset
+        yield reset
         yield " "
 
         # Package name in bold if explicit, default otherwise
         if build_info.explicit:
-            if self.color:
-                yield "\033[1m"
+            yield self.bold
             yield build_info.name
-            if self.color:
-                yield "\033[0m"  # reset
+            yield reset
         else:
             yield build_info.name
 
-        if self.color:
-            yield "\033[0;36m"  # cyan
+        yield self.cyan
         yield f"@{build_info.version}"
-        if self.color:
-            yield "\033[0m"  # reset
+        yield reset
 
         # progress or state
         if build_info.progress_percent is not None:
@@ -717,8 +701,6 @@ class TerminalUI(InstallerUI):
             else (now - build_info.start_time)
         )
         if elapsed > 0:
-            if self.color:
-                yield "\033[0;90m"  # dark gray
+            yield gray
             yield f" ({pretty_duration(elapsed)})"
-            if self.color:
-                yield "\033[0m"
+            yield reset
