@@ -303,9 +303,9 @@ class PackageInstaller:
             for s in self.build_graph.nodes.values()
         }
 
-        self._installer()
+        self._run_event_loop()
 
-    def _installer(self) -> None:
+    def _run_event_loop(self) -> None:
         self.store.install_sbang()
         jobserver = JobServer(self.jobs, os.environ.get("MAKEFLAGS", ""))
         selector = selectors.DefaultSelector()
