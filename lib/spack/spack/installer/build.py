@@ -398,10 +398,8 @@ def worker_function(
 
     # Detach stdin from the terminal like `./build < /dev/null`. This would not be necessary if we
     # used os.setsid() instead of os.setpgid(), but that would "break" pstree output.
-    devnull_fd = os.open(os.devnull, os.O_RDONLY)
-    os.dup2(devnull_fd, 0)
-    os.close(devnull_fd)
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
+    os.dup2(sys.stdin.fileno(), 0)
 
     # Start the tee thread to forward output to the log file and parent process.
     tee = Tee(tee_control_r, tee_control_w, parent, log_path)
