@@ -175,7 +175,7 @@ Up to Spack v0.20, ``duplicates:strategy:none`` was the default (and only) behav
 From Spack v0.21, the default behavior is ``duplicates:strategy:minimal``.
 
 .. index::
-   single: splice; in config
+   single: splicing; in config
    :name: splicing
 
 Splicing

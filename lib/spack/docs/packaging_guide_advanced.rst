@@ -507,7 +507,6 @@ This YAML file instructs Spack to run the detection tests defined in ``builtin.l
 .. index::
    single: ABI compatibility
    single: directive; can_splice
-   single: splice; in package.py
    single: splicing; in package.py
    :name: abi_compatibility
 

@@ -444,7 +444,6 @@ For an alphabetic list of every documented keyword and environment variable, see
       Another :term:`spack instance` whose :term:`store` is registered (via ``upstreams.yaml``) as a read-only source of installed packages for the local instance.
       See :doc:`chain`.
 
-   splice
    splicing
       Replacing a dependency in a :term:`concrete spec` with a different, ABI-compatible spec providing the same package or :term:`virtual package`.
       Often used to swap a generic buildcache MPI for a site-tuned one.
