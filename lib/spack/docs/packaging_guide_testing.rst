@@ -285,7 +285,7 @@ If the installation fails due to build-time test failures, then both logs will b
 
 
 .. index::
-   single: stand-alone test
+   single: stand-alone test; running
    :name: cmd-spack-test
 
 Stand-alone tests

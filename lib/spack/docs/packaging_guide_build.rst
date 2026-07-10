@@ -487,7 +487,7 @@ In those cases, the build system could use some help, for which we give a few ex
 
 
 .. index::
-   single: build phase
+   single: phase; before and after callbacks
    :name: before_after_build_phases
 
 Before and after build phases
@@ -905,6 +905,12 @@ If your file or directory contains dashes or dots, use ``join`` instead:
 
 .. _environment-variables:
 
+.. index::
+   single: build environment; variables set by Spack
+   single: environment variable; CC, CXX, FC (set by compiler wrappers)
+   single: environment variable; PATH, CMAKE_PREFIX_PATH, PKG_CONFIG_PATH (set in builds)
+   single: environment variable; CFLAGS, LD_LIBRARY_PATH (cleaned in builds)
+
 The build environment
 ---------------------
 
@@ -1143,7 +1149,7 @@ To ensure that flags are always *passed to the build system*, you can use:
 
 
 .. index::
-   single: compiler wrapper
+   single: compiler wrapper; in builds
    single: compiler-wrapper package
    :name: compiler-wrappers
 
@@ -1197,8 +1203,7 @@ The configure script picks up the compiler wrapper from the ``CC`` environment v
 Because the compiler wrapper is set up to automatically include the ``-I<libelf prefix>/include`` and ``-L<libelf prefix>/lib`` flags, the configure script succeeds and uses the correct ``libelf.h`` header and the ``libelf.so`` library out of the box.
 
 .. index::
-   single: RPATH
-   single: runpath
+   single: RPATH; handling
    :name: handling_rpaths
 
 Runtime library search paths

@@ -429,6 +429,10 @@ Typically every package version has a corresponding source code archive, which S
 
 .. _versions-and-fetching:
 
+.. index::
+   single: version; directive
+   single: directive; version
+
 Versions and URLs
 ^^^^^^^^^^^^^^^^^
 
@@ -1316,6 +1320,10 @@ The example sets permissions on the downloaded file to make it executable, then 
        installer("--prefix=%s" % prefix, "arg1", "arg2", "etc.")
 
 
+.. index::
+   single: resource; adding extra archives
+   single: directive; resource
+
 Extra Resources
 ^^^^^^^^^^^^^^^
 
@@ -1383,6 +1391,7 @@ For example, if the package defines the version ``1.2.3``, we know from :ref:`ve
 
 .. index::
    single: variant; directive
+   single: directive; variant
    :name: variants
 
 Variants
@@ -1644,7 +1653,7 @@ It also allows a package to implement ``or`` semantics for a variant ``when`` cl
 
 .. index::
    single: dependency; in package.py
-   single: depends_on
+   single: directive; depends_on
    :name: dependencies
 
 Dependencies
@@ -1803,7 +1812,6 @@ It is *not* known whether future versions ``@1.68:`` are incompatible, so they m
 If and when future versions are known incompatible, the version range should be constrained with an upper bound.
 
 .. index::
-   single: dependency type
    single: dependency type; build
    single: dependency type; link
    single: dependency type; run
@@ -1969,7 +1977,7 @@ As with ``patch`` directives, patches are applied in the order they appear in th
 
 .. index::
    single: virtual package; defining
-   single: provides (directive)
+   single: directive; provides
    :name: virtual-dependencies
 
 Virtual dependencies
@@ -2122,7 +2130,7 @@ This means that language dependencies translate to one or more compiler packages
 
 .. index::
    single: conflict; in package.py
-   single: conflicts
+   single: directive; conflicts
    :name: packaging_conflicts
 
 Conflicts
@@ -2175,7 +2183,7 @@ means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur
 
 .. index::
    single: requirement; in package.py
-   single: requires
+   single: directive; requires
    :name: packaging_requires
 
 Requires
@@ -2228,8 +2236,8 @@ Or the package must be built with a GCC or Clang that supports C++ 20, which you
 
 
 .. index::
-   single: patch
-   single: patch (directive)
+   single: patch; applying
+   single: directive; patch
    :name: patching
 
 Patches
@@ -2506,6 +2514,9 @@ Here you can see that the patch is applied to ``boost`` by ``dealii``, and that 
 
 .. _packaging_extensions:
 
+.. index::
+   single: directive; extends
+
 Extensions
 ----------
 
@@ -2619,7 +2630,7 @@ These mixins should be used as additional base classes for your package, in addi
 In the example above ``Cp2k`` inherits the variants and conflicts defined by ``CudaPackage``.
 
 .. index::
-   single: maintainers directive
+   single: directive; maintainers
    :name: maintainers
 
 Maintainers
@@ -2699,7 +2710,7 @@ To determine which licenses are validated and which are not, there is the ``chec
 When you have validated a package license, either when doing so explicitly or as part of packaging a new package, please set the ``checked_by`` parameter to your Github username to signal that the license has been manually verified.
 
 .. index::
-   single: license directive
+   single: directive; license
    :name: license
 
 Proprietary software

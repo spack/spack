@@ -8,9 +8,7 @@
       Discover how to create, use, and manage build caches in Spack to share pre-built binary packages and speed up installations.
 
 .. index::
-   single: buildcache
-   single: build cache
-   single: binary mirror
+   single: buildcache; using
    :name: binary_caches
 
 Build Caches
@@ -396,7 +394,7 @@ will have the same effect as
     Packages are automatically pushed to a build cache only if they are built from source.
 
 .. index::
-   single: OCI buildcache
+   single: buildcache; OCI registries
    single: OCI registry
    :name: binary_caches_oci
 
@@ -607,7 +605,7 @@ Arguments  Description
 =========  ==============================================
 
 .. index::
-   single: buildcache layout
+   single: buildcache; layout
    :name: build_cache_layout
 
 Build Cache Layout

@@ -3,6 +3,40 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+..
+   Indexing conventions
+   --------------------
+
+   Sphinx automatically adds an index entry for every glossary term below, linking to its
+   definition on this page. To keep the general index readable, ``.. index::`` directives
+   elsewhere in the documentation follow these rules:
+
+   1. Never add a bare ``single: <term>`` entry whose text equals a glossary term: it would
+      render as an unlabeled ``term, [1]`` pair in the index. The bare entry belongs to the
+      glossary alone.
+   2. Page-side entries always carry a subentry label describing what the section covers,
+      e.g. ``single: environment; activating``, and are placed at the most specific section
+      (not piled up at the top of a page).
+   3. Qualified variants of a concept group under the parent concept, e.g.
+      ``single: scope; site`` rather than ``single: site scope``.
+      Avoid ``see:`` crossref entries: they render as unlinked text in the index.
+      If a qualified or alternate name must be findable directly, make it a glossary alias
+      (or a "See :term:`...`" stub) so its index entry links to the glossary.
+   4. Environment variables are declared with ``.. envvar::``, which indexes them both by
+      name and under the "environment variable" category; variables Spack *sets* get index
+      entries under that same category.
+   5. Spec sigils are indexed both as symbols (``single: + (spec sigil)``) and under the
+      ``spec sigil`` category (``single: spec sigil; + (enable variant)``).
+   6. Package directives (``depends_on``, ``patch``, ``provides``, ...) are indexed only
+      under the ``directive`` category (``single: directive; depends_on``), not as bare
+      top-level entries: the corresponding concept entry (``dependency; in package.py``)
+      already covers the alphabetic lookup, and bare tokens would duplicate it.
+
+   In the glossary itself, use :term:`...` on the first use of another glossary term, add
+   "See also" backlinks between related entries, and prefer a canonical term plus a
+   "See :term:`...`" stub over multi-term aliases that alphabetize far apart (e.g.
+   "install tree" vs. "store").
+
 .. meta::
    :description lang=en:
       Glossary of terms used throughout the Spack documentation.
@@ -21,15 +55,18 @@ For an alphabetic list of every documented keyword and environment variable, see
       A description of a package configuration: name, version, variants, compiler, flags, architecture, and dependencies.
       Specs are Spack's central data structure and the syntax users type on the command line.
       See :doc:`spec_syntax` and :ref:`sec-specs`.
+      See also :term:`abstract spec`, :term:`concrete spec`, :term:`root spec <root>`, :term:`anonymous spec`, :term:`spec syntax`, :term:`explicit`.
 
    abstract spec
-      A spec that is only partially specified.
+      A :term:`spec` that is only partially specified.
       Missing fields (version, variants, compiler, dependencies) are filled in during :term:`concretization`.
       Anything a user types on the command line is an abstract spec until it is concretized.
+      See also :term:`concrete spec`.
 
    concrete spec
-      A fully specified spec in which every field is fixed: an exact version, all variant values, a compiler, an architecture, and a concrete spec for every dependency in the :term:`DAG`.
+      A fully specified :term:`spec` in which every field is fixed: an exact version, all variant values, a compiler, an architecture, and a concrete spec for every dependency in the :term:`DAG`.
       Concrete specs are what Spack actually installs; they are identified by a :term:`DAG hash`.
+      See also :term:`abstract spec`.
 
    root spec
    root
@@ -37,11 +74,15 @@ For an alphabetic list of every documented keyword and environment variable, see
       Roots are the starting points of concretization; everything else in the resulting :term:`DAG` is a dependency pulled in to satisfy a root.
 
    explicit
-   implicit
       A property of an installed spec recorded in the :term:`database`.
-      A spec is *explicit* if it was requested directly (a ``spack install`` argument or an environment :term:`root spec <root>`); it is *implicit* if it was only installed as a dependency of something else.
-      Explicit installs are preserved by ``spack gc``; implicit installs become eligible for garbage collection once no installed spec depends on them.
+      A spec is *explicit* if it was requested directly: a ``spack install`` argument or an environment :term:`root spec <root>`.
+      Explicit installs are preserved by ``spack gc``.
       ``spack mark -e/-i`` toggles the flag on an existing install, ``spack find --explicit`` / ``--implicit`` filters by it, and a :term:`spec group` with ``explicit: false`` installs its specs as implicit.
+      See also :term:`implicit`.
+
+   implicit
+      The opposite of :term:`explicit`: a property of an installed spec, recorded in the :term:`database`, marking that it was only installed as a dependency of something else.
+      Implicit installs become eligible for garbage collection (``spack gc``) once no installed spec depends on them.
 
    fresh
       The concretizer policy of ignoring already-installed and cached specs and solving for the newest configuration allowed by the constraints.
@@ -97,10 +138,12 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :ref:`compiler-wrappers`.
 
    package
-   recipe
-      A Python class describing how to fetch, configure, build, and install a piece of software.
+      A Python class describing how to fetch, configure, build, and install a piece of software; also called a *recipe*.
       Lives in a ``package.py`` file inside a :term:`repository <repo>`.
       See :doc:`package_fundamentals`.
+
+   recipe
+      See :term:`package`.
 
    directive
       A decorator-style call used in a ``package.py`` body to declare package metadata: ``version``, ``depends_on``, ``variant``, ``provides``, ``conflicts``, ``requires``, ``patch``, ``resource``, ``extends``, and so on.
@@ -132,13 +175,16 @@ For an alphabetic list of every documented keyword and environment variable, see
       A view's ``link: run`` / ``link: all`` options pull in :term:`root spec <root>` transitive dependencies of the corresponding :term:`types <dependency type>`.
 
    phase
-   install phase
    build phase
       One step of a :term:`build system`'s install lifecycle.
       The ordered list lives in the builder's ``phases`` attribute, for example ``("configure", "build", "install")`` for autotools or ``("build", "install")`` for ruby gems.
       Each phase is a method on the builder class and can be overridden, replaced, or wrapped with ``run_before`` / ``run_after``.
-      *Install phase* names the specific ``install`` step (and, by extension, post-install hooks attached to it); *build phase* is used loosely for any phase in the lifecycle.
+      Note that *build phase* is often used loosely for any phase in the lifecycle, not just for the phase named ``build``.
       See :ref:`overriding-phases`.
+      See also :term:`install phase`.
+
+   install phase
+      The specific ``install`` :term:`phase` of a build, which copies the build results into the installation :term:`prefix` — and, by extension, the post-install hooks attached to it.
 
    build environment
       The shell environment Spack constructs for a package's build: ``PATH``, compiler wrappers, ``CC`` / ``CXX`` / ``F77`` / ``FC``, ``CPATH``, ``LIBRARY_PATH``, ``CMAKE_PREFIX_PATH``, jobserver ``MAKEFLAGS``, and any variables set by ``setup_build_environment`` or by dependencies' ``setup_dependent_build_environment``.
@@ -177,8 +223,9 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :ref:`packaging_extensions`.
 
    external package
-      A package that is *not* built by Spack but found on the system and registered through ``packages.yaml``.
+      A package that is *not* built by Spack but found on the system and registered through :term:`packages.yaml`.
       Used for vendor-provided compilers, MPI, CUDA, system libraries, etc.
+      See :ref:`sec-external-packages`.
 
    repo
    repository
@@ -226,9 +273,11 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :doc:`toolchains_yaml`.
 
    store
-   install tree
-      The directory tree where Spack installs packages, one per :term:`prefix`.
+      The directory tree where Spack installs packages, one per :term:`prefix`; also called the *install tree*.
       Backed by a :term:`database` that indexes every install.
+
+   install tree
+      See :term:`store`.
 
    prefix
       The installation directory of a single concrete spec inside the :term:`store`.
@@ -260,8 +309,10 @@ For an alphabetic list of every documented keyword and environment variable, see
       An environment stored in Spack's environment directory and addressed by name (``spack env activate myenv``).
 
    anonymous environment
+   independent environment
       An environment activated by directory path (``spack env activate ./my-env``).
       Not registered under a name.
+      See :ref:`independent_environments`.
 
    spack.yaml
       The human-edited manifest of an :term:`environment`: the specs to build, the configuration overrides, and the view settings.
@@ -280,6 +331,7 @@ For an alphabetic list of every documented keyword and environment variable, see
    develop spec
       A spec that builds from a local source directory instead of a fetched archive, so edits to the sources trigger a rebuild on the next install.
       It carries a ``dev_path=<path>`` variant pointing at the working tree, and is set up with ``spack develop``.
+      See :ref:`cmd-spack-develop`.
 
    mirror
       A location (URL or path) Spack consults for source tarballs and patches before fetching upstream.
@@ -345,8 +397,8 @@ For an alphabetic list of every documented keyword and environment variable, see
    TCL modules
       The classic environment-modules module system Spack can also target.
 
-   configuration scope
    scope
+   configuration scope
       A named layer of YAML configuration.
       Scopes from lowest to highest precedence: ``defaults``, ``system``, ``site``, ``user``, custom (``-C``), environment, command line.
       See :ref:`configuration-scopes`.
@@ -360,13 +412,16 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :doc:`packages_yaml`.
 
    mirrors.yaml
-      Configuration of source and binary mirrors.
+      Configuration of source and binary :term:`mirrors <mirror>`.
+      See :doc:`mirrors`.
 
    modules.yaml
-      Configuration of module file generation.
+      Configuration of :term:`module file` generation.
+      See :doc:`module_file_support`.
 
    repos.yaml
-      The list of active package repositories.
+      The list of active package :term:`repositories <repo>`.
+      See :doc:`repositories`.
 
    include chain
       A sequence of ``include:`` directives pulling additional YAML files (or environments) into a configuration.

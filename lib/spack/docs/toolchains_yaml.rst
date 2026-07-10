@@ -8,7 +8,7 @@
       Define named compiler sets (toolchains) in Spack to easily and consistently apply compiler choices for C, C++, and Fortran across different packages.
 
 .. index::
-   single: toolchain
+   single: toolchain; configuring
    single: toolchains.yaml
    :name: toolchains
 

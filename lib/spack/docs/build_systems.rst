@@ -8,11 +8,7 @@
       An overview of the build systems supported by Spack, with links to detailed documentation for each system.
 
 .. index::
-   single: build system
-   single: CMakePackage
-   single: AutotoolsPackage
-   single: MesonPackage
-   single: PythonPackage
+   single: build system; overview
    :name: build-systems
 
 Build Systems

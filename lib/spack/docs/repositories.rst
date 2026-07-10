@@ -8,10 +8,8 @@
       Learn how to set up and manage package repositories in Spack, enabling you to maintain custom packages and override built-in ones.
 
 .. index::
-   single: repo
-   single: repository
-   single: repos.yaml
-   single: namespace
+   single: repo; configuring
+   single: repos.yaml; reference
    :name: repositories
 
 Package Repositories (repos.yaml)

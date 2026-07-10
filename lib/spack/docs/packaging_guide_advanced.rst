@@ -24,6 +24,7 @@ This section of the packaging guide covers a few advanced topics.
 
 .. index::
    single: build system; multiple
+   single: directive; build_system
    :name: multiple_build_systems
 
 Multiple build systems
@@ -505,7 +506,7 @@ This YAML file instructs Spack to run the detection tests defined in ``builtin.l
 
 .. index::
    single: ABI compatibility
-   single: can_splice
+   single: directive; can_splice
    single: splice; in package.py
    single: splicing; in package.py
    :name: abi_compatibility

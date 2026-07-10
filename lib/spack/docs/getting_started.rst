@@ -7,11 +7,7 @@
    :description lang=en:
       A beginner's guide to Spack, walking you through the initial setup, basic commands, and core concepts to get you started with managing software.
 
-.. index::
-   single: install tree
-   single: store
-   single: prefix
-   :name: getting_started
+.. _getting_started:
 
 Getting Started
 ===============

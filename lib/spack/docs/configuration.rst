@@ -51,12 +51,10 @@ So, ``config.yaml`` starts with ``config:``, ``mirrors.yaml`` starts with ``mirr
    Validation and autocompletion of Spack config files can be enabled in your editor using `JSON Schema Store <https://www.schemastore.org/>`_.
 
 .. index::
-   single: scope
-   single: configuration scope
-   single: defaults scope
-   single: system scope
-   single: site scope
-   single: user scope
+   single: scope; defaults
+   single: scope; system
+   single: scope; site
+   single: scope; user
    :name: configuration-scopes
 
 Configuration Scopes
@@ -126,7 +124,7 @@ Commands that modify scopes (e.g., ``spack compilers``, ``spack repo``, ``spack 
 By default, they modify the highest-precedence available scope that is not read-only (like `defaults`).
 
 .. index::
-   single: custom scope
+   single: scope; custom
    :name: custom-scopes
 
 Custom scopes
@@ -211,7 +209,7 @@ You can create different configuration scopes for use with ``pkg-a`` and ``pkg-b
 
 
 .. index::
-   single: plugin scope
+   single: scope; plugin
    :name: plugin-scopes
 
 Plugin scopes
@@ -254,7 +252,7 @@ The function ``my_package.get_config_path`` (matching the entry point definition
            return str(dirname)
 
 .. index::
-   single: platform scope
+   single: scope; platform-specific
    :name: platform-scopes
 
 Platform-specific Configuration
@@ -290,7 +288,7 @@ Because ``${platform}`` is above the ``base`` include in the list, ``${platform}
 Platform-specific configuration files can similarly be set up for any other scope by creating an ``include.yaml`` similar to the one above for ``defaults`` -- under the appropriate configuration paths (see :ref:`config-overrides`) and creating a subdirectory with the platform name that contains the configurations.
 
 .. index::
-   single: scope precedence
+   single: scope; precedence
    :name: config-scope-precedence
 
 Scope Precedence

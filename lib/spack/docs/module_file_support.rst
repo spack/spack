@@ -8,10 +8,10 @@
       Learn how to configure and customize module file generation in Spack for Environment Modules and Lmod.
 
 .. index::
-   single: module file
-   single: modules.yaml
-   single: Lmod
-   single: TCL modules
+   single: module file; generating
+   single: modules.yaml; reference
+   single: module file; Lmod
+   single: module file; TCL
    single: environment modules
    :name: modules
 
@@ -111,7 +111,7 @@ Overriding callback APIs lets you express changes in the run-time environment th
 Configuration rules and custom templates instead permit you to fine-tune the filesystem layout, content and creation of module files to meet site-specific conventions.
 
 .. index::
-   single: module set
+   single: module set; configuring
    :name: modules-yaml
 
 Configuration structure

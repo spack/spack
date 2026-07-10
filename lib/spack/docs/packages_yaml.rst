@@ -8,8 +8,7 @@
       A guide to customizing package settings in Spack using the packages.yaml file, including configuring compilers, specifying external packages, package requirements, and permissions.
 
 .. index::
-   single: packages.yaml
-   single: external package
+   single: packages.yaml; reference
    :name: packages-config
 
 Package Settings (packages.yaml)
@@ -40,6 +39,9 @@ You can override them in ``~/.spack/packages.yaml`` or ``etc/spack/packages.yaml
 For more details on how this works, see :ref:`configuration-scopes`.
 
 .. _sec-external-packages:
+
+.. index::
+   single: external package; configuring
 
 External packages
 -----------------
@@ -606,7 +608,7 @@ you will use ``mvapich2~cuda %c,cxx,fortran=gcc`` as an ``mpi`` provider.
 
 .. index::
    single: conflict; in config
-   single: strong preference
+   single: strong preference; in config
    :name: package-strong-preferences
 
 Conflicts and strong preferences

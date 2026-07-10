@@ -8,8 +8,7 @@
       Discover how to configure compilers in Spack, whether by specifying them as externals, or by installing them with Spack.
 
 .. index::
-   single: compiler
-   single: compiler wrapper
+   single: compiler; configuring
    single: compilers.yaml
    :name: compiler-config
 

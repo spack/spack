@@ -8,11 +8,7 @@
       Learn how to use Spack environments to manage reproducible software stacks, making it easy to share and recreate specific sets of packages and their dependencies.
 
 .. index::
-   single: environment
-   single: managed environment
-   single: anonymous environment
-   single: spack.yaml
-   single: spack.lock
+   single: environment; overview
    :name: environments
 
 Environments (spack.yaml, spack.lock)
@@ -47,6 +43,10 @@ Spack environments provide some distinctive features though:
 #. A spec installed "in" an environment is no different from the same spec installed anywhere else in Spack.
 #. Spack environments may contain more than one spec of the same package.
 
+.. index::
+   single: spack.yaml; manifest and lock model
+   single: spack.lock; manifest and lock model
+
 Spack uses a "manifest and lock" model similar to `Bundler gemfiles <https://bundler.io/man/gemfile.5.html>`_ and other package managers.
 The environment's user input file (or manifest), is named ``spack.yaml``.
 The lock file, which contains the fully configured and concretized specs, is named ``spack.lock``.
@@ -59,6 +59,10 @@ Using Environments
 Here we follow a typical use case of creating, concretizing, installing and loading an environment.
 
 .. _cmd-spack-env-create:
+
+.. index::
+   single: environment; creating
+   single: environment; managed
 
 Creating a managed Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -144,6 +148,9 @@ Changing ``environment_root`` can therefore also be used to make a whole group o
 .. _cmd-spack-env-activate:
 .. _cmd-spack-env-deactivate:
 
+.. index::
+   single: environment; activating
+
 Activating an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -190,6 +197,9 @@ or the shortcut alias
 If the environment was activated with its view, deactivating the environment will remove the view from the user environment.
 
 .. _independent_environments:
+
+.. index::
+   single: environment; independent (anonymous)
 
 Independent Environments
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -379,7 +389,7 @@ In other words, if there is an unambiguous match in the active concrete environm
 At the same time, a spec that already exists in the environment, but only as a dependency, will be added to the environment as a root spec without the ``--no-add`` option.
 
 .. index::
-   single: develop spec
+   single: develop spec; usage
    single: spack develop
    :name: cmd-spack-develop
 
@@ -932,7 +942,7 @@ For example, the following environment has three root packages: ``gcc@8.1.0``, `
 This allows for a much-needed reduction in redundancy between packages and constraints.
 
 .. index::
-   single: spec group
+   single: spec group; defining
    :name: environment-spec-groups
 
 Spec Groups
@@ -1065,7 +1075,7 @@ The environment can be configured to set, unset, prepend, or append using ``env_
         PATH_LIST: "path/to/remove"
 
 .. index::
-   single: view
+   single: view; of an environment
 
 Environment Views
 -----------------

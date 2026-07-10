@@ -8,7 +8,7 @@
       Learn how to generate and run automated build pipelines in Spack for CI instances, enabling the building and deployment of binaries and reporting to CDash.
 
 .. index::
-   single: CI pipeline
+   single: CI pipeline; generating
    single: GitLab pipeline
    single: spack ci
    :name: pipelines

@@ -9,7 +9,7 @@
 
 
 .. index::
-   single: signing
+   single: signing; of packages
    single: GPG
    single: signing key
    :name: signing

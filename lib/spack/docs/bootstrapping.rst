@@ -12,8 +12,7 @@
 .. _cmd-spack-bootstrap-now:
 
 .. index::
-   single: bootstrap
-   single: bootstrapping
+   single: bootstrap; managing
    single: spack bootstrap
    :name: bootstrapping
 

@@ -8,10 +8,7 @@
       A detailed guide to the Spack spec syntax for describing package constraints, including versions, variants, and dependencies.
 
 .. index::
-   single: spec
-   single: spec syntax
-   single: abstract spec
-   single: concrete spec
+   single: spec; syntax
    :name: sec-specs
 
 Spec Syntax
@@ -124,9 +121,16 @@ That is, you can specify their versions, variants, and architectures just like a
 Specifiers are associated with the nearest package name to their left.
 
 .. index::
-   single: virtual package
+   single: spec; abstract vs. concrete
+
+A spec that leaves details unspecified, like ``mpileaks ^dyninst@8.1`` above, is called an :term:`abstract spec`.
+Everything a user writes on the command line or in configuration files is an abstract spec.
+Before installing, Spack *concretizes* it: every missing choice (version, variants, architecture, and the full dependency DAG) is filled in, yielding a :term:`concrete spec` that describes exactly one build.
+
+.. index::
+   single: virtual package; in specs
    single: virtual dependency
-   single: provider
+   single: provider; in specs
    :name: sec-virtual-dependencies
 
 Virtual dependencies
@@ -172,11 +176,12 @@ For instance, if an application needs MPI-2 functions, it can depend on ``mpi@2:
 Below are more details about the specifiers that you can add to specs.
 
 .. index::
-   single: version
+   single: version; in specs
    single: version specifier
-   single: version range
-   single: version list
+   single: version; range
+   single: version; list
    single: @ (spec sigil)
+   single: spec sigil; @ (version)
    :name: version-specifier
 
 Version specifier
@@ -280,9 +285,11 @@ For example:
 Details about how versions are compared and how Spack determines if one version is less than another are discussed in the developer guide.
 
 .. index::
-   single: variant
+   single: variant; in specs
    single: + (spec sigil)
    single: ~ (spec sigil)
+   single: spec sigil; + (enable variant)
+   single: spec sigil; ~ (disable variant)
    :name: basic-variants
 
 Variants
@@ -337,6 +344,7 @@ or
 .. index::
    single: variant; multi-valued
    single: := (spec sigil)
+   single: spec sigil; := (exact multi-valued variant)
 
 Multi-valued Variants
 ^^^^^^^^^^^^^^^^^^^^^
@@ -363,9 +371,11 @@ syntax should be used with the ``:=`` operator.
 
 
 .. index::
-   single: propagation
+   single: propagation; of variants
    single: ++ (spec sigil)
    single: == (spec sigil)
+   single: spec sigil; ++ (propagate variant)
+   single: spec sigil; == (propagate value)
 
 Variant propagation to dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -389,13 +399,15 @@ For example, for the ``stackstart`` variant:
 Spack also allows variants to be propagated from a package that does not have that variant.
 
 .. index::
-   single: compiler flags
-   single: cflags
-   single: cxxflags
-   single: cppflags
-   single: fflags
-   single: ldflags
-   single: ldlibs
+   single: compiler flags; in specs
+   single: compiler flags; cflags
+   single: compiler flags; cxxflags
+   single: compiler flags; cppflags
+   single: compiler flags; fflags
+   single: compiler flags; ldflags
+   single: compiler flags; ldlibs
+   single: propagation; of compiler flags
+   single: environment variable; CFLAGS, CXXFLAGS, ... (see compiler flags)
 
 Compiler Flags
 --------------
@@ -415,9 +427,9 @@ If all flags are set, the order is ``$cppflags $cflags|$cxxflags $ldflags <comma
 
 
 .. index::
-   single: architecture spec
+   single: architecture spec; syntax
    single: platform
-   single: target
+   single: target; in specs
    single: os
    :name: architecture_specifiers
 
@@ -505,10 +517,12 @@ Finally, if Spack has no information to match the compiler and target, it will p
 
 .. index::
    single: dependency
-   single: direct dependency
-   single: transitive dependency
+   single: dependency; direct
+   single: dependency; transitive
    single: % (spec sigil)
    single: ^ (spec sigil)
+   single: spec sigil; % (direct dependency)
+   single: spec sigil; ^ (transitive dependency)
    :name: sec-dependencies
 
 Dependencies
@@ -653,8 +667,9 @@ Build tools are unaffected and can still prefer to use a different compiler.
 .. index::
    single: spec hash
    single: hash; spec
-   single: DAG hash
+   single: DAG hash; in specs
    single: / (spec sigil)
+   single: spec sigil; / (hash)
 
 Specifying Specs by Hash
 ------------------------

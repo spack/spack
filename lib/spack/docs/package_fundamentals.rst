@@ -8,7 +8,7 @@
       Learn the fundamental Spack commands for managing software packages, including how to find, inspect, install, and remove them.
 
 .. index::
-   single: package
+   single: package; installing and uninstalling
    single: spack install
    single: spack uninstall
    single: spack find

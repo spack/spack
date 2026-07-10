@@ -8,10 +8,7 @@
       A detailed guide to the config.yaml file in Spack, which allows you to set core configuration options like installation paths, build parallelism, and trusted sources.
 
 .. index::
-   single: config.yaml
-   single: install_tree
-   single: build_jobs
-   single: connect_timeout
+   single: config.yaml; reference
    :name: config-yaml
 
 Spack Settings (config.yaml)
@@ -25,6 +22,9 @@ You can see the default settings by looking at ``etc/spack/defaults/config.yaml`
 
 These settings can be overridden in ``etc/spack/config.yaml`` or ``~/.spack/config.yaml``.
 See :ref:`configuration-scopes` for details.
+
+.. index::
+   single: install_tree (config.yaml)
 
 ``install_tree:root``
 ---------------------
@@ -177,6 +177,9 @@ You can set ``dirty`` to ``true`` to skip the cleaning step and make all builds 
 Be aware that this will reduce the reproducibility of builds.
 
 .. _build-jobs:
+
+.. index::
+   single: build_jobs (config.yaml)
 
 ``build_jobs``
 --------------

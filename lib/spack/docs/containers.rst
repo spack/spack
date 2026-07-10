@@ -8,7 +8,7 @@
       Learn how to turn Spack packages and Spack environments into OCI-compatible container images, either by exporting existing installations or by generating recipes for Docker and Singularity.
 
 .. index::
-   single: container image
+   single: container image; generating
    single: Docker
    single: Singularity
    single: spack containerize
