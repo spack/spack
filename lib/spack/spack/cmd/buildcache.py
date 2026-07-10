@@ -1095,7 +1095,7 @@ def check_index_fn(args):
         for spec_manifest in manifest_files:
             # Spec manifests have a naming format
             # <name>-<version>-<hash>.spec.manifest.json
-            spec_hash = spec_manifest.rsplit("-", 1)[1].split(".", 1)[0]
+            _, _, spec_hash = URLBuildcacheEntry.decompose_manifest_filename(spec_manifest)
             if checking_view_index and spec_hash not in index_hash_list:
                 continue
 

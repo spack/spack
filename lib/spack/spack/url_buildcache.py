@@ -37,6 +37,7 @@ from spack.util import tty
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
 from spack.util.executable import which
+from spack.version.version_types import Version, VersionType
 
 #: The build cache layout version that this version of Spack creates.
 #: Version 3: Introduces content-addressable tarballs
@@ -44,6 +45,9 @@ CURRENT_BUILD_CACHE_LAYOUT_VERSION = 3
 
 #: The name of the default buildcache index manifest file
 INDEX_MANIFEST_FILE = "index.manifest.json"
+
+#: Simple regex for matching spec hashes
+SPEC_HASH_RE = re.compile(r"^[a-z0-9]{32}$")
 
 
 class BuildcacheComponent(enum.Enum):
@@ -275,6 +279,22 @@ class URLBuildcacheEntry:
         the manifest file representing it"""
         spec_formatted = spec.format_path("{name}-{version}-{hash}")
         return f"{spec_formatted}.spec.manifest.json"
+
+    @classmethod
+    def decompose_manifest_filename(cls, file) -> Tuple[str, VersionType, str]:
+        """Get the spec name, version, and hash from a manifest file name"""
+        # Strip any leading prefix path and file suffix
+        manifest_name = file.split("/")[-1].replace(".spec.manifest.json", "")
+        parts = manifest_name.split("-")
+        if len(parts) < 3:
+            raise ValueError("Expected file with format <package-*>-<version>-<spec_hash>")
+        spec_hash = parts[-1]
+        if not SPEC_HASH_RE.match(spec_hash):
+            raise ValueError(
+                f"Expected spec hash with pattern {SPEC_HASH_RE.pattern} found {spec_hash}"
+            )
+        spec_version = Version(parts[-2])
+        return "-".join(parts[:-2]), spec_version, spec_hash
 
     @classmethod
     def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
