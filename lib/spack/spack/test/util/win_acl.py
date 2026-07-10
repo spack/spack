@@ -550,9 +550,9 @@ def test_set_exclusive_owner_control_file(tmp_path):
         a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FA)
         for a in sd.dacl
     ), "owner must have an Allow ACE granting FILE_ALL_ACCESS"
-    assert not any(
-        a.sid == "WD" for a in sd.dacl
-    ), "Everyone must have no ACE after set_exclusive_owner_control"
+    assert not any(a.sid == "WD" for a in sd.dacl), (
+        "Everyone must have no ACE after set_exclusive_owner_control"
+    )
 
 
 def test_set_exclusive_owner_control_directory(tmp_path):
@@ -571,6 +571,6 @@ def test_set_exclusive_owner_control_directory(tmp_path):
         a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FA)
         for a in sd.dacl
     ), "owner must have an Allow ACE granting FILE_ALL_ACCESS"
-    assert not any(
-        a.sid == "WD" and a.grants(_FX) for a in sd.dacl
-    ), "Everyone must not have execute access after set_exclusive_owner_control"
+    assert not any(a.sid == "WD" and a.grants(_FX) for a in sd.dacl), (
+        "Everyone must not have execute access after set_exclusive_owner_control"
+    )
