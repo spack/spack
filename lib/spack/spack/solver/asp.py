@@ -1089,6 +1089,11 @@ class PyclingoDriver:
         result = None
         if cache:
             result, concretization_stats = cache.fetch(cache_key)
+            if result:
+                # Abstract specs do not round-trip faithfully through JSON (e.g. conditional
+                # dependency edges lose their when= conditions). The problem hash guarantees
+                # the caller's input specs are equivalent to the stored ones, so use them.
+                result.abstract_specs = specs
         timer.stop("cache-check")
 
         # run the solver
