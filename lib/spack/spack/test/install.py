@@ -17,6 +17,7 @@ import spack.config
 import spack.database
 import spack.deprecation
 import spack.error
+import spack.installer
 import spack.installer_dispatch
 import spack.mirrors.mirror
 import spack.mirrors.utils
@@ -860,7 +861,7 @@ def test_new_installer_static_gate_sees_deferred_build_deps(
             spec = spack.concretize.concretize_one("deprecated-buildtool-client")
 
         with mutable_config.override("packages:all:deprecation_scope", "all"):
-            installer = spack.new_installer.PackageInstaller(
+            installer = spack.installer.PackageInstaller(
                 [spec.package], dependencies_policy="auto"
             )
             # The build tool (which carries the deprecated runtime dep) is deferred out of the
