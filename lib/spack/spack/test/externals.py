@@ -9,6 +9,8 @@ from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
 import spack.traverse
+from spack.compilers.config import CompilerFactory
+from spack.config import override
 from spack.externals import (
     DuplicateExternalError,
     ExternalDict,
@@ -17,8 +19,6 @@ from spack.externals import (
     complete_architecture,
     complete_variants_and_architecture,
 )
-from spack.compilers.config import CompilerFactory
-from spack.config import override
 
 pytestmark = pytest.mark.usefixtures("config", "mock_packages")
 
@@ -381,31 +381,29 @@ def test_external_compiler_with_non_compiler_dependency():
     # These dependencies are meaningless, since we're not checking if they
     # actually exist.
     packages_config = {
-        "compiler-with-deps" : {
-                "externals" : [
-                    {
-                        "spec": "compiler-with-deps@1",
-                        "prefix": "/usr",
-                        "extra_attributes": {
-                            "compilers": {
-                                "c": "/usr/bin/gcc",
-                                "cxx": "/usr/bin/g++",
-                                "fortran": "/usr/bin/gfortran",
-                            }
-                        },
-                        "dependencies": [{"id": "bin_id", "deptypes": ["run", "link"]}]
-                    }
-                ]
-             },
-        'binutils-for-test' : {
-            "externals" : [
-                {"spec": "binutils-for-test@1", "prefix": "/usr", "id": "bin_id"},
+        "compiler-with-deps": {
+            "externals": [
+                {
+                    "spec": "compiler-with-deps@1",
+                    "prefix": "/usr",
+                    "extra_attributes": {
+                        "compilers": {
+                            "c": "/usr/bin/gcc",
+                            "cxx": "/usr/bin/g++",
+                            "fortran": "/usr/bin/gfortran",
+                        }
+                    },
+                    "dependencies": [{"id": "bin_id", "deptypes": ["run", "link"]}],
+                }
             ]
-        }
+        },
+        "binutils-for-test": {
+            "externals": [{"spec": "binutils-for-test@1", "prefix": "/usr", "id": "bin_id"}]
+        },
     }
     with override("packages", packages_config) as c:
         valid_compilers = CompilerFactory.from_packages_yaml(c)
         for c in valid_compilers:
-            if c.name == 'compiler-with-deps':
+            if c.name == "compiler-with-deps":
                 assert c.external
-                assert c['binutils-for-test'].external
+                assert c["binutils-for-test"].external
