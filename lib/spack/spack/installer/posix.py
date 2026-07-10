@@ -437,12 +437,10 @@ def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
             os.unlink(fifo_path)
         except OSError as e:
             spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO: {e}", level=3)
-            pass
         try:
             os.rmdir(tmpdir)
         except OSError as e:
             spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO dir: {e}", level=3)
-            pass
         raise
 
 
