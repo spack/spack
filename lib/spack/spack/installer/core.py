@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
 
 import spack.binary_distribution
 import spack.config
+import spack.deprecation
 import spack.error
 import spack.mirrors.mirror
 import spack.report
@@ -211,6 +212,7 @@ class PackageInstaller:
 
         specs = [pkg.spec for pkg in packages]
 
+        self.roots = specs
         self.has_mirrors = bool(spack.mirrors.mirror.MirrorCollection(binary=True))
         self.root_policy: InstallPolicy = root_policy
         self.dependencies_policy: InstallPolicy = dependencies_policy
@@ -311,6 +313,7 @@ class PackageInstaller:
         self._run_event_loop()
 
     def _run_event_loop(self) -> None:
+        spack.deprecation.check_deprecations(self.roots)
         self.store.install_sbang()
         jobserver = JobServer(self.jobs, os.environ.get("MAKEFLAGS", ""))
         selector = selectors.DefaultSelector()
