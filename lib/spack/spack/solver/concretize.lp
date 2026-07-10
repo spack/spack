@@ -412,7 +412,13 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
      Vsha != Psha.
 
 % Which nodes are subject to the deprecation policy, per the global 'deprecation_scope':
-% 'all' checks every node in the DAG, 'runtime' only the link/run closure of the roots
+% 'all' checks every node in the DAG, 'runtime' reuses the root unification set, i.e. the
+% non-build closure of the roots (link, run, and test edges).
+%
+% This is intentionally the already-computed 'root' unification set rather than a dedicated
+% link/run closure as it avoids the extra grounding cost. The only difference is 'test' edges, so
+% under 'runtime' scope concretization is slightly stricter than the install-time gate, which
+% walks link/run only. Concretization erring on the strict side is the safe direction.
 node_in_deprecation_scope(node(ID, Package)) :-
     attr("node", node(ID, Package)), deprecation_scope("all").
 
