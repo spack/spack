@@ -1381,7 +1381,7 @@ def windows_sfn(path: os.PathLike):
         # stub Windows types TCHAR[LENGTH]
         TCHAR_arr = ctypes.c_wchar * sz
         ret_str = TCHAR_arr()
-        _GetShortPathNameW(path, ctypes.byref(ret_str), sz)
+        _GetShortPathNameW(path, ret_str, sz)
         return ret_str.value
     return path
 
