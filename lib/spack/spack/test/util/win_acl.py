@@ -22,6 +22,7 @@ from spack.util.win_acl import (
     copy_file_permissions,
     get_file_owner,
     get_file_sddl,
+    set_exclusive_owner_control,
     set_file_sddl,
 )
 
@@ -531,3 +532,45 @@ def test_copy_mode_only_changes_execute_on_windows(tmp_path):
     before = get_file_sddl(str(dst))
     fs.copy_mode(str(src), str(dst))
     assert get_file_sddl(str(dst)) == before
+
+
+def test_set_exclusive_owner_control_file(tmp_path):
+    """set_exclusive_owner_control gives only the owner access on a file (chmod 700)."""
+    f = tmp_path / "secret.txt"
+    f.write_text("hello")
+    owner_sid = SecurityDescriptor.from_file(str(f)).owner
+    # Start with Everyone having read access so we can verify it gets stripped.
+    set_file_sddl(str(f), f"D:P(A;;FA;;;{owner_sid})(A;;FR;;;WD)")
+
+    set_exclusive_owner_control(str(f))
+
+    sd = SecurityDescriptor.from_file(str(f))
+    _FA = int(FileAccessRights.FILE_ALL_ACCESS)
+    assert any(
+        a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FA)
+        for a in sd.dacl
+    ), "owner must have an Allow ACE granting FILE_ALL_ACCESS"
+    assert not any(
+        a.sid == "WD" for a in sd.dacl
+    ), "Everyone must have no ACE after set_exclusive_owner_control"
+
+
+def test_set_exclusive_owner_control_directory(tmp_path):
+    """set_exclusive_owner_control gives only the owner access on a directory (chmod 700)."""
+    d = tmp_path / "private"
+    d.mkdir()
+    owner_sid = SecurityDescriptor.from_file(str(d)).owner
+    set_file_sddl(str(d), f"D:P(A;;FA;;;{owner_sid})(A;;FRFX;;;WD)")
+
+    set_exclusive_owner_control(str(d))
+
+    sd = SecurityDescriptor.from_file(str(d))
+    _FA = int(FileAccessRights.FILE_ALL_ACCESS)
+    _FX = int(FileAccessRights.FILE_GENERIC_EXECUTE)
+    assert any(
+        a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FA)
+        for a in sd.dacl
+    ), "owner must have an Allow ACE granting FILE_ALL_ACCESS"
+    assert not any(
+        a.sid == "WD" and a.grants(_FX) for a in sd.dacl
+    ), "Everyone must not have execute access after set_exclusive_owner_control"
