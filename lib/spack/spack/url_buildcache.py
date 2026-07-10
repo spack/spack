@@ -37,7 +37,6 @@ from spack.util import tty
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
 from spack.util.executable import which
-from spack.version.version_types import Version, VersionType
 
 #: The build cache layout version that this version of Spack creates.
 #: Version 3: Introduces content-addressable tarballs
@@ -281,8 +280,8 @@ class URLBuildcacheEntry:
         return f"{spec_formatted}.spec.manifest.json"
 
     @classmethod
-    def decompose_manifest_filename(cls, file) -> Tuple[str, VersionType, str]:
-        """Get the spec name, version, and hash from a manifest file name"""
+    def hash_from_manifest_name(cls, file) -> str:
+        """Extract the hash from a manifest file name"""
         # Strip any leading prefix path and file suffix
         manifest_name = file.split("/")[-1].replace(".spec.manifest.json", "")
         parts = manifest_name.split("-")
@@ -293,8 +292,7 @@ class URLBuildcacheEntry:
             raise ValueError(
                 f"Expected spec hash with pattern {SPEC_HASH_RE.pattern} found {spec_hash}"
             )
-        spec_version = Version(parts[-2])
-        return "-".join(parts[:-2]), spec_version, spec_hash
+        return spec_hash
 
     @classmethod
     def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
