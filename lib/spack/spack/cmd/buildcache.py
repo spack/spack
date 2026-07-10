@@ -2,12 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
+import contextlib
 import enum
 import glob
 import json
 import os
 import sys
 import tempfile
+import warnings
 from typing import List, Mapping, Optional, Tuple
 
 import spack.binary_distribution
@@ -43,6 +45,7 @@ from ..enums import InstallRecordStatus
 from ..url_buildcache import (
     BuildcacheComponent,
     BuildcacheEntryError,
+    MirrorMetadata,
     URLBuildcacheEntry,
     check_mirror_for_layout,
     get_entries_from_cache,
@@ -920,7 +923,7 @@ def update_index(
     url = mirror.push_url
 
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-        spack.binary_distribution._url_generate_package_index(url, tmpdir, timer=timer)
+        spack.binary_distribution._url_update_index(MirrorMetadata(url), tmpdir, timer=timer)
 
     if update_keys:
         mirror_update_keys(mirror)
@@ -965,7 +968,7 @@ def update_view(
     url = mirror.push_url
 
     if (name and mirror.push_view) and not name == mirror.push_view:
-        tty.warn(
+        warnings.warn(
             (
                 f"Updating index view with name ({name}), which is different than "
                 f"the configured name ({mirror.push_view}) for the mirror {mirror.name}"
@@ -996,36 +999,39 @@ def update_view(
             "Index already exists. To overwrite or update pass --force or --append respectively"
         )
 
-    hashes = []
+    envs = []
     if sources:
-        for source in sources:
-            tty.debug(f"reading specs from source: {source}")
-            env = ev.environment_from_name_or_dir(source)
-            hashes.extend(env.all_hashes())
+        envs = [ev.environment_from_name_or_dir(x) for x in sources]
     else:
-        # Get hashes in the current active environment
-        hashes = spack.cmd.require_active_env(parser).all_hashes()
+        envs = [spack.cmd.require_active_env(parser)]
+
+    hashes = {h for e in envs for h in e.all_hashes()}
 
     if not hashes:
+        # If this is append mode and there is nothing to
+        # append, skip updating the index
+        if update_mode == ViewUpdateMode.APPEND:
+            return
+
+        # This has to be a tty.warn or else the output is lost for tests
         tty.warn("No specs found for view, creating an empty index")
 
     filter_fn = lambda x: x in hashes
 
+    def _spec_by_hash(spec_hash: str) -> Optional[Spec]:
+        for e in envs:
+            with contextlib.suppress(Exception):
+                return e.get_one_by_hash(spec_hash)
+        return None
+
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-        # Initialize a database
-        db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
-        db._write()
-
-        if update_mode == ViewUpdateMode.APPEND:
-            # Load the current state of the view index from the cache into the database
-            cache_index = BINARY_INDEX._local_index_cache.get(str(mirror_metadata))
-            if cache_index:
-                cache_key = cache_index["index_path"]
-                with BINARY_INDEX._index_file_cache.read_transaction(cache_key) as f:
-                    if f is not None:
-                        db._read_from_stream(f)
-
-        spack.binary_distribution._url_generate_package_index(url, tmpdir, db, name, filter_fn)
+        spack.binary_distribution._url_update_index(
+            mirror_metadata,
+            tmpdir,
+            update_mode == ViewUpdateMode.APPEND,
+            filter_fn=filter_fn,
+            spec_by_hash=_spec_by_hash,
+        )
 
     if update_keys:
         mirror_update_keys(mirror)
@@ -1056,7 +1062,7 @@ def check_index_fn(args):
     index_exists = True
     missing_index_blob = False
     try:
-        BINARY_INDEX._fetch_and_cache_index(mirror_metadata)
+        BINARY_INDEX._fetch_and_cache_index(mirror_metadata, force=True)
     except spack.binary_distribution.BuildcacheIndexNotExists:
         index_exists = False
     except spack.binary_distribution.FetchIndexError:
