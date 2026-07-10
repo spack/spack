@@ -1418,8 +1418,8 @@ class SpackSolverSetup:
         # Set during the call to setup
         self.pkgs: Set[str] = set()
 
-        # packages:all deprecation fallback, computed once in setup and reused for every package
-        self.default_allowed_deprecation = DeprecationSeverity.NONE
+        # deprecation policy resolved once in setup and reused for every package
+        self.deprecation_policy = spack.deprecation.Policy({}, DeprecationSeverity.NONE)
 
         # list of unique libc specs targeted by compilers (or an educated guess if no compiler)
 
@@ -1499,7 +1499,7 @@ class SpackSolverSetup:
                 )
             self.gen.newline()
 
-        allowed = spack.deprecation.allowed_severity(pkg.name, self.default_allowed_deprecation)
+        allowed = self.deprecation_policy.allowed_severity(pkg.name)
         self.gen.fact(fn.pkg_fact(pkg.name, fn.allowed_deprecation_severity(allowed.value)))
 
     def config_compatible_os(self):
@@ -2576,9 +2576,7 @@ class SpackSolverSetup:
                 continue  # conditional dependency that won't be satisfied
 
             possible: Iterable = self.possible_versions.get(spec.name, set())
-            sat_possible = [v for v in possible if possible and v.satisfies(spec.versions)]
-
-            if not sat_possible:
+            if not any(v.satisfies(spec.versions) for v in possible):
                 impossible.append(spec)
 
         if impossible:
@@ -2785,10 +2783,8 @@ class SpackSolverSetup:
         )
         self.validate_and_define_versions_from_requirements(require_checksum=checksummed)
 
-        # Compute the packages:all fallback once (and emit the one-time legacy warning here).
-        self.default_allowed_deprecation = spack.deprecation.default_allowed_severity(
-            warn_on_legacy=True
-        )
+        # Resolve the deprecation policy once (and emit the one-time legacy warning here).
+        self.deprecation_policy = spack.deprecation.Policy.from_config(warn_on_legacy=True)
 
         # Global deprecation-check scope (runtime vs. the whole DAG)
         self.gen.fact(fn.deprecation_scope(spack.deprecation.deprecation_scope()))
