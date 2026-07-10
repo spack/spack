@@ -18,8 +18,8 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.installer as inst
 import spack.installer_dispatch
+import spack.old_installer as inst
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo

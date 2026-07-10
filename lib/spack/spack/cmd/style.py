@@ -168,7 +168,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--fix",
         action="store_true",
         default=False,
-        help="format automatically if possible (e.g., with isort, black)",
+        help="format and fix issues automatically (e.g., with ruff)",
     )
     subparser.add_argument(
         "--root", action="store", default=None, help="style check a different spack instance"
@@ -486,7 +486,7 @@ def print_style_header(file_list: List[Path], args, tools_to_run):
 
 def validate_toolset(arg_value):
     """Validate ``--tool`` and ``--skip`` arguments (sets of optionally comma-separated tools)."""
-    tools = set(",".join(arg_value).split(","))  # allow args like 'isort,flake8'
+    tools = set(",".join(arg_value).split(","))  # allow args like 'ruff-check,mypy'
     for tool in tools:
         if tool not in tool_names:
             tty.die("Invalid tool: '%s'" % tool, "Choose from: %s" % ", ".join(tool_names))

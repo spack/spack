@@ -151,8 +151,7 @@ Check out the `pytest documentation <http://pytest.org/>`_ and feel free to ask 
 Style Tests
 ^^^^^^^^^^^^
 
-Spack uses `Flake8 <http://flake8.pycqa.org/en/latest/>`_ to test for `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ conformance and `mypy <https://mypy.readthedocs.io/en/stable/>`_ for type checking.
-PEP 8 is a series of style guides for Python that provide suggestions for everything from variable naming to indentation.
+Spack uses `Ruff <https://docs.astral.sh/ruff/>`_ for code formatting and linting, and `mypy <https://mypy.readthedocs.io/en/stable/>`_ for type checking.
 In order to limit the number of PRs that were mostly style changes, we decided to enforce PEP 8 conformance.
 Your PR needs to comply with PEP 8 in order to be accepted, and if it modifies the Spack library, it needs to successfully type-check with mypy as well.
 
@@ -163,51 +162,60 @@ Simply run the ``spack style`` command:
 
    $ spack style
 
+To automatically fix formatting and linting issues, use the ``--fix`` flag:
+
+.. code-block:: console
+
+   $ spack style --fix
+
 ``spack style`` has a couple advantages over running the tools by hand:
 
 #. It only tests files that you have modified since branching off of ``develop``.
 
 #. It works regardless of what directory you are in.
 
-#. It automatically adds approved exemptions from the ``flake8`` checks.
-   For example, URLs are often longer than 80 characters, so we exempt them from line length checks.
-   We also exempt lines that start with ``homepage =``, ``url =``, ``version()``, ``variant()``, ``depends_on()``, and ``extends()`` in ``package.py`` files.
-   This is now also possible when directly running Flake8 if you can use the ``spack`` formatter plugin included with Spack.
-
-More approved Flake8 exemptions can be found `here <https://github.com/spack/spack/blob/develop/.flake8>`_.
+#. It automatically adds approved exemptions from style checks.
+   For example, URLs are often longer than 99 characters, so we exempt them from line length checks.
+   We also exempt certain import-related checks in ``package.py`` files (e.g., ``from spack.package import *``).
 
 If all is well, you'll see something like this:
 
 .. code-block:: console
 
-   $ run-flake8-tests
-   Dependencies found.
-   =======================================================
-   flake8: running flake8 code checks on spack.
+   $ spack style
+   ==> Running style checks on spack
+     selected: import, ruff-format, ruff-check, mypy
+   ==> Checking Files:
+     var/spack/repos/builtin/packages/hdf5/package.py
+     var/spack/repos/builtin/packages/hdf/package.py
+     var/spack/repos/builtin/packages/netcdf/package.py
+   ==> Running import checks
+     import checks were clean
+   ==> Running ruff-format checks
+     ruff-format checks were clean
+   ==> Running ruff-check checks
+     ruff-check checks were clean
+   ==> Running mypy checks
+     mypy checks were clean
+   ==> spack style checks were clean
 
-   Modified files:
-
-     var/spack/repos/spack_repo/builtin/packages/hdf5/package.py
-     var/spack/repos/spack_repo/builtin/packages/hdf/package.py
-     var/spack/repos/spack_repo/builtin/packages/netcdf/package.py
-   =======================================================
-   Flake8 checks were clean.
-
-However, if you are not compliant with PEP 8, Flake8 will complain:
+However, if you are not compliant with PEP 8, Ruff will report errors:
 
 .. code-block:: console
 
-   var/spack/repos/spack_repo/builtin/packages/netcdf/package.py:26: [F401] 'os' imported but unused
-   var/spack/repos/spack_repo/builtin/packages/netcdf/package.py:61: [E303] too many blank lines (2)
-   var/spack/repos/spack_repo/builtin/packages/netcdf/package.py:106: [E501] line too long (92 > 79 characters)
-   Flake8 found errors.
+   $ spack style
+   ==> Running style checks on spack
+   var/spack/repos/builtin/packages/netcdf/package.py:26:1: F401 'os' imported but unused
+   var/spack/repos/builtin/packages/netcdf/package.py:61:1: E303 too many blank lines (2)
+   var/spack/repos/builtin/packages/netcdf/package.py:106:100: E501 line too long (105 > 99 characters)
 
 Most of the error messages are straightforward, but if you do not understand what they mean, just ask questions about them when you submit your PR.
 The line numbers will change if you add or delete lines, so simply run ``spack style`` again to update them.
+Many errors can be automatically fixed by running ``spack style --fix``.
 
 .. tip::
 
-   Try fixing Flake8 errors in reverse order.
+   Try fixing style errors in reverse order.
    This eliminates the need for multiple runs of ``spack style`` just to re-compute line numbers and makes it much easier to fix errors directly off of the CI output.
 
 

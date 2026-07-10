@@ -1286,9 +1286,7 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
         try:
             with open(file_path, "w", encoding="utf-8") as fd:
                 syaml.dump(broken_spec_details, fd)
-            web_util.push_to_url(
-                file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
-            )
+            web_util.push_to_url(file_path, url, keep_original=False, content_type="text/plain")
         except Exception as err:
             # If there is an S3 error (e.g., access denied or connection
             # error), the first non boto-specific class in the exception

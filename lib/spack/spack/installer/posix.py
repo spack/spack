@@ -8,7 +8,7 @@ import sys
 
 if sys.platform == "win32":
     # Also lets mypy skip this module when run on Windows.
-    raise ImportError("spack.new_installer_posix cannot be imported on Windows")
+    raise ImportError("spack.installer.posix cannot be imported on Windows")
 
 import fcntl
 import functools
@@ -21,19 +21,21 @@ import tempfile
 import termios
 import tty
 import warnings
-from multiprocessing import Process
+from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Callable, Optional, Tuple, Union
 
 import spack.spec
 import spack.util.tty
-from spack.new_installer_base import (
+from spack.installer.base import (
     OUTPUT_BUFFER_SIZE,
     SIGWINCH_EVENT,
     STDIN_EVENT,
     TEE_STOP,
     BaseTerminalState,
+    BuildChannels,
     JobServerBase,
+    JobserverInfo,
     ProcessExitNotifier,
     StdinReader,
     Tee,
@@ -190,6 +192,18 @@ class PosixExitNotifier(ProcessExitNotifier):
         return self.proc.sentinel
 
 
+def create_build_channels() -> BuildChannels:
+    """Create the channel pairs of a build. The state and output read ends are non-blocking so
+    the selector-based loop never blocks. The worker also receives the control write end, used to
+    stop its tee thread."""
+    state_r, state_w = Pipe(duplex=False)
+    output_r, output_w = Pipe(duplex=False)
+    control_r, control_w = Pipe(duplex=False)
+    os.set_blocking(output_r.fileno(), False)
+    os.set_blocking(state_r.fileno(), False)
+    return BuildChannels(state_r, state_w, output_r, output_w, control_r, control_w, control_w)
+
+
 class PosixTee(Tee):
     def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
         """Forward log_r to log_file and parent (if echoing is enabled).
@@ -280,15 +294,17 @@ class PosixJobServer(JobServerBase):
         self.r, self.w, self.fifo_path = create_jobserver_fifo(self.num_jobs)
         self.created = True
 
-    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> Tuple[Optional[str], Any]:
+    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> JobserverInfo:
         if self.fifo_path and (not gmake or gmake.satisfies("@4.4:")):
-            return f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}", None
+            return JobserverInfo(
+                f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}", None
+            )
         # For non-FIFO jobservers, ensure the pipes are inherited by the child process
         pipes = (self.r_conn, self.w_conn)
         if not gmake or gmake.satisfies("@4.0:"):
-            return f" -j{self.num_jobs} --jobserver-auth={self.r},{self.w}", pipes
+            return JobserverInfo(f" -j{self.num_jobs} --jobserver-auth={self.r},{self.w}", pipes)
         else:
-            return f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}", pipes
+            return JobserverInfo(f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}", pipes)
 
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
         if wake and self.r not in selector.get_map():

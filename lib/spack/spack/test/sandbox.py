@@ -17,7 +17,7 @@ from typing import List, Tuple
 
 import spack.sandbox
 import spack.store
-from spack.new_installer import _enable_sandbox
+from spack.installer.build import _enable_sandbox
 
 
 class SpyLandlockSandbox(spack.sandbox.LandlockSandbox):

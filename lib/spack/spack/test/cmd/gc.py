@@ -12,7 +12,7 @@ import spack.environment as ev
 import spack.main
 import spack.spec
 import spack.traverse
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 
 gc = spack.main.SpackCommand("gc")
 add = spack.main.SpackCommand("add")

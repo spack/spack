@@ -335,7 +335,7 @@ Style failures
 The PR may fail one or more style checks.
 
 **Action.**
-If the failure is due to issues raised by the ``black`` style checker *and* the PR is otherwise ready to be merged, you can add ``@spackbot fix style`` in a comment to see if Spack will fix the errors.
+If the failure is due to style issues that can be automatically fixed *and* the PR is otherwise ready to be merged, you can add ``@spackbot fix style`` in a comment to see if Spack will fix the errors.
 Otherwise, inform the Contributor that the style failures need to be addressed.
 
 CI stack failures

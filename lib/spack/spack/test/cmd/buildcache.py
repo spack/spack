@@ -25,7 +25,7 @@ import spack.mirrors.mirror
 import spack.spec
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,

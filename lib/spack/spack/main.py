@@ -1132,7 +1132,7 @@ def main(argv=None):
         multiprocessing.set_start_method("forkserver")
     # When using the forkserver start method, preload the following modules to improve startup
     # time of child processes.
-    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.new_installer"])
+    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.installer"])
     try:
         g0, g1, g2 = gc.get_threshold()
         gc.set_threshold(50 * g0, g1, g2)

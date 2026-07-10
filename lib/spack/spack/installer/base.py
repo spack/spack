@@ -15,10 +15,15 @@ import socket
 import sys
 import threading
 from multiprocessing.connection import Connection
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, NamedTuple, Optional, Union
+
+from spack.vendor.typing_extensions import Literal
 
 import spack.spec
 from spack.util.tty.log import redirect_stdio, restore_stdio
+
+#: Type for specifying installation source modes
+InstallPolicy = Literal["auto", "cache_only", "source_only"]
 
 # Inter-process communication type
 if sys.platform == "win32":
@@ -32,6 +37,16 @@ OUTPUT_BUFFER_SIZE = 32768
 #: Control byte that stops the tee thread
 TEE_STOP = b"2"
 
+
+class ExitCode:
+    SUCCESS = 0
+    BUILD_ERROR = 1
+    #: Exit code used by the child process to signal that the build was stopped at a phase boundary
+    STOPPED_AT_PHASE = 3
+    #: Exit code used by the child process to signal a binary cache miss (no source fallback)
+    BUILD_CACHE_MISS = 4
+
+
 #: How often the event loop should wake up to poll for a background-to-foreground transition
 #: while the terminal is headless (there is no signal for it).
 HEADLESS_WAKE_INTERVAL = 1.0
@@ -39,6 +54,27 @@ HEADLESS_WAKE_INTERVAL = 1.0
 #: Selector data keys registered by the terminal and dispatched by the event loop
 STDIN_EVENT = "stdin"
 SIGWINCH_EVENT = "sigwinch"
+
+
+class BuildChannels(NamedTuple):
+    """The state, output, and control channel pairs connecting the event loop to one build.
+    Created by the platform-specific ``create_build_channels`` factories."""
+
+    state_r: IpcChannel
+    state_w: IpcChannel
+    output_r: IpcChannel
+    output_w: IpcChannel
+    control_r: IpcChannel
+    control_w: IpcChannel
+    #: Control write end passed to the worker to stop its tee thread (POSIX only, None on Windows)
+    tee_control_w: Optional[IpcChannel]
+
+    def close_child_ends(self) -> None:
+        """Close the ends owned by the build: in the parent after fork, or in launchers whose
+        builds finish in-process."""
+        self.state_w.close()
+        self.output_w.close()
+        self.control_r.close()
 
 
 class StdinReader:
@@ -160,13 +196,24 @@ class BaseTerminalState(abc.ABC):
 
 
 class FdInfo:
-    """Information about a file descriptor mapping."""
+    """Associates a selector-registered file descriptor with a build and a channel name."""
 
     __slots__ = ("build_id", "name")
 
     def __init__(self, build_id: str, name: str) -> None:
         self.build_id = build_id
         self.name = name
+
+
+class JobserverInfo(NamedTuple):
+    """What a build process needs to participate in the jobserver, produced by
+    :meth:`JobServerBase.makeflags_and_data`."""
+
+    #: MAKEFLAGS value to set in the build process environment, or None if there is no jobserver.
+    makeflags: Optional[str]
+    #: Implementation specific data serialized to the build process (e.g. pipe-based jobserver
+    #: connections that the build process must inherit).
+    data: Any
 
 
 class ProcessExitNotifier(abc.ABC):
@@ -203,10 +250,9 @@ class JobServerBase(abc.ABC):
         return self.num_jobs == self.target_jobs
 
     @abc.abstractmethod
-    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> Tuple[Optional[str], Any]:
-        """Return a tuple of (makeflags, data) to be passed to the child process. The makeflags are
-        meant to be set in the child process's environment, and the data is implementation specific
-        data serialized and sent to the child process for jobserver support."""
+    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> JobserverInfo:
+        """Return the :class:`~spack.installer.base.JobserverInfo` to be passed to the child
+        process."""
 
     @abc.abstractmethod
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
@@ -237,8 +283,8 @@ class JobServerBase(abc.ABC):
 class NoopJobServer(JobServerBase):
     """Dummy jobserver for platforms lacking jobserver support."""
 
-    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> Tuple[Optional[str], Any]:
-        return (None, None)
+    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> JobserverInfo:
+        return JobserverInfo(None, None)
 
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None: ...
 

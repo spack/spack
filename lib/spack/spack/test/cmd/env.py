@@ -37,8 +37,8 @@ import spack.util.spack_yaml
 from spack.cmd.env import _env_create
 from spack.config import substitute_path_variables
 from spack.environment import depfile
-from spack.installer import PackageInstaller
 from spack.main import SpackCommand, SpackCommandError
+from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.stage import stage_prefix
 from spack.test.conftest import RepoBuilder

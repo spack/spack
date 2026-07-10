@@ -37,7 +37,7 @@ import spack.util.web as web_util
 from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.database import INDEX_JSON_FILE
 from spack.hooks import sbang
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,

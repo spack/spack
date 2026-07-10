@@ -47,7 +47,7 @@ import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.externals import ExternalDependencyError
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.solver.asp import Result
 from spack.solver.reuse import spec_filter_from_packages_yaml
 from spack.spec import Spec

@@ -3,18 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests for BuildGraph class in new_installer"""
 
-import sys
 from typing import Dict, List, Tuple, Union
 
 import pytest
 
-if sys.platform == "win32":
-    pytest.skip("Skipping new installer tests on Windows", allow_module_level=True)
-
 import spack.deptypes as dt
 import spack.error
 import spack.traverse
-from spack.new_installer import BuildGraph
+from spack.installer.schedule import BuildGraph
 from spack.spec import Spec
 from spack.store import Store
 
