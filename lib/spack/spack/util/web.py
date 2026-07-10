@@ -127,7 +127,7 @@ def is_precondition_error(e: Exception) -> bool:
         return True
 
     # Handle boto errors types by string name to avoid import
-    if "PreconditionFailed" == type(e).__name__:
+    if "PreconditionFailed" in str(e):
         return True
 
     return False
@@ -457,12 +457,7 @@ def push_to_url(
                 raise spack.error.SpackError(f"File too large (max. 5GB): {local_file_path}")
 
             with open(local_file_path, "rb") as fd:
-                s3.put_object(
-                    Bucket=remote_url.netloc,
-                    Key=remote_path,
-                    Body=fd,
-                    **extra_args,
-                )
+                s3.put_object(Bucket=remote_url.netloc, Key=remote_path, Body=fd, **extra_args)
         else:
             s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
 

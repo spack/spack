@@ -113,8 +113,8 @@ from .url_buildcache import (
     get_url_buildcache_class,
     get_valid_spec_file,
 )
-from .vendor.typing_extensions import TypedDict
 from .vendor.jsonschema.exceptions import ValidationError
+from .vendor.typing_extensions import TypedDict
 
 
 class BuildCacheDatabase(spack.database.Database):
@@ -882,6 +882,8 @@ def _url_update_index(
             with timer.measure("read"):
                 _read_specs(file_list, try_read_spec, filter_fn, db)
 
+            print("Sleeping")
+            time.sleep(10)
             with timer.measure("push"):
                 index_handler = BINARY_INDEX.get_index_handler(mirror_metadata)
                 index_handler.push_index(db)
@@ -892,7 +894,16 @@ def _url_update_index(
             # Only attempt a retry if the error is possible to recover from.
             # Transient network errors or precondition errors (ie. IfMatch conflict requires
             # a refresh of the index and etag).
-            retryable = web_util.is_transient_error(e) or web_util.is_precondition_error(e)
+            print(e)
+            print(type(e))
+            print(type(e).mro())
+            retryable = False
+            if web_util.is_transient_error(e):
+                errmsg += ": transient network error"
+                retryable = True
+            elif web_util.is_precondition_error(e):
+                errmsg += ": Precondition Failed"
+                retryable = True
             if not retryable or retry.is_last_attempt():
                 raise GenerateIndexError(errmsg) from e
             else:
