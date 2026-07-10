@@ -95,7 +95,3 @@ Alternatively, you can install ``gfortran`` from another package manager, after 
 
 Once a Fortran compiler is available, Spack will use it automatically for packages that require Fortran.
 
-.. note::
-
-   Spack will not build a compiler on the fly to satisfy a Fortran dependency.
-   A compiler providing Fortran must already be installed or detected as external before concretizing such packages.
