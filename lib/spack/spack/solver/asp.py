@@ -646,6 +646,11 @@ class ConcretizationCache:
             self._remove_entry(pathlib.Path(tmp_path))
             return
 
+        # Only a newly stored entry can push the cache over its entry limit, so this is the
+        # only place that needs to prune. Listing the entire cache is too expensive to do on
+        # every solve, let alone cache hits.
+        self.cleanup()
+
     def fetch(self, problem: str) -> Union[Tuple[Result, Dict], Tuple[None, None]]:
         """Returns the concretization cache result for a lookup based on the given problem.
 
@@ -4000,7 +4005,6 @@ class Solver:
             output=output,
             allow_deprecated=allow_deprecated,
         )
-        self._conc_cache.cleanup()
         return result
 
     def solve(self, specs: Sequence[spack.spec.Spec], **kwargs) -> Result:
@@ -4070,8 +4074,6 @@ class Solver:
             input_specs = [x for (x, y) in result.unsolved_specs]
             for spec in result.specs:
                 reusable_specs.extend(spec.traverse())
-
-        self._conc_cache.cleanup()
 
 
 class _SkipConcreteVisitor(traverse.BaseVisitor):
