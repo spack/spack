@@ -45,6 +45,9 @@ CURRENT_BUILD_CACHE_LAYOUT_VERSION = 3
 #: The name of the default buildcache index manifest file
 INDEX_MANIFEST_FILE = "index.manifest.json"
 
+#: Simple regex for matching spec hashes
+SPEC_HASH_RE = re.compile(r"^[a-z0-9]{32}$")
+
 
 class BuildcacheComponent(enum.Enum):
     """Enumeration of the kinds of things that live in a URL buildcache
@@ -275,6 +278,21 @@ class URLBuildcacheEntry:
         the manifest file representing it"""
         spec_formatted = spec.format_path("{name}-{version}-{hash}")
         return f"{spec_formatted}.spec.manifest.json"
+
+    @classmethod
+    def hash_from_manifest_name(cls, file) -> str:
+        """Extract the hash from a manifest file name"""
+        # Strip any leading prefix path and file suffix
+        manifest_name = file.split("/")[-1].replace(".spec.manifest.json", "")
+        parts = manifest_name.split("-")
+        if len(parts) < 3:
+            raise ValueError("Expected file with format <package-*>-<version>-<spec_hash>")
+        spec_hash = parts[-1]
+        if not SPEC_HASH_RE.match(spec_hash):
+            raise ValueError(
+                f"Expected spec hash with pattern {SPEC_HASH_RE.pattern} found {spec_hash}"
+            )
+        return spec_hash
 
     @classmethod
     def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
