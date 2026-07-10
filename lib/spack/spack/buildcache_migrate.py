@@ -25,6 +25,7 @@ from .enums import InstallRecordStatus
 from .url_buildcache import (
     BlobRecord,
     BuildcacheComponent,
+    MirrorMetadata,
     compressed_json_from_dict,
     get_url_buildcache_class,
     sign_file,
@@ -331,7 +332,7 @@ def migrate(
             # Push the migrated mirror index
             index_tmpdir = os.path.join(tmpdir, "rebuild_index")
             os.mkdir(index_tmpdir)
-            spack.binary_distribution._push_index(db, index_tmpdir, mirror_url)
+            spack.binary_distribution._url_push_index(MirrorMetadata(mirror_url), db)
 
             # Push the public part of the signing key
             if not unsigned:
