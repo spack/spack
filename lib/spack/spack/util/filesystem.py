@@ -1384,8 +1384,8 @@ def windows_sfn(path: os.PathLike):
         # stub Windows types TCHAR[LENGTH]
         TCHAR_arr = ctypes.c_wchar * sz
         ret_str = TCHAR_arr()
-        _GetShortPathNameW(path, ret_str, sz)
-        if ctypes.get_last_error():
+        status = _GetShortPathNameW(path, ret_str, sz)
+        if not status:
             tty.debug(ctypes.WinError(ctypes.get_last_error()))
             return path
         return ret_str.value
