@@ -661,7 +661,7 @@ def keys_fn(args):
     if args.mirrors:
         mirror_map = dict([(m.name, m) for m in args.mirrors])
 
-    spack.binary_distribution.get_keys(
+    spack.binary_distribution.trust_keys(
         args.yes_to_all, args.install, args.trust, args.force, mirrors=mirror_map
     )
 

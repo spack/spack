@@ -2265,20 +2265,19 @@ def load_buildcache_index() -> None:
         pass
 
 
-def get_keys(
+def trust_keys(
     yes_to_all: bool = False,
     install: bool = False,
     trust: bool = False,
     force: bool = False,
     mirrors: Optional[Mapping[str, spack.mirrors.mirror.Mirror]] = None,
-):
+) -> None:
     """Get pgp public keys available on mirror with suffix .pub"""
     mirror_collection = mirrors or spack.mirrors.mirror.MirrorCollection(binary=True)
 
     if not mirror_collection:
         tty.die("Please add a spack mirror to allow " + "download of build caches.")
 
-    fingerprints = []
     for mirror in mirror_collection.values():
         if not mirror.signed:
             # Don't bother fetching keys for unsigned mirrors
@@ -2286,26 +2285,19 @@ def get_keys(
         for layout_version in mirror.supported_layout_versions:
             fetch_url = mirror.fetch_url
             if layout_version == 2:
-                mirror_layout_fingerprints = _get_keys_v2(
-                    fetch_url, yes_to_all, install, trust, force
-                )
+                _trust_keys_v2(fetch_url, yes_to_all, install, trust, force)
             else:
-                mirror_layout_fingerprints = _get_keys(
-                    fetch_url, layout_version, yes_to_all, install, trust, force
-                )
-            if mirror_layout_fingerprints:
-                fingerprints.extend(mirror_layout_fingerprints)
-    return fingerprints
+                _trust_keys(fetch_url, layout_version, yes_to_all, install, trust, force)
 
 
-def _get_keys(
+def _trust_keys(
     mirror_url: str,
     layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION,
     yes_to_all: bool = False,
     install: bool = False,
     trust: bool = False,
     force: bool = False,
-) -> Optional[List[str]]:
+) -> None:
     cache_class = get_url_buildcache_class(layout_version=layout_version)
 
     tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
@@ -2328,7 +2320,6 @@ def _get_keys(
         json_index = json.load(fd)
     index_entry.destroy()
 
-    saved_fingerprints = []
     for fingerprint, _ in json_index["keys"].items():
         key_manifest_url = url_util.join(keys_prefix, f"{fingerprint}.key.manifest.json")
         key_entry = cache_class(mirror_url, allow_unsigned=True)
@@ -2345,19 +2336,15 @@ def _get_keys(
             if trust:
                 spack.util.gpg.trust(key_blob_path, yes_to_all=yes_to_all)
                 tty.debug(f"Added {fingerprint} to trusted keys.")
-                saved_fingerprints.append(fingerprint)
             else:
                 tty.debug(
                     "Will not add this key to trusted keys.Use -t to install all downloaded keys"
                 )
 
         key_entry.destroy()
-    return saved_fingerprints
 
 
-def _get_keys_v2(
-    mirror_url, yes_to_all=False, install=False, trust=False, force=False
-) -> Optional[List[str]]:
+def _trust_keys_v2(mirror_url, yes_to_all=False, install=False, trust=False, force=False) -> None:
     cache_class = get_url_buildcache_class(layout_version=2)
 
     keys_url = url_util.join(
@@ -2379,7 +2366,6 @@ def _get_keys_v2(
             tty.error(url_err)
         return None
 
-    saved_fingerprints = []
     for fingerprint, key_attributes in json_index["keys"].items():
         link = os.path.join(keys_url, fingerprint + ".pub")
 
@@ -2397,12 +2383,10 @@ def _get_keys_v2(
             if trust:
                 spack.util.gpg.trust(stage.save_filename, yes_to_all=yes_to_all)
                 tty.debug("Added this key to trusted keys.")
-                saved_fingerprints.append(fingerprint)
             else:
                 tty.debug(
                     "Will not add this key to trusted keys.Use -t to install all downloaded keys"
                 )
-    return saved_fingerprints
 
 
 def _url_push_keys(
