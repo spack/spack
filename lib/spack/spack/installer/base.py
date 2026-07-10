@@ -2,8 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Abstract base classes for new_installer:
-TUI terminal state, IPC channels, and job scheduling."""
+"""Abstract base classes: TUI terminal state, IPC channels, and job scheduling."""
 
 import abc
 import codecs

@@ -141,7 +141,7 @@ def test_enable_sandbox_paths(
     temporary_store: spack.store.Store,
     tmp_path: pathlib.Path,
 ):
-    """Test that _enable_sandbox in new_installer calls allow_read/allow_write correctly."""
+    """Test that _enable_sandbox in the installer calls allow_read/allow_write correctly."""
     mock_sandbox = MockSandbox()
     monkeypatch.setattr(spack.sandbox, "get_sandbox", lambda: mock_sandbox)
 
