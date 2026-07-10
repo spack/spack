@@ -8,6 +8,7 @@ expansion), :func:`schedule_builds` (per-spec lock acquisition and readiness sel
 :class:`DatabaseAction` hierarchy of pending DB writes. See :mod:`spack.installer` for the
 overall design."""
 
+import abc
 from typing import Dict, FrozenSet, List, NamedTuple, Optional, Set, Tuple, Union
 
 import spack.database
@@ -20,7 +21,7 @@ import spack.util.lock
 from spack.installer.base import InstallPolicy, JobServerBase
 
 
-class DatabaseAction:
+class DatabaseAction(abc.ABC):
     """Base class for objects that need to be persisted to the database."""
 
     __slots__ = ("spec", "prefix_lock")
@@ -28,7 +29,9 @@ class DatabaseAction:
     spec: spack.spec.Spec
     prefix_lock: Optional[spack.util.lock.Lock]
 
-    def save_to_db(self, db: spack.database.Database) -> None: ...
+    @abc.abstractmethod
+    def save_to_db(self, db: spack.database.Database) -> None:
+        """Persist this action to the database."""
 
     def release_prefix_lock(self) -> None:
         if self.prefix_lock is not None:
