@@ -447,7 +447,7 @@ def test_generate_key_index_failure(monkeypatch, tmp_path: pathlib.Path):
 
 def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, capfd):
     def mock_list_url(url, recursive=False):
-        raise Exception("Some HTTP error")
+        raise OSError("Some HTTP error")
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)
 
@@ -464,7 +464,7 @@ def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, cap
 
 def test_generate_indices_exception(monkeypatch, tmp_path: pathlib.Path, capfd):
     def mock_list_url(url, recursive=False):
-        raise Exception("Test Exception handling")
+        raise OSError("Test Exception handling")
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)
 
@@ -1492,13 +1492,11 @@ def test_get_entries_from_cache_nested_mirrors(monkeypatch, tmp_path: pathlib.Pa
     install_cmd("--fake", s.name)
     buildcache_cmd("push", "-u", str(mirror_dir / "nested"), s.name)
 
-    spec_manifests, _ = get_entries_from_cache(
-        str(mirror_url), str(tmp_path / "stage"), BuildcacheComponent.SPEC
-    )
+    spec_manifests, _ = get_entries_from_cache(str(mirror_url), BuildcacheComponent.SPEC)
 
     nested_mirror_url = url_util.path_to_file_url(str(mirror_dir / "nested"))
     spec_manifests_nested, _ = get_entries_from_cache(
-        str(nested_mirror_url), str(tmp_path / "stage"), BuildcacheComponent.SPEC
+        str(nested_mirror_url), BuildcacheComponent.SPEC
     )
 
     # Expected specs in root mirror

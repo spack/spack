@@ -1076,7 +1076,7 @@ def check_index_fn(args):
         manifest_files = []
         if "manifests" in verify or "blobs" in verify:
             manifest_files, read_fn = get_entries_from_cache(
-                mirror.fetch_url, tmpdir, BuildcacheComponent.SPEC
+                mirror.fetch_url, BuildcacheComponent.SPEC
             )
         if "manifests" in verify and index_exists:
             # Read the index file
