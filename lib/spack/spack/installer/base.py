@@ -268,6 +268,10 @@ class JobServerBase(abc.ABC):
         """Decrease the target parallelism by one."""
 
     @abc.abstractmethod
+    def maybe_discard_tokens(self) -> None:
+        """Try to reduce parallelism to the target by discarding tokens."""
+
+    @abc.abstractmethod
     def acquire(self, jobs: int) -> int:
         """Try and acquire at most 'jobs' tokens from the jobserver. Returns the number of tokens
         actually acquired (may be less than requested, or zero)."""
@@ -292,6 +296,8 @@ class NoopJobServer(JobServerBase):
     def increase_parallelism(self) -> None: ...
 
     def decrease_parallelism(self) -> None: ...
+
+    def maybe_discard_tokens(self) -> None: ...
 
     def acquire(self, jobs: int) -> int:
         return jobs

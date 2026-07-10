@@ -400,7 +400,7 @@ class PackageInstaller:
                         terminal.drain_sigwinch()
                         self.ui.on_resize()
                     elif data == JOBSERVER_EVENT and not jobserver.has_target_parallelism():
-                        jobserver._maybe_discard_tokens()
+                        jobserver.maybe_discard_tokens()
                         self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
 
                 current_time = time.monotonic()

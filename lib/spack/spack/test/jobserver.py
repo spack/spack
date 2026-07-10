@@ -448,7 +448,7 @@ class TestJobServer:
         js = PosixJobServer(3, makeflags="")
         try:
             original_num = js.num_jobs
-            js._maybe_discard_tokens()  # to_discard == 0
+            js.maybe_discard_tokens()  # to_discard == 0
             assert js.num_jobs == original_num
         finally:
             js.close()
@@ -460,7 +460,7 @@ class TestJobServer:
             # Manually set target lower to create a discard requirement.
             js.target_jobs = js.num_jobs - 2
             original_num = js.num_jobs
-            js._maybe_discard_tokens()
+            js.maybe_discard_tokens()
             assert js.num_jobs < original_num
         finally:
             js.close()
@@ -474,7 +474,7 @@ class TestJobServer:
             original_num = js.num_jobs
             # Artificially lower target so a discard is requested, but pipe is empty.
             js.target_jobs = js.num_jobs - 1
-            js._maybe_discard_tokens()  # Should not raise; num_jobs unchanged.
+            js.maybe_discard_tokens()  # Should not raise; num_jobs unchanged.
             assert js.num_jobs == original_num
         finally:
             js.close()

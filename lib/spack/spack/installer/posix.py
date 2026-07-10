@@ -327,10 +327,10 @@ class PosixJobServer(JobServerBase):
         if not self.created or self.target_jobs <= 1:
             return
         self.target_jobs -= 1
-        self._maybe_discard_tokens()
+        self.maybe_discard_tokens()
 
-    def _maybe_discard_tokens(self) -> None:
-        """Try to get reduce parallelism by discarding tokens."""
+    def maybe_discard_tokens(self) -> None:
+        """Try to reduce parallelism to the target by discarding tokens."""
         to_discard = self.num_jobs - self.target_jobs
         if to_discard <= 0:
             return
