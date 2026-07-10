@@ -41,8 +41,17 @@ ENABLE_ECHO_INPUT = 0x0004
 ENABLE_QUICK_EDIT_MODE = 0x0040
 ENABLE_EXTENDED_FLAGS = 0x0080
 ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # for stdout handle
+WIN_STD_INPUT_HANDLE = -10
 WIN_STD_OUTPUT_HANDLE = -11
 WIN_STD_ERROR_HANDLE = -12
+
+
+def _handle_is_console(handle_id: int) -> bool:
+    """Use GetConsoleMode so this works correctly through Windows Terminal's ConPTY."""
+    mode = wintypes.DWORD()
+    kernel32 = ctypes.windll.kernel32
+    handle = kernel32.GetStdHandle(handle_id)
+    return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))
 
 
 class WindowsTerminalState(BaseTerminalState):
@@ -58,18 +67,11 @@ class WindowsTerminalState(BaseTerminalState):
 
     @classmethod
     def stdout_is_interactive(cls) -> bool:
-        """Use GetConsoleMode so this works correctly through Windows Terminal's ConPTY."""
-        mode = wintypes.DWORD()
-        kernel32 = ctypes.windll.kernel32
-        handle = kernel32.GetStdHandle(-11)
-        return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))
+        return _handle_is_console(WIN_STD_OUTPUT_HANDLE)
 
     @classmethod
     def stdin_is_interactive(cls) -> bool:
-        mode = wintypes.DWORD()
-        kernel32 = ctypes.windll.kernel32
-        handle = kernel32.GetStdHandle(-10)
-        return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))
+        return _handle_is_console(WIN_STD_INPUT_HANDLE)
 
     def __init__(
         self,
@@ -80,8 +82,8 @@ class WindowsTerminalState(BaseTerminalState):
     ) -> None:
         super().__init__(selector, on_headless, on_suspend, on_resume)
         self.kernel32 = ctypes.windll.kernel32
-        self.hStdin = self.kernel32.GetStdHandle(-10)
-        self.hStdout = self.kernel32.GetStdHandle(-11)
+        self.hStdin = self.kernel32.GetStdHandle(WIN_STD_INPUT_HANDLE)
+        self.hStdout = self.kernel32.GetStdHandle(WIN_STD_OUTPUT_HANDLE)
         self.old_stdin_settings = wintypes.DWORD()
         self.old_stdout_settings = wintypes.DWORD()
         self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
