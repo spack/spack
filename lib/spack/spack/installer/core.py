@@ -290,7 +290,7 @@ class PackageInstaller:
         self.next_database_write = 0.0
 
     def install(self) -> None:
-        #: check what specs we could fetch from binaries (checks against cache, not remotely)
+        # check what specs we could fetch from binaries (checks against cache, not remotely)
         try:
             spack.binary_distribution.BINARY_INDEX.update()
         except spack.binary_distribution.FetchCacheError:
@@ -516,7 +516,7 @@ class PackageInstaller:
         try:
             self.report_data.finalize(self.reports, build_graph=self.build_graph)
         except Exception as e:
-            spack.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}]")
+            spack.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}")
 
         # Clean up temp log files of successful builds now that reports have consumed them.
         if not self.keep_stage:
