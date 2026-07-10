@@ -450,7 +450,7 @@ def push_to_url(
             remote_path = remote_path[1:]
 
         s3 = get_s3_session(remote_url, method="push")
-        if if_match:
+        if if_match is not None:
             # IfMatch is only supported by put_object which has additional limitations
             if os.stat(local_file_path).st_size >= 5e9:
                 raise spack.error.SpackError(f"File too large (max. 5GB): {local_file_path}")
