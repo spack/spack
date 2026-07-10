@@ -15,9 +15,9 @@ import spack.concretize
 import spack.config
 import spack.database
 import spack.error
-import spack.installer
 import spack.mirrors.mirror
 import spack.mirrors.utils
+import spack.old_installer
 import spack.package_base
 import spack.patch
 import spack.repo
@@ -26,7 +26,7 @@ import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack import binary_distribution
 from spack.error import InstallError
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.package_base import (
     PackageBase,
     PackageStillNeededError,
@@ -467,7 +467,7 @@ def test_log_install_without_build_files(install_mockery):
 
     # Attempt installing log without the build log file
     with pytest.raises(OSError, match="No such file or directory"):
-        spack.installer.log(spec.package)
+        spack.old_installer.log(spec.package)
 
 
 def test_log_install_with_build_files(install_mockery, monkeypatch):
@@ -507,7 +507,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
         type(spec.package), "archive_files", ["missing", "..", config], raising=False
     )
 
-    spack.installer.log(spec.package)
+    spack.old_installer.log(spec.package)
 
     assert os.path.exists(spec.package.install_log_path)
     assert os.path.exists(spec.package.install_env_path)

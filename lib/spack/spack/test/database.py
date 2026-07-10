@@ -40,7 +40,7 @@ import spack.util.filesystem as fs
 import spack.util.lock as lk
 import spack.version as vn
 from spack.enums import InstallRecordStatus
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.schema.database_index import schema
 from spack.test.conftest import RepoBuilder, writable
 from spack.util.executable import Executable

@@ -12,7 +12,7 @@ import spack.concretize
 import spack.deptypes as dt
 import spack.rewiring
 import spack.store
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.test.relocate import text_in_bin
 
 if sys.platform == "darwin":

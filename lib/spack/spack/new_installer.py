@@ -72,7 +72,6 @@ import spack.util.filesystem as fs
 import spack.util.lock
 import spack.util.tty
 import spack.util.tty.color
-from spack.installer import _do_fake_install, dump_packages
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
     SIGWINCH_EVENT,
@@ -84,6 +83,7 @@ from spack.new_installer_base import (
     JobserverInfo,
     ProcessExitNotifier,
 )
+from spack.old_installer import _do_fake_install, dump_packages
 from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
 from spack.util.lang import pretty_duration

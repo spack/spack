@@ -70,8 +70,8 @@ import spack.util.web
 import spack.version
 from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
-from spack.installer import PackageInstaller
 from spack.main import SpackCommand
+from spack.old_installer import PackageInstaller
 from spack.util import tty
 from spack.util.filesystem import (
     copy,

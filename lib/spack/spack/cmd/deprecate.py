@@ -18,7 +18,7 @@ import argparse
 import spack.cmd
 import spack.concretize
 import spack.environment as ev
-import spack.installer
+import spack.old_installer
 import spack.store
 from spack.cmd.common import arguments
 from spack.util import tty
@@ -147,4 +147,4 @@ def deprecate(parser, args):
             tty.die("Will not deprecate any packages.")
 
     for dcate, dcator in zip(all_deprecate, all_deprecators):
-        spack.installer.deprecate(dcate, dcator, symlink)
+        spack.old_installer.deprecate(dcate, dcator, symlink)
