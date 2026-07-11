@@ -95,10 +95,11 @@ class TestPkg(Package):
         # Remove all package modules from sys.modules so they get reloaded
         _cleanup_modules(namespace)
 
-        # Create a new Repo with fresh cache to ensure clean state
-        cache_dir2 = tmp_path / "cache2"
-        cache_dir2.mkdir()
-        repo_cache2 = spack.util.file_cache.FileCache(str(cache_dir2))
+        # Create a new Repo with a new FileCache pointing to the same cache directory
+        # This simulates a fresh Spack session that loads the stale index from disk
+        # Because package.py didn't change, FastPackageChecker marks the index as fresh
+        # and loads it without rebuilding - even though the patch file changed
+        repo_cache2 = spack.util.file_cache.FileCache(str(cache_dir))
         repo2 = spack.repo.Repo(repo_root, cache=repo_cache2)
         repo_path2 = spack.repo.RepoPath(repo2)
 
@@ -109,14 +110,10 @@ class TestPkg(Package):
         new_hash = _get_patch_by_name(pkg_cls2, "fix.patch").sha256
         assert new_hash != original_hash, "Patch hash should have changed after file modification"
 
-        # Simulate the stale index scenario by installing the stale index (with only the old hash)
-        # on the new repo_path. This simulates what happens when FastPackageChecker doesn't
-        # detect the change because package.py didn't change (only the patch file changed)
-        repo_path2._patch_index = patch_index
-        repo_path2._index_is_fresh = True  # Mark as fresh so get_patch_index won't rebuild
-
-        # Check that patches can be retrieved successfully even though contents of
-        # patch file have changed
+        # Try to get patches using the NEW hash (from modified file)
+        # The stale index (loaded from cache) only has the OLD hash
+        # WITHOUT the fix: This raises PatchLookupError
+        # WITH the fix: update_packages() is called automatically and succeeds
         try:
             result_patches = repo_path2.get_patches_for_package([new_hash], pkg_cls2)
             assert len(result_patches) == 1
