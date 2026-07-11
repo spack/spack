@@ -4,7 +4,6 @@
 
 """Simple test for patch index auto-update that avoids Python module caching issues."""
 
-import hashlib
 import os
 import sys
 
@@ -12,9 +11,7 @@ import pytest
 
 import spack.error
 import spack.patch
-import spack.paths
 import spack.repo
-import spack.util.crypto
 import spack.util.file_cache
 
 
@@ -110,8 +107,6 @@ class TestPkg(Package):
 
         # Get the new hash (should be computed from modified file by fresh patch object)
         new_hash = _get_patch_by_name(pkg_cls2, "fix.patch").sha256
-
-        # Verify the hash actually changed
         assert new_hash != original_hash, "Patch hash should have changed after file modification"
 
         # Simulate the stale index scenario by installing the stale index (with only the old hash)
@@ -120,10 +115,8 @@ class TestPkg(Package):
         repo_path2._patch_index = patch_index
         repo_path2._index_is_fresh = True  # Mark as fresh so get_patch_index won't rebuild
 
-        # Try to get patches using the NEW hash (from modified file)
-        # The stale index only has the OLD hash
-        # WITHOUT the fix: This raises PatchLookupError
-        # WITH the fix: update_packages() is called automatically and succeeds
+        # Check that patches can be retrieved successfully even though contents of
+        # patch file have changed
         try:
             result_patches = repo_path2.get_patches_for_package([new_hash], pkg_cls2)
             assert len(result_patches) == 1
@@ -135,5 +128,4 @@ class TestPkg(Package):
             )
 
     finally:
-        # Clean up modules
         _cleanup_modules(namespace)
