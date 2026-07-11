@@ -4464,7 +4464,9 @@ class Spec:
         # TODO: get rid of the space here and make formatting smarter
         return " " + self._format_dependencies(
             "{name}{@version}",
-            include=lambda dep: any(lang in dep.virtuals for lang in ("c", "cxx", "fortran")),
+            include=lambda dep: any(
+                lang in dep.virtuals for lang in ("c", "cxx", "fortran", "hip-lang")
+            ),
             deptypes=False,
             _force_direct=True,
         )
