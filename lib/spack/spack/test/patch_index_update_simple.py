@@ -6,6 +6,7 @@
 
 import hashlib
 import os
+import sys
 
 import pytest
 
@@ -15,6 +16,13 @@ import spack.paths
 import spack.repo
 import spack.util.crypto
 import spack.util.file_cache
+
+
+def _cleanup_modules(namespace):
+    """Remove all modules for the given repo namespace from sys.modules."""
+    to_remove = [k for k in sys.modules if k.startswith(f"spack_repo.{namespace}")]
+    for k in to_remove:
+        del sys.modules[k]
 
 
 def _get_patch_by_name(pkg_cls, patch_filename):
@@ -87,17 +95,8 @@ class TestPkg(Package):
 
         # Create a fresh Repo and RepoPath to simulate a new Spack session
         # In a real scenario, this would be a completely fresh Python process
-        import sys
-
-        # Remove the package module from sys.modules so it gets reloaded
-        module_name = f"spack_repo.{namespace}.packages.test_pkg"
-        if module_name in sys.modules:
-            del sys.modules[module_name]
-
-        # Also clear the parent package modules
-        parent_modules = [k for k in sys.modules.keys() if k.startswith(f"spack_repo.{namespace}.packages")]
-        for mod in parent_modules:
-            del sys.modules[mod]
+        # Remove all package modules from sys.modules so they get reloaded
+        _cleanup_modules(namespace)
 
         # Create a new Repo with fresh cache to ensure clean state
         cache_dir2 = tmp_path / "cache2"
@@ -137,7 +136,4 @@ class TestPkg(Package):
 
     finally:
         # Clean up modules
-        import sys
-        to_remove = [k for k in sys.modules if k.startswith(f"spack_repo.{namespace}")]
-        for k in to_remove:
-            del sys.modules[k]
+        _cleanup_modules(namespace)
