@@ -3586,6 +3586,26 @@ packages:
     assert s["c"].satisfies("gcc@9.4.0")
 
 
+def test_external_compiler_paths_provide_languages(mutable_config, mock_packages):
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  llvm:
+    externals:
+    - spec: "llvm@18.1.8~clang"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/clang
+          cxx: /path/bin/clang++
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+    s = spack.concretize.concretize_one("libdwarf %c,cxx=llvm@18.1.8")
+    assert s["c"].satisfies("llvm@18.1.8~clang")
+    assert s["cxx"].satisfies("llvm@18.1.8~clang")
+
+
 @pytest.mark.parametrize(
     "spec_str,expected",
     [

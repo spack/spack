@@ -11,6 +11,8 @@ class Provenance(enum.IntEnum):
     SPEC = enum.auto()
     # A dev spec literal
     DEV_SPEC = enum.auto()
+    # A compiler spec from configuration
+    COMPILER = enum.auto()
     # The 'packages' section of the configuration
     PACKAGES_YAML = enum.auto()
     # A git version in the 'packages' section of the configuration

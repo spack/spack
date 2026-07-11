@@ -1800,6 +1800,31 @@ class SpackSolverSetup:
                     )
             self.gen.newline()
 
+    def compiler_provider_rules(self) -> None:
+        """
+        Configured compilers may be represented by package specs that do not otherwise
+        provide language virtuals, e.g. an external llvm~clang with clang executables.
+        Treat the recorded compiler paths as the source of truth for language support.
+        """
+        for compiler in self.possible_compilers:
+            compilers = compiler.extra_attributes.get("compilers", {})
+            provided_virtuals = {
+                language for language in compilers if language in self.possible_virtuals
+            }
+            if not provided_virtuals:
+                continue
+
+            for vpkg_name in sorted(provided_virtuals):
+                vpkg = spack.spec.Spec(vpkg_name)
+                self.gen.fact(fn.pkg_fact(compiler.name, fn.possible_provider(vpkg_name)))
+                msg = f"{compiler.name} provides {vpkg_name} from configured compiler paths"
+                condition_id = self.condition(compiler, vpkg, required_name=compiler.name, msg=msg)
+                self.gen.fact(
+                    fn.pkg_fact(compiler.name, fn.provider_condition(condition_id, vpkg_name))
+                )
+
+            self.gen.newline()
+
     def package_dependencies_rules(self, pkg):
         """Translate ``depends_on`` directives into ASP logic."""
         for cond, deps_by_name in pkg.dependencies.items():
@@ -2933,8 +2958,15 @@ class SpackSolverSetup:
         reuse_from_compilers = traverse.traverse_nodes(
             [x for x in candidate_compilers if not x.external], deptype=("link", "run")
         )
+        # External compiler specs have no dependency graph to traverse, but the solver still
+        # needs a concrete node for them when they provide compiler language virtuals.
+        external_compilers = [x for x in candidate_compilers if x.external]
         reused_set = set(reuse)
-        reuse += [x for x in reuse_from_compilers if x not in reused_set]
+        reuse += [
+            x
+            for x in itertools.chain(reuse_from_compilers, external_compilers)
+            if x not in reused_set
+        ]
 
         candidate_compilers.update(compilers_from_reuse)
         self.possible_compilers = list(candidate_compilers)
@@ -2954,6 +2986,15 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
+        self.pkgs.update(
+            compiler.name
+            for compiler in self.possible_compilers
+            if compiler.external
+            and any(
+                language in self.possible_virtuals
+                for language in compiler.extra_attributes.get("compilers", {})
+            )
+        )
         self.libcs = sorted(all_libcs())  # type: ignore[type-var]
 
         for node in traverse.traverse_nodes(specs):
@@ -3015,6 +3056,7 @@ class SpackSolverSetup:
 
         self.virtual_requirements_and_weights()
         self.external_packages(packages_with_externals)
+        self.compiler_provider_rules()
 
         # TODO: make a config option for this undocumented feature
         checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
@@ -3023,6 +3065,14 @@ class SpackSolverSetup:
         )
         self.define_ad_hoc_versions_from_specs(
             specs, Provenance.SPEC, allow_deprecated=allow_deprecated, require_checksum=checksummed
+        )
+        # Compiler configuration can mention externally detected versions that are not known
+        # from package.py, packages.yaml, or installed specs.
+        self.define_ad_hoc_versions_from_specs(
+            self.possible_compilers,
+            Provenance.COMPILER,
+            allow_deprecated=allow_deprecated,
+            require_checksum=checksummed,
         )
         self.define_ad_hoc_versions_from_specs(
             dev_specs,
