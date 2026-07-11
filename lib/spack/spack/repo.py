@@ -30,6 +30,7 @@ from typing import (
     Iterator,
     List,
     Mapping,
+    NamedTuple,
     Optional,
     Set,
     Tuple,
@@ -1154,6 +1155,10 @@ class Repo:
         # The parent dir of spack_repo/ which should be added to sys.path for api v2.x
         self.python_path: Optional[str] = None
 
+        #: (git url, checkout root) when this repo was constructed from a git-configured
+        #: repository; None otherwise.
+        self.remote_info: Optional[RemoteInfo] = None
+
         if self.package_api < (2, 0):
             check(
                 "namespace" in config,
@@ -1688,6 +1693,13 @@ def from_path(path: str) -> Repo:
 MaybeExecutable = Optional[spack.util.executable.Executable]
 
 
+class RemoteInfo(NamedTuple):
+    #: authoritative git url of the repository this repo was checked out from
+    url: str
+    #: checkout root (the RemoteRepoDescriptor.destination)
+    root: str
+
+
 class RepoDescriptor:
     """Abstract base class for repository data."""
 
@@ -1933,9 +1945,13 @@ class RemoteRepoDescriptor(RepoDescriptor):
                 continue
             path = os.path.join(self.destination, subpath)
             try:
-                repos[path] = Repo(path, cache=cache, overrides=overrides)
+                repo = Repo(path, cache=cache, overrides=overrides)
             except RepoError as e:
                 repos[path] = e
+                continue
+            if repo.python_path:
+                repo.remote_info = RemoteInfo(self.repository, self.destination)
+            repos[path] = repo
         return repos
 
 

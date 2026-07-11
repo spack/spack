@@ -701,6 +701,29 @@ def mock_packages_repo():
     yield spack.repo.from_path(spack.paths.mock_packages_path)
 
 
+@pytest.fixture
+def mock_git_packages_repo(tmp_path, mock_test_cache):
+    """Factory: url -> the builtin_mock repo constructed as a git checkout of ``url``, so
+    remote_info is populated."""
+
+    def _make(url: str) -> spack.repo.Repo:
+        descriptor = spack.repo.RemoteRepoDescriptor(
+            name="builtin_mock",
+            repository=url,
+            destination=spack.paths.test_repos_path,  # dir containing spack_repo/
+            relative_paths=["spack_repo/builtin_mock"],
+            branch=None,
+            tag=None,
+            commit=None,
+            lock=spack.util.lock.Lock(str(tmp_path / "repo.lock"), enable=False),
+        )
+        repo = next(iter(descriptor.construct(cache=mock_test_cache).values()))
+        assert isinstance(repo, spack.repo.Repo), repo
+        return repo
+
+    return _make
+
+
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
