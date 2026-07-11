@@ -2129,10 +2129,14 @@ def use_repositories(
     paths = {getattr(x, "root", x): getattr(x, "root", x) for x in paths_and_repos}
     scope_name = f"use-repo-{uuid.uuid4()}"
     repos_key = "repos:" if override else "repos"
+    # PATH may be a lazy singleton created from config, so materialize it before pushing the
+    # new scope, otherwise we'd save (and later restore) the new repositories instead of the
+    # current ones.
+    old_repo = ensure_unwrapped(PATH)
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={repos_key: paths})
     )
-    old_repo, new_repo = PATH, RepoPath.from_config(spack.config.CONFIG)
+    new_repo = RepoPath.from_config(spack.config.CONFIG)
     old_repo.disable()
     enable_repo(new_repo)
     try:
