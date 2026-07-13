@@ -410,10 +410,28 @@ def test_security_descriptor_apply_null_dacl_is_rejected(tmp_path):
         sd.apply(str(f))
 
 
+def test_security_descriptor_apply_update_ownership_raises_without_write_owner(tmp_path):
+    """apply(update_ownership=True) must raise PermissionError when WRITE_OWNER is absent.
+
+    After set_install_permissions the file DACL grants FILE_ALL_ACCESS to the owner,
+    which includes WRITE_OWNER - to test the error path we must first restrict the
+    DACL to rights that exclude WRITE_OWNER, then attempt the ownership update.
+    """
+    f = tmp_path / "test.txt"
+    f.write_text("hello")
+    owner_sid = SecurityDescriptor.from_file(str(f)).owner
+    # FR excludes WRITE_OWNER (0x00080000); use P so no inherited ACE sneaks WRITE_OWNER back in.
+    set_file_sddl(str(f), f"D:P(A;;FR;;;{owner_sid})")
+
+    sd = SecurityDescriptor.from_file(str(f))
+    with pytest.raises(PermissionError, match="WRITE_OWNER"):
+        sd.apply(str(f), update_ownership=True)
+
+
 def test_set_install_permissions_file_acl(tmp_path):
     """set_install_permissions sets 644-equivalent permissions on a file.
 
-    The owner receives Allow(read+write); Everyone receives Allow(read).
+    The owner receives Allow(full access); Everyone receives Allow(read).
     """
     f = tmp_path / "test.txt"
     f.write_text("hello")
@@ -421,13 +439,13 @@ def test_set_install_permissions_file_acl(tmp_path):
     fs.set_install_permissions(str(f))
 
     sd = SecurityDescriptor.from_file(str(f))
-    _FRFW = int(FileAccessRights.FILE_GENERIC_READ) | int(FileAccessRights.FILE_GENERIC_WRITE)
+    _FA = int(FileAccessRights.FILE_ALL_ACCESS)
     _FR = int(FileAccessRights.FILE_GENERIC_READ)
 
     assert any(
-        a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FRFW)
+        a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FA)
         for a in sd.dacl
-    ), "owner must have Allow ACE granting read+write"
+    ), "owner must have Allow ACE granting full access"
     assert any(
         a.sid == "WD" and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FR)
         for a in sd.dacl
@@ -478,6 +496,28 @@ def test_set_install_permissions_expands_restricted_dacl(tmp_path):
         and a.grants(int(FileAccessRights.FILE_GENERIC_READ))
         for a in sd.dacl
     ), "Everyone must have read access after set_install_permissions"
+
+
+def test_set_install_permissions_on_previously_installed_file(tmp_path):
+    """set_install_permissions must succeed on a file already processed by a prior install.
+
+    shutil.copy2 preserves the destination ACL when the file already exists, so a
+    reinstall leaves a file with the FR+FW DACL set by the previous run (no WRITE_OWNER).
+    apply() was previously failing with WinError 5 because it tried to re-set owner/group
+    via SetNamedSecurityInfoW, which requires a WRITE_OWNER not held implicitly by the owner.
+    """
+    f = tmp_path / "test.txt"
+    f.write_text("hello")
+    # Simulate a file left by a previous install: DACL already restricted to FR+FW.
+    fs.set_install_permissions(str(f))
+    # Reinstall overwrites content but not ACL (shutil.copy2 behaviour); then
+    # set_install_permissions is called again — must not raise.
+    fs.set_install_permissions(str(f))
+    sd = SecurityDescriptor.from_file(str(f))
+    owner_sid = sd.owner
+    assert any(
+        a.sid == owner_sid and a.grants(int(FileAccessRights.FILE_ALL_ACCESS)) for a in sd.dacl
+    ), "owner must still have full access after second set_install_permissions"
 
 
 def test_copy_mode_propagates_execute_on_windows(tmp_path):
