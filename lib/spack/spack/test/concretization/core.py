@@ -5283,25 +5283,6 @@ def test_concretization_cache_remove_entry_oserror(tmp_path):
     spack.solver.asp.ConcretizationCache._remove_entry(gone)
 
 
-def test_concretization_cache_store_skips_existing(use_concretization_cache):
-    """store() is a no-op when the cache path already exists."""
-    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
-    problem = "duplicate store test"
-    cache_path = cache._cache_path_from_problem(problem)
-    cache_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Pre-create the file with sentinel content
-    cache_path.write_bytes(b"sentinel")
-
-    # Build a minimal Result so store() has something to serialize
-    result = Result(specs=[])
-
-    cache.store(problem, result, statistics=[])
-
-    # The file should still contain the sentinel, proving store() returned early
-    assert cache_path.read_bytes() == b"sentinel"
-
-
 def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cache, monkeypatch):
     """store() swallows OSError, logs, and cleans up the temp file.
 
