@@ -952,7 +952,7 @@ class SecurityDescriptor:
         try:
             _set_file_sddl_raw(path, sddl)
         except OSError as exc:
-            if update_ownership and exc.winerror == 5:  # ERROR_ACCESS_DENIED
+            if update_ownership and hasattr(exc, "winerror") and exc.winerror == 5:  # ERROR_ACCESS_DENIED
                 raise PermissionError(
                     f"Cannot update owner/group on {path!r}: the current process lacks "
                     "WRITE_OWNER access to the file and does not hold "
