@@ -277,11 +277,14 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
     return None
 
 
+def _dest_args(dest: Optional[str] = None) -> List:
+    return ["-C", dest] if dest else []
+
+
 def _exec_git_commands(git_exe, cmds, debug, dest=None):
-    dest_args = ["-C", dest] if dest else []
     error_stream = sys.stdout if debug else os.devnull  # swallow extra output for non-debug
     for cmd in cmds:
-        git_exe(*dest_args, *cmd, error=error_stream)
+        git_exe(*_dest_args(dest), *cmd, error=error_stream)
 
 
 def _exec_git_commands_unique_dir(git_exe, cmds, debug, dest=None):
@@ -363,8 +366,25 @@ def git_checkout(
     It is intended to be used with ``git clone --no-checkout`` or ``git init && git fetch``.
     There is minimal impact to performance since the initial clone operation filters blobs and
     has to download a minimal subset of git data.
+
+    Uses ``symbolic-ref HEAD`` before checkout to distinguish branch vs tag/commit state.
+    If checkout fails, this provides actionable error messages:
+    - Branch (symbolic HEAD): commit may not be reachable from the branch
+    - Tag/commit (detached HEAD): commit may not match the cloned tag
     """
     git_exe = git_exe or git(required=True)
+
+    on_branch = None
+    try:
+        symbolic = git_exe(
+            *_dest_args(dest), "symbolic-ref", "HEAD", output=str, error=os.devnull
+        ).strip()
+        prefix = "refs/heads/"
+        if symbolic.startswith(prefix):
+            on_branch = symbolic[len(prefix) :]
+    except exe.ProcessError:
+        pass
+
     checkout = ["checkout"]
     sparse_checkout = SPARSE_CHECKOUT(git_exe.version)
 
@@ -379,7 +399,18 @@ def git_checkout(
         cmds.append(sparse_checkout)
 
     cmds.append(checkout)
-    _exec_git_commands(git_exe, cmds, debug, dest)
+    try:
+        _exec_git_commands(git_exe, cmds, debug, dest)
+    except exe.ProcessError:
+        if on_branch:
+            raise exe.ProcessError(
+                f"Could not checkout {ref} from branch '{on_branch}'. "
+                f"The commit may not be reachable from this branch."
+            )
+        raise exe.ProcessError(
+            f"Could not checkout {ref}. "
+            f"This may indicate a mismatch between the expected commit and the cloned tag."
+        )
 
 
 def git_clone(
