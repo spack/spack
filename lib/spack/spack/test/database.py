@@ -1231,6 +1231,16 @@ def test_database_construction_doesnt_use_globals(
     assert os.path.exists(db.database_directory)
 
 
+def test_store_disables_prefix_and_failure_locks(tmp_path: pathlib.Path):
+    """The no-lock configuration applies to every lock used by the store."""
+    store = spack.store.Store(str(tmp_path), lock_cfg=spack.database.NO_LOCK)
+    spec = spack.spec.Spec("pkg-a")
+    spec._mark_concrete()
+
+    assert isinstance(store.prefix_locker.lock(spec).backend, lk.DummyBackend)
+    assert isinstance(store.failure_tracker.locker.lock(spec).backend, lk.DummyBackend)
+
+
 def test_database_read_works_with_trailing_data(
     tmp_path: pathlib.Path, default_mock_concretization
 ):
