@@ -417,11 +417,6 @@ def archspec_host_is_spack_test_host(monkeypatch):
     monkeypatch.setattr(spack.vendor.archspec.cpu, "host", _host)
 
 
-# Opt-in plugin (--spack-concretization-cache=DIR) that makes tests reuse concretization
-# results across tests, xdist workers, and pytest invocations.
-pytest_plugins = ["spack.test.concretization_cache_plugin"]
-
-
 # Hooks to add command line options or set other custom behaviors.
 # They must be placed here to be found by pytest. See:
 #
