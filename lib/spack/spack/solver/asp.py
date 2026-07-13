@@ -2787,7 +2787,7 @@ class SpackSolverSetup:
         self.deprecation_policy = spack.deprecation.Policy.from_config(warn_on_legacy=True)
 
         # Global deprecation-check scope (runtime vs. the whole DAG)
-        self.gen.fact(fn.deprecation_scope(spack.deprecation.deprecation_scope()))
+        self.gen.fact(fn.deprecation_scope(self.deprecation_policy.scope))
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
