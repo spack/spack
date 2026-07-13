@@ -1001,26 +1001,22 @@ def override(
     an internal config scope for it and push/pop that scope.
 
     """
+    path: Optional[str]
     if isinstance(path_or_scope, ConfigScope):
-        overrides = path_or_scope
-        CONFIG.push_scope(path_or_scope, priority=None)
+        overrides, path = path_or_scope, None
     else:
-        base_name = _OVERRIDES_BASE_NAME
         # Ensure the new override gets a unique scope name
-        current_overrides = [s.name for s in CONFIG.matching_scopes(rf"^{base_name}")]
-        num_overrides = len(current_overrides)
-        while True:
-            scope_name = f"{base_name}{num_overrides}"
-            if scope_name in current_overrides:
-                num_overrides += 1
-            else:
-                break
+        existing = {s.name for s in CONFIG.matching_scopes(rf"^{_OVERRIDES_BASE_NAME}")}
+        num_overrides = len(existing)
+        while f"{_OVERRIDES_BASE_NAME}{num_overrides}" in existing:
+            num_overrides += 1
+        overrides = InternalConfigScope(f"{_OVERRIDES_BASE_NAME}{num_overrides}")
+        path = path_or_scope
 
-        overrides = InternalConfigScope(scope_name)
-        CONFIG.push_scope(overrides, priority=None)
-        CONFIG.set(path_or_scope, value, scope=scope_name)
-
+    CONFIG.push_scope(overrides, priority=None)
     try:
+        if path is not None:
+            CONFIG.set(path, value, scope=overrides.name)
         yield CONFIG
     finally:
         scope = CONFIG.remove_scope(overrides.name)
