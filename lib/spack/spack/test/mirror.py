@@ -5,6 +5,7 @@
 import filecmp
 import os
 import pathlib
+from typing import Any, Dict
 
 import pytest
 
@@ -31,7 +32,14 @@ pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")]
 exclude = [".hg", ".git", ".svn"]
 
 
-repos = {}
+repos: Dict[str, Any] = {}
+
+
+@pytest.fixture(autouse=True)
+def _clear_repos():
+    # start each test with a clean slate so a failure does not leak into the next test
+    repos.clear()
+    yield
 
 
 def set_up_package(name, repository, url_attr):
@@ -104,25 +112,21 @@ def check_mirror():
 def test_url_mirror(mock_archive):
     set_up_package("trivial-install-test-package", mock_archive, "url")
     check_mirror()
-    repos.clear()
 
 
 def test_git_mirror(git, mock_git_repository):
     set_up_package("git-test", mock_git_repository, "git")
     check_mirror()
-    repos.clear()
 
 
 def test_svn_mirror(mock_svn_repository):
     set_up_package("svn-test", mock_svn_repository, "svn")
     check_mirror()
-    repos.clear()
 
 
 def test_hg_mirror(mock_hg_repository):
     set_up_package("hg-test", mock_hg_repository, "hg")
     check_mirror()
-    repos.clear()
 
 
 def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository, mock_archive):
@@ -131,7 +135,6 @@ def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository
     set_up_package("hg-test", mock_hg_repository, "hg")
     set_up_package("trivial-install-test-package", mock_archive, "url")
     check_mirror()
-    repos.clear()
 
 
 @pytest.mark.parametrize(
