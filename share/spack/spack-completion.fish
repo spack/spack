@@ -2222,8 +2222,8 @@ complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command isolate' -l path -r -f -a path
 complete -c spack -n '__fish_spack_using_command isolate' -l path -r -d 'path to data isolation directory'
-complete -c spack -n '__fish_spack_using_command isolate' -l self -f -a path
-complete -c spack -n '__fish_spack_using_command isolate' -l self -d 'use spack'"'"'s own prefix as isolation directory'
+complete -c spack -n '__fish_spack_using_command isolate' -l self -f -a use_self
+complete -c spack -n '__fish_spack_using_command isolate' -l self -d 'store isolation directory in Spack'"'"'s prefix'
 complete -c spack -n '__fish_spack_using_command isolate' -l undo -f -a undo
 complete -c spack -n '__fish_spack_using_command isolate' -l undo -d 'undo the result of calling isolate'
 complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -f -a overwrite
