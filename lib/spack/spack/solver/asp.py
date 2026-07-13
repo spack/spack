@@ -647,18 +647,16 @@ class ConcretizationCache:
         or returns none if no cache entry was found.
         """
         cache_path = self._cache_path_from_problem(problem)
-        if not cache_path.exists():
-            return None, None
 
-        # Each failure below removes the cache entry so that corrupt or outdated files
-        # don't persist and cause repeated failed lookups.
         try:
             with gzip.open(cache_path, "rb") as f:
                 cache_content = json.loads(f.read().decode("utf-8"))
-        except (OSError, json.JSONDecodeError) as e:
+        except FileNotFoundError:  # cache miss
+            return None, None
+        except (OSError, json.JSONDecodeError) as e:  # corrupt cache entry
             tty.debug(
                 f"ConcretizationCache.fetch(): force-removing {cache_path} because it is "
-                f"corrupt, truncated, or removed since the exists() check: {e}"
+                f"corrupt or truncated: {e}"
             )
             self._remove_entry(cache_path)
             return None, None
