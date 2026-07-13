@@ -16,7 +16,6 @@ import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.spec_parser
-import spack.store
 import spack.util.lang
 import spack.variant
 import spack.version as vn
@@ -1006,10 +1005,7 @@ class TestSpecSemantics:
             ("{^pkg-a.variants.foo}", spec["pkg-a"], "foo"),
         ]
 
-        other_segments = [
-            ("{spack_root}", spack.paths.spack_root),
-            ("{spack_install}", spack.store.STORE.layout.root),
-        ]
+        other_segments = [("{spack_root}", spack.paths.spack_root)]
 
         def depify(depname, fmt_str, sigil):
             sig = len(sigil)
@@ -1096,6 +1092,7 @@ class TestSpecSemantics:
             r"{_concrete}",
             r"{dag_hash}",
             r"{foo}",
+            r"{spack_install}",
             r"{+variants.debug}",
             r"{variants.this_variant_does_not_exist}",
         ],
