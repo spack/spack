@@ -603,9 +603,12 @@ class ArchSpec:
         )
 
     def to_dict(self):
+        # Abstract specs may have no target
+        if self.target is None:
+            target_data = None
         # Generic targets represent either an architecture family (like x86_64)
         # or a custom micro-architecture
-        if self.target.vendor == "generic":
+        elif self.target.vendor == "generic":
             target_data = str(self.target)
         else:
             # Get rid of compiler flag information before turning the uarch into a dict
@@ -618,6 +621,8 @@ class ArchSpec:
         """Import an ArchSpec from raw YAML/JSON data"""
         arch = d["arch"]
         target_name = arch["target"]
+        if target_name is None:
+            return ArchSpec((arch["platform"], arch["platform_os"], None))
         if not isinstance(target_name, str):
             target_name = target_name["name"]
         target = _make_microarchitecture(target_name)
