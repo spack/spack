@@ -68,7 +68,7 @@ import spack.error
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.enums import PropagationPolicy
-from spack.tokenize import TokenBase, fast_regex
+from spack.tokenize import fast_regex
 from spack.util.tty import color
 
 if TYPE_CHECKING:
@@ -87,15 +87,6 @@ GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
 #: Git refs include branch names, and can contain ``.`` and ``/``
 GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
 GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
-
-#: Substitute a package for a virtual, e.g., c,cxx=gcc.
-#: NOTE: Overlaps w/KVP; this should be first if matched in sequence.
-VIRTUAL_ASSIGNMENT = (
-    r"(?:"
-    rf"(?P<virtuals>{IDENTIFIER}(?:,{IDENTIFIER})*)"  # comma-separated virtuals
-    rf"=(?P<substitute>{DOTTED_IDENTIFIER}|{IDENTIFIER})"  # package to substitute
-    r")"
-)
 
 STAR = r"\*"
 
@@ -332,80 +323,88 @@ def quote_if_needed(value: str) -> str:
     return json.dumps(value) if "'" in value else f"'{value}'"
 
 
-class SpecTokens(TokenBase):
-    """Enumeration of the different token kinds in the spec grammar.
+# Token kinds: names of the top-level capture groups in FAST_SPEC_REGEX, compared against
+# match.lastgroup in the parser.
+_END_EDGE_PROPERTIES = "END_EDGE_PROPERTIES"
+_DEPENDENCY = "DEPENDENCY"
+_VERSION = "VERSION"
+_BOOL_VARIANT = "BOOL_VARIANT"
+_KEY_VALUE_PAIR = "KEY_VALUE_PAIR"
+_FILENAME = "FILENAME"
+_FULLY_QUALIFIED_PACKAGE_NAME = "FULLY_QUALIFIED_PACKAGE_NAME"
+_UNQUALIFIED_PACKAGE_NAME = "UNQUALIFIED_PACKAGE_NAME"
+_DAG_HASH = "DAG_HASH"
+_UNEXPECTED = "UNEXPECTED"
 
-    Order of declaration is important, since text containing specs is parsed with a single regex
-    obtained by ``"|".join(...)`` of all the regex in the order of declaration.
-    """
+# Subgroup names within the token regexes below, read with match.group(...). All group names
+# must be unique across FAST_SPEC_REGEX; re.compile enforces this.
+_EDGE_BRACKET = "edge_bracket"
+_EDGE_VIRTUALS = "edge_virtuals"
+_EDGE_SUBSTITUTE = "edge_substitute"
+_END_EDGE_VIRTUALS = "end_edge_virtuals"
+_END_EDGE_SUBSTITUTE = "end_edge_substitute"
+_GIT_VERSION = "git_version"
+_VERSION_LIST = "version_list"
+_BV_PREFIX = "bv_prefix"
+_BV_NAME = "bv_name"
+_KV_NAME = "kv_name"
+_KV_SEP = "kv_sep"
+_KV_VALUE = "kv_value"
 
-    #: ``]`` closing edge properties, optionally followed by a virtual assignment
-    END_EDGE_PROPERTIES = rf"\](?:\s*{VIRTUAL_ASSIGNMENT})?"
-    #: ``^`` (transitive), ``%`` (direct) or ``%%`` (direct, propagated) dependency
-    DEPENDENCY = (
+# The virtual assignment ``c,cxx=gcc`` substitutes a package for one or more virtuals. Both
+# END_EDGE_PROPERTIES and DEPENDENCY embed it, each with its own group names; only that context
+# distinguishes it from KEY_VALUE_PAIR.
+_VIRTUALS_LIST = rf"{IDENTIFIER}(?:,{IDENTIFIER})*"  # comma-separated virtuals
+_SUBSTITUTE = rf"{DOTTED_IDENTIFIER}|{IDENTIFIER}"  # package to substitute for them
+
+#: Token kind -> regex. FAST_SPEC_REGEX is the ``|``-alternation of these in order: tokens are
+#: tried top to bottom, so more specific tokens come first (e.g. FILENAME before package names).
+SPEC_TOKENS: Dict[str, str] = {
+    # ``]`` closing edge properties, optionally fused with a virtual assignment, e.g.
+    # ``^[deptypes=link] mpi=openmpi``
+    _END_EDGE_PROPERTIES: (
+        r"\]"
+        rf"(?:\s*(?P<{_END_EDGE_VIRTUALS}>{_VIRTUALS_LIST})=(?P<{_END_EDGE_SUBSTITUTE}>{_SUBSTITUTE}))?"
+    ),
+    # ``^`` (transitive), ``%`` (direct) or ``%%`` (direct, propagated) dependency
+    _DEPENDENCY: (
         r"(?:\^|\%\%|\%)"
         r"(?:"
-        r"(?P<edge_bracket>\[)"  # start of edge properties, e.g. ``^[virtuals=mpi]``
-        rf"|(?:\s*{VIRTUAL_ASSIGNMENT})?"  # or a virtual assignment, e.g. ``%c,cxx=gcc``
+        rf"(?P<{_EDGE_BRACKET}>\[)"  # start of edge properties, e.g. ``^[virtuals=mpi]``
+        rf"|(?:\s*(?P<{_EDGE_VIRTUALS}>{_VIRTUALS_LIST})=(?P<{_EDGE_SUBSTITUTE}>{_SUBSTITUTE}))?"
         r")"
-    )
-    #: ``@`` followed by a git version or a version list
-    VERSION = (
-        rf"@(?:(?P<git_version>{GIT_VERSION_PATTERN}(?:={VERSION})?)"
-        rf"|\s*(?P<version_list>{VERSION_LIST}))"
-    )
-    #: boolean variant, e.g. ``+debug``, ``~qt_4``, or propagated, e.g. ``++debug``
-    BOOL_VARIANT = (
-        r"(?P<bv_prefix>\+\+|~~|--|[~+-])"  # propagated (``++``/``~~``/``--``) or plain prefix
+    ),
+    # ``@`` followed by a git version or a version list
+    _VERSION: (
+        rf"@(?:(?P<{_GIT_VERSION}>{GIT_VERSION_PATTERN}(?:={VERSION})?)"
+        rf"|\s*(?P<{_VERSION_LIST}>{VERSION_LIST}))"
+    ),
+    # boolean variant, e.g. ``+debug``, ``~qt_4``, or propagated, e.g. ``++debug``
+    _BOOL_VARIANT: (
+        rf"(?P<{_BV_PREFIX}>\+\+|~~|--|[~+-])"  # propagated (``++``/``~~``/``--``) or plain
         r"\s*"
-        rf"(?P<bv_name>{NAME})"  # variant name
-    )
-    #: key-value pair, e.g. ``foo=bar``, ``foo==bar`` (propagated), ``foo:=bar`` (concrete)
-    KEY_VALUE_PAIR = (
-        rf"(?P<kv_name>{NAME})"  # key
-        r"(?P<kv_sep>:?==?)"  # separator: ``=``, ``==``, ``:=`` or ``:==``
-        rf"(?P<kv_value>{VALUE}|{QUOTED_VALUE})"  # bare or quoted value
-    )
-    #: path to a spec file, e.g. ``./foo/bar.json``
-    FILENAME = FILENAME
-    #: package name with namespace, e.g. ``builtin.mpich``
-    FULLY_QUALIFIED_PACKAGE_NAME = DOTTED_IDENTIFIER
-    #: package name, e.g. ``mpich``, or ``*`` for any package
-    UNQUALIFIED_PACKAGE_NAME = rf"(?:{IDENTIFIER}|{STAR})"
-    #: ``/`` followed by a (prefix of a) DAG hash
-    DAG_HASH = rf"/(?P<dag_hash>{HASH})"
-    #: anything else is a single unexpected character
-    UNEXPECTED = r"."
+        rf"(?P<{_BV_NAME}>{NAME})"  # variant name
+    ),
+    # key-value pair, e.g. ``foo=bar``, ``foo==bar`` (propagated), ``foo:=bar`` (concrete)
+    _KEY_VALUE_PAIR: (
+        rf"(?P<{_KV_NAME}>{NAME})"  # key
+        rf"(?P<{_KV_SEP}>:?==?)"  # separator: ``=``, ``==``, ``:=`` or ``:==``
+        rf"(?P<{_KV_VALUE}>{VALUE}|{QUOTED_VALUE})"  # bare or quoted value
+    ),
+    # path to a spec file, e.g. ``./foo/bar.json``
+    _FILENAME: FILENAME,
+    # package name with namespace, e.g. ``builtin.mpich``
+    _FULLY_QUALIFIED_PACKAGE_NAME: DOTTED_IDENTIFIER,
+    # package name, e.g. ``mpich``, or ``*`` for any package
+    _UNQUALIFIED_PACKAGE_NAME: rf"(?:{IDENTIFIER}|{STAR})",
+    # ``/`` followed by a (prefix of a) DAG hash
+    _DAG_HASH: rf"/{HASH}",
+    # anything else is a single unexpected character
+    _UNEXPECTED: r".",
+}
 
-
-#: Global regex matching any token (and its named subgroups) after optional whitespace
-FAST_SPEC_REGEX = fast_regex(SpecTokens)
-
-# Aliases for token names. This avoids a function call to SpecTokens.<token>.name in the parser.
-_END_EDGE_PROPERTIES = SpecTokens.END_EDGE_PROPERTIES.name
-_DEPENDENCY = SpecTokens.DEPENDENCY.name
-_VERSION = SpecTokens.VERSION.name
-_BOOL_VARIANT = SpecTokens.BOOL_VARIANT.name
-_KEY_VALUE_PAIR = SpecTokens.KEY_VALUE_PAIR.name
-_FILENAME = SpecTokens.FILENAME.name
-_FULLY_QUALIFIED_PACKAGE_NAME = SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.name
-_UNQUALIFIED_PACKAGE_NAME = SpecTokens.UNQUALIFIED_PACKAGE_NAME.name
-_DAG_HASH = SpecTokens.DAG_HASH.name
-_UNEXPECTED = SpecTokens.UNEXPECTED.name
-
-# Names of token subgroups in FAST_SPEC_REGEX.
-_EDGE_BRACKET = f"{SpecTokens.DEPENDENCY.name}_edge_bracket"
-_EDGE_VIRTUALS = f"{SpecTokens.DEPENDENCY.name}_virtuals"
-_EDGE_SUBSTITUTE = f"{SpecTokens.DEPENDENCY.name}_substitute"
-_END_EDGE_VIRTUALS = f"{SpecTokens.END_EDGE_PROPERTIES.name}_virtuals"
-_END_EDGE_SUBSTITUTE = f"{SpecTokens.END_EDGE_PROPERTIES.name}_substitute"
-_GIT_VERSION = f"{SpecTokens.VERSION.name}_git_version"
-_VERSION_LIST = f"{SpecTokens.VERSION.name}_version_list"
-_BV_PREFIX = f"{SpecTokens.BOOL_VARIANT.name}_bv_prefix"
-_BV_NAME = f"{SpecTokens.BOOL_VARIANT.name}_bv_name"
-_KV_NAME = f"{SpecTokens.KEY_VALUE_PAIR.name}_kv_name"
-_KV_SEP = f"{SpecTokens.KEY_VALUE_PAIR.name}_kv_sep"
-_KV_VALUE = f"{SpecTokens.KEY_VALUE_PAIR.name}_kv_value"
+#: Single regex matching any spec token (and its subgroups) after optional whitespace
+FAST_SPEC_REGEX = fast_regex(SPEC_TOKENS)
 
 
 class SpecParser:
@@ -414,8 +413,9 @@ class SpecParser:
     The parser operates directly on the stream of ``re.Match`` objects produced by
     ``FAST_SPEC_REGEX.scanner``, with one token of lookahead: ``self.curr`` is the current,
     not yet consumed token and ``self.next`` the one after it; both are ``None`` at the end
-    of input. For a match, ``match.lastgroup`` is the token kind (a :class:`SpecTokens`
-    name), and subgroups of that token are accessed as ``match.group("<TOKEN>_<subgroup>")``.
+    of input. For a match, ``match.lastgroup`` is the token kind (a key of
+    :data:`SPEC_TOKENS`), and subgroups of that token are accessed by name, e.g.
+    ``match.group(_KV_NAME)``.
 
     Instead of ``accept``/``expect`` methods, the parser uses two idioms:
 
@@ -503,7 +503,8 @@ class SpecParser:
                     self.curr, self.next = self.next, self.scanner.match()
 
                     # Collect edge attributes (key=value pairs) up to the closing bracket
-                    attributes = {}
+                    attributes: Dict[str, List[str]] = {}
+                    when_string: Optional[str] = None
                     substitute = None
                     while self.curr:
                         if self.curr.lastgroup == _KEY_VALUE_PAIR:
@@ -520,7 +521,7 @@ class SpecParser:
                             # syntax, e.g. when='@1,2'; deptypes and virtuals values are
                             # comma-separated lists.
                             if name == "when":
-                                attributes[name] = value
+                                when_string = value
                             else:
                                 attributes[name] = [v.strip() for v in value.split(",")]
 
@@ -552,8 +553,7 @@ class SpecParser:
                     virtuals_tuple = tuple(attributes.get("virtuals", ()))
 
                     conditions = None
-                    if "when" in attributes:
-                        when_string = attributes["when"]
+                    if when_string is not None:
                         conditions = SpecParser(when_string).next_spec()
 
                     dep_spec = self._parse_node(initial_name=substitute)

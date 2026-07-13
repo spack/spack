@@ -135,7 +135,7 @@ PygmentsBridge.html_formatter = NoWhitespaceHtmlFormatter
 
 
 from spack.util.lang import classproperty
-from spack.spec_parser import SpecTokens
+from spack.spec_parser import SPEC_TOKENS
 
 # replace classproperty.__get__ to return `self` so Sphinx can document it correctly. Otherwise
 # it evaluates the callback, and it documents the result, which is not what we want.
@@ -181,26 +181,26 @@ class SpecLexer(RegexLexer):
             (r"\s*?$", Text, "#pop"),
             # Dependency, with optional virtual assignment specifier
             (r"(?:(?:\^|\%\%|\%)\[)", Name.Variable, "edge_properties"),
-            (SpecTokens.DEPENDENCY, Name.Variable),
+            (SPEC_TOKENS["DEPENDENCY"], Name.Variable),
             # versions
-            (SpecTokens.VERSION, Keyword.Pseudo),
+            (SPEC_TOKENS["VERSION"], Keyword.Pseudo),
             # variants
-            (SpecTokens.BOOL_VARIANT, Name.Function),
-            (SpecTokens.KEY_VALUE_PAIR, Name.Function),
+            (SPEC_TOKENS["BOOL_VARIANT"], Name.Function),
+            (SPEC_TOKENS["KEY_VALUE_PAIR"], Name.Function),
             # filename
-            (SpecTokens.FILENAME, Text),
+            (SPEC_TOKENS["FILENAME"], Text),
             # Package name
-            (SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME, Name.Class),
-            (SpecTokens.UNQUALIFIED_PACKAGE_NAME, Name.Class),
+            (SPEC_TOKENS["FULLY_QUALIFIED_PACKAGE_NAME"], Name.Class),
+            (SPEC_TOKENS["UNQUALIFIED_PACKAGE_NAME"], Name.Class),
             # DAG hash
-            (SpecTokens.DAG_HASH, Text),
+            (SPEC_TOKENS["DAG_HASH"], Text),
             (r"\s+", Text),
             # Also stop at unrecognized tokens (without consuming them)
             default("#pop"),
         ],
         "edge_properties": [
-            (SpecTokens.KEY_VALUE_PAIR, Name.Function),
-            (SpecTokens.END_EDGE_PROPERTIES, Name.Variable, "#pop"),
+            (SPEC_TOKENS["KEY_VALUE_PAIR"], Name.Function),
+            (SPEC_TOKENS["END_EDGE_PROPERTIES"], Name.Variable, "#pop"),
         ],
     }
 
