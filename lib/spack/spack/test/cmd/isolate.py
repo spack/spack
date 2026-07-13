@@ -60,6 +60,7 @@ def test_isolate_added_config(mock_pre_isolate_config):
     cfg_dir, iso_root = mock_pre_isolate_config
     isolated_path = iso_root / "test-isolation"
     sp_isolate("--path", str(isolated_path))
+    # configuration has changed on disk, this refreshes it in memory
     with spack.config.use_configuration(cfg_dir / "spack"):
         sp_config("add", "config:build_jobs:42")
         assert (isolated_path / "config.yaml").exists()
@@ -82,8 +83,8 @@ def test_isolate_overwrite_same_dir(mock_pre_isolate_config):
 
 def test_isolate_overwrite_different_dir(mock_pre_isolate_config):
     cfg_dir, iso_root = mock_pre_isolate_config
-    isolated_path1 = iso_root / "test-isolation"
-    isolated_path2 = iso_root / "test-isolation"
+    isolated_path1 = iso_root / "test-isolation1"
+    isolated_path2 = iso_root / "test-isolation2"
     sp_isolate("--path", str(isolated_path1))
     with pytest.raises(Exception):
         sp_isolate("--path", str(isolated_path1))
@@ -94,6 +95,59 @@ def test_isolate_overwrite_different_dir(mock_pre_isolate_config):
 bootstrap:
   root: {isolated_path2 / "bootstrap"}"""
     assert text == expected_text
+
+
+def test_self_isolate(mock_pre_isolate_config):
+    cfg_dir, _ = mock_pre_isolate_config
+    sp_isolate("--self")
+    assert os.path.exists(spack.cmd.isolate.ISOLATE_SCOPE_PATH)
+    assert os.path.exists(spack.cmd.isolate.PRESERVED_INCLUDE_PATH)
+    assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "bootstrap.yaml"))
+    assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "config.yaml"))
+    # configuration has changed on disk, this refreshes it in memory
+    with spack.config.use_configuration(cfg_dir / "spack"):
+        sp_config("add", "packages:gcc:buildable:false")
+        new_config_path = os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "packages.yaml")
+        assert os.path.exists(new_config_path)
+        with open(new_config_path, "r", encoding="utf-8") as f:
+            text = f.read().strip()
+        expected_text = """\
+packages:
+  gcc:
+    buildable: false"""
+        assert text == expected_text
+
+
+def test_self_isolate_overwrite(mock_pre_isolate_config):
+    sp_isolate("--self")
+    cfg_dir, _ = mock_pre_isolate_config
+    with pytest.raises(Exception):
+        sp_isolate("--self")
+    new_concr_config_path = os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "concretizer.yaml")
+    new_pkgs_config_path = os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "packages.yaml")
+    # configuration has changed on disk, this refreshes it in memory
+    with spack.config.use_configuration(cfg_dir / "spack"):
+        sp_config("add", "concretizer:reuse:false")
+        assert os.path.exists(new_concr_config_path)
+        with open(new_concr_config_path, "r", encoding="utf-8") as f:
+            text = f.read().strip()
+        expected_text = """\
+concretizer:
+  reuse: false"""
+        assert text == expected_text
+    sp_isolate("--self", "--overwrite")
+
+    with spack.config.use_configuration(cfg_dir / "spack"):
+        sp_config("add", "packages:gcc:buildable:false")
+        assert not os.path.exists(new_concr_config_path)
+        assert os.path.exists(new_pkgs_config_path)
+        with open(new_pkgs_config_path, "r", encoding="utf-8") as f:
+            text = f.read().strip()
+        expected_text = """\
+packages:
+  gcc:
+    buildable: false"""
+        assert text == expected_text
 
 
 def test_isolate_undo(mock_pre_isolate_config):
