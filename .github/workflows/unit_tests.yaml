@@ -188,7 +188,7 @@ jobs:
         spack bootstrap disable github-actions-v2
         spack bootstrap status
         spack spec --show opt,solutions zlib
-        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/
+        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 --dist worksteal lib/spack/spack/test/concretization/
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-clingo-cffi
@@ -226,7 +226,7 @@ jobs:
         spack bootstrap disable github-actions-v2
         spack bootstrap status
         spack spec --show opt,solutions zlib
-        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/
+        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 --dist worksteal lib/spack/spack/test/concretization/
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-clingo-v6
@@ -263,7 +263,7 @@ jobs:
         . share/spack/setup-env.sh
         spack bootstrap disable spack-install
         spack spec --show opt,solutions zlib
-        python3 -m pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --dist loadfile -x -n4
+        python3 -m pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --dist worksteal -x -n4
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
