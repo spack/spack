@@ -9,6 +9,8 @@ import enum
 import re
 from typing import Generator, Match, Optional, Type
 
+from spack.util.lang import PatternStr
+
 
 class TokenBase(enum.Enum):
     """Base class for an enum type with a regex value"""
@@ -53,6 +55,22 @@ class Token:
             and self.value == other.value
             and self.subvalues == other.subvalues
         )
+
+
+def fast_regex(tokens: Type[TokenBase], skip_whitespace: bool = True) -> PatternStr:
+    """Compile a single regex that matches any token of the provided enum.
+
+    The pattern is intended for use with ``pattern.scanner(text)``. On a match, ``match.lastgroup``
+    is the token name, and named capture groups of individual tokens are available as
+    ``<TOKEN_NAME>_<group_name>`` (see :func:`token_match_regex`), e.g.
+    ``match.group("KEY_VALUE_PAIR_kv_name")``.
+
+    Tokens are tried in enum definition order, so more specific tokens must be defined first. With
+    ``skip_whitespace``, whitespace before a token is consumed by the regex engine itself, so no
+    separate whitespace token is needed.
+    """
+    joined = "|".join(token_match_regex(token)[0] for token in tokens)
+    return re.compile(rf"\s*(?:{joined})" if skip_whitespace else joined)
 
 
 def token_match_regex(token: TokenBase):

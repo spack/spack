@@ -68,6 +68,7 @@ import spack.error
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.enums import PropagationPolicy
+from spack.tokenize import TokenBase, fast_regex
 from spack.util.tty import color
 
 if TYPE_CHECKING:
@@ -331,47 +332,74 @@ def quote_if_needed(value: str) -> str:
     return json.dumps(value) if "'" in value else f"'{value}'"
 
 
-class SpecTokens:
+class SpecTokens(TokenBase):
+    """Enumeration of the different token kinds in the spec grammar.
+
+    Order of declaration is important, since text containing specs is parsed with a single regex
+    obtained by ``"|".join(...)`` of all the regex in the order of declaration.
+    """
+
+    #: ``]`` closing edge properties, optionally followed by a virtual assignment
     END_EDGE_PROPERTIES = rf"\](?:\s*{VIRTUAL_ASSIGNMENT})?"
-    DEPENDENCY = rf"(?:\^|\%\%|\%)(?:(?P<edge_bracket>\[)|(?:\s*{VIRTUAL_ASSIGNMENT})?)"
+    #: ``^`` (transitive), ``%`` (direct) or ``%%`` (direct, propagated) dependency
+    DEPENDENCY = (
+        r"(?:\^|\%\%|\%)"
+        r"(?:"
+        r"(?P<edge_bracket>\[)"  # start of edge properties, e.g. ``^[virtuals=mpi]``
+        rf"|(?:\s*{VIRTUAL_ASSIGNMENT})?"  # or a virtual assignment, e.g. ``%c,cxx=gcc``
+        r")"
+    )
+    #: ``@`` followed by a git version or a version list
     VERSION = (
         rf"@(?:(?P<git_version>{GIT_VERSION_PATTERN}(?:={VERSION})?)"
         rf"|\s*(?P<version_list>{VERSION_LIST}))"
     )
-    BOOL_VARIANT = rf"(?P<bv_prefix>\+\+|~~|--|[~+-])\s*(?P<bv_name>{NAME})"
-    KEY_VALUE_PAIR = rf"(?P<kv_name>{NAME})(?P<kv_sep>:?==?)(?P<kv_value>{VALUE}|{QUOTED_VALUE})"
+    #: boolean variant, e.g. ``+debug``, ``~qt_4``, or propagated, e.g. ``++debug``
+    BOOL_VARIANT = (
+        r"(?P<bv_prefix>\+\+|~~|--|[~+-])"  # propagated (``++``/``~~``/``--``) or plain prefix
+        r"\s*"
+        rf"(?P<bv_name>{NAME})"  # variant name
+    )
+    #: key-value pair, e.g. ``foo=bar``, ``foo==bar`` (propagated), ``foo:=bar`` (concrete)
+    KEY_VALUE_PAIR = (
+        rf"(?P<kv_name>{NAME})"  # key
+        r"(?P<kv_sep>:?==?)"  # separator: ``=``, ``==``, ``:=`` or ``:==``
+        rf"(?P<kv_value>{VALUE}|{QUOTED_VALUE})"  # bare or quoted value
+    )
+    #: path to a spec file, e.g. ``./foo/bar.json``
     FILENAME = FILENAME
+    #: package name with namespace, e.g. ``builtin.mpich``
     FULLY_QUALIFIED_PACKAGE_NAME = DOTTED_IDENTIFIER
+    #: package name, e.g. ``mpich``, or ``*`` for any package
     UNQUALIFIED_PACKAGE_NAME = rf"(?:{IDENTIFIER}|{STAR})"
+    #: ``/`` followed by a (prefix of a) DAG hash
     DAG_HASH = rf"/(?P<dag_hash>{HASH})"
+    #: anything else is a single unexpected character
     UNEXPECTED = r"."
 
 
-RAW_PATTERNS = [
-    ("END_EDGE_PROPERTIES", SpecTokens.END_EDGE_PROPERTIES),
-    ("DEPENDENCY", SpecTokens.DEPENDENCY),
-    ("VERSION", SpecTokens.VERSION),
-    ("BOOL_VARIANT", SpecTokens.BOOL_VARIANT),
-    ("KEY_VALUE_PAIR", SpecTokens.KEY_VALUE_PAIR),
-    ("FILENAME", SpecTokens.FILENAME),
-    ("FULLY_QUALIFIED_PACKAGE_NAME", SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME),
-    ("UNQUALIFIED_PACKAGE_NAME", SpecTokens.UNQUALIFIED_PACKAGE_NAME),
-    ("DAG_HASH", SpecTokens.DAG_HASH),
-    ("UNEXPECTED", SpecTokens.UNEXPECTED),
-]
-
-_regex_parts = []
-for _name, _pattern in RAW_PATTERNS:
-    # Rename groups: (?P<groupname> -> (?P<TOKENNAME_groupname>
-    _renamed_pattern = re.sub(r"\(\?P<([a-zA-Z_0-9]+)>", f"(?P<{_name}_\\1>", _pattern)
-    _regex_parts.append(f"(?P<{_name}>{_renamed_pattern})")
-
-# Global regex that skips whitespace before matching any token
-FAST_SPEC_REGEX = re.compile(r"\s*(?:" + "|".join(_regex_parts) + r")")
+#: Global regex matching any token (and its named subgroups) after optional whitespace
+FAST_SPEC_REGEX = fast_regex(SpecTokens)
 
 
 class SpecParser:
-    """Fast spec parser using a single compiled regex"""
+    """Fast spec parser using a single compiled regex.
+
+    The parser operates directly on the stream of ``re.Match`` objects produced by
+    ``FAST_SPEC_REGEX.scanner``, with one token of lookahead: ``self.curr`` is the current,
+    not yet consumed token and ``self.next`` the one after it; both are ``None`` at the end
+    of input. For a match, ``match.lastgroup`` is the token kind (a :class:`SpecTokens`
+    name), and subgroups of that token are accessed as ``match.group("<TOKEN>_<subgroup>")``.
+
+    Instead of ``accept``/``expect`` methods, the parser uses two idioms:
+
+    * accept: after inspecting ``self.curr``, consume it by shifting the lookahead::
+
+          self.curr, self.next = self.next, self.scanner.match()
+
+    * expect: branch on ``self.curr.lastgroup``, and raise a parsing error from the branch
+      where the token cannot appear at the current point in the grammar.
+    """
 
     __slots__ = "literal_str", "scanner", "curr", "next"
 
@@ -434,6 +462,7 @@ class SpecParser:
 
         while self.curr:
             if self.curr.lastgroup == "DEPENDENCY":
+                # ^ (transitive) or % / %% (direct) edge, followed by a dependency node
                 token = self.curr.group()
                 # Strip leading whitespace for checking startswith
                 token = token.lstrip()
@@ -443,9 +472,11 @@ class SpecParser:
                     propagation = PropagationPolicy.PREFERENCE
 
                 if self.curr.group("DEPENDENCY_edge_bracket"):
-                    # Advance
+                    # Bracketed form with edge properties: ^[key=value ...] node.
+                    # Accept the opening ^[ / %[ token
                     self.curr, self.next = self.next, self.scanner.match()
 
+                    # Collect edge attributes (key=value pairs) up to the closing bracket
                     attributes = {}
                     substitute = None
                     while self.curr:
@@ -470,6 +501,8 @@ class SpecParser:
                             self.curr, self.next = self.next, self.scanner.match()
 
                         elif self.curr.lastgroup == "END_EDGE_PROPERTIES":
+                            # Closing ], optionally fused with a virtual assignment, as in
+                            # ^[deptypes=link] mpi=openmpi
                             virtuals_str = self.curr.group("END_EDGE_PROPERTIES_virtuals")
                             substitute = self.curr.group("END_EDGE_PROPERTIES_substitute")
 
@@ -478,11 +511,12 @@ class SpecParser:
                                 virtuals.extend(virtuals_str.split(","))
                                 attributes["virtuals"] = virtuals
 
-                            # Advance
+                            # Accept the ] token and stop collecting edge attributes
                             self.curr, self.next = self.next, self.scanner.match()
 
                             break
                         else:
+                            # Only key=value pairs can occur between brackets
                             self._raise_parsing_error("Unexpected token in edge attributes")
 
                     depflag = 0
@@ -515,12 +549,14 @@ class SpecParser:
                         pending = (dep_spec, self.curr, edge_kwargs)
 
                 else:
+                    # Plain form without brackets: ^node / %node, where the edge token may
+                    # carry a virtual assignment, as in %c,cxx=gcc
                     virtuals_str = self.curr.group("DEPENDENCY_virtuals")
                     substitute = self.curr.group("DEPENDENCY_substitute")
 
                     virtuals_tuple = tuple(virtuals_str.split(",")) if virtuals_str else ()
 
-                    # Advance
+                    # Accept the ^ / % / %% token
                     self.curr, self.next = self.next, self.scanner.match()
 
                     dep_spec = self._parse_node(initial_name=substitute)
@@ -544,6 +580,8 @@ class SpecParser:
                 self._raise_tokenization_error()
 
             else:
+                # Any other token (e.g. a package name) starts the next spec in the input;
+                # this spec is complete.
                 break
 
         self._attach_pending(root_spec, pending)
@@ -577,10 +615,13 @@ class SpecParser:
                 Spec = _Spec  # just `from spack.spec import Spec` is insufficient for mypy
             spec = Spec()
 
+        # The lookahead is shifted in locals for speed and written back on return
         curr, next, scanner = self.curr, self.next, self.scanner
 
-        # 1. Package Name
+        # 1. Package name (or spec file). A missing name is fine: anonymous specs like
+        # `@1.2 +debug` are valid.
         if initial_name:
+            # Name came from a virtual assignment on the incoming edge, e.g. %c,cxx=gcc
             if "." in initial_name:
                 spec.namespace, spec.name = initial_name.rsplit(".", 1)
             else:
@@ -590,7 +631,7 @@ class SpecParser:
         kind = curr.lastgroup
         value = curr.group(kind)
         if kind == "UNQUALIFIED_PACKAGE_NAME":
-            if value != "*":
+            if value != "*":  # `*` is an anonymous node, as in `%*+shared`
                 spec.name = value
             curr = next
             next = scanner.match() if curr is not None else None
@@ -599,6 +640,7 @@ class SpecParser:
             curr = next
             next = scanner.match() if curr is not None else None
         elif kind == "FILENAME":
+            # A spec file is a complete node: read it and return
             if not os.path.exists(value):
                 raise spack.error.NoSuchSpecFileError(f"No such spec file: '{value}'")
             spec._dup(spack.spec.Spec.from_specfile(value))
@@ -606,8 +648,9 @@ class SpecParser:
             return spec
         elif kind == "UNEXPECTED":
             self._raise_tokenization_error()
+        # else: no name; fall through to attributes of an anonymous node
 
-        # 2. Attributes
+        # 2. Node attributes: version, variants, flags, and abstract hash, in any order
         has_version = False
         while curr:
             kind = curr.lastgroup
@@ -651,13 +694,16 @@ class SpecParser:
 
             elif kind == "DAG_HASH":
                 if spec.abstract_hash:
+                    # A second hash belongs to the next spec, e.g. `spack find /abc /def`
                     break
                 spec.abstract_hash = curr.group().strip()[1:]
 
             else:
-                # Stop if we hit something else (like DEPENDENCY or another package name)
+                # DEPENDENCY, END_EDGE_PROPERTIES, a package name, or UNEXPECTED: this node
+                # is done; the caller decides what is valid next.
                 break
 
+            # Accept the token
             curr = next
             next = scanner.match() if curr is not None else None
 
