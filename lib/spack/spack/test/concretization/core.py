@@ -4501,6 +4501,7 @@ def test_spec_dict_roundtrip(mock_packages, config, spec_str):
         # fresh solves
         ("hdf5", None),
         ("hdf5^zmpi", None),
+        ("mpileaks ~debug ^[when=+debug] zmpi", None),
         ("zmpi", None),
         ("pkg-with-zlib-dep", None),
         ("hypre^openblas-with-lapack", None),
