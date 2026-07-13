@@ -559,8 +559,13 @@ class ConcretizationCache:
         count limits. Cleanup is done in LRU ordering."""
         entry_limit = spack.config.get("concretizer:concretization_cache:entry_limit", 1000)
 
-        # determine if we even need to clean up
-        entries = list(self.cache_entries())
+        try:
+            with os.scandir(self.root) as it:
+                # skip dotfiles and old-style directory entries
+                entries = [e for e in it if not e.name.startswith(".") and e.is_file()]
+        except FileNotFoundError:
+            return
+
         if len(entries) <= entry_limit:
             return
 
@@ -568,11 +573,9 @@ class ConcretizationCache:
         removal_queue = []
         for entry in entries:
             try:
-                entry_stat_info = entry.stat()
                 # mtime will always be time of last use as we update it after
                 # each read and obviously after each write
-                mod_time = entry_stat_info.st_mtime
-                removal_queue.append((mod_time, entry))
+                removal_queue.append((entry.stat(follow_symlinks=False).st_mtime, entry.path))
             except FileNotFoundError:
                 # don't need to cleanup the file, it's not there!
                 pass
@@ -580,17 +583,8 @@ class ConcretizationCache:
         removal_queue.sort()  # sort items for removal, ascending, so oldest first
 
         # Try to remove the oldest half of the cache.
-        for _, entry_to_rm in removal_queue[: entry_limit // 2]:
-            self._remove_entry(entry_to_rm)
-
-    def cache_entries(self):
-        """Generator producing cache entries within a bucket"""
-        if not self.root.exists():
-            return
-        for cache_entry in self.root.iterdir():
-            # skip dotfiles and old-style directory entries
-            if not cache_entry.name.startswith(".") and cache_entry.is_file():
-                yield cache_entry
+        for _, path in removal_queue[: entry_limit // 2]:
+            self._remove_entry(pathlib.Path(path))
 
     def _prefix_digest(self, problem: str) -> str:
         """Return the first two characters of, and the full, sha256 of the given asp problem"""
@@ -620,12 +614,6 @@ class ConcretizationCache:
         """
         cache_path = self._cache_path_from_problem(problem)
 
-        # Content-keyed: if the file exists, it already has the right content.
-        if cache_path.exists():
-            return
-
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-
         cache_dict = {
             "_meta": {"version": ConcretizationCache.VERSION},
             "results": result.to_dict(),
@@ -634,7 +622,12 @@ class ConcretizationCache:
 
         # Write to a temp file in the same directory, then atomically rename.
         # mkstemp appends random characters after the prefix, so names are unique.
-        fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
+        # A missing root dir is the only expected failure; create it and retry once.
+        try:
+            fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
+        except FileNotFoundError:
+            self.root.mkdir(parents=True, exist_ok=True)
+            fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
         try:
             with os.fdopen(fd, "wb") as raw_f:
                 with gzip.open(raw_f, "wb", compresslevel=6) as f:
@@ -659,18 +652,16 @@ class ConcretizationCache:
         or returns none if no cache entry was found.
         """
         cache_path = self._cache_path_from_problem(problem)
-        if not cache_path.exists():
-            return None, None
 
-        # Each failure below removes the cache entry so that corrupt or outdated files
-        # don't persist and cause repeated failed lookups.
         try:
             with gzip.open(cache_path, "rb") as f:
                 cache_content = json.loads(f.read().decode("utf-8"))
-        except (OSError, json.JSONDecodeError) as e:
+        except FileNotFoundError:  # cache miss
+            return None, None
+        except (OSError, json.JSONDecodeError) as e:  # corrupt cache entry
             tty.debug(
                 f"ConcretizationCache.fetch(): force-removing {cache_path} because it is "
-                f"corrupt, truncated, or removed since the exists() check: {e}"
+                f"corrupt or truncated: {e}"
             )
             self._remove_entry(cache_path)
             return None, None
