@@ -590,6 +590,7 @@ def test_install_from_binary_with_missing_patch_succeeds(
     s_dict["spec"]["nodes"][0]["patches"] = patches
     s_dict["spec"]["nodes"][0]["parameters"]["patches"] = patches
     s = Spec.from_dict(s_dict)
+    temporary_store.set_prefixes([s])
 
     # Create an install dir for it
     os.makedirs(os.path.join(s.prefix, ".spack"))

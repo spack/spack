@@ -1273,14 +1273,19 @@ class ForwardQueryToPackage:
                 # A callback can return None to trigger an error indicating
                 # that the query failed.
                 if value is None:
+                    try:
+                        prefix = str(instance.prefix)
+                    except spack.error.SpecError:
+                        prefix = "<unset>"
                     msg = "Query of package '{name}' for '{attrib}' failed\n"
-                    msg += "\tprefix : {spec.prefix}\n"
+                    msg += "\tprefix : {prefix}\n"
                     msg += "\tspec : {spec}\n"
                     msg += "\tqueried as : {query.name}\n"
                     msg += "\textra parameters : {query.extra_parameters}"
                     message = msg.format(
                         name=pkg.name,
                         attrib=self.attribute_name,
+                        prefix=prefix,
                         spec=instance,
                         query=instance.last_query,
                     )
@@ -2227,12 +2232,15 @@ class Spec:
             raise spack.error.SpecError(f"Spec is not concrete: {self}")
 
         if self._prefix is None:
-            from spack.store import STORE
-
-            # Installed specs carry their prefix from the database record (set when the
-            # InstallRecord is built). Anything reaching this point is not a stamped record
-            # spec, so its prefix is the deterministic layout path (external_path for externals).
-            self.set_prefix(STORE.layout.path_for_spec(self))
+            if self.external:
+                # An external spec records its prefix on the spec itself, so it needs no store.
+                self.set_prefix(self.external_path)
+            else:
+                raise spack.error.SpecError(
+                    f"cannot determine the prefix of {self.short_spec}: its install prefix has "
+                    "not been set. The prefix of a non-external spec is set from its database "
+                    "record or by the installer; read it only after one of those has run."
+                )
         assert self._prefix is not None
         return self._prefix
 

@@ -1262,6 +1262,10 @@ class Database:
         # Make sure the directory layout agrees whether the spec is installed
         if not spec.external and self.layout:
             path = self.layout.path_for_spec(spec)
+            # Fill in a missing prefix so ensure_installed can read spec.prefix; a spec added
+            # directly (e.g. a spliced spec) may not carry one. A caller-provided prefix wins.
+            if spec._prefix is None:
+                spec.set_prefix(path)
             installed = False
             try:
                 self.layout.ensure_installed(spec)

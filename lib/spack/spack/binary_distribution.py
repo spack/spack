@@ -2119,6 +2119,9 @@ def install_root_node(
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 
+    # Stamp the destination prefix so extract_tarball can read spec.prefix.
+    spack.store.STORE.set_prefixes([spec])
+
     tarball_stage = download_tarball(spec.build_spec, unsigned)
     if not tarball_stage:
         msg = 'download of binary cache file for spec "{0}" failed'

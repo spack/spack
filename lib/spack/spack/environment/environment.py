@@ -911,7 +911,11 @@ class ViewDescriptor:
         with spack.store.STORE.db.read_transaction():
             result = [s for s in specs if s in self and spack.store.STORE.db.installed(s)]
 
-        return self._exclude_duplicate_runtimes(result)
+        result = self._exclude_duplicate_runtimes(result)
+        # These specs are installed; stamp their prefix so content_hash and view regeneration
+        # can read Spec.prefix without the spec reaching into the store.
+        spack.store.STORE.set_prefixes(result)
+        return result
 
     def regenerate(self, env: "Environment") -> None:
         if self.groups is None:
@@ -2439,6 +2443,13 @@ class Environment:
 
             for env_path, roots in self.included_concretized_roots.items():
                 self.included_specs_by_hash[env_path] = {x.hash: first_seen[x.hash] for x in roots}
+
+        # Specs read from the lockfile carry no install prefix. Stamp it so consumers (views,
+        # modules, user environments) can read Spec.prefix without reaching into the store.
+        stamp = list(self.specs_by_hash.values())
+        for included in self.included_specs_by_hash.values():
+            stamp.extend(included.values())
+        spack.store.STORE.set_prefixes(stamp)
 
     def _filter_specs(self, reader, json_specs_by_hash, order_concretized):
         # Track specs by their lockfile key.  Currently, spack uses the finest
