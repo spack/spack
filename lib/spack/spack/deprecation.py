@@ -71,6 +71,8 @@ class Policy(NamedTuple):
 
     packages_yaml: dict
     default_allowed: DeprecationSeverity
+    #: Global check scope from ``packages:all:deprecation_scope`` ("runtime" or "all")
+    scope: str = "runtime"
 
     @staticmethod
     def from_config(warn_on_legacy: bool = False) -> "Policy":
@@ -81,7 +83,15 @@ class Policy(NamedTuple):
                 what relaxes the policy. Set only where the warning should fire once.
         """
         packages_yaml = spack.config.CONFIG.get_config("packages")
-        return Policy(packages_yaml, _default_allowed_severity(packages_yaml, warn_on_legacy))
+        scope = packages_yaml.get("all", {}).get("deprecation_scope", "runtime")
+        return Policy(
+            packages_yaml, _default_allowed_severity(packages_yaml, warn_on_legacy), scope
+        )
+
+    @property
+    def deptypes(self) -> int:
+        """Dependency types to traverse for the configured deprecation scope."""
+        return dt.ALL if self.scope == "all" else dt.LINK | dt.RUN
 
     def allowed_severity(self, pkg_name: str) -> DeprecationSeverity:
         """Return the allowed severity for a package, honoring per-package overrides."""
@@ -106,18 +116,6 @@ class Policy(NamedTuple):
         ]
 
 
-def deprecation_scope() -> str:
-    """Returns the global deprecation-check scope from ``packages:all:deprecation_scope``."""
-    packages_yaml = spack.config.CONFIG.get_config("packages")
-    return packages_yaml.get("all", {}).get("deprecation_scope", "runtime")
-
-
-def deptypes_for_scope(scope: Optional[str] = None) -> int:
-    """Return the dependency-type flag to traverse for a given deprecation scope."""
-    scope = scope if scope is not None else deprecation_scope()
-    return dt.ALL if scope == "all" else dt.LINK | dt.RUN
-
-
 def check_deprecations(
     seeds: Iterable["spack.spec.Spec"],
     *,
@@ -132,8 +130,9 @@ def check_deprecations(
             ``packages`` policy.
         deptypes: dependency types to traverse; defaults to the configured ``deprecation_scope``.
     """
-    policy = policy or Policy.from_config().disallowed
-    deptypes = deptypes if deptypes is not None else deptypes_for_scope()
+    resolved = Policy.from_config()
+    policy = policy or resolved.disallowed
+    deptypes = deptypes if deptypes is not None else resolved.deptypes
 
     violations: List[str] = []
     for node in spack.traverse.traverse_nodes(list(seeds), deptype=deptypes):
