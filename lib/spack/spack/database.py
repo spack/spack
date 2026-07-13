@@ -200,7 +200,8 @@ class InstallRecord:
 
     __slots__ = (
         "spec",
-        "path",
+        # "path" is a property that keeps the record and its spec's prefix in sync
+        "_path",
         "installed",
         "ref_count",
         "explicit",
@@ -223,7 +224,7 @@ class InstallRecord:
         origin: Optional[str] = None,
     ) -> None:
         self.spec = spec
-        self.path = str(path) if path else None
+        self.path = path
         self.installed = bool(installed)
         self.ref_count = ref_count
         self.explicit = explicit
@@ -231,6 +232,18 @@ class InstallRecord:
         self.deprecated_for = deprecated_for
         self.in_buildcache = in_buildcache
         self.origin = origin
+
+    @property
+    def path(self) -> Optional[str]:
+        return self._path
+
+    @path.setter
+    def path(self, value: Optional[str]) -> None:
+        # The install prefix is a property of the record's spec. Keep the two in sync, so that
+        # every spec handed out by a query carries its prefix without reading the store.
+        self._path = str(value) if value else None
+        if self._path is not None:
+            self.spec.set_prefix(self._path)
 
     def install_type_matches(self, installed: InstallRecordStatus) -> bool:
         if self.installed:

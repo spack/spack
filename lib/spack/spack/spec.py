@@ -2229,11 +2229,10 @@ class Spec:
         if self._prefix is None:
             from spack.store import STORE
 
-            _, record = STORE.db.query_by_spec_hash(self.dag_hash())
-            if record and record.path:
-                self.set_prefix(record.path)
-            else:
-                self.set_prefix(STORE.layout.path_for_spec(self))
+            # Installed specs carry their prefix from the database record (set when the
+            # InstallRecord is built). Anything reaching this point is not a stamped record
+            # spec, so its prefix is the deterministic layout path (external_path for externals).
+            self.set_prefix(STORE.layout.path_for_spec(self))
         assert self._prefix is not None
         return self._prefix
 
