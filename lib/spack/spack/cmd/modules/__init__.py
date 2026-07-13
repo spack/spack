@@ -158,6 +158,7 @@ def loads(module_type, specs, args, out=None):
                 ]
             )
 
+    cache: spack.modules.common.ModuleConfigurationCache = {}
     modules = [
         (
             spec,
@@ -167,6 +168,7 @@ def loads(module_type, specs, args, out=None):
                 get_full_path=False,
                 module_set_name=args.module_set_name,
                 required=False,
+                cache=cache,
             ),
         )
         for spec in specs
@@ -208,6 +210,7 @@ def find(module_type, specs, args):
     else:
         dependency_specs_to_retrieve = []
 
+    cache: spack.modules.common.ModuleConfigurationCache = {}
     try:
         modules = [
             spack.modules.get_module(
@@ -216,6 +219,7 @@ def find(module_type, specs, args):
                 args.full_path,
                 module_set_name=args.module_set_name,
                 required=False,
+                cache=cache,
             )
             for spec in dependency_specs_to_retrieve
         ]
@@ -227,6 +231,7 @@ def find(module_type, specs, args):
                 args.full_path,
                 module_set_name=args.module_set_name,
                 required=True,
+                cache=cache,
             )
         )
     except spack.modules.error.ModuleNotFoundError as e:
@@ -245,13 +250,17 @@ def rm(module_type, specs, args):
     check_module_set_name(args.module_set_name)
 
     module_cls = spack.modules.module_types[module_type]
+    cache: spack.modules.common.ModuleConfigurationCache = {}
     module_exist = lambda x: os.path.exists(
-        module_cls.from_spec(x, args.module_set_name).layout.filename
+        module_cls.from_spec(x, args.module_set_name, cache=cache).layout.filename
     )
 
     specs_with_modules = [spec for spec in specs if module_exist(spec)]
 
-    modules = [module_cls.from_spec(spec, args.module_set_name) for spec in specs_with_modules]
+    modules = [
+        module_cls.from_spec(spec, args.module_set_name, cache=cache)
+        for spec in specs_with_modules
+    ]
 
     if not modules:
         tty.die("No module file matches your query")
@@ -297,10 +306,11 @@ def refresh(module_type, specs, args):
     # Cycle over the module types and regenerate module files
 
     cls = spack.modules.module_types[module_type]
+    cache: spack.modules.common.ModuleConfigurationCache = {}
 
     # Skip unknown packages.
     writers = [
-        cls.from_spec(spec, args.module_set_name)
+        cls.from_spec(spec, args.module_set_name, cache=cache)
         for spec in specs
         if spack.repo.PATH.exists(spec.name)
     ]

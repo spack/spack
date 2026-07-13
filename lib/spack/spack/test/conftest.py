@@ -1405,11 +1405,8 @@ def upstream_and_downstream_db(tmp_path: Path, gen_mock_layout):
 
 
 class ConfigUpdate:
-    def __init__(self, root_for_conf, writer_mod, writer_key, monkeypatch):
+    def __init__(self, root_for_conf):
         self.root_for_conf = root_for_conf
-        self.writer_mod = writer_mod
-        self.writer_key = writer_key
-        self.monkeypatch = monkeypatch
 
     def __call__(self, filename):
         file = os.path.join(self.root_for_conf, filename + ".yaml")
@@ -1417,12 +1414,9 @@ class ConfigUpdate:
             config_settings = syaml.load_config(f)
         spack.config.set("modules:default", config_settings)
 
-        conf_cls = getattr(self.writer_mod, self.writer_key.capitalize() + "Configuration")
-        self.monkeypatch.setattr(conf_cls, "_registry", {})
-
 
 @pytest.fixture()
-def module_configuration(monkeypatch, request, mutable_config):
+def module_configuration(request, mutable_config):
     """Reads the module configuration file from the mock ones prepared
     for tests and monkeypatches the right classes to hook it in.
     """
@@ -1437,7 +1431,7 @@ def module_configuration(monkeypatch, request, mutable_config):
 
     # ConfigUpdate, when called, will modify configuration, so we need to use
     # the mutable_config fixture
-    return ConfigUpdate(root_for_conf, writer_mod, writer_key, monkeypatch)
+    return ConfigUpdate(root_for_conf)
 
 
 @pytest.fixture()
