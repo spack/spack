@@ -514,7 +514,7 @@ class Gpg:
         """Init gnupg home and check permissions."""
         gnupghome = Gpg._init_gnupghome_dir(gnupghome)
         if sys.platform == "win32":
-            wacl.set_exclusive_owner_control(gnupghome)
+            wacl.set_exclusive_owner_control(str(gnupghome))
         else:
             # Ensure safe permissions on posix systems
             st = gnupghome.stat()
