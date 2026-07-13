@@ -1169,6 +1169,16 @@ def test_bad_path_double_override(config):
             pass
 
 
+def test_override_error_does_not_leak_scope(config):
+    """A failed override must not leave its internal scope behind."""
+    before = [s.name for s in spack.config.CONFIG.matching_scopes(r"^overrides-")]
+    with pytest.raises(ValueError):
+        with spack.config.override(":bad:path", ""):
+            pass
+    after = [s.name for s in spack.config.CONFIG.matching_scopes(r"^overrides-")]
+    assert after == before
+
+
 def test_license_dir_config(mutable_config, mock_packages, tmp_path):
     """Ensure license directory is customizable"""
     expected_dir = spack.paths.default_license_dir
