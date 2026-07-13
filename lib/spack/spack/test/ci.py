@@ -232,13 +232,11 @@ def test_download_and_extract_artifacts(tmp_path: pathlib.Path, monkeypatch):
         ci.download_and_extract_artifacts(url, str(working_dir))
 
 
-def test_ci_copy_stage_logs_to_artifacts_fail(
-    tmp_path: pathlib.Path, default_mock_concretization, capfd
-):
+def test_ci_copy_stage_logs_to_artifacts_fail(tmp_path: pathlib.Path, config, capfd):
     """The copy will fail because the spec is not concrete so does not have
     a package."""
     log_dir = tmp_path / "log_dir"
-    concrete_spec = default_mock_concretization("printing-package")
+    concrete_spec = spack.concretize.concretize_one("printing-package")
     ci.copy_stage_logs_to_artifacts(concrete_spec, str(log_dir))
     _, err = capfd.readouterr()
     assert "Unable to copy files" in err
@@ -466,15 +464,13 @@ def test_ci_create_buildcache(working_env, config, monkeypatch):
     assert results[0].url == "file:///fake-url-one"
 
 
-def test_ci_run_standalone_tests_missing_requirements(
-    working_env, default_mock_concretization, capfd
-):
+def test_ci_run_standalone_tests_missing_requirements(working_env, config, capfd):
     """This test case checks for failing prerequisite checks."""
     ci.run_standalone_tests()
     err = capfd.readouterr()[1]
     assert "Job spec is required" in err
 
-    args = {"job_spec": default_mock_concretization("printing-package")}
+    args = {"job_spec": spack.concretize.concretize_one("printing-package")}
     ci.run_standalone_tests(**args)
     err = capfd.readouterr()[1]
     assert "Reproduction directory is required" in err

@@ -1204,13 +1204,11 @@ def test_database_construction_doesnt_use_globals(
     assert os.path.exists(db.database_directory)
 
 
-def test_database_read_works_with_trailing_data(
-    tmp_path: pathlib.Path, default_mock_concretization
-):
+def test_database_read_works_with_trailing_data(tmp_path: pathlib.Path, config, mock_packages):
     # Populate a database
     root = str(tmp_path)
     db = spack.database.Database(root, layout=None)
-    spec = default_mock_concretization("pkg-a")
+    spec = spack.concretize.concretize_one("pkg-a")
     db.add(spec)
     specs_in_db = db.query_local()
     assert spec in specs_in_db

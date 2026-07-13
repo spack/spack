@@ -3104,7 +3104,7 @@ class TestConcreteSpecsByHash:
     @pytest.mark.parametrize(
         "input_specs", [["pkg-a"], ["pkg-a foobar=bar", "pkg-b"], ["pkg-a foobar=baz", "pkg-b"]]
     )
-    def test_adding_specs(self, input_specs, default_mock_concretization):
+    def test_adding_specs(self, input_specs, config, mock_packages):
         """Tests that concrete specs in the container are equivalent, but stored as different
         objects in memory.
         """
@@ -3600,11 +3600,9 @@ packages:
         ("gcc@14", ["gcc@14", "%c,cxx=gcc@10", "^gcc-runtime@10"]),
     ],
 )
-def test_compiler_can_depend_on_themselves_to_build(
-    spec_str, expected, default_mock_concretization
-):
+def test_compiler_can_depend_on_themselves_to_build(spec_str, expected, config, mock_packages):
     """Tests that a compiler can depend on "itself" to bootstrap."""
-    s = default_mock_concretization(spec_str)
+    s = spack.concretize.concretize_one(spec_str)
     assert not s.external
     for c in expected:
         assert s.satisfies(c)
@@ -3706,17 +3704,17 @@ packages:
     assert libelf.external and libelf.external_path == str(tmp_path / expected)
 
 
-def test_specifying_compilers_with_virtuals_syntax(default_mock_concretization):
+def test_specifying_compilers_with_virtuals_syntax(config, mock_packages):
     """Tests that we can pin compilers to nodes using the %[virtuals=...] syntax"""
     # clang will be used for both C and C++, since they are provided together
-    mpich = default_mock_concretization("mpich %[virtuals=fortran] gcc %clang")
+    mpich = spack.concretize.concretize_one("mpich %[virtuals=fortran] gcc %clang")
 
     assert mpich["fortran"].satisfies("gcc")
     assert mpich["c"].satisfies("llvm")
     assert mpich["cxx"].satisfies("llvm")
 
     # gcc is the default compiler
-    mpileaks = default_mock_concretization(
+    mpileaks = spack.concretize.concretize_one(
         "mpileaks ^libdwarf %gcc ^mpich %[virtuals=fortran] gcc %clang"
     )
 
@@ -3764,7 +3762,7 @@ def test_reuse_when_requiring_build_dep(install_mockery, mutable_config):
 
 
 @pytest.mark.regression("50167")
-def test_input_analysis_and_conditional_requirements(default_mock_concretization):
+def test_input_analysis_and_conditional_requirements(config, mock_packages):
     """Tests that input analysis doesn't account for conditional requirement
     to discard possible dependencies.
 
@@ -3772,7 +3770,7 @@ def test_input_analysis_and_conditional_requirements(default_mock_concretization
     platform, the valid search space is still the complement of the condition that
     activates the requirement.
     """
-    libceed = default_mock_concretization("libceed")
+    libceed = spack.concretize.concretize_one("libceed")
     assert libceed["libxsmm"].satisfies("@main")
     assert libceed["libxsmm"].satisfies("platform=test")
 
@@ -3895,9 +3893,9 @@ packages:
     assert s["c"].satisfies("languages=c,c++") and not s["c"].satisfies("languages=fortran")
 
 
-def test_concrete_multi_valued_in_input_specs(default_mock_concretization):
+def test_concrete_multi_valued_in_input_specs(config, mock_packages):
     """Tests that we can use := to specify exactly multivalued variants in input specs."""
-    s = default_mock_concretization("gcc languages:=fortran")
+    s = spack.concretize.concretize_one("gcc languages:=fortran")
     assert not s.external and s["c"].external
     assert s.satisfies("languages:=fortran")
     assert not s.satisfies("languages=c") and not s.satisfies("languages=c++")
@@ -3924,34 +3922,34 @@ packages:
     assert not s.satisfies("libs=shared")
 
 
-def test_concrete_multi_valued_variants_in_depends_on(default_mock_concretization):
+def test_concrete_multi_valued_variants_in_depends_on(config, mock_packages):
     """Tests the use of := in depends_on directives"""
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
-        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=c")
-        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=a,c")
-        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=b,c")
+        spack.concretize.concretize_one("gmt-concrete-mv-dependency ^mvdefaults foo:=c")
+        spack.concretize.concretize_one("gmt-concrete-mv-dependency ^mvdefaults foo:=a,c")
+        spack.concretize.concretize_one("gmt-concrete-mv-dependency ^mvdefaults foo:=b,c")
 
-    s = default_mock_concretization("gmt-concrete-mv-dependency")
+    s = spack.concretize.concretize_one("gmt-concrete-mv-dependency")
     assert s.satisfies("^mvdefaults foo:=a,b"), s.tree()
     assert not s.satisfies("^mvdefaults foo=c")
 
 
-def test_concrete_multi_valued_variants_when_args(default_mock_concretization):
+def test_concrete_multi_valued_variants_when_args(config, mock_packages):
     """Tests the use of := in conflicts and when= arguments"""
     # Check conflicts("foo:=a,b", when="@0.9")
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
-        default_mock_concretization("mvdefaults@0.9 foo:=a,b")
+        spack.concretize.concretize_one("mvdefaults@0.9 foo:=a,b")
 
     for c in ("foo:=a", "foo:=a,b,c", "foo:=a,c", "foo:=b,c"):
-        s = default_mock_concretization(f"mvdefaults@0.9 {c}")
+        s = spack.concretize.concretize_one(f"mvdefaults@0.9 {c}")
         assert s.satisfies(c)
 
     # Check depends_on("pkg-b", when="foo:=b,c")
-    s = default_mock_concretization("mvdefaults foo:=b,c")
+    s = spack.concretize.concretize_one("mvdefaults foo:=b,c")
     assert s.satisfies("^pkg-b")
 
     for c in ("foo:=a", "foo:=a,b,c", "foo:=a,b", "foo:=a,c"):
-        s = default_mock_concretization(f"mvdefaults {c}")
+        s = spack.concretize.concretize_one(f"mvdefaults {c}")
         assert not s.satisfies("^pkg-b")
 
 
@@ -4143,11 +4141,9 @@ def test_use_compiler_by_hash(mock_packages, mutable_database, mutable_config):
         ("llvm-client %c,cxx=llvm", ["%[virtuals=c,cxx deptypes=build,link] llvm"], ["%gcc"]),
     ],
 )
-def test_specifying_direct_dependencies(
-    spec_str, expected, not_expected, default_mock_concretization
-):
+def test_specifying_direct_dependencies(spec_str, expected, not_expected, config, mock_packages):
     """Tests solving % in different scenarios, either for runtime or buildtime dependencies."""
-    concrete_spec = default_mock_concretization(spec_str)
+    concrete_spec = spack.concretize.concretize_one(spec_str)
 
     for c in expected:
         assert concrete_spec.satisfies(c)
@@ -4204,14 +4200,12 @@ def test_specifying_direct_dependencies(
         ),
     ],
 )
-def test_satisfies_conditional_spec(
-    spec_str, conditional_spec, expected, default_mock_concretization
-):
+def test_satisfies_conditional_spec(spec_str, conditional_spec, expected, config, mock_packages):
     """Tests satisfies semantic when testing an abstract spec and its concretized counterpart
     with a conditional spec.
     """
     abstract_spec = Spec(spec_str)
-    concrete_spec = default_mock_concretization(spec_str)
+    concrete_spec = spack.concretize.concretize_one(spec_str)
     expected_abstract, expected_concrete = expected
 
     assert abstract_spec.satisfies(conditional_spec) is expected_abstract
@@ -4345,12 +4339,12 @@ packages:
 
 
 @pytest.mark.regression("51146,51067")
-def test_caret_in_input_cannot_set_transitive_build_dependencies(default_mock_concretization):
+def test_caret_in_input_cannot_set_transitive_build_dependencies(config, mock_packages):
     """Tests that a caret in the input spec does not set transitive build dependencies, and errors
     with an appropriate message.
     """
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="transitive 'link' or"):
-        _ = default_mock_concretization("multivalue-variant ^gmake")
+        _ = spack.concretize.concretize_one("multivalue-variant ^gmake")
 
 
 @pytest.mark.regression("51167")
@@ -5051,38 +5045,38 @@ def test_concrete_specs_skip_prechecks(config, mock_packages):
 
 
 @pytest.mark.regression("51683")
-def test_activating_variant_for_conditional_language_dependency(default_mock_concretization):
+def test_activating_variant_for_conditional_language_dependency(config, mock_packages):
     """Tests that a dependency on a conditional language can be concretized, and that the solver
     turn on the correct variant to enable the language dependency
     """
     # To trigger the bug, we need at least another node needing fortran, in this case mpich
-    s = default_mock_concretization("mpileaks %fortran=gcc %mpi=mpich")
+    s = spack.concretize.concretize_one("mpileaks %fortran=gcc %mpi=mpich")
     assert s.satisfies("+fortran")
 
     # Try just asking for fortran, without the provider
-    s = default_mock_concretization("mpileaks %fortran %mpi=mpich")
+    s = spack.concretize.concretize_one("mpileaks %fortran %mpi=mpich")
     assert s.satisfies("+fortran")
 
 
-def test_when_condition_with_direct_dependency_on_virtual_provider(default_mock_concretization):
+def test_when_condition_with_direct_dependency_on_virtual_provider(config, mock_packages):
     """If a when condition contains a direct dependency on a provider of a virtual, it should only
     trigger if the provider is used for that current package, and not if the provider happens to be
     a dependency, without its virtual being depended on."""
-    s = default_mock_concretization("direct-dep-virtuals-one")
+    s = spack.concretize.concretize_one("direct-dep-virtuals-one")
     assert s.satisfies("%netlib-blas")
     assert s["direct-dep-virtuals-two"].satisfies("%blas=netlib-blas")
 
 
-def test_conflict_with_direct_dependency_on_virtual_provider(default_mock_concretization):
+def test_conflict_with_direct_dependency_on_virtual_provider(config, mock_packages):
     """Test that conflicts on virtual providers as direct dependencies work"""
-    s = default_mock_concretization("conflict-virtual")
+    s = spack.concretize.concretize_one("conflict-virtual")
     assert s.satisfies("%blas=netlib-blas")
 
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
-        default_mock_concretization("conflict-virtual +conflict_direct")
+        spack.concretize.concretize_one("conflict-virtual +conflict_direct")
 
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
-        default_mock_concretization("conflict-virtual +conflict_transitive")
+        spack.concretize.concretize_one("conflict-virtual +conflict_transitive")
 
 
 def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
@@ -5119,13 +5113,11 @@ def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
         ("variant-function-validator generator=other", "generator=other %adios2+bzip2"),
     ],
 )
-def test_penalties_for_variant_defined_by_function(
-    default_mock_concretization, spec_str, expected
-):
+def test_penalties_for_variant_defined_by_function(config, mock_packages, spec_str, expected):
     """Tests that we have penalties for variants defined by functions, and that variant values
     are consistent with defaults and optimization rules.
     """
-    s = default_mock_concretization(spec_str)
+    s = spack.concretize.concretize_one(spec_str)
     assert s.satisfies(expected)
 
 
