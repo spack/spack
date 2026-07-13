@@ -561,11 +561,11 @@ class ConcretizationCache:
 
         try:
             with os.scandir(self.root) as it:
+                # skip dotfiles and old-style directory entries
                 entries = [e for e in it if not e.name.startswith(".") and e.is_file()]
         except FileNotFoundError:
             return
 
-        # under the limit, no stats have happened at all
         if len(entries) <= entry_limit:
             return
 
@@ -614,12 +614,6 @@ class ConcretizationCache:
         """
         cache_path = self._cache_path_from_problem(problem)
 
-        # Content-keyed: if the file exists, it already has the right content.
-        if cache_path.exists():
-            return
-
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-
         cache_dict = {
             "_meta": {"version": ConcretizationCache.VERSION},
             "results": result.to_dict(),
@@ -628,7 +622,12 @@ class ConcretizationCache:
 
         # Write to a temp file in the same directory, then atomically rename.
         # mkstemp appends random characters after the prefix, so names are unique.
-        fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
+        # A missing root dir is the only expected failure; create it and retry once.
+        try:
+            fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
+        except FileNotFoundError:
+            self.root.mkdir(parents=True, exist_ok=True)
+            fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
         try:
             with os.fdopen(fd, "wb") as raw_f:
                 with gzip.open(raw_f, "wb", compresslevel=6) as f:
