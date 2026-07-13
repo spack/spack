@@ -384,7 +384,7 @@ class BaseConfiguration:
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
-        self._configuration_cache: ModuleConfigurationCache = {} if cache is None else cache
+        self._configuration_cache = {} if cache is None else cache
         self._cache: Dict[str, Any] = {}
         _modules_cfg = spack.config.CONFIG.get_config("modules")
         _set_cfg = _modules_cfg.get(module_set_name, {})
@@ -425,12 +425,6 @@ class BaseConfiguration:
                             "compiler."
                         )
                     break
-
-    def __getstate__(self) -> Dict[str, Any]:
-        # Exclude cache when serializing
-        state = self.__dict__.copy()
-        state["_configuration_cache"] = {}
-        return state
 
     @property
     def projections(self) -> Dict[str, str]:
@@ -1298,7 +1292,7 @@ class BaseModuleFileWriter:
         # a module file that is already there (name clash)
         if not overwrite and os.path.exists(self.layout.filename):
             message = "Module file {0.filename} exists and will not be overwritten"
-            tty.warn(message.format(self.layout))
+            warnings.warn(message.format(self.layout))
             return
 
         # If we are here it means it's ok to write the module file

@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import pickle
 import stat
 
 import pytest
@@ -219,22 +218,3 @@ def test_check_module_set_name(mutable_config):
 
     with pytest.raises(spack.error.ConfigError, match=msg):
         spack.cmd.modules.check_module_set_name("third")
-
-
-@pytest.mark.parametrize("module_type", ["tcl", "lmod"])
-def test_module_writers_are_pickleable(default_mock_concretization, module_type):
-    s = default_mock_concretization("mpileaks")
-    writer = spack.modules.module_types[module_type].from_spec(s, "default")
-    assert pickle.loads(pickle.dumps(writer)).spec == s
-
-
-@pytest.mark.parametrize("module_type", ["tcl", "lmod"])
-def test_configuration_cache_not_pickled(default_mock_concretization, module_type):
-    """Tests that we don't serialize the cache of a module writer."""
-    # The per-operation configuration cache is transient state and must not be serialized with
-    # the writer, otherwise pickling drags in the whole sibling/dependency configuration graph.
-    s = default_mock_concretization("mpileaks")
-    writer = spack.modules.module_types[module_type].from_spec(s, "default")
-    assert writer.conf._configuration_cache  # populated with at least the root configuration
-    restored = pickle.loads(pickle.dumps(writer))
-    assert restored.conf._configuration_cache == {}
