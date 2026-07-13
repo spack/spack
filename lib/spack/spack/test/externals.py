@@ -401,8 +401,8 @@ def test_external_compiler_with_non_compiler_dependency():
             "externals": [{"spec": "binutils-for-test@1", "prefix": "/usr", "id": "bin_id"}]
         },
     }
-    with override("packages", packages_config) as c:
-        valid_compilers = CompilerFactory.from_packages_yaml(c)
+    with override("packages", packages_config) as cfg:
+        valid_compilers = CompilerFactory.from_packages_yaml(cfg)
         for c in valid_compilers:
             if c.name == "compiler-with-deps":
                 assert c.external
