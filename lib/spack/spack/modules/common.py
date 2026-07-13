@@ -77,6 +77,9 @@ EnvironmentModification = Tuple[
     str, Union[spack.util.environment.NameModifier, spack.util.environment.NameValueModifier]
 ]
 
+#: Cache of configuration objects, keyed by (dag_hash, module_set_name, explicit)
+ModuleConfigurationCache = Dict[Tuple[str, str, bool], "BaseConfiguration"]
+
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
     "name",
@@ -326,8 +329,6 @@ class BaseConfiguration:
     #: Default for the ``hierarchical`` config key when it is absent. Subclasses may override.
     _default_hierarchical: bool = False
 
-    _registry: ClassVar[Dict[Tuple[str, str, bool], "BaseConfiguration"]]
-
     #: File extension for module files (empty string means no extension)
     file_extension: ClassVar[str] = ""
 
@@ -335,30 +336,55 @@ class BaseConfiguration:
         super().__init_subclass__(**kwargs)
         if not hasattr(cls, "module_system"):
             raise AttributeError(f"'{cls.__name__}' must define a 'module_system' class attribute")
-        cls._registry = {}
 
     @classmethod
     def make_configuration(
-        cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+        cls,
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        explicit: Optional[bool] = None,
+        *,
+        cache: Optional[ModuleConfigurationCache] = None,
     ) -> "BaseConfiguration":
-        """Returns the cached configuration object for spec."""
+        """Returns the configuration object for spec, reusing ``cache`` if it already holds one.
+
+        Callers that generate modules for many specs may pass a single shared cache to deduplicate
+        work across specs. When ``cache`` is ``None`` a fresh one is created, so the returned
+        object always reflects the current configuration.
+        """
+        if cache is None:
+            cache = {}
         explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
         key = (spec.dag_hash(), module_set_name, explicit)
-        try:
-            return cls._registry[key]
-        except KeyError:
-            return cls._registry.setdefault(key, cls(spec, module_set_name, explicit))
+        configuration = cache.get(key)
+        if configuration is None:
+            configuration = cls(spec, module_set_name, explicit, cache=cache)
+            cache[key] = configuration
+        return configuration
 
     @classmethod
     def make_layout(
-        cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+        cls,
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        explicit: Optional[bool] = None,
+        *,
+        cache: Optional[ModuleConfigurationCache] = None,
     ) -> "FileLayout":
-        return FileLayout(cls.make_configuration(spec, module_set_name, explicit))
+        return FileLayout(cls.make_configuration(spec, module_set_name, explicit, cache=cache))
 
-    def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
+    def __init__(
+        self,
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        explicit: bool,
+        *,
+        cache: Optional[ModuleConfigurationCache] = None,
+    ) -> None:
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
+        self._configuration_cache: ModuleConfigurationCache = {} if cache is None else cache
         self._cache: Dict[str, Any] = {}
         _modules_cfg = spack.config.CONFIG.get_config("modules")
         _set_cfg = _modules_cfg.get(module_set_name, {})
@@ -399,6 +425,12 @@ class BaseConfiguration:
                             "compiler."
                         )
                     break
+
+    def __getstate__(self) -> Dict[str, Any]:
+        # Exclude cache when serializing
+        state = self.__dict__.copy()
+        state["_configuration_cache"] = {}
+        return state
 
     @property
     def projections(self) -> Dict[str, str]:
@@ -545,7 +577,9 @@ class BaseConfiguration:
         return [
             item
             for item in self.conf[what]
-            if not self.make_configuration(item, self.name).excluded
+            if not self.make_configuration(
+                item, self.name, cache=self._configuration_cache
+            ).excluded
         ]
 
     @property
@@ -1121,7 +1155,10 @@ class ModuleContext(tengine.Context):
 
     def _create_module_list_of(self, what: str) -> List[str]:
         name = self.conf.name
-        return [self.conf.make_layout(x, name).use_name for x in getattr(self.conf, what)]
+        cache = self.conf._configuration_cache
+        return [
+            self.conf.make_layout(x, name, cache=cache).use_name for x in getattr(self.conf, what)
+        ]
 
     @tengine.context_property
     def verbose(self) -> Optional[bool]:
@@ -1215,9 +1252,16 @@ class BaseModuleFileWriter:
 
     @classmethod
     def from_spec(
-        cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+        cls,
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        explicit: Optional[bool] = None,
+        *,
+        cache: Optional[ModuleConfigurationCache] = None,
     ) -> "BaseModuleFileWriter":
-        conf = cls.configuration_class.make_configuration(spec, module_set_name, explicit)
+        conf = cls.configuration_class.make_configuration(
+            spec, module_set_name, explicit, cache=cache
+        )
         return cls(conf)
 
     @property

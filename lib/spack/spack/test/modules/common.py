@@ -226,3 +226,15 @@ def test_module_writers_are_pickleable(default_mock_concretization, module_type)
     s = default_mock_concretization("mpileaks")
     writer = spack.modules.module_types[module_type].from_spec(s, "default")
     assert pickle.loads(pickle.dumps(writer)).spec == s
+
+
+@pytest.mark.parametrize("module_type", ["tcl", "lmod"])
+def test_configuration_cache_not_pickled(default_mock_concretization, module_type):
+    """Tests that we don't serialize the cache of a module writer."""
+    # The per-operation configuration cache is transient state and must not be serialized with
+    # the writer, otherwise pickling drags in the whole sibling/dependency configuration graph.
+    s = default_mock_concretization("mpileaks")
+    writer = spack.modules.module_types[module_type].from_spec(s, "default")
+    assert writer.conf._configuration_cache  # populated with at least the root configuration
+    restored = pickle.loads(pickle.dumps(writer))
+    assert restored.conf._configuration_cache == {}
