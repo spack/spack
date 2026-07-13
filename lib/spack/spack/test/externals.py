@@ -378,8 +378,6 @@ def test_external_spec_multi_valued_variant_is_not_changed():
 
 @pytest.mark.regression("52643")
 def test_external_compiler_with_non_compiler_dependency():
-    # These dependencies are meaningless, since we're not checking if they
-    # actually exist.
     packages_config = {
         "compiler-with-deps": {
             "externals": [
