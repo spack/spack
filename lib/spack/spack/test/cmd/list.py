@@ -107,10 +107,10 @@ def test_list_url_schemes(mock_util_executable, url):
 
 def test_list_format_local_repo(tmp_path: pathlib.Path):
     """Confirm a file path is returned for local repository."""
-    pkg_name = "mypkg"
-    repo_root = tmp_path / "repos" / "spack_repo" / "builtin"
+    namespace, pkg_name = "local_list_repo", "mypkg"
+    repo_root = tmp_path / "repos" / "spack_repo" / namespace
     repo_root.mkdir(parents=True)
-    (repo_root / "repo.yaml").write_text("repo:\n  namespace: builtin\n  api: v2.2\n")
+    (repo_root / "repo.yaml").write_text(f"repo:\n  namespace: {namespace}\n  api: v2.2\n")
     package_root = repo_root / "packages" / pkg_name
     package_root.mkdir(parents=True)
     (package_root / "package.py").write_text(
@@ -132,10 +132,10 @@ class Mypkg(Package):
 
 def test_list_format_non_github_repo(tmp_path: pathlib.Path, mock_util_executable):
     """Confirm a file path is returned for a non-github repository."""
-    pkg_name = "mypkg"
-    repo_root = tmp_path / "my" / "project" / "spack_repo" / "builtin"
+    namespace, pkg_name = "non_github_list_repo", "mypkg"
+    repo_root = tmp_path / "my" / "project" / "spack_repo" / namespace
     repo_root.mkdir(parents=True)
-    (repo_root / "repo.yaml").write_text("repo:\n  namespace: builtin\n  api: v2.2\n")
+    (repo_root / "repo.yaml").write_text(f"repo:\n  namespace: {namespace}\n  api: v2.2\n")
     package_root = repo_root / "packages" / pkg_name
     package_root.mkdir(parents=True)
     package_path = package_root / "package.py"
