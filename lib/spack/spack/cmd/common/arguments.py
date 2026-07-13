@@ -682,10 +682,10 @@ def add_concretizer_args(subparser):
     subgroup.add_argument(
         "--deprecated",
         action=ConfigSetAction,
-        dest="config:deprecated",
-        const=True,
+        dest="packages:all:allowed_deprecation_severity",
+        const="critical",
         default=None,
-        help="allow concretizer to select deprecated versions",
+        help="allow the concretizer to select deprecated versions of any severity",
     )
 
 
