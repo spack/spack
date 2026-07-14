@@ -47,6 +47,7 @@ from spack.vendor import jsonschema
 import spack
 import spack.error
 import spack.paths
+import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.cdash
@@ -1574,6 +1575,9 @@ def create() -> Configuration:
 #: This is the singleton configuration instance for Spack.
 CONFIG = cast(Configuration, lang.Singleton(create_incremental))
 
+#: Many cached config values depend on the current platform, so drop them when it changes.
+spack.platforms.on_host_changed.append(lambda: CONFIG.clear_caches())
+
 
 def add_from_file(filename: str, scope: Optional[str] = None) -> None:
     """Add updates to a config from a filename"""
@@ -2250,7 +2254,6 @@ def determine_number_of_jobs(
 
 def architecture():
     # break circular import
-    import spack.platforms
     import spack.spec
 
     host_platform = spack.platforms.host()
