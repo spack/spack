@@ -2076,16 +2076,30 @@ class Spec:
     @property
     def installed(self):
         """Whether the spec is installed, locally or in an upstream."""
-        from spack.store import STORE
+        if not self.concrete:
+            return False
 
-        return STORE.db.installed(self)
+        try:
+            # If the spec is in the DB, check the installed
+            # attribute of the record
+            from spack.store import STORE
+
+            return STORE.db.get_record(self).installed
+        except KeyError:
+            # If the spec is not in the DB, the method
+            #  above raises a Key error
+            return False
 
     @property
     def installed_upstream(self):
         """Whether the spec is installed in an upstream database."""
+        if not self.concrete:
+            return False
+
         from spack.store import STORE
 
-        return STORE.db.installed_upstream(self)
+        upstream, record = STORE.db.query_by_spec_hash(self.dag_hash())
+        return upstream and record and record.installed
 
     @overload
     def traverse(
