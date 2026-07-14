@@ -24,7 +24,12 @@ def _cleanup_modules(namespace):
 
 def _get_patch_by_name(pkg_cls, patch_filename):
     """Helper to get a patch object by its filename from a package class."""
-    return next(p for patches in pkg_cls.patches.values() for p in patches if isinstance(p, spack.patch.FilePatch) and p.relative_path == patch_filename)
+    return next(
+        p
+        for patches in pkg_cls.patches.values()
+        for p in patches
+        if isinstance(p, spack.patch.FilePatch) and p.relative_path == patch_filename
+    )
 
 
 def test_patch_index_update_packages_works(tmp_path, config):
