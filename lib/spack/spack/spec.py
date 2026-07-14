@@ -4002,18 +4002,6 @@ class Spec:
     def namespace_if_anonymous(self):
         return self.namespace if not self.name else None
 
-    @property
-    def spack_root(self):
-        """Special field for using ``{spack_root}`` in :meth:`format`."""
-        return spack.paths.spack_root
-
-    @property
-    def spack_install(self):
-        """Special field for using ``{spack_install}`` in :meth:`format`."""
-        from spack.store import STORE
-
-        return STORE.layout.root
-
     def _format_default(self) -> str:
         """Fast path for formatting with DEFAULT_FORMAT and no color.
 
@@ -4093,7 +4081,6 @@ class Spec:
 
            hash[:len]    The DAG hash with optional length argument
            spack_root    The spack root directory
-           spack_install The spack install directory
 
         The ``^`` sigil can be used to access dependencies by name.
         ``s.format({^mpi.name})`` will print the name of the MPI implementation in the
@@ -4204,6 +4191,10 @@ class Spec:
                 raise SpecFormatSigilError(sig, "compilers", attribute)
             elif sig == "/" and attribute != "abstract_hash":
                 raise SpecFormatSigilError(sig, "DAG hashes", attribute)
+
+            # spack_root is a spec-independent special field: Spack's source root.
+            if attribute == "spack_root":
+                return safe_color(sig, spack.paths.spack_root, None)
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
