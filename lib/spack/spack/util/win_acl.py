@@ -178,7 +178,7 @@ class ResourceAttributeAceDataType(Enum):
 
 
 # SDDL code: 32-bit access mask for every named right token.  Used by _map_rights to
-# parse SDDL strings ("FRFW", "GR", …) into integer masks during ACE construction.
+# parse SDDL strings ("FRFW", "GR", ...) into integer masks during ACE construction.
 _NAMED_RIGHT_MASKS: Dict[str, int] = {
     # File access rights
     "FA": int(FileAccessRights.FILE_ALL_ACCESS),
@@ -219,7 +219,7 @@ _NAMED_RIGHT_MASKS: Dict[str, int] = {
 
 # Reverse lookup:  SDDL code string to int mask for file/generic rights.
 # Used during SDDL serialisation to convert stored integer masks back to readable tokens.
-# Limited to the 8 file+generic codes since those are what ConvertSecurityDescriptor…
+# Limited to the 8 file+generic codes since those are what ConvertSecurityDescriptor
 # emits for file objects; other masks fall back to hex in _to_ace_string.
 _FILE_GENERIC_SDDL_CODES: Dict[str, int] = {
     k: _NAMED_RIGHT_MASKS[k] for k in ("FA", "FR", "FW", "FX", "GA", "GR", "GW", "GX")

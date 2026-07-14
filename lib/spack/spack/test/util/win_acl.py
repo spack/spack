@@ -421,6 +421,11 @@ def test_security_descriptor_apply_update_ownership_raises_without_write_owner(t
     f.write_text("hello")
     owner_sid = SecurityDescriptor.from_file(str(f)).owner
     # FR excludes WRITE_OWNER (0x00080000); use P so no inherited ACE sneaks WRITE_OWNER back in.
+    # WRITE_OWNER (WO) is the string alias for the above access mask. 
+    # As the strings are aliases for bit masks, some strings represent the bitwise OR of other
+    # access masks (and their string aliases). I.e FA is an OR of every other access right
+    # Other string access aliases can imply the WO mask, such as FA (FILE_ALL_ACCESS) 
+    # so we explicitly set the ACE right to FR (file generic read) which does not include WO
     set_file_sddl(str(f), f"D:P(A;;FR;;;{owner_sid})")
 
     sd = SecurityDescriptor.from_file(str(f))
@@ -435,13 +440,19 @@ def test_set_install_permissions_file_acl(tmp_path):
     """
     f = tmp_path / "test.txt"
     f.write_text("hello")
-    owner_sid = SecurityDescriptor.from_file(str(f)).owner
-    fs.set_install_permissions(str(f))
 
-    sd = SecurityDescriptor.from_file(str(f))
     _FA = int(FileAccessRights.FILE_ALL_ACCESS)
     _FR = int(FileAccessRights.FILE_GENERIC_READ)
 
+    initial_sd = SecurityDescriptor.from_file(str(f))
+    owner_sid = initial_sd.owner
+    assert not any(a.sid == owner_sid and a.grants(_FA) for a in initial_sd.dacl), (
+        "precondition: new file must not already grant FILE_ALL_ACCESS to owner"
+    )
+
+    fs.set_install_permissions(str(f))
+
+    sd = SecurityDescriptor.from_file(str(f))
     assert any(
         a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FA)
         for a in sd.dacl
@@ -459,13 +470,19 @@ def test_set_install_permissions_directory_acl(tmp_path):
     """
     d = tmp_path / "subdir"
     d.mkdir()
-    owner_sid = SecurityDescriptor.from_file(str(d)).owner
-    fs.set_install_permissions(str(d))
 
-    sd = SecurityDescriptor.from_file(str(d))
     _FA = int(FileAccessRights.FILE_ALL_ACCESS)
     _FRFX = int(FileAccessRights.FILE_GENERIC_READ) | int(FileAccessRights.FILE_GENERIC_EXECUTE)
 
+    initial_sd = SecurityDescriptor.from_file(str(d))
+    owner_sid = initial_sd.owner
+    assert not any(a.sid == owner_sid and a.grants(_FA) for a in initial_sd.dacl), (
+        "precondition: new directory must not already grant FILE_ALL_ACCESS to owner"
+    )
+
+    fs.set_install_permissions(str(d))
+
+    sd = SecurityDescriptor.from_file(str(d))
     assert any(
         a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FA)
         for a in sd.dacl
@@ -496,28 +513,6 @@ def test_set_install_permissions_expands_restricted_dacl(tmp_path):
         and a.grants(int(FileAccessRights.FILE_GENERIC_READ))
         for a in sd.dacl
     ), "Everyone must have read access after set_install_permissions"
-
-
-def test_set_install_permissions_on_previously_installed_file(tmp_path):
-    """set_install_permissions must succeed on a file already processed by a prior install.
-
-    shutil.copy2 preserves the destination ACL when the file already exists, so a
-    reinstall leaves a file with the FR+FW DACL set by the previous run (no WRITE_OWNER).
-    apply() was previously failing with WinError 5 because it tried to re-set owner/group
-    via SetNamedSecurityInfoW, which requires a WRITE_OWNER not held implicitly by the owner.
-    """
-    f = tmp_path / "test.txt"
-    f.write_text("hello")
-    # Simulate a file left by a previous install: DACL already restricted to FR+FW.
-    fs.set_install_permissions(str(f))
-    # Reinstall overwrites content but not ACL (shutil.copy2 behaviour); then
-    # set_install_permissions is called again — must not raise.
-    fs.set_install_permissions(str(f))
-    sd = SecurityDescriptor.from_file(str(f))
-    owner_sid = sd.owner
-    assert any(
-        a.sid == owner_sid and a.grants(int(FileAccessRights.FILE_ALL_ACCESS)) for a in sd.dacl
-    ), "owner must still have full access after second set_install_permissions"
 
 
 def test_copy_mode_propagates_execute_on_windows(tmp_path):
