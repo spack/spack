@@ -444,11 +444,13 @@ def test_set_install_permissions_file_acl(tmp_path):
     _FA = int(FileAccessRights.FILE_ALL_ACCESS)
     _FR = int(FileAccessRights.FILE_GENERIC_READ)
 
-    initial_sd = SecurityDescriptor.from_file(str(f))
-    owner_sid = initial_sd.owner
-    assert not any(a.sid == owner_sid and a.grants(_FA) for a in initial_sd.dacl), (
-        "precondition: new file must not already grant FILE_ALL_ACCESS to owner"
-    )
+    owner_sid = SecurityDescriptor.from_file(str(f)).owner
+    # Force a known state without FA so the post-call assertion is not a no-op.
+    # P blocks inheritance so the parent directory cannot re-introduce FA.
+    # The owner retains implicit WRITE_DAC so set_install_permissions can still
+    # modify the DACL even though FRFW does not include explicit WRITE_DAC.
+    set_file_sddl(str(f), f"D:P(A;;FRFW;;;{owner_sid})")
+    assert not any(a.sid == owner_sid and a.grants(_FA) for a in SecurityDescriptor.from_file(str(f)).dacl)
 
     fs.set_install_permissions(str(f))
 
@@ -474,11 +476,9 @@ def test_set_install_permissions_directory_acl(tmp_path):
     _FA = int(FileAccessRights.FILE_ALL_ACCESS)
     _FRFX = int(FileAccessRights.FILE_GENERIC_READ) | int(FileAccessRights.FILE_GENERIC_EXECUTE)
 
-    initial_sd = SecurityDescriptor.from_file(str(d))
-    owner_sid = initial_sd.owner
-    assert not any(a.sid == owner_sid and a.grants(_FA) for a in initial_sd.dacl), (
-        "precondition: new directory must not already grant FILE_ALL_ACCESS to owner"
-    )
+    owner_sid = SecurityDescriptor.from_file(str(d)).owner
+    set_file_sddl(str(d), f"D:P(A;;FRFW;;;{owner_sid})")
+    assert not any(a.sid == owner_sid and a.grants(_FA) for a in SecurityDescriptor.from_file(str(d)).dacl)
 
     fs.set_install_permissions(str(d))
 
