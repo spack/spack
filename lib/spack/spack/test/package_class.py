@@ -157,6 +157,7 @@ def test_possible_dependencies_with_multiple_classes(
     assert set(expected) == real_pkgs
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="Not supported < 3.7")
 def test_can_be_installed_with_buildable_false_all(mock_packages, mutable_config):
     """Test that can_be_installed returns False when packages:all:buildable:false
     and no externals are configured."""
