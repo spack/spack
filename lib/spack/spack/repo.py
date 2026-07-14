@@ -912,6 +912,16 @@ class RepoPath:
             pass
 
         current_index = self.get_patch_index(allow_stale=False)
+
+        # Check if this package has file patches missing from the index
+        # This can happen when patch files change but package.py doesn't (so FastPackageChecker
+        # doesn't detect the change). If patches are missing, update just this package.
+        repo = self.repo_for_pkg(pkg_cls.name)
+        if repo._repo_index is not None:
+            patch_indexer = repo._repo_index.indexers.get("patches")
+            if patch_indexer and patch_indexer.needs_update(pkg_cls):
+                current_index.update_packages({pkg_cls.fullname})
+
         return [current_index.patch_for_package(sha256, pkg_cls) for sha256 in sha256s]
 
     def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
@@ -1486,18 +1496,12 @@ class Repo:
         """
         return not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
 
-    def get_pkg_class(
-        self, pkg_name: str, _check_index: bool = True
-    ) -> Type["spack.package_base.PackageBase"]:
+    def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
         """Get the class for the package out of its module.
 
         First loads (or fetches from cache) a module for the
         package. Then extracts the package class from the module
         according to Spack's naming convention.
-
-        Args:
-            pkg_name: Name of the package
-            _check_index: Internal parameter to avoid recursion during index updates
         """
         _, pkg_name = self.partition_package_name(pkg_name)
         fullname = f"{self.full_namespace}.{nm.pkg_name_to_pkg_dir(pkg_name, self.package_api)}"
@@ -1523,13 +1527,6 @@ class Repo:
         cls = getattr(module, class_name)
         if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
-
-        # Check if patch index needs updating for this package
-        if _check_index and hasattr(self, "repo_index"):
-            patch_indexer = self.repo_index.indexers.get("patches")
-            if patch_indexer and patch_indexer.needs_update(cls):
-                # Update just this package in the patch index
-                patch_indexer.index.update_packages({cls.fullname})
 
         # Early exit if no overrides to apply or undo
         if (
