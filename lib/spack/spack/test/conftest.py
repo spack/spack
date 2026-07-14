@@ -141,9 +141,6 @@ def write_file(filename, contents):
         f.write(contents)
 
 
-commit_counter = 0
-
-
 @pytest.fixture
 def override_git_repos_cache_path(tmp_path: Path):
     saved = spack.paths.user_repos_cache_path
@@ -154,39 +151,18 @@ def override_git_repos_cache_path(tmp_path: Path):
     spack.paths.user_repos_cache_path = saved
 
 
-@pytest.fixture
-def mock_git_version_info(git, tmp_path: Path, override_git_repos_cache_path):
-    """Create a mock git repo with known structure
-
-    The structure of commits in this repo is as follows::
-
-       | o fourth 1.x commit (1.2)
-       | o third 1.x commit
-       | |
-       o | fourth main commit (v2.0)
-       o | third main commit
-       | |
-       | o second 1.x commit (v1.1)
-       | o first 1.x commit
-       | /
-       |/
-       o second commit (v1.0)
-       o first commit
-
-    The repo consists of a single file, in which the GitVersion.std_version representation
-    of each commit is expressed as a string.
-
-    Important attributes of the repo for test coverage are: multiple branches,
-    version tags on multiple branches, and version order is not equal to time
-    order or topological order.
-    """
-    repo_dir = tmp_path / "git_version_info_repo"
+@pytest.fixture(scope="session")
+def _mock_git_version_info_template(git, tmp_path_factory: pytest.TempPathFactory):
+    """Session-scoped template repo for ``mock_git_version_info``: built once per
+    process with git, then copied into a fresh directory for each test."""
+    repo_dir = tmp_path_factory.mktemp("git_version_info_template") / "git_version_info_repo"
     repo_dir.mkdir()
     repo_path = str(repo_dir)
     filename = "file.txt"
+    commit_counter = 0
 
     def commit(message):
-        global commit_counter
+        nonlocal commit_counter
         git(
             "commit",
             "--no-gpg-sign",
@@ -256,40 +232,61 @@ def mock_git_version_info(git, tmp_path: Path, override_git_repos_cache_path):
         # The commits are ordered with the last commit first in the list
         commits = list(reversed(commits))
 
+    return repo_path, filename, commits
+
+
+@pytest.fixture
+def mock_git_version_info(
+    _mock_git_version_info_template, tmp_path: Path, override_git_repos_cache_path
+):
+    """Copy of a mock git repo with known structure
+
+    The structure of commits in this repo is as follows::
+
+       | o fourth 1.x commit (1.2)
+       | o third 1.x commit
+       | |
+       o | fourth main commit (v2.0)
+       o | third main commit
+       | |
+       | o second 1.x commit (v1.1)
+       | o first 1.x commit
+       | /
+       |/
+       o second commit (v1.0)
+       o first commit
+
+    The repo consists of a single file, in which the GitVersion.std_version representation
+    of each commit is expressed as a string.
+
+    Important attributes of the repo for test coverage are: multiple branches,
+    version tags on multiple branches, and version order is not equal to time
+    order or topological order.
+    """
+    template_path, filename, commits = _mock_git_version_info_template
+    repo_path = str(tmp_path / "git_version_info_repo")
+    shutil.copytree(template_path, repo_path)
+
     # Return the git directory to install, the filename used, and the commits
     yield repo_path, filename, commits
 
 
-@pytest.fixture
-def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path, monkeypatch):
-    """Create a mock git repo with known structure of package edits
-
-    The structure of commits in this repo is as follows::
-
-       o diff-test: add v2.1.7 and v2.1.8 (invalid duplicated checksum)
-       |
-       o diff-test: add v2.1.6 (from a git ref)
-       |
-       o diff-test: add v2.1.5 (from source tarball)
-       |
-       o diff-test: new package (testing multiple added versions)
-
-    The repo consists of a single package.py file for DiffTest.
-
-    Important attributes of the repo for test coverage are: multiple package
-    versions are added with some coming from a tarball and some from git refs.
-    """
+@pytest.fixture(scope="session")
+def _mock_git_package_changes_template(git, tmp_path_factory: pytest.TempPathFactory):
+    """Session-scoped template repo for ``mock_git_package_changes``: built once per
+    process with git, then copied into a fresh directory for each test."""
+    root = str(tmp_path_factory.mktemp("git_package_changes_template"))
     filename = "diff_test/package.py"
 
-    repo_path, _ = spack.repo.create_repo(str(tmp_path), namespace="myrepo")
-    cache_dir = tmp_path / "cache"
-    cache_dir.mkdir()
+    repo_path, _ = spack.repo.create_repo(root, namespace="myrepo")
+    cache_dir = tmp_path_factory.mktemp("git_package_changes_template_cache")
     repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
 
     repo = spack.repo.Repo(repo_path, cache=repo_cache)
+    commit_counter = 0
 
     def commit(message):
-        global commit_counter
+        nonlocal commit_counter
         git(
             "commit",
             "--no-gpg-sign",
@@ -340,7 +337,40 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
         # The commits are ordered with the last commit first in the list
         commits = list(reversed(commits))
 
-    # Return the git directory to install, the filename used, and the commits
+    return root, repo_path, filename, commits
+
+
+@pytest.fixture
+def mock_git_package_changes(
+    _mock_git_package_changes_template, tmp_path: Path, override_git_repos_cache_path
+):
+    """Copy of a mock git repo with known structure of package edits
+
+    The structure of commits in this repo is as follows::
+
+       o diff-test: add v2.1.7 and v2.1.8 (invalid duplicated checksum)
+       |
+       o diff-test: add v2.1.6 (from a git ref)
+       |
+       o diff-test: add v2.1.5 (from source tarball)
+       |
+       o diff-test: new package (testing multiple added versions)
+
+    The repo consists of a single package.py file for DiffTest.
+
+    Important attributes of the repo for test coverage are: multiple package
+    versions are added with some coming from a tarball and some from git refs.
+    """
+    template_root, template_repo_path, filename, commits = _mock_git_package_changes_template
+    root = str(tmp_path / "myrepo")
+    shutil.copytree(template_root, root)
+    repo_path = os.path.join(root, os.path.relpath(template_repo_path, template_root))
+
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    repo = spack.repo.Repo(repo_path, cache=spack.util.file_cache.FileCache(str(cache_dir)))
+
+    # Return the repo, the filename used, and the commits
     yield repo, filename, commits
 
 
