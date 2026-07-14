@@ -66,7 +66,6 @@ import spack.util.filesystem as fsys
 import spack.util.gpg
 import spack.util.lang
 import spack.util.parallel
-import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
@@ -2161,7 +2160,7 @@ def install_root_node(
         raise RuntimeError(msg.format(spec.build_spec.format()))
 
     # don't print long padded paths while extracting/relocating binaries
-    with spack.util.path.filter_padding():
+    with spack.store.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, tarball_stage, force)
         spec.package.windows_establish_runtime_linkage()

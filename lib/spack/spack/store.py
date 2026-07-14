@@ -131,6 +131,22 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     return root, unpadded_root, projections
 
 
+@contextlib.contextmanager
+def filter_padding():
+    """Context manager to safely disable path padding in all Spack output.
+
+    This is needed because Spack's debug output gets extremely long when we use a
+    long padded installation path.
+    """
+    padding = spack.config.get("config:install_tree:padded_length", None)
+    if padding:
+        # filter out all padding from the install command output
+        with tty.output_filter(spack.util.path.padding_filter):
+            yield
+    else:
+        yield  # no-op: don't filter unless padding is actually enabled
+
+
 class Store:
     """A store is a path full of installed Spack packages.
 
