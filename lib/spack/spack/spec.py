@@ -2073,6 +2073,20 @@ class Spec:
         """
         return any(s.build_spec is not s for s in self.traverse(root=True))
 
+    @property
+    def installed(self):
+        """Whether the spec is installed, locally or in an upstream."""
+        from spack.store import STORE
+
+        return STORE.db.installed(self)
+
+    @property
+    def installed_upstream(self):
+        """Whether the spec is installed in an upstream database."""
+        from spack.store import STORE
+
+        return STORE.db.installed_upstream(self)
+
     @overload
     def traverse(
         self,
