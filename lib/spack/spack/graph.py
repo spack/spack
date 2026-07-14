@@ -451,7 +451,7 @@ class DotGraphBuilder:
         self.nodes: Set[Tuple[str, str]] = set()
         self.edges: Set[Tuple[str, str, str]] = set()
 
-    def visit(self, edge: spack.spec.DependencySpec):
+    def visit(self, edge: spack.traverse.EdgeType):
         """Visit an edge and builds up entries to render the graph"""
         if edge.parent is None:
             self.nodes.add(self.node_entry(edge.spec))
