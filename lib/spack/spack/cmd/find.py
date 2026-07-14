@@ -16,6 +16,7 @@ import spack.spec
 import spack.store
 import spack.util.lang
 from spack import cmd
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.util import tty
@@ -403,7 +404,7 @@ def _find_query(
 
 
 def find(parser, args):
-    env = ev.active_environment()
+    env = active_environment()
 
     if not env and args.only_roots:
         args.subparser.error("-r / --only-roots requires an active environment")

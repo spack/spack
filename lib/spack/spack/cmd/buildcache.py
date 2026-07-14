@@ -27,6 +27,7 @@ import spack.util.parallel
 import spack.util.timer as timer_mod
 import spack.util.web as web_util
 from spack import traverse
+from spack.active_environment import active_environment
 from spack.binary_distribution import BINARY_INDEX
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
@@ -400,7 +401,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
 def _matching_specs(specs: List[Spec]) -> List[Spec]:
     """Disambiguate specs and return a list of matching specs"""
     return [
-        spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=InstallRecordStatus.ANY)
+        spack.cmd.disambiguate_spec(s, active_environment(), installed=InstallRecordStatus.ANY)
         for s in specs
     ]
 

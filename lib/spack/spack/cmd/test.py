@@ -12,10 +12,10 @@ from collections import Counter
 
 import spack.cmd
 import spack.config
-import spack.environment as ev
 import spack.install_test
 import spack.repo
 import spack.store
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.util import tty
 from spack.util.tty import colify
@@ -173,7 +173,7 @@ def test_run(args):
     explicit_str = "explicitly " if args.explicit else ""
 
     # Get specs to test
-    env = ev.active_environment()
+    env = active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
@@ -242,7 +242,7 @@ def test_list(args):
 
     # TODO: This can be extended to have all of the output formatting options
     # from `spack find`.
-    env = ev.active_environment()
+    env = active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.store.STORE.db.query(hashes=hashes)

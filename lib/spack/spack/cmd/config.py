@@ -18,6 +18,7 @@ import spack.store
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.util import tty
 from spack.util.editor import editor
@@ -182,7 +183,7 @@ def _get_scope_and_section(args):
 
     # w/no args and an active environment, point to env manifest
     if not section and not scope:
-        env = ev.active_environment()
+        env = active_environment()
         if env:
             scope = env.scope_name
 
@@ -207,7 +208,7 @@ def print_configuration(args, *, blame: bool) -> None:
 
     group = getattr(args, "group", None)
     if group is not None:
-        env = ev.active_environment()
+        env = active_environment()
         if env is None:
             args.subparser.error("the argument --group requires an active environment")
             return  # parser.error exits, but help mypy understand this is unreachable
@@ -237,7 +238,7 @@ def print_flattened_configuration(*, blame: bool, yaml: bool) -> None:
     Args:
         blame: if True, shows file provenance for each entry in the configuration.
     """
-    env = ev.active_environment()
+    env = active_environment()
     if env is not None:
         pristine = env.manifest.yaml_content
         flattened = pristine.copy()

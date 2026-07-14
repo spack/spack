@@ -5,10 +5,10 @@
 import argparse
 import sys
 
-import spack.environment as ev
 import spack.repo
 import spack.store
 from spack import cmd
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.util import tty
 from spack.util.tty.colify import colify
@@ -68,7 +68,7 @@ def extensions(parser, args):
     if len(spec) > 1:
         args.subparser.error("can only list extensions for one package")
 
-    env = ev.active_environment()
+    env = active_environment()
     spec = cmd.disambiguate_spec(spec[0], env)
 
     if not spec.package.extendable:

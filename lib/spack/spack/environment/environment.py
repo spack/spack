@@ -30,6 +30,7 @@ from typing import (
 )
 
 import spack
+import spack.active_environment
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -53,6 +54,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.tty.color as clr
 import spack.variant as vt
 from spack import traverse
+from spack.active_environment import active_environment
 from spack.config import substitute_path_variables
 from spack.enums import ConfigScopePriority
 from spack.schema.env import TOP_LEVEL_KEY
@@ -74,9 +76,6 @@ spack_env_var = "SPACK_ENV"
 
 #: environment variable used to indicate the active environment view
 spack_env_view_var = "SPACK_ENV_VIEW"
-
-#: currently activated environment
-_active_environment: Optional["Environment"] = None
 
 # This is used in spack.main to bypass env failures if the command is `spack config edit`
 # It is used in spack.cmd.config to get the path to a failed env for `spack config edit`
@@ -218,8 +217,7 @@ def validate_env_name(name):
 
 def set_active_environment(env: Optional["Environment"]) -> None:
     """Set or clear the active environment, keeping the "$env" config substitution in sync."""
-    global _active_environment
-    _active_environment = env
+    spack.active_environment._active_environment = env
     spack.config.CONFIG.env_path = env.path if env is not None else None
 
 
@@ -271,31 +269,27 @@ def activate(env, use_env_repo=False):
 
 def deactivate():
     """Undo any configuration or repo settings modified by ``activate()``."""
-    if not _active_environment:
+    env = active_environment()
+    if not env:
         return
 
     # If any config changes affected spack.store.STORE or spack.repo.PATH, undo them.
-    store = getattr(_active_environment, "store_token", None)
+    store = getattr(env, "store_token", None)
     if store is not None:
         spack.store.restore(store)
-        delattr(_active_environment, "store_token")
+        delattr(env, "store_token")
 
-    repo = getattr(_active_environment, "repo_token", None)
+    repo = getattr(env, "repo_token", None)
 
     if repo is not None:
         spack.repo.PATH.disable()
         spack.repo.enable_repo(repo)
 
-    _active_environment.manifest.deactivate_config_scope()
+    env.manifest.deactivate_config_scope()
 
-    tty.debug(f"Deactivated environment '{_active_environment.name}'")
+    tty.debug(f"Deactivated environment '{env.name}'")
 
     set_active_environment(None)
-
-
-def active_environment() -> Optional["Environment"]:
-    """Returns the active environment when there is any"""
-    return _active_environment
 
 
 def _root(name):
@@ -316,7 +310,8 @@ def exists(name):
 
 def active(name):
     """True if the named environment is active."""
-    return _active_environment and name == _active_environment.name
+    env = active_environment()
+    return env and name == env.name
 
 
 def is_env_dir(path):
@@ -1365,7 +1360,8 @@ class Environment:
     @property
     def active(self):
         """True if this environment is currently active."""
-        return _active_environment and self.path == _active_environment.path
+        env = active_environment()
+        return env and self.path == env.path
 
     @property
     def manifest_path(self):
@@ -2586,7 +2582,7 @@ class Environment:
         self._repo = None
 
     def __enter__(self):
-        self._previous_active = _active_environment
+        self._previous_active = active_environment()
         if self._previous_active:
             deactivate()
         activate(self)

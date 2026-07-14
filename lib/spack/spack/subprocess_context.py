@@ -27,6 +27,7 @@ import spack.repo
 import spack.store
 import spack.util.gpg
 import spack.util.lang
+from spack.active_environment import active_environment
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -109,8 +110,6 @@ class GlobalStateMarshaler:
         self.spack_working_dir = spack.paths.spack_working_dir
         self.gnupg_home = str(spack.util.gpg.GNUPGHOME) if spack.util.gpg.GNUPGHOME else None
         if serialize_env:
-            from spack.environment import active_environment
-
             self.env = active_environment()
         else:
             self.env = None
