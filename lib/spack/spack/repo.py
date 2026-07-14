@@ -892,32 +892,8 @@ class RepoPath:
         except spack.error.PatchLookupError:
             pass
 
-        # Try to rebuild the full index from scratch
         current_index = self.get_patch_index(allow_stale=False)
-        try:
-            return [current_index.patch_for_package(sha256, pkg_cls) for sha256 in sha256s]
-        except spack.error.PatchLookupError as e:
-            # If we still can't find the patch, it might be because a patch file changed
-            # but the package.py file didn't (FastPackageChecker only tracks package.py mtime).
-            # Try updating the patch index specifically for this package's owners.
-
-            # Get all possible owner packages (the package itself and any packages it depends on)
-            owners_to_update = set(pkg_cls.fullnames)
-
-            tty.debug(
-                f"Patch not found for {pkg_cls.fullname}, attempting targeted patch index "
-                f"update for owners: {owners_to_update}"
-            )
-
-            # Update the patch cache for these specific packages
-            current_index.update_packages(owners_to_update)
-
-            # Try one more time with the updated index
-            try:
-                return [current_index.patch_for_package(sha256, pkg_cls) for sha256 in sha256s]
-            except spack.error.PatchLookupError:
-                # If it still fails, raise the original error
-                raise e
+        return [current_index.patch_for_package(sha256, pkg_cls) for sha256 in sha256s]
 
     def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
         all_packages = self._all_package_names_set(include_virtuals=False)
