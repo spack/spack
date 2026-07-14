@@ -292,7 +292,7 @@ class PackageInstaller:
     def install(self) -> None:
         #: check what specs we could fetch from binaries (checks against cache, not remotely)
         try:
-            spack.binary_distribution.BINARY_INDEX.update()
+            spack.binary_distribution.BINARY_INDEX.update(config=spack.config.CONFIG)
         except spack.binary_distribution.FetchCacheError:
             pass
 

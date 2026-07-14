@@ -10,7 +10,6 @@ import spack.store
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.context import SpackContext
-from spack.solver.context import Context
 from spack.solver.input_analysis import create_graph_analyzer
 from spack.util import tty
 from spack.util.tty.colify import colify

@@ -3981,29 +3981,6 @@ def _ensure_external_path_if_external(spec: spack.spec.Spec, *, repo: spack.repo
     )
 
 
-def _ensure_no_deprecated(root: spack.spec.Spec, store: spack.store.Store) -> None:
-    """Raise if a deprecated spec is in the dag of the given root spec.
-
-    Raises:
-        spack.spec.SpecDeprecatedError: if any deprecated spec is found
-    """
-    deprecated = []
-    db = store.db
-    with db.read_transaction():
-        for x in root.traverse():
-            _, rec = db.query_by_spec_hash(x.dag_hash())
-            if rec and rec.deprecated_for:
-                deprecated.append(rec)
-    if deprecated:
-        msg = "\n    The following specs have been deprecated"
-        msg += " in favor of specs with the hashes shown:\n"
-        for rec in deprecated:
-            msg += "        %s  --> %s\n" % (rec.spec, rec.deprecated_for)
-        msg += "\n"
-        msg += "    For each package listed, choose another spec\n"
-        raise spack.spec.SpecDeprecatedError(msg)
-
-
 def _develop_specs_from_env(spec, env):
     dev_info = env.dev_specs.get(spec.name, {}) if env else {}
     if not dev_info:

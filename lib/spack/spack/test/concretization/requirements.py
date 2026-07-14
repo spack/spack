@@ -1661,7 +1661,7 @@ def test_compiler_in_all_from_internal_scope_warns(mock_packages):
     )
     config = spack.config.Configuration()
     config.push_scope(scope)
-    parser = RequirementParser(config)
+    parser = RequirementParser(configuration=config, repo=spack.repo.PATH)
 
     require = config.get("packages:all:require")
     # The mark on the requirement string has a name but no line number.
