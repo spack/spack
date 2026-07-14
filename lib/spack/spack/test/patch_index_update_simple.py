@@ -53,12 +53,12 @@ def test_patch_index_update_packages_works(tmp_path, config):
 +new content
 """
     patch_path = os.path.join(pkg_dir, "fix.patch")
-    with open(patch_path, "w") as f:
+    with open(patch_path, "w", encoding="utf-8") as f:
         f.write(patch_content_v1)
 
     # Write package.py
     package_py = os.path.join(pkg_dir, "package.py")
-    with open(package_py, "w") as f:
+    with open(package_py, "w", encoding="utf-8") as f:
         f.write("""
 from spack.package import *
 
@@ -87,7 +87,7 @@ class TestPkg(Package):
 -old content
 +modified content
 """
-        with open(patch_path, "w") as f:
+        with open(patch_path, "w", encoding="utf-8") as f:
             f.write(patch_content_v2)
 
         # Create a fresh Repo and RepoPath to simulate a new Spack session
