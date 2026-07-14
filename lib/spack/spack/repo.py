@@ -557,11 +557,30 @@ class PatchIndexer(Indexer):
     def _create(self) -> spack.patch.PatchCache:
         return spack.patch.PatchCache(repository=self.repository)
 
-    def needs_update(self):
-        # TODO: patches can change under a package and we should handle
-        # TODO: it, but we currently punt. This should be refactored to
-        # TODO: check whether patches changed each time a package loads,
-        # TODO: tell the RepoIndex to reindex them.
+    def needs_update(self, pkg_cls: Type["spack.package_base.PackageBase"]) -> bool:
+        """Check if any file patches for this package are missing from the index.
+
+        Only checks FilePatch objects, since UrlPatch hashes are in package.py
+        and would trigger FastPackageChecker if they changed.
+
+        Args:
+            pkg_cls: Package class to check
+
+        Returns:
+            True if any file patch hashes are missing from the index
+        """
+        if not self.index:
+            return False
+
+        # Get all patches from the package class
+        for when_spec, patches in pkg_cls.patches.items():
+            for patch in patches:
+                # Only check FilePatch - UrlPatch changes would update package.py mtime
+                if isinstance(patch, spack.patch.FilePatch):
+                    # If this hash is not in the index, we need an update
+                    if patch.sha256 not in self.index.index:
+                        return True
+
         return False
 
     def read(self, stream):
@@ -1467,12 +1486,18 @@ class Repo:
         """
         return not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
 
-    def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
+    def get_pkg_class(
+        self, pkg_name: str, _check_index: bool = True
+    ) -> Type["spack.package_base.PackageBase"]:
         """Get the class for the package out of its module.
 
         First loads (or fetches from cache) a module for the
         package. Then extracts the package class from the module
         according to Spack's naming convention.
+
+        Args:
+            pkg_name: Name of the package
+            _check_index: Internal parameter to avoid recursion during index updates
         """
         _, pkg_name = self.partition_package_name(pkg_name)
         fullname = f"{self.full_namespace}.{nm.pkg_name_to_pkg_dir(pkg_name, self.package_api)}"
@@ -1498,6 +1523,13 @@ class Repo:
         cls = getattr(module, class_name)
         if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
+
+        # Check if patch index needs updating for this package
+        if _check_index and hasattr(self, "repo_index"):
+            patch_indexer = self.repo_index.indexers.get("patches")
+            if patch_indexer and patch_indexer.needs_update(cls):
+                # Update just this package in the patch index
+                patch_indexer.index.update_packages({cls.fullname})
 
         # Early exit if no overrides to apply or undo
         if (

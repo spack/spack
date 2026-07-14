@@ -506,7 +506,7 @@ class PatchCache:
 
         # update the index with per-package patch indexes
         for pkg_fullname in pkgs_fullname:
-            pkg_cls = self.repository.get_pkg_class(pkg_fullname)
+            pkg_cls = self.repository.get_pkg_class(pkg_fullname, _check_index=False)
             partial_index = self._index_patches(pkg_cls, self.repository)
             for sha256, package_to_patch in partial_index.items():
                 p2p = self.index.setdefault(sha256, {})
