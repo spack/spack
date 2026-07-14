@@ -1363,6 +1363,10 @@ class Environment:
         env = active_environment()
         return env and self.path == env.path
 
+    def activate(self, use_env_repo=False) -> None:
+        """Activate this environment globally."""
+        activate(self, use_env_repo=use_env_repo)
+
     @property
     def manifest_path(self):
         """Path to spack.yaml file in this environment."""

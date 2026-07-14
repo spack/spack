@@ -136,9 +136,7 @@ class GlobalStateMarshaler:
             spack.util.gpg.GNUPGHOME = spack.util.gpg.GPG.home
         self.test_patches.restore()
         if self.env:
-            from spack.environment import activate
-
-            activate(self.env)
+            self.env.activate()
 
 
 class TestPatches:

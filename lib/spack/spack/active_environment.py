@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     import spack.environment
 
-#: Currently activated environment. Do not set directly: use the setter below.
+#: Currently activated environment, or None if no environment is active.
 _active_environment: Optional["spack.environment.Environment"] = None
 
 
