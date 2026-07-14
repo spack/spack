@@ -22,6 +22,8 @@ import functools
 import os
 from typing import Optional, Tuple
 
+import spack.solver.asp
+
 _stats = {"hits": 0, "misses": 0}
 
 #: Absolute path of the cache directory, or None when the plugin is disabled
@@ -58,9 +60,6 @@ def pytest_configure(config):
         return
     os.makedirs(_cache_dir, exist_ok=True)
     _initial_entries, _ = _scan(_cache_dir)
-
-    import spack.solver.asp
-
     _count_lookups(spack.solver.asp.ConcretizationCache)
 
 
