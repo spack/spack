@@ -1802,20 +1802,20 @@ def test_merge_anonymous_spec_with_named_spec(anonymous, named, expected):
 
 
 def test_spec_installed(default_mock_concretization, database):
-    """Test whether Spec.installed works."""
+    """Test whether Database.installed works."""
     # a known installed spec should say that it's installed
     specs = database.query()
     spec = specs[0]
-    assert spec.installed
-    assert spec.copy().installed
+    assert database.installed(spec)
+    assert database.installed(spec.copy())
 
     # an abstract spec should say it's not installed
     spec = Spec("not-a-real-package")
-    assert not spec.installed
+    assert not database.installed(spec)
 
     # pkg-a is not in the mock DB and is not installed
     spec = default_mock_concretization("pkg-a")
-    assert not spec.installed
+    assert not database.installed(spec)
 
 
 @pytest.mark.regression("30678")

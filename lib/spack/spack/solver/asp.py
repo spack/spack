@@ -3123,7 +3123,7 @@ class SpackSolverSetup:
                 continue
 
             current_libc = None
-            if compiler.external or compiler.installed:
+            if compiler.external or spack.store.STORE.db.installed(compiler):
                 current_libc = CompilerPropertyDetector(compiler).default_libc()
             else:
                 try:
@@ -3808,7 +3808,7 @@ def post_process_concretization_result(specs: SpecDict) -> None:
 
     # needs to happen after finalize_concretization, as it looks up hashes
     for s in specs.values():
-        spack.spec.Spec.ensure_no_deprecated(s)
+        _ensure_no_deprecated(s, spack.store.STORE)
 
     # Add git version lookup info to concrete Specs (this is generated for
     # abstract specs as well but the Versions may be replaced during the
@@ -3898,6 +3898,29 @@ def _ensure_external_path_if_external(spec: spack.spec.Spec) -> None:
     spec.external_path = getattr(package, "external_prefix", None) or md.path_from_modules(
         spec.external_modules
     )
+
+
+def _ensure_no_deprecated(root: spack.spec.Spec, store: spack.store.Store) -> None:
+    """Raise if a deprecated spec is in the dag of the given root spec.
+
+    Raises:
+        spack.spec.SpecDeprecatedError: if any deprecated spec is found
+    """
+    deprecated = []
+    db = store.db
+    with db.read_transaction():
+        for x in root.traverse():
+            _, rec = db.query_by_spec_hash(x.dag_hash())
+            if rec and rec.deprecated_for:
+                deprecated.append(rec)
+    if deprecated:
+        msg = "\n    The following specs have been deprecated"
+        msg += " in favor of specs with the hashes shown:\n"
+        for rec in deprecated:
+            msg += "        %s  --> %s\n" % (rec.spec, rec.deprecated_for)
+        msg += "\n"
+        msg += "    For each package listed, choose another spec\n"
+        raise spack.spec.SpecDeprecatedError(msg)
 
 
 def _develop_specs_from_env(spec, env):

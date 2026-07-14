@@ -7,6 +7,7 @@ import argparse
 import spack.cmd
 import spack.config
 import spack.environment as ev
+import spack.store
 import spack.traverse
 from spack.cmd.common import arguments
 
@@ -65,7 +66,7 @@ def fetch(parser, args):
         to_be_fetched = specs
 
     for spec in to_be_fetched:
-        if args.missing and spec.installed:
+        if args.missing and spack.store.STORE.db.installed(spec):
             continue
 
         pkg = spec.package

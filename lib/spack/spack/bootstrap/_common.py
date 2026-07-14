@@ -67,7 +67,7 @@ def _try_import_from_store(
             python, *_ = candidate_spec.dependencies("python")
 
         # if python is installed, ask it for the layout
-        if python.installed:
+        if spack.store.STORE.db.installed(python):
             module_paths = [
                 os.path.join(candidate_spec.prefix, python.package.purelib),
                 os.path.join(candidate_spec.prefix, python.package.platlib),

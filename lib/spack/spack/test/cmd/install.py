@@ -850,7 +850,16 @@ def test_install_no_add_in_env(
 
         # Without --add, ensure that two packages "a" get installed
         inst_out = install("--fake", "pkg-a")
-        assert len([x for x in e.all_specs() if x.installed and x.name == "pkg-a"]) == 2
+        assert (
+            len(
+                [
+                    x
+                    for x in e.all_specs()
+                    if spack.store.STORE.db.installed(x) and x.name == "pkg-a"
+                ]
+            )
+            == 2
+        )
 
         # Install an unambiguous dependency spec (that already exists as a dep
         # in the environment) and make sure it gets installed (w/ deps),

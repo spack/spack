@@ -77,33 +77,6 @@ def test_query_by_install_tree(
     assert {s.name for s in specs} == set(result)
 
 
-def test_spec_installed_upstream(
-    upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
-):
-    """Test whether Spec.installed_upstream() works."""
-    upstream_db, downstream_db = upstream_and_downstream_db
-
-    # a known installed spec should say that it's installed
-    with spack.repo.use_repositories(mock_custom_repository):
-        spec = spack.concretize.concretize_one("pkg-c")
-        assert not spec.installed
-        assert not spec.installed_upstream
-
-        with writable(upstream_db):
-            upstream_db.add(spec)
-        upstream_db._read()
-
-        monkeypatch.setattr(spack.store.STORE, "db", downstream_db)
-        assert spec.installed
-        assert spec.installed_upstream
-        assert spec.copy().installed
-
-    # an abstract spec should say it's not installed
-    spec = spack.spec.Spec("not-a-real-package")
-    assert not spec.installed
-    assert not spec.installed_upstream
-
-
 @pytest.mark.usefixtures("config")
 def test_installed_upstream(upstream_and_downstream_db, repo_builder: RepoBuilder):
     upstream_db, downstream_db = upstream_and_downstream_db
@@ -175,11 +148,11 @@ def test_missing_upstream_build_dep(
         assert upstream
         assert not record.installed
 
-        assert y.installed
-        assert y.installed_upstream
+        assert downstream_db.installed(y)
+        assert downstream_db.installed_upstream(y)
 
-        assert not z_y.installed
-        assert not z_y.installed_upstream
+        assert not downstream_db.installed(z_y)
+        assert not downstream_db.installed_upstream(z_y)
 
         # Now add z to downstream with non-triggering prefix
         # and make sure z *is* installed
@@ -188,8 +161,8 @@ def test_missing_upstream_build_dep(
         z_new.set_prefix(str(tmp_path / "z-new"))
         downstream_db.add(z_new)
 
-        assert z_new.installed
-        assert not z_new.installed_upstream
+        assert downstream_db.installed(z_new)
+        assert not downstream_db.installed_upstream(z_new)
 
 
 def test_removed_upstream_dep(
@@ -845,11 +818,11 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
     # not be considered installed until it is added to the database by
     # the installer with install().
     s = spack.concretize.concretize_one("externaltool@0.9")
-    assert not s.installed
+    assert not spack.store.STORE.db.installed(s)
 
-    # Now install the external package and check again the `installed` property
+    # Now install the external package and check again the `installed` status
     PackageInstaller([s.package], fake=True, explicit=True).install()
-    assert s.installed
+    assert spack.store.STORE.db.installed(s)
 
 
 @pytest.mark.regression("11118")
@@ -879,7 +852,7 @@ def test_old_external_entries_prefix(mutable_database: spack.database.Database):
 def test_uninstall_by_spec(mutable_database):
     with mutable_database.write_transaction():
         for spec in mutable_database.query():
-            if spec.installed:
+            if mutable_database.installed(spec):
                 spack.package_base.PackageBase.uninstall_by_spec(spec, force=True)
             else:
                 mutable_database.remove(spec)
@@ -1198,8 +1171,8 @@ def test_query_installed_when_package_unknown(database, repo_builder: RepoBuilde
         for s in specs:
             # Assert that we can query the installation methods even though we
             # don't have the package.py available
-            assert s.installed
-            assert not s.installed_upstream
+            assert database.installed(s)
+            assert not database.installed_upstream(s)
             with pytest.raises(spack.repo.UnknownNamespaceError):
                 s.package
 
@@ -1362,3 +1335,31 @@ def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
     assert len(specs) == 8
     assert len([x for x in specs if x.external]) == 2
     assert len([x for x in specs if x.original_spec_format() < 5]) == 8
+
+
+def test_database_installed(
+    upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
+):
+    """Test the owner-side Database.installed / installed_upstream API."""
+    upstream_db, downstream_db = upstream_and_downstream_db
+
+    with spack.repo.use_repositories(mock_custom_repository):
+        spec = spack.concretize.concretize_one("pkg-c")
+
+        # a concrete but not-yet-installed spec is not installed anywhere
+        assert not downstream_db.installed(spec)
+        assert not downstream_db.installed_upstream(spec)
+
+        with writable(upstream_db):
+            upstream_db.add(spec)
+        upstream_db._read()
+
+        # once installed upstream, both queries report it, and copies match
+        assert downstream_db.installed(spec)
+        assert downstream_db.installed_upstream(spec)
+        assert downstream_db.installed(spec.copy())
+
+    # an abstract spec is never installed
+    abstract = spack.spec.Spec("not-a-real-package")
+    assert not downstream_db.installed(abstract)
+    assert not downstream_db.installed_upstream(abstract)

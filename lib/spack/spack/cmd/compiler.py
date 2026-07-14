@@ -149,7 +149,9 @@ def compiler_info(args):
             )
             continue
 
-        print(f"{c.tree(recurse_dependencies=False, status_fn=spack.spec.Spec.install_status)}")
+        print(
+            f"{c.tree(recurse_dependencies=False, status_fn=spack.store.STORE.db.install_status)}"
+        )
         print(f"  prefix: {c.prefix}")
         print("  compilers:")
         for language, exe in exes.items():
@@ -189,7 +191,7 @@ def compiler_list(args):
     status_fn = (
         spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
         if args.remote
-        else spack.spec.Spec.install_status
+        else spack.store.STORE.db.install_status
     )
 
     # If there are no compilers in any scope, and we're outputting to a tty, give a

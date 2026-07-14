@@ -550,8 +550,10 @@ def push_fn(args):
     # push installed package in best effort mode.
     failed: List[Tuple[Spec, BaseException]] = []
     with spack.store.STORE.db.read_transaction():
-        if any(not s.installed for s in specs):
-            specs, not_installed = stable_partition(specs, lambda s: s.installed)
+        if any(not spack.store.STORE.db.installed(s) for s in specs):
+            specs, not_installed = stable_partition(
+                specs, lambda s: spack.store.STORE.db.installed(s)
+            )
             if args.fail_fast and not args.allow_missing:
                 raise PackagesAreNotInstalledError(not_installed)
             elif args.allow_missing:

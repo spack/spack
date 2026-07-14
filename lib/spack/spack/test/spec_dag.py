@@ -8,6 +8,7 @@ These tests check Spec DAG operations using dummy packages.
 import pytest
 
 import spack.concretize
+import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.old_installer
@@ -135,7 +136,9 @@ def test_specify_preinstalled_dep(monkeypatch, repo_builder: RepoBuilder):
 
     with spack.repo.use_repositories(repo_builder.root):
         b_spec = spack.concretize.concretize_one("pkg-b")
-        monkeypatch.setattr(Spec, "installed", property(lambda x: x.name != "pkg-a"))
+        monkeypatch.setattr(
+            spack.database.Database, "installed", lambda self, spec: spec.name != "pkg-a"
+        )
 
         a_spec = Spec("pkg-a")
         a_spec._add_dependency(b_spec, depflag=dt.BUILD | dt.LINK, virtuals=())

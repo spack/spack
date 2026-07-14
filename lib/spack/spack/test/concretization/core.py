@@ -39,6 +39,7 @@ import spack.solver.input_analysis
 import spack.solver.reuse
 import spack.spec
 import spack.spec_filter
+import spack.store
 import spack.traverse
 import spack.util.file_cache
 import spack.util.hash
@@ -1734,7 +1735,7 @@ spack:
         # the answer set produced by clingo.
         with spack.config.override("concretizer:reuse", True):
             s = spack.concretize.concretize_one(spec_str)
-        assert s.installed is expect_installed
+        assert spack.store.STORE.db.installed(s) is expect_installed
         assert s.satisfies(spec_str)
 
     @pytest.mark.regression("26721,19736")
@@ -2370,7 +2371,7 @@ spack:
         # If we concretize with --reuse it is not, since "mpich~debug" was already installed
         with spack.config.override("concretizer:reuse", True):
             s = spack.concretize.concretize_one("mpich")
-            assert s.installed
+            assert spack.store.STORE.db.installed(s)
             assert s.satisfies("~debug"), s
 
     @pytest.mark.regression("32471")
@@ -2565,7 +2566,7 @@ packages:
         """Tests that when we reuse a spec, virtual on edges are reconstructed correctly"""
         with spack.config.override("concretizer:reuse", True):
             spec = spack.concretize.concretize_one(spec_str)
-            assert spec.installed
+            assert spack.store.STORE.db.installed(spec)
             mpi_edges = spec.edges_to_dependencies(mpi_name)
             assert len(mpi_edges) == 1
             assert "mpi" in mpi_edges[0].virtuals

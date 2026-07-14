@@ -2075,11 +2075,7 @@ class Spec:
 
     @property
     def installed(self):
-        """Installation status of a package.
-
-        Returns:
-            True if the package has been installed, False otherwise.
-        """
+        """Whether the spec is installed, locally or in an upstream."""
         if not self.concrete:
             return False
 
@@ -2096,11 +2092,7 @@ class Spec:
 
     @property
     def installed_upstream(self):
-        """Whether the spec is installed in an upstream repository.
-
-        Returns:
-            True if the package is installed in an upstream, False otherwise.
-        """
+        """Whether the spec is installed in an upstream database."""
         if not self.concrete:
             return False
 
@@ -2844,30 +2836,6 @@ class Spec:
         )
 
         return True
-
-    @staticmethod
-    def ensure_no_deprecated(root: "Spec") -> None:
-        """Raise if a deprecated spec is in the dag of the given root spec.
-
-        Raises:
-            spack.spec.SpecDeprecatedError: if any deprecated spec is found
-        """
-        deprecated = []
-        from spack.store import STORE
-
-        with STORE.db.read_transaction():
-            for x in root.traverse():
-                _, rec = STORE.db.query_by_spec_hash(x.dag_hash())
-                if rec and rec.deprecated_for:
-                    deprecated.append(rec)
-        if deprecated:
-            msg = "\n    The following specs have been deprecated"
-            msg += " in favor of specs with the hashes shown:\n"
-            for rec in deprecated:
-                msg += "        %s  --> %s\n" % (rec.spec, rec.deprecated_for)
-            msg += "\n"
-            msg += "    For each package listed, choose another spec\n"
-            raise SpecDeprecatedError(msg)
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
@@ -4506,38 +4474,6 @@ class Spec:
     def __str__(self) -> str:
         """String representation of this spec."""
         return self._str(color=False)
-
-    def install_status(self) -> InstallStatus:
-        """Helper for tree to print DB install status."""
-        if not self.concrete:
-            return InstallStatus.absent
-
-        if self.external:
-            return InstallStatus.external
-
-        from spack.store import STORE
-
-        upstream, record = STORE.db.query_by_spec_hash(self.dag_hash())
-        if not record:
-            return InstallStatus.absent
-        elif upstream and record.installed:
-            return InstallStatus.upstream
-        elif record.installed:
-            return InstallStatus.installed
-        else:
-            return InstallStatus.missing
-
-    def _installed_explicitly(self):
-        """Helper for tree to print DB install status."""
-        if not self.concrete:
-            return None
-        try:
-            from spack.store import STORE
-
-            record = STORE.db.get_record(self)
-            return record.explicit
-        except KeyError:
-            return None
 
     def tree(
         self,

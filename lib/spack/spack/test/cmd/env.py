@@ -516,7 +516,7 @@ def test_env_install_all(install_mockery, mock_fetch):
     e.concretize()
     e.install_all(fake=True)
     spec = next(x for x in e.all_specs_generator() if x.name == "cmake-client")
-    assert spec.installed
+    assert spack.store.STORE.db.installed(spec)
 
 
 def test_env_install_single_spec(install_mockery, mock_fetch, installer_variant):
@@ -558,7 +558,7 @@ def test_env_install_include_concrete_env(
     test2_user_spec_hashes = [x.hash for x in test2.concretized_roots]
 
     for spec in combined.all_specs():
-        assert spec.installed
+        assert spack.store.STORE.db.installed(spec)
 
     assert test1_user_spec_hashes == [
         x.hash for x in combined.included_concretized_roots[test1.path]
@@ -1873,7 +1873,7 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
     assert {x.hash for x in test.concretized_roots} == user_spec_hashes_before
     assert test.user_specs.specs == user_specs_before.specs
     assert mpileaks_hash in test.specs_by_hash
-    assert not test.specs_by_hash[mpileaks_hash].installed
+    assert not spack.store.STORE.db.installed(test.specs_by_hash[mpileaks_hash])
 
 
 def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
@@ -3994,8 +3994,8 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
         spec = e.matching_spec("libelf")
         install("--fake", f"/{spec.dag_hash()}")
     with ev.read("test") as e:
-        assert not e.matching_spec("libdwarf").installed
-        assert e.matching_spec("libelf").installed
+        assert not spack.store.STORE.db.installed(e.matching_spec("libdwarf"))
+        assert spack.store.STORE.db.installed(e.matching_spec("libelf"))
 
 
 @pytest.mark.parametrize("lockfile", ["v1", "v2", "v3"])

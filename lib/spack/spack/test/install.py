@@ -46,10 +46,10 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
     spec = spack.concretize.concretize_one("trivial-install-test-package")
 
     PackageInstaller([spec.package], explicit=True).install()
-    assert spec.installed
+    assert spack.store.STORE.db.installed(spec)
 
     spec.package.do_uninstall()
-    assert not spec.installed
+    assert not spack.store.STORE.db.installed(spec)
 
 
 @pytest.mark.regression("11870")
@@ -58,7 +58,7 @@ def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch
     spec = spack.concretize.concretize_one("trivial-install-test-package")
 
     PackageInstaller([spec.package], explicit=True).install()
-    assert spec.installed
+    assert spack.store.STORE.db.installed(spec)
 
     # Mock deletion of the package
     spec._package = None
@@ -68,7 +68,7 @@ def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch
 
     # Ensure we can uninstall it
     PackageBase.uninstall_by_spec(spec)
-    assert not spec.installed
+    assert not spack.store.STORE.db.installed(spec)
 
 
 def test_pkg_attributes(install_mockery, mock_fetch, monkeypatch):
@@ -148,7 +148,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
 
     PackageInstaller([s.package], explicit=True, restage=True).install()
     assert rm_prefix_checker.removed
-    assert s.package.spec.installed
+    assert spack.store.STORE.db.installed(s.package.spec)
 
 
 @pytest.mark.not_on_windows("Fails spuriously on Windows")
@@ -173,7 +173,7 @@ def test_failing_overwrite_install_should_keep_previous_installation(
     with pytest.raises(Exception):
         PackageInstaller([s.package], explicit=True, **kwargs).install()
 
-    assert s.package.spec.installed
+    assert spack.store.STORE.db.installed(s.package.spec)
     assert os.path.exists(s.prefix)
 
 
@@ -276,7 +276,7 @@ def test_installed_upstream(install_upstream, mock_fetch):
         dependent = spack.concretize.concretize_one("dependent-install")
 
         new_dependency = dependent["dependency-install"]
-        assert new_dependency.installed_upstream
+        assert spack.store.STORE.db.installed_upstream(new_dependency)
         assert new_dependency.prefix == upstream_layout.path_for_spec(dependency)
 
         PackageInstaller([dependent.package], explicit=True).install()
@@ -302,7 +302,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, w
     s.package.succeed = True
     spack.builder._BUILDERS.clear()  # the builder is cached with a copy of the pkg's __dict__.
     PackageInstaller([s.package], explicit=True, keep_prefix=True).install()
-    assert s.package.spec.installed
+    assert spack.store.STORE.db.installed(s.package.spec)
 
 
 def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypatch):
@@ -311,7 +311,7 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypa
 
     s.package.succeed = True
     PackageInstaller([s.package], explicit=True).install()
-    assert s.package.spec.installed
+    assert spack.store.STORE.db.installed(s.package.spec)
 
     # If Package.install is called after this point, it will fail
     s.package.succeed = False
