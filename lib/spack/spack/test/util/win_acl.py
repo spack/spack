@@ -421,10 +421,10 @@ def test_security_descriptor_apply_update_ownership_raises_without_write_owner(t
     f.write_text("hello")
     owner_sid = SecurityDescriptor.from_file(str(f)).owner
     # FR excludes WRITE_OWNER (0x00080000); use P so no inherited ACE sneaks WRITE_OWNER back in.
-    # WRITE_OWNER (WO) is the string alias for the above access mask. 
+    # WRITE_OWNER (WO) is the string alias for the above access mask.
     # As the strings are aliases for bit masks, some strings represent the bitwise OR of other
     # access masks (and their string aliases). I.e FA is an OR of every other access right
-    # Other string access aliases can imply the WO mask, such as FA (FILE_ALL_ACCESS) 
+    # Other string access aliases can imply the WO mask, such as FA (FILE_ALL_ACCESS)
     # so we explicitly set the ACE right to FR (file generic read) which does not include WO
     set_file_sddl(str(f), f"D:P(A;;FR;;;{owner_sid})")
 
