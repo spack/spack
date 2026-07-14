@@ -34,9 +34,15 @@ _initial_entries = 0
 
 
 def cache_dir(config) -> Optional[str]:
-    """Absolute path of the persistent concretization cache, or None when disabled."""
+    """Absolute path of the persistent concretization cache, or None when disabled.
+
+    ``~`` and environment variables are expanded, so DIR can be given as e.g.
+    ``${RUNNER_TEMP}/cache`` and stay correct on Windows, where the temporary directory
+    lives on a different drive."""
     path = config.getoption("--spack-concretization-cache")
-    return os.path.abspath(os.path.expanduser(path)) if path else None
+    if not path:
+        return None
+    return os.path.abspath(os.path.expandvars(os.path.expanduser(path)))
 
 
 def pytest_addoption(parser):
@@ -49,7 +55,8 @@ def pytest_addoption(parser):
         help="enable a persistent concretization cache in DIR: tests whose concretization "
         "problem was already solved by an earlier test or pytest invocation skip the solver "
         "entirely. Entries are keyed by the full solver input, so DIR can be shared across "
-        "branches and CI runs (default: $SPACK_TEST_CONCRETIZATION_CACHE)",
+        "branches and CI runs. ~ and environment variables in DIR are expanded "
+        "(default: $SPACK_TEST_CONCRETIZATION_CACHE)",
     )
 
 

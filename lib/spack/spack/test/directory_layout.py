@@ -25,10 +25,10 @@ from spack.util.path import path_to_os_path
 max_packages = 10
 
 
-def test_yaml_directory_layout_parameters(tmp_path: pathlib.Path, default_mock_concretization):
+def test_yaml_directory_layout_parameters(tmp_path: pathlib.Path, config, mock_packages):
     """This tests the various parameters that can be used to configure
     the install location"""
-    spec = default_mock_concretization("python")
+    spec = spack.concretize.concretize_one("python")
 
     # Ensure default layout matches expected spec format
     layout_default = DirectoryLayout(str(tmp_path))
@@ -215,9 +215,9 @@ def test_find(temporary_store, config, mock_packages):
         assert found_specs[name].eq_dag(spec)
 
 
-def test_yaml_directory_layout_build_path(tmp_path: pathlib.Path, default_mock_concretization):
+def test_yaml_directory_layout_build_path(tmp_path: pathlib.Path, config, mock_packages):
     """This tests build path method."""
-    spec = default_mock_concretization("python")
+    spec = spack.concretize.concretize_one("python")
     layout = DirectoryLayout(str(tmp_path))
     rel_path = os.path.join(layout.metadata_dir, layout.packages_dir)
     assert layout.build_packages_path(spec) == os.path.join(spec.prefix, rel_path)

@@ -419,10 +419,11 @@ def test_correct_specs_are_pushed(
     expected,
     tmp_path: pathlib.Path,
     monkeypatch,
-    default_mock_concretization,
+    config,
+    mock_packages,
     temporary_store,
 ):
-    spec = default_mock_concretization("dttop")
+    spec = spack.concretize.concretize_one("dttop")
     PackageInstaller([spec.package], explicit=True, fake=True).install()
     slash_hash = f"/{spec.dag_hash()}"
 

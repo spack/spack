@@ -382,7 +382,7 @@ class TestSpecDag:
             ),
         ],
     )
-    def test_traversal(self, pairs, traverse_kwargs, default_mock_concretization):
+    def test_traversal(self, pairs, traverse_kwargs):
         r"""Tests different traversals of the following graph
 
         o mpileaks@2.3/3qeg7jx
@@ -433,7 +433,7 @@ class TestSpecDag:
         |
         o glibc@2.31/tbyn33w
         """
-        dag = default_mock_concretization("mpileaks ^zmpi")
+        dag = spack.concretize.concretize_one("mpileaks ^zmpi")
         names = [x for _, x in pairs]
 
         traversal = dag.traverse(**traverse_kwargs, depth=True)
@@ -891,9 +891,7 @@ class TestSpecDag:
             ({"virtuals": ["lapack"]}, 0, []),
         ],
     )
-    def test_query_dependency_edges(
-        self, default_mock_concretization, query, expected_length, expected_satisfies
-    ):
+    def test_query_dependency_edges(self, query, expected_length, expected_satisfies):
         """Tests querying edges to dependencies on the following DAG:
 
          -   [    ]  mpileaks@2.3
@@ -905,15 +903,15 @@ class TestSpecDag:
          -   [ l  ]      ^gcc-runtime@10.1.0
          -   [bl  ]      ^mpich@3.0.4~debug
         """
-        mpileaks = default_mock_concretization("mpileaks")
+        mpileaks = spack.concretize.concretize_one("mpileaks")
         edges = mpileaks.edges_to_dependencies(**query)
         assert len(edges) == expected_length
         for constraint in expected_satisfies:
             assert any(x.spec.satisfies(constraint) for x in edges)
 
-    def test_query_dependents_edges(self, default_mock_concretization):
+    def test_query_dependents_edges(self):
         """Tests querying edges from dependents"""
-        mpileaks = default_mock_concretization("mpileaks")
+        mpileaks = spack.concretize.concretize_one("mpileaks")
         mpich = mpileaks["mpich"]
 
         # Recover the root with 2 different queries

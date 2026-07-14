@@ -295,11 +295,11 @@ def test_flag_injection_different_compilers(mock_packages, mutable_config):
         ),
     ],
 )
-def test_flags_and_duplicate_nodes(spec_str, expected, not_expected, default_mock_concretization):
+def test_flags_and_duplicate_nodes(spec_str, expected, not_expected, config, mock_packages):
     """Tests that we can concretize a spec with flags on a node that is present with duplicates
     in the DAG. For instance, a compiler built with a previous version of itself.
     """
-    s = default_mock_concretization(spec_str)
+    s = spack.concretize.concretize_one(spec_str)
     assert all(s.satisfies(x) for x in expected)
     assert all(not s.satisfies(x) for x in not_expected)
 

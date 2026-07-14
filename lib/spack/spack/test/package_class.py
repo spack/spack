@@ -317,9 +317,9 @@ def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
     assert "Skipping tests for package" in error
 
 
-def test_package_subscript(default_mock_concretization):
+def test_package_subscript(config, mock_packages):
     """Tests that we can use the subscript notation on packages, and that it returns a package"""
-    root = default_mock_concretization("mpileaks")
+    root = spack.concretize.concretize_one("mpileaks")
     root_pkg = root.package
 
     # Subscript of a virtual
@@ -330,8 +330,8 @@ def test_package_subscript(default_mock_concretization):
         assert isinstance(root_pkg[d.name], spack.package_base.PackageBase)
 
 
-def test_deserialize_preserves_package_attribute(default_mock_concretization):
-    x = default_mock_concretization("mpileaks").package
+def test_deserialize_preserves_package_attribute(config, mock_packages):
+    x = spack.concretize.concretize_one("mpileaks").package
     assert x.spec._package is x
 
     y = spack.subprocess_context.deserialize(spack.subprocess_context.serialize(x))
@@ -339,8 +339,8 @@ def test_deserialize_preserves_package_attribute(default_mock_concretization):
 
 
 @pytest.mark.require_provenance
-def test_git_provenance_commit_version(default_mock_concretization):
-    spec = default_mock_concretization("git-ref-package@stable")
+def test_git_provenance_commit_version(config, mock_packages):
+    spec = spack.concretize.concretize_one("git-ref-package@stable")
     assert spec.satisfies(f"commit={'c' * 40}")
 
 

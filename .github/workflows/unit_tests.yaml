@@ -8,6 +8,12 @@ concurrency:
   group: unit_tests-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
+env:
+  # RUNNER_TEMP is set by the runner on every platform, and is the only temporary directory
+  # Windows runners guarantee to be writable. The runner context is not available here, so
+  # the plugin expands the variable itself.
+  SPACK_TEST_CONCRETIZATION_CACHE: ${RUNNER_TEMP}/spack-concretization-cache
+
 jobs:
   # Run unit tests with different configurations on linux
   ubuntu:

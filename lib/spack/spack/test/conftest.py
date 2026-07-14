@@ -22,7 +22,7 @@ import tempfile
 import textwrap
 import xml.etree.ElementTree
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import pytest
 
@@ -2323,34 +2323,6 @@ def binary_with_rpaths(prefix_tmpdir: Path):
         return executable
 
     return _factory
-
-
-@pytest.fixture(scope="session")
-def concretized_specs_cache():
-    """Cache for mock concrete specs"""
-    return {}
-
-
-@pytest.fixture
-def default_mock_concretization(
-    config, mock_packages, concretized_specs_cache
-) -> Callable[[str], spack.spec.Spec]:
-    """Return the default mock concretization of a spec literal, obtained using the mock
-    repository and the mock configuration.
-
-    This fixture is unsafe to call in a test when either the default configuration or mock
-    repository are not used or have been modified.
-    """
-
-    def _func(spec_str, tests=False):
-        key = spec_str, tests
-        if key not in concretized_specs_cache:
-            concretized_specs_cache[key] = spack.concretize.concretize_one(
-                spack.spec.Spec(spec_str), tests=tests
-            )
-        return concretized_specs_cache[key].copy()
-
-    return _func
 
 
 @pytest.fixture
