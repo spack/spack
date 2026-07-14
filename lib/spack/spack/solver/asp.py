@@ -489,6 +489,8 @@ class Result:
             "optimal": self.optimal,
             "warnings": self.warnings,
             "nmodels": self.nmodels,
+            # abstract specs are not used for deserialization, but dropping them is
+            # forward-incompatible with Spack 1.2 and earlier.
             "abstract_specs": [s.to_dict() for s in self.abstract_specs],
             "satisfiable": self.satisfiable,
             "answers": [
@@ -497,12 +499,14 @@ class Result:
         }
 
     @staticmethod
-    def from_dict(obj: dict):
-        """Returns Result object from compatible dictionary"""
+    def from_dict(obj: dict, specs: List[spack.spec.Spec]):
+        """Returns Result object from compatible dictionary, for the given input specs.
 
-        abstract_specs = [spack.spec.Spec.from_dict(s) for s in obj["abstract_specs"]]
-
-        result = Result(abstract_specs)
+        The stored abstract specs are troubleshooting metadata and are deliberately not
+        deserialized: the caller's input specs are authoritative. This also keeps cache
+        entries with unreadable abstract spec data usable.
+        """
+        result = Result(specs)
         result.criteria = [OptimizationCriteria(*t) for t in obj["criteria"]]
         result.optimal = obj["optimal"]
         result.warnings = obj["warnings"]
@@ -645,12 +649,18 @@ class ConcretizationCache:
         # every solve, let alone cache hits.
         self.cleanup()
 
-    def fetch(self, problem: str) -> Union[Tuple[Result, Dict], Tuple[None, None]]:
+    def fetch(
+        self, problem: str, specs: List[spack.spec.Spec]
+    ) -> Union[Tuple[Result, Dict], Tuple[None, None]]:
         """Returns the concretization cache result for a lookup based on the given problem.
 
         Checks the concretization cache for the given problem, and either returns the
         Python objects cached on disk representing the concretization results and statistics
         or returns none if no cache entry was found.
+
+        The returned Result is associated with ``specs``, the input specs of the caller:
+        the problem hash guarantees they are equivalent to the ones the entry was stored
+        with.
         """
         cache_path = self._cache_path_from_problem(problem)
 
@@ -686,7 +696,7 @@ class ConcretizationCache:
             return None, None
 
         try:
-            result = Result.from_dict(results)
+            result = Result.from_dict(results, specs)
         except (KeyError, TypeError, ValueError, spack.error.SpecSyntaxError) as e:
             tty.debug(
                 f"ConcretizationCache.fetch(): force-removing {cache_path}. "
@@ -1085,11 +1095,11 @@ class PyclingoDriver:
         # try to fetch from the cache
         result = None
         if cache:
-            result, concretization_stats = cache.fetch(cache_key)
+            result, concretization_stats = cache.fetch(cache_key, specs)
         timer.stop("cache-check")
 
         # run the solver
-        if not result:
+        if result is None:
             tty.debug("Starting concretizer")
             result = self._run_clingo(specs, setup, "\n".join(problem), control_file_paths, timer)
             result.raise_if_unsat()
