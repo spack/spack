@@ -55,6 +55,7 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.tengine
+import spack.test.concretization_cache_plugin
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
@@ -901,7 +902,7 @@ def mock_targets(mock_uarch_configuration, monkeypatch):
 
 
 @pytest.fixture(scope="session")
-def configuration_dir(tmp_path_factory: pytest.TempPathFactory, linux_os):
+def configuration_dir(request, tmp_path_factory: pytest.TempPathFactory, linux_os):
     """Copies mock configuration files in a temporary directory. Returns the
     directory path.
     """
@@ -935,6 +936,20 @@ def configuration_dir(tmp_path_factory: pytest.TempPathFactory, linux_os):
     modules = tmp_path / "site" / "modules.yaml"
     modules_template = test_config / "modules.yaml"
     modules.write_text(modules_template.read_text().format(tcl_root, lmod_root))
+
+    # The concretization cache is disabled unless --spack-concretization-cache=DIR is
+    # given, in which case all tests, xdist workers, and future pytest invocations share
+    # the cache in DIR. The entry limit stays above the ~1700 distinct problems of a full
+    # suite run so LRU pruning does not thrash within one invocation.
+    cache_url = spack.test.concretization_cache_plugin.cache_dir(request.config)
+    concretizer = tmp_path / "site" / "concretizer.yaml"
+    concretizer_template = test_config / "concretizer.yaml"
+    concretizer.write_text(
+        concretizer_template.read_text().format(
+            cache_enable=str(cache_url is not None).lower(),
+            cache_url=cache_url or str(tmp_path / "concretization-cache"),
+        )
+    )
 
     for scope in ("spack", "user", "site", "system"):
         scope_path = tmp_path / scope
