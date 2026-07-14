@@ -590,7 +590,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
 
         def get_url(version: spack.version.VersionType) -> str:
             try:
-                return str(fs.for_package_version(pkg, version))
+                return str(spack.package_base.for_package_version(pkg, version))
             except fs.InvalidArgsError:
                 return "No URL"
 

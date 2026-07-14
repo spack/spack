@@ -53,7 +53,7 @@ from urllib.request import urlopen
 import spack.builder
 import spack.config
 import spack.enums
-import spack.fetch_strategy
+import spack.package_base
 import spack.patch
 import spack.repo
 import spack.spec
@@ -600,9 +600,9 @@ def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         pkg = pkg_cls(spack.spec.Spec(pkg_name))
         try:
-            spack.fetch_strategy.check_pkg_attributes(pkg)
+            spack.package_base.check_pkg_attributes(pkg)
             for version in pkg.versions:
-                assert spack.fetch_strategy.for_package_version(pkg, version)
+                assert spack.package_base.for_package_version(pkg, version)
         except Exception as e:
             error_msg = "The package '{}' cannot produce a fetcher for some of its versions"
             details = ["{}".format(str(e))]
@@ -681,7 +681,7 @@ def _ensure_all_packages_use_sha256_checksums(pkgs, error_cls):
         error_msg = f"Package '{pkg_name}' does not use sha256 checksum"
         details = []
         for v, args in pkg.versions.items():
-            fetcher = spack.fetch_strategy.for_package_version(pkg, v)
+            fetcher = spack.package_base.for_package_version(pkg, v)
             digest, is_bad = invalid_sha256_digest(fetcher)
             if is_bad:
                 details.append(f"{pkg_name}@{v} uses {digest}")
