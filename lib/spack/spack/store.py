@@ -206,7 +206,7 @@ class Store:
             enable=lock_cfg.enable,
         )
         self.failure_tracker = spack.database.FailureTracker(
-            self.root, default_timeout=lock_cfg.package_timeout
+            self.root, default_timeout=lock_cfg.package_timeout, enable=lock_cfg.enable
         )
 
     def has_padding(self) -> bool:
