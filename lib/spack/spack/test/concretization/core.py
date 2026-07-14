@@ -4451,7 +4451,7 @@ def test_result_roundtrip(mock_packages, config, specs):
     """Test that a solve result can be serialized and brought back."""
     solver = spack.solver.asp.Solver()
     result = solver.solve(specs)
-    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict())
+    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict(), specs)
 
     # ensure that we didn't duplicate spec objects during the round trip -- specs need
     # to come back as exactly the same graph they were before.
@@ -4502,6 +4502,7 @@ def test_spec_dict_roundtrip(mock_packages, config, spec_str):
         # fresh solves
         ("hdf5", None),
         ("hdf5^zmpi", None),
+        ("mpileaks ~debug ^[when=+debug] zmpi", None),
         ("zmpi", None),
         ("pkg-with-zlib-dep", None),
         ("hypre^openblas-with-lapack", None),
@@ -4546,8 +4547,8 @@ def test_concretization_cache_roundtrip(
     # Assert that we're actually hitting the cache
     cache_fetch = spack.solver.asp.ConcretizationCache.fetch
 
-    def _ensure_cache_hits(self, problem: str):
-        result, statistics = cache_fetch(self, problem)
+    def _ensure_cache_hits(self, problem: str, specs):
+        result, statistics = cache_fetch(self, problem, specs)
         assert result, "Expected successful concretization cache hit"
         assert statistics, "Expected statistics to be non null on cache hit"
         return result, statistics
@@ -4673,7 +4674,7 @@ def corrupt_cache_entry(use_concretization_cache):
     yield cache, cache_path, write_gzip_json
 
     assert cache_path.exists(), "test should have written a corrupt file"
-    result, stats = cache.fetch(problem)
+    result, stats = cache.fetch(problem, [])
     assert result is None
     assert stats is None
     assert not cache_path.exists(), "corrupt cache entry should have been removed"
