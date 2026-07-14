@@ -4,7 +4,6 @@
 
 import collections
 import filecmp
-import hashlib
 import os
 import pathlib
 import shutil
@@ -21,7 +20,6 @@ import spack.paths
 import spack.repo
 import spack.spec
 import spack.stage
-import spack.util.crypto
 import spack.util.url as url_util
 from spack.spec import Spec
 from spack.stage import Stage
