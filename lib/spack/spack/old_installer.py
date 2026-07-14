@@ -463,7 +463,7 @@ def _process_binary_cache_tarball(
 
     tty.msg(f"Extracting {package_id(pkg.spec)} from binary cache")
 
-    with timer.measure("install"), spack.util.path.filter_padding():
+    with timer.measure("install"), spack.store.filter_padding():
         binary_distribution.extract_tarball(pkg.spec, tarball_stage, force=False, timer=timer)
 
         if pkg.spec.spliced:  # overwrite old metadata with new
@@ -2790,7 +2790,7 @@ def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> 
     installer = BuildProcessInstaller(pkg, install_args)
 
     # don't print long padded paths in executable debug output.
-    with spack.util.path.filter_padding():
+    with spack.store.filter_padding():
         return installer.run()
 
 
