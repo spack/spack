@@ -74,7 +74,8 @@ SPACK_REPO_INDEX_FILE_NAME = "spack-repo-index.yaml"
 def package_repository_lock() -> spack.util.lock.Lock:
     """Lock for process safety when cloning remote package repositories"""
     return spack.util.lock.Lock(
-        os.path.join(spack.paths.user_cache_path, "package-repository.lock")
+        os.path.join(spack.paths.user_cache_path, "package-repository.lock"),
+        enable=spack.config.get("config:locks", True),
     )
 
 

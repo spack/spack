@@ -267,7 +267,11 @@ class AbstractStage(abc.ABC):
             lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
             stage_lock_path = os.path.join(get_stage_root(), ".lock")
             self._lock = spack.util.lock.Lock(
-                stage_lock_path, start=lock_id, length=1, desc=self.name
+                stage_lock_path,
+                start=lock_id,
+                length=1,
+                desc=self.name,
+                enable=spack.config.get("config:locks", True),
             )
         return self._lock
 
