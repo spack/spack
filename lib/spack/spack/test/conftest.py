@@ -18,6 +18,7 @@ import re
 import shutil
 import stat
 import sys
+import tarfile
 import tempfile
 import textwrap
 import xml.etree.ElementTree
@@ -74,14 +75,7 @@ from spack.fetch_strategy import URLFetchStrategy
 from spack.main import SpackCommand
 from spack.old_installer import PackageInstaller
 from spack.util import tty
-from spack.util.filesystem import (
-    copy,
-    copy_tree,
-    join_path,
-    mkdirp,
-    remove_linked_tree,
-    working_dir,
-)
+from spack.util.filesystem import copy, join_path, mkdirp, remove_linked_tree, working_dir
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
 
@@ -1190,13 +1184,9 @@ def _populate(mock_db):
 
 
 @pytest.fixture(scope="session")
-def _store_dir_and_cache(tmp_path_factory: pytest.TempPathFactory):
-    """Returns the directory where to build the mock database and
-    where to cache it.
-    """
-    store = tmp_path_factory.mktemp("mock_store")
-    cache = tmp_path_factory.mktemp("mock_store_cache")
-    return store, cache
+def _store_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Returns the directory where to build the mock database."""
+    return tmp_path_factory.mktemp("mock_store")
 
 
 @pytest.fixture(scope="session")
@@ -1204,7 +1194,7 @@ def mock_store(
     tmp_path_factory: pytest.TempPathFactory,
     mock_packages_repo,
     mock_configuration_scopes,
-    _store_dir_and_cache: Tuple[Path, Path],
+    _store_dir: Path,
     mock_stage_for_database,
 ):
     """Creates a read-only mock database with some packages installed note
@@ -1215,32 +1205,33 @@ def mock_store(
     ``database`` fixture for that.
 
     """
-    store_path, store_cache = _store_dir_and_cache
+    store_path = _store_dir
     _mock_wsdk_externals = spack.bootstrap.ensure_winsdk_external_or_raise
+
+    with spack.config.use_configuration(*mock_configuration_scopes):
+        with spack.store.use_store(str(store_path)) as store:
+            with spack.repo.use_repositories(mock_packages_repo):
+                try:
+                    spack.bootstrap.ensure_winsdk_external_or_raise = _return_none
+                    _populate(store.db)
+                finally:
+                    spack.bootstrap.ensure_winsdk_external_or_raise = _mock_wsdk_externals
 
     # Make the DB filesystem read-only to ensure constructors don't modify anything in it.
     # We want Spack to be able to point to a DB on a read-only filesystem easily.
     _recursive_chmod(store_path, 0o555)
 
-    # If the cache does not exist populate the store and create it
-    if not os.path.exists(str(store_cache / ".spack-db")):
-        with spack.config.use_configuration(*mock_configuration_scopes):
-            with spack.store.use_store(str(store_path)) as store:
-                with spack.repo.use_repositories(mock_packages_repo):
-                    # make the DB filesystem writable only while we populate it
-                    _recursive_chmod(store_path, 0o755)
-                    try:
-                        spack.bootstrap.ensure_winsdk_external_or_raise = _return_none
-                        _populate(store.db)
-                    finally:
-                        spack.bootstrap.ensure_winsdk_external_or_raise = _mock_wsdk_externals
-                    _recursive_chmod(store_path, 0o555)
-
-        _recursive_chmod(store_cache, 0o755)
-        copy_tree(str(store_path), str(store_cache))
-        _recursive_chmod(store_cache, 0o555)
-
     yield store_path
+
+
+@pytest.fixture(scope="session")
+def _mock_store_tarball(mock_store) -> bytes:
+    """Pristine copy of the mock store as an in-memory uncompressed tarball, so that
+    ``mutable_database`` can restore the store without walking or reading a source tree."""
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        tar.add(str(mock_store), arcname=".")
+    return buf.getvalue()
 
 
 @pytest.fixture(scope="function")
@@ -1261,21 +1252,23 @@ def database_mutable_config(mock_store, mock_packages, mutable_config, monkeypat
 
 
 @pytest.fixture(scope="function")
-def mutable_database(database_mutable_config, _store_dir_and_cache: Tuple[Path, Path]):
+def mutable_database(database_mutable_config, _store_dir: Path, _mock_store_tarball: bytes):
     """Writeable version of the fixture, restored to its initial state
     after each test.
     """
     # Make the database writeable, as we are going to modify it
-    store_path, store_cache = _store_dir_and_cache
+    store_path = _store_dir
     _recursive_chmod(store_path, 0o755)
 
     yield database_mutable_config
 
-    # Restore the initial state by copying the content of the cache back into
-    # the store and making the database read-only
+    # Restore the initial state from the pristine tarball; modes recorded in the tar
+    # make the database read-only again.
     shutil.rmtree(store_path)
-    copy_tree(str(store_cache), str(store_path))
-    _recursive_chmod(store_path, 0o555)
+    store_path.mkdir()
+    with tarfile.open(fileobj=io.BytesIO(_mock_store_tarball), mode="r") as tar:
+        tar.extraction_filter = lambda member, path: member
+        tar.extractall(str(store_path))
 
 
 @pytest.fixture()
