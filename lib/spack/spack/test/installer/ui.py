@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Tests for the TerminalUI terminal UI in new_installer.py"""
+"""Tests for the TerminalUI terminal UI in installer.ui"""
 
 import functools
 import io

@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Tests for Windows-specific TUI components in new_installer.py.
+"""Tests for Windows-specific TUI components in installer.windows.
 
 WindowsTerminalState uses two daemon threads (_input_thread, _resize_thread) and
 a pair of socketpairs (stdin_r/w, sigwinch_r/w) to bridge Win32 console events
