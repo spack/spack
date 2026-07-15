@@ -18,6 +18,7 @@ import re
 import shutil
 import stat
 import sys
+import tarfile
 import tempfile
 import textwrap
 import xml.etree.ElementTree
@@ -74,14 +75,7 @@ from spack.fetch_strategy import URLFetchStrategy
 from spack.main import SpackCommand
 from spack.old_installer import PackageInstaller
 from spack.util import tty
-from spack.util.filesystem import (
-    copy,
-    copy_tree,
-    join_path,
-    mkdirp,
-    remove_linked_tree,
-    working_dir,
-)
+from spack.util.filesystem import copy, join_path, mkdirp, remove_linked_tree, working_dir
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
 
@@ -96,15 +90,6 @@ def _recursive_chmod(path: Path, mode: int):
             os.chmod(os.path.join(root, file), mode)
         for dir in dirs:
             os.chmod(os.path.join(root, dir), mode)
-
-
-@pytest.fixture(autouse=True)
-def clear_sys_modules():
-    """Clear package repos from sys.modules before each test."""
-    for key in list(sys.modules.keys()):
-        if key.startswith("spack_repo.") or key == "spack_repo":
-            del sys.modules[key]
-    yield
 
 
 @pytest.fixture(autouse=True)
@@ -150,9 +135,6 @@ def write_file(filename, contents):
         f.write(contents)
 
 
-commit_counter = 0
-
-
 @pytest.fixture
 def override_git_repos_cache_path(tmp_path: Path):
     saved = spack.paths.user_repos_cache_path
@@ -163,39 +145,18 @@ def override_git_repos_cache_path(tmp_path: Path):
     spack.paths.user_repos_cache_path = saved
 
 
-@pytest.fixture
-def mock_git_version_info(git, tmp_path: Path, override_git_repos_cache_path):
-    """Create a mock git repo with known structure
-
-    The structure of commits in this repo is as follows::
-
-       | o fourth 1.x commit (1.2)
-       | o third 1.x commit
-       | |
-       o | fourth main commit (v2.0)
-       o | third main commit
-       | |
-       | o second 1.x commit (v1.1)
-       | o first 1.x commit
-       | /
-       |/
-       o second commit (v1.0)
-       o first commit
-
-    The repo consists of a single file, in which the GitVersion.std_version representation
-    of each commit is expressed as a string.
-
-    Important attributes of the repo for test coverage are: multiple branches,
-    version tags on multiple branches, and version order is not equal to time
-    order or topological order.
-    """
-    repo_dir = tmp_path / "git_version_info_repo"
+@pytest.fixture(scope="session")
+def _mock_git_version_info_template(git, tmp_path_factory: pytest.TempPathFactory):
+    """Session-scoped template repo for ``mock_git_version_info``: built once per
+    process with git, then copied into a fresh directory for each test."""
+    repo_dir = tmp_path_factory.mktemp("git_version_info_template") / "git_version_info_repo"
     repo_dir.mkdir()
     repo_path = str(repo_dir)
     filename = "file.txt"
+    commit_counter = 0
 
     def commit(message):
-        global commit_counter
+        nonlocal commit_counter
         git(
             "commit",
             "--no-gpg-sign",
@@ -265,40 +226,61 @@ def mock_git_version_info(git, tmp_path: Path, override_git_repos_cache_path):
         # The commits are ordered with the last commit first in the list
         commits = list(reversed(commits))
 
+    return repo_path, filename, commits
+
+
+@pytest.fixture
+def mock_git_version_info(
+    _mock_git_version_info_template, tmp_path: Path, override_git_repos_cache_path
+):
+    """Copy of a mock git repo with known structure
+
+    The structure of commits in this repo is as follows::
+
+       | o fourth 1.x commit (1.2)
+       | o third 1.x commit
+       | |
+       o | fourth main commit (v2.0)
+       o | third main commit
+       | |
+       | o second 1.x commit (v1.1)
+       | o first 1.x commit
+       | /
+       |/
+       o second commit (v1.0)
+       o first commit
+
+    The repo consists of a single file, in which the GitVersion.std_version representation
+    of each commit is expressed as a string.
+
+    Important attributes of the repo for test coverage are: multiple branches,
+    version tags on multiple branches, and version order is not equal to time
+    order or topological order.
+    """
+    template_path, filename, commits = _mock_git_version_info_template
+    repo_path = str(tmp_path / "git_version_info_repo")
+    shutil.copytree(template_path, repo_path)
+
     # Return the git directory to install, the filename used, and the commits
     yield repo_path, filename, commits
 
 
-@pytest.fixture
-def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path, monkeypatch):
-    """Create a mock git repo with known structure of package edits
-
-    The structure of commits in this repo is as follows::
-
-       o diff-test: add v2.1.7 and v2.1.8 (invalid duplicated checksum)
-       |
-       o diff-test: add v2.1.6 (from a git ref)
-       |
-       o diff-test: add v2.1.5 (from source tarball)
-       |
-       o diff-test: new package (testing multiple added versions)
-
-    The repo consists of a single package.py file for DiffTest.
-
-    Important attributes of the repo for test coverage are: multiple package
-    versions are added with some coming from a tarball and some from git refs.
-    """
+@pytest.fixture(scope="session")
+def _mock_git_package_changes_template(git, tmp_path_factory: pytest.TempPathFactory):
+    """Session-scoped template repo for ``mock_git_package_changes``: built once per
+    process with git, then copied into a fresh directory for each test."""
+    root = str(tmp_path_factory.mktemp("git_package_changes_template"))
     filename = "diff_test/package.py"
 
-    repo_path, _ = spack.repo.create_repo(str(tmp_path), namespace="myrepo")
-    cache_dir = tmp_path / "cache"
-    cache_dir.mkdir()
+    repo_path, _ = spack.repo.create_repo(root, namespace="myrepo")
+    cache_dir = tmp_path_factory.mktemp("git_package_changes_template_cache")
     repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
 
     repo = spack.repo.Repo(repo_path, cache=repo_cache)
+    commit_counter = 0
 
     def commit(message):
-        global commit_counter
+        nonlocal commit_counter
         git(
             "commit",
             "--no-gpg-sign",
@@ -349,7 +331,40 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
         # The commits are ordered with the last commit first in the list
         commits = list(reversed(commits))
 
-    # Return the git directory to install, the filename used, and the commits
+    return root, repo_path, filename, commits
+
+
+@pytest.fixture
+def mock_git_package_changes(
+    _mock_git_package_changes_template, tmp_path: Path, override_git_repos_cache_path
+):
+    """Copy of a mock git repo with known structure of package edits
+
+    The structure of commits in this repo is as follows::
+
+       o diff-test: add v2.1.7 and v2.1.8 (invalid duplicated checksum)
+       |
+       o diff-test: add v2.1.6 (from a git ref)
+       |
+       o diff-test: add v2.1.5 (from source tarball)
+       |
+       o diff-test: new package (testing multiple added versions)
+
+    The repo consists of a single package.py file for DiffTest.
+
+    Important attributes of the repo for test coverage are: multiple package
+    versions are added with some coming from a tarball and some from git refs.
+    """
+    template_root, template_repo_path, filename, commits = _mock_git_package_changes_template
+    root = str(tmp_path / "myrepo")
+    shutil.copytree(template_root, root)
+    repo_path = os.path.join(root, os.path.relpath(template_repo_path, template_root))
+
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    repo = spack.repo.Repo(repo_path, cache=spack.util.file_cache.FileCache(str(cache_dir)))
+
+    # Return the repo, the filename used, and the commits
     yield repo, filename, commits
 
 
@@ -1169,13 +1184,9 @@ def _populate(mock_db):
 
 
 @pytest.fixture(scope="session")
-def _store_dir_and_cache(tmp_path_factory: pytest.TempPathFactory):
-    """Returns the directory where to build the mock database and
-    where to cache it.
-    """
-    store = tmp_path_factory.mktemp("mock_store")
-    cache = tmp_path_factory.mktemp("mock_store_cache")
-    return store, cache
+def _store_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Returns the directory where to build the mock database."""
+    return tmp_path_factory.mktemp("mock_store")
 
 
 @pytest.fixture(scope="session")
@@ -1183,7 +1194,7 @@ def mock_store(
     tmp_path_factory: pytest.TempPathFactory,
     mock_packages_repo,
     mock_configuration_scopes,
-    _store_dir_and_cache: Tuple[Path, Path],
+    _store_dir: Path,
     mock_stage_for_database,
 ):
     """Creates a read-only mock database with some packages installed note
@@ -1194,32 +1205,33 @@ def mock_store(
     ``database`` fixture for that.
 
     """
-    store_path, store_cache = _store_dir_and_cache
+    store_path = _store_dir
     _mock_wsdk_externals = spack.bootstrap.ensure_winsdk_external_or_raise
+
+    with spack.config.use_configuration(*mock_configuration_scopes):
+        with spack.store.use_store(str(store_path)) as store:
+            with spack.repo.use_repositories(mock_packages_repo):
+                try:
+                    spack.bootstrap.ensure_winsdk_external_or_raise = _return_none
+                    _populate(store.db)
+                finally:
+                    spack.bootstrap.ensure_winsdk_external_or_raise = _mock_wsdk_externals
 
     # Make the DB filesystem read-only to ensure constructors don't modify anything in it.
     # We want Spack to be able to point to a DB on a read-only filesystem easily.
     _recursive_chmod(store_path, 0o555)
 
-    # If the cache does not exist populate the store and create it
-    if not os.path.exists(str(store_cache / ".spack-db")):
-        with spack.config.use_configuration(*mock_configuration_scopes):
-            with spack.store.use_store(str(store_path)) as store:
-                with spack.repo.use_repositories(mock_packages_repo):
-                    # make the DB filesystem writable only while we populate it
-                    _recursive_chmod(store_path, 0o755)
-                    try:
-                        spack.bootstrap.ensure_winsdk_external_or_raise = _return_none
-                        _populate(store.db)
-                    finally:
-                        spack.bootstrap.ensure_winsdk_external_or_raise = _mock_wsdk_externals
-                    _recursive_chmod(store_path, 0o555)
-
-        _recursive_chmod(store_cache, 0o755)
-        copy_tree(str(store_path), str(store_cache))
-        _recursive_chmod(store_cache, 0o555)
-
     yield store_path
+
+
+@pytest.fixture(scope="session")
+def _mock_store_tarball(mock_store) -> bytes:
+    """Pristine copy of the mock store as an in-memory uncompressed tarball, so that
+    ``mutable_database`` can restore the store without walking or reading a source tree."""
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        tar.add(str(mock_store), arcname=".")
+    return buf.getvalue()
 
 
 @pytest.fixture(scope="function")
@@ -1240,21 +1252,23 @@ def database_mutable_config(mock_store, mock_packages, mutable_config, monkeypat
 
 
 @pytest.fixture(scope="function")
-def mutable_database(database_mutable_config, _store_dir_and_cache: Tuple[Path, Path]):
+def mutable_database(database_mutable_config, _store_dir: Path, _mock_store_tarball: bytes):
     """Writeable version of the fixture, restored to its initial state
     after each test.
     """
     # Make the database writeable, as we are going to modify it
-    store_path, store_cache = _store_dir_and_cache
+    store_path = _store_dir
     _recursive_chmod(store_path, 0o755)
 
     yield database_mutable_config
 
-    # Restore the initial state by copying the content of the cache back into
-    # the store and making the database read-only
+    # Restore the initial state from the pristine tarball; modes recorded in the tar
+    # make the database read-only again.
     shutil.rmtree(store_path)
-    copy_tree(str(store_cache), str(store_path))
-    _recursive_chmod(store_path, 0o555)
+    store_path.mkdir()
+    with tarfile.open(fileobj=io.BytesIO(_mock_store_tarball), mode="r") as tar:
+        tar.extraction_filter = lambda member, path: member
+        tar.extractall(str(store_path))
 
 
 @pytest.fixture()
