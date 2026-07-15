@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import difflib
 import gzip
 import json
 import os
@@ -4739,35 +4738,24 @@ def test_concretization_cache_removes_bad_spec_data(corrupt_cache_entry):
     )
 
 
-@pytest.mark.parametrize(
-    "asp_file",
-    [
-        "concretize.lp",
-        "heuristic.lp",
-        "display.lp",
-        "direct_dependency.lp",
-        "when_possible.lp",
-        "libc_compatibility.lp",
-        "os_compatibility.lp",
-        "splices.lp",
-    ],
-)
-def test_concretization_cache_asp_canonicalization(asp_file):
-    path = os.path.join(os.path.dirname(spack.solver.asp.__file__), asp_file)
+def test_concretization_cache_asp_canonicalization():
+    """Canonicalization strips empty lines"""
+    input = """\
+% ID of the nodes in the "root" link-run sub-DAG
+#const min_dupe_id = 0.
 
-    with open(path, "r", encoding="utf-8") as f:
-        original = [line.strip() for line in f.readlines()]
-        stripped = spack.solver.asp.strip_asp_problem(original)
-
-    diff = list(difflib.unified_diff(original, stripped))
-
-    assert all(
-        [
-            line == "-" or line.startswith("-%")
-            for line in diff
-            if line.startswith("-") and not line.startswith("---")
-        ]
-    )
+% Allow clingo to create nodes
+{ attr("node", node(0..X-1, Package))         } :- max_dupes(Package, X), not virtual(Package).
+{ attr("virtual_node", node(0..X-1, Package)) } :- max_dupes(Package, X), virtual(Package).
+"""
+    output = """\
+% ID of the nodes in the "root" link-run sub-DAG
+#const min_dupe_id = 0.
+% Allow clingo to create nodes
+{ attr("node", node(0..X-1, Package))         } :- max_dupes(Package, X), not virtual(Package).
+{ attr("virtual_node", node(0..X-1, Package)) } :- max_dupes(Package, X), virtual(Package).
+"""
+    assert spack.solver.asp._strip_asp_problem(input.splitlines()) == output.splitlines()
 
 
 @pytest.mark.parametrize(

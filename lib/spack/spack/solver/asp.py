@@ -899,6 +899,30 @@ class ErrorHandler:
         raise UnsatisfiableSpecError(msg)
 
 
+def _strip_asp_problem(asp_problem: Iterable[str]) -> List[str]:
+    """Remove empty lines from an ASP program."""
+    return [stmt for stmt in asp_problem if stmt]
+
+
+def _make_cache_key(asp_problem: str, control_file_paths: List[str]) -> str:
+    """Make a key for fetching a solve from the concretization cache.
+
+    A key comprises the entire input to clingo, i.e., the problem instance plus the
+    control files.  The problem instance is assumed to already be sorted and stripped.
+
+    Changes to the control files always invalidate the cache.
+
+    Arguments:
+        asp_problem: pre-processed string representation of the ASP problem instance
+        control_file_paths: list of paths to control files we'll send to clingo
+    """
+    components = [asp_problem]
+    for path in control_file_paths:
+        with open(path, "r", encoding="utf-8") as f:
+            components.append(f.read())
+    return "\n".join(components)
+
+
 class PyclingoDriver:
     def __init__(self, conc_cache: Optional[ConcretizationCache] = None) -> None:
         """Driver for the Python clingo interface.
@@ -917,27 +941,6 @@ class PyclingoDriver:
         """
         parent_dir = os.path.dirname(__file__)
         return [os.path.join(parent_dir, rel_path) for rel_path in control_files]
-
-    def _make_cache_key(self, asp_problem: List[str], control_file_paths: List[str]) -> str:
-        """Make a key for fetching a solve from the concretization cache.
-
-        A key comprises the entire input to clingo, i.e., the problem instance plus the
-        control files.  The problem instance is assumed to already be sorted and stripped of
-        comments and empty lines.
-
-        The control files are stripped but not sorted, so changes to the control files will cause
-        cache misses if they modify any code.
-
-        Arguments:
-            asp_problem: list of statements in the ASP program
-            control_file_paths: list of paths to control files we'll send to clingo
-        """
-        lines = list(asp_problem)
-        for path in control_file_paths:
-            with open(path, "r", encoding="utf-8") as f:
-                lines.extend(strip_asp_problem(f.readlines()))
-
-        return "\n".join(lines)
 
     def _run_clingo(
         self,
@@ -1096,7 +1099,7 @@ class PyclingoDriver:
         timer.stop("setup")
 
         timer.start("ordering")
-        # print the output with comments, etc. if the user asked
+        # print the original ASP program if requested
         problem = problem_builder.asp_problem
         if output.out is not None:
             output.out.write("\n".join(problem))
@@ -1104,15 +1107,14 @@ class PyclingoDriver:
         if output.setup_only:
             return Result(specs), None, None
 
-        # strip the problem of comments and empty lines
-        problem = strip_asp_problem(problem)
-        randomize = "SPACK_SOLVER_RANDOMIZATION" in os.environ
-        if randomize:
-            # create a shuffled copy -- useful for understanding performance variation
-            problem = random.sample(problem, len(problem))
+        # strip and order the ASP problem for caching and deterministic solves
+        problem = _strip_asp_problem(problem)
+        if "SPACK_SOLVER_RANDOMIZATION" in os.environ:
+            # shuffling is used in benchmarking to rule out variability due to input ordering
+            random.shuffle(problem)
         else:
-            problem.sort()  # sort for deterministic output
-
+            problem.sort()
+        problem_str = "\n".join(problem)
         timer.stop("ordering")
 
         timer.start("cache-check")
@@ -1121,23 +1123,24 @@ class PyclingoDriver:
 
         # load control files to add to the input representation
         control_file_paths = self._control_file_paths(control_files)
-        cache_key = self._make_cache_key(problem, control_file_paths)
 
-        # try to fetch from the cache
+        # try to fetch from the cache; only compute the key if the cache is enabled
         result = None
+        cache_key = None
         if cache:
+            cache_key = _make_cache_key(problem_str, control_file_paths)
             result, concretization_stats = cache.fetch(cache_key, specs)
         timer.stop("cache-check")
 
         # run the solver
         if result is None:
             tty.debug("Starting concretizer")
-            result = self._run_clingo(specs, setup, "\n".join(problem), control_file_paths, timer)
+            result = self._run_clingo(specs, setup, problem_str, control_file_paths, timer)
             result.raise_if_unsat()
             concretization_stats = self.control.statistics
 
             # write result back to the cache *before* post-processing
-            if cache:
+            if cache and cache_key is not None:
                 cache.store(cache_key, result, self.control.statistics)
 
         # apply post-concretization transformations
@@ -3388,19 +3391,6 @@ class _Body:
     variant_value = fn.attr("variant_value")
     node_flag = fn.attr("node_flag")
     propagate = fn.attr("propagate")
-
-
-def strip_asp_problem(asp_problem: Iterable[str]) -> List[str]:
-    """Remove comments and empty lines from an ASP program."""
-
-    def strip_statement(stmt: str) -> str:
-        lines = [line for line in stmt.split("\n") if not line.startswith("%")]
-        return "".join(line.strip() for line in lines if line)
-
-    value = [strip_statement(stmt) for stmt in asp_problem]
-    value = [s for s in value if s]
-
-    return value
 
 
 class ProblemInstanceBuilder:
