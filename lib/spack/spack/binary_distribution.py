@@ -200,7 +200,9 @@ class BinaryIndexCache:
         self._index_contents_key = "contents.json"
 
         # a FileCache instance storing copies of remote binary cache indices
-        self._index_file_cache: file_cache.FileCache = file_cache.FileCache(self._index_cache_root)
+        self._index_file_cache: file_cache.FileCache = file_cache.FileCache(
+            self._index_cache_root, enable_lock=spack.config.CONFIG.get("config:locks", True)
+        )
         self._index_file_cache_initialized = False
 
         # stores a map of mirror URL and version layout to index hash and cache key (index path)
