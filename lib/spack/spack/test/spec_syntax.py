@@ -1216,7 +1216,7 @@ def test_cli_spec_roundtrip(args, expected):
         ),
     ],
 )
-def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config):
+def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config, mock_packages):
     """Tests that toolchains are expanded correctly"""
     parser = SpecParser(spec_str)
     for expected in expected_roundtrip:

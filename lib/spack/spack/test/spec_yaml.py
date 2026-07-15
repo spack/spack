@@ -411,7 +411,7 @@ ordered_spec = collections.OrderedDict(
         ("specfiles/hdf5.v020.json.gz", "vlirlcgazhvsvtundz4kug75xkkqqgou", spack.spec.SpecfileV4),
     ],
 )
-def test_load_json_specfiles(specfile, expected_hash, reader_cls):
+def test_load_json_specfiles(specfile, expected_hash, reader_cls, mock_packages):
     fullpath = os.path.join(spack.paths.test_path, "data", specfile)
     with gzip.open(fullpath, "rt", encoding="utf-8") as f:
         data = json.load(f)
