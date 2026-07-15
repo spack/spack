@@ -49,6 +49,13 @@ jobs:
     - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Restore concretization cache
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+      with:
+        path: ${{ runner.temp }}/spack-concretization-cache
+        key: concretization-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          concretization-${{ runner.os }}-
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -90,6 +97,12 @@ jobs:
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.14' }}
       run: |
           share/spack/qa/run-unit-tests
+    - name: Save concretization cache
+      if: ${{ always() && github.ref == 'refs/heads/develop' }}
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+      with:
+        path: ${{ runner.temp }}/spack-concretization-cache
+        key: concretization-${{ runner.os }}-${{ github.run_id }}
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
@@ -183,6 +196,13 @@ jobs:
       run: |
           pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
           pip install --upgrade -r .github/workflows/requirements/style/requirements.txt
+    - name: Restore concretization cache
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+      with:
+        path: ${{ runner.temp }}/spack-concretization-cache
+        key: concretization-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          concretization-${{ runner.os }}-
     - name: Run unit tests (full suite with coverage)
       env:
           COVERAGE: true
@@ -195,6 +215,12 @@ jobs:
         spack bootstrap status
         spack spec --show opt,solutions zlib
         pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 --dist worksteal lib/spack/spack/test/concretization/
+    - name: Save concretization cache
+      if: ${{ always() && github.ref == 'refs/heads/develop' }}
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+      with:
+        path: ${{ runner.temp }}/spack-concretization-cache
+        key: concretization-${{ runner.os }}-${{ github.run_id }}
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-clingo-cffi
@@ -221,6 +247,13 @@ jobs:
           pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
           pip install --upgrade -r .github/workflows/requirements/style/requirements.txt
           pip install --upgrade --pre --extra-index-url https://test.pypi.org/simple clingo
+    - name: Restore concretization cache
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+      with:
+        path: ${{ runner.temp }}/spack-concretization-cache
+        key: concretization-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          concretization-${{ runner.os }}-
     - name: Run unit tests (full suite with coverage)
       env:
           COVERAGE: true
@@ -233,6 +266,12 @@ jobs:
         spack bootstrap status
         spack spec --show opt,solutions zlib
         pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 --dist worksteal lib/spack/spack/test/concretization/
+    - name: Save concretization cache
+      if: ${{ always() && github.ref == 'refs/heads/develop' }}
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+      with:
+        path: ${{ runner.temp }}/spack-concretization-cache
+        key: concretization-${{ runner.os }}-${{ github.run_id }}
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-clingo-v6
@@ -257,6 +296,13 @@ jobs:
           pip install --upgrade pip
           # See https://github.com/coveragepy/coveragepy/issues/2082
           pip install --upgrade -r .github/workflows/requirements/unit_tests/requirements.txt
+    - name: Restore concretization cache
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+      with:
+        path: ${{ runner.temp }}/spack-concretization-cache
+        key: concretization-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          concretization-${{ runner.os }}-
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg kcov
@@ -270,6 +316,12 @@ jobs:
         spack bootstrap disable spack-install
         spack spec --show opt,solutions zlib
         python3 -m pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --dist worksteal -x -n4
+    - name: Save concretization cache
+      if: ${{ always() && github.ref == 'refs/heads/develop' }}
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+      with:
+        path: ${{ runner.temp }}/spack-concretization-cache
+        key: concretization-${{ runner.os }}-${{ github.run_id }}
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
@@ -293,6 +345,13 @@ jobs:
       run: |
           python -m pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
           python -m pip install --upgrade pip -r .github/workflows/requirements/style/requirements.txt
+    - name: Restore concretization cache
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+      with:
+        path: ${{ runner.temp }}/spack-concretization-cache
+        key: concretization-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          concretization-${{ runner.os }}-
     - name: Create local develop
       run: |
         ./.github/workflows/bin/setup_git.ps1
@@ -302,6 +361,12 @@ jobs:
       run: |
         python -m pytest -x --verbose --cov --cov-config=pyproject.toml
         ./share/spack/qa/validate_last_exit.ps1
+    - name: Save concretization cache
+      if: ${{ always() && github.ref == 'refs/heads/develop' }}
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+      with:
+        path: ${{ runner.temp }}/spack-concretization-cache
+        key: concretization-${{ runner.os }}-${{ github.run_id }}
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-windows
