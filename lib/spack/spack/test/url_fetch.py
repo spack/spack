@@ -375,7 +375,7 @@ def test_url_fetch_text_urllib_web_error(mutable_config, monkeypatch):
     def _raise_web_error(*args, **kwargs):
         raise web_util.SpackWebError("bad url")
 
-    monkeypatch.setattr(web_util, "read_from_url", _raise_web_error)
+    monkeypatch.setattr(web_util, "read_text", _raise_web_error)
     mutable_config.set("config:url_fetch_method", "urllib")
 
     with pytest.raises(spack.error.FetchError, match="fetch failed"):

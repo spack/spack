@@ -20,6 +20,7 @@ import spack.hash_types as ht
 import spack.main
 import spack.paths
 import spack.repo
+import spack.reporters.cdash
 import spack.spec
 import spack.stage
 import spack.util.spack_yaml as syaml
@@ -640,6 +641,8 @@ def test_ci_rebuild_mock_success(
     rebuild_env = create_rebuild_env(tmp_path, pkg_name, broken_tests)
 
     monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "echo")
+    # the cdash url in the environment is fake; never upload reports to it
+    monkeypatch.setattr(spack.reporters.cdash.CDash, "upload", lambda self, filename: None)
 
     with working_dir(rebuild_env.env_dir):
         activate_rebuild_env(tmp_path, pkg_name, rebuild_env)
@@ -1723,12 +1726,12 @@ def dynamic_mapping_setup(tmp_path: pathlib.Path):
     filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
-            """\
+            f"""\
 spack:
   specs:
     - pkg-a
   mirrors:
-    buildcache-destination: https://my.fake.mirror
+    buildcache-destination: {(tmp_path / "buildcache").as_uri()}
   ci:
     pipeline-gen:
     - dynamic-mapping:

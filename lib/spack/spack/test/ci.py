@@ -13,6 +13,7 @@ import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.paths
+import spack.reporters.cdash
 import spack.util.filesystem as fs
 import spack.util.git
 from spack import ci, repo
@@ -530,8 +531,10 @@ def test_ci_run_standalone_tests_not_installed_cdash(
     assert "No such file or directory" in err
 
 
-def test_ci_skipped_report(tmp_path: pathlib.Path, config):
+def test_ci_skipped_report(tmp_path: pathlib.Path, config, monkeypatch):
     """Test explicit skipping of report as well as CI's 'package' arg."""
+    # the cdash url is fake; never upload reports to it
+    monkeypatch.setattr(spack.reporters.cdash.CDash, "upload", lambda self, filename: None)
     pkg = "trivial-smoke-test"
     spec = spack.concretize.concretize_one(pkg)
     ci_cdash = {
