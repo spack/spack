@@ -2171,8 +2171,6 @@ build(PackageNode) :- attr("node", PackageNode), not concrete(PackageNode).
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
 %-----------------------------------------------------------------------------
-% Each criterion is defined as 
-% opt_criterion(index, location, type, description)
 % 
 % +-----+-----------------------------------------------------------------+
 % |prio |     high <---                                    ---> low       |
@@ -2304,7 +2302,7 @@ opt_criterion(11, "built", "fixed", 0, "version badness (roots)").
 opt_criterion(10, "built", "fixed", 0, "variant penalty (roots)").
 opt_criterion(9, "built", "fixed", 0, "default values of variants not being used (roots)").
 opt_criterion(8, "built", "fixed", 0, "preferred compilers").
-%opt_criterion(7, "built", "fixed", 0, "compiler penalty from reuse").
+opt_criterion(7, "built", "fixed", 0, "compiler penalty from reuse").
 opt_criterion(6, "built", "level", 1, "variant penalty (non-roots)").
 opt_criterion(5, "built", "level", 1, "preferred providers (excluded compilers and language runtimes)").
 opt_criterion(4, "built", "fixed", 1, "number of compilers used on the same node").
@@ -2386,7 +2384,7 @@ opt_priority(Priority, low_offset, "", Description) :-
         opt_priority(Priority, built_offset, "fixed", _);
     0@Priority + Level*level_opt:
         opt_priority(Priority, built_offset, "level", _),
-        Level = 1..(max_depth-1);
+        Level = 0..(max_depth-2);
     % hinge
     0@Priority:
         opt_priority(Priority, hinge_offset, "", _);
@@ -2395,7 +2393,7 @@ opt_priority(Priority, low_offset, "", Description) :-
         opt_priority(Priority, concr_offset, "fixed", _);
     0@Priority + Level*level_opt:
         opt_priority(Priority, concr_offset, "level", _),
-        Level = 1..(max_depth-1);
+        Level = 0..(max_depth-2);
     % low
     0@Priority:
         opt_priority(Priority, low_offset, "", _)
@@ -2505,7 +2503,7 @@ opt_priority(Priority, low_offset, "", Description) :-
 #minimize{
     1@Priority, Hash
     : compiler_penalty_from_reuse(Hash),
-      opt_priority(Priority, _, _, "compiler penalty from reuse")    
+      opt_priority(Priority, concr_offset, _, "compiler penalty from reuse")    
 }.
 
 
@@ -2515,6 +2513,7 @@ opt_priority(Priority, low_offset, "", Description) :-
     : variant_penalty(PackageNode, Variant, Value, Penalty),
       not attr("root", PackageNode),
       level(PackageNode, Level),
+      Level != max_depth-1,
       build_priority(PackageNode, BuildPriority),
       opt_priority(Priority, BuildPriority, _, "variant penalty (non-roots)")
 }.
@@ -2526,6 +2525,7 @@ opt_priority(Priority, low_offset, "", Description) :-
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       not language(Virtual), not language_runtime(Virtual),
       level(ProviderNode, Level),
+      Level != max_depth-1,
       build_priority(ProviderNode, BuildPriority),
       opt_priority(Priority, BuildPriority, _, "preferred providers (excluded compilers and language runtimes)")
 }.
@@ -2561,6 +2561,7 @@ compiler_penalty(PackageNode, C-1) :-
       not attr("root", node(X, Package)),
       not runtime(Package),
       level(node(X, Package), Level),
+      Level != max_depth-1,
       opt_priority(Priority, BuildPriority, _, "version badness (non roots)");
 
     Penalty@Priority+Level*level_opt, node(X, Package)
@@ -2569,6 +2570,7 @@ compiler_penalty(PackageNode, C-1) :-
       not attr("root", node(X, Package)),
       not runtime(Package),
       level(node(X, Package), Level),
+      Level != max_depth-1,
       opt_priority(Priority, BuildPriority, _, "version badness (non roots)")
 }.
 
@@ -2580,6 +2582,7 @@ compiler_penalty(PackageNode, C-1) :-
       not attr("root", PackageNode),
       build_priority(PackageNode, BuildPriority),
       level(PackageNode, Level),
+      Level != max_depth-1,
       opt_priority(Priority, BuildPriority, _, "default values of variants not being used (non-roots)")
 }.
 
@@ -2591,6 +2594,7 @@ compiler_penalty(PackageNode, C-1) :-
       language_runtime(Virtual),
       build_priority(ProviderNode, BuildPriority),
       level(ProviderNode, Level),
+      Level != max_depth-1,
       opt_priority(Priority, BuildPriority, _, "preferred providers (language runtimes)")
 }.
 
