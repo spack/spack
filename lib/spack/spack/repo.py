@@ -6,7 +6,6 @@ import abc
 import contextlib
 import difflib
 import errno
-import functools
 import importlib
 import importlib.machinery
 import importlib.util
@@ -326,22 +325,6 @@ def add_package_to_git_stage(packages: List[str], repo: "Repo") -> None:
         git("add", filename)
 
 
-def autospec(function):
-    """Decorator that automatically converts the first argument of a
-    function to a Spec.
-    """
-
-    @functools.wraps(function)
-    def converter(self, spec_like, *args, **kwargs):
-        from spack.spec import Spec
-
-        if not isinstance(spec_like, Spec):
-            spec_like = Spec(spec_like)
-        return function(self, spec_like, *args, **kwargs)
-
-    return converter
-
-
 class SpackNamespace(types.ModuleType):
     """Allow lazy loading of modules."""
 
@@ -658,9 +641,8 @@ class RepoIndex:
         index is fresh."""
 
         # Filename of the provider index cache (we assume they're all json)
-        from spack.spec import SPECFILE_FORMAT_VERSION
-
-        cache_filename = f"{name}/{self.namespace}-specfile_v{SPECFILE_FORMAT_VERSION}-index.json"
+        version = spack.provider_index.SPECFILE_FORMAT_VERSION
+        cache_filename = f"{name}/{self.namespace}-specfile_v{version}-index.json"
 
         with self.cache.read_transaction(cache_filename) as f:
             # Get the mtime of the cache if it exists, of -inf.
@@ -907,34 +889,17 @@ class RepoPath:
             raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.fullname)
         return providers
 
-    @autospec
-    def extensions_for(
-        self, extendee_spec: "spack.spec.Spec"
-    ) -> List["spack.package_base.PackageBase"]:
-        from spack.spec import Spec
-
-        return [
-            pkg_cls(Spec(pkg_cls.name))
-            for pkg_cls in self.all_package_classes()
-            if pkg_cls(Spec(pkg_cls.name)).extends(extendee_spec)
-        ]
-
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
         return max(repo.last_mtime() for repo in self.repos)
 
     def repo_for_pkg(self, spec: Union[str, "spack.spec.Spec"]) -> "Repo":
         """Given a spec, get the repository for its package."""
-        # We don't @_autospec this function b/c it's called very frequently
-        # and we want to avoid parsing str's into Specs unnecessarily.
-        from spack.spec import Spec
-
-        if isinstance(spec, Spec):
+        if isinstance(spec, str):
+            namespace, _, name = spec.rpartition(".")
+        else:
             namespace = spec.namespace
             name = spec.name
-        else:
-            # handle strings directly for speed instead of @_autospec'ing
-            namespace, _, name = spec.rpartition(".")
 
         # If the spec already has a namespace, then return the
         # corresponding repo if we know about it.
@@ -958,10 +923,6 @@ class RepoPath:
 
     def get(self, spec: "spack.spec.Spec") -> "spack.package_base.PackageBase":
         """Returns the package associated with the supplied spec."""
-        from spack.spec import Spec
-
-        msg = "RepoPath.get can only be called on concrete specs"
-        assert isinstance(spec, Spec) and spec.concrete, msg
         return self.repo_for_pkg(spec).get(spec)
 
     def python_paths(self) -> List[str]:
@@ -972,8 +933,7 @@ class RepoPath:
         """Find a class for the spec's package and return the class object."""
         return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
 
-    @autospec
-    def dump_provenance(self, spec, path):
+    def dump_provenance(self, spec: "spack.spec.Spec", path: str) -> None:
         """Dump provenance information for a spec to a particular path.
 
         This dumps the package file and any associated patch files.
@@ -1281,10 +1241,7 @@ class Repo:
 
     def get(self, spec: "spack.spec.Spec") -> "spack.package_base.PackageBase":
         """Returns the package associated with the supplied spec."""
-        from spack.spec import Spec
-
-        msg = "Repo.get can only be called on concrete specs"
-        assert isinstance(spec, Spec) and spec.concrete, msg
+        assert spec.concrete, "Repo.get can only be called on concrete specs"
         # NOTE: we only check whether the package is None here, not whether it
         # actually exists, because we have to load it anyway, and that ends up
         # checking for existence. We avoid constructing FastPackageChecker,
@@ -1307,7 +1264,6 @@ class Repo:
             tty.debug(e)
             raise FailedConstructorError(spec.fullname, *sys.exc_info()) from e
 
-    @autospec
     def dump_provenance(self, spec: "spack.spec.Spec", path: str) -> None:
         """Dump provenance information for a spec to a particular path.
 
@@ -1370,15 +1326,6 @@ class Repo:
         if not providers:
             raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.fullname)
         return providers
-
-    @autospec
-    def extensions_for(
-        self, extendee_spec: "spack.spec.Spec"
-    ) -> List["spack.package_base.PackageBase"]:
-        from spack.spec import Spec
-
-        result = [pkg_cls(Spec(pkg_cls.name)) for pkg_cls in self.all_package_classes()]
-        return [x for x in result if x.extends(extendee_spec)]
 
     def dirname_for_package_name(self, pkg_name: str) -> str:
         """Given a package name, get the directory containing its package.py file."""
