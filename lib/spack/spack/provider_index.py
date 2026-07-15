@@ -12,6 +12,9 @@ if TYPE_CHECKING:
     import spack.repo
     import spack.spec
 
+#: specfile format version. Must increase monotonically
+SPECFILE_FORMAT_VERSION = 5
+
 
 class ProviderIndex:
     #: This is a dict of dicts used for finding providers of particular
@@ -65,24 +68,12 @@ class ProviderIndex:
             virtual: either a Spec or a string name of a virtual package
         """
         result: Set["spack.spec.Spec"] = set()
+        name = virtual if isinstance(virtual, str) else virtual.name
 
-        if isinstance(virtual, str):
-            # In the common case where just a package name is passed, we can avoid running the
-            # spec parser and intersects, since intersects is always true.
-            if virtual.isalnum():
-                if virtual in self.providers:
-                    for p_spec, spec_set in self.providers[virtual].items():
-                        result.update(spec_set)
-                return list(result)
-
-            from spack.spec import Spec
-
-            virtual = Spec(virtual)
-
-        # Add all the providers that satisfy the vpkg spec.
-        if virtual.name in self.providers:
-            for p_spec, spec_set in self.providers[virtual.name].items():
-                if p_spec.intersects(virtual, deps=False):
+        if name in self.providers:
+            for p_spec, spec_set in self.providers[name].items():
+                # A plain package name matches all providers; a Spec constrains them.
+                if isinstance(virtual, str) or p_spec.intersects(virtual, deps=False):
                     result.update(spec_set)
 
         return list(result)
