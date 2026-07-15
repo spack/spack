@@ -376,13 +376,12 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :ref:`vcs-fetch`.
 
    sbang
-      Spack's shebang trampoline for ``#!`` lines that exceed the kernel length limit.
-      Installed as a post-install hook.
+      Tool that lets Spack use shebang (``#!``) lines whose length exceeds the operating system's limit, by rewriting them through a post-install :term:`hook`.
 
    RPATH
    runpath
       A linker-embedded library search path baked into installed binaries so they find their dependencies without ``LD_LIBRARY_PATH``.
-      See :ref:`handling_rpaths`.
+      See :ref:`handling_rpaths` and :ref:`shared-linking-type`.
 
    hook
       A Python callback that runs at a defined point in the install lifecycle (pre-install, post-install, pre-uninstall, ...).
@@ -450,7 +449,7 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :ref:`splicing` and :ref:`abi_compatibility`.
 
    microarchitecture
-      A specific CPU model recognized by ``archspec`` (``zen3``, ``skylake_avx512``, ``neoverse_v2``, ...) and used as the :term:`target` portion of an :term:`architecture spec`.
+      A specific CPU microarchitecture recognized by ``archspec`` (``zen3``, ``skylake_avx512``, ``neoverse_v2``, ...) and used as the :term:`target` portion of an :term:`architecture spec`.
       The concretizer can label nodes either with full microarchitectures or with generic families (``x86_64_v3``) via ``concretizer:targets:granularity``.
       See :ref:`concretizer-options`.
 

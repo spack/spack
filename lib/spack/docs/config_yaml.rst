@@ -211,6 +211,10 @@ Some systems come with ``ccache``, but it can also be installed using ``spack in
 (See the *Configuration settings* section of ``man ccache`` to learn more about the default settings and how to change them.)
 Please note that we currently disable ccache's ``hash_dir`` feature to avoid an issue with the stage directory (see https://github.com/spack/spack/pull/3761#issuecomment-294352232).
 
+.. index::
+   single: shared_linking (config.yaml)
+   :name: shared-linking-type
+
 ``shared_linking:type``
 -----------------------
 
