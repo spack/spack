@@ -106,7 +106,6 @@ def relocate_windows_binaries(
     # form here, since the old prefix no longer exists on this host, so instead we
     # also match directly against the SFN form of each old prefix.
     all_prefixes = {**prefixes, **(sfn_prefixes or {})}
-    import pdb; pdb.set_trace()
     ev = EnvironmentModifications()
     ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in all_prefixes.items()])
 
