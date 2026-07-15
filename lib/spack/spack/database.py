@@ -279,8 +279,8 @@ class LockConfiguration(NamedTuple):
     """
 
     enable: bool
-    database_timeout: Optional[int]
-    package_timeout: Optional[int]
+    database_timeout: Optional[float]
+    package_timeout: Optional[float]
 
 
 #: Configure a database to avoid using locks
@@ -332,16 +332,10 @@ def failures_lock_path(root_dir: Union[str, pathlib.Path]) -> pathlib.Path:
 class SpecLocker:
     """Manages acquiring and releasing read or write locks on concrete specs."""
 
-    def __init__(
-        self,
-        lock_path: Union[str, pathlib.Path],
-        default_timeout: Optional[float],
-        *,
-        enable: bool = True,
-    ):
+    def __init__(self, lock_path: Union[str, pathlib.Path], lock_cfg: LockConfiguration):
         self.lock_path = pathlib.Path(lock_path)
-        self.default_timeout = default_timeout
-        self._enable = enable
+        self.default_timeout = lock_cfg.package_timeout
+        self._enable = lock_cfg.enable
 
         # Maps (spec.dag_hash(), spec.name) to the corresponding lock object
         self.locks: Dict[Tuple[str, str], lk.Lock] = {}
@@ -436,19 +430,11 @@ class FailureTracker:
     #: File for locking particular concrete spec hashes
     locker: SpecLocker
 
-    def __init__(
-        self,
-        root_dir: Union[str, pathlib.Path],
-        default_timeout: Optional[float],
-        *,
-        enable: bool = True,
-    ):
+    def __init__(self, root_dir: Union[str, pathlib.Path], lock_cfg: LockConfiguration):
         #: Ensure a persistent location for dealing with parallel installation
         #: failures (e.g., across near-concurrent processes).
         self.dir = pathlib.Path(root_dir) / _DB_DIRNAME / "failures"
-        self.locker = SpecLocker(
-            failures_lock_path(root_dir), default_timeout=default_timeout, enable=enable
-        )
+        self.locker = SpecLocker(failures_lock_path(root_dir), lock_cfg=lock_cfg)
 
     def _ensure_parent_directories(self) -> None:
         """Ensure that parent directories of the FailureTracker exist.

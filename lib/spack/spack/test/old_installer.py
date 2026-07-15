@@ -483,7 +483,12 @@ def test_dump_packages_deps_errs(install_mockery, tmp_path: pathlib.Path, monkey
 
 def test_clear_failures_success(tmp_path: pathlib.Path):
     """Test the clear_failures happy path."""
-    failures = spack.database.FailureTracker(str(tmp_path), default_timeout=0.1)
+    failures = spack.database.FailureTracker(
+        str(tmp_path),
+        lock_cfg=spack.database.LockConfiguration(
+            enable=True, database_timeout=None, package_timeout=0.1
+        ),
+    )
 
     spec = spack.spec.Spec("pkg-a")
     spec._mark_concrete()
@@ -511,7 +516,12 @@ def test_clear_failures_success(tmp_path: pathlib.Path):
 @pytest.mark.skipif(fs.getuid() == 0, reason="user is root")
 def test_clear_failures_errs(tmp_path: pathlib.Path, capfd):
     """Test the clear_failures exception paths."""
-    failures = spack.database.FailureTracker(str(tmp_path), default_timeout=0.1)
+    failures = spack.database.FailureTracker(
+        str(tmp_path),
+        lock_cfg=spack.database.LockConfiguration(
+            enable=True, database_timeout=None, package_timeout=0.1
+        ),
+    )
     spec = spack.spec.Spec("pkg-a")
     spec._mark_concrete()
     failures.mark(spec)

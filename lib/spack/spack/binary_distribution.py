@@ -197,7 +197,7 @@ class BinaryIndexCache:
 
         # a FileCache instance storing copies of remote binary cache indices
         self._index_file_cache: file_cache.FileCache = file_cache.FileCache(
-            self._index_cache_root, enable_lock=spack.config.get("config:locks", True)
+            self._index_cache_root, enable_lock=spack.config.CONFIG.get("config:locks", True)
         )
         self._index_file_cache_initialized = False
 

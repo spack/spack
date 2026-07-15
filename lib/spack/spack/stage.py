@@ -271,7 +271,7 @@ class AbstractStage(abc.ABC):
                 start=lock_id,
                 length=1,
                 desc=self.name,
-                enable=spack.config.get("config:locks", True),
+                enable=spack.config.CONFIG.get("config:locks", True),
             )
         return self._lock
 

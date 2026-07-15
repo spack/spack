@@ -75,7 +75,7 @@ def package_repository_lock() -> spack.util.lock.Lock:
     """Lock for process safety when cloning remote package repositories"""
     return spack.util.lock.Lock(
         os.path.join(spack.paths.user_cache_path, "package-repository.lock"),
-        enable=spack.config.get("config:locks", True),
+        enable=spack.config.CONFIG.get("config:locks", True),
     )
 
 
