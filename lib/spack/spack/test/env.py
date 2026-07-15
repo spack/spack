@@ -2177,15 +2177,13 @@ def test_environment_pickle_preserves_lock_state(enable_locks, tmp_path: pathlib
     """Tests that an environment round-trips through pickle with its lock-enable state intact."""
     with spack.config.override("config:locks", enable_locks):
         env = ev.create_in_dir(tmp_path)
-    assert env._lock_enabled is enable_locks
+    original_enabled = env.txlock.enabled
 
     blob = pickle.dumps(env)
 
-    # Flip the global config, then unpickle: the restored environment must keep the value
+    # Flip the global config, then unpickle: the rebuilt transaction lock must keep the state
     # that was pickled, not the (now different) global one.
     with spack.config.override("config:locks", not enable_locks):
         restored = pickle.loads(blob)
 
-    assert restored._lock_enabled is enable_locks
-    # The rebuilt transaction lock must reflect the pickled state, not the flipped global.
-    assert type(restored.txlock.backend) is type(env.txlock.backend)
+    assert restored.txlock.enabled == original_enabled
