@@ -2151,8 +2151,14 @@ impose(Hash, PackageNode) :- attr("hash", PackageNode, Hash), attr("node", Packa
 % If there is not a hash for a package, we build it.
 build(PackageNode) :- attr("node", PackageNode), not concrete(PackageNode).
 
-% Minimizing builds is tricky. We want a minimizing criterion
+% This statement, which is a hidden feature of clingo, let us avoid cycles in the DAG
+#edge (A, B) : depends_on(A, B).
 
+%-----------------------------------------------------------------------------------------
+% Optimization
+%-----------------------------------------------------------------------------------------
+%
+% Minimizing builds is tricky. We want a minimizing criterion
 % because we want to reuse what is available, but
 % we also want things that are built to stick to *default preferences* from
 % the package and from the user. We therefore treat built specs differently and apply
@@ -2162,305 +2168,502 @@ build(PackageNode) :- attr("node", PackageNode), not concrete(PackageNode).
 % criteria for built specs -- so that they take precedence over the otherwise
 % topmost-priority criterion to reuse what is installed.
 %
-
-% The priority ranges are:
-%   1000+       Optimizations for concretization errors
-%   300 - 1000  Highest priority optimizations for valid solutions
-%   200 - 299   Shifted priorities for build nodes; correspond to priorities 0 - 99.
-%   100 - 199   Unshifted priorities. Currently only includes minimizing #builds and minimizing dupes.
-%   0   -  99   Priorities for non-built nodes.
-
-treat_node_as_concrete(node(X, Package)) :- attr("node", node(X, Package)), runtime(Package).
-
-build_priority(PackageNode, 200) :- build(PackageNode), attr("node", PackageNode), not treat_node_as_concrete(PackageNode).
-build_priority(PackageNode, 0)   :- build(PackageNode), attr("node", PackageNode), treat_node_as_concrete(PackageNode).
-build_priority(PackageNode, 0)   :- concrete(PackageNode), attr("node", PackageNode).
-
-% This statement, which is a hidden feature of clingo, let us avoid cycles in the DAG
-#edge (A, B) : depends_on(A, B).
-
-%-----------------------------------------------------------------
-% Optimization to avoid errors
-%-----------------------------------------------------------------
-% Some errors are handled as rules instead of constraints because
-% it allows us to explain why something failed.
-#minimize{ 0@1000: #true}.
-
-#minimize{ Weight@1000,Msg: error(Weight, Msg) }.
-#minimize{ Weight@1000,Msg,Arg1: error(Weight, Msg, Arg1) }.
-#minimize{ Weight@1000,Msg,Arg1,Arg2: error(Weight, Msg, Arg1, Arg2) }.
-#minimize{ Weight@1000,Msg,Arg1,Arg2,Arg3: error(Weight, Msg, Arg1, Arg2, Arg3) }.
-#minimize{ Weight@1000,Msg,Arg1,Arg2,Arg3,Arg4: error(Weight, Msg, Arg1, Arg2, Arg3, Arg4) }.
-
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
 %-----------------------------------------------------------------------------
-% Each criterion below has:
-%   1. an opt_criterion(ID, Name) fact that describes the criterion, and
-%   2. a `#minimize{ 0@2 : #true }.` statement that ensures the criterion
-%      is displayed (clingo doesn't display sums over empty sets by default)
+% Each criterion is defined as 
+% opt_criterion(index, location, type, description)
+% 
+% +-----+-----------------------------------------------------------------+
+% |prio |     high <---                                    ---> low       |
+% |-----|-------+------+-----------------+-------+-----------------+------|
+% |loc  | error | high |      built      | hinge |    concrete     | low  | 
+% |-----|-------|------|-----------------|-------|-----------------|------|
+% |type | n/a   | n/a  |  fixed & level  | n/a   |  fixed & level  | n/a  |
+% |-----|-------|------|------+------+---|-------|------+------+---|------|
+% |level| n/a   | n/a  |  L0  |  L1  |...| n/a   |  L0  |  L1  |...| n/a  |
+% |-----|-------|------|------|------|---|-------|------|------|---|------|
+% |index| 1000  |0|1|..|0|1|..|0|1|..|...|0|1|...|0|1|..|0|1|..|...|0|1|..|
+% +-----+-------+------+------+------+---+-------+------+------+---+------+
+%
+% Locations:
+%   "error"     Highest priority (used for errors)
+%   "high"      Higher priority than built and concrete criteria
+%   "built"     Priority for built specs
+%   "hinge"     Priority between built and concrete specs
+%   "concrete"  Priority for concrete specs
+%   "low"       Priority below concrete specs
+%
+% Types:
+%   "fixed"     Criteria dependent on built/concrete. Independent of level
+%   "level"     Criteria dependent on built/concrete and level
+%
+%   Types are relevant only for built and concrete locations. "fixed" and
+%   "level" share the same index "namespace" per level. "fixed" criteria are
+%   only active level specified by `opt_criterion`.
+%
+% Note that level is a computed value from the DAG and is only used for "level"
+% criteria. 
 
+% Constants for calculating optimization criterion priority
+%   level_opt is level & fixed per level
+%   indep_opt is per high/hinge/low
+#const level_opt = 16.
+#const indep_opt = 8.
+%   location
+#const low_offset   = 0.
+#const concr_offset = low_offset + indep_opt.
+#const hinge_offset = concr_offset + max_depth * level_opt.
+#const built_offset = hinge_offset + indep_opt.
+#const high_offset  = built_offset + max_depth * level_opt.
+#const error_offset = high_offset + indep_opt.
+%   type
+#const fixed_offset = (max_depth - 1) * level_opt.
+
+% Build priority
+treat_node_as_concrete(node(X, Package)) :- attr("node", node(X, Package)), runtime(Package).
+
+build_priority(PackageNode, built_offset) :- build(PackageNode), attr("node", PackageNode), not treat_node_as_concrete(PackageNode).
+build_priority(PackageNode, concr_offset) :- build(PackageNode), attr("node", PackageNode), treat_node_as_concrete(PackageNode).
+build_priority(PackageNode, concr_offset) :- concrete(PackageNode), attr("node", PackageNode).
+
+%-----------------------------------------------------------------------------
+% DAG Node Level
+%-----------------------------------------------------------------------------
+% We define the "level" of a package node as its minimum depth in the DAG. For
+% convenience of optimization priority computation, level values are
+% reversed: roots are set to `max_depth` with level decreasing further into 
+% the DAG.
+%
+% if max_depth = 6:
+%
+%       A       level = 6
+%      / \
+%     B   C     level = 5
+%     |  /
+%     D /       level = 4
+%     |/
+%     E         level = 4
+%
+% Computing exact depth for package nodes during search is costly and 
+% inefficient for the solver. For all possible paths to a node, all edges must 
+% be assigned for clingo to derive a depth. What we really want is a depth 
+% value that can change when new packages nodes are created during the search. 
+% First order logic is monotonic, so we cannot "disprove" a level with additional 
+% facts.
+%
+% Since dependency paths cannot be deleted without backtracking, level is a
+% monotonically increasing property of package nodes. Thus we can treat level
+% facts as "level is at least N", written as `level(PackageNode, N)`. If shorter 
+% paths are derived, we derive a new `level(PackageNode, M)` fact. We avoid 
+% taking the minimum of these facts with the following trick.
+%
+% Package nodes can have multiple `level(PackageNode, _)` facts derived from
+% different paths, so we enforce that `level(PackageNode, N)` implies
+% `level(PackageNode, N-1)`. Because optimization criteria is lexicographically
+% optimized by priority, an optimal solution with a cost of [x_1, x_2, x_3, ...] 
+% will also be the optimal solution if cost is "prefix summed": 
+% [x_1, x_1 + x_2, x_1 + x_2 + x_3, ...]. This prefix sum effect is removed when
+% displaying optimization criteria to the user for clarity.
+%
+% Because all level(PackageNode, _) facts are derived easily by unit propagation, 
+% it should be easier for clingo to find unsat cores for optimization.
+
+#const max_depth = 2.
+level(Package, max_depth-1) :- attr("root", Package).
+level(Package, 0)           :- attr("node", Package).
+level(Package, L-1)         :- level(Package, L), L > 0.
+level(Package, L-1) :-
+    attr("node", Package),
+    level(Dependent, L),
+    depends_on(Dependent, Package),
+    L > 0.
+
+%----------------------------------------------------------------------
+% Errors
+%----------------------------------------------------------------------
+% Some errors are handled as rules instead of constraints because
+% it allows us to explain why something failed.
+% These do not have an associated opt_criterion/5 so asp.py can
+% differentiate between actual optimization criteria and error criteria
+#minimize{ 0@error_offset: #true}.
+#minimize{ Weight@error_offset,Msg: error(Weight, Msg) }.
+#minimize{ Weight@error_offset,Msg,Arg1: error(Weight, Msg, Arg1) }.
+#minimize{ Weight@error_offset,Msg,Arg1,Arg2: error(Weight, Msg, Arg1, Arg2) }.
+#minimize{ Weight@error_offset,Msg,Arg1,Arg2,Arg3: error(Weight, Msg, Arg1, Arg2, Arg3) }.
+#minimize{ Weight@error_offset,Msg,Arg1,Arg2,Arg3,Arg4: error(Weight, Msg, Arg1, Arg2, Arg3, Arg4) }.
+
+%-----------------------------------------------------------------------------
+% Optimization Criteria
+%-----------------------------------------------------------------------------
+% opt_criterion(Priority, Location, Type, Level (for fixed only), Description)
+opt_criterion(0, "high", "", 0, "requirement weight").
+
+opt_criterion(12, "built", "fixed", 0, "deprecated versions used").
+opt_criterion(11, "built", "fixed", 0, "version badness (roots)").
+opt_criterion(10, "built", "fixed", 0, "variant penalty (roots)").
+opt_criterion(9, "built", "fixed", 0, "default values of variants not being used (roots)").
+opt_criterion(8, "built", "fixed", 0, "preferred compilers").
+%opt_criterion(7, "built", "fixed", 0, "compiler penalty from reuse").
+opt_criterion(6, "built", "level", 1, "variant penalty (non-roots)").
+opt_criterion(5, "built", "level", 1, "preferred providers (excluded compilers and language runtimes)").
+opt_criterion(4, "built", "fixed", 1, "number of compilers used on the same node").
+opt_criterion(3, "built", "fixed", 1, "non-preferred OS's").
+opt_criterion(2, "built", "level", 1, "version badness (non roots)").
+opt_criterion(1, "built", "level", 1, "default values of variants not being used (non-roots)").
+opt_criterion(0, "built", "level", 1, "preferred providers (language runtimes)").
+
+opt_criterion(2, "hinge", "", 0, "number of packages to build (vs. reuse)").
+opt_criterion(1, "hinge", "", 0, "number of nodes from the same package").
+opt_criterion(0, "hinge", "", 0, "build unification sets").
+
+opt_criterion(12, "concr", "fixed", 0, "deprecated versions used").
+opt_criterion(11, "concr", "fixed", 0, "version badness (roots)").
+opt_criterion(10, "concr", "fixed", 0, "variant penalty (roots)").
+opt_criterion(9, "concr", "fixed", 0, "default values of variants not being used (roots)").
+opt_criterion(8, "concr", "fixed", 0, "preferred compilers").
+opt_criterion(7, "concr", "fixed", 0, "compiler penalty from reuse").
+opt_criterion(6, "concr", "level", 1, "variant penalty (non-roots)").
+opt_criterion(5, "concr", "level", 1, "preferred providers (excluded compilers and language runtimes)").
+opt_criterion(4, "concr", "fixed", 1, "number of compilers used on the same node").
+opt_criterion(3, "concr", "fixed", 1, "non-preferred OS's").
+opt_criterion(2, "concr", "level", 1, "version badness (non roots)").
+opt_criterion(1, "concr", "level", 1, "default values of variants not being used (non-roots)").
+opt_criterion(0, "concr", "level", 1, "preferred providers (language runtimes)").
+
+opt_criterion(7, "low", "", 0, "target mismatches (built nodes)").
+opt_criterion(6, "low", "", 0, "non-preferred targets").
+opt_criterion(5, "low", "", 0, "target mismatches (reused nodes)").
+opt_criterion(4, "low", "", 0, "version badness (runtimes)").
+opt_criterion(3, "low", "", 0, "non-preferred targets (runtimes)").
+opt_criterion(2, "low", "", 0, "providers on edges").
+opt_criterion(1, "low", "", 0, "version badness on edges").
+opt_criterion(0, "low", "", 0, "penalty on symmetric duplicates").
+
+%----------------------------------------------------------------------------
+% Show optimization criteria
+%----------------------------------------------------------------------------
+% These statements ensure that the optimization criteria are displayed
+% they also serve as examples of correct priority calculation - this should
+% be used when writing the actual minimization criteria
+
+% compute criteria priority (excluding level offset)
+opt_priority(Priority, high_offset, "", Description) :-
+    opt_criterion(N, "high", _, _, Description),
+    Priority = N + high_offset.
+
+opt_priority(Priority, built_offset, "fixed", Description) :-
+    opt_criterion(N, "built", "fixed", Level, Description),
+    Priority = N + built_offset + fixed_offset - (Level*level_opt).
+
+opt_priority(Priority, built_offset, "level", Description) :-
+    opt_criterion(N, "built", "level", _, Description),
+    Priority = N + built_offset.
+
+opt_priority(Priority, hinge_offset, "", Description) :-
+    opt_criterion(N, "hinge", _, _, Description),
+    Priority = N + hinge_offset.
+
+opt_priority(Priority, concr_offset, "fixed", Description) :-
+    opt_criterion(N, "concr", "fixed", Level, Description),
+    Priority = N + concr_offset + fixed_offset - (Level*level_opt).
+
+opt_priority(Priority, concr_offset, "level", Description) :-
+    opt_criterion(N, "concr", "level", _, Description),
+    Priority = N + concr_offset.
+
+opt_priority(Priority, low_offset, "", Description) :-
+    opt_criterion(N, "low", _, _, Description),
+    Priority = N + low_offset. 
+
+% show criteria
+#minimize {
+    % high
+    0@Priority:
+        opt_priority(Priority, high_offset, "", _);
+    % built
+    0@Priority:
+        opt_priority(Priority, built_offset, "fixed", _);
+    0@Priority + Level*level_opt:
+        opt_priority(Priority, built_offset, "level", _),
+        Level = 1..(max_depth-1);
+    % hinge
+    0@Priority:
+        opt_priority(Priority, hinge_offset, "", _);
+    % concrete
+    0@Priority:
+        opt_priority(Priority, concr_offset, "fixed", _);
+    0@Priority + Level*level_opt:
+        opt_priority(Priority, concr_offset, "level", _),
+        Level = 1:..(max_depth-1);
+    % low
+    0@Priority:
+        opt_priority(Priority, low_offset, "", _)
+}.
+
+%-----------------------------------------------------------------------------
+% Optimization minimize blocks
+%-----------------------------------------------------------------------------
 % A condition group specifies one or more specs that must be satisfied.
 % Specs declared first are preferred, so we assign increasing weights and
 % minimize the weights.
-opt_criterion(410, "requirement weight").
-#minimize{ 0@410: #true }.
 #minimize {
-    Weight@410,PackageNode,Group
-    : requirement_penalty(PackageNode, Group, Weight)
+    Weight@Priority, PackageNode,Group
+    : requirement_penalty(PackageNode, Group, Weight),
+      opt_priority(Priority, _, _, "requirement_weight");
+
+    Weight@Priority, PackageNode,Language,Group
+    : requirement_penalty(PackageNode, Language, Group, Weight),
+      opt_priority(Priority, _, _, "requirement_weight")
 }.
-#minimize {
-    Weight@410,PackageNode,Language,Group
-    : requirement_penalty(PackageNode, Language, Group, Weight)
-}.
+
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
-opt_criterion(220, "number of packages to build (vs. reuse)").
-#minimize { 0@220: #true }.
-#minimize { 1@220,PackageNode : build(PackageNode), not treat_node_as_concrete(PackageNode) }.
+#minimize {
+    1@Priority, PackageNode
+    : build(PackageNode), not treat_node_as_concrete(PackageNode),
+      opt_priority(Priority, _, _, "number of packages to build (vs. reuse)")
+}.
 
-opt_criterion(210, "number of nodes from the same package").
-#minimize { 0@210: #true }.
-#minimize { ID@210,Package : attr("node", node(ID, Package)), not is_self_build_req(node(ID, Package)) }.
-#minimize { ID@210,Package : attr("virtual_node", node(ID, Package)) }.
+
+% Minimize number of nodes from the same package
+#minimize {
+    ID@Priority, Package
+    : attr("node", node(ID, Package)), not is_self_build_req(node(ID, Package)),
+      opt_priority(Priority, _, _, "number of nodes from the same package");
+    ID@Priority, Package
+    : attr("virtual_node", node(ID, Package)),
+      opt_priority(Priority, _, _, "number of nodes from the same package")
+}.
 #defined optimize_for_reuse/0.
+
 
 % Minimize the unification set ID used for build dependencies. This reduces the number of optimal
 % solutions that differ only by which node belongs to which unification set.
-opt_criterion(200, "build unification sets").
-#minimize{ 0@200: #true }.
-#minimize{ ID@200,ParentNode : build_set_id(ParentNode, ID) }.
+#minimize{
+    ID@Priority, ParentNode
+    : build_set_id(ParentNode, ID),
+      opt_priority(Priority, _, _, "build unification sets")
+}.
+
 
 % Minimize the number of deprecated versions being used
-opt_criterion(173, "deprecated versions used").
-#minimize{ 0@373: #true }.
-#minimize{ 0@173: #true }.
-#minimize{
-    1@173+Priority,PackageNode
+#minimize {
+    1@Priority, PackageNode
     : attr("deprecated", PackageNode, _),
       not external(PackageNode),
-      build_priority(PackageNode, Priority)
+      build_priority(PackageNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, "deprecated versions used")
 }.
+
 
 % Minimize the:
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root package.
-opt_criterion(170, "version badness (roots)").
-#minimize{ 0@370: #true }.
-#minimize{ 0@170: #true }.
 #minimize {
-    Weight@170+Priority,PackageNode
+    Weight@Priority, PackageNode
     : attr("root", PackageNode),
       version_weight(PackageNode, Weight),
-      build_priority(PackageNode, Priority)
-}.
-#minimize {
-    Penalty@170+Priority,PackageNode
+      build_priority(PackageNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, "version badness (roots)");
+
+    Penalty@Priority, PackageNode
     : attr("root", PackageNode),
       version_deprecation_penalty(PackageNode, Penalty),
-      build_priority(PackageNode, Priority)
+      build_priority(PackageNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, "version badness (roots)")
 }.
 
-opt_criterion(165, "variant penalty (roots)").
-#minimize{ 0@365: #true }.
-#minimize{ 0@165: #true }.
 #minimize {
-    Penalty@165+Priority,PackageNode,Variant,Value
+    Penalty@Priority, PackageNode,Variant,Value
     : variant_penalty(PackageNode, Variant, Value, Penalty),
       attr("root", PackageNode),
-      build_priority(PackageNode, Priority)
+      build_priority(PackageNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, "variant penalty (roots)")
 }.
 
-opt_criterion(155, "default values of variants not being used (roots)").
-#minimize{ 0@355: #true }.
-#minimize{ 0@155: #true }.
 #minimize{
-    1@155+Priority,PackageNode,Variant,Value
+    1@Priority, PackageNode,Variant,Value
     : variant_default_not_used(PackageNode, Variant, Value),
       attr("root", PackageNode),
-      build_priority(PackageNode, Priority)
+      build_priority(PackageNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, "default values of variants not being used (roots)")
 }.
+
 
 % Choose the preferred compiler before penalizing variants, to avoid that a variant penalty
 % on e.g. gcc causes clingo to pick another compiler e.g. llvm
-opt_criterion(148, "preferred compilers").
-#minimize{ 0@348: #true }.
-#minimize{ 0@148: #true }.
 #minimize{
-    Weight@148+Priority,ProviderNode,X,Virtual
+    Weight@Priority, ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       language(Virtual),
-      build_priority(ProviderNode, Priority)
+      build_priority(ProviderNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, "preferred compilers")
 }.
 
-opt_criterion(141, "compiler penalty from reuse").
-#minimize{ 0@341: #true }.
-#minimize{ 0@141: #true }.
-#minimize{1@141,Hash : compiler_penalty_from_reuse(Hash)}.
+#minimize{
+    1@Priority, Hash
+    : compiler_penalty_from_reuse(Hash),
+      opt_priority(Priority, _, _, "compiler penalty from reuse")    
+}.
+
 
 % Try to use default variants or variants that have been set
-opt_criterion(140, "variant penalty (non-roots)").
-#minimize{ 0@340: #true }.
-#minimize{ 0@140: #true }.
 #minimize {
-    Penalty@140+Priority,PackageNode,Variant,Value
+    Penalty@Priority+Level*level_opt, PackageNode,Variant,Value
     : variant_penalty(PackageNode, Variant, Value, Penalty),
       not attr("root", PackageNode),
-      build_priority(PackageNode, Priority)
+      level(PackageNode, Level),
+      build_priority(PackageNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, "variant penalty (non-roots)")
 }.
 
+
 % Minimize the weights of all the other providers (mpi, lapack, etc.)
-opt_criterion(138, "preferred providers (excluded compilers and language runtimes)").
-#minimize{ 0@338: #true }.
-#minimize{ 0@138: #true }.
 #minimize{
-    Weight@138+Priority,ProviderNode,X,Virtual
+    Weight@Priority+Level*level_opt, ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       not language(Virtual), not language_runtime(Virtual),
-      build_priority(ProviderNode, Priority)
+      level(ProviderNode, Level),
+      build_priority(ProviderNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, "preferred providers (excluded compilers and language runtimes)")
 }.
+
 
 % Minimize the number of compilers used on nodes
 compiler_penalty(PackageNode, C-1) :-
    C = #count { CompilerNode : node_compiler(PackageNode, CompilerNode) },
    node_compiler(PackageNode, _), C > 0.
 
-opt_criterion(136, "number of compilers used on the same node").
-#minimize{ 0@336: #true }.
-#minimize{ 0@136: #true }.
 #minimize{
-    Penalty@136+Priority,PackageNode
-    : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
+    Penalty@Priority, PackageNode
+    : compiler_penalty(PackageNode, Penalty), 
+      build_priority(PackageNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, "number of compilers used on the same node")
 }.
 
 
-opt_criterion(130, "non-preferred OS's").
-#minimize{ 0@330: #true }.
-#minimize{ 0@130: #true }.
+% Non-preferred OS's
 #minimize{
-    Weight@130+Priority,PackageNode
+    Weight@Priority, PackageNode
     : node_os_weight(PackageNode, Weight),
-      build_priority(PackageNode, Priority)
+      build_priority(PackageNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, "non-preferred OS's")
 }.
+
 
 % Choose more recent versions for nodes
-opt_criterion(125, "version badness (non roots)").
-#minimize{ 0@325: #true }.
-#minimize{ 0@125: #true }.
 #minimize{
-    Weight@125+Priority,node(X, Package)
+    Weight@Priority+Level*level_opt, node(X, Package)
     : version_weight(node(X, Package), Weight),
-      build_priority(node(X, Package), Priority),
+      build_priority(node(X, Package), BuildPriority),
       not attr("root", node(X, Package)),
-      not runtime(Package)
-}.
-#minimize {
-    Penalty@125+Priority,node(X, Package)
+      not runtime(Package),
+      level(node(X, Package), Level),
+      opt_priority(Priority, BuildPriority, _, "version badness (non roots)");
+
+    Penalty@Priority+Level*level_opt, node(X, Package)
     : version_deprecation_penalty(node(X, Package), Penalty),
-      build_priority(node(X, Package), Priority),
+      build_priority(node(X, Package), BuildPriority),
       not attr("root", node(X, Package)),
-      not runtime(Package)
+      not runtime(Package),
+      level(node(X, Package), Level),
+      opt_priority(Priority, BuildPriority, _, "version badness (non roots)")
 }.
 
 
 % Try to use all the default values of variants
-opt_criterion(120, "default values of variants not being used (non-roots)").
-#minimize{ 0@320: #true }.
-#minimize{ 0@120: #true }.
 #minimize{
-    1@120+Priority,PackageNode,Variant,Value
+    1@Priority+Level*level_opt, PackageNode,Variant,Value
     : variant_default_not_used(PackageNode, Variant, Value),
       not attr("root", PackageNode),
-      build_priority(PackageNode, Priority)
+      build_priority(PackageNode, BuildPriority),
+      level(PackageNode, Level),
+      opt_priority(Priority, BuildPriority, _, "default values of variants not being used (non-roots)")
 }.
 
+
 % Prefer more optimal providers for language runtimes.
-opt_criterion(105, "preferred providers (language runtimes)").
-#minimize{ 0@305: #true }.
-#minimize{ 0@105: #true }.
 #minimize{
-    Weight@105+Priority,ProviderNode,X,Virtual
+    Weight@Priority+Level*level_opt, ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       language_runtime(Virtual),
-      build_priority(ProviderNode, Priority)
+      build_priority(ProviderNode, BuildPriority),
+      level(ProviderNode, Level),
+      opt_priority(Priority, BuildPriority, _, "preferred providers (language runtimes)")
 }.
+
 
 % Build and concrete mismatches are sandwiched between node target penalty so that
 % we can still reuse an old, available target and build a more specific software on
 % top of it by default
-opt_criterion(12, "target mismatches (built nodes)").
-#minimize{ 0@12: #true }.
 #minimize{
-    1@12,PackageNode,node(ID, Dependency)
+    1@Priority, PackageNode,node(ID, Dependency)
     : node_target_mismatch(PackageNode, node(ID, Dependency)),
-      build_priority(node(ID, Dependency), 200),
-      not runtime(Dependency)
+      build_priority(node(ID, Dependency), built_offset),
+      not runtime(Dependency),
+      opt_priority(Priority, _, _, "target mismatches (built nodes)")
 }.
 
-opt_criterion(10, "non-preferred targets").
-#minimize{ 0@10: #true }.
 #minimize{
-    Weight@10,node(X, Package)
+    Weight@Priority, node(X, Package)
     : node_target_weight(node(X, Package), Weight),
-      not runtime(Package)
+      not runtime(Package),
+      opt_priority(Priority, _, _, "non-preferred targets")
 }.
 
-opt_criterion(7, "target mismatches (reused nodes)").
-#minimize{ 0@7: #true }.
 #minimize{
-    1@7,PackageNode,node(ID, Dependency)
+    1@Priority, PackageNode,node(ID, Dependency)
     : node_target_mismatch(PackageNode, node(ID, Dependency)),
-      build_priority(node(ID, Dependency), 0),
-      not runtime(Dependency)
+      build_priority(node(ID, Dependency), concr_offset),
+      not runtime(Dependency),
+      opt_priority(Priority, _, _, "target mismatches (reused nodes)")
 }.
+
 
 % Choose more recent versions for runtimes
-opt_criterion(4, "version badness (runtimes)").
-#minimize{ 0@4: #true }.
 #minimize{
-    Weight@4,node(X, Package)
+    Weight@Priority, node(X, Package)
     : version_weight(node(X, Package), Weight),
-      runtime(Package)
+      runtime(Package),
+      opt_priority(Priority, _, _, "version badness (runtimes)")
 }.
 
 % Choose best target for runtimes
-opt_criterion(3, "non-preferred targets (runtimes)").
-#minimize{ 0@3: #true }.
 #minimize{
-    Weight@3,node(X, Package)
+    Weight@Priority, node(X, Package)
     : node_target_weight(node(X, Package), Weight),
-      runtime(Package)
+      runtime(Package),
+      opt_priority(Priority, _, _, "non-preferred targets (runtimes)")
 }.
 
 % Try to use the most optimal providers as much as possible
-opt_criterion(2, "providers on edges").
-#minimize{ 0@2: #true }.
 #minimize{
-    Weight@2,ParentNode,ProviderNode,node(X, Virtual)
+    Weight@Priority, ParentNode,ProviderNode,node(X, Virtual)
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       max_dupes(Virtual, MaxDupes), MaxDupes > 1,
       not attr("root", ProviderNode),
       language(Virtual),
-      depends_on(ParentNode, ProviderNode)
+      depends_on(ParentNode, ProviderNode),
+      opt_priority(Priority, _, _, "providers on edges")
 }.
 
 % Try to use latest versions of nodes as much as possible
-opt_criterion(1, "version badness on edges").
-#minimize{ 0@1: #true }.
 #minimize{
-    Weight@1,ParentNode,node(X, Package)
+    Weight@Priority, ParentNode,node(X, Package)
     : version_weight(node(X, Package), Weight),
       multiple_unification_sets(Package),
       not attr("root", node(X, Package)),
-      depends_on(ParentNode, node(X, Package))
+      depends_on(ParentNode, node(X, Package)),
+      opt_priority(Priority, _, _, "version badness on edges")
 }.
 
 % Reduce symmetry on duplicates
-opt_criterion(0, "penalty on symmetric duplicates").
-#minimize{ 0@0: #true }.
 #minimize{
-    Weight@1,PackageNode,Reason : duplicate_penalty(PackageNode, Weight, Reason)
+    Weight@Priority, PackageNode,Reason 
+    : duplicate_penalty(PackageNode, Weight, Reason),
+      opt_priority(Priority, _, _, "penalty on symmetric duplicates")
 }.
 
 
