@@ -2408,11 +2408,11 @@ opt_priority(Priority, low_offset, "", Description) :-
 #minimize {
     Weight@Priority, PackageNode,Group
     : requirement_penalty(PackageNode, Group, Weight),
-      opt_priority(Priority, _, _, "requirement_weight");
+      opt_priority(Priority, _, _, "requirement weight");
 
     Weight@Priority, PackageNode,Language,Group
     : requirement_penalty(PackageNode, Language, Group, Weight),
-      opt_priority(Priority, _, _, "requirement_weight")
+      opt_priority(Priority, _, _, "requirement weight")
 }.
 
 
