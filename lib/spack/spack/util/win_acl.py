@@ -178,7 +178,7 @@ class ResourceAttributeAceDataType(Enum):
 
 
 # SDDL code: 32-bit access mask for every named right token.  Used by _map_rights to
-# parse SDDL strings ("FRFW", "GR", …) into integer masks during ACE construction.
+# parse SDDL strings ("FRFW", "GR", ...) into integer masks during ACE construction.
 _NAMED_RIGHT_MASKS: Dict[str, int] = {
     # File access rights
     "FA": int(FileAccessRights.FILE_ALL_ACCESS),
@@ -219,7 +219,7 @@ _NAMED_RIGHT_MASKS: Dict[str, int] = {
 
 # Reverse lookup:  SDDL code string to int mask for file/generic rights.
 # Used during SDDL serialisation to convert stored integer masks back to readable tokens.
-# Limited to the 8 file+generic codes since those are what ConvertSecurityDescriptor…
+# Limited to the 8 file+generic codes since those are what ConvertSecurityDescriptor
 # emits for file objects; other masks fall back to hex in _to_ace_string.
 _FILE_GENERIC_SDDL_CODES: Dict[str, int] = {
     k: _NAMED_RIGHT_MASKS[k] for k in ("FA", "FR", "FW", "FX", "GA", "GR", "GW", "GX")
@@ -914,12 +914,20 @@ class SecurityDescriptor:
         """Compile the current state back into an SDDL string."""
         return _SddlHelper.create_sddl(self._parsed)
 
-    def apply(self, path: str) -> None:
+    def apply(self, path: str, update_ownership: bool = False) -> None:
         """Write this security descriptor to *path*.
+
+        By default only the DACL is written (``DACL_SECURITY_INFORMATION``).  Pass
+        ``update_ownership=True`` to also write owner and group fields, which is needed
+        for ``chown``-style operations.  Doing so requires ``WRITE_OWNER`` access to the
+        file or ``SE_TAKE_OWNERSHIP_PRIVILEGE`` in the process token; if neither is
+        present a ``PermissionError`` is raised with an explanation.
 
         Raises:
             ValueError: if the descriptor has an explicit but empty DACL (null DACL).
-            OSError: raised by ``ctypes.WinError`` on Windows API failure (carries ``winerror``).
+            PermissionError: if ``update_ownership=True`` and the caller lacks ``WRITE_OWNER``
+                access or ``SE_TAKE_OWNERSHIP_PRIVILEGE``.
+            OSError: on any other Windows API failure (carries ``winerror``).
         """
         if self._parsed.get("DACL_PRESENT") and not self._parsed["DACL"]:
             raise ValueError(
@@ -930,12 +938,31 @@ class SecurityDescriptor:
         # describe how the *existing* DACL was built.  Passing them back to SetNamedSecurityInfoW
         # causes the kernel to re-process parent inheritance, producing a different (and larger)
         # ACE set than the one we wrote.  Strip them so the kernel treats our ACEs as explicit.
+        # Build a view for serialisation without mutating self._parsed.
+        # Scalar values (Owner, Group, DACL_CONTROL) are reassigned on the copy;
+        # DACL is a shared list reference but create_sddl only reads it.
         parsed = dict(self._parsed)
+        if not update_ownership:
+            parsed["Owner"] = None
+            parsed["Group"] = None
         parsed["DACL_CONTROL"] = re.sub(r"AI|AR", "", parsed.get("DACL_CONTROL", ""))
         sddl = _SddlHelper.create_sddl(parsed)
         if not sddl:
             return
-        _set_file_sddl_raw(path, sddl)
+        try:
+            _set_file_sddl_raw(path, sddl)
+        except OSError as exc:
+            if (
+                update_ownership and hasattr(exc, "winerror") and exc.winerror == 5
+            ):  # ERROR_ACCESS_DENIED
+                raise PermissionError(
+                    f"Cannot update owner/group on {path!r}: the current process lacks "
+                    "WRITE_OWNER access to the file and does not hold "
+                    "SE_TAKE_OWNERSHIP_PRIVILEGE.  Acquire the necessary privilege before "
+                    "calling apply(update_ownership=True), or omit update_ownership to "
+                    "update only the DACL."
+                ) from exc
+            raise
 
     def __str__(self) -> str:
         return self.to_sddl()
@@ -1139,7 +1166,9 @@ def get_file_sddl(path: str) -> str:
 def set_file_sddl(path: str, sddl: str) -> None:
     """Apply a security descriptor described by *sddl* to *path*.
 
-    Only the components present in *sddl* (owner, group, DACL) are written.
+    Only the DACL is written; ``O:`` and ``G:`` components in *sddl* are ignored.
+    To also transfer ownership pass ``update_ownership=True`` to
+    :meth:`SecurityDescriptor.apply` directly.
 
     Raises:
         WindowsError: on any Windows API failure.
