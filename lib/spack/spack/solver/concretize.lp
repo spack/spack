@@ -2395,7 +2395,7 @@ opt_priority(Priority, low_offset, "", Description) :-
         opt_priority(Priority, concr_offset, "fixed", _);
     0@Priority + Level*level_opt:
         opt_priority(Priority, concr_offset, "level", _),
-        Level = 1:..(max_depth-1);
+        Level = 1..(max_depth-1);
     % low
     0@Priority:
         opt_priority(Priority, low_offset, "", _)
