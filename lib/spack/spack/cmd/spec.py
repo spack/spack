@@ -191,10 +191,10 @@ def spec(parser, args):
         "show_types": args.types,
         "status_fn": status_fn,
         "hashes": args.long or args.very_long,
-        "highlight_version_fn": (
+        "version_style_fn": (
             spack.package_base.non_preferred_version if args.non_defaults else None
         ),
-        "highlight_variant_fn": (
+        "variant_style_fn": (
             spack.package_base.non_default_variant if args.non_defaults else None
         ),
     }

@@ -2962,10 +2962,10 @@ def display_specs(
         hashes=True,
         hashlen=7,
         status_fn=status_fn if status_fn is not None else spack.store.STORE.db.install_status,
-        highlight_version_fn=(
+        version_style_fn=(
             spack.package_base.non_preferred_version if highlight_non_defaults else None
         ),
-        highlight_variant_fn=(
+        variant_style_fn=(
             spack.package_base.non_default_variant if highlight_non_defaults else None
         ),
         key=traverse.by_dag_hash,
