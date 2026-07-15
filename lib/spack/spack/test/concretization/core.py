@@ -1154,6 +1154,41 @@ spack:
         s = spack.concretize.concretize_one(spec)
         assert str(s.architecture.target) == str(expected)
 
+    @pytest.mark.not_on_windows("Not supported on Windows (yet)")
+    @pytest.mark.usefixtures("mock_targets")
+    def test_preferred_compiler_kept_by_downgrading_target(
+        self, compiler_factory, mutable_config, monkeypatch
+    ):
+        """When the preferred compiler cannot reach the host target, but a non-preferred
+        compiler could, Spack keeps the preferred compiler and downgrades the target
+        rather than switching compilers to get a better target.
+        """
+        core2 = spack.vendor.archspec.cpu.TARGETS["core2"]
+        haswell = spack.vendor.archspec.cpu.TARGETS["haswell"]
+
+        # Host is haswell, but the only available gcc (the preferred c/cxx provider) is
+        # gcc@4.4.7, which supports at most core2. llvm@15 (available by default) could
+        # reach haswell.
+        monkeypatch.setattr(spack.platforms.Test, "default", "haswell")
+        monkeypatch.setattr(
+            spack.archspec, "HOST_TARGET_FAMILY", spack.vendor.archspec.cpu.TARGETS["x86_64"]
+        )
+        monkeypatch.setattr(spack.vendor.archspec.cpu, "host", lambda: haswell)
+        mutable_config.set(
+            "packages:gcc",
+            {
+                "require": "@4.4.7",
+                "externals": [compiler_factory(spec="gcc@4.4.7 languages=c,c++,fortran")],
+            },
+        )
+
+        s = spack.concretize.concretize_one("pkg-a")
+
+        # The preferred compiler is kept and the target is downgraded, instead of
+        # switching to llvm to reach a better target.
+        assert s.satisfies("%c=gcc@4.4.7")
+        assert str(s.architecture.target) == str(core2)
+
     @pytest.mark.parametrize(
         "constraint,expected", [("%gcc@10.2", "@=10.2.1"), ("%gcc@10.2:", "@=10.2.1")]
     )

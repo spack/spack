@@ -2203,40 +2203,40 @@ build_priority(PackageNode, 0)   :- concrete(PackageNode), attr("node", PackageN
 % A condition group specifies one or more specs that must be satisfied.
 % Specs declared first are preferred, so we assign increasing weights and
 % minimize the weights.
-opt_criterion(310, "requirement weight").
-#minimize{ 0@310: #true }.
+opt_criterion(410, "requirement weight").
+#minimize{ 0@410: #true }.
 #minimize {
-    Weight@310,PackageNode,Group
+    Weight@410,PackageNode,Group
     : requirement_penalty(PackageNode, Group, Weight)
 }.
 #minimize {
-    Weight@310,PackageNode,Language,Group
+    Weight@410,PackageNode,Language,Group
     : requirement_penalty(PackageNode, Language, Group, Weight)
 }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
-opt_criterion(120, "number of packages to build (vs. reuse)").
-#minimize { 0@120: #true }.
-#minimize { 1@120,PackageNode : build(PackageNode), not treat_node_as_concrete(PackageNode) }.
+opt_criterion(220, "number of packages to build (vs. reuse)").
+#minimize { 0@220: #true }.
+#minimize { 1@220,PackageNode : build(PackageNode), not treat_node_as_concrete(PackageNode) }.
 
-opt_criterion(110, "number of nodes from the same package").
-#minimize { 0@110: #true }.
-#minimize { ID@110,Package : attr("node", node(ID, Package)), not is_self_build_req(node(ID, Package)) }.
-#minimize { ID@110,Package : attr("virtual_node", node(ID, Package)) }.
+opt_criterion(210, "number of nodes from the same package").
+#minimize { 0@210: #true }.
+#minimize { ID@210,Package : attr("node", node(ID, Package)), not is_self_build_req(node(ID, Package)) }.
+#minimize { ID@210,Package : attr("virtual_node", node(ID, Package)) }.
 #defined optimize_for_reuse/0.
 
 % Minimize the unification set ID used for build dependencies. This reduces the number of optimal
 % solutions that differ only by which node belongs to which unification set.
-opt_criterion(100, "build unification sets").
-#minimize{ 0@100: #true }.
-#minimize{ ID@100,ParentNode : build_set_id(ParentNode, ID) }.
+opt_criterion(200, "build unification sets").
+#minimize{ 0@200: #true }.
+#minimize{ ID@200,ParentNode : build_set_id(ParentNode, ID) }.
 
 % Minimize the number of deprecated versions being used
-opt_criterion(73, "deprecated versions used").
-#minimize{ 0@273: #true }.
-#minimize{ 0@73: #true }.
+opt_criterion(173, "deprecated versions used").
+#minimize{ 0@373: #true }.
+#minimize{ 0@173: #true }.
 #minimize{
-    1@73+Priority,PackageNode
+    1@173+Priority,PackageNode
     : attr("deprecated", PackageNode, _),
       not external(PackageNode),
       build_priority(PackageNode, Priority)
@@ -2246,37 +2246,37 @@ opt_criterion(73, "deprecated versions used").
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root package.
-opt_criterion(70, "version badness (roots)").
-#minimize{ 0@270: #true }.
-#minimize{ 0@70: #true }.
+opt_criterion(170, "version badness (roots)").
+#minimize{ 0@370: #true }.
+#minimize{ 0@170: #true }.
 #minimize {
-    Weight@70+Priority,PackageNode
+    Weight@170+Priority,PackageNode
     : attr("root", PackageNode),
       version_weight(PackageNode, Weight),
       build_priority(PackageNode, Priority)
 }.
 #minimize {
-    Penalty@70+Priority,PackageNode
+    Penalty@170+Priority,PackageNode
     : attr("root", PackageNode),
       version_deprecation_penalty(PackageNode, Penalty),
       build_priority(PackageNode, Priority)
 }.
 
-opt_criterion(65, "variant penalty (roots)").
-#minimize{ 0@265: #true }.
-#minimize{ 0@65: #true }.
+opt_criterion(165, "variant penalty (roots)").
+#minimize{ 0@365: #true }.
+#minimize{ 0@165: #true }.
 #minimize {
-    Penalty@65+Priority,PackageNode,Variant,Value
+    Penalty@165+Priority,PackageNode,Variant,Value
     : variant_penalty(PackageNode, Variant, Value, Penalty),
       attr("root", PackageNode),
       build_priority(PackageNode, Priority)
 }.
 
-opt_criterion(55, "default values of variants not being used (roots)").
-#minimize{ 0@255: #true }.
-#minimize{ 0@55: #true }.
+opt_criterion(155, "default values of variants not being used (roots)").
+#minimize{ 0@355: #true }.
+#minimize{ 0@155: #true }.
 #minimize{
-    1@55+Priority,PackageNode,Variant,Value
+    1@155+Priority,PackageNode,Variant,Value
     : variant_default_not_used(PackageNode, Variant, Value),
       attr("root", PackageNode),
       build_priority(PackageNode, Priority)
@@ -2284,38 +2284,38 @@ opt_criterion(55, "default values of variants not being used (roots)").
 
 % Choose the preferred compiler before penalizing variants, to avoid that a variant penalty
 % on e.g. gcc causes clingo to pick another compiler e.g. llvm
-opt_criterion(48, "preferred compilers").
-#minimize{ 0@248: #true }.
-#minimize{ 0@48: #true }.
+opt_criterion(148, "preferred compilers").
+#minimize{ 0@348: #true }.
+#minimize{ 0@148: #true }.
 #minimize{
-    Weight@48+Priority,ProviderNode,X,Virtual
+    Weight@148+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       language(Virtual),
       build_priority(ProviderNode, Priority)
 }.
 
-opt_criterion(41, "compiler penalty from reuse").
-#minimize{ 0@241: #true }.
-#minimize{ 0@41: #true }.
-#minimize{1@41,Hash : compiler_penalty_from_reuse(Hash)}.
+opt_criterion(141, "compiler penalty from reuse").
+#minimize{ 0@341: #true }.
+#minimize{ 0@141: #true }.
+#minimize{1@141,Hash : compiler_penalty_from_reuse(Hash)}.
 
 % Try to use default variants or variants that have been set
-opt_criterion(40, "variant penalty (non-roots)").
-#minimize{ 0@240: #true }.
-#minimize{ 0@40: #true }.
+opt_criterion(140, "variant penalty (non-roots)").
+#minimize{ 0@340: #true }.
+#minimize{ 0@140: #true }.
 #minimize {
-    Penalty@40+Priority,PackageNode,Variant,Value
+    Penalty@140+Priority,PackageNode,Variant,Value
     : variant_penalty(PackageNode, Variant, Value, Penalty),
       not attr("root", PackageNode),
       build_priority(PackageNode, Priority)
 }.
 
 % Minimize the weights of all the other providers (mpi, lapack, etc.)
-opt_criterion(38, "preferred providers (excluded compilers and language runtimes)").
-#minimize{ 0@238: #true }.
-#minimize{ 0@38: #true }.
+opt_criterion(138, "preferred providers (excluded compilers and language runtimes)").
+#minimize{ 0@338: #true }.
+#minimize{ 0@138: #true }.
 #minimize{
-    Weight@38+Priority,ProviderNode,X,Virtual
+    Weight@138+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       not language(Virtual), not language_runtime(Virtual),
       build_priority(ProviderNode, Priority)
@@ -2326,37 +2326,37 @@ compiler_penalty(PackageNode, C-1) :-
    C = #count { CompilerNode : node_compiler(PackageNode, CompilerNode) },
    node_compiler(PackageNode, _), C > 0.
 
-opt_criterion(36, "number of compilers used on the same node").
-#minimize{ 0@236: #true }.
-#minimize{ 0@36: #true }.
+opt_criterion(136, "number of compilers used on the same node").
+#minimize{ 0@336: #true }.
+#minimize{ 0@136: #true }.
 #minimize{
-    Penalty@36+Priority,PackageNode
+    Penalty@136+Priority,PackageNode
     : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
 }.
 
 
-opt_criterion(30, "non-preferred OS's").
-#minimize{ 0@230: #true }.
-#minimize{ 0@30: #true }.
+opt_criterion(130, "non-preferred OS's").
+#minimize{ 0@330: #true }.
+#minimize{ 0@130: #true }.
 #minimize{
-    Weight@30+Priority,PackageNode
+    Weight@130+Priority,PackageNode
     : node_os_weight(PackageNode, Weight),
       build_priority(PackageNode, Priority)
 }.
 
 % Choose more recent versions for nodes
-opt_criterion(25, "version badness (non roots)").
-#minimize{ 0@225: #true }.
-#minimize{ 0@25: #true }.
+opt_criterion(125, "version badness (non roots)").
+#minimize{ 0@325: #true }.
+#minimize{ 0@125: #true }.
 #minimize{
-    Weight@25+Priority,node(X, Package)
+    Weight@125+Priority,node(X, Package)
     : version_weight(node(X, Package), Weight),
       build_priority(node(X, Package), Priority),
       not attr("root", node(X, Package)),
       not runtime(Package)
 }.
 #minimize {
-    Penalty@25+Priority,node(X, Package)
+    Penalty@125+Priority,node(X, Package)
     : version_deprecation_penalty(node(X, Package), Penalty),
       build_priority(node(X, Package), Priority),
       not attr("root", node(X, Package)),
@@ -2365,51 +2365,58 @@ opt_criterion(25, "version badness (non roots)").
 
 
 % Try to use all the default values of variants
-opt_criterion(20, "default values of variants not being used (non-roots)").
-#minimize{ 0@220: #true }.
-#minimize{ 0@20: #true }.
+opt_criterion(120, "default values of variants not being used (non-roots)").
+#minimize{ 0@320: #true }.
+#minimize{ 0@120: #true }.
 #minimize{
-    1@20+Priority,PackageNode,Variant,Value
+    1@120+Priority,PackageNode,Variant,Value
     : variant_default_not_used(PackageNode, Variant, Value),
       not attr("root", PackageNode),
       build_priority(PackageNode, Priority)
 }.
 
-% Minimize the number of mismatches for targets in the DAG, try
-% to select the preferred target.
-opt_criterion(10, "target mismatches").
-#minimize{ 0@210: #true }.
-#minimize{ 0@10: #true }.
+% Prefer more optimal providers for language runtimes.
+opt_criterion(105, "preferred providers (language runtimes)").
+#minimize{ 0@305: #true }.
+#minimize{ 0@105: #true }.
 #minimize{
-    1@10+Priority,PackageNode,node(ID, Dependency)
-    : node_target_mismatch(PackageNode, node(ID, Dependency)),
-      build_priority(node(ID, Dependency), Priority),
-      not runtime(Dependency)
-}.
-
-opt_criterion(7, "non-preferred targets").
-#minimize{ 0@207: #true }.
-#minimize{ 0@7: #true }.
-#minimize{
-    Weight@7+Priority,node(X, Package)
-    : node_target_weight(node(X, Package), Weight),
-      build_priority(node(X, Package), Priority),
-      not runtime(Package)
-}.
-
-opt_criterion(5, "preferred providers (language runtimes)").
-#minimize{ 0@205: #true }.
-#minimize{ 0@5: #true }.
-#minimize{
-    Weight@5+Priority,ProviderNode,X,Virtual
+    Weight@105+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       language_runtime(Virtual),
       build_priority(ProviderNode, Priority)
 }.
 
+% Build and concrete mismatches are sandwiched between node target penalty so that
+% we can still reuse an old, available target and build a more specific software on
+% top of it by default
+opt_criterion(12, "target mismatches (built nodes)").
+#minimize{ 0@12: #true }.
+#minimize{
+    1@12,PackageNode,node(ID, Dependency)
+    : node_target_mismatch(PackageNode, node(ID, Dependency)),
+      build_priority(node(ID, Dependency), 200),
+      not runtime(Dependency)
+}.
+
+opt_criterion(10, "non-preferred targets").
+#minimize{ 0@10: #true }.
+#minimize{
+    Weight@10,node(X, Package)
+    : node_target_weight(node(X, Package), Weight),
+      not runtime(Package)
+}.
+
+opt_criterion(7, "target mismatches (reused nodes)").
+#minimize{ 0@7: #true }.
+#minimize{
+    1@7,PackageNode,node(ID, Dependency)
+    : node_target_mismatch(PackageNode, node(ID, Dependency)),
+      build_priority(node(ID, Dependency), 0),
+      not runtime(Dependency)
+}.
+
 % Choose more recent versions for runtimes
 opt_criterion(4, "version badness (runtimes)").
-#minimize{ 0@204: #true }.
 #minimize{ 0@4: #true }.
 #minimize{
     Weight@4,node(X, Package)
@@ -2419,7 +2426,6 @@ opt_criterion(4, "version badness (runtimes)").
 
 % Choose best target for runtimes
 opt_criterion(3, "non-preferred targets (runtimes)").
-#minimize{ 0@203: #true }.
 #minimize{ 0@3: #true }.
 #minimize{
     Weight@3,node(X, Package)
@@ -2429,7 +2435,6 @@ opt_criterion(3, "non-preferred targets (runtimes)").
 
 % Try to use the most optimal providers as much as possible
 opt_criterion(2, "providers on edges").
-#minimize{ 0@202: #true }.
 #minimize{ 0@2: #true }.
 #minimize{
     Weight@2,ParentNode,ProviderNode,node(X, Virtual)
@@ -2442,7 +2447,6 @@ opt_criterion(2, "providers on edges").
 
 % Try to use latest versions of nodes as much as possible
 opt_criterion(1, "version badness on edges").
-#minimize{ 0@201: #true }.
 #minimize{ 0@1: #true }.
 #minimize{
     Weight@1,ParentNode,node(X, Package)
@@ -2454,7 +2458,6 @@ opt_criterion(1, "version badness on edges").
 
 % Reduce symmetry on duplicates
 opt_criterion(0, "penalty on symmetric duplicates").
-#minimize{ 0@200: #true }.
 #minimize{ 0@0: #true }.
 #minimize{
     Weight@1,PackageNode,Reason : duplicate_penalty(PackageNode, Weight, Reason)
