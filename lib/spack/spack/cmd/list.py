@@ -141,6 +141,14 @@ def name_only(pkgs, out):
         tty.msg("%d packages" % len(pkgs))
 
 
+def _is_spack_packages(url: str) -> bool:
+    """True if ``url`` is likely the official github.com/spack/spack-packages repo."""
+    url = url.rstrip("/")
+    if url.endswith(".git"):
+        url = url[:-4]
+    return url.endswith(("github.com/spack/spack-packages", "github.com:spack/spack-packages"))
+
+
 def github_url(pkg: Type[spack.package_base.PackageBase]) -> Optional[str]:
     """Link to a package file in spack package's github or the path to the file.
 
@@ -158,13 +166,9 @@ def github_url(pkg: Type[spack.package_base.PackageBase]) -> Optional[str]:
         if not os.path.exists(path):
             continue
 
-        # Match spack repositories under any scheme (e.g. ssh) by ignoring the scheme.
-        if repo.remote_info is not None and any(
-            name in repo.remote_info.url for name in ("spack.git", "spack-packages.git")
-        ):
-            git_repo = repo.remote_info.url.split("/")[-1].replace(".git", "").strip()
+        if repo.remote_info is not None and _is_spack_packages(repo.remote_info.url):
             rel = os.path.relpath(path, repo.remote_info.root).replace(os.sep, "/")
-            return f"https://github.com/spack/{git_repo}/blob/develop/{rel}"
+            return f"https://github.com/spack/spack-packages/blob/develop/{rel}"
 
         tty.debug(f"Package repository of {pkg} has no github git url, using path URL")
         return path_to_file_url(path)

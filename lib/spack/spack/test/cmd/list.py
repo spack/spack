@@ -85,23 +85,25 @@ def test_list_format_html():
 @pytest.mark.parametrize(
     "url",
     [
-        "git@github.com:username/spack-packages.git",
-        "https://github.com/username/spack-packages.git",
-        "git@github.com:username/spack.git",
-        "https://github.com/username/spack.git",
+        "https://github.com/spack/spack-packages.git",
+        "https://github.com/spack/spack-packages",
+        "git@github.com:spack/spack-packages.git",
+        "ssh://git@github.com/spack/spack-packages.git",
+        "https://user:token@github.com/spack/spack-packages.git",
     ],
 )
 def test_list_url_schemes(mock_git_packages_repo, url):
-    """Confirm the github URL is derived from the configured git url of the repository."""
+    """Confirm the official spack-packages repo is recognized in any url scheme."""
     repo = mock_git_packages_repo(url)
     with spack.repo.use_repositories(repo):
         output = list("--format", "version_json", "hdf5")
 
-    repo_name = os.path.basename(url).replace(".git", "")
     assert (
-        f"https://github.com/spack/{repo_name}/blob/develop/"
+        "https://github.com/spack/spack-packages/blob/develop/"
         "spack_repo/builtin_mock/packages/hdf5/package.py" in output
     )
+    # a credentialed url must never leak the credentials into the emitted url
+    assert "token" not in output
 
 
 def test_list_format_local_repo():
