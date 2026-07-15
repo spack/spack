@@ -1072,7 +1072,8 @@ class Environment:
         self.name = environment_name(self.path)
         self.env_subdir_path = env_subdir_path(self.path)
 
-        self.txlock = lk.Lock(self._transaction_lock_path)
+        lock_enabled = spack.config.CONFIG.get("config:locks", True)
+        self.txlock = lk.Lock(self._transaction_lock_path, enable=lock_enabled)
 
         self._unify = None
         self.views: Dict[str, ViewDescriptor] = {}
@@ -1138,6 +1139,7 @@ class Environment:
 
     def __getstate__(self):
         state = self.__dict__.copy()
+        state["_txlock_enabled"] = self.txlock.enabled
         state.pop("txlock", None)
         state.pop("_repo", None)
         state.pop("repo_token", None)
@@ -1145,8 +1147,9 @@ class Environment:
         return state
 
     def __setstate__(self, state):
+        lock_enabled = state.pop("_txlock_enabled")
         self.__dict__.update(state)
-        self.txlock = lk.Lock(self._transaction_lock_path)
+        self.txlock = lk.Lock(self._transaction_lock_path, enable=lock_enabled)
         self._repo = None
 
     def _re_read(self):
