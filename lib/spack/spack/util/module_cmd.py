@@ -43,7 +43,9 @@ def module(
     module_cmd = module_template or ("module " + " ".join(args))
     environb = environb or os.environb
     if b"MODULESHOME" in environb:
-        module_cmd = module_src_cmd or "source $MODULESHOME/init/bash; " + module_cmd
+        module_cmd = (
+            module_src_cmd or "source $MODULESHOME/init/bash >/dev/null 2>&1; " + module_cmd
+        )
 
     if args[0] in module_change_commands:
         # Suppress module output
