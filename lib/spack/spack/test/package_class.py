@@ -401,7 +401,7 @@ def test_git_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, 
     "pkg_name,preferred_version",
     [
         # This package has a deprecated v1.1.0 which should not be the preferred
-        ("deprecated_versions", "1.0.0"),
+        ("deprecated-versions", "1.0.0"),
         # Python has v2.7.11 marked as preferred and newer v3 versions
         ("python", "2.7.11"),
         # This package has various versions, some deprecated, plus "main" and "develop"
