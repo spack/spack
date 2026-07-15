@@ -526,6 +526,9 @@ class EnvironmentModifications:
     def __len__(self):
         return len(self.env_modifications)
 
+    def __bool__(self):
+        return bool(self.env_modifications)
+
     def extend(self, other: "EnvironmentModifications"):
         """Extends the current instance with modifications from another instance."""
         self._check_other(other)

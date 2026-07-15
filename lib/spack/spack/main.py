@@ -982,7 +982,11 @@ def _main(argv=None):
     if not args.no_env:
         try:
             env = spack.cmd.find_environment(args)
-        except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError) as e:
+        except (
+            spack.config.ConfigFormatError,
+            ev.SpackEnvironmentConfigError,
+            ev.SpackEnvironmentError,
+        ) as e:
             # print the context but delay this exception so that commands like
             # `spack config edit` can still work with a bad environment.
             e.print_context()
@@ -990,7 +994,7 @@ def _main(argv=None):
 
     def add_environment_scope():
         if env_format_error:
-            # Allow command to continue without env in case it is `spack config edit`
+            # Allow command to continue without env in case it is `spack config edit` or similar
             # All other cases will raise in `finish_parse_and_run`
             spack.environment.environment._active_environment_error = env_format_error
             return
@@ -1059,8 +1063,12 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
     # Now that we know what command this is and what its args are, determine
     # whether we can continue with a bad environment and raise if not.
     if env_format_error:
-        subcommand = getattr(args, "config_command", None)
-        if (cmd_name, subcommand) != ("config", "edit"):
+        config_subcommand = getattr(args, "config_command", None)
+        env_subcommand = getattr(args, "env_command", None)
+
+        is_config_edit = (cmd_name, config_subcommand) == ("config", "edit")
+        is_env_deactivate = (cmd_name, env_subcommand) == ("env", "deactivate")
+        if not (is_config_edit or is_env_deactivate):
             raise env_format_error
 
     # many operations will fail without a working directory.
