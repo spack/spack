@@ -98,7 +98,7 @@ jobs:
       run: |
           share/spack/qa/run-unit-tests
     - name: Save concretization cache
-      if: ${{ always() && github.ref == 'refs/heads/develop' }}
+      if: ${{ always() && (github.ref == 'refs/heads/develop' || github.head_ref == 'hs/ci/persist-concretization-cache') }}
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
       with:
         path: ${{ runner.temp }}/spack-concretization-cache
@@ -216,7 +216,7 @@ jobs:
         spack spec --show opt,solutions zlib
         pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 --dist worksteal lib/spack/spack/test/concretization/
     - name: Save concretization cache
-      if: ${{ always() && github.ref == 'refs/heads/develop' }}
+      if: ${{ always() && (github.ref == 'refs/heads/develop' || github.head_ref == 'hs/ci/persist-concretization-cache') }}
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
       with:
         path: ${{ runner.temp }}/spack-concretization-cache
@@ -267,7 +267,7 @@ jobs:
         spack spec --show opt,solutions zlib
         pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 --dist worksteal lib/spack/spack/test/concretization/
     - name: Save concretization cache
-      if: ${{ always() && github.ref == 'refs/heads/develop' }}
+      if: ${{ always() && (github.ref == 'refs/heads/develop' || github.head_ref == 'hs/ci/persist-concretization-cache') }}
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
       with:
         path: ${{ runner.temp }}/spack-concretization-cache
@@ -317,7 +317,7 @@ jobs:
         spack spec --show opt,solutions zlib
         python3 -m pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --dist worksteal -x -n4
     - name: Save concretization cache
-      if: ${{ always() && github.ref == 'refs/heads/develop' }}
+      if: ${{ always() && (github.ref == 'refs/heads/develop' || github.head_ref == 'hs/ci/persist-concretization-cache') }}
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
       with:
         path: ${{ runner.temp }}/spack-concretization-cache
@@ -362,7 +362,7 @@ jobs:
         python -m pytest -x --verbose --cov --cov-config=pyproject.toml
         ./share/spack/qa/validate_last_exit.ps1
     - name: Save concretization cache
-      if: ${{ always() && github.ref == 'refs/heads/develop' }}
+      if: ${{ always() && (github.ref == 'refs/heads/develop' || github.head_ref == 'hs/ci/persist-concretization-cache') }}
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
       with:
         path: ${{ runner.temp }}/spack-concretization-cache
