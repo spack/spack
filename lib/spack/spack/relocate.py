@@ -383,13 +383,14 @@ def is_msvc_magic(f: IO[bytes]) -> bool:
     # need at least 64 bytes for e_lfanew header
     # which gives us the PE signature
     f.seek(0, 2)
-    if f.tell() < 0x40:
+    fsize = f.tell()
+    if fsize < 0x40:
         return False
     # wasn't a coff file, check PE
     f.seek(0x3C)
     pe_offset_bytes = f.read(4)
     pe_offset = struct.unpack('<I', pe_offset_bytes)[0]
-    if pe_offset > f.tell():
+    if pe_offset > fsize:
         return False
     f.seek(pe_offset)
     is_pe = f.read(4) == b"PE\x00\x00"
