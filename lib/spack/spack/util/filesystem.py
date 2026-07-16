@@ -1379,15 +1379,13 @@ def windows_sfn(path: os.PathLike):
         # Method with null values returns size of short path name
         sz = _GetShortPathNameW(path, None, 0)
         if not sz:
-            tty.debug(ctypes.WinError(ctypes.get_last_error()))
-            return path
+            raise ctypes.WinError(ctypes.get_last_error())
         # stub Windows types TCHAR[LENGTH]
         TCHAR_arr = ctypes.c_wchar * sz
         ret_str = TCHAR_arr()
         status = _GetShortPathNameW(path, ret_str, sz)
         if not status:
-            tty.debug(ctypes.WinError(ctypes.get_last_error()))
-            return path
+            raise ctypes.WinError(ctypes.get_last_error())
         return ret_str.value
     return path
 
