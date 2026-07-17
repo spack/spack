@@ -10,6 +10,7 @@ import spack.cmd.uninstall
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.store
+from spack.active_environment import active_environment
 from spack.util import tty
 
 description = "remove specs that are now no longer needed"
@@ -77,7 +78,7 @@ def gc(parser, args):
     if args.keep_build_dependencies:
         deptype |= dt.BUILD
 
-    active_env = ev.active_environment()
+    active_env = active_environment()
 
     # wrap the whole command with a read transaction to avoid multiple
     with spack.store.STORE.db.read_transaction():

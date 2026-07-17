@@ -32,6 +32,7 @@ import spack.util.filesystem as fs
 import spack.util.link_tree
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
+from spack.active_environment import active_environment
 from spack.cmd.env import _env_create
 from spack.config import substitute_path_variables
 from spack.environment import depfile
@@ -1272,7 +1273,7 @@ spack:
     with pytest.raises(ValueError, match="does not exist"):
         ev.activate(ev.Environment(env_root))
 
-    assert ev.active_environment() is None
+    assert active_environment() is None
 
 
 def test_env_with_include_config_files_same_basename(
@@ -3857,7 +3858,7 @@ def test_create_and_activate_managed(tmp_path: pathlib.Path):
         shell = env("activate", "--without-view", "--create", "--sh", "foo")
         active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
         assert str(tmp_path) in active_env_var
-        active_ev = ev.active_environment()
+        active_ev = active_environment()
         assert active_ev and "foo" == active_ev.name
         env("deactivate")
 

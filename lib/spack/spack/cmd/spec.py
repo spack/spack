@@ -10,10 +10,10 @@ import spack
 import spack.binary_distribution
 import spack.cmd
 import spack.config
-import spack.environment
 import spack.hash_types as ht
 import spack.package_base
 import spack.spec
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.solver import asp
 from spack.util import tty
@@ -191,10 +191,10 @@ def spec(parser, args):
         "show_types": args.types,
         "status_fn": status_fn,
         "hashes": args.long or args.very_long,
-        "highlight_version_fn": (
+        "version_style_fn": (
             spack.package_base.non_preferred_version if args.non_defaults else None
         ),
-        "highlight_variant_fn": (
+        "variant_style_fn": (
             spack.package_base.non_default_variant if args.non_defaults else None
         ),
     }
@@ -214,7 +214,7 @@ def spec(parser, args):
     required_format = args.format
 
     # If we have an active environment, pick the specs from there
-    env = spack.environment.active_environment()
+    env = active_environment()
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs)
     elif env:

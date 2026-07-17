@@ -7,9 +7,9 @@ import argparse
 import sys
 
 import spack.cmd
-import spack.environment as ev
 import spack.hash_lookup
 import spack.util.spack_json as sjson
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.solver import asp
 from spack.util import tty
@@ -207,7 +207,7 @@ def print_difference(c, attributes="all", out=None):
 
 
 def diff(parser, args):
-    env = ev.active_environment()
+    env = active_environment()
 
     if len(args.specs) != 2:
         args.subparser.error("you must provide two specs to diff")

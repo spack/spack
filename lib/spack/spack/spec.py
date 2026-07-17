@@ -84,6 +84,7 @@ import spack
 import spack.aliases
 import spack.compilers.flags
 import spack.deptypes as dt
+import spack.enums
 import spack.error
 import spack.hash_types as ht
 import spack.patch
@@ -165,6 +166,12 @@ ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
 VARIANT_COLOR = "@B"  #: color for highlighting variants
 HASH_COLOR = "@K"  #: color for highlighting package hashes
 HIGHLIGHT_COLOR = "@_R"  #: color for highlighting spec parts on demand
+DIM_COLOR = "@K"  #: color for dimmed (grey-out) spec parts
+#: Maps PartStyle to a color override; NORMAL is absent so .get(style, default) preserves default
+_STYLE_COLOR_MAP = {
+    spack.enums.PartStyle.HIGHLIGHT: HIGHLIGHT_COLOR,
+    spack.enums.PartStyle.DIM: DIM_COLOR,
+}
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
@@ -1323,8 +1330,9 @@ def tree(
     status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
     prefix: Optional[Callable[["Spec"], str]] = None,
     key: Callable[["Spec"], Any] = id,
-    highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
-    highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
+    version_style_fn: Optional[Callable[["Spec"], spack.enums.PartStyle]] = None,
+    variant_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
+    architecture_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
 ) -> str:
     """Prints out specs and their dependencies, tree-formatted with indentation.
 
@@ -1347,10 +1355,11 @@ def tree(
             installation status
         prefix: optional callable that takes a node as an argument and return its
             installation prefix
-        highlight_version_fn: optional callable that returns true on nodes where the version
-            needs to be highlighted
-        highlight_variant_fn: optional callable that returns true on variants that need
-            to be highlighted
+        version_style_fn: optional callable ``(node) -> PartStyle`` controlling version rendering
+        variant_style_fn: optional callable ``(node, key) -> PartStyle`` controlling variant
+            rendering
+        architecture_style_fn: optional callable ``(node, part) -> PartStyle`` controlling
+            architecture part rendering
     """
     out = ""
 
@@ -1410,8 +1419,9 @@ def tree(
             node.format(
                 format,
                 color=color,
-                highlight_version_fn=highlight_version_fn,
-                highlight_variant_fn=highlight_variant_fn,
+                version_style_fn=version_style_fn,
+                variant_style_fn=variant_style_fn,
+                architecture_style_fn=architecture_style_fn,
             )
             + "\n"
         )
@@ -4013,8 +4023,9 @@ class Spec:
         format_string: str = DEFAULT_FORMAT,
         color: Optional[bool] = False,
         *,
-        highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
-        highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
+        version_style_fn: Optional[Callable[["Spec"], spack.enums.PartStyle]] = None,
+        variant_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
+        architecture_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
     ) -> str:
         r"""Prints out attributes of a spec according to a format string.
 
@@ -4095,13 +4106,23 @@ class Spec:
         Args:
             format_string: string containing the format to be expanded
             color: True for colorized result; False for no color; None for auto color.
-            highlight_version_fn: optional callable that returns true on nodes where the version
-                needs to be highlighted
-            highlight_variant_fn: optional callable that returns true on variants that need
-                to be highlighted
+            version_style_fn: optional callable ``(node) -> PartStyle`` controlling how the
+                version part is rendered. ``HIGHLIGHT`` uses highlight color, ``DIM`` uses
+                grey-out color, ``HIDDEN`` suppresses the part entirely.
+            variant_style_fn: optional callable ``(node, key) -> PartStyle`` controlling how
+                each individual variant is rendered.
+            architecture_style_fn: optional callable ``(node, part) -> PartStyle`` controlling
+                how architecture parts are rendered. ``part`` is one of ``"platform"``,
+                ``"os"``, ``"target"``, or ``"architecture"`` for the whole ArchSpec.
         """
-        # Fast path for the common case: default format with no color
-        if format_string == DEFAULT_FORMAT and color is False:
+        # Fast path for the common case: default format with no color and no style callbacks
+        if (
+            format_string == DEFAULT_FORMAT
+            and color is False
+            and version_style_fn is None
+            and variant_style_fn is None
+            and architecture_style_fn is None
+        ):
             return self._format_default()
 
         ensure_modern_format_string(format_string)
@@ -4116,7 +4137,7 @@ class Spec:
             return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
         def format_attribute(match_object: Match) -> str:
-            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
+            esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace = (
                 match_object.groups()
             )
             if esc:
@@ -4146,7 +4167,6 @@ class Spec:
 
             attribute = attribute.lower()
             parts = attribute.split(".")
-            assert parts
 
             # check that the sigil is valid for the attribute.
             if not sig:
@@ -4208,47 +4228,51 @@ class Spec:
                     # not printing anything
                     return ""
 
-            # Set color codes for various attributes
-            color = None
-            if "architecture" in parts:
-                color = ARCHITECTURE_COLOR
-            elif "variants" in parts or sig.endswith("="):
-                color = VARIANT_COLOR
+            is_version_part = "version" in parts or "versions" in parts
+            is_arch_part = "architecture" in parts
+            is_variant_part = "variants" in parts
+
+            color_code = None
+            if is_arch_part:
+                color_code = ARCHITECTURE_COLOR
+            elif is_variant_part or sig.endswith("="):
+                color_code = VARIANT_COLOR
             elif any(c in parts for c in ("compiler", "compilers", "compiler_flags")):
-                color = COMPILER_COLOR
-            elif "version" in parts or "versions" in parts:
-                color = VERSION_COLOR
-                if highlight_version_fn and highlight_version_fn(current_node):
-                    color = HIGHLIGHT_COLOR
+                color_code = COMPILER_COLOR
+            elif is_version_part:
+                color_code = VERSION_COLOR
 
-            # return empty string if the value of the attribute is None.
-            if current is None:
-                return ""
+            if version_style_fn and is_version_part:
+                style = version_style_fn(current_node)
+                if style == spack.enums.PartStyle.HIDDEN:
+                    return ""
+                color_code = _STYLE_COLOR_MAP.get(style, color_code)
 
-            # Override the color for single variants, if need be
-            if color and highlight_variant_fn and isinstance(current, VariantMap):
+            if architecture_style_fn and is_arch_part:
+                style = architecture_style_fn(current_node, parts[-1])
+                if style == spack.enums.PartStyle.HIDDEN:
+                    return ""
+                color_code = _STYLE_COLOR_MAP.get(style, color_code)
+
+            if variant_style_fn and is_variant_part and isinstance(current, VariantMap):
                 bool_keys, kv_keys = current.partition_keys()
+                key_and_prefix = [(k, "") for k in bool_keys] + [(k, " ") for k in kv_keys]
                 result = ""
-
-                for key in bool_keys:
-                    current_color = color
-                    if highlight_variant_fn(current_node, key):
-                        current_color = HIGHLIGHT_COLOR
-
-                    result += safe_color(sig, str(current[key]), current_color)
-
-                for key in kv_keys:
-                    current_color = color
-                    if highlight_variant_fn(current_node, key):
-                        current_color = HIGHLIGHT_COLOR
-
-                    # Don't highlight the space before the key/value pair
-                    result += " " + safe_color(sig, f"{current[key]}", current_color)
-
+                for key, prefix in key_and_prefix:
+                    style = variant_style_fn(current_node, key)
+                    if style == spack.enums.PartStyle.HIDDEN:
+                        continue
+                    key_color: Optional[str] = _STYLE_COLOR_MAP.get(style, color_code)
+                    result += prefix + safe_color(sig, str(current[key]), key_color)
                 return result
 
-            # return colored output
-            return safe_color(sig, str(current), color)
+            if variant_style_fn and is_variant_part and not isinstance(current, VariantMap):
+                style = variant_style_fn(current_node, parts[-1])
+                if style == spack.enums.PartStyle.HIDDEN:
+                    return ""
+                color_code = _STYLE_COLOR_MAP.get(style, color_code)
+
+            return safe_color(sig, str(current), color_code)
 
         return SPEC_FORMAT_RE.sub(format_attribute, format_string).strip()
 
@@ -4490,8 +4514,9 @@ class Spec:
         status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
         key=id,
-        highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
-        highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
+        version_style_fn: Optional[Callable[["Spec"], spack.enums.PartStyle]] = None,
+        variant_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
+        architecture_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
     ) -> str:
         """Prints out this spec and its dependencies, tree-formatted with indentation.
 
@@ -4515,10 +4540,12 @@ class Spec:
                 installation status
             prefix: optional callable that takes a node as an argument and return its
                 installation prefix
-            highlight_version_fn: optional callable that returns true on nodes where the version
-                needs to be highlighted
-            highlight_variant_fn: optional callable that returns true on variants that need
-                to be highlighted
+            version_style_fn: optional callable ``(node) -> PartStyle`` controlling version
+                rendering
+            variant_style_fn: optional callable ``(node, key) -> PartStyle`` controlling variant
+                rendering
+            architecture_style_fn: optional callable ``(node, part) -> PartStyle`` controlling
+                architecture part rendering
         """
         return tree(
             [self],
@@ -4536,8 +4563,9 @@ class Spec:
             status_fn=status_fn,
             prefix=prefix,
             key=key,
-            highlight_version_fn=highlight_version_fn,
-            highlight_variant_fn=highlight_variant_fn,
+            version_style_fn=version_style_fn,
+            variant_style_fn=variant_style_fn,
+            architecture_style_fn=architecture_style_fn,
         )
 
     def __repr__(self):

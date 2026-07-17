@@ -2031,7 +2031,7 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
         ),
     ],
 )
-def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
+def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_packages):
     lhs = factory(lhs_str)
     rhs = factory(rhs_str)
 
@@ -2570,10 +2570,11 @@ def test_highlighting_spec_parts(spec_str, expected_fmt, config, mock_packages):
     """Tests correct highlighting of non-default versions and variants"""
     s = spack.concretize.concretize_one(spec_str)
     expected = colorize(expected_fmt, color=True)
+
     colorized_str = s.format(
         color=True,
-        highlight_version_fn=spack.package_base.non_preferred_version,
-        highlight_variant_fn=spack.package_base.non_default_variant,
+        version_style_fn=spack.package_base.non_preferred_version,
+        variant_style_fn=spack.package_base.non_default_variant,
     )
     assert expected in colorized_str
 

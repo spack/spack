@@ -20,6 +20,7 @@ import spack.util.executable as exe
 import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.spack_yaml as syaml
+from spack.active_environment import active_environment
 
 pytestmark = pytest.mark.not_on_windows(
     "Test functionality supported but tests are failing on Win"
@@ -180,7 +181,7 @@ spack:
     assert len(config.scopes) == 2
     assert config.get("config:install_tree:root") == "/tmp/first"
 
-    assert ev.active_environment() is None  # shouldn't cause an environment to be activated
+    assert active_environment() is None  # shouldn't cause an environment to be activated
 
 
 def test_include_cfg(mock_low_high_config, write_config_file, tmp_path: pathlib.Path):

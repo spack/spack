@@ -29,6 +29,7 @@ from typing import (
     Iterator,
     List,
     Mapping,
+    NamedTuple,
     Optional,
     Set,
     Tuple,
@@ -676,6 +677,18 @@ class RepoIndex:
         return True
 
 
+def package_attributes_overrides(config: spack.config.Configuration) -> Dict[str, Any]:
+    """Extract per-package attribute overrides from the packages config section."""
+    return {
+        pkg_name: {
+            k: spack.config.substitute_path_variables(v) if isinstance(v, str) else v
+            for k, v in data["package_attributes"].items()
+        }
+        for pkg_name, data in config.get_config("packages").items()
+        if pkg_name != "all" and "package_attributes" in data
+    }
+
+
 class RepoPath:
     """A RepoPath is a list of Repo instances that function as one.
 
@@ -713,19 +726,10 @@ class RepoPath:
     @staticmethod
     def from_config(config: spack.config.Configuration) -> "RepoPath":
         """Create a RepoPath from a configuration object."""
-        overrides = {
-            pkg_name: {
-                k: spack.config.substitute_path_variables(v) if isinstance(v, str) else v
-                for k, v in data["package_attributes"].items()
-            }
-            for pkg_name, data in config.get_config("packages").items()
-            if pkg_name != "all" and "package_attributes" in data
-        }
-
         return RepoPath.from_descriptors(
             descriptors=RepoDescriptors.from_config(lock=package_repository_lock(), config=config),
             cache=spack.caches.MISC_CACHE,
-            overrides=overrides,
+            overrides=package_attributes_overrides(config),
         )
 
     def enable(self) -> None:
@@ -1110,6 +1114,10 @@ class Repo:
 
         # The parent dir of spack_repo/ which should be added to sys.path for api v2.x
         self.python_path: Optional[str] = None
+
+        #: (git url, checkout root) when this repo was constructed from a git-configured
+        #: repository; None otherwise.
+        self.remote_info: Optional[RemoteInfo] = None
 
         if self.package_api < (2, 0):
             check(
@@ -1561,7 +1569,7 @@ def get_repo_yaml_dir(
     namespace_components = namespace.split(".")
 
     if not all(nm.valid_module_name(n, package_api=package_api) for n in namespace_components):
-        raise InvalidNamespaceError(f"'{namespace}' is not a valid namespace." % namespace)
+        raise InvalidNamespaceError(f"'{namespace}' is not a valid namespace.")
 
     return os.path.join(root, "spack_repo", *namespace_components), namespace
 
@@ -1630,6 +1638,13 @@ def from_path(path: str) -> Repo:
 
 
 MaybeExecutable = Optional[spack.util.executable.Executable]
+
+
+class RemoteInfo(NamedTuple):
+    #: authoritative git url of the repository this repo was checked out from
+    url: str
+    #: checkout root (the RemoteRepoDescriptor.destination)
+    root: str
 
 
 class RepoDescriptor:
@@ -1877,9 +1892,13 @@ class RemoteRepoDescriptor(RepoDescriptor):
                 continue
             path = os.path.join(self.destination, subpath)
             try:
-                repos[path] = Repo(path, cache=cache, overrides=overrides)
+                repo = Repo(path, cache=cache, overrides=overrides)
             except RepoError as e:
                 repos[path] = e
+                continue
+            if repo.python_path:
+                repo.remote_info = RemoteInfo(self.repository, self.destination)
+            repos[path] = repo
         return repos
 
 
@@ -2066,6 +2085,9 @@ def use_repositories(
 ) -> Generator[RepoPath, None, None]:
     """Use the repositories passed as arguments within the context manager.
 
+    ``Repo`` instances are used as-is; paths are constructed into fresh ``Repo`` instances,
+    with ``package_attributes`` overrides from the current configuration applied.
+
     Args:
         *paths_and_repos: paths to the repositories to be used, or
             already constructed Repo objects
@@ -2074,17 +2096,29 @@ def use_repositories(
     Returns:
         Corresponding RepoPath object
     """
-    paths = {getattr(x, "root", x): getattr(x, "root", x) for x in paths_and_repos}
+    # Materialize the lazy PATH singleton before pushing the new scope, since its factory
+    # reads the configuration.
+    old_repo = ensure_unwrapped(PATH)
+    overrides = package_attributes_overrides(spack.config.CONFIG)
+    new_repos = [
+        x
+        if isinstance(x, Repo)
+        else Repo(
+            spack.config.canonicalize_path(x), cache=spack.caches.MISC_CACHE, overrides=overrides
+        )
+        for x in paths_and_repos
+    ]
+    paths = {r.root: r.root for r in new_repos}
+    if not override:
+        new_repos.extend(r for r in old_repo.repos if r.root not in paths)
+    new_repo = RepoPath(*new_repos)
+    # The scope is pushed only to keep the repos config section in sync with the enabled
+    # repositories: subprocess state transfer and environment activation read it.
     scope_name = f"use-repo-{uuid.uuid4()}"
     repos_key = "repos:" if override else "repos"
-    # PATH may be a lazy singleton created from config, so materialize it before pushing the
-    # new scope, otherwise we'd save (and later restore) the new repositories instead of the
-    # current ones.
-    old_repo = ensure_unwrapped(PATH)
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={repos_key: paths})
     )
-    new_repo = RepoPath.from_config(spack.config.CONFIG)
     old_repo.disable()
     enable_repo(new_repo)
     try:

@@ -410,24 +410,57 @@ def test_security_descriptor_apply_null_dacl_is_rejected(tmp_path):
         sd.apply(str(f))
 
 
-def test_set_install_permissions_file_acl(tmp_path):
-    """set_install_permissions sets 644-equivalent permissions on a file.
+def test_security_descriptor_apply_update_ownership_raises_without_write_owner(tmp_path):
+    """apply(update_ownership=True) must raise PermissionError when WRITE_OWNER is absent.
 
-    The owner receives Allow(read+write); Everyone receives Allow(read).
+    After set_install_permissions the file DACL grants FILE_ALL_ACCESS to the owner,
+    which includes WRITE_OWNER - to test the error path we must first restrict the
+    DACL to rights that exclude WRITE_OWNER, then attempt the ownership update.
     """
     f = tmp_path / "test.txt"
     f.write_text("hello")
     owner_sid = SecurityDescriptor.from_file(str(f)).owner
+    # FR excludes WRITE_OWNER (0x00080000); use P so no inherited ACE sneaks WRITE_OWNER back in.
+    # WRITE_OWNER (WO) is the string alias for the above access mask.
+    # As the strings are aliases for bit masks, some strings represent the bitwise OR of other
+    # access masks (and their string aliases). I.e FA is an OR of every other access right
+    # Other string access aliases can imply the WO mask, such as FA (FILE_ALL_ACCESS)
+    # so we explicitly set the ACE right to FR (file generic read) which does not include WO
+    set_file_sddl(str(f), f"D:P(A;;FR;;;{owner_sid})")
+
+    sd = SecurityDescriptor.from_file(str(f))
+    with pytest.raises(PermissionError, match="WRITE_OWNER"):
+        sd.apply(str(f), update_ownership=True)
+
+
+def test_set_install_permissions_file_acl(tmp_path):
+    """set_install_permissions sets 644-equivalent permissions on a file.
+
+    The owner receives Allow(full access); Everyone receives Allow(read).
+    """
+    f = tmp_path / "test.txt"
+    f.write_text("hello")
+
+    _FA = int(FileAccessRights.FILE_ALL_ACCESS)
+    _FR = int(FileAccessRights.FILE_GENERIC_READ)
+
+    owner_sid = SecurityDescriptor.from_file(str(f)).owner
+    # Force a known state without FA so the post-call assertion is not a no-op.
+    # P blocks inheritance so the parent directory cannot re-introduce FA.
+    # The owner retains implicit WRITE_DAC so set_install_permissions can still
+    # modify the DACL even though FRFW does not include explicit WRITE_DAC.
+    set_file_sddl(str(f), f"D:P(A;;FRFW;;;{owner_sid})")
+    assert not any(
+        a.sid == owner_sid and a.grants(_FA) for a in SecurityDescriptor.from_file(str(f)).dacl
+    )
+
     fs.set_install_permissions(str(f))
 
     sd = SecurityDescriptor.from_file(str(f))
-    _FRFW = int(FileAccessRights.FILE_GENERIC_READ) | int(FileAccessRights.FILE_GENERIC_WRITE)
-    _FR = int(FileAccessRights.FILE_GENERIC_READ)
-
     assert any(
-        a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FRFW)
+        a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FA)
         for a in sd.dacl
-    ), "owner must have Allow ACE granting read+write"
+    ), "owner must have Allow ACE granting full access"
     assert any(
         a.sid == "WD" and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FR)
         for a in sd.dacl
@@ -441,13 +474,19 @@ def test_set_install_permissions_directory_acl(tmp_path):
     """
     d = tmp_path / "subdir"
     d.mkdir()
-    owner_sid = SecurityDescriptor.from_file(str(d)).owner
-    fs.set_install_permissions(str(d))
 
-    sd = SecurityDescriptor.from_file(str(d))
     _FA = int(FileAccessRights.FILE_ALL_ACCESS)
     _FRFX = int(FileAccessRights.FILE_GENERIC_READ) | int(FileAccessRights.FILE_GENERIC_EXECUTE)
 
+    owner_sid = SecurityDescriptor.from_file(str(d)).owner
+    set_file_sddl(str(d), f"D:P(A;;FRFW;;;{owner_sid})")
+    assert not any(
+        a.sid == owner_sid and a.grants(_FA) for a in SecurityDescriptor.from_file(str(d)).dacl
+    )
+
+    fs.set_install_permissions(str(d))
+
+    sd = SecurityDescriptor.from_file(str(d))
     assert any(
         a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FA)
         for a in sd.dacl

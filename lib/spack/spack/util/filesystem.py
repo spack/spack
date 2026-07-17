@@ -602,17 +602,17 @@ def set_install_permissions(path):
         sd.clear_dacl()
         owner_ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid=owner_sid)
         everyone_ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="WD")
+        # Owner always gets FILE_ALL_ACCESS so they retain DELETE and WRITE_DAC regardless
+        # of whether the implicit owner rights survive a copy or ownership transfer.
+        # Everyone gets the read-only equivalent of the Unix world bits (r-x for dirs, r-- for
+        # files); execute is omitted for files because Windows uses file extensions, not mode bits,
+        # to determine executability.
+        owner_ace.add_right(FileAccessRights.FILE_ALL_ACCESS)
         if os.path.isdir(path):
-            # 755: owner full access, everyone read + traverse
-            owner_ace.add_right(FileAccessRights.FILE_ALL_ACCESS)
             everyone_ace.add_right(
                 FileAccessRights.FILE_GENERIC_READ | FileAccessRights.FILE_GENERIC_EXECUTE
             )
         else:
-            # 644: owner read + write, everyone read
-            owner_ace.add_right(
-                FileAccessRights.FILE_GENERIC_READ | FileAccessRights.FILE_GENERIC_WRITE
-            )
             everyone_ace.add_right(FileAccessRights.FILE_GENERIC_READ)
         sd.add_ace(owner_ace)
         sd.add_ace(everyone_ace)
