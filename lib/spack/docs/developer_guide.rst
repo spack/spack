@@ -424,7 +424,6 @@ For example, if you were to add this step to the Linux unit test CI, it would lo
 .. code-block:: yaml
 
    - name: Bootstrap clingo
-     if: ${{ matrix.concretizer == 'clingo' }}
      env:
        SPACK_PYTHON: python
      run: |
@@ -437,12 +436,10 @@ For example, if you were to add this step to the Linux unit test CI, it would lo
    - name: Run unit tests
      env:
        SPACK_PYTHON: python
-       SPACK_TEST_PARALLEL: 4
-       COVERAGE: true
        COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
-       UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.14' }}
+       PYTEST_ADDOPTS: ${{ matrix.python-version == '3.14' && '--cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml' || '' }}
      run: |-
-       share/spack/qa/run-unit-tests
+       python3 -m pytest -x --verbose --dist worksteal -n4
 
 
 Note that the ssh session comes after Spack does its setup but before it runs the unit tests.
