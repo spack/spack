@@ -13,6 +13,7 @@ import inspect
 import io
 import itertools
 import json
+import multiprocessing
 import os
 import re
 import shutil
@@ -437,6 +438,13 @@ def archspec_host_is_spack_test_host(monkeypatch):
 #
 # https://docs.pytest.org/en/latest/writing_plugins.html
 #
+def pytest_configure(config):
+    # improve performance on macOS
+    if sys.platform == "darwin" and multiprocessing.get_start_method(allow_none=True) is None:
+        multiprocessing.set_start_method("forkserver")
+    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.installer"])
+
+
 def pytest_addoption(parser):
     group = parser.getgroup("Spack specific command line options")
     group.addoption(
