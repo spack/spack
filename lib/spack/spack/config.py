@@ -235,7 +235,7 @@ class DirectoryConfigScope(ConfigScope):
         self.path = path
         self.writable = writable
         self.prefer_modify = prefer_modify
-        self.last_read: Dict[str,Any] = {}
+        self.last_read: Dict[str, Any] = {}
 
     @property
     def exists(self) -> bool:
