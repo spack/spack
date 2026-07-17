@@ -1977,10 +1977,27 @@ language("fortran").
 language("hip-lang").
 language_runtime("fortran-rt").
 
+% Vestigial when SPACK_COMPILER_PRUNE=1 (asp.py filters non-reusable compiler-virtual
+% providers before grounding, so this criterion cannot be triggered). We suppress it
+% via the compiler_pruning_enabled/0 fact to avoid grounding a rule whose body is
+% statically unsatisfiable. It stays as a safety net when pruning is disabled.
+%
+% TODO: this criterion needs further reformulation. Suppressing it silences a
+% now-dead rule, but does not diagnose the *new* failure the prune creates: when
+% the user's constraints (%compiler@ver, C++ standard, target, ...) cannot be
+% satisfied by any compiler currently in the reuse universe, the solve fails
+% via "Cannot find valid provider for virtual c" or "cannot satisfy X" -- which
+% hides the real answer ("we could satisfy this by building a new compiler, but
+% Spack doesn't allow that in a single solve; configure or install one first").
+% A reformulated rule (or a Python-side check at compiler-pruning time) should
+% emit that message when the pruned candidate set can't satisfy the input.
 error(10, "Only external, or concrete, compilers are allowed for the {0} language", Language)
   :- provider(ProviderNode, node(_, Language)),
      language(Language),
-     build(ProviderNode).
+     build(ProviderNode),
+     not compiler_pruning_enabled.
+
+#defined compiler_pruning_enabled/0.
 
 error(10, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Target, Compiler, Version)
   :- attr("node_target", node(X, Package), Target),

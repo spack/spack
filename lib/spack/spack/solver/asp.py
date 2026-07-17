@@ -1403,12 +1403,17 @@ class SpackSolverSetup:
         # number of candidate targets removed by reachability pruning
         self.pruned_target_count = 0
         self.total_target_count = 0
+        # compiler packages fully skipped in pkg_rules (not selectable, not depended on directly)
+        self.pruned_compilers_fully: Set[str] = set()
+        # compiler packages kept as normal deps but with the compiler role stripped
+        self.pruned_compilers_role_only: Set[str] = set()
 
         # Static-prune toggles from ``concretizer:pruning:*`` config, cached at setup
         # init so each prune site reads a bool instead of hitting the config layer.
         pruning_cfg = spack.config.get("concretizer:pruning", {}) or {}
         self._prune_dominated_versions: bool = pruning_cfg.get("dominated_versions", True)
         self._prune_unreachable_targets: bool = pruning_cfg.get("unreachable_targets", True)
+        self._prune_unusable_compilers: bool = pruning_cfg.get("unusable_compilers", True)
 
         self.possible_compilers: List[spack.spec.Spec] = []
         self.rejected_compilers: Set[spack.spec.Spec] = set()
@@ -1865,14 +1870,19 @@ class SpackSolverSetup:
         return condition_id
 
     def package_provider_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
+        skip_langs = pkg.name in self.pruned_compilers_role_only
         for vpkg_name in pkg.provided_virtual_names():
             if vpkg_name not in self.possible_virtuals:
+                continue
+            if skip_langs and vpkg_name in self._COMPILER_LANGUAGE_VIRTUALS:
                 continue
             self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
 
         for when, provided in pkg.provided.items():
             for vpkg in sorted(provided):  # type: ignore[type-var]
                 if vpkg.name not in self.possible_virtuals:
+                    continue
+                if skip_langs and vpkg.name in self._COMPILER_LANGUAGE_VIRTUALS:
                     continue
 
                 msg = f"{pkg.name} provides {vpkg}{'' if when == EMPTY_SPEC else f' when {when}'}"
@@ -2888,6 +2898,65 @@ class SpackSolverSetup:
 
         return kept
 
+    #: Language virtuals that can only be provided by "reuse" compilers.
+    #: A provider of any of these that ``build(N)`` triggers error(10) at concretize.lp:1980,
+    #: so any compiler package that is not in the reuse universe (externals, installed,
+    #: buildcache-injected) is statically unselectable as a provider for these virtuals.
+    _COMPILER_LANGUAGE_VIRTUALS = frozenset(
+        {"c", "cxx", "fortran", "cuda-lang", "hip-lang", "fortran-rt"}
+    )
+
+    def _compute_compiler_pruning(self):
+        """Partition compiler packages into three sets based on selectability + direct-dep use.
+
+        Categories:
+          * *selectable*: name is in ``self.possible_compilers`` (externals / installed /
+            buildcache-injected). Never pruned.
+          * *role-only-pruned*: not selectable, but at least one package in ``self.pkgs`` names
+            it as a direct (non-virtual) dependency (e.g. hip depends_on("llvm") for libLLVM).
+            The package must still be selectable as a normal dep, so we keep ``pkg_rules``
+            but suppress its language-virtual provider facts.
+          * *fully-pruned*: not selectable and not directly depended on by name. The package
+            is pure dead weight in this solve; skip ``pkg_rules`` entirely.
+
+        Controlled by ``concretizer:pruning:unusable_compilers`` (default true).
+        """
+        self.pruned_compilers_fully = set()
+        self.pruned_compilers_role_only = set()
+        if not self._prune_unusable_compilers:
+            return
+
+        all_compiler_pkgs = set(spack.compilers.config.supported_compilers())
+        selectable = {c.name for c in self.possible_compilers}
+        candidates = {p for p in self.pkgs if p in all_compiler_pkgs} - selectable
+        if not candidates:
+            return
+
+        direct_dep_targets: Set[str] = set()
+        for pkg_name in self.pkgs:
+            try:
+                pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            except spack.repo.UnknownPackageError:
+                continue
+            for _when, deps in pkg_cls.dependencies.items():
+                for dep_name in deps:
+                    if dep_name in candidates:
+                        direct_dep_targets.add(dep_name)
+
+        self.pruned_compilers_role_only = candidates & direct_dep_targets
+        self.pruned_compilers_fully = candidates - direct_dep_targets
+
+        # Suppress the "Only external, or concrete, compilers are allowed" error rule
+        # in concretize.lp -- our prune has statically enforced that invariant, so the
+        # rule can't fire in this solve and grounding it is dead weight.
+        self.gen.fact(fn.compiler_pruning_enabled())
+
+        tty.debug(
+            f"compiler-provider pruning: "
+            f"{len(self.pruned_compilers_fully)} compiler packages fully pruned, "
+            f"{len(self.pruned_compilers_role_only)} kept as deps with compiler role removed"
+        )
+
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
         sorted_versions = {}
@@ -3225,6 +3294,8 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
+        self._compute_compiler_pruning()
+        self.pkgs -= self.pruned_compilers_fully
         self.libcs = sorted(all_libcs())  # type: ignore[type-var]
 
         for node in traverse.traverse_nodes(specs):

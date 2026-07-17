@@ -234,6 +234,13 @@ properties: Dict[str, Any] = {
                         "actually be driven to (host/family-best, per-constraint "
                         "feasible-best, compiler fallbacks, pinned/reused).",
                     },
+                    "unusable_compilers": {
+                        "type": "boolean",
+                        "description": "Drop compiler packages not present in the reuse "
+                        "universe (externals + installed + buildcache). Compilers cannot be "
+                        "bootstrapped in a single solve, so unusable ones can never be "
+                        "selected as language-virtual providers.",
+                    },
                 },
             },
             "timeout": {

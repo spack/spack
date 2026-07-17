@@ -103,6 +103,8 @@ concretizer:
     dominated_versions: true
     # Keep only microarchitecture targets a node could actually be driven to.
     unreachable_targets: true
+    # Drop compiler packages not present in the reuse universe (external/installed/buildcache).
+    unusable_compilers: true
 
   # If enabled, concretizations are cached in the misc_cache. The cache is keyed by the hash
   # of solver inputs, so we only need to run setup (not solve) if there is a cache hit.
