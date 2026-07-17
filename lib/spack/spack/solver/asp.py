@@ -103,62 +103,6 @@ DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
 )
 
 
-# Below numbers are used to map names of criteria to the order they appear in the solution
-#
-# The space of possible priorities for optimization targets is partitioned in the following ranges:
-#
-# [0-100)     Low-priority criteria (target-related criteria plus symmetry tie-breakers)
-# [100-200)   Optimization criteria for software being reused (concrete slot)
-# [200-300)   Fixed criteria higher priority than reuse, lower than build
-# [300-400)   Optimization criteria for software being built (build slot)
-# [400-1000)  High-priority fixed criteria
-# [1000-inf)  Error conditions
-#
-# The "low" band sits strictly below the reused/concrete band, so the solver decides compilers,
-# versions, etc. before targets and tie-breakers.
-#
-# The priority of an opt_criterion() fact is the level of its slot. Priorities in the "concrete"
-# band have an implicit "build" priority shifted by build_priority_offset.
-# Each optimization target is a minimization with optimal value 0.
-
-#: Exclusive upper bound of each priority band, in ascending order
-low_band_max = 100
-concrete_band_max = 200
-fixed_band_max = 300
-build_band_max = 400
-
-#: Displacement from a concrete-band criterion's level to its implicit build-band twin
-build_priority_offset = 200
-
-
-class OptimizationBand(enum.Enum):
-    """Grouping for optimization criteria by their priority range."""
-
-    LOW = "Lowest priority"
-    REUSED = "Reused nodes"
-    FIXED = "Fixed (reuse vs build)"
-    BUILD = "Built nodes"
-    HIGHEST = "Highest priority"
-
-
-#: Exclusive upper bound of each band's priority range, in ascending order.
-_BAND_UPPER_BOUNDS = (
-    (low_band_max, OptimizationBand.LOW),  # [0, 100)
-    (concrete_band_max, OptimizationBand.REUSED),  # [100, 200)
-    (fixed_band_max, OptimizationBand.FIXED),  # [200, 300)
-    (build_band_max, OptimizationBand.BUILD),  # [300, 400)
-    # [400, inf) -> OptimizationBand.HIGHEST (requirement weight, unsolved input specs)
-)
-
-
-def optimization_band(priority: int) -> OptimizationBand:
-    """Return the display band a criterion belongs to, given its clingo priority."""
-    for upper_bound, band in _BAND_UPPER_BOUNDS:
-        if priority < upper_bound:
-            return band
-    return OptimizationBand.HIGHEST
-
-
 # type aliases for the data structures we get back from the solver
 SpecDict = Dict[NodeId, spack.spec.Spec]
 SpliceDict = Dict[spack.spec.Spec, List[spack.solver.splicing.Splice]]
@@ -181,6 +125,7 @@ class OptimizationCriteria(NamedTuple):
     priority: int
     value: int
     name: str
+    location: str
     kind: OptimizationKind
 
 
@@ -190,19 +135,17 @@ def build_criteria_names(costs, arg_tuples):
     priorities_names = []
 
     for args in arg_tuples:
-        priority, name = args[:2]
+        priority, location, name = args[0], args[2], args[4]
         priority = int(priority)
 
-        if priority < low_band_max:
-            priorities_names.append((priority, name, OptimizationKind.OTHER))
-        elif priority < concrete_band_max:
-            # Reused/concrete criterion in the [100, 200) band.
-            priorities_names.append((priority, name, OptimizationKind.CONCRETE))
-            # Same build criterion in the [300, 400) band.
-            build_priority = priority + build_priority_offset
-            priorities_names.append((build_priority, name, OptimizationKind.BUILD))
+        if location == "concr":
+            # Reused/concrete criterion
+            priorities_names.append((priority, name, location, OptimizationKind.CONCRETE))
+        elif location == "built":
+            # Build criterion
+            priorities_names.append((priority, name, location, OptimizationKind.BUILD))
         else:
-            priorities_names.append((priority, name, OptimizationKind.OTHER))
+            priorities_names.append((priority, name, location, OptimizationKind.OTHER))
 
     # sort the criteria by priority
     priorities_names = sorted(priorities_names, reverse=True)
@@ -213,8 +156,8 @@ def build_criteria_names(costs, arg_tuples):
     costs = costs[error_criteria:]
 
     return [
-        OptimizationCriteria(priority, value, name, status)
-        for (priority, name, status), value in zip(priorities_names, costs)
+        OptimizationCriteria(priority, value, name, location, status)
+        for (priority, name, location, status), value in zip(priorities_names, costs)
     ]
 
 
@@ -1026,7 +969,7 @@ class PyclingoDriver:
         result.answers.append((list(min_cost), 0, spec_dict))
 
         # get optimization criteria
-        criteria_args = extract_args(best_model, "opt_criterion")
+        criteria_args = extract_args(best_model, "opt_priority")
         result.criteria = build_criteria_names(min_cost, criteria_args)
 
         # record the number of models the solver considered
