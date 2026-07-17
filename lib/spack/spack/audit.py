@@ -319,8 +319,8 @@ def _wrongly_named_spec(error_cls):
         for entry in externals:
             spec = spack.spec.Spec(entry["spec"])
             regular_pkg_is_wrong = not is_virtual and pkg_name != spec.name
-            virtual_pkg_is_wrong = is_virtual and not any(
-                p.name == spec.name for p in spack.repo.PATH.providers_for(pkg_name)
+            virtual_pkg_is_wrong = (
+                is_virtual and spec.name not in spack.repo.PATH.provider_names_for(pkg_name)
             )
             if regular_pkg_is_wrong or virtual_pkg_is_wrong:
                 summary = f"Wrong external spec detected for '{pkg_name}': {spec}"

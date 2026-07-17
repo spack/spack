@@ -33,7 +33,7 @@ from spack.version import Version
 
 @pytest.fixture(scope="module")
 def compiler_names(mock_packages_repo):
-    return [spec.name for spec in mock_packages_repo.providers_for("c")]
+    return mock_packages_repo.provider_names_for("c")
 
 
 @pytest.fixture()
@@ -75,7 +75,7 @@ def mock_inspector(config, mock_packages, request):
 
 @pytest.fixture
 def mpi_names(mock_inspector):
-    return [spec.name for spec in mock_inspector.providers_for("mpi")]
+    return mock_inspector.providers_for("mpi")
 
 
 @pytest.mark.parametrize(
@@ -133,7 +133,7 @@ def test_possible_dependencies_virtual(mock_inspector, mock_packages, mpi_names)
             for dep in mock_packages.get_pkg_class(name).dependencies_by_name()
             if not mock_packages.is_virtual(dep)
         )
-    expected.update(s.name for s in mock_packages.providers_for("c"))
+    expected.update(mock_packages.provider_names_for("c"))
 
     real_pkgs, *_ = mock_inspector.possible_dependencies(
         "mpi", transitive=False, allowed_deps=dt.ALL

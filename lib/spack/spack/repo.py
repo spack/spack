@@ -518,10 +518,10 @@ class ProviderIndexer(Indexer):
     """Lifecycle methods for virtual package providers."""
 
     def _create(self) -> "spack.provider_index.ProviderIndex":
-        return spack.provider_index.ProviderIndex(repository=self.repository)
+        return spack.provider_index.ProviderIndex()
 
     def read(self, stream):
-        self.index = spack.provider_index.ProviderIndex.from_json(stream, self.repository)
+        self.index = spack.provider_index.ProviderIndex.from_json(stream)
 
     def update(self, pkgs_fullname: Set[str]):
         is_virtual = lambda name: (
@@ -530,7 +530,7 @@ class ProviderIndexer(Indexer):
         non_virtual_pkgs_fullname = {p for p in pkgs_fullname if not is_virtual(p.split(".")[-1])}
         non_virtual_pkgs_names = {p.split(".")[-1] for p in non_virtual_pkgs_fullname}
         self.index.remove_providers(non_virtual_pkgs_names)
-        self.index.update_packages(non_virtual_pkgs_fullname)
+        self.index.update_packages(non_virtual_pkgs_fullname, self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -825,7 +825,7 @@ class RepoPath:
     def provider_index(self) -> spack.provider_index.ProviderIndex:
         """Merged ProviderIndex from all Repos in the RepoPath."""
         if self._provider_index is None:
-            self._provider_index = spack.provider_index.ProviderIndex(repository=self)
+            self._provider_index = spack.provider_index.ProviderIndex()
             for repo in reversed(self.repos):
                 self._provider_index.merge(repo.provider_index)
         return self._provider_index
@@ -882,16 +882,17 @@ class RepoPath:
         current_index = self.get_patch_index(allow_stale=False)
         return [current_index.patch_for_package(sha256, pkg_cls) for sha256 in sha256s]
 
-    def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
+    def provider_names_for(self, virtual_name: str) -> List[str]:
+        """Return names of all packages providing the given virtual package name."""
         all_packages = self._all_package_names_set(include_virtuals=False)
-        providers = [
-            spec
-            for spec in self.provider_index.providers_for(virtual)
-            if spec.name in all_packages
-        ]
+        providers = {
+            node["name"]
+            for _, provider_nodes in self.provider_index.providers.get(virtual_name, [])
+            for node in provider_nodes
+        } & all_packages
         if not providers:
-            raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.fullname)
-        return providers
+            raise UnknownPackageError(virtual_name)
+        return sorted(providers)
 
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
@@ -1329,11 +1330,16 @@ class Repo:
         cache validation and return a potentially stale index."""
         return self.index.get_index("patches", allow_stale=allow_stale)
 
-    def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
-        providers = self.provider_index.providers_for(virtual)
+    def provider_names_for(self, virtual_name: str) -> List[str]:
+        """Return names of all packages providing the given virtual package name."""
+        providers = {
+            node["name"]
+            for _, provider_nodes in self.provider_index.providers.get(virtual_name, [])
+            for node in provider_nodes
+        }
         if not providers:
-            raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.fullname)
-        return providers
+            raise UnknownPackageError(virtual_name)
+        return sorted(providers)
 
     def dirname_for_package_name(self, pkg_name: str) -> str:
         """Given a package name, get the directory containing its package.py file."""

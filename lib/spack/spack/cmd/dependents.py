@@ -54,7 +54,7 @@ def inverted_dependencies():
 
                 # expand virtuals if necessary
                 if spack.repo.PATH.is_virtual(dep):
-                    deps += [s.name for s in spack.repo.PATH.providers_for(dep)]
+                    deps += spack.repo.PATH.provider_names_for(dep)
 
                 for d in deps:
                     dag[d].add(pkg_cls.name)

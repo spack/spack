@@ -30,8 +30,8 @@ def _normalize_packages_yaml(packages_yaml: Dict[str, Any]) -> None:
         data = packages_yaml.pop(pkg_name)
         is_buildable = data.get("buildable", True)
         if not is_buildable:
-            for provider in spack.repo.PATH.providers_for(pkg_name):
-                entry = packages_yaml.setdefault(provider.name, {})
+            for provider_name in spack.repo.PATH.provider_names_for(pkg_name):
+                entry = packages_yaml.setdefault(provider_name, {})
                 entry["buildable"] = False
 
         externals = data.get("externals", [])

@@ -90,7 +90,6 @@ import spack.hash_types as ht
 import spack.patch
 import spack.paths
 import spack.platforms
-import spack.provider_index
 import spack.repo
 import spack.spec_parser
 import spack.traverse
@@ -1559,6 +1558,51 @@ def _satisfies_edge(lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtua
         return False
 
     return lhs.spec._provides_virtual(rhs.spec)
+
+
+def _virtual_specs_intersect(lhs: "Spec", rhs: "Spec") -> bool:
+    """Whether two abstract virtual specs with different names intersect, i.e. whether some
+    package can provide both under compatible conditions."""
+    rhs_providers = set(spack.repo.PATH.provider_names_for(rhs.name))
+    for name in spack.repo.PATH.provider_names_for(lhs.name):
+        if name not in rhs_providers:
+            continue
+
+        pkg_provided = spack.repo.PATH.get_pkg_class(name).provided
+        lhs_conditions = [
+            when
+            for when, provided in pkg_provided.items()
+            if (not when.name or when.name == name)
+            and any(v.name == lhs.name and v.intersects(lhs, deps=False) for v in provided)
+        ]
+        rhs_conditions = [
+            when
+            for when, provided in pkg_provided.items()
+            if (not when.name or when.name == name)
+            and any(v.name == rhs.name and v.intersects(rhs, deps=False) for v in provided)
+        ]
+        if any(w1.intersects(w2) for w1 in lhs_conditions for w2 in rhs_conditions):
+            return True
+    return False
+
+
+def _provided_virtuals(nodes: Iterable["Spec"]) -> Dict[str, List["Spec"]]:
+    """Map virtual name to the virtual specs provided by any of the given package nodes, under
+    provide conditions the node intersects (ignoring compiler flags)."""
+    provided: Dict[str, List["Spec"]] = {}
+    for node in nodes:
+        if not node.name or spack.repo.PATH.is_virtual_safe(node.name):
+            # Only non-virtual packages with name can provide virtual specs.
+            continue
+
+        pkg_cls = spack.repo.PATH.get_pkg_class(node.name)
+        for when_spec, provided_specs in pkg_cls.provided.items():
+            condition = when_spec.copy()
+            condition.compiler_flags = node.compiler_flags.copy()
+            if node.intersects(condition, deps=False):
+                for vspec in provided_specs:
+                    provided.setdefault(vspec.name, []).append(vspec)
+    return provided
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
@@ -3205,11 +3249,8 @@ class Spec:
             self_virtual = spack.repo.PATH.is_virtual(self.name)
             other_virtual = spack.repo.PATH.is_virtual(other.name)
             if self_virtual and other_virtual:
-                # Two virtual specs intersect only if there are providers for both
-                lhs = spack.repo.PATH.providers_for(self)
-                rhs = spack.repo.PATH.providers_for(other)
-                intersection = [s for s in lhs if any(s.intersects(z) for z in rhs)]
-                return bool(intersection)
+                # Two virtual specs intersect only if some package provides both
+                return _virtual_specs_intersect(self, other)
 
             # A provider can satisfy a virtual dependency.
             elif self_virtual or other_virtual:
@@ -3276,12 +3317,8 @@ class Spec:
             return True
 
         # For virtual dependencies, we need to dig a little deeper.
-        self_index = spack.provider_index.ProviderIndex(
-            repository=spack.repo.PATH, specs=self.traverse(), restrict=True
-        )
-        other_index = spack.provider_index.ProviderIndex(
-            repository=spack.repo.PATH, specs=other.traverse(), restrict=True
-        )
+        self_provided = _provided_virtuals(self.traverse())
+        other_provided = _provided_virtuals(other.traverse())
 
         # These two loops handle cases where there is an overly restrictive
         # vpkg in one spec for a provider in the other (e.g., mpi@3: is not
@@ -3289,16 +3326,16 @@ class Spec:
         for spec in self.traverse():
             if (
                 spack.repo.PATH.is_virtual(spec.name)
-                and spec.name in other_index
-                and not other_index.providers_for(spec)
+                and spec.name in other_provided
+                and not any(v.intersects(spec, deps=False) for v in other_provided[spec.name])
             ):
                 return False
 
         for spec in other.traverse():
             if (
                 spack.repo.PATH.is_virtual(spec.name)
-                and spec.name in self_index
-                and not self_index.providers_for(spec)
+                and spec.name in self_provided
+                and not any(v.intersects(spec, deps=False) for v in self_provided[spec.name])
             ):
                 return False
 

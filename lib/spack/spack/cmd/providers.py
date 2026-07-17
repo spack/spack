@@ -8,6 +8,7 @@ import sys
 
 import spack.cmd
 import spack.repo
+import spack.spec
 from spack.util.tty import colify
 
 description = "list packages that provide a particular virtual package"
@@ -56,5 +57,11 @@ def providers(parser, args):
     for spec in specs:
         if sys.stdout.isatty():
             print("{0}:".format(spec))
-        spack.cmd.display_specs(sorted(spack.repo.PATH.providers_for(spec)))
+        providers = {
+            spack.spec.SpecfileLatest.from_node_dict(node)
+            for vpkg_node, provider_nodes in spack.repo.PATH.provider_index.providers[spec.name]
+            if spack.spec.SpecfileLatest.from_node_dict(vpkg_node).intersects(spec, deps=False)
+            for node in provider_nodes
+        }
+        spack.cmd.display_specs(sorted(p for p in providers if spack.repo.PATH.exists(p.name)))
         print("")

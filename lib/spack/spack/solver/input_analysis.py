@@ -76,7 +76,7 @@ class NoStaticAnalysis(PossibleDependencyGraph):
         )
 
         try:
-            self.libc_pkgs = [x.name for x in self.providers_for("libc")]
+            self.libc_pkgs = self.providers_for("libc")
         except spack.repo.UnknownPackageError:
             self.libc_pkgs = []
 
@@ -97,9 +97,9 @@ class NoStaticAnalysis(PossibleDependencyGraph):
                     return False
         return True
 
-    def providers_for(self, virtual_str: str) -> List[spack.spec.Spec]:
-        """Returns a list of possible providers for the virtual string in input."""
-        return self.repo.providers_for(virtual_str)
+    def providers_for(self, virtual_str: str) -> List[str]:
+        """Returns the names of possible providers for the virtual string in input."""
+        return self.repo.provider_names_for(virtual_str)
 
     def can_be_installed(self, *, pkg_name) -> bool:
         """Returns True if a package can be installed, False otherwise."""
@@ -197,8 +197,7 @@ class NoStaticAnalysis(PossibleDependencyGraph):
                     if self.is_virtual(name):
                         virtuals.add(name)
                         if expand_virtuals:
-                            providers = self.providers_for(name)
-                            dep_names = {spec.name for spec in providers}
+                            dep_names = set(self.providers_for(name))
                     else:
                         dep_names = {name}
 
@@ -231,7 +230,7 @@ class NoStaticAnalysis(PossibleDependencyGraph):
                 current_spec = spack.spec.Spec(current_spec)
 
             if self.repo.is_virtual(current_spec.name):
-                stack.extend([p.name for p in self.providers_for(current_spec.name)])
+                stack.extend(self.providers_for(current_spec.name))
                 continue
 
             stack.append(current_spec.name)
@@ -276,14 +275,12 @@ class StaticAnalysis(NoStaticAnalysis):
         super().__init__(configuration=configuration, repo=repo)
 
     @lang.memoized
-    def providers_for(self, virtual_str: str) -> List[spack.spec.Spec]:
-        candidates = super().providers_for(virtual_str)
-        result = []
-        for spec in candidates:
-            if not self._is_provider_candidate(pkg_name=spec.name, virtual=virtual_str):
-                continue
-            result.append(spec)
-        return result
+    def providers_for(self, virtual_str: str) -> List[str]:
+        return [
+            name
+            for name in super().providers_for(virtual_str)
+            if self._is_provider_candidate(pkg_name=name, virtual=virtual_str)
+        ]
 
     @lang.memoized
     def buildcache_specs(self) -> List[spack.spec.Spec]:

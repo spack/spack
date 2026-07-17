@@ -325,7 +325,7 @@ class TestRepo:
     @pytest.mark.parametrize("virtual_name,expected", [("mpi", ["mpich", "zmpi"])])
     def test_providers(self, virtual_name, expected, mock_test_cache):
         repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
-        provider_names = {x.name for x in repo.providers_for(virtual_name)}
+        provider_names = set(repo.provider_names_for(virtual_name))
         assert provider_names.issuperset(expected)
 
     @pytest.mark.parametrize(

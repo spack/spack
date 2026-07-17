@@ -388,16 +388,22 @@ class TestConcretize:
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.
         """
-        repo = spack.repo.PATH
-        assert not any(s.intersects("mpich2@:1.0") for s in repo.providers_for(Spec("mpi@2.1")))
-        assert not any(s.intersects("mpich2@:1.1") for s in repo.providers_for(Spec("mpi@2.2")))
-        assert not any(s.intersects("mpich@:1") for s in repo.providers_for(Spec("mpi@2")))
-        assert not any(s.intersects("mpich@:1") for s in repo.providers_for(Spec("mpi@3")))
-        assert not any(s.intersects("mpich2") for s in repo.providers_for(Spec("mpi@3")))
+        assert not Spec("mpi@2.1").intersects(Spec("mpich2@:1.0"))
+        assert not Spec("mpi@2.2").intersects(Spec("mpich2@:1.1"))
+        assert not Spec("mpi@2").intersects(Spec("mpich@:1"))
+        assert not Spec("mpi@3").intersects(Spec("mpich@:1"))
+        assert not Spec("mpi@3").intersects(Spec("mpich2"))
 
     def test_provides_handles_multiple_providers_of_same_version(self):
         """ """
-        providers = spack.repo.PATH.providers_for(Spec("mpi@3.0"))
+        providers = {
+            spack.spec.SpecfileLatest.from_node_dict(node)
+            for vpkg_node, provider_nodes in spack.repo.PATH.provider_index.providers["mpi"]
+            if spack.spec.SpecfileLatest.from_node_dict(vpkg_node).intersects(
+                Spec("mpi@3.0"), deps=False
+            )
+            for node in provider_nodes
+        }
 
         # Note that providers are repo-specific, so we don't misinterpret
         # providers, but vdeps are not namespace-specific, so we can
@@ -1750,10 +1756,10 @@ spack:
         assert s["lapack"].name == "low-priority-provider"
 
         for virtual_pkg in ("mpi", "lapack"):
-            for pkg in spack.repo.PATH.providers_for(virtual_pkg):
-                if pkg.name == "low-priority-provider":
+            for pkg_name in spack.repo.PATH.provider_names_for(virtual_pkg):
+                if pkg_name == "low-priority-provider":
                     continue
-                assert pkg not in s
+                assert pkg_name not in s
 
     @pytest.mark.regression("27237")
     @pytest.mark.parametrize(
