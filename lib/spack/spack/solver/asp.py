@@ -2911,8 +2911,6 @@ class SpackSolverSetup:
         Return:
             A ProblemInstanceBuilder populated with facts and rules for an ASP solve.
         """
-        # TODO: remove this local import and get rid of dependency on globals
-
         reuse = reuse or []
         if packages_with_externals is None:
             packages_with_externals = (
@@ -3775,8 +3773,6 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     This method updates the SpecDict in place.
 
     """
-    # TODO: remove this local import and get rid of dependency on globals
-
     # inject patches -- note that we can't use set() to unique the
     # roots here, because the specs aren't complete, and the hash
     # function will loop forever.
