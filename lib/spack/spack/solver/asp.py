@@ -2824,10 +2824,7 @@ class SpackSolverSetup:
         archspec = spack.vendor.archspec.cpu
         # weight order: mirror target_preferences (lower index == more preferred)
         prefs_key = spack.package_prefs.PackagePrefs("all", "target")
-        ordered = sorted(
-            (spack.spec.Spec(f"target={n}") for n in names),
-            key=prefs_key,
-        )
+        ordered = sorted((spack.spec.Spec(f"target={n}") for n in names), key=prefs_key)
         weight = {s.architecture.target.name: i for i, s in enumerate(ordered)}
         by_weight = sorted(names, key=lambda n: weight.get(n, len(names)))
 
@@ -2956,6 +2953,29 @@ class SpackSolverSetup:
             f"{len(self.pruned_compilers_fully)} compiler packages fully pruned, "
             f"{len(self.pruned_compilers_role_only)} kept as deps with compiler role removed"
         )
+
+    def _prune_transitively_unreachable(self, root_names, edges) -> Set[str]:
+        """Remove from ``self.pkgs`` any package no longer reachable from ``root_names``.
+
+        Called after another prune has removed packages from ``self.pkgs``. Walks
+        the (virtual-expanded) adjacency map ``edges`` from the roots, only
+        following edges to nodes still in ``self.pkgs``. Previously-pruned nodes
+        act as walls, so any package whose only path from the roots went through
+        one becomes unreachable and is dropped. Returns the set of packages removed.
+        """
+        reachable: Set[str] = set()
+        stack: List[str] = [n for n in root_names if n in self.pkgs]
+        while stack:
+            p = stack.pop()
+            if p in reachable:
+                continue
+            reachable.add(p)
+            for dep in edges.get(p, ()):
+                if dep in self.pkgs and dep not in reachable:
+                    stack.append(dep)
+        to_remove = self.pkgs - reachable
+        self.pkgs -= to_remove
+        return to_remove
 
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
@@ -3295,7 +3315,19 @@ class SpackSolverSetup:
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
         self._compute_compiler_pruning()
-        self.pkgs -= self.pruned_compilers_fully
+        if self.pruned_compilers_fully:
+            self.pkgs -= self.pruned_compilers_fully
+            root_names = {s.name for s in list(specs) + injected_dependencies}
+            dead_transitive = self._prune_transitively_unreachable(
+                root_names, node_counter.edges()
+            )
+            if dead_transitive:
+                sample = ", ".join(sorted(dead_transitive)[:5])
+                more = "..." if len(dead_transitive) > 5 else ""
+                tty.debug(
+                    f"transitive dead-dep pruning removed {len(dead_transitive)} "
+                    f"more package(s): {sample}{more}"
+                )
         self.libcs = sorted(all_libcs())  # type: ignore[type-var]
 
         for node in traverse.traverse_nodes(specs):

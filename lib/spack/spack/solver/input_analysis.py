@@ -393,6 +393,8 @@ class Counter:
         self._possible_virtuals: Set[str] = {
             x.name for x in specs if spack.repo.PATH.is_virtual(x.name)
         }
+        # adjacency map (pkg -> set of dep pkgs), populated by _compute_cache_values
+        self._edges: Dict[str, Set[str]] = {}
 
     def possible_dependencies(self) -> Set[str]:
         """Returns the list of possible dependencies"""
@@ -403,6 +405,11 @@ class Counter:
         """Returns the list of possible virtuals"""
         self.ensure_cache_values()
         return self._possible_virtuals
+
+    def edges(self) -> Dict[str, Set[str]]:
+        """Returns adjacency map: pkg -> set of dep pkgs (virtuals already expanded)."""
+        self.ensure_cache_values()
+        return self._edges
 
     def ensure_cache_values(self) -> None:
         """Ensure the cache values have been computed"""
@@ -420,10 +427,11 @@ class Counter:
 
 class NoDuplicatesCounter(Counter):
     def _compute_cache_values(self) -> None:
-        self._possible_dependencies, virtuals, _ = self.possible_graph.possible_dependencies(
+        self._possible_dependencies, virtuals, edges = self.possible_graph.possible_dependencies(
             *self.specs, allowed_deps=self.all_types
         )
         self._possible_virtuals.update(virtuals)
+        self._edges = edges
 
     def possible_packages_facts(self, gen: "spack.solver.asp.ProblemInstanceBuilder", fn) -> None:
         gen.h2("Maximum number of nodes (packages)")
@@ -454,23 +462,30 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         self._link_run_virtuals: Set[str] = set()
 
     def _compute_cache_values(self) -> None:
-        self._link_run, virtuals, _ = self.possible_graph.possible_dependencies(
+        self._link_run, virtuals, edges_link_run = self.possible_graph.possible_dependencies(
             *self.specs, allowed_deps=self.link_run_types
         )
         self._possible_virtuals.update(virtuals)
         self._link_run_virtuals.update(virtuals)
+        edges_direct_build: Dict[str, Set[str]] = {}
         if self._link_run:
-            reals, virtuals, _ = self.possible_graph.possible_dependencies(
+            reals, virtuals, edges_direct_build = self.possible_graph.possible_dependencies(
                 *self._link_run, allowed_deps=dt.BUILD, transitive=False, strict_depflag=True
             )
             self._possible_virtuals.update(virtuals)
             self._direct_build.update(reals)
 
-        self._total_build, virtuals, _ = self.possible_graph.possible_dependencies(
+        self._total_build, virtuals, edges_total_build = self.possible_graph.possible_dependencies(
             *self._direct_build, allowed_deps=self.all_types
         )
         self._possible_virtuals.update(virtuals)
         self._possible_dependencies = set(self._link_run) | set(self._total_build)
+        # Union all edge maps -- a package's outgoing edges may come from any pass
+        merged: Dict[str, Set[str]] = {}
+        for edge_map in (edges_link_run, edges_direct_build, edges_total_build):
+            for src, dsts in edge_map.items():
+                merged.setdefault(src, set()).update(dsts)
+        self._edges = merged
 
     def possible_packages_facts(self, gen, fn):
         build_tools = set()
