@@ -1407,6 +1407,13 @@ class SpackSolverSetup:
         self.pruned_compilers_fully: Set[str] = set()
         # compiler packages kept as normal deps but with the compiler role stripped
         self.pruned_compilers_role_only: Set[str] = set()
+        # count of dep-when blocks skipped because their version constraint could not be met
+        self.pruned_dep_blocks_version = 0
+        self.pruned_dep_blocks_variant = 0
+        self.total_dep_blocks = 0
+        # boolean variants provably pinned to their declared default in every optimal model.
+        # (pkg_name, variant_name) -> default (True/False)
+        self.pinned_default_variants: Dict[Tuple[str, str], bool] = {}
 
         # Static-prune toggles from ``concretizer:pruning:*`` config, cached at setup
         # init so each prune site reads a bool instead of hitting the config layer.
@@ -1414,6 +1421,7 @@ class SpackSolverSetup:
         self._prune_dominated_versions: bool = pruning_cfg.get("dominated_versions", True)
         self._prune_unreachable_targets: bool = pruning_cfg.get("unreachable_targets", True)
         self._prune_unusable_compilers: bool = pruning_cfg.get("unusable_compilers", True)
+        self._prune_dead_dep_blocks: bool = pruning_cfg.get("dead_dep_blocks", True)
 
         self.possible_compilers: List[spack.spec.Spec] = []
         self.rejected_compilers: Set[spack.spec.Spec] = set()
@@ -1905,7 +1913,19 @@ class SpackSolverSetup:
 
     def package_dependencies_rules(self, pkg):
         """Translate ``depends_on`` directives into ASP logic."""
+        dep_prune = self._prune_dead_dep_blocks
         for cond, deps_by_name in pkg.dependencies.items():
+            self.total_dep_blocks += 1
+            # Skip the whole block if the when-clause's version constraint cannot
+            # be satisfied by any version we've registered for this package. None
+            # of the deps in the block can fire, so we can save the ``condition()``
+            # machinery entirely. Controlled by concretizer:pruning:dead_dep_blocks.
+            if dep_prune and self._when_versions_dead(pkg.name, cond):
+                self.pruned_dep_blocks_version += 1
+                continue
+            if dep_prune and self._when_variants_dead(pkg.name, cond):
+                self.pruned_dep_blocks_variant += 1
+                continue
             cond_str = str(cond)
             cond_str_suffix = f" when {cond_str}" if cond_str else ""
             for _, dep in deps_by_name.items():
@@ -2954,6 +2974,138 @@ class SpackSolverSetup:
             f"{len(self.pruned_compilers_role_only)} kept as deps with compiler role removed"
         )
 
+    def _compute_pinned_variants(self, input_specs, reuse_specs) -> None:
+        """Populate ``self.pinned_default_variants`` with (pkg, variant) pairs whose
+        boolean value must be the declared default in every optimal model.
+
+        A pair is pinned only when we can't find any hard-force that could push it
+        away from default: input specs, reuse specs, cross-package ``depends_on``
+        that names the variant, ``requires`` clauses that name the variant, or
+        packages.yaml overrides. We over-approximate the "constrained" set on
+        purpose -- being too conservative here just gives up prunes, being too
+        aggressive silently changes concretization. When-clauses that merely
+        *check* the variant (``depends_on(X, when="+V")``) do not count as a
+        hard-force: they gate a dep, they don't require the value.
+        """
+        self.pinned_default_variants = {}
+        if not self._prune_dead_dep_blocks:
+            return
+
+        constrained: Set[Tuple[str, str]] = set()
+
+        def add_from_spec(spec):
+            for node in spec.traverse():
+                if node.name is None:
+                    continue
+                for vname in node.variants:
+                    constrained.add((node.name, vname))
+
+        # Input specs and reuse specs directly express variant values.
+        for s in input_specs or ():
+            add_from_spec(s)
+        for s in reuse_specs or ():
+            add_from_spec(s)
+
+        # Cross-package hard forces: depends_on target specs and requires clauses.
+        for pkg_name in self.pkgs:
+            try:
+                pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            except spack.repo.UnknownPackageError:
+                continue
+            for _cond, deps in pkg_cls.dependencies.items():
+                for dep_name, dep in deps.items():
+                    for vname in dep.spec.variants:
+                        constrained.add((dep_name, vname))
+            try:
+                for _cond, when_reqs in pkg_cls.requirements.items():
+                    for req_specs, _, _ in when_reqs:
+                        for rs in req_specs:
+                            add_from_spec(rs)
+            except Exception:
+                pass
+
+        # packages.yaml preferences and requires.
+        packages_cfg = spack.config.CONFIG.get("packages", {}) or {}
+        for pkg_key, cfg in packages_cfg.items():
+            variants_pref = cfg.get("variants", [])
+            if isinstance(variants_pref, str):
+                variants_pref = [variants_pref]
+            for vstr in variants_pref:
+                if not isinstance(vstr, str):
+                    continue
+                try:
+                    add_from_spec(spack.spec.Spec(vstr))
+                except Exception:
+                    pass
+            req_pref = cfg.get("require", [])
+            if isinstance(req_pref, str):
+                req_pref = [req_pref]
+            for r in req_pref:
+                if not isinstance(r, str):
+                    continue
+                try:
+                    add_from_spec(spack.spec.Spec(r))
+                except Exception:
+                    pass
+
+        # Compute the pinned set: unconstrained boolean variants with an unconditional
+        # default (i.e. the definition is not itself guarded by a when-clause).
+        for pkg_name in self.pkgs:
+            try:
+                pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            except spack.repo.UnknownPackageError:
+                continue
+            seen_variants: Set[str] = set()
+            for when_spec, defs_by_name in pkg_cls.variants.items():
+                if when_spec is not None and str(when_spec):
+                    continue  # only unconditional variant definitions
+                for vname, variant_def in defs_by_name.items():
+                    if vname in seen_variants:
+                        continue
+                    seen_variants.add(vname)
+                    if (pkg_name, vname) in constrained:
+                        continue
+                    default = getattr(variant_def, "default", None)
+                    if isinstance(default, bool):
+                        self.pinned_default_variants[(pkg_name, vname)] = default
+
+    def _when_variants_dead(self, pkg_name, cond) -> bool:
+        """Is any variant constraint in ``cond`` provably unsatisfiable for pkg_name?
+
+        Returns True if some (variant, required_value) in the when-clause references
+        a variant we've pinned to a *different* default. The whole clause is then dead.
+        """
+        variants = getattr(cond, "variants", None)
+        if not variants:
+            return False
+        for vname, vsel in variants.items():
+            pinned = self.pinned_default_variants.get((pkg_name, vname))
+            if pinned is None:
+                continue
+            required = vsel.value
+            if not isinstance(required, bool):
+                continue
+            if required != pinned:
+                return True
+        return False
+
+    def _when_versions_dead(self, pkg_name, cond) -> bool:
+        """Is ``cond``'s version constraint provably unsatisfiable for pkg_name?
+
+        The pruning is sound: if no version in ``self.possible_versions[pkg_name]``
+        satisfies ``cond.versions``, then no reachable model can select a version
+        that fires ``cond``, so any dep gated on ``cond`` is dead. Returns False
+        for the degenerate cases (no version constraint on ``cond``, or no known
+        versions yet for ``pkg_name``) so callers stay conservative.
+        """
+        versions = getattr(cond, "versions", None)
+        if versions is None or versions == vn.any_version:
+            return False
+        possible = self.possible_versions.get(pkg_name)
+        if not possible:
+            return False
+        return not any(v.satisfies(versions) for v in possible)
+
     def _prune_transitively_unreachable(self, root_names, edges) -> Set[str]:
         """Remove from ``self.pkgs`` any package no longer reachable from ``root_names``.
 
@@ -3408,11 +3560,23 @@ class SpackSolverSetup:
             allow_deprecated=allow_deprecated, require_checksum=checksummed
         )
 
+        self._compute_pinned_variants(specs, reuse)
+
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
             self.gen.h2(f"Package rules: {pkg}")
             self.pkg_rules(pkg, tests=self.tests)
             self.preferred_variants(pkg)
+
+        if self._prune_dead_dep_blocks and (
+            self.pruned_dep_blocks_version or self.pruned_dep_blocks_variant
+        ):
+            total_dead = self.pruned_dep_blocks_version + self.pruned_dep_blocks_variant
+            tty.debug(
+                f"dep-block pruning removed {total_dead} of {self.total_dep_blocks} "
+                f"depends_on blocks: {self.pruned_dep_blocks_version} by dead version "
+                f"constraint, {self.pruned_dep_blocks_variant} by pinned-default variant"
+            )
 
         self.gen.h1("Condition Triggers and Imposed Effects")
         self.trigger_rules()

@@ -105,6 +105,8 @@ concretizer:
     unreachable_targets: true
     # Drop compiler packages not present in the reuse universe (external/installed/buildcache).
     unusable_compilers: true
+    # Skip depends_on blocks whose when-clause cannot fire (dead version or pinned variant).
+    dead_dep_blocks: true
 
   # If enabled, concretizations are cached in the misc_cache. The cache is keyed by the hash
   # of solver inputs, so we only need to run setup (not solve) if there is a cache hit.

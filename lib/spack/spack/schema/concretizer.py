@@ -241,6 +241,13 @@ properties: Dict[str, Any] = {
                         "bootstrapped in a single solve, so unusable ones can never be "
                         "selected as language-virtual providers.",
                     },
+                    "dead_dep_blocks": {
+                        "type": "boolean",
+                        "description": "Skip depends_on blocks whose when-clause cannot fire "
+                        "(version constraint not intersecting the parent's possible versions, "
+                        "or a boolean variant pinned to a default incompatible with what the "
+                        "when-clause requires).",
+                    },
                 },
             },
             "timeout": {
