@@ -141,13 +141,6 @@ If you are modifying core Spack libraries or adding new functionality, please ad
 You will likely be asked to do this if you submit a pull request to the Spack project on GitHub.
 Check out the `pytest documentation <http://pytest.org/>`_ and feel free to ask for guidance on how to write tests!
 
-.. note::
-
-   You may notice the ``share/spack/qa/run-unit-tests`` script in the repository.
-   This script is designed for CI.
-   It runs the unit tests and reports coverage statistics back to Codecov.
-   If you want to run the unit tests yourself, we suggest you use ``spack unit-test``.
-
 Style Tests
 ^^^^^^^^^^^^
 
