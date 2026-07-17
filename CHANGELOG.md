@@ -1,3 +1,18 @@
+# v1.2.2 (2026-07-20)
+
+## Bug fixes
+
+* Concretization cache:
+  * Fix accidental exponential complexity issue in spec hash, and disable for spliced specs (#52665)
+  * Fix serialization issues with abstract input spec (#52714, #52716)
+  * Prune cache only after write (#52715)
+  * Reduce excessive syscalls (#52721)
+* Make ``spack --disable-locks`` apply to all file system locks used by Spack (#52270)
+* Fix a patch file lookup issue when using multiple package repositories (#52675)
+* Fix a few issues with ``spack isolate --self`` (#52725)
+* Fix an issue where repositories did not raise InvalidNamespaceError correctly (#52689)
+
+
 # v1.2.1 (2026-07-06)
 
 ## Bug fixes
