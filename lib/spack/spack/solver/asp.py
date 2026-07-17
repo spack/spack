@@ -1048,6 +1048,7 @@ class PyclingoDriver:
         output: Optional[OutputConfiguration] = None,
         control: Optional[Any] = None,  # TODO: figure out how to annotate clingo.Control
         allow_deprecated: bool = False,
+        profile: bool = False,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
         """Set up the input and solve for dependencies of ``specs``.
 
@@ -1058,6 +1059,8 @@ class PyclingoDriver:
             output: configuration object to set the output of this solve.
             control: configuration for the solver. If None, default values will be used
             allow_deprecated: if True, allow deprecated versions in the solve
+            profile: if True, register a per-atom propagation profiler and print its
+                results after the solve; see ``spack.solver.profiler``
 
         Return:
             A tuple of the solve result, the timer for the different phases of the
@@ -1070,6 +1073,15 @@ class PyclingoDriver:
 
         # Initialize the control object for the solver
         self.control = control or default_clingo_control()
+
+        # If profiling is enabled, register a profiling propagator (see
+        # ``spack.solver.profiler``). Adds nonzero overhead so opt-in only.
+        propagator = None
+        if profile:
+            from .profiler import ProfilePropagator
+
+            propagator = ProfilePropagator()
+            self.control.register_propagator(propagator)
 
         # ensure core deps are present on Windows
         # needs to modify active config scope, so cannot be run within
@@ -1157,6 +1169,10 @@ class PyclingoDriver:
         if output.stats:
             print("Statistics:")
             pprint.pprint(concretization_stats)
+
+        if propagator is not None:
+            tty.msg("Profile (top 40 propagated atom categories):")
+            propagator.print_profile(40)
 
         return result, timer, concretization_stats
 
@@ -4017,6 +4033,7 @@ class Solver:
         tests: spack.concretize.TestsType = False,
         setup_only: bool = False,
         allow_deprecated: bool = False,
+        profile: bool = False,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
         """
         Concretize a set of specs and track the timing and statistics for the solve
@@ -4031,6 +4048,8 @@ class Solver:
             packages (defaults to False: do not concretize test dependencies).
           setup_only: if True, stop after setup and don't solve (default False).
           allow_deprecated: allow deprecated version in the solve
+          profile: if True, register a per-atom propagation profiler and print
+            its results after the solve (see ``spack.solver.profiler``).
         """
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
@@ -4045,6 +4064,7 @@ class Solver:
             packages_with_externals=self.packages_with_externals,
             output=output,
             allow_deprecated=allow_deprecated,
+            profile=profile,
         )
         return result
 
@@ -4065,6 +4085,7 @@ class Solver:
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
         allow_deprecated: bool = False,
+        profile: bool = False,
     ) -> Generator[Result, None, None]:
         """Solve for a stable model of specs in multiple rounds.
 
@@ -4081,6 +4102,8 @@ class Solver:
             stats (bool): print internal statistics if set to True
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
+            profile (bool): if True, register a per-atom propagation profiler on
+                each round and print its results (see ``spack.solver.profiler``).
         """
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
@@ -4100,6 +4123,7 @@ class Solver:
                 packages_with_externals=self.packages_with_externals,
                 output=output,
                 allow_deprecated=allow_deprecated,
+                profile=profile,
             )
             yield result
 

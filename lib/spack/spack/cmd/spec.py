@@ -101,6 +101,12 @@ for further documentation regarding the spec syntax, see:
     subparser.add_argument(
         "--stats", action="store_true", default=False, help="print out statistics from clingo"
     )
+    subparser.add_argument(
+        "--profile",
+        action="store_true",
+        default=False,
+        help="profile the solve phase and print out statistics on which atoms drove propagation",
+    )
 
 
 def _process_result(result, show, required_format, kwargs):
@@ -234,6 +240,7 @@ def spec(parser, args):
                 out=output,
                 timers=args.timers,
                 stats=args.stats,
+                profile=args.profile,
                 allow_deprecated=allow_deprecated,
             )
         ):
@@ -252,6 +259,7 @@ def spec(parser, args):
             out=output,
             timers=args.timers,
             stats=args.stats,
+            profile=args.profile,
             setup_only=setup_only,
             allow_deprecated=allow_deprecated,
         )
