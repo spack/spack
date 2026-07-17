@@ -488,6 +488,8 @@ In those cases, the build system could use some help, for which we give a few ex
 
 .. index::
    single: phase; before and after callbacks
+   single: run_before (decorator)
+   single: run_after (decorator)
    :name: before_after_build_phases
 
 Before and after build phases

@@ -151,7 +151,7 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :term:`package`.
 
    directive
-      A decorator-style call used in a ``package.py`` body to declare package metadata: ``version``, ``depends_on``, ``variant``, ``provides``, ``conflicts``, ``requires``, ``patch``, ``resource``, ``extends``, and so on.
+      A function called directly in the class body of a ``package.py`` to declare package metadata: ``version``, ``depends_on``, ``variant``, ``provides``, ``conflicts``, ``requires``, ``patch``, ``resource``, ``extends``, and so on.
 
    build system
       A :term:`mixin` base class that knows how to drive a particular build tool: ``Package``, :class:`~spack_repo.builtin.build_systems.cmake.CMakePackage`, :class:`~spack_repo.builtin.build_systems.autotools.AutotoolsPackage`, :class:`~spack_repo.builtin.build_systems.meson.MesonPackage`, and so on.
@@ -181,15 +181,13 @@ For an alphabetic list of every documented keyword and environment variable, see
 
    phase
    build phase
+   install phase
       One step of a :term:`build system`'s install lifecycle.
-      The ordered list lives in the builder's ``phases`` attribute, for example ``("configure", "build", "install")`` for autotools or ``("build", "install")`` for ruby gems.
-      Each phase is a method on the builder class and can be overridden, replaced, or wrapped with ``run_before`` / ``run_after``.
+      The ordered list lives in the builder's ``phases`` attribute, for example ``("configure", "build", "install")`` for autotools or ``("cmake", "build", "install")`` for CMake.
+      Each phase is a method on the builder class and can be overridden, replaced, or wrapped with ``@run_before`` / ``@run_after``.
+      The final ``install`` phase is the one that copies the build results into the installation :term:`prefix`.
       Note that *build phase* is often used loosely for any phase in the lifecycle, not just for the phase named ``build``.
       See :ref:`overriding-phases`.
-      See also :term:`install phase`.
-
-   install phase
-      The specific ``install`` :term:`phase` of a build, which copies the build results into the installation :term:`prefix` — and, by extension, the post-install hooks attached to it.
 
    build environment
       The shell environment Spack constructs for a package's build: ``PATH``, ``CC`` / ``CXX`` / ``FC`` pointing at the :term:`compiler wrappers <compiler wrapper>`, ``CMAKE_PREFIX_PATH``, ``PKG_CONFIG_PATH``, :term:`jobserver` ``MAKEFLAGS``, and any variables set by ``setup_build_environment`` or by dependencies' ``setup_dependent_build_environment``.
@@ -210,7 +208,6 @@ For an alphabetic list of every documented keyword and environment variable, see
       A Spack installation itself, addressable in config as ``$spack``.
       In the context of :term:`chained install trees <chained install tree>`, ":term:`upstream` instance" is often used informally to refer to that instance's :term:`store`.
 
-   standalone test
    stand-alone test
       A test defined by a package's ``test_*`` methods and executed *after* installation by ``spack test run`` against an installed :term:`prefix`.
       Distinct from build-time tests run during the ``check`` :term:`build phase` of an autotools/cmake build.
@@ -341,7 +338,8 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :ref:`cmd-spack-develop`.
 
    mirror
-      A location (URL or path) Spack consults for source tarballs and :term:`patches <patch>` before fetching upstream.
+      A location (URL or path) holding copies of the artifacts Spack would otherwise fetch from their canonical locations: source tarballs, :term:`resources <resource>`, and :term:`patches <patch>` for source builds, and binary tarballs in the case of a :term:`binary mirror`.
+      Mirrors are consulted before fetching upstream.
       See :doc:`mirrors`.
 
    binary mirror
@@ -391,7 +389,8 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :ref:`handling_rpaths` and :ref:`shared-linking-type`.
 
    hook
-      A Python callback that runs at a defined point in the install lifecycle (pre-install, post-install, pre-uninstall, ...).
+      A Python callback built into Spack that runs at a defined point in the install lifecycle (post-install, pre-uninstall, ...), for example to generate :term:`module files <module file>` or rewrite shebang lines (:term:`sbang`).
+      Hooks are fixed in Spack itself; packages instead customize their own builds by wrapping :term:`phases <phase>` with ``@run_before`` / ``@run_after``.
 
    module file
       A generated file (Lua for :term:`Lmod`, TCL for environment-modules) that loads a package's run environment into the user's shell.
@@ -399,14 +398,17 @@ For an alphabetic list of every documented keyword and environment variable, see
 
    Lmod
       A Lua-based module system Spack can generate :term:`module files <module file>` for.
+      See also :term:`TCL modules`.
 
    TCL modules
-      The classic environment-modules module system Spack can also target.
+      The module system of the ``environment-modules`` project, whose module files are written in TCL.
+      One of the two module systems Spack generates :term:`module files <module file>` for; the other is :term:`Lmod`.
 
    scope
    configuration scope
       A named layer of YAML configuration.
-      Scopes from lowest to highest precedence: ``defaults``, ``system``, ``site``, ``plugin``, ``user``, ``spack``, environment, custom (``-C``), command line.
+      Examples are the ``defaults`` scope shipped with Spack, the ``site`` scope for a single Spack instance, and the ``user`` scope in ``~/.spack``; settings in higher-precedence scopes override lower ones, and command-line flags override them all.
+      ``spack config scopes`` lists the active scopes in precedence order.
       See :ref:`configuration-scopes`.
 
    config.yaml
@@ -443,7 +445,7 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :doc:`containers`.
 
    chained install tree
-      A read-only :term:`upstream` :term:`store` mounted into a downstream Spack installation so its installs can be reused.
+      A read-only :term:`upstream` :term:`store` made available to a downstream Spack instance so its installs can be reused.
       See :doc:`chain`.
 
    upstream
