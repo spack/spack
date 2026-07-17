@@ -748,6 +748,9 @@ In this case, you can mark an older version as preferred using the ``preferred=T
 See the section on :ref:`version ordering <version-comparison>` for more details and exceptions on how the latest version is computed.
 
 
+.. index::
+   single: deprecation; of package versions
+
 .. _deprecate:
 
 Deprecating old versions
@@ -853,6 +856,9 @@ The logic behind this sort order is two-fold:
 #. The most-recent development version of a package will usually be newer than any released numeric versions.
    This allows the ``@develop`` version to satisfy dependencies like ``depends_on(abc, when="@x.y.z:")``
 
+
+.. index::
+   single: fetch strategy; version control
 
 .. _vcs-fetch:
 

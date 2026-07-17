@@ -9,7 +9,6 @@
 
 .. index::
    single: compiler; configuring
-   single: compilers.yaml
    :name: compiler-config
 
 Configuring Compilers

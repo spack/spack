@@ -32,6 +32,9 @@ If issues are found, they are reported to stdout:
        the variant 'adios' does not exist
        in spack_repo/builtin/packages/lammps/package.py
 
+.. index::
+   single: SBOM; format and location
+
 .. _sbom:
 
 Software Bill of Materials (SBOM)

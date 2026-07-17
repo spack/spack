@@ -90,16 +90,21 @@ For an alphabetic list of every documented keyword and environment variable, see
       ``--fresh-roots`` is a middle ground: solve :term:`root specs <root>` fresh while still reusing their dependencies.
 
    anonymous spec
-      A spec without a package name, used to express constraints that should apply to any package (for example in ``packages.yaml``).
+      A spec without a package name, used to express constraints that should apply to any package matching it (for example as selection patterns in configuration files).
       See :ref:`anonymous_specs`.
 
    spec syntax
-      The textual language used to write specs, with sigils for version (``@``), compiler (``%``), variants (``+`` / ``~`` / ``name=value``), dependencies (``^``), flags (``cflags=...``), architecture (``arch=...``), and hashes (``/``).
+      The textual language used to write specs, built from :term:`sigils <spec sigil>`: version (``@``), :term:`direct dependencies <direct dependency>` including compilers (``%``), :term:`transitive dependencies <transitive dependency>` (``^``), variants (``+`` / ``~`` / ``name=value``), flags (``cflags=...``), architecture (``arch=...``), and hashes (``/``).
       See :doc:`spec_syntax`.
 
+   sigil
+   spec sigil
+      A punctuation token that introduces the next component of a spec in :term:`spec syntax`: ``@`` (version), ``%`` (:term:`direct dependency`, including compilers), ``^`` (:term:`transitive dependency`), ``+`` / ``~`` (boolean :term:`variants <variant>`), ``/`` (:term:`DAG hash`), and the doubled forms ``++`` / ``~~`` / ``==`` / ``%%`` for :term:`propagation`.
+      Each sigil is also indexed individually under *spec sigil* in the :ref:`general index <genindex>`.
+
    propagation
-      Pushing a variant value or compiler flag down through a spec's dependencies.
-      Written with doubled sigils: ``++variant``, ``cflags==-O3``, ``%%compiler``.
+      Pushing a variant value, compiler flag, or dependency choice down through a spec's dependencies.
+      Written with doubled sigils: ``++variant`` and ``cflags==-O3`` propagate a variant or flag, while ``%%c,cxx=clang`` propagates a :term:`direct dependency` choice (typically the compiler) to the runtime sub-DAG as a :term:`strong preference`.
 
    variant
       A named build option on a package.
@@ -133,8 +138,8 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :ref:`compiler_flags`.
 
    compiler wrapper
-      The script Spack puts in ``PATH`` in place of the real compiler.
-      It rewrites the command line, injects RPATHs, filters flags, and enforces Spack's build environment.
+      A shell script that sits between the build system and the real compiler: it rewrites the command line, injects include, library, and RPATH flags for dependencies, and then invokes the underlying compiler.
+      The wrappers are provided by the ``compiler-wrapper`` package, which is automatically injected as a dependency of every package that depends on a language virtual (``c``, ``cxx``, ``fortran``); the :term:`build environment` points ``CC`` / ``CXX`` / ``FC`` at the wrapper executables.
       See :ref:`compiler-wrappers`.
 
    package
@@ -187,7 +192,8 @@ For an alphabetic list of every documented keyword and environment variable, see
       The specific ``install`` :term:`phase` of a build, which copies the build results into the installation :term:`prefix` — and, by extension, the post-install hooks attached to it.
 
    build environment
-      The shell environment Spack constructs for a package's build: ``PATH``, compiler wrappers, ``CC`` / ``CXX`` / ``F77`` / ``FC``, ``CPATH``, ``LIBRARY_PATH``, ``CMAKE_PREFIX_PATH``, jobserver ``MAKEFLAGS``, and any variables set by ``setup_build_environment`` or by dependencies' ``setup_dependent_build_environment``.
+      The shell environment Spack constructs for a package's build: ``PATH``, ``CC`` / ``CXX`` / ``FC`` pointing at the :term:`compiler wrappers <compiler wrapper>`, ``CMAKE_PREFIX_PATH``, ``PKG_CONFIG_PATH``, jobserver ``MAKEFLAGS``, and any variables set by ``setup_build_environment`` or by dependencies' ``setup_dependent_build_environment``.
+      Variables that could pull unintended system libraries into the build (``LD_LIBRARY_PATH``, ``CPATH``, ``LIBRARY_PATH``, ``PYTHONPATH``, ...) are unset.
       ``spack build-env <spec>`` prints it; passing a shell as the command (``spack build-env <spec> sh``) drops you into it, and ``--dump`` / ``--pickle`` write it to a file.
 
    module set
@@ -240,7 +246,8 @@ For an alphabetic list of every documented keyword and environment variable, see
 
    DAG
       Directed acyclic graph.
-      A concretized spec is a DAG of concrete specs (one per package), because in general a package may appear multiple times with different configurations or roles.
+      A concretized spec is a DAG whose nodes are concrete specs and whose edges are dependencies.
+      It is generally not a tree, because dependencies are shared, and the same package may even appear more than once in different configurations or roles.
 
    concretization
       The process of turning an :term:`abstract spec` and the surrounding configuration into a :term:`concrete spec` DAG.
@@ -273,7 +280,7 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :doc:`toolchains_yaml`.
 
    store
-      The directory tree where Spack installs packages, one per :term:`prefix`; also called the *install tree*.
+      The directory tree where Spack installs packages, one :term:`prefix` per concrete spec; also called the *install tree*.
       Backed by a :term:`database` that indexes every install.
 
    install tree
@@ -372,7 +379,7 @@ For an alphabetic list of every documented keyword and environment variable, see
       Unbounded by default; packages start as :term:`jobserver` tokens become available.
 
    fetch strategy
-      The mechanism used to obtain a package's source: a URL tarball, ``git``, ``hg``, ``svn``, ``cvs``, or a buildcache.
+      The mechanism used to obtain a package's source: a URL tarball, or a checkout from ``git``, ``hg``, ``svn``, or ``cvs``.
       See :ref:`vcs-fetch`.
 
    sbang
@@ -399,7 +406,7 @@ For an alphabetic list of every documented keyword and environment variable, see
    scope
    configuration scope
       A named layer of YAML configuration.
-      Scopes from lowest to highest precedence: ``defaults``, ``system``, ``site``, ``user``, custom (``-C``), environment, command line.
+      Scopes from lowest to highest precedence: ``defaults``, ``system``, ``site``, ``plugin``, ``user``, ``spack``, environment, custom (``-C``), command line.
       See :ref:`configuration-scopes`.
 
    config.yaml
@@ -460,7 +467,7 @@ For an alphabetic list of every documented keyword and environment variable, see
    deprecate
    deprecation
       Marking a version (or whole package) as no longer supported.
-      Package authors set ``deprecated=True`` on a ``version(...)`` directive; ``spack install`` then prompts before fetching, and ``spack info`` hides the version unless ``--deprecated`` is passed.
+      Package authors set ``deprecated=True`` on a ``version(...)`` directive; ``spack install`` then warns and prompts before fetching such a version (``spack install --deprecated`` or ``config:deprecated:true`` skips the check), and ``spack info`` lists it under "Deprecated versions".
       Distinct from ``spack deprecate``, which replaces one installed spec with another in the :term:`store` by symlinking the old prefix at the new one.
       See :ref:`deprecate`.
 
@@ -480,5 +487,5 @@ For an alphabetic list of every documented keyword and environment variable, see
    sandbox
    sandboxing
       An opt-in Linux build isolation mode that confines a package's build phase using Landlock, restricting filesystem and (optionally) network access.
-      Configured under ``config:sandbox:`` with ``allow_read`` / ``allow_read_write`` paths; intended for reproducibility and bug containment, not as a strict security boundary.
+      Configured under ``config:sandbox:`` with ``allow_read`` / ``allow_write`` paths and an ``allow_network`` toggle; intended for reproducibility and bug containment, not as a strict security boundary.
       See :doc:`installing`.

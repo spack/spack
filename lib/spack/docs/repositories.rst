@@ -268,6 +268,9 @@ The default configuration in ``$spack/etc/spack/defaults/repos.yaml`` looks some
      builtin:
        git: https://github.com/spack/spack-packages.git
 
+.. index::
+   single: namespace; of a repository
+
 .. _namespaces:
 
 Namespaces

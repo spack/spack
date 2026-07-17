@@ -408,6 +408,9 @@ To suppress a variable from all module files, use ``exclude_env_vars``:
            filter:
              exclude_env_vars: ["CPATH", "LIBRARY_PATH"]
 
+.. index::
+   single: anonymous spec; in modules.yaml
+
 .. _anonymous_specs:
 
 Selective environment modifications

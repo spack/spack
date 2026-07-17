@@ -63,6 +63,10 @@ Parallelism
 
 Spack controls parallelism at two levels: the number of build jobs shared across all packages (``-j``), and the number of packages building concurrently (``-p``).
 
+.. index::
+   single: jobserver; in spack install
+   single: build job; in spack install
+
 Build-level parallelism (``-j``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -80,6 +84,9 @@ Child build systems automatically respect it through ``MAKEFLAGS``, so total CPU
 .. note::
 
    If an external jobserver is already present in ``MAKEFLAGS``, for example when Spack itself is invoked from inside a larger ``make`` build, Spack attaches to the existing jobserver instead of creating its own.
+
+.. index::
+   single: concurrent packages; in spack install
 
 Package-level parallelism (``-p``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -156,6 +163,9 @@ Navigate to a failed build and press ``v`` to see a parsed error summary and the
 
 See :ref:`spack install <spack-install>` for the full set of flags related to debugging and controlling build behavior.
 
+
+.. index::
+   single: sandbox; configuring
 
 Build isolation and sandboxing (Linux)
 --------------------------------------
