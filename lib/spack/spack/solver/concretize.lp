@@ -2200,8 +2200,8 @@ build(PackageNode) :- attr("node", PackageNode), not concrete(PackageNode).
 %   "level" share the same index "namespace" per level. "fixed" criteria are
 %   only active level specified by `opt_criterion`.
 %
-% Note that level is a computed value from the DAG and is only used for "level"
-% criteria. 
+% Note that level(PackageNode, Level)  is a computed value from the DAG and 
+% is only used for "level" criteria. 
 
 % Constants for calculating optimization criterion priority
 %   level_opt is level & fixed per level
@@ -2270,12 +2270,12 @@ build_priority(PackageNode, concr_offset) :- concrete(PackageNode), attr("node",
 #const max_depth = 2.
 level(Package, max_depth-1) :- attr("root", Package).
 level(Package, 0)           :- attr("node", Package).
-level(Package, L-1)         :- level(Package, L), L > 0.
+level(Package, L-1)         :- level(Package, L), L > 1.
 level(Package, L-1) :-
     attr("node", Package),
     level(Dependent, L),
     depends_on(Dependent, Package),
-    L > 0.
+    L > 1.
 
 %----------------------------------------------------------------------
 % Errors
