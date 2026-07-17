@@ -268,6 +268,13 @@ If you are editing the documentation, you should be running the documentation te
 Documentation changes can result in some obfuscated warning messages.
 If you do not understand what they mean, feel free to ask when you submit your PR.
 
+Glossary and Index
+^^^^^^^^^^^^^^^^^^
+
+The documentation maintains a :doc:`glossary <glossary>` of Spack terminology and a :ref:`general index <genindex>`.
+Every glossary term is indexed automatically, so ``.. index::`` directives in the documentation pages must not repeat a glossary term verbatim; instead they carry a descriptive subentry (``single: environment; activating``) placed at the most specific section.
+The full set of indexing conventions is documented in a comment at the top of ``lib/spack/docs/glossary.rst`` — please follow it when adding index entries or glossary terms.
+
 .. _spack-builders-and-pipelines:
 
 GitLab CI

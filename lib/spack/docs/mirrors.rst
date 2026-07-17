@@ -7,7 +7,10 @@
    :description lang=en:
       Discover how to set up and manage mirrors in Spack to provide a local repository of tarballs for offline package fetching.
 
-.. _mirrors:
+.. index::
+   single: mirror; configuring
+   single: mirrors.yaml; reference
+   :name: mirrors
 
 Mirrors (mirrors.yaml)
 ======================

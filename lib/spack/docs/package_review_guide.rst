@@ -309,7 +309,7 @@ In this case, check Python package dependencies by following the build system `g
 
 .. tip::
 
-    In general, refer to the relevant dependencies section, if any, for the package’s :ref:`build-systems` for guidance.
+    In general, refer to the relevant dependencies section, if any, for the package's :ref:`build-systems` for guidance.
 
 Updating language and compiler dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
