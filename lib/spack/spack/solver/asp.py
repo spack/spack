@@ -262,6 +262,62 @@ def dependency_holds(
     return _transform_fn
 
 
+@functools.lru_cache(maxsize=None)
+def _pkg_variant_hard_forces(pkg_name: str) -> "frozenset[Tuple[str, str]]":
+    """Return (target_pkg, variant_name) pairs that ``pkg_name``'s package.py could
+    hard-force via ``depends_on`` target specs or ``requires`` clauses.
+
+    Depends only on the loaded package class, so it's stable across solves in the
+    same process and safe to cache module-wide. Used by variant-based dep-clause
+    pruning (see ``SpackSolverSetup._compute_pinned_variants``).
+    """
+    try:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+    except spack.repo.UnknownPackageError:
+        return frozenset()
+    result: Set[Tuple[str, str]] = set()
+    for _cond, deps in pkg_cls.dependencies.items():
+        for dep_name, dep in deps.items():
+            for vname in dep.spec.variants:
+                result.add((dep_name, vname))
+    try:
+        for _cond, when_reqs in pkg_cls.requirements.items():
+            for req_specs, _, _ in when_reqs:
+                for rs in req_specs:
+                    for node in rs.traverse():
+                        if node.name is None:
+                            continue
+                        for vname in node.variants:
+                            result.add((node.name, vname))
+    except Exception:
+        pass
+    return frozenset(result)
+
+
+@functools.lru_cache(maxsize=None)
+def _pkg_boolean_default_variants(pkg_name: str) -> Dict[str, bool]:
+    """Return {variant_name: default} for ``pkg_name``'s *unconditional* boolean variants.
+
+    Only variants declared without a ``when=`` guard are included. Cached
+    module-wide since it depends only on the package class.
+    """
+    try:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+    except spack.repo.UnknownPackageError:
+        return {}
+    result: Dict[str, bool] = {}
+    for when_spec, defs_by_name in pkg_cls.variants.items():
+        if when_spec is not None and str(when_spec):
+            continue  # only unconditional variant definitions
+        for vname, variant_def in defs_by_name.items():
+            if vname in result:
+                continue
+            default = getattr(variant_def, "default", None)
+            if isinstance(default, bool):
+                result[vname] = default
+    return result
+
+
 def dag_closure_by_deptype(
     name: str, spec: spack.spec.Spec, facts: List[AspFunction]
 ) -> List[AspFunction]:
@@ -1414,6 +1470,8 @@ class SpackSolverSetup:
         # boolean variants provably pinned to their declared default in every optimal model.
         # (pkg_name, variant_name) -> default (True/False)
         self.pinned_default_variants: Dict[Tuple[str, str], bool] = {}
+        # per-solve memo for _when_versions_dead: (pkg_name, versions_str) -> bool
+        self._when_version_cache: Dict[Tuple[str, str], bool] = {}
 
         # Static-prune toggles from ``concretizer:pruning:*`` config, cached at setup
         # init so each prune site reads a bool instead of hitting the config layer.
@@ -2986,6 +3044,13 @@ class SpackSolverSetup:
         aggressive silently changes concretization. When-clauses that merely
         *check* the variant (``depends_on(X, when="+V")``) do not count as a
         hard-force: they gate a dep, they don't require the value.
+
+        Per-package data (hard-forced variant mentions from ``depends_on``/
+        ``requires`` and boolean-default variant maps) is cached module-wide via
+        ``_pkg_variant_hard_forces`` and ``_pkg_boolean_default_variants`` since
+        it depends only on the package class, not the solve inputs. Repeated
+        solves in the same process (environment concretization, tests, batch
+        operations) reuse the cached data.
         """
         self.pinned_default_variants = {}
         if not self._prune_dead_dep_blocks:
@@ -3006,25 +3071,11 @@ class SpackSolverSetup:
         for s in reuse_specs or ():
             add_from_spec(s)
 
-        # Cross-package hard forces: depends_on target specs and requires clauses.
+        # Cross-package hard forces: cached per-package.
         for pkg_name in self.pkgs:
-            try:
-                pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-            except spack.repo.UnknownPackageError:
-                continue
-            for _cond, deps in pkg_cls.dependencies.items():
-                for dep_name, dep in deps.items():
-                    for vname in dep.spec.variants:
-                        constrained.add((dep_name, vname))
-            try:
-                for _cond, when_reqs in pkg_cls.requirements.items():
-                    for req_specs, _, _ in when_reqs:
-                        for rs in req_specs:
-                            add_from_spec(rs)
-            except Exception:
-                pass
+            constrained.update(_pkg_variant_hard_forces(pkg_name))
 
-        # packages.yaml preferences and requires.
+        # packages.yaml preferences and requires (cheap, per-solve since config can change).
         packages_cfg = spack.config.CONFIG.get("packages", {}) or {}
         for pkg_key, cfg in packages_cfg.items():
             variants_pref = cfg.get("variants", [])
@@ -3049,25 +3100,12 @@ class SpackSolverSetup:
                     pass
 
         # Compute the pinned set: unconstrained boolean variants with an unconditional
-        # default (i.e. the definition is not itself guarded by a when-clause).
+        # default. Boolean-default map is cached per-package.
         for pkg_name in self.pkgs:
-            try:
-                pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-            except spack.repo.UnknownPackageError:
-                continue
-            seen_variants: Set[str] = set()
-            for when_spec, defs_by_name in pkg_cls.variants.items():
-                if when_spec is not None and str(when_spec):
-                    continue  # only unconditional variant definitions
-                for vname, variant_def in defs_by_name.items():
-                    if vname in seen_variants:
-                        continue
-                    seen_variants.add(vname)
-                    if (pkg_name, vname) in constrained:
-                        continue
-                    default = getattr(variant_def, "default", None)
-                    if isinstance(default, bool):
-                        self.pinned_default_variants[(pkg_name, vname)] = default
+            for vname, default in _pkg_boolean_default_variants(pkg_name).items():
+                if (pkg_name, vname) in constrained:
+                    continue
+                self.pinned_default_variants[(pkg_name, vname)] = default
 
     def _when_variants_dead(self, pkg_name, cond) -> bool:
         """Is any variant constraint in ``cond`` provably unsatisfiable for pkg_name?
@@ -3104,7 +3142,13 @@ class SpackSolverSetup:
         possible = self.possible_versions.get(pkg_name)
         if not possible:
             return False
-        return not any(v.satisfies(versions) for v in possible)
+        key = (pkg_name, str(versions))
+        cached = self._when_version_cache.get(key)
+        if cached is not None:
+            return cached
+        result = not any(v.satisfies(versions) for v in possible)
+        self._when_version_cache[key] = result
+        return result
 
     def _prune_transitively_unreachable(self, root_names, edges) -> Set[str]:
         """Remove from ``self.pkgs`` any package no longer reachable from ``root_names``.
