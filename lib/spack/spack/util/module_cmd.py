@@ -108,6 +108,12 @@ def load_module(mod):
     # Store the LOADEDMODULES before trying to load the new module
     loaded_modules_before = os.environ.get("LOADEDMODULES", "")
 
+    # Loading a module that is already loaded is a successful no-op for
+    # module systems such as Lmod. In that case LOADEDMODULES is unchanged,
+    # so treating an unchanged value below as a failure would be incorrect.
+    if mod in loaded_modules_before.split(":"):
+        return
+
     # Load the module now that there are no conflicts
     # Some module systems use stdout and some use stderr
     module("load", mod)
