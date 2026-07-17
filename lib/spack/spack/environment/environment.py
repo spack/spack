@@ -60,7 +60,7 @@ from spack.spec import Spec
 from spack.spec_filter import SpecFilter
 from spack.util import tty
 from spack.util.filesystem import copy_tree, islink, readlink
-from spack.util.lang import stable_partition
+from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
 from .list import SpecList, SpecListError, SpecListParser
@@ -242,6 +242,9 @@ def activate(env, use_env_repo=False):
         install_tree_before = spack.config.get("config:install_tree")
         upstreams_before = spack.config.get("upstreams")
         repos_before = spack.config.get("repos")
+        # PATH may be a lazy singleton created from config, so materialize it before pushing
+        # the env scope, otherwise we'd save (and later restore) the env's repositories.
+        repo_before = ensure_unwrapped(spack.repo.PATH)
 
         # Record the active env (and its path, so config "$env" substitutions work)
         set_active_environment(env)
@@ -256,8 +259,8 @@ def activate(env, use_env_repo=False):
             setattr(env, "store_token", spack.store.reinitialize())
 
         if repos_before != repos_after:
-            setattr(env, "repo_token", spack.repo.PATH)
-            spack.repo.PATH.disable()
+            setattr(env, "repo_token", repo_before)
+            repo_before.disable()
             new_repo = spack.repo.RepoPath.from_config(spack.config.CONFIG)
             if use_env_repo:
                 new_repo.put_first(env.repo)

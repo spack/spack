@@ -135,6 +135,33 @@ def test_use_repositories_with_unmaterialized_path(tmp_path: pathlib.Path, confi
     assert [r.root for r in spack.repo.PATH.repos] == [spack.paths.mock_packages_path]
 
 
+def test_env_activate_with_unmaterialized_path(tmp_path: pathlib.Path, config, monkeypatch):
+    """Tests that env deactivation restores the repositories from config even when activation
+    is the first to touch the global PATH singleton. Materializing it after pushing the env
+    config scope would "save" the env's repositories and "restore" them on deactivation."""
+    (tmp_path / "spack.yaml").write_text(
+        """\
+spack:
+  specs: []
+  repos:
+    extra: $spack/var/spack/test_repos/spack_repo/builder_test
+"""
+    )
+
+    monkeypatch.setattr(
+        spack.repo, "PATH", Singleton(lambda: spack.repo.create_and_enable(spack.config.CONFIG))
+    )
+
+    env = spack.environment.Environment(tmp_path)
+    spack.environment.activate(env)
+    try:
+        assert {r.namespace for r in spack.repo.PATH.repos} == {"builder_test", "builtin_mock"}
+    finally:
+        spack.environment.deactivate()
+
+    assert [r.namespace for r in spack.repo.PATH.repos] == ["builtin_mock"]
+
+
 def test_absolute_import_spack_packages_as_python_modules(mock_packages):
     import spack_repo.builtin_mock.packages.mpileaks.package  # type: ignore[import]
 
