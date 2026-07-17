@@ -59,6 +59,7 @@ import spack.util.filesystem
 import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack import tengine
+from spack.active_environment import active_environment
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 from spack.enums import Context
 from spack.util import tty
@@ -1034,7 +1035,7 @@ class ModuleContext(tengine.Context):
         assert isinstance(use_view, (bool, str))
 
         if use_view:
-            spack_env = spack.environment.active_environment()
+            spack_env = active_environment()
             if not spack_env:
                 raise spack.environment.SpackEnvironmentViewError(
                     "Module generation with views requires active environment"

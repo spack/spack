@@ -66,6 +66,7 @@ import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
+from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
@@ -2988,9 +2989,6 @@ class SpackSolverSetup:
         Return:
             A ProblemInstanceBuilder populated with facts and rules for an ASP solve.
         """
-        # TODO: remove this local import and get rid of dependency on globals
-        import spack.environment as ev
-
         reuse = reuse or []
         if packages_with_externals is None:
             packages_with_externals = (
@@ -3054,7 +3052,7 @@ class SpackSolverSetup:
         # they will be used in addition to command line specs
         # in determining known versions/targets/os
         dev_specs: Tuple[spack.spec.Spec, ...] = ()
-        env = ev.active_environment()
+        env = active_environment()
         if env:
             dev_specs = tuple(
                 spack.spec.Spec(info["spec"]).constrained(
@@ -3840,9 +3838,6 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     This method updates the SpecDict in place.
 
     """
-    # TODO: remove this local import and get rid of dependency on globals
-    import spack.environment as ev
-
     # inject patches -- note that we can't use set() to unique the
     # roots here, because the specs aren't complete, and the hash
     # function will loop forever.
@@ -3854,7 +3849,7 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     for s in specs.values():
         # Add external paths to specs with just external modules
         _ensure_external_path_if_external(s)
-        _develop_specs_from_env(s, ev.active_environment())
+        _develop_specs_from_env(s, active_environment())
 
         # check for commits must happen after all version adaptations are complete
         _specs_with_commits(s)
