@@ -2304,12 +2304,12 @@ opt_criterion(9, "built", "fixed", 0, "default values of variants not being used
 opt_criterion(8, "built", "fixed", 0, "preferred compilers").
 opt_criterion(7, "built", "fixed", 0, "compiler penalty from reuse").
 opt_criterion(6, "built", "level", 1, "variant penalty (non-roots)").
-opt_criterion(5, "built", "level", 1, "preferred providers (excluded compilers and language runtimes)").
+opt_criterion(5, "built", "fixed", 1, "preferred providers (excluded compilers and language runtimes)").
 opt_criterion(4, "built", "fixed", 1, "number of compilers used on the same node").
 opt_criterion(3, "built", "fixed", 1, "non-preferred OS's").
 opt_criterion(2, "built", "level", 1, "version badness (non roots)").
 opt_criterion(1, "built", "level", 1, "default values of variants not being used (non-roots)").
-opt_criterion(0, "built", "level", 1, "preferred providers (language runtimes)").
+opt_criterion(0, "built", "fixed", 1, "preferred providers (language runtimes)").
 
 opt_criterion(2, "hinge", "", 0, "number of packages to build (vs. reuse)").
 opt_criterion(1, "hinge", "", 0, "number of nodes from the same package").
@@ -2322,12 +2322,12 @@ opt_criterion(9, "concr", "fixed", 0, "default values of variants not being used
 opt_criterion(8, "concr", "fixed", 0, "preferred compilers").
 opt_criterion(7, "concr", "fixed", 0, "compiler penalty from reuse").
 opt_criterion(6, "concr", "level", 1, "variant penalty (non-roots)").
-opt_criterion(5, "concr", "level", 1, "preferred providers (excluded compilers and language runtimes)").
+opt_criterion(5, "concr", "fixed", 1, "preferred providers (excluded compilers and language runtimes)").
 opt_criterion(4, "concr", "fixed", 1, "number of compilers used on the same node").
 opt_criterion(3, "concr", "fixed", 1, "non-preferred OS's").
 opt_criterion(2, "concr", "level", 1, "version badness (non roots)").
 opt_criterion(1, "concr", "level", 1, "default values of variants not being used (non-roots)").
-opt_criterion(0, "concr", "level", 1, "preferred providers (language runtimes)").
+opt_criterion(0, "concr", "fixed", 1, "preferred providers (language runtimes)").
 
 opt_criterion(7, "low", "", 0, "target mismatches (built nodes)").
 opt_criterion(6, "low", "", 0, "non-preferred targets").
@@ -2521,11 +2521,9 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
 
 % Minimize the weights of all the other providers (mpi, lapack, etc.)
 #minimize{
-    Weight@Priority+Level*level_opt, ProviderNode,X,Virtual
+    Weight@Priority, ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       not language(Virtual), not language_runtime(Virtual),
-      level(ProviderNode, Level),
-      Level != max_depth-1,
       build_priority(ProviderNode, BuildPriority),
       opt_priority(Priority, BuildPriority, _, _, "preferred providers (excluded compilers and language runtimes)")
 }.
@@ -2589,12 +2587,10 @@ compiler_penalty(PackageNode, C-1) :-
 
 % Prefer more optimal providers for language runtimes.
 #minimize{
-    Weight@Priority+Level*level_opt, ProviderNode,X,Virtual
+    Weight@Priority, ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       language_runtime(Virtual),
       build_priority(ProviderNode, BuildPriority),
-      level(ProviderNode, Level),
-      Level != max_depth-1,
       opt_priority(Priority, BuildPriority, _, _, "preferred providers (language runtimes)")
 }.
 
