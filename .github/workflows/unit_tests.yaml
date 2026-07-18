@@ -73,14 +73,12 @@ jobs:
           . share/spack/setup-env.sh
           spack bootstrap disable spack-install
           spack bootstrap now
-          spack -v spec --show opt,solutions zlib
     - name: Smoke tests
       env:
           SPACK_PYTHON: python
       run: |
           bin/spack -h
           bin/spack help -a
-          bin/spack bootstrap status --dev --optional
           bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
     - name: Run unit tests
       env:
@@ -124,6 +122,16 @@ jobs:
           # Need this for the git tests to succeed.
           git --version
           . .github/workflows/bin/setup_git.sh
+    - name: Bootstrap clingo
+      run: |
+          . share/spack/setup-env.sh
+          spack bootstrap disable spack-install
+          spack bootstrap now
+    - name: Smoke tests
+      run: |
+          bin/spack -h
+          bin/spack help -a
+          bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
     - name: Run shell tests
       env:
           COVERAGE: true
@@ -158,12 +166,21 @@ jobs:
           /usr/libexec/platform-python -m venv ~/platform-spack
           source ~/platform-spack/bin/activate
           pip install --upgrade pip pytest coverage[toml] pytest-xdist
-    - name: Bootstrap Spack development environment and run unit tests
+    - name: Bootstrap Spack development environment
       run: |
           source ~/platform-spack/bin/activate
           source share/spack/setup-env.sh
           spack debug report
           spack -d bootstrap now
+    - name: Smoke tests
+      run: |
+          source ~/platform-spack/bin/activate
+          bin/spack -h
+          bin/spack help -a
+          bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
+    - name: Run unit tests
+      run: |
+          source ~/platform-spack/bin/activate
           pytest --verbose -x -n3 --dist loadfile -k 'not cvs and not svn and not hg'
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
@@ -183,17 +200,23 @@ jobs:
       run: |
           pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
           pip install --upgrade -r .github/workflows/requirements/style/requirements.txt
-    - name: Run unit tests (full suite with coverage)
-      env:
-          COVERAGE: true
-          COVERAGE_FILE: coverage/.coverage-clingo-cffi
+          # This job deliberately tests the clingo build published on PyPI
+          pip install --upgrade clingo==5.8.0
+    - name: Disable bootstrapping
       run: |
         . share/spack/setup-env.sh
         spack bootstrap disable spack-install
         spack bootstrap disable github-actions-v0.6
         spack bootstrap disable github-actions-v2
-        spack bootstrap status
-        spack spec --show opt,solutions zlib
+    - name: Smoke tests
+      run: |
+        bin/spack -h
+        bin/spack help -a
+        bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
+    - name: Run unit tests (full suite with coverage)
+      env:
+          COVERAGE_FILE: coverage/.coverage-clingo-cffi
+      run: |
         pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 --dist worksteal lib/spack/spack/test/concretization/
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
@@ -221,17 +244,21 @@ jobs:
           pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
           pip install --upgrade -r .github/workflows/requirements/style/requirements.txt
           pip install --upgrade --pre --extra-index-url https://test.pypi.org/simple clingo
-    - name: Run unit tests (full suite with coverage)
-      env:
-          COVERAGE: true
-          COVERAGE_FILE: coverage/.coverage-clingo-v6
+    - name: Disable bootstrapping
       run: |
         . share/spack/setup-env.sh
         spack bootstrap disable spack-install
         spack bootstrap disable github-actions-v0.6
         spack bootstrap disable github-actions-v2
-        spack bootstrap status
-        spack spec --show opt,solutions zlib
+    - name: Smoke tests
+      run: |
+        bin/spack -h
+        bin/spack help -a
+        bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
+    - name: Run unit tests (full suite with coverage)
+      env:
+          COVERAGE_FILE: coverage/.coverage-clingo-v6
+      run: |
         pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 --dist worksteal lib/spack/spack/test/concretization/
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
@@ -260,15 +287,24 @@ jobs:
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg kcov
+    - name: Setup git configuration
+      run: |
+        git --version
+        . .github/workflows/bin/setup_git.sh
+    - name: Bootstrap clingo
+      run: |
+        . share/spack/setup-env.sh
+        spack bootstrap disable spack-install
+        spack bootstrap now
+    - name: Smoke tests
+      run: |
+        bin/spack -h
+        bin/spack help -a
+        bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
     - name: Run unit tests
       env:
         COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
       run: |
-        git --version
-        . .github/workflows/bin/setup_git.sh
-        . share/spack/setup-env.sh
-        spack bootstrap disable spack-install
-        spack spec --show opt,solutions zlib
         python3 -m pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --dist worksteal -x -n4
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
@@ -293,9 +329,19 @@ jobs:
       run: |
           python -m pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
           python -m pip install --upgrade pip -r .github/workflows/requirements/style/requirements.txt
+          # There are no prebuilt clingo binaries for Windows to bootstrap from
+          python -m pip install --upgrade clingo==5.8.0
     - name: Create local develop
       run: |
         ./.github/workflows/bin/setup_git.ps1
+    - name: Smoke tests
+      run: |
+        spack -h
+        ./share/spack/qa/validate_last_exit.ps1
+        spack help -a
+        ./share/spack/qa/validate_last_exit.ps1
+        spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
+        ./share/spack/qa/validate_last_exit.ps1
     - name: Unit Test
       env:
         COVERAGE_FILE: coverage/.coverage-windows
