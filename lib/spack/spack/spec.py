@@ -60,6 +60,7 @@ import platform
 import re
 import socket
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     ClassVar,
@@ -88,7 +89,6 @@ import spack.error
 import spack.hash_types as ht
 import spack.paths
 import spack.platforms
-import spack.repo
 import spack.spec_parser
 import spack.traverse
 import spack.util.filesystem as fs
@@ -107,6 +107,9 @@ import spack.version.git_ref_lookup
 from spack.util import lang, tty
 
 from .enums import PropagationPolicy
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 __all__ = [
     "CompilerSpec",
@@ -2048,12 +2051,12 @@ class Spec:
         return edges_by_package[0].parent.root
 
     @property
-    def package(self):
-        assert self.concrete, "{0}: Spec.package can only be called on concrete specs".format(
-            self.name
-        )
-        if not self._package:
-            self._package = spack.repo.PATH.get(self)
+    def package(self) -> "spack.package_base.PackageBase":
+        if self._package is None:
+            raise spack.error.SpecError(
+                f"spec {self.name} has no package instance attached; "
+                f"use spack.repo.PATH.get(spec) to attach one"
+            )
         return self._package
 
     @property
@@ -2882,6 +2885,8 @@ class Spec:
         # Freeze the virtual versions each node provides. Before marking concrete, which
         # defaults the freshly concrete nodes to providing nothing, and before any hash is
         # computed, since the frozen versions are part of it.
+        import spack.repo
+
         spack.repo.reconstruct_virtuals([self])
 
         # Mark everything in the spec as concrete

@@ -648,7 +648,7 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
     package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
     if not os.path.isdir(package_metadata_root):
         # Fallback to using the stage directory
-        job_pkg = job_spec.package
+        job_pkg = spack.repo.PATH.get(job_spec)
 
         package_metadata_root = pathlib.Path(job_pkg.stage.path)
         archive_files = spack.builder.create(job_pkg).archive_files

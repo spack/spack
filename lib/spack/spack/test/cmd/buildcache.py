@@ -22,6 +22,7 @@ import spack.environment as ev
 import spack.error
 import spack.main
 import spack.mirrors.mirror
+import spack.repo
 import spack.spec
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -527,7 +528,7 @@ def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path: pathlib.Path,
 
     # Uninstall mpich so that its dependent mpileaks can't be pushed
     for s in mutable_database.query_local("mpich"):
-        s.package.do_uninstall(force=True)
+        spack.repo.PATH.get(s).do_uninstall(force=True)
 
     with pytest.raises(spack.cmd.buildcache.PackagesAreNotInstalledError, match="mpich"):
         buildcache("push", "--update-index", "--fail-fast", "my-mirror", "mpileaks^mpich")
@@ -554,7 +555,7 @@ def test_allow_missing_when_dep_not_installed(tmp_path: pathlib.Path, mutable_da
 
     # Uninstall mpich so that its dependent mpileaks can't be pushed
     for s in mutable_database.query_local("mpich"):
-        s.package.do_uninstall(force=True)
+        spack.repo.PATH.get(s).do_uninstall(force=True)
 
     # There should be warnings but no errors
     buildcache("push", "--update-index", "--allow-missing", "my-mirror", "mpileaks^mpich")
@@ -1408,7 +1409,7 @@ spack:
         e.concretize()
         e.write()
         for _, root in e.concretized_specs():
-            PackageInstaller([root.package], explicit=True, fake=True).install()
+            PackageInstaller([spack.repo.PATH.get(root)], explicit=True, fake=True).install()
 
         buildcache("push", "--unsigned", "--only", "package", "--group", "extra", str(mirror_dir))
 
@@ -1445,7 +1446,7 @@ spack:
         e.concretize()
         e.write()
         for _, root in e.concretized_specs():
-            PackageInstaller([root.package], explicit=True, fake=True).install()
+            PackageInstaller([spack.repo.PATH.get(root)], explicit=True, fake=True).install()
 
         buildcache(
             "push",

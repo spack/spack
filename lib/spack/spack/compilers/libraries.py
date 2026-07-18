@@ -10,9 +10,10 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Dict, List, Optional, Set, Tuple, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
 import spack.caches
+import spack.repo
 import spack.schema.environment
 import spack.spec
 import spack.util.executable
@@ -178,7 +179,7 @@ class CompilerPropertyDetector:
             os.environ.update(backup_env)
 
     def _compile_dummy_c_source(self) -> Optional[str]:
-        compiler_pkg = self.spec.package
+        compiler_pkg: Any = spack.repo.PATH.get(self.spec)
         if getattr(compiler_pkg, "cc"):
             cc = compiler_pkg.cc
             ext = "c"
@@ -186,7 +187,7 @@ class CompilerPropertyDetector:
             cc = compiler_pkg.cxx
             ext = "cc"
 
-        if not cc or not self.spec.package.verbose_flags:
+        if not cc or not compiler_pkg.verbose_flags:
             return None
 
         try:
@@ -254,7 +255,8 @@ class CompilerPropertyDetector:
             return []
 
         link_dirs = parse_non_system_link_dirs(output)
-        all_required_libs = list(self.spec.package.implicit_rpath_libs) + [
+        compiler_pkg: Any = spack.repo.PATH.get(self.spec)
+        all_required_libs = list(compiler_pkg.implicit_rpath_libs) + [
             "libc",
             "libc++",
             "libstdc++",

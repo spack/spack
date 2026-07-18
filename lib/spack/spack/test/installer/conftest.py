@@ -9,6 +9,7 @@ import socket
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
 
 import spack.deptypes as dt
+import spack.repo
 import spack.spec
 from spack.installer.base import BuildChannels, ExitCode, JobServerBase, ProcessExitNotifier
 from spack.installer.build import BuildRequest, ChildInfo, create_build_channels
@@ -208,6 +209,6 @@ def _install(launcher, *specs: spack.spec.Spec, ui=None, **kwargs) -> RecordingU
     """Install specs through the event loop with a scripted launcher; explicit by default."""
     ui = ui or RecordingUI()
     PackageInstaller(
-        [s.package for s in specs], explicit=True, ui=ui, launcher=launcher, **kwargs
+        [spack.repo.PATH.get(s) for s in specs], explicit=True, ui=ui, launcher=launcher, **kwargs
     ).install()
     return ui

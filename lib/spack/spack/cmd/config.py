@@ -11,6 +11,7 @@ from typing import List
 import spack.config
 import spack.environment as ev
 import spack.error
+import spack.repo
 import spack.schema
 import spack.schema.env
 import spack.spec
@@ -709,11 +710,12 @@ def config_prefer_upstream(args):
 
         # Get and list all the variants that differ from the default.
         variants = []
+        pkg_instance = spack.repo.PATH.get(spec)
         for var_name, variant in spec.variants.items():
-            if var_name in ["patches"] or not spec.package.has_variant(var_name):
+            if var_name in ["patches"] or not pkg_instance.has_variant(var_name):
                 continue
 
-            vdef = spec.package.get_variant(var_name)
+            vdef = pkg_instance.get_variant(var_name)
             if variant.value != vdef.default:
                 variants.append(str(variant))
         variants.sort()

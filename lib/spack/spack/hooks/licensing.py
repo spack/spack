@@ -4,6 +4,7 @@
 
 import os
 
+import spack.repo
 import spack.util.editor as ed
 from spack.util import tty
 from spack.util.filesystem import mkdirp, symlink
@@ -11,7 +12,7 @@ from spack.util.filesystem import mkdirp, symlink
 
 def pre_install(spec):
     """This hook handles global license setup for licensed software."""
-    pkg = spec.package
+    pkg = spack.repo.PATH.get(spec)
     if pkg.license_required and not pkg.spec.external:
         set_up_license(pkg)
 
@@ -141,7 +142,7 @@ def post_install(spec, explicit=None):
     """This hook symlinks local licenses to the global license for
     licensed software.
     """
-    pkg = spec.package
+    pkg = spack.repo.PATH.get(spec)
     if pkg.license_required and not pkg.spec.external:
         symlink_license(pkg)
 

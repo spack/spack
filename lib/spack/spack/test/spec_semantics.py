@@ -1459,6 +1459,7 @@ class TestSpecSemantics:
         dep = spack.concretize.concretize_one("splice-z+bar")
 
         # Transitivity shouldn't matter since Splice Z has no dependencies.
+        spack.repo.attach_packages([out])
         out2 = out.splice(dep, transitive)
         assert out2.concrete
         assert out2["splice-z"].dag_hash() != spec["splice-z"].dag_hash()
@@ -1827,7 +1828,10 @@ def test_is_extension_after_round_trip_to_dict(config, mock_packages, spec_str):
 
     # Using 'y' since the round-trip make us lose build dependencies
     for d in y.traverse():
-        assert x[d.name].package.is_extension == y[d.name].package.is_extension
+        assert (
+            spack.repo.PATH.get(x[d.name]).is_extension
+            == spack.repo.PATH.get(y[d.name]).is_extension
+        )
 
 
 def test_malformed_spec_dict():

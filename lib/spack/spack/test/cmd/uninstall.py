@@ -7,6 +7,7 @@ import pytest
 
 import spack.cmd.uninstall
 import spack.environment
+import spack.repo
 import spack.store
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand, SpackCommandError
@@ -55,7 +56,7 @@ def test_correct_installed_dependents(mutable_database):
     assert dependents and dependencies
 
     # Uninstall it, so it's missing.
-    callpath.package.do_uninstall(force=True)
+    spack.repo.PATH.get(callpath).do_uninstall(force=True)
 
     # Retrieve all dependent hashes
     dependents = spack.cmd.uninstall.installed_dependents(dependencies)

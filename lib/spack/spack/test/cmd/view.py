@@ -5,6 +5,7 @@
 import os
 import pathlib
 import sys
+from typing import Any
 
 import pytest
 
@@ -217,7 +218,7 @@ def test_view_files_not_ignored(
     with_projection,
 ):
     spec = spack.concretize.concretize_one("view-not-ignored")
-    pkg = spec.package
+    pkg: Any = spec.package
     PackageInstaller([pkg], explicit=True).install()
     pkg.assert_installed(spec.prefix)
 

@@ -179,7 +179,7 @@ def location(parser, args):
 
     # Either concretize or filter from already concretized environment
     spec = spack.cmd.matching_spec_from_env(spec)
-    pkg = spec.package
+    pkg = spack.repo.PATH.get(spec)
     builder = spack.builder.create(pkg)
 
     if args.stage_dir:

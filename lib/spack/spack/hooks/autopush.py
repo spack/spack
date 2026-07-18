@@ -4,6 +4,7 @@
 
 import spack.binary_distribution
 import spack.mirrors.mirror
+import spack.repo
 from spack.util import tty
 
 
@@ -15,7 +16,7 @@ def post_install(spec, explicit):
         return
 
     # Do nothing if package was not installed from source
-    pkg = spec.package
+    pkg = spack.repo.PATH.get(spec)
     if pkg.installed_from_binary_cache:
         return
 

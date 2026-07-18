@@ -133,7 +133,7 @@ def dev_build(self, args):
         tests = [spec.name for spec in specs]
 
     spack.installer_dispatch.create_installer(
-        [spec.package],
+        [spack.repo.PATH.get(spec)],
         tests=tests,
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,

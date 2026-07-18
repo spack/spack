@@ -47,6 +47,7 @@ import spack.error
 import spack.patch
 import spack.paths
 import spack.provider_index
+import spack.spec
 import spack.tag
 import spack.traverse
 import spack.util.executable
@@ -59,13 +60,13 @@ import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
 import spack.version
+from spack.spec import SPECFILE_FORMAT_VERSION, Spec
 from spack.util import tty
 from spack.util.filesystem import working_dir
 from spack.util.lang import Singleton, ensure_unwrapped, memoized
 
 if TYPE_CHECKING:
     import spack.package_base
-    import spack.spec
 
 PKG_MODULE_PREFIX_V1 = "spack.pkg."
 PKG_MODULE_PREFIX_V2 = "spack_repo."
@@ -337,8 +338,6 @@ def autospec(function):
 
     @functools.wraps(function)
     def converter(self, spec_like, *args, **kwargs):
-        from spack.spec import Spec
-
         if not isinstance(spec_like, Spec):
             spec_like = Spec(spec_like)
         return function(self, spec_like, *args, **kwargs)
@@ -662,8 +661,6 @@ class RepoIndex:
         index is fresh."""
 
         # Filename of the provider index cache (we assume they're all json)
-        from spack.spec import SPECFILE_FORMAT_VERSION
-
         cache_filename = f"{name}/{self.namespace}-specfile_v{SPECFILE_FORMAT_VERSION}-index.json"
 
         with self.cache.read_transaction(cache_filename) as f:
@@ -903,7 +900,7 @@ class RepoPath:
         current_index = self.get_patch_index(allow_stale=False)
         return [current_index.patch_for_package(sha256, pkg_cls) for sha256 in sha256s]
 
-    def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
+    def providers_for(self, virtual: Union[str, spack.spec.Spec]) -> List[spack.spec.Spec]:
         all_packages = self._all_package_names_set(include_virtuals=False)
         providers = [
             spec
@@ -916,10 +913,8 @@ class RepoPath:
 
     @autospec
     def extensions_for(
-        self, extendee_spec: "spack.spec.Spec"
+        self, extendee_spec: spack.spec.Spec
     ) -> List["spack.package_base.PackageBase"]:
-        from spack.spec import Spec
-
         return [
             pkg_cls(Spec(pkg_cls.name))
             for pkg_cls in self.all_package_classes()
@@ -930,12 +925,10 @@ class RepoPath:
         """Time a package file in this repo was last updated."""
         return max(repo.last_mtime() for repo in self.repos)
 
-    def repo_for_pkg(self, spec: Union[str, "spack.spec.Spec"]) -> "Repo":
+    def repo_for_pkg(self, spec: Union[str, spack.spec.Spec]) -> "Repo":
         """Given a spec, get the repository for its package."""
         # We don't @_autospec this function b/c it's called very frequently
         # and we want to avoid parsing str's into Specs unnecessarily.
-        from spack.spec import Spec
-
         if isinstance(spec, Spec):
             namespace = spec.namespace
             name = spec.name
@@ -963,13 +956,14 @@ class RepoPath:
             raise UnknownPackageError(name)
         return selected
 
-    def get(self, spec: "spack.spec.Spec") -> "spack.package_base.PackageBase":
-        """Returns the package associated with the supplied spec."""
-        from spack.spec import Spec
-
+    def get(self, spec: spack.spec.Spec) -> "spack.package_base.PackageBase":
+        """Returns the package associated with the supplied spec, attaching it to the
+        spec if it does not have one yet."""
         msg = "RepoPath.get can only be called on concrete specs"
         assert isinstance(spec, Spec) and spec.concrete, msg
-        return self.repo_for_pkg(spec).get(spec)
+        if spec._package is None:
+            spec._package = self.repo_for_pkg(spec).get(spec)
+        return spec._package
 
     def python_paths(self) -> List[str]:
         """Return a list of all the Python paths in the repos."""
@@ -1290,10 +1284,8 @@ class Repo:
         except OSError:
             tty.die(f"Error reading {self.config_file} when opening {self.root}")
 
-    def get(self, spec: "spack.spec.Spec") -> "spack.package_base.PackageBase":
+    def get(self, spec: spack.spec.Spec) -> "spack.package_base.PackageBase":
         """Returns the package associated with the supplied spec."""
-        from spack.spec import Spec
-
         msg = "Repo.get can only be called on concrete specs"
         assert isinstance(spec, Spec) and spec.concrete, msg
         # NOTE: we only check whether the package is None here, not whether it
@@ -1319,7 +1311,7 @@ class Repo:
             raise FailedConstructorError(spec.fullname, *sys.exc_info()) from e
 
     @autospec
-    def dump_provenance(self, spec: "spack.spec.Spec", path: str) -> None:
+    def dump_provenance(self, spec: spack.spec.Spec, path: str) -> None:
         """Dump provenance information for a spec to a particular path.
 
         This dumps the package file and any associated patch files.
@@ -1339,7 +1331,7 @@ class Repo:
         # Install patch files needed by the (concrete) package.
         fs.mkdirp(path)
         if spec.concrete:
-            for patch in itertools.chain.from_iterable(spec.package.patches.values()):
+            for patch in itertools.chain.from_iterable(self.get(spec).patches.values()):
                 if patch.path:
                     if os.path.exists(patch.path):
                         fs.install(patch.path, path)
@@ -1376,7 +1368,7 @@ class Repo:
         cache validation and return a potentially stale index."""
         return self.index.get_index("patches", allow_stale=allow_stale)
 
-    def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
+    def providers_for(self, virtual: Union[str, spack.spec.Spec]) -> List[spack.spec.Spec]:
         providers = self.provider_index.providers_for(virtual)
         if not providers:
             raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.fullname)
@@ -1384,10 +1376,8 @@ class Repo:
 
     @autospec
     def extensions_for(
-        self, extendee_spec: "spack.spec.Spec"
+        self, extendee_spec: spack.spec.Spec
     ) -> List["spack.package_base.PackageBase"]:
-        from spack.spec import Spec
-
         result = [pkg_cls(Spec(pkg_cls.name)) for pkg_cls in self.all_package_classes()]
         return [x for x in result if x.extends(extendee_spec)]
 
@@ -2135,8 +2125,230 @@ def all_package_names(include_virtuals=False):
     return PATH.all_package_names(include_virtuals)
 
 
+def attach_packages(
+    specs: Iterable[spack.spec.Spec], repository: Optional[Union[Repo, RepoPath]] = None
+) -> None:
+    """Attach a package instance to every node of the given concrete specs."""
+    repo = repository or PATH
+    for spec in spack.traverse.traverse_nodes(list(specs), key=id):
+        repo.get(spec)
+
+
+def validate_spec(spec: spack.spec.Spec) -> None:
+    """Checks that names and values in this spec are real. If they're not,
+    it will raise an appropriate exception.
+    """
+    # FIXME: this function should be lazy, and collect all the errors
+    # FIXME: before raising the exceptions, instead of being greedy and
+    # FIXME: raise just the first one encountered
+    for node in spec.traverse():
+        # raise an UnknownPackageError if the spec's package isn't real.
+        if node.name and not PATH.is_virtual(node.name):
+            PATH.get_pkg_class(node.fullname)
+
+        # FIXME: atm allow '%' on abstract specs only if they depend on C, C++, or Fortran
+        if node.dependencies(deptype="build"):
+            pkg_cls = PATH.get_pkg_class(node.fullname)
+            pkg_dependencies = pkg_cls.dependency_names()
+            if not any(x in pkg_dependencies for x in ("c", "cxx", "fortran")):
+                raise spack.spec.UnsupportedCompilerError(
+                    f"{node.fullname} does not depend on 'c', 'cxx, or 'fortran'"
+                )
+
+        # Ensure correctness of variants (if the spec is not virtual)
+        if not PATH.is_virtual(node.name):
+            ensure_valid_variants(node)
+            substitute_abstract_variants(node)
+
+
+def ensure_valid_variants(spec: spack.spec.Spec) -> None:
+    """Ensures that the variant attached to the given spec are valid.
+
+    Raises:
+        spack.variant.UnknownVariantError: on the first unknown variant found
+    """
+    import spack.variant as vt
+
+    # concrete variants are always valid
+    if spec.concrete:
+        return
+
+    pkg_cls = PATH.get_pkg_class(spec.fullname)
+    pkg_variants = pkg_cls.variant_names()
+    # reserved names are variants that may be set on any package
+    # but are not necessarily recorded by the package's class
+    propagate_variants = [name for name, variant in spec.variants.items() if variant.propagate]
+
+    not_existing = set(spec.variants)
+    not_existing.difference_update(pkg_variants, vt.RESERVED_NAMES, propagate_variants)
+
+    if not_existing:
+        raise vt.UnknownVariantError(
+            f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
+        )
+
+
+def substitute_abstract_variants(spec: spack.spec.Spec) -> None:
+    """Uses the information in ``spec.package`` to turn any variant that needs
+    it into a SingleValuedVariant or BoolValuedVariant.
+
+    This method is best effort. All variants that can be substituted will be
+    substituted before any error is raised.
+
+    Args:
+        spec: spec on which to operate the substitution
+    """
+    import spack.util.string
+    import spack.variant as vt
+
+    # This method needs to be best effort so that it works in matrix exclusion
+    # in $spack/lib/spack/spack/spec_list.py
+    unknown = []
+    for name, v in spec.variants.items():
+        if v.concrete and v.type == vt.VariantType.MULTI:
+            continue
+
+        if name in ("dev_path", "commit"):
+            v.type = vt.VariantType.SINGLE
+            v.concrete = True
+            continue
+        elif name in vt.RESERVED_NAMES:
+            continue
+
+        variant_defs = PATH.get_pkg_class(spec.fullname).variant_definitions(name)
+        valid_defs = []
+        for when, vdef in variant_defs:
+            if when.intersects(spec):
+                valid_defs.append(vdef)
+
+        if not valid_defs:
+            if name not in PATH.get_pkg_class(spec.fullname).variant_names():
+                unknown.append(name)
+            else:
+                whens = [str(when) for when, _ in variant_defs]
+                raise spack.spec.InvalidVariantForSpecError(v.name, f"({', '.join(whens)})", spec)
+            continue
+
+        pkg_variant, *rest = valid_defs
+        if rest:
+            continue
+
+        new_variant = pkg_variant.make_variant(*v.values)
+        pkg_variant.validate_or_raise(new_variant, spec.name)
+        spec.variants.substitute(new_variant)
+
+    if unknown:
+        variants = spack.util.string.plural(len(unknown), "variant")
+        raise vt.UnknownVariantError(
+            f"Tried to set {variants} {spack.util.string.comma_and(unknown)}. "
+            f"{spec.name} has no such {variants}",
+            unknown_variants=unknown,
+        )
+
+
+def get_patches(spec: spack.spec.Spec) -> List["spack.patch.Patch"]:
+    """Resolve and cache patch objects for any patch sha256 sums on the given spec.
+
+    This is for use after concretization to iterate over any patches
+    associated with this spec. The result is cached as ``spec._patches``, making the
+    ``Spec.patches`` property available afterwards.
+
+    TODO: this only checks in the package; it doesn't resurrect old
+    patches from install directories, but it probably should.
+    """
+    if not hasattr(spec, "_patches"):
+        spec._patches = []
+
+        # translate patch sha256sums to patch objects by consulting the index
+        if spec._patches_assigned():
+            sha256s = list(spec.variants["patches"]._patches_in_order_of_appearance)
+            pkg_cls = PATH.get_pkg_class(spec.fullname)
+            try:
+                spec._patches = PATH.get_patches_for_package(sha256s, pkg_cls)
+            except spack.error.PatchLookupError as e:
+                raise spack.error.SpecError(
+                    f"{e}. This usually means the patch was modified or removed. "
+                    "To fix this, either reconcretize or use the original package "
+                    "repository"
+                ) from e
+
+    return spec._patches
+
+
+def inject_patches_variant(root: spack.spec.Spec) -> None:
+    """Inject any patches from the packages into the ``patches`` variant of the specs
+    in the given DAG, before it is marked concrete."""
+    import spack.deptypes as dt
+    import spack.variant as vt
+
+    # This dictionary will store object IDs rather than Specs as keys
+    # since the Spec __hash__ will change as patches are added to them
+    spec_to_patches: Dict[int, Set[spack.patch.Patch]] = {}
+    for s in root.traverse():
+        assert s.namespace is not None, (
+            f"internal error: {s.name} has no namespace after concretization. "
+            f"Please report a bug at https://github.com/spack/spack/issues"
+        )
+
+        if s.concrete:
+            continue
+
+        # Add any patches from the package to the spec.
+        node_patches = {
+            patch
+            for cond, patch_list in PATH.get_pkg_class(s.fullname).patches.items()
+            if s.satisfies(cond)
+            for patch in patch_list
+        }
+        if node_patches:
+            spec_to_patches[id(s)] = node_patches
+
+    # Also record all patches required on dependencies by depends_on(..., patch=...)
+    for dspec in root.traverse_edges(deptype=dt.ALL, cover="edges", root=False):
+        if dspec.spec.concrete:
+            continue
+
+        pkg_deps = PATH.get_pkg_class(dspec.parent.fullname).dependencies
+
+        edge_patches: List[spack.patch.Patch] = []
+        for cond, deps_by_name in pkg_deps.items():
+            dependency = deps_by_name.get(dspec.spec.name)
+            if not dependency:
+                continue
+
+            if not dspec.parent.satisfies(cond):
+                continue
+
+            for pcond, patch_list in dependency.patches.items():
+                if dspec.spec.satisfies(pcond):
+                    edge_patches.extend(patch_list)
+
+        if edge_patches:
+            spec_to_patches.setdefault(id(dspec.spec), set()).update(edge_patches)
+
+    for spec in root.traverse():
+        if id(spec) not in spec_to_patches:
+            continue
+
+        patches = list(spec_to_patches[id(spec)])
+        variant: vt.VariantValue = spec.variants.setdefault(
+            "patches", vt.MultiValuedVariant("patches", ())
+        )
+        variant.set(*(p.sha256 for p in patches))
+        # FIXME: Monkey patches variant to store patches order
+        ordered_hashes = [(*p.ordering_key, p.sha256) for p in patches if p.ordering_key]
+        ordered_hashes.sort()
+        tty.debug(
+            f"Ordered hashes [{spec.name}]: "
+            + ", ".join("/".join(str(e) for e in t) for t in ordered_hashes)
+        )
+        setattr(
+            variant, "_patches_in_order_of_appearance", [sha256 for _, _, sha256 in ordered_hashes]
+        )
+
+
 def reconstruct_virtuals(
-    specs: Iterable["spack.spec.Spec"], *, edges_lack_virtuals: bool = False
+    specs: Iterable[spack.spec.Spec], *, edges_lack_virtuals: bool = False
 ) -> None:
     """Fill in, from ``package.py``, the virtual data that belongs on a concrete spec but that
     older spec documents did not record:
@@ -2218,222 +2430,6 @@ def reconstruct_virtuals(
             virtuals_to_add = needed & set(edge.spec.provided_virtuals)
             if virtuals_to_add:
                 edge.update_virtuals(virtuals_to_add)
-
-
-def validate_spec(spec: "spack.spec.Spec") -> None:
-    """Checks that names and values in this spec are real. If they're not,
-    it will raise an appropriate exception.
-    """
-    import spack.spec
-
-    # FIXME: this function should be lazy, and collect all the errors
-    # FIXME: before raising the exceptions, instead of being greedy and
-    # FIXME: raise just the first one encountered
-    for node in spec.traverse():
-        # raise an UnknownPackageError if the spec's package isn't real.
-        if node.name and not PATH.is_virtual(node.name):
-            PATH.get_pkg_class(node.fullname)
-
-        # FIXME: atm allow '%' on abstract specs only if they depend on C, C++, or Fortran
-        if node.dependencies(deptype="build"):
-            pkg_cls = PATH.get_pkg_class(node.fullname)
-            pkg_dependencies = pkg_cls.dependency_names()
-            if not any(x in pkg_dependencies for x in ("c", "cxx", "fortran")):
-                raise spack.spec.UnsupportedCompilerError(
-                    f"{node.fullname} does not depend on 'c', 'cxx, or 'fortran'"
-                )
-
-        # Ensure correctness of variants (if the spec is not virtual)
-        if not PATH.is_virtual(node.name):
-            ensure_valid_variants(node)
-            substitute_abstract_variants(node)
-
-
-def ensure_valid_variants(spec: "spack.spec.Spec") -> None:
-    """Ensures that the variant attached to the given spec are valid.
-
-    Raises:
-        spack.variant.UnknownVariantError: on the first unknown variant found
-    """
-    import spack.variant as vt
-
-    # concrete variants are always valid
-    if spec.concrete:
-        return
-
-    pkg_cls = PATH.get_pkg_class(spec.fullname)
-    pkg_variants = pkg_cls.variant_names()
-    # reserved names are variants that may be set on any package
-    # but are not necessarily recorded by the package's class
-    propagate_variants = [name for name, variant in spec.variants.items() if variant.propagate]
-
-    not_existing = set(spec.variants)
-    not_existing.difference_update(pkg_variants, vt.RESERVED_NAMES, propagate_variants)
-
-    if not_existing:
-        raise vt.UnknownVariantError(
-            f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
-        )
-
-
-def substitute_abstract_variants(spec: "spack.spec.Spec") -> None:
-    """Uses the information in ``spec.package`` to turn any variant that needs
-    it into a SingleValuedVariant or BoolValuedVariant.
-
-    This method is best effort. All variants that can be substituted will be
-    substituted before any error is raised.
-
-    Args:
-        spec: spec on which to operate the substitution
-    """
-    import spack.spec
-    import spack.util.string
-    import spack.variant as vt
-
-    # This method needs to be best effort so that it works in matrix exclusion
-    # in $spack/lib/spack/spack/spec_list.py
-    unknown = []
-    for name, v in spec.variants.items():
-        if v.concrete and v.type == vt.VariantType.MULTI:
-            continue
-
-        if name in ("dev_path", "commit"):
-            v.type = vt.VariantType.SINGLE
-            v.concrete = True
-            continue
-        elif name in vt.RESERVED_NAMES:
-            continue
-
-        variant_defs = PATH.get_pkg_class(spec.fullname).variant_definitions(name)
-        valid_defs = []
-        for when, vdef in variant_defs:
-            if when.intersects(spec):
-                valid_defs.append(vdef)
-
-        if not valid_defs:
-            if name not in PATH.get_pkg_class(spec.fullname).variant_names():
-                unknown.append(name)
-            else:
-                whens = [str(when) for when, _ in variant_defs]
-                raise spack.spec.InvalidVariantForSpecError(v.name, f"({', '.join(whens)})", spec)
-            continue
-
-        pkg_variant, *rest = valid_defs
-        if rest:
-            continue
-
-        new_variant = pkg_variant.make_variant(*v.values)
-        pkg_variant.validate_or_raise(new_variant, spec.name)
-        spec.variants.substitute(new_variant)
-
-    if unknown:
-        variants = spack.util.string.plural(len(unknown), "variant")
-        raise vt.UnknownVariantError(
-            f"Tried to set {variants} {spack.util.string.comma_and(unknown)}. "
-            f"{spec.name} has no such {variants}",
-            unknown_variants=unknown,
-        )
-
-
-def get_patches(spec: "spack.spec.Spec") -> List["spack.patch.Patch"]:
-    """Resolve and cache patch objects for any patch sha256 sums on the given spec.
-
-    This is for use after concretization to iterate over any patches
-    associated with this spec. The result is cached as ``spec._patches``, making the
-    ``Spec.patches`` property available afterwards.
-
-    TODO: this only checks in the package; it doesn't resurrect old
-    patches from install directories, but it probably should.
-    """
-    if not hasattr(spec, "_patches"):
-        spec._patches = []
-
-        # translate patch sha256sums to patch objects by consulting the index
-        if spec._patches_assigned():
-            sha256s = list(spec.variants["patches"]._patches_in_order_of_appearance)
-            pkg_cls = PATH.get_pkg_class(spec.fullname)
-            try:
-                spec._patches = PATH.get_patches_for_package(sha256s, pkg_cls)
-            except spack.error.PatchLookupError as e:
-                raise spack.error.SpecError(
-                    f"{e}. This usually means the patch was modified or removed. "
-                    "To fix this, either reconcretize or use the original package "
-                    "repository"
-                ) from e
-
-    return spec._patches
-
-
-def inject_patches_variant(root: "spack.spec.Spec") -> None:
-    """Inject any patches from the packages into the ``patches`` variant of the specs
-    in the given DAG, before it is marked concrete."""
-    import spack.deptypes as dt
-    import spack.variant as vt
-
-    # This dictionary will store object IDs rather than Specs as keys
-    # since the Spec __hash__ will change as patches are added to them
-    spec_to_patches: Dict[int, Set[spack.patch.Patch]] = {}
-    for s in root.traverse():
-        assert s.namespace is not None, (
-            f"internal error: {s.name} has no namespace after concretization. "
-            f"Please report a bug at https://github.com/spack/spack/issues"
-        )
-
-        if s.concrete:
-            continue
-
-        # Add any patches from the package to the spec.
-        node_patches = {
-            patch
-            for cond, patch_list in PATH.get_pkg_class(s.fullname).patches.items()
-            if s.satisfies(cond)
-            for patch in patch_list
-        }
-        if node_patches:
-            spec_to_patches[id(s)] = node_patches
-
-    # Also record all patches required on dependencies by depends_on(..., patch=...)
-    for dspec in root.traverse_edges(deptype=dt.ALL, cover="edges", root=False):
-        if dspec.spec.concrete:
-            continue
-
-        pkg_deps = PATH.get_pkg_class(dspec.parent.fullname).dependencies
-
-        edge_patches: List[spack.patch.Patch] = []
-        for cond, deps_by_name in pkg_deps.items():
-            dependency = deps_by_name.get(dspec.spec.name)
-            if not dependency:
-                continue
-
-            if not dspec.parent.satisfies(cond):
-                continue
-
-            for pcond, patch_list in dependency.patches.items():
-                if dspec.spec.satisfies(pcond):
-                    edge_patches.extend(patch_list)
-
-        if edge_patches:
-            spec_to_patches.setdefault(id(dspec.spec), set()).update(edge_patches)
-
-    for spec in root.traverse():
-        if id(spec) not in spec_to_patches:
-            continue
-
-        patches = list(spec_to_patches[id(spec)])
-        variant: vt.VariantValue = spec.variants.setdefault(
-            "patches", vt.MultiValuedVariant("patches", ())
-        )
-        variant.set(*(p.sha256 for p in patches))
-        # FIXME: Monkey patches variant to store patches order
-        ordered_hashes = [(*p.ordering_key, p.sha256) for p in patches if p.ordering_key]
-        ordered_hashes.sort()
-        tty.debug(
-            f"Ordered hashes [{spec.name}]: "
-            + ", ".join("/".join(str(e) for e in t) for t in ordered_hashes)
-        )
-        setattr(
-            variant, "_patches_in_order_of_appearance", [sha256 for _, _, sha256 in ordered_hashes]
-        )
 
 
 @contextlib.contextmanager

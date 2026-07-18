@@ -862,7 +862,7 @@ class BuildRequest:
         if visited is None:
             visited = set()
 
-        for dep in spec.dependencies(deptype=self.get_depflags(spec.package)):
+        for dep in spec.dependencies(deptype=self.get_depflags(spack.repo.PATH.get(spec))):
             hash = dep.dag_hash()
             if hash in visited:
                 continue
@@ -1655,7 +1655,7 @@ class PackageInstaller:
         """
         err = "Cannot proceed with {0}: {1}"
         for dep in request.traverse_dependencies():
-            dep_pkg = dep.package
+            dep_pkg = spack.repo.PATH.get(dep)
             dep_id = package_id(dep)
 
             # Check for failure since a prefix lock is not required
@@ -1913,7 +1913,7 @@ class PackageInstaller:
         # Full install of the build_spec is necessary because it didn't already exist somewhere
         spec = task.pkg.spec
         for dep in spec.build_spec.traverse():
-            dep_pkg = dep.package
+            dep_pkg = spack.repo.PATH.get(dep)
 
             dep_id = package_id(dep)
             if dep_id not in self.build_tasks:
@@ -1960,7 +1960,7 @@ class PackageInstaller:
 
         if install_deps:
             for dep in request.traverse_dependencies():
-                dep_pkg = dep.package
+                dep_pkg = spack.repo.PATH.get(dep)
 
                 dep_id = package_id(dep)
                 if dep_id not in self.build_tasks:
@@ -2807,7 +2807,7 @@ def deprecate(spec: "spack.spec.Spec", deprecator: "spack.spec.Spec", link_fn) -
 
     # Install deprecator if it isn't installed already
     if not spack.store.STORE.db.query(deprecator):
-        PackageInstaller([deprecator.package], explicit=True).install()
+        PackageInstaller([spack.repo.PATH.get(deprecator)], explicit=True).install()
 
     old_deprecator = spack.store.STORE.db.deprecator(spec)
     if old_deprecator:

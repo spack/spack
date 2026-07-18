@@ -380,7 +380,7 @@ class YamlFilesystemView(FilesystemView):
         return True
 
     def merge(self, spec, ignore=None):
-        pkg = spec.package
+        pkg = spack.repo.PATH.get(spec)
         view_source = pkg.view_source()
         view_dst = pkg.view_destination(self)
 
@@ -405,7 +405,7 @@ class YamlFilesystemView(FilesystemView):
         pkg.add_files_to_view(self, merge_map)
 
     def unmerge(self, spec, ignore=None):
-        pkg = spec.package
+        pkg = spack.repo.PATH.get(spec)
         view_source = pkg.view_source()
         view_dst = pkg.view_destination(self)
 
@@ -546,8 +546,9 @@ class YamlFilesystemView(FilesystemView):
         spec = spack.spec.Spec(spec)
         locator_spec = spec
 
-        if spec.package.extendee_spec:
-            locator_spec = spec.package.extendee_spec
+        extendee_spec = spack.repo.PATH.get(spec).extendee_spec
+        if extendee_spec:
+            locator_spec = extendee_spec
 
         proj = spack.projections.get_projection(self.projections, locator_spec)
         if proj:
@@ -720,7 +721,7 @@ class SimpleFilesystemView(FilesystemView):
         normalize_paths = is_folder_on_case_insensitive_filesystem(self._root)
 
         sources = [
-            (spec.package.view_source(), self.get_relative_projection_for_spec(spec))
+            (spack.repo.PATH.get(spec).view_source(), self.get_relative_projection_for_spec(spec))
             for spec in specs
         ]
         visitor = MultiPrefixMerger(
@@ -753,11 +754,11 @@ class SimpleFilesystemView(FilesystemView):
         # Link the files using a "merge map": full src => full dst
         merge_map_per_prefix = self._source_merge_visitor_to_merge_map(visitor)
         for spec in specs:
-            merge_map = merge_map_per_prefix.get(spec.package.view_source(), None)
+            merge_map = merge_map_per_prefix.get(spack.repo.PATH.get(spec).view_source(), None)
             if not merge_map:
                 # Not every spec may have files to contribute.
                 continue
-            spec.package.add_files_to_view(self, merge_map, skip_if_exists=False)
+            spack.repo.PATH.get(spec).add_files_to_view(self, merge_map, skip_if_exists=False)
 
         # Finally create the metadata dirs.
         self.link_metadata(specs)
@@ -784,7 +785,9 @@ class SimpleFilesystemView(FilesystemView):
     def link_metadata(self, specs):
         prefix_and_projection = [
             (
-                os.path.join(spec.package.view_source(), spack.store.STORE.layout.metadata_dir),
+                os.path.join(
+                    spack.repo.PATH.get(spec).view_source(), spack.store.STORE.layout.metadata_dir
+                ),
                 self.relative_metadata_dir_for_spec(spec),
             )
             for spec in specs
@@ -810,8 +813,9 @@ class SimpleFilesystemView(FilesystemView):
 
     def get_relative_projection_for_spec(self, spec):
         # Extensions are placed by their extendee, not by their own spec
-        if spec.package.extendee_spec:
-            spec = spec.package.extendee_spec
+        extendee_spec = spack.repo.PATH.get(spec).extendee_spec
+        if extendee_spec:
+            spec = extendee_spec
 
         p = spack.projections.get_projection(self.projections, spec)
         return spec.format_path(p) if p else ""
@@ -824,8 +828,9 @@ class SimpleFilesystemView(FilesystemView):
         """
         spec = spack.spec.Spec(spec)
 
-        if spec.package.extendee_spec:
-            spec = spec.package.extendee_spec
+        extendee_spec = spack.repo.PATH.get(spec).extendee_spec
+        if extendee_spec:
+            spec = extendee_spec
 
         proj = spack.projections.get_projection(self.projections, spec)
         if proj:

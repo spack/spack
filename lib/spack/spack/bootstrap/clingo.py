@@ -90,7 +90,7 @@ class ClingoBootstrapConcretizer:
         best.namespace = "builtin"
         # If the compiler does not support C++ 14, fail with a legible error message
         try:
-            _ = best.package.standard_flag(language="cxx", standard="14")
+            _ = spack.repo.PATH.get(best).standard_flag(language="cxx", standard="14")
         except RuntimeError as e:
             raise RuntimeError(
                 "cannot find a compiler supporting C++ 14 [needed to bootstrap clingo]"

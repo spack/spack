@@ -1539,8 +1539,9 @@ class Database:
     def installed_extensions_for(self, extendee_spec: "spack.spec.Spec"):
         """Returns the specs of all packages that extend the given spec"""
         for spec in self.query():
-            if spec.package.extends(extendee_spec):
-                yield spec.package
+            pkg = spack.repo.PATH.get(spec)
+            if pkg.extends(extendee_spec):
+                yield pkg
 
     def _get_by_hash_local(
         self,

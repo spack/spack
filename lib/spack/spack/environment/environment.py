@@ -678,7 +678,7 @@ def _is_dev_spec_and_has_changed(spec):
     # hook so packages can use to write their own method for checking the dev_path
     # use package so attributes about concretization such as variant state can be
     # utilized
-    return spec.package.detect_dev_src_change()
+    return spack.repo.PATH.get(spec).detect_dev_src_change()
 
 
 class ViewDescriptor:
@@ -999,7 +999,7 @@ class ViewDescriptor:
         # Maps packages tagged "runtime" to the spec with latest version.
         latest: Dict[str, Spec] = {}
         for s in specs:
-            if "runtime" not in getattr(s.package, "tags", ()):
+            if "runtime" not in getattr(spack.repo.PATH.get(s), "tags", ()):
                 continue
             elif s.name not in latest or latest[s.name].version < s.version:
                 latest[s.name] = s
@@ -1936,7 +1936,11 @@ class Environment:
             with spack.store.STORE.db.read_transaction():
                 for view_name, view in self.views.items():
                     for spec in self.concrete_roots():
-                        if spec in view and spec.package and spack.store.STORE.db.installed(spec):
+                        if (
+                            spec in view
+                            and spack.repo.PATH.get(spec)
+                            and spack.store.STORE.db.installed(spec)
+                        ):
                             msg = '{0} in view "{1}"'
                             tty.debug(msg.format(spec.name, view_name))
 
@@ -2105,7 +2109,9 @@ class Environment:
         }
 
         builder = spack.installer_dispatch.create_installer(
-            [spec.package for spec in specs], create_reports=reporter is not None, **install_args
+            [spack.repo.PATH.get(spec) for spec in specs],
+            create_reports=reporter is not None,
+            **install_args,
         )
 
         try:

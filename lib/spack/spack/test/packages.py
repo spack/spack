@@ -280,7 +280,7 @@ def test_rpath_args(mutable_database):
 
     rec = mutable_database.get_record("mpich")
 
-    rpath_args = rec.spec.package.rpath_args
+    rpath_args = spack.repo.PATH.get(rec.spec).rpath_args
     assert "-rpath" in rpath_args
     assert "mpich" in rpath_args
 

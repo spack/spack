@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Union
 
 import spack.error
 import spack.util.spack_json as sjson
+from spack.spec import Spec, SpecfileLatest
 
 if TYPE_CHECKING:
     import spack.repo
-    import spack.spec
 
 
 class ProviderIndex:
@@ -30,12 +30,12 @@ class ProviderIndex:
     #: Calling providers_for(spec) will find specs that provide a
     #: matching implementation of MPI. Derived class need to construct
     #: this attribute according to the semantics above.
-    providers: Dict[str, Dict["spack.spec.Spec", Set["spack.spec.Spec"]]]
+    providers: Dict[str, Dict[Spec, Set[Spec]]]
 
     def __init__(
         self,
         repository: "spack.repo.RepoType",
-        specs: Optional[Iterable["spack.spec.Spec"]] = None,
+        specs: Optional[Iterable[Spec]] = None,
         restrict: bool = False,
     ):
         """Provider index based on a single mapping of providers.
@@ -57,14 +57,14 @@ class ProviderIndex:
         if specs:
             self.update_packages(specs)
 
-    def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
+    def providers_for(self, virtual: Union[str, Spec]) -> List[Spec]:
         """Return a list of specs of all packages that provide virtual packages with the supplied
         spec.
 
         Args:
             virtual: either a Spec or a string name of a virtual package
         """
-        result: Set["spack.spec.Spec"] = set()
+        result: Set[Spec] = set()
 
         if isinstance(virtual, str):
             # In the common case where just a package name is passed, we can avoid running the
@@ -74,8 +74,6 @@ class ProviderIndex:
                     for p_spec, spec_set in self.providers[virtual].items():
                         result.update(spec_set)
                 return list(result)
-
-            from spack.spec import Spec
 
             virtual = Spec(virtual)
 
@@ -113,14 +111,12 @@ class ProviderIndex:
     def __repr__(self):
         return repr(self.providers)
 
-    def update_packages(self, specs: Iterable[Union[str, "spack.spec.Spec"]]):
+    def update_packages(self, specs: Iterable[Union[str, Spec]]):
         """Update the provider index with additional virtual specs.
 
         Args:
             spec: spec potentially providing additional virtual specs
         """
-        from spack.spec import Spec
-
         for spec in specs:
             if not isinstance(spec, Spec):
                 spec = Spec(spec)
@@ -240,7 +236,6 @@ class ProviderIndex:
 
         index = ProviderIndex(repository=repository)
         providers = data["provider_index"]["providers"]
-        from spack.spec import SpecfileLatest
 
         index.providers = _transform(
             providers,

@@ -3884,6 +3884,9 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     specs.clear()
     specs.update(new_specs)
 
+    # attach a package instance to every node of the concretized specs
+    spack.repo.attach_packages(specs.values())
+
     # Resolve patch objects for all nodes, making Spec.patches available
     for s in specs.values():
         for node in s.traverse():

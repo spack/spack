@@ -6,6 +6,7 @@ import io
 
 import spack.config
 import spack.error
+import spack.repo
 import spack.verify_libraries
 from spack.util import tty
 from spack.util.filesystem import visit_directory_tree
@@ -20,7 +21,7 @@ def post_install(spec, explicit):
         return
 
     visitor = spack.verify_libraries.ResolveSharedElfLibDepsVisitor(
-        [*spack.verify_libraries.ALLOW_UNRESOLVED, *spec.package.unresolved_libraries]
+        [*spack.verify_libraries.ALLOW_UNRESOLVED, *spack.repo.PATH.get(spec).unresolved_libraries]
     )
     visit_directory_tree(spec.prefix, visitor)
 

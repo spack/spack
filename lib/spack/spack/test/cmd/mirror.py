@@ -4,6 +4,7 @@
 
 import os
 import pathlib
+from typing import Any
 
 import pytest
 
@@ -189,11 +190,12 @@ def test_mirror_spec_from_env(
 @pytest.fixture
 def source_for_pkg_with_hash(mock_packages, tmp_path: pathlib.Path):
     s = spack.concretize.concretize_one("trivial-pkg-with-valid-hash")
-    local_url_basename = os.path.basename(s.package.url)
+    pkg: Any = s.package
+    local_url_basename = os.path.basename(pkg.url)
     local_path = tmp_path / local_url_basename
-    local_path.write_text(s.package.hashed_content, encoding="utf-8")
+    local_path.write_text(pkg.hashed_content, encoding="utf-8")
     local_url = url_util.path_to_file_url(str(local_path))
-    s.package.versions[spack.version.Version("1.0")]["url"] = local_url
+    pkg.versions[spack.version.Version("1.0")]["url"] = local_url
 
 
 def test_mirror_skip_unstable(

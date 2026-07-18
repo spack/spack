@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.repo
+
 
 def post_install(spec, explicit=None):
-    spec.package.windows_establish_runtime_linkage()
+    spack.repo.PATH.get(spec).windows_establish_runtime_linkage()

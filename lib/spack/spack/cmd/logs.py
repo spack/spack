@@ -11,6 +11,7 @@ import shutil
 import sys
 
 import spack.cmd
+import spack.repo
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
@@ -33,12 +34,13 @@ def _dump_byte_stream_to_stdout(instream: io.BufferedIOBase) -> None:
 
 
 def _logs(cmdline_spec: spack.spec.Spec, concrete_spec: spack.spec.Spec):
+    pkg = spack.repo.PATH.get(concrete_spec)
     if spack.store.STORE.db.installed(concrete_spec):
-        log_path = concrete_spec.package.install_log_path
-    elif os.path.exists(concrete_spec.package.stage.path):
+        log_path = pkg.install_log_path
+    elif os.path.exists(pkg.stage.path):
         # TODO: `spack logs` can currently not show the logs while a package is being built, as the
         # combined log file is only written after the build is finished.
-        log_path = concrete_spec.package.log_path
+        log_path = pkg.log_path
     else:
         raise SpackError(f"{cmdline_spec} is not installed or staged")
 

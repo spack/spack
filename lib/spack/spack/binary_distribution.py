@@ -2168,7 +2168,7 @@ def install_root_node(
     with spack.store.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, tarball_stage, force)
-        spec.package.windows_establish_runtime_linkage()
+        spack.repo.PATH.get(spec).windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, allow_missing=allow_missing)
 
