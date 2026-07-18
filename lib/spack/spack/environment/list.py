@@ -4,6 +4,7 @@
 import itertools
 from typing import Any, Dict, List, NamedTuple, Optional, Union
 
+import spack.repo
 import spack.spec
 import spack.util.spack_yaml
 import spack.variant
@@ -152,7 +153,7 @@ def _expand_matrix_constraints(matrix_config):
         # Catch exceptions because we want to be able to operate on
         # abstract specs without needing package information
         try:
-            spack.spec.substitute_abstract_variants(test_spec)
+            spack.repo.substitute_abstract_variants(test_spec)
         except spack.variant.UnknownVariantError:
             pass
 

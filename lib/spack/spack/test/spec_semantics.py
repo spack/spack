@@ -715,8 +715,9 @@ class TestSpecSemantics:
         assert "provided_virtuals" in provider.to_node_dict()
 
     def test_provided_virtuals_reconstructed_from_legacy_specfile(self):
-        """A specfile written before this field existed has no ``provided_virtuals`` key. Reading
-        it reconstructs the data from package.py, and the stored dag hash is used verbatim, so
+        """A specfile written before this field existed has no ``provided_virtuals`` key.
+        Spec.from_dict leaves those nodes unresolved, and spack.repo.reconstruct_virtuals fills
+        them in from package.py at the read boundaries. The stored dag hash is used verbatim, so
         hashes are unchanged across Spack versions."""
         concrete = spack.concretize.concretize_one("mpileaks ^mpich")
 
@@ -725,6 +726,9 @@ class TestSpecSemantics:
             node.pop("provided_virtuals", None)
 
         old = Spec.from_dict(as_dict)
+        assert old["mpich"]._provided_virtuals is None
+
+        spack.repo.reconstruct_virtuals([old])
         provider = old["mpich"]
 
         # Reconstructed from package.py rather than left empty / None.

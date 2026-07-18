@@ -186,6 +186,9 @@ def parse_specs(
 
     toolchains = spack.config.CONFIG.get("toolchains", {})
     specs = spack.spec_parser.parse(arg_string, toolchains=toolchains)
+    for spec in specs:
+        # Literal specfile arguments may predate virtuals on edges or on nodes
+        spack.repo.reconstruct_virtuals([spec])
     if not concretize:
         return specs
 

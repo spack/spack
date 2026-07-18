@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Tuple
 import spack.config
 import spack.hash_types as ht
 import spack.projections
+import spack.repo
 import spack.spec
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
@@ -34,9 +35,11 @@ def _get_spec(prefix: str) -> Optional["spack.spec.Spec"]:
     """Returns a spec if the prefix contains a spec file in the .spack subdir"""
     for f in ("spec.json", "spec.yaml"):
         try:
-            return spack.spec.Spec.from_specfile(os.path.join(prefix, ".spack", f))
+            spec = spack.spec.Spec.from_specfile(os.path.join(prefix, ".spack", f))
         except Exception:
             continue
+        spack.repo.reconstruct_virtuals([spec])
+        return spec
     return None
 
 
@@ -166,6 +169,7 @@ class DirectoryLayout:
 
         # Specs read from actual installations are always concrete
         spec._mark_concrete()
+        spack.repo.reconstruct_virtuals([spec])
         return spec
 
     def spec_file_path(self, spec: "spack.spec.Spec") -> str:
@@ -350,9 +354,10 @@ class DirectoryLayout:
                 for entry in entries:
                     try:
                         deprecated_spec = spack.spec.Spec.from_specfile(entry.path)
-                        spec_with_deprecated.append((spec, deprecated_spec))
                     except Exception:
                         continue
+                    spack.repo.reconstruct_virtuals([deprecated_spec])
+                    spec_with_deprecated.append((spec, deprecated_spec))
         return spec_with_deprecated
 
 

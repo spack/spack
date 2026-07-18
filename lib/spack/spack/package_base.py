@@ -26,6 +26,7 @@ from spack.vendor.typing_extensions import Literal
 import spack.config
 import spack.dependency
 import spack.deptypes as dt
+import spack.detection
 import spack.directives_meta
 import spack.enums
 import spack.error
@@ -227,7 +228,7 @@ class DetectablePackageMeta(type):
                         external_path = extra_attributes.pop("prefix", None)
                         external_modules = extra_attributes.pop("modules", None)
                         try:
-                            spec = spack.spec.Spec.from_detection(
+                            spec = spack.detection.spec_from_detection(
                                 spec_str,
                                 external_path=external_path,
                                 external_modules=external_modules,
@@ -1249,7 +1250,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             )
 
         if self.spec.concrete:
-            patches = self.spec.patches
+            patches = spack.repo.get_patches(self.spec)
             uniqe_part = self.spec.dag_hash(7)
         else:
             # The only code path that gets here is `spack mirror create --all`,
@@ -1697,7 +1698,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         has_patch_fun = hasattr(self, "patch") and callable(self.patch)
 
         # Get the patches from the spec (this is a shortcut for the MV-variant)
-        patches = self.spec.patches
+        patches = spack.repo.get_patches(self.spec)
 
         # If there are no patches, note it.
         if not patches and not has_patch_fun:
@@ -1879,7 +1880,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # we have to call package_hash *before* marking specs concrete
         if self.spec._patches_assigned():
             hash_content.extend(
-                ":".join((p.sha256, str(p.level))).encode("utf-8") for p in self.spec.patches
+                ":".join((p.sha256, str(p.level))).encode("utf-8")
+                for p in spack.repo.get_patches(self.spec)
             )
 
         # package.py contents

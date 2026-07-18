@@ -412,7 +412,7 @@ def check_multi_dependency_patch_specs(
     assert baz_sha256 in libdwarf.variants["patches"].value
 
     def get_patch(spec, ending):
-        return next(p for p in spec.patches if p.path_or_url.endswith(ending))
+        return next(p for p in spack.repo.get_patches(spec) if p.path_or_url.endswith(ending))
 
     # make sure file patches are reconstructed properly
     foo_patch = get_patch(libelf, "foo.patch")

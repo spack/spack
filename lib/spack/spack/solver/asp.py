@@ -2964,7 +2964,7 @@ class SpackSolverSetup:
                             f"{start_str} cannot depend on {', '.join(sorted(invalid))}"
                         )
 
-                spack.spec.Spec.ensure_valid_variants(s)
+                spack.repo.ensure_valid_variants(s)
 
     def setup(
         self,
@@ -3844,7 +3844,7 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     roots = [spec.root for spec in specs.values()]
     roots = {id(r): r for r in roots}
     for root in roots.values():
-        spack.spec._inject_patches_variant(root)
+        spack.repo.inject_patches_variant(root)
 
     for s in specs.values():
         # Add external paths to specs with just external modules
@@ -3883,6 +3883,11 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     new_specs = execute_explicit_splices(specs)
     specs.clear()
     specs.update(new_specs)
+
+    # Resolve patch objects for all nodes, making Spec.patches available
+    for s in specs.values():
+        for node in s.traverse():
+            spack.repo.get_patches(node)
 
 
 def execute_explicit_splices(specs: SpecDict) -> SpecDict:

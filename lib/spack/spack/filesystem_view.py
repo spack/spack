@@ -17,6 +17,7 @@ import spack.config
 import spack.directory_layout
 import spack.projections
 import spack.relocate
+import spack.repo
 import spack.schema.projections
 import spack.spec
 import spack.store
@@ -838,9 +839,11 @@ class SimpleFilesystemView(FilesystemView):
 def get_spec_from_file(filename) -> Optional[spack.spec.Spec]:
     try:
         with open(filename, "r", encoding="utf-8") as f:
-            return spack.spec.Spec.from_yaml(f)
+            spec = spack.spec.Spec.from_yaml(f)
     except OSError:
         return None
+    spack.repo.reconstruct_virtuals([spec])
+    return spec
 
 
 def colorize_root(root):

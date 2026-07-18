@@ -162,7 +162,8 @@ class ClingoBootstrapConcretizer:
         # Tweak it to conform to the host architecture + update the version of a few dependencies
         for node in s.traverse():
             # Clear patches, we'll compute them correctly later
-            node.patches.clear()
+            if hasattr(node, "_patches"):
+                del node._patches
             if "patches" in node.variants:
                 del node.variants["patches"]
 
@@ -196,7 +197,7 @@ class ClingoBootstrapConcretizer:
             if "libc" in edge.virtuals:
                 edge.spec = self.host_libc
 
-        spack.spec._inject_patches_variant(s)
+        spack.repo.inject_patches_variant(s)
         s._finalize_concretization()
 
         # Work around the fact that the installer calls Spec.dependents() and

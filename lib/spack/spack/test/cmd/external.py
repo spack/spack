@@ -39,8 +39,8 @@ def define_plat_exe(exe):
 
 def test_find_external_update_config(mutable_config):
     entries = [
-        Spec.from_detection("cmake@1.foo", external_path="/x/y1"),
-        Spec.from_detection("cmake@3.17.2", external_path="/x/y2"),
+        spack.detection.spec_from_detection("cmake@1.foo", external_path="/x/y1"),
+        spack.detection.spec_from_detection("cmake@3.17.2", external_path="/x/y2"),
     ]
     pkg_to_entries = {"cmake": entries}
 
@@ -227,8 +227,8 @@ def test_find_external_merge(mutable_config):
 
     mutable_config.update_config("packages", pkgs_cfg_init)
     entries = [
-        Spec.from_detection("find-externals1@1.1", external_path="/x/y1"),
-        Spec.from_detection("find-externals1@1.2", external_path="/x/y2"),
+        spack.detection.spec_from_detection("find-externals1@1.1", external_path="/x/y1"),
+        spack.detection.spec_from_detection("find-externals1@1.2", external_path="/x/y2"),
     ]
     pkg_to_entries = {"find-externals1": entries}
     scope = spack.config.default_modify_scope("packages")
