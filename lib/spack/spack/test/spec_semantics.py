@@ -9,6 +9,7 @@ import pytest
 import spack.concretize
 import spack.deptypes as dt
 import spack.directives
+import spack.environment as ev
 import spack.hash_types as ht
 import spack.package_base
 import spack.paths
@@ -1573,7 +1574,7 @@ class TestSpecSemantics:
     def test_spec_override(self):
         init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
         change_spec = Spec("pkg-a foo=fee cflags=-O2")
-        new_spec = spack.concretize.concretize_one(Spec.override(init_spec, change_spec))
+        new_spec = spack.concretize.concretize_one(ev.override_spec(init_spec, change_spec))
         assert "foo=fee" in new_spec
         # This check fails without concretizing: apparently if both specs are
         # abstract, then the spec will always be considered to satisfy
@@ -1587,12 +1588,12 @@ class TestSpecSemantics:
         init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
         change_spec = Spec("pkg-a baz=fee")
         with pytest.raises(ValueError):
-            Spec.override(init_spec, change_spec)
+            ev.override_spec(init_spec, change_spec)
 
     def test_spec_override_with_variant_not_in_init_spec(self):
         init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
         change_spec = Spec("pkg-a +bvv ~lorem_ipsum")
-        new_spec = spack.concretize.concretize_one(Spec.override(init_spec, change_spec))
+        new_spec = spack.concretize.concretize_one(ev.override_spec(init_spec, change_spec))
         assert "+bvv" in new_spec
         assert "~lorem_ipsum" in new_spec
 

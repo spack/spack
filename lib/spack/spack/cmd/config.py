@@ -462,7 +462,7 @@ def _config_change_requires_scope(path, spec, scope, match_spec=None):
             return spec_str
         elif not init_spec.intersects(spec):
             changed = True
-            return str(spack.spec.Spec.override(init_spec, spec))
+            return str(ev.override_spec(init_spec, spec))
         else:
             # Don't override things if they intersect, otherwise we'd
             # be e.g. attaching +debug to every single version spec

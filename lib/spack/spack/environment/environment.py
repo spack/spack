@@ -53,6 +53,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.tty.color as clr
 import spack.variant as vt
+import spack.version
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.config import substitute_path_variables
@@ -1056,6 +1057,34 @@ class ConcretizedRootInfo:
         )
 
 
+def override_spec(init_spec: Spec, change_spec: Spec) -> Spec:
+    """Return a copy of ``init_spec`` with the constraints of ``change_spec`` applied on top."""
+    # TODO: this doesn't account for the case where the changed spec
+    # (and the user spec) have dependencies
+    new_spec = init_spec.copy()
+    package_cls = spack.repo.PATH.get_pkg_class(new_spec.name)
+    if change_spec.versions and not change_spec.versions == spack.version.any_version:
+        new_spec.versions = change_spec.versions
+
+    for vname, value in change_spec.variants.items():
+        if vname in package_cls.variant_names():
+            if vname in new_spec.variants:
+                new_spec.variants.substitute(value)
+            else:
+                new_spec.variants[vname] = value
+        else:
+            raise ValueError("{0} is not a variant of {1}".format(vname, new_spec.name))
+
+    if change_spec.compiler_flags:
+        for flagname, flagvals in change_spec.compiler_flags.items():
+            new_spec.compiler_flags[flagname] = flagvals
+    if change_spec.architecture:
+        new_spec.architecture = spack.spec.ArchSpec.override(
+            new_spec.architecture, change_spec.architecture
+        )
+    return new_spec
+
+
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
@@ -1532,12 +1561,12 @@ class Environment:
             raise ValueError(f"{str(match_spec)} matches multiple specs")
 
         for idx, spec in matches:
-            override_spec = Spec.override(spec, change_spec)
+            overridden = override_spec(spec, change_spec)
             if list_name == USER_SPECS_KEY:
-                self.manifest.override_user_spec(str(override_spec), idx=idx)
+                self.manifest.override_user_spec(str(overridden), idx=idx)
             else:
                 self.manifest.override_definition(
-                    str(spec), override=str(override_spec), list_name=list_name
+                    str(spec), override=str(overridden), list_name=list_name
                 )
         self._sync_speclists()
 

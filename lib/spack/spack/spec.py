@@ -2583,33 +2583,6 @@ class Spec:
             return Spec.from_yaml(file_content)
 
     @staticmethod
-    def override(init_spec, change_spec):
-        # TODO: this doesn't account for the case where the changed spec
-        # (and the user spec) have dependencies
-        new_spec = init_spec.copy()
-        package_cls = spack.repo.PATH.get_pkg_class(new_spec.name)
-        if change_spec.versions and not change_spec.versions == vn.any_version:
-            new_spec.versions = change_spec.versions
-
-        for vname, value in change_spec.variants.items():
-            if vname in package_cls.variant_names():
-                if vname in new_spec.variants:
-                    new_spec.variants.substitute(value)
-                else:
-                    new_spec.variants[vname] = value
-            else:
-                raise ValueError("{0} is not a variant of {1}".format(vname, new_spec.name))
-
-        if change_spec.compiler_flags:
-            for flagname, flagvals in change_spec.compiler_flags.items():
-                new_spec.compiler_flags[flagname] = flagvals
-        if change_spec.architecture:
-            new_spec.architecture = ArchSpec.override(
-                new_spec.architecture, change_spec.architecture
-            )
-        return new_spec
-
-    @staticmethod
     def from_literal(spec_dict: dict, normal: bool = True) -> "Spec":
         """Builds a Spec from a dictionary containing the spec literal.
 
