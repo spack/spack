@@ -48,7 +48,8 @@ jobs:
     # This job tests older Python versions, which the pins in the requirements file do
     # not support, so it installs unpinned. mypy and ruff are needed by the tests
     # covering "spack style". See coveragepy issue 2082 for the coverage bound.
-    - uses: ./.github/actions/setup-spack
+    - name: Setup Spack
+      uses: ./.github/actions/setup-spack
       with:
         python-version: ${{ matrix.python-version }}
         pip-install: >-
@@ -83,7 +84,8 @@ jobs:
       uses: Homebrew/actions/setup-homebrew@40e9946c182a64b3db1bf51be0dcb915f7802aa9
     - name: Install kcov with brew
       run: "brew install kcov"
-    - uses: ./.github/actions/setup-spack
+    - name: Setup Spack
+      uses: ./.github/actions/setup-spack
       with:
         python-version: '3.11'
     - name: Run shell tests
@@ -159,7 +161,8 @@ jobs:
       run: |
           sudo apt-get -y update
           sudo apt-get -y install coreutils gfortran graphviz gnupg2
-    - uses: ./.github/actions/setup-spack
+    - name: Setup Spack
+      uses: ./.github/actions/setup-spack
       with:
         python-version: '3.13'
         pip-install: >-
@@ -190,7 +193,8 @@ jobs:
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg kcov
-    - uses: ./.github/actions/setup-spack
+    - name: Setup Spack
+      uses: ./.github/actions/setup-spack
       with:
         python-version: ${{ matrix.python-version }}
     - name: Run unit tests
