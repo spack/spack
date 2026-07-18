@@ -10,7 +10,6 @@ from typing import Dict, Optional, Tuple
 import spack.caches
 import spack.fetch_strategy
 import spack.paths
-import spack.repo
 import spack.util.executable
 import spack.util.hash
 import spack.util.spack_json as sjson
@@ -71,6 +70,8 @@ class GitRefLookup(AbstractRefLookup):
     @property
     def pkg(self):
         if not self._pkg:
+            import spack.repo
+
             try:
                 pkg = spack.repo.PATH.get_pkg_class(self.pkg_name)
                 pkg.git
