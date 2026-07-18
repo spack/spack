@@ -424,20 +424,16 @@ For example, if you were to add this step to the Linux unit test CI, it would lo
 .. code-block:: yaml
 
    - name: Bootstrap clingo
-     env:
-       SPACK_PYTHON: python
      run: |
        . share/spack/setup-env.sh
        spack bootstrap disable spack-install
        spack bootstrap now
-       spack -v spec --show opt,solutions zlib
    - name: Setup tmate session
      uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
    - name: Run unit tests
      env:
-       SPACK_PYTHON: python
        COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
-       PYTEST_ADDOPTS: ${{ matrix.python-version == '3.14' && '--cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml' || '' }}
+       PYTEST_ADDOPTS: ${{ matrix.python-version == '3.14' && '--cov --cov-config=pyproject.toml' || '' }}
      run: |-
        python3 -m pytest -x --verbose --dist worksteal -n4
 
