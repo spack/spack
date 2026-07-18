@@ -38,9 +38,6 @@ jobs:
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
-      with:
-        python-version: ${{ matrix.python-version }}
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -48,27 +45,14 @@ jobs:
           sudo apt-get -y install \
               coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build \
               cmake bison libbison-dev subversion
-    - name: Install Python packages
-      run: |
-          # See https://github.com/coveragepy/coveragepy/issues/2082
-          pip install --upgrade pip pytest pytest-xdist pytest-cov "coverage<=7.11.0"
-          # Needed by the tests covering "spack style"
-          pip install --upgrade "mypy>=0.900" "ruff"
-    - name: Setup git configuration
-      run: |
-          # Need this for the git tests to succeed.
-          git --version
-          . .github/workflows/bin/setup_git.sh
-    - name: Bootstrap clingo
-      run: |
-          . share/spack/setup-env.sh
-          spack bootstrap disable spack-install
-          spack bootstrap now
-    - name: Smoke tests
-      run: |
-          bin/spack -h
-          bin/spack help -a
-          bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
+    # This job tests older Python versions, which the pins in the requirements file do
+    # not support, so it installs unpinned. mypy and ruff are needed by the tests
+    # covering "spack style". See coveragepy issue 2082 for the coverage bound.
+    - uses: ./.github/actions/setup-spack
+      with:
+        python-version: ${{ matrix.python-version }}
+        pip-install: >-
+          pytest pytest-xdist pytest-cov "coverage<=7.11.0" "mypy>=0.900" ruff
     - name: Run unit tests
       env:
           COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
@@ -88,9 +72,6 @@ jobs:
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
-      with:
-        python-version: '3.11'
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -102,24 +83,9 @@ jobs:
       uses: Homebrew/actions/setup-homebrew@40e9946c182a64b3db1bf51be0dcb915f7802aa9
     - name: Install kcov with brew
       run: "brew install kcov"
-    - name: Install Python packages
-      run: |
-          pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
-    - name: Setup git configuration
-      run: |
-          # Need this for the git tests to succeed.
-          git --version
-          . .github/workflows/bin/setup_git.sh
-    - name: Bootstrap clingo
-      run: |
-          . share/spack/setup-env.sh
-          spack bootstrap disable spack-install
-          spack bootstrap now
-    - name: Smoke tests
-      run: |
-          bin/spack -h
-          bin/spack help -a
-          bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
+    - uses: ./.github/actions/setup-spack
+      with:
+        python-version: '3.11'
     - name: Run shell tests
       env:
           COVERAGE: true
@@ -189,29 +155,17 @@ jobs:
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
-      with:
-        python-version: '3.13'
     - name: Install System packages
       run: |
           sudo apt-get -y update
           sudo apt-get -y install coreutils gfortran graphviz gnupg2
-    - name: Install Python packages
-      run: |
-          pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
-          pip install --upgrade -r .github/workflows/requirements/style/requirements.txt
-          pip install --upgrade ${{ matrix.install }}
-    - name: Disable bootstrapping
-      run: |
-        . share/spack/setup-env.sh
-        spack bootstrap disable spack-install
-        spack bootstrap disable github-actions-v0.6
-        spack bootstrap disable github-actions-v2
-    - name: Smoke tests
-      run: |
-        bin/spack -h
-        bin/spack help -a
-        bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
+    - uses: ./.github/actions/setup-spack
+      with:
+        python-version: '3.13'
+        pip-install: >-
+          -r .github/workflows/requirements/unit_tests/requirements.txt
+          ${{ matrix.install }}
+        bootstrap: none
     - name: Run unit tests (full suite with coverage)
       env:
           COVERAGE_FILE: coverage/.coverage-clingo-${{ matrix.variant }}
@@ -233,31 +187,12 @@ jobs:
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install Python packages
-      run: |
-          pip install --upgrade pip
-          # See https://github.com/coveragepy/coveragepy/issues/2082
-          pip install --upgrade -r .github/workflows/requirements/unit_tests/requirements.txt
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg kcov
-    - name: Setup git configuration
-      run: |
-        git --version
-        . .github/workflows/bin/setup_git.sh
-    - name: Bootstrap clingo
-      run: |
-        . share/spack/setup-env.sh
-        spack bootstrap disable spack-install
-        spack bootstrap now
-    - name: Smoke tests
-      run: |
-        bin/spack -h
-        bin/spack help -a
-        bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
+    - uses: ./.github/actions/setup-spack
+      with:
+        python-version: ${{ matrix.python-version }}
     - name: Run unit tests
       env:
         COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}

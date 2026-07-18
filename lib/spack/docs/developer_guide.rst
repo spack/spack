@@ -423,11 +423,9 @@ For example, if you were to add this step to the Linux unit test CI, it would lo
 
 .. code-block:: yaml
 
-   - name: Bootstrap clingo
-     run: |
-       . share/spack/setup-env.sh
-       spack bootstrap disable spack-install
-       spack bootstrap now
+   - uses: ./.github/actions/setup-spack
+     with:
+       python-version: ${{ matrix.python-version }}
    - name: Setup tmate session
      uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
    - name: Run unit tests
