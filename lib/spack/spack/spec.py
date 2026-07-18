@@ -2054,8 +2054,10 @@ class Spec:
     def package(self) -> "spack.package_base.PackageBase":
         if self._package is None:
             raise spack.error.SpecError(
-                f"spec {self.name} has no package instance attached; "
-                f"use spack.repo.PATH.get(spec) to attach one"
+                f"spec {self.name} has no package instance attached. Spack attaches package "
+                f"instances to specs after concretization and when entering the build process; "
+                f"hitting this error means the code that produced this spec failed to do so, "
+                f"which is likely a bug in Spack"
             )
         return self._package
 
@@ -4467,12 +4469,6 @@ class Spec:
 
         Arguments:
             replacement: The node that will replace any equivalent node in self
-            self_root: The root of the spec that self comes from. This provides the context for
-                evaluating whether ``replacement`` is a match for each node of ``self``. See
-                ``Spec._splice_match`` and ``Spec._virtuals_provided`` for details.
-            other_root: The root of the spec that replacement comes from. This provides the context
-                for evaluating whether ``replacement`` is a match for each node of ``self``. See
-                ``Spec._splice_match`` and ``Spec._virtuals_provided`` for details.
         """
         ids = {id(s) for s in replacement.traverse()}
 
@@ -4480,7 +4476,7 @@ class Spec:
         replacements_by_name = collections.defaultdict(list)
         for node in replacement.traverse():
             replacements_by_name[node.name].append(node)
-            virtuals = node._virtuals_provided(root=replacement)
+            virtuals = node._virtuals_provided(replacement)
             for virtual in virtuals:
                 replacements_by_name[virtual].append(node)
 
@@ -4500,11 +4496,11 @@ class Spec:
                 if not analogs:
                     # If we have to check for matching virtuals, then we need to check that it
                     # matches all virtuals. Use `_splice_match` to validate possible matches
-                    for virtual in node._virtuals_provided(root=self):
+                    for virtual in node._virtuals_provided(self):
                         analogs += [
                             r
                             for r in replacements_by_name[virtual]
-                            if node._splice_match(r, self_root=self, other_root=replacement)
+                            if node._splice_match(r, self, replacement)
                         ]
 
                     # No match, keep iterating over self
@@ -4571,11 +4567,11 @@ class Spec:
         assert self.concrete
         assert other.concrete
 
-        if self._splice_match(other, self_root=self, other_root=other):
+        if self._splice_match(other, self, other):
             return other.copy()
 
         if not any(
-            node._splice_match(other, self_root=self, other_root=other)
+            node._splice_match(other, self, other)
             for node in self.traverse(root=False, deptype=dt.LINK | dt.RUN)
         ):
             other_str = other.format("{name}/{hash:7}")
@@ -4622,7 +4618,7 @@ class Spec:
             # Intransitively splice replacement into spec
             # This is very simple now that all shared dependencies have been handled
             for node in spec.traverse(order="topo", deptype=dt.LINK | dt.RUN):
-                if node._splice_match(other, self_root=spec, other_root=other):
+                if node._splice_match(other, spec, other):
                     node._splice_detach_and_add_dependents(replacement, context=spec)
 
         # For nodes that were spliced, modify the build spec to ensure build deps are preserved

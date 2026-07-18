@@ -64,7 +64,7 @@ def setup_complex_splice(monkeypatch):
         return self.name == other.name
 
     def virtuals_provided(self, root):
-        return []
+        return set()
 
     monkeypatch.setattr(Spec, "_splice_match", splice_match)
     monkeypatch.setattr(Spec, "_virtuals_provided", virtuals_provided)
@@ -1459,7 +1459,6 @@ class TestSpecSemantics:
         dep = spack.concretize.concretize_one("splice-z+bar")
 
         # Transitivity shouldn't matter since Splice Z has no dependencies.
-        spack.repo.attach_packages([out])
         out2 = out.splice(dep, transitive)
         assert out2.concrete
         assert out2["splice-z"].dag_hash() != spec["splice-z"].dag_hash()

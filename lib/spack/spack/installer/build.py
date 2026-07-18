@@ -581,8 +581,9 @@ def _install(
     """Install a spec from build cache or source."""
     spec, explicit, install_policy = request.spec, request.explicit, request.install_policy
 
-    # Create the stage and log file before starting the tee thread.
-    pkg = spack.repo.PATH.get(spec)
+    # Build code can reach any node of the DAG, so all nodes need a package instance.
+    spack.repo.attach_packages([spec])
+    pkg = spec.package
     pkg.run_tests = request.run_tests
 
     if request.fake:

@@ -1936,13 +1936,12 @@ class Environment:
             with spack.store.STORE.db.read_transaction():
                 for view_name, view in self.views.items():
                     for spec in self.concrete_roots():
-                        if (
-                            spec in view
-                            and spack.repo.PATH.get(spec)
-                            and spack.store.STORE.db.installed(spec)
-                        ):
-                            msg = '{0} in view "{1}"'
-                            tty.debug(msg.format(spec.name, view_name))
+                        if spec not in view:
+                            continue
+                        # raises if the package no longer exists in the repo
+                        spack.repo.PATH.get(spec)
+                        if spack.store.STORE.db.installed(spec):
+                            tty.debug(f'{spec.name} in view "{view_name}"')
 
         except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
             tty.warn(e)

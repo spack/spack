@@ -23,6 +23,7 @@ import spack.package_base
 import spack.patch
 import spack.repo
 import spack.store
+import spack.subprocess_context
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack import binary_distribution
@@ -702,3 +703,45 @@ def test_log_files_preserved_on_error(install_mockery, mock_fetch, installer_var
     with pytest.raises(spack.error.InstallError):
         installer.install()
     assert os.path.exists(pkg.log_path)
+
+
+def _touch_install(self, spec, prefix):
+    fs.touch(os.path.join(prefix, "dummy.txt"))
+
+
+def _run_dep_access_install(self, spec, prefix):
+    # access a run-only dependency during the build, like gnupg does with pinentry
+    assert spec["dtrun3"].package.name == "dtrun3"
+    fs.touch(os.path.join(prefix, "dummy.txt"))
+
+
+def test_run_only_dep_accessible_during_build(
+    install_mockery, mock_fetch, monkeypatch, installer_variant
+):
+    """Build code can reach dependency specs over run-only edges, so the build process must
+    attach package instances to every node of the DAG, not just the root."""
+    for name in ("dtlink5", "dtrun3", "dtbuild3"):
+        monkeypatch.setattr(
+            spack.repo.PATH.get_pkg_class(name), "install", _touch_install, raising=False
+        )
+    monkeypatch.setattr(
+        spack.repo.PATH.get_pkg_class("dtrun1"), "install", _run_dep_access_install, raising=False
+    )
+
+    spec = spack.concretize.concretize_one("dtrun1")
+
+    # specs from the database or a lockfile have no package instances attached
+    for node in spec.traverse():
+        node._package = None
+
+    spack.installer_dispatch.create_installer([spack.repo.PATH.get(spec)], explicit=True).install()
+    assert spack.store.STORE.db.installed(spec)
+
+
+def test_deserialize_attaches_full_dag(install_mockery):
+    """Sending a package to a child process must reattach package instances to all nodes of
+    its spec, not just the root."""
+    pkg = spack.concretize.concretize_one("dtrun1").package
+    restored = spack.subprocess_context.deserialize(spack.subprocess_context.serialize(pkg))
+    assert restored.spec._package is restored
+    assert restored.spec["dtrun3"].package.name == "dtrun3"
