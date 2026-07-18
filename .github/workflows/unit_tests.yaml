@@ -172,16 +172,17 @@ jobs:
   # we bootstrap. clingo v6 is still pre-release, so that variant is allowed to fail
   # without blocking the workflow.
   clingo:
+    name: clingo-${{ matrix.variant }}
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
         include:
-        - name: cffi
+        - variant: cffi
           install: clingo==5.8.0
           experimental: false
-        - name: v6
+        - variant: v6
           install: --pre --extra-index-url https://test.pypi.org/simple clingo
           experimental: true
     steps:
@@ -213,12 +214,12 @@ jobs:
         bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
     - name: Run unit tests (full suite with coverage)
       env:
-          COVERAGE_FILE: coverage/.coverage-clingo-${{ matrix.name }}
+          COVERAGE_FILE: coverage/.coverage-clingo-${{ matrix.variant }}
       run: |
         python3 -m pytest --verbose --cov --cov-config=pyproject.toml -x -n3 --dist worksteal lib/spack/spack/test/concretization/
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
-        name: coverage-clingo-${{ matrix.name }}
+        name: coverage-clingo-${{ matrix.variant }}
         path: coverage
         include-hidden-files: true
   # Run unit tests on MacOS
