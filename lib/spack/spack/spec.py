@@ -2848,49 +2848,13 @@ class Spec:
                 s.clear_caches()
             s._mark_root_concrete(value)
 
-    def _finalize_concretization(self):
-        """Assign hashes to this spec, and mark it concrete.
+    def _mark_concrete_and_assign_hashes(self):
+        """Mark this spec concrete and assign its dag hashes.
 
-        There are special semantics to consider for ``package_hash``, because we can't
-        call it on *already* concrete specs, but we need to assign it *at concretization
-        time* to just-concretized specs. So, the concretizer must assign the package
-        hash *before* marking their specs concrete (so that we know which specs were
-        already concrete before this latest concretization).
-
-        ``dag_hash`` is also tricky, since it cannot compute ``package_hash()`` lazily.
-        Because ``package_hash`` needs to be assigned *at concretization time*,
-        ``to_node_dict()`` can't just assume that it can compute ``package_hash`` itself
-        -- it needs to either see or not see a ``_package_hash`` attribute.
-
-        Rules of thumb for ``package_hash``:
-          1. Old-style concrete specs from *before* ``dag_hash`` included ``package_hash``
-             will not have a ``_package_hash`` attribute at all.
-          2. New-style concrete specs will have a ``_package_hash`` assigned at
-             concretization time.
-          3. Abstract specs will not have a ``_package_hash`` attribute at all.
-
-        """
-        for spec in self.traverse():
-            # Already concrete specs either already have a package hash (new dag_hash())
-            # or they never will b/c we can't know it (old dag_hash()). Skip them.
-            #
-            # We only assign package hash to not-yet-concrete specs, for which we know
-            # we can compute the hash.
-            if not spec.concrete:
-                # we need force=True here because package hash assignment has to happen
-                # before we mark concrete, so that we know what was *already* concrete.
-                spec._cached_hash(ht.package_hash, force=True)
-
-                # keep this check here to ensure package hash is saved
-                assert getattr(spec, ht.package_hash.attr)
-
-        # Freeze the virtual versions each node provides. Before marking concrete, which
-        # defaults the freshly concrete nodes to providing nothing, and before any hash is
-        # computed, since the frozen versions are part of it.
-        import spack.repo
-
-        spack.repo.reconstruct_virtuals([self])
-
+        This is the repository-free half of concretization finalization. The values only a
+        package can supply, the package hash and the provided virtual versions, are assigned
+        beforehand by ``spack.repo.finalize_concretization``, which is the entry point
+        callers should use."""
         # Mark everything in the spec as concrete
         self._mark_concrete()
 
@@ -4632,7 +4596,7 @@ class Spec:
 
         return spec
 
-    def mutate(self, mutator, rehash=True) -> bool:
+    def mutate(self, mutator) -> bool:
         """Mutate concrete spec to match constraints represented by mutator.
 
         Mutation can modify the spec version, variants, compiler flags, and architecture.
@@ -4641,7 +4605,10 @@ class Spec:
         Variant values can be replaced with the literal ``None`` to remove the variant.
         ``None`` as a variant value is represented by ``VariantValue(..., (None,))``.
 
-        If ``rehash``, concrete spec and its dependents have hashes updated.
+        A mutated spec keeps no package hash or provided virtuals: both describe the version
+        and variants that just changed, and only a package can supply them again. The caller
+        invalidates the dag hashes of this node and its dependents, and passes the roots to
+        ``spack.repo.finalize_concretization`` to make them concrete again.
 
         Returns whether the spec was modified by the mutation"""
         assert self.concrete
@@ -4700,18 +4667,13 @@ class Spec:
                 self.architecture.target = mutator.target
                 changed = True
 
-        if changed and rehash:
-            roots = []
-            for parent in spack.traverse.traverse_nodes([self], direction="parents"):
-                if not parent.dependents():
-                    roots.append(parent)
-                # invalidate hashes
-                parent._mark_root_concrete(False)
-                parent.clear_caches()
-
-            for root in roots:
-                # compute new hashes on full DAGs
-                root._finalize_concretization()
+        if changed:
+            # The version and variants this node was concretized with have changed, so its
+            # package hash and provided virtuals no longer describe it. Recomputing them needs
+            # a package, so that is left to the caller, along with invalidating the dag hashes
+            # of this node and its dependents.
+            self._package_hash = None
+            self._provided_virtuals = None
 
         return changed
 

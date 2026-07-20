@@ -8,6 +8,7 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.environment as ev
+import spack.repo
 import spack.spec
 from spack.main import SpackCommand
 
@@ -65,6 +66,7 @@ def test_mutate_internals(dep, orig_constraint, mutated_constraint):
     mutator = spack.spec.Spec(mutated_constraint)
     env.mutate(selectors=[selector], mutators=[mutator])
     cmake_spec.mutate(mutator)
+    spack.repo.refinalize_mutated([cmake_spec])
 
     for spec in env.all_specs_generator():
         if spec.name == "cmake":

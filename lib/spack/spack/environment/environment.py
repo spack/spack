@@ -1709,25 +1709,22 @@ class Environment:
 
         # Manipulate selected specs
         for s, mutator in modify_specs:
-            modified = s.mutate(mutator, rehash=False)
+            modified = s.mutate(mutator)
             if modified:
                 modified_specs.append(s)
 
-        # Identify roots modified and invalidate all dependent hashes
-        modified_roots = []
-        for parent in traverse.traverse_nodes(modified_specs, direction="parents"):
-            # record whether this parent is a root before we modify the hash
-            if parent.dag_hash() in self.specs_by_hash:
-                modified_roots.append((parent, parent.dag_hash()))
-            # modify the parent to invalidate hashes
-            parent._mark_root_concrete(False)
-            parent.clear_caches()
+        # Record the roots we are about to invalidate, while their old hashes are still cached
+        modified_roots = [
+            (parent, parent.dag_hash())
+            for parent in traverse.traverse_nodes(modified_specs, direction="parents")
+            if parent.dag_hash() in self.specs_by_hash
+        ]
 
-        # Compute new hashes and update the env list of specs
+        spack.repo.refinalize_mutated(modified_specs)
+
+        # Update the env list of specs with the recomputed hashes
         hash_mutations = {}
         for root, old_hash in modified_roots:
-            # New hash must be computed after we finalize concretization
-            root._finalize_concretization()
             new_hash = root.dag_hash()
             self.specs_by_hash.pop(old_hash)
             self.specs_by_hash[new_hash] = root

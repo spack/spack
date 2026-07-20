@@ -45,6 +45,7 @@ import spack.caches
 import spack.config
 import spack.deptypes as dt
 import spack.error
+import spack.hash_types
 import spack.patch
 import spack.paths
 import spack.provider_index
@@ -2351,6 +2352,60 @@ def inject_patches_variant(root: spack.spec.Spec) -> None:
         setattr(
             variant, "_patches_in_order_of_appearance", [sha256 for _, _, sha256 in ordered_hashes]
         )
+
+
+def finalize_concretization(specs: Iterable["spack.spec.Spec"]) -> None:
+    """Assign to freshly concretized nodes the values only their package can supply, then mark
+    them concrete and assign their dag hashes.
+
+    There are special semantics to consider for ``package_hash``, because we can't compute it
+    for *already* concrete specs, but we need to assign it *at concretization time* to
+    just-concretized specs. So it is assigned here, before the specs are marked concrete, so
+    that we know which ones were already concrete before this latest concretization.
+
+    ``dag_hash`` is also tricky, since it cannot compute ``package_hash`` lazily. Because
+    ``package_hash`` needs to be assigned at concretization time, ``to_node_dict`` can't just
+    assume it can compute one itself: it needs to either see or not see a ``_package_hash``.
+
+    Rules of thumb for ``package_hash``:
+      1. Old-style concrete specs from *before* ``dag_hash`` included ``package_hash`` do not
+         have one at all.
+      2. New-style concrete specs have one assigned at concretization time.
+      3. Abstract specs do not have one.
+    """
+    nodes = list(spack.traverse.traverse_nodes(list(specs), key=id))
+
+    # Already concrete specs either have a package hash, or never will because we cannot know
+    # what the package looked like when they were concretized. force=True, because the package
+    # hash has to be assigned before marking concrete, so that we know what was already concrete.
+    for spec in nodes:
+        if not spec.concrete:
+            spec._cached_hash(spack.hash_types.package_hash, force=True)
+            assert getattr(spec, spack.hash_types.package_hash.attr)
+
+    # Freeze the virtual versions each node provides before anything is marked concrete, which
+    # defaults freshly concrete nodes to providing nothing, and before any node is hashed,
+    # since the frozen versions are part of the hash.
+    reconstruct_virtuals(nodes)
+
+    for spec in specs:
+        spec._mark_concrete_and_assign_hashes()
+
+
+def refinalize_mutated(specs: Iterable["spack.spec.Spec"]) -> None:
+    """Make nodes concrete again after ``Spec.mutate`` changed them.
+
+    Mutation changes the version and variants a node was concretized with, so its package
+    hash and provided virtuals no longer describe it and every dependent's dag hash is stale.
+    Invalidate the mutated nodes and their dependents, then reassign all of it."""
+    roots = []
+    for parent in spack.traverse.traverse_nodes(list(specs), direction="parents"):
+        if not parent.dependents():
+            roots.append(parent)
+        parent._mark_root_concrete(False)
+        parent.clear_caches()
+
+    finalize_concretization(roots)
 
 
 def reconstruct_virtuals(
