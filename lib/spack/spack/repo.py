@@ -45,7 +45,6 @@ import spack.caches
 import spack.config
 import spack.deptypes as dt
 import spack.error
-import spack.hash_types
 import spack.patch
 import spack.paths
 import spack.provider_index
@@ -2376,12 +2375,10 @@ def finalize_concretization(specs: Iterable["spack.spec.Spec"]) -> None:
     nodes = list(spack.traverse.traverse_nodes(list(specs), key=id))
 
     # Already concrete specs either have a package hash, or never will because we cannot know
-    # what the package looked like when they were concretized. force=True, because the package
-    # hash has to be assigned before marking concrete, so that we know what was already concrete.
+    # what the package looked like when they were concretized.
     for spec in nodes:
-        if not spec.concrete:
-            spec._cached_hash(spack.hash_types.package_hash, force=True)
-            assert getattr(spec, spack.hash_types.package_hash.attr)
+        if not spec.concrete and not spec._package_hash:
+            spec._package_hash = PATH.get_pkg_class(spec.fullname)(spec).content_hash()
 
     # Freeze the virtual versions each node provides before anything is marked concrete, which
     # defaults freshly concrete nodes to providing nothing, and before any node is hashed,

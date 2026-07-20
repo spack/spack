@@ -1594,7 +1594,9 @@ class Spec:
         self.namespace = None
         self.abstract_hash = None
 
-        # initial values for all spec hash types
+        # initial values for all spec hash types. The package hash is spelled out, since it is
+        # the one assigned directly, by spack.repo.finalize_concretization.
+        self._package_hash: Optional[str] = None
         for h in ht.HASHES:
             setattr(self, h.attr, None)
 
@@ -2243,8 +2245,6 @@ class Spec:
         """
         # TODO: currently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
-        if hash.override is not None:
-            return hash.override(self)
         node_dict = self.to_node_dict(hash=hash)
         json_text = json.dumps(
             node_dict, ensure_ascii=True, indent=None, separators=(",", ":"), sort_keys=False
@@ -2281,15 +2281,18 @@ class Spec:
         return hash_string[:length]
 
     def package_hash(self):
-        """Compute the hash of the contents of the package for this node"""
-        # Concrete specs with the old DAG hash did not have the package hash, so we do
-        # not know what the package looked like at concretization time
-        if self.concrete and not self._package_hash:
+        """The hash of the package contents this node was concretized with.
+
+        Assigned by ``spack.repo.finalize_concretization``, since computing it needs a
+        package; this only returns the stored value. Concrete specs with the old DAG hash
+        never recorded one, and an abstract spec has none to record."""
+        if not self._package_hash:
             raise ValueError(
-                "Cannot call package_hash() on concrete specs with the old dag_hash()"
+                f"Cannot call package_hash() on {self.name}: it is either abstract, or a "
+                f"concrete spec from before the dag hash included the package hash"
             )
 
-        return self._cached_hash(ht.package_hash)
+        return self._package_hash
 
     def dag_hash(self, length=None):
         """This is Spack's default hash, used to identify installations.
