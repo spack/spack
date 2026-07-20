@@ -278,7 +278,7 @@ class DirectoryConfigScope(ConfigScope):
         if data == self.last_read.get(section, None):
             # data is unchanged since we last read it
             # no need to write it again
-            tty.debug("Skipping unneded write of unmodified %s" % filename)
+            tty.debug("Skipping unneeded write of unmodified %s" % filename)
             return
 
         validate(data, SECTION_SCHEMAS[section])
