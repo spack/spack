@@ -235,7 +235,7 @@ def test_download_and_extract_artifacts(tmp_path: pathlib.Path, monkeypatch):
         ci.download_and_extract_artifacts(url, str(working_dir))
 
 
-def test_ci_copy_stage_logs_to_artifacts_fail(tmp_path: pathlib.Path, config, capfd):
+def test_ci_copy_stage_logs_to_artifacts_fail(tmp_path: pathlib.Path, capfd):
     """The copy will warn because the package has no log files to copy."""
     log_dir = tmp_path / "log_dir"
     concrete_spec = spack.concretize.concretize_one("printing-package")
