@@ -9,6 +9,8 @@ from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
 import spack.traverse
+from spack.compilers.config import CompilerFactory
+from spack.config import override
 from spack.externals import (
     DuplicateExternalError,
     ExternalDict,
@@ -372,3 +374,34 @@ def test_external_spec_multi_valued_variant_is_not_changed():
     specs = parser.all_specs()
     assert len(specs) == 1
     assert specs[0].variants["v"].value == ("bar", "foo")
+
+
+@pytest.mark.regression("52643")
+def test_external_compiler_with_non_compiler_dependency():
+    packages_config = {
+        "compiler-with-deps": {
+            "externals": [
+                {
+                    "spec": "compiler-with-deps@1",
+                    "prefix": "/usr",
+                    "extra_attributes": {
+                        "compilers": {
+                            "c": "/usr/bin/gcc",
+                            "cxx": "/usr/bin/g++",
+                            "fortran": "/usr/bin/gfortran",
+                        }
+                    },
+                    "dependencies": [{"id": "bin_id", "deptypes": ["run", "link"]}],
+                }
+            ]
+        },
+        "binutils-for-test": {
+            "externals": [{"spec": "binutils-for-test@1", "prefix": "/usr", "id": "bin_id"}]
+        },
+    }
+    with override("packages", packages_config) as cfg:
+        valid_compilers = CompilerFactory.from_packages_yaml(cfg)
+        for c in valid_compilers:
+            if c.name == "compiler-with-deps":
+                assert c.external
+                assert c["binutils-for-test"].external

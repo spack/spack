@@ -10,6 +10,7 @@ import pytest
 
 import spack.concretize
 import spack.config
+import spack.database
 import spack.install_test
 import spack.spec
 import spack.util.executable
@@ -106,7 +107,7 @@ def test_test_external(
     spec = spack.concretize.concretize_one(name)
     spec.external_path = "/path/to/external/{0}".format(name)
 
-    monkeypatch.setattr(spack.spec.Spec, "installed", _true)
+    monkeypatch.setattr(spack.database.Database, "installed", _true)
 
     test_suite = spack.install_test.TestSuite([spec])
     test_suite(**arguments)
@@ -153,7 +154,7 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
 @pytest.mark.not_on_windows("Cannot find echo executable")
 def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monkeypatch):
     spec = spack.concretize.concretize_one("simple-standalone-test")
-    monkeypatch.setattr(spack.spec.Spec, "installed", _true)
+    monkeypatch.setattr(spack.database.Database, "installed", _true)
     test_suite = spack.install_test.TestSuite([spec])
     test_suite()
 

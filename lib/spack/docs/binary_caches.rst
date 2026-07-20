@@ -7,7 +7,9 @@
    :description lang=en:
       Discover how to create, use, and manage build caches in Spack to share pre-built binary packages and speed up installations.
 
-.. _binary_caches:
+.. index::
+   single: buildcache; using
+   :name: binary_caches
 
 Build Caches
 ============
@@ -78,6 +80,9 @@ You can see that the mirror is added with ``spack mirror list`` as follows:
     mymirror           file:///home/spackuser/spack/spack-cache
     spack-public       https://spack-llnl-mirror.s3-us-west-2.amazonaws.com/
 
+
+.. index::
+   single: build cache index; updating
 
 At this point, you've created a build cache, but Spack hasn't indexed it, so if you run ``spack buildcache list``, you won't see any results.
 You need to index this new build cache as follows:
@@ -332,6 +337,8 @@ The ``mirrors.yaml`` has to be edited directly to specify include and exclude pa
        - "^mpich"  # and any spec that depends on mpich
 
 
+.. index:: relocation
+
 Relocation
 ----------
 
@@ -351,6 +358,8 @@ To reduce the likelihood of this happening, it is highly recommended to add padd
        root: /opt/spack
        padded_length: 128
 
+
+.. index:: autopush
 
 Automatic Push to a Build Cache
 ---------------------------------
@@ -387,7 +396,10 @@ will have the same effect as
 
     Packages are automatically pushed to a build cache only if they are built from source.
 
-.. _binary_caches_oci:
+.. index::
+   single: buildcache; OCI registries
+   single: OCI registry
+   :name: binary_caches_oci
 
 OCI / Docker V2 Registries as Build Cache
 -----------------------------------------
@@ -595,7 +607,9 @@ Arguments  Description
 ``-y``     answer yes to all trust all keys downloaded
 =========  ==============================================
 
-.. _build_cache_layout:
+.. index::
+   single: buildcache; layout
+   :name: build_cache_layout
 
 Build Cache Layout
 ------------------

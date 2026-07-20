@@ -15,9 +15,10 @@ import spack.concretize
 import spack.config
 import spack.database
 import spack.error
-import spack.installer
+import spack.installer_dispatch
 import spack.mirrors.mirror
 import spack.mirrors.utils
+import spack.old_installer
 import spack.package_base
 import spack.patch
 import spack.repo
@@ -26,7 +27,8 @@ import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack import binary_distribution
 from spack.error import InstallError
-from spack.installer import PackageInstaller
+from spack.main import SpackCommand
+from spack.old_installer import PackageInstaller
 from spack.package_base import (
     PackageBase,
     PackageStillNeededError,
@@ -46,10 +48,10 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
     spec = spack.concretize.concretize_one("trivial-install-test-package")
 
     PackageInstaller([spec.package], explicit=True).install()
-    assert spec.installed
+    assert spack.store.STORE.db.installed(spec)
 
     spec.package.do_uninstall()
-    assert not spec.installed
+    assert not spack.store.STORE.db.installed(spec)
 
 
 @pytest.mark.regression("11870")
@@ -58,7 +60,7 @@ def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch
     spec = spack.concretize.concretize_one("trivial-install-test-package")
 
     PackageInstaller([spec.package], explicit=True).install()
-    assert spec.installed
+    assert spack.store.STORE.db.installed(spec)
 
     # Mock deletion of the package
     spec._package = None
@@ -68,7 +70,7 @@ def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch
 
     # Ensure we can uninstall it
     PackageBase.uninstall_by_spec(spec)
-    assert not spec.installed
+    assert not spack.store.STORE.db.installed(spec)
 
 
 def test_pkg_attributes(install_mockery, mock_fetch, monkeypatch):
@@ -148,7 +150,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
 
     PackageInstaller([s.package], explicit=True, restage=True).install()
     assert rm_prefix_checker.removed
-    assert s.package.spec.installed
+    assert spack.store.STORE.db.installed(s.package.spec)
 
 
 @pytest.mark.not_on_windows("Fails spuriously on Windows")
@@ -173,7 +175,7 @@ def test_failing_overwrite_install_should_keep_previous_installation(
     with pytest.raises(Exception):
         PackageInstaller([s.package], explicit=True, **kwargs).install()
 
-    assert s.package.spec.installed
+    assert spack.store.STORE.db.installed(s.package.spec)
     assert os.path.exists(s.prefix)
 
 
@@ -276,7 +278,7 @@ def test_installed_upstream(install_upstream, mock_fetch):
         dependent = spack.concretize.concretize_one("dependent-install")
 
         new_dependency = dependent["dependency-install"]
-        assert new_dependency.installed_upstream
+        assert spack.store.STORE.db.installed_upstream(new_dependency)
         assert new_dependency.prefix == upstream_layout.path_for_spec(dependency)
 
         PackageInstaller([dependent.package], explicit=True).install()
@@ -302,7 +304,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, w
     s.package.succeed = True
     spack.builder._BUILDERS.clear()  # the builder is cached with a copy of the pkg's __dict__.
     PackageInstaller([s.package], explicit=True, keep_prefix=True).install()
-    assert s.package.spec.installed
+    assert spack.store.STORE.db.installed(s.package.spec)
 
 
 def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypatch):
@@ -311,7 +313,7 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypa
 
     s.package.succeed = True
     PackageInstaller([s.package], explicit=True).install()
-    assert s.package.spec.installed
+    assert spack.store.STORE.db.installed(s.package.spec)
 
     # If Package.install is called after this point, it will fail
     s.package.succeed = False
@@ -467,7 +469,7 @@ def test_log_install_without_build_files(install_mockery):
 
     # Attempt installing log without the build log file
     with pytest.raises(OSError, match="No such file or directory"):
-        spack.installer.log(spec.package)
+        spack.old_installer.log(spec.package)
 
 
 def test_log_install_with_build_files(install_mockery, monkeypatch):
@@ -507,7 +509,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
         type(spec.package), "archive_files", ["missing", "..", config], raising=False
     )
 
-    spack.installer.log(spec.package)
+    spack.old_installer.log(spec.package)
 
     assert os.path.exists(spec.package.install_log_path)
     assert os.path.exists(spec.package.install_env_path)
@@ -608,3 +610,95 @@ def test_install_from_binary_with_missing_patch_succeeds(
     ).install()
 
     assert temporary_store.db.query_local_by_spec_hash(s.dag_hash())
+
+
+@pytest.mark.parametrize("transitive", [True, False])
+def test_install_spliced(install_mockery, mock_fetch, monkeypatch, transitive, installer_variant):
+    """Test installing a spliced spec"""
+    spec = spack.concretize.concretize_one("splice-t")
+    dep = spack.concretize.concretize_one("splice-h+foo")
+
+    # Do the splice.
+    out = spec.splice(dep, transitive)
+    installer = spack.installer_dispatch.create_installer(
+        [out.package], verbose=True, fail_fast=True
+    )
+    installer.install()
+    for node in out.traverse():
+        assert spack.store.STORE.db.installed(node)
+        assert spack.store.STORE.db.installed(node.build_spec)
+
+
+@pytest.mark.parametrize("transitive", [True, False])
+def test_install_spliced_build_spec_installed(
+    install_mockery, mock_fetch, transitive, installer_variant
+):
+    """Test installing a spliced spec with the build spec already installed"""
+    spec = spack.concretize.concretize_one("splice-t")
+    dep = spack.concretize.concretize_one("splice-h+foo")
+
+    # Do the splice.
+    out = spec.splice(dep, transitive)
+    spack.installer_dispatch.create_installer([out.build_spec.package]).install()
+
+    installer = spack.installer_dispatch.create_installer(
+        [out.package], verbose=True, fail_fast=True
+    )
+    installer.install()
+    for node in out.traverse():
+        assert spack.store.STORE.db.installed(node)
+        assert spack.store.STORE.db.installed(node.build_spec)
+
+
+# Unit tests should not be affected by the user's managed environments
+@pytest.mark.not_on_windows("lacking windows support for binary installs")
+@pytest.mark.parametrize("transitive", [True, False])
+@pytest.mark.parametrize(
+    "root_str", ["splice-t^splice-h~foo", "splice-h~foo", "splice-vt^splice-a"]
+)
+def test_install_splice_root_from_binary(
+    mutable_mock_env_path,
+    install_mockery,
+    mock_fetch,
+    temporary_mirror,
+    transitive,
+    root_str,
+    installer_variant,
+):
+    """Test installing a spliced spec with the root available in binary cache"""
+    # Test splicing and rewiring a spec with the same name, different hash.
+    original_spec = spack.concretize.concretize_one(root_str)
+    spec_to_splice = spack.concretize.concretize_one("splice-h+foo")
+
+    spack.installer_dispatch.create_installer(
+        [original_spec.package, spec_to_splice.package]
+    ).install()
+
+    out = original_spec.splice(spec_to_splice, transitive)
+
+    buildcache = SpackCommand("buildcache")
+    buildcache(
+        "push",
+        "--unsigned",
+        "--update-index",
+        temporary_mirror,
+        str(original_spec),
+        str(spec_to_splice),
+    )
+
+    uninstall = SpackCommand("uninstall")
+    uninstall("-ay")
+
+    spack.installer_dispatch.create_installer([out.package], unsigned=True).install()
+
+    assert len(spack.store.STORE.db.query()) == len(list(out.traverse()))
+
+
+@pytest.mark.disable_clean_stage_check
+def test_log_files_preserved_on_error(install_mockery, mock_fetch, installer_variant):
+    """Test that the log file is preserved when an install error occurs."""
+    pkg = spack.concretize.concretize_one("build-error").package
+    installer = spack.installer_dispatch.create_installer([pkg])
+    with pytest.raises(spack.error.InstallError):
+        installer.install()
+    assert os.path.exists(pkg.log_path)

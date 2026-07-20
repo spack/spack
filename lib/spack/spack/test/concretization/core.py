@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import difflib
 import gzip
 import json
 import os
@@ -39,6 +38,7 @@ import spack.solver.input_analysis
 import spack.solver.reuse
 import spack.spec
 import spack.spec_filter
+import spack.store
 import spack.traverse
 import spack.util.file_cache
 import spack.util.hash
@@ -47,7 +47,7 @@ import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.externals import ExternalDependencyError
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.solver.asp import Result
 from spack.solver.reuse import spec_filter_from_packages_yaml
 from spack.spec import Spec
@@ -1153,6 +1153,41 @@ spack:
         s = spack.concretize.concretize_one(spec)
         assert str(s.architecture.target) == str(expected)
 
+    @pytest.mark.not_on_windows("Not supported on Windows (yet)")
+    @pytest.mark.usefixtures("mock_targets")
+    def test_preferred_compiler_kept_by_downgrading_target(
+        self, compiler_factory, mutable_config, monkeypatch
+    ):
+        """When the preferred compiler cannot reach the host target, but a non-preferred
+        compiler could, Spack keeps the preferred compiler and downgrades the target
+        rather than switching compilers to get a better target.
+        """
+        core2 = spack.vendor.archspec.cpu.TARGETS["core2"]
+        haswell = spack.vendor.archspec.cpu.TARGETS["haswell"]
+
+        # Host is haswell, but the only available gcc (the preferred c/cxx provider) is
+        # gcc@4.4.7, which supports at most core2. llvm@15 (available by default) could
+        # reach haswell.
+        monkeypatch.setattr(spack.platforms.Test, "default", "haswell")
+        monkeypatch.setattr(
+            spack.archspec, "HOST_TARGET_FAMILY", spack.vendor.archspec.cpu.TARGETS["x86_64"]
+        )
+        monkeypatch.setattr(spack.vendor.archspec.cpu, "host", lambda: haswell)
+        mutable_config.set(
+            "packages:gcc",
+            {
+                "require": "@4.4.7",
+                "externals": [compiler_factory(spec="gcc@4.4.7 languages=c,c++,fortran")],
+            },
+        )
+
+        s = spack.concretize.concretize_one("pkg-a")
+
+        # The preferred compiler is kept and the target is downgraded, instead of
+        # switching to llvm to reach a better target.
+        assert s.satisfies("%c=gcc@4.4.7")
+        assert str(s.architecture.target) == str(core2)
+
     @pytest.mark.parametrize(
         "constraint,expected", [("%gcc@10.2", "@=10.2.1"), ("%gcc@10.2:", "@=10.2.1")]
     )
@@ -1734,7 +1769,7 @@ spack:
         # the answer set produced by clingo.
         with spack.config.override("concretizer:reuse", True):
             s = spack.concretize.concretize_one(spec_str)
-        assert s.installed is expect_installed
+        assert spack.store.STORE.db.installed(s) is expect_installed
         assert s.satisfies(spec_str)
 
     @pytest.mark.regression("26721,19736")
@@ -2370,7 +2405,7 @@ spack:
         # If we concretize with --reuse it is not, since "mpich~debug" was already installed
         with spack.config.override("concretizer:reuse", True):
             s = spack.concretize.concretize_one("mpich")
-            assert s.installed
+            assert spack.store.STORE.db.installed(s)
             assert s.satisfies("~debug"), s
 
     @pytest.mark.regression("32471")
@@ -2565,7 +2600,7 @@ packages:
         """Tests that when we reuse a spec, virtual on edges are reconstructed correctly"""
         with spack.config.override("concretizer:reuse", True):
             spec = spack.concretize.concretize_one(spec_str)
-            assert spec.installed
+            assert spack.store.STORE.db.installed(spec)
             mpi_edges = spec.edges_to_dependencies(mpi_name)
             assert len(mpi_edges) == 1
             assert "mpi" in mpi_edges[0].virtuals
@@ -3103,7 +3138,7 @@ class TestConcreteSpecsByHash:
     @pytest.mark.parametrize(
         "input_specs", [["pkg-a"], ["pkg-a foobar=bar", "pkg-b"], ["pkg-a foobar=baz", "pkg-b"]]
     )
-    def test_adding_specs(self, input_specs, default_mock_concretization):
+    def test_adding_specs(self, input_specs, config, mock_packages):
         """Tests that concrete specs in the container are equivalent, but stored as different
         objects in memory.
         """
@@ -3599,11 +3634,9 @@ packages:
         ("gcc@14", ["gcc@14", "%c,cxx=gcc@10", "^gcc-runtime@10"]),
     ],
 )
-def test_compiler_can_depend_on_themselves_to_build(
-    spec_str, expected, default_mock_concretization
-):
+def test_compiler_can_depend_on_themselves_to_build(spec_str, expected, config, mock_packages):
     """Tests that a compiler can depend on "itself" to bootstrap."""
-    s = default_mock_concretization(spec_str)
+    s = spack.concretize.concretize_one(spec_str)
     assert not s.external
     for c in expected:
         assert s.satisfies(c)
@@ -3705,17 +3738,17 @@ packages:
     assert libelf.external and libelf.external_path == str(tmp_path / expected)
 
 
-def test_specifying_compilers_with_virtuals_syntax(default_mock_concretization):
+def test_specifying_compilers_with_virtuals_syntax(config, mock_packages):
     """Tests that we can pin compilers to nodes using the %[virtuals=...] syntax"""
     # clang will be used for both C and C++, since they are provided together
-    mpich = default_mock_concretization("mpich %[virtuals=fortran] gcc %clang")
+    mpich = spack.concretize.concretize_one("mpich %[virtuals=fortran] gcc %clang")
 
     assert mpich["fortran"].satisfies("gcc")
     assert mpich["c"].satisfies("llvm")
     assert mpich["cxx"].satisfies("llvm")
 
     # gcc is the default compiler
-    mpileaks = default_mock_concretization(
+    mpileaks = spack.concretize.concretize_one(
         "mpileaks ^libdwarf %gcc ^mpich %[virtuals=fortran] gcc %clang"
     )
 
@@ -3763,7 +3796,7 @@ def test_reuse_when_requiring_build_dep(install_mockery, mutable_config):
 
 
 @pytest.mark.regression("50167")
-def test_input_analysis_and_conditional_requirements(default_mock_concretization):
+def test_input_analysis_and_conditional_requirements(config, mock_packages):
     """Tests that input analysis doesn't account for conditional requirement
     to discard possible dependencies.
 
@@ -3771,7 +3804,7 @@ def test_input_analysis_and_conditional_requirements(default_mock_concretization
     platform, the valid search space is still the complement of the condition that
     activates the requirement.
     """
-    libceed = default_mock_concretization("libceed")
+    libceed = spack.concretize.concretize_one("libceed")
     assert libceed["libxsmm"].satisfies("@main")
     assert libceed["libxsmm"].satisfies("platform=test")
 
@@ -3894,9 +3927,9 @@ packages:
     assert s["c"].satisfies("languages=c,c++") and not s["c"].satisfies("languages=fortran")
 
 
-def test_concrete_multi_valued_in_input_specs(default_mock_concretization):
+def test_concrete_multi_valued_in_input_specs(config, mock_packages):
     """Tests that we can use := to specify exactly multivalued variants in input specs."""
-    s = default_mock_concretization("gcc languages:=fortran")
+    s = spack.concretize.concretize_one("gcc languages:=fortran")
     assert not s.external and s["c"].external
     assert s.satisfies("languages:=fortran")
     assert not s.satisfies("languages=c") and not s.satisfies("languages=c++")
@@ -3923,34 +3956,34 @@ packages:
     assert not s.satisfies("libs=shared")
 
 
-def test_concrete_multi_valued_variants_in_depends_on(default_mock_concretization):
+def test_concrete_multi_valued_variants_in_depends_on(config, mock_packages):
     """Tests the use of := in depends_on directives"""
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
-        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=c")
-        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=a,c")
-        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=b,c")
+        spack.concretize.concretize_one("gmt-concrete-mv-dependency ^mvdefaults foo:=c")
+        spack.concretize.concretize_one("gmt-concrete-mv-dependency ^mvdefaults foo:=a,c")
+        spack.concretize.concretize_one("gmt-concrete-mv-dependency ^mvdefaults foo:=b,c")
 
-    s = default_mock_concretization("gmt-concrete-mv-dependency")
+    s = spack.concretize.concretize_one("gmt-concrete-mv-dependency")
     assert s.satisfies("^mvdefaults foo:=a,b"), s.tree()
     assert not s.satisfies("^mvdefaults foo=c")
 
 
-def test_concrete_multi_valued_variants_when_args(default_mock_concretization):
+def test_concrete_multi_valued_variants_when_args(config, mock_packages):
     """Tests the use of := in conflicts and when= arguments"""
     # Check conflicts("foo:=a,b", when="@0.9")
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
-        default_mock_concretization("mvdefaults@0.9 foo:=a,b")
+        spack.concretize.concretize_one("mvdefaults@0.9 foo:=a,b")
 
     for c in ("foo:=a", "foo:=a,b,c", "foo:=a,c", "foo:=b,c"):
-        s = default_mock_concretization(f"mvdefaults@0.9 {c}")
+        s = spack.concretize.concretize_one(f"mvdefaults@0.9 {c}")
         assert s.satisfies(c)
 
     # Check depends_on("pkg-b", when="foo:=b,c")
-    s = default_mock_concretization("mvdefaults foo:=b,c")
+    s = spack.concretize.concretize_one("mvdefaults foo:=b,c")
     assert s.satisfies("^pkg-b")
 
     for c in ("foo:=a", "foo:=a,b,c", "foo:=a,b", "foo:=a,c"):
-        s = default_mock_concretization(f"mvdefaults {c}")
+        s = spack.concretize.concretize_one(f"mvdefaults {c}")
         assert not s.satisfies("^pkg-b")
 
 
@@ -4142,11 +4175,9 @@ def test_use_compiler_by_hash(mock_packages, mutable_database, mutable_config):
         ("llvm-client %c,cxx=llvm", ["%[virtuals=c,cxx deptypes=build,link] llvm"], ["%gcc"]),
     ],
 )
-def test_specifying_direct_dependencies(
-    spec_str, expected, not_expected, default_mock_concretization
-):
+def test_specifying_direct_dependencies(spec_str, expected, not_expected, config, mock_packages):
     """Tests solving % in different scenarios, either for runtime or buildtime dependencies."""
-    concrete_spec = default_mock_concretization(spec_str)
+    concrete_spec = spack.concretize.concretize_one(spec_str)
 
     for c in expected:
         assert concrete_spec.satisfies(c)
@@ -4203,14 +4234,12 @@ def test_specifying_direct_dependencies(
         ),
     ],
 )
-def test_satisfies_conditional_spec(
-    spec_str, conditional_spec, expected, default_mock_concretization
-):
+def test_satisfies_conditional_spec(spec_str, conditional_spec, expected, config, mock_packages):
     """Tests satisfies semantic when testing an abstract spec and its concretized counterpart
     with a conditional spec.
     """
     abstract_spec = Spec(spec_str)
-    concrete_spec = default_mock_concretization(spec_str)
+    concrete_spec = spack.concretize.concretize_one(spec_str)
     expected_abstract, expected_concrete = expected
 
     assert abstract_spec.satisfies(conditional_spec) is expected_abstract
@@ -4344,12 +4373,12 @@ packages:
 
 
 @pytest.mark.regression("51146,51067")
-def test_caret_in_input_cannot_set_transitive_build_dependencies(default_mock_concretization):
+def test_caret_in_input_cannot_set_transitive_build_dependencies(config, mock_packages):
     """Tests that a caret in the input spec does not set transitive build dependencies, and errors
     with an appropriate message.
     """
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="transitive 'link' or"):
-        _ = default_mock_concretization("multivalue-variant ^gmake")
+        _ = spack.concretize.concretize_one("multivalue-variant ^gmake")
 
 
 @pytest.mark.regression("51167")
@@ -4450,7 +4479,7 @@ def test_result_roundtrip(mock_packages, config, specs):
     """Test that a solve result can be serialized and brought back."""
     solver = spack.solver.asp.Solver()
     result = solver.solve(specs)
-    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict())
+    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict(), specs)
 
     # ensure that we didn't duplicate spec objects during the round trip -- specs need
     # to come back as exactly the same graph they were before.
@@ -4495,12 +4524,51 @@ def test_spec_dict_roundtrip(mock_packages, config, spec_str):
     assert roundtrip[nid] == spec
 
 
+def test_concretization_cache_store_skips_spliced_results(mock_packages, use_concretization_cache):
+    """store() must not cache results containing spliced specs, even nested ones.
+
+    Spliced nodes carry a build_spec DAG that is reachable only through the build_spec
+    link -- dependency traversal never visits it, so spec_dict_to_json() would serialize
+    a dangling build_spec hash. It raises SpliceSerializationError instead, and store()
+    skips the entry, so spliced results are just re-solved every time.
+    """
+    t = spack.concretize.concretize_one("splice-t")
+    h = spack.concretize.concretize_one("splice-h+foo")
+    spliced = t.splice(h, transitive=True)
+    assert spliced.build_spec is not spliced
+
+    # an abstract parent that reuses the spliced spec as a plain dependency. The parent has
+    # no build_spec of its own, and the spliced node has no NodeId, so the splice can only
+    # be found by traversing the whole DAG. The abstract dep is added first so that its
+    # hash is force-cached before the splice is found.
+    root = Spec("pkg-a")
+    abstract_dep = Spec("pkg-b")
+    root._add_dependency(abstract_dep, depflag=dt.LINK, virtuals=())
+    root._add_dependency(spliced, depflag=dt.LINK, virtuals=())
+    nid = spack.solver.asp.SpecBuilder.make_node(pkg=root.name)
+
+    # serialization refuses spliced specs, and must clean up any force-cached hashes
+    with pytest.raises(spack.solver.asp.SpliceSerializationError):
+        spack.solver.asp.spec_dict_to_json({nid: root})
+    assert abstract_dep._hash is None
+    assert root._hash is None
+
+    result = Result(specs=[Spec("pkg-a")])
+    result.answers = [(0, 0, {nid: root})]
+
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    cache.store("spliced problem", result, statistics=[])
+
+    assert not cache._cache_path_from_problem("spliced problem").exists()
+
+
 @pytest.mark.parametrize(
     "spec,reused_dep",
     [
         # fresh solves
         ("hdf5", None),
         ("hdf5^zmpi", None),
+        ("mpileaks ~debug ^[when=+debug] zmpi", None),
         ("zmpi", None),
         ("pkg-with-zlib-dep", None),
         ("hypre^openblas-with-lapack", None),
@@ -4545,8 +4613,8 @@ def test_concretization_cache_roundtrip(
     # Assert that we're actually hitting the cache
     cache_fetch = spack.solver.asp.ConcretizationCache.fetch
 
-    def _ensure_cache_hits(self, problem: str):
-        result, statistics = cache_fetch(self, problem)
+    def _ensure_cache_hits(self, problem: str, specs):
+        result, statistics = cache_fetch(self, problem, specs)
         assert result, "Expected successful concretization cache hit"
         assert statistics, "Expected statistics to be non null on cache hit"
         return result, statistics
@@ -4672,7 +4740,7 @@ def corrupt_cache_entry(use_concretization_cache):
     yield cache, cache_path, write_gzip_json
 
     assert cache_path.exists(), "test should have written a corrupt file"
-    result, stats = cache.fetch(problem)
+    result, stats = cache.fetch(problem, [])
     assert result is None
     assert stats is None
     assert not cache_path.exists(), "corrupt cache entry should have been removed"
@@ -4708,35 +4776,24 @@ def test_concretization_cache_removes_bad_spec_data(corrupt_cache_entry):
     )
 
 
-@pytest.mark.parametrize(
-    "asp_file",
-    [
-        "concretize.lp",
-        "heuristic.lp",
-        "display.lp",
-        "direct_dependency.lp",
-        "when_possible.lp",
-        "libc_compatibility.lp",
-        "os_compatibility.lp",
-        "splices.lp",
-    ],
-)
-def test_concretization_cache_asp_canonicalization(asp_file):
-    path = os.path.join(os.path.dirname(spack.solver.asp.__file__), asp_file)
+def test_concretization_cache_asp_canonicalization():
+    """Canonicalization strips empty lines"""
+    input = """\
+% ID of the nodes in the "root" link-run sub-DAG
+#const min_dupe_id = 0.
 
-    with open(path, "r", encoding="utf-8") as f:
-        original = [line.strip() for line in f.readlines()]
-        stripped = spack.solver.asp.strip_asp_problem(original)
-
-    diff = list(difflib.unified_diff(original, stripped))
-
-    assert all(
-        [
-            line == "-" or line.startswith("-%")
-            for line in diff
-            if line.startswith("-") and not line.startswith("---")
-        ]
-    )
+% Allow clingo to create nodes
+{ attr("node", node(0..X-1, Package))         } :- max_dupes(Package, X), not virtual(Package).
+{ attr("virtual_node", node(0..X-1, Package)) } :- max_dupes(Package, X), virtual(Package).
+"""
+    output = """\
+% ID of the nodes in the "root" link-run sub-DAG
+#const min_dupe_id = 0.
+% Allow clingo to create nodes
+{ attr("node", node(0..X-1, Package))         } :- max_dupes(Package, X), not virtual(Package).
+{ attr("virtual_node", node(0..X-1, Package)) } :- max_dupes(Package, X), virtual(Package).
+"""
+    assert spack.solver.asp._strip_asp_problem(input.splitlines()) == output.splitlines()
 
 
 @pytest.mark.parametrize(
@@ -5049,38 +5106,38 @@ def test_concrete_specs_skip_prechecks(config, mock_packages):
 
 
 @pytest.mark.regression("51683")
-def test_activating_variant_for_conditional_language_dependency(default_mock_concretization):
+def test_activating_variant_for_conditional_language_dependency(config, mock_packages):
     """Tests that a dependency on a conditional language can be concretized, and that the solver
     turn on the correct variant to enable the language dependency
     """
     # To trigger the bug, we need at least another node needing fortran, in this case mpich
-    s = default_mock_concretization("mpileaks %fortran=gcc %mpi=mpich")
+    s = spack.concretize.concretize_one("mpileaks %fortran=gcc %mpi=mpich")
     assert s.satisfies("+fortran")
 
     # Try just asking for fortran, without the provider
-    s = default_mock_concretization("mpileaks %fortran %mpi=mpich")
+    s = spack.concretize.concretize_one("mpileaks %fortran %mpi=mpich")
     assert s.satisfies("+fortran")
 
 
-def test_when_condition_with_direct_dependency_on_virtual_provider(default_mock_concretization):
+def test_when_condition_with_direct_dependency_on_virtual_provider(config, mock_packages):
     """If a when condition contains a direct dependency on a provider of a virtual, it should only
     trigger if the provider is used for that current package, and not if the provider happens to be
     a dependency, without its virtual being depended on."""
-    s = default_mock_concretization("direct-dep-virtuals-one")
+    s = spack.concretize.concretize_one("direct-dep-virtuals-one")
     assert s.satisfies("%netlib-blas")
     assert s["direct-dep-virtuals-two"].satisfies("%blas=netlib-blas")
 
 
-def test_conflict_with_direct_dependency_on_virtual_provider(default_mock_concretization):
+def test_conflict_with_direct_dependency_on_virtual_provider(config, mock_packages):
     """Test that conflicts on virtual providers as direct dependencies work"""
-    s = default_mock_concretization("conflict-virtual")
+    s = spack.concretize.concretize_one("conflict-virtual")
     assert s.satisfies("%blas=netlib-blas")
 
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
-        default_mock_concretization("conflict-virtual +conflict_direct")
+        spack.concretize.concretize_one("conflict-virtual +conflict_direct")
 
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
-        default_mock_concretization("conflict-virtual +conflict_transitive")
+        spack.concretize.concretize_one("conflict-virtual +conflict_transitive")
 
 
 def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
@@ -5117,13 +5174,11 @@ def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
         ("variant-function-validator generator=other", "generator=other %adios2+bzip2"),
     ],
 )
-def test_penalties_for_variant_defined_by_function(
-    default_mock_concretization, spec_str, expected
-):
+def test_penalties_for_variant_defined_by_function(config, mock_packages, spec_str, expected):
     """Tests that we have penalties for variants defined by functions, and that variant values
     are consistent with defaults and optimization rules.
     """
-    s = default_mock_concretization(spec_str)
+    s = spack.concretize.concretize_one(spec_str)
     assert s.satisfies(expected)
 
 
@@ -5288,25 +5343,6 @@ def test_concretization_cache_remove_entry_oserror(tmp_path):
     spack.solver.asp.ConcretizationCache._remove_entry(gone)
 
 
-def test_concretization_cache_store_skips_existing(use_concretization_cache):
-    """store() is a no-op when the cache path already exists."""
-    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
-    problem = "duplicate store test"
-    cache_path = cache._cache_path_from_problem(problem)
-    cache_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Pre-create the file with sentinel content
-    cache_path.write_bytes(b"sentinel")
-
-    # Build a minimal Result so store() has something to serialize
-    result = Result(specs=[])
-
-    cache.store(problem, result, statistics=[])
-
-    # The file should still contain the sentinel, proving store() returned early
-    assert cache_path.read_bytes() == b"sentinel"
-
-
 def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cache, monkeypatch):
     """store() swallows OSError, logs, and cleans up the temp file.
 
@@ -5333,10 +5369,15 @@ def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cach
     assert temps == []
 
 
-def test_concretization_cache_roundtrip_with_automatic_splice(
+def test_concretization_cache_skips_automatic_splice(
     use_concretization_cache, mutable_config, monkeypatch, install_mockery
 ):
-    """Test that cache entries written after an automatic splice are readable on the next solve."""
+    """Solves that produce an automatic splice are not cached and re-solve correctly.
+
+    spec_dict_to_json() cannot serialize the build_spec DAGs that spliced specs carry, so
+    store() skips results containing them. The second solve must be a cache miss that
+    re-runs clingo and produces the same result.
+    """
     mutable_config.set("concretizer:reuse", True)
 
     # Install the old version.  splice-t depends on splice-h, which has:
@@ -5353,8 +5394,11 @@ def test_concretization_cache_roundtrip_with_automatic_splice(
 
     goal = "splice-t@1 ^splice-h@1.0.1+compat ^splice-z@1.0.0+compat"
 
+    # The solve for ``old`` above was cached; snapshot so we can tell nothing new appears.
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    entries_before = {entry.name for entry in cache.cache_entries()}
+
     # First solve: the auto-splice fires, producing a spec with ._build_spec set.
-    # The result is stored in the cache by spec_dict_to_json().
     spec1 = spack.concretize.concretize_one(goal)
 
     # Confirm the splice actually occurred -- if it didn't, the test doesn't cover the bug.
@@ -5363,16 +5407,20 @@ def test_concretization_cache_roundtrip_with_automatic_splice(
         "the test premise is wrong if no splice occurred"
     )
 
-    # Second solve must be a pure cache hit: clingo must not run again.
-    # If the cache entry is unreadable (the bug), fetch() deletes it and falls through
-    # to _run_clingo, which calls store() -- triggering this assertion.
-    def _assert_no_store(self, problem, result, statistics):
-        raise AssertionError(
-            "cache should have been hit on the second solve, "
-            "but the cache entry was unreadable and clingo ran again"
-        )
+    # The spliced result must not have been written to the cache.
+    assert {entry.name for entry in cache.cache_entries()} == entries_before
 
-    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _assert_no_store)
+    # Second solve: a cache miss that re-runs clingo and gets the same answer.
+    fetches = []
+    original_fetch = spack.solver.asp.ConcretizationCache.fetch
+
+    def counting_fetch(self, *args, **kwargs):
+        outcome = original_fetch(self, *args, **kwargs)
+        fetches.append(outcome)
+        return outcome
+
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "fetch", counting_fetch)
 
     spec2 = spack.concretize.concretize_one(goal)
+    assert fetches and all(outcome == (None, None) for outcome in fetches)
     assert spec1 == spec2

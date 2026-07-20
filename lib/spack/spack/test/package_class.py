@@ -20,6 +20,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.install_test
 import spack.package_base
+import spack.repo
 import spack.spec
 import spack.store
 import spack.subprocess_context
@@ -317,9 +318,9 @@ def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
     assert "Skipping tests for package" in error
 
 
-def test_package_subscript(default_mock_concretization):
+def test_package_subscript(config, mock_packages):
     """Tests that we can use the subscript notation on packages, and that it returns a package"""
-    root = default_mock_concretization("mpileaks")
+    root = spack.concretize.concretize_one("mpileaks")
     root_pkg = root.package
 
     # Subscript of a virtual
@@ -330,8 +331,8 @@ def test_package_subscript(default_mock_concretization):
         assert isinstance(root_pkg[d.name], spack.package_base.PackageBase)
 
 
-def test_deserialize_preserves_package_attribute(default_mock_concretization):
-    x = default_mock_concretization("mpileaks").package
+def test_deserialize_preserves_package_attribute(config, mock_packages):
+    x = spack.concretize.concretize_one("mpileaks").package
     assert x.spec._package is x
 
     y = spack.subprocess_context.deserialize(spack.subprocess_context.serialize(x))
@@ -339,8 +340,8 @@ def test_deserialize_preserves_package_attribute(default_mock_concretization):
 
 
 @pytest.mark.require_provenance
-def test_git_provenance_commit_version(default_mock_concretization):
-    spec = default_mock_concretization("git-ref-package@stable")
+def test_git_provenance_commit_version(config, mock_packages):
+    spec = spack.concretize.concretize_one("git-ref-package@stable")
     assert spec.satisfies(f"commit={'c' * 40}")
 
 
@@ -389,7 +390,10 @@ def test_git_provenance_find_commit_ls_remote(
 def test_git_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, capfd, tmp_path):
     """Fail all attempts to resolve git commits"""
     repo_path = str(tmp_path / "non_existent")
+    # patch the base class for dependencies, and the concrete class, whose own ``git``
+    # attribute (a real github URL) shadows the base class one
     monkeypatch.setattr(spack.package_base.PackageBase, "git", repo_path, raising=False)
+    monkeypatch.setattr(spack.repo.PATH.get_pkg_class("git-ref-package"), "git", repo_path)
     monkeypatch.setattr(spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None)
     spec = spack.concretize.concretize_one("git-ref-package@develop")
     captured = capfd.readouterr()
@@ -401,7 +405,7 @@ def test_git_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, 
     "pkg_name,preferred_version",
     [
         # This package has a deprecated v1.1.0 which should not be the preferred
-        ("deprecated_versions", "1.0.0"),
+        ("deprecated-versions", "1.0.0"),
         # Python has v2.7.11 marked as preferred and newer v3 versions
         ("python", "2.7.11"),
         # This package has various versions, some deprecated, plus "main" and "develop"

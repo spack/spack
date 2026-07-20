@@ -11,6 +11,7 @@ import spack.vendor.archspec.cpu
 
 import spack.concretize
 import spack.config
+import spack.database
 import spack.paths
 import spack.repo
 import spack.solver.asp
@@ -166,7 +167,7 @@ def test_views_can_handle_duplicate_runtime_nodes(
     )
 
     # Mock the installation status to allow selecting nodes for the view
-    monkeypatch.setattr(spack.spec.Spec, "installed", True)
+    monkeypatch.setattr(spack.database.Database, "installed", lambda self, spec: True)
     nodes = list(root.traverse())
 
     view = ViewDescriptor(str(tmp_path), str(tmp_path))

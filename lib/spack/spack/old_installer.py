@@ -249,7 +249,7 @@ def _handle_external_and_upstream(pkg: "spack.package_base.PackageBase", explici
         _print_installed_pkg(f"{pkg.prefix} (external {package_id(pkg.spec)})")
         return True
 
-    if pkg.spec.installed_upstream:
+    if spack.store.STORE.db.installed_upstream(pkg.spec):
         tty.verbose(
             f"{package_id(pkg.spec)} is installed in an upstream Spack instance at "
             f"{pkg.spec.prefix}"
@@ -463,7 +463,7 @@ def _process_binary_cache_tarball(
 
     tty.msg(f"Extracting {package_id(pkg.spec)} from binary cache")
 
-    with timer.measure("install"), spack.util.path.filter_padding():
+    with timer.measure("install"), spack.store.filter_padding():
         binary_distribution.extract_tarball(pkg.spec, tarball_stage, force=False, timer=timer)
 
         if pkg.spec.spliced:  # overwrite old metadata with new
@@ -822,7 +822,7 @@ class BuildRequest:
         # if build deps are explicitly requested.
         if include_build_deps or not (
             policy == "cache_only"
-            or pkg.spec.installed
+            or spack.store.STORE.db.installed(pkg.spec)
             and pkg.spec.dag_hash() not in self.overwrite
         ):
             depflag |= dt.BUILD
@@ -1421,7 +1421,7 @@ class RewireTask(Task):
         """
         oldstatus = self.status
         self.status = BuildStatus.INSTALLING
-        if not self.pkg.spec.build_spec.installed:
+        if not spack.store.STORE.db.installed(self.pkg.spec.build_spec):
             try:
                 install_args = self.request.install_args
                 unsigned = install_args.get("unsigned")
@@ -1673,7 +1673,7 @@ class PackageInstaller:
                 raise spack.error.InstallError(err.format(request.pkg_id, msg), pkg=request.pkg)
 
             # Flag external and upstream packages as being installed
-            if dep_pkg.spec.external or dep_pkg.spec.installed_upstream:
+            if dep_pkg.spec.external or spack.store.STORE.db.installed_upstream(dep_pkg.spec):
                 self._flag_installed(dep_pkg)
                 continue
 
@@ -1812,7 +1812,7 @@ class PackageInstaller:
             raise ExternalPackageError(f"{pre} is external")
 
         # Upstream packages cannot be installed locally.
-        if pkg.spec.installed_upstream:
+        if spack.store.STORE.db.installed_upstream(pkg.spec):
             raise UpstreamPackageError(f"{pre} is upstream")
 
         # The package must have a prefix lock at this stage.
@@ -2440,7 +2440,7 @@ class PackageInstaller:
 
         # Perform basic task cleanup for the installed spec to
         # include downgrading the write to a read lock
-        if pkg.spec.installed:
+        if spack.store.STORE.db.installed(pkg.spec):
             self._cleanup_task(pkg)
             # mark installed if we haven't yet - may be discovering installed for the first time
             self._update_installed(task)
@@ -2790,7 +2790,7 @@ def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> 
     installer = BuildProcessInstaller(pkg, install_args)
 
     # don't print long padded paths in executable debug output.
-    with spack.util.path.filter_padding():
+    with spack.store.filter_padding():
         return installer.run()
 
 

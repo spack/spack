@@ -53,6 +53,15 @@ from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_
 
 if sys.platform == "win32":
     from ctypes import wintypes
+
+    from spack.util.win_acl import (
+        AccessControlEntry,
+        AceType,
+        FileAccessRights,
+        GenericAccessRights,
+        SecurityDescriptor,
+        get_file_owner,
+    )
 else:
     import grp
     import pwd
@@ -545,124 +554,8 @@ def exploding_archive_handler(tarball_container, stage):
 @system_path_filter
 def get_windows_file_security(path: str) -> str:
     if sys.platform == "win32":
-        # Validate path exists before calling API to get a clear Python error
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"The system cannot find the path specified: '{path}'")
-
-        advapi = ctypes.WinDLL("advapi32", use_last_error=True)
-        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-
-        # SE_FILE_OBJECT applies to both files and directories
-        SE_FILE_OBJECT = 1
-        OWNER_SECURITY_INFO = 1
-        ERROR_SUCCESS = 0
-
-        # Describe LocalFree API
-        LocalFree = kernel32.LocalFree
-        LocalFree.argtypes = [wintypes.HLOCAL]
-        LocalFree.restype = wintypes.HLOCAL
-
-        # Describe GetNamedSecurityInfoW API
-        GetNamedSecurityInfo = advapi.GetNamedSecurityInfoW
-        GetNamedSecurityInfo.argtypes = [
-            wintypes.LPCWSTR,  # pObjectName (The path)
-            ctypes.c_int,  # ObjectType
-            wintypes.DWORD,  # SecurityInfo
-            ctypes.POINTER(wintypes.LPVOID),  # ppsidOwner
-            ctypes.POINTER(wintypes.LPVOID),  # ppsidGroup
-            ctypes.POINTER(wintypes.LPVOID),  # ppDacl
-            ctypes.POINTER(wintypes.LPVOID),  # ppSacl
-            ctypes.POINTER(wintypes.LPVOID),  # ppSecurityDescriptor
-        ]
-        GetNamedSecurityInfo.restype = wintypes.DWORD
-
-        # Describe LookupAccountSID API
-        LookupAccountSid = advapi.LookupAccountSidW
-        LookupAccountSid.argtypes = [
-            wintypes.LPCWSTR,  # lpSystemName
-            wintypes.LPVOID,  # Sid
-            wintypes.LPWSTR,  # Name
-            wintypes.LPDWORD,  # cchName
-            wintypes.LPWSTR,  # ReferencedDomainName
-            wintypes.LPDWORD,  # cchReferencedDomainName
-            ctypes.POINTER(ctypes.c_int),  # peUse
-        ]
-        LookupAccountSid.restype = ctypes.c_bool
-
-        p_sid_owner = wintypes.LPVOID()
-        psd = wintypes.LPVOID()
-
-        # Call GetNamedSecurityInfo directly with the path string
-        res = GetNamedSecurityInfo(
-            path,
-            SE_FILE_OBJECT,
-            OWNER_SECURITY_INFO,
-            ctypes.byref(p_sid_owner),
-            None,
-            None,
-            None,
-            ctypes.byref(psd),
-        )
-
-        if res != ERROR_SUCCESS:
-            raise ctypes.WinError(res, f"Failed to get security info for {path}")
-
-        try:
-            # establish vars for Lookup account sid return params
-            dwacct_name = wintypes.DWORD(0)
-            dw_domain_name = wintypes.DWORD(0)
-            e_use = ctypes.c_int()
-
-            # first call to lookup account SID to determine buffer sizes
-            success = LookupAccountSid(
-                None,
-                p_sid_owner,
-                None,
-                ctypes.byref(dwacct_name),
-                None,
-                ctypes.byref(dw_domain_name),
-                ctypes.byref(e_use),
-            )
-
-            # 122 is ERROR_INSUFFICIENT_BUFFER, which we expect
-            if not success:
-                err = ctypes.get_last_error()
-                # 122 is ERROR_INSUFFICIENT_BUFFER, which we want/expect!
-                if err != 122:
-                    raise ctypes.WinError(
-                        err, f"Unexpected error when obtaining buffer for : {path}"
-                    )
-
-            # create buffers
-            acct_name_buf = dwacct_name.value * wintypes.WCHAR
-            acct_name = acct_name_buf()
-            domain_name_buf = dw_domain_name.value * wintypes.WCHAR
-            domain_name = domain_name_buf()
-
-            # second call to fetch the actual names
-            success = LookupAccountSid(
-                None,
-                p_sid_owner,
-                acct_name,
-                ctypes.byref(dwacct_name),
-                domain_name,
-                ctypes.byref(dw_domain_name),
-                ctypes.byref(e_use),
-            )
-
-            if not success:
-                raise ctypes.WinError(
-                    ctypes.get_last_error(), f"Could not determine owner for : {path}"
-                )
-
-        finally:
-            # Free the security descriptor
-            if psd:
-                LocalFree(psd)
-
-        return acct_name.value
-    else:
-        raise RuntimeError("cannot determine Windows file security on non-Windows")
+        return get_file_owner(path)
+    raise RuntimeError("cannot determine Windows file security on non-Windows")
 
 
 @system_path_filter(arg_slice=slice(1))
@@ -702,6 +595,28 @@ def set_install_permissions(path):
     # this function will be invoked on the target. If the file is outside a
     # Spack-maintained prefix, the permissions should not be modified.
     if islink(path):
+        return
+    if sys.platform == "win32":
+        sd = SecurityDescriptor.from_file(path)
+        owner_sid = sd.owner
+        sd.clear_dacl()
+        owner_ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid=owner_sid)
+        everyone_ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="WD")
+        # Owner always gets FILE_ALL_ACCESS so they retain DELETE and WRITE_DAC regardless
+        # of whether the implicit owner rights survive a copy or ownership transfer.
+        # Everyone gets the read-only equivalent of the Unix world bits (r-x for dirs, r-- for
+        # files); execute is omitted for files because Windows uses file extensions, not mode bits,
+        # to determine executability.
+        owner_ace.add_right(FileAccessRights.FILE_ALL_ACCESS)
+        if os.path.isdir(path):
+            everyone_ace.add_right(
+                FileAccessRights.FILE_GENERIC_READ | FileAccessRights.FILE_GENERIC_EXECUTE
+            )
+        else:
+            everyone_ace.add_right(FileAccessRights.FILE_GENERIC_READ)
+        sd.add_ace(owner_ace)
+        sd.add_ace(everyone_ace)
+        sd.apply(path)
         return
     if os.path.isdir(path):
         os.chmod(path, 0o755)
@@ -766,11 +681,46 @@ def chmod_x(entry, perms):
     os.chmod(entry, perms)
 
 
+def win_copy_exe_mode(src, dest):
+    """Propagate execute permission from *src* to *dest* on Windows.
+
+    Reads the DACL of *src*; if any Allow ACE grants execute, ORs FILE_GENERIC_EXECUTE
+    into every Allow ACE in *dest*'s DACL that does not already include it.
+    """
+    # Masks that imply execute for file objects.  GENERIC_ALL / GENERIC_EXECUTE are
+    # checked separately because the generic bits don't overlap with the file-specific ones.
+    _FX = int(FileAccessRights.FILE_GENERIC_EXECUTE)
+    _GENERIC_X_MASKS = (
+        int(GenericAccessRights.GENERIC_EXECUTE),
+        int(GenericAccessRights.GENERIC_ALL),
+    )
+
+    def _grants_execute(ace) -> bool:
+        if ace.ace_type != AceType.SDDL_ACCESS_ALLOWED or not ace.rights:  # type: ignore[name-defined]
+            return False
+        # FILE_GENERIC_READ and FILE_GENERIC_EXECUTE share bits (READ_CONTROL,
+        # FILE_READ_ATTRIBUTES, SYNCHRONIZE), so `rights & FX != 0` is True for
+        # a read-only ACE (false positive).  Requiring all FX bits to be
+        # present (`== FX`) avoids that.  GENERIC_ALL/EXECUTE don't overlap with
+        # the file-specific mask at all, so they are checked separately.
+        return (ace.rights & _FX) == _FX or any(bool(ace.rights & m) for m in _GENERIC_X_MASKS)
+
+    src_sd = SecurityDescriptor.from_file(src)
+    if any(_grants_execute(ace) for ace in src_sd.dacl):
+        dst_sd = SecurityDescriptor.from_file(dest)
+        for ace in dst_sd.dacl:
+            if ace.ace_type == AceType.SDDL_ACCESS_ALLOWED and not _grants_execute(ace):  # type: ignore[name-defined]
+                ace.add_right(_FX)
+        dst_sd.apply(dest)
+
+
 @system_path_filter
 def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link."""
     if islink(dest):
         return
+    if sys.platform == "win32":
+        return win_copy_exe_mode(src, dest)
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
     if src_mode & stat.S_IXUSR:
@@ -784,6 +734,8 @@ def copy_mode(src, dest):
 
 @system_path_filter
 def unset_executable_mode(path):
+    if sys.platform == "win32":
+        return
     mode = os.stat(path).st_mode
     mode &= ~stat.S_IXUSR
     mode &= ~stat.S_IXGRP
@@ -1638,6 +1590,8 @@ def visit_directory_tree(
 @system_path_filter
 def set_executable(path):
     """Set the executable bit on a file or directory."""
+    if sys.platform == "win32":
+        return
     mode = os.stat(path).st_mode
     if mode & stat.S_IRUSR:
         mode |= stat.S_IXUSR

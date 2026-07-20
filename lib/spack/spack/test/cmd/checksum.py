@@ -309,7 +309,7 @@ def test_checksum_url(mock_packages, config):
         spack_checksum(f"{pkg_cls.url}")
 
 
-def test_checksum_verification_fails(default_mock_concretization, capfd, can_fetch_versions):
+def test_checksum_verification_fails(config, mock_packages, capfd, can_fetch_versions):
     spec = spack.concretize.concretize_one("zlib")
     pkg = spec.package
     versions = list(pkg.versions.keys())

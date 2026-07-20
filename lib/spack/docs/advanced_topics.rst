@@ -32,6 +32,9 @@ If issues are found, they are reported to stdout:
        the variant 'adios' does not exist
        in spack_repo/builtin/packages/lammps/package.py
 
+.. index::
+   single: SBOM; format and location
+
 .. _sbom:
 
 Software Bill of Materials (SBOM)
@@ -88,7 +91,9 @@ This typically indicates that a package was linked against a system library inst
 
 This verification can also be enabled as a post-install hook by setting ``config:shared_linking:missing_library_policy`` to ``error`` or ``warn`` in :ref:`config.yaml <config-yaml>`.
 
-.. _filesystem-requirements:
+.. index::
+   single: filesystem requirements
+   :name: filesystem-requirements
 
 Filesystem Requirements
 =======================

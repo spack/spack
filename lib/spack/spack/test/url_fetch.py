@@ -159,12 +159,7 @@ if sys.platform != "win32":
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 @pytest.mark.parametrize("mock_archive", files, indirect=True)
 def test_fetch(
-    mock_archive,
-    secure,
-    _fetch_method,
-    checksum_type,
-    default_mock_concretization,
-    mutable_mock_repo,
+    mock_archive, secure, _fetch_method, checksum_type, config, mutable_mock_repo, monkeypatch
 ):
     """Fetch an archive and make sure we can checksum it."""
     algo = crypto.hash_fun_for_algo(checksum_type)()
@@ -172,13 +167,16 @@ def test_fetch(
         algo.update(f.read())
     checksum = algo.hexdigest()
 
-    # Get a spec and tweak the test package with new checksum params
-    s = default_mock_concretization("url-test")
+    # Get a spec and tweak the test package with new checksum params. versions is a class-level
+    # dict shared across instances and cached with the package module, so add the version via
+    # monkeypatch to restore it after the test instead of leaking it into later tests.
+    s = spack.concretize.concretize_one("url-test")
     s.package.url = mock_archive.url
-    s.package.versions[spack.version.Version("test")] = {
-        checksum_type: checksum,
-        "url": s.package.url,
-    }
+    monkeypatch.setitem(
+        s.package.versions,
+        spack.version.Version("test"),
+        {checksum_type: checksum, "url": s.package.url},
+    )
 
     # Enter the stage directory and check some properties
     with s.package.stage:
@@ -382,7 +380,7 @@ def test_url_fetch_text_urllib_web_error(mutable_config, monkeypatch):
     def _raise_web_error(*args, **kwargs):
         raise web_util.SpackWebError("bad url")
 
-    monkeypatch.setattr(web_util, "read_from_url", _raise_web_error)
+    monkeypatch.setattr(web_util, "read_text", _raise_web_error)
     mutable_config.set("config:url_fetch_method", "urllib")
 
     with pytest.raises(spack.error.FetchError, match="fetch failed"):

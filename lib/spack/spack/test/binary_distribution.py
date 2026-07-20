@@ -37,7 +37,7 @@ import spack.util.web as web_util
 from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.database import INDEX_JSON_FILE
 from spack.hooks import sbang
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
@@ -162,7 +162,7 @@ def test_push_and_fetch_keys(mock_gnupghome, tmp_path: pathlib.Path):
     with spack.util.gpg.gnupghome_override(gpg_dir2):
         assert len(spack.util.gpg.public_keys()) == 0
 
-        spack.binary_distribution.get_keys(
+        spack.binary_distribution.trust_keys(
             mirrors=mirrors, yes_to_all=True, install=True, trust=True, force=True
         )
 
@@ -1611,3 +1611,40 @@ def test_load_buildcache_index_degrades_gracefully(monkeypatch, tmp_path):
 
     # Should not raise.
     spack.binary_distribution.load_buildcache_index()
+
+
+@pytest.mark.parametrize(
+    ("spec_manifest", "result"),
+    [
+        (
+            "mock/prefix/long{:_<256}/manifest/spec/package-1.1.1-asdf1234asdf1234asdf1234asdf1234.spec.manifest.json".format(
+                ""
+            ),
+            "asdf1234asdf1234asdf1234asdf1234",
+        ),
+        (
+            "mock/invalid/prefix/package-1.1.1-asdf1234asdf1234asdf1234asdf1234.spec.manifest.json",
+            "asdf1234asdf1234asdf1234asdf1234",
+        ),
+        (
+            "mock/v3/manifest/spec/package-1.1.1-asdf1234asdf1234asdf1234asdf1234.spec.manifest.json",
+            "asdf1234asdf1234asdf1234asdf1234",
+        ),
+        (
+            "mock/v3/manifest/spec/package-1.1.1-asdf1234asdf1234asdf1234asdf1234",
+            "asdf1234asdf1234asdf1234asdf1234",
+        ),
+        (
+            "mock/v3/manifest/spec/package-with-long-name-and-many-dashes-1.1.1-asdf1234asdf1234asdf1234asdf1234",
+            "asdf1234asdf1234asdf1234asdf1234",
+        ),
+        ("mock/v3/manifest/spec/missing-hash", ValueError),
+        ("mock/v3/manifest/spec/malformed-package-1.1.1-shorthash", ValueError),
+    ],
+)
+def test_url_buildcache_hash_from_manifest_name(spec_manifest, result):
+    if result is ValueError:
+        with pytest.raises(ValueError):
+            result = URLBuildcacheEntry.hash_from_manifest_name(spec_manifest)
+    else:
+        assert result == URLBuildcacheEntry.hash_from_manifest_name(spec_manifest)

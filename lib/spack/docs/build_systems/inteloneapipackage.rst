@@ -9,6 +9,10 @@
 
 .. _inteloneapipackage:
 
+.. index::
+   single: build system; Intel oneAPI
+   single: IntelOneApiPackage
+
 
 IntelOneapi
 ===========

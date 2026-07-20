@@ -47,6 +47,7 @@ from spack.vendor import jsonschema
 import spack
 import spack.error
 import spack.paths
+import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.cdash
@@ -1001,26 +1002,22 @@ def override(
     an internal config scope for it and push/pop that scope.
 
     """
+    path: Optional[str]
     if isinstance(path_or_scope, ConfigScope):
-        overrides = path_or_scope
-        CONFIG.push_scope(path_or_scope, priority=None)
+        overrides, path = path_or_scope, None
     else:
-        base_name = _OVERRIDES_BASE_NAME
         # Ensure the new override gets a unique scope name
-        current_overrides = [s.name for s in CONFIG.matching_scopes(rf"^{base_name}")]
-        num_overrides = len(current_overrides)
-        while True:
-            scope_name = f"{base_name}{num_overrides}"
-            if scope_name in current_overrides:
-                num_overrides += 1
-            else:
-                break
+        existing = {s.name for s in CONFIG.matching_scopes(rf"^{_OVERRIDES_BASE_NAME}")}
+        num_overrides = len(existing)
+        while f"{_OVERRIDES_BASE_NAME}{num_overrides}" in existing:
+            num_overrides += 1
+        overrides = InternalConfigScope(f"{_OVERRIDES_BASE_NAME}{num_overrides}")
+        path = path_or_scope
 
-        overrides = InternalConfigScope(scope_name)
-        CONFIG.push_scope(overrides, priority=None)
-        CONFIG.set(path_or_scope, value, scope=scope_name)
-
+    CONFIG.push_scope(overrides, priority=None)
     try:
+        if path is not None:
+            CONFIG.set(path, value, scope=overrides.name)
         yield CONFIG
     finally:
         scope = CONFIG.remove_scope(overrides.name)
@@ -1577,6 +1574,9 @@ def create() -> Configuration:
 
 #: This is the singleton configuration instance for Spack.
 CONFIG = cast(Configuration, lang.Singleton(create_incremental))
+
+#: Many cached config values depend on the current platform, so drop them when it changes.
+spack.platforms.on_host_changed.append(lambda: CONFIG.clear_caches())
 
 
 def add_from_file(filename: str, scope: Optional[str] = None) -> None:
@@ -2254,7 +2254,6 @@ def determine_number_of_jobs(
 
 def architecture():
     # break circular import
-    import spack.platforms
     import spack.spec
 
     host_platform = spack.platforms.host()

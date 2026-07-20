@@ -10,10 +10,10 @@ import spack
 import spack.binary_distribution
 import spack.cmd
 import spack.config
-import spack.environment
 import spack.hash_types as ht
 import spack.package_base
 import spack.spec
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.solver import asp
 from spack.util import tty
@@ -112,7 +112,20 @@ def _process_result(result, show, required_format, kwargs):
         maxlen = max(len(s.name) for s in result.criteria)
         color.cprint("@*{  Priority  Value  Criterion}")
 
+        # Width of a data row past its 2-space indent, matching the row format below:
+        # 8-wide priority + 2 gap + 5-wide value + 2 gap + maxlen-wide criterion name.
+        divider_width = 8 + 2 + 5 + 2 + maxlen
+        prev_band = None
+
         for i, criterion in enumerate(result.criteria, 1):
+            # Criteria are grouped into priority bands; print a header when the band changes.
+            band = asp.optimization_band(criterion.priority)
+            if band != prev_band:
+                label = f"-- {band.value}"
+                dashes = "-" * max(0, divider_width - len(label) - 1)
+                color.cprint(f"  @*{{{label}}} @K{{{dashes}}}")
+                prev_band = band
+
             value = f"@K{{{criterion.value:>5}}}"
             grey_out = True
             if criterion.value > 0:
@@ -178,10 +191,10 @@ def spec(parser, args):
         "show_types": args.types,
         "status_fn": status_fn,
         "hashes": args.long or args.very_long,
-        "highlight_version_fn": (
+        "version_style_fn": (
             spack.package_base.non_preferred_version if args.non_defaults else None
         ),
-        "highlight_variant_fn": (
+        "variant_style_fn": (
             spack.package_base.non_default_variant if args.non_defaults else None
         ),
     }
@@ -201,7 +214,7 @@ def spec(parser, args):
     required_format = args.format
 
     # If we have an active environment, pick the specs from there
-    env = spack.environment.active_environment()
+    env = active_environment()
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs)
     elif env:

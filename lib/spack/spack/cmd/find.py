@@ -16,6 +16,7 @@ import spack.spec
 import spack.store
 import spack.util.lang
 from spack import cmd
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.util import tty
@@ -264,7 +265,7 @@ def display_env(env, args, decorator, results, status_fn=None):
     tty.msg(f"In environment {env.name} ({root_spec_str})")
 
     concrete_specs = {x.root: env.specs_by_hash[x.hash] for x in env.concretized_roots}
-    _status_fn = status_fn if status_fn is not None else spack.spec.Spec.install_status
+    _status_fn = status_fn if status_fn is not None else spack.store.STORE.db.install_status
 
     def root_decorator(spec, string):
         """Decorate root specs with their install status if needed"""
@@ -366,7 +367,7 @@ def _find_query(
         results = list()
         with spack.store.STORE.db.read_transaction():
             for spec in env_specs:
-                if not spec.installed:
+                if not spack.store.STORE.db.installed(spec):
                     concretized_but_not_installed.append(spec)
                 if spec in specs_meeting_q_args:
                     results.append(spec)
@@ -403,7 +404,7 @@ def _find_query(
 
 
 def find(parser, args):
-    env = ev.active_environment()
+    env = active_environment()
 
     if not env and args.only_roots:
         args.subparser.error("-r / --only-roots requires an active environment")

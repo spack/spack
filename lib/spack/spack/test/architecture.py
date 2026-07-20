@@ -65,11 +65,11 @@ def test_user_input_combination(config, target_str, os_str):
     assert spec.architecture.target == TEST_PLATFORM.target(target_str)
 
 
-def test_default_os_and_target(default_mock_concretization):
+def test_default_os_and_target(config, mock_packages):
     """Test that is we don't specify `os=` or `target=` we get the default values
     after concretization.
     """
-    spec = default_mock_concretization("libelf")
+    spec = spack.concretize.concretize_one("libelf")
     assert spec.architecture.os == str(TEST_PLATFORM.default_operating_system())
     assert spec.architecture.target == TEST_PLATFORM.default_target()
 

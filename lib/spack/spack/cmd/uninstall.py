@@ -12,6 +12,7 @@ import spack.package_base
 import spack.spec
 import spack.store
 from spack import traverse
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments, confirmation
 from spack.util import tty
 from spack.util.tty.colify import colify
@@ -269,7 +270,7 @@ def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Envi
 
 
 def uninstall_specs(args, specs):
-    env = ev.active_environment()
+    env = active_environment()
 
     uninstall_list, remove_list = get_uninstall_list(args, specs, env)
 

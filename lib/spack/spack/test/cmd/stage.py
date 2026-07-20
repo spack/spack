@@ -7,8 +7,10 @@ import pathlib
 import pytest
 
 import spack.config
+import spack.database
 import spack.environment as ev
 import spack.package_base
+import spack.store
 import spack.traverse
 from spack.cmd.stage import StageFilter
 from spack.main import SpackCommand, SpackCommandError
@@ -154,11 +156,11 @@ def test_stage_spec_filters(
     e.concretize()
     all_specs = e.all_specs()
 
-    def is_installed(self):
-        return self.name in installed
+    def is_installed(self, spec):
+        return spec.name in installed
 
     if skip_installed:
-        monkeypatch.setattr(Spec, "installed", is_installed)
+        monkeypatch.setattr(spack.database.Database, "installed", is_installed)
 
     should_be_filtered = []
     for spec in all_specs:
@@ -169,7 +171,7 @@ def test_stage_spec_filters(
                 should_be_filtered.append(spec)
         for ins in installed:
             if skip_installed and spec.satisfies(Spec(ins)):
-                assert spec.installed
+                assert spack.store.STORE.db.installed(spec)
                 should_be_filtered.append(spec)
         for exc in exclusions:
             if spec.satisfies(Spec(exc)):

@@ -8,7 +8,7 @@ import sys
 
 if sys.platform != "win32":
     # Also lets mypy skip this module when run on other platforms.
-    raise ImportError("spack.new_installer_windows can only be imported on Windows")
+    raise ImportError("spack.installer.windows can only be imported on Windows")
 
 import ctypes
 import functools
@@ -22,18 +22,18 @@ import threading
 import time
 from ctypes import wintypes
 from multiprocessing import Process
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import Callable, Optional
 
-from spack.new_installer_base import (
+from spack.installer.base import (
     OUTPUT_BUFFER_SIZE,
+    SIGWINCH_EVENT,
+    STDIN_EVENT,
     BaseTerminalState,
+    BuildChannels,
     ProcessExitNotifier,
     StdinReader,
     Tee,
 )
-
-if TYPE_CHECKING:
-    from spack.new_installer import BuildStatus
 
 # Windows console mode flags
 ENABLE_LINE_INPUT = 0x0002
@@ -74,11 +74,11 @@ class WindowsTerminalState(BaseTerminalState):
     def __init__(
         self,
         selector: selectors.BaseSelector,
-        build_status: "BuildStatus",
+        on_headless: Optional[Callable[[bool], None]] = None,
         on_suspend: Optional[Callable[[], None]] = None,
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
-        super().__init__(selector, build_status, on_suspend, on_resume)
+        super().__init__(selector, on_headless, on_suspend, on_resume)
         self.kernel32 = ctypes.windll.kernel32
         self.hStdin = self.kernel32.GetStdHandle(-10)
         self.hStdout = self.kernel32.GetStdHandle(-11)
@@ -91,17 +91,15 @@ class WindowsTerminalState(BaseTerminalState):
         self.stdin_r.setblocking(False)
         self.sigwinch_r, self.sigwinch_w = socket.socketpair()
         self.sigwinch_r.setblocking(False)
-
-    def create_stdin_reader(self) -> StdinReader:
-        return StdinReader(functools.partial(self.stdin_r.recv, 1024))
+        self.stdin_reader = StdinReader(functools.partial(self.stdin_r.recv, 1024))
 
     def setup(self) -> None:
         # Enable VT100 ANSI escapes on stdout
         new_out_mode = self.old_stdout_settings.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING
         self.kernel32.SetConsoleMode(self.hStdout, new_out_mode)
 
-        self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
-        self.build_status.headless = True
+        self.selector.register(self.sigwinch_r, selectors.EVENT_READ, SIGWINCH_EVENT)
+        self._set_headless(True)
 
         self._running = True
         threading.Thread(target=self._input_thread, daemon=True).start()
@@ -124,7 +122,7 @@ class WindowsTerminalState(BaseTerminalState):
         self.kernel32.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)
 
     def enter_foreground(self) -> None:
-        if not self.build_status.headless:
+        if not self.headless:
             return
 
         self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
@@ -134,17 +132,16 @@ class WindowsTerminalState(BaseTerminalState):
         self.kernel32.SetConsoleMode(self.hStdin, new_in_mode)
 
         if self.stdin_is_interactive() and self.stdin_r.fileno() not in self.selector.get_map():
-            self.selector.register(self.stdin_r, selectors.EVENT_READ, "stdin")
+            self.selector.register(self.stdin_r, selectors.EVENT_READ, STDIN_EVENT)
 
-        self.build_status.headless = False
-        self.build_status.dirty = True
+        self._set_headless(False)
 
     def drain_sigwinch(self) -> None:
         self.sigwinch_r.recv(64)
 
     def _input_thread(self) -> None:
         while self._running:
-            if self.build_status.headless:
+            if self.headless:
                 time.sleep(0.1)
                 continue
             if msvcrt.kbhit():
@@ -197,6 +194,18 @@ class WindowsSentinelBridge(ProcessExitNotifier):
 
     def close(self) -> None:
         self.rsock.close()
+
+
+def create_build_channels() -> BuildChannels:
+    """Create the channel pairs of a build. The state and output read ends are non-blocking so
+    the selector-based loop never blocks. The worker's tee thread is stopped by closing the
+    control socket rather than through a write end."""
+    state_r, state_w = socket.socketpair()
+    output_r, output_w = socket.socketpair()
+    control_r, control_w = socket.socketpair()
+    output_r.setblocking(False)
+    state_r.setblocking(False)
+    return BuildChannels(state_r, state_w, output_r, output_w, control_r, control_w, None)
 
 
 class WindowsTee(Tee):

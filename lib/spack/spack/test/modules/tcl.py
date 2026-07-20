@@ -824,3 +824,20 @@ class TestTcl:
                 assert "${lapack_name} ${lapack_version}" in line, (
                     f"Expected Tcl syntax '${{lapack_name}} ${{lapack_version}}' but got: {line!r}"
                 )
+
+    @pytest.mark.regression("7487")
+    def test_suffix_does_not_propagate_to_dependents(self, factory, module_configuration):
+        """A bare package-name suffix key matches only the root spec, while a '^name'
+        key matches specs that depend on that package. The two must not overlap.
+        """
+        module_configuration("suffix_propagation")
+
+        # mpileaks depends on mpich but is not mpich, so only the '^mpich' key applies
+        writer, _ = factory("mpileaks ^mpich@3.0.4")
+        assert "depmatch" in writer.layout.use_name
+        assert "namematch" not in writer.layout.use_name
+
+        # mpich itself is matched only by the bare 'mpich' key
+        writer, _ = factory("mpich@3.0.4")
+        assert "namematch" in writer.layout.use_name
+        assert "depmatch" not in writer.layout.use_name

@@ -13,6 +13,7 @@ import spack.concretize
 import spack.config
 import spack.installer_dispatch
 import spack.repo
+import spack.store
 from spack.cmd.common import arguments
 from spack.util import tty
 
@@ -116,7 +117,7 @@ def dev_build(self, args):
     spec.constrain(f'dev_path="{source_path}"')
     spec = spack.concretize.concretize_one(spec)
 
-    if spec.installed:
+    if spack.store.STORE.db.installed(spec):
         tty.error("Already installed in %s" % spec.prefix)
         tty.msg("Uninstall or try adding a version suffix for this dev build.")
         sys.exit(1)
