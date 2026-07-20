@@ -83,7 +83,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
     layout.
     """
     layout = temporary_store.layout
-    pkg_names = list(spack.repo.PATH.all_package_names())[:max_packages]
+    pkg_names = list(mock_packages.all_package_names())[:max_packages]
 
     for name in pkg_names:
         if name.startswith("external"):
@@ -195,7 +195,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages, tmp_path
 def test_find(temporary_store, config, mock_packages):
     """Test that finding specs within an install layout works."""
     layout = temporary_store.layout
-    package_names = list(spack.repo.PATH.all_package_names())[:max_packages]
+    package_names = list(mock_packages.all_package_names())[:max_packages]
 
     # Create install prefixes for all packages in the list
     installed_specs = {}

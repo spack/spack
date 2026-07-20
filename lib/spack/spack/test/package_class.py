@@ -20,7 +20,6 @@ import spack.deptypes as dt
 import spack.error
 import spack.install_test
 import spack.package_base
-import spack.repo
 import spack.spec
 import spack.store
 import spack.subprocess_context
@@ -393,7 +392,7 @@ def test_git_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, 
     # patch the base class for dependencies, and the concrete class, whose own ``git``
     # attribute (a real github URL) shadows the base class one
     monkeypatch.setattr(spack.package_base.PackageBase, "git", repo_path, raising=False)
-    monkeypatch.setattr(spack.repo.PATH.get_pkg_class("git-ref-package"), "git", repo_path)
+    monkeypatch.setattr(mock_packages.get_pkg_class("git-ref-package"), "git", repo_path)
     monkeypatch.setattr(spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None)
     spec = spack.concretize.concretize_one("git-ref-package@develop")
     captured = capfd.readouterr()

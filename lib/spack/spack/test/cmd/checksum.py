@@ -11,7 +11,6 @@ import spack.cmd.checksum
 import spack.concretize
 import spack.error
 import spack.package_base
-import spack.repo
 import spack.stage
 import spack.util.web
 from spack.main import SpackCommand
@@ -280,7 +279,7 @@ def test_checksum_interactive_unrecognized_command():
 
 
 def test_checksum_versions(mock_packages, can_fetch_versions, monkeypatch):
-    pkg_cls = spack.repo.PATH.get_pkg_class("zlib")
+    pkg_cls = mock_packages.get_pkg_class("zlib")
     versions = [str(v) for v in pkg_cls.versions]
     output = spack_checksum("zlib", *versions)
     assert "Found 3 versions" in output
@@ -304,7 +303,7 @@ def test_checksum_deprecated_version(mock_packages, can_fetch_versions):
 
 
 def test_checksum_url(mock_packages, config):
-    pkg_cls = spack.repo.PATH.get_pkg_class("zlib")
+    pkg_cls = mock_packages.get_pkg_class("zlib")
     with pytest.raises(spack.error.SpecSyntaxError):
         spack_checksum(f"{pkg_cls.url}")
 
@@ -325,7 +324,7 @@ def test_checksum_verification_fails(config, mock_packages, capfd, can_fetch_ver
 def test_checksum_manual_download_fails(mock_packages, monkeypatch):
     """Confirm that checksumming a manually downloadable package fails."""
     name = "zlib"
-    pkg_cls = spack.repo.PATH.get_pkg_class(name)
+    pkg_cls = mock_packages.get_pkg_class(name)
     versions = [str(v) for v in pkg_cls.versions]
     monkeypatch.setattr(spack.package_base.PackageBase, "manual_download", True)
 

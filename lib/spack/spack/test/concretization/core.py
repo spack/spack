@@ -5196,7 +5196,7 @@ def test_virtual_gets_multiple_dupes(mock_packages, config):
     """
     specs = [spack.spec.Spec("pkg-with-c-link-dep")]
     possible_graph = spack.solver.input_analysis.NoStaticAnalysis(
-        configuration=spack.config.CONFIG, repo=spack.repo.PATH
+        configuration=spack.config.CONFIG, repo=mock_packages
     )
     counter = spack.solver.input_analysis.MinimalDuplicatesCounter(
         specs, tests=False, possible_graph=possible_graph

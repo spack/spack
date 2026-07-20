@@ -21,7 +21,6 @@ import spack.error
 import spack.package_base
 import spack.paths
 import spack.platforms
-import spack.repo
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
@@ -1184,13 +1183,13 @@ def test_license_dir_config(mutable_config, mock_packages, tmp_path):
     expected_dir = spack.paths.default_license_dir
     assert spack.config.get("config:license_dir") == expected_dir
     assert spack.package_base.PackageBase.global_license_dir == expected_dir
-    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == expected_dir
+    assert mock_packages.get_pkg_class("pkg-a").global_license_dir == expected_dir
 
     abs_path = str(tmp_path / "foo" / "bar" / "baz")
     spack.config.set("config:license_dir", abs_path)
     assert spack.config.get("config:license_dir") == abs_path
     assert spack.package_base.PackageBase.global_license_dir == abs_path
-    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == abs_path
+    assert mock_packages.get_pkg_class("pkg-a").global_license_dir == abs_path
 
 
 @pytest.mark.regression("22547")

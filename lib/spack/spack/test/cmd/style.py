@@ -130,7 +130,7 @@ def test_changed_files_all_files(mock_packages):
     assert len(files) > 500
 
     # a builtin package
-    zlib = spack.repo.PATH.get_pkg_class("zlib")
+    zlib = mock_packages.get_pkg_class("zlib")
     zlib_file = zlib.module.__file__
     if zlib_file.endswith("pyc"):
         zlib_file = zlib_file[:-1]
