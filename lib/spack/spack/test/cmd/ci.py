@@ -2067,7 +2067,7 @@ def fetch_versions_invalid(monkeypatch):
 @pytest.mark.parametrize("versions", [["2.1.4"], ["2.1.4", "2.1.5"]])
 def test_ci_validate_standard_versions_valid(capfd, mock_packages, fetch_versions_match, versions):
     spec = spack.spec.Spec("diff-test")
-    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    pkg = mock_packages.get_pkg_class(spec.name)(spec)
     version_list = [spack.version.Version(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list)
@@ -2082,7 +2082,7 @@ def test_ci_validate_standard_versions_invalid(
     capfd, mock_packages, fetch_versions_invalid, versions
 ):
     spec = spack.spec.Spec("diff-test")
-    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    pkg = mock_packages.get_pkg_class(spec.name)(spec)
     version_list = [spack.version.Version(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
@@ -2097,7 +2097,7 @@ def test_ci_validate_git_versions_valid(
     capfd, monkeypatch, mock_packages, mock_git_version_info, versions
 ):
     spec = spack.spec.Spec("diff-test")
-    pkg_class = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
     version_list = [spack.version.Version(v) for v, _ in versions]
 
@@ -2121,7 +2121,7 @@ def test_ci_validate_git_versions_bad_tag(
     capfd, monkeypatch, mock_packages, mock_git_version_info, versions
 ):
     spec = spack.spec.Spec("diff-test")
-    pkg_class = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
     version_list = [spack.version.Version(v) for v, _ in versions]
 
@@ -2145,7 +2145,7 @@ def test_ci_validate_git_versions_invalid(
     capfd, monkeypatch, mock_packages, mock_git_version_info, versions
 ):
     spec = spack.spec.Spec("diff-test")
-    pkg_class = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
     version_list = [spack.version.Version(v) for v, _ in versions]
 
@@ -2278,10 +2278,10 @@ def test_ci_verify_versions_standard_duplicates(
 
 def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_package_changes):
     repo, _, commits = mock_git_package_changes
-    with spack.repo.use_repositories(repo):
+    with spack.repo.use_repositories(repo) as repos:
         monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
 
-        pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
+        pkg_class = repos.get_pkg_class("diff-test")
         monkeypatch.setattr(pkg_class, "manual_download", True)
 
         out = ci_cmd("verify-versions", commits[-1], commits[-2])

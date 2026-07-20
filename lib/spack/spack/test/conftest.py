@@ -1897,7 +1897,7 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
 @pytest.fixture(scope="function")
 def mock_git_test_package(mock_git_repository, mutable_mock_repo, monkeypatch):
     # install a fake git version in the package class
-    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    pkg_class = mutable_mock_repo.get_pkg_class("git-test")
     monkeypatch.delattr(pkg_class, "git")
     monkeypatch.setitem(pkg_class.versions, spack.version.Version("git"), mock_git_repository.url)
     return pkg_class

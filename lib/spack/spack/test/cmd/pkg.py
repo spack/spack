@@ -241,7 +241,7 @@ def test_pkg_source_requires_one_arg(mock_packages):
 def test_pkg_source(mock_packages):
     fake_source = pkg("source", "fake")
 
-    fake_file = spack.repo.PATH.filename_for_package_name("fake")
+    fake_file = mock_packages.filename_for_package_name("fake")
     with open(fake_file, encoding="utf-8") as f:
         contents = f.read()
         assert fake_source == contents
@@ -348,7 +348,7 @@ def test_pkg_grep(mock_packages):
     # only splice-* mock packages have the string "splice" in them
     pkg("grep", "-l", "splice")
     assert pkg.output.strip() == "\n".join(
-        spack.repo.PATH.get_pkg_class(name).module.__file__
+        mock_packages.get_pkg_class(name).module.__file__
         for name in [
             "depends-on-manyvariants",
             "manyvariants",

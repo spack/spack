@@ -540,7 +540,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
 def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     """Test attempts to perform install phases with unconcretized spec."""
     spec = Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = mock_packages.get_pkg_class(spec.name)
 
     with pytest.raises(ValueError, match="must have a concrete spec"):
         PackageInstaller([pkg_cls(spec)], explicit=True).install()

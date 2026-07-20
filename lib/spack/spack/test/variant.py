@@ -7,7 +7,6 @@ import pytest
 
 import spack.concretize
 import spack.error
-import spack.repo
 import spack.spec
 import spack.variant
 from spack.spec import Spec, VariantMap
@@ -602,7 +601,7 @@ def test_wild_card_valued_variants_equivalent_to_str():
 
 
 def test_variant_definitions(mock_packages):
-    pkg = spack.repo.PATH.get_pkg_class("variant-values")
+    pkg = mock_packages.get_pkg_class("variant-values")
 
     # two variant names
     assert len(pkg.variant_names()) == 2
@@ -653,7 +652,7 @@ def test_variant_definitions(mock_packages):
     ],
 )
 def test_prevalidate_variant_value(mock_packages, pkg_name, value, spec, def_ids):
-    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
+    pkg = mock_packages.get_pkg_class(pkg_name)
 
     all_defs = [vdef for _, vdef in pkg.variant_definitions("v")]
 
@@ -683,7 +682,7 @@ def test_prevalidate_variant_value(mock_packages, pkg_name, value, spec, def_ids
     ],
 )
 def test_strict_invalid_variant_values(mock_packages, pkg_name, value, spec):
-    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
+    pkg = mock_packages.get_pkg_class(pkg_name)
 
     with pytest.raises(spack.variant.InvalidVariantValueError):
         spack.variant.prevalidate_variant_value(
@@ -705,7 +704,7 @@ def test_strict_invalid_variant_values(mock_packages, pkg_name, value, spec):
 def test_concretize_variant_default_with_multiple_defs(
     mock_packages, config, pkg_name, spec, satisfies, def_id
 ):
-    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
+    pkg = mock_packages.get_pkg_class(pkg_name)
     pkg_defs = [vdef for _, vdef in pkg.variant_definitions("v")]
 
     spec = spack.concretize.concretize_one(f"{pkg_name}{spec}")

@@ -15,7 +15,6 @@ import spack.error
 import spack.fetch_strategy
 import spack.package_base
 import spack.platforms
-import spack.repo
 import spack.util.git
 from spack.fetch_strategy import GitFetchStrategy
 from spack.package_base import PackageBase
@@ -103,7 +102,7 @@ def test_fetch(
     t = mock_git_repository.checks[type_of_test]
     h = mock_git_repository.hash
 
-    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    pkg_class = mutable_mock_repo.get_pkg_class("git-test")
     # This would fail using the default-no-per-version-git check but that
     # isn't included in this test
     monkeypatch.delattr(pkg_class, "git")
@@ -153,7 +152,7 @@ def test_fetch_pkg_attr_submodule_init(
     """
 
     t = mock_git_repository.checks["default-no-per-version-git"]
-    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    pkg_class = mutable_mock_repo.get_pkg_class("git-test")
     # For this test, the version args don't specify 'git' (which is
     # the majority of version specifications)
     monkeypatch.setattr(pkg_class, "git", mock_git_repository.url)
@@ -190,7 +189,7 @@ def test_adhoc_version_submodules(
 ):
     t = mock_git_repository.checks["tag"]
     # Construct the package under test
-    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    pkg_class = mutable_mock_repo.get_pkg_class("git-test")
     monkeypatch.setitem(pkg_class.versions, Version("git"), t.args)
     monkeypatch.setattr(pkg_class, "git", mock_git_repository.url, raising=False)
 

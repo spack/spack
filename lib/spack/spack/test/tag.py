@@ -91,7 +91,7 @@ def test_tag_get_installed_packages(mock_packages, mock_archive, mock_fetch, ins
 
 def test_tag_index_round_trip(mock_packages):
     # Assumes at least two packages -- mpich and mpich2 -- have tags
-    mock_index = spack.repo.PATH.tag_index
+    mock_index = mock_packages.tag_index
     assert mock_index.tags
 
     ostream = io.StringIO()
