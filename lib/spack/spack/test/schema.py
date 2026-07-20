@@ -262,12 +262,12 @@ def test_filter_schema_accepts_valid_configuration():
         {
             "filter": {
                 "projections": {
-                    "all": "{name}/{version}",
-                    "mpileaks": "{name}-{hash:7}",
+                    "all": "{name}@{version}",
+                    "mpileaks": "{name}@{version}/{hash:7}",
                 },
                 "concrete": True,
                 "specs": {"allow": ["mpileaks"], "block": ["zmpi"]},
-                "externals": {"allow": ["cmake"], "block": ["gcc"]},
+                "externals": {"allow": ["cmake@3.27"], "block": ["gcc@12"]},
                 "config": {"allow": ["packages"], "block": ["mirrors"]},
             }
         }
