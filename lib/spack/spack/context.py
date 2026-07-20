@@ -39,7 +39,8 @@ class SpackContext(NamedTuple):
             # solver relies on to load package classes.
             repo=spack.repo.create_and_enable(config, cache=misc_cache),
             binary_index=spack.binary_distribution.BinaryIndexCache(
-                cache_root=spack.binary_distribution.binary_index_location(config=config)
+                cache_root=spack.binary_distribution.binary_index_location(config=config),
+                config=config,
             ),
             misc_cache=misc_cache,
         )

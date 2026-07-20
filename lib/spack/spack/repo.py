@@ -72,11 +72,20 @@ _API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
 SPACK_REPO_INDEX_FILE_NAME = "spack-repo-index.yaml"
 
 
-def package_repository_lock() -> spack.util.lock.Lock:
-    """Lock for process safety when cloning remote package repositories"""
+def package_repository_lock(
+    config: Optional[spack.config.Configuration] = None,
+) -> spack.util.lock.Lock:
+    """Lock for process safety when cloning remote package repositories.
+
+    Args:
+        config: configuration deciding whether locks are enabled. If None, the global
+            ``spack.config.CONFIG`` is used.
+    """
+    if config is None:
+        config = spack.config.CONFIG
     return spack.util.lock.Lock(
         os.path.join(spack.paths.user_cache_path, "package-repository.lock"),
-        enable=spack.config.CONFIG.get("config:locks", True),
+        enable=config.get("config:locks", True),
     )
 
 
@@ -758,7 +767,9 @@ class RepoPath:
             cache = spack.caches.MISC_CACHE
 
         return RepoPath.from_descriptors(
-            descriptors=RepoDescriptors.from_config(lock=package_repository_lock(), config=config),
+            descriptors=RepoDescriptors.from_config(
+                lock=package_repository_lock(config), config=config
+            ),
             cache=cache,
             overrides=package_attributes_overrides(config),
         )

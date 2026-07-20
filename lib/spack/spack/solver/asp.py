@@ -19,6 +19,7 @@ import tempfile
 import time
 import warnings
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -79,6 +80,9 @@ from .requirements import RequirementKind, RequirementOrigin, RequirementParser,
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory
 from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder, all_libcs
 from .versions import Provenance
+
+if TYPE_CHECKING:
+    import spack.store
 
 GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
 
@@ -3214,7 +3218,7 @@ class SpackSolverSetup:
                 continue
 
             current_libc = None
-            if compiler.external or spack.store.STORE.db.installed(compiler):
+            if compiler.external or self.context.store.db.installed(compiler):
                 current_libc = CompilerPropertyDetector(compiler).default_libc()
             else:
                 try:
@@ -3888,8 +3892,7 @@ def post_process_concretization_result(specs: SpecDict, *, context: SpackContext
         specs[key] = unifier[current_spec.dag_hash()]
 
     # needs to happen after finalize_concretization, as it looks up hashes
-    for s in specs.values():
-        _ensure_no_deprecated(s, spack.store.STORE)
+    _ensure_no_deprecated(specs.values(), store=context.store)
 
     # Add git version lookup info to concrete Specs (this is generated for
     # abstract specs as well but the Versions may be replaced during the
@@ -3966,6 +3969,28 @@ def _specs_with_commits(spec, *, repo: spack.repo.RepoPath):
         " does not meet commit syntax requirements."
     )
     assert vn.is_git_commit_sha(spec.variants["commit"].value), invalid_commit_msg
+
+
+def _ensure_no_deprecated(specs: Iterable[spack.spec.Spec], *, store: "spack.store.Store") -> None:
+    """Raise if any spec in the DAGs of ``specs`` is deprecated in the store.
+
+    Raises:
+        spack.spec.SpecDeprecatedError: if any deprecated spec is found
+    """
+    deprecated = []
+    with store.db.read_transaction():
+        for x in spack.traverse.traverse_nodes(list(specs)):
+            _, rec = store.db.query_by_spec_hash(x.dag_hash())
+            if rec and rec.deprecated_for:
+                deprecated.append(rec)
+    if deprecated:
+        msg = "\n    The following specs have been deprecated"
+        msg += " in favor of specs with the hashes shown:\n"
+        for rec in deprecated:
+            msg += "        %s  --> %s\n" % (rec.spec, rec.deprecated_for)
+        msg += "\n"
+        msg += "    For each package listed, choose another spec\n"
+        raise spack.spec.SpecDeprecatedError(msg)
 
 
 def _ensure_external_path_if_external(spec: spack.spec.Spec, *, repo: spack.repo.RepoPath) -> None:

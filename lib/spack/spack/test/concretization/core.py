@@ -4546,7 +4546,7 @@ def test_concretization_cache_store_skips_spliced_results(mock_packages, use_con
     assert abstract_dep._hash is None
     assert root._hash is None
 
-    result = Result(specs=[Spec("pkg-a")])
+    result = Result(specs=[Spec("pkg-a")], repo=spack.repo.PATH)
     result.answers = [(0, 0, {nid: root})]
 
     cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))

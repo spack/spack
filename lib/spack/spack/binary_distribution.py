@@ -189,17 +189,22 @@ class BinaryIndexCache:
     absolutely necessary.
     """
 
-    def __init__(self, cache_root: Optional[str] = None):
-        self._index_cache_root: str = cache_root or binary_index_location(
-            config=spack.config.CONFIG
-        )
+    def __init__(
+        self,
+        cache_root: Optional[str] = None,
+        *,
+        config: Optional[spack.config.Configuration] = None,
+    ):
+        if config is None:
+            config = spack.config.CONFIG
+        self._index_cache_root: str = cache_root or binary_index_location(config=config)
 
         # the key associated with the serialized _local_index_cache
         self._index_contents_key = "contents.json"
 
         # a FileCache instance storing copies of remote binary cache indices
         self._index_file_cache: file_cache.FileCache = file_cache.FileCache(
-            self._index_cache_root, enable_lock=spack.config.CONFIG.get("config:locks", True)
+            self._index_cache_root, enable_lock=config.get("config:locks", True)
         )
         self._index_file_cache_initialized = False
 
