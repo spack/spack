@@ -8,7 +8,6 @@ import pytest
 import spack.config
 import spack.environment as ev
 import spack.error
-import spack.store
 from spack.cmd import (
     CommandNameError,
     PythonNameError,
@@ -69,7 +68,7 @@ def test_special_cases_concretization_parse_specs(
 
     spack.config.set("concretizer:unify", unify)
 
-    args = [f"/{spack.store.STORE.db.query(s)[0].dag_hash()}" for s in spec_strs]
+    args = [f"/{mutable_database.query(s)[0].dag_hash()}" for s in spec_strs]
     if len(args) > 1:
         # We convert the last one to a specfile input
         filename = tmp_path / "spec.json"
@@ -121,7 +120,7 @@ def test_special_cases_concretization_matching_specs_from_env(
     ev.create("test")
     env = ev.read("test")
 
-    args = [f"/{spack.store.STORE.db.query(s)[0].dag_hash()}" for s in spec_strs]
+    args = [f"/{mutable_database.query(s)[0].dag_hash()}" for s in spec_strs]
     if len(args) > 1:
         # We convert the last one to a specfile input
         filename = tmp_path / "spec.json"

@@ -26,7 +26,6 @@ import spack.hooks.sbom_generate
 import spack.old_installer
 import spack.package_base
 import spack.reporters.cdash
-import spack.store
 import spack.util.filesystem as fs
 from spack.error import SpackError, SpecSyntaxError
 from spack.main import SpackCommand
@@ -230,7 +229,7 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mock
 
 
 def test_install_overwrite(
-    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+    mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery, installer_variant
 ):
     """Tests installing a spec, and then re-installing it in the same prefix."""
     spec = spack.concretize.concretize_one("pkg-c")
@@ -238,9 +237,7 @@ def test_install_overwrite(
 
     # Ignore manifest, install times, and sbom
     manifest = os.path.join(
-        spec.prefix,
-        spack.store.STORE.layout.metadata_dir,
-        spack.store.STORE.layout.manifest_file_name,
+        spec.prefix, temporary_store.layout.metadata_dir, temporary_store.layout.manifest_file_name
     )
     ignores = [
         manifest,
@@ -302,7 +299,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
 
 
 def test_install_overwrite_multiple(
-    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+    mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery, installer_variant
 ):
     # Try to install a spec and then to reinstall it.
     libdwarf = spack.concretize.concretize_one("libdwarf")
@@ -314,8 +311,8 @@ def test_install_overwrite_multiple(
     # Ignore manifest, install times, and sbom
     ld_manifest = os.path.join(
         libdwarf.prefix,
-        spack.store.STORE.layout.metadata_dir,
-        spack.store.STORE.layout.manifest_file_name,
+        temporary_store.layout.metadata_dir,
+        temporary_store.layout.manifest_file_name,
     )
 
     ld_ignores = [
@@ -329,8 +326,8 @@ def test_install_overwrite_multiple(
 
     cm_manifest = os.path.join(
         cmake.prefix,
-        spack.store.STORE.layout.metadata_dir,
-        spack.store.STORE.layout.manifest_file_name,
+        temporary_store.layout.metadata_dir,
+        temporary_store.layout.manifest_file_name,
     )
 
     cm_ignores = [
@@ -523,13 +520,13 @@ def test_install_mix_cli_and_files(spec_format, clispecs, filespecs, tmp_path: p
 
 
 def test_extra_files_are_archived(
-    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+    mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery, installer_variant
 ):
     s = spack.concretize.concretize_one("archive-files")
 
     install("archive-files")
 
-    archive_dir = os.path.join(spack.store.STORE.layout.metadata_path(s), "archived-files")
+    archive_dir = os.path.join(temporary_store.layout.metadata_path(s), "archived-files")
     config_log = os.path.join(archive_dir, mock_archive.expanded_archive_basedir, "config.log")
     assert os.path.exists(config_log)
 
@@ -704,13 +701,13 @@ def test_build_warning_output(mock_fetch, install_mockery):
 
 
 @pytest.mark.disable_clean_stage_check  # new installer keeps a log for build cache installs
-def test_cache_only_fails(mock_fetch, install_mockery, installer_variant):
+def test_cache_only_fails(mock_fetch, temporary_store, install_mockery, installer_variant):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
     out = install("--cache-only", "libdwarf", fail_on_error=False)
     assert isinstance(install.error, spack.error.InstallError)
-    assert not spack.store.STORE.db.query_local("libdwarf")
-    assert not spack.store.STORE.db.query_local("libelf")
+    assert not temporary_store.db.query_local("libdwarf")
+    assert not temporary_store.db.query_local("libelf")
 
     if installer_variant == "old":
         assert "Failed to install gcc-runtime" in out
@@ -719,8 +716,7 @@ def test_cache_only_fails(mock_fetch, install_mockery, installer_variant):
 
         # Check that failure prefix locks are still cached
         failed_packages = [
-            pkg_name
-            for dag_hash, pkg_name in spack.store.STORE.failure_tracker.locker.locks.keys()
+            pkg_name for dag_hash, pkg_name in temporary_store.failure_tracker.locker.locks.keys()
         ]
         assert "libelf" in failed_packages
         assert "libdwarf" in failed_packages
@@ -802,7 +798,12 @@ def test_install_only_dependencies_of_all_in_env(
 
 # Unit tests should not be affected by the user's managed environments
 def test_install_no_add_in_env(
-    tmp_path: pathlib.Path, mutable_mock_env_path, mock_fetch, install_mockery, installer_variant
+    tmp_path: pathlib.Path,
+    mutable_mock_env_path,
+    mock_fetch,
+    temporary_store,
+    install_mockery,
+    installer_variant,
 ):
     # To test behavior of --add option, we create the following environment:
     #
@@ -860,11 +861,7 @@ def test_install_no_add_in_env(
         inst_out = install("--fake", "pkg-a")
         assert (
             len(
-                [
-                    x
-                    for x in e.all_specs()
-                    if spack.store.STORE.db.installed(x) and x.name == "pkg-a"
-                ]
+                [x for x in e.all_specs() if temporary_store.db.installed(x) and x.name == "pkg-a"]
             )
             == 2
         )

@@ -505,12 +505,12 @@ def test_010_all_install_sanity(database):
 
 def test_015_write_and_read(mutable_database):
     # write and read DB
-    with spack.store.STORE.db.write_transaction():
-        specs = spack.store.STORE.db.query()
-        recs = [spack.store.STORE.db.get_record(s) for s in specs]
+    with mutable_database.write_transaction():
+        specs = mutable_database.query()
+        recs = [mutable_database.get_record(s) for s in specs]
 
     for spec, rec in zip(specs, recs):
-        new_rec = spack.store.STORE.db.get_record(spec)
+        new_rec = mutable_database.get_record(spec)
         assert new_rec.ref_count == rec.ref_count
         assert new_rec.spec == rec.spec
         assert new_rec.path == rec.path
@@ -522,11 +522,11 @@ def test_016_roundtrip_spliced_spec(mutable_database):
     replacement = spack.concretize.concretize_one("splice-h+foo")
     spec = build_spec.splice(replacement)
 
-    spack.store.STORE.db.add(spec)
-    spack.store.STORE.db._state_is_inconsistent = True  # force re-read
+    mutable_database.add(spec)
+    mutable_database._state_is_inconsistent = True  # force re-read
 
-    _, spec_record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
-    _, buildspec_record = spack.store.STORE.db.query_by_spec_hash(spec.build_spec.dag_hash())
+    _, spec_record = mutable_database.query_by_spec_hash(spec.dag_hash())
+    _, buildspec_record = mutable_database.query_by_spec_hash(spec.build_spec.dag_hash())
 
     assert spec_record.spec == spec
     assert spec_record.spec.build_spec == spec.build_spec
@@ -536,12 +536,12 @@ def test_016_roundtrip_spliced_spec(mutable_database):
 def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
     monkeypatch.setattr(spack.database, "_use_uuid", False)
     # write and read DB
-    with spack.store.STORE.db.write_transaction():
-        specs = spack.store.STORE.db.query()
-        recs = [spack.store.STORE.db.get_record(s) for s in specs]
+    with mutable_database.write_transaction():
+        specs = mutable_database.query()
+        recs = [mutable_database.get_record(s) for s in specs]
 
     for spec, rec in zip(specs, recs):
-        new_rec = spack.store.STORE.db.get_record(spec)
+        new_rec = mutable_database.get_record(spec)
         assert new_rec.ref_count == rec.ref_count
         assert new_rec.spec == rec.spec
         assert new_rec.path == rec.path
@@ -551,7 +551,7 @@ def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
 def test_try_write_transaction(mutable_database, monkeypatch):
     """try_write_transaction persists changes on success and yields False without doing anything
     when acquiring the lock would block."""
-    db = spack.store.STORE.db
+    db = mutable_database
 
     spec = db.query_one("mpileaks ^zmpi")
     with db.try_write_transaction() as acquired:
@@ -570,7 +570,7 @@ def test_try_write_transaction(mutable_database, monkeypatch):
 def test_try_write_transaction_does_not_flush_on_exception(mutable_database):
     """Regression test: an exception inside try_write_transaction must not flush the possibly
     inconsistent in-memory database to disk; the next transaction re-reads it instead."""
-    db = spack.store.STORE.db
+    db = mutable_database
 
     with pytest.raises(ValueError):
         with db.try_write_transaction() as acquired:
@@ -584,7 +584,7 @@ def test_try_write_transaction_does_not_flush_on_exception(mutable_database):
 
 
 def test_try_read_transaction(mutable_database, monkeypatch):
-    db = spack.store.STORE.db
+    db = mutable_database
 
     with db.try_read_transaction() as acquired:
         assert acquired
@@ -656,7 +656,7 @@ def test_041_ref_counts_deprecate(mutable_database):
 def test_050_basic_query(database):
     """Ensure querying database is consistent with what is installed."""
     # query everything
-    total_specs = len(spack.store.STORE.db.query())
+    total_specs = len(database.query())
     assert total_specs == 20
 
     # query specs with multiple configurations
@@ -818,16 +818,16 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
     # not be considered installed until it is added to the database by
     # the installer with install().
     s = spack.concretize.concretize_one("externaltool@0.9")
-    assert not spack.store.STORE.db.installed(s)
+    assert not mutable_database.installed(s)
 
     # Now install the external package and check again the `installed` status
     PackageInstaller([s.package], fake=True, explicit=True).install()
-    assert spack.store.STORE.db.installed(s)
+    assert mutable_database.installed(s)
 
 
 @pytest.mark.regression("11118")
 def test_old_external_entries_prefix(mutable_database: spack.database.Database):
-    with open(spack.store.STORE.db._index_path, "r", encoding="utf-8") as f:
+    with open(mutable_database._index_path, "r", encoding="utf-8") as f:
         db_obj = json.loads(f.read())
 
     spack.vendor.jsonschema.validate(db_obj, schema)
@@ -836,13 +836,13 @@ def test_old_external_entries_prefix(mutable_database: spack.database.Database):
 
     db_obj["database"]["installs"][s.dag_hash()]["path"] = "None"
 
-    with open(spack.store.STORE.db._index_path, "w", encoding="utf-8") as f:
+    with open(mutable_database._index_path, "w", encoding="utf-8") as f:
         f.write(json.dumps(db_obj))
     if _use_uuid:
-        with open(spack.store.STORE.db._verifier_path, "w", encoding="utf-8") as f:
+        with open(mutable_database._verifier_path, "w", encoding="utf-8") as f:
             f.write(str(uuid.uuid4()))
 
-    record = spack.store.STORE.db.get_record(s)
+    record = mutable_database.get_record(s)
     assert record is not None
     assert record.path is None
     assert record.spec._prefix is None
@@ -865,11 +865,11 @@ def test_query_unused_specs(mutable_database):
     PackageInstaller([s.package], fake=True, explicit=True).install()
 
     si = s.dag_hash()
-    ml_mpich = spack.store.STORE.db.query_one("mpileaks ^mpich").dag_hash()
-    ml_mpich2 = spack.store.STORE.db.query_one("mpileaks ^mpich2").dag_hash()
-    ml_zmpi = spack.store.STORE.db.query_one("mpileaks ^zmpi").dag_hash()
-    externaltest = spack.store.STORE.db.query_one("externaltest").dag_hash()
-    trivial_smoke_test = spack.store.STORE.db.query_one("trivial-smoke-test").dag_hash()
+    ml_mpich = mutable_database.query_one("mpileaks ^mpich").dag_hash()
+    ml_mpich2 = mutable_database.query_one("mpileaks ^mpich2").dag_hash()
+    ml_zmpi = mutable_database.query_one("mpileaks ^zmpi").dag_hash()
+    externaltest = mutable_database.query_one("externaltest").dag_hash()
+    trivial_smoke_test = mutable_database.query_one("trivial-smoke-test").dag_hash()
 
     def check_unused(roots, deptype, expected):
         unused = spack.store.STORE.db.unused_specs(root_hashes=roots, deptype=deptype)
@@ -914,7 +914,7 @@ def test_query_spec_with_conditional_dependency(mutable_database):
     s = spack.concretize.concretize_one("hdf5~mpi")
     PackageInstaller([s.package], fake=True, explicit=True).install()
 
-    results = spack.store.STORE.db.query_local("hdf5 ^mpich")
+    results = mutable_database.query_local("hdf5 ^mpich")
     assert not results
 
 
@@ -922,13 +922,13 @@ def test_query_spec_with_conditional_dependency(mutable_database):
 def test_query_spec_with_non_conditional_virtual_dependency(database):
     # Ensure the same issue doesn't come up for virtual
     # dependency that are not conditional on variants
-    results = spack.store.STORE.db.query_local("mpileaks ^mpich")
+    results = database.query_local("mpileaks ^mpich")
     assert len(results) == 1
 
 
 def test_query_virtual_spec(database):
     """Make sure we can query for virtuals in the DB"""
-    results = spack.store.STORE.db.query_local("mpi")
+    results = database.query_local("mpi")
     assert len(results) == 3
     names = [s.name for s in results]
     assert all(name in names for name in ["mpich", "mpich2", "zmpi"])
@@ -1095,7 +1095,7 @@ def test_reindex_removed_prefix_is_not_installed(mutable_database, mock_store, c
 
 def test_reindex_when_all_prefixes_are_removed(mutable_database, mock_store):
     # Remove all non-external installations from the filesystem
-    for spec in spack.store.STORE.db.query_local():
+    for spec in mutable_database.query_local():
         if not spec.external:
             assert spec.prefix.startswith(str(mock_store))
             shutil.rmtree(spec.prefix)

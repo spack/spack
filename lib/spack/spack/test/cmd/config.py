@@ -17,7 +17,6 @@ import spack.database
 import spack.environment as ev
 import spack.main
 import spack.schema.config
-import spack.store
 import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
 
@@ -663,6 +662,7 @@ def test_config_update_shared_linking(mutable_config):
 
 def test_config_prefer_upstream(
     tmp_path_factory: pytest.TempPathFactory,
+    temporary_store,
     install_mockery,
     mock_fetch,
     mutable_config,
@@ -682,7 +682,7 @@ def test_config_prefer_upstream(
 
     downstream_db_root = str(tmp_path_factory.mktemp("mock_downstream_db_root"))
     db_for_test = spack.database.Database(downstream_db_root, upstream_dbs=[prepared_db])
-    monkeypatch.setattr(spack.store.STORE, "db", db_for_test)
+    monkeypatch.setattr(temporary_store, "db", db_for_test)
 
     output = config("prefer-upstream")
     scope = spack.config.default_modify_scope("packages")

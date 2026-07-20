@@ -6,7 +6,6 @@ import re
 
 import pytest
 
-import spack.store
 from spack.main import SpackCommand
 from spack.util.tty.color import color_when
 
@@ -55,7 +54,7 @@ def test_direct_installed_dependencies(mock_packages, database):
     with color_when(False):
         out = dependencies("--installed", "mpileaks^mpich")
 
-    root = spack.store.STORE.db.query_one("mpileaks ^mpich")
+    root = database.query_one("mpileaks ^mpich")
 
     lines = [line for line in out.strip().split("\n") if line and not line.startswith("--")]
     hashes = {re.split(r"\s+", line)[0] for line in lines}
@@ -69,7 +68,7 @@ def test_transitive_installed_dependencies(mock_packages, database):
     with color_when(False):
         out = dependencies("--installed", "--transitive", "mpileaks^zmpi")
 
-    root = spack.store.STORE.db.query_one("mpileaks ^zmpi")
+    root = database.query_one("mpileaks ^zmpi")
 
     lines = [line for line in out.strip().split("\n") if line and not line.startswith("--")]
     hashes = {re.split(r"\s+", line)[0] for line in lines}

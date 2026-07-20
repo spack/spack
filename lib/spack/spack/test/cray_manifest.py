@@ -25,7 +25,6 @@ import spack.platforms
 import spack.platforms.test
 import spack.solver.reuse
 import spack.spec
-import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
 
 pytestmark = [
@@ -345,7 +344,7 @@ def test_read_cray_manifest_add_compiler_failure(temporary_store, manifest_file,
     monkeypatch.setattr(spack.cray_manifest, "compiler_from_entry", _mock)
 
     spack.cray_manifest.read(str(manifest_file), True)
-    query_specs = spack.store.STORE.db.query("openmpi")
+    query_specs = temporary_store.db.query("openmpi")
     assert any(x.dag_hash() == "openmpifakehasha" for x in query_specs)
 
 

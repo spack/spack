@@ -13,7 +13,6 @@ import spack.error
 import spack.main
 import spack.repo
 import spack.spec
-import spack.store
 import spack.util.filesystem as fs
 from spack.main import SpackCommand
 
@@ -63,7 +62,9 @@ def test_dev_build_before(tmp_path: pathlib.Path, install_mockery, installer_var
 
 
 @pytest.mark.parametrize("last_phase", ["edit", "install"])
-def test_dev_build_until(tmp_path: pathlib.Path, install_mockery, last_phase, installer_variant):
+def test_dev_build_until(
+    tmp_path: pathlib.Path, temporary_store, install_mockery, last_phase, installer_variant
+):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
     )
@@ -79,7 +80,7 @@ def test_dev_build_until(tmp_path: pathlib.Path, install_mockery, last_phase, in
             assert f.read() == spec.package.replacement_string  # type: ignore
 
     assert not os.path.exists(spec.prefix)
-    assert not spack.store.STORE.db.query(spec, installed=True)
+    assert not temporary_store.db.query(spec, installed=True)
 
 
 def test_dev_build_before_until(tmp_path: pathlib.Path, install_mockery, installer_variant):

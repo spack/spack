@@ -18,7 +18,6 @@ import spack.package_base
 import spack.paths
 import spack.repo
 import spack.spec
-import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand
@@ -435,7 +434,7 @@ def test_find_loaded(database, working_env):
     assert output == ""
 
     os.environ[uenv.spack_loaded_hashes_var] = os.pathsep.join(
-        [x.dag_hash() for x in spack.store.STORE.db.query()]
+        [x.dag_hash() for x in database.query()]
     )
     output = find("--loaded")
     expected = find()

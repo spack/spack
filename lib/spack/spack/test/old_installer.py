@@ -24,7 +24,6 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.report
 import spack.spec
-import spack.store
 import spack.util.filesystem as fs
 import spack.util.lock as lk
 from spack.test.conftest import RepoBuilder
@@ -440,9 +439,11 @@ def test_dump_packages_deps_ok(install_mockery, tmp_path: pathlib.Path, mock_pac
     assert os.path.isfile(dest_pkg)
 
 
-def test_dump_packages_deps_errs(install_mockery, tmp_path: pathlib.Path, monkeypatch, capfd):
+def test_dump_packages_deps_errs(
+    temporary_store, install_mockery, tmp_path: pathlib.Path, monkeypatch, capfd
+):
     """Test error paths for dump_packages with dependencies."""
-    orig_bpp = spack.store.STORE.layout.build_packages_path
+    orig_bpp = temporary_store.layout.build_packages_path
     orig_dirname = spack.repo.Repo.dirname_for_package_name
     repo_err_msg = "Mock dirname_for_package_name"
 
@@ -461,7 +462,7 @@ def test_dump_packages_deps_errs(install_mockery, tmp_path: pathlib.Path, monkey
 
     # Now mock the creation of the required directory structure to cover
     # the try-except block
-    monkeypatch.setattr(spack.store.STORE.layout, "build_packages_path", bpp_path)
+    monkeypatch.setattr(temporary_store.layout, "build_packages_path", bpp_path)
 
     spec = spack.concretize.concretize_one("simple-inheritance")
     path = str(tmp_path)
@@ -580,13 +581,13 @@ def test_combine_phase_logs_does_not_care_about_encoding(tmp_path: pathlib.Path)
         assert f.read() == data * 2
 
 
-def test_check_deps_status_install_failure(install_mockery):
+def test_check_deps_status_install_failure(temporary_store, install_mockery):
     """Tests that checking the dependency status on a request to install
     'a' fails, if we mark the dependency as failed.
     """
     s = spack.concretize.concretize_one("pkg-a")
     for dep in s.traverse(root=False):
-        spack.store.STORE.failure_tracker.mark(dep)
+        temporary_store.failure_tracker.mark(dep)
 
     installer = create_installer(["pkg-a"], {})
     request = installer.build_requests[0]
@@ -809,7 +810,7 @@ def test_cleanup_all_tasks(install_mockery, monkeypatch):
     assert len(installer.build_tasks) == 1
 
 
-def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
+def test_setup_install_dir_grp(temporary_store, install_mockery, monkeypatch, capfd):
     """Test _setup_install_dir's group change."""
     mock_group = "mockgroup"
     mock_chgrp_msg = "Changing group for {0} to {1}"
@@ -829,7 +830,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     spec = build_task.request.pkg.spec
 
     fs.touchp(spec.prefix)
-    metadatadir = spack.store.STORE.layout.metadata_path(spec)
+    metadatadir = temporary_store.layout.metadata_path(spec)
     # Regex matching with Windows style paths typically fails
     # so we skip the match check here
     if sys.platform == "win32":
@@ -1199,7 +1200,7 @@ def test_overwrite_install_backup_success(monkeypatch, temporary_store, config, 
     monkeypatch.setattr(inst, "build_process", wipe_prefix)
 
     # Make sure the package is not marked uninstalled
-    monkeypatch.setattr(spack.store.STORE.db, "remove", fail)
+    monkeypatch.setattr(temporary_store.db, "remove", fail)
     # Make sure that the installer does an overwrite install
     monkeypatch.setattr(task, "_install_action", inst.InstallAction.OVERWRITE)
 
@@ -1263,16 +1264,16 @@ def test_term_status_line():
 
 
 @pytest.mark.parametrize("explicit", [True, False])
-def test_single_external_implicit_install(install_mockery, explicit):
+def test_single_external_implicit_install(temporary_store, install_mockery, explicit):
     pkg = "trivial-install-test-package"
     s = spack.concretize.concretize_one(pkg)
     s.external_path = "/usr"
     args = {"explicit": [s.dag_hash()] if explicit else []}
     create_installer([s], args).install()
-    assert spack.store.STORE.db.get_record(pkg).explicit == explicit
+    assert temporary_store.db.get_record(pkg).explicit == explicit
 
 
-def test_overwrite_install_does_install_build_deps(install_mockery, mock_fetch):
+def test_overwrite_install_does_install_build_deps(temporary_store, install_mockery, mock_fetch):
     """When overwrite installing something from sources, build deps should be installed."""
     s = spack.concretize.concretize_one("dtrun3")
     create_installer([s]).install()
@@ -1289,7 +1290,7 @@ def test_overwrite_install_does_install_build_deps(install_mockery, mock_fetch):
     create_installer([s], {"overwrite": [s.dag_hash()]}).install()
 
     # Verify that the build dep was also installed.
-    assert spack.store.STORE.db.installed(build_dep)
+    assert temporary_store.db.installed(build_dep)
 
 
 @pytest.mark.parametrize("run_tests", [True, False])
