@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import collections.abc
+import copy
 import contextlib
 import errno
 import glob
@@ -11,6 +12,7 @@ import pathlib
 import re
 import shutil
 import stat
+import tempfile
 import uuid
 import warnings
 from collections.abc import KeysView
@@ -354,6 +356,7 @@ def create(
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
     include_concrete: Optional[List[str]] = None,
+    filter_env: bool = False,
 ) -> "Environment":
     """Create a managed environment in Spack and returns it.
 
@@ -370,7 +373,8 @@ def create(
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
-        include_concrete: concrete environment names/paths to be included
+        include_concrete: list of concrete environment names/paths to be included
+        filter_env: if True, create a filtered environment from init_file
     """
     environment_dir = environment_dir_from_name(name, exists_ok=False)
     return create_in_dir(
@@ -379,6 +383,7 @@ def create(
         with_view=with_view,
         keep_relative=keep_relative,
         include_concrete=include_concrete,
+        filter_env=filter_env,
     )
 
 
@@ -388,6 +393,7 @@ def create_in_dir(
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
     include_concrete: Optional[List[str]] = None,
+    filter_env: bool = False,
 ) -> "Environment":
     """Create an environment in the directory passed as input and returns it.
 
@@ -402,10 +408,21 @@ def create_in_dir(
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
         include_concrete: concrete environment names/paths to be included
+        filter_env: if True, create a filtered environment from init_file
     """
     # If the initfile is a named environment, get its path
     if init_file and exists(str(init_file)):
         init_file = read(str(init_file)).path
+
+    if filter_env:
+        return _create_filtered_environment_in_dir(
+            root,
+            init_file=init_file,
+            with_view=with_view,
+            keep_relative=keep_relative,
+            include_concrete=include_concrete,
+        )
+
     initialize_environment_dir(root, envfile=init_file)
 
     if with_view is None and keep_relative:
@@ -454,6 +471,304 @@ def create_in_dir(
                 _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=copied)
 
     return env
+
+
+def _is_lockfile_path(path: Union[str, pathlib.Path]) -> bool:
+    path = str(path)
+    return path.endswith(".lock") or path.endswith(".json")
+
+
+def _default_filter_configuration() -> Dict[str, Any]:
+    return {
+        "projections": {"all": spack.spec.DISPLAY_FORMAT},
+        "concrete": True,
+        "specs": {"allow": [], "block": []},
+        "externals": {"allow": [], "block": []},
+        "config": {"allow": [], "block": ["filter", lockfile_include_key]},
+    }
+
+
+def _normalize_filter_configuration(configuration: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    normalized = _default_filter_configuration()
+    if not configuration:
+        return normalized
+
+    normalized["projections"].update(configuration.get("projections", {}))
+    normalized["concrete"] = configuration.get("concrete", True)
+
+    specs = configuration.get("specs", {})
+    normalized["specs"]["allow"] = list(specs.get("allow", []))
+    normalized["specs"]["block"] = list(specs.get("block", []))
+
+    externals = configuration.get("externals", {})
+    normalized["externals"]["allow"] = list(externals.get("allow", []))
+    normalized["externals"]["block"] = externals.get("block", [])
+
+    config = configuration.get("config", {})
+    config_allow = list(config.get("allow", []))
+    config_block = list(config.get("block", []))
+    default_config_block = _default_filter_configuration()["config"]["block"]
+    normalized["config"]["allow"] = config_allow
+    normalized["config"]["block"] = list(
+        dict.fromkeys(
+            config_block
+            + [section for section in default_config_block if section not in config_allow]
+        )
+    )
+    return normalized
+
+
+def _source_filter_configuration(source_env: "Environment") -> Dict[str, Any]:
+    with source_env:
+        return _normalize_filter_configuration(spack.config.get("filter"))
+
+
+def _matches_any_spec(spec: Spec, patterns: Sequence[str]) -> bool:
+    return any(spec.satisfies(Spec(pattern)) for pattern in patterns)
+
+
+def _spec_is_allowed(spec: Spec, allow: Sequence[str], block: Sequence[str]) -> bool:
+    allowed = not allow or _matches_any_spec(spec, allow)
+    return allowed and not _matches_any_spec(spec, block)
+
+
+def _package_matches_filter(package_name: str, patterns: Sequence[str]) -> bool:
+    package_spec = Spec(package_name)
+    return any(
+        package_name == pattern or package_spec.satisfies(Spec(pattern)) for pattern in patterns
+    )
+
+
+def _package_is_allowed(package_name: str, allow: Sequence[str], block: Sequence[str]) -> bool:
+    allowed = not allow or _package_matches_filter(package_name, allow)
+    return allowed and not _package_matches_filter(package_name, block)
+
+
+def _external_spec_is_allowed(spec: Spec, filter_configuration: Dict[str, Any]) -> bool:
+    if not spec.external:
+        return True
+
+    allow = filter_configuration["externals"]["allow"]
+    block = filter_configuration["externals"]["block"]
+    if block is True:
+        return False
+
+    return _package_is_allowed(spec.name, allow, block)
+
+
+def _projection_format_for(spec: Spec, projections: Dict[str, str]) -> str:
+    for matcher, format_string in projections.items():
+        if matcher == "all":
+            continue
+        if spec.satisfies(Spec(matcher)):
+            return format_string
+    return projections.get("all", spack.spec.DISPLAY_FORMAT)
+
+
+def _filtered_concrete_root_entries(
+    source_env: "Environment", filter_configuration: Dict[str, Any]
+) -> List[Tuple[str, Spec]]:
+    return [
+        (concrete.format(_projection_format_for(concrete, filter_configuration["projections"])), concrete)
+        for concrete in source_env.all_specs_generator()
+        if _spec_is_allowed(
+            concrete,
+            filter_configuration["specs"]["allow"],
+            filter_configuration["specs"]["block"],
+        )
+        and _external_spec_is_allowed(concrete, filter_configuration)
+    ]
+
+
+def _filtered_abstract_root_entries(
+    source_env: "Environment", filter_configuration: Dict[str, Any]
+) -> List[str]:
+    return [
+        str(spec)
+        for spec in source_env.user_specs
+        if _spec_is_allowed(
+            spec,
+            filter_configuration["specs"]["allow"],
+            filter_configuration["specs"]["block"],
+        )
+    ]
+
+
+def _filter_packages_configuration(
+    packages_configuration: Dict[str, Any], filter_configuration: Dict[str, Any]
+) -> Dict[str, Any]:
+    result = {}
+    allow = filter_configuration["externals"]["allow"]
+    block = filter_configuration["externals"]["block"]
+    block_all = block is True
+    block_patterns = [] if block is True else block
+
+    for package_name, package_configuration in packages_configuration.items():
+        if "externals" not in package_configuration:
+            continue
+        if block_all or not _package_is_allowed(package_name, allow, block_patterns):
+            continue
+
+        filtered_package = copy.deepcopy(package_configuration)
+        if filtered_package:
+            result[package_name] = filtered_package
+
+    return result
+
+
+def _filtered_configuration(
+    source_env: "Environment",
+    source_configuration: Dict[str, Any],
+    filter_configuration: Dict[str, Any],
+    specs: List[str],
+    with_view: Optional[Union[str, pathlib.Path, bool]],
+) -> Dict[str, Any]:
+    allowed_sections = set(filter_configuration["config"]["allow"])
+    blocked_sections = set(filter_configuration["config"]["block"])
+    filtered = {}
+
+    for key, value in source_configuration.items():
+        if key == "specs" or key in blocked_sections:
+            continue
+        if allowed_sections and key not in allowed_sections:
+            continue
+        filtered[key] = copy.deepcopy(value)
+
+    def include_section(name: str) -> bool:
+        return name not in blocked_sections and (not allowed_sections or name in allowed_sections)
+
+    with source_env:
+        if include_section("packages"):
+            filtered_packages = _filter_packages_configuration(
+                spack.config.get("packages") or {}, filter_configuration
+            )
+        else:
+            filtered_packages = {}
+
+        if include_section("concretizer"):
+            filtered["concretizer"] = copy.deepcopy(spack.config.get("concretizer"))
+
+    if include_section("packages"):
+        if filtered_packages:
+            filtered["packages"] = filtered_packages
+        else:
+            filtered.pop("packages", None)
+    else:
+        filtered.pop("packages", None)
+
+    if not include_section("concretizer"):
+        filtered.pop("concretizer", None)
+
+    if "concretizer" in filtered and not filtered["concretizer"]:
+        filtered.pop("concretizer", None)
+
+    filtered["specs"] = specs
+
+    if with_view is not None:
+        filtered["view"] = str(with_view) if not isinstance(with_view, bool) else with_view
+
+    return filtered
+
+
+@contextlib.contextmanager
+def _filtered_source_environment(
+    init_file: Union[str, pathlib.Path]
+) -> Iterable[Tuple["Environment", pathlib.Path, bool]]:
+    source_path = pathlib.Path(init_file)
+    if _is_lockfile_path(source_path):
+        raise SpackEnvironmentError(
+            "cannot create a filtered environment from a lockfile; use an environment "
+            "directory or manifest instead"
+        )
+
+    if source_path.is_dir():
+        if not is_env_dir(str(source_path)):
+            raise SpackEnvironmentError(
+                f"cannot create a filtered environment, {source_path} is not a valid environment"
+            )
+        yield Environment(source_path), source_path, True
+        return
+
+    with tempfile.TemporaryDirectory(prefix="spack-filter-source-") as temp_dir:
+        initialize_environment_dir(temp_dir, envfile=source_path)
+        yield Environment(temp_dir), source_path, False
+
+
+def _set_filtered_manifest(env: "Environment", configuration: Dict[str, Any]) -> None:
+    env.manifest.yaml_content = {TOP_LEVEL_KEY: configuration}
+    env.manifest.changed = True
+    with fs.safe_remove(env.lock_path):
+        env.manifest.flush()
+    env._re_read()
+
+
+def _populate_filtered_lockfile(
+    env: "Environment", filtered_roots: Sequence[Tuple[str, Spec]]
+) -> None:
+    add_concrete_spec = getattr(env, "add_concrete_spec", None) or getattr(
+        env, "_add_concrete_spec"
+    )
+    for abstract_spec, concrete_spec in filtered_roots:
+        add_concrete_spec(Spec(abstract_spec), concrete_spec)
+    env.write(regenerate=False)
+
+
+def _create_filtered_environment_in_dir(
+    root: Union[str, pathlib.Path],
+    *,
+    init_file: Optional[Union[str, pathlib.Path]],
+    with_view: Optional[Union[str, pathlib.Path, bool]],
+    keep_relative: bool,
+    include_concrete: Optional[List[str]],
+) -> "Environment":
+    if init_file is None:
+        raise SpackEnvironmentError("cannot create a filtered environment without a source")
+
+    if include_concrete is not None:
+        raise SpackEnvironmentError(
+            "cannot combine filtered environment creation with --include-concrete"
+        )
+
+    with _filtered_source_environment(init_file) as (source_env, source_path, is_source_dir):
+        filter_configuration = _source_filter_configuration(source_env)
+
+        if filter_configuration["concrete"]:
+            if not is_source_dir:
+                raise SpackEnvironmentError(
+                    "cannot create a concrete filtered environment from a manifest file; "
+                    "use an environment directory instead"
+                )
+            if not (source_path / lockfile_name).exists():
+                raise SpackEnvironmentError(
+                    "cannot create a concrete filtered environment from an environment "
+                    "without a spack.lock"
+                )
+            filtered_roots = _filtered_concrete_root_entries(source_env, filter_configuration)
+            filtered_specs = [abstract for abstract, _ in filtered_roots]
+        else:
+            filtered_roots = []
+            filtered_specs = _filtered_abstract_root_entries(source_env, filter_configuration)
+
+        initialize_environment_dir(root, envfile=init_file)
+        env = Environment(root)
+        filtered_configuration = _filtered_configuration(
+            source_env,
+            source_env.manifest[TOP_LEVEL_KEY],
+            filter_configuration,
+            filtered_specs,
+            with_view,
+        )
+        _set_filtered_manifest(env, filtered_configuration)
+
+        init_file_dir = str(source_path) if is_source_dir else os.path.abspath(os.path.dirname(source_path))
+        if not keep_relative and env.path != init_file_dir:
+            _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=is_source_dir)
+            _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=is_source_dir)
+
+        if filter_configuration["concrete"]:
+            _populate_filtered_lockfile(env, filtered_roots)
+
+        return env
 
 
 def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=False):
