@@ -511,13 +511,13 @@ def test_env_specs_partition(install_mockery, mock_fetch):
     assert roots_to_install[0].name == "mpileaks"
 
 
-def test_env_install_all(install_mockery, mock_fetch):
+def test_env_install_all(temporary_store, install_mockery, mock_fetch):
     e = ev.create("test")
     e.add("cmake-client")
     e.concretize()
     e.install_all(fake=True)
     spec = next(x for x in e.all_specs_generator() if x.name == "cmake-client")
-    assert spack.store.STORE.db.installed(spec)
+    assert temporary_store.db.installed(spec)
 
 
 def test_env_install_single_spec(install_mockery, mock_fetch, installer_variant):
@@ -540,7 +540,7 @@ def test_env_install_single_spec(install_mockery, mock_fetch, installer_variant)
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])
 @pytest.mark.parametrize("reuse", [True, False])
 def test_env_install_include_concrete_env(
-    unify, reuse, install_mockery, mock_fetch, mutable_config
+    unify, reuse, temporary_store, install_mockery, mock_fetch, mutable_config
 ):
     test1, test2, combined = setup_combined_multiple_env()
 
@@ -559,7 +559,7 @@ def test_env_install_include_concrete_env(
     test2_user_spec_hashes = [x.hash for x in test2.concretized_roots]
 
     for spec in combined.all_specs():
-        assert spack.store.STORE.db.installed(spec)
+        assert temporary_store.db.installed(spec)
 
     assert test1_user_spec_hashes == [
         x.hash for x in combined.included_concretized_roots[test1.path]
@@ -578,13 +578,15 @@ def test_env_install_include_concrete_env(
         assert mpileaks["libelf"].dag_hash() in test2_user_spec_hashes
 
 
-def test_env_roots_marked_explicit(install_mockery, mock_fetch, installer_variant):
+def test_env_roots_marked_explicit(
+    temporary_store, install_mockery, mock_fetch, installer_variant
+):
     install = SpackCommand("install")
     install("--fake", "dependent-install")
 
     # Check one explicit, one implicit install
-    dependent = spack.store.STORE.db.query(explicit=True)
-    dependency = spack.store.STORE.db.query(explicit=False)
+    dependent = temporary_store.db.query(explicit=True)
+    dependency = temporary_store.db.query(explicit=False)
     assert len(dependent) == 1
     assert len(dependency) == 1
 
@@ -595,7 +597,7 @@ def test_env_roots_marked_explicit(install_mockery, mock_fetch, installer_varian
         e.concretize()
         e.install_all()
 
-    explicit = spack.store.STORE.db.query(explicit=True)
+    explicit = temporary_store.db.query(explicit=True)
     assert len(explicit) == 2
 
 
@@ -653,7 +655,7 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmp_path: pathlib.P
 
 
 def test_env_install_two_specs_same_dep(
-    install_mockery, mock_fetch, tmp_path: pathlib.Path, monkeypatch
+    temporary_store, install_mockery, mock_fetch, tmp_path: pathlib.Path, monkeypatch
 ):
     """Test installation of two packages that share a dependency with no
     connection and the second specifying the dependency as a 'build'
@@ -682,10 +684,10 @@ spack:
     assert "depb: Successfully installed" in out
     assert "pkg-a: Successfully installed" in out
 
-    depb = spack.store.STORE.db.query_one("depb", installed=True)
+    depb = temporary_store.db.query_one("depb", installed=True)
     assert depb, "Expected depb to be installed"
 
-    a = spack.store.STORE.db.query_one("pkg-a", installed=True)
+    a = temporary_store.db.query_one("pkg-a", installed=True)
     assert a, "Expected pkg-a to be installed"
 
 
@@ -1852,7 +1854,7 @@ def test_roots_display_with_variants():
     assert "boost+shared" in out
 
 
-def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
+def test_uninstall_keeps_in_env(mock_stage, mock_fetch, temporary_store, install_mockery):
     # 'spack uninstall' without --remove should not change the environment
     # spack.yaml file, just uninstall specs
     env("create", "test")
@@ -1874,7 +1876,7 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
     assert {x.hash for x in test.concretized_roots} == user_spec_hashes_before
     assert test.user_specs.specs == user_specs_before.specs
     assert mpileaks_hash in test.specs_by_hash
-    assert not spack.store.STORE.db.installed(test.specs_by_hash[mpileaks_hash])
+    assert not temporary_store.db.installed(test.specs_by_hash[mpileaks_hash])
 
 
 def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
@@ -3986,7 +3988,7 @@ def test_environment_view_target_already_exists(
     assert os.path.isfile(os.path.join(orphan_dir, "orphan_file"))
 
 
-def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery):
+def test_environment_query_spec_by_hash(mock_stage, mock_fetch, temporary_store, install_mockery):
     env("create", "test")
     with ev.read("test"):
         add("libdwarf")
@@ -3995,8 +3997,8 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
         spec = e.matching_spec("libelf")
         install("--fake", f"/{spec.dag_hash()}")
     with ev.read("test") as e:
-        assert not spack.store.STORE.db.installed(e.matching_spec("libdwarf"))
-        assert spack.store.STORE.db.installed(e.matching_spec("libelf"))
+        assert not temporary_store.db.installed(e.matching_spec("libdwarf"))
+        assert temporary_store.db.installed(e.matching_spec("libelf"))
 
 
 @pytest.mark.parametrize("lockfile", ["v1", "v2", "v3"])

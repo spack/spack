@@ -14,12 +14,12 @@ deprecate = SpackCommand("deprecate")
 reindex = SpackCommand("reindex")
 
 
-def test_reindex_basic(mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_reindex_basic(mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery):
     install("--fake", "libelf@0.8.13")
     install("--fake", "libelf@0.8.12")
-    all_installed = spack.store.STORE.db.query()
+    all_installed = temporary_store.db.query()
     reindex()
-    assert spack.store.STORE.db.query() == all_installed
+    assert temporary_store.db.query() == all_installed
 
 
 def _clear_db(tmp_path: pathlib.Path):
@@ -33,25 +33,35 @@ def _clear_db(tmp_path: pathlib.Path):
 
 
 def test_reindex_db_deleted(
-    mock_packages, mock_archive, mock_fetch, install_mockery, tmp_path: pathlib.Path
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    temporary_store,
+    install_mockery,
+    tmp_path: pathlib.Path,
 ):
     install("--fake", "libelf@0.8.13")
     install("--fake", "libelf@0.8.12")
-    all_installed = spack.store.STORE.db.query()
+    all_installed = temporary_store.db.query()
     _clear_db(tmp_path)
     reindex()
-    assert spack.store.STORE.db.query() == all_installed
+    assert temporary_store.db.query() == all_installed
 
 
 def test_reindex_with_deprecated_packages(
-    mock_packages, mock_archive, mock_fetch, install_mockery, tmp_path: pathlib.Path
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    temporary_store,
+    install_mockery,
+    tmp_path: pathlib.Path,
 ):
     install("--fake", "libelf@0.8.13")
     install("--fake", "libelf@0.8.12")
 
     deprecate("-y", "libelf@0.8.12", "libelf@0.8.13")
 
-    db = spack.store.STORE.db
+    db = temporary_store.db
 
     all_installed = db.query(installed=InstallRecordStatus.ANY)
     non_deprecated = db.query(installed=True)

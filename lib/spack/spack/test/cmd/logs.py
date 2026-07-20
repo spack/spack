@@ -16,7 +16,6 @@ import spack.concretize
 import spack.error
 import spack.main
 import spack.spec
-import spack.store
 from spack.main import SpackCommand
 
 logs = SpackCommand("logs")
@@ -48,9 +47,11 @@ def _rewind_collect_and_decode(rw_stream):
     return rw_stream.read().decode("utf-8")
 
 
-def test_logs_cmd_errors(install_mockery, mock_fetch, mock_archive, mock_packages):
+def test_logs_cmd_errors(
+    temporary_store, install_mockery, mock_fetch, mock_archive, mock_packages
+):
     spec = spack.concretize.concretize_one("pkg-c")
-    assert not spack.store.STORE.db.installed(spec)
+    assert not temporary_store.db.installed(spec)
 
     with pytest.raises(spack.error.SpackError, match="is not installed or staged"):
         logs("pkg-c")
@@ -71,7 +72,7 @@ def _write_string_to_path(string, path):
         f.write(string.encode("utf-8"))
 
 
-def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages):
+def test_dump_logs(temporary_store, install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that ``spack log`` can find (and print) the logs for partial
     builds and completed installs.
 
@@ -83,7 +84,7 @@ def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages):
 
     # Sanity check, make sure this test is checking what we want: to
     # start with
-    assert not spack.store.STORE.db.installed(concrete_spec)
+    assert not temporary_store.db.installed(concrete_spec)
 
     stage_log_content = "test_log stage output\nanother line"
     installed_log_content = "test_log install output\nhere to test multiple lines"

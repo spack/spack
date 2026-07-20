@@ -47,7 +47,7 @@ def test_correct_installed_dependents(mutable_database):
     # Test whether we return the right dependents.
 
     # Take callpath from the database
-    callpath = spack.store.STORE.db.query_local("callpath")[0]
+    callpath = mutable_database.query_local("callpath")[0]
 
     # Ensure it still has dependents and dependencies
     dependents = callpath.dependents(deptype=("run", "link"))
@@ -115,7 +115,7 @@ def test_force_uninstall_spec_with_ref_count_not_zero(
 def test_force_uninstall_and_reinstall_by_hash(mutable_database):
     """Test forced uninstall and reinstall of old specs."""
     # this is the spec to be removed
-    callpath_spec = spack.store.STORE.db.query_one("callpath ^mpich")
+    callpath_spec = mutable_database.query_one("callpath ^mpich")
     dag_hash = callpath_spec.dag_hash()
 
     # ensure can look up by hash and that it's a dependent of mpileaks
