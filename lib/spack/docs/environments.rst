@@ -181,7 +181,7 @@ The ``filter:`` section is written under the top-level ``spack:`` key in ``spack
          allow: [packages, concretizer]
          block: [mirrors]
        projections:
-         all: "{name}/{version}-{hash:7}"
+         all: "{name}@{version}/{hash:7}"
 
 The ``concrete`` option controls whether the filter is applied to the concretized lockfile graph or to the abstract specs in ``spack.yaml``.
 When ``concrete`` is ``true`` (the default), the source must be an environment directory with a ``spack.lock`` file.
@@ -194,6 +194,7 @@ The ``specs`` subsection selects which specs are kept.
 ``specs:block`` is a list of spec constraints to remove; an empty list removes nothing.
 When both are present, a spec must match the allow list and must not match the block list.
 In concrete mode, these constraints are matched against every concrete spec in the source lockfile graph, not only against the original roots.
+Projection formats used in concrete mode must format each selected concrete spec to a valid Spack spec string.
 
 The ``externals`` subsection controls external specs and external package configuration.
 ``externals:allow`` is a list of package names or package constraints whose external package configuration may be copied.
