@@ -27,6 +27,7 @@ from typing import (
     Callable,
     Dict,
     Generator,
+    Iterable,
     Iterator,
     List,
     Mapping,
@@ -47,6 +48,7 @@ import spack.patch
 import spack.paths
 import spack.provider_index
 import spack.tag
+import spack.traverse
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.filesystem as fs
@@ -56,6 +58,7 @@ import spack.util.lock
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
+import spack.version
 from spack.util import tty
 from spack.util.filesystem import working_dir
 from spack.util.lang import Singleton, ensure_unwrapped, memoized
@@ -2127,6 +2130,91 @@ PATH = cast(RepoPath, Singleton(lambda: create_and_enable(spack.config.CONFIG)))
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
 sys.meta_path.append(REPOS_FINDER)
+
+
+def reconstruct_virtuals(
+    specs: Iterable["spack.spec.Spec"], *, edges_lack_virtuals: bool = False
+) -> None:
+    """Fill in, from ``package.py``, the virtual data that belongs on a concrete spec but that
+    older spec documents did not record:
+
+    - on each node, the versions of the virtuals it provides, absent before the
+      ``provided_virtuals`` key existed
+    - on each edge, the virtuals it resolves, absent before specfile format 3
+
+    The two are guarded independently, since the node data was added without a specfile format
+    bump: a format 5 document written by an older Spack has edge virtuals but no node ones.
+
+    Edges are only revisited for documents that predate format 3, since doing so costs a
+    package class lookup per node. Pass ``edges_lack_virtuals`` for specs assembled outside the
+    spec file readers, whose edges have no virtuals set regardless of the format they report.
+
+    Nodes and edges that already have the data keep it, so this is idempotent and cheap to
+    call defensively. It runs on a wired DAG, since ``provides`` and ``depends_on`` when
+    clauses may constrain dependencies.
+
+    Everything is read off the package class, never an instance: constructing a package can
+    format a spec, which hashes it, and the provided virtuals have to be in place before any
+    node is hashed."""
+    # Post order, so a `provides` when clause constraining a dependency sees frozen children.
+    nodes = list(spack.traverse.traverse_nodes(list(specs), order="post", key=id))
+
+    for spec in nodes:
+        if spec._provided_virtuals is not None:
+            continue
+
+        # When several `provides` clauses match, the provided version is their intersection,
+        # which is what the solver enforces by imposing each clause as a node_version_satisfies
+        # constraint on the virtual node.
+        provided: Dict[str, spack.version.VersionList] = {}
+        try:
+            declared = PATH.get_pkg_class(spec.fullname).provided
+        except Exception as e:
+            warnings.warn(f"cannot reconstruct provided virtuals on {spec.name}: {e}")
+        else:
+            for when_spec, vspecs in declared.items():
+                if not spec.satisfies(when_spec):
+                    continue
+                for vspec in vspecs:
+                    if vspec.name in provided:
+                        provided[vspec.name] = provided[vspec.name].intersection(vspec.versions)
+                    else:
+                        provided[vspec.name] = vspec.versions.copy()
+
+        spec._provided_virtuals = provided
+
+    for spec in nodes:
+        if not spec.concrete:
+            continue
+
+        if not edges_lack_virtuals and spec.original_spec_format() >= 3:
+            continue
+
+        try:
+            pkg_cls = PATH.get_pkg_class(spec.fullname)
+        except Exception as e:
+            warnings.warn(f"cannot reconstruct virtual dependencies on {spec.name}: {e}")
+            continue
+
+        needed: Set[str] = set()
+        for name, when_deps in pkg_cls.dependencies_by_name(when=True).items():
+            if not PATH.is_virtual(name):
+                continue
+            for when_dep in when_deps:
+                if spec.satisfies(when_dep):
+                    needed.add(name)
+                    break
+
+        if not needed:
+            continue
+
+        # The provided virtuals were frozen above, so the child side needs no package instance.
+        for edge in spec.edges_to_dependencies():
+            if not edge.spec.concrete:
+                continue
+            virtuals_to_add = needed & set(edge.spec.provided_virtuals)
+            if virtuals_to_add:
+                edge.update_virtuals(virtuals_to_add)
 
 
 @contextlib.contextmanager

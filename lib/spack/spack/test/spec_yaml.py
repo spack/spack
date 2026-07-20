@@ -48,7 +48,7 @@ def check_json_round_trip(spec):
     assert spec.eq_dag(spec_from_json)
 
 
-def test_read_spec_from_signed_json():
+def test_read_spec_from_signed_json(mock_packages):
     spec_dir = os.path.join(spack.paths.test_path, "data", "mirrors", "signed_json")
     file_name = (
         "linux-ubuntu18.04-haswell-gcc-8.4.0-"
