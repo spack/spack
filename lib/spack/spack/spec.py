@@ -59,7 +59,6 @@ import pathlib
 import platform
 import re
 import socket
-import warnings
 from typing import (
     Any,
     Callable,
@@ -1614,6 +1613,10 @@ class Spec:
         # cache of package for this spec
         self._package = None
 
+        # Virtual name -> version(s) this spec provides, frozen at concretization time from the
+        # package's `provides`. None means "not populated"; callers fall back to a package lookup.
+        self._provided_virtuals: Optional[Dict[str, vn.VersionList]] = None
+
         # whether the spec is concrete or not; set at the end of concretization
         self._concrete = False
 
@@ -2428,6 +2431,13 @@ class Spec:
                 package_hash = package_hash.decode("utf-8")
             d["package_hash"] = package_hash
 
+        # Always written for concrete nodes, even when empty, so that an absent key means the
+        # document was written by a Spack that predates this field.
+        if self._concrete:
+            d["provided_virtuals"] = {
+                name: str(versions) for name, versions in sorted(self.provided_virtuals.items())
+            }
+
         # Note: Relies on sorting dict by keys later in algorithm.
         deps = self._dependencies_dict(depflag=hash.depflag)
         if deps:
@@ -2850,6 +2860,9 @@ class Spec:
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
         self._concrete = value
+        if not value:
+            # Frozen provided virtuals are no longer valid; repopulated on re-concretization.
+            self._provided_virtuals = None
         self._validate_version()
         for variant in self.variants.values():
             variant.concrete = True
@@ -2882,6 +2895,11 @@ class Spec:
         # if set to false, clear out all hashes (set to None or remove attr)
         # may need to change references to respect None
         for s in self.traverse():
+            # A node that is turned concrete here provides no virtuals unless something says
+            # otherwise. Nodes that are concrete already are left alone: they may come from a
+            # document that predates `provided_virtuals`, and still need reconstruction.
+            if value and not s._concrete and s._provided_virtuals is None:
+                s._provided_virtuals = {}
             if not value:
                 s.clear_caches()
             s._mark_root_concrete(value)
@@ -2922,6 +2940,11 @@ class Spec:
                 # keep this check here to ensure package hash is saved
                 assert getattr(spec, ht.package_hash.attr)
 
+        # Freeze the virtual versions each node provides. Before marking concrete, which
+        # defaults the freshly concrete nodes to providing nothing, and before any hash is
+        # computed, since the frozen versions are part of it.
+        spack.repo.reconstruct_virtuals([self])
+
         # Mark everything in the spec as concrete
         self._mark_concrete()
 
@@ -2931,6 +2954,19 @@ class Spec:
         # DAG hash.
         for spec in self.traverse():
             spec._cached_hash(ht.dag_hash)
+
+    @property
+    def provided_virtuals(self) -> Dict[str, vn.VersionList]:
+        """Virtual name -> version(s) this concrete node provides, frozen at concretization.
+
+        The values are assigned by ``spack.repo.reconstruct_virtuals``; this property only
+        returns the cached result."""
+        if self._provided_virtuals is None:
+            raise spack.error.SpecError(
+                f"the provided virtuals of {self.name} were never frozen; "
+                f"call spack.repo.reconstruct_virtuals(specs) first"
+            )
+        return self._provided_virtuals
 
     def index(self, deptype="all"):
         """Return a dictionary that points to all the dependencies in this
@@ -3589,6 +3625,9 @@ class Spec:
             )
 
         self._package = None
+        self._provided_virtuals = (
+            None if other._provided_virtuals is None else dict(other._provided_virtuals)
+        )
 
         # Local node attributes get copied first.
         self.name = other.name
@@ -5216,53 +5255,6 @@ def parse_with_version_concrete(spec_like: Union[str, Spec]):
     return s
 
 
-def reconstruct_virtuals_on_edges(spec: Spec) -> None:
-    """Reconstruct virtuals on edges. Used to read from old DB and reindex."""
-    virtuals_needed: Dict[str, Set[str]] = {}
-    virtuals_provided: Dict[str, Set[str]] = {}
-    for edge in spec.traverse_edges(cover="edges", root=False):
-        parent_key = edge.parent.dag_hash()
-        if parent_key not in virtuals_needed:
-            # Construct which virtuals are needed by parent
-            virtuals_needed[parent_key] = set()
-            try:
-                parent_pkg = edge.parent.package
-            except Exception as e:
-                warnings.warn(
-                    f"cannot reconstruct virtual dependencies on {edge.parent.name}: {e}"
-                )
-                continue
-
-            virtuals_needed[parent_key].update(
-                name
-                for name, when_deps in parent_pkg.dependencies_by_name(when=True).items()
-                if spack.repo.PATH.is_virtual(name)
-                and any(edge.parent.satisfies(x) for x in when_deps)
-            )
-
-        if not virtuals_needed[parent_key]:
-            continue
-
-        child_key = edge.spec.dag_hash()
-        if child_key not in virtuals_provided:
-            virtuals_provided[child_key] = set()
-            try:
-                child_pkg = edge.spec.package
-            except Exception as e:
-                warnings.warn(
-                    f"cannot reconstruct virtual dependencies on {edge.parent.name}: {e}"
-                )
-                continue
-            virtuals_provided[child_key].update(x.name for x in child_pkg.virtuals_provided)
-
-        if not virtuals_provided[child_key]:
-            continue
-
-        virtuals_to_add = virtuals_needed[parent_key] & virtuals_provided[child_key]
-        if virtuals_to_add:
-            edge.update_virtuals(virtuals_to_add)
-
-
 DepSpecComponents = Tuple[str, str, List[str], str, Tuple[str, ...], bool]
 
 
@@ -5349,6 +5341,14 @@ class SpecfileReaderBase(abc.ABC):
         # specs read in are concrete unless marked abstract
         if node.get("concrete", True):
             spec._mark_root_concrete()
+            # An absent key means the document predates this field; it is left as None here and
+            # reconstructed from package.py once the DAG is wired up, since `provides` when
+            # clauses may constrain dependencies.
+            if "provided_virtuals" in node:
+                spec._provided_virtuals = {
+                    name: vn.VersionList(versions)
+                    for name, versions in node["provided_virtuals"].items()
+                }
 
         if "patches" in node:
             patches = node["patches"]
@@ -5456,6 +5456,10 @@ def wire_spec_nodes(
                 )
             node_spec._build_spec = build_spec
 
+    # Fills in nodes read from documents that predate the `provided_virtuals` key; a no-op
+    # otherwise.
+    spack.repo.reconstruct_virtuals(specs_by_hash.values())
+
     return specs_by_hash
 
 
@@ -5493,7 +5497,7 @@ class SpecfileV1(SpecfileReaderBase):
                     deps[dname], depflag=dt.canonicalize(dtypes), virtuals=virtuals, direct=direct
                 )
 
-        reconstruct_virtuals_on_edges(result)
+        spack.repo.reconstruct_virtuals(dep_list)
         return result
 
     @classmethod
@@ -5549,9 +5553,7 @@ class SpecfileV2(SpecfileReaderBase):
 
     @classmethod
     def load(cls, data) -> Spec:
-        result = cls._load(data)
-        reconstruct_virtuals_on_edges(result)
-        return result
+        return cls._load(data)
 
     @classmethod
     def name_and_data(cls, node):
