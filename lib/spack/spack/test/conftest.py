@@ -1486,55 +1486,6 @@ def upstream_and_downstream_db(tmp_path: Path, gen_mock_layout):
     mock_db_root.chmod(0o755)
 
 
-@contextlib.contextmanager
-def writable(database):
-    """Allow a database to be written inside this context manager."""
-    old_lock, old_is_upstream = database.lock, database.is_upstream
-    db_root = Path(database.root)
-
-    try:
-        # this is safe on all platforms during tests (tests get their own tmpdirs)
-        database.lock = spack.llnl.util.lock.Lock(str(database._lock_path), enable=False)
-        database.is_upstream = False
-        db_root.chmod(mode=0o755)
-        with database.write_transaction():
-            yield
-    finally:
-        db_root.chmod(mode=0o555)
-        database.lock = old_lock
-        database.is_upstream = old_is_upstream
-
-
-@pytest.fixture()
-def upstream_and_downstream_db(tmp_path: Path, gen_mock_layout):
-    """Fixture for a pair of stores: upstream and downstream.
-
-    Upstream API prohibits writing to an upstream, so we also return a writable version
-    of the upstream DB for tests to use.
-
-    """
-    mock_db_root = tmp_path / "mock_db_root"
-    mock_db_root.mkdir()
-    mock_db_root.chmod(0o555)
-
-    upstream_db = spack.database.Database(
-        str(mock_db_root), is_upstream=True, layout=gen_mock_layout("a")
-    )
-    with writable(upstream_db):
-        upstream_db._write()
-
-    downstream_db_root = tmp_path / "mock_downstream_db_root"
-    downstream_db_root.mkdir()
-    downstream_db_root.chmod(0o755)
-
-    downstream_db = spack.database.Database(
-        str(downstream_db_root), upstream_dbs=[upstream_db], layout=gen_mock_layout("b")
-    )
-    downstream_db._write()
-
-    yield upstream_db, downstream_db
-
-
 class ConfigUpdate:
     def __init__(self, root_for_conf):
         self.root_for_conf = root_for_conf
