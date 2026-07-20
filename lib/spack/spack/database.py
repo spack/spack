@@ -927,6 +927,11 @@ class Database:
         for hash_key, rec in data.items():
             rec.spec._mark_root_concrete()
 
+        # Pass 4: fill in the virtual data that databases written by older Spack versions
+        # omit. Like pass 3, this runs once the DAG is connected, and before anything hashes
+        # a node.
+        spack.repo.reconstruct_virtuals([rec.spec for rec in data.values()])
+
         self._data = data
         self._installed_prefixes = installed_prefixes
 

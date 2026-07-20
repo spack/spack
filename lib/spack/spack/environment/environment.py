@@ -2476,6 +2476,10 @@ class Environment:
                 _, bhash, _ = reader.extract_build_spec_info_from_node_dict(node_dict)
                 specs_by_hash[lockfile_key]._build_spec = specs_by_hash[bhash]
 
+        # This wires up the DAG by hand rather than going through the spec file readers, so
+        # fill in the virtual data that lockfiles written by older Spack versions omit.
+        spack.repo.reconstruct_virtuals(specs_by_hash.values())
+
         # Traverse the root specs one at a time in the order they appear.
         # The first time we see each DAG hash, that's the one we want to
         # keep.  This is only required as long as we support older lockfile

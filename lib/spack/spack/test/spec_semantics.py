@@ -693,6 +693,47 @@ class TestSpecSemantics:
 
         assert not concrete.satisfies("%c,mpi=mpich")
 
+    def test_provided_virtuals_frozen_at_concretization(self):
+        """Each concrete node freezes the versions of the virtuals it provides. When several
+        ``provides`` clauses match, the frozen version is their intersection (the tightest range),
+        matching the solver: mpich2 provides mpi@:2.0 (bare), mpi@:2.1 (@1.1:) and mpi@:2.2 (@1.2:);
+        a recent version matches all three -> intersection mpi@:2.0 (not the union :2.2)."""
+        provider = spack.concretize.concretize_one("mpich2@1.5")
+        assert provider._provided_virtuals["mpi"] == vn.VersionList(":2.0")
+
+    def test_provided_virtuals_serialization_roundtrip(self):
+        """Frozen provided virtuals survive a JSON round-trip and are part of the dag hash."""
+        provider = spack.concretize.concretize_one("mpileaks ^mpich")["mpich"]
+
+        roundtrip = Spec.from_json(provider.to_json())
+        assert {k: str(v) for k, v in roundtrip._provided_virtuals.items()} == {
+            k: str(v) for k, v in provider._provided_virtuals.items()
+        }
+        assert "mpi" in provider._provided_virtuals
+
+        # to_node_dict() is exactly the dag-hash preimage, so appearing there means the field
+        # contributes to the dag hash (`provides` is stripped from the package hash).
+        assert roundtrip.dag_hash() == provider.dag_hash()
+        assert "provided_virtuals" in provider.to_node_dict()
+
+    def test_provided_virtuals_reconstructed_from_legacy_specfile(self):
+        """A specfile written before this field existed has no ``provided_virtuals`` key. Reading
+        it reconstructs the data from package.py, and the stored dag hash is used verbatim, so
+        hashes are unchanged across Spack versions."""
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
+
+        as_dict = concrete.to_dict()
+        for node in as_dict["spec"]["nodes"]:
+            node.pop("provided_virtuals", None)
+
+        old = Spec.from_dict(as_dict)
+        provider = old["mpich"]
+
+        # Reconstructed from package.py rather than left empty / None.
+        assert provider._provided_virtuals["mpi"] == vn.VersionList(":3")
+        # The stored dag hash is trusted on read, so dropping the field does not change it.
+        assert old.dag_hash() == concrete.dag_hash()
+
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
         https://github.com/spack/spack/pull/2386#issuecomment-282147639
