@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pathlib
+import warnings
 
 import pytest
 
@@ -16,6 +17,7 @@ import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.spec_parser
+import spack.traverse
 import spack.util.lang
 import spack.variant
 import spack.version as vn
@@ -713,6 +715,120 @@ class TestSpecSemantics:
         assert concrete.satisfies("%mpi=mpich")
 
         assert not concrete.satisfies("%c,mpi=mpich")
+
+    def test_provided_virtuals_frozen_at_concretization(self):
+        """Each concrete node freezes the versions of the virtuals it provides. When several
+        ``provides`` clauses match, the frozen version is their intersection, matching the
+        solver."""
+        # mpich2 provides mpi@:2.0 (bare), mpi@:2.1 (@1.1:) and mpi@:2.2 (@1.2:), all three
+        # matching at 1.5, so the intersection is mpi@:2.0 and not the union :2.2
+        provider = spack.concretize.concretize_one("mpich2@1.5")
+        assert provider.provided_virtuals["mpi"] == vn.VersionList(":2.0")
+
+    def test_provided_virtuals_serialization_roundtrip(self):
+        """Frozen provided virtuals survive a JSON round-trip and are part of the dag hash."""
+        provider = spack.concretize.concretize_one("mpileaks ^mpich")["mpich"]
+
+        roundtrip = Spec.from_json(provider.to_json())
+        assert {k: str(v) for k, v in roundtrip.provided_virtuals.items()} == {
+            k: str(v) for k, v in provider.provided_virtuals.items()
+        }
+        assert "mpi" in provider.provided_virtuals
+
+        assert roundtrip.dag_hash() == provider.dag_hash()
+        # to_node_dict() is exactly the dag-hash preimage, so the field is part of the dag hash
+        # (`provides` is stripped from the package hash).
+        assert "provided_virtuals" in provider.to_node_dict()
+
+    def test_provided_virtuals_reconstructed_from_legacy_specfile(self):
+        """A specfile written before this field existed has no ``provided_virtuals`` key. Reading
+        it reconstructs the data from package.py, and the stored dag hash is used verbatim, so
+        hashes are unchanged across Spack versions."""
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
+
+        as_dict = concrete.to_dict()
+        for node in as_dict["spec"]["nodes"]:
+            node.pop("provided_virtuals", None)
+
+        old = Spec.from_dict(as_dict)
+        provider = old["mpich"]
+
+        # Reconstructed from package.py, not left empty / None.
+        assert provider._provided_virtuals["mpi"] == vn.VersionList(":3")
+        # The stored dag hash is trusted on read, so dropping the field does not change it.
+        assert old.dag_hash() == concrete.dag_hash()
+
+    def test_legacy_specfile_fill_loads_no_package_classes(self, monkeypatch):
+        """Reading a legacy document reconstructs provided virtuals from the cached provider
+        index, never by loading a package class per node."""
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
+
+        as_dict = concrete.to_dict()
+        for node in as_dict["spec"]["nodes"]:
+            node.pop("provided_virtuals", None)
+
+        # The merged index is (re)built with imports only when the repo contents change, which
+        # concretization triggers anyway; reading only consumes it.
+        spack.repo.PATH.provider_index
+
+        def no_class_loads(self, name):
+            raise AssertionError(f"read path must not load package classes, asked for {name}")
+
+        monkeypatch.setattr(spack.repo.RepoPath, "get_pkg_class", no_class_loads)
+
+        old = Spec.from_dict(as_dict)
+        assert old["mpich"]._provided_virtuals["mpi"] == vn.VersionList(":3")
+        assert old.dag_hash() == concrete.dag_hash()
+
+    def test_abstract_root_with_concrete_deps_is_filled_per_node(self):
+        """A document can mix both kinds of node, since an abstract spec holds concrete
+        dependencies once a ``^/hash`` is resolved and written out. Reconstruction fills the
+        concrete nodes only; the abstract ones stay unfrozen."""
+        mpich = spack.concretize.concretize_one("mpich")
+        root = Spec("mpileaks")
+        root._add_dependency(mpich, depflag=dt.BUILD | dt.LINK, virtuals=())
+
+        as_dict = root.to_dict()
+        assert as_dict["spec"]["nodes"][0]["concrete"] is False
+        for node in as_dict["spec"]["nodes"]:
+            node.pop("provided_virtuals", None)
+
+        reread = Spec.from_dict(as_dict)
+        assert not reread.concrete
+        assert reread._provided_virtuals is None
+        assert reread["mpich"]._provided_virtuals["mpi"] == vn.VersionList(":3")
+
+    def test_legacy_specfile_with_unknown_package_reads_without_warning(self):
+        """A legacy document naming a package absent from the configured repos reads without
+        warnings: an unknown package provides nothing, as it did before the field existed."""
+        concrete = spack.concretize.concretize_one("pkg-a")
+
+        as_dict = concrete.to_dict()
+        for node in as_dict["spec"]["nodes"]:
+            node.pop("provided_virtuals", None)
+        as_dict["spec"]["nodes"][0]["name"] = "no-such-package"
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            reread = Spec.from_dict(as_dict)
+
+        assert reread._provided_virtuals == {}
+
+    def test_provided_virtuals_refilled_on_rehash(self):
+        """The mutate/rehash paths un-mark dependents, which clears their provided virtuals,
+        then refill them during finalization while the nodes are temporarily abstract in a DAG
+        whose other nodes are still concrete."""
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
+        provider = concrete["mpich"]
+        frozen = {name: v.copy() for name, v in provider._provided_virtuals.items()}
+
+        for parent in spack.traverse.traverse_nodes([provider], direction="parents"):
+            parent._mark_root_concrete(False)
+            parent.clear_caches()
+        assert provider._provided_virtuals is None
+
+        concrete._finalize_concretization()
+        assert provider._provided_virtuals == frozen
 
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
