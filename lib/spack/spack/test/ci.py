@@ -255,7 +255,7 @@ def test_ci_copy_stage_logs_to_artifacts_fail(tmp_path: pathlib.Path, config, ca
 )
 def test_ci_copy_stage_logs_to_artifacts_copies_existing_build_logs(
     tmp_path: pathlib.Path,
-    default_mock_concretization,
+    config,
     monkeypatch,
     capfd,
     build_logs,
@@ -271,7 +271,7 @@ def test_ci_copy_stage_logs_to_artifacts_copies_existing_build_logs(
             (metadata_dir / build_log).write_text("build log")
     (metadata_dir / "spack-build-env.txt").write_text("build env")
 
-    concrete_spec = default_mock_concretization("printing-package")
+    concrete_spec = spack.concretize.concretize_one("printing-package")
     monkeypatch.setattr(spack.store.STORE.layout, "metadata_path", lambda spec: str(metadata_dir))
 
     log_dir = tmp_path / "log_dir"
@@ -286,7 +286,7 @@ def test_ci_copy_stage_logs_to_artifacts_copies_existing_build_logs(
 
 
 def test_ci_copy_stage_logs_to_artifacts_attempts_all_existing_candidates(
-    tmp_path: pathlib.Path, default_mock_concretization, monkeypatch, capfd
+    tmp_path: pathlib.Path, config, monkeypatch, capfd
 ):
     metadata_dir = tmp_path / "metadata"
     metadata_dir.mkdir()
@@ -298,7 +298,7 @@ def test_ci_copy_stage_logs_to_artifacts_attempts_all_existing_candidates(
     archive_dir.mkdir()
     (archive_dir / "archive.txt").write_text("archive")
 
-    concrete_spec = default_mock_concretization("printing-package")
+    concrete_spec = spack.concretize.concretize_one("printing-package")
     monkeypatch.setattr(spack.store.STORE.layout, "metadata_path", lambda spec: str(metadata_dir))
 
     copied = []
@@ -321,12 +321,12 @@ def test_ci_copy_stage_logs_to_artifacts_attempts_all_existing_candidates(
 
 
 def test_ci_copy_stage_logs_to_artifacts_warns_when_nothing_exists(
-    tmp_path: pathlib.Path, default_mock_concretization, monkeypatch, capfd
+    tmp_path: pathlib.Path, config, monkeypatch, capfd
 ):
     metadata_dir = tmp_path / "metadata"
     metadata_dir.mkdir()
 
-    concrete_spec = default_mock_concretization("printing-package")
+    concrete_spec = spack.concretize.concretize_one("printing-package")
     monkeypatch.setattr(spack.store.STORE.layout, "metadata_path", lambda spec: str(metadata_dir))
 
     log_dir = tmp_path / "log_dir"
