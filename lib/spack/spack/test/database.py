@@ -39,8 +39,6 @@ import spack.paths
 import spack.repo
 import spack.spec
 import spack.store
-import spack.util.filesystem as fs
-import spack.util.lock as lk
 import spack.version as vn
 from spack.enums import InstallRecordStatus
 from spack.old_installer import PackageInstaller

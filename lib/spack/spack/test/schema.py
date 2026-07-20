@@ -11,6 +11,7 @@ from spack.vendor import jsonschema
 
 import spack.schema
 import spack.schema.env
+import spack.schema.filter
 import spack.util.spack_yaml as syaml
 from spack.util.lang import list_modules
 
@@ -253,6 +254,40 @@ def test_spack_schemas_are_valid():
             jsonschema.validate(module_schema, _draft_07_with_spack_extensions)
         except jsonschema.ValidationError as e:
             raise RuntimeError(f"Invalid JSON schema in {module_name}: {e.message}") from e
+
+
+def test_filter_schema_accepts_valid_configuration():
+    v = spack.schema.Validator(spack.schema.filter.schema)
+    v.validate(
+        {
+            "filter": {
+                "projections": {
+                    "all": "{name}/{version}",
+                    "mpileaks": "{name}-{hash:7}",
+                },
+                "concrete": True,
+                "specs": {"allow": ["mpileaks"], "block": ["zmpi"]},
+                "externals": {"allow": ["cmake"], "block": ["gcc"]},
+                "config": {"allow": ["packages"], "block": ["mirrors"]},
+            }
+        }
+    )
+    v.validate({"filter": {"externals": {"block": True}}})
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"filter": {"externals": {"block": False}}},
+        {"filter": {"unknown": []}},
+        {"filter": {"specs": {"allow": True}}},
+        {"filter": {"config": {"block": True}}},
+    ],
+)
+def test_filter_schema_rejects_invalid_configuration(data):
+    v = spack.schema.Validator(spack.schema.filter.schema)
+    with pytest.raises(jsonschema.ValidationError):
+        v.validate(data)
 
 
 def test_env_schema_update_wrong_type():

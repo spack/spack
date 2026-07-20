@@ -11,6 +11,7 @@
 import os
 from typing import Any, Dict
 
+import spack.schema.filter
 import spack.schema.merged
 
 from .spec_list import spec_list_properties, spec_list_schema
@@ -95,6 +96,7 @@ properties: Dict[str, Any] = {
             # (DEPRECATED) include concrete to be merged under the include key
             "include_concrete": include_concrete,
             **spack.schema.merged.removed_sections,
+            **spack.schema.filter.properties,
         },
         "deprecatedProperties": spack.schema.merged.removed_sections_errors,
     }
