@@ -2143,6 +2143,55 @@ def test_env_create_filter_can_select_concrete_dependency():
     assert [spec.name for spec in filtered.concrete_roots()] == ["callpath"]
 
 
+def test_env_create_filter_accepts_projection_that_formats_to_spec():
+    env("create", "source")
+    source = ev.read("source")
+    with source:
+        add("mpileaks")
+        spack.config.set(
+            "filter",
+            {
+                "specs": {"allow": ["mpileaks"]},
+                "projections": {"all": "{name}@{version}"},
+            },
+            scope=source.scope_name,
+        )
+    source.concretize()
+    source.write()
+
+    env("create", "--filter", "filtered", "source")
+
+    filtered = ev.read("filtered")
+    assert [spec.name for spec in filtered.user_specs] == ["mpileaks"]
+    assert [spec.name for spec in filtered.concrete_roots()] == ["mpileaks"]
+
+    with open(filtered.lock_path, encoding="utf-8") as stream:
+        lockfile = filtered._read_lockfile(stream)
+
+    root_specs = [Spec(root["spec"]) for root in lockfile["roots"]]
+    assert [spec.name for spec in root_specs] == ["mpileaks"]
+
+
+def test_env_create_filter_rejects_projection_that_formats_to_path():
+    env("create", "source")
+    source = ev.read("source")
+    with source:
+        add("mpileaks")
+        spack.config.set(
+            "filter",
+            {
+                "specs": {"allow": ["mpileaks"]},
+                "projections": {"all": "{name}/{version}-{hash:7}"},
+            },
+            scope=source.scope_name,
+        )
+    source.concretize()
+    source.write()
+
+    with pytest.raises(ev.SpackEnvironmentError, match="invalid spec string"):
+        env("create", "--filter", "filtered", "source")
+
+
 def test_env_create_filter_can_copy_default_blocked_sections(tmp_path: pathlib.Path):
     env("create", "included")
     included = ev.read("included")
@@ -2180,6 +2229,40 @@ def test_env_create_filter_blocks_external_concrete_specs():
         add("externaltool")
         config("add", "filter:specs:allow:[externaltool]")
         config("add", "filter:externals:block:true")
+    source.concretize()
+    source.write()
+
+    env("create", "--filter", "filtered", "source")
+
+    filtered = ev.read("filtered")
+
+    assert list(filtered.user_specs) == []
+    assert not filtered.concrete_roots()
+
+
+def test_env_create_filter_allows_versioned_external_concrete_specs():
+    env("create", "source")
+    source = ev.read("source")
+    with source:
+        add("externaltool@0.9")
+        config("add", "filter:externals:allow:[externaltool@0.9]")
+    source.concretize()
+    source.write()
+
+    env("create", "--filter", "filtered", "source")
+
+    filtered = ev.read("filtered")
+
+    assert [spec.name for spec in filtered.user_specs] == ["externaltool"]
+    assert [str(spec.version) for spec in filtered.concrete_roots()] == ["0.9"]
+
+
+def test_env_create_filter_blocks_versioned_external_concrete_specs():
+    env("create", "source")
+    source = ev.read("source")
+    with source:
+        add("externaltool@0.9")
+        config("add", "filter:externals:block:[externaltool@0.9]")
     source.concretize()
     source.write()
 
@@ -2295,6 +2378,69 @@ def test_env_create_filter_packages_include_selected_externals():
 
     assert set(filtered_yaml["packages"]) == {"cmake", "libelf"}
     assert all("externals" in pkg for pkg in filtered_yaml["packages"].values())
+
+
+def test_env_create_filter_packages_include_versioned_external_entries():
+    env("create", "source")
+    source = ev.read("source")
+    with source:
+        add("mpileaks")
+        spack.config.set(
+            "packages",
+            {
+                "externaltool": {
+                    "externals": [
+                        {"spec": "externaltool@1.0", "prefix": "/tmp/externaltool-1.0"},
+                        {"spec": "externaltool@0.9", "prefix": "/tmp/externaltool-0.9"},
+                    ],
+                    "buildable": False,
+                },
+            },
+            scope=source.scope_name,
+        )
+        config("add", "filter:config:allow:[packages]")
+        config("add", "filter:externals:allow:[externaltool@0.9]")
+    source.concretize()
+    source.write()
+
+    env("create", "--filter", "filtered", "source")
+
+    filtered_yaml = ev.read("filtered").manifest["spack"]
+
+    externals = filtered_yaml["packages"]["externaltool"]["externals"]
+    assert [external["spec"] for external in externals] == ["externaltool@0.9"]
+    assert filtered_yaml["packages"]["externaltool"]["buildable"] is False
+
+
+def test_env_create_filter_packages_block_versioned_external_entries():
+    env("create", "source")
+    source = ev.read("source")
+    with source:
+        add("mpileaks")
+        spack.config.set(
+            "packages",
+            {
+                "externaltool": {
+                    "externals": [
+                        {"spec": "externaltool@1.0", "prefix": "/tmp/externaltool-1.0"},
+                        {"spec": "externaltool@0.9", "prefix": "/tmp/externaltool-0.9"},
+                    ],
+                    "buildable": False,
+                },
+            },
+            scope=source.scope_name,
+        )
+        config("add", "filter:config:allow:[packages]")
+        config("add", "filter:externals:block:[externaltool@0.9]")
+    source.concretize()
+    source.write()
+
+    env("create", "--filter", "filtered", "source")
+
+    filtered_yaml = ev.read("filtered").manifest["spack"]
+
+    externals = filtered_yaml["packages"]["externaltool"]["externals"]
+    assert [external["spec"] for external in externals] == ["externaltool@1.0"]
 
 
 def test_env_create_filter_from_manifest(tmp_path: pathlib.Path):

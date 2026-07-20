@@ -532,18 +532,6 @@ def _spec_is_allowed(spec: Spec, allow: Sequence[str], block: Sequence[str]) -> 
     return allowed and not _matches_any_spec(spec, block)
 
 
-def _package_matches_filter(package_name: str, patterns: Sequence[str]) -> bool:
-    package_spec = Spec(package_name)
-    return any(
-        package_name == pattern or package_spec.satisfies(Spec(pattern)) for pattern in patterns
-    )
-
-
-def _package_is_allowed(package_name: str, allow: Sequence[str], block: Sequence[str]) -> bool:
-    allowed = not allow or _package_matches_filter(package_name, allow)
-    return allowed and not _package_matches_filter(package_name, block)
-
-
 def _external_spec_is_allowed(spec: Spec, filter_configuration: Dict[str, Any]) -> bool:
     if not spec.external:
         return True
@@ -553,7 +541,7 @@ def _external_spec_is_allowed(spec: Spec, filter_configuration: Dict[str, Any]) 
     if block is True:
         return False
 
-    return _package_is_allowed(spec.name, allow, block)
+    return _spec_is_allowed(spec, allow, block)
 
 
 def _projection_format_for(spec: Spec, projections: Dict[str, str]) -> str:
@@ -565,11 +553,35 @@ def _projection_format_for(spec: Spec, projections: Dict[str, str]) -> str:
     return projections.get("all", spack.spec.DISPLAY_FORMAT)
 
 
+def _validated_filter_projection(spec: Spec, format_string: str) -> str:
+    try:
+        projected = spec.format(format_string)
+    except spack.error.SpecError as e:
+        raise SpackEnvironmentError(
+            f"filter projection {format_string!r} cannot format concrete spec {spec}"
+        ) from e
+
+    try:
+        Spec(projected)
+    except (spack.error.SpecError, spack.error.SpecSyntaxError, ValueError) as e:
+        raise SpackEnvironmentError(
+            "filter projection produced an invalid spec string "
+            f"{projected!r} for concrete spec {spec} using projection {format_string!r}"
+        ) from e
+
+    return projected
+
+
 def _filtered_concrete_root_entries(
     source_env: "Environment", filter_configuration: Dict[str, Any]
 ) -> List[Tuple[str, Spec]]:
     return [
-        (concrete.format(_projection_format_for(concrete, filter_configuration["projections"])), concrete)
+        (
+            _validated_filter_projection(
+                concrete, _projection_format_for(concrete, filter_configuration["projections"])
+            ),
+            concrete,
+        )
         for concrete in source_env.all_specs_generator()
         if _spec_is_allowed(
             concrete,
@@ -606,10 +618,19 @@ def _filter_packages_configuration(
     for package_name, package_configuration in packages_configuration.items():
         if "externals" not in package_configuration:
             continue
-        if block_all or not _package_is_allowed(package_name, allow, block_patterns):
+        if block_all:
+            continue
+
+        filtered_externals = [
+            copy.deepcopy(external)
+            for external in package_configuration["externals"]
+            if _spec_is_allowed(Spec(external["spec"]), allow, block_patterns)
+        ]
+        if not filtered_externals:
             continue
 
         filtered_package = copy.deepcopy(package_configuration)
+        filtered_package["externals"] = filtered_externals
         if filtered_package:
             result[package_name] = filtered_package
 
