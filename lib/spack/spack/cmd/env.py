@@ -96,6 +96,11 @@ def env_create_setup_parser(subparser):
         action="append",
         help="copy concrete specs from INCLUDE_CONCRETE's environment",
     )
+    subparser.add_argument(
+        "--filter",
+        action="store_true",
+        help="create a filtered environment using the source environment's filter config",
+    )
 
 
 def env_create(args):
@@ -124,6 +129,7 @@ def env_create(args):
         with_view=with_view,
         keep_relative=args.keep_relative,
         include_concrete=include_concrete,
+        filter_env=args.filter,
     )
 
     # Generate views, only really useful for environments created from spack.lock files.
@@ -139,6 +145,7 @@ def _env_create(
     with_view: Optional[Union[bool, str]] = None,
     keep_relative: bool = False,
     include_concrete: Optional[List[str]] = None,
+    filter_env: bool = False,
 ):
     """Create a new environment, with an optional yaml description.
 
@@ -152,6 +159,7 @@ def _env_create(
             environment file, otherwise they may be made absolute if the new
             environment is in a different location
         include_concrete: list of the included concrete environments
+        filter_env (bool): if True, create a filtered environment from init_file
     """
     if not dir:
         env = ev.create(
@@ -160,6 +168,7 @@ def _env_create(
             with_view=with_view,
             keep_relative=keep_relative,
             include_concrete=include_concrete,
+            filter_env=filter_env,
         )
         tty.msg(
             colorize(
@@ -173,6 +182,7 @@ def _env_create(
             with_view=with_view,
             keep_relative=keep_relative,
             include_concrete=include_concrete,
+            filter_env=filter_env,
         )
         tty.msg(colorize(f"Created independent environment in: @c{{{cescape(env.path)}}}"))
     tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")

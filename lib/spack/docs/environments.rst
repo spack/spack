@@ -145,6 +145,76 @@ The name of an environment can be a nested path to help organize environments vi
 This will create a managed environment under ``$environments_root/projectA/configA/myenv``.
 Changing ``environment_root`` can therefore also be used to make a whole group of nested environments available.
 
+.. _filtered_environments:
+
+Creating Filtered Environments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack can create a filtered environment from another environment using:
+
+.. code-block:: console
+
+   $ spack env create --filter new-env old-env
+
+The source environment, ``old-env`` in the example above, must be provided explicitly.
+Spack reads the source environment's ``filter:`` section and writes a new environment whose specs and selected configuration have been reduced according to that filter.
+If no source environment is provided, Spack reports an error.
+If the source is a ``spack.lock`` file, Spack reports an error; filtered environments are created from environment directories or manifest files so that the filter configuration is available.
+
+The ``filter:`` section is written under the top-level ``spack:`` key in ``spack.yaml``:
+
+.. code-block:: yaml
+
+   spack:
+     specs:
+     - mpileaks
+     - hdf5
+     filter:
+       concrete: true
+       specs:
+         allow: [callpath, hdf5]
+         block: []
+       externals:
+         allow: [cmake]
+         block: [gcc]
+       config:
+         allow: [packages, concretizer]
+         block: [mirrors]
+       projections:
+         all: "{name}/{version}-{hash:7}"
+
+The ``concrete`` option controls whether the filter is applied to the concretized lockfile graph or to the abstract specs in ``spack.yaml``.
+When ``concrete`` is ``true`` (the default), the source must be an environment directory with a ``spack.lock`` file.
+Spack filters all concrete specs in the source lockfile graph, writes matching concrete specs as roots of the new environment, and writes a new ``spack.lock`` preserving the selected concrete specs.
+When ``concrete`` is ``false``, the source may be a manifest file or environment directory, and Spack filters only the abstract specs from ``spack.yaml``.
+In this mode Spack does not write a lockfile for the new environment.
+
+The ``specs`` subsection selects which specs are kept.
+``specs:allow`` is a list of spec constraints to keep; an empty list keeps every spec.
+``specs:block`` is a list of spec constraints to remove; an empty list removes nothing.
+When both are present, a spec must match the allow list and must not match the block list.
+In concrete mode, these constraints are matched against every concrete spec in the source lockfile graph, not only against the original roots.
+
+The ``externals`` subsection controls external specs and external package configuration.
+``externals:allow`` is a list of package names or package constraints whose external package configuration may be copied.
+An empty allow list allows all external package configuration.
+``externals:block`` may be a list of package names or package constraints, or the value ``true``.
+An empty block list blocks nothing.
+The value ``true`` blocks all external concrete specs and all external package configuration.
+If the filtered environment copies a ``packages:`` section, only package entries that declare ``externals`` and pass the ``externals`` allow/block rules are copied.
+General package preferences such as ``packages:all``, non-external ``require`` entries, provider preferences, and build preferences are not copied by the filter.
+
+The ``config`` subsection controls which top-level configuration sections are copied from the source environment.
+``config:allow`` is a list of section names to copy; an empty list allows all sections.
+``config:block`` is a list of section names to omit; an empty list blocks nothing.
+By default, the ``filter`` section itself and the lockfile include section are omitted from the generated environment.
+They can be copied by including them explicitly in ``config:allow``.
+If either section is also listed explicitly in ``config:block``, the block entry takes precedence.
+
+The optional ``projections`` subsection controls how concrete specs are written as abstract roots in the generated ``spack.yaml``.
+Keys are spec constraints and values are spec format strings.
+The ``all`` key is the fallback projection and defaults to Spack's standard display format.
+
 .. _cmd-spack-env-activate:
 .. _cmd-spack-env-deactivate:
 
