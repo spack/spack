@@ -162,7 +162,7 @@ def test_missing_config_scopes_are_valid_scope_arguments(mock_missing_dir_includ
     a.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     namespace = a.parse_args(["--scope", "sub_base"])
@@ -177,7 +177,7 @@ def test_missing_config_scopes_not_valid_read_scope(mock_missing_dir_include_sco
         "--scope",
         action=arguments.ConfigScope,
         type=arguments.config_scope_readable_validator,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     with pytest.raises(SystemExit):

@@ -170,7 +170,7 @@ def _store_core_compilers(
     module_set: str, module_system: str, core_compilers: List[spack.spec.Spec]
 ) -> None:
     """Writes a list of core compilers to the modules.yaml configuration file."""
-    default_scope = spack.config.default_modify_scope()
+    default_scope = spack.config.CONFIG.default_modify_scope()
     modules_cfg = spack.config.CONFIG.get(f"modules:{module_set}", {}, scope=default_scope)
     modules_cfg.setdefault(module_system, {})["core_compilers"] = [str(x) for x in core_compilers]
     spack.config.CONFIG.set(f"modules:{module_set}", modules_cfg, scope=default_scope)

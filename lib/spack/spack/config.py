@@ -1038,7 +1038,7 @@ class Configuration:
                 # Special handling for compiler scope difference
                 # Has to be handled after we choose a section
                 if scope is None:
-                    scope = default_modify_scope(section)
+                    scope = self.default_modify_scope(section)
 
                 value = data[section]
                 existing = self.get(section, scope=scope)
@@ -1094,6 +1094,82 @@ class Configuration:
         # merge value into existing
         new = spack.schema.merge_yaml(existing, value)
         self.set(path, new, scope)
+
+    def writable_scope_names(self) -> List[str]:
+        """Names of writable scopes, highest priority first."""
+        return [s.name for s in self.scopes.values() if s.writable][::-1]
+
+    def existing_scope_names(self) -> List[str]:
+        """Names of existing scopes, highest priority first."""
+        return [s.name for s in self.scopes.values() if s.exists][::-1]
+
+    def default_modify_scope(self, section: str = "config") -> str:
+        """Return the config scope that commands should modify by default.
+
+        Commands that modify configuration by default modify the *highest*
+        priority scope.
+
+        Arguments:
+            section (bool): Section for which to get the default scope.
+        """
+        return self.highest_precedence_scope().name
+
+    def matched_config(self, cfg_path: str) -> List[Tuple[str, Any]]:
+        return [(scope, self.get(cfg_path, scope=scope)) for scope in self.writable_scope_names()]
+
+    def change_or_add(
+        self, section_name: str, find_fn: Callable[[str], bool], update_fn: Callable[[str], None]
+    ) -> None:
+        """Change or add a subsection of config, with additional logic to
+        select a reasonable scope where the change is applied.
+
+        Search through config scopes starting with the highest priority:
+        the first matching a criteria (determined by ``find_fn``) is updated;
+        if no such config exists, find the first config scope that defines
+        any config for the named section; if no scopes define any related
+        config, then update the highest-priority config scope.
+        """
+        configs_by_section = self.matched_config(section_name)
+        found = False
+        for scope, section in configs_by_section:
+            found = find_fn(section)
+            if found:
+                break
+
+        if found:
+            update_fn(section)
+            self.set(section_name, section, scope=scope)
+            return
+
+        # If no scope meets the criteria specified by ``find_fn``,
+        # then look for a scope that has any content (for the specified
+        # section name)
+        for scope, section in configs_by_section:
+            if section:
+                update_fn(section)
+                found = True
+                break
+
+        if found:
+            self.set(section_name, section, scope=scope)
+            return
+
+        # If no scopes define any config for the named section, then
+        # modify the highest-priority scope.
+        scope, section = configs_by_section[0]
+        update_fn(section)
+        self.set(section_name, section, scope=scope)
+
+    def update_all(self, section_name: str, change_fn: Callable[[str], bool]) -> None:
+        """Change a config section, which may have details duplicated
+        across multiple scopes.
+        """
+        configs_by_section = self.matched_config("develop")
+
+        for scope, section in configs_by_section:
+            modified = change_fn(section)
+            if modified:
+                self.set(section_name, section, scope=scope)
 
 
 #: Class for the relevance of an optional path conditioned on a limited
@@ -1651,11 +1727,6 @@ CONFIG = cast(Configuration, lang.Singleton(create_incremental))
 spack.platforms.on_host_changed.append(lambda: CONFIG.clear_caches())
 
 
-def scopes() -> lang.PriorityOrderedMapping[str, ConfigScope]:
-    """Convenience function to get list of configuration scopes."""
-    return CONFIG.scopes
-
-
 def writable_scopes() -> List[ConfigScope]:
     """Return list of writable scopes. Higher-priority scopes come first in the list."""
     scopes = [x for x in CONFIG.scopes.values() if x.writable]
@@ -1671,74 +1742,6 @@ def existing_scopes() -> List[ConfigScope]:
     scopes = [x for x in CONFIG.scopes.values() if x.exists]
     scopes.reverse()
     return scopes
-
-
-def writable_scope_names() -> List[str]:
-    return [x.name for x in writable_scopes()]
-
-
-def existing_scope_names() -> List[str]:
-    return [x.name for x in existing_scopes()]
-
-
-def matched_config(cfg_path: str) -> List[Tuple[str, Any]]:
-    return [(scope, CONFIG.get(cfg_path, scope=scope)) for scope in writable_scope_names()]
-
-
-def change_or_add(
-    section_name: str, find_fn: Callable[[str], bool], update_fn: Callable[[str], None]
-) -> None:
-    """Change or add a subsection of config, with additional logic to
-    select a reasonable scope where the change is applied.
-
-    Search through config scopes starting with the highest priority:
-    the first matching a criteria (determined by ``find_fn``) is updated;
-    if no such config exists, find the first config scope that defines
-    any config for the named section; if no scopes define any related
-    config, then update the highest-priority config scope.
-    """
-    configs_by_section = matched_config(section_name)
-    found = False
-    for scope, section in configs_by_section:
-        found = find_fn(section)
-        if found:
-            break
-
-    if found:
-        update_fn(section)
-        CONFIG.set(section_name, section, scope=scope)
-        return
-
-    # If no scope meets the criteria specified by ``find_fn``,
-    # then look for a scope that has any content (for the specified
-    # section name)
-    for scope, section in configs_by_section:
-        if section:
-            update_fn(section)
-            found = True
-            break
-
-    if found:
-        CONFIG.set(section_name, section, scope=scope)
-        return
-
-    # If no scopes define any config for the named section, then
-    # modify the highest-priority scope.
-    scope, section = configs_by_section[0]
-    update_fn(section)
-    CONFIG.set(section_name, section, scope=scope)
-
-
-def update_all(section_name: str, change_fn: Callable[[str], bool]) -> None:
-    """Change a config section, which may have details duplicated
-    across multiple scopes.
-    """
-    configs_by_section = matched_config("develop")
-
-    for scope, section in configs_by_section:
-        modified = change_fn(section)
-        if modified:
-            CONFIG.set(section_name, section, scope=scope)
 
 
 def _validate_section_name(section: str) -> None:
@@ -2078,21 +2081,6 @@ def process_config_path(path: str) -> List[str]:
     should not parse it in this case).
     """
     return ConfigPath.process(path)
-
-
-#
-# Settings for commands that modify configuration
-#
-def default_modify_scope(section: str = "config") -> str:
-    """Return the config scope that commands should modify by default.
-
-    Commands that modify configuration by default modify the *highest*
-    priority scope.
-
-    Arguments:
-        section (bool): Section for which to get the default scope.
-    """
-    return CONFIG.highest_precedence_scope().name
 
 
 def _update_in_memory(data: YamlConfigDict, section: str) -> bool:

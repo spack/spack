@@ -193,7 +193,7 @@ def _root(args):
     if args.path:
         spack.config.CONFIG.set("bootstrap:root", args.path, scope=args.scope)
     elif args.scope:
-        if args.scope not in spack.config.existing_scope_names():
+        if args.scope not in spack.config.CONFIG.existing_scope_names():
             spack.util.tty.die(
                 f"The argument --scope={args.scope} must refer to an existing scope."
             )
@@ -284,7 +284,7 @@ def _write_bootstrapping_source_status(name, enabled, scope=None):
 
     # Setting the scope explicitly is needed to not copy over to a new scope
     # the entire default configuration for bootstrap.yaml
-    scope = scope or spack.config.default_modify_scope("bootstrap")
+    scope = scope or spack.config.CONFIG.default_modify_scope("bootstrap")
     spack.config.CONFIG.add("bootstrap:trusted:{0}:{1}".format(name, str(enabled)), scope=scope)
 
 
@@ -352,7 +352,7 @@ def _add(args):
         raise RuntimeError('the file "{0}" does not exist'.format(file))
 
     # Insert the new source as the highest priority one
-    write_scope = args.scope or spack.config.default_modify_scope(section="bootstrap")
+    write_scope = args.scope or spack.config.CONFIG.default_modify_scope(section="bootstrap")
     sources = spack.config.CONFIG.get("bootstrap:sources", scope=write_scope) or []
     sources = [{"name": args.name, "metadata": args.metadata_dir}] + sources
     spack.config.CONFIG.set("bootstrap:sources", sources, scope=write_scope)
@@ -373,7 +373,7 @@ def _remove(args):
         )
         raise RuntimeError(msg.format(args.name))
 
-    for current_scope in spack.config.scopes():
+    for current_scope in spack.config.CONFIG.scopes:
         sources = spack.config.CONFIG.get("bootstrap:sources", scope=current_scope) or []
         if args.name in [s["name"] for s in sources]:
             sources = [s for s in sources if s["name"] != args.name]

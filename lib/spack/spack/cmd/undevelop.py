@@ -43,7 +43,7 @@ def _update_config(specs_to_remove):
                 modified = True
         return modified
 
-    spack.config.update_all("develop", change_fn)
+    spack.config.CONFIG.update_all("develop", change_fn)
 
 
 def undevelop(parser, args):

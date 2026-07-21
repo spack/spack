@@ -151,7 +151,7 @@ def _update_config(spec, path):
     def change_fn(section):
         section[spec.name] = entry
 
-    spack.config.change_or_add("develop", find_fn, change_fn)
+    spack.config.CONFIG.change_or_add("develop", find_fn, change_fn)
 
 
 def update_env(

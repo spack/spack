@@ -108,7 +108,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     add_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     add_parser.add_argument(
@@ -176,7 +176,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     set_url_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     arguments.add_connection_args(set_url_parser, False)
@@ -236,7 +236,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     set_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     arguments.add_connection_args(set_parser, False)

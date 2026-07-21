@@ -554,7 +554,7 @@ def ci_rebuild(args):
                 test_stage = fs.join_path(stage_root, "spack-standalone-tests")
                 tty.debug("Configuring test_stage to {0}".format(test_stage))
                 config_test_path = "config:test_stage:{0}".format(test_stage)
-                cfg.CONFIG.add(config_test_path, scope=cfg.default_modify_scope())
+                cfg.CONFIG.add(config_test_path, scope=cfg.CONFIG.default_modify_scope())
 
                 # Run the tests, resorting to junit results if not using cdash
                 log_file = (

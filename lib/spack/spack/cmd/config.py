@@ -189,19 +189,19 @@ def _get_scope_and_section(args):
 
     # set scope defaults
     elif not scope:
-        scope = spack.config.default_modify_scope(section)
+        scope = spack.config.CONFIG.default_modify_scope(section)
 
     # special handling for commands that take value instead of section
     if path:
         section = path[: path.find(":")] if ":" in path else path
         if not scope:
-            scope = spack.config.default_modify_scope(section)
+            scope = spack.config.CONFIG.default_modify_scope(section)
 
     return scope, section
 
 
 def print_configuration(args, *, blame: bool) -> None:
-    if args.scope and args.scope not in spack.config.existing_scope_names():
+    if args.scope and args.scope not in spack.config.CONFIG.existing_scope_names():
         args.subparser.error(f"the argument --scope={args.scope} must refer to an existing scope")
     if args.scope and args.section is None:
         args.subparser.error(f"the argument --scope={args.scope} requires specifying a section")
@@ -359,11 +359,11 @@ def _config_basic_scope_types(scope, included):
 
 def config_scopes(args):
     """List configured scopes in descending order of precedence."""
-    included = [i.name for s in spack.config.scopes().values() for i in s.included_scopes]
+    included = [i.name for s in spack.config.CONFIG.scopes.values() for i in s.included_scopes]
     active = [s.name for s in spack.config.CONFIG.active_scopes]
     scopes = [
         s
-        for s in spack.config.scopes().reversed_values()
+        for s in spack.config.CONFIG.scopes.reversed_values()
         if (
             "include" in args.type
             and s.name in included
@@ -507,7 +507,7 @@ def _config_change(config_path, match_spec_str=None):
         spec.name = pkg_name
 
         changed = False
-        for scope in spack.config.writable_scope_names():
+        for scope in spack.config.CONFIG.writable_scope_names():
             changed |= _config_change_requires_scope(key_path, spec, scope, match_spec=match_spec)
 
         if not changed:
@@ -519,13 +519,13 @@ def _config_change(config_path, match_spec_str=None):
                 )
 
             ideal_scope_to_modify = None
-            for scope in spack.config.writable_scope_names():
+            for scope in spack.config.CONFIG.writable_scope_names():
                 if spack.config.CONFIG.get(key_path, scope=scope):
                     ideal_scope_to_modify = scope
                     break
             # If we find our key in a specific scope, that's the one we want
             # to modify. Otherwise we use the default write scope.
-            write_scope = ideal_scope_to_modify or spack.config.default_modify_scope()
+            write_scope = ideal_scope_to_modify or spack.config.CONFIG.default_modify_scope()
 
             update_path = f"{key_path}:[{str(spec)}]"
             spack.config.CONFIG.add(update_path, scope=write_scope)
@@ -686,7 +686,7 @@ def config_prefer_upstream(args):
 
     scope = args.scope
     if scope is None:
-        scope = spack.config.default_modify_scope("packages")
+        scope = spack.config.CONFIG.default_modify_scope("packages")
 
     all_specs = set(spack.store.STORE.db.query(installed=True))
     local_specs = set(spack.store.STORE.db.query_local(installed=True))

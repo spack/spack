@@ -194,7 +194,7 @@ class ConfigScope(argparse.Action):
 
     @property
     def choices(self):
-        return spack.config.scopes().keys()
+        return spack.config.CONFIG.scopes.keys()
 
     @choices.setter
     def choices(self, value):
@@ -205,7 +205,7 @@ class ConfigScope(argparse.Action):
 
 
 def config_scope_readable_validator(value):
-    if value not in spack.config.existing_scope_names():
+    if value not in spack.config.CONFIG.existing_scope_names():
         raise ValueError(
             f"Invalid scope argument {value} "
             "for config read operation, scope context does not exist"

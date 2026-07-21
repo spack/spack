@@ -102,7 +102,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     add_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
 
@@ -124,7 +124,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     set_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
 
@@ -182,7 +182,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     update_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     update_parser.add_argument(
