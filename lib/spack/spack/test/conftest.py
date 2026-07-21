@@ -442,7 +442,10 @@ def pytest_configure(config):
     # improve performance on macOS
     if sys.platform == "darwin" and multiprocessing.get_start_method(allow_none=True) is None:
         multiprocessing.set_start_method("forkserver")
-    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.installer"])
+    # forkserver build subprocesses re-import this conftest, so preload it too
+    multiprocessing.set_forkserver_preload(
+        ["spack.main", "spack.package", "spack.installer", "spack.test.conftest"]
+    )
 
 
 def pytest_addoption(parser):
