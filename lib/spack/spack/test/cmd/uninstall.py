@@ -112,44 +112,45 @@ def test_force_uninstall_spec_with_ref_count_not_zero(
 
 
 @pytest.mark.db
-def test_force_uninstall_and_reinstall_by_hash(mutable_database):
+def test_force_uninstall_and_reinstall_by_hash(mutable_database_store):
     """Test forced uninstall and reinstall of old specs."""
+    db = mutable_database_store.db
     # this is the spec to be removed
-    callpath_spec = mutable_database.query_one("callpath ^mpich")
+    callpath_spec = db.query_one("callpath ^mpich")
     dag_hash = callpath_spec.dag_hash()
 
     # ensure can look up by hash and that it's a dependent of mpileaks
     def validate_callpath_spec(installed):
         assert installed is True or installed is False
 
-        specs = spack.store.STORE.db.get_by_hash(dag_hash, installed=installed)
+        specs = db.get_by_hash(dag_hash, installed=installed)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
-        specs = spack.store.STORE.db.get_by_hash(dag_hash[:7], installed=installed)
+        specs = db.get_by_hash(dag_hash[:7], installed=installed)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
-        specs = spack.store.STORE.db.get_by_hash(dag_hash, installed=InstallRecordStatus.ANY)
+        specs = db.get_by_hash(dag_hash, installed=InstallRecordStatus.ANY)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
-        specs = spack.store.STORE.db.get_by_hash(dag_hash[:7], installed=InstallRecordStatus.ANY)
+        specs = db.get_by_hash(dag_hash[:7], installed=InstallRecordStatus.ANY)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
-        specs = spack.store.STORE.db.get_by_hash(dag_hash, installed=not installed)
+        specs = db.get_by_hash(dag_hash, installed=not installed)
         assert specs is None
 
-        specs = spack.store.STORE.db.get_by_hash(dag_hash[:7], installed=not installed)
+        specs = db.get_by_hash(dag_hash[:7], installed=not installed)
         assert specs is None
 
-        mpileaks_spec = spack.store.STORE.db.query_one("mpileaks ^mpich")
+        mpileaks_spec = db.query_one("mpileaks ^mpich")
         assert callpath_spec in mpileaks_spec
 
-        spec = spack.store.STORE.db.query_one("callpath ^mpich", installed=installed)
+        spec = db.query_one("callpath ^mpich", installed=installed)
         assert spec == callpath_spec
 
-        spec = spack.store.STORE.db.query_one("callpath ^mpich", installed=InstallRecordStatus.ANY)
+        spec = db.query_one("callpath ^mpich", installed=InstallRecordStatus.ANY)
         assert spec == callpath_spec
 
-        spec = spack.store.STORE.db.query_one("callpath ^mpich", installed=not installed)
+        spec = db.query_one("callpath ^mpich", installed=not installed)
         assert spec is None
 
     validate_callpath_spec(True)
@@ -162,7 +163,7 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
 
     # BUT, make sure that the removed callpath spec is not in queries
     def db_specs():
-        all_specs = spack.store.STORE.layout.all_specs()
+        all_specs = mutable_database_store.layout.all_specs()
         return (
             all_specs,
             [s for s in all_specs if s.satisfies("mpileaks")],

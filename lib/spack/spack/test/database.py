@@ -873,7 +873,7 @@ def test_query_unused_specs(mutable_database):
     trivial_smoke_test = mutable_database.query_one("trivial-smoke-test").dag_hash()
 
     def check_unused(roots, deptype, expected):
-        unused = spack.store.STORE.db.unused_specs(root_hashes=roots, deptype=deptype)
+        unused = mutable_database.unused_specs(root_hashes=roots, deptype=deptype)
         assert {u.name for u in unused} == set(expected)
 
     default_dt = dt.LINK | dt.RUN
