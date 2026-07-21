@@ -8,7 +8,6 @@ import sys
 import pytest
 
 import spack.cmd.external
-import spack.config
 import spack.cray_manifest
 import spack.detection
 import spack.detection.path
