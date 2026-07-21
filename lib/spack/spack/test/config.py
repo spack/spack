@@ -552,12 +552,12 @@ def test_change_or_add(mutable_config, mock_packages):
             section[self.pkg_name] = pkg_section
 
     change1 = ChangeTest("b", ["1.2"])
-    spack.config.CONFIG.change_or_add("packages", change1.find_fn, change1.change_fn)
+    mutable_config.change_or_add("packages", change1.find_fn, change1.change_fn)
     assert "b" not in mutable_config.get("packages", scope="user")
     assert mutable_config.get("packages")["b"]["version"] == ["1.2"]
 
     change2 = ChangeTest("c", ["1.0"])
-    spack.config.CONFIG.change_or_add("packages", change2.find_fn, change2.change_fn)
+    mutable_config.change_or_add("packages", change2.find_fn, change2.change_fn)
     assert "c" in mutable_config.get("packages", scope="user")
 
 

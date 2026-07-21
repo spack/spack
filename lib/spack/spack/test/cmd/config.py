@@ -219,7 +219,7 @@ repos:
 def test_config_edit(mutable_config, working_env):
     """Ensure `spack config edit` edits the right paths."""
 
-    dms = spack.config.CONFIG.default_modify_scope("compilers")
+    dms = mutable_config.default_modify_scope("compilers")
     dms_path = mutable_config.scopes[dms].path
     user_path = mutable_config.scopes["user"].path
 
@@ -685,7 +685,7 @@ def test_config_prefer_upstream(
     monkeypatch.setattr(temporary_store, "db", db_for_test)
 
     output = config("prefer-upstream")
-    scope = spack.config.CONFIG.default_modify_scope("packages")
+    scope = mutable_config.default_modify_scope("packages")
     cfg_file = mutable_config.get_config_filename(scope, "packages")
     packages = syaml.load(open(cfg_file, encoding="utf-8"))["packages"]
 
@@ -774,7 +774,7 @@ def test_config_with_unknown_group_gives_clear_error(cmd_str, tmp_path, mutable_
 @pytest.mark.regression("52152")
 def test_config_edit_creates_scope_dir(mutable_config, working_env, monkeypatch):
     """Tests that `spack config edit` can create the scope directory if it does not exist."""
-    scope_name = spack.config.CONFIG.default_modify_scope("config")
+    scope_name = mutable_config.default_modify_scope("config")
     scope_dir = pathlib.Path(mutable_config.scopes[scope_name].path)
 
     # Remove the scope directory to simulate a "fresh start" with no ~/.spack
