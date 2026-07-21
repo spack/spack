@@ -3438,7 +3438,6 @@ def apply_pe_relocations(
     coff_for_target: Dict[str, str],
     reloc_exe: Executable,
     ev: EnvironmentModifications,
-    export: bool = False,
     **reloc_kwargs,
 ) -> None:
     """Invoke the compiler wrapper's relocate executable on each PE target (dll or
@@ -3450,8 +3449,6 @@ def apply_pe_relocations(
     """
     for pe in pe_targets:
         args = ["--pe", pe]
-        if export:
-            args.append("--export")
         args.append("--full")
         if pe in coff_for_target:
             args.extend(["--coff", coff_for_target[pe]])
