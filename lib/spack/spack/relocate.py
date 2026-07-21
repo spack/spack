@@ -78,12 +78,14 @@ def _buildcache_import_lib_targets(
         # via import libs to determine the proper association
         if sfs.verify_import_lib(lib):
             dll_path = sfs.get_importlib_target(lib)
+            print(f"imp lib target {dll_path}")
             if not dll_path:
                 tty.debug(
                     f"Import lib {lib} does not reference a compatible DLL, skipping relocation..."
                 )
                 continue
-            match = regex.match(dll_path)
+            norm_dll_path = dll_path[:2] + "\\" + dll_path[2:].lstrip("\\")
+            match = regex.match(norm_dll_path)
             if match:
                 old_root = match.group()
                 new_root = all_prefixes[old_root]
