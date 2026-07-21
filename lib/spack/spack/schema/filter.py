@@ -22,19 +22,12 @@ allow_block = {
     },
 }
 
-externals_filter = {
-    "type": "object",
-    "additionalProperties": False,
-    "properties": {
-        "allow": {"type": "array", "default": [], "items": {"type": "string"}},
-        "block": {
-            "default": [],
-            "oneOf": [
-                {"const": True},
-                {"type": "array", "items": {"type": "string"}},
-            ],
-        },
-    },
+packages_filter = {
+    "default": "all",
+    "oneOf": [
+        {"type": "string", "enum": ["all", "externals_only"]},
+        allow_block,
+    ],
 }
 
 properties: Dict[str, Any] = {
@@ -46,7 +39,7 @@ properties: Dict[str, Any] = {
             "projections": projection_scheme,
             "concrete": {"type": "boolean", "default": True},
             "specs": allow_block,
-            "externals": externals_filter,
+            "packages": packages_filter,
             "config": allow_block,
         },
     }

@@ -591,12 +591,12 @@ def test_config_add_filter_to_env(mutable_empty_config, mutable_mock_env_path):
     env("create", "test")
     with ev.read("test"):
         config("add", "filter:specs:allow:[mpileaks]")
-        config("add", "filter:externals:block:true")
+        config("add", "filter:specs:block:[zmpi]")
         output = config("get")
 
     assert "filter:" in output
     assert "allow: [mpileaks]" in output
-    assert "block: true" in output
+    assert "block: [zmpi]" in output
 
 
 def test_config_add_to_env_preserve_comments(

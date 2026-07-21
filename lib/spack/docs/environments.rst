@@ -172,9 +172,7 @@ The ``filter:`` section is written under the top-level ``spack:`` key in ``spack
        specs:
          allow: [callpath, hdf5]
          block: []
-       externals:
-         allow: [cmake]
-         block: [gcc]
+       packages: externals_only
        config:
          allow: [packages, concretizer]
          block: [mirrors]
@@ -194,14 +192,23 @@ When both are present, a spec must match the allow list and must not match the b
 In concrete mode, these constraints are matched against every concrete spec in the source lockfile graph, not only against the original roots.
 Projection formats used in concrete mode must format each selected concrete spec to a valid Spack spec string.
 
-The ``externals`` subsection controls external specs and external package configuration.
-``externals:allow`` is a list of package names or package constraints whose external package configuration may be copied.
-An empty allow list allows all external package configuration.
-``externals:block`` may be a list of package names or package constraints, or the value ``true``.
-An empty block list blocks nothing.
-The value ``true`` blocks all external concrete specs and all external package configuration.
-If the filtered environment copies a ``packages:`` section, only package entries that declare ``externals`` and pass the ``externals`` allow/block rules are copied.
-General package preferences such as ``packages:all``, non-external ``require`` entries, provider preferences, and build preferences are not copied by the filter.
+The ``packages`` setting controls filtering of the copied ``packages:`` configuration section.
+Valid values are ``all``, ``externals_only``, or an allow/block object.
+If the filtered environment copies ``packages:`` configuration, ``packages`` defaults to ``all`` and the complete allowed ``packages:`` configuration is copied.
+Set ``packages`` to ``externals_only`` to copy only package configuration entries that declare ``externals``.
+This copies each selected package entry as a whole and does not filter individual entries within a package's ``externals`` list.
+Set ``packages`` to an allow/block object to copy complete package configuration entries by name:
+
+.. code-block:: yaml
+
+   spack:
+     filter:
+       packages:
+         allow: [all, cmake]
+         block: [libelf]
+
+An empty ``packages:allow`` list allows every package configuration entry.
+An empty ``packages:block`` list blocks nothing.
 
 The ``config`` subsection controls which top-level configuration sections are copied from the source environment.
 ``config:allow`` is a list of section names to copy; an empty list allows all sections.

@@ -267,20 +267,30 @@ def test_filter_schema_accepts_valid_configuration():
                 },
                 "concrete": True,
                 "specs": {"allow": ["mpileaks"], "block": ["zmpi"]},
-                "externals": {"allow": ["cmake@3.27"], "block": ["gcc@12"]},
+                "packages": {
+                    "allow": ["all", "cmake"],
+                    "block": ["mpileaks"],
+                },
                 "config": {"allow": ["packages"], "block": ["mirrors"]},
             }
         }
     )
-    v.validate({"filter": {"externals": {"block": True}}})
+    v.validate({"filter": {"packages": "all"}})
+    v.validate({"filter": {"packages": "externals_only"}})
 
 
 @pytest.mark.parametrize(
     "data",
     [
-        {"filter": {"externals": {"block": False}}},
+        {"filter": {"externals": {"block": True}}},
         {"filter": {"unknown": []}},
         {"filter": {"specs": {"allow": True}}},
+        {"filter": {"packages": "externals"}},
+        {"filter": {"packages": "none"}},
+        {"filter": {"packages": {"allow": True}}},
+        {"filter": {"packages": {"externals": {"block": True}}}},
+        {"filter": {"packages": {"externals": {"allow": ["cmake"]}}}},
+        {"filter": {"packages": {"unknown": []}}},
         {"filter": {"config": {"block": True}}},
     ],
 )
