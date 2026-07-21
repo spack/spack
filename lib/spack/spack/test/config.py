@@ -80,9 +80,9 @@ spack:
     return env_yaml
 
 
-def check_compiler_config(comps, *compiler_names):
+def check_compiler_config(configuration, comps, *compiler_names):
     """Check that named compilers in comps match Spack's config."""
-    config = spack.config.CONFIG.get("compilers")
+    config = configuration.get("compilers")
     compiler_list = ["cc", "cxx", "f77", "fc"]
     flag_list = ["cflags", "cxxflags", "fflags", "cppflags", "ldflags", "ldlibs"]
     param_list = ["modules", "paths", "spec", "operating_system"]
@@ -211,8 +211,8 @@ def test_write_key_in_memory(mock_low_high_config, compiler_specs):
     mock_low_high_config.set("compilers", b_comps["compilers"], scope="high")
 
     # Make sure the config looks how we expect.
-    check_compiler_config(a_comps["compilers"], *compiler_specs.a)
-    check_compiler_config(b_comps["compilers"], *compiler_specs.b)
+    check_compiler_config(mock_low_high_config, a_comps["compilers"], *compiler_specs.a)
+    check_compiler_config(mock_low_high_config, b_comps["compilers"], *compiler_specs.b)
 
 
 def test_write_key_to_disk(mock_low_high_config, compiler_specs):
@@ -224,8 +224,8 @@ def test_write_key_to_disk(mock_low_high_config, compiler_specs):
     mock_low_high_config.clear_caches()
 
     # Same check again, to ensure consistency.
-    check_compiler_config(a_comps["compilers"], *compiler_specs.a)
-    check_compiler_config(b_comps["compilers"], *compiler_specs.b)
+    check_compiler_config(mock_low_high_config, a_comps["compilers"], *compiler_specs.a)
+    check_compiler_config(mock_low_high_config, b_comps["compilers"], *compiler_specs.b)
 
 
 def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
@@ -237,8 +237,8 @@ def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
     mock_low_high_config.clear_caches()
 
     # Same check again, to ensure consistency.
-    check_compiler_config(a_comps["compilers"], *compiler_specs.a)
-    check_compiler_config(b_comps["compilers"], *compiler_specs.b)
+    check_compiler_config(mock_low_high_config, a_comps["compilers"], *compiler_specs.a)
+    check_compiler_config(mock_low_high_config, b_comps["compilers"], *compiler_specs.b)
 
 
 #
