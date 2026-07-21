@@ -40,19 +40,7 @@ import tempfile
 import warnings
 from collections import defaultdict
 from itertools import chain
-from typing import (
-    Any,
-    Callable,
-    ContextManager,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union, cast
 
 from spack.vendor import jsonschema
 
@@ -208,7 +196,7 @@ class ConfigScope:
     def transitive_includes(self, _names: Optional[Set[str]] = None) -> Set[str]:
         """Get name of this scope and names of its transitively included scopes."""
         if _names is None:
-            _names = _set()
+            _names = set()
         _names.add(self.name)
         for scope in self.included_scopes:
             _names |= scope.transitive_includes(_names=_names)
@@ -800,16 +788,16 @@ class Configuration:
         if i < 0:
             return scopes  # no overrides
 
-        keep = _set(s.name for s in scopes[i:])
-        keep |= _set(s.name for s in self.scopes.priority_values(ConfigScopePriority.DEFAULTS))
+        keep = set(s.name for s in scopes[i:])
+        keep |= set(s.name for s in self.scopes.priority_values(ConfigScopePriority.DEFAULTS))
 
         if not includes:
             # For all sections except for the include section:
             # non-included scopes are still active, as are scopes included
             # from the overriding scope
             # Transitive scopes from the overriding scope are not included
-            keep |= _set([s.name for s in scopes[i].included_scopes])
-            keep |= _set([s.name for s in scopes if not s.included])
+            keep |= set([s.name for s in scopes[i].included_scopes])
+            keep |= set([s.name for s in scopes if not s.included])
 
         # return scopes to keep, with order preserved
         return [s for s in scopes if s.name in keep]
@@ -894,11 +882,11 @@ class Configuration:
         Accepts a path syntax that allows us to grab nested config map
         entries.  Getting the ``config`` section would look like::
 
-            spack.config.get("config")
+            spack.config.CONFIG.get("config")
 
         and the ``dirty`` section in the ``config`` scope would be::
 
-            spack.config.get("config:dirty")
+            spack.config.CONFIG.get("config:dirty")
 
         We use ``:`` as the separator, like YAML objects.
         """
@@ -1106,23 +1094,6 @@ class Configuration:
         # merge value into existing
         new = spack.schema.merge_yaml(existing, value)
         self.set(path, new, scope)
-
-
-def override(
-    path_or_scope: Union[ConfigScope, str], value: Optional[Any] = None
-) -> ContextManager[Configuration]:
-    """Simple way to override config settings within a context.
-
-    Arguments:
-        path_or_scope (ConfigScope or str): scope or single option to override
-        value (object or None): value for the single option
-
-    Temporarily push a scope on the current configuration, then remove it
-    after the context completes. If a single option is provided, create
-    an internal config scope for it and push/pop that scope.
-
-    """
-    return CONFIG.override(path_or_scope, value)
 
 
 #: Class for the relevance of an optional path conditioned on a limited
@@ -1680,34 +1651,6 @@ CONFIG = cast(Configuration, lang.Singleton(create_incremental))
 spack.platforms.on_host_changed.append(lambda: CONFIG.clear_caches())
 
 
-def add_from_file(filename: str, scope: Optional[str] = None) -> None:
-    """Add updates to a config from a filename"""
-    CONFIG.add_from_file(filename, scope)
-
-
-def add(fullpath: str, scope: Optional[str] = None) -> None:
-    """Add the given configuration to the specified config scope.
-    Add accepts a path. If you want to add from a filename, use add_from_file"""
-    CONFIG.add(fullpath, scope)
-
-
-def get(path: str, default: Any = default_sigil, scope: Optional[str] = None) -> Any:
-    """Module-level wrapper for ``Configuration.get()``."""
-    return CONFIG.get(path, default, scope)
-
-
-_set = set  #: save this before defining set -- maybe config.set was ill-advised :)
-
-
-def set(path: str, value: Any, scope: Optional[str] = None) -> None:
-    """Convenience function for setting single values in config files.
-
-    Accepts the path syntax described in ``get()``.
-    """
-    result = CONFIG.set(path, value, scope)
-    return result
-
-
 def scopes() -> lang.PriorityOrderedMapping[str, ConfigScope]:
     """Convenience function to get list of configuration scopes."""
     return CONFIG.scopes
@@ -1739,7 +1682,7 @@ def existing_scope_names() -> List[str]:
 
 
 def matched_config(cfg_path: str) -> List[Tuple[str, Any]]:
-    return [(scope, get(cfg_path, scope=scope)) for scope in writable_scope_names()]
+    return [(scope, CONFIG.get(cfg_path, scope=scope)) for scope in writable_scope_names()]
 
 
 def change_or_add(
