@@ -586,16 +586,74 @@ def _filtered_concrete_root_entries(
 
 def _filtered_abstract_root_entries(
     source_env: "Environment", filter_configuration: Dict[str, Any]
-) -> List[str]:
-    return [
-        str(spec)
-        for spec in source_env.user_specs
-        if _spec_is_allowed(
-            spec,
-            filter_configuration["specs"]["allow"],
-            filter_configuration["specs"]["block"],
-        )
-    ]
+) -> List[Union[str, Dict[str, Any]]]:
+    specs: List[Union[str, Dict[str, Any]]] = []
+
+    for group in source_env.manifest.groups():
+        filtered_group_specs = [
+            str(spec)
+            for spec in source_env.user_specs_by(group=group)
+            if _spec_is_allowed(
+                spec,
+                filter_configuration["specs"]["allow"],
+                filter_configuration["specs"]["block"],
+            )
+        ]
+
+        if group == DEFAULT_USER_SPEC_GROUP:
+            specs.extend(filtered_group_specs)
+            continue
+
+        group_entry: Dict[str, Any] = {"group": group, "specs": filtered_group_specs}
+
+        needs = source_env.manifest.needs(group=group)
+        if needs:
+            group_entry["needs"] = list(needs)
+
+        if not source_env.manifest.is_explicit(group=group):
+            group_entry["explicit"] = False
+
+        override = source_env.manifest._config_override.get(group)
+        if override is not None:
+            group_entry["override"] = copy.deepcopy(override)
+
+        specs.append(group_entry)
+
+    return specs
+
+
+def _is_lockfile_include_path(path: str) -> bool:
+    return os.path.basename(substitute_path_variables(path)) == lockfile_name
+
+
+def _filter_lockfile_includes(
+    includes: List[Union[str, Dict[str, Any]]],
+) -> List[Union[str, Dict[str, Any]]]:
+    filtered: List[Union[str, Dict[str, Any]]] = []
+
+    for entry in includes:
+        if isinstance(entry, str):
+            if not _is_lockfile_include_path(entry):
+                filtered.append(entry)
+            continue
+
+        if "paths" in entry:
+            paths = [
+                path
+                for path in entry.get("paths", [])
+                if not _is_lockfile_include_path(path)
+            ]
+            if paths:
+                filtered_entry = copy.deepcopy(entry)
+                filtered_entry["paths"] = paths
+                filtered.append(filtered_entry)
+            continue
+
+        paths = spack.config.included_path(entry).paths
+        if not any(_is_lockfile_include_path(path) for path in paths):
+            filtered.append(copy.deepcopy(entry))
+
+    return filtered
 
 
 def _filter_packages_configuration(
@@ -625,7 +683,7 @@ def _filtered_configuration(
     source_env: "Environment",
     source_configuration: Dict[str, Any],
     filter_configuration: Dict[str, Any],
-    specs: List[str],
+    specs: List[Union[str, Dict[str, Any]]],
     with_view: Optional[Union[str, pathlib.Path, bool]],
 ) -> Dict[str, Any]:
     allowed_sections = set(filter_configuration["config"]["allow"])
@@ -633,9 +691,14 @@ def _filtered_configuration(
     filtered = {}
 
     for key, value in source_configuration.items():
-        if key == "specs" or key in blocked_sections:
+        if key in ("specs", lockfile_include_key) or key in blocked_sections:
             continue
         if allowed_sections and key not in allowed_sections:
+            continue
+        if key == manifest_include_name:
+            filtered_includes = _filter_lockfile_includes(value)
+            if filtered_includes:
+                filtered[key] = filtered_includes
             continue
         filtered[key] = copy.deepcopy(value)
 
@@ -765,10 +828,18 @@ def _create_filtered_environment_in_dir(
         )
         _set_filtered_manifest(env, filtered_configuration)
 
-        init_file_dir = str(source_path) if is_source_dir else os.path.abspath(os.path.dirname(source_path))
+        init_file_dir = (
+            str(source_path)
+            if is_source_dir
+            else os.path.abspath(os.path.dirname(source_path))
+        )
         if not keep_relative and env.path != init_file_dir:
-            _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=is_source_dir)
-            _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=is_source_dir)
+            _rewrite_relative_dev_paths_on_relocation(
+                env, init_file_dir, copied_env=is_source_dir
+            )
+            _rewrite_relative_repos_paths_on_relocation(
+                env, init_file_dir, copied_env=is_source_dir
+            )
 
         if filter_configuration["concrete"]:
             _populate_filtered_lockfile(env, filtered_roots)
