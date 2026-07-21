@@ -38,11 +38,11 @@ def pkg_factory(name):
 
 @pytest.mark.usefixtures("config", "mock_packages")
 class TestPackage:
-    def test_load_package(self):
-        spack.repo.PATH.get_pkg_class("mpich")
+    def test_load_package(self, mock_packages):
+        mock_packages.get_pkg_class("mpich")
 
-    def test_package_name(self):
-        pkg_cls = spack.repo.PATH.get_pkg_class("mpich")
+    def test_package_name(self, mock_packages):
+        pkg_cls = mock_packages.get_pkg_class("mpich")
         assert pkg_cls.name == "mpich"
 
     def test_package_filename(self):
@@ -83,8 +83,8 @@ class TestPackage:
         del sys.modules["spack.pkg.testing_repo"]
         del sys.modules["spack.pkg.testing_repo.mpich"]
 
-    def test_inheritance_of_directives(self):
-        pkg_cls = spack.repo.PATH.get_pkg_class("simple-inheritance")
+    def test_inheritance_of_directives(self, mock_packages):
+        pkg_cls = mock_packages.get_pkg_class("simple-inheritance")
 
         # Check dictionaries that should have been filled by directives
         dependencies = pkg_cls.dependencies_by_name()

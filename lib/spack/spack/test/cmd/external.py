@@ -11,7 +11,6 @@ import spack.cmd.external
 import spack.cray_manifest
 import spack.detection
 import spack.detection.path
-import spack.repo
 from spack.main import SpackCommand
 from spack.spec import Spec
 from spack.util.filesystem import getuid, touch
@@ -68,7 +67,7 @@ external = SpackCommand("external")
 # causing intermittent (spurious) CI failures on all PRs
 @pytest.mark.not_on_windows("Test fails intermittently on Windows")
 def test_find_external_cmd_not_buildable(
-    mutable_config, working_env, mock_executable, monkeypatch
+    mutable_config, working_env, mock_executable, monkeypatch, mock_packages
 ):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as
@@ -80,7 +79,7 @@ def test_find_external_cmd_not_buildable(
     def _determine_version(cls, exe):
         return version
 
-    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    cmake_cls = mock_packages.get_pkg_class("cmake")
     monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
 
     cmake_path = mock_executable("cmake", output=f"echo cmake version {version}")
@@ -246,7 +245,7 @@ def test_list_detectable_packages(mutable_config):
     assert external.returncode == 0
 
 
-def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
+def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, mock_packages):
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     search_dir = gcc_exe.parent
 
@@ -254,12 +253,12 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     def _determine_variants(cls, exes, version_str):
         return "languages=c", {"prefix": "/opt/gcc/bin", "compilers": {"c": exes[0]}}
 
-    gcc_cls = spack.repo.PATH.get_pkg_class("gcc")
+    gcc_cls = mock_packages.get_pkg_class("gcc")
     monkeypatch.setattr(gcc_cls, "determine_variants", _determine_variants)
 
     finder = spack.detection.path.ExecutablesFinder()
     detected_specs = finder.find(
-        pkg_name="gcc", initial_guess=[str(search_dir)], repository=spack.repo.PATH
+        pkg_name="gcc", initial_guess=[str(search_dir)], repository=mock_packages
     )
 
     assert len(detected_specs) == 1
@@ -288,14 +287,16 @@ def test_new_entries_are_reported_correctly(mock_executable, mutable_config, mon
 
 @pytest.mark.parametrize("command_args", [("-t", "build-tools"), ("-t", "build-tools", "cmake")])
 @pytest.mark.not_on_windows("the test uses bash scripts")
-def test_use_tags_for_detection(command_args, mock_executable, mutable_config, monkeypatch):
+def test_use_tags_for_detection(
+    command_args, mock_executable, mutable_config, monkeypatch, mock_packages
+):
     versions = {"cmake": "3.19.1", "openssl": "2.8.3"}
 
     @classmethod
     def _determine_version(cls, exe):
         return versions[os.path.basename(exe)]
 
-    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    cmake_cls = mock_packages.get_pkg_class("cmake")
     monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
 
     # Prepare an environment to detect a fake cmake
@@ -317,7 +318,7 @@ def test_use_tags_for_detection(command_args, mock_executable, mutable_config, m
 @pytest.mark.regression("38733")
 @pytest.mark.not_on_windows("the test uses bash scripts")
 def test_failures_in_scanning_do_not_result_in_an_error(
-    mock_executable, monkeypatch, mutable_config
+    mock_executable, monkeypatch, mutable_config, mock_packages
 ):
     """Tests that scanning paths with wrong permissions, won't cause `external find` to error."""
     cmake_exe1 = mock_executable(
@@ -336,7 +337,7 @@ def test_failures_in_scanning_do_not_result_in_an_error(
             return "3.23.3"
         assert False, f"Unexpected exe path {exe}"
 
-    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    cmake_cls = mock_packages.get_pkg_class("cmake")
     monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
     monkeypatch.setenv("PATH", f"{cmake_exe1.parent}{os.pathsep}{cmake_exe2.parent}")
 
@@ -354,7 +355,7 @@ def test_failures_in_scanning_do_not_result_in_an_error(
     assert "3.23.3" in output
 
 
-def test_detect_virtuals(mock_executable, mutable_config, monkeypatch):
+def test_detect_virtuals(mock_executable, mutable_config, monkeypatch, mock_packages):
     """Test whether external find --not-buildable sets virtuals as non-buildable (unless user
     config sets them to buildable)"""
     version = "4.0.2"
@@ -363,7 +364,7 @@ def test_detect_virtuals(mock_executable, mutable_config, monkeypatch):
     def _determine_version(cls, exe):
         return version
 
-    cmake_cls = spack.repo.PATH.get_pkg_class("mpich")
+    cmake_cls = mock_packages.get_pkg_class("mpich")
     monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
 
     mpich = mock_executable("mpichversion", output=f"echo MPICH Version:    {version}")
