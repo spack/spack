@@ -40,7 +40,19 @@ import tempfile
 import warnings
 from collections import defaultdict
 from itertools import chain
-from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union, cast
+from typing import (
+    Any,
+    Callable,
+    ContextManager,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 from spack.vendor import jsonschema
 
@@ -986,11 +998,119 @@ class Configuration:
         except (syaml.SpackYAMLError, OSError) as e:
             raise spack.error.ConfigError(f"cannot read '{section}' configuration") from e
 
+    @contextlib.contextmanager
+    def override(
+        self, path_or_scope: Union[ConfigScope, str], value: Optional[Any] = None
+    ) -> Generator["Configuration", None, None]:
+        """Temporarily override a single option or push a scope, then restore.
 
-@contextlib.contextmanager
+        See the module-level ``override`` for the argument semantics.
+        """
+        path: Optional[str]
+        if isinstance(path_or_scope, ConfigScope):
+            overrides, path = path_or_scope, None
+        else:
+            # Ensure the new override gets a unique scope name
+            existing = {s.name for s in self.matching_scopes(rf"^{_OVERRIDES_BASE_NAME}")}
+            num_overrides = len(existing)
+            while f"{_OVERRIDES_BASE_NAME}{num_overrides}" in existing:
+                num_overrides += 1
+            overrides = InternalConfigScope(f"{_OVERRIDES_BASE_NAME}{num_overrides}")
+            path = path_or_scope
+
+        self.push_scope(overrides, priority=None)
+        try:
+            if path is not None:
+                self.set(path, value, scope=overrides.name)
+            yield self
+        finally:
+            scope = self.remove_scope(overrides.name)
+            assert scope is overrides
+
+    def add_from_file(self, filename: str, scope: Optional[str] = None) -> None:
+        """Add updates to a config from a filename"""
+        # Extract internal attributes, if we are dealing with an environment
+        data = read_config_file(filename)
+        if data is None:
+            return
+
+        if spack.schema.env.TOP_LEVEL_KEY in data:
+            data = data[spack.schema.env.TOP_LEVEL_KEY]
+
+        msg = (
+            "unexpected 'None' value when retrieving configuration. "
+            "Please submit a bug-report at https://github.com/spack/spack/issues"
+        )
+        assert data is not None, msg
+
+        # update all sections from config dict
+        # We have to iterate on keys to keep overrides from the file
+        for section in data.keys():
+            if section in SECTION_SCHEMAS.keys():
+                # Special handling for compiler scope difference
+                # Has to be handled after we choose a section
+                if scope is None:
+                    scope = default_modify_scope(section)
+
+                value = data[section]
+                existing = self.get(section, scope=scope)
+                new = spack.schema.merge_yaml(existing, value)
+
+                self.set(section, new, scope)
+
+    def add(self, fullpath: str, scope: Optional[str] = None) -> None:
+        """Add the given configuration to the specified config scope.
+        Add accepts a path. If you want to add from a filename, use add_from_file"""
+        components = process_config_path(fullpath)
+
+        has_existing_value = True
+        path = ""
+        override = False
+        value = components[-1]
+        if not isinstance(value, syaml.syaml_str):
+            value = syaml.load_config(value)
+        for idx, name in enumerate(components[:-1]):
+            # First handle double colons in constructing path
+            colon = "::" if override else ":" if path else ""
+            path += colon + name
+            if getattr(name, "override", False):
+                override = True
+            else:
+                override = False
+
+            # Test whether there is an existing value at this level
+            existing = self.get(path, scope=scope)
+
+            if existing is None:
+                has_existing_value = False
+                # We've nested further than existing config, so we need the
+                # type information for validation to know how to handle bare
+                # values appended to lists.
+                existing = get_default_from_schema(path)
+
+                # construct value from this point down
+                for component in reversed(components[idx + 1 : -1]):
+                    value: Dict[str, str] = {component: value}  # type: ignore[no-redef]
+                break
+
+        if override:
+            path += "::"
+
+        if has_existing_value:
+            existing = self.get(path, scope=scope)
+
+        # append values to lists
+        if isinstance(existing, list) and not isinstance(value, list):
+            value: List[str] = [value]  # type: ignore[no-redef]
+
+        # merge value into existing
+        new = spack.schema.merge_yaml(existing, value)
+        self.set(path, new, scope)
+
+
 def override(
     path_or_scope: Union[ConfigScope, str], value: Optional[Any] = None
-) -> Generator[Configuration, None, None]:
+) -> ContextManager[Configuration]:
     """Simple way to override config settings within a context.
 
     Arguments:
@@ -1002,26 +1122,7 @@ def override(
     an internal config scope for it and push/pop that scope.
 
     """
-    path: Optional[str]
-    if isinstance(path_or_scope, ConfigScope):
-        overrides, path = path_or_scope, None
-    else:
-        # Ensure the new override gets a unique scope name
-        existing = {s.name for s in CONFIG.matching_scopes(rf"^{_OVERRIDES_BASE_NAME}")}
-        num_overrides = len(existing)
-        while f"{_OVERRIDES_BASE_NAME}{num_overrides}" in existing:
-            num_overrides += 1
-        overrides = InternalConfigScope(f"{_OVERRIDES_BASE_NAME}{num_overrides}")
-        path = path_or_scope
-
-    CONFIG.push_scope(overrides, priority=None)
-    try:
-        if path is not None:
-            CONFIG.set(path, value, scope=overrides.name)
-        yield CONFIG
-    finally:
-        scope = CONFIG.remove_scope(overrides.name)
-        assert scope is overrides
+    return CONFIG.override(path_or_scope, value)
 
 
 #: Class for the relevance of an optional path conditioned on a limited
@@ -1581,85 +1682,13 @@ spack.platforms.on_host_changed.append(lambda: CONFIG.clear_caches())
 
 def add_from_file(filename: str, scope: Optional[str] = None) -> None:
     """Add updates to a config from a filename"""
-    # Extract internal attributes, if we are dealing with an environment
-    data = read_config_file(filename)
-    if data is None:
-        return
-
-    if spack.schema.env.TOP_LEVEL_KEY in data:
-        data = data[spack.schema.env.TOP_LEVEL_KEY]
-
-    msg = (
-        "unexpected 'None' value when retrieving configuration. "
-        "Please submit a bug-report at https://github.com/spack/spack/issues"
-    )
-    assert data is not None, msg
-
-    # update all sections from config dict
-    # We have to iterate on keys to keep overrides from the file
-    for section in data.keys():
-        if section in SECTION_SCHEMAS.keys():
-            # Special handling for compiler scope difference
-            # Has to be handled after we choose a section
-            if scope is None:
-                scope = default_modify_scope(section)
-
-            value = data[section]
-            existing = get(section, scope=scope)
-            new = spack.schema.merge_yaml(existing, value)
-
-            # We cannot call config.set directly (set is a type)
-            CONFIG.set(section, new, scope)
+    CONFIG.add_from_file(filename, scope)
 
 
 def add(fullpath: str, scope: Optional[str] = None) -> None:
     """Add the given configuration to the specified config scope.
     Add accepts a path. If you want to add from a filename, use add_from_file"""
-    components = process_config_path(fullpath)
-
-    has_existing_value = True
-    path = ""
-    override = False
-    value = components[-1]
-    if not isinstance(value, syaml.syaml_str):
-        value = syaml.load_config(value)
-    for idx, name in enumerate(components[:-1]):
-        # First handle double colons in constructing path
-        colon = "::" if override else ":" if path else ""
-        path += colon + name
-        if getattr(name, "override", False):
-            override = True
-        else:
-            override = False
-
-        # Test whether there is an existing value at this level
-        existing = get(path, scope=scope)
-
-        if existing is None:
-            has_existing_value = False
-            # We've nested further than existing config, so we need the
-            # type information for validation to know how to handle bare
-            # values appended to lists.
-            existing = get_default_from_schema(path)
-
-            # construct value from this point down
-            for component in reversed(components[idx + 1 : -1]):
-                value: Dict[str, str] = {component: value}  # type: ignore[no-redef]
-            break
-
-    if override:
-        path += "::"
-
-    if has_existing_value:
-        existing = get(path, scope=scope)
-
-    # append values to lists
-    if isinstance(existing, list) and not isinstance(value, list):
-        value: List[str] = [value]  # type: ignore[no-redef]
-
-    # merge value into existing
-    new = spack.schema.merge_yaml(existing, value)
-    CONFIG.set(path, new, scope)
+    CONFIG.add(fullpath, scope)
 
 
 def get(path: str, default: Any = default_sigil, scope: Optional[str] = None) -> Any:
