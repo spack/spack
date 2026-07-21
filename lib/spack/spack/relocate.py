@@ -111,7 +111,7 @@ def relocate_windows_binaries(
 
     coff_for_target = _buildcache_import_lib_targets(targets, all_prefixes)
     pe_targets = [t for t in targets if t.endswith(".dll") or t.endswith(".exe")]
-    sfs.apply_pe_relocations(pe_targets, coff_for_target, _msvc_relocate(), ev, export=True)
+    sfs.apply_pe_relocations(pe_targets, coff_for_target, _msvc_relocate(), ev)
 
 
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
