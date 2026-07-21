@@ -76,9 +76,9 @@ def test_repo_unknown_pkg(mutable_mock_repo):
 def test_repo_last_mtime(mock_packages):
     mtime_with_package_py = [
         (os.path.getmtime(p.module.__file__), p.module.__file__)
-        for p in spack.repo.PATH.all_package_classes()
+        for p in mock_packages.all_package_classes()
     ]
-    repo_mtime = spack.repo.PATH.last_mtime()
+    repo_mtime = mock_packages.last_mtime()
     max_mtime, max_file = max(mtime_with_package_py)
     if max_mtime > repo_mtime:
         modified_after = "\n    ".join(
@@ -639,7 +639,7 @@ def test_repo_update(tmp_path: pathlib.Path):
 
 
 def test_mock_builtin_repo(mock_packages):
-    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin_mock")
+    assert spack.repo.builtin_repo() is mock_packages.get_repo("builtin_mock")
 
 
 def test_parse_config_descriptor_git_1(tmp_path: pathlib.Path):
