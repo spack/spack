@@ -570,7 +570,7 @@ def concrete_specs_from_environment():
 
 
 def all_specs_with_all_versions():
-    specs = [spack.spec.Spec(n) for n in spack.repo.all_package_names()]
+    specs = [spack.spec.Spec(n) for n in spack.repo.PATH.all_package_names()]
     mirror_specs = spack.mirrors.utils.get_all_versions(specs)
     mirror_specs.sort(key=lambda s: (s.name, s.version))
     return mirror_specs
