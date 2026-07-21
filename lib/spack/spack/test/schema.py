@@ -267,10 +267,7 @@ def test_filter_schema_accepts_valid_configuration():
                 },
                 "concrete": True,
                 "specs": {"allow": ["mpileaks"], "block": ["zmpi"]},
-                "packages": {
-                    "allow": ["all", "cmake"],
-                    "block": ["mpileaks"],
-                },
+                "packages": {"allow": ["all", "cmake"], "block": ["mpileaks"]},
                 "config": {"allow": ["packages"], "block": ["mirrors"]},
             }
         }

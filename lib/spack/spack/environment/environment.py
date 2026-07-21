@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import collections.abc
-import copy
 import contextlib
+import copy
 import errno
 import glob
 import os
@@ -639,9 +639,7 @@ def _filter_lockfile_includes(
 
         if "paths" in entry:
             paths = [
-                path
-                for path in entry.get("paths", [])
-                if not _is_lockfile_include_path(path)
+                path for path in entry.get("paths", []) if not _is_lockfile_include_path(path)
             ]
             if paths:
                 filtered_entry = copy.deepcopy(entry)
@@ -740,7 +738,7 @@ def _filtered_configuration(
 
 @contextlib.contextmanager
 def _filtered_source_environment(
-    init_file: Union[str, pathlib.Path]
+    init_file: Union[str, pathlib.Path],
 ) -> Iterable[Tuple["Environment", pathlib.Path, bool]]:
     source_path = pathlib.Path(init_file)
     if _is_lockfile_path(source_path):
@@ -829,14 +827,10 @@ def _create_filtered_environment_in_dir(
         _set_filtered_manifest(env, filtered_configuration)
 
         init_file_dir = (
-            str(source_path)
-            if is_source_dir
-            else os.path.abspath(os.path.dirname(source_path))
+            str(source_path) if is_source_dir else os.path.abspath(os.path.dirname(source_path))
         )
         if not keep_relative and env.path != init_file_dir:
-            _rewrite_relative_dev_paths_on_relocation(
-                env, init_file_dir, copied_env=is_source_dir
-            )
+            _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=is_source_dir)
             _rewrite_relative_repos_paths_on_relocation(
                 env, init_file_dir, copied_env=is_source_dir
             )
