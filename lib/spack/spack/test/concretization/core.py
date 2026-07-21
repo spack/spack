@@ -177,7 +177,7 @@ def current_host(request, monkeypatch):
     else:
         target = spack.vendor.archspec.cpu.TARGETS["sapphirerapids"]
         monkeypatch.setattr(spack.vendor.archspec.cpu, "host", lambda: target)
-        with spack.config.override("packages:all", {"target": [cpu]}):
+        with spack.config.CONFIG.override("packages:all", {"target": [cpu]}):
             yield target
 
 

@@ -104,7 +104,7 @@ MARKER_FILE = ".spack-view"
 def env_root_path() -> str:
     """Override default root path if the user specified it"""
     return spack.config.canonicalize_path(
-        spack.config.get("config:environments_root", default=default_env_path)
+        spack.config.CONFIG.get("config:environments_root", default=default_env_path)
     )
 
 
@@ -154,7 +154,7 @@ spack:
   view: true
   concretizer:
     unify: {}
-""".format("true" if spack.config.get("concretizer:unify") else "false")
+""".format("true" if spack.config.CONFIG.get("concretizer:unify") else "false")
 
 
 sep_re = re.escape(os.sep)
@@ -237,9 +237,9 @@ def activate(env, use_env_repo=False):
         if not isinstance(env, Environment):
             raise TypeError(f"`env` should be of type {Environment.__name__}")
 
-        install_tree_before = spack.config.get("config:install_tree")
-        upstreams_before = spack.config.get("upstreams")
-        repos_before = spack.config.get("repos")
+        install_tree_before = spack.config.CONFIG.get("config:install_tree")
+        upstreams_before = spack.config.CONFIG.get("upstreams")
+        repos_before = spack.config.CONFIG.get("repos")
         # PATH may be a lazy singleton created from config, so materialize it before pushing
         # the env scope, otherwise we'd save (and later restore) the env's repositories.
         repo_before = ensure_unwrapped(spack.repo.PATH)
@@ -248,9 +248,9 @@ def activate(env, use_env_repo=False):
         set_active_environment(env)
         env.manifest.prepare_config_scope()
 
-        install_tree_after = spack.config.get("config:install_tree")
-        upstreams_after = spack.config.get("upstreams")
-        repos_after = spack.config.get("repos")
+        install_tree_after = spack.config.CONFIG.get("config:install_tree")
+        upstreams_after = spack.config.CONFIG.get("upstreams")
+        repos_after = spack.config.CONFIG.get("repos")
 
         # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO
         if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
@@ -461,7 +461,7 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=Fal
     to store the environment in a different directory, we have to rewrite
     relative paths to absolute ones."""
     with env:
-        dev_specs = spack.config.get("develop", default={}, scope=env.scope_name)
+        dev_specs = spack.config.CONFIG.get("develop", default={}, scope=env.scope_name)
         if not dev_specs:
             return
         for name, entry in dev_specs.items():
@@ -480,7 +480,7 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=Fal
 
             dev_specs[name]["path"] = expanded_path
 
-        spack.config.set("develop", dev_specs, scope=env.scope_name)
+        spack.config.CONFIG.set("develop", dev_specs, scope=env.scope_name)
 
         env._dev_specs = None
         # If we changed the environment's spack.yaml scope, that will not be reflected
@@ -493,7 +493,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=F
     to store the environment in a different directory, we have to rewrite
     relative repo paths to absolute ones and expand environment variables."""
     with env:
-        repos_specs = spack.config.get("repos", default={}, scope=env.scope_name)
+        repos_specs = spack.config.CONFIG.get("repos", default={}, scope=env.scope_name)
         if not repos_specs:
             return
         for name, entry in list(repos_specs.items()):
@@ -515,7 +515,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=F
 
             repos_specs[name] = expanded_path
 
-        spack.config.set("repos", repos_specs, scope=env.scope_name)
+        spack.config.CONFIG.set("repos", repos_specs, scope=env.scope_name)
 
         env.repos_specs = None
         # If we changed the environment's spack.yaml scope, that will not be reflected
@@ -1274,7 +1274,7 @@ class Environment:
         """Set up user specs and views from the manifest file."""
         self.views = {}
         self._sync_speclists()
-        self._process_view(spack.config.get("view", True))
+        self._process_view(spack.config.CONFIG.get("view", True))
         self._process_included_lockfiles()
 
     def _sync_speclists(self):
@@ -1316,7 +1316,7 @@ class Environment:
     @property
     def dev_specs(self):
         dev_specs = {}
-        dev_config = spack.config.get("develop", {})
+        dev_config = spack.config.CONFIG.get("develop", {})
         for name, entry in dev_config.items():
             local_entry = {"spec": str(entry["spec"])}
             # default path is the spec name
@@ -1723,7 +1723,7 @@ class Environment:
 
         Arguments:
             force: re-concretize ALL specs, even those that were already concretized;
-                defaults to ``spack.config.get("concretizer:force")``
+                defaults to ``spack.config.CONFIG.get("concretizer:force")``
             tests: False to run no tests, True to test all packages, or a list of
                 package names to run tests for some
 
@@ -2711,7 +2711,7 @@ class EnvironmentConcretizer:
         self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
     ) -> List[SpecPair]:
         if force is None:
-            force = spack.config.get("concretizer:force")
+            force = spack.config.CONFIG.get("concretizer:force")
         self._prepare_environment_for_concretization(force=force)
 
         result = []

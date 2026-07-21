@@ -248,7 +248,7 @@ def print_flattened_configuration(*, blame: bool, yaml: bool) -> None:
         flattened[spack.schema.env.TOP_LEVEL_KEY] = syaml.syaml_dict()
 
     for config_section in spack.config.SECTION_SCHEMAS:
-        current = spack.config.get(config_section)
+        current = spack.config.CONFIG.get(config_section)
         flattened[spack.schema.env.TOP_LEVEL_KEY][config_section] = current
     if blame or yaml:
         syaml.dump_config(flattened, stream=sys.stdout, default_flow_style=False, blame=blame)
@@ -400,10 +400,10 @@ def config_add(args):
     scope, section = _get_scope_and_section(args)
 
     if args.file:
-        spack.config.add_from_file(args.file, scope=scope)
+        spack.config.CONFIG.add_from_file(args.file, scope=scope)
 
     if args.path:
-        spack.config.add(args.path, scope=scope)
+        spack.config.CONFIG.add(args.path, scope=scope)
 
 
 def config_remove(args):
@@ -413,11 +413,11 @@ def config_remove(args):
     scope, _ = _get_scope_and_section(args)
 
     path, _, value = args.path.rpartition(":")
-    existing = spack.config.get(path, scope=scope)
+    existing = spack.config.CONFIG.get(path, scope=scope)
 
     if not isinstance(existing, (list, dict)):
         path, _, value = path.rpartition(":")
-        existing = spack.config.get(path, scope=scope)
+        existing = spack.config.CONFIG.get(path, scope=scope)
 
     value = syaml.load(value)
 
@@ -431,7 +431,7 @@ def config_remove(args):
         # This should be impossible to reach
         raise spack.error.ConfigError("Config has nested non-dict values")
 
-    spack.config.set(path, existing, scope)
+    spack.config.CONFIG.set(path, existing, scope)
 
 
 def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
@@ -444,7 +444,7 @@ def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
 
 def _config_change_requires_scope(path, spec, scope, match_spec=None):
     """Return whether or not anything changed."""
-    require = spack.config.get(path, scope=scope)
+    require = spack.config.CONFIG.get(path, scope=scope)
     if not require:
         return False
 
@@ -485,7 +485,7 @@ def _config_change_requires_scope(path, spec, scope, match_spec=None):
                 raise ValueError(f"Unexpected requirement: ({type(item)}) {str(item)}")
             new_require.append(item)
 
-    spack.config.set(path, new_require, scope=scope)
+    spack.config.CONFIG.set(path, new_require, scope=scope)
     return changed
 
 
@@ -511,7 +511,7 @@ def _config_change(config_path, match_spec_str=None):
             changed |= _config_change_requires_scope(key_path, spec, scope, match_spec=match_spec)
 
         if not changed:
-            existing_requirements = spack.config.get(key_path)
+            existing_requirements = spack.config.CONFIG.get(key_path)
             if isinstance(existing_requirements, str):
                 raise spack.error.ConfigError(
                     "'config change' needs to append a requirement,"
@@ -520,7 +520,7 @@ def _config_change(config_path, match_spec_str=None):
 
             ideal_scope_to_modify = None
             for scope in spack.config.writable_scope_names():
-                if spack.config.get(key_path, scope=scope):
+                if spack.config.CONFIG.get(key_path, scope=scope):
                     ideal_scope_to_modify = scope
                     break
             # If we find our key in a specific scope, that's the one we want
@@ -528,7 +528,7 @@ def _config_change(config_path, match_spec_str=None):
             write_scope = ideal_scope_to_modify or spack.config.default_modify_scope()
 
             update_path = f"{key_path}:[{str(spec)}]"
-            spack.config.add(update_path, scope=write_scope)
+            spack.config.CONFIG.add(update_path, scope=write_scope)
     else:
         raise ValueError("'config change' can currently only change 'require' sections")
 
@@ -739,9 +739,9 @@ def config_prefer_upstream(args):
         )
 
     # Simply write the config to the specified file.
-    existing = spack.config.get("packages", scope=scope)
+    existing = spack.config.CONFIG.get("packages", scope=scope)
     new = spack.schema.merge_yaml(existing, pkgs)
-    spack.config.set("packages", new, scope)
+    spack.config.CONFIG.set("packages", new, scope)
     config_file = spack.config.CONFIG.get_config_filename(scope, section)
 
     tty.msg("Updated config at {0}".format(config_file))

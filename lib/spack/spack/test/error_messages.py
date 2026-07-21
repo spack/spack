@@ -25,7 +25,7 @@ solve = SpackCommand("solve")
 
 def update_packages_config(conf_str):
     conf = syaml.load_config(conf_str)
-    spack.config.set("packages", conf["packages"], scope="concretize")
+    spack.config.CONFIG.set("packages", conf["packages"], scope="concretize")
 
 
 _pkgx1 = (

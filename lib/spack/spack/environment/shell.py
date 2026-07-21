@@ -181,7 +181,7 @@ def activate(
     # become PATH variables.
     #
 
-    env_vars_yaml = spack.config.get("env_vars", None)
+    env_vars_yaml = spack.config.CONFIG.get("env_vars", None)
     if env_vars_yaml:
         env_mods.extend(spack.schema.environment.parse(env_vars_yaml))
 
@@ -219,7 +219,7 @@ def deactivate() -> EnvironmentModifications:
         return env_mods
 
     with active.manifest.use_config():
-        env_vars_yaml = spack.config.get("env_vars", None)
+        env_vars_yaml = spack.config.CONFIG.get("env_vars", None)
     if env_vars_yaml:
         env_mods.extend(spack.schema.environment.parse(env_vars_yaml).reversed())
 

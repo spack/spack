@@ -221,7 +221,7 @@ def query_arguments(args):
     q_args = {"installed": installed, "predicate_fn": predicate_fn, "explicit": explicit}
 
     install_tree = args.install_tree
-    upstreams = spack.config.get("upstreams", {})
+    upstreams = spack.config.CONFIG.get("upstreams", {})
     if install_tree in upstreams.keys():
         install_tree = upstreams[install_tree]["install_tree"]
     q_args["install_tree"] = install_tree

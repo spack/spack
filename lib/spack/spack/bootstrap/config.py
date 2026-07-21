@@ -42,13 +42,13 @@ def spec_for_current_python() -> str:
 def root_path() -> str:
     """Root of all the bootstrap related folders"""
     return spack.config.canonicalize_path(
-        spack.config.get("bootstrap:root", spack.paths.default_user_bootstrap_path)
+        spack.config.CONFIG.get("bootstrap:root", spack.paths.default_user_bootstrap_path)
     )
 
 
 def store_path() -> str:
     """Path to the store used for bootstrapped software"""
-    enabled = spack.config.get("bootstrap:enable", True)
+    enabled = spack.config.CONFIG.get("bootstrap:enable", True)
     if not enabled:
         msg = 'bootstrapping is currently disabled. Use "spack bootstrap enable" to enable it'
         raise RuntimeError(msg)
@@ -70,7 +70,7 @@ def spack_python_interpreter() -> Generator:
         "externals": [{"prefix": python_prefix, "spec": str(external_python)}],
     }
 
-    with spack.config.override("packages:python::", entry):
+    with spack.config.CONFIG.override("packages:python::", entry):
         yield
 
 
@@ -112,12 +112,12 @@ def _read_and_sanitize_configuration() -> Dict[str, Any]:
     # Read the "config" section but pop the install tree (the entry will not be
     # considered due to the use_store context manager, so it will be confusing
     # to have it in the configuration).
-    config_yaml = spack.config.get("config")
+    config_yaml = spack.config.CONFIG.get("config")
     config_yaml.pop("install_tree", None)
     return {
-        "bootstrap": spack.config.get("bootstrap"),
+        "bootstrap": spack.config.CONFIG.get("bootstrap"),
         "config": config_yaml,
-        "repos": spack.config.get("repos"),
+        "repos": spack.config.CONFIG.get("repos"),
     }
 
 
@@ -147,8 +147,8 @@ def _ensure_bootstrap_configuration() -> Generator:
         # Default configuration scopes excluding command line and builtin
         *_bootstrap_config_scopes()
     ), spack.store.use_store(bootstrap_store_path, extra_data={"padded_length": 0}):
-        spack.config.set("bootstrap", user_configuration["bootstrap"])
-        spack.config.set("config", user_configuration["config"])
-        spack.config.set("repos", user_configuration["repos"])
+        spack.config.CONFIG.set("bootstrap", user_configuration["bootstrap"])
+        spack.config.CONFIG.set("config", user_configuration["config"])
+        spack.config.CONFIG.set("repos", user_configuration["repos"])
         with spack.modules.disable_modules(), spack_python_interpreter():
             yield

@@ -100,7 +100,7 @@ def graph(parser, args):
         return
 
     # ascii is default: user doesn't need to provide it explicitly
-    debug = spack.config.get("config:debug")
+    debug = spack.config.CONFIG.get("config:debug")
     graph_ascii(specs[0], debug=debug, depflag=args.deptype)
     for spec in specs[1:]:
         print()  # extra line bt/w independent graphs

@@ -29,7 +29,7 @@ from spack.util.url import path_to_file_url
 
 def update_packages_config(conf_str):
     conf = syaml.load_config(conf_str)
-    spack.config.set("packages", conf["packages"], scope="concretize")
+    spack.config.CONFIG.set("packages", conf["packages"], scope="concretize")
 
 
 @pytest.fixture

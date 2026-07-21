@@ -315,7 +315,7 @@ def install(parser, args):
         return
 
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     if args.log_file and not args.log_format:
         msg = "the '--log-format' must be specified when using '--log-file'"

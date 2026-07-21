@@ -131,7 +131,7 @@ def test_install_package_already_installed(
 @pytest.mark.parametrize(
     "arguments,expected",
     [
-        ([], spack.config.get("config:dirty")),  # default from config file
+        ([], spack.config.CONFIG.get("config:dirty")),  # default from config file
         (["--clean"], False),
         (["--dirty"], True),
     ],

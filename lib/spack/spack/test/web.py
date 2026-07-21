@@ -394,7 +394,7 @@ def ssl_scrubbed_env(mutable_config, monkeypatch):
     monkeypatch.delenv("SSL_CERT_FILE", raising=False)
     monkeypatch.delenv("SSL_CERT_DIR", raising=False)
     monkeypatch.delenv("CURL_CA_BUNDLE", raising=False)
-    spack.config.set("config:verify_ssl", True)
+    spack.config.CONFIG.set("config:verify_ssl", True)
 
 
 @pytest.mark.parametrize(

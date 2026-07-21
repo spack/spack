@@ -82,7 +82,7 @@ spack:
 
 def check_compiler_config(comps, *compiler_names):
     """Check that named compilers in comps match Spack's config."""
-    config = spack.config.get("compilers")
+    config = spack.config.CONFIG.get("compilers")
     compiler_list = ["cc", "cxx", "f77", "fc"]
     flag_list = ["cflags", "cxxflags", "fflags", "cppflags", "ldflags", "ldlibs"]
     param_list = ["modules", "paths", "spec", "operating_system"]

@@ -41,7 +41,7 @@ callpath:
     write: world
 """
     )
-    spack.config.set("packages", conf, scope="concretize")
+    spack.config.CONFIG.set("packages", conf, scope="concretize")
 
     yield
 
@@ -53,7 +53,7 @@ def concretize(abstract_spec):
 def update_packages(pkgname, section, value):
     """Update config and reread package list"""
     conf = {pkgname: {section: value}}
-    spack.config.set("packages", conf, scope="concretize")
+    spack.config.CONFIG.set("packages", conf, scope="concretize")
 
 
 def assert_variant_values(spec, **variants):

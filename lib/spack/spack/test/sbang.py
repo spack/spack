@@ -283,7 +283,7 @@ all:
     group: {0}
 """.format(group_name)
     )
-    spack.config.set("packages", conf, scope="user")
+    spack.config.CONFIG.set("packages", conf, scope="user")
 
     yield
 
@@ -298,7 +298,7 @@ all:
     write: user
 """
     )
-    spack.config.set("packages", conf, scope="user")
+    spack.config.CONFIG.set("packages", conf, scope="user")
 
     yield
 

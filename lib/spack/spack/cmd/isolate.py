@@ -64,7 +64,7 @@ def _isolate_config_config(new_user_path):
 
 
 def _isolate_repos_config(new_user_path):
-    current_repos_config = spack.config.get("repos")
+    current_repos_config = spack.config.CONFIG.get("repos")
     new_repos_config = {}
     for key, value in current_repos_config.items():
         if isinstance(value, str):

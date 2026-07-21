@@ -67,8 +67,8 @@ def check_mirror():
         mirror_root = os.path.join(stage.path, "test-mirror")
         # register mirror with spack config
         mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_root)}
-        with spack.config.override("mirrors", mirrors):
-            with spack.config.override("config:checksum", False):
+        with spack.config.CONFIG.override("mirrors", mirrors):
+            with spack.config.CONFIG.override("config:checksum", False):
                 specs = [spack.concretize.concretize_one(x) for x in repos]
                 spack.cmd.mirror.create(mirror_root, specs)
 
@@ -89,7 +89,7 @@ def check_mirror():
                 spec = spack.concretize.concretize_one(name)
                 pkg = spec.package
 
-                with spack.config.override("config:checksum", False):
+                with spack.config.CONFIG.override("config:checksum", False):
                     with pkg.stage:
                         pkg.do_stage(mirror_only=True)
 

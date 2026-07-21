@@ -37,7 +37,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def fetch(parser, args):
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs, concretize=True)

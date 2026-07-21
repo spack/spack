@@ -406,7 +406,7 @@ class TestLmod:
         def no_op_set(*args, **kwargs):
             pass
 
-        monkeypatch.setattr(spack.config, "set", no_op_set)
+        monkeypatch.setattr(spack.config.Configuration, "set", no_op_set)
 
         # Assert we have core compilers now
         writer, _ = factory(mpileaks_spec_string)

@@ -380,7 +380,7 @@ def mirror_remove(args):
 
 
 def _configure_mirror(args):
-    mirrors = spack.config.get("mirrors", scope=args.scope)
+    mirrors = spack.config.CONFIG.get("mirrors", scope=args.scope)
 
     if args.name not in mirrors:
         tty.die(f"No mirror found with name {args.name}.")
@@ -432,7 +432,7 @@ def _configure_mirror(args):
 
     if changed:
         mirrors[args.name] = entry.to_dict()
-        spack.config.set("mirrors", mirrors, scope=args.scope)
+        spack.config.CONFIG.set("mirrors", mirrors, scope=args.scope)
     else:
         tty.msg("No changes made to mirror %s." % args.name)
 
@@ -746,6 +746,6 @@ def mirror(parser, args):
     }
 
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     action[args.mirror_command](args)

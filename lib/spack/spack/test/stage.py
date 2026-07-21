@@ -189,7 +189,7 @@ def get_stage_path(stage, stage_name):
 def tmp_build_stage_dir(tmp_path: pathlib.Path, clear_stage_root):
     """Use a temporary test directory for the stage root."""
     test_path = str(tmp_path / "stage")
-    with spack.config.override("config:build_stage", test_path):
+    with spack.config.CONFIG.override("config:build_stage", test_path):
         yield tmp_path, spack.stage.get_stage_root()
 
     shutil.rmtree(test_path)

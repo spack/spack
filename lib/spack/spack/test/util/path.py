@@ -145,5 +145,5 @@ def test_path_debug_padded_filter(debug, monkeypatch):
     )
 
     monkeypatch.setattr(tty, "_debug", debug)
-    with spack.config.override("config:install_tree", {"padded_length": 128}):
+    with spack.config.CONFIG.override("config:install_tree", {"padded_length": 128}):
         assert expected == sup.debug_padded_filter(string)

@@ -8,9 +8,9 @@ import pytest
 from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
+import spack.config
 import spack.traverse
 from spack.compilers.config import CompilerFactory
-from spack.config import override
 from spack.externals import (
     DuplicateExternalError,
     ExternalDict,
@@ -399,7 +399,7 @@ def test_external_compiler_with_non_compiler_dependency():
             "externals": [{"spec": "binutils-for-test@1", "prefix": "/usr", "id": "bin_id"}]
         },
     }
-    with override("packages", packages_config) as cfg:
+    with spack.config.CONFIG.override("packages", packages_config) as cfg:
         valid_compilers = CompilerFactory.from_packages_yaml(cfg)
         for c in valid_compilers:
             if c.name == "compiler-with-deps":

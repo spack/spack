@@ -126,7 +126,9 @@ def clean(parser, args):
         remove_python_cache()
 
     if args.bootstrap:
-        bootstrap_prefix = spack.config.canonicalize_path(spack.config.get("bootstrap:root"))
+        bootstrap_prefix = spack.config.canonicalize_path(
+            spack.config.CONFIG.get("bootstrap:root")
+        )
         msg = 'Removing bootstrapped software and configuration in "{0}"'
         tty.msg(msg.format(bootstrap_prefix))
         spack.util.filesystem.remove_directory_contents(bootstrap_prefix)

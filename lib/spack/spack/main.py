@@ -359,7 +359,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
 
             # build a list of aliases
             alias_list = []
-            aliases = spack.config.get("config:aliases")
+            aliases = spack.config.CONFIG.get("config:aliases")
             if aliases:
                 alias_list = [k for k, v in aliases.items() if shlex.split(v)[0] == cmd_name]
 
@@ -571,7 +571,7 @@ def setup_main_options(args):
         spack.error.SHOW_BACKTRACE = True
 
     if args.debug:
-        spack.config.set("config:debug", True, scope="command_line")
+        spack.config.CONFIG.set("config:debug", True, scope="command_line")
         spack.util.environment.TRACING_ENABLED = True
 
     if args.timestamp:
@@ -581,7 +581,7 @@ def setup_main_options(args):
     if args.locks is not None:
         if args.locks is False:
             spack.util.lock.check_lock_safety(spack.paths.prefix)
-        spack.config.set("config:locks", args.locks, scope="command_line")
+        spack.config.CONFIG.set("config:locks", args.locks, scope="command_line")
 
     if args.mock:
         import spack.util.spack_yaml as syaml
@@ -595,11 +595,11 @@ def setup_main_options(args):
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
-        spack.config.set("config:verify_ssl", False, scope="command_line")
+        spack.config.CONFIG.set("config:verify_ssl", False, scope="command_line")
 
     # Use the spack config command to handle parsing the config strings
     for config_var in args.config_vars or []:
-        spack.config.add(fullpath=config_var, scope="command_line")
+        spack.config.CONFIG.add(fullpath=config_var, scope="command_line")
 
     # On Windows10 console handling for ASCI/VT100 sequences is not
     # on by default. Turn on before we try to write to console
@@ -815,7 +815,7 @@ def print_setup_info(*info):
         path = root_path(name, "default")
         module_to_roots[name].append(path)
 
-    other_spack_instances = spack.config.get("upstreams") or {}
+    other_spack_instances = spack.config.CONFIG.get("upstreams") or {}
     for install_properties in other_spack_instances.values():
         upstream_module_roots = install_properties.get("modules", {})
         upstream_module_roots = {
@@ -860,7 +860,7 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
         new command name and arguments.
     """
     all_commands = spack.cmd.all_commands()
-    aliases = spack.config.get("config:aliases")
+    aliases = spack.config.CONFIG.get("config:aliases")
 
     if aliases:
         for key, value in aliases.items():
@@ -1125,7 +1125,7 @@ def main(argv=None):
     if (
         sys.platform == "darwin"
         and multiprocessing.get_start_method(allow_none=True) is None
-        and spack.config.get("config:installer") == "new"
+        and spack.config.CONFIG.get("config:installer") == "new"
     ):
         # Forkserver is significantly faster than spawn. This has to be configured once and early
         # in the process.
@@ -1147,19 +1147,19 @@ def main(argv=None):
         e.die()  # gracefully die on any SpackErrors
 
     except KeyboardInterrupt:
-        if spack.config.get("config:debug") or spack.error.SHOW_BACKTRACE:
+        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
             raise
         sys.stderr.write("\n")
         tty.error("Keyboard interrupt.")
         return signal.SIGINT.value
 
     except SystemExit as e:
-        if spack.config.get("config:debug") or spack.error.SHOW_BACKTRACE:
+        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
             traceback.print_exc()
         return e.code
 
     except Exception as e:
-        if spack.config.get("config:debug") or spack.error.SHOW_BACKTRACE:
+        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
             raise
         tty.error(e)
         return 3

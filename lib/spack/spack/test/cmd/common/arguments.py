@@ -28,13 +28,13 @@ def job_parser():
 def test_setting_jobs_flag(job_parser):
     namespace = job_parser.parse_args(["-j", "24"])
     assert namespace.jobs == 24
-    assert spack.config.get("config:build_jobs", scope="command_line") == 24
+    assert spack.config.CONFIG.get("config:build_jobs", scope="command_line") == 24
 
 
 def test_omitted_job_flag(job_parser):
     namespace = job_parser.parse_args([])
     assert namespace.jobs is None
-    assert spack.config.get("config:build_jobs") is None
+    assert spack.config.CONFIG.get("config:build_jobs") is None
 
 
 def test_negative_integers_not_allowed_for_parallel_jobs(job_parser):

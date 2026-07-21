@@ -36,7 +36,7 @@ class TestDevelop:
         assert dev_specs_entry["spec"] == str(spec)
 
         # check yaml representation
-        dev_config = spack.config.get("develop", {})
+        dev_config = spack.config.CONFIG.get("develop", {})
         assert spec.name in dev_config
         yaml_entry = dev_config[spec.name]
         assert yaml_entry["spec"] == str(spec)
@@ -48,7 +48,7 @@ class TestDevelop:
 
         if build_dir is not None:
             scope = env.scope_name
-            assert build_dir == spack.config.get(
+            assert build_dir == spack.config.CONFIG.get(
                 "packages:{}:package_attributes:build_directory".format(spec.name), scope
             )
 

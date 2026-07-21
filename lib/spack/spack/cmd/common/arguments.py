@@ -108,7 +108,7 @@ class SetParallelJobs(argparse.Action):
             msg = 'invalid value for argument "{0}" [expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, jobs))
 
-        spack.config.set("config:build_jobs", jobs, scope="command_line")
+        spack.config.CONFIG.set("config:build_jobs", jobs, scope="command_line")
 
         setattr(namespace, "jobs", jobs)
 
@@ -125,7 +125,9 @@ class SetConcurrentPackages(argparse.Action):
             msg = 'invalid value for argument "{0}" [expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, concurrent_packages))
 
-        spack.config.set("config:concurrent_packages", concurrent_packages, scope="command_line")
+        spack.config.CONFIG.set(
+            "config:concurrent_packages", concurrent_packages, scope="command_line"
+        )
 
         setattr(namespace, "concurrent_packages", concurrent_packages)
 
@@ -356,7 +358,7 @@ def clean():
     return Args(
         "--clean",
         action="store_false",
-        default=spack.config.get("config:dirty"),
+        default=spack.config.CONFIG.get("config:dirty"),
         dest="dirty",
         help="unset harmful variables in the build environment (default)",
     )
@@ -377,7 +379,7 @@ def dirty():
     return Args(
         "--dirty",
         action="store_true",
-        default=spack.config.get("config:dirty"),
+        default=spack.config.CONFIG.get("config:dirty"),
         dest="dirty",
         help="preserve user environment in spack's build environment (danger!)",
     )
@@ -581,7 +583,7 @@ class ConfigSetAction(argparse.Action):
 
     This works like a ``store_const`` action but you can set the
     ``dest`` to some Spack configuration path (like ``concretizer:reuse``)
-    and the ``const`` will be stored there using ``spack.config.set()``
+    and the ``const`` will be stored there using ``spack.config.CONFIG.set()``
     """
 
     def __init__(
@@ -625,7 +627,7 @@ class ConfigSetAction(argparse.Action):
         # the const from the constructor or a value from the CLI.
         # Note that this is only called if the argument is actually
         # specified on the command line.
-        spack.config.set(self.config_path, self.const, scope="command_line")
+        spack.config.CONFIG.set(self.config_path, self.const, scope="command_line")
 
 
 def add_concretizer_args(subparser):

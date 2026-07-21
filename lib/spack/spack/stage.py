@@ -68,7 +68,9 @@ def compute_stage_name(spec):
     # commit values for git versions when using source mirrors
     if spec.concrete:
         spec_stage_structure += "{name}-{version}-{hash}"
-        stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
+        stage_name_structure = spack.config.CONFIG.get(
+            "config:stage_name", default=spec_stage_structure
+        )
     else:
         stage_name_structure = spec_stage_structure + "{name}-{version}"
     return spec.format_path(format_string=stage_name_structure)
@@ -194,7 +196,7 @@ def get_stage_root():
     global _stage_root
 
     if _stage_root is None:
-        candidates = spack.config.get("config:build_stage")
+        candidates = spack.config.CONFIG.get("config:build_stage")
         if isinstance(candidates, str):
             candidates = [candidates]
 
@@ -209,7 +211,7 @@ def get_stage_root():
 
 
 def _mirror_roots():
-    mirrors = spack.config.get("mirrors")
+    mirrors = spack.config.CONFIG.get("mirrors")
     return [
         (
             sup.substitute_path_variables(root)
@@ -681,7 +683,7 @@ class Stage(AbstractStage):
                 f"{self.fetcher}. Spack lacks a tree hash to verify the integrity of this "
                 f"archive. Make sure {secure_msg}.",
             )
-        elif spack.config.get("config:checksum"):
+        elif spack.config.CONFIG.get("config:checksum"):
             self.fetcher.check()
 
     def cache_local(self):

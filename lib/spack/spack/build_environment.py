@@ -379,7 +379,7 @@ def clean_environment():
     for v in mpi_vars:
         env.unset(v)
 
-    build_lang = spack.config.get("config:build_language")
+    build_lang = spack.config.CONFIG.get("config:build_language")
     if build_lang:
         # Override language-related variables. This can be used to force
         # English compiler messages etc., which allows parse_log_events to
@@ -422,7 +422,7 @@ def set_wrapper_environment_variables_for_flags(pkg, env):
     if pkg.keep_werror is not None:
         keep_werror = pkg.keep_werror
     else:
-        keep_werror = spack.config.get("config:flags:keep_werror")
+        keep_werror = spack.config.CONFIG.get("config:flags:keep_werror")
 
     _add_werror_handling(keep_werror, env)
 
@@ -489,13 +489,13 @@ def set_wrapper_variables(pkg, env):
     set_wrapper_environment_variables_for_flags(pkg, env)
 
     # Working directory for the spack command itself, for debug logs.
-    if spack.config.get("config:debug"):
+    if spack.config.CONFIG.get("config:debug"):
         env.set(SPACK_DEBUG, "TRUE")
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
     env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format("{name}-{hash:7}"))
     env.set(SPACK_DEBUG_LOG_DIR, spack.paths.spack_working_dir)
 
-    if spack.config.get("config:ccache"):
+    if spack.config.CONFIG.get("config:ccache"):
         # Enable ccache in the compiler wrapper
         env.set(SPACK_CCACHE_BINARY, spack.util.executable.which_string("ccache", required=True))
     else:

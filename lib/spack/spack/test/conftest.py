@@ -465,7 +465,7 @@ def use_concretization_cache(mock_packages, mutable_config, tmp_path: Path):
     conc_cache_dir = tmp_path / "concretization"
 
     # ensure we have an isolated concretization cache while using fixture
-    with spack.config.override(
+    with spack.config.CONFIG.override(
         "concretizer:concretization_cache", {"enable": True, "url": str(conc_cache_dir)}
     ):
         yield conc_cache_dir
@@ -505,7 +505,7 @@ def onerror(func, path, error_info):
 def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
     """Establish the temporary build_stage for the mock archive."""
     # The approach with this autouse fixture is to set the stage root
-    # instead of using spack.config.override() to avoid configuration
+    # instead of using spack.config.CONFIG.override() to avoid configuration
     # conflicts with dozens of tests that rely on other configuration
     # fixtures, such as config.
 
@@ -1098,7 +1098,7 @@ def concretize_scope(mutable_config, tmp_path: Path):
     """Adds a scope for concretization preferences"""
     concretize_dir = tmp_path / "concretize"
     concretize_dir.mkdir()
-    with spack.config.override(
+    with spack.config.CONFIG.override(
         spack.config.DirectoryConfigScope("concretize", str(concretize_dir))
     ):
         yield str(concretize_dir)
@@ -1335,7 +1335,7 @@ def disable_compiler_output_cache(monkeypatch):
 def install_mockery(temporary_store: spack.store.Store, mutable_config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     # We use a fake package, so temporarily disable checksumming
-    with spack.config.override("config:checksum", False):
+    with spack.config.CONFIG.override("config:checksum", False):
         yield
 
     # Wipe out any cached prefix failure locks (associated with the session-scoped mock archive)
@@ -1464,7 +1464,7 @@ class ConfigUpdate:
         file = os.path.join(self.root_for_conf, filename + ".yaml")
         with open(file, encoding="utf-8") as f:
             config_settings = syaml.load_config(f)
-        spack.config.set("modules:default", config_settings)
+        spack.config.CONFIG.set("modules:default", config_settings)
 
 
 @pytest.fixture()
@@ -2634,7 +2634,7 @@ def reset_extension_paths():
 @pytest.fixture(params=["old", "new"])
 def installer_variant(request):
     """Parametrize a test over the old and new installer."""
-    with spack.config.override("config:installer", request.param):
+    with spack.config.CONFIG.override("config:installer", request.param):
         yield request.param
 
 

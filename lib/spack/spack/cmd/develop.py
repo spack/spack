@@ -173,7 +173,7 @@ def update_env(
 
     with env.write_transaction():
         if build_dir is not None:
-            spack.config.add(
+            spack.config.CONFIG.add(
                 f"packages:{spec.name}:package_attributes:build_directory:{build_dir}",
                 env.scope_name,
             )
