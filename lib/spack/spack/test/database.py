@@ -474,9 +474,9 @@ def test_005_db_exists(database):
         spack.vendor.jsonschema.validate(index_object, schema)
 
 
-def test_010_all_install_sanity(database):
+def test_010_all_install_sanity(database_store):
     """Ensure that the install layout reflects what we think it does."""
-    all_specs = spack.store.STORE.layout.all_specs()
+    all_specs = database_store.layout.all_specs()
     assert len(all_specs) == 17
 
     # Query specs with multiple configurations
@@ -600,20 +600,21 @@ def test_020_db_sanity(database):
     _check_db_sanity(database)
 
 
-def test_025_reindex(mutable_database):
+def test_025_reindex(mutable_database_store):
     """Make sure reindex works and ref counts are valid."""
-    spack.store.STORE.reindex()
-    _check_db_sanity(mutable_database)
+    mutable_database_store.reindex()
+    _check_db_sanity(mutable_database_store.db)
 
 
-def test_026_reindex_after_deprecate(mutable_database):
+def test_026_reindex_after_deprecate(mutable_database_store):
     """Make sure reindex works and ref counts are valid after deprecation."""
-    mpich = mutable_database.query_one("mpich")
-    zmpi = mutable_database.query_one("zmpi")
-    mutable_database.deprecate(mpich, zmpi)
+    db = mutable_database_store.db
+    mpich = db.query_one("mpich")
+    zmpi = db.query_one("zmpi")
+    db.deprecate(mpich, zmpi)
 
-    spack.store.STORE.reindex()
-    _check_db_sanity(mutable_database)
+    mutable_database_store.reindex()
+    _check_db_sanity(db)
 
 
 class ReadModify:
@@ -785,13 +786,13 @@ def test_110_no_write_with_exception_on_install(database):
         assert database.query("cmake", installed=InstallRecordStatus.ANY) == []
 
 
-def test_115_reindex_with_packages_not_in_repo(mutable_database, repo_builder: RepoBuilder):
+def test_115_reindex_with_packages_not_in_repo(mutable_database_store, repo_builder: RepoBuilder):
     # Dont add any package definitions to this repository, the idea is that
     # packages should not have to be defined in the repository once they
     # are installed
     with spack.repo.use_repositories(repo_builder.root):
-        spack.store.STORE.reindex()
-        _check_db_sanity(mutable_database)
+        mutable_database_store.reindex()
+        _check_db_sanity(mutable_database_store.db)
 
 
 def test_external_entries_in_db(mutable_database):
@@ -934,15 +935,15 @@ def test_query_virtual_spec(database):
     assert all(name in names for name in ["mpich", "mpich2", "zmpi"])
 
 
-def test_failed_spec_path_error(mutable_database):
+def test_failed_spec_path_error(mutable_database_store):
     """Ensure spec not concrete check is covered."""
     s = spack.spec.Spec("pkg-a")
     with pytest.raises(AssertionError, match="concrete spec required"):
-        spack.store.STORE.failure_tracker.mark(s)
+        mutable_database_store.failure_tracker.mark(s)
 
 
 @pytest.mark.db
-def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
+def test_clear_failure_keep(mutable_database_store, monkeypatch, capfd):
     """Add test coverage for clear_failure operation when to be retained."""
 
     def _is(self, spec):
@@ -952,13 +953,13 @@ def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
     monkeypatch.setattr(spack.database.FailureTracker, "lock_taken", _is)
 
     s = spack.concretize.concretize_one("pkg-a")
-    spack.store.STORE.failure_tracker.clear(s)
+    mutable_database_store.failure_tracker.clear(s)
     out = capfd.readouterr()[0]
     assert "Retaining failure marking" in out
 
 
 @pytest.mark.db
-def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
+def test_clear_failure_forced(mutable_database_store, monkeypatch, capfd):
     """Add test coverage for clear_failure operation when force."""
 
     def _is(self, spec):
@@ -970,14 +971,14 @@ def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
     monkeypatch.setattr(spack.database.FailureTracker, "persistent_mark", _is)
 
     s = spack.concretize.concretize_one("pkg-a")
-    spack.store.STORE.failure_tracker.clear(s, force=True)
+    mutable_database_store.failure_tracker.clear(s, force=True)
     out = capfd.readouterr()[1]
     assert "Removing failure marking despite lock" in out
     assert "Unable to remove failure marking" in out
 
 
 @pytest.mark.db
-def test_mark_failed(mutable_database, monkeypatch, tmp_path: pathlib.Path, capfd):
+def test_mark_failed(mutable_database_store, monkeypatch, tmp_path: pathlib.Path, capfd):
     """Add coverage to mark_failed."""
 
     def _raise_exc(lock):
@@ -989,36 +990,37 @@ def test_mark_failed(mutable_database, monkeypatch, tmp_path: pathlib.Path, capf
         # Ensure attempt to acquire write lock on the mark raises the exception
         monkeypatch.setattr(lk.Lock, "acquire_write", _raise_exc)
 
-        spack.store.STORE.failure_tracker.mark(s)
+        mutable_database_store.failure_tracker.mark(s)
         out = str(capfd.readouterr()[1])
         assert "Unable to mark pkg-a as failed" in out
 
-    spack.store.STORE.failure_tracker.clear_all()
+    mutable_database_store.failure_tracker.clear_all()
 
 
 @pytest.mark.db
-def test_prefix_failed(mutable_database, monkeypatch):
+def test_prefix_failed(mutable_database_store, monkeypatch):
     """Add coverage to failed operation."""
 
     s = spack.concretize.concretize_one("pkg-a")
+    failure_tracker = mutable_database_store.failure_tracker
 
     # Confirm the spec is not already marked as failed
-    assert not spack.store.STORE.failure_tracker.has_failed(s)
+    assert not failure_tracker.has_failed(s)
 
     # Check that a failure entry is sufficient
-    spack.store.STORE.failure_tracker.mark(s)
-    assert spack.store.STORE.failure_tracker.has_failed(s)
+    failure_tracker.mark(s)
+    assert failure_tracker.has_failed(s)
 
     # Remove the entry and check again
-    spack.store.STORE.failure_tracker.clear(s)
-    assert not spack.store.STORE.failure_tracker.has_failed(s)
+    failure_tracker.clear(s)
+    assert not failure_tracker.has_failed(s)
 
     # Now pretend that the prefix failure is locked
     monkeypatch.setattr(spack.database.FailureTracker, "lock_taken", lambda self, spec: True)
-    assert spack.store.STORE.failure_tracker.has_failed(s)
+    assert failure_tracker.has_failed(s)
 
 
-def test_prefix_write_lock_error(mutable_database, monkeypatch):
+def test_prefix_write_lock_error(mutable_database_store, monkeypatch):
     """Cover the prefix write lock exception."""
 
     def _raise(db, spec):
@@ -1030,7 +1032,7 @@ def test_prefix_write_lock_error(mutable_database, monkeypatch):
     monkeypatch.setattr(lk.Lock, "acquire_write", _raise)
 
     with pytest.raises(Exception):
-        with spack.store.STORE.prefix_locker.write_lock(s):
+        with mutable_database_store.prefix_locker.write_lock(s):
             assert False
 
 
@@ -1068,10 +1070,11 @@ def test_store_find_accept_string(database):
     assert len(result) == 3
 
 
-def test_reindex_removed_prefix_is_not_installed(mutable_database, mock_store, capfd):
+def test_reindex_removed_prefix_is_not_installed(mutable_database_store, mock_store, capfd):
     """When a prefix of a dependency is removed and the database is reindexed,
     the spec should still be added through the dependent, but should be listed as
     not installed."""
+    mutable_database = mutable_database_store.db
 
     # Remove libelf from the filesystem
     prefix = mutable_database.query_one("libelf").prefix
@@ -1079,7 +1082,7 @@ def test_reindex_removed_prefix_is_not_installed(mutable_database, mock_store, c
     shutil.rmtree(prefix)
 
     # Reindex should pick up libelf as a dependency of libdwarf
-    spack.store.STORE.reindex()
+    mutable_database_store.reindex()
 
     # Reindexing should warn about libelf not found on the filesystem
     assert re.search(
@@ -1093,7 +1096,8 @@ def test_reindex_removed_prefix_is_not_installed(mutable_database, mock_store, c
     assert mutable_database.query_one("libelf", installed=False)
 
 
-def test_reindex_when_all_prefixes_are_removed(mutable_database, mock_store):
+def test_reindex_when_all_prefixes_are_removed(mutable_database_store, mock_store):
+    mutable_database = mutable_database_store.db
     # Remove all non-external installations from the filesystem
     for spec in mutable_database.query_local():
         if not spec.external:
@@ -1105,7 +1109,7 @@ def test_reindex_when_all_prefixes_are_removed(mutable_database, mock_store):
     assert num > 0
 
     # Reindex uses the current index to repopulate itself
-    spack.store.STORE.reindex()
+    mutable_database_store.reindex()
 
     # Make sure all explicit specs are still there, but are now uninstalled.
     specs = mutable_database.query_local(installed=False, explicit=True)

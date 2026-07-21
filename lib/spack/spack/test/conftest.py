@@ -1258,32 +1258,45 @@ def _mock_store_tarball(mock_store) -> bytes:
 
 
 @pytest.fixture(scope="function")
-def database(mock_store, mock_packages, config):
-    """This activates the mock store, packages, AND config."""
+def database_store(mock_store, mock_packages, config):
+    """This activates the mock store, packages, AND config. Yields the Store."""
     with spack.store.use_store(str(mock_store)) as store:
-        yield store.db
+        yield store
         # Force reading the database again between tests
         store.db.last_seen_verifier = ""
 
 
 @pytest.fixture(scope="function")
-def database_mutable_config(mock_store, mock_packages, mutable_config, monkeypatch):
-    """This activates the mock store, packages, AND config."""
+def database(database_store):
+    """This activates the mock store, packages, AND config. Yields store.db."""
+    return database_store.db
+
+
+@pytest.fixture(scope="function")
+def database_mutable_config_store(mock_store, mock_packages, mutable_config, monkeypatch):
+    """Like database_store, but with a mutable config. Yields the Store."""
     with spack.store.use_store(str(mock_store)) as store:
-        yield store.db
+        yield store
         store.db.last_seen_verifier = ""
 
 
 @pytest.fixture(scope="function")
-def mutable_database(database_mutable_config, _store_dir: Path, _mock_store_tarball: bytes):
-    """Writeable version of the fixture, restored to its initial state
-    after each test.
-    """
+def database_mutable_config(database_mutable_config_store):
+    """This activates the mock store, packages, AND config. Yields store.db."""
+    return database_mutable_config_store.db
+
+
+@pytest.fixture(scope="function")
+def mutable_database_store(
+    database_mutable_config_store, _store_dir: Path, _mock_store_tarball: bytes
+):
+    """Writeable version of database_store, restored to its initial state after each
+    test. Yields the Store."""
     # Make the database writeable, as we are going to modify it
     store_path = _store_dir
     _recursive_chmod(store_path, 0o755)
 
-    yield database_mutable_config
+    yield database_mutable_config_store
 
     # Restore the initial state from the pristine tarball; modes recorded in the tar
     # make the database read-only again.
@@ -1292,6 +1305,14 @@ def mutable_database(database_mutable_config, _store_dir: Path, _mock_store_tarb
     with tarfile.open(fileobj=io.BytesIO(_mock_store_tarball), mode="r") as tar:
         tar.extraction_filter = lambda member, path: member
         tar.extractall(str(store_path))
+
+
+@pytest.fixture(scope="function")
+def mutable_database(mutable_database_store):
+    """Writeable version of the fixture, restored to its initial state
+    after each test. Yields store.db.
+    """
+    return mutable_database_store.db
 
 
 @pytest.fixture()
