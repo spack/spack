@@ -11,8 +11,8 @@ import pytest
 import spack.concretize
 import spack.main
 import spack.util.spack_yaml as s_yaml
-from spack.installer import PackageInstaller
 from spack.main import SpackCommand
+from spack.old_installer import PackageInstaller
 from spack.util.filesystem import _windows_can_symlink
 
 extensions = SpackCommand("extensions")

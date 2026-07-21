@@ -6,6 +6,7 @@ import pathlib
 
 import pytest
 
+import spack.config
 import spack.environment
 import spack.package_base
 import spack.paths
@@ -17,6 +18,7 @@ import spack.util.file_cache
 import spack.util.lock
 import spack.util.naming
 from spack.test.conftest import RepoBuilder
+from spack.util.lang import Singleton
 from spack.util.naming import valid_module_name
 
 
@@ -113,6 +115,51 @@ def test_use_repositories_doesnt_change_class(mock_packages):
     with spack.repo.use_repositories(*current_paths):
         zlib_cls_inner = spack.repo.PATH.get_pkg_class("zlib")
     assert id(zlib_cls_inner) == id(zlib_cls_outer)
+
+
+def test_use_repositories_with_unmaterialized_path(tmp_path: pathlib.Path, config, monkeypatch):
+    """Tests that use_repositories restores the repositories from config even when the global
+    PATH singleton is materialized for the first time inside the context manager. Materializing
+    it after pushing the new repos scope onto the config would "save" the new repositories and
+    "restore" those same repositories on exit."""
+    (tmp_path / "packages").mkdir()
+    (tmp_path / "repo.yaml").write_text("repo:\n  namespace: myrepo\n")
+
+    monkeypatch.setattr(
+        spack.repo, "PATH", Singleton(lambda: spack.repo.create_and_enable(spack.config.CONFIG))
+    )
+
+    with spack.repo.use_repositories(str(tmp_path)) as repo:
+        assert [r.root for r in repo.repos] == [str(tmp_path)]
+
+    assert [r.root for r in spack.repo.PATH.repos] == [spack.paths.mock_packages_path]
+
+
+def test_env_activate_with_unmaterialized_path(tmp_path: pathlib.Path, config, monkeypatch):
+    """Tests that env deactivation restores the repositories from config even when activation
+    is the first to touch the global PATH singleton. Materializing it after pushing the env
+    config scope would "save" the env's repositories and "restore" them on deactivation."""
+    (tmp_path / "spack.yaml").write_text(
+        """\
+spack:
+  specs: []
+  repos:
+    extra: $spack/var/spack/test_repos/spack_repo/builder_test
+"""
+    )
+
+    monkeypatch.setattr(
+        spack.repo, "PATH", Singleton(lambda: spack.repo.create_and_enable(spack.config.CONFIG))
+    )
+
+    env = spack.environment.Environment(tmp_path)
+    spack.environment.activate(env)
+    try:
+        assert {r.namespace for r in spack.repo.PATH.repos} == {"builder_test", "builtin_mock"}
+    finally:
+        spack.environment.deactivate()
+
+    assert [r.namespace for r in spack.repo.PATH.repos] == ["builtin_mock"]
 
 
 def test_absolute_import_spack_packages_as_python_modules(mock_packages):

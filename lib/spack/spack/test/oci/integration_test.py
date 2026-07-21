@@ -22,6 +22,7 @@ import spack.environment as ev
 import spack.error
 import spack.oci.opener
 import spack.spec
+import spack.store
 import spack.traverse
 from spack.main import SpackCommand
 from spack.oci.image import Digest, ImageReference, default_config, default_manifest
@@ -60,7 +61,7 @@ def test_buildcache_push_command(mutable_database):
         buildcache("install", "--unsigned", "mpileaks^mpich")
 
         # Now it should be installed again
-        assert spec.installed
+        assert spack.store.STORE.db.installed(spec)
 
         # And let's check that the bin/mpileaks executable is there
         assert os.path.exists(os.path.join(spec.prefix, "bin", "mpileaks"))

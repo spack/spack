@@ -23,13 +23,14 @@ import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
 import spack.hooks.sbom_generate
-import spack.installer
+import spack.old_installer
 import spack.package_base
+import spack.reporters.cdash
 import spack.store
 import spack.util.filesystem as fs
 from spack.error import SpackError, SpecSyntaxError
-from spack.installer import PackageInstaller
 from spack.main import SpackCommand
+from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.util import tty
 
@@ -47,7 +48,7 @@ def noop_install(monkeypatch):
     def noop(*args, **kwargs):
         pass
 
-    monkeypatch.setattr(spack.installer.PackageInstaller, "install", noop)
+    monkeypatch.setattr(spack.old_installer.PackageInstaller, "install", noop)
 
 
 def test_install_package_and_dependency(
@@ -86,19 +87,19 @@ def _check_runtests_all(pkg):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_notests(monkeypatch, mock_packages, install_mockery):
+def test_install_runtests_notests(monkeypatch, mock_packages, mock_fetch, install_mockery):
     monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_none)
     install("-v", "dttop")
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_root(monkeypatch, mock_packages, install_mockery):
+def test_install_runtests_root(monkeypatch, mock_packages, mock_fetch, install_mockery):
     monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_dttop)
     install("--test=root", "dttop")
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
+def test_install_runtests_all(monkeypatch, mock_packages, mock_fetch, install_mockery):
     monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_all)
     install("--test=all", "pkg-a")
 
@@ -424,7 +425,7 @@ def test_junit_output_with_failures(tmp_path: pathlib.Path, exc_typename, msg, i
 
 
 def _throw(task, exc_typename, exc_type, msg):
-    # Self is a spack.installer.Task
+    # Self is a spack.old_installer.Task
     exc_type = getattr(builtins, exc_typename)
     exc = exc_type(msg)
     task.fail(exc)
@@ -458,7 +459,7 @@ def test_junit_output_with_errors(
     monkeypatch,
 ):
     throw = _keyboard_error if expected_exc is KeyboardInterrupt else _runtime_error
-    monkeypatch.setattr(spack.installer.BuildTask, "complete", throw)
+    monkeypatch.setattr(spack.old_installer.BuildTask, "complete", throw)
 
     with fs.working_dir(str(tmp_path)):
         install(
@@ -555,11 +556,18 @@ def test_cdash_report_concretization_error(
         assert any(x in content for x in expected_messages)
 
 
+def _noop_cdash_upload(self, filename):
+    """Module-level so it can be pickled into the build child process."""
+    return None
+
+
 @pytest.mark.not_on_windows("Windows log_output logs phase header out of order")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_build_error(
-    capfd, tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant
+    capfd, tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant, monkeypatch
 ):
+    # the cdash upload url is fake; never upload reports to it
+    monkeypatch.setattr(spack.reporters.cdash.CDash, "upload", _noop_cdash_upload)
     with fs.working_dir(str(tmp_path)):
         with pytest.raises(SpackError):
             install(
@@ -850,7 +858,16 @@ def test_install_no_add_in_env(
 
         # Without --add, ensure that two packages "a" get installed
         inst_out = install("--fake", "pkg-a")
-        assert len([x for x in e.all_specs() if x.installed and x.name == "pkg-a"]) == 2
+        assert (
+            len(
+                [
+                    x
+                    for x in e.all_specs()
+                    if spack.store.STORE.db.installed(x) and x.name == "pkg-a"
+                ]
+            )
+            == 2
+        )
 
         # Install an unambiguous dependency spec (that already exists as a dep
         # in the environment) and make sure it gets installed (w/ deps),
@@ -1155,5 +1172,5 @@ def test_concurrent_packages_set_in_config(mutable_config, mock_packages):
     """Ensure that the number of concurrent packages is properly set from adding to config"""
     spack.config.set("config:concurrent_packages", 3)
     spec = spack.concretize.concretize_one("pkg-a")
-    installer = spack.installer.PackageInstaller([spec.package])
+    installer = spack.old_installer.PackageInstaller([spec.package])
     assert installer.concurrent_packages == 3

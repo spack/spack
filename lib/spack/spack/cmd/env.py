@@ -21,6 +21,7 @@ import spack.environment.environment
 import spack.environment.generate_env_scripts as generate_script
 import spack.tengine
 import spack.util.filesystem as fs
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.environment import depfile
 from spack.traverse import traverse_nodes
@@ -457,7 +458,7 @@ def env_deactivate(args):
     if args.env or args.no_env or args.env_dir:
         tty.die("Calling spack env deactivate with --env, --env-dir and --no-env is ambiguous")
 
-    if ev.active_environment() is None:
+    if active_environment() is None:
         tty.die("No environment is currently active.")
 
     env_deactivate_script_path = generate_script.path_to_env_deactivate_shell_script(
@@ -756,7 +757,7 @@ def env_rename(args):
         tty.die("The specified name does not correspond to a managed spack environment")
 
     # Guard against renaming from or to an active environment
-    active_env = ev.active_environment()
+    active_env = active_environment()
     if active_env:
         from_env = ev.Environment(from_path)
         if from_env.path == active_env.path:
@@ -833,7 +834,7 @@ def env_view_setup_parser(subparser):
 
 
 def env_view(args):
-    env = ev.active_environment()
+    env = active_environment()
 
     if not env:
         tty.msg("No active environment")
@@ -864,7 +865,7 @@ def env_status_setup_parser(subparser):
 
 
 def env_status(args):
-    env = ev.active_environment()
+    env = active_environment()
     if env:
         if env.path == os.getcwd():
             tty.msg("Using %s in current directory: %s" % (ev.manifest_name, env.path))
@@ -1074,7 +1075,7 @@ def env_depfile(args):
     # Currently only make is supported.
     spack.cmd.require_active_env(args.subparser)
 
-    env = ev.active_environment()
+    env = active_environment()
 
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.

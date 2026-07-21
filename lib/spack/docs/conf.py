@@ -17,6 +17,10 @@
 # serve to show the default.
 
 import os
+
+# Set this before importing sphinx.
+os.environ["SPHINX_APIDOC_OPTIONS"] = "members,undoc-members,show-inheritance,no-index-entry"
+
 import subprocess
 import sys
 from glob import glob
@@ -96,7 +100,8 @@ sphinx_apidoc(
         "_spack_root/lib/spack/spack/vendor",
         "_spack_root/lib/spack/spack/test",
         "_spack_root/lib/spack/spack/package.py",
-        "_spack_root/lib/spack/spack/new_installer_windows.py",
+        "_spack_root/lib/spack/spack/installer/windows.py",
+        "_spack_root/lib/spack/spack/util/win_acl.py",
     ]
 )
 sphinx_apidoc(

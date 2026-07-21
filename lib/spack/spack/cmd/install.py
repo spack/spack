@@ -17,9 +17,10 @@ import spack.paths
 import spack.spec
 import spack.store
 import spack.util.filesystem as fs
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
-from spack.installer import InstallPolicy
+from spack.old_installer import InstallPolicy
 from spack.util import tty
 from spack.util.string import plural
 
@@ -324,7 +325,7 @@ def install(parser, args):
 
     reporter = args.reporter() if args.log_format else None
     install_kwargs = install_kwargs_from_args(args)
-    env = ev.active_environment()
+    env = active_environment()
 
     if not env and not args.spec:
         _die_require_env(args.subparser)

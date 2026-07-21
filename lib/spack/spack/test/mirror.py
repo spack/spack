@@ -5,6 +5,7 @@
 import filecmp
 import os
 import pathlib
+from typing import Any, Dict
 
 import pytest
 
@@ -31,10 +32,17 @@ pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")]
 exclude = [".hg", ".git", ".svn"]
 
 
-repos = {}
+repos: Dict[str, Any] = {}
 
 
-def set_up_package(name, repository, url_attr):
+@pytest.fixture(autouse=True)
+def _clear_repos():
+    # start each test with a clean slate so a failure does not leak into the next test
+    repos.clear()
+    yield
+
+
+def set_up_package(name, repository, url_attr, monkeypatch):
     """Set up a mock package to be mirrored.
     Each package needs us to:
 
@@ -45,11 +53,13 @@ def set_up_package(name, repository, url_attr):
     s = spack.concretize.concretize_one(name)
     repos[name] = repository
 
-    # change the fetch args of the first (only) version.
+    # change the fetch args of the first (only) version. versions is a class-level dict shared
+    # across instances and cached with the package module, so mutate it via monkeypatch to
+    # restore it after the test instead of leaking the mock URL into later tests.
     assert len(s.package.versions) == 1
 
     v = next(iter(s.package.versions))
-    s.package.versions[v][url_attr] = repository.url
+    monkeypatch.setitem(s.package.versions[v], url_attr, repository.url)
 
 
 def check_mirror():
@@ -101,37 +111,34 @@ def check_mirror():
                         assert all(left in exclude for left in dcmp.left_only)
 
 
-def test_url_mirror(mock_archive):
-    set_up_package("trivial-install-test-package", mock_archive, "url")
+def test_url_mirror(mock_archive, monkeypatch):
+    set_up_package("trivial-install-test-package", mock_archive, "url", monkeypatch)
     check_mirror()
-    repos.clear()
 
 
-def test_git_mirror(git, mock_git_repository):
-    set_up_package("git-test", mock_git_repository, "git")
+def test_git_mirror(git, mock_git_repository, monkeypatch):
+    set_up_package("git-test", mock_git_repository, "git", monkeypatch)
     check_mirror()
-    repos.clear()
 
 
-def test_svn_mirror(mock_svn_repository):
-    set_up_package("svn-test", mock_svn_repository, "svn")
+def test_svn_mirror(mock_svn_repository, monkeypatch):
+    set_up_package("svn-test", mock_svn_repository, "svn", monkeypatch)
     check_mirror()
-    repos.clear()
 
 
-def test_hg_mirror(mock_hg_repository):
-    set_up_package("hg-test", mock_hg_repository, "hg")
+def test_hg_mirror(mock_hg_repository, monkeypatch):
+    set_up_package("hg-test", mock_hg_repository, "hg", monkeypatch)
     check_mirror()
-    repos.clear()
 
 
-def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository, mock_archive):
-    set_up_package("git-test", mock_git_repository, "git")
-    set_up_package("svn-test", mock_svn_repository, "svn")
-    set_up_package("hg-test", mock_hg_repository, "hg")
-    set_up_package("trivial-install-test-package", mock_archive, "url")
+def test_all_mirror(
+    mock_git_repository, mock_svn_repository, mock_hg_repository, mock_archive, monkeypatch
+):
+    set_up_package("git-test", mock_git_repository, "git", monkeypatch)
+    set_up_package("svn-test", mock_svn_repository, "svn", monkeypatch)
+    set_up_package("hg-test", mock_hg_repository, "hg", monkeypatch)
+    set_up_package("trivial-install-test-package", mock_archive, "url", monkeypatch)
     check_mirror()
-    repos.clear()
 
 
 @pytest.mark.parametrize(

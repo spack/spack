@@ -20,6 +20,7 @@ import spack.paths
 import spack.repo
 import spack.report
 import spack.spec
+import spack.store
 import spack.util.executable
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
@@ -714,7 +715,7 @@ def test_process(pkg: "spack.package_base.PackageBase", kwargs):
             pkg.tester.status(pkg.spec.name, TestStatus.SKIPPED)
             return
 
-        if not pkg.spec.installed:
+        if not spack.store.STORE.db.installed(pkg.spec):
             print_message(logger, "Skipped not installed package", verbose)
             pkg.tester.status(pkg.spec.name, TestStatus.SKIPPED)
             return
@@ -970,7 +971,7 @@ class TestSuite:
             self.ensure_stage()
             if spec.external and not externals:
                 status = TestStatus.SKIPPED
-            elif not spec.installed:
+            elif not spack.store.STORE.db.installed(spec):
                 status = TestStatus.SKIPPED
             else:
                 status = TestStatus.NO_TESTS

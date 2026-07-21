@@ -9,6 +9,10 @@
 
 .. _cachedcmakepackage:
 
+.. index::
+   single: build system; CachedCMake
+   single: CachedCMakePackage
+
 CachedCMake
 -----------
 

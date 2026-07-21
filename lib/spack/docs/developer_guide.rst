@@ -423,26 +423,17 @@ For example, if you were to add this step to the Linux unit test CI, it would lo
 
 .. code-block:: yaml
 
-   - name: Bootstrap clingo
-     if: ${{ matrix.concretizer == 'clingo' }}
-     env:
-       SPACK_PYTHON: python
-     run: |
-       . share/spack/setup-env.sh
-       spack bootstrap disable spack-install
-       spack bootstrap now
-       spack -v spec --show opt,solutions zlib
+   - uses: ./.github/actions/setup-spack
+     with:
+       python-version: ${{ matrix.python-version }}
    - name: Setup tmate session
      uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
    - name: Run unit tests
      env:
-       SPACK_PYTHON: python
-       SPACK_TEST_PARALLEL: 4
-       COVERAGE: true
        COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
-       UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.14' }}
+       PYTEST_ADDOPTS: ${{ matrix.python-version == '3.14' && '--cov --cov-config=pyproject.toml' || '' }}
      run: |-
-       share/spack/qa/run-unit-tests
+       python3 -m pytest -x --verbose --dist worksteal -n4
 
 
 Note that the ssh session comes after Spack does its setup but before it runs the unit tests.
@@ -519,14 +510,14 @@ Developer commands
 ``spack style``
 ^^^^^^^^^^^^^^^
 
-``spack style`` exists to help the developer check imports and style with mypy, Flake8, isort, and (soon) Black.
+``spack style`` exists to help the developer check imports and style with mypy and Ruff (for formatting and linting).
 To run all style checks, simply do:
 
 .. code-block:: console
 
     $ spack style
 
-To run automatic fixes for isort, you can do:
+To automatically fix formatting and linting issues, you can do:
 
 .. code-block:: console
 

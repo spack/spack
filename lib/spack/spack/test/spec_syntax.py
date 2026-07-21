@@ -62,9 +62,9 @@ def dependency_with_version(text):
 
 
 @pytest.fixture()
-def specfile_for(default_mock_concretization):
+def specfile_for(config, mock_packages):
     def _specfile_for(spec_str, filename):
-        s = default_mock_concretization(spec_str)
+        s = spack.concretize.concretize_one(spec_str)
         is_json = str(filename).endswith(".json")
         is_yaml = str(filename).endswith(".yaml")
         if not is_json and not is_yaml:
@@ -1216,7 +1216,7 @@ def test_cli_spec_roundtrip(args, expected):
         ),
     ],
 )
-def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config):
+def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config, mock_packages):
     """Tests that toolchains are expanded correctly"""
     parser = SpecParser(spec_str)
     for expected in expected_roundtrip:
@@ -1642,9 +1642,9 @@ def test_parse_filename_missing_slash_as_spec(specfile_for, tmp_path: pathlib.Pa
     )
 
 
-def test_parse_specfile_dependency(default_mock_concretization, tmp_path: pathlib.Path):
+def test_parse_specfile_dependency(config, mock_packages, tmp_path: pathlib.Path):
     """Ensure we can use a specfile as a dependency"""
-    s = default_mock_concretization("libdwarf")
+    s = spack.concretize.concretize_one("libdwarf")
 
     specfile = tmp_path / "libelf.json"
     with open(specfile, "w", encoding="utf-8") as f:

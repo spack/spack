@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Tests for Windows-specific TUI components in new_installer.py.
+"""Tests for Windows-specific TUI components in installer.windows.
 
 WindowsTerminalState uses two daemon threads (_input_thread, _resize_thread) and
 a pair of socketpairs (stdin_r/w, sigwinch_r/w) to bridge Win32 console events
@@ -23,9 +23,9 @@ if sys.platform != "win32":
 
 from ctypes import wintypes
 
-import spack.new_installer_windows as _niw
-from spack.new_installer_base import StdinReader
-from spack.new_installer_windows import (
+import spack.installer.windows as _niw
+from spack.installer.base import StdinReader
+from spack.installer.windows import (
     ENABLE_ECHO_INPUT,
     ENABLE_EXTENDED_FLAGS,
     ENABLE_LINE_INPUT,
@@ -156,12 +156,12 @@ def _make_state(headless=True):
     sockets.
     """
     sel = _FakeSelector()
-    bs = types.SimpleNamespace(headless=headless, dirty=False)
     k32 = _FakeKernel32()
 
     state = object.__new__(WindowsTerminalState)
     state.selector = sel
-    state.build_status = bs
+    state.on_headless = None
+    state.headless = headless
     state.on_suspend = None
     state.on_resume = None
     state.kernel32 = k32
@@ -172,14 +172,15 @@ def _make_state(headless=True):
     state.old_stdout_settings = wintypes.DWORD(0x0003)
     state.stdin_r, state.stdin_w = _fakepair(10, 11)
     state.sigwinch_r, state.sigwinch_w = _fakepair(12, 13)
+    state.stdin_reader = StdinReader(functools.partial(state.stdin_r.recv, 1024))
     state._running = False
-    return state, sel, bs, k32
+    return state, sel, k32
 
 
 class TestSetupTeardown:
     def test_setup_enables_vt100_on_stdout(self, monkeypatch):
         """setup() ORs ENABLE_VIRTUAL_TERMINAL_PROCESSING into the stdout console mode."""
-        state, sel, bs, k32 = _make_state()
+        state, sel, k32 = _make_state()
         monkeypatch.setattr(_niw.threading, "Thread", _NoopThread)
         monkeypatch.setattr(state, "enter_foreground", lambda: None)
 
@@ -191,7 +192,7 @@ class TestSetupTeardown:
 
     def test_setup_registers_sigwinch_socket(self, monkeypatch):
         """setup() registers sigwinch_r in the selector with tag 'sigwinch'."""
-        state, sel, bs, k32 = _make_state()
+        state, sel, k32 = _make_state()
         monkeypatch.setattr(_niw.threading, "Thread", _NoopThread)
         monkeypatch.setattr(state, "enter_foreground", lambda: None)
 
@@ -202,7 +203,7 @@ class TestSetupTeardown:
 
     def test_setup_starts_two_daemon_threads(self, monkeypatch):
         """setup() starts exactly two daemon threads."""
-        state, sel, bs, k32 = _make_state()
+        state, sel, k32 = _make_state()
         threads = []
 
         class _FakeThread:
@@ -223,7 +224,7 @@ class TestSetupTeardown:
 
     def test_teardown_restores_console_mode_with_int_values(self):
         """teardown() passes plain ints (not DWORD structs) to SetConsoleMode."""
-        state, sel, bs, k32 = _make_state()
+        state, sel, k32 = _make_state()
 
         state.teardown()
 
@@ -233,7 +234,7 @@ class TestSetupTeardown:
 
     def test_teardown_closes_stdin_and_sigwinch_sockets(self):
         """teardown() closes stdin_r and sigwinch_r."""
-        state, sel, bs, k32 = _make_state()
+        state, sel, k32 = _make_state()
         stdin_fake = _FakeSocket(99)
         sigwinch_fake = _FakeSocket(100)
         state.stdin_r = stdin_fake
@@ -246,7 +247,7 @@ class TestSetupTeardown:
 
     def test_teardown_sets_running_false(self):
         """teardown() sets _running=False to stop background threads."""
-        state, sel, bs, k32 = _make_state()
+        state, sel, k32 = _make_state()
         state._running = True
 
         state.teardown()
@@ -257,7 +258,7 @@ class TestSetupTeardown:
 class TestForegroundBackground:
     def test_enter_foreground_noop_when_already_foreground(self):
         """enter_foreground() is a no-op when headless is already False."""
-        state, sel, bs, k32 = _make_state(headless=False)
+        state, sel, k32 = _make_state(headless=False)
 
         state.enter_foreground()
 
@@ -265,7 +266,7 @@ class TestForegroundBackground:
 
     def test_enter_foreground_disables_line_echo_quickedit(self, monkeypatch):
         """enter_foreground() clears LINE_INPUT, ECHO_INPUT, QUICK_EDIT_MODE."""
-        state, sel, bs, k32 = _make_state(headless=True)
+        state, sel, k32 = _make_state(headless=True)
         monkeypatch.setattr(
             WindowsTerminalState, "stdin_is_interactive", staticmethod(lambda: True)
         )
@@ -280,7 +281,7 @@ class TestForegroundBackground:
 
     def test_enter_foreground_registers_stdin_when_interactive(self, monkeypatch):
         """enter_foreground() registers stdin_r with tag 'stdin' when interactive."""
-        state, sel, bs, k32 = _make_state(headless=True)
+        state, sel, k32 = _make_state(headless=True)
         monkeypatch.setattr(
             WindowsTerminalState, "stdin_is_interactive", staticmethod(lambda: True)
         )
@@ -289,11 +290,11 @@ class TestForegroundBackground:
 
         tags = [data for _, _, data in sel.register_calls]
         assert "stdin" in tags
-        assert bs.headless is False
+        assert state.headless is False
 
     def test_enter_foreground_skips_stdin_when_not_interactive(self, monkeypatch):
         """enter_foreground() does not register stdin_r when not interactive."""
-        state, sel, bs, k32 = _make_state(headless=True)
+        state, sel, k32 = _make_state(headless=True)
         monkeypatch.setattr(
             WindowsTerminalState, "stdin_is_interactive", staticmethod(lambda: False)
         )
@@ -310,7 +311,7 @@ class TestInputThread:
     def _run_thread(self, state, fake_msvcrt, monkeypatch):
         """Call _input_thread directly and return bytes received on stdin_r."""
         state._running = True
-        state.build_status.headless = False
+        state.headless = False
         monkeypatch.setattr(_niw, "msvcrt", fake_msvcrt)
         monkeypatch.setattr(_niw.time, "sleep", lambda _: None)
         state._input_thread()
@@ -318,7 +319,7 @@ class TestInputThread:
 
     def test_keystroke_forwarded_to_stdin_r(self, monkeypatch):
         """A normal keypress is sent to stdin_r."""
-        state, sel, bs, k32 = _make_state()
+        state, sel, k32 = _make_state()
         call_count = [0]
 
         def kbhit():
@@ -335,7 +336,7 @@ class TestInputThread:
 
     def test_extended_key_e0_reads_two_bytes_and_discards(self, monkeypatch):
         """The 0xe0 prefix (arrow/nav keys) reads a second byte but discards both."""
-        state, sel, bs, k32 = _make_state()
+        state, sel, k32 = _make_state()
         call_count = [0]
         getwch_results = ["\xe0", "H"]
         getwch_calls = [0]
@@ -360,7 +361,7 @@ class TestInputThread:
 
     def test_extended_key_null_reads_two_bytes_and_discards(self, monkeypatch):
         """The 0x00 prefix (F-keys) reads a second byte but discards both."""
-        state, sel, bs, k32 = _make_state()
+        state, sel, k32 = _make_state()
         call_count = [0]
         getwch_results = ["\x00", "K"]
         getwch_calls = [0]
@@ -385,8 +386,8 @@ class TestInputThread:
 
     def test_no_keypress_when_headless(self, monkeypatch):
         """_input_thread does not call kbhit when headless=True."""
-        state, sel, bs, k32 = _make_state()
-        state.build_status.headless = True
+        state, sel, k32 = _make_state()
+        state.headless = True
         kbhit_calls = []
 
         def fake_sleep(_):
@@ -409,7 +410,7 @@ class TestResizeThread:
 
     def test_resize_event_sent_on_size_change(self, monkeypatch):
         """_resize_thread sends b'\\x00' to sigwinch_w when terminal dimensions change."""
-        state, sel, bs, k32 = _make_state()
+        state, sel, k32 = _make_state()
         state._running = True
         call_count = [0]
         sizes = [
@@ -434,7 +435,7 @@ class TestResizeThread:
 
     def test_no_resize_event_on_same_size(self, monkeypatch):
         """_resize_thread does not send if dimensions are unchanged."""
-        state, sel, bs, k32 = _make_state()
+        state, sel, k32 = _make_state()
         state._running = True
         call_count = [0]
 

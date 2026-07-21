@@ -430,6 +430,11 @@ class Lock:
         else:
             self.backend = DummyBackend()
 
+    @property
+    def enabled(self) -> bool:
+        """True if this lock actually takes OS locks (False for the no-op backend)."""
+        return not isinstance(self.backend, DummyBackend)
+
     @staticmethod
     def _poll_interval_generator(
         _wait_times: Optional[Tuple[float, float, float]] = None,

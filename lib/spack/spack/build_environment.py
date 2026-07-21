@@ -1154,7 +1154,7 @@ def _setup_pkg_and_run(
 
     ``_setup_pkg_and_run`` is called by the child process created in
     ``start_build_process()``, and its main job is to run ``function()`` on behalf of
-    some Spack installation (see :ref:`spack.installer.PackageInstaller._complete_task`).
+    some Spack installation (see :ref:`spack.old_installer.PackageInstaller._complete_task`).
 
     The child process is passed a ``write_pipe``, on which it's expected to send one of
     the following:

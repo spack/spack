@@ -17,9 +17,9 @@ import argparse
 
 import spack.cmd
 import spack.concretize
-import spack.environment as ev
-import spack.installer
+import spack.old_installer
 import spack.store
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.util import tty
 from spack.util.filesystem import symlink
@@ -89,7 +89,7 @@ def deprecate(parser, args):
     if args.link_type is not None:
         tty.warn("The --link-type option is deprecated and will be removed in a future release.")
 
-    env = ev.active_environment()
+    env = active_environment()
     specs = spack.cmd.parse_specs(args.specs)
 
     if len(specs) != 2:
@@ -147,4 +147,4 @@ def deprecate(parser, args):
             tty.die("Will not deprecate any packages.")
 
     for dcate, dcator in zip(all_deprecate, all_deprecators):
-        spack.installer.deprecate(dcate, dcator, symlink)
+        spack.old_installer.deprecate(dcate, dcator, symlink)

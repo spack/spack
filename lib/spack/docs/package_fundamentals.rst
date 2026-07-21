@@ -7,7 +7,12 @@
    :description lang=en:
       Learn the fundamental Spack commands for managing software packages, including how to find, inspect, install, and remove them.
 
-.. _basic-usage:
+.. index::
+   single: package; installing and uninstalling
+   single: spack install
+   single: spack uninstall
+   single: spack find
+   :name: basic-usage
 
 Package Fundamentals
 ====================
@@ -229,7 +234,9 @@ but you risk breaking other installed packages.
 In general, it is safer to remove dependent packages *before* removing their dependencies or to use the ``--dependents`` option.
 
 
-.. _cmd-spack-gc:
+.. index::
+   single: garbage collection
+   :name: cmd-spack-gc
 
 Garbage collection
 ^^^^^^^^^^^^^^^^^^
@@ -270,7 +277,10 @@ All other packages, such as build-only dependencies or orphaned packages, are id
 
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages or :ref:`dependency-types` for a more thorough treatment of dependency types.
 
-.. _cmd-spack-mark:
+.. index::
+   single: explicit install
+   single: implicit install
+   :name: cmd-spack-mark
 
 Marking packages explicit or implicit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -357,7 +367,9 @@ When using this workflow for installations that contain more packages, care must
 
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly or implicitly installed packages.
 
-.. _nondownloadable:
+.. index::
+   single: manual download
+   :name: nondownloadable
 
 Non-Downloadable Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -835,6 +847,7 @@ The shell scripts contain all the environment modifications needed for the packa
 4. Setting other package-specific environment variables
 5. Tracking which packages are loaded via SPACK_LOADED_HASHES environment variable
 
+.. index:: ambiguous spec
 
 Ambiguous specs
 """""""""""""""

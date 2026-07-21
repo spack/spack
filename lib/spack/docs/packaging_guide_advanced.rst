@@ -22,7 +22,10 @@ Packaging Guide: advanced topics
 
 This section of the packaging guide covers a few advanced topics.
 
-.. _multiple_build_systems:
+.. index::
+   single: build system; multiple
+   single: directive; build_system
+   :name: multiple_build_systems
 
 Multiple build systems
 ----------------------
@@ -501,7 +504,11 @@ For instance the ``detection_test.yaml`` for ``myrepo.llvm`` might look like:
 
 This YAML file instructs Spack to run the detection tests defined in ``builtin.llvm`` in addition to those locally defined in the file.
 
-.. _abi_compatibility:
+.. index::
+   single: ABI compatibility
+   single: directive; can_splice
+   single: splicing; in package.py
+   :name: abi_compatibility
 
 Specifying ABI Compatibility
 ----------------------------

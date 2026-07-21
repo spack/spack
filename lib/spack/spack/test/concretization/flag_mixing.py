@@ -295,10 +295,47 @@ def test_flag_injection_different_compilers(mock_packages, mutable_config):
         ),
     ],
 )
-def test_flags_and_duplicate_nodes(spec_str, expected, not_expected, default_mock_concretization):
+def test_flags_and_duplicate_nodes(spec_str, expected, not_expected, config, mock_packages):
     """Tests that we can concretize a spec with flags on a node that is present with duplicates
     in the DAG. For instance, a compiler built with a previous version of itself.
     """
-    s = default_mock_concretization(spec_str)
+    s = spack.concretize.concretize_one(spec_str)
     assert all(s.satisfies(x) for x in expected)
     assert all(not s.satisfies(x) for x in not_expected)
+
+
+@pytest.mark.regression("52670")
+def test_no_flags_from_compiler_used_only_as_library(concretize_scope, mock_packages):
+    """Tests that we don't attach flags defined on a possible compiler when we have a build
+    dependency on it, but we're using it as a library.
+    """
+    packages_yaml = """
+packages:
+  gcc:
+    externals:
+    - spec: gcc@12.100.100 languages:=c,c++
+      prefix: /fake
+      extra_attributes:
+        compilers:
+          c: /fake/bin/gcc
+          cxx: /fake/bin/g++
+  llvm:
+    externals:
+    - spec: llvm@19.1.0+clang
+      prefix: /fake
+      extra_attributes:
+        compilers:
+          c: /fake/bin/clang
+          cxx: /fake/bin/clang++
+        flags:
+          cflags: -Wall
+"""
+    update_concretize_scope(packages_yaml, "packages")
+
+    s = spack.concretize.concretize_one("llvm-client %c,cxx=gcc@12.100.100")
+
+    # gcc, not llvm, compiles llvm-client, and llvm is pulled in only as a library
+    assert s["c"].name == "gcc"
+    assert s["llvm"].external and s["llvm"].satisfies("@19.1.0")
+    # the external llvm's cflags must not be injected into its dependent
+    assert s.compiler_flags["cflags"] == []
