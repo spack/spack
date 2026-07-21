@@ -10,7 +10,6 @@ import sys
 import pytest
 
 import spack.cmd
-import spack.config
 import spack.extensions
 import spack.main
 
@@ -58,7 +57,7 @@ def extension_creator(tmp_path: pathlib.Path, config):
         root = tmp_path / ("spack-" + extension_name)
         root.mkdir()
         extension = Extension(extension_name, root)
-        with spack.config.CONFIG.override("config:extensions", [str(extension.root)]):
+        with config.override("config:extensions", [str(extension.root)]):
             yield extension
 
     list_of_modules = list(sys.modules.keys())

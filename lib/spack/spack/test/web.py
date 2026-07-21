@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Tuple
 
 import pytest
 
-import spack.config
 import spack.mirrors.mirror
 import spack.paths
 import spack.url
@@ -394,7 +393,7 @@ def ssl_scrubbed_env(mutable_config, monkeypatch):
     monkeypatch.delenv("SSL_CERT_FILE", raising=False)
     monkeypatch.delenv("SSL_CERT_DIR", raising=False)
     monkeypatch.delenv("CURL_CA_BUNDLE", raising=False)
-    spack.config.CONFIG.set("config:verify_ssl", True)
+    mutable_config.set("config:verify_ssl", True)
 
 
 @pytest.mark.parametrize(
