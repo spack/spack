@@ -254,7 +254,7 @@ def test_ci_copy_stage_logs_to_artifacts_fail(tmp_path: pathlib.Path, config, ca
     ],
 )
 def test_ci_copy_stage_logs_to_artifacts_copies_existing_build_logs(
-    tmp_path: pathlib.Path, config, monkeypatch, capfd, build_logs, copied_logs,
+    tmp_path: pathlib.Path, config, monkeypatch, capfd, build_logs, copied_logs
 ):
     metadata_dir = tmp_path / "metadata"
     metadata_dir.mkdir()
