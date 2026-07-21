@@ -9,11 +9,15 @@ import re
 from typing import Optional
 
 import spack
+import spack.cmd
 import spack.config
+import spack.debug_source
+import spack.environment as ev
 import spack.platforms
 import spack.repo
 import spack.spec
 import spack.util.git
+from spack.llnl.util import tty
 
 description = "debugging commands for troubleshooting Spack"
 section = "developer"
@@ -23,6 +27,16 @@ level = "long"
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="debug_command")
     sp.add_parser("report", help="print information useful for bug reports")
+
+    stage_source_parser = sp.add_parser(
+        "stage-source",
+        help="fetch pristine source for an installed package into the debug-source cache "
+        "(fallback for packages installed without 'spack install --debug-source')",
+    )
+    stage_source_parser.add_argument("spec", help="installed spec to stage source for")
+    stage_source_parser.add_argument(
+        "--force", action="store_true", help="re-stage even if already staged"
+    )
 
 
 def _format_repo_info(source, commit):
@@ -88,6 +102,19 @@ def report(args):
     print("* **Platform:**", architecture)
 
 
+def stage_source(args):
+    specs = spack.cmd.parse_specs(args.spec, concretize=False)
+    if len(specs) != 1:
+        tty.die("'spack debug stage-source' requires exactly one spec")
+
+    env = ev.active_environment()
+    spec = spack.cmd.disambiguate_spec(specs[0], env)
+    pkg = spec.package
+    spack.debug_source.stage_source(pkg, force=args.force)
+
+
 def debug(parser, args):
     if args.debug_command == "report":
         report(args)
+    elif args.debug_command == "stage-source":
+        stage_source(args)
