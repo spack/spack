@@ -7,7 +7,9 @@
    :description lang=en:
       A guide to customizing package settings in Spack using the packages.yaml file, including configuring compilers, specifying external packages, package requirements, and permissions.
 
-.. _packages-config:
+.. index::
+   single: packages.yaml; reference
+   :name: packages-config
 
 Package Settings (packages.yaml)
 ================================
@@ -37,6 +39,9 @@ You can override them in ``~/.spack/packages.yaml`` or ``etc/spack/packages.yaml
 For more details on how this works, see :ref:`configuration-scopes`.
 
 .. _sec-external-packages:
+
+.. index::
+   single: external package; configuring
 
 External packages
 -----------------
@@ -249,6 +254,9 @@ This method's conciseness comes with a strict requirement: each dependency must 
 This makes the approach suitable for simple or temporary configurations.
 In larger, more dynamic environments, however, it can become a maintenance challenge, as adding new external packages over time may require frequent updates to existing specs to preserve their uniqueness.
 
+.. index::
+   single: dependency; in config
+
 Dependencies using YAML configuration
 """""""""""""""""""""""""""""""""""""
 
@@ -396,7 +404,10 @@ The ``implicit_rpaths`` field is filled in automatically by Spack when detecting
 In addition, paths from ``extra_rpaths`` are added as library search paths for the linker.
 In the example above, both ``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` would be added as rpaths to the linker, and ``-L/usr/lib/unusual_gcc_path`` would be added as well.
 
-.. _package-requirements:
+.. index::
+   single: requirement; in config
+   single: require
+   :name: package-requirements
 
 Package Requirements
 --------------------
@@ -595,7 +606,10 @@ For instance with a configuration like:
 
 you will use ``mvapich2~cuda %c,cxx,fortran=gcc`` as an ``mpi`` provider.
 
-.. _package-strong-preferences:
+.. index::
+   single: conflict; in config
+   single: strong preference; in config
+   :name: package-strong-preferences
 
 Conflicts and strong preferences
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -641,7 +655,10 @@ The ``spec`` attribute is mandatory, while both ``when`` and ``message`` are opt
    Since only one of the requirements must hold, and ``@:`` is always true, the rule above is equivalent to a conflict.
    For "strong preferences" the same construction works, with the ``any_of`` policy instead of the ``one_of`` policy.
 
-.. _package-preferences:
+.. index::
+   single: preference
+   single: prefer
+   :name: package-preferences
 
 Package Preferences
 -------------------
