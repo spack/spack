@@ -158,8 +158,6 @@ Spack can create a filtered environment from another environment using:
 
 The source environment, ``old-env`` in the example above, must be provided explicitly.
 Spack reads the source environment's ``filter:`` section and writes a new environment whose specs and selected configuration have been reduced according to that filter.
-If no source environment is provided, Spack reports an error.
-If the source is a ``spack.lock`` file, Spack reports an error; filtered environments are created from environment directories or manifest files so that the filter configuration is available.
 
 The ``filter:`` section is written under the top-level ``spack:`` key in ``spack.yaml``:
 
