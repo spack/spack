@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/filter.py
    :lines: 18-
 """
+
 from typing import Any, Dict
 
 import spack.schema.projections
@@ -24,10 +25,7 @@ allow_block = {
 
 packages_filter = {
     "default": "all",
-    "oneOf": [
-        {"type": "string", "enum": ["all", "externals_only"]},
-        allow_block,
-    ],
+    "oneOf": [{"type": "string", "enum": ["all", "externals_only"]}, allow_block],
 }
 
 properties: Dict[str, Any] = {

@@ -2118,9 +2118,7 @@ def test_env_create_filter_defaults_to_concrete_allow_all():
     filtered = ev.read("filtered")
     filtered_yaml = filtered.manifest["spack"]
 
-    assert {"callpath", "libelf", "mpileaks"}.issubset(
-        spec.name for spec in filtered.user_specs
-    )
+    assert {"callpath", "libelf", "mpileaks"}.issubset(spec.name for spec in filtered.user_specs)
     assert {"callpath", "libelf", "mpileaks"}.issubset(
         spec.name for spec in filtered.concrete_roots()
     )
@@ -2152,10 +2150,7 @@ def test_env_create_filter_accepts_projection_that_formats_to_spec():
         add("mpileaks")
         spack.config.set(
             "filter",
-            {
-                "specs": {"allow": ["mpileaks"]},
-                "projections": {"all": "{name}@{version}"},
-            },
+            {"specs": {"allow": ["mpileaks"]}, "projections": {"all": "{name}@{version}"}},
             scope=source.scope_name,
         )
     source.concretize()
@@ -2372,10 +2367,7 @@ def test_env_create_filter_packages_externals_only():
         )
         spack.config.set(
             "filter",
-            {
-                "config": {"allow": ["packages"]},
-                "packages": "externals_only",
-            },
+            {"config": {"allow": ["packages"]}, "packages": "externals_only"},
             scope=source.scope_name,
         )
     source.concretize()
@@ -2484,10 +2476,7 @@ def test_env_create_filter_packages_externals_only_excludes_non_external_entries
         )
         spack.config.set(
             "filter",
-            {
-                "config": {"allow": ["packages"]},
-                "packages": "externals_only",
-            },
+            {"config": {"allow": ["packages"]}, "packages": "externals_only"},
             scope=source.scope_name,
         )
     source.concretize()
@@ -2515,16 +2504,13 @@ def test_env_create_filter_packages_externals_only_preserves_external_entries():
                         {"spec": "externaltool@0.9", "prefix": "/tmp/externaltool-0.9"},
                     ],
                     "buildable": False,
-                },
+                }
             },
             scope=source.scope_name,
         )
         spack.config.set(
             "filter",
-            {
-                "config": {"allow": ["packages"]},
-                "packages": "externals_only",
-            },
+            {"config": {"allow": ["packages"]}, "packages": "externals_only"},
             scope=source.scope_name,
         )
     source.concretize()
@@ -2535,10 +2521,7 @@ def test_env_create_filter_packages_externals_only_preserves_external_entries():
     filtered_yaml = ev.read("filtered").manifest["spack"]
 
     externals = filtered_yaml["packages"]["externaltool"]["externals"]
-    assert [external["spec"] for external in externals] == [
-        "externaltool@1.0",
-        "externaltool@0.9",
-    ]
+    assert [external["spec"] for external in externals] == ["externaltool@1.0", "externaltool@0.9"]
     assert filtered_yaml["packages"]["externaltool"]["buildable"] is False
 
 
@@ -2634,9 +2617,7 @@ def test_env_create_filter_from_manifest_preserves_grouped_specs(tmp_path: pathl
 
     assert list(filtered.user_specs) == []
     assert [spec.name for spec in filtered.user_specs_by(group="apps")] == ["mpileaks", "libelf"]
-    assert filtered_yaml["specs"] == [
-        {"group": "apps", "specs": ["mpileaks", "libelf"]}
-    ]
+    assert filtered_yaml["specs"] == [{"group": "apps", "specs": ["mpileaks", "libelf"]}]
     assert not os.path.exists(filtered.lock_path)
 
 
