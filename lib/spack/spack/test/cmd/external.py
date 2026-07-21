@@ -11,6 +11,7 @@ import spack.cmd.external
 import spack.cray_manifest
 import spack.detection
 import spack.detection.path
+from spack.active_environment import active_environment
 from spack.config import Configuration
 from spack.main import SpackCommand
 from spack.spec import Spec
@@ -389,3 +390,124 @@ def test_detect_virtuals(mock_executable, mutable_config, monkeypatch, mock_pack
 
     # Check that the mpi:buildable entry was not overwritten
     assert mutable_config.get("packages:mpi:buildable") is True
+
+
+def _setup_external_find_test(mock_executable, monkeypatch, mock_packages):
+    """Helper to set up mock executables for external find tests."""
+    versions = {"gcc": "9.3.0", "cmake": "3.19.1"}
+
+    @classmethod
+    def _determine_version_gcc(cls, exe):
+        return versions["gcc"]
+
+    @classmethod
+    def _determine_version_cmake(cls, exe):
+        return versions["cmake"]
+
+    gcc_cls = mock_packages.get_pkg_class("gcc")
+    cmake_cls = mock_packages.get_pkg_class("cmake")
+    monkeypatch.setattr(gcc_cls, "determine_version", _determine_version_gcc)
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version_cmake)
+
+    gcc_exe = mock_executable("gcc", output=f"echo {versions['gcc']}")
+    cmake_exe = mock_executable("cmake", output=f"echo cmake version {versions['cmake']}")
+
+    path = f"{gcc_exe.parent}{os.pathsep}{cmake_exe.parent}"
+    monkeypatch.setenv("PATH", path)
+
+
+def test_find_external_all_in_concretized_env(
+    mock_executable, mutable_config, monkeypatch, mock_packages, mutable_mock_env_path
+):
+    """Test that 'spack external find --all' in a concretized environment only searches for
+    packages in the environment's concretization."""
+    import spack.environment as ev
+
+    _setup_external_find_test(mock_executable, monkeypatch, mock_packages)
+
+    env = ev.create("test")
+    env.add("gcc")
+    env.concretize()
+
+    with env:
+        assert active_environment() is env
+        external("find", "--all")
+
+        pkgs_cfg = mutable_config.get("packages")
+        assert "gcc" in pkgs_cfg
+        assert "cmake" not in pkgs_cfg
+
+
+def test_find_external_all_in_unconcretized_env(
+    mock_executable, mutable_config, monkeypatch, mock_packages, mutable_mock_env_path
+):
+    """Test that 'spack external find --all' in an unconcretized environment searches for
+    all detectable packages (fallback behavior)."""
+    import spack.environment as ev
+
+    _setup_external_find_test(mock_executable, monkeypatch, mock_packages)
+
+    env = ev.create("test")
+    env.add("gcc")
+
+    with env:
+        assert active_environment() is env
+        assert not env.all_specs()
+        external("find", "--all")
+
+        pkgs_cfg = mutable_config.get("packages")
+        assert "gcc" in pkgs_cfg
+        assert "cmake" in pkgs_cfg
+
+
+def test_find_external_all_excludes_view_paths(
+    mock_executable, mutable_config, monkeypatch, mock_packages, mutable_mock_env_path, tmp_path
+):
+    """Test that 'spack external find --all' in a concretized environment excludes
+    environment view paths from the search."""
+    import spack.environment as ev
+    from spack.environment.environment import ViewDescriptor
+
+    versions = {"view": "3.18.0", "external": "3.19.1"}
+
+    @classmethod
+    def _determine_version(cls, exe):
+        if "view" in exe:
+            return versions["view"]
+        else:
+            return versions["external"]
+
+    cmake_cls = mock_packages.get_pkg_class("cmake")
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
+
+    view_dir = tmp_path / "view" / "bin"
+    view_dir.mkdir(parents=True)
+    external_dir = tmp_path / "external" / "bin"
+    external_dir.mkdir(parents=True)
+
+    cmake_in_view = mock_executable(
+        "cmake", output=f"echo cmake version {versions['view']}", subdir=("view", "bin")
+    )
+    cmake_external = mock_executable(
+        "cmake", output=f"echo cmake version {versions['external']}", subdir=("external", "bin")
+    )
+
+    path = f"{cmake_in_view.parent}{os.pathsep}{cmake_external.parent}"
+    monkeypatch.setenv("PATH", path)
+
+    env = ev.create("test")
+    env.add("cmake")
+    env.concretize()
+
+    env.views = {"default": ViewDescriptor(env.path, str(tmp_path / "view"))}
+
+    with env:
+        assert active_environment() is env
+        external("find", "--all")
+
+        pkgs_cfg = mutable_config.get("packages")
+        assert "cmake" in pkgs_cfg
+        cmake_externals = pkgs_cfg["cmake"]["externals"]
+        assert len(cmake_externals) == 1
+        assert versions["external"] in cmake_externals[0]["spec"]
+        assert versions["view"] not in str(cmake_externals)
