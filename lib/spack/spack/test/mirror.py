@@ -12,7 +12,6 @@ import pytest
 import spack.caches
 import spack.cmd.mirror
 import spack.concretize
-import spack.config
 import spack.fetch_strategy
 import spack.mirrors.layout
 import spack.mirrors.mirror
@@ -62,13 +61,13 @@ def set_up_package(name, repository, url_attr, monkeypatch):
     monkeypatch.setitem(s.package.versions[v], url_attr, repository.url)
 
 
-def check_mirror():
+def check_mirror(mutable_config):
     with spack.stage.Stage("spack-mirror-test") as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
         # register mirror with spack config
         mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_root)}
-        with spack.config.CONFIG.override("mirrors", mirrors):
-            with spack.config.CONFIG.override("config:checksum", False):
+        with mutable_config.override("mirrors", mirrors):
+            with mutable_config.override("config:checksum", False):
                 specs = [spack.concretize.concretize_one(x) for x in repos]
                 spack.cmd.mirror.create(mirror_root, specs)
 
@@ -89,7 +88,7 @@ def check_mirror():
                 spec = spack.concretize.concretize_one(name)
                 pkg = spec.package
 
-                with spack.config.CONFIG.override("config:checksum", False):
+                with mutable_config.override("config:checksum", False):
                     with pkg.stage:
                         pkg.do_stage(mirror_only=True)
 
@@ -111,34 +110,39 @@ def check_mirror():
                         assert all(left in exclude for left in dcmp.left_only)
 
 
-def test_url_mirror(mock_archive, monkeypatch):
+def test_url_mirror(mock_archive, monkeypatch, mutable_config):
     set_up_package("trivial-install-test-package", mock_archive, "url", monkeypatch)
-    check_mirror()
+    check_mirror(mutable_config)
 
 
-def test_git_mirror(git, mock_git_repository, monkeypatch):
+def test_git_mirror(git, mock_git_repository, monkeypatch, mutable_config):
     set_up_package("git-test", mock_git_repository, "git", monkeypatch)
-    check_mirror()
+    check_mirror(mutable_config)
 
 
-def test_svn_mirror(mock_svn_repository, monkeypatch):
+def test_svn_mirror(mock_svn_repository, monkeypatch, mutable_config):
     set_up_package("svn-test", mock_svn_repository, "svn", monkeypatch)
-    check_mirror()
+    check_mirror(mutable_config)
 
 
-def test_hg_mirror(mock_hg_repository, monkeypatch):
+def test_hg_mirror(mock_hg_repository, monkeypatch, mutable_config):
     set_up_package("hg-test", mock_hg_repository, "hg", monkeypatch)
-    check_mirror()
+    check_mirror(mutable_config)
 
 
 def test_all_mirror(
-    mock_git_repository, mock_svn_repository, mock_hg_repository, mock_archive, monkeypatch
+    mock_git_repository,
+    mock_svn_repository,
+    mock_hg_repository,
+    mock_archive,
+    monkeypatch,
+    mutable_config,
 ):
     set_up_package("git-test", mock_git_repository, "git", monkeypatch)
     set_up_package("svn-test", mock_svn_repository, "svn", monkeypatch)
     set_up_package("hg-test", mock_hg_repository, "hg", monkeypatch)
     set_up_package("trivial-install-test-package", mock_archive, "url", monkeypatch)
-    check_mirror()
+    check_mirror(mutable_config)
 
 
 @pytest.mark.parametrize(
