@@ -4,8 +4,6 @@
 import collections
 import pathlib
 
-import pytest
-
 import spack.detection
 import spack.detection.common
 import spack.detection.path
@@ -55,7 +53,6 @@ def test_dedupe_paths(tmp_path: pathlib.Path):
     assert spack.detection.path.dedupe_paths([str(y), str(z), str(x)]) == [str(y), str(x)]
 
 
-@pytest.mark.usefixtures("mock_packages")
 def test_detect_specs_deduplicates_across_prefixes(tmp_path, monkeypatch, mock_packages):
     """Tests that the same spec detected at two different prefixes should yield only one result.
 
