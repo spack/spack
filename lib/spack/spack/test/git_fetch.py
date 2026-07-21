@@ -10,7 +10,6 @@ import shutil
 import pytest
 
 import spack.concretize
-import spack.config
 import spack.error
 import spack.fetch_strategy
 import spack.package_base
@@ -116,7 +115,7 @@ def test_fetch(
 
     # Enter the stage directory and check some properties
     with s.package.stage:
-        with spack.config.override("config:verify_ssl", secure):
+        with config.override("config:verify_ssl", secure):
             s.package.do_stage()
 
         with working_dir(s.package.stage.source_path):
@@ -216,7 +215,7 @@ def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config, m
 
     # Fetch then ensure source path exists
     with s.package.stage:
-        with spack.config.override("config:debug", True):
+        with config.override("config:debug", True):
             s.package.do_fetch()
             assert os.path.isdir(s.package.stage.source_path)
 
@@ -283,7 +282,7 @@ def test_get_full_repo(
             git_exe("-C", path, "config", "uploadpack.allowReachableSHA1InWant", "true")
 
     with s.package.stage:
-        with spack.config.override("config:verify_ssl", secure):
+        with config.override("config:verify_ssl", secure):
             s.package.do_stage()
             with working_dir(s.package.stage.source_path):
                 branches = mock_git_repository.git_exe("branch", "-a", output=str).splitlines()

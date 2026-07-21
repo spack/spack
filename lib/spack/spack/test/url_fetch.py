@@ -12,7 +12,6 @@ import urllib.error
 import pytest
 
 import spack.concretize
-import spack.config
 import spack.error
 import spack.fetch_strategy as fs
 import spack.url
@@ -95,8 +94,8 @@ def test_urlfetchstrategy_bad_url(tmp_path: pathlib.Path, mutable_config, method
         assert isinstance(exception.reason, FileNotFoundError)
 
 
-def test_fetch_options(tmp_path: pathlib.Path, mock_archive):
-    with spack.config.override("config:url_fetch_method", "curl"):
+def test_fetch_options(mutable_config, tmp_path: pathlib.Path, mock_archive):
+    with mutable_config.override("config:url_fetch_method", "curl"):
         fetcher = fs.URLFetchStrategy(
             url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
         )
@@ -109,8 +108,8 @@ def test_fetch_options(tmp_path: pathlib.Path, mock_archive):
             assert filecmp.cmp(archive_file, mock_archive.archive_file)
 
 
-def test_fetch_curl_options(tmp_path: pathlib.Path, mock_archive, monkeypatch):
-    with spack.config.override("config:url_fetch_method", "curl -k -q"):
+def test_fetch_curl_options(mutable_config, tmp_path: pathlib.Path, mock_archive, monkeypatch):
+    with mutable_config.override("config:url_fetch_method", "curl -k -q"):
         fetcher = fs.URLFetchStrategy(
             url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
         )
@@ -132,7 +131,7 @@ def test_fetch_curl_options(tmp_path: pathlib.Path, mock_archive, monkeypatch):
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 def test_archive_file_errors(tmp_path: pathlib.Path, mutable_config, mock_archive, _fetch_method):
     """Ensure FetchStrategy commands may only be used as intended"""
-    with spack.config.override("config:url_fetch_method", _fetch_method):
+    with mutable_config.override("config:url_fetch_method", _fetch_method):
         fetcher = fs.URLFetchStrategy(url=mock_archive.url)
         with Stage(fetcher, path=str(tmp_path)) as stage:
             assert fetcher.archive_file is None
@@ -180,8 +179,8 @@ def test_fetch(
 
     # Enter the stage directory and check some properties
     with s.package.stage:
-        with spack.config.override("config:verify_ssl", secure):
-            with spack.config.override("config:url_fetch_method", _fetch_method):
+        with config.override("config:verify_ssl", secure):
+            with config.override("config:url_fetch_method", _fetch_method):
                 s.package.do_stage()
         with working_dir(s.package.stage.source_path):
             assert os.path.exists("configure")
@@ -211,7 +210,7 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
     Test URLs in the url-list-test package, which means they should
     have checksums in the package.
     """
-    with spack.config.override("config:url_fetch_method", _fetch_method):
+    with config.override("config:url_fetch_method", _fetch_method):
         s = spack.concretize.concretize_one(spec)
         fetch_strategy = fs.from_list_url(s.package)
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
@@ -237,7 +236,7 @@ def test_new_version_from_list_url(
     mock_packages, config, _fetch_method, requested_version, tarball, digest
 ):
     """Test non-specific URLs from the url-list-test package."""
-    with spack.config.override("config:url_fetch_method", _fetch_method):
+    with config.override("config:url_fetch_method", _fetch_method):
         s = spack.concretize.concretize_one(f"url-list-test @{requested_version}")
         fetch_strategy = fs.from_list_url(s.package)
 
@@ -270,7 +269,9 @@ def test_unknown_hash(checksum_type):
 
 
 @pytest.mark.skipif(which("curl") is None, reason="Urllib does not have built-in status bar")
-def test_url_with_status_bar(tmp_path: pathlib.Path, mock_archive, monkeypatch, capfd):
+def test_url_with_status_bar(
+    mutable_config, tmp_path: pathlib.Path, mock_archive, monkeypatch, capfd
+):
     """Ensure fetch with status bar option succeeds."""
 
     def is_true():
@@ -280,7 +281,7 @@ def test_url_with_status_bar(tmp_path: pathlib.Path, mock_archive, monkeypatch, 
 
     monkeypatch.setattr(sys.stdout, "isatty", is_true)
     monkeypatch.setattr(tty, "msg_enabled", is_true)
-    with spack.config.override("config:url_fetch_method", "curl"):
+    with mutable_config.override("config:url_fetch_method", "curl"):
         fetcher = fs.URLFetchStrategy(url=mock_archive.url)
         with Stage(fetcher, path=testpath) as stage:
             assert fetcher.archive_file is None
@@ -322,11 +323,11 @@ def test_url_extra_fetch(tmp_path: pathlib.Path, mutable_config, mock_archive, _
     ],
 )
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_candidate_urls(pkg_factory, url, urls, version, expected, _fetch_method):
+def test_candidate_urls(mutable_config, pkg_factory, url, urls, version, expected, _fetch_method):
     """Tests that candidate urls include mirrors and that they go through
     pattern matching and substitution for versions.
     """
-    with spack.config.override("config:url_fetch_method", _fetch_method):
+    with mutable_config.override("config:url_fetch_method", _fetch_method):
         pkg = pkg_factory(url, urls)
         f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
         assert f.candidate_urls == expected

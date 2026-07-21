@@ -418,7 +418,7 @@ def test_ssl_urllib(
     """
     create a proposed cert type and then verify that they exist inside ssl's checks
     """
-    spack.config.set("config:url_fetch_method", "urllib")
+    mutable_config.set("config:url_fetch_method", "urllib")
 
     def mock_verify_locations(self, cafile, capath, cadata):
         """overwrite ssl's verification to simply check for valid file/path"""
@@ -433,9 +433,9 @@ def test_ssl_urllib(
     with working_dir(str(tmp_path)):
         mock_cert = cert_path(str(tmp_path))
         cert_creator(mock_cert)
-        spack.config.set("config:ssl_certs", mock_cert)
+        mutable_config.set("config:ssl_certs", mock_cert)
 
-        assert mock_cert == spack.config.get("config:ssl_certs", None)
+        assert mock_cert == mutable_config.get("config:ssl_certs", None)
 
         ssl_context = spack.util.web.ssl_create_default_context()
         assert ssl_context.verify_mode == ssl.CERT_REQUIRED
@@ -449,10 +449,10 @@ def test_ssl_curl_cert_file(
     Assure that if a valid cert file is specified curl executes
     with CURL_CA_BUNDLE in the env
     """
-    spack.config.set("config:url_fetch_method", "curl")
+    mutable_config.set("config:url_fetch_method", "curl")
     with working_dir(str(tmp_path)):
         mock_cert = str(tmp_path / "mock_cert.crt")
-        spack.config.set("config:ssl_certs", mock_cert)
+        mutable_config.set("config:ssl_certs", mock_cert)
         if cert_exists:
             open(mock_cert, "w", encoding="utf-8").close()
             assert os.path.isfile(mock_cert)

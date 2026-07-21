@@ -1037,7 +1037,7 @@ spack:
 
 
 @pytest.mark.parametrize("use_name", (True, False))
-def test_init_from_env(use_name, environment_from_manifest):
+def test_init_from_env(use_name, environment_from_manifest, mutable_config):
     """Test that an environment can be instantiated from an environment dir"""
     e1 = environment_from_manifest(
         """
@@ -1056,7 +1056,7 @@ spack:
             "libelf": {"spec": "libelf", "path": "./libelf"},
             "mpileaks": {"spec": "mpileaks", "path": "../mpileaks"},
         }
-        spack.config.set("develop", dev_config)
+        mutable_config.set("develop", dev_config)
         fs.touch(os.path.join(e1.path, "libelf"))
 
     e1.concretize()
@@ -1142,7 +1142,9 @@ spack:
         _ = _env_create("test2", init_file=str(e1_manifest))
 
 
-def test_env_view_external_prefix(tmp_path: pathlib.Path, mutable_database, mock_packages):
+def test_env_view_external_prefix(
+    tmp_path: pathlib.Path, mutable_database, mock_packages, mutable_config
+):
     fake_prefix = tmp_path / "a-prefix"
     fake_bin = fake_prefix / "bin"
     fake_bin.mkdir(parents=True, exist_ok=False)
@@ -1172,7 +1174,7 @@ packages:
     external_config_dict = spack.util.spack_yaml.load_config(external_config)
 
     test_scope = spack.config.InternalConfigScope("env-external-test", data=external_config_dict)
-    with spack.config.override(test_scope):
+    with mutable_config.override(test_scope):
         e = ev.create("test", manifest_file)
         e.concretize()
         # Note: normally installing specs in a test environment requires doing
@@ -1515,7 +1517,7 @@ def test_env_with_included_config_file_url(
     env = ev.Environment(str(tmp_path))
     ev.activate(env)
 
-    cfg = spack.config.get("packages")
+    cfg = mutable_empty_config.get("packages")
     assert cfg["mpileaks"]["version"] == ["2.2"]
 
 
@@ -3753,7 +3755,7 @@ def test_virtual_spec_concretize_together(mutable_config):
     ],
 )
 def test_concretize_transactional(unify, method_to_fail, monkeypatch, mutable_config):
-    spack.config.set("concretizer:unify", unify)
+    mutable_config.set("concretizer:unify", unify)
     e = ev.create("test")
 
     e.add("mpi")
@@ -4460,12 +4462,12 @@ spack:
 """
         )
 
-    with spack.config.override("config:url_fetch_method", "curl"):
+    with mutable_empty_config.override("config:url_fetch_method", "curl"):
         env = ev.Environment(str(tmp_path))
         ev.activate(env)
 
         # Make sure a setting from test/data/config/packages.yaml is present
-        cfg = spack.config.get("packages")
+        cfg = mutable_empty_config.get("packages")
         assert "mpich" in cfg["all"]["providers"]["mpi"]
 
 

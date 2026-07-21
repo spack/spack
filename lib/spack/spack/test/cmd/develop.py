@@ -167,7 +167,7 @@ class TestDevelop:
             with pytest.raises(ev.SpackEnvironmentDevelopError, match="conflicts with concrete"):
                 develop("mpich@1.1")
 
-    def test_develop_applies_changes_path(self, monkeypatch):
+    def test_develop_applies_changes_path(self, monkeypatch, mutable_config):
         env("create", "test")
         with ev.read("test") as e:
             e.add("mpich@1.0")
@@ -186,7 +186,7 @@ class TestDevelop:
                 # Check modifications actually worked
                 spec = next(e.roots())
                 assert spec.satisfies(f"dev_path={path}")
-                assert spack.config.get("develop:mpich:path") == path
+                assert mutable_config.get("develop:mpich:path") == path
 
     def test_develop_no_modify(self, monkeypatch):
         env("create", "test")

@@ -220,8 +220,8 @@ def test_config_edit(mutable_config, working_env):
     """Ensure `spack config edit` edits the right paths."""
 
     dms = spack.config.default_modify_scope("compilers")
-    dms_path = spack.config.CONFIG.scopes[dms].path
-    user_path = spack.config.CONFIG.scopes["user"].path
+    dms_path = mutable_config.scopes[dms].path
+    user_path = mutable_config.scopes["user"].path
 
     comp_path = os.path.join(dms_path, "compilers.yaml")
     repos_path = os.path.join(user_path, "repos.yaml")
@@ -249,7 +249,7 @@ def test_config_add_with_scope_adds_to_scope(mutable_config, mutable_mock_env_pa
     env = ev.create("test")
     with env:
         config("--scope=user", "add", "config:install_tree:root:/usr")
-    assert spack.config.get("config:install_tree:root", scope="user") == "/usr"
+    assert mutable_config.get("config:install_tree:root", scope="user") == "/usr"
 
 
 def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
@@ -646,18 +646,18 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
 
 
 def test_config_update_not_needed(mutable_config):
-    data_before = spack.config.get("repos")
+    data_before = mutable_config.get("repos")
     config("update", "-y", "repos")
-    data_after = spack.config.get("repos")
+    data_after = mutable_config.get("repos")
     assert data_before == data_after
 
 
 def test_config_update_shared_linking(mutable_config):
     # Old syntax: config:shared_linking:rpath/runpath
     # New syntax: config:shared_linking:{type:rpath/runpath,bind:True/False}
-    with spack.config.override("config:shared_linking", "runpath"):
-        assert spack.config.get("config:shared_linking:type") == "runpath"
-        assert not spack.config.get("config:shared_linking:bind")
+    with mutable_config.override("config:shared_linking", "runpath"):
+        assert mutable_config.get("config:shared_linking:type") == "runpath"
+        assert not mutable_config.get("config:shared_linking:bind")
 
 
 def test_config_prefer_upstream(
@@ -686,7 +686,7 @@ def test_config_prefer_upstream(
 
     output = config("prefer-upstream")
     scope = spack.config.default_modify_scope("packages")
-    cfg_file = spack.config.CONFIG.get_config_filename(scope, "packages")
+    cfg_file = mutable_config.get_config_filename(scope, "packages")
     packages = syaml.load(open(cfg_file, encoding="utf-8"))["packages"]
 
     # Make sure only the non-default variants are set.

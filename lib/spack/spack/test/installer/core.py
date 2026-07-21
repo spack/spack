@@ -8,7 +8,6 @@ import sys
 
 import pytest
 
-import spack.config
 import spack.error
 import spack.spec
 from spack.installer.base import ExitCode
@@ -98,7 +97,9 @@ def test_cache_miss_falls_back_to_source_build(
 ):
     """With a binary mirror configured, the first attempt is cache_only; a cache miss removes the
     build from the UI, reschedules it as source_only, and the second attempt succeeds."""
-    spack.config.set("mirrors", {"local": {"url": (tmp_path / "mirror").as_uri(), "binary": True}})
+    mutable_config.set(
+        "mirrors", {"local": {"url": (tmp_path / "mirror").as_uri(), "binary": True}}
+    )
     spec = _make_concrete("trivial-install-test-package")
     launcher = ScriptedLauncher(
         {spec.name: [Script(exitcode=ExitCode.BUILD_CACHE_MISS), Script(exitcode=0)]}

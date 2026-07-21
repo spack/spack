@@ -10,7 +10,6 @@ import pytest
 import spack.vendor.archspec.cpu
 
 import spack.concretize
-import spack.config
 import spack.database
 import spack.paths
 import spack.repo
@@ -64,7 +63,7 @@ def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_p
     """Tests that external nodes don't have runtime dependencies."""
 
     packages_yaml = {"pkg-b": {"externals": [{"spec": "pkg-b@1.0", "prefix": f"{str(tmp_path)}"}]}}
-    spack.config.set("packages", packages_yaml)
+    mutable_config.set("packages", packages_yaml)
 
     s = spack.concretize.concretize_one("pkg-a%gcc@10.2.1")
 

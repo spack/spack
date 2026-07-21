@@ -8,7 +8,6 @@ import pytest
 
 import spack.cmd.compiler
 import spack.compilers.config
-import spack.config
 import spack.main
 import spack.util.pattern
 import spack.version
@@ -97,8 +96,8 @@ def test_compiler_remove(mutable_config):
 @pytest.mark.regression("37996")
 def test_removing_compilers_from_multiple_scopes(mutable_config):
     # Duplicate "site" scope into "user" scope
-    site_config = spack.config.get("packages", scope="site")
-    spack.config.set("packages", site_config, scope="user")
+    site_config = mutable_config.get("packages", scope="site")
+    mutable_config.set("packages", site_config, scope="user")
 
     assert any(
         compiler.satisfies("gcc@=9.4.0") for compiler in spack.compilers.config.all_compilers()
@@ -237,15 +236,15 @@ def test_compiler_list_empty(no_packages_yaml, compilers_dir, monkeypatch):
     ],
 )
 def test_compilers_shows_packages_yaml(
-    external, expected, no_packages_yaml, working_env, compilers_dir
+    external, expected, no_packages_yaml, working_env, compilers_dir, mutable_config
 ):
     """Spack should see a single compiler defined from packages.yaml"""
     external["prefix"] = external["prefix"].format(prefix=os.path.dirname(compilers_dir))
     gcc_entry = {"externals": [external]}
 
-    packages = spack.config.get("packages")
+    packages = mutable_config.get("packages")
     packages["gcc"] = gcc_entry
-    spack.config.set("packages", packages)
+    mutable_config.set("packages", packages)
 
     out = compiler("list", fail_on_error=True)
     assert out.count("gcc@7.7.7") == 1

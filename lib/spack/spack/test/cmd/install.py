@@ -1129,8 +1129,8 @@ def test_install_use_buildcache(
 @pytest.mark.not_on_windows("Windows logger I/O operation on closed file when install fails")
 @pytest.mark.regression("34006")
 @pytest.mark.disable_clean_stage_check
-def test_padded_install_runtests_root(install_mockery, mock_fetch):
-    spack.config.set("config:install_tree:padded_length", 255)
+def test_padded_install_runtests_root(install_mockery, mock_fetch, mutable_config):
+    mutable_config.set("config:install_tree:padded_length", 255)
     output = install(
         "--verbose", "--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False
     )
@@ -1154,7 +1154,7 @@ def test_setting_concurrent_packages_flag(mutable_config):
     """Ensure that the number of concurrent packages is properly set from the command-line flag"""
     install = SpackCommand("install")
     install("--concurrent-packages", "8", fail_on_error=False)
-    assert spack.config.get("config:concurrent_packages", scope="command_line") == 8
+    assert mutable_config.get("config:concurrent_packages", scope="command_line") == 8
 
 
 def test_invalid_concurrent_packages_flag(mutable_config):
@@ -1167,7 +1167,7 @@ def test_invalid_concurrent_packages_flag(mutable_config):
 @pytest.mark.skipif(sys.platform == "win32", reason="Feature disabled on windows due to locking")
 def test_concurrent_packages_set_in_config(mutable_config, mock_packages):
     """Ensure that the number of concurrent packages is properly set from adding to config"""
-    spack.config.set("config:concurrent_packages", 3)
+    mutable_config.set("config:concurrent_packages", 3)
     spec = spack.concretize.concretize_one("pkg-a")
     installer = spack.old_installer.PackageInstaller([spec.package])
     assert installer.concurrent_packages == 3

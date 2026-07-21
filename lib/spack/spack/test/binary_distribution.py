@@ -21,7 +21,6 @@ import pytest
 
 import spack.binary_distribution
 import spack.concretize
-import spack.config
 import spack.environment as ev
 import spack.main
 import spack.mirrors.mirror
@@ -235,7 +234,7 @@ def test_generate_index_missing(monkeypatch, tmp_path: pathlib.Path, mutable_con
     # Create a temp mirror directory for buildcache usage
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": mirror_url})
+    mutable_config.set("mirrors", {"test": mirror_url})
 
     s = spack.concretize.concretize_one("libdwarf")
 
@@ -264,7 +263,7 @@ def test_generate_index_missing(monkeypatch, tmp_path: pathlib.Path, mutable_con
     # Update index
     buildcache_cmd("update-index", str(mirror_dir))
 
-    with spack.config.override("config:binary_index_ttl", 0):
+    with mutable_config.override("config:binary_index_ttl", 0):
         # Check dependency not in buildcache
         cache_list = buildcache_cmd("list", "--allarch")
         assert "libdwarf" in cache_list
@@ -287,7 +286,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
     # put it in the mirror
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": mirror_url})
+    mutable_config.set("mirrors", {"test": mirror_url})
     s = spack.concretize.concretize_one("libdwarf")
     install_cmd("--fake", "--no-cache", s.name)
     buildcache_cmd("push", "-u", str(mirror_dir), s.name)
@@ -320,7 +319,7 @@ def test_use_bin_index_active_env_with_view(
     # put it in the mirror
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
+    mutable_config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
     s = spack.concretize.concretize_one("libdwarf")
 
     # Create an environment and install specs for the view
@@ -357,7 +356,7 @@ def test_use_bin_index_with_view(
     # put it in the mirror
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
+    mutable_config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
     s = spack.concretize.concretize_one("libdwarf")
 
     # Create an environment and install specs for the view

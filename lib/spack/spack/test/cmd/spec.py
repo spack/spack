@@ -8,7 +8,6 @@ import pytest
 
 import spack.cmd
 import spack.concretize
-import spack.config
 import spack.environment as ev
 import spack.error
 import spack.spec
@@ -214,7 +213,7 @@ def test_spec_unification_from_cli(
     install_mockery, mutable_config, mutable_database, unify, spec_hash_args, match, error
 ):
     """Ensure specs grouped together on the CLI are concretized together when unify:true."""
-    spack.config.set("concretizer:unify", unify)
+    mutable_config.set("concretizer:unify", unify)
 
     db = mutable_database
     spec_lookup = {

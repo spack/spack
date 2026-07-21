@@ -4,7 +4,6 @@
 
 import re
 
-import spack.config
 from spack.main import SpackCommand
 
 config_cmd = SpackCommand("config")
@@ -56,7 +55,7 @@ def test_config_blame_with_override(config):
     """check blame for an element from an override scope"""
     config_file = config.get_config_filename("site", "config")
 
-    with spack.config.override("config:install_tree", {"root": "foobar"}):
+    with config.override("config:install_tree", {"root": "foobar"}):
         check_blame("install_tree", "overrides")
 
         check_blame("source_cache", config_file, 11)

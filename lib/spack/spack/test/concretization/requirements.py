@@ -453,7 +453,9 @@ packages:
     assert s2.satisfies("@2.5")
 
 
-def test_reuse_oneof(concretize_scope, test_repo, tmp_path: pathlib.Path, mock_fetch):
+def test_reuse_oneof(
+    concretize_scope, test_repo, tmp_path: pathlib.Path, mock_fetch, mutable_config
+):
     conf_str = """\
 packages:
   y:
@@ -468,7 +470,7 @@ packages:
 
         update_packages_config(conf_str)
 
-        with spack.config.override("concretizer:reuse", True):
+        with mutable_config.override("concretizer:reuse", True):
             s2 = spack.concretize.concretize_one("y")
             assert not s2.satisfies("@2.5~shared")
 
@@ -478,7 +480,7 @@ packages:
     [(True, ["@=2.3", "%gcc"], []), (False, ["%gcc"], ["@=2.3"])],
 )
 def test_requirements_and_deprecated_versions(
-    allow_deprecated, expected, not_expected, concretize_scope, test_repo
+    allow_deprecated, expected, not_expected, concretize_scope, test_repo, mutable_config
 ):
     """Tests the expected behavior of requirements and deprecated versions.
 
@@ -497,7 +499,7 @@ packages:
 """
     update_packages_config(conf_str)
 
-    with spack.config.override("config:deprecated", allow_deprecated):
+    with mutable_config.override("config:deprecated", allow_deprecated):
         s1 = spack.concretize.concretize_one("y")
         for constrain in expected:
             assert s1.satisfies(constrain)
@@ -1155,14 +1157,16 @@ def test_forward_multi_valued_variant_using_requires(
         assert not s.satisfies(constraint)
 
 
-def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_packages):
+def test_strong_preferences_higher_priority_than_reuse(
+    concretize_scope, mock_packages, mutable_config
+):
     """Tests that strong preferences have a higher priority than reusing specs."""
     reused_spec = spack.concretize.concretize_one("adios2~bzip2")
     reuse_nodes = list(reused_spec.traverse())
     root_specs = [Spec("ascent+adios2")]
 
     # Check that without further configuration adios2 is reused
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
@@ -1178,7 +1182,7 @@ def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_pa
         - "+bzip2"
 """
     )
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
@@ -1188,7 +1192,7 @@ def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_pa
     assert ascent["adios2"].satisfies("+bzip2")
 
     # A preference is still preference, so we can override from input
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(
@@ -1327,7 +1331,7 @@ def test_requirements_on_compilers_and_reuse(
         exclude=[],
     ).selected_specs()
 
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(setup, root_specs, reuse=reused_nodes + external_specs)
@@ -1362,7 +1366,7 @@ def test_requirements_conditional_deps(
     abstract = spack.spec.Spec(abstract)
 
     no_requirements = spack.concretize.concretize_one(abstract)
-    spack.config.CONFIG.set(f"packages:{abstract.name}", {"require": required_spec})
+    mutable_config.set(f"packages:{abstract.name}", {"require": required_spec})
     requirements = spack.concretize.concretize_one(abstract)
 
     assert requirements.satisfies(required_spec)
@@ -1518,7 +1522,7 @@ packages:
     ).selected_specs()
 
     # Ask for just "mpileaks" and check the spec is reused
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(
@@ -1547,7 +1551,7 @@ packages:
           cxx: /path1/bin/clang++
 """
     update_packages_config(packages_yaml)
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(

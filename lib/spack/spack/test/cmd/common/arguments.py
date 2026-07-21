@@ -131,12 +131,12 @@ def test_concretizer_arguments(mutable_config, mock_packages, arg, conf):
     """Ensure that ConfigSetAction is doing the right thing."""
     spec = spack.main.SpackCommand("spec")
 
-    assert spack.config.get("concretizer:reuse", None, scope="command_line") is None
+    assert mutable_config.get("concretizer:reuse", None, scope="command_line") is None
 
     spec(arg, "zlib")
 
-    assert spack.config.get("concretizer:reuse", None) == conf
-    assert spack.config.get("concretizer:reuse", None, scope="command_line") == conf
+    assert mutable_config.get("concretizer:reuse", None) == conf
+    assert mutable_config.get("concretizer:reuse", None, scope="command_line") == conf
 
 
 def test_use_buildcache_type():

@@ -11,7 +11,6 @@ import pickle
 
 import pytest
 
-import spack.config
 import spack.environment as ev
 import spack.package_base
 import spack.platforms
@@ -537,7 +536,7 @@ spack:
 
 
 @pytest.mark.parametrize("unify_in_config", [True, False, "when_possible"])
-def test_environment_config_scheme_used(tmp_path: pathlib.Path, unify_in_config):
+def test_environment_config_scheme_used(mutable_config, tmp_path: pathlib.Path, unify_in_config):
     """Tests that "unify" settings in lower configuration scopes is taken into account,
     if absent in spack.yaml.
     """
@@ -550,9 +549,9 @@ spack:
 """
     )
 
-    with spack.config.override("concretizer:unify", unify_in_config):
+    with mutable_config.override("concretizer:unify", unify_in_config):
         with ev.Environment(manifest.parent):
-            assert spack.config.CONFIG.get("concretizer:unify") == unify_in_config
+            assert mutable_config.get("concretizer:unify") == unify_in_config
 
 
 @pytest.mark.parametrize(
@@ -983,7 +982,7 @@ def test_environment_from_name_or_dir(mutable_mock_env_path):
         _ = ev.environment_from_name_or_dir("fake-env")
 
 
-def test_env_include_configs(mutable_mock_env_path):
+def test_env_include_configs(mutable_mock_env_path, mutable_config):
     """check config and package values using new include schema"""
     env_path = mutable_mock_env_path
     env_path.mkdir()
@@ -1024,8 +1023,8 @@ spack:
 
     e = ev.Environment(env_path)
     with e.manifest.use_config():
-        assert not spack.config.get("config:verify_ssl")
-        python_reqs = spack.config.get("packages")["python"]["require"]
+        assert not mutable_config.get("config:verify_ssl")
+        python_reqs = mutable_config.get("packages")["python"]["require"]
         req_specs = {x["spec"] for x in python_reqs}
         assert req_specs == set(["@3.11:"])
 
@@ -1644,7 +1643,7 @@ spack:
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path):
         # We rely on this behavior when emitting facts for the solver
-        toolchains = spack.config.CONFIG.get("toolchains", {})
+        toolchains = mutable_config.get("toolchains", {})
         s = spack.spec_parser.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
         assert id(s["gcc"]) != id(s["callpath"]["gcc"])
 
@@ -2173,9 +2172,11 @@ def test_unified_environment_with_mixed_compilers_and_fortran(tmp_path, config):
 
 
 @pytest.mark.parametrize("enable_locks", [True, False])
-def test_environment_pickle_preserves_lock_state(enable_locks, tmp_path: pathlib.Path):
+def test_environment_pickle_preserves_lock_state(
+    mutable_config, enable_locks, tmp_path: pathlib.Path
+):
     """Tests that an environment round-trips through pickle with its lock-enable state intact."""
-    with spack.config.override("config:locks", enable_locks):
+    with mutable_config.override("config:locks", enable_locks):
         env = ev.create_in_dir(tmp_path)
     original_enabled = env.txlock.enabled
 
@@ -2183,7 +2184,7 @@ def test_environment_pickle_preserves_lock_state(enable_locks, tmp_path: pathlib
 
     # Flip the global config, then unpickle: the rebuilt transaction lock must keep the state
     # that was pickled, not the (now different) global one.
-    with spack.config.override("config:locks", not enable_locks):
+    with mutable_config.override("config:locks", not enable_locks):
         restored = pickle.loads(blob)
 
     assert restored.txlock.enabled == original_enabled

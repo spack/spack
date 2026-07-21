@@ -243,12 +243,12 @@ packages:
     include_cfg = {"include": include_entries}
     filename = write_config_file("include", include_cfg, "low")
 
-    assert not spack.config.get("config:dirty")
+    assert not mock_low_high_config.get("config:dirty")
 
     spack.main.add_command_line_scopes(mock_low_high_config, [os.path.dirname(filename)])
 
-    assert spack.config.get("config:dirty")
-    python_reqs = spack.config.get("packages")["python"]["require"]
+    assert mock_low_high_config.get("config:dirty")
+    python_reqs = mock_low_high_config.get("packages")["python"]["require"]
     req_specs = {x["spec"] for x in python_reqs}
     assert req_specs == set(["@3.11:", "+ssl", "+tk"])
 
@@ -345,13 +345,13 @@ include:
 
 
 @pytest.mark.regression("52664")
-def test_env_substitution_via_main_entrypoint(mutable_mock_env_path):
+def test_env_substitution_via_main_entrypoint(mutable_mock_env_path, mutable_config):
     """Tests that an environment activated through the CLI entrypoint can substitute ``$env``"""
     env = ev.create("test")
-    assert spack.config.CONFIG.env_path is None
+    assert mutable_config.env_path is None
 
     # Just call a fast command
     spack.main._main(["-e", "test", "config", "scopes"])
 
-    assert spack.config.CONFIG.env_path == env.path
+    assert mutable_config.env_path == env.path
     assert spack.config.substitute_path_variables("$env/foo") == f"{env.path}/foo"

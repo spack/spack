@@ -678,9 +678,9 @@ class TestTcl:
             assert repetitions == 1
 
     def test_compilers_provided_different_name(
-        self, factory, module_configuration, compiler_factory
+        self, factory, module_configuration, compiler_factory, mutable_config
     ):
-        with spack.config.override(
+        with mutable_config.override(
             "packages", {"llvm": {"externals": [compiler_factory(spec="llvm@3.3 +clang")]}}
         ):
             module_configuration("complex_hierarchy")

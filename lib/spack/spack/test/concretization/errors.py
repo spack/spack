@@ -17,7 +17,6 @@ from typing import List
 import pytest
 
 import spack.concretize
-import spack.config
 import spack.error
 import spack.main
 import spack.solver.asp
@@ -60,7 +59,7 @@ external_config = {
 )
 def test_error_messages(error_messages, config_set, spec, mock_packages, mutable_config):
     for path, conf in config_set.items():
-        spack.config.set(path, conf)
+        mutable_config.set(path, conf)
 
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as e:
         _ = spack.concretize.concretize_one(spec)
@@ -76,7 +75,7 @@ def test_deprecated_version_error(spec, mock_packages, mutable_config):
     with pytest.raises(spack.solver.asp.DeprecatedVersionError, match="deprecated-versions@1.1.0"):
         _ = spack.concretize.concretize_one(spec)
 
-    spack.config.set("config:deprecated", True)
+    mutable_config.set("config:deprecated", True)
     spack.concretize.concretize_one(spec)
 
 
@@ -263,7 +262,7 @@ def test_config_driven_errors(
     identify the package and the config value to fix.
     """
     for path, conf in packages_config.items():
-        spack.config.set(path, conf)
+        mutable_config.set(path, conf)
 
     with pytest.raises(spack.error.SpackError) as exc_info:
         spack.concretize.concretize_one(input_spec)

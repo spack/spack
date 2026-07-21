@@ -9,7 +9,6 @@ import pytest
 
 import spack.cmd.modules
 import spack.concretize
-import spack.config
 import spack.error
 import spack.modules
 import spack.modules.common
@@ -203,7 +202,7 @@ def test_check_module_set_name(mutable_config):
     """Tests that modules set name are validated correctly and an error is reported if the
     name we require does not exist or is reserved by the configuration."""
     # Minimal modules.yaml config.
-    spack.config.set(
+    mutable_config.set(
         "modules",
         {
             "prefix_inspections": {"./bin": ["PATH"]},

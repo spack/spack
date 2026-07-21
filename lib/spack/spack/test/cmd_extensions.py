@@ -238,7 +238,7 @@ def test_extension_naming(tmp_path: pathlib.Path, extension_path, expected_excep
     import spack.util.filesystem as fs
 
     with fs.working_dir(str(tmp_path)):
-        with spack.config.override("config:extensions", [extension_path]):
+        with config.override("config:extensions", [extension_path]):
             with pytest.raises(expected_exception):
                 spack.cmd.get_module("no-such-command")
 
@@ -267,7 +267,7 @@ def test_get_command_paths(config):
         path = os.path.abspath(path)
         expected_cmd_paths.append(path)
 
-    with spack.config.override("config:extensions", ext_paths):
+    with config.override("config:extensions", ext_paths):
         assert spack.extensions.get_command_paths() == expected_cmd_paths
 
 
@@ -280,7 +280,7 @@ def test_variable_in_extension_path(config, working_env):
     expected_ext_paths = [
         os.path.join(os.environ[home_env], os.environ["_MY_VAR"], "spack-extension-1")
     ]
-    with spack.config.override("config:extensions", ext_paths):
+    with config.override("config:extensions", ext_paths):
         assert spack.extensions.get_extension_paths() == expected_ext_paths
 
 

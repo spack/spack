@@ -6,7 +6,6 @@ import pathlib
 
 import pytest
 
-import spack.config
 import spack.detection
 import spack.detection.common
 import spack.detection.path
@@ -22,7 +21,7 @@ def test_detection_update_config(mutable_config):
     # update config for new package
     spack.detection.common.update_configuration(detected_packages)
     # Check entries in 'packages.yaml'
-    packages_yaml = spack.config.get("packages")
+    packages_yaml = mutable_config.get("packages")
     assert "cmake" in packages_yaml
     assert "externals" in packages_yaml["cmake"]
     externals = packages_yaml["cmake"]["externals"]

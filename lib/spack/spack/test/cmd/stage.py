@@ -6,7 +6,6 @@ import pathlib
 
 import pytest
 
-import spack.config
 import spack.database
 import spack.environment as ev
 import spack.package_base
@@ -126,13 +125,13 @@ def test_stage_full_env(mutable_mock_env_path, monkeypatch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_concretizer_arguments(mock_packages, mock_fetch):
+def test_concretizer_arguments(mock_packages, mock_fetch, mutable_config):
     """Make sure stage also has --reuse and --fresh flags."""
     stage("--reuse", "trivial-install-test-package")
-    assert spack.config.get("concretizer:reuse", None) is True
+    assert mutable_config.get("concretizer:reuse", None) is True
 
     stage("--fresh", "trivial-install-test-package")
-    assert spack.config.get("concretizer:reuse", None) is False
+    assert mutable_config.get("concretizer:reuse", None) is False
 
 
 @pytest.mark.maybeslow

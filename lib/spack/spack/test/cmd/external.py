@@ -47,7 +47,7 @@ def test_find_external_update_config(mutable_config):
     scope = spack.config.default_modify_scope("packages")
     spack.detection.update_configuration(pkg_to_entries, scope=scope, buildable=True)
 
-    pkgs_cfg = spack.config.get("packages")
+    pkgs_cfg = mutable_config.get("packages")
     cmake_cfg = pkgs_cfg["cmake"]
     cmake_externals = cmake_cfg["externals"]
 
@@ -87,7 +87,7 @@ def test_find_external_cmd_not_buildable(
     cmake_path = mock_executable("cmake", output=f"echo cmake version {version}")
     os.environ["PATH"] = str(cmake_path.parent)
     external("find", "--not-buildable", "cmake")
-    pkgs_cfg = spack.config.get("packages")
+    pkgs_cfg = mutable_config.get("packages")
     assert "cmake" in pkgs_cfg
     assert not pkgs_cfg["cmake"]["buildable"]
 
@@ -234,7 +234,7 @@ def test_find_external_merge(mutable_config):
     scope = spack.config.default_modify_scope("packages")
     spack.detection.update_configuration(pkg_to_entries, scope=scope, buildable=True)
 
-    pkgs_cfg = spack.config.get("packages")
+    pkgs_cfg = mutable_config.get("packages")
     pkg_cfg = pkgs_cfg["find-externals1"]
     pkg_externals = pkg_cfg["externals"]
 

@@ -6,7 +6,6 @@ import pathlib
 
 import pytest
 
-import spack.config
 import spack.environment
 import spack.package_base
 import spack.paths
@@ -126,7 +125,7 @@ def test_use_repositories_with_unmaterialized_path(tmp_path: pathlib.Path, confi
     (tmp_path / "repo.yaml").write_text("repo:\n  namespace: myrepo\n")
 
     monkeypatch.setattr(
-        spack.repo, "PATH", Singleton(lambda: spack.repo.create_and_enable(spack.config.CONFIG))
+        spack.repo, "PATH", Singleton(lambda: spack.repo.create_and_enable(config))
     )
 
     with spack.repo.use_repositories(str(tmp_path)) as repo:
@@ -149,7 +148,7 @@ spack:
     )
 
     monkeypatch.setattr(
-        spack.repo, "PATH", Singleton(lambda: spack.repo.create_and_enable(spack.config.CONFIG))
+        spack.repo, "PATH", Singleton(lambda: spack.repo.create_and_enable(config))
     )
 
     env = spack.environment.Environment(tmp_path)

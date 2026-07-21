@@ -333,7 +333,7 @@ def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmp_p
     """
     projections = {"projections": {"all": "one-prefix-per-package-{name}"}}
     with spack.store.use_store(str(tmp_path), extra_data=projections):
-        with spack.config.override("config:checksum", False):
+        with config.override("config:checksum", False):
             pkg_a = spack.concretize.concretize_one("libelf@0.8.13").package
             pkg_b = spack.concretize.concretize_one("libelf@0.8.12").package
             PackageInstaller([pkg_a], explicit=True, fake=True).install()

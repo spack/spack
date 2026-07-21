@@ -331,7 +331,7 @@ def test_external_config_env(mock_packages, mutable_config, working_env):
             }
         ]
     }
-    spack.config.set("packages:cmake", cmake_config)
+    mutable_config.set("packages:cmake", cmake_config)
 
     cmake_client = spack.concretize.concretize_one("cmake-client")
     spack.build_environment.setup_package(cmake_client.package, False)
@@ -463,7 +463,7 @@ dt-diamond-left:
   buildable: false
 """
     )
-    spack.config.set("packages", cfg_data)
+    mutable_config.set("packages", cfg_data)
     top = spack.concretize.concretize_one("dt-diamond")
 
     def _trust_me_its_a_dir(path):
@@ -512,7 +512,7 @@ def test_setting_dtags_based_on_config(
 ):
     # Pick a random package to be able to set compiler's variables
     s = spack.concretize.concretize_one("cmake")
-    with spack.config.override("config:shared_linking", {"type": config_setting, "bind": False}):
+    with config.override("config:shared_linking", {"type": config_setting, "bind": False}):
         env = spack.build_environment.setup_package(s.package, dirty=False)
         modifications = env.group_by_name()
         assert "SPACK_DTAGS_TO_STRIP" in modifications
@@ -832,7 +832,7 @@ def test_extra_rpaths_is_set(
     SPACK_COMPILER_EXTRA_RPATHS variable for the wrapper.
     """
     cfg_data = syaml.load_config(gcc_config)
-    spack.config.set("packages", cfg_data)
+    mutable_config.set("packages", cfg_data)
     mpich = spack.concretize.concretize_one("mpich %gcc@14")
     spack.build_environment.setup_package(mpich.package, dirty=False)
 

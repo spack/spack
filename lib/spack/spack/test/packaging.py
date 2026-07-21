@@ -19,7 +19,6 @@ import pytest
 import spack.binary_distribution
 import spack.cmd.mirror
 import spack.concretize
-import spack.config
 import spack.error
 import spack.fetch_strategy
 import spack.package_base
@@ -59,7 +58,7 @@ def test_buildcache(mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_c
 
     # register mirror with spack config
     mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_path)}
-    spack.config.set("mirrors", mirrors)
+    mutable_config.set("mirrors", mirrors)
 
     with spack.stage.Stage(mirrors["spack-mirror-test"], name="build_cache", keep=True):
         parser = argparse.ArgumentParser()

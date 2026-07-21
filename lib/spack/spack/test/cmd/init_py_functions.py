@@ -5,7 +5,6 @@ import pathlib
 
 import pytest
 
-import spack.config
 import spack.environment as ev
 import spack.error
 from spack.cmd import (
@@ -66,7 +65,7 @@ def test_special_cases_concretization_parse_specs(
 
     monkeypatch.setattr(asp.SpackSolverSetup, "setup", _fail)
 
-    spack.config.set("concretizer:unify", unify)
+    mutable_config.set("concretizer:unify", unify)
 
     args = [f"/{mutable_database.query(s)[0].dag_hash()}" for s in spec_strs]
     if len(args) > 1:
@@ -115,7 +114,7 @@ def test_special_cases_concretization_matching_specs_from_env(
 
     monkeypatch.setattr(asp.SpackSolverSetup, "setup", _fail)
 
-    spack.config.set("concretizer:unify", unify)
+    mutable_config.set("concretizer:unify", unify)
 
     ev.create("test")
     env = ev.read("test")

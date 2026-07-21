@@ -9,7 +9,6 @@ import sys
 import pytest
 
 import spack.concretize
-import spack.config
 import spack.database
 import spack.install_test
 import spack.spec
@@ -339,7 +338,7 @@ def test_test_part_skip(install_mockery, mock_fetch, mock_test_stage):
 
 
 def test_test_part_missing_exe_fail_fast(
-    tmp_path: pathlib.Path, install_mockery, mock_fetch, mock_test_stage
+    tmp_path: pathlib.Path, install_mockery, mock_fetch, mock_test_stage, mutable_config
 ):
     """Confirm test_part with fail fast enabled raises exception."""
     s = spack.concretize.concretize_one("trivial-smoke-test")
@@ -348,7 +347,7 @@ def test_test_part_missing_exe_fail_fast(
     touch(pkg.tester.test_log_file)
 
     name = "test_fail_fast"
-    with spack.config.override("config:fail_fast", True):
+    with mutable_config.override("config:fail_fast", True):
         with pytest.raises(spack.install_test.TestFailure, match="object is not callable"):
             with spack.install_test.test_part(pkg, name, "fail fast"):
                 missing = which("no-possible-program")

@@ -9,7 +9,6 @@ from typing import Dict, List, Optional, Set, Tuple
 
 import pytest
 
-import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.spec
@@ -1146,7 +1145,9 @@ class TestScheduleBuilds:
 def test_cache_miss_expands_build_deps(temporary_store, mock_packages, mutable_config, tmp_path):
     """A cache miss on a root with unexpanded build deps schedules those deps (growing the UI
     total) and retries the root as source_only."""
-    spack.config.set("mirrors", {"local": {"url": (tmp_path / "mirror").as_uri(), "binary": True}})
+    mutable_config.set(
+        "mirrors", {"local": {"url": (tmp_path / "mirror").as_uri(), "binary": True}}
+    )
     dep = _make_concrete("dependency-install")
     root = _make_concrete("dependent-install", deps=[dep], depflag=dt.BUILD)
     launcher = ScriptedLauncher(

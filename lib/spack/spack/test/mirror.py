@@ -171,7 +171,7 @@ def test_mirror_archive_paths_no_version(mock_packages, mock_archive):
     spack.mirrors.layout.default_mirror_layout(fetcher, "per-package-ref", spec)
 
 
-def test_mirror_with_url_patches(mock_packages, monkeypatch):
+def test_mirror_with_url_patches(mock_packages, monkeypatch, mutable_config):
     spec = spack.concretize.concretize_one("patch-several-dependencies")
     files_cached_in_mirror = set()
 
@@ -205,7 +205,7 @@ def test_mirror_with_url_patches(mock_packages, monkeypatch):
             spack.mirrors.layout.DefaultLayout, "make_alias", successful_make_alias
         )
 
-        with spack.config.override("config:checksum", False):
+        with mutable_config.override("config:checksum", False):
             spack.cmd.mirror.create(mirror_root, list(spec.traverse()))
 
         assert {

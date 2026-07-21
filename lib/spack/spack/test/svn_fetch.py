@@ -8,7 +8,6 @@ import pathlib
 import pytest
 
 import spack.concretize
-import spack.config
 from spack.fetch_strategy import SvnFetchStrategy
 from spack.stage import Stage
 from spack.util.executable import which
@@ -45,7 +44,7 @@ def test_fetch(type_of_test, secure, mock_svn_repository, config, mutable_mock_r
 
     # Enter the stage directory and check some properties
     with s.package.stage:
-        with spack.config.override("config:verify_ssl", secure):
+        with config.override("config:verify_ssl", secure):
             s.package.do_stage()
 
         with working_dir(s.package.stage.source_path):
