@@ -805,7 +805,7 @@ repos:
   d: https://foobar.com/baz
 """,
         )
-        assert "repos.yaml:2" in str(e)
+        assert "repos.yaml:5" in str(e)
 
 
 def test_config_parse_str_not_bool(tmp_path: pathlib.Path):
@@ -999,7 +999,7 @@ spack:
         verify_ssl: False
         dirty: False
     repos:
-        - ~/my/repo/location
+        location: ~/my/repo/location
     mirrors:
         remote: /foo/bar/baz
     compilers:
