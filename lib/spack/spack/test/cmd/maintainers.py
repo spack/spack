@@ -36,7 +36,7 @@ def test_maintained():
 
 def test_unmaintained():
     out = split(maintainers("--unmaintained"))
-    assert out == sorted(set(spack.repo.all_package_names()) - set(MAINTAINED_PACKAGES))
+    assert out == sorted(set(spack.repo.PATH.all_package_names()) - set(MAINTAINED_PACKAGES))
 
 
 def test_all():

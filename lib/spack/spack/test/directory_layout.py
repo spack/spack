@@ -161,7 +161,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages, tmp_path
     mock_db = spack.repo.Repo(spack.paths.mock_packages_path, cache=repo_cache)
 
     not_in_mock = set.difference(
-        set(spack.repo.all_package_names()), set(mock_db.all_package_names())
+        set(mock_packages.all_package_names()), set(mock_db.all_package_names())
     )
     packages = list(not_in_mock)[:max_packages]
 

@@ -166,11 +166,11 @@ def test_list_tags():
 
 def test_list_count():
     output = list("--count")
-    assert int(output.strip()) == len(spack.repo.all_package_names())
+    assert int(output.strip()) == len(spack.repo.PATH.all_package_names())
 
     output = list("--count", "py-")
     assert int(output.strip()) == len(
-        [name for name in spack.repo.all_package_names() if "py-" in name]
+        [name for name in spack.repo.PATH.all_package_names() if "py-" in name]
     )
 
 

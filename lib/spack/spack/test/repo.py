@@ -100,8 +100,8 @@ def test_repo_invisibles(mutable_mock_repo, extra_repo):
 
 @pytest.mark.regression("24552")
 def test_all_package_names_is_cached_correctly(mock_packages):
-    assert "mpi" in spack.repo.all_package_names(include_virtuals=True)
-    assert "mpi" not in spack.repo.all_package_names(include_virtuals=False)
+    assert "mpi" in mock_packages.all_package_names(include_virtuals=True)
+    assert "mpi" not in mock_packages.all_package_names(include_virtuals=False)
 
 
 @pytest.mark.regression("29203")

@@ -20,13 +20,12 @@ Tests assume that mock packages provide this::
 
 import io
 
-import spack.repo
 from spack.provider_index import ProviderIndex
 from spack.spec import Spec
 
 
 def test_provider_index_round_trip(mock_packages):
-    p = ProviderIndex(specs=spack.repo.all_package_names(), repository=mock_packages)
+    p = ProviderIndex(specs=mock_packages.all_package_names(), repository=mock_packages)
 
     ostream = io.StringIO()
     p.to_json(ostream)
@@ -38,7 +37,7 @@ def test_provider_index_round_trip(mock_packages):
 
 
 def test_providers_for_simple(mock_packages):
-    p = ProviderIndex(specs=spack.repo.all_package_names(), repository=mock_packages)
+    p = ProviderIndex(specs=mock_packages.all_package_names(), repository=mock_packages)
 
     blas_providers = p.providers_for("blas")
     assert Spec("netlib-blas") in blas_providers
@@ -51,7 +50,7 @@ def test_providers_for_simple(mock_packages):
 
 
 def test_mpi_providers(mock_packages):
-    p = ProviderIndex(specs=spack.repo.all_package_names(), repository=mock_packages)
+    p = ProviderIndex(specs=mock_packages.all_package_names(), repository=mock_packages)
 
     mpi_2_providers = p.providers_for("mpi@2")
     assert Spec("mpich2") in mpi_2_providers
@@ -64,13 +63,13 @@ def test_mpi_providers(mock_packages):
 
 
 def test_equal(mock_packages):
-    p = ProviderIndex(specs=spack.repo.all_package_names(), repository=mock_packages)
-    q = ProviderIndex(specs=spack.repo.all_package_names(), repository=mock_packages)
+    p = ProviderIndex(specs=mock_packages.all_package_names(), repository=mock_packages)
+    q = ProviderIndex(specs=mock_packages.all_package_names(), repository=mock_packages)
     assert p == q
 
 
 def test_copy(mock_packages):
-    p = ProviderIndex(specs=spack.repo.all_package_names(), repository=mock_packages)
+    p = ProviderIndex(specs=mock_packages.all_package_names(), repository=mock_packages)
     q = p.copy()
     assert p == q
 
