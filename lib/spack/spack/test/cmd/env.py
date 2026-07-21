@@ -601,7 +601,9 @@ def test_env_roots_marked_explicit(
     assert len(explicit) == 2
 
 
-def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkeypatch, capfd):
+def test_env_modifications_error_on_activate(
+    install_mockery, mock_fetch, monkeypatch, capfd, mock_packages
+):
     env("create", "test")
     install = SpackCommand("install")
 
@@ -612,7 +614,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
     def setup_error(pkg, env):
         raise RuntimeError("cmake-client had issues!")
 
-    pkg = spack.repo.PATH.get_pkg_class("cmake-client")
+    pkg = mock_packages.get_pkg_class("cmake-client")
     monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
 
     ev.shell.activate(e)

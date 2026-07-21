@@ -1329,12 +1329,12 @@ def test_print_install_test_log_failures(
     assert "See test results at" in out
 
 
-def test_build_request_errors(install_mockery):
+def test_build_request_errors(install_mockery, mock_packages):
     with pytest.raises(ValueError, match="must be a package"):
         inst.BuildRequest("abc", {})
 
     spec = spack.spec.Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = mock_packages.get_pkg_class(spec.name)
     with pytest.raises(ValueError, match="must have a concrete spec"):
         inst.BuildRequest(pkg_cls(spec), {})
 
@@ -1398,10 +1398,10 @@ def test_build_request_deptypes(
     assert actual_dependency_deptypes == dependencies_deptypes
 
 
-def test_build_task_errors(install_mockery):
+def test_build_task_errors(install_mockery, mock_packages):
     """Check expected errors when instantiating a BuildTask."""
     spec = spack.spec.Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = mock_packages.get_pkg_class(spec.name)
 
     # The value of the request argument is expected to not be checked.
     for pkg in [None, "abc"]:

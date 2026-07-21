@@ -304,7 +304,7 @@ spack:
 
 
 def test_dev_build_multiple(
-    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, mock_fetch
+    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, mock_fetch, mock_packages
 ):
     """Test spack install with multiple developer builds
 
@@ -319,7 +319,7 @@ def test_dev_build_multiple(
     leaf_dir = tmp_path / "leaf"
     leaf_dir.mkdir()
     leaf_spec = spack.spec.Spec("dev-build-test-install@=1.0.0")  # non-existing version
-    leaf_pkg_cls = spack.repo.PATH.get_pkg_class(leaf_spec.name)
+    leaf_pkg_cls = mock_packages.get_pkg_class(leaf_spec.name)
     with fs.working_dir(str(leaf_dir)):
         with open(leaf_pkg_cls.filename, "w", encoding="utf-8") as f:  # type: ignore
             f.write(leaf_pkg_cls.original_string)  # type: ignore
@@ -329,7 +329,7 @@ def test_dev_build_multiple(
     root_dir = tmp_path / "root"
     root_dir.mkdir()
     root_spec = spack.spec.Spec("dev-build-test-dependent@0.0.0")
-    root_pkg_cls = spack.repo.PATH.get_pkg_class(root_spec.name)
+    root_pkg_cls = mock_packages.get_pkg_class(root_spec.name)
     with fs.working_dir(str(root_dir)):
         with open(root_pkg_cls.filename, "w", encoding="utf-8") as f:  # type: ignore
             f.write(root_pkg_cls.original_string)  # type: ignore
@@ -373,7 +373,7 @@ spack:
 
 
 def test_dev_build_env_dependency(
-    tmp_path: pathlib.Path, install_mockery, mock_fetch, mutable_mock_env_path
+    tmp_path: pathlib.Path, install_mockery, mock_fetch, mutable_mock_env_path, mock_packages
 ):
     """
     Test non-root specs in an environment are properly marked for dev builds.
@@ -385,7 +385,7 @@ def test_dev_build_env_dependency(
     dep_spec = spack.spec.Spec("dev-build-test-install")
 
     with fs.working_dir(str(build_dir)):
-        dep_pkg_cls = spack.repo.PATH.get_pkg_class(dep_spec.name)
+        dep_pkg_cls = mock_packages.get_pkg_class(dep_spec.name)
         with open(dep_pkg_cls.filename, "w", encoding="utf-8") as f:  # type: ignore
             f.write(dep_pkg_cls.original_string)  # type: ignore
 

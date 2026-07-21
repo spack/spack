@@ -383,20 +383,20 @@ class TestConcretize:
         concrete = check_concretize("mpileaks   ^mpich2@1.3.1:1.4")
         assert concrete["mpich2"].satisfies("mpich2@1.3.1:1.4")
 
-    def test_concretize_with_provides_when(self):
+    def test_concretize_with_provides_when(self, mock_packages):
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.
         """
-        repo = spack.repo.PATH
+        repo = mock_packages
         assert not any(s.intersects("mpich2@:1.0") for s in repo.providers_for("mpi@2.1"))
         assert not any(s.intersects("mpich2@:1.1") for s in repo.providers_for("mpi@2.2"))
         assert not any(s.intersects("mpich@:1") for s in repo.providers_for("mpi@2"))
         assert not any(s.intersects("mpich@:1") for s in repo.providers_for("mpi@3"))
         assert not any(s.intersects("mpich2") for s in repo.providers_for("mpi@3"))
 
-    def test_provides_handles_multiple_providers_of_same_version(self):
+    def test_provides_handles_multiple_providers_of_same_version(self, mock_packages):
         """ """
-        providers = spack.repo.PATH.providers_for("mpi@3.0")
+        providers = mock_packages.providers_for("mpi@3.0")
 
         # Note that providers are repo-specific, so we don't misinterpret
         # providers, but vdeps are not namespace-specific, so we can
@@ -1752,13 +1752,13 @@ spack:
         assert s["java"].satisfies("virtual-with-versions@1.8.0")
 
     @pytest.mark.regression("26866")
-    def test_non_default_provider_of_multiple_virtuals(self):
+    def test_non_default_provider_of_multiple_virtuals(self, mock_packages):
         s = spack.concretize.concretize_one("many-virtual-consumer ^low-priority-provider")
         assert s["mpi"].name == "low-priority-provider"
         assert s["lapack"].name == "low-priority-provider"
 
         for virtual_pkg in ("mpi", "lapack"):
-            for pkg in spack.repo.PATH.providers_for(virtual_pkg):
+            for pkg in mock_packages.providers_for(virtual_pkg):
                 if pkg.name == "low-priority-provider":
                     continue
                 assert pkg not in s
@@ -2400,13 +2400,13 @@ spack:
 
     @pytest.mark.regression("31484")
     def test_installed_specs_disregard_conflicts(
-        self, mutable_database, monkeypatch, mutable_config
+        self, mutable_database, monkeypatch, mutable_config, mock_packages
     ):
         """Test that installed specs do not trigger conflicts. This covers for the rare case
         where a conflict is added on a package after a spec matching the conflict was installed.
         """
         # Add a conflict to "mpich" that match an already installed "mpich~debug"
-        pkg_cls = spack.repo.PATH.get_pkg_class("mpich")
+        pkg_cls = mock_packages.get_pkg_class("mpich")
         monkeypatch.setitem(pkg_cls.conflicts, Spec(), [(Spec("~debug"), None)])
 
         # If we concretize with --fresh the conflict is taken into account
