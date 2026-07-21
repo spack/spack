@@ -8,9 +8,9 @@ import sys
 
 import spack.cmd
 import spack.cmd.common
-import spack.environment as ev
 import spack.hooks.generate_spec_scripts as generate_script
 import spack.util.tty as tty
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 
 description = "add package to the user environment"
@@ -77,8 +77,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def load(parser, args):
-    env = active_environment()
-
     if args.list:
         results = spack.cmd.filter_loaded_specs(args.specs())
         if sys.stdout.isatty():
@@ -88,7 +86,8 @@ def load(parser, args):
 
     constraint_specs = spack.cmd.parse_specs(args.constraint)
     specs = [
-        spack.cmd.disambiguate_spec(spec, env, first=args.load_first) for spec in constraint_specs
+        spack.cmd.disambiguate_spec(spec, active_environment(), first=args.load_first)
+        for spec in constraint_specs
     ]
 
     shell = args.shell if args.shell else os.environ.get("SPACK_SHELL")
