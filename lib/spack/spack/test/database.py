@@ -311,21 +311,21 @@ def usr_folder_exists(monkeypatch):
     monkeypatch.setattr(os.path, "isdir", mock_isdir)
 
 
-def _print_ref_counts():
+def _print_ref_counts(db):
     """Print out all ref counts for the graph used here, for debugging"""
     recs = []
 
     def add_rec(spec):
-        cspecs = spack.store.STORE.db.query(spec, installed=InstallRecordStatus.ANY)
+        cspecs = db.query(spec, installed=InstallRecordStatus.ANY)
 
         if not cspecs:
             recs.append("[ %-7s ] %-20s-" % ("", spec))
         else:
             key = cspecs[0].dag_hash()
-            rec = spack.store.STORE.db.get_record(cspecs[0])
+            rec = db.get_record(cspecs[0])
             recs.append("[ %-7s ] %-20s%d" % (key[:7], spec, rec.ref_count))
 
-    with spack.store.STORE.db.read_transaction():
+    with db.read_transaction():
         add_rec("mpileaks ^mpich")
         add_rec("callpath ^mpich")
         add_rec("mpich")
@@ -346,9 +346,9 @@ def _print_ref_counts():
     colify(recs, cols=3)
 
 
-def _check_merkleiness():
+def _check_merkleiness(db):
     """Ensure the spack database is a valid merkle graph."""
-    all_specs = spack.store.STORE.db.query(installed=InstallRecordStatus.ANY)
+    all_specs = db.query(installed=InstallRecordStatus.ANY)
 
     seen = {}
     for spec in all_specs:
@@ -362,7 +362,7 @@ def _check_merkleiness():
 
 def _check_db_sanity(database):
     """Utility function to check db against install layout."""
-    pkg_in_layout = sorted(spack.store.STORE.layout.all_specs())
+    pkg_in_layout = sorted(database.layout.all_specs())
     actual = sorted(database.query())
 
     externals = sorted([x for x in actual if x.external])
@@ -375,7 +375,7 @@ def _check_db_sanity(database):
     for e, a in zip(pkg_in_layout, non_external_in_db):
         assert e == a
 
-    _check_merkleiness()
+    _check_merkleiness(database)
 
 
 def _check_remove_and_add_package(database: spack.database.Database, spec):
@@ -413,8 +413,8 @@ def _mock_install(spec: str):
     PackageInstaller([s.package], fake=True, explicit=True).install()
 
 
-def _mock_remove(spec):
-    specs = spack.store.STORE.db.query(spec)
+def _mock_remove(spec, db):
+    specs = db.query(spec)
     assert len(specs) == 1
     spec = specs[0]
     spec.package.do_uninstall(spec)
@@ -623,10 +623,12 @@ class ReadModify:
     """
 
     def __call__(self):
+        # Runs in a child process where the global store is legitimately re-established.
+        db = spack.store.STORE.db
         # check that other process can read DB
-        _check_db_sanity(spack.store.STORE.db)
-        with spack.store.STORE.db.write_transaction():
-            _mock_remove("mpileaks ^zmpi")
+        _check_db_sanity(db)
+        with db.write_transaction():
+            _mock_remove("mpileaks ^zmpi", db)
 
 
 def test_030_db_sanity_from_another_process(mutable_database):
@@ -755,7 +757,7 @@ def test_090_non_root_ref_counts(mutable_database):
 def test_100_no_write_with_exception_on_remove(database):
     def fail_while_writing():
         with database.write_transaction():
-            _mock_remove("mpileaks ^zmpi")
+            _mock_remove("mpileaks ^zmpi", database)
             raise Exception()
 
     with database.read_transaction():
