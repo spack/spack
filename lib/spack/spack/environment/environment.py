@@ -483,7 +483,7 @@ def _default_filter_configuration() -> Dict[str, Any]:
         "projections": {"all": spack.spec.DISPLAY_FORMAT},
         "concrete": True,
         "specs": {"allow": [], "block": []},
-        "externals": {"allow": [], "block": []},
+        "packages": "all",
         "config": {"allow": [], "block": ["filter", lockfile_include_key]},
     }
 
@@ -500,9 +500,14 @@ def _normalize_filter_configuration(configuration: Optional[Dict[str, Any]]) -> 
     normalized["specs"]["allow"] = list(specs.get("allow", []))
     normalized["specs"]["block"] = list(specs.get("block", []))
 
-    externals = configuration.get("externals", {})
-    normalized["externals"]["allow"] = list(externals.get("allow", []))
-    normalized["externals"]["block"] = externals.get("block", [])
+    packages = configuration.get("packages", "all")
+    if isinstance(packages, str):
+        normalized["packages"] = packages
+    else:
+        normalized["packages"] = {
+            "allow": list(packages.get("allow", [])),
+            "block": list(packages.get("block", [])),
+        }
 
     config = configuration.get("config", {})
     config_allow = list(config.get("allow", []))
@@ -530,18 +535,6 @@ def _matches_any_spec(spec: Spec, patterns: Sequence[str]) -> bool:
 def _spec_is_allowed(spec: Spec, allow: Sequence[str], block: Sequence[str]) -> bool:
     allowed = not allow or _matches_any_spec(spec, allow)
     return allowed and not _matches_any_spec(spec, block)
-
-
-def _external_spec_is_allowed(spec: Spec, filter_configuration: Dict[str, Any]) -> bool:
-    if not spec.external:
-        return True
-
-    allow = filter_configuration["externals"]["allow"]
-    block = filter_configuration["externals"]["block"]
-    if block is True:
-        return False
-
-    return _spec_is_allowed(spec, allow, block)
 
 
 def _projection_format_for(spec: Spec, projections: Dict[str, str]) -> str:
@@ -588,7 +581,6 @@ def _filtered_concrete_root_entries(
             filter_configuration["specs"]["allow"],
             filter_configuration["specs"]["block"],
         )
-        and _external_spec_is_allowed(concrete, filter_configuration)
     ]
 
 
@@ -609,32 +601,24 @@ def _filtered_abstract_root_entries(
 def _filter_packages_configuration(
     packages_configuration: Dict[str, Any], filter_configuration: Dict[str, Any]
 ) -> Dict[str, Any]:
-    result = {}
-    allow = filter_configuration["externals"]["allow"]
-    block = filter_configuration["externals"]["block"]
-    block_all = block is True
-    block_patterns = [] if block is True else block
+    packages_filter = filter_configuration["packages"]
+    if packages_filter == "all":
+        return copy.deepcopy(packages_configuration)
 
-    for package_name, package_configuration in packages_configuration.items():
-        if "externals" not in package_configuration:
-            continue
-        if block_all:
-            continue
+    if packages_filter == "externals_only":
+        return {
+            package_name: copy.deepcopy(package_configuration)
+            for package_name, package_configuration in packages_configuration.items()
+            if "externals" in package_configuration
+        }
 
-        filtered_externals = [
-            copy.deepcopy(external)
-            for external in package_configuration["externals"]
-            if _spec_is_allowed(Spec(external["spec"]), allow, block_patterns)
-        ]
-        if not filtered_externals:
-            continue
-
-        filtered_package = copy.deepcopy(package_configuration)
-        filtered_package["externals"] = filtered_externals
-        if filtered_package:
-            result[package_name] = filtered_package
-
-    return result
+    allow = packages_filter["allow"]
+    block = packages_filter["block"]
+    return {
+        package_name: copy.deepcopy(package_configuration)
+        for package_name, package_configuration in packages_configuration.items()
+        if (not allow or package_name in allow) and package_name not in block
+    }
 
 
 def _filtered_configuration(
