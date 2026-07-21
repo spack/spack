@@ -488,23 +488,23 @@ def _default_filter_configuration() -> Dict[str, Any]:
     }
 
 
-def _normalize_filter_configuration(configuration: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    normalized = _default_filter_configuration()
+def _merged_scope_filter_configuration(configuration: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    merged_scoped = _default_filter_configuration()
     if not configuration:
-        return normalized
+        return merged_scoped
 
-    normalized["projections"].update(configuration.get("projections", {}))
-    normalized["concrete"] = configuration.get("concrete", True)
+    merged_scoped["projections"].update(configuration.get("projections", {}))
+    merged_scoped["concrete"] = configuration.get("concrete", True)
 
     specs = configuration.get("specs", {})
-    normalized["specs"]["allow"] = list(specs.get("allow", []))
-    normalized["specs"]["block"] = list(specs.get("block", []))
+    merged_scoped["specs"]["allow"] = list(specs.get("allow", []))
+    merged_scoped["specs"]["block"] = list(specs.get("block", []))
 
     packages = configuration.get("packages", "all")
     if isinstance(packages, str):
-        normalized["packages"] = packages
+        merged_scoped["packages"] = packages
     else:
-        normalized["packages"] = {
+        merged_scoped["packages"] = {
             "allow": list(packages.get("allow", [])),
             "block": list(packages.get("block", [])),
         }
@@ -513,19 +513,19 @@ def _normalize_filter_configuration(configuration: Optional[Dict[str, Any]]) -> 
     config_allow = list(config.get("allow", []))
     config_block = list(config.get("block", []))
     default_config_block = _default_filter_configuration()["config"]["block"]
-    normalized["config"]["allow"] = config_allow
-    normalized["config"]["block"] = list(
+    merged_scoped["config"]["allow"] = config_allow
+    merged_scoped["config"]["block"] = list(
         dict.fromkeys(
             config_block
             + [section for section in default_config_block if section not in config_allow]
         )
     )
-    return normalized
+    return merged_scoped
 
 
 def _source_filter_configuration(source_env: "Environment") -> Dict[str, Any]:
     with source_env:
-        return _normalize_filter_configuration(spack.config.get("filter"))
+        return _merged_scope_filter_configuration(spack.config.get("filter"))
 
 
 def _matches_any_spec(spec: Spec, patterns: Sequence[str]) -> bool:
