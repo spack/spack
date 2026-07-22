@@ -209,7 +209,10 @@ def cwd_relative(path: Path, root: Union[Path, str], initial_working_dir: Path) 
         return Path(os.path.relpath(abs_path, initial_working_dir))
     except ValueError:
         if not same_drive(abs_path, initial_working_dir):
-            tty.debug(f"Cannot make relative path across drives ({abs_path!r} vs {initial_working_dir!r}); using absolute path")
+            tty.debug(
+                f"Cannot make relative path across drives ({abs_path!r}"
+                " vs {initial_working_dir!r}); using absolute path"
+            )
             return abs_path
         raise
 
@@ -538,7 +541,10 @@ def style(parser, args):
             return Path(os.path.relpath(abs_path, args.root))
         except ValueError:
             if not same_drive(abs_path, args.root):
-                tty.debug(f"Cannot make relative path across drives ({abs_path!r} vs {args.root!r}); using absolute path")
+                tty.debug(
+                    f"Cannot make relative path across drives ({abs_path!r} vs {args.root!r});"
+                    " using absolute path"
+                )
                 return Path(abs_path)
             raise
 

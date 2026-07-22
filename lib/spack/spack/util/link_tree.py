@@ -568,7 +568,10 @@ class LinkTree:
                     link(rel, dst)
                 except ValueError:
                     if not same_drive(abs_src, dst_dir):
-                        tty.debug(f"Cannot make relative symlink across drives ({abs_src!r} vs {dst_dir!r}); using absolute path")
+                        tty.debug(
+                            f"Cannot make relative symlink across drives ({abs_src!r}"
+                            " vs {dst_dir!r}); using absolute path"
+                        )
                         link(abs_src, dst)
                     else:
                         raise

@@ -132,9 +132,10 @@ def same_drive(
     component, so this function returns True for any two paths (they are trivially
     on the same "drive").  Comparison is case-insensitive.
     """
-    return os.path.splitdrive(os.fspath(path_a))[0].upper() == os.path.splitdrive(
-        os.fspath(path_b)
-    )[0].upper()
+    return (
+        os.path.splitdrive(os.fspath(path_a))[0].upper()
+        == os.path.splitdrive(os.fspath(path_b))[0].upper()
+    )
 
 
 def sanitize_win_longpath(path: str) -> str:
