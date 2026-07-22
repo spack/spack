@@ -46,7 +46,8 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     """Parse config settings and return values relevant to the store object.
 
     Arguments:
-        config_dict: dictionary of config values, as returned from ``spack.config.get("config")``
+        config_dict: dictionary of config values, as returned from
+            ``spack.config.CONFIG.get("config")``
 
     Returns:
         triple of the install tree root, the unpadded install tree
@@ -138,7 +139,7 @@ def filter_padding():
     This is needed because Spack's debug output gets extremely long when we use a
     long padded installation path.
     """
-    padding = spack.config.get("config:install_tree:padded_length", None)
+    padding = spack.config.CONFIG.get("config:install_tree:padded_length", None)
     if padding:
         # filter out all padding from the install command output
         with tty.output_filter(spack.util.path.padding_filter):

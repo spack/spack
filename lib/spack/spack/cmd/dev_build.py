@@ -124,7 +124,7 @@ def dev_build(self, args):
 
     # disable checksumming if requested
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     tests = False
     if args.test == "all":

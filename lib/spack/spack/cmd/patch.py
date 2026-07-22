@@ -31,7 +31,7 @@ def patch(parser, args):
         return _patch_env(env)
 
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
     specs = spack.cmd.matching_specs_from_env(specs)

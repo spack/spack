@@ -15,6 +15,7 @@ import spack.spec
 import spack.stage
 import spack.util.filesystem as fs
 import spack.util.git
+from spack.config import Configuration
 from spack.error import SpackError
 from spack.fetch_strategy import URLFetchStrategy
 from spack.main import SpackCommand
@@ -36,7 +37,7 @@ class TestDevelop:
         assert dev_specs_entry["spec"] == str(spec)
 
         # check yaml representation
-        dev_config = spack.config.get("develop", {})
+        dev_config = spack.config.CONFIG.get("develop", {})
         assert spec.name in dev_config
         yaml_entry = dev_config[spec.name]
         assert yaml_entry["spec"] == str(spec)
@@ -48,7 +49,7 @@ class TestDevelop:
 
         if build_dir is not None:
             scope = env.scope_name
-            assert build_dir == spack.config.get(
+            assert build_dir == spack.config.CONFIG.get(
                 "packages:{}:package_attributes:build_directory".format(spec.name), scope
             )
 
@@ -167,7 +168,7 @@ class TestDevelop:
             with pytest.raises(ev.SpackEnvironmentDevelopError, match="conflicts with concrete"):
                 develop("mpich@1.1")
 
-    def test_develop_applies_changes_path(self, monkeypatch):
+    def test_develop_applies_changes_path(self, monkeypatch, mutable_config: Configuration):
         env("create", "test")
         with ev.read("test") as e:
             e.add("mpich@1.0")
@@ -186,7 +187,7 @@ class TestDevelop:
                 # Check modifications actually worked
                 spec = next(e.roots())
                 assert spec.satisfies(f"dev_path={path}")
-                assert spack.config.get("develop:mpich:path") == path
+                assert mutable_config.get("develop:mpich:path") == path
 
     def test_develop_no_modify(self, monkeypatch):
         env("create", "test")

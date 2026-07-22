@@ -23,6 +23,7 @@ import spack.util.environment
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
+from spack.config import Configuration
 from spack.enums import Context
 from spack.old_installer import PackageInstaller
 from spack.util.environment import EnvironmentModifications
@@ -321,7 +322,7 @@ def test_load_external_modules_error(working_env, monkeypatch):
         spack.build_environment.load_external_modules(context)
 
 
-def test_external_config_env(mock_packages, mutable_config, working_env):
+def test_external_config_env(mock_packages, mutable_config: Configuration, working_env):
     cmake_config = {
         "externals": [
             {
@@ -331,7 +332,7 @@ def test_external_config_env(mock_packages, mutable_config, working_env):
             }
         ]
     }
-    spack.config.set("packages:cmake", cmake_config)
+    mutable_config.set("packages:cmake", cmake_config)
 
     cmake_client = spack.concretize.concretize_one("cmake-client")
     spack.build_environment.setup_package(cmake_client.package, False)
@@ -448,7 +449,9 @@ def test_wrapper_variables(
         delattr(dep_pkg, "libs")
 
 
-def test_external_prefixes_last(mutable_config, mock_packages, working_env, monkeypatch):
+def test_external_prefixes_last(
+    mutable_config: Configuration, mock_packages, working_env, monkeypatch
+):
     # Sanity check: under normal circumstances paths associated with
     # dt-diamond-left would appear first. We'll mark it as external in
     # the test to check if the associated paths are placed last.
@@ -463,7 +466,7 @@ dt-diamond-left:
   buildable: false
 """
     )
-    spack.config.set("packages", cfg_data)
+    mutable_config.set("packages", cfg_data)
     top = spack.concretize.concretize_one("dt-diamond")
 
     def _trust_me_its_a_dir(path):
@@ -508,11 +511,11 @@ def test_parallel_false_is_not_propagating(config, mock_packages):
 )
 @pytest.mark.skipif(sys.platform != "linux", reason="dtags make sense only on linux")
 def test_setting_dtags_based_on_config(
-    config_setting, expected_flag, config, mock_packages, working_env
+    config_setting, expected_flag, config: Configuration, mock_packages, working_env
 ):
     # Pick a random package to be able to set compiler's variables
     s = spack.concretize.concretize_one("cmake")
-    with spack.config.override("config:shared_linking", {"type": config_setting, "bind": False}):
+    with config.override("config:shared_linking", {"type": config_setting, "bind": False}):
         env = spack.build_environment.setup_package(s.package, dirty=False)
         modifications = env.group_by_name()
         assert "SPACK_DTAGS_TO_STRIP" in modifications
@@ -826,13 +829,13 @@ gcc:
 )
 @pytest.mark.not_on_windows("Windows doesn't use the compiler-wrapper")
 def test_extra_rpaths_is_set(
-    working_env, mutable_config, mock_packages, gcc_config, expected_rpaths
+    working_env, mutable_config: Configuration, mock_packages, gcc_config, expected_rpaths
 ):
     """Tests that using a compiler with an 'extra_rpaths' section will set the corresponding
     SPACK_COMPILER_EXTRA_RPATHS variable for the wrapper.
     """
     cfg_data = syaml.load_config(gcc_config)
-    spack.config.set("packages", cfg_data)
+    mutable_config.set("packages", cfg_data)
     mpich = spack.concretize.concretize_one("mpich %gcc@14")
     spack.build_environment.setup_package(mpich.package, dirty=False)
 

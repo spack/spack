@@ -99,7 +99,7 @@ class BootstrapEnvironment(spack.environment.Environment):
                     download_and_trust_key()
                     fetch_policy = (
                         "cache_only"
-                        if not spack.config.get("bootstrap:dev:enable_source", False)
+                        if not spack.config.CONFIG.get("bootstrap:dev:enable_source", False)
                         else "auto"
                     )
                     try:

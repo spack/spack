@@ -170,10 +170,10 @@ def _store_core_compilers(
     module_set: str, module_system: str, core_compilers: List[spack.spec.Spec]
 ) -> None:
     """Writes a list of core compilers to the modules.yaml configuration file."""
-    default_scope = spack.config.default_modify_scope()
-    modules_cfg = spack.config.get(f"modules:{module_set}", {}, scope=default_scope)
+    default_scope = spack.config.CONFIG.default_modify_scope()
+    modules_cfg = spack.config.CONFIG.get(f"modules:{module_set}", {}, scope=default_scope)
     modules_cfg.setdefault(module_system, {})["core_compilers"] = [str(x) for x in core_compilers]
-    spack.config.set(f"modules:{module_set}", modules_cfg, scope=default_scope)
+    spack.config.CONFIG.set(f"modules:{module_set}", modules_cfg, scope=default_scope)
 
 
 def merge_config_rules(configuration: dict, spec: spack.spec.Spec) -> dict:
@@ -212,7 +212,7 @@ def root_path(module_type: str, module_set: str) -> str:
     """
     dir_name = "modules" if module_type == "tcl" else module_type
     fallback = os.path.join(spack.paths.share_path, dir_name)
-    configured = spack.config.get(f"modules:{module_set}:roots", {})
+    configured = spack.config.CONFIG.get(f"modules:{module_set}:roots", {})
     return spack.config.canonicalize_path(configured.get(module_type, fallback))
 
 
@@ -266,7 +266,7 @@ def _read_module_index(str_or_file: IO[str]) -> Dict[str, ModuleIndexEntry]:
 
 
 def read_module_indices() -> List[Dict[str, Dict[str, ModuleIndexEntry]]]:
-    other_spack_instances = spack.config.get("upstreams") or {}
+    other_spack_instances = spack.config.CONFIG.get("upstreams") or {}
 
     module_indices = []
 
@@ -1450,5 +1450,5 @@ def disable_modules() -> Iterator[None]:
     """Disable the generation of modulefiles within the context manager."""
     data: Dict[str, object] = {"modules:": {"default": {"enable": []}}}
     disable_scope = spack.config.InternalConfigScope("disable_modules", data=data)
-    with spack.config.override(disable_scope):
+    with spack.config.CONFIG.override(disable_scope):
         yield

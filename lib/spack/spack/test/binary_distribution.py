@@ -21,7 +21,6 @@ import pytest
 
 import spack.binary_distribution
 import spack.concretize
-import spack.config
 import spack.environment as ev
 import spack.main
 import spack.mirrors.mirror
@@ -35,6 +34,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.binary_distribution import CannotListKeys, GenerateIndexError
+from spack.config import Configuration
 from spack.database import INDEX_JSON_FILE
 from spack.hooks import sbang
 from spack.old_installer import PackageInstaller
@@ -229,13 +229,15 @@ def test_spec_needs_rebuild(monkeypatch, tmp_path: pathlib.Path):
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
-def test_generate_index_missing(monkeypatch, tmp_path: pathlib.Path, mutable_config):
+def test_generate_index_missing(
+    monkeypatch, tmp_path: pathlib.Path, mutable_config: Configuration
+):
     """Ensure spack buildcache index only reports available packages"""
 
     # Create a temp mirror directory for buildcache usage
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": mirror_url})
+    mutable_config.set("mirrors", {"test": mirror_url})
 
     s = spack.concretize.concretize_one("libdwarf")
 
@@ -264,7 +266,7 @@ def test_generate_index_missing(monkeypatch, tmp_path: pathlib.Path, mutable_con
     # Update index
     buildcache_cmd("update-index", str(mirror_dir))
 
-    with spack.config.override("config:binary_index_ttl", 0):
+    with mutable_config.override("config:binary_index_ttl", 0):
         # Check dependency not in buildcache
         cache_list = buildcache_cmd("list", "--allarch")
         assert "libdwarf" in cache_list
@@ -272,7 +274,7 @@ def test_generate_index_missing(monkeypatch, tmp_path: pathlib.Path, mutable_con
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
-def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
+def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config: Configuration):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
     """
@@ -287,7 +289,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
     # put it in the mirror
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": mirror_url})
+    mutable_config.set("mirrors", {"test": mirror_url})
     s = spack.concretize.concretize_one("libdwarf")
     install_cmd("--fake", "--no-cache", s.name)
     buildcache_cmd("push", "-u", str(mirror_dir), s.name)
@@ -304,7 +306,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
 def test_use_bin_index_active_env_with_view(
-    monkeypatch, tmp_path: pathlib.Path, mutable_config, mutable_mock_env_path
+    monkeypatch, tmp_path: pathlib.Path, mutable_config: Configuration, mutable_mock_env_path
 ):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
@@ -320,7 +322,7 @@ def test_use_bin_index_active_env_with_view(
     # put it in the mirror
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
+    mutable_config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
     s = spack.concretize.concretize_one("libdwarf")
 
     # Create an environment and install specs for the view
@@ -341,7 +343,7 @@ def test_use_bin_index_active_env_with_view(
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
 def test_use_bin_index_with_view(
-    monkeypatch, tmp_path: pathlib.Path, mutable_config, mutable_mock_env_path
+    monkeypatch, tmp_path: pathlib.Path, mutable_config: Configuration, mutable_mock_env_path
 ):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
@@ -357,7 +359,7 @@ def test_use_bin_index_with_view(
     # put it in the mirror
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
+    mutable_config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
     s = spack.concretize.concretize_one("libdwarf")
 
     # Create an environment and install specs for the view

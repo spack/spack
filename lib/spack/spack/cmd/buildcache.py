@@ -228,7 +228,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "--scope",
         action=arguments.ConfigScope,
         type=arguments.config_scope_readable_validator,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
 
@@ -689,7 +689,7 @@ def check_fn(args: argparse.Namespace):
     specs = [spack.concretize.concretize_one(s) for s in specs]
 
     # Next see if there are any configured binary mirrors
-    configured_mirrors = spack.config.get("mirrors", scope=args.scope)
+    configured_mirrors = spack.config.CONFIG.get("mirrors", scope=args.scope)
 
     if args.mirror_url:
         configured_mirrors = {"additionalMirrorUrl": args.mirror_url}

@@ -228,7 +228,7 @@ class TerminalUI(InstallerUI):
         self.filter_padding = filter_padding
         #: When True, suppress all terminal output (process is in background).
         self.headless = False
-        self.term_title = spack.config.get("config:install_status", True) and self.is_tty
+        self.term_title = spack.config.CONFIG.get("config:install_status", True) and self.is_tty
 
     def on_resize(self) -> None:
         """Refresh cached terminal size and trigger a redraw."""

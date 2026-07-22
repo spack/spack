@@ -667,7 +667,7 @@ def _install(
         if stop_at is not None and stop_at not in builder.phases:
             raise spack.error.InstallError(f"'{stop_at}' is not a valid phase for {pkg.name}")
 
-        _enable_sandbox(spack.config.get("config:sandbox", {}), spec, stage.path)
+        _enable_sandbox(spack.config.CONFIG.get("config:sandbox", {}), spec, stage.path)
 
         for phase in builder:
             if stop_before is not None and phase.name == stop_before:
