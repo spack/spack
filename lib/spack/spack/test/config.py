@@ -327,11 +327,6 @@ def test_write_list_in_memory(mock_low_high_config):
     assert config == {**repos_high["repos"], **repos_low["repos"]}
 
 
-class MockEnv:
-    def __init__(self, path):
-        self.path = path
-
-
 def test_substitute_config_variables(mock_low_high_config, monkeypatch, tmp_path: pathlib.Path):
     # Test $spack substitution at the start (valid on all platforms)
     assert os.path.join(spack.paths.prefix, "foo", "bar", "baz") == spack.config.canonicalize_path(
@@ -380,7 +375,7 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch, tmp_path
 
     # Fake an active environment and $env is replaced properly
     fake_env_path = str(tmp_path / "quux" / "quuux")
-    monkeypatch.setattr(ev, "active_environment", lambda: MockEnv(fake_env_path))
+    monkeypatch.setattr(spack.config.CONFIG, "env_path", fake_env_path)
     assert spack.config.canonicalize_path("$env/foo/bar/baz") == os.path.join(
         fake_env_path, os.path.join("foo", "bar", "baz")
     )
@@ -1172,6 +1167,16 @@ def test_bad_path_double_override(config):
     with pytest.raises(syaml.SpackYAMLError, match="Meaningless second override"):
         with spack.config.override("bad::double:override::directive", ""):
             pass
+
+
+def test_override_error_does_not_leak_scope(config):
+    """A failed override must not leave its internal scope behind."""
+    before = [s.name for s in spack.config.CONFIG.matching_scopes(r"^overrides-")]
+    with pytest.raises(ValueError):
+        with spack.config.override(":bad:path", ""):
+            pass
+    after = [s.name for s in spack.config.CONFIG.matching_scopes(r"^overrides-")]
+    assert after == before
 
 
 def test_license_dir_config(mutable_config, mock_packages, tmp_path):
@@ -2177,3 +2182,22 @@ def test_canonicalize_file_relative():
     assert spack.config.canonicalize_path("path/to.txt") == os.path.join(
         os.getcwd(), "path", "to.txt"
     )
+
+
+def test_env_substitution_follows_activation(mutable_mock_env_path):
+    """Tests that the "$env" substitution resolves to the active environment's path only while an
+    environment is active, and is a no-op before and after activation.
+    """
+    # Before activation "$env" is a no-op
+    assert spack.config.CONFIG.env_path is None
+    assert spack.config.substitute_path_variables("$env/foo/bar") == "$env/foo/bar"
+
+    env = ev.create("test")
+    with env:
+        # During activation "$env" resolves to the environment's path
+        assert spack.config.CONFIG.env_path == env.path
+        assert spack.config.substitute_path_variables("$env/foo/bar") == f"{env.path}/foo/bar"
+
+    # After deactivation "$env" is a no-op again
+    assert spack.config.CONFIG.env_path is None
+    assert spack.config.substitute_path_variables("$env/foo/bar") == "$env/foo/bar"

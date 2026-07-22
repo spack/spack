@@ -18,12 +18,8 @@ import spack.cmd.env
 import spack.concretize
 import spack.config
 import spack.environment as ev
-import spack.environment.depfile as depfile
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.main
-import spack.modules
-import spack.modules.tcl
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -36,14 +32,17 @@ import spack.util.filesystem as fs
 import spack.util.link_tree
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
+from spack.active_environment import active_environment
 from spack.cmd.env import _env_create
 from spack.config import substitute_path_variables
-from spack.installer import PackageInstaller
+from spack.environment import depfile
 from spack.main import SpackCommand, SpackCommandError
+from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.stage import stage_prefix
 from spack.test.conftest import RepoBuilder
 from spack.traverse import traverse_nodes
+from spack.util import tty
 from spack.util.executable import Executable
 from spack.util.filesystem import readlink
 from spack.util.lang import dedupe
@@ -518,7 +517,7 @@ def test_env_install_all(install_mockery, mock_fetch):
     e.concretize()
     e.install_all(fake=True)
     spec = next(x for x in e.all_specs_generator() if x.name == "cmake-client")
-    assert spec.installed
+    assert spack.store.STORE.db.installed(spec)
 
 
 def test_env_install_single_spec(install_mockery, mock_fetch, installer_variant):
@@ -560,7 +559,7 @@ def test_env_install_include_concrete_env(
     test2_user_spec_hashes = [x.hash for x in test2.concretized_roots]
 
     for spec in combined.all_specs():
-        assert spec.installed
+        assert spack.store.STORE.db.installed(spec)
 
     assert test1_user_spec_hashes == [
         x.hash for x in combined.included_concretized_roots[test1.path]
@@ -1274,7 +1273,7 @@ spack:
     with pytest.raises(ValueError, match="does not exist"):
         ev.activate(ev.Environment(env_root))
 
-    assert ev.active_environment() is None
+    assert active_environment() is None
 
 
 def test_env_with_include_config_files_same_basename(
@@ -1864,7 +1863,7 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
 
     test = ev.read("test")
     # Save this spec to check later if it is still in the env
-    (mpileaks_hash,) = list(x for x, y in test.specs_by_hash.items() if y.name == "mpileaks")
+    (mpileaks_hash,) = [x for x, y in test.specs_by_hash.items() if y.name == "mpileaks"]
     user_specs_before = test.user_specs
     user_spec_hashes_before = {x.hash for x in test.concretized_roots}
 
@@ -1875,7 +1874,7 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
     assert {x.hash for x in test.concretized_roots} == user_spec_hashes_before
     assert test.user_specs.specs == user_specs_before.specs
     assert mpileaks_hash in test.specs_by_hash
-    assert not test.specs_by_hash[mpileaks_hash].installed
+    assert not spack.store.STORE.db.installed(test.specs_by_hash[mpileaks_hash])
 
 
 def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
@@ -2123,12 +2122,12 @@ def test_env_include_concrete_envs_lockfile():
     with open(combined.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-    assert set(
+    assert {
         entry["hash"] for entry in lockfile_as_dict[ev.lockfile_include_key][test1.path]["roots"]
-    ) == set(test1.specs_by_hash)
-    assert set(
+    } == set(test1.specs_by_hash)
+    assert {
         entry["hash"] for entry in lockfile_as_dict[ev.lockfile_include_key][test2.path]["roots"]
-    ) == set(test2.specs_by_hash)
+    } == set(test2.specs_by_hash)
 
 
 def test_env_include_concrete_add_env():
@@ -3651,9 +3650,7 @@ spack:
     assert spec.prefix not in contents
 
 
-def test_modules_exist_after_env_install(installed_environment, monkeypatch):
-    # Some caching issue
-    monkeypatch.setattr(spack.modules.tcl.TclConfiguration, "_registry", {})
+def test_modules_exist_after_env_install(installed_environment):
     with installed_environment(
         """
 spack:
@@ -3861,7 +3858,7 @@ def test_create_and_activate_managed(tmp_path: pathlib.Path):
         shell = env("activate", "--without-view", "--create", "--sh", "foo")
         active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
         assert str(tmp_path) in active_env_var
-        active_ev = ev.active_environment()
+        active_ev = active_environment()
         assert active_ev and "foo" == active_ev.name
         env("deactivate")
 
@@ -3998,8 +3995,8 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
         spec = e.matching_spec("libelf")
         install("--fake", f"/{spec.dag_hash()}")
     with ev.read("test") as e:
-        assert not e.matching_spec("libdwarf").installed
-        assert e.matching_spec("libelf").installed
+        assert not spack.store.STORE.db.installed(e.matching_spec("libdwarf"))
+        assert spack.store.STORE.db.installed(e.matching_spec("libelf"))
 
 
 @pytest.mark.parametrize("lockfile", ["v1", "v2", "v3"])
@@ -4133,7 +4130,7 @@ def test_read_legacy_lockfile_and_reconcretize(
     assert len(test.specs_by_hash) == 2
 
     expected_versions = set([Version("0.5"), Version("1.0")])
-    current_versions = set(s["dtbuild1"].version for s in test.specs_by_hash.values())
+    current_versions = {s["dtbuild1"].version for s in test.specs_by_hash.values()}
     assert current_versions == expected_versions
 
 

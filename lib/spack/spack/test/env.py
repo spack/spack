@@ -1026,7 +1026,7 @@ spack:
     with e.manifest.use_config():
         assert not spack.config.get("config:verify_ssl")
         python_reqs = spack.config.get("packages")["python"]["require"]
-        req_specs = set(x["spec"] for x in python_reqs)
+        req_specs = {x["spec"] for x in python_reqs}
         assert req_specs == set(["@3.11:"])
 
 
@@ -2170,3 +2170,20 @@ def test_unified_environment_with_mixed_compilers_and_fortran(tmp_path, config):
     assert mpich.satisfies("%fortran=gcc")
     assert openblas.satisfies("%c,fortran=gcc")
     assert mpich["fortran"].dag_hash() == openblas["fortran"].dag_hash()
+
+
+@pytest.mark.parametrize("enable_locks", [True, False])
+def test_environment_pickle_preserves_lock_state(enable_locks, tmp_path: pathlib.Path):
+    """Tests that an environment round-trips through pickle with its lock-enable state intact."""
+    with spack.config.override("config:locks", enable_locks):
+        env = ev.create_in_dir(tmp_path)
+    original_enabled = env.txlock.enabled
+
+    blob = pickle.dumps(env)
+
+    # Flip the global config, then unpickle: the rebuilt transaction lock must keep the state
+    # that was pickled, not the (now different) global one.
+    with spack.config.override("config:locks", not enable_locks):
+        restored = pickle.loads(blob)
+
+    assert restored.txlock.enabled == original_enabled

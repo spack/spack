@@ -35,9 +35,6 @@ import spack.environment
 import spack.environment as ev
 import spack.environment.environment
 import spack.error
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.colify
-import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.platforms
 import spack.solver.asp
@@ -45,6 +42,9 @@ import spack.spec
 import spack.util.environment
 import spack.util.lang
 import spack.util.lock
+import spack.util.tty.colify
+from spack.util import tty
+from spack.util.tty import color
 
 from .enums import ConfigScopePriority
 
@@ -225,10 +225,10 @@ class SpackArgumentParser(argparse.ArgumentParser):
 
         def add_subcommand_group(title, commands):
             """Add informational help group for a specific subcommand set."""
-            cmd_set = set(c for c in commands)
+            cmd_set = set(commands)
 
             # make a dict of commands of interest
-            cmds = dict((a.dest, a) for a in self.actions if a.dest in cmd_set)
+            cmds = {a.dest: a for a in self.actions if a.dest in cmd_set}
 
             # add commands to a group in order, and add the group
             group = argparse._ArgumentGroup(self, title=title)
@@ -387,7 +387,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
     def _check_value(self, action, value):
         # converted value must be one of the choices (if specified)
         if action.choices is not None and value not in action.choices:
-            cols = spack.llnl.util.tty.colify.colified(sorted(action.choices), indent=4, tty=True)
+            cols = spack.util.tty.colify.colified(sorted(action.choices), indent=4, tty=True)
             msg = "invalid choice: %r choose from:\n%s" % (value, cols)
             raise argparse.ArgumentError(action, msg)
 
@@ -818,9 +818,9 @@ def print_setup_info(*info):
     other_spack_instances = spack.config.get("upstreams") or {}
     for install_properties in other_spack_instances.values():
         upstream_module_roots = install_properties.get("modules", {})
-        upstream_module_roots = dict(
-            (k, v) for k, v in upstream_module_roots.items() if k in module_to_roots
-        )
+        upstream_module_roots = {
+            k: v for k, v in upstream_module_roots.items() if k in module_to_roots
+        }
         for module_type, root in upstream_module_roots.items():
             module_to_roots[module_type].append(root)
 
@@ -997,7 +997,7 @@ def _main(argv=None):
         # do not call activate here, as it has a lot of expensive function calls to deal
         # with mutation of spack.config.CONFIG -- but we are still building the config.
         env.manifest.prepare_config_scope()
-        spack.environment.environment._active_environment = env
+        spack.environment.environment.set_active_environment(env)
 
     # add the environment
     if env:
@@ -1039,7 +1039,7 @@ def _main(argv=None):
     # like `ConstraintAction` and `ConfigSetAction` happen at parse time.
     bootstrap_context = spack.util.lang.nullcontext()
     if args.bootstrap:
-        import spack.bootstrap as bootstrap  # avoid circular imports
+        from spack import bootstrap  # avoid circular imports
 
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
@@ -1132,7 +1132,7 @@ def main(argv=None):
         multiprocessing.set_start_method("forkserver")
     # When using the forkserver start method, preload the following modules to improve startup
     # time of child processes.
-    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.new_installer"])
+    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.installer"])
     try:
         g0, g1, g2 = gc.get_threshold()
         gc.set_threshold(50 * g0, g1, g2)

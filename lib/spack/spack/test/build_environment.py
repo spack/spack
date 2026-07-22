@@ -24,7 +24,7 @@ import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
 from spack.enums import Context
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.filesystem import HeaderList, LibraryList
@@ -421,7 +421,7 @@ def test_wrapper_variables(
         env_mods.apply_modifications()
 
         def normpaths(paths):
-            return list(os.path.normpath(p) for p in paths)
+            return [os.path.normpath(p) for p in paths]
 
         link_dir_var = os.environ["SPACK_LINK_DIRS"]
         assert normpaths(link_dir_var.split(":")) == normpaths(dep_lib_dirs)
@@ -482,16 +482,16 @@ dt-diamond-left:
     )
     # The external lib paths should be the last two entries of the list and
     # should not appear anywhere before the last two entries
-    assert set(os.path.normpath(x) for x in link_dirs[-2:]) == external_lib_paths
-    assert not (set(os.path.normpath(x) for x in link_dirs[:-2]) & external_lib_paths)
+    assert {os.path.normpath(x) for x in link_dirs[-2:]} == external_lib_paths
+    assert not ({os.path.normpath(x) for x in link_dirs[:-2]} & external_lib_paths)
 
 
-def test_parallel_false_is_not_propagating(default_mock_concretization):
+def test_parallel_false_is_not_propagating(config, mock_packages):
     """Test that parallel=False is not propagating to dependencies"""
     # a foobar=bar (parallel = False)
     # |
     # b (parallel =True)
-    s = default_mock_concretization("pkg-a foobar=bar")
+    s = spack.concretize.concretize_one("pkg-a foobar=bar")
 
     spack.build_environment.set_package_py_globals(s.package, context=Context.BUILD)
     assert s["pkg-a"].package.module.make_jobs == 1
@@ -611,13 +611,13 @@ def test_build_jobs_defaults():
 
 
 class TestModuleMonkeyPatcher:
-    def test_getting_attributes(self, default_mock_concretization):
-        s = default_mock_concretization("libelf")
+    def test_getting_attributes(self, config, mock_packages):
+        s = spack.concretize.concretize_one("libelf")
         module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
         assert module_wrapper.Libelf == s.package.module.Libelf
 
-    def test_setting_attributes(self, default_mock_concretization):
-        s = default_mock_concretization("libelf")
+    def test_setting_attributes(self, config, mock_packages):
+        s = spack.concretize.concretize_one("libelf")
         module = s.package.module
         module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
 
@@ -634,8 +634,8 @@ class TestModuleMonkeyPatcher:
             assert current_module.SOME_ATTRIBUTE == 1
 
 
-def test_effective_deptype_build_environment(default_mock_concretization):
-    s = default_mock_concretization("dttop")
+def test_effective_deptype_build_environment(config, mock_packages):
+    s = spack.concretize.concretize_one("dttop")
 
     #  [    ]  dttop@1.0                    #
     #  [b   ]      ^dtbuild1@1.0            # <- direct build dep
@@ -668,8 +668,8 @@ def test_effective_deptype_build_environment(default_mock_concretization):
     assert not expected_flags, f"Missing {expected_flags.keys()} from effective_deptypes"
 
 
-def test_effective_deptype_run_environment(default_mock_concretization):
-    s = default_mock_concretization("dttop")
+def test_effective_deptype_run_environment(config, mock_packages):
+    s = spack.concretize.concretize_one("dttop")
 
     #  [    ]  dttop@1.0                    #
     #  [b   ]      ^dtbuild1@1.0            # <- direct build-only dep is pruned
@@ -700,21 +700,21 @@ def test_effective_deptype_run_environment(default_mock_concretization):
     assert not expected_flags, f"Missing {expected_flags.keys()} from effective_deptypes"
 
 
-def test_monkey_patching_works_across_virtual(default_mock_concretization):
+def test_monkey_patching_works_across_virtual(config, mock_packages):
     """Assert that a monkeypatched attribute is found regardless we access through the
     real name or the virtual name.
     """
-    s = default_mock_concretization("mpileaks ^mpich")
+    s = spack.concretize.concretize_one("mpileaks ^mpich")
     s["mpich"].foo = "foo"
     assert s["mpich"].foo == "foo"
     assert s["mpi"].foo == "foo"
 
 
-def test_clear_compiler_related_runtime_variables_of_build_deps(default_mock_concretization):
+def test_clear_compiler_related_runtime_variables_of_build_deps(config, mock_packages):
     """Verify that Spack drops CC, CXX, FC and F77 from the dependencies related build environment
     variable changes if they are set in setup_run_environment. Spack manages those variables
     elsewhere."""
-    s = default_mock_concretization("build-env-compiler-var-a")
+    s = spack.concretize.concretize_one("build-env-compiler-var-a")
     ctx = spack.build_environment.SetupContext(s, context=Context.BUILD)
     result = {}
     ctx.get_env_modifications().apply_modifications(result)
@@ -772,12 +772,12 @@ def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler
     reason="tests check specific x86_64 uarch flags",
 )
 @pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")
-def test_optimization_flags_are_using_node_target(default_mock_concretization, monkeypatch):
+def test_optimization_flags_are_using_node_target(config, mock_packages, monkeypatch):
     """Tests that we are using the target on the node to be compiled to retrieve the uarch
     specific flags, and not the target of the compiler.
     """
-    compiler_wrapper_pkg = default_mock_concretization("compiler-wrapper target=core2").package
-    mpileaks = default_mock_concretization("mpileaks target=x86_64")
+    compiler_wrapper_pkg = spack.concretize.concretize_one("compiler-wrapper target=core2").package
+    mpileaks = spack.concretize.concretize_one("mpileaks target=x86_64")
 
     env = EnvironmentModifications()
     compiler_wrapper_pkg.setup_dependent_build_environment(env, mpileaks)

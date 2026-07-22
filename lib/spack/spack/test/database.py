@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Check the database is functioning properly, both in memory and in its file."""
 
-import contextlib
 import datetime
 import functools
 import gzip
@@ -41,62 +40,13 @@ import spack.util.filesystem as fs
 import spack.util.lock as lk
 import spack.version as vn
 from spack.enums import InstallRecordStatus
-from spack.installer import PackageInstaller
-from spack.llnl.util.tty.colify import colify
+from spack.old_installer import PackageInstaller
 from spack.schema.database_index import schema
-from spack.test.conftest import RepoBuilder
+from spack.test.conftest import RepoBuilder, writable
 from spack.util.executable import Executable
+from spack.util.tty.colify import colify
 
 pytestmark = pytest.mark.db
-
-
-@contextlib.contextmanager
-def writable(database):
-    """Allow a database to be written inside this context manager."""
-    old_lock, old_is_upstream = database.lock, database.is_upstream
-    db_root = pathlib.Path(database.root)
-
-    try:
-        # this is safe on all platforms during tests (tests get their own tmpdirs)
-        database.lock = lk.Lock(str(database._lock_path), enable=False)
-        database.is_upstream = False
-        db_root.chmod(mode=0o755)
-        with database.write_transaction():
-            yield
-    finally:
-        db_root.chmod(mode=0o555)
-        database.lock = old_lock
-        database.is_upstream = old_is_upstream
-
-
-@pytest.fixture()
-def upstream_and_downstream_db(tmp_path: pathlib.Path, gen_mock_layout):
-    """Fixture for a pair of stores: upstream and downstream.
-
-    Upstream API prohibits writing to an upstream, so we also return a writable version
-    of the upstream DB for tests to use.
-
-    """
-    mock_db_root = tmp_path / "mock_db_root"
-    mock_db_root.mkdir()
-    mock_db_root.chmod(0o555)
-
-    upstream_db = spack.database.Database(
-        str(mock_db_root), is_upstream=True, layout=gen_mock_layout("a")
-    )
-    with writable(upstream_db):
-        upstream_db._write()
-
-    downstream_db_root = tmp_path / "mock_downstream_db_root"
-    downstream_db_root.mkdir()
-    downstream_db_root.chmod(0o755)
-
-    downstream_db = spack.database.Database(
-        str(downstream_db_root), upstream_dbs=[upstream_db], layout=gen_mock_layout("b")
-    )
-    downstream_db._write()
-
-    yield upstream_db, downstream_db
 
 
 @pytest.mark.parametrize(
@@ -125,33 +75,6 @@ def test_query_by_install_tree(
 
     specs = down_db.query(install_tree=install_tree.format(u=up_db.root, d=down_db.root))
     assert {s.name for s in specs} == set(result)
-
-
-def test_spec_installed_upstream(
-    upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
-):
-    """Test whether Spec.installed_upstream() works."""
-    upstream_db, downstream_db = upstream_and_downstream_db
-
-    # a known installed spec should say that it's installed
-    with spack.repo.use_repositories(mock_custom_repository):
-        spec = spack.concretize.concretize_one("pkg-c")
-        assert not spec.installed
-        assert not spec.installed_upstream
-
-        with writable(upstream_db):
-            upstream_db.add(spec)
-        upstream_db._read()
-
-        monkeypatch.setattr(spack.store.STORE, "db", downstream_db)
-        assert spec.installed
-        assert spec.installed_upstream
-        assert spec.copy().installed
-
-    # an abstract spec should say it's not installed
-    spec = spack.spec.Spec("not-a-real-package")
-    assert not spec.installed
-    assert not spec.installed_upstream
 
 
 @pytest.mark.usefixtures("config")
@@ -225,11 +148,11 @@ def test_missing_upstream_build_dep(
         assert upstream
         assert not record.installed
 
-        assert y.installed
-        assert y.installed_upstream
+        assert downstream_db.installed(y)
+        assert downstream_db.installed_upstream(y)
 
-        assert not z_y.installed
-        assert not z_y.installed_upstream
+        assert not downstream_db.installed(z_y)
+        assert not downstream_db.installed_upstream(z_y)
 
         # Now add z to downstream with non-triggering prefix
         # and make sure z *is* installed
@@ -238,8 +161,8 @@ def test_missing_upstream_build_dep(
         z_new.set_prefix(str(tmp_path / "z-new"))
         downstream_db.add(z_new)
 
-        assert z_new.installed
-        assert not z_new.installed_upstream
+        assert downstream_db.installed(z_new)
+        assert not downstream_db.installed_upstream(z_new)
 
 
 def test_removed_upstream_dep(
@@ -895,11 +818,11 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
     # not be considered installed until it is added to the database by
     # the installer with install().
     s = spack.concretize.concretize_one("externaltool@0.9")
-    assert not s.installed
+    assert not spack.store.STORE.db.installed(s)
 
-    # Now install the external package and check again the `installed` property
+    # Now install the external package and check again the `installed` status
     PackageInstaller([s.package], fake=True, explicit=True).install()
-    assert s.installed
+    assert spack.store.STORE.db.installed(s)
 
 
 @pytest.mark.regression("11118")
@@ -929,7 +852,7 @@ def test_old_external_entries_prefix(mutable_database: spack.database.Database):
 def test_uninstall_by_spec(mutable_database):
     with mutable_database.write_transaction():
         for spec in mutable_database.query():
-            if spec.installed:
+            if mutable_database.installed(spec):
                 spack.package_base.PackageBase.uninstall_by_spec(spec, force=True)
             else:
                 mutable_database.remove(spec)
@@ -950,7 +873,7 @@ def test_query_unused_specs(mutable_database):
 
     def check_unused(roots, deptype, expected):
         unused = spack.store.STORE.db.unused_specs(root_hashes=roots, deptype=deptype)
-        assert set(u.name for u in unused) == set(expected)
+        assert {u.name for u in unused} == set(expected)
 
     default_dt = dt.LINK | dt.RUN
     check_unused(None, default_dt, ["cmake", "gcc", "compiler-wrapper"])
@@ -1219,7 +1142,7 @@ def test_db_all_hashes(database):
 
     # and make sure the hashes match
     with database.read_transaction():
-        assert set(s.dag_hash() for s in database.query()) == set(hashes)
+        assert {s.dag_hash() for s in database.query()} == set(hashes)
 
 
 def test_consistency_of_dependents_upon_remove(mutable_database):
@@ -1248,8 +1171,8 @@ def test_query_installed_when_package_unknown(database, repo_builder: RepoBuilde
         for s in specs:
             # Assert that we can query the installation methods even though we
             # don't have the package.py available
-            assert s.installed
-            assert not s.installed_upstream
+            assert database.installed(s)
+            assert not database.installed_upstream(s)
             with pytest.raises(spack.repo.UnknownNamespaceError):
                 s.package
 
@@ -1281,13 +1204,11 @@ def test_database_construction_doesnt_use_globals(
     assert os.path.exists(db.database_directory)
 
 
-def test_database_read_works_with_trailing_data(
-    tmp_path: pathlib.Path, default_mock_concretization
-):
+def test_database_read_works_with_trailing_data(tmp_path: pathlib.Path, config, mock_packages):
     # Populate a database
     root = str(tmp_path)
     db = spack.database.Database(root, layout=None)
-    spec = default_mock_concretization("pkg-a")
+    spec = spack.concretize.concretize_one("pkg-a")
     db.add(spec)
     specs_in_db = db.query_local()
     assert spec in specs_in_db
@@ -1412,3 +1333,31 @@ def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
     assert len(specs) == 8
     assert len([x for x in specs if x.external]) == 2
     assert len([x for x in specs if x.original_spec_format() < 5]) == 8
+
+
+def test_database_installed(
+    upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
+):
+    """Test the owner-side Database.installed / installed_upstream API."""
+    upstream_db, downstream_db = upstream_and_downstream_db
+
+    with spack.repo.use_repositories(mock_custom_repository):
+        spec = spack.concretize.concretize_one("pkg-c")
+
+        # a concrete but not-yet-installed spec is not installed anywhere
+        assert not downstream_db.installed(spec)
+        assert not downstream_db.installed_upstream(spec)
+
+        with writable(upstream_db):
+            upstream_db.add(spec)
+        upstream_db._read()
+
+        # once installed upstream, both queries report it, and copies match
+        assert downstream_db.installed(spec)
+        assert downstream_db.installed_upstream(spec)
+        assert downstream_db.installed(spec.copy())
+
+    # an abstract spec is never installed
+    abstract = spack.spec.Spec("not-a-real-package")
+    assert not downstream_db.installed(abstract)
+    assert not downstream_db.installed_upstream(abstract)

@@ -21,7 +21,6 @@ import spack.binary_distribution
 import spack.builder
 import spack.config as cfg
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.mirrors.mirror
 import spack.paths
@@ -38,8 +37,9 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
-from spack.llnl.util.tty.color import cescape, colorize
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
+from spack.util import tty
+from spack.util.tty.color import cescape, colorize
 
 from .common import (
     IS_WINDOWS,
@@ -1286,9 +1286,7 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
         try:
             with open(file_path, "w", encoding="utf-8") as fd:
                 syaml.dump(broken_spec_details, fd)
-            web_util.push_to_url(
-                file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
-            )
+            web_util.push_to_url(file_path, url, keep_original=False, content_type="text/plain")
         except Exception as err:
             # If there is an S3 error (e.g., access denied or connection
             # error), the first non boto-specific class in the exception

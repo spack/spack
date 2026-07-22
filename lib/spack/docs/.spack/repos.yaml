@@ -1,3 +1,4 @@
 repos:
   builtin:
     destination: ./spack-packages
+    git: https://github.com/spack/spack-packages

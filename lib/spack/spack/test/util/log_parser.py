@@ -6,9 +6,9 @@ import io
 import pathlib
 import re
 
-from spack.llnl.util.tty.color import color_when
 from spack.util.ctest_log_parser import CTestLogParser, LogEvent, _optimize_regexes
 from spack.util.log_parse import make_log_context
+from spack.util.tty.color import color_when
 
 
 def test_log_parser(tmp_path: pathlib.Path):

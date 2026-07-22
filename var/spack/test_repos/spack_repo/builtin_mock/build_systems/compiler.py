@@ -9,10 +9,10 @@ import sys
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import spack
-import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.util.executable
 from spack.package import CompilerError
+from spack.util import tty
 from spack.util.lang import classproperty, memoized
 
 # Local "type" for type hints

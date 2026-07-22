@@ -25,7 +25,8 @@ import spack.mirrors.mirror
 import spack.spec
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.installer import PackageInstaller
+from spack.active_environment import active_environment
+from spack.old_installer import PackageInstaller
 from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,
@@ -285,7 +286,7 @@ def test_buildcache_sync(
 
         manifest_file = str(tmp_path / "manifest_dest.json")
         with open(manifest_file, "w", encoding="utf-8") as fd:
-            test_env = ev.active_environment()
+            test_env = active_environment()
             assert test_env is not None
 
             manifest: Dict[str, Dict[str, str]] = {}
@@ -419,10 +420,11 @@ def test_correct_specs_are_pushed(
     expected,
     tmp_path: pathlib.Path,
     monkeypatch,
-    default_mock_concretization,
+    config,
+    mock_packages,
     temporary_store,
 ):
-    spec = default_mock_concretization("dttop")
+    spec = spack.concretize.concretize_one("dttop")
     PackageInstaller([spec.package], explicit=True, fake=True).install()
     slash_hash = f"/{spec.dag_hash()}"
 

@@ -96,7 +96,7 @@ class FileCache:
 
     """
 
-    def __init__(self, root: Union[str, pathlib.Path], timeout=120):
+    def __init__(self, root: Union[str, pathlib.Path], timeout=120, *, enable_lock: bool = True):
         """Create a file cache object.
 
         This will create the cache directory if it does not exist yet.
@@ -107,6 +107,8 @@ class FileCache:
             timeout: when there is contention among multiple Spack processes
                 for cache files, this specifies how long Spack should wait
                 before assuming that there is a deadlock.
+
+            enable_lock: if False, all lock operations are no-ops.
         """
         if isinstance(root, str):
             root = pathlib.Path(root)
@@ -116,6 +118,7 @@ class FileCache:
         self.lock_path = self.root / ".lock"
         self._locks: Dict[str, Lock] = {}
         self.lock_timeout = timeout
+        self._enable_lock = enable_lock
 
     def destroy(self):
         """Remove all files under the cache root."""
@@ -149,6 +152,7 @@ class FileCache:
                 length=length,
                 default_timeout=self.lock_timeout,
                 desc=f"key:{key_str}",
+                enable=self._enable_lock,
             )
         return self._locks[key_str]
 

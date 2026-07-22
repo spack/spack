@@ -10,14 +10,14 @@ import spack.binary_distribution
 import spack.cmd
 import spack.compilers.config
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import colorize
 from spack.spec import Spec
+from spack.util import tty
 from spack.util.lang import index_by
+from spack.util.tty.colify import colify
+from spack.util.tty.color import colorize
 
 description = "manage compilers"
 section = "config"
@@ -149,7 +149,9 @@ def compiler_info(args):
             )
             continue
 
-        print(f"{c.tree(recurse_dependencies=False, status_fn=spack.spec.Spec.install_status)}")
+        print(
+            f"{c.tree(recurse_dependencies=False, status_fn=spack.store.STORE.db.install_status)}"
+        )
         print(f"  prefix: {c.prefix}")
         print("  compilers:")
         for language, exe in exes.items():
@@ -189,7 +191,7 @@ def compiler_list(args):
     status_fn = (
         spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
         if args.remote
-        else spack.spec.Spec.install_status
+        else spack.store.STORE.db.install_status
     )
 
     # If there are no compilers in any scope, and we're outputting to a tty, give a
@@ -212,7 +214,7 @@ def compiler_list(args):
     # Python 3
     convert_str = lambda tuple_container: tuple(str(x) if x else "" for x in tuple_container)
 
-    index_str_keys = list((convert_str(x), y) for x, y in index.items())
+    index_str_keys = [(convert_str(x), y) for x, y in index.items()]
     ordered_sections = sorted(index_str_keys, key=lambda item: item[0])
     for i, (key, compilers) in enumerate(ordered_sections):
         if i >= 1:

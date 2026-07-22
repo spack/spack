@@ -10,19 +10,18 @@ import spack.caches
 import spack.cmd
 import spack.concretize
 import spack.config
-import spack.environment as ev
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.colify as colify
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.repo
 import spack.spec
-import spack.util.lang as lang
 import spack.util.parallel
 import spack.util.web as web_util
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.util import lang, tty
 from spack.util.string import comma_or
+from spack.util.tty import colify
 
 description = "manage mirrors (source and binary)"
 section = "config"
@@ -563,7 +562,7 @@ class IncludeFilter:
 
 
 def concrete_specs_from_environment():
-    env = ev.active_environment()
+    env = active_environment()
     assert env, "an active environment is required"
     mirror_specs = env.all_specs()
     mirror_specs = filter_externals(mirror_specs)
@@ -656,9 +655,9 @@ def mirror_create(args):
 def _specs_to_mirror(args):
     include_fn = IncludeFilter(args)
 
-    if args.all and not ev.active_environment():
+    if args.all and not active_environment():
         mirror_specs = all_specs_with_all_versions()
-    elif args.all and ev.active_environment():
+    elif args.all and active_environment():
         mirror_specs = concrete_specs_from_environment()
     else:
         mirror_specs = concrete_specs_from_user(args)

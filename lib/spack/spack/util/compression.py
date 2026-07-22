@@ -12,7 +12,7 @@ from typing import Any, BinaryIO, Callable, Dict, List, Optional
 
 import spack.util.url
 from spack.error import SpackError
-from spack.llnl.util import tty
+from spack.util import tty
 from spack.util.executable import CommandNotFoundError, which
 
 try:

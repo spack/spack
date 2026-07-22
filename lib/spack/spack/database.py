@@ -54,7 +54,6 @@ except ImportError:
 
 import spack.deptypes as dt
 import spack.hash_types as ht
-import spack.llnl.util.tty as tty
 import spack.spec
 import spack.traverse as tr
 import spack.util.filesystem as fs
@@ -67,6 +66,7 @@ from spack.directory_layout import (
     InconsistentInstallDirectoryError,
 )
 from spack.error import SpackError
+from spack.util import tty
 from spack.util.crypto import bit_length
 from spack.util.socket import _gethostname
 
@@ -279,8 +279,8 @@ class LockConfiguration(NamedTuple):
     """
 
     enable: bool
-    database_timeout: Optional[int]
-    package_timeout: Optional[int]
+    database_timeout: Optional[float]
+    package_timeout: Optional[float]
 
 
 #: Configure a database to avoid using locks
@@ -332,9 +332,10 @@ def failures_lock_path(root_dir: Union[str, pathlib.Path]) -> pathlib.Path:
 class SpecLocker:
     """Manages acquiring and releasing read or write locks on concrete specs."""
 
-    def __init__(self, lock_path: Union[str, pathlib.Path], default_timeout: Optional[float]):
+    def __init__(self, lock_path: Union[str, pathlib.Path], lock_cfg: LockConfiguration):
         self.lock_path = pathlib.Path(lock_path)
-        self.default_timeout = default_timeout
+        self.default_timeout = lock_cfg.package_timeout
+        self._enable = lock_cfg.enable
 
         # Maps (spec.dag_hash(), spec.name) to the corresponding lock object
         self.locks: Dict[Tuple[str, str], lk.Lock] = {}
@@ -369,6 +370,7 @@ class SpecLocker:
             length=1,
             default_timeout=timeout,
             desc=spec.name,
+            enable=self._enable,
         )
 
     def has_lock(self, spec: "spack.spec.Spec") -> bool:
@@ -428,11 +430,11 @@ class FailureTracker:
     #: File for locking particular concrete spec hashes
     locker: SpecLocker
 
-    def __init__(self, root_dir: Union[str, pathlib.Path], default_timeout: Optional[float]):
+    def __init__(self, root_dir: Union[str, pathlib.Path], lock_cfg: LockConfiguration):
         #: Ensure a persistent location for dealing with parallel installation
         #: failures (e.g., across near-concurrent processes).
         self.dir = pathlib.Path(root_dir) / _DB_DIRNAME / "failures"
-        self.locker = SpecLocker(failures_lock_path(root_dir), default_timeout=default_timeout)
+        self.locker = SpecLocker(failures_lock_path(root_dir), lock_cfg=lock_cfg)
 
     def _ensure_parent_directories(self) -> None:
         """Ensure that parent directories of the FailureTracker exist.
@@ -683,9 +685,7 @@ class Database:
         self._ensure_parent_directories()
 
         # map from per-spec hash code to installation record.
-        installs = dict(
-            (k, v.to_dict(include_fields=self.record_fields)) for k, v in self._data.items()
-        )
+        installs = {k: v.to_dict(include_fields=self.record_fields) for k, v in self._data.items()}
 
         # database includes installation list and version.
 
@@ -1335,6 +1335,40 @@ class Database:
         _, record = self.query_by_spec_hash(key)
         return record
 
+    def installed(self, spec: "spack.spec.Spec") -> bool:
+        """Return whether the spec is installed, locally or in an upstream."""
+        if not spec.concrete:
+            return False
+        try:
+            return self.get_record(spec).installed
+        except KeyError:
+            return False
+
+    def installed_upstream(self, spec: "spack.spec.Spec") -> bool:
+        """Return whether the spec is installed in an upstream database."""
+        if not spec.concrete:
+            return False
+        upstream, record = self.query_by_spec_hash(spec.dag_hash())
+        return bool(upstream and record and record.installed)
+
+    def install_status(self, spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":
+        """Return the installation status of a spec (helper for tree display)."""
+        if not spec.concrete:
+            return spack.spec.InstallStatus.absent
+
+        if spec.external:
+            return spack.spec.InstallStatus.external
+
+        upstream, record = self.query_by_spec_hash(spec.dag_hash())
+        if not record:
+            return spack.spec.InstallStatus.absent
+        elif upstream and record.installed:
+            return spack.spec.InstallStatus.upstream
+        elif record.installed:
+            return spack.spec.InstallStatus.installed
+        else:
+            return spack.spec.InstallStatus.missing
+
     def _decrement_ref_count(self, spec: "spack.spec.Spec") -> None:
         key = spec.dag_hash()
 
@@ -1817,7 +1851,7 @@ class Database:
                 )
             )
 
-        results = list(local_results) + list(x for x in upstream_results if x not in local_results)
+        results = list(local_results) + [x for x in upstream_results if x not in local_results]
         results.sort()  # type: ignore[call-arg,call-overload]
         return results
 
@@ -1874,7 +1908,7 @@ class Database:
 
         with self.read_transaction():
             roots = [rec.spec for key, rec in self._data.items() if root(key, rec)]
-            needed = set(id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype))
+            needed = {id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype)}
             return [
                 rec.spec
                 for rec in self._data.values()

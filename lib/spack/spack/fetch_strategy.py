@@ -43,10 +43,8 @@ from typing import Callable, List, Mapping, Optional, Type
 
 import spack.config
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.oci.opener
 import spack.util.archive
-import spack.util.crypto as crypto
 import spack.util.executable
 import spack.util.filesystem as fs
 import spack.util.git
@@ -54,6 +52,7 @@ import spack.util.url
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
+from spack.util import crypto, tty
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
 from spack.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
@@ -1526,7 +1525,7 @@ def _check_version_attributes(fetcher, pkg, version):
     This assumes that we have already determined the fetcher for the
     specific version using ``for_package_version()``
     """
-    all_optionals = set(a for s in all_strategies for a in s.optional_attrs)
+    all_optionals = {a for s in all_strategies for a in s.optional_attrs}
 
     args = pkg.versions[version]
     extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr, "no_cache"])

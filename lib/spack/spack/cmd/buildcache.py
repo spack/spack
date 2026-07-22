@@ -27,14 +27,15 @@ import spack.util.parallel
 import spack.util.timer as timer_mod
 import spack.util.web as web_util
 from spack import traverse
+from spack.active_environment import active_environment
 from spack.binary_distribution import BINARY_INDEX
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
-from spack.llnl.util import tty
-from spack.llnl.util.tty import colify
 from spack.spec import Spec, save_dependency_specfiles
+from spack.util import tty
 from spack.util.lang import elide_list, stable_partition
 from spack.util.string import plural
+from spack.util.tty import colify
 
 from ..buildcache_migrate import migrate
 from ..buildcache_prune import prune_buildcache
@@ -400,7 +401,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
 def _matching_specs(specs: List[Spec]) -> List[Spec]:
     """Disambiguate specs and return a list of matching specs"""
     return [
-        spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=InstallRecordStatus.ANY)
+        spack.cmd.disambiguate_spec(s, active_environment(), installed=InstallRecordStatus.ANY)
         for s in specs
     ]
 
@@ -550,8 +551,10 @@ def push_fn(args):
     # push installed package in best effort mode.
     failed: List[Tuple[Spec, BaseException]] = []
     with spack.store.STORE.db.read_transaction():
-        if any(not s.installed for s in specs):
-            specs, not_installed = stable_partition(specs, lambda s: s.installed)
+        if any(not spack.store.STORE.db.installed(s) for s in specs):
+            specs, not_installed = stable_partition(
+                specs, lambda s: spack.store.STORE.db.installed(s)
+            )
             if args.fail_fast and not args.allow_missing:
                 raise PackagesAreNotInstalledError(not_installed)
             elif args.allow_missing:
@@ -661,7 +664,7 @@ def keys_fn(args):
     if args.mirrors:
         mirror_map = dict([(m.name, m) for m in args.mirrors])
 
-    spack.binary_distribution.get_keys(
+    spack.binary_distribution.trust_keys(
         args.yes_to_all, args.install, args.trust, args.force, mirrors=mirror_map
     )
 
@@ -1095,7 +1098,7 @@ def check_index_fn(args):
         for spec_manifest in manifest_files:
             # Spec manifests have a naming format
             # <name>-<version>-<hash>.spec.manifest.json
-            spec_hash = spec_manifest.rsplit("-", 1)[1].split(".", 1)[0]
+            spec_hash = URLBuildcacheEntry.hash_from_manifest_name(spec_manifest)
             if checking_view_index and spec_hash not in index_hash_list:
                 continue
 

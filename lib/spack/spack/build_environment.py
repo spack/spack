@@ -68,7 +68,6 @@ import spack.compilers.libraries
 import spack.config
 import spack.deptypes as dt
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.multimethod
 import spack.package_base
 import spack.paths
@@ -84,7 +83,7 @@ from spack import traverse
 from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
-from spack.llnl.util.tty.color import cescape, colorize
+from spack.util import tty
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
@@ -101,6 +100,7 @@ from spack.util.filesystem import join_path, symlink
 from spack.util.lang import dedupe, stable_partition
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.string import plural
+from spack.util.tty.color import cescape, colorize
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -363,6 +363,12 @@ def clean_environment():
         "FCLIBS",  # Fortran variables
         "LDFLAGS",
         "LIBS",  # linker variables
+        "CUDAFLAGS",
+        "CUDA_PATH",
+        "CUDACXX",
+        "CUDAHOSTCXX",
+        "CUDAARCHS",
+        "CUDA_NVCC_EXECUTABLE",  # CUDA variables
     ]
     for v in build_system_vars:
         env.unset(v)
@@ -497,7 +503,7 @@ def set_wrapper_variables(pkg, env):
         env.set("CCACHE_DISABLE", "1")
 
     # Gather information about various types of dependencies
-    rpath_hashes = set(s.dag_hash() for s in get_rpath_deps(pkg))
+    rpath_hashes = {s.dag_hash() for s in get_rpath_deps(pkg)}
     link_deps = pkg.spec.traverse(root=False, order="topo", deptype=dt.LINK)
     external_link_deps, nonexternal_link_deps = stable_partition(link_deps, lambda d: d.external)
 
@@ -840,7 +846,7 @@ class EnvironmentVisitor:
     def __init__(self, *roots: spack.spec.Spec, context: Context):
         # For the roots (well, marked specs) we follow different edges
         # than for their deps, depending on the context.
-        self.root_hashes = set(s.dag_hash() for s in roots)
+        self.root_hashes = {s.dag_hash() for s in roots}
 
         if context == Context.BUILD:
             # Drop direct run deps in build context
@@ -985,7 +991,7 @@ class SetupContext:
         self.external: List[Tuple[spack.spec.Spec, UseMode]]
         self.nonexternal: List[Tuple[spack.spec.Spec, UseMode]]
         # Reverse so we go from leaf to root
-        self.nodes_in_subdag = set(id(s) for s, _ in specs_with_type)
+        self.nodes_in_subdag = {id(s) for s, _ in specs_with_type}
 
         # Split into non-external and external, maintaining topo order per group.
         self.external, self.nonexternal = stable_partition(
@@ -1135,7 +1141,7 @@ def _setup_pkg_and_run(
 
     ``_setup_pkg_and_run`` is called by the child process created in
     ``start_build_process()``, and its main job is to run ``function()`` on behalf of
-    some Spack installation (see :ref:`spack.installer.PackageInstaller._complete_task`).
+    some Spack installation (see :ref:`spack.old_installer.PackageInstaller._complete_task`).
 
     The child process is passed a ``write_pipe``, on which it's expected to send one of
     the following:

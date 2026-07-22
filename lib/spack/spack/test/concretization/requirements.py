@@ -8,7 +8,7 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.error
-import spack.installer
+import spack.old_installer
 import spack.package_base
 import spack.paths
 import spack.platforms
@@ -19,8 +19,9 @@ import spack.store
 import spack.util.spack_yaml as syaml
 import spack.version
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
+from spack.solver.requirements import RequirementParser
 from spack.solver.reuse import spec_filter_from_packages_yaml
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
@@ -319,7 +320,7 @@ def test_require_hash(mock_fetch, install_mockery, concretize_scope, test_repo):
     s1 = spack.concretize.concretize_one("x@1.1")
     s2 = spack.concretize.concretize_one("x@1.0")
 
-    builder = spack.installer.PackageInstaller([s1.package, s2.package], fake=True)
+    builder = spack.old_installer.PackageInstaller([s1.package, s2.package], fake=True)
     builder.install()
 
     conf_str = f"""\
@@ -1663,3 +1664,24 @@ packages:
     # With clang as compiler, condition does not fire -> default highest version @2.3
     s_clang = spack.concretize.concretize_one("multivalue-variant %clang")
     assert s_clang.satisfies("@2.3 %c=clang"), f"expected @2.3 with clang, got {s_clang.version}"
+
+
+@pytest.mark.regression("52636")
+def test_compiler_in_all_from_internal_scope_warns(mock_packages):
+    """Tests that building a warning on an InternalConfigScope doesn't raise because
+    there's no "line" attribute.
+    """
+    scope = spack.config.InternalConfigScope(
+        "env:groups:libs", {"packages": {"all": {"require": ["%gcc"]}}}
+    )
+    config = spack.config.Configuration()
+    config.push_scope(scope)
+    parser = RequirementParser(config)
+
+    require = config.get("packages:all:require")
+    # The mark on the requirement string has a name but no line number.
+    mark = syaml.get_mark_from_yaml_data(require[0])
+    assert mark is not None and mark.line is None
+
+    with pytest.warns(UserWarning, match="applies a dependency constraint to all packages"):
+        parser._maybe_warn_compiler_in_all(require, "require")

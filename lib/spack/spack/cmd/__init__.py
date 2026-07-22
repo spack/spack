@@ -19,21 +19,22 @@ import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.hash_lookup
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.spec
 import spack.spec_parser
 import spack.store
-import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.string
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import colorize
+from spack import traverse
+from spack.active_environment import active_environment
+from spack.util import tty
 from spack.util.filesystem import join_path
 from spack.util.lang import attr_setdefault, index_by
+from spack.util.tty.colify import colify
+from spack.util.tty.color import colorize
 
 from ..enums import InstallRecordStatus
 
@@ -256,7 +257,7 @@ def matching_spec_from_env(spec):
     If no matching spec is found in the environment (or if no environment is
     active), this will return the given spec but concretized.
     """
-    env = ev.active_environment()
+    env = active_environment()
     if env:
         return env.matching_spec(spec) or spack.concretize.concretize_one(spec)
     else:
@@ -271,7 +272,7 @@ def matching_specs_from_env(specs):
     matching spec is found, this will return the given spec but concretized in the
     context of the active environment and other given specs, with unification rules applied.
     """
-    env = ev.active_environment()
+    env = active_environment()
     spec_pairs = [(spec, env.matching_spec(spec) if env else None) for spec in specs]
     additional_concrete_specs = (
         [(concrete, concrete) for _, concrete in env.concretized_specs()] if env else []
@@ -366,7 +367,7 @@ def buildcache_status_fn(
     """
 
     def _status_fn(spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":
-        status = spec.install_status()
+        status = spack.store.STORE.db.install_status(spec)
         if (
             status in (spack.spec.InstallStatus.absent, spack.spec.InstallStatus.missing)
             and spec.dag_hash() in available_hashes
@@ -674,7 +675,7 @@ def require_active_env(parser):
     Returns:
         (spack.environment.Environment): the active environment
     """
-    env = ev.active_environment()
+    env = active_environment()
     if env:
         return env
     parser.error(

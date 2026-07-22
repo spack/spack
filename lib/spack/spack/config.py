@@ -44,8 +44,10 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, U
 
 from spack.vendor import jsonschema
 
+import spack
 import spack.error
 import spack.paths
+import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.cdash
@@ -72,8 +74,7 @@ import spack.util.hash
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.llnl.util import tty
-from spack.util import filesystem, lang
+from spack.util import filesystem, lang, tty
 from spack.util.cpus import cpus_available
 from spack.util.spack_yaml import get_mark_from_yaml_data
 
@@ -273,14 +274,8 @@ class DirectoryConfigScope(ConfigScope):
 
         try:
             filesystem.mkdirp(self.path)
-            fd, tmp = tempfile.mkstemp(dir=self.path, suffix=".tmp")
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as f:
-                    syaml.dump_config(data, stream=f, default_flow_style=False)
-                filesystem.rename(tmp, filename)
-            except Exception:
-                os.unlink(tmp)
-                raise
+            with filesystem.write_tmp_and_move(filename, encoding="utf-8") as f:
+                syaml.dump_config(data, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
 
@@ -416,16 +411,9 @@ class SingleFileScope(ConfigScope):
 
         validate(data_to_write, self.schema)
         try:
-            parent = os.path.dirname(self.path)
-            filesystem.mkdirp(parent)
-            fd, tmp = tempfile.mkstemp(dir=parent, suffix=".tmp")
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as f:
-                    syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
-                filesystem.rename(tmp, self.path)
-            except Exception:
-                os.unlink(tmp)
-                raise
+            filesystem.mkdirp(os.path.dirname(self.path))
+            with filesystem.write_tmp_and_move(self.path, encoding="utf-8") as f:
+                syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
@@ -526,6 +514,11 @@ class Configuration:
     def __init__(self) -> None:
         self.scopes = lang.PriorityOrderedMapping()
         self.updated_scopes_by_section: Dict[str, List[ConfigScope]] = defaultdict(list)
+        # Path of the active environment, used for the "$env" substitution. It is set
+        # when an environment is activated and unset when it is deactivated, so that
+        # substitutions do not need to import spack.environment (avoiding a circular
+        # import).
+        self.env_path: Optional[str] = None
 
     def highest(self) -> ConfigScope:
         """Scope with the highest precedence"""
@@ -1009,26 +1002,22 @@ def override(
     an internal config scope for it and push/pop that scope.
 
     """
+    path: Optional[str]
     if isinstance(path_or_scope, ConfigScope):
-        overrides = path_or_scope
-        CONFIG.push_scope(path_or_scope, priority=None)
+        overrides, path = path_or_scope, None
     else:
-        base_name = _OVERRIDES_BASE_NAME
         # Ensure the new override gets a unique scope name
-        current_overrides = [s.name for s in CONFIG.matching_scopes(rf"^{base_name}")]
-        num_overrides = len(current_overrides)
-        while True:
-            scope_name = f"{base_name}{num_overrides}"
-            if scope_name in current_overrides:
-                num_overrides += 1
-            else:
-                break
+        existing = {s.name for s in CONFIG.matching_scopes(rf"^{_OVERRIDES_BASE_NAME}")}
+        num_overrides = len(existing)
+        while f"{_OVERRIDES_BASE_NAME}{num_overrides}" in existing:
+            num_overrides += 1
+        overrides = InternalConfigScope(f"{_OVERRIDES_BASE_NAME}{num_overrides}")
+        path = path_or_scope
 
-        overrides = InternalConfigScope(scope_name)
-        CONFIG.push_scope(overrides, priority=None)
-        CONFIG.set(path_or_scope, value, scope=scope_name)
-
+    CONFIG.push_scope(overrides, priority=None)
     try:
+        if path is not None:
+            CONFIG.set(path, value, scope=overrides.name)
         yield CONFIG
     finally:
         scope = CONFIG.remove_scope(overrides.name)
@@ -1586,6 +1575,9 @@ def create() -> Configuration:
 #: This is the singleton configuration instance for Spack.
 CONFIG = cast(Configuration, lang.Singleton(create_incremental))
 
+#: Many cached config values depend on the current platform, so drop them when it changes.
+spack.platforms.on_host_changed.append(lambda: CONFIG.clear_caches())
+
 
 def add_from_file(filename: str, scope: Optional[str] = None) -> None:
     """Add updates to a config from a filename"""
@@ -1710,11 +1702,11 @@ def existing_scopes() -> List[ConfigScope]:
 
 
 def writable_scope_names() -> List[str]:
-    return list(x.name for x in writable_scopes())
+    return [x.name for x in writable_scopes()]
 
 
 def existing_scope_names() -> List[str]:
-    return list(x.name for x in existing_scopes())
+    return [x.name for x in existing_scopes()]
 
 
 def matched_config(cfg_path: str) -> List[Tuple[str, Any]]:
@@ -2262,7 +2254,6 @@ def determine_number_of_jobs(
 
 def architecture():
     # break circular import
-    import spack.platforms
     import spack.spec
 
     host_platform = spack.platforms.host()
@@ -2292,10 +2283,6 @@ NOMATCH = object()
 
 # Substitutions to perform
 def replacements():
-    # break circular imports
-    import spack
-    import spack.environment as ev
-
     arch = architecture()
 
     return {
@@ -2312,7 +2299,7 @@ def replacements():
         "target": lambda: arch.target,
         "target_family": lambda: arch.target.family,
         "date": lambda: __import__("datetime").date.today().strftime("%Y-%m-%d"),
-        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
+        "env": lambda: CONFIG.env_path or NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
     }
 
@@ -2419,7 +2406,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
 
     # Prepend the default, if provided, or current working directory.
     base = default_wd or os.getcwd()
-    import spack.llnl.util.tty as tty
+    from spack.util import tty
 
     tty.debug(f"Using working directory {base} as base for abspath")
     return os.path.normpath(os.path.join(base, path))

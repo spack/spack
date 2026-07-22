@@ -16,6 +16,7 @@ import spack.config
 import spack.environment
 import spack.store
 import spack.util.executable
+from spack.active_environment import active_environment
 
 from .conftest import _true
 
@@ -113,10 +114,10 @@ def test_raising_exception_executables_in_path(config, monkeypatch):
 
 @pytest.mark.regression("25603")
 def test_bootstrap_deactivates_environments(active_mock_environment):
-    assert spack.environment.active_environment() == active_mock_environment
+    assert active_environment() == active_mock_environment
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.environment.active_environment() is None
-    assert spack.environment.active_environment() == active_mock_environment
+        assert active_environment() is None
+    assert active_environment() == active_mock_environment
 
 
 @pytest.mark.regression("25805")
@@ -183,7 +184,7 @@ spack:
 """.format(install_root)
     )
     with spack.environment.Environment(str(tmp_path)):
-        assert spack.environment.active_environment()
+        assert active_environment()
         assert spack.config.get("config:install_tree:root") == str(install_root)
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():

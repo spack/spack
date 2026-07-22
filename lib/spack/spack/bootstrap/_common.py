@@ -22,7 +22,7 @@ import spack.store
 import spack.util.environment
 import spack.util.executable
 import spack.util.filesystem as fs
-from spack.llnl.util import tty
+from spack.util import tty
 
 from .config import spec_for_current_python
 
@@ -67,7 +67,7 @@ def _try_import_from_store(
             python, *_ = candidate_spec.dependencies("python")
 
         # if python is installed, ask it for the layout
-        if python.installed:
+        if spack.store.STORE.db.installed(python):
             module_paths = [
                 os.path.join(candidate_spec.prefix, python.package.purelib),
                 os.path.join(candidate_spec.prefix, python.package.platlib),

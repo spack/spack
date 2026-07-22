@@ -27,10 +27,10 @@ import spack.config
 import spack.dependency
 import spack.deptypes as dt
 import spack.directives_meta
+import spack.enums
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
-import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.multimethod
@@ -54,6 +54,7 @@ from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.resource import Resource
+from spack.util import tty
 from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
 from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
@@ -352,7 +353,7 @@ class PackageViewMixin:
         Alternative implementations may allow some of the files to exist in
         the view (in this case they would be omitted from the results).
         """
-        return set(dst for dst in merge_map.values() if os.path.lexists(dst))
+        return {dst for dst in merge_map.values() if os.path.lexists(dst)}
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
@@ -520,9 +521,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
        provide the constraints that are used as input to the concretizer.
 
     2. **Package instances**. Once instantiated with a concrete spec, a package can be passed to
-       the :py:class:`spack.installer.PackageInstaller`. It calls methods like :meth:`do_stage` on
-       the package instance, and it uses those to drive user-implemented methods like ``def patch``
-       and install phases like ``def configure`` and ``def install``.
+       the ``PackageInstaller``. It calls methods like :meth:`do_stage` on the package instance,
+       and it uses those to drive user-implemented methods like ``def patch`` and install phases
+       like ``def configure`` and ``def install``.
 
     Packages are imported from package repositories (see :py:mod:`spack.repo`).
 
@@ -1541,7 +1542,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def provided_virtual_names(cls):
         """Return sorted list of names of virtuals that can be provided by this package."""
         return sorted(
-            set(vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals))
+            {vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals)}
         )
 
     @property
@@ -2608,25 +2609,35 @@ def preferred_version(
     return version
 
 
-def non_preferred_version(node: spack.spec.Spec) -> bool:
-    """Returns True if the spec version is not the preferred one, according to the package.py"""
+def non_preferred_version(node: spack.spec.Spec) -> spack.enums.PartStyle:
+    """Returns :attr:`~spack.enums.PartStyle.HIGHLIGHT` if the spec version is not the preferred
+    one according to package.py, :attr:`~spack.enums.PartStyle.NORMAL` otherwise.
+    """
     if not node.versions.concrete:
-        return False
+        return spack.enums.PartStyle.NORMAL
 
     try:
-        return node.version != preferred_version(node.package)
+        is_preferred = node.version == preferred_version(node.package)
     except ValueError:
-        return False
+        return spack.enums.PartStyle.NORMAL
+
+    return spack.enums.PartStyle.NORMAL if is_preferred else spack.enums.PartStyle.HIGHLIGHT
 
 
-def non_default_variant(node: spack.spec.Spec, variant_name: str) -> bool:
-    """Returns True if the variant in the spec has a non-default value."""
+def non_default_variant(node: spack.spec.Spec, variant_name: str) -> spack.enums.PartStyle:
+    """Return :attr:`~spack.enums.PartStyle.HIGHLIGHT` if the variant has a non-default value,
+    :attr:`~spack.enums.PartStyle.NORMAL` otherwise.
+
+    Intended for use as ``variant_style_fn`` in :meth:`~spack.spec.Spec.format`.
+    """
     try:
         default_variant = node.package.get_variant(variant_name).make_default()
-        return not node.satisfies(str(default_variant))
+        is_non_default = not node.satisfies(str(default_variant))
     except ValueError:
-        # This is the case for special variants like "patches" etc.
-        return False
+        # Special variants like "patches" have no meaningful default.
+        return spack.enums.PartStyle.NORMAL
+
+    return spack.enums.PartStyle.HIGHLIGHT if is_non_default else spack.enums.PartStyle.NORMAL
 
 
 def sort_by_pkg_preference(

@@ -171,7 +171,7 @@ def parse_link_rel_next(link_value: str) -> Optional[str]:
 
 
 # ==============================================================================
-# Archive extension functions (originally from spack.llnl.url)
+# Archive extension functions (originally from spack.util.url)
 # ==============================================================================
 
 

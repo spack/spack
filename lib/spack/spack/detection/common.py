@@ -29,7 +29,7 @@ import spack.spec
 import spack.util.environment
 import spack.util.spack_yaml
 import spack.util.windows_registry
-from spack.llnl.util import tty
+from spack.util import tty
 
 
 def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:

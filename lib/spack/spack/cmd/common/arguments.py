@@ -10,13 +10,13 @@ from typing import Any, Optional
 import spack.cmd
 import spack.config
 import spack.deptypes as dt
-import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.reporters
 import spack.spec
 import spack.store
+from spack.active_environment import active_environment
+from spack.util import tty
 from spack.util.lang import stable_partition
 from spack.util.pattern import Args
 
@@ -76,7 +76,7 @@ class ConstraintAction(argparse.Action):
 
         # If an environment is provided, we'll restrict the search to
         # only its installed packages.
-        env = ev.active_environment()
+        env = active_environment()
         if env:
             kwargs["hashes"] = set(env.all_hashes())
 
@@ -616,7 +616,7 @@ class ConfigSetAction(argparse.Action):
         )
 
     def __call__(self, parser, namespace, values, option_string):
-        if self.require_environment and not ev.active_environment():
+        if self.require_environment and not active_environment():
             raise argparse.ArgumentTypeError(
                 f"argument '{self.option_strings[-1]}' requires an environment"
             )

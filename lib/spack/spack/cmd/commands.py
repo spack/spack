@@ -13,13 +13,13 @@ from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, 
 
 import spack.cmd
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.paths
 import spack.platforms
-from spack.llnl.util.tty.colify import colify
 from spack.main import SpackArgumentParser, section_descriptions
+from spack.util import tty
 from spack.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
+from spack.util.tty.colify import colify
 
 description = "list available spack commands"
 section = "config"

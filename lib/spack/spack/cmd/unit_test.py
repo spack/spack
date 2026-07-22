@@ -16,11 +16,11 @@ try:
 except ImportError:
     pytest = None  # type: ignore
 
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.util.filesystem
-from spack.llnl.util.tty.colify import colify
+from spack.util import tty
+from spack.util.tty import color
+from spack.util.tty.colify import colify
 
 description = "run spack's unit tests (wrapper around pytest)"
 section = "developer"

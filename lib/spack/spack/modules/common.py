@@ -46,22 +46,23 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.projections as proj
 import spack.schema
 import spack.schema.environment
 import spack.spec
 import spack.store
-import spack.tengine as tengine
 import spack.user_environment
 import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.filesystem
 import spack.util.path
 import spack.util.spack_yaml as syaml
+from spack import tengine
+from spack.active_environment import active_environment
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 from spack.enums import Context
+from spack.util import tty
 from spack.util.lang import Singleton, dedupe
 
 from .error import (
@@ -76,6 +77,9 @@ from .error import (
 EnvironmentModification = Tuple[
     str, Union[spack.util.environment.NameModifier, spack.util.environment.NameValueModifier]
 ]
+
+#: Cache of configuration objects, keyed by (dag_hash, module_set_name, explicit)
+ModuleConfigurationCache = Dict[Tuple[str, str, bool], "BaseConfiguration"]
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
@@ -326,8 +330,6 @@ class BaseConfiguration:
     #: Default for the ``hierarchical`` config key when it is absent. Subclasses may override.
     _default_hierarchical: bool = False
 
-    _registry: ClassVar[Dict[Tuple[str, str, bool], "BaseConfiguration"]]
-
     #: File extension for module files (empty string means no extension)
     file_extension: ClassVar[str] = ""
 
@@ -335,30 +337,61 @@ class BaseConfiguration:
         super().__init_subclass__(**kwargs)
         if not hasattr(cls, "module_system"):
             raise AttributeError(f"'{cls.__name__}' must define a 'module_system' class attribute")
-        cls._registry = {}
 
     @classmethod
     def make_configuration(
-        cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+        cls,
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        explicit: Optional[bool] = None,
+        *,
+        cache: Optional[ModuleConfigurationCache] = None,
     ) -> "BaseConfiguration":
-        """Returns the cached configuration object for spec."""
-        explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
+        """Returns the configuration object for spec, reusing ``cache`` if it already holds one.
+
+        Callers that generate modules for many specs may pass a single shared cache to deduplicate
+        work across specs. When ``cache`` is ``None`` a fresh one is created, so the returned
+        object always reflects the current configuration.
+        """
+        if cache is None:
+            cache = {}
+
+        if explicit is None:
+            try:
+                explicit = bool(spack.store.STORE.db.get_record(spec).explicit)
+            except KeyError:
+                explicit = False
+
         key = (spec.dag_hash(), module_set_name, explicit)
-        try:
-            return cls._registry[key]
-        except KeyError:
-            return cls._registry.setdefault(key, cls(spec, module_set_name, explicit))
+        configuration = cache.get(key)
+        if configuration is None:
+            configuration = cls(spec, module_set_name, explicit, cache=cache)
+            cache[key] = configuration
+        return configuration
 
     @classmethod
     def make_layout(
-        cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+        cls,
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        explicit: Optional[bool] = None,
+        *,
+        cache: Optional[ModuleConfigurationCache] = None,
     ) -> "FileLayout":
-        return FileLayout(cls.make_configuration(spec, module_set_name, explicit))
+        return FileLayout(cls.make_configuration(spec, module_set_name, explicit, cache=cache))
 
-    def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
+    def __init__(
+        self,
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        explicit: bool,
+        *,
+        cache: Optional[ModuleConfigurationCache] = None,
+    ) -> None:
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
+        self._configuration_cache = {} if cache is None else cache
         self._cache: Dict[str, Any] = {}
         _modules_cfg = spack.config.CONFIG.get_config("modules")
         _set_cfg = _modules_cfg.get(module_set_name, {})
@@ -445,7 +478,7 @@ class BaseConfiguration:
         """
         suffixes = []
         for constraint, suffix in self.conf.get("suffixes", {}).items():
-            if constraint in self.spec:
+            if self.spec.satisfies(constraint):
                 suffixes.append(suffix)
         suffixes = list(dedupe(suffixes))
         # For hidden modules we can always add a fixed length hash as suffix, since it guards
@@ -545,7 +578,9 @@ class BaseConfiguration:
         return [
             item
             for item in self.conf[what]
-            if not self.make_configuration(item, self.name).excluded
+            if not self.make_configuration(
+                item, self.name, cache=self._configuration_cache
+            ).excluded
         ]
 
     @property
@@ -1000,7 +1035,7 @@ class ModuleContext(tengine.Context):
         assert isinstance(use_view, (bool, str))
 
         if use_view:
-            spack_env = spack.environment.active_environment()
+            spack_env = active_environment()
             if not spack_env:
                 raise spack.environment.SpackEnvironmentViewError(
                     "Module generation with views requires active environment"
@@ -1121,7 +1156,10 @@ class ModuleContext(tengine.Context):
 
     def _create_module_list_of(self, what: str) -> List[str]:
         name = self.conf.name
-        return [self.conf.make_layout(x, name).use_name for x in getattr(self.conf, what)]
+        cache = self.conf._configuration_cache
+        return [
+            self.conf.make_layout(x, name, cache=cache).use_name for x in getattr(self.conf, what)
+        ]
 
     @tengine.context_property
     def verbose(self) -> Optional[bool]:
@@ -1215,9 +1253,16 @@ class BaseModuleFileWriter:
 
     @classmethod
     def from_spec(
-        cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+        cls,
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        explicit: Optional[bool] = None,
+        *,
+        cache: Optional[ModuleConfigurationCache] = None,
     ) -> "BaseModuleFileWriter":
-        conf = cls.configuration_class.make_configuration(spec, module_set_name, explicit)
+        conf = cls.configuration_class.make_configuration(
+            spec, module_set_name, explicit, cache=cache
+        )
         return cls(conf)
 
     @property
@@ -1254,7 +1299,7 @@ class BaseModuleFileWriter:
         # a module file that is already there (name clash)
         if not overwrite and os.path.exists(self.layout.filename):
             message = "Module file {0.filename} exists and will not be overwritten"
-            tty.warn(message.format(self.layout))
+            warnings.warn(message.format(self.layout))
             return
 
         # If we are here it means it's ok to write the module file

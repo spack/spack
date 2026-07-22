@@ -5,11 +5,11 @@ import argparse
 
 import spack.cmd
 import spack.config
-import spack.environment as ev
 import spack.store
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_dot, static_graph_dot
-from spack.llnl.util import tty
+from spack.util import tty
 
 description = "generate graphs of package dependency relationships"
 section = "query"
@@ -55,7 +55,7 @@ in the lockfile.
 
 
 def graph(parser, args):
-    env = ev.active_environment()
+    env = active_environment()
     if args.installed and env:
         args.subparser.error("cannot use --installed with an active environment")
 

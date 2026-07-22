@@ -13,8 +13,7 @@ from types import TracebackType
 from typing import IO, Callable, Dict, Generator, Optional, Tuple, Type, Union
 
 import spack.error
-from spack.llnl.util import tty
-from spack.util import lang
+from spack.util import lang, tty
 from spack.util.string import plural
 
 if sys.platform != "win32":
@@ -430,6 +429,11 @@ class Lock:
             )
         else:
             self.backend = DummyBackend()
+
+    @property
+    def enabled(self) -> bool:
+        """True if this lock actually takes OS locks (False for the no-op backend)."""
+        return not isinstance(self.backend, DummyBackend)
 
     @staticmethod
     def _poll_interval_generator(

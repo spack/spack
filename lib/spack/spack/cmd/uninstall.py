@@ -7,15 +7,15 @@ import sys
 from typing import Dict, List, Optional
 
 import spack.cmd
-import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
 import spack.package_base
 import spack.spec
 import spack.store
-import spack.traverse as traverse
-from spack.cmd.common import arguments
-from spack.llnl.util import tty
-from spack.llnl.util.tty.colify import colify
+from spack import traverse
+from spack.active_environment import active_environment
+from spack.cmd.common import arguments, confirmation
+from spack.util import tty
+from spack.util.tty.colify import colify
 
 from ..enums import InstallRecordStatus
 
@@ -192,7 +192,7 @@ def _remove_from_env(spec, env):
 def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
     # TODO: get rid of the call-sites that use this function,
     # so that we don't have to do a dance of list -> set -> list -> set
-    hashes_to_remove = set(s.dag_hash() for s in specs)
+    hashes_to_remove = {s.dag_hash() for s in specs}
 
     for s in traverse.traverse_nodes(
         specs, order="topo", direction="children", root=True, cover="nodes", deptype="all"
@@ -270,7 +270,7 @@ def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Envi
 
 
 def uninstall_specs(args, specs):
-    env = ev.active_environment()
+    env = active_environment()
 
     uninstall_list, remove_list = get_uninstall_list(args, specs, env)
 

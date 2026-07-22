@@ -328,7 +328,7 @@ from spack.package import Package
     )
 
 
-all_pkgs = list((x, _add_import(y)) for (x, y) in all_pkgs)
+all_pkgs = [(x, _add_import(y)) for (x, y) in all_pkgs]
 
 
 _repo_name_id = 0

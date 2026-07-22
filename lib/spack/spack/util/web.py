@@ -18,6 +18,7 @@ import sys
 import time
 import traceback
 import urllib.parse
+import warnings
 from html.parser import HTMLParser
 from http.client import IncompleteRead
 from pathlib import Path, PurePosixPath
@@ -34,8 +35,7 @@ import spack.util.executable
 import spack.util.parallel
 import spack.util.url
 import spack.util.url as url_util
-from spack.llnl.util import tty
-from spack.util import lang
+from spack.util import lang, tty
 from spack.util.filesystem import mkdirp, working_dir
 
 from .executable import CommandNotFoundError, Executable
@@ -112,6 +112,23 @@ def is_transient_error(e: Exception) -> bool:
         "ResponseStreamingError",
     ):
         return True
+    return False
+
+
+def is_precondition_error(e: Exception) -> bool:
+    """Return True if HTTP/Boto3 error is related to a precondition error.
+
+    Examples of precontition errors:
+        HTTP status code 412
+        Boto error 'PreconditionFailed'
+    """
+    if isinstance(e, HTTPError) and 412 == e.code:
+        return True
+
+    # Handle boto errors types by string name to avoid import
+    if "PreconditionFailed" in str(e):
+        return True
+
     return False
 
 
@@ -387,8 +404,20 @@ def read_json(url: str):
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
 
-def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
+def push_to_url(
+    local_file_path,
+    remote_path,
+    keep_original=True,
+    content_type: Optional[str] = None,
+    if_match: Optional[str] = None,
+):
     remote_url = urllib.parse.urlparse(remote_path)
+    if if_match and remote_url.scheme != "s3":
+        warnings.warn(
+            "Pushing to URL with `if_match` is only supported for s3:// URLS\n"
+            "Files may be overwritten unexpectedly."
+        )
+
     if remote_url.scheme == "file":
         remote_file_path = url_util.local_file_path(remote_url)
         mkdirp(os.path.dirname(remote_file_path))
@@ -409,15 +438,27 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
                     raise
 
     elif remote_url.scheme == "s3":
-        if extra_args is None:
-            extra_args = {}
+        extra_args = {}
+        if if_match is not None:
+            # API ref https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+            extra_args.update({"IfMatch": if_match})
+        if content_type is not None:
+            extra_args.update({"ContentType": content_type})
 
         remote_path = remote_url.path
         while remote_path.startswith("/"):
             remote_path = remote_path[1:]
 
         s3 = get_s3_session(remote_url, method="push")
-        s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
+        if if_match is not None:
+            # IfMatch is only supported by put_object which has additional limitations
+            if os.stat(local_file_path).st_size >= 5e9:
+                raise spack.error.SpackError(f"File too large (max. 5GB): {local_file_path}")
+
+            with open(local_file_path, "rb") as fd:
+                s3.put_object(Bucket=remote_url.netloc, Key=remote_path, Body=fd, **extra_args)
+        else:
+            s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
             os.remove(local_file_path)
@@ -762,7 +803,7 @@ def list_url(url, recursive=False):
         if recursive:
             return list(_iter_s3_prefix(s3, url))
 
-        return list(set(key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)))
+        return list({key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)})
 
     elif url.scheme == "gs":
         gcs = GCSBucket(url)

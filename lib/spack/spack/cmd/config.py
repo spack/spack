@@ -11,8 +11,6 @@ from typing import List
 import spack.config
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.schema
 import spack.schema.env
 import spack.spec
@@ -20,9 +18,12 @@ import spack.store
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify_table
+from spack.util import tty
 from spack.util.editor import editor
+from spack.util.tty import color
+from spack.util.tty.colify import colify_table
 
 description = "get and set configuration options"
 section = "config"
@@ -182,7 +183,7 @@ def _get_scope_and_section(args):
 
     # w/no args and an active environment, point to env manifest
     if not section and not scope:
-        env = ev.active_environment()
+        env = active_environment()
         if env:
             scope = env.scope_name
 
@@ -207,7 +208,7 @@ def print_configuration(args, *, blame: bool) -> None:
 
     group = getattr(args, "group", None)
     if group is not None:
-        env = ev.active_environment()
+        env = active_environment()
         if env is None:
             args.subparser.error("the argument --group requires an active environment")
             return  # parser.error exits, but help mypy understand this is unreachable
@@ -237,7 +238,7 @@ def print_flattened_configuration(*, blame: bool, yaml: bool) -> None:
     Args:
         blame: if True, shows file provenance for each entry in the configuration.
     """
-    env = ev.active_environment()
+    env = active_environment()
     if env is not None:
         pristine = env.manifest.yaml_content
         flattened = pristine.copy()
@@ -358,7 +359,7 @@ def _config_basic_scope_types(scope, included):
 
 def config_scopes(args):
     """List configured scopes in descending order of precedence."""
-    included = list(i.name for s in spack.config.scopes().values() for i in s.included_scopes)
+    included = [i.name for s in spack.config.scopes().values() for i in s.included_scopes]
     active = [s.name for s in spack.config.CONFIG.active_scopes]
     scopes = [
         s

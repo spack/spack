@@ -50,32 +50,27 @@ import spack.error
 import spack.hash_types as ht
 import spack.hooks
 import spack.hooks.sbang
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
 import spack.paths
 import spack.platforms
-import spack.relocate as relocate
 import spack.spec
 import spack.stage
 import spack.store
 import spack.user_environment
 import spack.util.archive
 import spack.util.crypto
-import spack.util.file_cache as file_cache
 import spack.util.filesystem as fsys
 import spack.util.gpg
 import spack.util.lang
 import spack.util.parallel
-import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack import traverse
+from spack import relocate, traverse
 from spack.oci.image import (
     Digest,
     ImageReference,
@@ -93,6 +88,7 @@ from spack.oci.oci import (
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.stage import Stage
+from spack.util import file_cache, timer, tty
 from spack.util.executable import which
 from spack.util.filesystem import mkdirp
 
@@ -200,7 +196,9 @@ class BinaryIndexCache:
         self._index_contents_key = "contents.json"
 
         # a FileCache instance storing copies of remote binary cache indices
-        self._index_file_cache: file_cache.FileCache = file_cache.FileCache(self._index_cache_root)
+        self._index_file_cache: file_cache.FileCache = file_cache.FileCache(
+            self._index_cache_root, enable_lock=spack.config.CONFIG.get("config:locks", True)
+        )
         self._index_file_cache_initialized = False
 
         # stores a map of mirror URL and version layout to index hash and cache key (index path)
@@ -797,7 +795,7 @@ def generate_key_index(mirror_url: str, tmpdir: str) -> None:
 
     target = os.path.join(tmpdir, "index.json")
 
-    index = {"keys": dict((fingerprint, {}) for fingerprint in sorted(set(fingerprints)))}
+    index: dict = {"keys": {fingerprint: {} for fingerprint in sorted(set(fingerprints))}}
     with open(target, "w", encoding="utf-8") as f:
         sjson.dump(index, f)
 
@@ -1929,7 +1927,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # the context of the relevant root spec. This ensures that the analog for a spec s is the spec
     # that s replaced when we spliced.
     relocation_specs = specs_to_relocate(spec)
-    build_spec_ids = set(id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD))
+    build_spec_ids = {id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)}
     for s in relocation_specs:
         analog = s
         if id(s) not in build_spec_ids:
@@ -2154,7 +2152,7 @@ def install_root_node(
     if spec.external or not spec.concrete:
         warnings.warn("Skipping external or abstract spec {0}".format(spec.format()))
         return
-    elif spec.installed and not force:
+    elif spack.store.STORE.db.installed(spec) and not force:
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 
@@ -2164,7 +2162,7 @@ def install_root_node(
         raise RuntimeError(msg.format(spec.build_spec.format()))
 
     # don't print long padded paths while extracting/relocating binaries
-    with spack.util.path.filter_padding():
+    with spack.store.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, tarball_stage, force)
         spec.package.windows_establish_runtime_linkage()
@@ -2268,20 +2266,19 @@ def load_buildcache_index() -> None:
         pass
 
 
-def get_keys(
+def trust_keys(
     yes_to_all: bool = False,
     install: bool = False,
     trust: bool = False,
     force: bool = False,
     mirrors: Optional[Mapping[str, spack.mirrors.mirror.Mirror]] = None,
-):
+) -> None:
     """Get pgp public keys available on mirror with suffix .pub"""
     mirror_collection = mirrors or spack.mirrors.mirror.MirrorCollection(binary=True)
 
     if not mirror_collection:
         tty.die("Please add a spack mirror to allow " + "download of build caches.")
 
-    fingerprints = []
     for mirror in mirror_collection.values():
         if not mirror.signed:
             # Don't bother fetching keys for unsigned mirrors
@@ -2289,26 +2286,19 @@ def get_keys(
         for layout_version in mirror.supported_layout_versions:
             fetch_url = mirror.fetch_url
             if layout_version == 2:
-                mirror_layout_fingerprints = _get_keys_v2(
-                    fetch_url, yes_to_all, install, trust, force
-                )
+                _trust_keys_v2(fetch_url, yes_to_all, install, trust, force)
             else:
-                mirror_layout_fingerprints = _get_keys(
-                    fetch_url, layout_version, yes_to_all, install, trust, force
-                )
-            if mirror_layout_fingerprints:
-                fingerprints.extend(mirror_layout_fingerprints)
-    return fingerprints
+                _trust_keys(fetch_url, layout_version, yes_to_all, install, trust, force)
 
 
-def _get_keys(
+def _trust_keys(
     mirror_url: str,
     layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION,
     yes_to_all: bool = False,
     install: bool = False,
     trust: bool = False,
     force: bool = False,
-) -> Optional[List[str]]:
+) -> None:
     cache_class = get_url_buildcache_class(layout_version=layout_version)
 
     tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
@@ -2331,7 +2321,6 @@ def _get_keys(
         json_index = json.load(fd)
     index_entry.destroy()
 
-    saved_fingerprints = []
     for fingerprint, _ in json_index["keys"].items():
         key_manifest_url = url_util.join(keys_prefix, f"{fingerprint}.key.manifest.json")
         key_entry = cache_class(mirror_url, allow_unsigned=True)
@@ -2348,19 +2337,15 @@ def _get_keys(
             if trust:
                 spack.util.gpg.trust(key_blob_path, yes_to_all=yes_to_all)
                 tty.debug(f"Added {fingerprint} to trusted keys.")
-                saved_fingerprints.append(fingerprint)
             else:
                 tty.debug(
                     "Will not add this key to trusted keys.Use -t to install all downloaded keys"
                 )
 
         key_entry.destroy()
-    return saved_fingerprints
 
 
-def _get_keys_v2(
-    mirror_url, yes_to_all=False, install=False, trust=False, force=False
-) -> Optional[List[str]]:
+def _trust_keys_v2(mirror_url, yes_to_all=False, install=False, trust=False, force=False) -> None:
     cache_class = get_url_buildcache_class(layout_version=2)
 
     keys_url = url_util.join(
@@ -2382,7 +2367,6 @@ def _get_keys_v2(
             tty.error(url_err)
         return None
 
-    saved_fingerprints = []
     for fingerprint, key_attributes in json_index["keys"].items():
         link = os.path.join(keys_url, fingerprint + ".pub")
 
@@ -2400,12 +2384,10 @@ def _get_keys_v2(
             if trust:
                 spack.util.gpg.trust(stage.save_filename, yes_to_all=yes_to_all)
                 tty.debug("Added this key to trusted keys.")
-                saved_fingerprints.append(fingerprint)
             else:
                 tty.debug(
                     "Will not add this key to trusted keys.Use -t to install all downloaded keys"
                 )
-    return saved_fingerprints
 
 
 def _url_push_keys(
