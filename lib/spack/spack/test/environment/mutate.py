@@ -140,7 +140,6 @@ def test_mutate_namespace(repo_builder):
     root_spec = next(env.roots()).copy()
     cmake_spec = root_spec["cmake"]
     assert cmake_spec.namespace == "builtin_mock"
-    orig_hash = root_spec.dag_hash()
 
     selector = spack.spec.Spec("cmake")
     mutator = spack.spec.Spec(f"{repo_builder.namespace}.cmake")
