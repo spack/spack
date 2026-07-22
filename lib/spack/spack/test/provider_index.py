@@ -53,11 +53,11 @@ def test_providers_for_simple(mock_packages):
 def test_mpi_providers(mock_packages):
     p = ProviderIndex(specs=spack.repo.all_package_names(), repository=spack.repo.PATH)
 
-    mpi_2_providers = p.providers_for("mpi@2")
+    mpi_2_providers = p.providers_for(Spec("mpi@2"))
     assert Spec("mpich2") in mpi_2_providers
     assert Spec("mpich@3:") in mpi_2_providers
 
-    mpi_3_providers = p.providers_for("mpi@3")
+    mpi_3_providers = p.providers_for(Spec("mpi@3"))
     assert Spec("mpich2") not in mpi_3_providers
     assert Spec("mpich@3:") in mpi_3_providers
     assert Spec("zmpi") in mpi_3_providers

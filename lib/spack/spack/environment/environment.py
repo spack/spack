@@ -2193,8 +2193,7 @@ class Environment:
             if any(s.satisfies(t) for t in specs)
         ]
 
-    @spack.repo.autospec
-    def matching_spec(self, spec):
+    def matching_spec(self, spec: Union[str, spack.spec.Spec]) -> Optional[spack.spec.Spec]:
         """
         Given a spec (likely not concretized), find a matching concretized
         spec in the environment.
@@ -2211,6 +2210,8 @@ class Environment:
         and multiple dependency specs match, then this raises an error
         and reports all matching specs.
         """
+        if isinstance(spec, str):
+            spec = Spec(spec)
         env_root_to_user = {root.dag_hash(): user for user, root in self.concretized_specs()}
         root_matches, dep_matches = [], []
 

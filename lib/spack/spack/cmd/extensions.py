@@ -4,8 +4,10 @@
 
 import argparse
 import sys
+from typing import List
 
 import spack.repo
+import spack.spec
 import spack.store
 from spack import cmd
 from spack.active_environment import active_environment
@@ -79,13 +81,13 @@ def extensions(parser, args):
 
     if args.show in ("packages", "all"):
         # List package names of extensions
-        extensions = spack.repo.PATH.extensions_for(spec)
+        extensions = extensions_for(spack.repo.PATH, spec)
         if not extensions:
             tty.msg("%s has no extensions." % spec.cshort_spec)
         else:
             tty.msg(spec.cshort_spec)
             tty.msg("%d extensions:" % len(extensions))
-            colify(ext.name for ext in extensions)
+            colify(extensions)
 
     if args.show in ("installed", "all"):
         # List specs of installed extensions.
@@ -98,3 +100,11 @@ def extensions(parser, args):
         else:
             tty.msg("%d installed:" % len(installed))
             cmd.display_specs(installed, args)
+
+
+def extensions_for(repo: spack.repo.RepoPath, extendee_spec: spack.spec.Spec) -> List[str]:
+    return [
+        pkg_cls.name
+        for pkg_cls in repo.all_package_classes()
+        if pkg_cls(spack.spec.Spec(pkg_cls.name)).extends(extendee_spec)
+    ]

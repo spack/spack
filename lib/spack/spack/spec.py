@@ -107,6 +107,7 @@ import spack.variant as vt
 import spack.version
 import spack.version as vn
 import spack.version.git_ref_lookup
+from spack.provider_index import SPECFILE_FORMAT_VERSION
 from spack.util import lang, tty
 
 from .enums import PropagationPolicy
@@ -189,9 +190,6 @@ DISPLAY_FORMAT = (
     "{/abstract_hash}"
     "{compilers}"
 )
-
-#: specfile format version. Must increase monotonically
-SPECFILE_FORMAT_VERSION = 5
 
 
 class InstallStatus(enum.Enum):
@@ -3208,8 +3206,8 @@ class Spec:
             other_virtual = spack.repo.PATH.is_virtual(other.name)
             if self_virtual and other_virtual:
                 # Two virtual specs intersect only if there are providers for both
-                lhs = spack.repo.PATH.providers_for(str(self))
-                rhs = spack.repo.PATH.providers_for(str(other))
+                lhs = spack.repo.PATH.providers_for(self)
+                rhs = spack.repo.PATH.providers_for(other)
                 intersection = [s for s in lhs if any(s.intersects(z) for z in rhs)]
                 return bool(intersection)
 
