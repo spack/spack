@@ -150,6 +150,7 @@ def extension_paths_from_entry_points() -> List[str]:
     This function assumes that the state of entry points doesn't change from the first time it's
     called. E.g., it doesn't support any new installation of packages between two calls.
     """
+
     extension_paths: List[str] = []
     for entry_point in spack.util.lang.get_entry_points(group="spack.extensions"):
         hook = entry_point.load()
@@ -168,8 +169,11 @@ def get_command_paths():
     extension_paths = get_extension_paths()
 
     for path in extension_paths:
+        # Skip duplicate paths, only load extensions once
+        if any([p.startswith(path) for _, p in command_paths]):
+            continue
         extension = _python_name(extension_name(path))
-        command_paths.append(os.path.join(path, extension, "cmd"))
+        command_paths.append((extension, os.path.join(path, extension, "cmd")))
 
     return command_paths
 
