@@ -11,12 +11,13 @@ import re
 import sys
 import sysconfig
 import warnings
-from typing import Optional, Sequence, Union
+from typing import Any, Optional, Sequence, Union
 
 import spack.vendor.archspec.cpu
 from spack.vendor.typing_extensions import TypedDict
 
 import spack.platforms
+import spack.repo
 import spack.spec
 import spack.store
 import spack.util.environment
@@ -68,9 +69,10 @@ def _try_import_from_store(
 
         # if python is installed, ask it for the layout
         if spack.store.STORE.db.installed(python):
+            python_pkg: Any = spack.repo.PATH.get(python)
             module_paths = [
-                os.path.join(candidate_spec.prefix, python.package.purelib),
-                os.path.join(candidate_spec.prefix, python.package.platlib),
+                os.path.join(candidate_spec.prefix, python_pkg.purelib),
+                os.path.join(candidate_spec.prefix, python_pkg.platlib),
             ]
         # otherwise search for the site-packages directory
         # (clingo from binaries with truncated python-venv runtime)

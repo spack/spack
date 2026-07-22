@@ -12,6 +12,7 @@ import spack.concretize
 import spack.config
 import spack.database
 import spack.install_test
+import spack.repo
 import spack.spec
 import spack.util.executable
 from spack.install_test import TestStatus
@@ -145,7 +146,7 @@ def test_test_stage_caches(mock_packages, install_mockery, mock_test_stage):
 def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
     spec = spack.concretize.concretize_one("libelf")
     test_suite = spack.install_test.TestSuite([spec], "test-dups")
-    (test_suite.specs[0]).package.test_suite = test_suite
+    spack.repo.PATH.get(test_suite.specs[0]).test_suite = test_suite
 
     with pytest.raises(spack.install_test.TestSuiteFailure):
         test_suite()

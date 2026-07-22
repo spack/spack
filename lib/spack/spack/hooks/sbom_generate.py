@@ -8,6 +8,7 @@ import time
 import urllib.parse
 
 import spack.error
+import spack.repo
 import spack.util.spack_json as sjson
 from spack.store import STORE
 from spack.util import tty
@@ -54,7 +55,7 @@ def get_checksums(spec):
     checksums = []
 
     # Get SHA256 from version metadata if available
-    version_metadata = getattr(spec.package, "versions", {})
+    version_metadata = getattr(spack.repo.PATH.get(spec), "versions", {})
     vmeta = version_metadata.get(spec.version) or {}
     sha256 = vmeta.get("sha256", None)
     if sha256:
@@ -69,7 +70,7 @@ def get_checksums(spec):
 
 
 def get_git_commit(spec):
-    pkg = spec.package
+    pkg = spack.repo.PATH.get(spec)
 
     if "commit" in spec.variants:
         return spec.variants["commit"].value
@@ -83,7 +84,7 @@ def get_git_commit(spec):
 
 
 def get_download_location(spec):
-    pkg = spec.package
+    pkg = spack.repo.PATH.get(spec)
 
     try:
         return str(pkg.url_for_version(spec.version))
@@ -98,7 +99,10 @@ def get_download_location(spec):
 
 
 def make_spdx_2_3_package_entry(spec):
-    pkg = getattr(spec, "package", None)
+    try:
+        pkg = spack.repo.PATH.get(spec)
+    except spack.repo.UnknownPackageError:
+        pkg = None
     return {
         "SPDXID": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
         "name": spec.name,

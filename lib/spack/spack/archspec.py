@@ -3,8 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Adapter for the archspec library."""
 
+from typing import Any
+
 import spack.vendor.archspec.cpu
 
+import spack.repo
 import spack.spec
 
 
@@ -53,8 +56,9 @@ def microarchitecture_flags_from_target(
     version_number, _ = spack.vendor.archspec.cpu.version_components(
         compiler.version.dotted_numeric_string
     )
+    compiler_pkg: Any = spack.repo.PATH.get(compiler)
     try:
-        return target.optimization_flags(compiler.package.archspec_name(), version_number)
+        return target.optimization_flags(compiler_pkg.archspec_name(), version_number)
     except ValueError:
         return ""
 

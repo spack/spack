@@ -417,7 +417,7 @@ def _mock_remove(spec):
     specs = spack.store.STORE.db.query(spec)
     assert len(specs) == 1
     spec = specs[0]
-    spec.package.do_uninstall(spec)
+    spack.repo.PATH.get(spec).do_uninstall(spec)
 
 
 def test_default_queries(database):
@@ -426,6 +426,7 @@ def test_default_queries(database):
     rec = database.get_record("zmpi")
 
     spec = rec.spec
+    spack.repo.attach_packages([spec])
 
     libraries = spec["zmpi"].libs
     assert len(libraries) == 1
@@ -445,6 +446,7 @@ def test_default_queries(database):
     rec = database.get_record("libelf")
 
     spec = rec.spec
+    spack.repo.attach_packages([spec])
 
     libraries = spec["libelf"].libs
     assert len(libraries) == 1
@@ -804,7 +806,7 @@ def test_external_entries_in_db(mutable_database):
     assert not rec.spec.external_modules
     assert rec.explicit is False
 
-    PackageInstaller([rec.spec.package], fake=True, explicit=True).install()
+    PackageInstaller([spack.repo.PATH.get(rec.spec)], fake=True, explicit=True).install()
     rec = mutable_database.get_record("externaltool")
     assert rec.spec.external_path == os.path.sep + os.path.join("path", "to", "external_tool")
     assert not rec.spec.external_modules
@@ -1174,7 +1176,7 @@ def test_query_installed_when_package_unknown(database, repo_builder: RepoBuilde
             assert database.installed(s)
             assert not database.installed_upstream(s)
             with pytest.raises(spack.repo.UnknownNamespaceError):
-                s.package
+                spack.repo.PATH.get(s)
 
 
 def test_error_message_when_using_too_new_db(database, monkeypatch):

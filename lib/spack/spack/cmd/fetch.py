@@ -6,6 +6,7 @@ import argparse
 
 import spack.cmd
 import spack.config
+import spack.repo
 import spack.store
 import spack.traverse
 from spack.active_environment import active_environment
@@ -69,7 +70,7 @@ def fetch(parser, args):
         if args.missing and spack.store.STORE.db.installed(spec):
             continue
 
-        pkg = spec.package
+        pkg = spack.repo.PATH.get(spec)
 
         pkg.stage.keep = True
         with pkg.stage:

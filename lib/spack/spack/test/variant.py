@@ -730,14 +730,14 @@ def test_concretize_variant_default_with_multiple_defs(
 )
 def test_substitute_abstract_variants_narrowing(mock_packages, spec, variant_name, narrowed_type):
     spec = Spec(spec)
-    spack.spec.substitute_abstract_variants(spec)
+    spack.repo.substitute_abstract_variants(spec)
     assert spec.variants[variant_name].type == narrowed_type
 
 
 def test_substitute_abstract_variants_failure(mock_packages):
     with pytest.raises(spack.spec.InvalidVariantForSpecError):
         # variant doesn't exist at version
-        spack.spec.substitute_abstract_variants(Spec("variant-values@4.0 v=bar"))
+        spack.repo.substitute_abstract_variants(Spec("variant-values@4.0 v=bar"))
 
 
 def test_abstract_variant_satisfies_abstract_abstract():

@@ -7,6 +7,7 @@ import os
 import spack.bootstrap
 import spack.config
 import spack.relocate
+import spack.repo
 from spack.util import tty
 from spack.util.elf import ElfParsingError, parse_elf
 from spack.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
@@ -150,7 +151,9 @@ def post_install(spec, explicit=None):
     if not patchelf:
         return
 
-    fixes = find_and_patch_sonames(spec.prefix, spec.package.non_bindable_shared_objects, patchelf)
+    fixes = find_and_patch_sonames(
+        spec.prefix, spack.repo.PATH.get(spec).non_bindable_shared_objects, patchelf
+    )
 
     if not fixes:
         return

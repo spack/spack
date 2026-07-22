@@ -53,6 +53,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.tty.color as clr
 import spack.variant as vt
+import spack.version
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.config import substitute_path_variables
@@ -677,7 +678,7 @@ def _is_dev_spec_and_has_changed(spec):
     # hook so packages can use to write their own method for checking the dev_path
     # use package so attributes about concretization such as variant state can be
     # utilized
-    return spec.package.detect_dev_src_change()
+    return spack.repo.PATH.get(spec).detect_dev_src_change()
 
 
 class ViewDescriptor:
@@ -998,7 +999,7 @@ class ViewDescriptor:
         # Maps packages tagged "runtime" to the spec with latest version.
         latest: Dict[str, Spec] = {}
         for s in specs:
-            if "runtime" not in getattr(s.package, "tags", ()):
+            if "runtime" not in getattr(spack.repo.PATH.get(s), "tags", ()):
                 continue
             elif s.name not in latest or latest[s.name].version < s.version:
                 latest[s.name] = s
@@ -1054,6 +1055,34 @@ class ConcretizedRootInfo:
             new=False,
             group=info_dict.get("group", DEFAULT_USER_SPEC_GROUP),
         )
+
+
+def override_spec(init_spec: Spec, change_spec: Spec) -> Spec:
+    """Return a copy of ``init_spec`` with the constraints of ``change_spec`` applied on top."""
+    # TODO: this doesn't account for the case where the changed spec
+    # (and the user spec) have dependencies
+    new_spec = init_spec.copy()
+    package_cls = spack.repo.PATH.get_pkg_class(new_spec.name)
+    if change_spec.versions and not change_spec.versions == spack.version.any_version:
+        new_spec.versions = change_spec.versions
+
+    for vname, value in change_spec.variants.items():
+        if vname in package_cls.variant_names():
+            if vname in new_spec.variants:
+                new_spec.variants.substitute(value)
+            else:
+                new_spec.variants[vname] = value
+        else:
+            raise ValueError("{0} is not a variant of {1}".format(vname, new_spec.name))
+
+    if change_spec.compiler_flags:
+        for flagname, flagvals in change_spec.compiler_flags.items():
+            new_spec.compiler_flags[flagname] = flagvals
+    if change_spec.architecture:
+        new_spec.architecture = spack.spec.ArchSpec.override(
+            new_spec.architecture, change_spec.architecture
+        )
+    return new_spec
 
 
 class Environment:
@@ -1532,12 +1561,12 @@ class Environment:
             raise ValueError(f"{str(match_spec)} matches multiple specs")
 
         for idx, spec in matches:
-            override_spec = Spec.override(spec, change_spec)
+            overridden = override_spec(spec, change_spec)
             if list_name == USER_SPECS_KEY:
-                self.manifest.override_user_spec(str(override_spec), idx=idx)
+                self.manifest.override_user_spec(str(overridden), idx=idx)
             else:
                 self.manifest.override_definition(
-                    str(spec), override=str(override_spec), list_name=list_name
+                    str(spec), override=str(overridden), list_name=list_name
                 )
         self._sync_speclists()
 
@@ -1680,25 +1709,22 @@ class Environment:
 
         # Manipulate selected specs
         for s, mutator in modify_specs:
-            modified = s.mutate(mutator, rehash=False)
+            modified = s.mutate(mutator)
             if modified:
                 modified_specs.append(s)
 
-        # Identify roots modified and invalidate all dependent hashes
-        modified_roots = []
-        for parent in traverse.traverse_nodes(modified_specs, direction="parents"):
-            # record whether this parent is a root before we modify the hash
-            if parent.dag_hash() in self.specs_by_hash:
-                modified_roots.append((parent, parent.dag_hash()))
-            # modify the parent to invalidate hashes
-            parent._mark_root_concrete(False)
-            parent.clear_caches()
+        # Record the roots we are about to invalidate, while their old hashes are still cached
+        modified_roots = [
+            (parent, parent.dag_hash())
+            for parent in traverse.traverse_nodes(modified_specs, direction="parents")
+            if parent.dag_hash() in self.specs_by_hash
+        ]
 
-        # Compute new hashes and update the env list of specs
+        spack.repo.refinalize_mutated(modified_specs)
+
+        # Update the env list of specs with the recomputed hashes
         hash_mutations = {}
         for root, old_hash in modified_roots:
-            # New hash must be computed after we finalize concretization
-            root._finalize_concretization()
             new_hash = root.dag_hash()
             self.specs_by_hash.pop(old_hash)
             self.specs_by_hash[new_hash] = root
@@ -1907,9 +1933,12 @@ class Environment:
             with spack.store.STORE.db.read_transaction():
                 for view_name, view in self.views.items():
                     for spec in self.concrete_roots():
-                        if spec in view and spec.package and spack.store.STORE.db.installed(spec):
-                            msg = '{0} in view "{1}"'
-                            tty.debug(msg.format(spec.name, view_name))
+                        if spec not in view:
+                            continue
+                        # raises if the package no longer exists in the repo
+                        spack.repo.PATH.get(spec)
+                        if spack.store.STORE.db.installed(spec):
+                            tty.debug(f'{spec.name} in view "{view_name}"')
 
         except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
             tty.warn(e)
@@ -2076,7 +2105,9 @@ class Environment:
         }
 
         builder = spack.installer_dispatch.create_installer(
-            [spec.package for spec in specs], create_reports=reporter is not None, **install_args
+            [spack.repo.PATH.get(spec) for spec in specs],
+            create_reports=reporter is not None,
+            **install_args,
         )
 
         try:
@@ -2475,6 +2506,10 @@ class Environment:
             if "build_spec" in node_dict:
                 _, bhash, _ = reader.extract_build_spec_info_from_node_dict(node_dict)
                 specs_by_hash[lockfile_key]._build_spec = specs_by_hash[bhash]
+
+        # This wires up the DAG by hand rather than going through the spec file readers, so
+        # fill in the virtual data that lockfiles written by older Spack versions omit.
+        spack.repo.reconstruct_virtuals(specs_by_hash.values())
 
         # Traverse the root specs one at a time in the order they appear.
         # The first time we see each DAG hash, that's the one we want to

@@ -14,6 +14,7 @@ import spack.repo
 import spack.spec
 from spack.util import filesystem, spack_yaml
 
+from .common import spec_from_detection
 from .path import by_path
 
 
@@ -102,7 +103,7 @@ class Runner:
     @property
     def expected_specs(self) -> List[spack.spec.Spec]:
         return [
-            spack.spec.Spec.from_detection(
+            spec_from_detection(
                 item.spec, external_path=self.tmpdir.name, extra_attributes=item.extra_attributes
             )
             for item in self.test.results

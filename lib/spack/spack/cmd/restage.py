@@ -5,6 +5,7 @@
 import argparse
 
 import spack.cmd
+import spack.repo
 from spack.cmd.common import arguments
 
 description = "revert checked out package source code"
@@ -22,4 +23,4 @@ def restage(parser, args):
 
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
     for spec in specs:
-        spec.package.do_restage()
+        spack.repo.PATH.get(spec).do_restage()

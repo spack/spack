@@ -11,6 +11,7 @@ import traceback
 from typing import Optional
 
 import spack.error
+import spack.repo
 import spack.store
 
 reporter = None
@@ -90,7 +91,7 @@ class SpecRecord(Record):
     def __init__(self, spec):
         super().__init__()
         self._spec = spec
-        self._package = spec.package
+        self._package = spack.repo.PATH.get(spec)
         self._start_time = None
         self.name = spec.name
         self.id = spec.dag_hash()

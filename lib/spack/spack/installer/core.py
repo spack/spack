@@ -20,6 +20,7 @@ import spack.binary_distribution
 import spack.config
 import spack.error
 import spack.mirrors.mirror
+import spack.repo
 import spack.report
 import spack.spec
 import spack.stage
@@ -887,6 +888,6 @@ class PackageInstaller:
             elif "progress" in message and "total" in message:
                 self.ui.on_progress(dag_hash, message["progress"], message["total"])
             elif "installed_from_binary_cache" in message:
-                child_info.spec.package.installed_from_binary_cache = True
+                spack.repo.PATH.get(child_info.spec).installed_from_binary_cache = True
 
         return True

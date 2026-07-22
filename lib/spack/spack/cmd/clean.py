@@ -9,6 +9,7 @@ import shutil
 import spack.caches
 import spack.cmd
 import spack.config
+import spack.repo
 import spack.stage
 import spack.store
 import spack.util.filesystem
@@ -103,7 +104,7 @@ def clean(parser, args):
         for spec in specs:
             msg = "Cleaning build stage [{0}]"
             tty.msg(msg.format(spec.short_spec))
-            spec.package.do_clean()
+            spack.repo.PATH.get(spec).do_clean()
 
     if args.stage:
         tty.msg("Removing all temporary build stages")

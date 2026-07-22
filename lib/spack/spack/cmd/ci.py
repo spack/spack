@@ -550,7 +550,7 @@ def ci_rebuild(args):
         if install_exit_code == 0:
             try:
                 # First ensure we will use a reasonable test stage directory
-                stage_root = os.path.dirname(str(job_spec.package.stage.path))
+                stage_root = os.path.dirname(str(spack.repo.PATH.get(job_spec).stage.path))
                 test_stage = fs.join_path(stage_root, "spack-standalone-tests")
                 tty.debug("Configuring test_stage to {0}".format(test_stage))
                 config_test_path = "config:test_stage:{0}".format(test_stage)

@@ -32,6 +32,7 @@ import spack.config
 import spack.error
 import spack.hooks
 import spack.mirrors.mirror
+import spack.repo
 import spack.sandbox
 import spack.spec
 import spack.store
@@ -223,7 +224,7 @@ def install_from_buildcache(
         spack.store.STORE.layout.write_spec(spec, spack.store.STORE.layout.spec_file_path(spec))
 
     # now a block of curious things follow that should be fixed.
-    pkg = spec.package
+    pkg = spack.repo.PATH.get(spec)
     if hasattr(pkg, "_post_buildcache_install_hook"):
         pkg._post_buildcache_install_hook()
     pkg.installed_from_binary_cache = True
@@ -439,9 +440,10 @@ def worker_function(
 
     if exit_code == ExitCode.SUCCESS:
         # Try to install the compressed log file
-        if not os.path.lexists(spec.package.install_log_path):
+        install_log_path = spack.repo.PATH.get(spec).install_log_path
+        if not os.path.lexists(install_log_path):
             try:
-                with open(log_path, "rb") as f, open(spec.package.install_log_path, "wb") as g:
+                with open(log_path, "rb") as f, open(install_log_path, "wb") as g:
                     # Use GzipFile directly so we can omit filename / mtime in header
                     gzip_file = GzipFile(
                         filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g
@@ -579,7 +581,8 @@ def _install(
     """Install a spec from build cache or source."""
     spec, explicit, install_policy = request.spec, request.explicit, request.install_policy
 
-    # Create the stage and log file before starting the tee thread.
+    # Build code can reach any node of the DAG, so all nodes need a package instance.
+    spack.repo.attach_packages([spec])
     pkg = spec.package
     pkg.run_tests = request.run_tests
 

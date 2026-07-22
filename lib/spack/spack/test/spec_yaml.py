@@ -419,6 +419,10 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls, mock_packages)
     s1 = Spec.from_dict(data)
     s2 = reader_cls.load(data)
 
+    # Reading is repository free, so the virtual data these old specfiles predate is filled in
+    # explicitly here, the way the read boundaries do it.
+    spack.repo.reconstruct_virtuals([s1, s2])
+
     assert s2.dag_hash() == expected_hash
     assert s1.dag_hash() == s2.dag_hash()
     assert s1 == s2

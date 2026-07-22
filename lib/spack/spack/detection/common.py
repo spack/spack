@@ -24,6 +24,7 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 import spack.config
 import spack.error
 import spack.operating_systems.windows_os as winOs
+import spack.repo
 import spack.schema
 import spack.spec
 import spack.util.environment
@@ -85,6 +86,31 @@ def _pkg_config_dict(
         pkg_dict["externals"].append(spack.util.spack_yaml.syaml_dict(external_items))
 
     return pkg_dict
+
+
+def spec_from_detection(
+    spec_str: str,
+    *,
+    external_path: str,
+    external_modules: Optional[List[str]] = None,
+    extra_attributes: Optional[Dict] = None,
+) -> spack.spec.Spec:
+    """Construct a spec from a spec string determined during external
+    detection and attach extra attributes to it.
+
+    Args:
+        spec_str: spec string
+        external_path: prefix of the external spec
+        external_modules: optional module files to be loaded when the external spec is used
+        extra_attributes: dictionary containing extra attributes
+    """
+    s = spack.spec.Spec(spec_str, external_path=external_path, external_modules=external_modules)
+    extra_attributes = spack.util.spack_yaml.sorted_dict(extra_attributes or {})
+    # This is needed to be able to validate multi-valued variants,
+    # otherwise they'll still be abstract in the context of detection.
+    spack.repo.substitute_abstract_variants(s)
+    s.extra_attributes = extra_attributes
+    return s
 
 
 def _spec_is_valid(spec: spack.spec.Spec) -> bool:

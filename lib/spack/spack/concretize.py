@@ -245,7 +245,12 @@ def concretize_one(
     spec = spack.hash_lookup.lookup_hash(spec)
 
     if spec.concrete:
-        return spec.copy()
+        copy = spec.copy()
+        try:
+            spack.repo.attach_packages([copy])
+        except spack.repo.UnknownEntityError:
+            pass  # the package may have been removed or renamed since the spec was created
+        return copy
 
     for node in spec.traverse():
         if not node.name:

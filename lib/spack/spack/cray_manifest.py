@@ -183,7 +183,7 @@ def spec_from_entry(entry):
     spec.external_path = entry["prefix"]
     spec.origin = "external-db"
     spec.namespace = pkg_cls.namespace
-    spack.spec.Spec.ensure_valid_variants(spec)
+    spack.repo.ensure_valid_variants(spec)
 
     return spec
 
@@ -214,8 +214,8 @@ def entries_to_specs(entries):
                 dep_spec = spec_dict[dep_hash]
                 parent_spec._add_dependency(dep_spec, depflag=depflag, virtuals=())
 
-    for spec in spec_dict.values():
-        spack.spec.reconstruct_virtuals_on_edges(spec)
+    # Edges above are added with virtuals=(), and the specs report the current format.
+    spack.repo.reconstruct_virtuals(spec_dict.values(), edges_lack_virtuals=True)
 
     return spec_dict
 

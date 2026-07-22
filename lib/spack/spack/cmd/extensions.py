@@ -71,10 +71,10 @@ def extensions(parser, args):
     env = active_environment()
     spec = cmd.disambiguate_spec(spec[0], env)
 
-    if not spec.package.extendable:
+    if not spack.repo.PATH.get(spec).extendable:
         tty.die("%s is not an extendable package." % spec.name)
 
-    if not spec.package.extendable:
+    if not spack.repo.PATH.get(spec).extendable:
         tty.die("%s does not have extensions." % spec.short_spec)
 
     if args.show in ("packages", "all"):

@@ -6,6 +6,7 @@ import io
 from typing import List, Optional
 
 import spack.cmd
+import spack.repo
 import spack.spec
 import spack.store
 import spack.verify
@@ -108,7 +109,7 @@ def _verify_version(specs):
 
     for spec in specs:
         try:
-            pkg = spec.package
+            pkg = spack.repo.PATH.get(spec)
         except Exception as e:
             tty.debug(str(e))
             missing_package.append(spec)
@@ -151,7 +152,7 @@ def verify_libraries(args):
     errors = 0
     for spec in specs_from_db:
         try:
-            pkg = spec.package
+            pkg = spack.repo.PATH.get(spec)
         except Exception:
             tty.warn(f"Skipping {spec.cformat('{name}{@version}{/hash}')} due to missing package")
         error_msg = _verify_libraries(spec, pkg.unresolved_libraries)

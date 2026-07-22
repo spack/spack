@@ -20,6 +20,7 @@ import spack.error
 import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
+import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
@@ -414,7 +415,7 @@ def _skip_no_redistribute_for_public(specs: List[Spec]) -> List[Spec]:
     remaining_specs: List[Spec] = []
     removed_specs: List[Spec] = []
     for spec in specs:
-        if spec.package.redistribute_binary:
+        if spack.repo.PATH.get(spec).redistribute_binary:
             remaining_specs.append(spec)
         else:
             removed_specs.append(spec)

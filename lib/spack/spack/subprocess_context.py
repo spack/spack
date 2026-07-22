@@ -46,6 +46,8 @@ def serialize(pkg: "spack.package_base.PackageBase") -> io.BytesIO:
 def deserialize(serialized_pkg: io.BytesIO) -> "spack.package_base.PackageBase":
     pkg = pickle.load(serialized_pkg)
     pkg.spec._package = pkg
+    # build code can reach any node of the DAG, so all nodes need a package instance
+    spack.repo.attach_packages([pkg.spec])
     # ensure overwritten package class attributes get applied
     spack.repo.PATH.get_pkg_class(pkg.spec.name)
     return pkg

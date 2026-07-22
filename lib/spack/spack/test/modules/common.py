@@ -190,7 +190,7 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
     spec._package = None
     monkeypatch.setattr(spack.repo.PATH, "get", find_nothing)
     with pytest.raises(spack.repo.UnknownPackageError):
-        spec.package
+        spack.repo.PATH.get(spec)
 
     module_path = spack.modules.get_module("tcl", spec, True)
     assert module_path

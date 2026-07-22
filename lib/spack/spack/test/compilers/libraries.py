@@ -9,6 +9,7 @@ import pytest
 
 import spack.compilers.config
 import spack.compilers.libraries
+import spack.repo
 import spack.util.executable
 import spack.util.filesystem as fs
 import spack.util.module_cmd
@@ -72,7 +73,7 @@ class TestCompilerPropertyDetector:
         assert detector._compile_dummy_c_source() is None
 
     def test_compile_dummy_c_source_no_verbose_flags(self, mock_gcc, monkeypatch):
-        monkeypatch.setattr(mock_gcc.package, "verbose_flags", "")
+        monkeypatch.setattr(spack.repo.PATH.get(mock_gcc), "verbose_flags", "")
         detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
         assert detector._compile_dummy_c_source() is None
 

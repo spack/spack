@@ -72,6 +72,7 @@ import spack.multimethod
 import spack.package_base
 import spack.paths
 import spack.platforms
+import spack.repo
 import spack.schema.environment
 import spack.spec
 import spack.stage
@@ -755,7 +756,9 @@ def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
     externals, spack_built = stable_partition((s for s in ordered_specs), lambda x: x.external)
 
     return filter_system_paths(
-        path for spec in chain(spack_built, externals) for path in spec.package.cmake_prefix_paths
+        path
+        for spec in chain(spack_built, externals)
+        for path in spack.repo.PATH.get(spec).cmake_prefix_paths
     )
 
 
@@ -985,6 +988,10 @@ class SetupContext:
         if (context == Context.BUILD or context == Context.TEST) and not len(specs) == 1:
             raise ValueError("Cannot setup build environment for multiple specs")
         specs_with_type = effective_deptypes(*specs, context=context)
+
+        # make sure every node has a package instance attached
+        for s, _ in specs_with_type:
+            spack.repo.PATH.get(s)
 
         self.specs = specs
         self.context = context

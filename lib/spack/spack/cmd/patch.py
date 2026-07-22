@@ -8,6 +8,7 @@ import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.package_base
+import spack.repo
 import spack.traverse
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
@@ -36,13 +37,13 @@ def patch(parser, args):
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
     specs = spack.cmd.matching_specs_from_env(specs)
     for spec in specs:
-        _patch(spec.package)
+        _patch(spack.repo.PATH.get(spec))
 
 
 def _patch_env(env: ev.Environment):
     tty.msg(f"Patching specs from environment {env.name}")
     for spec in spack.traverse.traverse_nodes(env.concrete_roots()):
-        _patch(spec.package)
+        _patch(spack.repo.PATH.get(spec))
 
 
 def _patch(pkg: spack.package_base.PackageBase):

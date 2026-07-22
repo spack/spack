@@ -552,7 +552,7 @@ def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec
 
     # copy installed test sources cache into test stage dir
     if test_spec.concrete:
-        cache_source = install_test_root(test_spec.package)
+        cache_source = install_test_root(spack.repo.PATH.get(test_spec))
         cache_dir = pkg.test_suite.current_test_cache_dir
         if os.path.isdir(cache_source) and not os.path.exists(cache_dir):
             fs.install_tree(cache_source, cache_dir)
@@ -887,13 +887,14 @@ class TestSuite:
             record.start()
 
             try:
-                if spec.package.test_suite:
+                pkg = spack.repo.PATH.get(spec)
+                if pkg.test_suite:
                     raise TestSuiteSpecError(
-                        f"Package {spec.package.name} cannot be run in two test suites at once"
+                        f"Package {pkg.name} cannot be run in two test suites at once"
                     )
 
                 # Set up the test suite to know which test is running
-                spec.package.test_suite = self
+                pkg.test_suite = self
                 self.current_base_spec = spec
                 self.current_test_spec = spec
 
@@ -904,7 +905,7 @@ class TestSuite:
                 fs.mkdirp(test_dir)
 
                 # run the package tests
-                spec.package.do_test(dirty=dirty, externals=externals, timeout=timeout)
+                pkg.do_test(dirty=dirty, externals=externals, timeout=timeout)
 
                 # Clean up on success
                 if remove_directory:
@@ -941,7 +942,7 @@ class TestSuite:
                     break
 
             finally:
-                spec.package.test_suite = None
+                spack.repo.PATH.get(spec).test_suite = None
                 self.current_test_spec = None
                 self.current_base_spec = None
 
@@ -1098,7 +1099,7 @@ class TestSuite:
         for spec in self.specs:
             repo_cache_path = self.stage.repo.join(spec.name)
             spack.repo.PATH.dump_provenance(spec, repo_cache_path)
-            for vspec in spec.package.virtuals_provided:
+            for vspec in spack.repo.PATH.get(spec).virtuals_provided:
                 repo_cache_path = self.stage.repo.join(vspec.name)
                 if not os.path.exists(repo_cache_path):
                     try:

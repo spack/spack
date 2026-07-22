@@ -32,6 +32,7 @@ import spack.directory_layout
 import spack.error
 import spack.package_prefs
 import spack.paths
+import spack.repo
 import spack.spec
 import spack.util.lang
 import spack.util.path
@@ -398,8 +399,9 @@ def specfile_matches(filename: str, **kwargs) -> List["spack.spec.Spec"]:
         filename: YAML or JSON file from which to read the query.
         **kwargs: keyword arguments forwarded to :func:`find`
     """
-    query = [spack.spec.Spec.from_specfile(filename)]
-    return find(query, **kwargs)
+    spec = spack.spec.Spec.from_specfile(filename)
+    spack.repo.reconstruct_virtuals([spec])
+    return find([spec], **kwargs)
 
 
 def ensure_singleton_created() -> None:

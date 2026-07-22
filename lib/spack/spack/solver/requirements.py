@@ -388,7 +388,7 @@ class RequirementParser:
         try:
             s = spack.spec.Spec(pkg_name)
             s.constrain(constraint)
-            s.validate_or_raise()
+            spack.repo.validate_spec(s)
         except spack.error.SpackError as e:
             tty.debug(
                 f"[{__name__}] Rejecting the default '{constraint}' requirement "

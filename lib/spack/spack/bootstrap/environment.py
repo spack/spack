@@ -8,7 +8,7 @@ import os
 import pathlib
 import shutil
 import sys
-from typing import Iterable, List
+from typing import Any, Iterable, List
 
 import spack.vendor.archspec.cpu
 
@@ -16,6 +16,7 @@ import spack.config
 import spack.environment
 import spack.error
 import spack.paths
+import spack.repo
 import spack.spec
 import spack.stage
 import spack.tengine
@@ -36,7 +37,7 @@ class BootstrapEnvironment(spack.environment.Environment):
 
         # Remove python package roots created before python-venv was introduced
         for s in self.concrete_roots():
-            if "python" in s.package.extendees and not s.dependencies("python-venv"):
+            if "python" in spack.repo.PATH.get(s).extendees and not s.dependencies("python-venv"):
                 self.deconcretize_by_hash(s.dag_hash())
 
     @classmethod
@@ -74,7 +75,8 @@ class BootstrapEnvironment(spack.environment.Environment):
         return cls.view_root().joinpath("bin")
 
     def python_dirs(self) -> Iterable[pathlib.Path]:
-        python = next(s for s in self.all_specs_generator() if s.name == "python-venv").package
+        spec = next(s for s in self.all_specs_generator() if s.name == "python-venv")
+        python: Any = spack.repo.PATH.get(spec)
         return {self.view_root().joinpath(p) for p in (python.platlib, python.purelib)}
 
     @classmethod

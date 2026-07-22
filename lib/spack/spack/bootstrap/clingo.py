@@ -90,7 +90,7 @@ class ClingoBootstrapConcretizer:
         best.namespace = "builtin"
         # If the compiler does not support C++ 14, fail with a legible error message
         try:
-            _ = best.package.standard_flag(language="cxx", standard="14")
+            _ = spack.repo.PATH.get(best).standard_flag(language="cxx", standard="14")
         except RuntimeError as e:
             raise RuntimeError(
                 "cannot find a compiler supporting C++ 14 [needed to bootstrap clingo]"
@@ -162,7 +162,8 @@ class ClingoBootstrapConcretizer:
         # Tweak it to conform to the host architecture + update the version of a few dependencies
         for node in s.traverse():
             # Clear patches, we'll compute them correctly later
-            node.patches.clear()
+            if hasattr(node, "_patches"):
+                del node._patches
             if "patches" in node.variants:
                 del node.variants["patches"]
 
@@ -196,8 +197,8 @@ class ClingoBootstrapConcretizer:
             if "libc" in edge.virtuals:
                 edge.spec = self.host_libc
 
-        spack.spec._inject_patches_variant(s)
-        s._finalize_concretization()
+        spack.repo.inject_patches_variant(s)
+        spack.repo.finalize_concretization([s])
 
         # Work around the fact that the installer calls Spec.dependents() and
         # we modified edges inconsistently

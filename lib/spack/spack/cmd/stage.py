@@ -9,6 +9,7 @@ import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.package_base
+import spack.repo
 import spack.store
 import spack.traverse
 from spack.active_environment import active_environment
@@ -95,7 +96,7 @@ def stage(parser, args):
         if filter(spec):
             continue
 
-        pkg = spec.package
+        pkg = spack.repo.PATH.get(spec)
 
         if custom_path:
             pkg.path = custom_path
@@ -109,7 +110,7 @@ def _stage_env(env: ev.Environment, filter):
         if filter(spec):
             continue
 
-        _stage(spec.package)
+        _stage(spack.repo.PATH.get(spec))
 
 
 def _stage(pkg: spack.package_base.PackageBase):

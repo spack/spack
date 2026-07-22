@@ -56,6 +56,7 @@ import spack.oci.oci
 import spack.oci.opener
 import spack.paths
 import spack.platforms
+import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
@@ -714,6 +715,7 @@ def _read_specs_and_push_index(
             finally:
                 if cache_entry:
                     cache_entry.destroy()
+            spack.repo.reconstruct_virtuals([fetched_spec])
             db.add(fetched_spec)
             db.mark(fetched_spec, "in_buildcache", True)
 
@@ -1628,6 +1630,7 @@ def _oci_update_index(
 
     for spec_dict in spec_dicts:
         spec = spack.spec.Spec.from_dict(spec_dict)
+        spack.repo.reconstruct_virtuals([spec])
         db.add(spec)
         db.mark(spec, "in_buildcache", True)
 
@@ -2165,7 +2168,7 @@ def install_root_node(
     with spack.store.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, tarball_stage, force)
-        spec.package.windows_establish_runtime_linkage()
+        spack.repo.PATH.get(spec).windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, allow_missing=allow_missing)
 
@@ -2209,6 +2212,7 @@ def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorMetadata]:
             # to mark this spec concrete on read-in.
             fetched_spec = spack.spec.Spec.from_dict(spec_dict)
             fetched_spec._mark_concrete()
+            spack.repo.reconstruct_virtuals([fetched_spec])
 
             found_specs.append(MirrorMetadata(mirror.fetch_url, layout_version, mirror.fetch_view))
 

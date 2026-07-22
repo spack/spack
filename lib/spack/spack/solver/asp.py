@@ -2964,7 +2964,7 @@ class SpackSolverSetup:
                             f"{start_str} cannot depend on {', '.join(sorted(invalid))}"
                         )
 
-                spack.spec.Spec.ensure_valid_variants(s)
+                spack.repo.ensure_valid_variants(s)
 
     def setup(
         self,
@@ -3844,7 +3844,7 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     roots = [spec.root for spec in specs.values()]
     roots = {id(r): r for r in roots}
     for root in roots.values():
-        spack.spec._inject_patches_variant(root)
+        spack.repo.inject_patches_variant(root)
 
     for s in specs.values():
         # Add external paths to specs with just external modules
@@ -3855,8 +3855,7 @@ def post_process_concretization_result(specs: SpecDict) -> None:
         _specs_with_commits(s)
 
     # mark concrete and assign hashes to all specs in the solve
-    for root in roots.values():
-        root._finalize_concretization()
+    spack.repo.finalize_concretization(roots.values())
 
     # Unify hashes (this is to avoid duplicates of runtimes and compilers)
     unifier = ConcreteSpecsByHash()
@@ -3883,6 +3882,14 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     new_specs = execute_explicit_splices(specs)
     specs.clear()
     specs.update(new_specs)
+
+    # attach a package instance to every node of the concretized specs
+    spack.repo.attach_packages(specs.values())
+
+    # Resolve patch objects for all nodes, making Spec.patches available
+    for s in specs.values():
+        for node in s.traverse():
+            spack.repo.get_patches(node)
 
 
 def execute_explicit_splices(specs: SpecDict) -> SpecDict:

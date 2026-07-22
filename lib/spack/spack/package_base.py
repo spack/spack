@@ -26,6 +26,7 @@ from spack.vendor.typing_extensions import Literal
 import spack.config
 import spack.dependency
 import spack.deptypes as dt
+import spack.detection
 import spack.directives_meta
 import spack.enums
 import spack.error
@@ -227,7 +228,7 @@ class DetectablePackageMeta(type):
                         external_path = extra_attributes.pop("prefix", None)
                         external_modules = extra_attributes.pop("modules", None)
                         try:
-                            spec = spack.spec.Spec.from_detection(
+                            spec = spack.detection.spec_from_detection(
                                 spec_str,
                                 external_path=external_path,
                                 external_modules=external_modules,
@@ -719,7 +720,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         super().__init__()
 
     def __getitem__(self, key: str) -> "PackageBase":
-        return self.spec[key].package
+        return spack.repo.PATH.get(self.spec[key])
 
     @classmethod
     def dependency_names(cls):
@@ -1249,7 +1250,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             )
 
         if self.spec.concrete:
-            patches = self.spec.patches
+            patches = spack.repo.get_patches(self.spec)
             uniqe_part = self.spec.dag_hash(7)
         else:
             # The only code path that gets here is `spack mirror create --all`,
@@ -1697,7 +1698,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         has_patch_fun = hasattr(self, "patch") and callable(self.patch)
 
         # Get the patches from the spec (this is a shortcut for the MV-variant)
-        patches = self.spec.patches
+        patches = spack.repo.get_patches(self.spec)
 
         # If there are no patches, note it.
         if not patches and not has_patch_fun:
@@ -1879,7 +1880,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # we have to call package_hash *before* marking specs concrete
         if self.spec._patches_assigned():
             hash_content.extend(
-                ":".join((p.sha256, str(p.level))).encode("utf-8") for p in self.spec.patches
+                ":".join((p.sha256, str(p.level))).encode("utf-8")
+                for p in spack.repo.get_patches(self.spec)
             )
 
         # package.py contents
@@ -2191,7 +2193,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # Try to get the package for the spec
         try:
-            pkg = spec.package
+            pkg = spack.repo.PATH.get(spec)
         except spack.repo.UnknownEntityError:
             pkg = None
 
@@ -2346,7 +2348,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 d.prefix.bin
                 for d in deps
                 if os.path.isdir(d.prefix.bin)
-                and "windows-system" not in getattr(d.package, "tags", [])
+                and "windows-system" not in getattr(spack.repo.PATH.get(d), "tags", [])
             )
         else:
             rpaths = [self.prefix.lib, self.prefix.lib64]
@@ -2617,7 +2619,7 @@ def non_preferred_version(node: spack.spec.Spec) -> spack.enums.PartStyle:
         return spack.enums.PartStyle.NORMAL
 
     try:
-        is_preferred = node.version == preferred_version(node.package)
+        is_preferred = node.version == preferred_version(spack.repo.PATH.get(node))
     except ValueError:
         return spack.enums.PartStyle.NORMAL
 
@@ -2631,7 +2633,7 @@ def non_default_variant(node: spack.spec.Spec, variant_name: str) -> spack.enums
     Intended for use as ``variant_style_fn`` in :meth:`~spack.spec.Spec.format`.
     """
     try:
-        default_variant = node.package.get_variant(variant_name).make_default()
+        default_variant = spack.repo.PATH.get(node).get_variant(variant_name).make_default()
         is_non_default = not node.satisfies(str(default_variant))
     except ValueError:
         # Special variants like "patches" have no meaningful default.

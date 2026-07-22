@@ -10,6 +10,7 @@ import spack.binary_distribution
 import spack.cmd
 import spack.compilers.config
 import spack.config
+import spack.repo
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
@@ -137,10 +138,9 @@ def compiler_info(args):
     compilers.sort(key=lambda x: (not x.external, x.name, x.version))
 
     for c in compilers:
+        pkg = spack.repo.PATH.get(c)
         exes = {
-            cname: getattr(c.package, cname)
-            for cname in ("cc", "cxx", "fortran")
-            if hasattr(c.package, cname)
+            cname: getattr(pkg, cname) for cname in ("cc", "cxx", "fortran") if hasattr(pkg, cname)
         }
         if not exes:
             tty.debug(
@@ -233,7 +233,11 @@ def _all_available_compilers(scope: Optional[str], remote: bool) -> List[Spec]:
     supported_compilers = spack.compilers.config.supported_compilers()
 
     def _is_compiler(x):
-        return x.name in supported_compilers and x.package.supported_languages and not x.external
+        return (
+            x.name in supported_compilers
+            and spack.repo.PATH.get(x).supported_languages
+            and not x.external
+        )
 
     compilers_from_store = [x for x in spack.store.STORE.db.query() if _is_compiler(x)]
     compilers_from_yaml = spack.compilers.config.all_compilers(scope=scope, init_config=False)

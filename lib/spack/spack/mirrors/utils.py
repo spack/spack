@@ -50,7 +50,7 @@ def get_matching_versions(specs, num_versions=1):
     """
     matching = []
     for spec in specs:
-        pkg = spec.package
+        pkg = spack.repo.PATH.get(spec)
 
         # Skip any package that has no known versions.
         if not pkg.versions:

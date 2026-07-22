@@ -4657,9 +4657,9 @@ def test_concretization_cache_reapplies_patches_on_hit(
     assert "patches" in spec1.variants
     initial_sha256s = frozenset(spec1.variants["patches"].value)
 
-    # Simulate a recipe change: wrap _inject_patches_variant to inject an extra sha256,
+    # Simulate a recipe change: wrap inject_patches_variant to inject an extra sha256,
     # as if a new patch directive had been added to the package.
-    original_inject = spack.spec._inject_patches_variant
+    original_inject = spack.repo.inject_patches_variant
 
     def inject_with_new_patch(root):
         original_inject(root)
@@ -4669,7 +4669,7 @@ def test_concretization_cache_reapplies_patches_on_hit(
                 s.variants["patches"].set(*existing, EXTRA_SHA256)
                 break
 
-    monkeypatch.setattr(spack.spec, "_inject_patches_variant", inject_with_new_patch)
+    monkeypatch.setattr(spack.repo, "inject_patches_variant", inject_with_new_patch)
 
     # The cache key has not changed (patches are not in ASP facts), so the second
     # solve must hit the cache without running clingo again.

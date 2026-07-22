@@ -10,6 +10,7 @@ import pytest
 
 import spack.config
 import spack.error
+import spack.repo
 import spack.spec
 from spack.installer.base import ExitCode
 from spack.installer.core import PackageInstaller, read_connection, write_connection
@@ -32,8 +33,8 @@ class TestPackageInstallerConstructor:
         """Test that capacity is set correctly when concurrent_packages is explicitly provided."""
         spec = spack.spec.Spec("trivial-install-test-package")
         spec._mark_concrete()
-        assert PackageInstaller([spec.package], concurrent_packages=5).capacity == 5
-        assert PackageInstaller([spec.package], concurrent_packages=1).capacity == 1
+        assert PackageInstaller([spack.repo.PATH.get(spec)], concurrent_packages=5).capacity == 5
+        assert PackageInstaller([spack.repo.PATH.get(spec)], concurrent_packages=1).capacity == 1
 
     def test_capacity_from_config_default_one(
         self, temporary_store, mock_packages, mutable_config
@@ -42,14 +43,14 @@ class TestPackageInstallerConstructor:
         mutable_config.set("config:concurrent_packages", 0)
         spec = spack.spec.Spec("trivial-install-test-package")
         spec._mark_concrete()
-        assert PackageInstaller([spec.package]).capacity == sys.maxsize
+        assert PackageInstaller([spack.repo.PATH.get(spec)]).capacity == sys.maxsize
 
     def test_capacity_from_config_non_zero(self, temporary_store, mock_packages, mutable_config):
         """Test that non-0 config values are used as-is."""
         mutable_config.set("config:concurrent_packages", 1)
         spec = spack.spec.Spec("trivial-install-test-package")
         spec._mark_concrete()
-        assert PackageInstaller([spec.package]).capacity == 1
+        assert PackageInstaller([spack.repo.PATH.get(spec)]).capacity == 1
 
     def test_no_binary_mirrors_forces_source_only(
         self, temporary_store, mock_packages, mutable_config
@@ -58,7 +59,7 @@ class TestPackageInstallerConstructor:
         source_only at scheduling time."""
         spec = spack.spec.Spec("trivial-install-test-package")
         spec._mark_concrete()
-        installer = PackageInstaller([spec.package], root_policy="auto")
+        installer = PackageInstaller([spack.repo.PATH.get(spec)], root_policy="auto")
         assert not installer.has_mirrors
 
     def test_no_binary_mirrors_preserves_cache_only(
@@ -68,7 +69,7 @@ class TestPackageInstallerConstructor:
         spec = spack.spec.Spec("trivial-install-test-package")
         spec._mark_concrete()
         installer = PackageInstaller(
-            [spec.package], root_policy="cache_only", dependencies_policy="cache_only"
+            [spack.repo.PATH.get(spec)], root_policy="cache_only", dependencies_policy="cache_only"
         )
         assert installer.root_policy == "cache_only"
         assert installer.dependencies_policy == "cache_only"
@@ -81,7 +82,9 @@ def test_build_failure_reported_through_event_loop(temporary_store, mock_package
     spec = _make_concrete("trivial-install-test-package")
     launcher = ScriptedLauncher({spec.name: Script(exitcode=ExitCode.BUILD_ERROR)})
     ui = RecordingUI()
-    installer = PackageInstaller([spec.package], explicit=True, ui=ui, launcher=launcher)
+    installer = PackageInstaller(
+        [spack.repo.PATH.get(spec)], explicit=True, ui=ui, launcher=launcher
+    )
 
     with pytest.raises(spack.error.InstallError) as exc_info:
         installer.install()
@@ -254,7 +257,7 @@ def test_installed_from_binary_cache_message_sets_package_attr(temporary_store, 
     )
     _install(launcher, spec)
 
-    assert spec.package.installed_from_binary_cache is True
+    assert spack.repo.PATH.get(spec).installed_from_binary_cache is True
 
 
 def test_state_messages_tolerate_garbage_and_partial_lines(temporary_store, mock_packages):
@@ -288,7 +291,7 @@ def test_reports_collect_success_failure_and_skips(temporary_store, mock_package
         {dep.name: Script(exitcode=ExitCode.BUILD_ERROR), other.name: Script()}
     )
     installer = PackageInstaller(
-        [root.package, other.package],
+        [spack.repo.PATH.get(root), spack.repo.PATH.get(other)],
         explicit=True,
         ui=RecordingUI(),
         launcher=launcher,
@@ -369,7 +372,10 @@ def test_explicit_as_set_marks_only_those_specs(temporary_store, mock_packages):
     a, b = _make_concrete("pkg-a"), _make_concrete("pkg-b")
     launcher = ScriptedLauncher({a.name: Script(), b.name: Script()})
     PackageInstaller(
-        [a.package, b.package], explicit={a.dag_hash()}, ui=RecordingUI(), launcher=launcher
+        [spack.repo.PATH.get(a), spack.repo.PATH.get(b)],
+        explicit={a.dag_hash()},
+        ui=RecordingUI(),
+        launcher=launcher,
     ).install()
 
     assert _record(temporary_store, a).explicit

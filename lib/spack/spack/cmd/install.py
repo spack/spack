@@ -14,6 +14,7 @@ import spack.config
 import spack.environment as ev
 import spack.installer_dispatch
 import spack.paths
+import spack.repo
 import spack.spec
 import spack.store
 import spack.util.filesystem as fs
@@ -441,7 +442,7 @@ def install_without_active_env(args, install_kwargs, reporter):
         require_user_confirmation_for_overwrite(concrete_specs, args)
         install_kwargs["overwrite"] = [spec.dag_hash() for spec in concrete_specs]
 
-    installs = [s.package for s in concrete_specs]
+    installs = [spack.repo.PATH.get(s) for s in concrete_specs]
     install_kwargs["explicit"] = [s.dag_hash() for s in concrete_specs]
 
     try:

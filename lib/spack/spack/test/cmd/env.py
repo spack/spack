@@ -3716,11 +3716,11 @@ spack:
         concretize()
         (libelf_spec,) = e.all_matching_specs("libelf")
         (mpileaks_spec,) = e.all_matching_specs("mpileaks")
-        assert not os.path.exists(libelf_spec.package.stage.path)
-        assert not os.path.exists(mpileaks_spec.package.stage.path)
+        assert not os.path.exists(spack.repo.PATH.get(libelf_spec).stage.path)
+        assert not os.path.exists(spack.repo.PATH.get(mpileaks_spec).stage.path)
         install("--fake")
-        assert os.path.exists(libelf_spec.package.stage.path)
-        assert not os.path.exists(mpileaks_spec.package.stage.path)
+        assert os.path.exists(spack.repo.PATH.get(libelf_spec).stage.path)
+        assert not os.path.exists(spack.repo.PATH.get(mpileaks_spec).stage.path)
 
 
 # Helper method for test_install_develop_keep_stage
@@ -3735,7 +3735,7 @@ def test_virtual_spec_concretize_together(mutable_config):
         mutable_config.set("concretizer:unify", True)
         e.add("mpi")
         e.concretize()
-        assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
+        assert any(spack.repo.PATH.get(s).provides("mpi") for _, s in e.concretized_specs())
 
 
 @pytest.mark.parametrize(

@@ -23,6 +23,7 @@ import spack.package_base
 import spack.patch
 import spack.repo
 import spack.store
+import spack.subprocess_context
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack import binary_distribution
@@ -66,7 +67,7 @@ def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch
     spec._package = None
     monkeypatch.setattr(spack.repo.PATH, "get", find_nothing)
     with pytest.raises(spack.repo.UnknownPackageError):
-        spec.package
+        spack.repo.PATH.get(spec)
 
     # Ensure we can uninstall it
     PackageBase.uninstall_by_spec(spec)
@@ -592,17 +593,17 @@ def test_install_from_binary_with_missing_patch_succeeds(
         uploader.push_or_raise([s])
 
     # Now re-install it.
-    s.package.do_uninstall()
+    spack.repo.PATH.get(s).do_uninstall()
     assert not temporary_store.db.query_local_by_spec_hash(s.dag_hash())
 
     # Source install: fails, we don't have the patch.
     with pytest.raises(spack.error.SpecError, match="Couldn't find patch for package"):
-        PackageInstaller([s.package], explicit=True).install()
+        PackageInstaller([spack.repo.PATH.get(s)], explicit=True).install()
 
     # Binary install: succeeds, we don't need the patch.
     spack.mirrors.utils.add(mirror)
     PackageInstaller(
-        [s.package],
+        [spack.repo.PATH.get(s)],
         explicit=True,
         root_policy="cache_only",
         dependencies_policy="cache_only",
@@ -621,7 +622,7 @@ def test_install_spliced(install_mockery, mock_fetch, monkeypatch, transitive, i
     # Do the splice.
     out = spec.splice(dep, transitive)
     installer = spack.installer_dispatch.create_installer(
-        [out.package], verbose=True, fail_fast=True
+        [spack.repo.PATH.get(out)], verbose=True, fail_fast=True
     )
     installer.install()
     for node in out.traverse():
@@ -639,10 +640,10 @@ def test_install_spliced_build_spec_installed(
 
     # Do the splice.
     out = spec.splice(dep, transitive)
-    spack.installer_dispatch.create_installer([out.build_spec.package]).install()
+    spack.installer_dispatch.create_installer([spack.repo.PATH.get(out.build_spec)]).install()
 
     installer = spack.installer_dispatch.create_installer(
-        [out.package], verbose=True, fail_fast=True
+        [spack.repo.PATH.get(out)], verbose=True, fail_fast=True
     )
     installer.install()
     for node in out.traverse():
@@ -689,7 +690,7 @@ def test_install_splice_root_from_binary(
     uninstall = SpackCommand("uninstall")
     uninstall("-ay")
 
-    spack.installer_dispatch.create_installer([out.package], unsigned=True).install()
+    spack.installer_dispatch.create_installer([spack.repo.PATH.get(out)], unsigned=True).install()
 
     assert len(spack.store.STORE.db.query()) == len(list(out.traverse()))
 
@@ -702,3 +703,45 @@ def test_log_files_preserved_on_error(install_mockery, mock_fetch, installer_var
     with pytest.raises(spack.error.InstallError):
         installer.install()
     assert os.path.exists(pkg.log_path)
+
+
+def _touch_install(self, spec, prefix):
+    fs.touch(os.path.join(prefix, "dummy.txt"))
+
+
+def _run_dep_access_install(self, spec, prefix):
+    # access a run-only dependency during the build, like gnupg does with pinentry
+    assert spec["dtrun3"].package.name == "dtrun3"
+    fs.touch(os.path.join(prefix, "dummy.txt"))
+
+
+def test_run_only_dep_accessible_during_build(
+    install_mockery, mock_fetch, monkeypatch, installer_variant
+):
+    """Build code can reach dependency specs over run-only edges, so the build process must
+    attach package instances to every node of the DAG, not just the root."""
+    for name in ("dtlink5", "dtrun3", "dtbuild3"):
+        monkeypatch.setattr(
+            spack.repo.PATH.get_pkg_class(name), "install", _touch_install, raising=False
+        )
+    monkeypatch.setattr(
+        spack.repo.PATH.get_pkg_class("dtrun1"), "install", _run_dep_access_install, raising=False
+    )
+
+    spec = spack.concretize.concretize_one("dtrun1")
+
+    # specs from the database or a lockfile have no package instances attached
+    for node in spec.traverse():
+        node._package = None
+
+    spack.installer_dispatch.create_installer([spack.repo.PATH.get(spec)], explicit=True).install()
+    assert spack.store.STORE.db.installed(spec)
+
+
+def test_deserialize_attaches_full_dag(install_mockery):
+    """Sending a package to a child process must reattach package instances to all nodes of
+    its spec, not just the root."""
+    pkg = spack.concretize.concretize_one("dtrun1").package
+    restored = spack.subprocess_context.deserialize(spack.subprocess_context.serialize(pkg))
+    assert restored.spec._package is restored
+    assert restored.spec["dtrun3"].package.name == "dtrun3"

@@ -48,6 +48,7 @@ import spack.environment
 import spack.error
 import spack.paths
 import spack.projections as proj
+import spack.repo
 import spack.schema
 import spack.schema.environment
 import spack.spec
@@ -158,7 +159,7 @@ def _has_system_driver(compiler: spack.spec.Spec) -> bool:
     """Returns True if any of the compiler's C, C++, or Fortran drivers lives in a system dir."""
     for attr in ("cc", "cxx", "fc"):
         try:
-            path = getattr(compiler.package, attr)
+            path = getattr(spack.repo.PATH.get(compiler), attr)
         except (KeyError, TypeError, AttributeError):
             continue
         if path and str(pathlib.Path(path).parent) in spack.util.environment.SYSTEM_DIRS:
@@ -536,7 +537,8 @@ class BaseConfiguration:
         if self.hierarchical:
             # Never hide a module that opens a hierarchy
             if any(
-                self.spec.name == x or self.spec.package.provides(x) for x in self.hierarchy_tokens
+                self.spec.name == x or spack.repo.PATH.get(self.spec).provides(x)
+                for x in self.hierarchy_tokens
             ):
                 return False
 
@@ -676,7 +678,9 @@ class BaseConfiguration:
                 continue
 
             # If I depend on it
-            if x in self.spec and not (self.spec.name == x or self.spec.package.provides(x)):
+            if x in self.spec and not (
+                self.spec.name == x or spack.repo.PATH.get(self.spec).provides(x)
+            ):
                 requirements[x] = self.spec[x]  # record the actual provider
         return requirements
 
@@ -710,7 +714,7 @@ class BaseConfiguration:
 
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:
-            if self.spec.name == x or self.spec.package.provides(x):
+            if self.spec.name == x or spack.repo.PATH.get(self.spec).provides(x):
                 provides[x] = self.spec
         return provides
 
@@ -956,9 +960,7 @@ class ModuleContext(tengine.Context):
 
     @tengine.context_property
     def tags(self) -> List[str]:
-        if not hasattr(self.spec.package, "tags"):
-            return []
-        return self.spec.package.tags
+        return getattr(spack.repo.PATH.get(self.spec), "tags", [])
 
     @tengine.context_property
     def timestamp(self) -> datetime.datetime:
@@ -971,7 +973,7 @@ class ModuleContext(tengine.Context):
     @tengine.context_property
     def short_description(self) -> str:
         # If we have a valid docstring return the first paragraph.
-        docstring = type(self.spec.package).__doc__
+        docstring = type(spack.repo.PATH.get(self.spec)).__doc__
         if docstring:
             value = docstring.split("\n\n")[0]
             # Transform tabs and friends into spaces
@@ -986,13 +988,14 @@ class ModuleContext(tengine.Context):
     @tengine.context_property
     def long_description(self) -> Optional[str]:
         # long description is the docstring with reduced whitespace.
-        if self.spec.package.__doc__:
-            return re.sub(r"\s+", " ", self.spec.package.__doc__)
+        docstring = spack.repo.PATH.get(self.spec).__doc__
+        if docstring:
+            return re.sub(r"\s+", " ", docstring)
         return None
 
     @tengine.context_property
     def configure_options(self) -> Optional[str]:
-        pkg = self.spec.package
+        pkg = spack.repo.PATH.get(self.spec)
 
         # If the spec is external Spack doesn't know its configure options
         if self.spec.external:
@@ -1071,8 +1074,8 @@ class ModuleContext(tengine.Context):
 
         # Then run setup_dependent_run_environment before setup_run_environment.
         for dep in self.spec.dependencies(deptype=("link", "run")):
-            dep.package.setup_dependent_run_environment(env, self.spec)
-        self.spec.package.setup_run_environment(env)
+            spack.repo.PATH.get(dep).setup_dependent_run_environment(env, self.spec)
+        spack.repo.PATH.get(self.spec).setup_run_environment(env)
 
         # Project the environment variables from prefix to view if needed
         if view and self.spec in view:
@@ -1276,7 +1279,10 @@ class BaseModuleFileWriter:
         # 2. template specified in a package directly
         # 3. default template (must be defined, check in __init__)
         package_attribute = f"{self.conf.module_system}_template"
-        for candidate in [self.conf.template, getattr(self.spec.package, package_attribute, None)]:
+        for candidate in [
+            self.conf.template,
+            getattr(spack.repo.PATH.get(self.spec), package_attribute, None),
+        ]:
             if candidate:
                 return candidate
         return self.default_template
@@ -1335,7 +1341,7 @@ class BaseModuleFileWriter:
 
         # Attribute from package
         attr_name = f"{self.conf.module_system}_context"
-        pkg_update = getattr(self.spec.package, attr_name, {})
+        pkg_update = getattr(spack.repo.PATH.get(self.spec), attr_name, {})
         context.update(pkg_update)
 
         # Context key in modules.yaml
