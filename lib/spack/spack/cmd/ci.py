@@ -747,8 +747,8 @@ def validate_standard_versions(
             for url in all_urls:
                 tty.error(f"    [Failed] {url}")
             valid_checksums = False
-            continue
-        url_dict[version] = url
+        else:
+            url_dict[version] = url
 
     version_hashes = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, fetch_options=pkg.fetch_options
@@ -762,9 +762,8 @@ def validate_standard_versions(
                 f"    [Downloaded] {sha}"
             )
             valid_checksums = False
-            continue
-
-        tty.info(f"Validated {pkg.name}@{version} --> {sha}")
+        else:
+            tty.info(f"Validated {pkg.name}@{version} --> {sha}")
 
     return valid_checksums
 
