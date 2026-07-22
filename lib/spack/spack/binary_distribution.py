@@ -847,10 +847,7 @@ def file_type(f: IO[bytes]) -> int:
             magic = f.read(8)
             if len(magic) < 8:
                 return FileTypes.UNKNOWN
-            elif (
-                relocate.is_elf_magic(magic)
-                or relocate.is_macho_magic(magic)
-            ):
+            elif relocate.is_elf_magic(magic) or relocate.is_macho_magic(magic):
                 return FileTypes.BINARY
 
         f.seek(0)
@@ -2004,7 +2001,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     elif "elf" in platform.binary_formats:
         relocate.relocate_elf_binaries(binaries, prefix_to_prefix)
     elif "pe" in platform.binary_formats and spec.name != "compiler-wrapper":
-        relocate.relocate_windows_binaries(binaries, prefix_to_prefix, sfn_prefix_to_prefix)
+        relocate.relocate_windows_binaries(binaries, spec, prefix_to_prefix, sfn_prefix_to_prefix)
 
     relocate.relocate_links(links, prefix_to_prefix)
     relocate.relocate_text(textfiles, prefix_to_prefix)

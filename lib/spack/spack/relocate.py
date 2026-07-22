@@ -12,6 +12,7 @@ from typing import IO, Dict, Iterable, List, Optional
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
 
+import spack.spec
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
@@ -101,7 +102,10 @@ def _buildcache_import_lib_targets(
 
 
 def relocate_windows_binaries(
-    targets, prefixes: Dict[str, str], sfn_prefixes: Optional[Dict[str, str]] = None
+    targets,
+    spec: spack.spec.Spec,
+    prefixes: Dict[str, str],
+    sfn_prefixes: Optional[Dict[str, str]] = None,
 ):
     # Import libraries may reference their DLL by an 8.3 short filename (SFN) if the
     # build host truncated the path. We can't expand such a path back to its long
@@ -111,11 +115,20 @@ def relocate_windows_binaries(
     ev = EnvironmentModifications()
     ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in all_prefixes.items()])
     ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
+    ev.set("SPACK_DEBUG_WRAPPER", "ON")
     print(["|".join((k, v)) for k, v in all_prefixes.items()])
 
     coff_for_target = _buildcache_import_lib_targets(targets, all_prefixes)
     pe_targets = [t for t in targets if t.endswith(".dll") or t.endswith(".exe")]
-    sfs.apply_pe_relocations(pe_targets, coff_for_target, _msvc_relocate(), ev)
+    sfs.apply_pe_relocations(
+        pe_targets,
+        coff_for_target,
+        sfs.relocate(spec.package),
+        ev,
+        output=str,
+        error=str,
+        fail_on_error=True,
+    )
 
 
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
@@ -393,7 +406,7 @@ def is_msvc_magic(f: IO[bytes]) -> bool:
     # wasn't a coff file, check PE
     f.seek(0x3C)
     pe_offset_bytes = f.read(4)
-    pe_offset = struct.unpack('<I', pe_offset_bytes)[0]
+    pe_offset = struct.unpack("<I", pe_offset_bytes)[0]
     if pe_offset > fsize:
         return False
     f.seek(pe_offset)
