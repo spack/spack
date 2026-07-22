@@ -377,7 +377,7 @@ def test_external_spec_multi_valued_variant_is_not_changed():
 
 
 @pytest.mark.regression("52643")
-def test_external_compiler_with_non_compiler_dependency():
+def test_external_compiler_with_non_compiler_dependency(mutable_config):
     packages_config = {
         "compiler-with-deps": {
             "externals": [
@@ -399,7 +399,7 @@ def test_external_compiler_with_non_compiler_dependency():
             "externals": [{"spec": "binutils-for-test@1", "prefix": "/usr", "id": "bin_id"}]
         },
     }
-    with spack.config.CONFIG.override("packages", packages_config) as cfg:
+    with mutable_config.override("packages", packages_config) as cfg:
         valid_compilers = CompilerFactory.from_packages_yaml(cfg)
         for c in valid_compilers:
             if c.name == "compiler-with-deps":

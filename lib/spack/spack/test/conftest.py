@@ -465,7 +465,7 @@ def use_concretization_cache(mock_packages, mutable_config, tmp_path: Path):
     conc_cache_dir = tmp_path / "concretization"
 
     # ensure we have an isolated concretization cache while using fixture
-    with spack.config.CONFIG.override(
+    with mutable_config.override(
         "concretizer:concretization_cache", {"enable": True, "url": str(conc_cache_dir)}
     ):
         yield conc_cache_dir
@@ -1098,7 +1098,7 @@ def concretize_scope(mutable_config, tmp_path: Path):
     """Adds a scope for concretization preferences"""
     concretize_dir = tmp_path / "concretize"
     concretize_dir.mkdir()
-    with spack.config.CONFIG.override(
+    with mutable_config.override(
         spack.config.DirectoryConfigScope("concretize", str(concretize_dir))
     ):
         yield str(concretize_dir)
