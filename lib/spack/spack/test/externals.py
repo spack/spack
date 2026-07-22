@@ -20,7 +20,7 @@ from spack.externals import (
     complete_variants_and_architecture,
 )
 
-pytestmark = pytest.mark.usefixtures("config", "mock_packages")
+pytestmark = pytest.mark.usefixtures("mock_packages")
 
 
 @pytest.mark.parametrize(
@@ -59,7 +59,7 @@ pytestmark = pytest.mark.usefixtures("config", "mock_packages")
         ),
     ],
 )
-def test_basic_parsing(externals_dict, expected_length, expected_queries):
+def test_basic_parsing(config, externals_dict, expected_length, expected_queries):
     """Tests parsing external specs, in some basic cases"""
     parser = ExternalSpecsParser(externals_dict)
 
@@ -91,7 +91,7 @@ def test_basic_parsing(externals_dict, expected_length, expected_queries):
     ],
 )
 def test_external_specs_architecture_completion(
-    externals_dict: List[ExternalDict], expected_triplet, monkeypatch
+    config, externals_dict: List[ExternalDict], expected_triplet, monkeypatch
 ):
     """Tests the completion of external specs architectures when using the default behavior"""
     monkeypatch.setattr(spack.archspec, "HOST_TARGET_FAMILY", TARGETS["aarch64"])
@@ -106,7 +106,7 @@ def test_external_specs_architecture_completion(
         assert node.target == expected_target
 
 
-def test_external_specs_parser_with_missing_packages():
+def test_external_specs_parser_with_missing_packages(config):
     """Tests the parsing of external specs when some packages are missing"""
     externals_dict: List[ExternalDict] = [
         {"spec": "gmake@1.0", "prefix": "/path/to/gmake1"},
@@ -125,7 +125,7 @@ def test_external_specs_parser_with_missing_packages():
         ExternalSpecsParser(externals_dict, allow_nonexisting=False)
 
 
-def test_externals_with_duplicate_id():
+def test_externals_with_duplicate_id(config):
     """Tests the parsing of external specs when some specs have the same id"""
     externals_dict: List[ExternalDict] = [
         {"spec": "gmake@1.0", "prefix": "/path/to/gmake1", "id": "gmake"},
@@ -266,7 +266,9 @@ def test_externals_with_duplicate_id():
         ),
     ],
 )
-def test_externals_with_dependencies(externals_dicts: List[ExternalDict], expected, not_expected):
+def test_externals_with_dependencies(
+    config, externals_dicts: List[ExternalDict], expected, not_expected
+):
     """Tests constructing externals with dependencies"""
     parser = ExternalSpecsParser(externals_dicts)
 
@@ -293,7 +295,7 @@ def test_externals_with_dependencies(externals_dicts: List[ExternalDict], expect
     ],
 )
 def test_externals_without_concrete_version(
-    externals_dicts: List[ExternalDict], expected_length, not_expected
+    config, externals_dicts: List[ExternalDict], expected_length, not_expected
 ):
     """Tests parsing externals, when some dicts are malformed and don't have a concrete version"""
     parser = ExternalSpecsParser(externals_dicts)
@@ -322,7 +324,7 @@ def test_externals_without_concrete_version(
     ],
 )
 def test_external_node_completion(
-    externals_dict: List[ExternalDict], completion_fn, expected, not_expected
+    config, externals_dict: List[ExternalDict], completion_fn, expected, not_expected
 ):
     """Tests the completion of external specs with different node completion"""
     parser = ExternalSpecsParser(externals_dict, complete_node=completion_fn)
@@ -345,7 +347,7 @@ def test_external_node_completion(
 
 
 @pytest.mark.regression("52179")
-def test_external_spec_single_valued_variant_type_is_corrected():
+def test_external_spec_single_valued_variant_type_is_corrected(config):
     """Tests that an external spec string including a single-valued variant is parsed correctly."""
     externals_dict = [
         {"spec": "dual-cmake-autotools@1.0 build_system=autotools", "prefix": "/usr/dual"}
@@ -364,7 +366,7 @@ def test_external_spec_single_valued_variant_type_is_corrected():
 
 
 @pytest.mark.regression("52179")
-def test_external_spec_multi_valued_variant_is_not_changed():
+def test_external_spec_multi_valued_variant_is_not_changed(config):
     """Tests that multi-valued variants in external specs are preserved as they are, even if the
     definition in package.py says otherwise.
     """
