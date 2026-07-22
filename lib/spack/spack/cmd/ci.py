@@ -737,6 +737,8 @@ def validate_standard_versions(
     """
     url_dict: Dict[StandardVersion, str] = {}
 
+    valid_checksums = True
+
     for version in versions:
         url = pkg.find_valid_url_for_version(version)
         if url is None:
@@ -752,7 +754,6 @@ def validate_standard_versions(
         url_dict, pkg.name, fetch_options=pkg.fetch_options
     )
 
-    valid_checksums = True
     for version, sha in version_hashes.items():
         if sha != pkg.versions[version]["sha256"]:
             tty.error(
