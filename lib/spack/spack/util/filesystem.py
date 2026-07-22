@@ -3535,7 +3535,7 @@ def relocate_win_rpath(package):
     # map all PE (dll,exe) prefix locations to the stage
     for pe in pes:
         # we don't want to update the rpath to symlinked files
-        if llnl.util.filesystem.islink(pe):
+        if islink(pe):
             continue
         print(f"Processing {pe}")
         # location of PE file at link time (in stage)
