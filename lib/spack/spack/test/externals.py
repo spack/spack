@@ -8,7 +8,6 @@ import pytest
 from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
-import spack.config
 import spack.traverse
 from spack.compilers.config import CompilerFactory
 from spack.externals import (

@@ -17,6 +17,7 @@ import pytest
 
 import spack.config
 import spack.subprocess_context
+from spack.database import Database
 from spack.directory_layout import DirectoryLayoutError
 
 try:
@@ -233,11 +234,11 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, repo_build
 def test_cannot_write_upstream(tmp_path: pathlib.Path, mock_packages, config):
     # Instantiate the database that will be used as the upstream DB and make
     # sure it has an index file
-    with spack.database.Database(str(tmp_path)).write_transaction():
+    with Database(str(tmp_path)).write_transaction():
         pass
 
     # Create it as an upstream
-    db = spack.database.Database(str(tmp_path), is_upstream=True)
+    db = Database(str(tmp_path), is_upstream=True)
 
     with pytest.raises(spack.database.ForbiddenLockError):
         db.add(spack.concretize.concretize_one("pkg-a"))
@@ -258,21 +259,19 @@ def test_recursive_upstream_dbs(
 
     with spack.repo.use_repositories(repo_builder.root):
         spec = spack.concretize.concretize_one("x")
-        db_c = spack.database.Database(roots[2], layout=layouts[2])
+        db_c = Database(roots[2], layout=layouts[2])
         db_c.add(spec["z"])
 
-        db_b = spack.database.Database(roots[1], upstream_dbs=[db_c], layout=layouts[1])
+        db_b = Database(roots[1], upstream_dbs=[db_c], layout=layouts[1])
         db_b.add(spec["y"])
 
-        db_a = spack.database.Database(roots[0], upstream_dbs=[db_b, db_c], layout=layouts[0])
+        db_a = Database(roots[0], upstream_dbs=[db_b, db_c], layout=layouts[0])
         db_a.add(spec["x"])
 
         upstream_dbs_from_scratch = spack.store._construct_upstream_dbs_from_install_roots(
             [roots[1], roots[2]]
         )
-        db_a_from_scratch = spack.database.Database(
-            roots[0], upstream_dbs=upstream_dbs_from_scratch
-        )
+        db_a_from_scratch = Database(roots[0], upstream_dbs=upstream_dbs_from_scratch)
 
         assert db_a_from_scratch.db_for_spec_hash(spec.dag_hash()) == (db_a_from_scratch)
         assert (
@@ -311,7 +310,7 @@ def usr_folder_exists(monkeypatch):
     monkeypatch.setattr(os.path, "isdir", mock_isdir)
 
 
-def _print_ref_counts(db):
+def _print_ref_counts(db: Database):
     """Print out all ref counts for the graph used here, for debugging"""
     recs = []
 
@@ -378,7 +377,7 @@ def _check_db_sanity(database):
     _check_merkleiness(database)
 
 
-def _check_remove_and_add_package(database: spack.database.Database, spec):
+def _check_remove_and_add_package(database: Database, spec):
     """Remove a spec from the DB, then add it and make sure everything's
     still ok once it is added.  This checks that it was
     removed, that it's back when added again, and that ref
@@ -829,7 +828,7 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
 
 
 @pytest.mark.regression("11118")
-def test_old_external_entries_prefix(mutable_database: spack.database.Database):
+def test_old_external_entries_prefix(mutable_database: Database):
     with open(mutable_database._index_path, "r", encoding="utf-8") as f:
         db_obj = json.loads(f.read())
 
@@ -1047,7 +1046,7 @@ def test_database_works_with_empty_dir(tmp_path: pathlib.Path):
     (db_dir / spack.database._LOCK_FILE).touch()
     (db_dir / "failures").mkdir()
     tmp_path.chmod(mode=0o555)
-    db = spack.database.Database(str(tmp_path))
+    db = Database(str(tmp_path))
     with db.read_transaction():
         db.query()
     # Check that reading an empty directory didn't create a new index.json
@@ -1193,7 +1192,7 @@ def test_error_message_when_using_too_new_db(database, monkeypatch):
     with pytest.raises(
         spack.database.InvalidDatabaseVersionError, match="you need a newer Spack version"
     ):
-        spack.database.Database(database.root)._read()
+        Database(database.root)._read()
 
 
 @pytest.mark.parametrize(
@@ -1204,7 +1203,7 @@ def test_database_construction_doesnt_use_globals(
     tmp_path: pathlib.Path, config, nullify_globals, lock_cfg
 ):
     lock_cfg = lock_cfg or spack.database.lock_configuration(config)
-    db = spack.database.Database(str(tmp_path), lock_cfg=lock_cfg)
+    db = Database(str(tmp_path), lock_cfg=lock_cfg)
     with db.write_transaction():
         pass  # ensure the DB is written
     assert os.path.exists(db.database_directory)
@@ -1213,7 +1212,7 @@ def test_database_construction_doesnt_use_globals(
 def test_database_read_works_with_trailing_data(tmp_path: pathlib.Path, config, mock_packages):
     # Populate a database
     root = str(tmp_path)
-    db = spack.database.Database(root, layout=None)
+    db = Database(root, layout=None)
     spec = spack.concretize.concretize_one("pkg-a")
     db.add(spec)
     specs_in_db = db.query_local()
@@ -1224,7 +1223,7 @@ def test_database_read_works_with_trailing_data(tmp_path: pathlib.Path, config, 
         f.write(json.dumps({"hello": "world"}))
 
     # Read the database and check that it ignores the trailing data
-    assert spack.database.Database(root).query_local() == specs_in_db
+    assert Database(root).query_local() == specs_in_db
 
 
 def test_database_errors_with_just_a_version_key(mutable_database):
@@ -1233,7 +1232,7 @@ def test_database_errors_with_just_a_version_key(mutable_database):
         f.write(json.dumps({"database": {"version": next_version}}))
 
     with pytest.raises(spack.database.InvalidDatabaseVersionError):
-        spack.database.Database(mutable_database.root).query_local()
+        Database(mutable_database.root).query_local()
 
 
 def test_reindex_with_upstreams(tmp_path: pathlib.Path, monkeypatch, mock_packages, config):
@@ -1332,7 +1331,7 @@ def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
     index_json.parent.mkdir(parents=True)
     index_json.write_text(json.dumps(data))
 
-    db = spack.database.Database(str(tmp_path))
+    db = Database(str(tmp_path))
 
     specs = db.query("%gcc")
 
