@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import functools
 import json
 import os
 import pathlib
@@ -24,24 +23,6 @@ config = spack.main.SpackCommand("config")
 env = spack.main.SpackCommand("env")
 
 pytestmark = pytest.mark.usefixtures("mock_packages")
-
-
-def _create_config(scope=None, data={}, section="packages"):
-    scope = scope or spack.config.CONFIG.default_modify_scope()
-    cfg_file = spack.config.CONFIG.get_config_filename(scope, section)
-    with open(cfg_file, "w", encoding="utf-8") as f:
-        syaml.dump(data, stream=f)
-    return cfg_file
-
-
-@pytest.fixture()
-def config_yaml_v015(mutable_config):
-    """Create a packages.yaml in the old format"""
-    old_data = {
-        "config": {"install_tree": "/fake/path", "install_path_scheme": "{name}-{version}"}
-    }
-    return functools.partial(_create_config, data=old_data, section="config")
-
 
 scope_path_re = r"\(([^\)]+)\)"
 
