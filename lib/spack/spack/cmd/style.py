@@ -20,6 +20,7 @@ from spack.cmd.common.spec_strings import (
 from spack.util import tty
 from spack.util.executable import Executable, which
 from spack.util.filesystem import working_dir
+from spack.util.path import same_drive
 from spack.util.tty import color
 
 description = "runs source code style checks on spack"
@@ -203,7 +204,14 @@ def cwd_relative(path: Path, root: Union[Path, str], initial_working_dir: Path) 
     """Translate prefix-relative path to current working directory-relative."""
     if path.is_absolute():
         return path
-    return Path(os.path.relpath((root / path), initial_working_dir))
+    abs_path = (Path(root) / path).resolve()
+    try:
+        return Path(os.path.relpath(abs_path, initial_working_dir))
+    except ValueError:
+        if not same_drive(abs_path, initial_working_dir):
+            tty.debug(f"Cannot make relative path across drives ({abs_path!r} vs {initial_working_dir!r}); using absolute path")
+            return abs_path
+        raise
 
 
 def rewrite_and_print_output(
@@ -525,7 +533,14 @@ def style(parser, args):
         tty.die("This does not look like a valid spack root.", "No such file: '%s'" % spack_script)
 
     def prefix_relative(path: Union[Path, str]) -> Path:
-        return Path(os.path.relpath(os.path.abspath(os.path.realpath(path)), args.root))
+        abs_path = os.path.abspath(os.path.realpath(path))
+        try:
+            return Path(os.path.relpath(abs_path, args.root))
+        except ValueError:
+            if not same_drive(abs_path, args.root):
+                tty.debug(f"Cannot make relative path across drives ({abs_path!r} vs {args.root!r}); using absolute path")
+                return Path(abs_path)
+            raise
 
     file_list = [prefix_relative(file) for file in args.files]
 

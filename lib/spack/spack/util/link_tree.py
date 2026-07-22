@@ -12,6 +12,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import spack.util.filesystem as fs
 from spack.util import tty
+from spack.util.path import same_drive
 
 __all__ = ["LinkTree"]
 
@@ -562,8 +563,15 @@ class LinkTree:
             elif relative:
                 abs_src = os.path.abspath(src)
                 dst_dir = os.path.dirname(os.path.abspath(dst))
-                rel = os.path.relpath(abs_src, dst_dir)
-                link(rel, dst)
+                try:
+                    rel = os.path.relpath(abs_src, dst_dir)
+                    link(rel, dst)
+                except ValueError:
+                    if not same_drive(abs_src, dst_dir):
+                        tty.debug(f"Cannot make relative symlink across drives ({abs_src!r} vs {dst_dir!r}); using absolute path")
+                        link(abs_src, dst)
+                    else:
+                        raise
             else:
                 link(src, dst)
 

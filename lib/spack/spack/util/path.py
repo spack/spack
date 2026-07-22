@@ -123,6 +123,20 @@ else:
     system_path_filter = _noop_decorator
 
 
+def same_drive(
+    path_a: Union[str, "os.PathLike[str]"], path_b: Union[str, "os.PathLike[str]"]
+) -> bool:
+    """Return True if both paths share the same Windows drive letter.
+
+    On non-Windows systems ``os.path.splitdrive`` always returns an empty drive
+    component, so this function returns True for any two paths (they are trivially
+    on the same "drive").  Comparison is case-insensitive.
+    """
+    return os.path.splitdrive(os.fspath(path_a))[0].upper() == os.path.splitdrive(
+        os.fspath(path_b)
+    )[0].upper()
+
+
 def sanitize_win_longpath(path: str) -> str:
     """Strip Windows extended path prefix from strings
     Returns sanitized string.
