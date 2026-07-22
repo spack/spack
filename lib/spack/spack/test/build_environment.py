@@ -23,6 +23,7 @@ import spack.util.environment
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
+from spack.config import Configuration
 from spack.enums import Context
 from spack.old_installer import PackageInstaller
 from spack.util.environment import EnvironmentModifications
@@ -321,7 +322,7 @@ def test_load_external_modules_error(working_env, monkeypatch):
         spack.build_environment.load_external_modules(context)
 
 
-def test_external_config_env(mock_packages, mutable_config, working_env):
+def test_external_config_env(mock_packages, mutable_config: Configuration, working_env):
     cmake_config = {
         "externals": [
             {
@@ -448,7 +449,9 @@ def test_wrapper_variables(
         delattr(dep_pkg, "libs")
 
 
-def test_external_prefixes_last(mutable_config, mock_packages, working_env, monkeypatch):
+def test_external_prefixes_last(
+    mutable_config: Configuration, mock_packages, working_env, monkeypatch
+):
     # Sanity check: under normal circumstances paths associated with
     # dt-diamond-left would appear first. We'll mark it as external in
     # the test to check if the associated paths are placed last.
@@ -508,7 +511,7 @@ def test_parallel_false_is_not_propagating(config, mock_packages):
 )
 @pytest.mark.skipif(sys.platform != "linux", reason="dtags make sense only on linux")
 def test_setting_dtags_based_on_config(
-    config_setting, expected_flag, config, mock_packages, working_env
+    config_setting, expected_flag, config: Configuration, mock_packages, working_env
 ):
     # Pick a random package to be able to set compiler's variables
     s = spack.concretize.concretize_one("cmake")
@@ -826,7 +829,7 @@ gcc:
 )
 @pytest.mark.not_on_windows("Windows doesn't use the compiler-wrapper")
 def test_extra_rpaths_is_set(
-    working_env, mutable_config, mock_packages, gcc_config, expected_rpaths
+    working_env, mutable_config: Configuration, mock_packages, gcc_config, expected_rpaths
 ):
     """Tests that using a compiler with an 'extra_rpaths' section will set the corresponding
     SPACK_COMPILER_EXTRA_RPATHS variable for the wrapper.

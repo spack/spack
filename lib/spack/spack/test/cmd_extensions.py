@@ -12,6 +12,7 @@ import pytest
 import spack.cmd
 import spack.extensions
 import spack.main
+from spack.config import Configuration
 
 
 class Extension:
@@ -49,7 +50,7 @@ class Extension:
 
 
 @pytest.fixture(scope="function")
-def extension_creator(tmp_path: pathlib.Path, config):
+def extension_creator(tmp_path: pathlib.Path, config: Configuration):
     """Create a basic extension command directory structure"""
 
     @contextlib.contextmanager
@@ -227,7 +228,9 @@ def test_missing_command():
     ],
     ids=["no_stem", "vacuous", "leading_hyphen", "basic_good", "trailing_slash", "hyphenated"],
 )
-def test_extension_naming(tmp_path: pathlib.Path, extension_path, expected_exception, config):
+def test_extension_naming(
+    tmp_path: pathlib.Path, extension_path, expected_exception, config: Configuration
+):
     """Ensure that we are correctly validating configured extension paths
     for conformity with the rules: the basename should match
     ``spack-<name>``; <name> may have embedded hyphens but not begin with one.
@@ -254,7 +257,7 @@ def test_missing_command_function(extension_creator, capfd):
         assert "must define function 'bad_cmd'." in capture[1]
 
 
-def test_get_command_paths(config):
+def test_get_command_paths(config: Configuration):
     """Exercise the construction of extension command search paths."""
     extensions = ("extension-1", "extension-2")
     ext_paths = []
@@ -270,7 +273,7 @@ def test_get_command_paths(config):
         assert spack.extensions.get_command_paths() == expected_cmd_paths
 
 
-def test_variable_in_extension_path(config, working_env):
+def test_variable_in_extension_path(config: Configuration, working_env):
     """Test variables in extension paths."""
     os.environ["_MY_VAR"] = os.path.join("my", "var")
     ext_paths = [os.path.join("~", "${_MY_VAR}", "spack-extension-1")]

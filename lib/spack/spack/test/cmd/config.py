@@ -18,6 +18,8 @@ import spack.main
 import spack.schema.config
 import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
+from spack.config import Configuration
+from spack.store import Store
 
 config = spack.main.SpackCommand("config")
 env = spack.main.SpackCommand("env")
@@ -225,7 +227,7 @@ def test_config_edit_edits_spack_yaml(mutable_mock_env_path):
         assert config("edit", "--print-file").strip() == env.manifest_path
 
 
-def test_config_add_with_scope_adds_to_scope(mutable_config, mutable_mock_env_path):
+def test_config_add_with_scope_adds_to_scope(mutable_config: Configuration, mutable_mock_env_path):
     """Test adding to non-env config scope with an active environment"""
     env = ev.create("test")
     with env:
@@ -626,14 +628,14 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     assert "dirty: true" not in output
 
 
-def test_config_update_not_needed(mutable_config):
+def test_config_update_not_needed(mutable_config: Configuration):
     data_before = mutable_config.get("repos")
     config("update", "-y", "repos")
     data_after = mutable_config.get("repos")
     assert data_before == data_after
 
 
-def test_config_update_shared_linking(mutable_config):
+def test_config_update_shared_linking(mutable_config: Configuration):
     # Old syntax: config:shared_linking:rpath/runpath
     # New syntax: config:shared_linking:{type:rpath/runpath,bind:True/False}
     with mutable_config.override("config:shared_linking", "runpath"):
@@ -643,10 +645,10 @@ def test_config_update_shared_linking(mutable_config):
 
 def test_config_prefer_upstream(
     tmp_path_factory: pytest.TempPathFactory,
-    temporary_store,
+    temporary_store: Store,
     install_mockery,
     mock_fetch,
-    mutable_config,
+    mutable_config: Configuration,
     gen_mock_layout,
     monkeypatch,
 ):

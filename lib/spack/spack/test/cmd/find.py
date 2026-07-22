@@ -19,6 +19,7 @@ import spack.paths
 import spack.repo
 import spack.spec
 import spack.user_environment as uenv
+from spack.database import Database
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand
 from spack.test.utilities import SpackCommandArgs
@@ -429,7 +430,7 @@ spack:
     assert "libelf" in output
 
 
-def test_find_loaded(database, working_env):
+def test_find_loaded(database: Database, working_env):
     output = find("--loaded", "--group")
     assert output == ""
 

@@ -7,13 +7,16 @@ import shutil
 from spack.database import Database
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand
+from spack.store import Store
 
 install = SpackCommand("install")
 deprecate = SpackCommand("deprecate")
 reindex = SpackCommand("reindex")
 
 
-def test_reindex_basic(mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery):
+def test_reindex_basic(
+    mock_packages, mock_archive, mock_fetch, temporary_store: Store, install_mockery
+):
     install("--fake", "libelf@0.8.13")
     install("--fake", "libelf@0.8.12")
     all_installed = temporary_store.db.query()
@@ -35,7 +38,7 @@ def test_reindex_db_deleted(
     mock_packages,
     mock_archive,
     mock_fetch,
-    temporary_store,
+    temporary_store: Store,
     install_mockery,
     tmp_path: pathlib.Path,
 ):
@@ -51,7 +54,7 @@ def test_reindex_with_deprecated_packages(
     mock_packages,
     mock_archive,
     mock_fetch,
-    temporary_store,
+    temporary_store: Store,
     install_mockery,
     tmp_path: pathlib.Path,
 ):

@@ -16,6 +16,8 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.lock
 import spack.util.naming
+from spack.config import Configuration
+from spack.repo import RepoPath
 from spack.test.conftest import RepoBuilder
 from spack.util.lang import Singleton
 from spack.util.naming import valid_module_name
@@ -73,7 +75,7 @@ def test_repo_unknown_pkg(mutable_mock_repo):
         mutable_mock_repo.get_pkg_class("builtin_mock.nonexistentpackage")
 
 
-def test_repo_last_mtime(mock_packages):
+def test_repo_last_mtime(mock_packages: RepoPath):
     mtime_with_package_py = [
         (os.path.getmtime(p.module.__file__), p.module.__file__)
         for p in mock_packages.all_package_classes()
@@ -99,7 +101,7 @@ def test_repo_invisibles(mutable_mock_repo, extra_repo):
 
 
 @pytest.mark.regression("24552")
-def test_all_package_names_is_cached_correctly(mock_packages):
+def test_all_package_names_is_cached_correctly(mock_packages: RepoPath):
     assert "mpi" in mock_packages.all_package_names(include_virtuals=True)
     assert "mpi" not in mock_packages.all_package_names(include_virtuals=False)
 
@@ -116,7 +118,9 @@ def test_use_repositories_doesnt_change_class(mock_packages):
     assert id(zlib_cls_inner) == id(zlib_cls_outer)
 
 
-def test_use_repositories_with_unmaterialized_path(tmp_path: pathlib.Path, config, monkeypatch):
+def test_use_repositories_with_unmaterialized_path(
+    tmp_path: pathlib.Path, config: Configuration, monkeypatch
+):
     """Tests that use_repositories restores the repositories from config even when the global
     PATH singleton is materialized for the first time inside the context manager. Materializing
     it after pushing the new repos scope onto the config would "save" the new repositories and
@@ -134,7 +138,9 @@ def test_use_repositories_with_unmaterialized_path(tmp_path: pathlib.Path, confi
     assert [r.root for r in spack.repo.PATH.repos] == [spack.paths.mock_packages_path]
 
 
-def test_env_activate_with_unmaterialized_path(tmp_path: pathlib.Path, config, monkeypatch):
+def test_env_activate_with_unmaterialized_path(
+    tmp_path: pathlib.Path, config: Configuration, monkeypatch
+):
     """Tests that env deactivation restores the repositories from config even when activation
     is the first to touch the global PATH singleton. Materializing it after pushing the env
     config scope would "save" the env's repositories and "restore" them on deactivation."""
@@ -638,7 +644,7 @@ def test_repo_update(tmp_path: pathlib.Path):
     }
 
 
-def test_mock_builtin_repo(mock_packages):
+def test_mock_builtin_repo(mock_packages: RepoPath):
     assert spack.repo.builtin_repo() is mock_packages.get_repo("builtin_mock")
 
 

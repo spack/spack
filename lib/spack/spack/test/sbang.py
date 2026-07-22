@@ -21,6 +21,7 @@ import spack.store
 import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
 from spack.hooks import sbang
+from spack.store import Store
 from spack.util.executable import which
 
 if sys.platform != "win32":
@@ -349,11 +350,11 @@ def run_test_install_sbang(store: spack.store.Store, group):
     check_sbang_installation(store, group)
 
 
-def test_install_group_sbang(temporary_store, install_mockery, configure_group_perms):
+def test_install_group_sbang(temporary_store: Store, install_mockery, configure_group_perms):
     run_test_install_sbang(temporary_store, True)
 
 
-def test_install_user_sbang(temporary_store, install_mockery, configure_user_perms):
+def test_install_user_sbang(temporary_store: Store, install_mockery, configure_user_perms):
     run_test_install_sbang(temporary_store, False)
 
 

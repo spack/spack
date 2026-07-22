@@ -11,6 +11,7 @@ import spack.compilers.config
 import spack.main
 import spack.util.pattern
 import spack.version
+from spack.config import Configuration
 
 compiler = spack.main.SpackCommand("compiler")
 
@@ -94,7 +95,7 @@ def test_compiler_remove(mutable_config):
 
 
 @pytest.mark.regression("37996")
-def test_removing_compilers_from_multiple_scopes(mutable_config):
+def test_removing_compilers_from_multiple_scopes(mutable_config: Configuration):
     # Duplicate "site" scope into "user" scope
     site_config = mutable_config.get("packages", scope="site")
     mutable_config.set("packages", site_config, scope="user")
@@ -236,7 +237,7 @@ def test_compiler_list_empty(no_packages_yaml, compilers_dir, monkeypatch):
     ],
 )
 def test_compilers_shows_packages_yaml(
-    external, expected, no_packages_yaml, working_env, compilers_dir, mutable_config
+    external, expected, no_packages_yaml, working_env, compilers_dir, mutable_config: Configuration
 ):
     """Spack should see a single compiler defined from packages.yaml"""
     external["prefix"] = external["prefix"].format(prefix=os.path.dirname(compilers_dir))

@@ -7,6 +7,7 @@ import re
 import pytest
 
 import spack.main
+from spack.repo import RepoPath
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
@@ -33,7 +34,7 @@ def test_maintained():
     assert out == MAINTAINED_PACKAGES
 
 
-def test_unmaintained(mock_packages):
+def test_unmaintained(mock_packages: RepoPath):
     out = split(maintainers("--unmaintained"))
     assert out == sorted(set(mock_packages.all_package_names()) - set(MAINTAINED_PACKAGES))
 

@@ -21,7 +21,7 @@ import spack.fetch_strategy
 import spack.stage
 import spack.util.executable
 import spack.util.url as url_util
-from spack.config import canonicalize_path
+from spack.config import Configuration, canonicalize_path
 from spack.resource import Resource
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite
 from spack.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
@@ -492,7 +492,7 @@ class TestStage:
         check_destroy(stage, None)
 
     @pytest.mark.parametrize("debug", [False, True])
-    def test_fetch(self, mutable_config, mock_stage_archive, debug):
+    def test_fetch(self, mutable_config: Configuration, mock_stage_archive, debug):
         archive = mock_stage_archive()
         with mutable_config.override("config:debug", debug):
             with Stage(archive.url, name=self.stage_name) as stage:
@@ -754,7 +754,7 @@ class TestStage:
 
     @pytest.mark.not_on_windows("Windows file permission erroring is not yet supported")
     @pytest.mark.skipif(getuid() == 0, reason="user is root")
-    def test_get_stage_root_bad_path(self, mutable_config, clear_stage_root):
+    def test_get_stage_root_bad_path(self, mutable_config: Configuration, clear_stage_root):
         """Ensure an invalid stage path root raises a StageError."""
         with mutable_config.override("config:build_stage", "/no/such/path"):
             with pytest.raises(spack.stage.StageError, match="No accessible stage paths in"):
@@ -772,7 +772,7 @@ class TestStage:
         ],
     )
     def test_stage_purge(
-        self, mutable_config, tmp_path: pathlib.Path, clear_stage_root, path, purged
+        self, mutable_config: Configuration, tmp_path: pathlib.Path, clear_stage_root, path, purged
     ):
         """Test purging of stage directories."""
         stage_config_path = str(tmp_path / "stage")

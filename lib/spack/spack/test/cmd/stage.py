@@ -12,6 +12,7 @@ import spack.package_base
 import spack.store
 import spack.traverse
 from spack.cmd.stage import StageFilter
+from spack.config import Configuration
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.version import Version
@@ -125,7 +126,7 @@ def test_stage_full_env(mutable_mock_env_path, monkeypatch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_concretizer_arguments(mock_packages, mock_fetch, mutable_config):
+def test_concretizer_arguments(mock_packages, mock_fetch, mutable_config: Configuration):
     """Make sure stage also has --reuse and --fresh flags."""
     stage("--reuse", "trivial-install-test-package")
     assert mutable_config.get("concretizer:reuse", None) is True

@@ -10,9 +10,11 @@ import pytest
 
 import spack.error
 import spack.spec
+from spack.config import Configuration
 from spack.installer.base import ExitCode
 from spack.installer.core import PackageInstaller, read_connection, write_connection
 from spack.installer.ui import ChangeJobs, SetEcho
+from spack.store import Store
 from spack.test.installer.conftest import (
     DrivingUI,
     RecordingUI,
@@ -93,7 +95,7 @@ def test_build_failure_reported_through_event_loop(temporary_store, mock_package
 
 
 def test_cache_miss_falls_back_to_source_build(
-    temporary_store, mock_packages, mutable_config, tmp_path
+    temporary_store: Store, mock_packages, mutable_config: Configuration, tmp_path
 ):
     """With a binary mirror configured, the first attempt is cache_only; a cache miss removes the
     build from the UI, reschedules it as source_only, and the second attempt succeeds."""

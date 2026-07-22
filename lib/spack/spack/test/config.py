@@ -34,7 +34,9 @@ import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
+from spack.config import Configuration
 from spack.enums import ConfigScopePriority
+from spack.repo import RepoPath
 from spack.util.filesystem import getuid, join_path, touch
 from spack.util.spack_yaml import DictWithLineInfo
 
@@ -80,7 +82,7 @@ spack:
     return env_yaml
 
 
-def check_compiler_config(config, comps, *compiler_names):
+def check_compiler_config(config: Configuration, comps, *compiler_names):
     """Check that named compilers in comps match Spack's config."""
     compilers = config.get("compilers")
     compiler_list = ["cc", "cxx", "f77", "fc"]
@@ -250,7 +252,7 @@ repos_high = {"repos": {"high": "/some/other/path"}}
 # Test setting config values via path in filename
 
 
-def test_add_config_path(mutable_config):
+def test_add_config_path(mutable_config: Configuration):
     # Try setting a new install tree root
     path = "config:install_tree:root:/path/to/config.yaml"
     mutable_config.add(path)
@@ -295,7 +297,7 @@ def test_add_config_path(mutable_config):
 
 
 @pytest.mark.regression("17543,23259")
-def test_add_config_path_with_enumerated_type(mutable_config):
+def test_add_config_path_with_enumerated_type(mutable_config: Configuration):
     mutable_config.add("config:flags:keep_werror:all")
     assert mutable_config.get("config")["flags"]["keep_werror"] == "all"
 
@@ -420,7 +422,7 @@ packages_merge_high = {
 
 
 @pytest.mark.regression("52423")
-def test_config_set_beyond_existing(mutable_config):
+def test_config_set_beyond_existing(mutable_config: Configuration):
     # no raised error is the primary test for this regression
     # Needs to be for a repo that does not already exist for valid test
     mutable_config.set("repos:nonexistent", "foo")
@@ -428,7 +430,7 @@ def test_config_set_beyond_existing(mutable_config):
 
 
 @pytest.mark.regression("52423")
-def test_config_section_defaults(mutable_config):
+def test_config_section_defaults(mutable_config: Configuration):
     view_default = mutable_config.get("view")
     assert view_default == spack.config.get_default_from_schema("view")
     assert view_default is True
@@ -533,7 +535,7 @@ def test_parse_install_tree(config_settings_fn, expected_fn, mutable_config, tmp
     assert projections == expected_proj
 
 
-def test_change_or_add(mutable_config, mock_packages):
+def test_change_or_add(mutable_config: Configuration, mock_packages):
     mutable_config.add("packages:a:version:['1.0']", scope="user")
 
     mutable_config.add("packages:b:version:['1.1']", scope="system")
@@ -768,7 +770,7 @@ def test_keys_are_ordered(configuration_dir):
         assert actual == expected
 
 
-def test_config_format_error(mutable_config):
+def test_config_format_error(mutable_config: Configuration):
     """This is raised when we try to write a bad configuration."""
     with pytest.raises(spack.config.ConfigFormatError):
         mutable_config.set("compilers", {"bad": "data"}, scope="site")
@@ -849,7 +851,7 @@ def test_bad_config_section(mock_low_high_config):
         mock_low_high_config.get("foobar")
 
 
-def test_nested_override(mutable_config):
+def test_nested_override(mutable_config: Configuration):
     """Ensure proper scope naming of nested overrides."""
     base_name = spack.config._OVERRIDES_BASE_NAME
 
@@ -873,7 +875,7 @@ def test_nested_override(mutable_config):
         _check_scopes(1, [True])
 
 
-def test_alternate_override(monkeypatch, mutable_config):
+def test_alternate_override(monkeypatch, mutable_config: Configuration):
     """Ensure proper scope naming of override when conflict present."""
     base_name = spack.config._OVERRIDES_BASE_NAME
 
@@ -915,7 +917,7 @@ config:
         scope._write_section("config")
 
 
-def test_single_file_scope(config, env_yaml):
+def test_single_file_scope(config: Configuration, env_yaml):
     scope = spack.config.SingleFileScope(
         "env", env_yaml, spack.schema.env.schema, yaml_path=["spack"]
     )
@@ -935,7 +937,7 @@ def test_single_file_scope(config, env_yaml):
         }
 
 
-def test_single_file_scope_section_override(tmp_path: pathlib.Path, config):
+def test_single_file_scope_section_override(tmp_path: pathlib.Path, config: Configuration):
     """Check that individual config sections can be overridden in an
     environment config. The config here primarily differs in that the
     ``packages`` section is intended to override all other scopes (using the
@@ -1158,19 +1160,19 @@ def test_set_dict_override(mock_low_high_config, write_config_file):
     assert config_merge_dict["config"]["aliases"] == mock_low_high_config.get("config:aliases")
 
 
-def test_set_bad_path(config):
+def test_set_bad_path(config: Configuration):
     with pytest.raises(ValueError):
         with config.override(":bad:path", ""):
             pass
 
 
-def test_bad_path_double_override(config):
+def test_bad_path_double_override(config: Configuration):
     with pytest.raises(syaml.SpackYAMLError, match="Meaningless second override"):
         with config.override("bad::double:override::directive", ""):
             pass
 
 
-def test_override_error_does_not_leak_scope(config):
+def test_override_error_does_not_leak_scope(config: Configuration):
     """A failed override must not leave its internal scope behind."""
     before = [s.name for s in config.matching_scopes(r"^overrides-")]
     with pytest.raises(ValueError):
@@ -1180,7 +1182,7 @@ def test_override_error_does_not_leak_scope(config):
     assert after == before
 
 
-def test_license_dir_config(mutable_config, mock_packages, tmp_path):
+def test_license_dir_config(mutable_config: Configuration, mock_packages: RepoPath, tmp_path):
     """Ensure license directory is customizable"""
     expected_dir = spack.paths.default_license_dir
     assert mutable_config.get("config:license_dir") == expected_dir
@@ -1584,7 +1586,9 @@ def test_config_path_dsl(path, it_should_work, expected_parsed):
 
 
 @pytest.mark.regression("48254")
-def test_env_activation_preserves_command_line_scope(mutable_mock_env_path, mutable_config):
+def test_env_activation_preserves_command_line_scope(
+    mutable_mock_env_path, mutable_config: Configuration
+):
     """Check that the "command_line" scope remains the highest priority scope, when we activate,
     or deactivate, environments.
     """
@@ -1612,7 +1616,9 @@ def test_env_activation_preserves_command_line_scope(mutable_mock_env_path, muta
 
 @pytest.mark.regression("48414")
 @pytest.mark.regression("49188")
-def test_env_activation_preserves_config_scopes(mutable_mock_env_path, mutable_config):
+def test_env_activation_preserves_config_scopes(
+    mutable_mock_env_path, mutable_config: Configuration
+):
     """Check that the priority of scopes is respected when merging configuration files."""
     custom_scope = spack.config.InternalConfigScope("custom_scope")
     mutable_config.push_scope(custom_scope, priority=ConfigScopePriority.CUSTOM)
@@ -2181,7 +2187,7 @@ def test_canonicalize_file_relative():
     )
 
 
-def test_env_substitution_follows_activation(mutable_mock_env_path, mutable_config):
+def test_env_substitution_follows_activation(mutable_mock_env_path, mutable_config: Configuration):
     """Tests that the "$env" substitution resolves to the active environment's path only while an
     environment is active, and is a no-op before and after activation.
     """

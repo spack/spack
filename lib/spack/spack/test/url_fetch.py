@@ -17,6 +17,7 @@ import spack.fetch_strategy as fs
 import spack.url
 import spack.util.web as web_util
 import spack.version
+from spack.config import Configuration
 from spack.stage import Stage
 from spack.util import crypto, tty
 from spack.util.executable import which
@@ -94,7 +95,7 @@ def test_urlfetchstrategy_bad_url(tmp_path: pathlib.Path, mutable_config, method
         assert isinstance(exception.reason, FileNotFoundError)
 
 
-def test_fetch_options(mutable_config, tmp_path: pathlib.Path, mock_archive):
+def test_fetch_options(mutable_config: Configuration, tmp_path: pathlib.Path, mock_archive):
     with mutable_config.override("config:url_fetch_method", "curl"):
         fetcher = fs.URLFetchStrategy(
             url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
@@ -108,7 +109,9 @@ def test_fetch_options(mutable_config, tmp_path: pathlib.Path, mock_archive):
             assert filecmp.cmp(archive_file, mock_archive.archive_file)
 
 
-def test_fetch_curl_options(mutable_config, tmp_path: pathlib.Path, mock_archive, monkeypatch):
+def test_fetch_curl_options(
+    mutable_config: Configuration, tmp_path: pathlib.Path, mock_archive, monkeypatch
+):
     with mutable_config.override("config:url_fetch_method", "curl -k -q"):
         fetcher = fs.URLFetchStrategy(
             url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
@@ -129,7 +132,9 @@ def test_fetch_curl_options(mutable_config, tmp_path: pathlib.Path, mock_archive
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_archive_file_errors(tmp_path: pathlib.Path, mutable_config, mock_archive, _fetch_method):
+def test_archive_file_errors(
+    tmp_path: pathlib.Path, mutable_config: Configuration, mock_archive, _fetch_method
+):
     """Ensure FetchStrategy commands may only be used as intended"""
     with mutable_config.override("config:url_fetch_method", _fetch_method):
         fetcher = fs.URLFetchStrategy(url=mock_archive.url)
@@ -158,7 +163,13 @@ if sys.platform != "win32":
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 @pytest.mark.parametrize("mock_archive", files, indirect=True)
 def test_fetch(
-    mock_archive, secure, _fetch_method, checksum_type, config, mutable_mock_repo, monkeypatch
+    mock_archive,
+    secure,
+    _fetch_method,
+    checksum_type,
+    config: Configuration,
+    mutable_mock_repo,
+    monkeypatch,
 ):
     """Fetch an archive and make sure we can checksum it."""
     algo = crypto.hash_fun_for_algo(checksum_type)()
@@ -205,7 +216,7 @@ def test_fetch(
     ],
 )
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
+def test_from_list_url(mock_packages, config: Configuration, spec, url, digest, _fetch_method):
     """
     Test URLs in the url-list-test package, which means they should
     have checksums in the package.
@@ -233,7 +244,7 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
     ],
 )
 def test_new_version_from_list_url(
-    mock_packages, config, _fetch_method, requested_version, tarball, digest
+    mock_packages, config: Configuration, _fetch_method, requested_version, tarball, digest
 ):
     """Test non-specific URLs from the url-list-test package."""
     with config.override("config:url_fetch_method", _fetch_method):
@@ -270,7 +281,7 @@ def test_unknown_hash(checksum_type):
 
 @pytest.mark.skipif(which("curl") is None, reason="Urllib does not have built-in status bar")
 def test_url_with_status_bar(
-    mutable_config, tmp_path: pathlib.Path, mock_archive, monkeypatch, capfd
+    mutable_config: Configuration, tmp_path: pathlib.Path, mock_archive, monkeypatch, capfd
 ):
     """Ensure fetch with status bar option succeeds."""
 
@@ -323,7 +334,9 @@ def test_url_extra_fetch(tmp_path: pathlib.Path, mutable_config, mock_archive, _
     ],
 )
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_candidate_urls(mutable_config, pkg_factory, url, urls, version, expected, _fetch_method):
+def test_candidate_urls(
+    mutable_config: Configuration, pkg_factory, url, urls, version, expected, _fetch_method
+):
     """Tests that candidate urls include mirrors and that they go through
     pattern matching and substitution for versions.
     """

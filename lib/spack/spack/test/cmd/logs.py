@@ -17,6 +17,7 @@ import spack.error
 import spack.main
 import spack.spec
 from spack.main import SpackCommand
+from spack.store import Store
 
 logs = SpackCommand("logs")
 install = SpackCommand("install")
@@ -48,7 +49,7 @@ def _rewind_collect_and_decode(rw_stream):
 
 
 def test_logs_cmd_errors(
-    temporary_store, install_mockery, mock_fetch, mock_archive, mock_packages
+    temporary_store: Store, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
     spec = spack.concretize.concretize_one("pkg-c")
     assert not temporary_store.db.installed(spec)
@@ -72,7 +73,9 @@ def _write_string_to_path(string, path):
         f.write(string.encode("utf-8"))
 
 
-def test_dump_logs(temporary_store, install_mockery, mock_fetch, mock_archive, mock_packages):
+def test_dump_logs(
+    temporary_store: Store, install_mockery, mock_fetch, mock_archive, mock_packages
+):
     """Test that ``spack log`` can find (and print) the logs for partial
     builds and completed installs.
 

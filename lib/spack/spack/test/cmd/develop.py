@@ -15,6 +15,7 @@ import spack.spec
 import spack.stage
 import spack.util.filesystem as fs
 import spack.util.git
+from spack.config import Configuration
 from spack.error import SpackError
 from spack.fetch_strategy import URLFetchStrategy
 from spack.main import SpackCommand
@@ -167,7 +168,7 @@ class TestDevelop:
             with pytest.raises(ev.SpackEnvironmentDevelopError, match="conflicts with concrete"):
                 develop("mpich@1.1")
 
-    def test_develop_applies_changes_path(self, monkeypatch, mutable_config):
+    def test_develop_applies_changes_path(self, monkeypatch, mutable_config: Configuration):
         env("create", "test")
         with ev.read("test") as e:
             e.add("mpich@1.0")

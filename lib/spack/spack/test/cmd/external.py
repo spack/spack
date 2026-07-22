@@ -11,6 +11,7 @@ import spack.cmd.external
 import spack.cray_manifest
 import spack.detection
 import spack.detection.path
+from spack.config import Configuration
 from spack.main import SpackCommand
 from spack.spec import Spec
 from spack.util.filesystem import getuid, touch
@@ -35,7 +36,7 @@ def define_plat_exe(exe):
     return exe
 
 
-def test_find_external_update_config(mutable_config):
+def test_find_external_update_config(mutable_config: Configuration):
     entries = [
         Spec.from_detection("cmake@1.foo", external_path="/x/y1"),
         Spec.from_detection("cmake@3.17.2", external_path="/x/y2"),
@@ -214,7 +215,7 @@ def test_find_external_manifest_failure(mutable_config, tmp_path: pathlib.Path, 
     assert "Skipping manifest and continuing" in output
 
 
-def test_find_external_merge(mutable_config):
+def test_find_external_merge(mutable_config: Configuration):
     """Checks that 'spack find external' doesn't overwrite an existing spec in packages.yaml."""
     pkgs_cfg_init = {
         "find-externals1": {

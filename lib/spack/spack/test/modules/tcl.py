@@ -15,6 +15,7 @@ import spack.modules.error
 import spack.modules.tcl
 import spack.spec
 import spack.util.environment
+from spack.config import Configuration
 
 mpich_spec_string = "mpich@3.0.4"
 mpileaks_spec_string = "mpileaks"
@@ -678,7 +679,7 @@ class TestTcl:
             assert repetitions == 1
 
     def test_compilers_provided_different_name(
-        self, factory, module_configuration, compiler_factory, mutable_config
+        self, factory, module_configuration, compiler_factory, mutable_config: Configuration
     ):
         with mutable_config.override(
             "packages", {"llvm": {"externals": [compiler_factory(spec="llvm@3.3 +clang")]}}

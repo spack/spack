@@ -15,6 +15,7 @@ import spack.paths
 import spack.repo
 import spack.solver.asp
 import spack.spec
+from spack.config import Configuration
 from spack.environment.environment import ViewDescriptor
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.solver.reuse import spec_filter_from_packages_yaml
@@ -59,7 +60,9 @@ def test_correct_gcc_runtime_is_injected_as_dependency(runtime_repo):
 
 
 @pytest.mark.regression("41972")
-def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_path: pathlib.Path):
+def test_external_nodes_do_not_have_runtimes(
+    runtime_repo, mutable_config: Configuration, tmp_path: pathlib.Path
+):
     """Tests that external nodes don't have runtime dependencies."""
 
     packages_yaml = {"pkg-b": {"externals": [{"spec": "pkg-b@1.0", "prefix": f"{str(tmp_path)}"}]}}

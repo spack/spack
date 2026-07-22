@@ -16,6 +16,7 @@ import spack.main
 import spack.paths
 import spack.repo
 from spack.cmd.style import _run_import_check, changed_files
+from spack.repo import RepoPath
 from spack.util.executable import which
 from spack.util.filesystem import FileFilter, working_dir
 
@@ -119,7 +120,7 @@ def test_changed_no_base(git, tmp_path: pathlib.Path, capfd):
         assert "This repository does not have a 'foobar'" in err
 
 
-def test_changed_files_all_files(mock_packages):
+def test_changed_files_all_files(mock_packages: RepoPath):
     # it's hard to guarantee "all files", so do some sanity checks.
     files = {
         os.path.join(spack.paths.prefix, os.path.normpath(path))

@@ -21,6 +21,7 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.url as url_util
+from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import Executable
@@ -174,7 +175,7 @@ def test_patch_in_spec(mock_packages, config):
     )
 
 
-def test_stale_patch_cache_falls_back_to_fresh(mock_packages, config):
+def test_stale_patch_cache_falls_back_to_fresh(mock_packages: RepoPath, config):
     """spec.patches returns correct patches even when the stale in-memory cache is wrong."""
     spec = spack.concretize.concretize_one("patch@=1.0")
     pkg_cls = mock_packages.get_pkg_class("patch")
@@ -244,7 +245,7 @@ def test_patch_order(mock_packages, config):
     assert expected_order == tuple(patch_order)
 
 
-def test_nested_directives(mock_packages):
+def test_nested_directives(mock_packages: RepoPath):
     """Ensure pkg data structures are set up properly by nested directives."""
     # this ensures that the patch() directive results were removed
     # properly from the DirectiveMeta._directives_to_be_executed list

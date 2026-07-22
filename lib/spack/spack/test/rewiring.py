@@ -12,6 +12,7 @@ import spack.concretize
 import spack.deptypes as dt
 import spack.rewiring
 from spack.old_installer import PackageInstaller
+from spack.store import Store
 from spack.test.relocate import text_in_bin
 
 if sys.platform == "darwin":
@@ -32,7 +33,7 @@ def check_spliced_spec_prefixes(spliced_spec):
 
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.parametrize("transitive", [True, False])
-def test_rewire_db(mock_fetch, temporary_store, install_mockery, transitive):
+def test_rewire_db(mock_fetch, temporary_store: Store, install_mockery, transitive):
     """Tests basic rewiring without binary executables."""
     spec = spack.concretize.concretize_one("splice-t^splice-h~foo")
     dep = spack.concretize.concretize_one("splice-h+foo")
@@ -56,7 +57,7 @@ def test_rewire_db(mock_fetch, temporary_store, install_mockery, transitive):
 
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.parametrize("transitive", [True, False])
-def test_rewire_bin(mock_fetch, temporary_store, install_mockery, transitive):
+def test_rewire_bin(mock_fetch, temporary_store: Store, install_mockery, transitive):
     """Tests basic rewiring with binary executables."""
     spec = spack.concretize.concretize_one("quux")
     dep = spack.concretize.concretize_one("garply cflags=-g")
@@ -84,7 +85,7 @@ def test_rewire_bin(mock_fetch, temporary_store, install_mockery, transitive):
 
 
 @pytest.mark.requires_executables(*required_executables)
-def test_rewire_writes_new_metadata(mock_fetch, temporary_store, install_mockery):
+def test_rewire_writes_new_metadata(mock_fetch, temporary_store: Store, install_mockery):
     """Tests that new metadata was written during a rewire.
     Accuracy of metadata is left to other tests."""
     spec = spack.concretize.concretize_one("quux")
@@ -127,7 +128,7 @@ def test_rewire_writes_new_metadata(mock_fetch, temporary_store, install_mockery
 
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.parametrize("transitive", [True, False])
-def test_uninstall_rewired_spec(mock_fetch, temporary_store, install_mockery, transitive):
+def test_uninstall_rewired_spec(mock_fetch, temporary_store: Store, install_mockery, transitive):
     """Test that rewired packages can be uninstalled as normal."""
     spec = spack.concretize.concretize_one("quux")
     dep = spack.concretize.concretize_one("garply cflags=-g")

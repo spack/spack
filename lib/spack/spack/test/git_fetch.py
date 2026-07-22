@@ -15,8 +15,10 @@ import spack.fetch_strategy
 import spack.package_base
 import spack.platforms
 import spack.util.git
+from spack.config import Configuration
 from spack.fetch_strategy import GitFetchStrategy
 from spack.package_base import PackageBase
+from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.filesystem import mkdirp, touch, working_dir
@@ -83,8 +85,8 @@ def test_fetch(
     type_of_test,
     secure,
     mock_git_repository,
-    config,
-    mutable_mock_repo,
+    config: Configuration,
+    mutable_mock_repo: RepoPath,
     git_version,
     monkeypatch,
 ):
@@ -142,7 +144,7 @@ def test_fetch(
 
 @pytest.mark.disable_clean_stage_check
 def test_fetch_pkg_attr_submodule_init(
-    mock_git_repository, config, mutable_mock_repo, monkeypatch, mock_stage
+    mock_git_repository, config, mutable_mock_repo: RepoPath, monkeypatch, mock_stage
 ):
     """In this case the version() args do not contain a 'git' URL, so
     the fetcher must be assembled using the Package-level 'git' attribute.
@@ -181,7 +183,7 @@ def test_fetch_pkg_attr_submodule_init(
 def test_adhoc_version_submodules(
     mock_git_repository,
     config,
-    mutable_mock_repo,
+    mutable_mock_repo: RepoPath,
     monkeypatch,
     mock_stage,
     override_git_repos_cache_path,
@@ -204,7 +206,9 @@ def test_adhoc_version_submodules(
 
 
 @pytest.mark.parametrize("type_of_test", ["branch", "commit"])
-def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config, monkeypatch):
+def test_debug_fetch(
+    mock_packages, type_of_test, mock_git_repository, config: Configuration, monkeypatch
+):
     """Fetch the repo with debug enabled."""
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
@@ -247,7 +251,7 @@ def test_get_full_repo(
     use_commit,
     git_version,
     mock_git_repository,
-    config,
+    config: Configuration,
     mutable_mock_repo,
     monkeypatch,
 ):

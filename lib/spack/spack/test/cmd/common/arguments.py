@@ -11,6 +11,7 @@ import spack.config
 import spack.environment as ev
 import spack.main
 from spack.cmd.common import arguments
+from spack.config import Configuration
 
 
 @pytest.fixture()
@@ -127,7 +128,7 @@ def test_root_and_dep_match_returns_root(mock_packages, mutable_mock_env_path):
         ("--fresh-roots", "dependencies"),
     ],
 )
-def test_concretizer_arguments(mutable_config, mock_packages, arg, conf):
+def test_concretizer_arguments(mutable_config: Configuration, mock_packages, arg, conf):
     """Ensure that ConfigSetAction is doing the right thing."""
     spec = spack.main.SpackCommand("spec")
 

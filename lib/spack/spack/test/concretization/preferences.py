@@ -14,6 +14,7 @@ import spack.paths
 import spack.repo
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
+from spack.config import Configuration
 from spack.error import ConfigError
 from spack.spec import Spec
 from spack.version import Version
@@ -183,7 +184,7 @@ class TestConcretizePreferences:
             spec = concretize("mpileaks")
             assert spec.package.fetcher.url == expected
 
-    def test_config_set_pkg_property_new(self, mutable_config):
+    def test_config_set_pkg_property_new(self, mutable_config: Configuration):
         """Test that you can set arbitrary attributes on the Package class"""
         conf = syaml.load_config(
             """\
@@ -261,7 +262,7 @@ mpileaks:
         spec = spack.concretize.concretize_one("develop-test2")
         assert spec.version == Version("0.2.15.develop")
 
-    def test_external_mpi(self, mutable_config):
+    def test_external_mpi(self, mutable_config: Configuration):
         # make sure this doesn't give us an external first.
         spec = spack.concretize.concretize_one("mpi")
         assert not spec.external and spec.package.provides("mpi")
@@ -285,7 +286,7 @@ mpich:
         spec = spack.concretize.concretize_one("mpi")
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
-    def test_external_module(self, monkeypatch, mutable_config):
+    def test_external_module(self, monkeypatch, mutable_config: Configuration):
         """Test that packages can find externals specified by module
 
         The specific code for parsing the module is tested elsewhere.
@@ -319,7 +320,7 @@ mpi:
         spec = spack.concretize.concretize_one("mpi")
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
-    def test_buildable_false(self, mutable_config):
+    def test_buildable_false(self, mutable_config: Configuration):
         conf = syaml.load_config(
             """\
 libelf:
@@ -333,7 +334,7 @@ libelf:
         spec = Spec("mpich")
         assert spack.package_prefs.is_spec_buildable(spec)
 
-    def test_buildable_false_virtual(self, mutable_config):
+    def test_buildable_false_virtual(self, mutable_config: Configuration):
         conf = syaml.load_config(
             """\
 mpi:
@@ -347,7 +348,7 @@ mpi:
         spec = Spec("mpich")
         assert not spack.package_prefs.is_spec_buildable(spec)
 
-    def test_buildable_false_all(self, mutable_config):
+    def test_buildable_false_all(self, mutable_config: Configuration):
         conf = syaml.load_config(
             """\
 all:
@@ -361,7 +362,7 @@ all:
         spec = Spec("mpich")
         assert not spack.package_prefs.is_spec_buildable(spec)
 
-    def test_buildable_false_all_true_package(self, mutable_config):
+    def test_buildable_false_all_true_package(self, mutable_config: Configuration):
         conf = syaml.load_config(
             """\
 all:
@@ -377,7 +378,7 @@ libelf:
         spec = Spec("mpich")
         assert not spack.package_prefs.is_spec_buildable(spec)
 
-    def test_buildable_false_all_true_virtual(self, mutable_config):
+    def test_buildable_false_all_true_virtual(self, mutable_config: Configuration):
         conf = syaml.load_config(
             """\
 all:
@@ -393,7 +394,7 @@ mpi:
         spec = Spec("mpich")
         assert spack.package_prefs.is_spec_buildable(spec)
 
-    def test_buildable_false_virtual_true_pacakge(self, mutable_config):
+    def test_buildable_false_virtual_true_pacakge(self, mutable_config: Configuration):
         conf = syaml.load_config(
             """\
 mpi:
@@ -480,7 +481,9 @@ mpich:
         assert "version-test-dependency-preferred" not in s
 
     @pytest.mark.regression("26598")
-    def test_multivalued_variants_are_lower_priority_than_providers(self, mutable_config):
+    def test_multivalued_variants_are_lower_priority_than_providers(
+        self, mutable_config: Configuration
+    ):
         """Test that the rule to maximize the number of values for multivalued
         variants is considered at lower priority than selecting the default
         provider for virtual dependencies.
@@ -496,13 +499,15 @@ mpich:
             assert s.name == "some-virtual-preferred"
 
     @pytest.mark.regression("26721,19736")
-    def test_sticky_variant_accounts_for_packages_yaml(self, mutable_config):
+    def test_sticky_variant_accounts_for_packages_yaml(self, mutable_config: Configuration):
         with mutable_config.override("packages:sticky-variant", {"variants": "+allow-gcc"}):
             s = spack.concretize.concretize_one("sticky-variant %gcc")
             assert s.satisfies("%gcc") and s.satisfies("+allow-gcc")
 
     @pytest.mark.regression("41134")
-    def test_default_preference_variant_different_type_does_not_error(self, mutable_config):
+    def test_default_preference_variant_different_type_does_not_error(
+        self, mutable_config: Configuration
+    ):
         """Tests that a different type for an existing variant in the 'all:' section of
         packages.yaml doesn't fail with an error.
         """
@@ -510,7 +515,9 @@ mpich:
             s = spack.concretize.concretize_one("pkg-a")
             assert s.satisfies("foo=bar")
 
-    def test_version_preference_cannot_generate_buildable_versions(self, mutable_config):
+    def test_version_preference_cannot_generate_buildable_versions(
+        self, mutable_config: Configuration
+    ):
         """Tests that a version preference not mentioned in package.py cannot be used in
         a built spec.
         """

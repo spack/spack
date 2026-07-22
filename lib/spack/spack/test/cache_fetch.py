@@ -8,13 +8,14 @@ import pathlib
 import pytest
 
 import spack.util.url as url_util
+from spack.config import Configuration
 from spack.fetch_strategy import CacheURLFetchStrategy, NoCacheError
 from spack.stage import Stage
 from spack.util.filesystem import mkdirp
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_fetch_missing_cache(mutable_config, tmp_path: pathlib.Path, _fetch_method):
+def test_fetch_missing_cache(mutable_config: Configuration, tmp_path: pathlib.Path, _fetch_method):
     """Ensure raise a missing cache file."""
     testpath = str(tmp_path)
     non_existing = os.path.join(testpath, "non-existing")
@@ -27,7 +28,7 @@ def test_fetch_missing_cache(mutable_config, tmp_path: pathlib.Path, _fetch_meth
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_fetch(mutable_config, tmp_path: pathlib.Path, _fetch_method):
+def test_fetch(mutable_config: Configuration, tmp_path: pathlib.Path, _fetch_method):
     """Ensure a fetch after expanding is effectively a no-op."""
     cache_dir = tmp_path / "cache"
     stage_dir = tmp_path / "stage"

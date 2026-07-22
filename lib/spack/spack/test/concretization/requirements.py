@@ -18,6 +18,7 @@ import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 import spack.version
+from spack.config import Configuration
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.old_installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
@@ -454,7 +455,7 @@ packages:
 
 
 def test_reuse_oneof(
-    concretize_scope, test_repo, tmp_path: pathlib.Path, mock_fetch, mutable_config
+    concretize_scope, test_repo, tmp_path: pathlib.Path, mock_fetch, mutable_config: Configuration
 ):
     conf_str = """\
 packages:
@@ -480,7 +481,12 @@ packages:
     [(True, ["@=2.3", "%gcc"], []), (False, ["%gcc"], ["@=2.3"])],
 )
 def test_requirements_and_deprecated_versions(
-    allow_deprecated, expected, not_expected, concretize_scope, test_repo, mutable_config
+    allow_deprecated,
+    expected,
+    not_expected,
+    concretize_scope,
+    test_repo,
+    mutable_config: Configuration,
 ):
     """Tests the expected behavior of requirements and deprecated versions.
 
@@ -1158,7 +1164,7 @@ def test_forward_multi_valued_variant_using_requires(
 
 
 def test_strong_preferences_higher_priority_than_reuse(
-    concretize_scope, mock_packages, mutable_config
+    concretize_scope, mock_packages, mutable_config: Configuration
 ):
     """Tests that strong preferences have a higher priority than reusing specs."""
     reused_spec = spack.concretize.concretize_one("adios2~bzip2")
@@ -1308,7 +1314,7 @@ packages:
 def test_requirements_on_compilers_and_reuse(
     concretize_scope,
     mock_packages,
-    mutable_config,
+    mutable_config: Configuration,
     packages_yaml,
     expected_reuse,
     expected_contraints,
@@ -1355,7 +1361,7 @@ def test_requirements_on_compilers_and_reuse(
     ],
 )
 def test_requirements_conditional_deps(
-    abstract, req_is_noop, mutable_config, mock_packages, config_two_gccs
+    abstract, req_is_noop, mutable_config: Configuration, mock_packages, config_two_gccs
 ):
     required_spec = (
         "%[when='^c' virtuals=c]gcc@10.3.1 "
@@ -1486,7 +1492,7 @@ def test_language_preferences_and_reuse(
     current_preference,
     constraint_kind,
     concretize_scope,
-    mutable_config,
+    mutable_config: Configuration,
     mock_packages,
 ):
     """Tests that language preferences are respected when reusing specs."""

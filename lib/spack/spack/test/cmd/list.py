@@ -11,6 +11,7 @@ import spack.cmd.list
 import spack.paths
 import spack.repo
 from spack.main import SpackCommand
+from spack.repo import RepoPath
 from spack.test.conftest import RepoBuilder
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
@@ -164,7 +165,7 @@ def test_list_tags():
     assert "mpich2" in output
 
 
-def test_list_count(mock_packages):
+def test_list_count(mock_packages: RepoPath):
     output = list("--count")
     assert int(output.strip()) == len(mock_packages.all_package_names())
 

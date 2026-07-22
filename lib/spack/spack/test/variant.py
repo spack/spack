@@ -9,6 +9,7 @@ import spack.concretize
 import spack.error
 import spack.spec
 import spack.variant
+from spack.repo import RepoPath
 from spack.spec import Spec, VariantMap
 from spack.variant import (
     BoolValuedVariant,
@@ -600,7 +601,7 @@ def test_wild_card_valued_variants_equivalent_to_str():
     assert str_output.value == wild_output.value
 
 
-def test_variant_definitions(mock_packages):
+def test_variant_definitions(mock_packages: RepoPath):
     pkg = mock_packages.get_pkg_class("variant-values")
 
     # two variant names
@@ -651,7 +652,7 @@ def test_variant_definitions(mock_packages):
         ("variant-values-override", "baz", "@4.0", [0]),
     ],
 )
-def test_prevalidate_variant_value(mock_packages, pkg_name, value, spec, def_ids):
+def test_prevalidate_variant_value(mock_packages: RepoPath, pkg_name, value, spec, def_ids):
     pkg = mock_packages.get_pkg_class(pkg_name)
 
     all_defs = [vdef for _, vdef in pkg.variant_definitions("v")]
@@ -681,7 +682,7 @@ def test_prevalidate_variant_value(mock_packages, pkg_name, value, spec, def_ids
         ("variant-values-override", "foo", "@4.0"),
     ],
 )
-def test_strict_invalid_variant_values(mock_packages, pkg_name, value, spec):
+def test_strict_invalid_variant_values(mock_packages: RepoPath, pkg_name, value, spec):
     pkg = mock_packages.get_pkg_class(pkg_name)
 
     with pytest.raises(spack.variant.InvalidVariantValueError):
@@ -702,7 +703,7 @@ def test_strict_invalid_variant_values(mock_packages, pkg_name, value, spec):
     ],
 )
 def test_concretize_variant_default_with_multiple_defs(
-    mock_packages, config, pkg_name, spec, satisfies, def_id
+    mock_packages: RepoPath, config, pkg_name, spec, satisfies, def_id
 ):
     pkg = mock_packages.get_pkg_class(pkg_name)
     pkg_defs = [vdef for _, vdef in pkg.variant_definitions("v")]

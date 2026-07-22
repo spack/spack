@@ -8,9 +8,10 @@ import spack.detection
 import spack.detection.common
 import spack.detection.path
 import spack.spec
+from spack.config import Configuration
 
 
-def test_detection_update_config(mutable_config):
+def test_detection_update_config(mutable_config: Configuration):
     # mock detected package
     detected_packages = collections.defaultdict(list)
     detected_packages["cmake"] = [spack.spec.Spec("cmake@3.27.5", external_path="/usr/bin")]

@@ -23,6 +23,7 @@ import spack.error
 import spack.oci.opener
 import spack.spec
 import spack.traverse
+from spack.database import Database
 from spack.main import SpackCommand
 from spack.oci.image import Digest, ImageReference, default_config, default_manifest
 from spack.oci.oci import blob_exists, get_manifest_and_config, upload_blob, upload_manifest
@@ -43,7 +44,7 @@ def oci_servers(*servers: DummyServer):
     spack.oci.opener.urlopen = old_opener
 
 
-def test_buildcache_push_command(mutable_database):
+def test_buildcache_push_command(mutable_database: Database):
     with oci_servers(InMemoryOCIRegistry("example.com")):
         mirror("add", "oci-test", "oci://example.com/image")
 

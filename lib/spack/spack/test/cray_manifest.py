@@ -26,6 +26,7 @@ import spack.platforms.test
 import spack.solver.reuse
 import spack.spec
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
+from spack.store import Store
 
 pytestmark = [
     pytest.mark.skipif(
@@ -333,7 +334,9 @@ def test_read_cray_manifest(temporary_store, manifest_file):
     assert concretized_spec["hwloc"].dag_hash() == "hwlocfakehashaaa"
 
 
-def test_read_cray_manifest_add_compiler_failure(temporary_store, manifest_file, monkeypatch):
+def test_read_cray_manifest_add_compiler_failure(
+    temporary_store: Store, manifest_file, monkeypatch
+):
     """Tests the Cray manifest can be read even if some compilers cannot be added."""
 
     def _mock(entry, *, manifest_path):

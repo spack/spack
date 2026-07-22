@@ -8,6 +8,7 @@ import pytest
 import spack.concretize
 import spack.environment as ev
 import spack.spec
+from spack.config import Configuration
 from spack.main import SpackCommand
 
 pytestmark = [
@@ -36,7 +37,7 @@ change = SpackCommand("change")
         ),
     ],
 )
-def test_mutate_internals(dep, orig_constraint, mutated_constraint, mutable_config):
+def test_mutate_internals(dep, orig_constraint, mutated_constraint, mutable_config: Configuration):
     """
     Check that Environment.mutate and Spec.mutate work for several different constraint types.
 

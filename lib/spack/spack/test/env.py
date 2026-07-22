@@ -18,6 +18,7 @@ import spack.solver.asp
 import spack.spec
 import spack.spec_parser
 import spack.util.filesystem as fs
+from spack.config import Configuration
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
 from spack.environment.environment import EnvironmentManifestFile
@@ -536,7 +537,9 @@ spack:
 
 
 @pytest.mark.parametrize("unify_in_config", [True, False, "when_possible"])
-def test_environment_config_scheme_used(mutable_config, tmp_path: pathlib.Path, unify_in_config):
+def test_environment_config_scheme_used(
+    mutable_config: Configuration, tmp_path: pathlib.Path, unify_in_config
+):
     """Tests that "unify" settings in lower configuration scopes is taken into account,
     if absent in spack.yaml.
     """
@@ -982,7 +985,7 @@ def test_environment_from_name_or_dir(mutable_mock_env_path):
         _ = ev.environment_from_name_or_dir("fake-env")
 
 
-def test_env_include_configs(mutable_mock_env_path, mutable_config):
+def test_env_include_configs(mutable_mock_env_path, mutable_config: Configuration):
     """check config and package values using new include schema"""
     env_path = mutable_mock_env_path
     env_path.mkdir()
@@ -1621,7 +1624,7 @@ def test_static_analysis_in_environments(spack_yaml, tmp_path, mutable_config):
 
 
 @pytest.mark.regression("51606")
-def test_ids_when_using_toolchain_twice_in_a_spec(tmp_path, mutable_config):
+def test_ids_when_using_toolchain_twice_in_a_spec(tmp_path, mutable_config: Configuration):
     """Tests that using the same toolchain twice in a spec constructs different objects"""
     spack_yaml = """
 spack:
@@ -2173,7 +2176,7 @@ def test_unified_environment_with_mixed_compilers_and_fortran(tmp_path, config):
 
 @pytest.mark.parametrize("enable_locks", [True, False])
 def test_environment_pickle_preserves_lock_state(
-    mutable_config, enable_locks, tmp_path: pathlib.Path
+    mutable_config: Configuration, enable_locks, tmp_path: pathlib.Path
 ):
     """Tests that an environment round-trips through pickle with its lock-enable state intact."""
     with mutable_config.override("config:locks", enable_locks):

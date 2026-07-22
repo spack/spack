@@ -8,6 +8,7 @@ import pathlib
 import pytest
 
 import spack.concretize
+from spack.config import Configuration
 from spack.fetch_strategy import HgFetchStrategy
 from spack.stage import Stage
 from spack.util.executable import which
@@ -24,7 +25,9 @@ pytestmark = [
 
 @pytest.mark.parametrize("type_of_test", ["default", "rev0"])
 @pytest.mark.parametrize("secure", [True, False])
-def test_fetch(type_of_test, secure, mock_hg_repository, config, mutable_mock_repo, monkeypatch):
+def test_fetch(
+    type_of_test, secure, mock_hg_repository, config: Configuration, mutable_mock_repo, monkeypatch
+):
     """Tries to:
 
     1. Fetch the repo using a fetch strategy constructed with

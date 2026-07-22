@@ -11,6 +11,7 @@ import spack.concretize
 import spack.directives_meta
 import spack.paths
 import spack.util.package_hash as ph
+from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.util.unparse import unparse
 
@@ -52,7 +53,7 @@ def test_different_variants(mock_packages, config):
     assert ph.package_hash(spec1) == ph.package_hash(spec2)
 
 
-def test_all_same_but_name(mock_packages, config):
+def test_all_same_but_name(mock_packages: RepoPath, config):
     spec1 = Spec("hash-test1@=1.2")
     spec2 = Spec("hash-test2@=1.2")
     compare_sans_name(mock_packages, True, spec1, spec2)
@@ -62,7 +63,7 @@ def test_all_same_but_name(mock_packages, config):
     compare_sans_name(mock_packages, True, spec1, spec2)
 
 
-def test_all_same_but_archive_hash(mock_packages, config):
+def test_all_same_but_archive_hash(mock_packages: RepoPath, config):
     """
     Archive hash is not intended to be reflected in Package hash.
     """
@@ -71,31 +72,31 @@ def test_all_same_but_archive_hash(mock_packages, config):
     compare_sans_name(mock_packages, True, spec1, spec2)
 
 
-def test_all_same_but_patch_contents(mock_packages, config):
+def test_all_same_but_patch_contents(mock_packages: RepoPath, config):
     spec1 = Spec("hash-test1@=1.1")
     spec2 = Spec("hash-test2@=1.1")
     compare_sans_name(mock_packages, True, spec1, spec2)
 
 
-def test_all_same_but_patches_to_apply(mock_packages, config):
+def test_all_same_but_patches_to_apply(mock_packages: RepoPath, config):
     spec1 = Spec("hash-test1@=1.4")
     spec2 = Spec("hash-test2@=1.4")
     compare_sans_name(mock_packages, True, spec1, spec2)
 
 
-def test_all_same_but_install(mock_packages, config):
+def test_all_same_but_install(mock_packages: RepoPath, config):
     spec1 = Spec("hash-test1@=1.5")
     spec2 = Spec("hash-test2@=1.5")
     compare_sans_name(mock_packages, False, spec1, spec2)
 
 
-def test_content_hash_all_same_but_patch_contents(mock_packages, config):
+def test_content_hash_all_same_but_patch_contents(mock_packages: RepoPath, config):
     spec1 = spack.concretize.concretize_one("hash-test1@1.1")
     spec2 = spack.concretize.concretize_one("hash-test2@1.1")
     compare_hash_sans_name(mock_packages, False, spec1, spec2)
 
 
-def test_content_hash_not_concretized(mock_packages, config):
+def test_content_hash_not_concretized(mock_packages: RepoPath, config):
     """Check that Package.content_hash() works on abstract specs."""
     # these are different due to the package hash
     spec1 = Spec("hash-test1@=1.1")
@@ -115,13 +116,13 @@ def test_content_hash_not_concretized(mock_packages, config):
     compare_hash_sans_name(mock_packages, False, spec1, spec2)
 
 
-def test_content_hash_different_variants(mock_packages, config):
+def test_content_hash_different_variants(mock_packages: RepoPath, config):
     spec1 = spack.concretize.concretize_one("hash-test1@1.2 +variantx")
     spec2 = spack.concretize.concretize_one("hash-test2@1.2 ~variantx")
     compare_hash_sans_name(mock_packages, True, spec1, spec2)
 
 
-def test_content_hash_cannot_get_details_from_ast(mock_packages, config):
+def test_content_hash_cannot_get_details_from_ast(mock_packages: RepoPath, config):
     """Packages hash-test1 and hash-test3 would be considered the same
     except that hash-test3 conditionally executes a phase based on
     a "when" directive that Spack cannot evaluate by examining the
@@ -136,7 +137,7 @@ def test_content_hash_cannot_get_details_from_ast(mock_packages, config):
     compare_hash_sans_name(mock_packages, False, spec3, spec4)
 
 
-def test_content_hash_all_same_but_archive_hash(mock_packages, config):
+def test_content_hash_all_same_but_archive_hash(mock_packages: RepoPath, config):
     spec1 = spack.concretize.concretize_one("hash-test1@1.3")
     spec2 = spack.concretize.concretize_one("hash-test2@1.3")
     compare_hash_sans_name(mock_packages, False, spec1, spec2)

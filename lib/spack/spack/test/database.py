@@ -17,8 +17,10 @@ import pytest
 
 import spack.config
 import spack.subprocess_context
+from spack.config import Configuration
 from spack.database import Database
 from spack.directory_layout import DirectoryLayoutError
+from spack.store import Store
 
 try:
     import uuid
@@ -473,7 +475,7 @@ def test_005_db_exists(database):
         spack.vendor.jsonschema.validate(index_object, schema)
 
 
-def test_010_all_install_sanity(database_store):
+def test_010_all_install_sanity(database_store: Store):
     """Ensure that the install layout reflects what we think it does."""
     all_specs = database_store.layout.all_specs()
     assert len(all_specs) == 17
@@ -502,7 +504,7 @@ def test_010_all_install_sanity(database_store):
     assert len([s for s in all_specs if s.satisfies("mpileaks ^zmpi")]) == 1
 
 
-def test_015_write_and_read(mutable_database):
+def test_015_write_and_read(mutable_database: Database):
     # write and read DB
     with mutable_database.write_transaction():
         specs = mutable_database.query()
@@ -532,7 +534,7 @@ def test_016_roundtrip_spliced_spec(mutable_database):
     assert buildspec_record  # buildspec needs to be recorded in db
 
 
-def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
+def test_017_write_and_read_without_uuid(mutable_database: Database, monkeypatch):
     monkeypatch.setattr(spack.database, "_use_uuid", False)
     # write and read DB
     with mutable_database.write_transaction():
@@ -566,7 +568,7 @@ def test_try_write_transaction(mutable_database, monkeypatch):
         assert not acquired
 
 
-def test_try_write_transaction_does_not_flush_on_exception(mutable_database):
+def test_try_write_transaction_does_not_flush_on_exception(mutable_database: Database):
     """Regression test: an exception inside try_write_transaction must not flush the possibly
     inconsistent in-memory database to disk; the next transaction re-reads it instead."""
     db = mutable_database
@@ -582,7 +584,7 @@ def test_try_write_transaction_does_not_flush_on_exception(mutable_database):
         assert db.query("mpileaks")
 
 
-def test_try_read_transaction(mutable_database, monkeypatch):
+def test_try_read_transaction(mutable_database: Database, monkeypatch):
     db = mutable_database
 
     with db.try_read_transaction() as acquired:
@@ -599,13 +601,13 @@ def test_020_db_sanity(database):
     _check_db_sanity(database)
 
 
-def test_025_reindex(mutable_database_store):
+def test_025_reindex(mutable_database_store: Store):
     """Make sure reindex works and ref counts are valid."""
     mutable_database_store.reindex()
     _check_db_sanity(mutable_database_store.db)
 
 
-def test_026_reindex_after_deprecate(mutable_database_store):
+def test_026_reindex_after_deprecate(mutable_database_store: Store):
     """Make sure reindex works and ref counts are valid after deprecation."""
     db = mutable_database_store.db
     mpich = db.query_one("mpich")
@@ -655,7 +657,7 @@ def test_041_ref_counts_deprecate(mutable_database):
     mutable_database._check_ref_counts()
 
 
-def test_050_basic_query(database):
+def test_050_basic_query(database: Database):
     """Ensure querying database is consistent with what is installed."""
     # query everything
     total_specs = len(database.query())
@@ -753,7 +755,7 @@ def test_090_non_root_ref_counts(mutable_database):
     assert mpich_rec.ref_count == 0
 
 
-def test_100_no_write_with_exception_on_remove(database):
+def test_100_no_write_with_exception_on_remove(database: Database):
     def fail_while_writing():
         with database.write_transaction():
             _mock_remove("mpileaks ^zmpi", database)
@@ -787,7 +789,9 @@ def test_110_no_write_with_exception_on_install(database):
         assert database.query("cmake", installed=InstallRecordStatus.ANY) == []
 
 
-def test_115_reindex_with_packages_not_in_repo(mutable_database_store, repo_builder: RepoBuilder):
+def test_115_reindex_with_packages_not_in_repo(
+    mutable_database_store: Store, repo_builder: RepoBuilder
+):
     # Dont add any package definitions to this repository, the idea is that
     # packages should not have to be defined in the repository once they
     # are installed
@@ -814,7 +818,7 @@ def test_external_entries_in_db(mutable_database):
 
 
 @pytest.mark.regression("8036")
-def test_regression_issue_8036(mutable_database, usr_folder_exists):
+def test_regression_issue_8036(mutable_database: Database, usr_folder_exists):
     # The test ensures that the external package prefix is treated as
     # existing. Even when the package prefix exists, the package should
     # not be considered installed until it is added to the database by
@@ -910,7 +914,7 @@ def test_query_unused_specs(mutable_database):
 
 
 @pytest.mark.regression("10019")
-def test_query_spec_with_conditional_dependency(mutable_database):
+def test_query_spec_with_conditional_dependency(mutable_database: Database):
     # The issue is triggered by having dependencies that are
     # conditional on a Boolean variant
     s = spack.concretize.concretize_one("hdf5~mpi")
@@ -921,14 +925,14 @@ def test_query_spec_with_conditional_dependency(mutable_database):
 
 
 @pytest.mark.regression("10019")
-def test_query_spec_with_non_conditional_virtual_dependency(database):
+def test_query_spec_with_non_conditional_virtual_dependency(database: Database):
     # Ensure the same issue doesn't come up for virtual
     # dependency that are not conditional on variants
     results = database.query_local("mpileaks ^mpich")
     assert len(results) == 1
 
 
-def test_query_virtual_spec(database):
+def test_query_virtual_spec(database: Database):
     """Make sure we can query for virtuals in the DB"""
     results = database.query_local("mpi")
     assert len(results) == 3
@@ -936,7 +940,7 @@ def test_query_virtual_spec(database):
     assert all(name in names for name in ["mpich", "mpich2", "zmpi"])
 
 
-def test_failed_spec_path_error(mutable_database_store):
+def test_failed_spec_path_error(mutable_database_store: Store):
     """Ensure spec not concrete check is covered."""
     s = spack.spec.Spec("pkg-a")
     with pytest.raises(AssertionError, match="concrete spec required"):
@@ -944,7 +948,7 @@ def test_failed_spec_path_error(mutable_database_store):
 
 
 @pytest.mark.db
-def test_clear_failure_keep(mutable_database_store, monkeypatch, capfd):
+def test_clear_failure_keep(mutable_database_store: Store, monkeypatch, capfd):
     """Add test coverage for clear_failure operation when to be retained."""
 
     def _is(self, spec):
@@ -960,7 +964,7 @@ def test_clear_failure_keep(mutable_database_store, monkeypatch, capfd):
 
 
 @pytest.mark.db
-def test_clear_failure_forced(mutable_database_store, monkeypatch, capfd):
+def test_clear_failure_forced(mutable_database_store: Store, monkeypatch, capfd):
     """Add test coverage for clear_failure operation when force."""
 
     def _is(self, spec):
@@ -979,7 +983,7 @@ def test_clear_failure_forced(mutable_database_store, monkeypatch, capfd):
 
 
 @pytest.mark.db
-def test_mark_failed(mutable_database_store, monkeypatch, tmp_path: pathlib.Path, capfd):
+def test_mark_failed(mutable_database_store: Store, monkeypatch, tmp_path: pathlib.Path, capfd):
     """Add coverage to mark_failed."""
 
     def _raise_exc(lock):
@@ -999,7 +1003,7 @@ def test_mark_failed(mutable_database_store, monkeypatch, tmp_path: pathlib.Path
 
 
 @pytest.mark.db
-def test_prefix_failed(mutable_database_store, monkeypatch):
+def test_prefix_failed(mutable_database_store: Store, monkeypatch):
     """Add coverage to failed operation."""
 
     s = spack.concretize.concretize_one("pkg-a")
@@ -1021,7 +1025,7 @@ def test_prefix_failed(mutable_database_store, monkeypatch):
     assert failure_tracker.has_failed(s)
 
 
-def test_prefix_write_lock_error(mutable_database_store, monkeypatch):
+def test_prefix_write_lock_error(mutable_database_store: Store, monkeypatch):
     """Cover the prefix write lock exception."""
 
     def _raise(db, spec):
@@ -1071,7 +1075,7 @@ def test_store_find_accept_string(database):
     assert len(result) == 3
 
 
-def test_reindex_removed_prefix_is_not_installed(mutable_database_store, mock_store, capfd):
+def test_reindex_removed_prefix_is_not_installed(mutable_database_store, mock_store: Store, capfd):
     """When a prefix of a dependency is removed and the database is reindexed,
     the spec should still be added through the dependent, but should be listed as
     not installed."""
@@ -1097,7 +1101,7 @@ def test_reindex_removed_prefix_is_not_installed(mutable_database_store, mock_st
     assert mutable_database.query_one("libelf", installed=False)
 
 
-def test_reindex_when_all_prefixes_are_removed(mutable_database_store, mock_store):
+def test_reindex_when_all_prefixes_are_removed(mutable_database_store: Store, mock_store: Store):
     mutable_database = mutable_database_store.db
     # Remove all non-external installations from the filesystem
     for spec in mutable_database.query_local():
@@ -1182,7 +1186,7 @@ def test_query_installed_when_package_unknown(database, repo_builder: RepoBuilde
                 s.package
 
 
-def test_error_message_when_using_too_new_db(database, monkeypatch):
+def test_error_message_when_using_too_new_db(database: Database, monkeypatch):
     """Sometimes the database format needs to be bumped. When that happens, we have forward
     incompatibilities that need to be reported in a clear way to the user, in case we moved
     back to an older version of Spack. This test ensures that the error message for a too
@@ -1200,7 +1204,7 @@ def test_error_message_when_using_too_new_db(database, monkeypatch):
     [spack.database.NO_LOCK, spack.database.NO_TIMEOUT, spack.database.DEFAULT_LOCK_CFG, None],
 )
 def test_database_construction_doesnt_use_globals(
-    tmp_path: pathlib.Path, config, nullify_globals, lock_cfg
+    tmp_path: pathlib.Path, config: Configuration, nullify_globals, lock_cfg
 ):
     lock_cfg = lock_cfg or spack.database.lock_configuration(config)
     db = Database(str(tmp_path), lock_cfg=lock_cfg)
@@ -1226,7 +1230,7 @@ def test_database_read_works_with_trailing_data(tmp_path: pathlib.Path, config, 
     assert Database(root).query_local() == specs_in_db
 
 
-def test_database_errors_with_just_a_version_key(mutable_database):
+def test_database_errors_with_just_a_version_key(mutable_database: Database):
     next_version = f"{spack.database._DB_VERSION}.next"
     with open(mutable_database._index_path, "w", encoding="utf-8") as f:
         f.write(json.dumps({"database": {"version": next_version}}))

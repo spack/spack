@@ -15,6 +15,8 @@ import spack.repo
 import spack.spec
 import spack.util.filesystem as fs
 from spack.main import SpackCommand
+from spack.repo import RepoPath
+from spack.store import Store
 
 dev_build = SpackCommand("dev-build")
 install = SpackCommand("install")
@@ -63,7 +65,7 @@ def test_dev_build_before(tmp_path: pathlib.Path, install_mockery, installer_var
 
 @pytest.mark.parametrize("last_phase", ["edit", "install"])
 def test_dev_build_until(
-    tmp_path: pathlib.Path, temporary_store, install_mockery, last_phase, installer_variant
+    tmp_path: pathlib.Path, temporary_store: Store, install_mockery, last_phase, installer_variant
 ):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
@@ -304,7 +306,11 @@ spack:
 
 
 def test_dev_build_multiple(
-    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, mock_fetch, mock_packages
+    tmp_path: pathlib.Path,
+    install_mockery,
+    mutable_mock_env_path,
+    mock_fetch,
+    mock_packages: RepoPath,
 ):
     """Test spack install with multiple developer builds
 
@@ -373,7 +379,11 @@ spack:
 
 
 def test_dev_build_env_dependency(
-    tmp_path: pathlib.Path, install_mockery, mock_fetch, mutable_mock_env_path, mock_packages
+    tmp_path: pathlib.Path,
+    install_mockery,
+    mock_fetch,
+    mutable_mock_env_path,
+    mock_packages: RepoPath,
 ):
     """
     Test non-root specs in an environment are properly marked for dev builds.

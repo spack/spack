@@ -11,7 +11,9 @@ import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.spec
+from spack.config import Configuration
 from spack.main import SpackCommand, SpackCommandError
+from spack.store import Store
 
 buildcache = SpackCommand("buildcache")
 install = SpackCommand("install")
@@ -210,7 +212,13 @@ def test_spec_version_assigned_git_ref_as_version(name, version, error):
     ],
 )
 def test_spec_unification_from_cli(
-    install_mockery, mutable_config, mutable_database, unify, spec_hash_args, match, error
+    install_mockery,
+    mutable_config: Configuration,
+    mutable_database,
+    unify,
+    spec_hash_args,
+    match,
+    error,
 ):
     """Ensure specs grouped together on the CLI are concretized together when unify:true."""
     mutable_config.set("concretizer:unify", unify)
@@ -231,7 +239,9 @@ def test_spec_unification_from_cli(
         assert match in output
 
 
-def test_buildcache_status_fn_marks_absent_spec(temporary_store, install_mockery, mock_packages):
+def test_buildcache_status_fn_marks_absent_spec(
+    temporary_store: Store, install_mockery, mock_packages
+):
     """Tests the basic semantics of build_cache_status_fn."""
     s = spack.concretize.concretize_one("mpileaks")
     assert temporary_store.db.install_status(s) == spack.spec.InstallStatus.absent

@@ -10,6 +10,7 @@ import pytest
 import spack.config
 import spack.store
 import spack.util.path as sup
+from spack.config import Configuration
 from spack.util import tty
 
 #: Some lines with lots of placeholders
@@ -83,7 +84,7 @@ class TestPathPadding:
 
 
 @pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
-def test_output_filtering(capfd, install_mockery, mutable_config):
+def test_output_filtering(capfd, install_mockery, mutable_config: Configuration):
     """Test filtering padding out of tty messages."""
     long_path = "/" + "/".join([sup.SPACK_PATH_PADDING_CHARS] * 200)
     padding_string = "[padded-to-%d-chars]" % len(long_path)

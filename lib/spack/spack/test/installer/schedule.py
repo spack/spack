@@ -14,6 +14,7 @@ import spack.error
 import spack.spec
 import spack.store
 import spack.traverse
+from spack.config import Configuration
 from spack.database import Database
 from spack.installer.base import ExitCode, JobServerBase, NoopJobServer
 from spack.installer.schedule import BuildGraph, ScheduleResult, _node_to_roots, schedule_builds
@@ -1142,7 +1143,9 @@ class TestScheduleBuilds:
             _schedule([colliding.dag_hash()], _FakeBuildGraph([colliding]), temporary_store)
 
 
-def test_cache_miss_expands_build_deps(temporary_store, mock_packages, mutable_config, tmp_path):
+def test_cache_miss_expands_build_deps(
+    temporary_store: Store, mock_packages, mutable_config: Configuration, tmp_path
+):
     """A cache miss on a root with unexpanded build deps schedules those deps (growing the UI
     total) and retries the root as source_only."""
     mutable_config.set(

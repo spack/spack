@@ -6,7 +6,7 @@
 import pytest
 
 from spack import tengine
-from spack.config import canonicalize_path
+from spack.config import Configuration, canonicalize_path
 
 
 class TestContext:
@@ -65,7 +65,7 @@ class TestContext:
 
 @pytest.mark.usefixtures("config")
 class TestTengineEnvironment:
-    def test_template_retrieval(self, config):
+    def test_template_retrieval(self, config: Configuration):
         """Tests the template retrieval mechanism hooked into config files"""
         # Check the directories are correct
         template_dirs = config.get("config:template_dirs")

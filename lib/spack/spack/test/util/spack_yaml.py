@@ -4,6 +4,7 @@
 
 import re
 
+from spack.config import Configuration
 from spack.main import SpackCommand
 
 config_cmd = SpackCommand("config")
@@ -51,7 +52,7 @@ def test_config_blame(config):
     check_blame("dirty", config_file, 15)
 
 
-def test_config_blame_with_override(config):
+def test_config_blame_with_override(config: Configuration):
     """check blame for an element from an override scope"""
     config_file = config.get_config_filename("site", "config")
 

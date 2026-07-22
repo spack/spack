@@ -13,6 +13,7 @@ import spack.database
 import spack.install_test
 import spack.spec
 import spack.util.executable
+from spack.config import Configuration
 from spack.install_test import TestStatus
 from spack.util.executable import which
 from spack.util.filesystem import touch
@@ -338,7 +339,11 @@ def test_test_part_skip(install_mockery, mock_fetch, mock_test_stage):
 
 
 def test_test_part_missing_exe_fail_fast(
-    tmp_path: pathlib.Path, install_mockery, mock_fetch, mock_test_stage, mutable_config
+    tmp_path: pathlib.Path,
+    install_mockery,
+    mock_fetch,
+    mock_test_stage,
+    mutable_config: Configuration,
 ):
     """Confirm test_part with fail fast enabled raises exception."""
     s = spack.concretize.concretize_one("trivial-smoke-test")

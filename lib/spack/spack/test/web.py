@@ -19,6 +19,7 @@ import spack.url
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
+from spack.config import Configuration
 from spack.util import tty
 from spack.util.filesystem import working_dir
 from spack.version import Version
@@ -388,7 +389,7 @@ def test_detailed_http_error_pickle(tmp_path: pathlib.Path):
 
 
 @pytest.fixture()
-def ssl_scrubbed_env(mutable_config, monkeypatch):
+def ssl_scrubbed_env(mutable_config: Configuration, monkeypatch):
     """clear out environment variables that could give false positives for SSL Cert tests"""
     monkeypatch.delenv("SSL_CERT_FILE", raising=False)
     monkeypatch.delenv("SSL_CERT_DIR", raising=False)
@@ -412,7 +413,12 @@ def ssl_scrubbed_env(mutable_config, monkeypatch):
     ],
 )
 def test_ssl_urllib(
-    cert_path, cert_creator, tmp_path: pathlib.Path, ssl_scrubbed_env, mutable_config, monkeypatch
+    cert_path,
+    cert_creator,
+    tmp_path: pathlib.Path,
+    ssl_scrubbed_env,
+    mutable_config: Configuration,
+    monkeypatch,
 ):
     """
     create a proposed cert type and then verify that they exist inside ssl's checks
@@ -442,7 +448,11 @@ def test_ssl_urllib(
 
 @pytest.mark.parametrize("cert_exists", [True, False], ids=["exists", "missing"])
 def test_ssl_curl_cert_file(
-    cert_exists, tmp_path: pathlib.Path, ssl_scrubbed_env, mutable_config, monkeypatch
+    cert_exists,
+    tmp_path: pathlib.Path,
+    ssl_scrubbed_env,
+    mutable_config: Configuration,
+    monkeypatch,
 ):
     """
     Assure that if a valid cert file is specified curl executes

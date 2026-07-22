@@ -27,10 +27,12 @@ import spack.old_installer
 import spack.package_base
 import spack.reporters.cdash
 import spack.util.filesystem as fs
+from spack.config import Configuration
 from spack.error import SpackError, SpecSyntaxError
 from spack.main import SpackCommand
 from spack.old_installer import PackageInstaller
 from spack.spec import Spec
+from spack.store import Store
 from spack.util import tty
 
 install = SpackCommand("install")
@@ -229,7 +231,12 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mock
 
 
 def test_install_overwrite(
-    mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery, installer_variant
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    temporary_store: Store,
+    install_mockery,
+    installer_variant,
 ):
     """Tests installing a spec, and then re-installing it in the same prefix."""
     spec = spack.concretize.concretize_one("pkg-c")
@@ -299,7 +306,12 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
 
 
 def test_install_overwrite_multiple(
-    mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery, installer_variant
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    temporary_store: Store,
+    install_mockery,
+    installer_variant,
 ):
     # Try to install a spec and then to reinstall it.
     libdwarf = spack.concretize.concretize_one("libdwarf")
@@ -520,7 +532,12 @@ def test_install_mix_cli_and_files(spec_format, clispecs, filespecs, tmp_path: p
 
 
 def test_extra_files_are_archived(
-    mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery, installer_variant
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    temporary_store: Store,
+    install_mockery,
+    installer_variant,
 ):
     s = spack.concretize.concretize_one("archive-files")
 
@@ -701,7 +718,7 @@ def test_build_warning_output(mock_fetch, install_mockery):
 
 
 @pytest.mark.disable_clean_stage_check  # new installer keeps a log for build cache installs
-def test_cache_only_fails(mock_fetch, temporary_store, install_mockery, installer_variant):
+def test_cache_only_fails(mock_fetch, temporary_store: Store, install_mockery, installer_variant):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
     out = install("--cache-only", "libdwarf", fail_on_error=False)
@@ -801,7 +818,7 @@ def test_install_no_add_in_env(
     tmp_path: pathlib.Path,
     mutable_mock_env_path,
     mock_fetch,
-    temporary_store,
+    temporary_store: Store,
     install_mockery,
     installer_variant,
 ):
@@ -1129,7 +1146,7 @@ def test_install_use_buildcache(
 @pytest.mark.not_on_windows("Windows logger I/O operation on closed file when install fails")
 @pytest.mark.regression("34006")
 @pytest.mark.disable_clean_stage_check
-def test_padded_install_runtests_root(install_mockery, mock_fetch, mutable_config):
+def test_padded_install_runtests_root(install_mockery, mock_fetch, mutable_config: Configuration):
     mutable_config.set("config:install_tree:padded_length", 255)
     output = install(
         "--verbose", "--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False
@@ -1150,7 +1167,7 @@ def test_report_filename_for_cdash(install_mockery, mock_fetch):
     assert filename != "https://blahblah/submit.php?project=debugging"
 
 
-def test_setting_concurrent_packages_flag(mutable_config):
+def test_setting_concurrent_packages_flag(mutable_config: Configuration):
     """Ensure that the number of concurrent packages is properly set from the command-line flag"""
     install = SpackCommand("install")
     install("--concurrent-packages", "8", fail_on_error=False)
@@ -1165,7 +1182,7 @@ def test_invalid_concurrent_packages_flag(mutable_config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Feature disabled on windows due to locking")
-def test_concurrent_packages_set_in_config(mutable_config, mock_packages):
+def test_concurrent_packages_set_in_config(mutable_config: Configuration, mock_packages):
     """Ensure that the number of concurrent packages is properly set from adding to config"""
     mutable_config.set("config:concurrent_packages", 3)
     spec = spack.concretize.concretize_one("pkg-a")

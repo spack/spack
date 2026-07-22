@@ -10,6 +10,7 @@ from spack.vendor.archspec.cpu import TARGETS
 import spack.archspec
 import spack.traverse
 from spack.compilers.config import CompilerFactory
+from spack.config import Configuration
 from spack.externals import (
     DuplicateExternalError,
     ExternalDict,
@@ -376,7 +377,7 @@ def test_external_spec_multi_valued_variant_is_not_changed():
 
 
 @pytest.mark.regression("52643")
-def test_external_compiler_with_non_compiler_dependency(mutable_config):
+def test_external_compiler_with_non_compiler_dependency(mutable_config: Configuration):
     packages_config = {
         "compiler-with-deps": {
             "externals": [

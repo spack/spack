@@ -13,12 +13,13 @@ import spack.concretize
 import spack.environment as ev
 import spack.main
 import spack.spec
+from spack.config import Configuration
 
 _bootstrap = spack.main.SpackCommand("bootstrap")
 
 
 @pytest.mark.parametrize("scope", [None, "site", "system", "user"])
-def test_enable_and_disable(mutable_config, scope):
+def test_enable_and_disable(mutable_config: Configuration, scope):
     scope_args = []
     if scope:
         scope_args = ["--scope={0}".format(scope)]
@@ -57,7 +58,7 @@ def test_reset_in_file_scopes(mutable_config, scopes):
         assert not os.path.exists(bootstrap_yaml)
 
 
-def test_reset_in_environment(mutable_mock_env_path, mutable_config):
+def test_reset_in_environment(mutable_mock_env_path, mutable_config: Configuration):
     env = spack.main.SpackCommand("env")
     env("create", "bootstrap-test")
     current_environment = ev.read("bootstrap-test")
@@ -107,7 +108,7 @@ def test_list_sources(config):
 
 
 @pytest.mark.parametrize("command,value", [("enable", True), ("disable", False)])
-def test_enable_or_disable_sources(mutable_config, command, value):
+def test_enable_or_disable_sources(mutable_config: Configuration, command, value):
     key = "bootstrap:trusted:github-actions"
     trusted = mutable_config.get(key, default=None)
     assert trusted is None
@@ -122,7 +123,7 @@ def test_enable_or_disable_fails_with_no_method(mutable_config):
         _bootstrap("enable", "foo")
 
 
-def test_enable_or_disable_fails_with_more_than_one_method(mutable_config):
+def test_enable_or_disable_fails_with_more_than_one_method(mutable_config: Configuration):
     wrong_config = {
         "sources": [
             {"name": "github-actions", "metadata": "$spack/share/spack/bootstrap/github-actions"},
@@ -172,7 +173,9 @@ def test_remove_and_add_a_source(mutable_config):
 
 @pytest.mark.maybeslow
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
-def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmp_path: pathlib.Path):
+def test_bootstrap_mirror_metadata(
+    mutable_config: Configuration, linux_os, monkeypatch, tmp_path: pathlib.Path
+):
     """Test that `spack bootstrap mirror` creates a folder that can be ingested by
     `spack bootstrap add`. Here we don't download data, since that would be an
     expensive operation for a unit test.

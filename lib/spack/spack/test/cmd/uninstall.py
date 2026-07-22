@@ -8,8 +8,10 @@ import pytest
 import spack.cmd.uninstall
 import spack.environment
 import spack.store
+from spack.database import Database
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand, SpackCommandError
+from spack.store import Store
 from spack.util import tty
 
 uninstall = SpackCommand("uninstall")
@@ -43,7 +45,7 @@ def test_installed_dependents(mutable_database):
 
 
 @pytest.mark.db
-def test_correct_installed_dependents(mutable_database):
+def test_correct_installed_dependents(mutable_database: Database):
     # Test whether we return the right dependents.
 
     # Take callpath from the database
@@ -75,7 +77,7 @@ def test_correct_installed_dependents(mutable_database):
 
 
 @pytest.mark.db
-def test_recursive_uninstall(mutable_database_store):
+def test_recursive_uninstall(mutable_database_store: Store):
     """Test recursive uninstall."""
     uninstall("-y", "-a", "--dependents", "callpath")
 
@@ -94,7 +96,7 @@ def test_recursive_uninstall(mutable_database_store):
 @pytest.mark.regression("3690")
 @pytest.mark.parametrize("constraint,expected_number_of_specs", [("dyninst", 10), ("libelf", 8)])
 def test_uninstall_spec_with_multiple_roots(
-    constraint, expected_number_of_specs, mutable_database_store
+    constraint, expected_number_of_specs, mutable_database_store: Store
 ):
     uninstall("-y", "-a", "--dependents", constraint)
     all_specs = mutable_database_store.layout.all_specs()
@@ -104,7 +106,7 @@ def test_uninstall_spec_with_multiple_roots(
 @pytest.mark.db
 @pytest.mark.parametrize("constraint,expected_number_of_specs", [("dyninst", 16), ("libelf", 16)])
 def test_force_uninstall_spec_with_ref_count_not_zero(
-    constraint, expected_number_of_specs, mutable_database_store
+    constraint, expected_number_of_specs, mutable_database_store: Store
 ):
     uninstall("-f", "-y", constraint)
     all_specs = mutable_database_store.layout.all_specs()

@@ -70,10 +70,13 @@ import spack.util.tty.color
 import spack.util.url as url_util
 import spack.util.web
 import spack.version
+from spack.config import Configuration
 from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
 from spack.main import SpackCommand
 from spack.old_installer import PackageInstaller
+from spack.repo import RepoPath
+from spack.store import Store
 from spack.util import tty
 from spack.util.filesystem import copy, join_path, mkdirp, remove_linked_tree, working_dir
 from spack.util.pattern import Bunch
@@ -460,7 +463,7 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="function")
-def use_concretization_cache(mock_packages, mutable_config, tmp_path: Path):
+def use_concretization_cache(mock_packages, mutable_config: Configuration, tmp_path: Path):
     """Enables the use of the concretization cache"""
     conc_cache_dir = tmp_path / "concretization"
 
@@ -1094,7 +1097,7 @@ def mock_wsdk_externals(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def concretize_scope(mutable_config, tmp_path: Path):
+def concretize_scope(mutable_config: Configuration, tmp_path: Path):
     """Adds a scope for concretization preferences"""
     concretize_dir = tmp_path / "concretize"
     concretize_dir.mkdir()
@@ -1258,7 +1261,7 @@ def _mock_store_tarball(mock_store) -> bytes:
 
 
 @pytest.fixture(scope="function")
-def database_store(mock_store, mock_packages, config):
+def database_store(mock_store: Store, mock_packages, config):
     """This activates the mock store, packages, AND config. Yields the Store."""
     with spack.store.use_store(str(mock_store)) as store:
         yield store
@@ -1267,13 +1270,13 @@ def database_store(mock_store, mock_packages, config):
 
 
 @pytest.fixture(scope="function")
-def database(database_store):
+def database(database_store: Store):
     """This activates the mock store, packages, AND config. Yields store.db."""
     return database_store.db
 
 
 @pytest.fixture(scope="function")
-def database_mutable_config_store(mock_store, mock_packages, mutable_config, monkeypatch):
+def database_mutable_config_store(mock_store: Store, mock_packages, mutable_config, monkeypatch):
     """Like database_store, but with a mutable config. Yields the Store."""
     with spack.store.use_store(str(mock_store)) as store:
         yield store
@@ -1281,14 +1284,14 @@ def database_mutable_config_store(mock_store, mock_packages, mutable_config, mon
 
 
 @pytest.fixture(scope="function")
-def database_mutable_config(database_mutable_config_store):
+def database_mutable_config(database_mutable_config_store: Store):
     """This activates the mock store, packages, AND config. Yields store.db."""
     return database_mutable_config_store.db
 
 
 @pytest.fixture(scope="function")
 def mutable_database_store(
-    database_mutable_config_store, _store_dir: Path, _mock_store_tarball: bytes
+    database_mutable_config_store: Store, _store_dir: Path, _mock_store_tarball: bytes
 ):
     """Writeable version of database_store, restored to its initial state after each
     test. Yields the Store."""
@@ -1308,7 +1311,7 @@ def mutable_database_store(
 
 
 @pytest.fixture(scope="function")
-def mutable_database(mutable_database_store):
+def mutable_database(mutable_database_store: Store):
     """Writeable version of the fixture, restored to its initial state
     after each test. Yields store.db.
     """
@@ -1916,7 +1919,7 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
 
 
 @pytest.fixture(scope="function")
-def mock_git_test_package(mock_git_repository, mutable_mock_repo, monkeypatch):
+def mock_git_test_package(mock_git_repository, mutable_mock_repo: RepoPath, monkeypatch):
     # install a fake git version in the package class
     pkg_class = mutable_mock_repo.get_pkg_class("git-test")
     monkeypatch.delattr(pkg_class, "git")

@@ -26,6 +26,7 @@ import spack.stage
 import spack.util.gpg
 import spack.util.url as url_util
 from spack.cmd import buildcache
+from spack.config import Configuration
 from spack.fetch_strategy import URLFetchStrategy
 from spack.old_installer import PackageInstaller
 from spack.paths import mock_gpg_keys_path
@@ -37,7 +38,9 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_gnupghome")
-def test_buildcache(mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_config):
+def test_buildcache(
+    mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_config: Configuration
+):
     # Install a test package
     spec = spack.concretize.concretize_one("trivial-install-test-package")
     monkeypatch.setattr(spec.package, "fetcher", URLFetchStrategy(url=mock_archive.url))

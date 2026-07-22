@@ -15,6 +15,7 @@ import spack.stage
 import spack.util.web
 from spack.main import SpackCommand
 from spack.package_base import ManualDownloadRequiredError
+from spack.repo import RepoPath
 from spack.stage import interactive_version_filter
 from spack.version import Version
 
@@ -278,7 +279,7 @@ def test_checksum_interactive_unrecognized_command():
     assert interactive_version_filter(v.copy(), input=input) == v
 
 
-def test_checksum_versions(mock_packages, can_fetch_versions, monkeypatch):
+def test_checksum_versions(mock_packages: RepoPath, can_fetch_versions, monkeypatch):
     pkg_cls = mock_packages.get_pkg_class("zlib")
     versions = [str(v) for v in pkg_cls.versions]
     output = spack_checksum("zlib", *versions)
@@ -321,7 +322,7 @@ def test_checksum_verification_fails(config, mock_packages, capfd, can_fetch_ver
     assert "Invalid checksum" in out
 
 
-def test_checksum_manual_download_fails(mock_packages, monkeypatch):
+def test_checksum_manual_download_fails(mock_packages: RepoPath, monkeypatch):
     """Confirm that checksumming a manually downloadable package fails."""
     name = "zlib"
     pkg_cls = mock_packages.get_pkg_class(name)

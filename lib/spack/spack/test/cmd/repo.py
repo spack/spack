@@ -15,6 +15,7 @@ import spack.environment as ev
 import spack.main
 import spack.repo
 import spack.repo_migrate
+from spack.config import Configuration
 from spack.error import SpackError
 from spack.util.executable import Executable
 from spack.util.filesystem import working_dir
@@ -82,7 +83,11 @@ def test_repo_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
 
 
 def test_env_repo_path_vars_substitution(
-    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, monkeypatch, mutable_config
+    tmp_path: pathlib.Path,
+    install_mockery,
+    mutable_mock_env_path,
+    monkeypatch,
+    mutable_config: Configuration,
 ):
     """Test Spack correctly substitutes repo paths with environment variables when creating an
     environment from a manifest file."""
@@ -700,7 +705,7 @@ def test_add_repo_git_url_detection_edge_cases(monkeypatch, test_url, expected_t
         assert isinstance(entry, str)
 
 
-def test_repo_set_git_config(mutable_config):
+def test_repo_set_git_config(mutable_config: Configuration):
     """Test that 'spack repo set' properly modifies git repository configurations."""
     # Set up initial git repository config in defaults scope
     git_url = "https://github.com/example/test-repo.git"
@@ -726,7 +731,7 @@ def test_repo_set_nonexistent_repo(mutable_config):
         repo("set", "--destination", "/some/path", "nonexistent")
 
 
-def test_repo_set_does_not_work_on_local_path(mutable_config):
+def test_repo_set_does_not_work_on_local_path(mutable_config: Configuration):
     mutable_config.set("repos", {"local-repo": "/local/path"}, scope="site")
     with pytest.raises(SpackError, match="is not a git repository"):
         repo("set", "--destination", "/some/path", "local-repo")
@@ -899,7 +904,9 @@ def test_repo_list_json_output(mutable_config: spack.config.Configuration, tmp_p
         ("new_repo", ["--commit", "abc123"]),
     ],
 )
-def test_repo_update_successful_flags(monkeypatch, mutable_config, repo_name, flags):
+def test_repo_update_successful_flags(
+    monkeypatch, mutable_config: Configuration, repo_name, flags
+):
     """Test repo update with flags."""
 
     def mock_parse_config_descriptor(name, entry, lock):

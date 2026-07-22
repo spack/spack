@@ -14,6 +14,7 @@ import spack.paths
 import spack.repo
 import spack.util.executable
 import spack.util.file_cache
+from spack.repo import RepoPath
 from spack.util.filesystem import mkdirp, working_dir
 
 pkg = spack.main.SpackCommand("pkg")
@@ -238,7 +239,7 @@ def test_pkg_source_requires_one_arg(mock_packages):
         pkg("source", "--canonical", "a", "b")
 
 
-def test_pkg_source(mock_packages):
+def test_pkg_source(mock_packages: RepoPath):
     fake_source = pkg("source", "fake")
 
     fake_file = mock_packages.filename_for_package_name("fake")
@@ -344,7 +345,7 @@ def test_group_arguments(
 
 
 @pytest.mark.skipif(not spack.cmd.pkg.get_grep(), reason="grep is not installed")
-def test_pkg_grep(mock_packages):
+def test_pkg_grep(mock_packages: RepoPath):
     # only splice-* mock packages have the string "splice" in them
     pkg("grep", "-l", "splice")
     assert pkg.output.strip() == "\n".join(

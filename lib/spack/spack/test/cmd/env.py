@@ -34,12 +34,14 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.active_environment import active_environment
 from spack.cmd.env import _env_create
-from spack.config import substitute_path_variables
+from spack.config import Configuration, substitute_path_variables
 from spack.environment import depfile
 from spack.main import SpackCommand, SpackCommandError
 from spack.old_installer import PackageInstaller
+from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.stage import stage_prefix
+from spack.store import Store
 from spack.test.conftest import RepoBuilder
 from spack.traverse import traverse_nodes
 from spack.util import tty
@@ -511,7 +513,7 @@ def test_env_specs_partition(install_mockery, mock_fetch):
     assert roots_to_install[0].name == "mpileaks"
 
 
-def test_env_install_all(temporary_store, install_mockery, mock_fetch):
+def test_env_install_all(temporary_store: Store, install_mockery, mock_fetch):
     e = ev.create("test")
     e.add("cmake-client")
     e.concretize()
@@ -540,7 +542,12 @@ def test_env_install_single_spec(install_mockery, mock_fetch, installer_variant)
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])
 @pytest.mark.parametrize("reuse", [True, False])
 def test_env_install_include_concrete_env(
-    unify, reuse, temporary_store, install_mockery, mock_fetch, mutable_config
+    unify,
+    reuse,
+    temporary_store: Store,
+    install_mockery,
+    mock_fetch,
+    mutable_config: Configuration,
 ):
     test1, test2, combined = setup_combined_multiple_env()
 
@@ -579,7 +586,7 @@ def test_env_install_include_concrete_env(
 
 
 def test_env_roots_marked_explicit(
-    temporary_store, install_mockery, mock_fetch, installer_variant
+    temporary_store: Store, install_mockery, mock_fetch, installer_variant
 ):
     install = SpackCommand("install")
     install("--fake", "dependent-install")
@@ -602,7 +609,7 @@ def test_env_roots_marked_explicit(
 
 
 def test_env_modifications_error_on_activate(
-    install_mockery, mock_fetch, monkeypatch, capfd, mock_packages
+    install_mockery, mock_fetch, monkeypatch, capfd, mock_packages: RepoPath
 ):
     env("create", "test")
     install = SpackCommand("install")
@@ -657,7 +664,7 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmp_path: pathlib.P
 
 
 def test_env_install_two_specs_same_dep(
-    temporary_store, install_mockery, mock_fetch, tmp_path: pathlib.Path, monkeypatch
+    temporary_store: Store, install_mockery, mock_fetch, tmp_path: pathlib.Path, monkeypatch
 ):
     """Test installation of two packages that share a dependency with no
     connection and the second specifying the dependency as a 'build'
@@ -1039,7 +1046,7 @@ spack:
 
 
 @pytest.mark.parametrize("use_name", (True, False))
-def test_init_from_env(use_name, environment_from_manifest, mutable_config):
+def test_init_from_env(use_name, environment_from_manifest, mutable_config: Configuration):
     """Test that an environment can be instantiated from an environment dir"""
     e1 = environment_from_manifest(
         """
@@ -1145,7 +1152,7 @@ spack:
 
 
 def test_env_view_external_prefix(
-    tmp_path: pathlib.Path, mutable_database, mock_packages, mutable_config
+    tmp_path: pathlib.Path, mutable_database, mock_packages, mutable_config: Configuration
 ):
     fake_prefix = tmp_path / "a-prefix"
     fake_bin = fake_prefix / "bin"
@@ -1858,7 +1865,7 @@ def test_roots_display_with_variants():
     assert "boost+shared" in out
 
 
-def test_uninstall_keeps_in_env(mock_stage, mock_fetch, temporary_store, install_mockery):
+def test_uninstall_keeps_in_env(mock_stage, mock_fetch, temporary_store: Store, install_mockery):
     # 'spack uninstall' without --remove should not change the environment
     # spack.yaml file, just uninstall specs
     env("create", "test")
@@ -3756,7 +3763,9 @@ def test_virtual_spec_concretize_together(mutable_config):
         (True, (ev.EnvironmentConcretizer, "concretize")),
     ],
 )
-def test_concretize_transactional(unify, method_to_fail, monkeypatch, mutable_config):
+def test_concretize_transactional(
+    unify, method_to_fail, monkeypatch, mutable_config: Configuration
+):
     mutable_config.set("concretizer:unify", unify)
     e = ev.create("test")
 
@@ -3992,7 +4001,9 @@ def test_environment_view_target_already_exists(
     assert os.path.isfile(os.path.join(orphan_dir, "orphan_file"))
 
 
-def test_environment_query_spec_by_hash(mock_stage, mock_fetch, temporary_store, install_mockery):
+def test_environment_query_spec_by_hash(
+    mock_stage, mock_fetch, temporary_store: Store, install_mockery
+):
     env("create", "test")
     with ev.read("test"):
         add("libdwarf")

@@ -17,6 +17,8 @@ from spack.cmd import (
     require_cmd_name,
     require_python_name,
 )
+from spack.config import Configuration
+from spack.database import Database
 from spack.solver import asp
 
 
@@ -55,7 +57,13 @@ def test_require_cmd_name():
     ],
 )
 def test_special_cases_concretization_parse_specs(
-    unify, spec_strs, error, monkeypatch, mutable_config, mutable_database, tmp_path: pathlib.Path
+    unify,
+    spec_strs,
+    error,
+    monkeypatch,
+    mutable_config: Configuration,
+    mutable_database: Database,
+    tmp_path: pathlib.Path,
 ):
     """Test that special cases in parse_specs(concretize=True) bypass solver"""
 
@@ -101,8 +109,8 @@ def test_special_cases_concretization_matching_specs_from_env(
     spec_strs,
     error,
     monkeypatch,
-    mutable_config,
-    mutable_database,
+    mutable_config: Configuration,
+    mutable_database: Database,
     tmp_path: pathlib.Path,
     mutable_mock_env_path,
 ):

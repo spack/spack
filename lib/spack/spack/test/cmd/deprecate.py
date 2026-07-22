@@ -10,6 +10,7 @@ import spack.concretize
 import spack.spec
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand
+from spack.store import Store
 
 install = SpackCommand("install")
 uninstall = SpackCommand("uninstall")
@@ -20,7 +21,9 @@ find = SpackCommand("find")
 pytestmark = pytest.mark.usefixtures("mutable_mock_env_path")
 
 
-def test_deprecate(mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery):
+def test_deprecate(
+    mock_packages, mock_archive, mock_fetch, temporary_store: Store, install_mockery
+):
     install("--fake", "libelf@0.8.13")
     install("--fake", "libelf@0.8.10")
 
@@ -50,7 +53,7 @@ def test_deprecate_fails_no_such_package(mock_packages, mock_archive, mock_fetch
 
 
 def test_deprecate_install(
-    mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery, monkeypatch
+    mock_packages, mock_archive, mock_fetch, temporary_store: Store, install_mockery, monkeypatch
 ):
     """Tests that the -i option allows us to deprecate in favor of a spec
     that is not yet installed.
@@ -92,7 +95,7 @@ def test_deprecate_deps(mock_packages, mock_archive, mock_fetch, temporary_store
 
 
 def test_uninstall_deprecated(
-    mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery
+    mock_packages, mock_archive, mock_fetch, temporary_store: Store, install_mockery
 ):
     """Tests that we can still uninstall deprecated packages."""
     install("--fake", "libelf@0.8.13")
@@ -111,7 +114,7 @@ def test_uninstall_deprecated(
 
 
 def test_deprecate_already_deprecated(
-    mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery
+    mock_packages, mock_archive, mock_fetch, temporary_store: Store, install_mockery
 ):
     """Tests that we can re-deprecate a spec to change its deprecator."""
     install("--fake", "libelf@0.8.13")
@@ -137,7 +140,7 @@ def test_deprecate_already_deprecated(
 
 
 def test_deprecate_deprecator(
-    mock_packages, mock_archive, mock_fetch, temporary_store, install_mockery
+    mock_packages, mock_archive, mock_fetch, temporary_store: Store, install_mockery
 ):
     """Tests that when a deprecator spec is deprecated, its deprecatee specs
     are updated to point to the new deprecator."""
