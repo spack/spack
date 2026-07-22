@@ -80,13 +80,13 @@ spack:
     return env_yaml
 
 
-def check_compiler_config(configuration, comps, *compiler_names):
+def check_compiler_config(config, comps, *compiler_names):
     """Check that named compilers in comps match Spack's config."""
-    config = configuration.get("compilers")
+    compilers = config.get("compilers")
     compiler_list = ["cc", "cxx", "f77", "fc"]
     flag_list = ["cflags", "cxxflags", "fflags", "cppflags", "ldflags", "ldlibs"]
     param_list = ["modules", "paths", "spec", "operating_system"]
-    for compiler in config:
+    for compiler in compilers:
         conf = compiler["compiler"]
         if conf["spec"] in compiler_names:
             comp = next(
