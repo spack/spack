@@ -18,9 +18,9 @@ import spack.config
 import spack.stage
 import spack.util.filesystem
 import spack.util.spack_yaml
-import spack.util.url
 import spack.util.tty
 import spack.util.tty.color
+import spack.util.url
 from spack.cmd.common import arguments
 
 description = "manage bootstrap configuration"

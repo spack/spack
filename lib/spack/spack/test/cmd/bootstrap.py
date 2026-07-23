@@ -11,6 +11,7 @@ import spack.bootstrap
 import spack.bootstrap.core
 import spack.cmd.mirror
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.main
 import spack.spec
