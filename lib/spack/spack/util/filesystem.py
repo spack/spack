@@ -3448,7 +3448,6 @@ def setup_relocate_run(wrapper_spec) -> Executable:
     return relocate_exe
 
 
-@memoized
 def bootstrap_relocate() -> Executable:
     import spack.bootstrap
 
@@ -3456,7 +3455,6 @@ def bootstrap_relocate() -> Executable:
         return spack.bootstrap.ensure_msvc_relocate_or_raise()  # type: ignore
 
 
-@memoized
 def relocate(package=None) -> Executable:
     wrapper_spec = None
     if package:
