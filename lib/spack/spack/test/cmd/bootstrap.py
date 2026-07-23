@@ -108,7 +108,7 @@ def test_list_sources_url(config, tmp_path):
     metadata = {"type": "install", "description": "test", "info": {"url": "../../bootstrap_cache"}}
     with open(metadata_yaml, "w", encoding="utf-8") as f:
         syaml.dump(metadata, f)
-    with spack.config.override(
+    with spack.config.CONFIG.override(
         "bootstrap",
         {"sources": [{"name": "test", "metadata": str(tmp_path)}], "trusted": {"test": True}},
     ):
@@ -122,7 +122,7 @@ def test_list_sources_url(config, tmp_path):
     metadata = {"type": "install", "description": "test", "info": {"url": absolute_url}}
     with open(metadata_yaml, "w", encoding="utf-8") as f:
         syaml.dump(metadata, f)
-    with spack.config.override(
+    with spack.config.CONFIG.override(
         "bootstrap",
         {"sources": [{"name": "test", "metadata": str(tmp_path)}], "trusted": {"test": True}},
     ):
@@ -135,7 +135,7 @@ def test_list_sources_url(config, tmp_path):
     metadata = {"type": "install", "description": "test", "info": {"url": "https://test.com"}}
     with open(metadata_yaml, "w", encoding="utf-8") as f:
         syaml.dump(metadata, f)
-    with spack.config.override(
+    with spack.config.CONFIG.override(
         "bootstrap",
         {"sources": [{"name": "test", "metadata": str(tmp_path)}], "trusted": {"test": True}},
     ):
