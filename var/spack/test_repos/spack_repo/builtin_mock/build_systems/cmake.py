@@ -30,6 +30,7 @@ class CMakePackage(PackageBase):
     default_buildsystem = "cmake"
 
     build_system("cmake")
+
     depends_on("cmake", type="build", when="build_system=cmake")
 
     def flags_to_build_system_args(self, flags):

@@ -6,58 +6,60 @@
 Fetch strategies are used to download source code into a staging area
 in order to build it.  They need to define the following methods:
 
-    * fetch()
-        This should attempt to download/check out source from somewhere.
-    * check()
-        Apply a checksum to the downloaded source code, e.g. for an archive.
-        May not do anything if the fetch method was safe to begin with.
-    * expand()
-        Expand (e.g., an archive) downloaded file to source, with the
-        standard stage source path as the destination directory.
-    * reset()
-        Restore original state of downloaded code.  Used by clean commands.
-        This may just remove the expanded source and re-expand an archive,
-        or it may run something like git reset --hard.
-    * archive()
-        Archive a source directory, e.g. for creating a mirror.
+``fetch()``
+    This should attempt to download/check out source from somewhere.
+
+``check()``
+    Apply a checksum to the downloaded source code, e.g. for an archive.
+    May not do anything if the fetch method was safe to begin with.
+
+``expand()``
+    Expand (e.g., an archive) downloaded file to source, with the
+    standard stage source path as the destination directory.
+
+``reset()``
+    Restore original state of downloaded code.  Used by clean commands.
+    This may just remove the expanded source and re-expand an archive,
+    or it may run something like git reset ``--hard``.
+
+``archive()``
+    Archive a source directory, e.g. for creating a mirror.
 """
+
 import copy
 import functools
 import hashlib
 import http.client
 import os
 import re
+import secrets
 import shutil
 import sys
 import time
-import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.response
 from pathlib import PurePath
-from typing import Callable, List, Mapping, Optional
+from typing import Callable, List, Mapping, Optional, Type
 
 import spack.config
 import spack.error
-import spack.llnl.url
-import spack.llnl.util
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
 import spack.oci.opener
 import spack.util.archive
-import spack.util.crypto as crypto
+import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.git
+import spack.util.url
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
-import spack.version.git_ref_lookup
-from spack.llnl.string import comma_and, quote
-from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
+from spack.util import crypto, tty
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
+from spack.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
+from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
-all_strategies = []
+all_strategies: List[Type["FetchStrategy"]] = []
 
 
 def _needs_stage(fun):
@@ -159,7 +161,7 @@ class FetchStrategy:
         the information available to them in the Spack package.
 
         The returned value is added to the content which determines the full
-        hash for a package using `str()`.
+        hash for a package using :class:`str`.
         """
         raise NotImplementedError
 
@@ -405,7 +407,7 @@ class URLFetchStrategy(FetchStrategy):
             )
 
     def _fetch_from_url(self, url):
-        fetch_method = spack.config.get("config:url_fetch_method", "urllib")
+        fetch_method = spack.config.CONFIG.get("config:url_fetch_method", "urllib")
         if fetch_method.startswith("curl"):
             return self._fetch_curl(url, config_args=fetch_method.split()[1:])
         else:
@@ -426,41 +428,53 @@ class URLFetchStrategy(FetchStrategy):
             tty.warn(msg)
 
     @_needs_stage
-    def _fetch_urllib(self, url, chunk_size=65536):
+    def _fetch_urllib(self, url, chunk_size=65536, retries=5):
+        """Fetch a URL using urllib, with retries on transient errors and progress reporting."""
         save_file = self.stage.save_filename
+        part_file = save_file + ".part"
 
-        request = urllib.request.Request(url, headers={"User-Agent": web_util.SPACK_USER_AGENT})
+        request = urllib.request.Request(
+            url, headers={"User-Agent": web_util.SPACK_USER_AGENT, "Accept": "*/*"}
+        )
 
-        if os.path.lexists(save_file):
-            os.remove(save_file)
-
-        try:
-            response = web_util.urlopen(request)
-            tty.msg(f"Fetching {url}")
-            progress = FetchProgress.from_headers(response.headers, enabled=sys.stdout.isatty())
-            with open(save_file, "wb") as f:
-                while True:
-                    chunk = response.read(chunk_size)
-                    if not chunk:
-                        break
-                    f.write(chunk)
-                    progress.advance(len(chunk))
-            progress.print(final=True)
-        except OSError as e:
-            # clean up archive on failure.
-            if self.archive_file:
-                os.remove(self.archive_file)
-            if os.path.lexists(save_file):
-                os.remove(save_file)
-            raise FailedDownloadError(e) from e
+        response_headers_str = None
+        for attempt in range(retries):
+            try:
+                with web_util.urlopen(request) as response:
+                    tty.verbose(f"Fetching {url}")
+                    progress = FetchProgress.from_headers(
+                        response.headers, enabled=sys.stdout.isatty()
+                    )
+                    with open(part_file, "wb") as f:
+                        while True:
+                            chunk = response.read(chunk_size)
+                            if not chunk:
+                                break
+                            f.write(chunk)
+                            progress.advance(len(chunk))
+                    progress.print(final=True)
+                    # Capture metadata before context manager closes the connection
+                    if isinstance(response, http.client.HTTPResponse):
+                        self._effective_url = response.geturl()
+                    response_headers_str = str(response.headers)
+                os.replace(part_file, save_file)
+                break  # success: exit retry loop
+            except Exception as e:
+                # clean up archive on failure.
+                if self.archive_file:
+                    os.remove(self.archive_file)
+                if os.path.lexists(part_file):
+                    os.remove(part_file)
+                # Raise if this was the last attempt, or if the error was not transient.
+                if (attempt + 1 == retries) or not web_util.is_transient_error(e):
+                    raise FailedDownloadError(e) from e
+                tty.debug(f"Retrying fetch (attempt {attempt + 1}): {e}")
+                time.sleep(2**attempt)
 
         # Save the redirected URL for error messages. Sometimes we're redirected to an arbitrary
         # mirror that is broken, leading to spurious download failures. In that case it's helpful
         # for users to know which URL was actually fetched.
-        if isinstance(response, http.client.HTTPResponse):
-            self._effective_url = response.geturl()
-
-        self._check_headers(str(response.headers))
+        self._check_headers(response_headers_str)
 
     @_needs_stage
     def _fetch_curl(self, url, config_args=[]):
@@ -469,7 +483,7 @@ class URLFetchStrategy(FetchStrategy):
         if self.stage.save_filename:
             save_file = self.stage.save_filename
             partial_file = self.stage.save_filename + ".part"
-        tty.msg(f"Fetching {url}")
+        tty.verbose(f"Fetching {url}")
         if partial_file:
             save_args = [
                 "-C",
@@ -550,7 +564,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # TODO: replace this by mime check.
         if not self.extension:
-            self.extension = spack.llnl.url.determine_url_file_extension(self.url)
+            self.extension = spack.util.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
             tty.debug("Source already staged to %s" % self.stage.source_path)
@@ -656,7 +670,7 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
 
         try:
             response = self._urlopen(self.url)
-            tty.msg(f"Fetching {self.url}")
+            tty.verbose(f"Fetching {self.url}")
             with open(file, "wb") as f:
                 shutil.copyfileobj(response, f)
         except OSError as e:
@@ -702,7 +716,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
-        assert spack.llnl.url.extension_from_path(destination) == "tar.gz"
+        assert spack.util.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
         # We need to prepend this dir name to every entry of the tarfile
         top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))
@@ -726,12 +740,11 @@ class VCSFetchStrategy(FetchStrategy):
 
 @fetcher
 class GoFetchStrategy(VCSFetchStrategy):
-    """Fetch strategy that employs the `go get` infrastructure.
+    """Fetch strategy that employs the ``go get`` infrastructure.
 
-    Use like this in a package:
+    Use like this in a package::
 
-       version('name',
-               go='github.com/monochromegane/the_platinum_searcher/...')
+       version("name", go="github.com/monochromegane/the_platinum_searcher/...")
 
     Go get does not natively support versions, they can be faked with git.
 
@@ -798,20 +811,19 @@ class GoFetchStrategy(VCSFetchStrategy):
 class GitFetchStrategy(VCSFetchStrategy):
     """
     Fetch strategy that gets source code from a git repository.
-    Use like this in a package:
+    Use like this in a package::
 
-        version('name', git='https://github.com/project/repo.git')
+        version("name", git="https://github.com/project/repo.git")
 
-    Optionally, you can provide a branch, or commit to check out, e.g.:
+    Optionally, you can provide a branch, or commit to check out, e.g.::
 
-        version('1.1', git='https://github.com/project/repo.git', tag='v1.1')
+        version("1.1", git="https://github.com/project/repo.git", tag="v1.1")
 
     You can use these three optional attributes in addition to ``git``:
 
-        * ``branch``: Particular branch to build from (default is the
-                      repository's default branch)
-        * ``tag``: Particular tag to check out
-        * ``commit``: Particular commit hash in the repo
+    * ``branch``: Particular branch to build from (default is the repository's default branch)
+    * ``tag``: Particular tag to check out
+    * ``commit``: Particular commit hash in the repo
 
     Repositories are cloned into the standard stage source path directory.
     """
@@ -825,9 +837,8 @@ class GitFetchStrategy(VCSFetchStrategy):
         "get_full_repo",
         "submodules_delete",
         "git_sparse_paths",
+        "skip_checkout",
     ]
-
-    git_version_re = r"git version (\S+)"
 
     def __init__(self, **kwargs):
 
@@ -846,6 +857,9 @@ class GitFetchStrategy(VCSFetchStrategy):
         self.submodules_delete = kwargs.get("submodules_delete", False)
         self.get_full_repo = kwargs.get("get_full_repo", False)
         self.git_sparse_paths = kwargs.get("git_sparse_paths", None)
+        # skipping checkout with a blobless clone is an efficient way to traverse meta-data
+        # see https://bhupesh.me/minimalist-guide-git-clone/
+        self.skip_checkout = kwargs.get("skip_checkout", False)
 
     @property
     def git_version(self):
@@ -856,9 +870,8 @@ class GitFetchStrategy(VCSFetchStrategy):
         """Given a git executable, return the Version (this will fail if
         the output cannot be parsed into a valid Version).
         """
-        version_output = git_exe("--version", output=str)
-        m = re.search(GitFetchStrategy.git_version_re, version_output)
-        return spack.version.Version(m.group(1))
+        version_string = ".".join(map(str, git_exe.version))
+        return spack.version.Version(version_string)
 
     @property
     def git(self):
@@ -876,7 +889,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             # If the user asked for insecure fetching, make that work
             # with git as well.
-            if not spack.config.get("config:verify_ssl"):
+            if not spack.config.CONFIG.get("config:verify_ssl"):
                 self._git.add_default_env("GIT_SSL_NO_VERIFY", "true")
 
         return self._git
@@ -887,6 +900,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     def source_id(self):
         # TODO: tree-hash would secure download cache and mirrors, commit only secures checkouts.
+        # TODO(psakiev): Tree-hash is part of the commit SHA computation, question comment validity
         return self.commit
 
     def mirror_id(self):
@@ -922,10 +936,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.debug(f"Already fetched {self.stage.source_path}")
             return
 
-        if self.git_sparse_paths:
-            self._sparse_clone_src()
-        else:
-            self._clone_src()
+        self._clone_src()
         self.submodule_operations()
 
     def bare_clone(self, dest: str) -> None:
@@ -939,7 +950,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         tty.debug(f"Cloning git repository: {self._repo_info()}")
 
         git = self.git
-        debug = spack.config.get("config:debug")
+        debug = spack.config.CONFIG.get("config:debug")
 
         # We don't need to worry about which commit/branch/tag is checked out
         clone_args = ["clone", "--bare"]
@@ -954,156 +965,41 @@ class GitFetchStrategy(VCSFetchStrategy):
         dest = self.stage.source_path
         tty.debug(f"Cloning git repository: {self._repo_info()}")
 
-        git = self.git
-        debug = spack.config.get("config:debug")
+        depth = None if self.get_full_repo else 1
+        name = self.package.name if self.package else None
+        checkout_ref = self.commit or self.tag or self.branch
+        fetch_ref = self.tag or self.branch
 
-        if self.commit:
-            # Need to do a regular clone and check out everything if
-            # they asked for a particular commit.
-            clone_args = ["clone", self.url]
-            if not debug:
-                clone_args.insert(1, "--quiet")
-            with temp_cwd():
-                git(*clone_args)
-                repo_name = get_single_file(".")
-                if self.stage:
-                    self.stage.srcdir = repo_name
-                shutil.copytree(repo_name, dest, symlinks=True)
-                shutil.rmtree(
-                    repo_name,
-                    ignore_errors=False,
-                    onerror=fs.readonly_file_handler(ignore_errors=True),
-                )
+        kwargs = {
+            "debug": spack.config.CONFIG.get("config:debug"),
+            "git_exe": self.git,
+            "dest": name,
+        }
 
-            with working_dir(dest):
-                checkout_args = ["checkout", self.commit]
-                if not debug:
-                    checkout_args.insert(1, "--quiet")
-                git(*checkout_args)
+        # TODO(psakievich) The use of the minimal clone need clearer justification via package API
+        # or something. There is a trade space of storage minimization vs available git information
+        # that grows to non-trivial proportions for larger projects
+        minimal_clone = self.commit and name and not self.get_full_repo
 
-        else:
-            # Can be more efficient if not checking out a specific commit.
-            args = ["clone"]
-            if not debug:
-                args.append("--quiet")
-
-            # If we want a particular branch ask for it.
-            if self.branch:
-                args.extend(["--branch", self.branch])
-            elif self.tag and self.git_version >= spack.version.Version("1.8.5.2"):
-                args.extend(["--branch", self.tag])
-
-            # Try to be efficient if we're using a new enough git.
-            # This checks out only one branch's history
-            if self.git_version >= spack.version.Version("1.7.10"):
-                if self.get_full_repo:
-                    args.append("--no-single-branch")
-                else:
-                    args.append("--single-branch")
-
-            with temp_cwd():
-                # Yet more efficiency: only download a 1-commit deep
-                # tree, if the in-use git and protocol permit it.
-                if (
-                    (not self.get_full_repo)
-                    and self.git_version >= spack.version.Version("1.7.1")
-                    and self.protocol_supports_shallow_clone()
-                ):
-                    args.extend(["--depth", "1"])
-
-                args.extend([self.url])
-                git(*args)
-
-                repo_name = get_single_file(".")
-                if self.stage:
-                    self.stage.srcdir = repo_name
-                shutil.move(repo_name, dest)
-
-            with working_dir(dest):
-                # For tags, be conservative and check them out AFTER
-                # cloning.  Later git versions can do this with clone
-                # --branch, but older ones fail.
-                if self.tag and self.git_version < spack.version.Version("1.8.5.2"):
-                    # pull --tags returns a "special" error code of 1 in
-                    # older versions that we have to ignore.
-                    # see: https://github.com/git/git/commit/19d122b
-                    pull_args = ["pull", "--tags"]
-                    co_args = ["checkout", self.tag]
-                    if not spack.config.get("config:debug"):
-                        pull_args.insert(1, "--quiet")
-                        co_args.insert(1, "--quiet")
-
-                    git(*pull_args, ignore_errors=1)
-                    git(*co_args)
-
-    def _sparse_clone_src(self, **kwargs):
-        """Use git's sparse checkout feature to clone portions of a git repository"""
-        dest = self.stage.source_path
-        git = self.git
-
-        if self.git_version < spack.version.Version("2.26.0"):
-            # technically this should be supported for 2.25, but bumping for OS issues
-            # see https://github.com/spack/spack/issues/45771
-            # code paths exist where the package is not set.  Assure some indentifier for the
-            # package that was configured  for sparse checkout exists in the error message
-            identifier = str(self.url)
-            if self.package:
-                identifier += f" ({self.package.name})"
-            tty.warn(
-                (
-                    f"{identifier} is configured for git sparse-checkout "
-                    "but the git version is too old to support sparse cloning. "
-                    "Cloning the full repository instead."
-                )
-            )
-            self._clone_src()
-        else:
-            # default to depth=2 to allow for retention of some git properties
-            depth = kwargs.get("depth", 2)
-            needs_fetch = self.branch or self.tag
-            git_ref = self.branch or self.tag or self.commit
-
-            assert git_ref
-
-            clone_args = ["clone"]
-
-            if needs_fetch:
-                clone_args.extend(["--branch", git_ref])
-
-            if self.get_full_repo:
-                clone_args.append("--no-single-branch")
+        with temp_cwd(ignore_cleanup_errors=True):
+            if minimal_clone:
+                try:
+                    spack.util.git.git_init_fetch(self.url, self.commit, depth, **kwargs)
+                except spack.util.executable.ProcessError:
+                    spack.util.git.git_clone(
+                        self.url, fetch_ref, self.get_full_repo, depth, **kwargs
+                    )
             else:
-                clone_args.append("--single-branch")
+                spack.util.git.git_clone(self.url, fetch_ref, self.get_full_repo, depth, **kwargs)
+            repo_name = get_single_file(".")
+            kwargs["dest"] = repo_name
+            if not self.skip_checkout:
+                spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
 
-            clone_args.extend(
-                [f"--depth={depth}", "--no-checkout", "--filter=blob:none", self.url]
-            )
-
-            sparse_args = ["sparse-checkout", "set"]
-
-            if callable(self.git_sparse_paths):
-                sparse_args.extend(self.git_sparse_paths())
-            else:
-                sparse_args.extend([p for p in self.git_sparse_paths])
-
-            sparse_args.append("--cone")
-
-            checkout_args = ["checkout", git_ref]
-
-            if not spack.config.get("config:debug"):
-                clone_args.insert(1, "--quiet")
-                checkout_args.insert(1, "--quiet")
-
-            with temp_cwd():
-                git(*clone_args)
-                repo_name = get_single_file(".")
-                if self.stage:
-                    self.stage.srcdir = repo_name
-                shutil.move(repo_name, dest)
-
-            with working_dir(dest):
-                git(*sparse_args)
-                git(*checkout_args)
+            if self.stage:
+                self.stage.srcdir = repo_name
+            shutil.copytree(repo_name, dest, symlinks=True)
+        return
 
     def submodule_operations(self):
         dest = self.stage.source_path
@@ -1113,7 +1009,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             with working_dir(dest):
                 for submodule_to_delete in self.submodules_delete:
                     args = ["rm", submodule_to_delete]
-                    if not spack.config.get("config:debug"):
+                    if not spack.config.CONFIG.get("config:debug"):
                         args.insert(1, "--quiet")
                     git(*args)
 
@@ -1135,7 +1031,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         with working_dir(dest):
             for args in git_commands:
-                if not spack.config.get("config:debug"):
+                if not spack.config.CONFIG.get("config:debug"):
                     args.insert(1, "--quiet")
                 git(*args)
 
@@ -1144,18 +1040,12 @@ class GitFetchStrategy(VCSFetchStrategy):
         with working_dir(self.stage.source_path):
             co_args = ["checkout", "."]
             clean_args = ["clean", "-f"]
-            if spack.config.get("config:debug"):
+            if spack.config.CONFIG.get("config:debug"):
                 co_args.insert(1, "--quiet")
                 clean_args.insert(1, "--quiet")
 
             self.git(*co_args)
             self.git(*clean_args)
-
-    def protocol_supports_shallow_clone(self):
-        """Shallow clone operations (--depth #) are not supported by the basic
-        HTTP protocol or by no-protocol file specifications.
-        Use (e.g.) https:// or file:// instead."""
-        return not (self.url.startswith("http://") or self.url.startswith("/"))
 
     def __str__(self):
         return f"[git] {self._repo_info()}"
@@ -1164,16 +1054,17 @@ class GitFetchStrategy(VCSFetchStrategy):
 @fetcher
 class CvsFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a CVS repository.
-       Use like this in a package:
+    Use like this in a package::
 
-           version('name',
-                   cvs=':pserver:anonymous@www.example.com:/cvsroot%module=modulename')
+        version("name", cvs=":pserver:anonymous@www.example.com:/cvsroot%module=modulename")
 
-       Optionally, you can provide a branch and/or a date for the URL:
+    Optionally, you can provide a branch and/or a date for the URL::
 
-           version('name',
-                   cvs=':pserver:anonymous@www.example.com:/cvsroot%module=modulename',
-                   branch='branchname', date='date')
+        version(
+            "name",
+            cvs=":pserver:anonymous@www.example.com:/cvsroot%module=modulename",
+            branch="branchname", date="date"
+        )
 
     Repositories are checked out into the standard stage source path directory.
     """
@@ -1281,14 +1172,13 @@ class CvsFetchStrategy(VCSFetchStrategy):
 @fetcher
 class SvnFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a subversion repository.
-       Use like this in a package:
+    Use like this in a package::
 
-           version('name', svn='http://www.example.com/svn/trunk')
+        version("name", svn="http://www.example.com/svn/trunk")
 
-       Optionally, you can provide a revision for the URL:
+    Optionally, you can provide a revision for the URL::
 
-           version('name', svn='http://www.example.com/svn/trunk',
-                   revision='1641')
+        version("name", svn="http://www.example.com/svn/trunk", revision="1641")
 
     Repositories are checked out into the standard stage source path directory.
     """
@@ -1376,21 +1266,20 @@ class SvnFetchStrategy(VCSFetchStrategy):
 class HgFetchStrategy(VCSFetchStrategy):
     """
     Fetch strategy that gets source code from a Mercurial repository.
-    Use like this in a package:
+    Use like this in a package::
 
-        version('name', hg='https://jay.grs.rwth-aachen.de/hg/lwm2')
+        version("name", hg="https://jay.grs.rwth-aachen.de/hg/lwm2")
 
-    Optionally, you can provide a branch, or revision to check out, e.g.:
+    Optionally, you can provide a branch, or revision to check out, e.g.::
 
-        version('torus',
-                hg='https://jay.grs.rwth-aachen.de/hg/lwm2', branch='torus')
+        version("torus", hg="https://jay.grs.rwth-aachen.de/hg/lwm2", branch="torus")
 
-    You can use the optional 'revision' attribute to check out a
+    You can use the optional ``revision`` attribute to check out a
     branch, tag, or particular revision in hg.  To prevent
     non-reproducible builds, using a moving target like a branch is
     discouraged.
 
-        * ``revision``: Particular revision, branch, or tag.
+    * ``revision``: Particular revision, branch, or tag.
 
     Repositories are cloned into the standard stage source path directory.
     """
@@ -1449,7 +1338,7 @@ class HgFetchStrategy(VCSFetchStrategy):
 
         args = ["clone"]
 
-        if not spack.config.get("config:verify_ssl"):
+        if not spack.config.CONFIG.get("config:verify_ssl"):
             args.append("--insecure")
 
         if self.revision:
@@ -1588,22 +1477,21 @@ def from_url(url: str) -> URLFetchStrategy:
     """Given a URL, find an appropriate fetch strategy for it.
     Currently just gives you a URLFetchStrategy that uses curl.
 
-    TODO: make this return appropriate fetch strategies for other
-          types of URLs.
+    TODO: make this return appropriate fetch strategies for other types of URLs.
     """
     return URLFetchStrategy(url=url)
 
 
-def from_kwargs(**kwargs):
+def from_kwargs(**kwargs) -> FetchStrategy:
     """Construct an appropriate FetchStrategy from the given keyword arguments.
 
     Args:
-        **kwargs: dictionary of keyword arguments, e.g. from a
-            ``version()`` directive in a package.
+        **kwargs: dictionary of keyword arguments, e.g. from a ``version()`` directive in a
+            package.
 
     Returns:
-        typing.Callable: The fetch strategy that matches the args, based
-            on attribute names (e.g., ``git``, ``hg``, etc.)
+        The fetch strategy that matches the args, based on attribute names (e.g., ``git``, ``hg``,
+        etc.)
 
     Raises:
         spack.error.FetchError: If no ``fetch_strategy`` matches the args.
@@ -1641,7 +1529,7 @@ def _check_version_attributes(fetcher, pkg, version):
     This assumes that we have already determined the fetcher for the
     specific version using ``for_package_version()``
     """
-    all_optionals = set(a for s in all_strategies for a in s.optional_attrs)
+    all_optionals = {a for s in all_strategies for a in s.optional_attrs}
 
     args = pkg.versions[version]
     extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr, "no_cache"])
@@ -1692,6 +1580,18 @@ def _from_merged_attrs(fetcher, pkg, version):
 
 
 def for_package_version(pkg, version=None):
+    saved_versions = None
+    if version is not None:
+        saved_versions = pkg.spec.versions
+
+    try:
+        return _for_package_version(pkg, version)
+    finally:
+        if saved_versions is not None:
+            pkg.spec.versions = saved_versions
+
+
+def _for_package_version(pkg, version=None):
     """Determine a fetch strategy based on the arguments supplied to
     version() in the package description."""
 
@@ -1716,15 +1616,26 @@ def for_package_version(pkg, version=None):
         version = pkg.version
 
     # if it's a commit, we must use a GitFetchStrategy
-    commit_sha = pkg.spec.variants.get("commit", None)
-    if isinstance(version, spack.version.GitVersion) or commit_sha:
-        if not hasattr(pkg, "git"):
+    commit_var = pkg.spec.variants.get("commit", None)
+    commit = commit_var.value if commit_var else None
+    tag = None
+    if isinstance(version, spack.version.GitVersion) or commit:
+        git_url = pkg.version_or_package_attr("git", version)
+        if not git_url:
             raise spack.error.FetchError(
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
-        # Populate the version with comparisons to other commits
         if isinstance(version, spack.version.GitVersion):
-            version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(pkg.name))
+            # Populate the version with comparisons to other commits
+            from spack.version.git_ref_lookup import GitRefLookup
+
+            version.attach_lookup(GitRefLookup(pkg.name))
+
+            if not commit and version.is_commit:
+                commit = version.ref
+            version_meta_data = pkg.versions.get(version.std_version)
+        else:
+            version_meta_data = pkg.versions.get(version)
 
         # For GitVersion, we have no way to determine whether a ref is a branch or tag
         # Fortunately, we handle branches and tags identically, except tags are
@@ -1734,19 +1645,18 @@ def for_package_version(pkg, version=None):
         # Branches cannot be cached, so we tell the fetcher not to cache tags/branches
 
         # TODO(psakiev) eventually we should  only need to clone based on the commit
-        ref_type = None
-        ref_value = None
-        if commit_sha:
-            ref_type = "commit"
-            ref_value = commit_sha.value
-        else:
-            ref_type = "commit" if version.is_commit else "tag"
-            ref_value = version.ref
 
-        kwargs = {ref_type: ref_value, "no_cache": ref_type != "commit"}
-        kwargs["git"] = pkg.version_or_package_attr("git", version)
+        # commit stashed on version
+        if version_meta_data:
+            if not commit:
+                commit = version_meta_data.get("commit")
+            tag = version_meta_data.get("tag") or version_meta_data.get("branch")
+
+        kwargs = {"commit": commit, "tag": tag, "no_cache": bool(not commit)}
+        kwargs["git"] = git_url
         kwargs["submodules"] = pkg.version_or_package_attr("submodules", version, False)
         kwargs["git_sparse_paths"] = pkg.version_or_package_attr("git_sparse_paths", version, None)
+        kwargs["get_full_repo"] = pkg.version_or_package_attr("get_full_repo", version, False)
 
         # if the ref_version is a known version from the package, use that version's
         # attributes
@@ -1854,10 +1764,29 @@ def from_list_url(pkg):
             tty.msg("Could not determine url from list_url.")
 
 
-class FsCache:
+class FsCacheBase:
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
+    def store(self, fetcher, relative_dest):
+        dst = os.path.join(self.root, relative_dest)
+        mkdirp(os.path.dirname(dst))
+        tmp = os.path.join(
+            os.path.dirname(dst), ".tmp." + secrets.token_hex(6) + "." + os.path.basename(dst)
+        )
+        open(tmp, "xb").close()
+        try:
+            fetcher.archive(tmp)
+            os.replace(tmp, dst)
+        except BaseException:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
+
+
+class FsCache(FsCacheBase):
     def store(self, fetcher, relative_dest):
         # skip fetchers that aren't cachable
         if not fetcher.cachable:
@@ -1867,9 +1796,7 @@ class FsCache:
         if isinstance(fetcher, CacheURLFetchStrategy):
             return
 
-        dst = os.path.join(self.root, relative_dest)
-        mkdirp(os.path.dirname(dst))
-        fetcher.archive(dst)
+        super().store(fetcher, relative_dest)
 
     def fetcher(self, target_path: str, digest: Optional[str], **kwargs) -> CacheURLFetchStrategy:
         path = os.path.join(self.root, target_path)

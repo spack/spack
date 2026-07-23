@@ -15,14 +15,14 @@ import spack.cmd
 import spack.compilers.config
 import spack.deptypes as dt
 import spack.error
-import spack.hash_types as hash_types
-import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+from spack import hash_types
 from spack.detection.path import ExecutablesFinder
 from spack.schema.cray_manifest import schema as manifest_schema
+from spack.util import tty
 
 #: Cray systems can store a Spack-compatible description of system
 #: packages here.
@@ -34,7 +34,7 @@ COMPILER_NAME_TRANSLATION = {"nvidia": "nvhpc", "rocm": "llvm-amdgpu", "clang": 
 def translated_compiler_name(manifest_compiler_name):
     """
     When creating a Compiler object, Spack expects a name matching
-    one of the classes in `spack.compilers.config`. Names in the Cray manifest
+    one of the classes in :mod:`spack.compilers.config`. Names in the Cray manifest
     may differ; for cases where we know the name refers to a compiler in
     Spack, this function translates it automatically.
 
@@ -182,6 +182,7 @@ def spec_from_entry(entry):
     spec._hashes_final = True
     spec.external_path = entry["prefix"]
     spec.origin = "external-db"
+    spec.namespace = pkg_cls.namespace
     spack.spec.Spec.ensure_valid_variants(spec)
 
     return spec

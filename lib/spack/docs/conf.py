@@ -17,18 +17,22 @@
 # serve to show the default.
 
 import os
+
+# Set this before importing sphinx.
+os.environ["SPHINX_APIDOC_OPTIONS"] = "members,undoc-members,show-inheritance,no-index-entry"
+
 import subprocess
 import sys
 from glob import glob
 from typing import List
 
 from docutils.statemachine import StringList
-
-# ... other imports at the top of the file
+from pygments.formatters.html import HtmlFormatter
 from pygments.lexer import RegexLexer, default
 from pygments.token import *
 from sphinx.domains.python import PythonDomain
 from sphinx.ext.apidoc import main as sphinx_apidoc
+from sphinx.highlighting import PygmentsBridge
 from sphinx.parsers import RSTParser
 
 # -- Spack customizations -----------------------------------------------------
@@ -54,9 +58,17 @@ sys.path[0:0] = [
     os.path.abspath(".spack/spack-packages/repos"),
 ]
 
-subprocess.call(["spack", "list"], stdout=subprocess.DEVNULL)
+# Init the package repo with all git history, so "Last updated on" is accurate.
+subprocess.call(["spack", "repo", "update"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+if os.path.exists(".spack/spack-packages/.git/shallow"):
+    subprocess.call(
+        ["git", "fetch", "--unshallow"],
+        cwd=".spack/spack-packages",
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
-# Generate a command index if an update is needed -- this also clones the package repository.
+# Generate a command index if an update is needed
 subprocess.call(
     [
         "spack",
@@ -88,6 +100,8 @@ sphinx_apidoc(
         "_spack_root/lib/spack/spack/vendor",
         "_spack_root/lib/spack/spack/test",
         "_spack_root/lib/spack/spack/package.py",
+        "_spack_root/lib/spack/spack/installer/windows.py",
+        "_spack_root/lib/spack/spack/util/win_acl.py",
     ]
 )
 sphinx_apidoc(
@@ -96,11 +110,36 @@ sphinx_apidoc(
         "--implicit-namespaces",
         ".spack/spack-packages/repos/spack_repo",
         ".spack/spack-packages/repos/spack_repo/builtin/packages",
+        ".spack/spack-packages/repos/spack_repo/builtin/build_systems/generic.py",
     ]
 )
 
 
+class NoWhitespaceHtmlFormatter(HtmlFormatter):
+    """HTML formatter that suppresses redundant span elements for Text.Whitespace tokens."""
+
+    def _get_css_classes(self, ttype):
+        # For Text.Whitespace return an empty string, which avoids <span class="w"> </span>
+        # elements from being generated.
+        return "" if ttype is Text.Whitespace else super()._get_css_classes(ttype)
+
+
+class CustomPygmentsBridge(PygmentsBridge):
+    def get_formatter(self, **options):
+        return NoWhitespaceHtmlFormatter(**options)
+
+
+# Use custom HTML formatter to avoid redundant <span class="w"> </span> elements.
+# See https://github.com/pygments/pygments/issues/1905#issuecomment-3170486995.
+PygmentsBridge.html_formatter = NoWhitespaceHtmlFormatter
+
+
+from spack.util.lang import classproperty
 from spack.spec_parser import SpecTokens
+
+# replace classproperty.__get__ to return `self` so Sphinx can document it correctly. Otherwise
+# it evaluates the callback, and it documents the result, which is not what we want.
+classproperty.__get__ = lambda self, instance, owner: self
 
 
 class SpecLexer(RegexLexer):
@@ -239,7 +278,9 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
-    "sphinx_design",
+    "sphinx_last_updated_by_git",
+    "sphinx_sitemap",
+    "sphinxcontrib.inkscapeconverter",
     "sphinxcontrib.programoutput",
 ]
 
@@ -307,49 +348,48 @@ gettext_uuid = False
 exclude_patterns = ["_build", "_spack_root", ".spack-env", ".spack", ".venv"]
 
 autodoc_mock_imports = ["llnl"]
+autodoc_default_options = {"no-value": True}
+autodoc_preserve_defaults = True
 
 nitpicky = True
 nitpick_ignore = [
     # Python classes that intersphinx is unable to resolve
     ("py:class", "argparse.HelpFormatter"),
-    ("py:class", "contextlib.contextmanager"),
-    ("py:class", "module"),
-    ("py:class", "_io.BufferedReader"),
-    ("py:class", "_io.BytesIO"),
-    ("py:class", "unittest.case.TestCase"),
-    ("py:class", "_frozen_importlib_external.SourceFileLoader"),
-    ("py:class", "clingo.Control"),
-    ("py:class", "six.moves.urllib.parse.ParseResult"),
-    ("py:class", "TextIO"),
-    ("py:class", "hashlib._Hash"),
     ("py:class", "concurrent.futures._base.Executor"),
-    ("py:class", "multiprocessing.context.Process"),
+    ("py:class", "hashlib._Hash"),
+    ("py:class", "multiprocessing.context.BaseContext"),
+    ("py:class", "posix.DirEntry"),
     # Spack classes that are private and we don't want to expose
-    ("py:class", "spack.provider_index._IndexBase"),
-    ("py:class", "spack.repo._PrependFileLoader"),
     ("py:class", "spack_repo.builtin.build_systems._checks.BuilderWithDefaults"),
+    ("py:class", "spack.repo._PrependFileLoader"),
     # Spack classes that intersphinx is unable to resolve
-    ("py:class", "spack.version.StandardVersion"),
-    ("py:class", "spack.spec.DependencySpec"),
+    ("py:class", "BuildStatus"),
+    ("py:class", "GitOrStandardVersion"),
+    ("py:class", "spack.bootstrap._common.QueryInfo"),
+    ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
     ("py:class", "spack.spec.ArchSpec"),
+    ("py:class", "spack.spec.DependencySpec"),
     ("py:class", "spack.spec.InstallStatus"),
     ("py:class", "spack.spec.SpecfileReaderBase"),
-    ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
     ("py:class", "spack.traverse.EdgeAndDepth"),
     ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
-    ("py:class", "spack.compiler.CompilerCache"),
+    ("py:class", "spack.vendor.jinja2.Environment"),
+    ("py:class", "SpecFiltersFactory"),
+    ("py:exc", "CoreCompilersNotFoundError"),
     # TypeVar that is not handled correctly
-    ("py:class", "spack.llnl.util.lang.T"),
-    ("py:class", "spack.llnl.util.lang.KT"),
-    ("py:class", "spack.llnl.util.lang.VT"),
-    ("py:class", "spack.llnl.util.lang.K"),
-    ("py:class", "spack.llnl.util.lang.V"),
-    ("py:class", "spack.llnl.util.lang.ClassPropertyType"),
-    ("py:obj", "spack.llnl.util.lang.KT"),
-    ("py:obj", "spack.llnl.util.lang.VT"),
-    ("py:obj", "spack.llnl.util.lang.ClassPropertyType"),
-    ("py:obj", "spack.llnl.util.lang.K"),
-    ("py:obj", "spack.llnl.util.lang.V"),
+    ("py:class", "spack.util.lang.ClassPropertyType"),
+    ("py:class", "spack.util.lang.K"),
+    ("py:class", "spack.util.lang.KT"),
+    ("py:class", "spack.util.lang.T"),
+    ("py:class", "spack.util.lang.V"),
+    ("py:class", "spack.util.lang.VT"),
+    ("py:obj", "spack.util.lang.ClassPropertyType"),
+    ("py:obj", "spack.util.lang.K"),
+    ("py:obj", "spack.util.lang.KT"),
+    ("py:obj", "spack.util.lang.V"),
+    ("py:obj", "spack.util.lang.VT"),
+    ("py:class", "_P"),
+    ("py:class", "spack.util.web._R"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
@@ -450,10 +490,20 @@ html_show_sphinx = False
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None
 
+# Base URL for the documentation, used to generate <link rel="canonical"/> for better indexing
+html_baseurl = "https://spack.readthedocs.io/en/latest/"
+
 # Output file base name for HTML help builder.
 htmlhelp_basename = "Spackdoc"
 
+# Sitemap settings
+sitemap_show_lastmod = True
+sitemap_url_scheme = "{link}"
+sitemap_excludes = ["search.html", "_modules/*"]
+
 # -- Options for LaTeX output --------------------------------------------------
+
+latex_engine = "lualatex"
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
@@ -466,7 +516,7 @@ latex_elements = {
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [("index", "Spack.tex", "Spack Documentation", "Todd Gamblin", "manual")]
+latex_documents = [("index", "Spack.tex", "Spack Documentation", "", "manual")]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.

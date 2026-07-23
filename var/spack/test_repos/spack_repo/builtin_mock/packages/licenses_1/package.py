@@ -17,3 +17,5 @@ class Licenses1(Package):
     license("Apache-2.0", when="~foo")
 
     version("1.0", md5="0123456789abcdef0123456789abcdef")
+
+    variant("foo", default=True, description="toggle license")

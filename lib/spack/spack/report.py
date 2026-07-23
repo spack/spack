@@ -2,13 +2,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tools to produce reports of spec installations or tests"""
+
 import collections
 import gzip
 import os
 import time
 import traceback
+from typing import Optional
 
 import spack.error
+import spack.store
 
 reporter = None
 report_file = None
@@ -55,17 +58,20 @@ class RequestRecord(Record):
         self.time = None
         self.timestamp = time.strftime("%a, %d %b %Y %H:%M:%S", time.gmtime())
         self.properties = [
-            Property("architecture", spec.architecture),
+            Property("architecture", spec.architecture)
             # Property("compiler", spec.compiler),
         ]
         self.packages = []
 
     def skip_installed(self):
         """Insert records for all nodes in the DAG that are no-ops for this request"""
-        for dep in filter(lambda x: x.installed or x.external, self._spec.traverse()):
-            record = InstallRecord(dep)
-            record.skip(msg="Spec external or already installed")
-            self.packages.append(record)
+        with spack.store.STORE.db.read_transaction():
+            for dep in filter(
+                lambda x: spack.store.STORE.db.installed(x) or x.external, self._spec.traverse()
+            ):
+                record = InstallRecord(dep)
+                record.skip(msg="Spec external or already installed")
+                self.packages.append(record)
 
     def append_record(self, record):
         self.packages.append(record)
@@ -98,7 +104,11 @@ class SpecRecord(Record):
         self.elapsed_time = 0.0
         self.message = msg
 
-    def fail(self, exc):
+    def fetch_log(self, log_path: Optional[str] = None) -> str:
+        """Fetch the log for this spec record. Subclasses should override."""
+        return ""
+
+    def fail(self, exc, log_path: Optional[str] = None):
         """Record failure based on exception type
 
         Errors wrapped by spack.error.InstallError are "failures"
@@ -112,14 +122,14 @@ class SpecRecord(Record):
             self.result = "error"
             self.message = str(exc) or "Unknown error"
             self.exception = traceback.format_exc()
-        self.stdout = self.fetch_log() + self.message
+        self.stdout = self.fetch_log(log_path) + self.message
         assert self._start_time, "Start time is None"
         self.elapsed_time = time.time() - self._start_time
 
-    def succeed(self):
+    def succeed(self, log_path: Optional[str] = None):
         """Record success for this spec"""
         self.result = "success"
-        self.stdout = self.fetch_log()
+        self.stdout = self.fetch_log(log_path)
         assert self._start_time, "Start time is None"
         self.elapsed_time = time.time() - self._start_time
 
@@ -131,21 +141,61 @@ class InstallRecord(SpecRecord):
         super().__init__(spec)
         self.installed_from_binary_cache = None
 
-    def fetch_log(self):
-        """Install log comes from install prefix on success, or stage dir on failure."""
+    def fetch_log(self, log_path: Optional[str] = None) -> str:
+        """Install log comes from log_path if provided, install prefix, or stage dir."""
         try:
-            if os.path.exists(self._package.install_log_path):
-                stream = gzip.open(self._package.install_log_path, "rt", encoding="utf-8")
+            if log_path and os.path.exists(log_path):
+                stream = open(log_path, encoding="utf-8", errors="replace")
+            elif os.path.exists(self._package.install_log_path):
+                stream = gzip.open(
+                    self._package.install_log_path, "rt", encoding="utf-8", errors="replace"
+                )
             else:
-                stream = open(self._package.log_path, encoding="utf-8")
+                stream = open(self._package.log_path, encoding="utf-8", errors="replace")
             with stream as f:
                 return f.read()
         except OSError:
             return f"Cannot open log for {self._spec.cshort_spec}"
 
-    def succeed(self):
-        super().succeed()
+    def succeed(self, log_path: Optional[str] = None):
+        super().succeed(log_path)
         self.installed_from_binary_cache = self._package.installed_from_binary_cache
+
+
+class NullInstallRecord(InstallRecord):
+    """No-op drop-in for InstallRecord when no reporter is configured.
+
+    Avoids reading log files from disk on every completed build."""
+
+    def start(self) -> None:
+        pass
+
+    def succeed(self, log_path: Optional[str] = None) -> None:
+        pass
+
+    def fail(self, exc, log_path: Optional[str] = None) -> None:
+        pass
+
+    def skip(self, msg: str = "") -> None:
+        pass
+
+
+class NullRequestRecord(RequestRecord):
+    """No-op drop-in for RequestRecord when no reporter is configured.
+
+    Avoids traversing the DAG and accumulating data that will not be reported."""
+
+    def __init__(self) -> None:
+        dict.__init__(self)
+
+    def skip_installed(self) -> None:
+        pass
+
+    def append_record(self, record) -> None:
+        pass
+
+    def summarize(self) -> None:
+        pass
 
 
 class TestRecord(SpecRecord):
@@ -155,11 +205,11 @@ class TestRecord(SpecRecord):
         super().__init__(spec)
         self.directory = directory
 
-    def fetch_log(self):
+    def fetch_log(self, log_path: Optional[str] = None) -> str:
         """Get output from test log"""
         log_file = os.path.join(self.directory, self._package.test_suite.test_log_name(self._spec))
         try:
-            with open(log_file, "r", encoding="utf-8") as stream:
+            with open(log_file, "r", encoding="utf-8", errors="replace") as stream:
                 return "".join(stream.readlines())
         except Exception:
             return f"Cannot open log for {self._spec.cshort_spec}"

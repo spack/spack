@@ -25,17 +25,56 @@ proc ModulesHelp { } {
 }
 {% endblock %}
 
+{% block provides %}
+{# Prepend the path I unlock as a provider of #}
+{# services and set the families of services I provide #}
+{% if has_modulepath_modifications %}
+# Services provided by the package
+{% for name in provides %}
+family {{ name }}
+{% endfor %}
+
+# Loading this module unlocks the path below unconditionally
+{% for path in unlocked_paths %}
+prepend-path MODULEPATH {{ '{' }}{{ path }}{{ '}' }}
+{% endfor %}
+
+{# Try to see if missing providers have already #}
+{# been loaded into the environment #}
+{% if has_conditional_modifications %}
+# Try to load variables into path to see if providers are there
+{% for name in missing %}
+set {{ name }}_name [getenv MODULES_{{ name|upper() }}_NAME]
+set {{ name }}_version [getenv MODULES_{{ name|upper() }}_VERSION]
+{% endfor %}
+
+# Change MODULEPATH based on the result of the tests above
+{% for condition, path in conditionally_unlocked_paths %}
+if { {{ condition }} } {
+    prepend-path MODULEPATH [file join {{ path }}]
+}
+{% endfor %}
+
+# Set variables to notify the provider of the new services
+{% for name in provides %}
+setenv MODULES_{{ name|upper() }}_NAME {{ '{' }}{{ name_part }}{{ '}' }}
+setenv MODULES_{{ name|upper() }}_VERSION {{ '{' }}{{ version_part }}{{ '}' }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endblock %}
+
 {% block autoloads %}
 {% if autoload|length > 0 %}
-if {![info exists ::env(LMOD_VERSION_MAJOR)]} {
-{% for module in autoload %}
-    module load {{ module }}
-{% endfor %}
-} else {
-{% for module in autoload %}
-    depends-on {{ module }}
-{% endfor %}
+# define missing command if using Environment Modules <5.1
+if {![llength [info commands depends-on]]} {
+    proc depends-on {args} {
+        module load {*}$args
+    }
 }
+{% for module in autoload %}
+depends-on {{ module }}
+{% endfor %}
 {% endif %}
 {% endblock %}
 {#  #}
@@ -54,23 +93,11 @@ conflict {{ name }}
 {% block environment %}
 {% for command_name, cmd in environment_modifications %}
 {% if command_name == 'PrependPath' %}
-{% if cmd.separator == ':' %}
-prepend-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% else %}
-prepend-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% endif %}
+prepend-path -d {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
 {% elif command_name in ('AppendPath', 'AppendFlagsEnv') %}
-{% if cmd.separator == ':' %}
-append-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% else %}
-append-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% endif %}
+append-path -d {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
 {% elif command_name in ('RemovePath', 'RemoveFlagsEnv') %}
-{% if cmd.separator == ':' %}
-remove-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% else %}
-remove-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% endif %}
+remove-path -d {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
 {% elif command_name == 'SetEnv' %}
 setenv {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
 {% elif command_name == 'UnsetEnv' %}

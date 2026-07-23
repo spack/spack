@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
@@ -14,17 +14,16 @@ export SHARE_DIR=$(cd "$QA_DIR/.." && pwd)
 
 # Include convenience functions
 . "$QA_DIR/test-framework.sh"
-. "$QA_DIR/setup.sh"
 
 # Source setup-env.sh before tests
 . "$SHARE_DIR/setup-env.sh"
 
 env_cfg=""
 
-function cleanup {
+cleanup() {
   # Regardless of whether the test fails or succeeds, we can't remove the
   # environment without restoring spack.yaml to match the schema
-  if [ ! -z "env_cfg" ]; then
+  if [ -n "$env_cfg" ]; then
     echo "\
 spack:
   specs: []
@@ -61,12 +60,9 @@ spack:
 
 echo "Try 'spack config edit' with broken environment"
 manifest_path=`spack config edit --print-file`
-# Re-run command for coverage purposes
-$coverage_run $(which spack) config edit --print-file
 
-if [ $orig_manifest_path = $manifest_path ]; then
+if [ "$orig_manifest_path" = "$manifest_path" ]; then
   pass
 else
   fail
 fi
-

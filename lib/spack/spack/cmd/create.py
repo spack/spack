@@ -6,12 +6,10 @@ import os
 import re
 import sys
 import urllib.parse
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.stage
-from spack.llnl.util.filesystem import mkdirp
 from spack.spec import Spec
 from spack.url import (
     UndetectableNameError,
@@ -20,8 +18,10 @@ from spack.url import (
     parse_name,
     parse_version,
 )
+from spack.util import tty
 from spack.util.editor import editor
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp
 from spack.util.format import get_version_lines
 from spack.util.naming import pkg_name_to_class_name, simplify_name
 
@@ -53,6 +53,7 @@ package_template = '''\
 # ----------------------------------------------------------------------------
 
 {package_class_import}
+
 from spack.package import *
 
 
@@ -62,6 +63,10 @@ class {class_name}({base_class_name}):
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
 {url_def}
+
+    # FIXME: Uncomment and add the upstream supplier (organization or author).
+    # If unknown or inapplicable, remove this entire block.
+    # supplier = organization_or_author
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
@@ -172,10 +177,11 @@ class AutoreconfPackageTemplate(PackageTemplate):
     )
 
     dependencies = """\
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
+    with default_args(type="build"):
+        depends_on("autoconf")
+        depends_on("automake")
+        depends_on("libtool")
+        depends_on("m4")
 
     # FIXME: Add additional dependencies if required.
     # depends_on("foo")"""
@@ -315,7 +321,8 @@ class BazelPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add additional dependencies if required.
-    depends_on("bazel", type="build")"""
+    with default_args(type="build"):
+        depends_on("bazel")"""
 
     body_def = """\
     def install(self, spec, prefix):
@@ -324,7 +331,7 @@ class BazelPackageTemplate(PackageTemplate):
 
 
 class RacketPackageTemplate(PackageTemplate):
-    """Provides approriate overrides for Racket extensions"""
+    """Provides appropriate overrides for Racket extensions"""
 
     base_class_name = "RacketPackage"
     package_class_import = "from spack_repo.builtin.build_systems.racket import RacketPackage"
@@ -337,8 +344,9 @@ class RacketPackageTemplate(PackageTemplate):
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the racket dependency
     # if you need specific versions. A generic racket dependency is
-    # added implicity by the RacketPackage class.
-    # depends_on("racket@8.3:", type=("build", "run"))"""
+    # added implicitly by the RacketPackage class.
+    # with default_args(type=("build", "run")):
+    #     depends_on("racket@8.3:")"""
 
     body_def = """\
     # FIXME: specify the name of the package,
@@ -370,20 +378,22 @@ class PythonPackageTemplate(PackageTemplate):
     dependencies = """\
     # FIXME: Only add the python/pip/wheel dependencies if you need specific versions
     # or need to change the dependency type. Generic python/pip/wheel dependencies are
-    # added implicity by the PythonPackage base class.
+    # added implicitly by the PythonPackage base class.
     # depends_on("python@2.X:2.Y,3.Z:", type=("build", "run"))
     # depends_on("py-pip@X.Y:", type="build")
     # depends_on("py-wheel@X.Y:", type="build")
 
     # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
     # exists, use setuptools.
-    # depends_on("py-setuptools", type="build")
-    # depends_on("py-hatchling", type="build")
-    # depends_on("py-flit-core", type="build")
-    # depends_on("py-poetry-core", type="build")
+    # with default_args(type="build"):
+    #     depends_on("py-setuptools")
+    #     depends_on("py-hatchling")
+    #     depends_on("py-flit-core")
+    #     depends_on("py-poetry-core")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on("py-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("py-foo")"""
 
     body_def = """\
     def config_settings(self, spec, prefix):
@@ -408,7 +418,7 @@ class PythonPackageTemplate(PackageTemplate):
         # e.g. https://files.pythonhosted.org/packages/source/n/numpy/numpy-1.19.4.zip
 
         # PyPI URLs containing hash:
-        # https://<hostname>/packages/<two character hash>/<two character hash>/<longer hash>/<download file>
+        # https://<hostname>/packages/<two character hash>/<two character hash>/<longer hash>/<download file> # noqa: E501
         # e.g. https://pypi.io/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip#sha256=141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512
@@ -457,7 +467,8 @@ class RPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required.
-    # depends_on("r-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("r-foo")"""
 
     body_def = """\
     def configure_args(self):
@@ -484,7 +495,7 @@ class RPackageTemplate(PackageTemplate):
         bioc = re.search(r"(?:bioconductor)[^/]+/packages" + "/([^/]+)" * 5, url)
 
         if bioc:
-            self.url_line = '    url = "{0}"\n' '    bioc = "{1}"'.format(url, r_name)
+            self.url_line = '    url = "{0}"\n    bioc = "{1}"'.format(url, r_name)
 
         super().__init__(name, url, versions, languages)
 
@@ -498,7 +509,8 @@ class PerlmakePackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required:
-    # depends_on("perl-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("perl-foo")"""
 
     body_def = """\
     def configure_args(self):
@@ -525,7 +537,8 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
     depends_on("perl-module-build", type="build")
 
     # FIXME: Add additional dependencies if required:
-    # depends_on("perl-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("perl-foo")"""
 
 
 class OctavePackageTemplate(PackageTemplate):
@@ -538,7 +551,8 @@ class OctavePackageTemplate(PackageTemplate):
     extends("octave")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on("octave-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("octave-foo")"""
 
     def __init__(self, name, url, versions, languages: List[str]):
         # If the user provided `--name octave-splines`, don't rename it
@@ -560,9 +574,10 @@ class RubyPackageTemplate(PackageTemplate):
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the ruby dependency
     # if you need specific versions. A generic ruby dependency is
-    # added implicity by the RubyPackage class.
-    # depends_on("ruby@X.Y.Z:", type=("build", "run"))
-    # depends_on("ruby-foo", type=("build", "run"))"""
+    # added implicitly by the RubyPackage class.
+    # with default_args(type=("build", "run")):
+    #     depends_on("ruby@X.Y.Z:")
+    #     depends_on("ruby-foo")"""
 
     body_def = """\
     def build(self, spec, prefix):
@@ -908,23 +923,22 @@ def get_name(name, url):
     return result
 
 
-def get_url(url):
+def get_url(url: Optional[str]) -> str:
     """Get the URL to use.
 
     Use a default URL if none is provided.
 
     Args:
-        url (str): ``url`` argument to ``spack create``
+        url: ``url`` argument to ``spack create``
 
-    Returns:
-        str: The URL of the package
+    Returns: The URL of the package
     """
 
     # Use the user-supplied URL or a default URL if none is present.
     return url or "https://www.example.com/example-1.2.3.tar.gz"
 
 
-def get_versions(args, name):
+def get_versions(args: argparse.Namespace, name: str) -> Tuple[str, BuildSystemAndLanguageGuesser]:
     """Returns a list of versions and hashes for a package.
 
     Also returns a BuildSystemAndLanguageGuesser object.
@@ -932,11 +946,10 @@ def get_versions(args, name):
     Returns default values if no URL is provided.
 
     Args:
-        args (argparse.Namespace): The arguments given to ``spack create``
-        name (str): The name of the package
+        args: The arguments given to ``spack create``
+        name: The name of the package
 
-    Returns:
-        tuple: versions and hashes, and a BuildSystemAndLanguageGuesser object
+    Returns: Tuple of versions and hashes, and a BuildSystemAndLanguageGuesser object
     """
 
     # Default version with hash
@@ -983,7 +996,7 @@ def get_versions(args, name):
             url_dict, name, first_stage_function=guesser, keep_stage=args.keep_stage
         )
 
-        versions = get_version_lines(version_hashes, url_dict)
+        versions = get_version_lines(version_hashes)
     else:
         versions = unhashed_versions
 
@@ -1027,17 +1040,16 @@ def get_build_system(
     return selected_template
 
 
-def get_repository(args, name):
+def get_repository(args: argparse.Namespace, name: str) -> spack.repo.Repo:
     """Returns a Repo object that will allow us to determine the path where
     the new package file should be created.
 
     Args:
-        args (argparse.Namespace): The arguments given to ``spack create``
-        name (str): The name of the package to create
+        args: The arguments given to ``spack create``
+        name: The name of the package to create
 
     Returns:
-        spack.repo.Repo: A Repo object capable of determining the path to the
-            package file
+        A Repo object capable of determining the path to the package file
     """
     spec = Spec(name)
     # Figure out namespace for spec
@@ -1053,14 +1065,17 @@ def get_repository(args, name):
         repo = spack.repo.from_path(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die(
-                "Can't create package with namespace {0} in repo with "
-                "namespace {1}".format(spec.namespace, repo.namespace)
+                "Can't create package with namespace {0} in repo with namespace {1}".format(
+                    spec.namespace, repo.namespace
+                )
             )
     else:
         if spec.namespace:
             repo = spack.repo.PATH.get_repo(spec.namespace)
         else:
-            repo = spack.repo.PATH.first_repo()
+            _repo = spack.repo.PATH.first_repo()
+            assert _repo is not None, "No package repository found"
+            repo = _repo
 
     # Set the namespace on the spec if it's not there already
     if not spec.namespace:

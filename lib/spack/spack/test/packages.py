@@ -17,6 +17,7 @@ import spack.package
 import spack.package_base
 import spack.repo
 from spack.paths import mock_packages_path
+from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.util.naming import pkg_name_to_class_name
 from spack.version import VersionChecksumError
@@ -38,11 +39,11 @@ def pkg_factory(name):
 
 @pytest.mark.usefixtures("config", "mock_packages")
 class TestPackage:
-    def test_load_package(self):
-        spack.repo.PATH.get_pkg_class("mpich")
+    def test_load_package(self, mock_packages: RepoPath):
+        mock_packages.get_pkg_class("mpich")
 
-    def test_package_name(self):
-        pkg_cls = spack.repo.PATH.get_pkg_class("mpich")
+    def test_package_name(self, mock_packages: RepoPath):
+        pkg_cls = mock_packages.get_pkg_class("mpich")
         assert pkg_cls.name == "mpich"
 
     def test_package_filename(self):
@@ -83,8 +84,8 @@ class TestPackage:
         del sys.modules["spack.pkg.testing_repo"]
         del sys.modules["spack.pkg.testing_repo.mpich"]
 
-    def test_inheritance_of_directives(self):
-        pkg_cls = spack.repo.PATH.get_pkg_class("simple-inheritance")
+    def test_inheritance_of_directives(self, mock_packages: RepoPath):
+        pkg_cls = mock_packages.get_pkg_class("simple-inheritance")
 
         # Check dictionaries that should have been filled by directives
         dependencies = pkg_cls.dependencies_by_name()
@@ -128,9 +129,9 @@ def test_urls_for_versions(mock_packages, config):
         assert url == "http://www.doesnotexist.org/url_override-0.8.1.tar.gz"
 
 
-def test_url_for_version_with_no_urls(mock_packages, config):
+def test_url_for_version_with_no_urls(mock_packages: RepoPath, config):
     spec = Spec("git-test")
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = mock_packages.get_pkg_class(spec.name)
     with pytest.raises(spack.error.NoURLError):
         pkg_cls(spec).url_for_version("1.0")
 
@@ -319,17 +320,19 @@ def test_fetch_options(version_str, digest_end, extra_options):
     assert fetcher.extra_options == extra_options
 
 
-def test_package_deprecated_version(mock_packages, mock_fetch, mock_stage):
+def test_package_deprecated_version(mock_packages: RepoPath, mock_fetch, mock_stage):
     spec = Spec("deprecated-versions")
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = mock_packages.get_pkg_class(spec.name)
 
     assert spack.package_base.deprecated_version(pkg_cls, "1.1.0")
     assert not spack.package_base.deprecated_version(pkg_cls, "1.0.0")
 
 
-def test_package_can_have_sparse_checkout_properties(mock_packages, mock_fetch, mock_stage):
+def test_package_can_have_sparse_checkout_properties(
+    mock_packages: RepoPath, mock_fetch, mock_stage
+):
     spec = Spec("git-sparsepaths-pkg")
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = mock_packages.get_pkg_class(spec.name)
     assert hasattr(pkg_cls, "git_sparse_paths")
 
     fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), "1.0")
@@ -339,10 +342,10 @@ def test_package_can_have_sparse_checkout_properties(mock_packages, mock_fetch, 
 
 
 def test_package_can_have_sparse_checkout_properties_with_commit_version(
-    mock_packages, mock_fetch, mock_stage
+    mock_packages: RepoPath, mock_fetch, mock_stage
 ):
     spec = Spec("git-sparsepaths-pkg commit=abcdefg")
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = mock_packages.get_pkg_class(spec.name)
     assert hasattr(pkg_cls, "git_sparse_paths")
 
     fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), "1.0")
@@ -352,10 +355,10 @@ def test_package_can_have_sparse_checkout_properties_with_commit_version(
 
 
 def test_package_can_have_sparse_checkout_properties_with_gitversion(
-    mock_packages, mock_fetch, mock_stage
+    mock_packages: RepoPath, mock_fetch, mock_stage
 ):
     spec = Spec("git-sparsepaths-pkg")
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = mock_packages.get_pkg_class(spec.name)
     assert hasattr(pkg_cls, "git_sparse_paths")
 
     version = "git.foo=1.0"
@@ -363,6 +366,21 @@ def test_package_can_have_sparse_checkout_properties_with_gitversion(
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert hasattr(fetcher, "git_sparse_paths")
     assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
+
+
+def test_package_version_can_have_sparse_checkout_properties(
+    mock_packages: RepoPath, mock_fetch, mock_stage
+):
+    spec = Spec("git-sparsepaths-version")
+    pkg_cls = mock_packages.get_pkg_class(spec.name)
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), version="1.0")
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.git_sparse_paths == ["foo", "bar"]
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), version="0.9")
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.git_sparse_paths is None
 
 
 def test_package_can_depend_on_commit_of_dependency(mock_packages, config):

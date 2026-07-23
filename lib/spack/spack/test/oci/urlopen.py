@@ -15,6 +15,7 @@ from urllib.request import Request
 import pytest
 
 import spack.mirrors.mirror
+import spack.util.web
 from spack.oci.image import Digest, ImageReference, default_config, default_manifest
 from spack.oci.oci import (
     copy_missing_layers,
@@ -28,9 +29,10 @@ from spack.oci.opener import (
     Challenge,
     RealmServiceScope,
     UsernamePassword,
+    _get_basic_challenge,
+    _get_bearer_challenge,
     credentials_from_mirrors,
     default_retry,
-    get_bearer_challenge,
     parse_www_authenticate,
 )
 from spack.test.conftest import MockHTTPResponse
@@ -38,7 +40,8 @@ from spack.test.oci.mock_registry import (
     DummyServer,
     DummyServerUrllibHandler,
     InMemoryOCIRegistry,
-    InMemoryOCIRegistryWithAuth,
+    InMemoryOCIRegistryWithBasicAuth,
+    InMemoryOCIRegistryWithBearerAuth,
     MiddlewareError,
     MockBearerTokenServer,
     create_opener,
@@ -52,7 +55,7 @@ def test_parse_www_authenticate():
     www_authenticate = 'Bearer realm="https://spack.io/authenticate",service="spack-registry",scope="repository:spack-registry:pull,push"'
     assert parse_www_authenticate(www_authenticate) == [
         Challenge(
-            "Bearer",
+            "bearer",
             [
                 ("realm", "https://spack.io/authenticate"),
                 ("service", "spack-registry"),
@@ -61,18 +64,18 @@ def test_parse_www_authenticate():
         )
     ]
 
-    assert parse_www_authenticate("Bearer") == [Challenge("Bearer")]
+    assert parse_www_authenticate("Bearer") == [Challenge("bearer")]
     assert parse_www_authenticate("MethodA, MethodB,MethodC") == [
-        Challenge("MethodA"),
-        Challenge("MethodB"),
-        Challenge("MethodC"),
+        Challenge("methoda"),
+        Challenge("methodb"),
+        Challenge("methodc"),
     ]
 
     assert parse_www_authenticate(
         'Digest realm="Digest Realm", nonce="1234567890", algorithm=MD5, qop="auth"'
     ) == [
         Challenge(
-            "Digest",
+            "digest",
             [
                 ("realm", "Digest Realm"),
                 ("nonce", "1234567890"),
@@ -85,8 +88,12 @@ def test_parse_www_authenticate():
     assert parse_www_authenticate(
         r'Newauth realm="apps", type=1, title="Login to \"apps\"", Basic realm="simple"'
     ) == [
-        Challenge("Newauth", [("realm", "apps"), ("type", "1"), ("title", 'Login to "apps"')]),
-        Challenge("Basic", [("realm", "simple")]),
+        Challenge("newauth", [("realm", "apps"), ("type", "1"), ("title", 'Login to "apps"')]),
+        Challenge("basic", [("realm", "simple")]),
+    ]
+
+    assert parse_www_authenticate(r'BASIC REALM="simple"') == [
+        Challenge("basic", [("realm", "simple")])
     ]
 
 
@@ -114,15 +121,71 @@ def test_invalid_www_authenticate(invalid_str):
         parse_www_authenticate(invalid_str)
 
 
+def test_get_basic_challenge():
+    """Test extracting Basic challenge from a list of challenges"""
+
+    # No basic challenge
+    assert (
+        _get_basic_challenge(
+            [
+                Challenge(
+                    "bearer",
+                    [
+                        ("realm", "https://spack.io/authenticate"),
+                        ("service", "spack-registry"),
+                        ("scope", "repository:spack-registry:pull,push"),
+                    ],
+                ),
+                Challenge(
+                    "digest",
+                    [
+                        ("realm", "Digest Realm"),
+                        ("nonce", "1234567890"),
+                        ("algorithm", "MD5"),
+                        ("qop", "auth"),
+                    ],
+                ),
+            ]
+        )
+        is None
+    )
+
+    # Multiple challenges, should pick the basic one and return its realm.
+    assert (
+        _get_basic_challenge(
+            [
+                Challenge(
+                    "dummy",
+                    [
+                        ("realm", "https://example.com/"),
+                        ("service", "service"),
+                        ("scope", "scope"),
+                    ],
+                ),
+                Challenge("basic", [("realm", "simple")]),
+                Challenge(
+                    "bearer",
+                    [
+                        ("realm", "https://spack.io/authenticate"),
+                        ("service", "spack-registry"),
+                        ("scope", "repository:spack-registry:pull,push"),
+                    ],
+                ),
+            ]
+        )
+        == "simple"
+    )
+
+
 def test_get_bearer_challenge():
     """Test extracting Bearer challenge from a list of challenges"""
 
     # Only an incomplete bearer challenge, missing service and scope, not usable.
     assert (
-        get_bearer_challenge(
+        _get_bearer_challenge(
             [
-                Challenge("Bearer", [("realm", "https://spack.io/authenticate")]),
-                Challenge("Basic", [("realm", "simple")]),
+                Challenge("bearer", [("realm", "https://spack.io/authenticate")]),
+                Challenge("basic", [("realm", "simple")]),
                 Challenge(
                     "Digest",
                     [
@@ -138,14 +201,14 @@ def test_get_bearer_challenge():
     )
 
     # Multiple challenges, should pick the bearer one.
-    assert get_bearer_challenge(
+    assert _get_bearer_challenge(
         [
             Challenge(
-                "Dummy",
+                "dummy",
                 [("realm", "https://example.com/"), ("service", "service"), ("scope", "scope")],
             ),
             Challenge(
-                "Bearer",
+                "bearer",
                 [
                     ("realm", "https://spack.io/authenticate"),
                     ("service", "spack-registry"),
@@ -163,16 +226,17 @@ def test_get_bearer_challenge():
     [
         ("public.example.com/spack-registry:latest", "public_token"),
         ("private.example.com/spack-registry:latest", "private_token"),
+        ("oauth.example.com/spack-registry:latest", "oauth_token"),
     ],
 )
-def test_automatic_oci_authentication(image_ref, token):
+def test_automatic_oci_bearer_authentication(image_ref: str, token: str):
     image = ImageReference.from_string(image_ref)
 
     def credentials_provider(domain: str):
         return UsernamePassword("user", "pass") if domain == "private.example.com" else None
 
     opener = create_opener(
-        InMemoryOCIRegistryWithAuth(
+        InMemoryOCIRegistryWithBearerAuth(
             image.domain, token=token, realm="https://auth.example.com/login"
         ),
         MockBearerTokenServer("auth.example.com"),
@@ -184,13 +248,34 @@ def test_automatic_oci_authentication(image_ref, token):
     assert opener.open(image.endpoint()).status == 200
 
 
+def test_automatic_oci_basic_authentication():
+    image = ImageReference.from_string("private.example.com/image")
+    server = InMemoryOCIRegistryWithBasicAuth(
+        image.domain, username="user", password="pass", realm="example.com"
+    )
+
+    # With correct credentials we should get a 200
+    opener_with_correct_auth = create_opener(
+        server, credentials_provider=lambda domain: UsernamePassword("user", "pass")
+    )
+    assert opener_with_correct_auth.open(image.endpoint()).status == 200
+
+    # With wrong credentials we should get a 401
+    opener_with_wrong_auth = create_opener(
+        server, credentials_provider=lambda domain: UsernamePassword("wrong", "wrong")
+    )
+    with pytest.raises(urllib.error.HTTPError) as e:
+        opener_with_wrong_auth.open(image.endpoint())
+    assert e.value.getcode() == 401
+
+
 def test_wrong_credentials():
     """Test that when wrong credentials are rejected by the auth server, we
     get a 401 error."""
     credentials_provider = lambda domain: UsernamePassword("wrong", "wrong")
     image = ImageReference.from_string("private.example.com/image")
     opener = create_opener(
-        InMemoryOCIRegistryWithAuth(
+        InMemoryOCIRegistryWithBearerAuth(
             image.domain, token="something", realm="https://auth.example.com/login"
         ),
         MockBearerTokenServer("auth.example.com"),
@@ -210,7 +295,7 @@ def test_wrong_bearer_token_returned_by_auth_server():
     registry, etc."""
     image = ImageReference.from_string("private.example.com/image")
     opener = create_opener(
-        InMemoryOCIRegistryWithAuth(
+        InMemoryOCIRegistryWithBearerAuth(
             image.domain,
             token="other_token_than_token_server_provides",
             realm="https://auth.example.com/login",
@@ -250,7 +335,7 @@ def test_registry_with_short_lived_bearer_tokens():
     credentials_provider = lambda domain: UsernamePassword("user", "pass")
 
     auth_server = TrivialAuthServer("auth.example.com", token="token")
-    registry_server = InMemoryOCIRegistryWithAuth(
+    registry_server = InMemoryOCIRegistryWithBearerAuth(
         image.domain, token="token", realm="https://auth.example.com/login"
     )
     urlopen = create_opener(
@@ -281,8 +366,8 @@ def test_registry_with_short_lived_bearer_tokens():
         ("GET", "/v2/"),  # 2: retry with bearer token
         ("GET", "/v2/"),  # 3: with incorrect bearer token
         ("GET", "/v2/"),  # 4: retry with new bearer token
-        ("GET", "/v2/"),  # 5: with recyled correct bearer token
-        ("GET", "/v2/"),  # 6: with recyled correct bearer token
+        ("GET", "/v2/"),  # 5: with recycled correct bearer token
+        ("GET", "/v2/"),  # 6: with recycled correct bearer token
     ]
 
 
@@ -307,8 +392,8 @@ class InMemoryRegistryWithUnsupportedAuth(InMemoryOCIRegistry):
     [
         # missing service and scope
         ('Bearer realm="https://auth.example.com/login"', "unsupported authentication scheme"),
-        # we don't do basic auth
-        ('Basic realm="https://auth.example.com/login"', "unsupported authentication scheme"),
+        # missing realm
+        ("Basic", "unsupported authentication scheme"),
         # multiple unsupported challenges
         (
             "CustomChallenge method=unsupported, OtherChallenge method=x,param=y",
@@ -474,6 +559,13 @@ def test_copy_missing_layers(tmp_path: pathlib.Path, config):
 def test_image_from_mirror():
     mirror = spack.mirrors.mirror.Mirror("oci://example.com/image")
     assert image_from_mirror(mirror) == ImageReference.from_string("example.com/image")
+
+
+def test_image_from_mirror_with_http_scheme():
+    image = image_from_mirror(spack.mirrors.mirror.Mirror({"url": "oci+http://example.com/image"}))
+    assert image.scheme == "http"
+    assert image.with_tag("latest").scheme == "http"
+    assert image.with_digest(f"sha256:{1234:064x}").scheme == "http"
 
 
 def test_image_reference_str():
@@ -652,14 +744,11 @@ class BrokenServer(DummyServer):
         ("https://example.com/not-found/", 3, True, 1),
     ],
 )
-def test_retry(url, max_retries, expect_failure, expect_requests):
+def test_retry(url, max_retries, expect_failure, expect_requests, mock_sleep):
     server = BrokenServer("example.com")
     urlopen = create_opener(server).open
-    sleep_time = []
-    dont_sleep = lambda t: sleep_time.append(t)  # keep track of sleep times
-
     try:
-        response = default_retry(urlopen, retries=max_retries, sleep=dont_sleep)(url)
+        response = default_retry(urlopen, spack.util.web.Retry(total=max_retries))(url)
     except urllib.error.HTTPError as e:
         if not expect_failure:
             assert False, f"Unexpected HTTPError: {e}"
@@ -669,7 +758,7 @@ def test_retry(url, max_retries, expect_failure, expect_requests):
         assert response.status == 200
 
     assert len(server.requests) == expect_requests
-    assert sleep_time == [2**i for i in range(expect_requests - 1)]
+    assert mock_sleep.times == [2**i for i in range(expect_requests - 1)]
 
 
 def test_list_tags():

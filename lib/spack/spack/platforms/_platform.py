@@ -6,10 +6,10 @@ from typing import Optional
 
 import spack.vendor.archspec.cpu
 
-import spack.llnl.util.lang
+import spack.util.lang
 
 
-@spack.llnl.util.lang.lazy_lexicographic_ordering
+@spack.util.lang.lazy_lexicographic_ordering
 class Platform:
     """Platform is an abstract class extended by subclasses.
 
@@ -80,10 +80,13 @@ class Platform:
 
         return self.operating_sys.get(name, None)
 
+    def buildable_oses(self):
+        return set(self.operating_sys.keys())
+
     def setup_platform_environment(self, pkg, env):
         """Platform-specific build environment modifications.
 
-        This method is meant toi be overridden by subclasses, when needed.
+        This method is meant to be overridden by subclasses, when needed.
         """
         pass
 

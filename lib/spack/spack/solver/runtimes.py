@@ -1,18 +1,22 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import copy
-import itertools
-from typing import Tuple
+from typing import Set, Tuple
 
 import spack.compilers.config
 import spack.compilers.libraries
+import spack.config
+import spack.hash_lookup
 import spack.repo
 import spack.spec
+import spack.util.libc
 import spack.version
 
-from .core import SourceContext, fn, using_libc_compatibility
-from .versions import DeclaredVersion, Provenance
+from .core import SourceContext, fn
+from .versions import Provenance
+
+#: Language virtuals wrapped by the compiler wrapper (same ones for which a flag exists)
+COMPILER_WRAPPER_LANGUAGES = ("c", "cxx", "fortran")
 
 
 class RuntimePropertyRecorder:
@@ -74,11 +78,11 @@ class RuntimePropertyRecorder:
         assert self.current_package == "*", msg
 
         when_spec = spack.spec.Spec(when)
-        assert when_spec.name is None, "only anonymous when specs are accepted"
+        assert not when_spec.name, "only anonymous when specs are accepted"
 
         dependency_spec = spack.spec.Spec(dependency_str)
         if dependency_spec.versions != spack.version.any_version:
-            self._setup.version_constraints.add((dependency_spec.name, dependency_spec.versions))
+            self._setup.version_constraints[dependency_spec.name].add(dependency_spec.versions)
 
         self.injected_dependencies.add(dependency_spec)
         body_str, node_variable = self.rule_body_from(when_spec)
@@ -90,13 +94,13 @@ class RuntimePropertyRecorder:
             f"% {description}\n"
             f'1 {{ attr("depends_on", {node_variable}, node(0..X-1, "{runtime_pkg}"), "{type}") :'
             f' max_dupes("{runtime_pkg}", X)}} 1:-\n'
-            f"{body_str}.\n\n"
+            f"{body_str}."
         )
         if is_virtual:
             main_rule = (
                 f"% {description}\n"
                 f'attr("dependency_holds", {node_variable}, "{runtime_pkg}", "{type}") :-\n'
-                f"{body_str}.\n\n"
+                f"{body_str}."
             )
 
         self.rules.append(main_rule)
@@ -114,7 +118,7 @@ class RuntimePropertyRecorder:
                     f"  provider(ProviderNode, {runtime_node}),\n"
                 )
 
-            rule = f"{head_str} :-\n" f"{depends_on_constraint}" f"{body_str}.\n\n"
+            rule = f"{head_str} :-\n{depends_on_constraint}{body_str}."
             self.rules.append(rule)
 
         self.reset()
@@ -133,8 +137,7 @@ class RuntimePropertyRecorder:
         when_substitutions = {}
         for s in when_spec.traverse(root=False):
             when_substitutions[f'"{s.name}"'] = self.node_for(s.name)
-        when_spec.name = node_placeholder
-        body_clauses = self._setup.spec_clauses(when_spec, body=True)
+        body_clauses = self._setup.spec_clauses(when_spec, name=node_placeholder, body=True)
         for clause in body_clauses:
             if clause.args[0] == "virtual_on_incoming_edges":
                 # Substitute: attr("virtual_on_incoming_edges", ProviderNode, Virtual)
@@ -142,8 +145,13 @@ class RuntimePropertyRecorder:
                 # (avoid adding virtuals everywhere, if a single edge needs it)
                 _, provider, virtual = clause.args
                 clause.args = "virtual_on_edge", node_placeholder, provider, virtual
+
+        # Check for abstract hashes in the body
+        for s in when_spec.traverse(root=False):
+            if s.abstract_hash:
+                body_clauses.append(fn.attr("hash", s.name, s.abstract_hash))
+
         body_str = ",\n".join(f"  {x}" for x in body_clauses)
-        body_str += f",\n  not external({node_variable})"
         body_str = body_str.replace(f'"{node_placeholder}"', f"{node_variable}")
         for old, replacement in when_substitutions.items():
             body_str = body_str.replace(old, replacement)
@@ -161,6 +169,7 @@ class RuntimePropertyRecorder:
 
         imposed_spec = spack.spec.Spec(f"{self.current_package}{impose}")
         when_spec = spack.spec.Spec(f"{self.current_package}{when}")
+        when_spec = spack.hash_lookup.lookup_hash(when_spec)
 
         assert imposed_spec.versions.concrete, f"{impose} must have a concrete version"
 
@@ -168,10 +177,7 @@ class RuntimePropertyRecorder:
         for s in (imposed_spec, when_spec):
             if not s.versions.concrete:
                 continue
-            self._setup.possible_versions[s.name].add(s.version)
-            self._setup.declared_versions[s.name].append(
-                DeclaredVersion(version=s.version, idx=0, origin=Provenance.RUNTIME)
-            )
+            self._setup.possible_versions[s.name][s.version].append(Provenance.RUNTIME)
 
         self.runtime_conditions.add((imposed_spec, when_spec))
         self.reset()
@@ -181,7 +187,7 @@ class RuntimePropertyRecorder:
         assert self.current_package == "*", msg
 
         when_spec = spack.spec.Spec(when)
-        assert when_spec.name is None, "only anonymous when specs are accepted"
+        assert not when_spec.name, "only anonymous when specs are accepted"
 
         when_substitutions = {}
         for s in when_spec.traverse(root=False):
@@ -193,12 +199,10 @@ class RuntimePropertyRecorder:
         constraint_clauses = self._setup.spec_clauses(constraint_spec, body=False)
         for clause in constraint_clauses:
             if clause.args[0] == "node_version_satisfies":
-                self._setup.version_constraints.add(
-                    (constraint_spec.name, constraint_spec.versions)
-                )
+                self._setup.version_constraints[constraint_spec.name].add(constraint_spec.versions)
                 args = f'"{constraint_spec.name}", "{constraint_spec.versions}"'
                 head_str = f"propagate({node_variable}, node_version_satisfies({args}))"
-                rule = f"{head_str} :-\n{body_str}.\n\n"
+                rule = f"{head_str} :-\n{body_str}."
                 self.rules.append(rule)
 
         self.reset()
@@ -207,9 +211,6 @@ class RuntimePropertyRecorder:
         if not spec.external or "flags" not in spec.extra_attributes:
             self.reset()
             return
-
-        when_spec = spack.spec.Spec(f"%[deptypes=build] {spec}")
-        body_str, node_variable = self.rule_body_from(when_spec)
 
         node_placeholder = "XXX"
         flags = spec.extra_attributes["flags"]
@@ -221,12 +222,18 @@ class RuntimePropertyRecorder:
             root_spec, body=False, context=SourceContext(source="compiler")
         )
         self.rules.append(f"% Default compiler flags for {spec}\n")
-        for clause in head_clauses:
-            if clause.args[0] == "node":
-                continue
-            head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
-            rule = f"{head_str} :-\n{body_str}.\n\n"
-            self.rules.append(rule)
+
+        # Inject the flags only when the compiler is actually used to compile the dependent,
+        # i.e. the build edge provides one of the language virtuals.
+        for language in COMPILER_WRAPPER_LANGUAGES:
+            when_spec = spack.spec.Spec(f"%[deptypes=build virtuals={language}] {spec}")
+            body_str, node_variable = self.rule_body_from(when_spec)
+            for clause in head_clauses:
+                if clause.args[0] == "node":
+                    continue
+                head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
+                rule = f"{head_str} :-\n{body_str}."
+                self.rules.append(rule)
 
         self.reset()
 
@@ -246,7 +253,7 @@ class RuntimePropertyRecorder:
         self._setup.gen.newline()
         for rule in self.rules:
             self._setup.gen.append(rule)
-        self._setup.gen.newline()
+            self._setup.gen.newline()
 
         self._setup.gen.h2("Runtimes: requirements")
         for imposed_spec, when_spec in sorted(self.runtime_conditions):
@@ -257,47 +264,17 @@ class RuntimePropertyRecorder:
         self._setup.effect_rules()
 
 
-def _normalize_packages_yaml(packages_yaml):
-    normalized_yaml = copy.copy(packages_yaml)
-    for pkg_name in packages_yaml:
-        is_virtual = spack.repo.PATH.is_virtual(pkg_name)
-        if pkg_name == "all" or not is_virtual:
-            continue
+def all_libcs() -> Set[spack.spec.Spec]:
+    """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
+    libc determined from the current Python process if dynamically linked."""
+    libcs = set()
+    for c in spack.compilers.config.all_compilers_from(spack.config.CONFIG):
+        candidate = spack.compilers.libraries.CompilerPropertyDetector(c).default_libc()
+        if candidate is not None:
+            libcs.add(candidate)
 
-        # Remove the virtual entry from the normalized configuration
-        data = normalized_yaml.pop(pkg_name)
-        is_buildable = data.get("buildable", True)
-        if not is_buildable:
-            for provider in spack.repo.PATH.providers_for(pkg_name):
-                entry = normalized_yaml.setdefault(provider.name, {})
-                entry["buildable"] = False
+    if libcs:
+        return libcs
 
-        externals = data.get("externals", [])
-
-        def keyfn(x):
-            return spack.spec.Spec(x["spec"]).name
-
-        for provider, specs in itertools.groupby(externals, key=keyfn):
-            entry = normalized_yaml.setdefault(provider, {})
-            entry.setdefault("externals", []).extend(specs)
-
-    return normalized_yaml
-
-
-def _external_config_with_implicit_externals(configuration):
-    # Read packages.yaml and normalize it so that it will not contain entries referring to
-    # virtual packages.
-    packages_yaml = _normalize_packages_yaml(configuration.get("packages"))
-
-    # Add externals for libc from compilers on Linux
-    if not using_libc_compatibility():
-        return packages_yaml
-
-    seen = set()
-    for compiler in spack.compilers.config.all_compilers_from(configuration):
-        libc = spack.compilers.libraries.CompilerPropertyDetector(compiler).default_libc()
-        if libc and libc not in seen:
-            seen.add(libc)
-            entry = {"spec": f"{libc}", "prefix": libc.external_path}
-            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
-    return packages_yaml
+    libc = spack.util.libc.libc_from_current_python_process()
+    return {libc} if libc else set()

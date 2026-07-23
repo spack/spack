@@ -5,6 +5,7 @@
 """\
 Test that Spack's shebang filtering works correctly.
 """
+
 import filecmp
 import os
 import pathlib
@@ -16,10 +17,11 @@ import tempfile
 import pytest
 
 import spack.config
-import spack.hooks.sbang as sbang
-import spack.llnl.util.filesystem as fs
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
+from spack.hooks import sbang
+from spack.store import Store
 from spack.util.executable import which
 
 if sys.platform != "win32":
@@ -56,8 +58,8 @@ last_line = "last!\n"
 
 
 @pytest.fixture  # type: ignore[no-redef]
-def sbang_line():
-    yield "#!/bin/sh %s/bin/sbang\n" % spack.store.STORE.layout.root
+def sbang_line(temporary_store: spack.store.Store):
+    yield "#!/bin/sh %s/bin/sbang\n" % temporary_store.layout.root
 
 
 class ScriptDirectory:
@@ -111,7 +113,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.luajit_shebang)
 
-        # Luajit occuring in text, not in shebang
+        # Luajit occurring in text, not in shebang
         self.luajit_textbang = os.path.join(self.tempdir, "luajit_in_text")
         with open(self.luajit_textbang, "w", encoding="utf-8") as f:
             f.write(short_line)
@@ -126,7 +128,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.node_shebang)
 
-        # Node occuring in text, not in shebang
+        # Node occurring in text, not in shebang
         self.node_textbang = os.path.join(self.tempdir, "node_in_text")
         with open(self.node_textbang, "w", encoding="utf-8") as f:
             f.write(short_line)
@@ -141,7 +143,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.php_shebang)
 
-        # php occuring in text, not in shebang
+        # php occurring in text, not in shebang
         self.php_textbang = os.path.join(self.tempdir, "php_in_text")
         with open(self.php_textbang, "w", encoding="utf-8") as f:
             f.write(short_line)
@@ -280,11 +282,9 @@ all:
     read: world
     write: group
     group: {0}
-""".format(
-            group_name
-        )
+""".format(group_name)
     )
-    spack.config.set("packages", conf, scope="user")
+    spack.config.CONFIG.set("packages", conf, scope="user")
 
     yield
 
@@ -299,15 +299,15 @@ all:
     write: user
 """
     )
-    spack.config.set("packages", conf, scope="user")
+    spack.config.CONFIG.set("packages", conf, scope="user")
 
     yield
 
 
-def check_sbang_installation(group=False):
+def check_sbang_installation(store: spack.store.Store, group=False):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
-    assert sbang_path.startswith(spack.store.STORE.unpadded_root)
+    assert sbang_path.startswith(store.unpadded_root)
 
     assert os.path.exists(sbang_path)
     assert fs.is_exe(sbang_path)
@@ -327,35 +327,35 @@ def check_sbang_installation(group=False):
         assert mode == 0o755, "Unexpected {0}".format(oct(mode))
 
 
-def run_test_install_sbang(group):
+def run_test_install_sbang(store: spack.store.Store, group):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
 
-    assert sbang_path.startswith(spack.store.STORE.unpadded_root)
+    assert sbang_path.startswith(store.unpadded_root)
     assert not os.path.exists(sbang_bin_dir)
 
-    sbang.install_sbang()
-    check_sbang_installation(group)
+    store.install_sbang()
+    check_sbang_installation(store, group)
 
     # put an invalid file in for sbang
     fs.mkdirp(sbang_bin_dir)
     with open(sbang_path, "w", encoding="utf-8") as f:
         f.write("foo")
 
-    sbang.install_sbang()
-    check_sbang_installation(group)
+    store.install_sbang()
+    check_sbang_installation(store, group)
 
     # install again and make sure sbang is still fine
-    sbang.install_sbang()
-    check_sbang_installation(group)
+    store.install_sbang()
+    check_sbang_installation(store, group)
 
 
-def test_install_group_sbang(install_mockery, configure_group_perms):
-    run_test_install_sbang(True)
+def test_install_group_sbang(temporary_store: Store, install_mockery, configure_group_perms):
+    run_test_install_sbang(temporary_store, True)
 
 
-def test_install_user_sbang(install_mockery, configure_user_perms):
-    run_test_install_sbang(False)
+def test_install_user_sbang(temporary_store: Store, install_mockery, configure_user_perms):
+    run_test_install_sbang(temporary_store, False)
 
 
 def test_install_sbang_too_long(tmp_path: pathlib.Path):

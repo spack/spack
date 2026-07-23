@@ -20,7 +20,6 @@ RUN dnf update -y \
         patch \
         python3 \
         python3-pip \
-        python3-setuptools \
         svn \
         unzip \
         xz \

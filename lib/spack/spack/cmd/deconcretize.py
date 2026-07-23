@@ -7,13 +7,12 @@ import sys
 from typing import List
 
 import spack.cmd
-import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.spec
-from spack.cmd.common import arguments
+from spack.cmd.common import arguments, confirmation
+from spack.util import tty
 
-description = "remove specs from the concretized lockfile of an environment"
+description = "remove specs from the lockfile of an environment"
 section = "environments"
 level = "long"
 
@@ -74,7 +73,7 @@ def get_deconcretize_list(
 
 
 def deconcretize_specs(args, specs):
-    env = spack.cmd.require_active_env(cmd_name="deconcretize")
+    env = spack.cmd.require_active_env(args.subparser)
 
     if args.specs:
         deconcretize_list = get_deconcretize_list(args, specs, env)
@@ -86,15 +85,15 @@ def deconcretize_specs(args, specs):
 
     with env.write_transaction():
         for spec in deconcretize_list:
-            env.deconcretize(spec)
+            env.deconcretize_by_hash(spec.dag_hash())
         env.write()
 
 
 def deconcretize(parser, args):
     if not args.specs and not args.all:
-        tty.die(
-            "deconcretize requires at least one spec argument.",
-            " Use `spack deconcretize --all` to deconcretize ALL specs.",
+        args.subparser.error(
+            "requires at least one spec argument\n"
+            "  use `spack deconcretize --all` to deconcretize ALL specs"
         )
 
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]

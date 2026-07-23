@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
+
 import collections
 import errno
 import getpass
@@ -20,10 +21,10 @@ import spack.fetch_strategy
 import spack.stage
 import spack.util.executable
 import spack.util.url as url_util
-from spack.llnl.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
+from spack.config import Configuration, canonicalize_path
 from spack.resource import Resource
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite
-from spack.util.path import canonicalize_path
+from spack.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"
@@ -188,7 +189,7 @@ def get_stage_path(stage, stage_name):
 def tmp_build_stage_dir(tmp_path: pathlib.Path, clear_stage_root):
     """Use a temporary test directory for the stage root."""
     test_path = str(tmp_path / "stage")
-    with spack.config.override("config:build_stage", test_path):
+    with spack.config.CONFIG.override("config:build_stage", test_path):
         yield tmp_path, spack.stage.get_stage_root()
 
     shutil.rmtree(test_path)
@@ -491,9 +492,9 @@ class TestStage:
         check_destroy(stage, None)
 
     @pytest.mark.parametrize("debug", [False, True])
-    def test_fetch(self, mock_stage_archive, debug):
+    def test_fetch(self, mutable_config: Configuration, mock_stage_archive, debug):
         archive = mock_stage_archive()
-        with spack.config.override("config:debug", debug):
+        with mutable_config.override("config:debug", debug):
             with Stage(archive.url, name=self.stage_name) as stage:
                 stage.fetch()
                 check_setup(stage, self.stage_name, archive)
@@ -707,39 +708,45 @@ class TestStage:
             except OSError:
                 pass
 
-    def test_resolve_paths(self):
+    def test_resolve_paths(self, monkeypatch):
         """Test _resolve_paths."""
         assert spack.stage._resolve_paths([]) == []
 
-        # resolved path without user appends user
-        paths = [os.path.join(os.path.sep, "a", "b", "c")]
-        can_paths = [paths[0]]
-        user = getpass.getuser()
+        user = "testuser"
+        monkeypatch.setattr(spack.config, "get_user", lambda: user)
 
-        if sys.platform != "win32":
-            can_paths = [os.path.join(paths[0], user)]
-        assert spack.stage._resolve_paths(paths) == can_paths
+        # Test that user is appended to path if not present (except on Windows)
+        if sys.platform == "win32":
+            path = r"C:\spack-test\a\b\c"
+            expected = path
+        else:
+            path = "/spack-test/a/b/c"
+            expected = os.path.join(path, user)
 
-        # resolved path with node including user does not append user
-        paths = [os.path.join(os.path.sep, "spack-{0}".format(user), "stage")]
-        assert spack.stage._resolve_paths(paths) == paths
+        assert spack.stage._resolve_paths([path]) == [expected]
 
-        tempdir = "$tempdir"
-        can_tempdir = canonicalize_path(tempdir)
-        user = getpass.getuser()
-        temp_has_user = user in can_tempdir.split(os.sep)
+        # Test that user is NOT appended if already present
+        if sys.platform == "win32":
+            path_with_user = rf"C:\spack-test\spack-{user}\stage"
+        else:
+            path_with_user = f"/spack-test/spack-{user}/stage"
+
+        assert spack.stage._resolve_paths([path_with_user]) == [path_with_user]
+
+        canonicalized_tempdir = canonicalize_path("$tempdir")
+        temp_has_user = user in canonicalized_tempdir.split(os.sep)
         paths = [
-            os.path.join(tempdir, "stage"),
-            os.path.join(tempdir, "$user"),
-            os.path.join(tempdir, "$user", "$user"),
-            os.path.join(tempdir, "$user", "stage", "$user"),
+            os.path.join("$tempdir", "stage"),
+            os.path.join("$tempdir", "$user"),
+            os.path.join("$tempdir", "$user", "$user"),
+            os.path.join("$tempdir", "$user", "stage", "$user"),
         ]
 
         res_paths = [canonicalize_path(p) for p in paths]
         if temp_has_user:
-            res_paths[1] = can_tempdir
-            res_paths[2] = os.path.join(can_tempdir, user)
-            res_paths[3] = os.path.join(can_tempdir, "stage", user)
+            res_paths[1] = canonicalized_tempdir
+            res_paths[2] = os.path.join(canonicalized_tempdir, user)
+            res_paths[3] = os.path.join(canonicalized_tempdir, "stage", user)
         elif sys.platform != "win32":
             res_paths[0] = os.path.join(res_paths[0], user)
 
@@ -747,9 +754,9 @@ class TestStage:
 
     @pytest.mark.not_on_windows("Windows file permission erroring is not yet supported")
     @pytest.mark.skipif(getuid() == 0, reason="user is root")
-    def test_get_stage_root_bad_path(self, clear_stage_root):
+    def test_get_stage_root_bad_path(self, mutable_config: Configuration, clear_stage_root):
         """Ensure an invalid stage path root raises a StageError."""
-        with spack.config.override("config:build_stage", "/no/such/path"):
+        with mutable_config.override("config:build_stage", "/no/such/path"):
             with pytest.raises(spack.stage.StageError, match="No accessible stage paths in"):
                 spack.stage.get_stage_root()
 
@@ -764,18 +771,18 @@ class TestStage:
             ("stage-spack", False),
         ],
     )
-    def test_stage_purge(self, tmp_path: pathlib.Path, clear_stage_root, path, purged):
+    def test_stage_purge(
+        self, mutable_config: Configuration, tmp_path: pathlib.Path, clear_stage_root, path, purged
+    ):
         """Test purging of stage directories."""
-        stage_dir = tmp_path / "stage"
-        stage_path = str(stage_dir)
+        stage_config_path = str(tmp_path / "stage")
 
-        test_dir = stage_dir / path
-        test_dir.mkdir(parents=True)
-        test_path = str(test_dir)
-
-        with spack.config.override("config:build_stage", stage_path):
+        with mutable_config.override("config:build_stage", stage_config_path):
             stage_root = spack.stage.get_stage_root()
-            assert stage_path == stage_root
+
+            test_dir = pathlib.Path(stage_root) / path
+            test_dir.mkdir(parents=True)
+            test_path = str(test_dir)
 
             spack.stage.purge()
 
@@ -866,6 +873,21 @@ class TestDevelopStage:
         srctree2 = _create_tree_from_dir_recursive(srcdir)
         assert srctree2 == devtree
 
+    def test_develop_stage_without_reference_link(self, develop_path, tmp_build_stage_dir):
+        """Check that develop stages can be created without creating a reference link"""
+        devtree, srcdir = develop_path
+        stage = DevelopStage("test-stage", srcdir, reference_link=None)
+        stage.create()
+        srctree1 = _create_tree_from_dir_recursive(stage.source_path)
+        assert srctree1 == devtree
+
+        stage.destroy()
+        # Make sure destroying the stage doesn't change anything
+        # about the path
+        assert not os.path.exists(stage.path)
+        srctree2 = _create_tree_from_dir_recursive(srcdir)
+        assert srctree2 == devtree
+
 
 def test_stage_create_replace_path(tmp_build_stage_dir):
     """Ensure stage creation replaces a non-directory path."""
@@ -883,13 +905,13 @@ def test_stage_create_replace_path(tmp_build_stage_dir):
     assert os.path.isdir(nondir)
 
 
-def test_cannot_access(capsys):
+def test_cannot_access(capfd):
     """Ensure can_access dies with the expected error."""
     with pytest.raises(SystemExit):
         # It's far more portable to use a non-existent filename.
         spack.stage.ensure_access("/no/such/file")
 
-    captured = capsys.readouterr()
+    captured = capfd.readouterr()
     assert "Insufficient permissions" in str(captured)
 
 

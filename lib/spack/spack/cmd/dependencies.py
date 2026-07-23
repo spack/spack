@@ -6,15 +6,15 @@ import argparse
 import sys
 
 import spack.cmd
-import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.store
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify
 from spack.solver.input_analysis import create_graph_analyzer
+from spack.util import tty
+from spack.util.tty.colify import colify
 
 description = "show dependencies of a package"
-section = "basic"
+section = "query"
 level = "long"
 
 
@@ -49,10 +49,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def dependencies(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
-        tty.die("spack dependencies takes only one spec.")
+        args.subparser.error("takes only one spec")
 
     if args.installed:
-        env = ev.active_environment()
+        env = active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
         format_string = "{name}{@version}{/hash:7}{%compiler}"

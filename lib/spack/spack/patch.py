@@ -6,22 +6,24 @@ import hashlib
 import os
 import pathlib
 import sys
-from typing import Any, Dict, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Tuple, Type, Union
 
 import spack
 import spack.error
 import spack.fetch_strategy
-import spack.llnl.util.filesystem
-import spack.repo
-import spack.stage
+import spack.util.filesystem
 import spack.util.spack_json as sjson
-from spack.llnl.url import allowed_archive
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
+from spack.util.url import allowed_archive
+
+if TYPE_CHECKING:
+    import spack.package_base
+    import spack.repo
 
 
 def apply_patch(
-    stage: "spack.stage.Stage",
+    source_path: str,
     patch_path: str,
     level: int = 1,
     working_dir: str = ".",
@@ -59,7 +61,7 @@ def apply_patch(
     # has issues handling CRLF line endings unless the --binary
     # flag is passed.
     patch = which("patch", required=True, path=git_utils_path)
-    with spack.llnl.util.filesystem.working_dir(stage.source_path):
+    with spack.util.filesystem.working_dir(source_path):
         patch(*args)
 
 
@@ -278,7 +280,7 @@ class UrlPatch(Patch):
             raise spack.error.PatchDirectiveError("URL patches require a sha256 checksum")
         self.sha256 = sha256
 
-    def fetcher(self) -> "spack.fetch_strategy.FetchStrategy":
+    def fetcher(self) -> spack.fetch_strategy.FetchStrategy:
         """Construct a fetcher that can download (and unpack) this patch."""
         # Two checksums, one for compressed file, one for its contents
         if self.archive_sha256 and self.sha256:
@@ -303,9 +305,7 @@ class UrlPatch(Patch):
         return data
 
 
-def from_dict(
-    dictionary: Dict[str, Any], repository: Optional["spack.repo.RepoPath"] = None
-) -> Patch:
+def from_dict(dictionary: Dict[str, Any], repository: "spack.repo.RepoPath") -> Patch:
     """Create a patch from json dictionary.
 
     Args:
@@ -318,7 +318,6 @@ def from_dict(
     Raises:
         ValueError: If *owner* or *url*/*relative_path* are missing in the dictionary.
     """
-    repository = repository or spack.repo.PATH
     owner = dictionary.get("owner")
     if owner is None:
         raise ValueError(f"Invalid patch dictionary: {dictionary}")
@@ -421,7 +420,9 @@ class PatchCache:
         """
         sjson.dump({"patches": self.index}, stream)
 
-    def patch_for_package(self, sha256: str, pkg: "spack.package_base.PackageBase") -> Patch:
+    def patch_for_package(
+        self, sha256: str, pkg: Type["spack.package_base.PackageBase"], *, validate: bool = False
+    ) -> Patch:
         """Look up a patch in the index and build a patch object for it.
 
         We build patch objects lazily because building them requires that
@@ -429,7 +430,9 @@ class PatchCache:
 
         Args:
             sha256: sha256 hash to look up
-            pkg: Package object to get patch for.
+            pkg: Package class to get patch for.
+            validate: if True, validate the cached entry against the owner's current package
+                class and raise ``PatchLookupError`` if the entry is missing or stale.
 
         Returns:
             The patch object.
@@ -450,42 +453,64 @@ class PatchCache:
                 f"Couldn't find patch for package {pkg.fullname} with sha256: {sha256}"
             )
 
+        if validate:
+            # Validate the cached entry against the owner's current package class
+            owner = patch_dict.get("owner")
+            if not owner:
+                raise spack.error.PatchLookupError(
+                    f"Patch for {pkg.fullname} with sha256 {sha256} has no owner in cache"
+                )
+            try:
+                owner_pkg_cls = self.repository.get_pkg_class(owner)
+                current_index = PatchCache._index_patches(owner_pkg_cls, self.repository)
+            except Exception as e:
+                raise spack.error.PatchLookupError(
+                    f"Could not validate patch cache for {pkg.fullname}: {e}"
+                ) from e
+            current_sha_index = current_index.get(sha256)
+            if not current_sha_index or current_sha_index.get(fullname) != patch_dict:
+                raise spack.error.PatchLookupError(
+                    f"Stale patch cache entry for {pkg.fullname} with sha256: {sha256}"
+                )
+
         # add the sha256 back (we take it out on write to save space,
         # because it's the index key)
         patch_dict = dict(patch_dict)
         patch_dict["sha256"] = sha256
         return from_dict(patch_dict, repository=self.repository)
 
-    def update_package(self, pkg_fullname: str) -> None:
+    def update_packages(self, pkgs_fullname: Set[str]) -> None:
         """Update the patch cache.
 
         Args:
             pkg_fullname: package to update.
         """
         # remove this package from any patch entries that reference it.
-        empty = []
-        for sha256, package_to_patch in self.index.items():
-            remove = []
-            for fullname, patch_dict in package_to_patch.items():
-                if patch_dict["owner"] == pkg_fullname:
-                    remove.append(fullname)
+        if self.index:
+            empty = []
+            for sha256, package_to_patch in self.index.items():
+                remove = []
+                for fullname, patch_dict in package_to_patch.items():
+                    if patch_dict["owner"] in pkgs_fullname:
+                        remove.append(fullname)
 
-            for fullname in remove:
-                package_to_patch.pop(fullname)
+                for fullname in remove:
+                    package_to_patch.pop(fullname)
 
-            if not package_to_patch:
-                empty.append(sha256)
+                if not package_to_patch:
+                    empty.append(sha256)
 
-        # remove any entries that are now empty
-        for sha256 in empty:
-            del self.index[sha256]
+            # remove any entries that are now empty
+            for sha256 in empty:
+                del self.index[sha256]
 
         # update the index with per-package patch indexes
-        pkg_cls = self.repository.get_pkg_class(pkg_fullname)
-        partial_index = self._index_patches(pkg_cls, self.repository)
-        for sha256, package_to_patch in partial_index.items():
-            p2p = self.index.setdefault(sha256, {})
-            p2p.update(package_to_patch)
+        for pkg_fullname in pkgs_fullname:
+            pkg_cls = self.repository.get_pkg_class(pkg_fullname)
+            partial_index = self._index_patches(pkg_cls, self.repository)
+            for sha256, package_to_patch in partial_index.items():
+                p2p = self.index.setdefault(sha256, {})
+                p2p.update(package_to_patch)
 
     def update(self, other: "PatchCache") -> None:
         """Update this cache with the contents of another.
@@ -518,6 +543,9 @@ class PatchCache:
                 patch_dict = patch.to_dict()
                 patch_dict.pop("sha256")  # save some space
                 index[patch.sha256] = {pkg_class.fullname: patch_dict}
+
+        if not pkg_class._patches_dependencies:
+            return index
 
         for deps_by_name in pkg_class.dependencies.values():
             for dependency in deps_by_name.values():

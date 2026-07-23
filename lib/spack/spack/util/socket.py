@@ -5,15 +5,15 @@
 
 import socket
 
-import spack.llnl.util.lang
+import spack.util.lang
 
 
-@spack.llnl.util.lang.memoized
-def _getfqdn():
+@spack.util.lang.memoized
+def _gethostname():
     """Memoized version of `getfqdn()`.
 
     If we call `getfqdn()` too many times, DNS can be very slow. We only need to call it
     one time per process, so we cache it here.
 
     """
-    return socket.getfqdn()
+    return socket.gethostname()

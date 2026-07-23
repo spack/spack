@@ -232,6 +232,10 @@ _spack_determine_shell() {
         # If procfs is present this seems a more reliable
         # way to detect the current shell
         _sp_exe=$(readlink /proc/$$/exe)
+        # Qemu emulation has _sp_exe point to the emulator
+        if [ "${_sp_exe##*qemu*}" != "${_sp_exe}" ]; then
+            _sp_exe=$(cat /proc/$$/comm)
+        fi
         # Shell may contain number, like zsh5 instead of zsh
         basename ${_sp_exe} | tr -d '0123456789'
     elif [ -n "${BASH:-}" ]; then
@@ -305,13 +309,6 @@ else
 fi
 _spack_pathadd PATH "${_sp_prefix%/}/bin"
 
-#
-# Check whether a function of the given name is defined
-#
-_spack_fn_exists() {
-    LANG= type $1 2>&1 | grep -q 'function'
-}
-
 # Define the spack shell function with some informative no-ops, so when users
 # run `which spack`, they see the path to spack and where the function is from.
 eval "spack() {
@@ -335,39 +332,9 @@ for cmd in "${SPACK_PYTHON:-}" python3 python python2; do
     fi
 done
 
-if [ -z "${SPACK_SKIP_MODULES+x}" ]; then
-    need_module="no"
-    if ! _spack_fn_exists use && ! _spack_fn_exists module; then
-        need_module="yes"
-    fi;
-
-    #
-    # make available environment-modules
-    #
-    if [ "${need_module}" = "yes" ]; then
-        eval `spack --print-shell-vars sh,modules`
-
-        # _sp_module_prefix is set by spack --print-sh-vars
-        if [ "${_sp_module_prefix}" != "not_installed" ]; then
-            # activate it!
-            # environment-modules@4: has a bin directory inside its prefix
-            _sp_module_bin="${_sp_module_prefix}/bin"
-            if [ ! -d "${_sp_module_bin}" ]; then
-                # environment-modules@3 has a nested bin directory
-                _sp_module_bin="${_sp_module_prefix}/Modules/bin"
-            fi
-
-            # _sp_module_bin and _sp_shell are evaluated here; the quoted
-            # eval statement and $* are deferred.
-            _sp_cmd="module() { eval \`${_sp_module_bin}/modulecmd ${_sp_shell} \$*\`; }"
-            eval "$_sp_cmd"
-            _spack_pathadd PATH "${_sp_module_bin}"
-        fi;
-    else
-        stdout="$(command spack --print-shell-vars sh)" || return
-        eval "$stdout"
-    fi;
-
+if [ -z "${SPACK_SKIP_MODULES+x}" ] && { type module > /dev/null 2>&1 || type use > /dev/null 2>&1; }; then
+    stdout="$(command spack --print-shell-vars sh)" || return
+    eval "$stdout"
 
     #
     # set module system roots

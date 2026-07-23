@@ -21,6 +21,7 @@ class GitTestCommit(Package):
     # -- only mock_git_repository
     # (session scope)
     version("tag", tag="test-tag")
+    version("annotated-tag", tag="annotated-tag")
     # ----------------------------
     # -- only mock_git_version_info below
     # (function scope)

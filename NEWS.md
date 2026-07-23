@@ -1,9 +1,18 @@
+## Package API v2.5
+- Added `cuda-lang` and `hip-lang` as language virtuals (analogous to `c`, `cxx`, `fortran`).
+
+## Package API v2.4
+- Added the `%%` sigil to spec syntax, to propagate compiler preferences.
+
 ## Spack v1.0.0
 Deprecated the implicit attributes:
 - `PackageBase.legacy_buildsystem`
 - `Builder.legacy_methods`
 - `Builder.legacy_attributes`
 - `Builder.legacy_long_methods`
+
+## Package API v2.3
+- `spack.package.version` directive: added `git_sparse_paths` parameter.
 
 ## Package API v2.2
 Added to `spack.package`:

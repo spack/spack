@@ -5,16 +5,16 @@
 import argparse
 import sys
 
-import spack.cmd as cmd
-import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.store
+from spack import cmd
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify
+from spack.util import tty
+from spack.util.tty.colify import colify
 
 description = "list extensions for package"
-section = "extensions"
+section = "query"
 level = "long"
 
 
@@ -55,7 +55,7 @@ def extensions(parser, args):
             tty.info("Extendable packages:")
 
         extendable_pkgs = []
-        for name in spack.repo.all_package_names():
+        for name in spack.repo.PATH.all_package_names():
             pkg_cls = spack.repo.PATH.get_pkg_class(name)
             if pkg_cls.extendable:
                 extendable_pkgs.append(name)
@@ -66,9 +66,9 @@ def extensions(parser, args):
     # Checks
     spec = cmd.parse_specs(args.spec)
     if len(spec) > 1:
-        tty.die("Can only list extensions for one package.")
+        args.subparser.error("can only list extensions for one package")
 
-    env = ev.active_environment()
+    env = active_environment()
     spec = cmd.disambiguate_spec(spec[0], env)
 
     if not spec.package.extendable:

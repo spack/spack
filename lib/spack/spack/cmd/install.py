@@ -8,32 +8,33 @@ import shutil
 import sys
 from typing import List
 
+import spack.binary_distribution
 import spack.cmd
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.filesystem as fs
+import spack.installer_dispatch
 import spack.paths
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
-from spack.installer import PackageInstaller
-from spack.llnl.string import plural
-from spack.llnl.util import tty
+from spack.old_installer import InstallPolicy
+from spack.util import tty
+from spack.util.string import plural
 
 description = "build and install packages"
 section = "build"
 level = "short"
 
 
-# Determine value of cache flag
-def cache_opt(default_opt, use_buildcache):
-    if use_buildcache == "auto":
-        return default_opt
-    elif use_buildcache == "only":
-        return True
+def cache_opt(use_buildcache: str, default: InstallPolicy) -> InstallPolicy:
+    if use_buildcache == "only":
+        return "cache_only"
     elif use_buildcache == "never":
-        return False
+        return "source_only"
+    return default
 
 
 def install_kwargs_from_args(args):
@@ -41,6 +42,12 @@ def install_kwargs_from_args(args):
     to the package installer.
     """
     pkg_use_bc, dep_use_bc = args.use_buildcache
+    if args.cache_only:
+        default = "cache_only"
+    elif args.use_cache:
+        default = "auto"
+    else:
+        default = "source_only"
 
     return {
         "fail_fast": args.fail_fast,
@@ -51,10 +58,8 @@ def install_kwargs_from_args(args):
         "verbose": args.verbose or args.install_verbose,
         "fake": args.fake,
         "dirty": args.dirty,
-        "package_use_cache": cache_opt(args.use_cache, pkg_use_bc),
-        "package_cache_only": cache_opt(args.cache_only, pkg_use_bc),
-        "dependencies_use_cache": cache_opt(args.use_cache, dep_use_bc),
-        "dependencies_cache_only": cache_opt(args.cache_only, dep_use_bc),
+        "root_policy": cache_opt(pkg_use_bc, default),
+        "dependencies_policy": cache_opt(dep_use_bc, default),
         "include_build_deps": args.include_build_deps,
         "stop_at": args.until,
         "unsigned": args.unsigned,
@@ -284,8 +289,8 @@ def _dump_log_on_error(e: InstallError):
             shutil.copyfileobj(log, sys.stderr)
 
 
-def _die_require_env():
-    msg = "install requires a package argument or active environment"
+def _die_require_env(parser):
+    msg = "requires a package argument or active environment"
     if "spack.yaml" in os.listdir(os.getcwd()):
         # There's a spack.yaml file in the working dir, the user may
         # have intended to use that
@@ -298,7 +303,7 @@ def _die_require_env():
             "  OR\n"
             "    spack --env . install"
         )
-    tty.die(msg)
+    parser.error(msg)
 
 
 def install(parser, args):
@@ -310,7 +315,7 @@ def install(parser, args):
         return
 
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     if args.log_file and not args.log_format:
         msg = "the '--log-format' must be specified when using '--log-file'"
@@ -320,10 +325,10 @@ def install(parser, args):
 
     reporter = args.reporter() if args.log_format else None
     install_kwargs = install_kwargs_from_args(args)
-    env = ev.active_environment()
+    env = active_environment()
 
     if not env and not args.spec:
-        _die_require_env()
+        _die_require_env(args.subparser)
 
     try:
         if env:
@@ -356,7 +361,9 @@ def _maybe_add_and_concretize(args, env, specs):
         concretized_specs = env.concretize(tests=tests)
         if concretized_specs:
             tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
-            ev.display_specs([concrete for _, concrete in concretized_specs])
+            spack.binary_distribution.load_buildcache_index()
+            status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+            ev.display_specs([concrete for _, concrete in concretized_specs], status_fn=status_fn)
 
         # save view regeneration for later, so that we only do it
         # once, as it can be slow.
@@ -384,9 +391,9 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter)
         specs_to_install = env.all_matching_specs(*specs)
         if not specs_to_install:
             msg = (
-                "Cannot install '{0}' because no matching specs are in the current environment."
-                " You can add specs to the environment with 'spack add {0}', or as part"
-                " of the install command with 'spack install --add {0}'"
+                "Cannot install '{0}' because no matching specs are in the current environment.\n"
+                " Specs can be added to the environment with 'spack add {0}',\n"
+                " or as part of the install command with 'spack install --add {0}'"
             ).format(" ".join(args.spec))
             tty.die(msg)
 
@@ -428,7 +435,7 @@ def install_without_active_env(args, install_kwargs, reporter):
     concrete_specs = concrete_specs_from_cli(args, install_kwargs)
 
     if len(concrete_specs) == 0:
-        tty.die("The `spack install` command requires a spec to install.")
+        args.subparser.error("requires a spec")
 
     if args.overwrite:
         require_user_confirmation_for_overwrite(concrete_specs, args)
@@ -438,7 +445,9 @@ def install_without_active_env(args, install_kwargs, reporter):
     install_kwargs["explicit"] = [s.dag_hash() for s in concrete_specs]
 
     try:
-        builder = PackageInstaller(installs, **install_kwargs)
+        builder = spack.installer_dispatch.create_installer(
+            installs, create_reports=reporter is not None, **install_kwargs
+        )
         builder.install()
     finally:
         if reporter:
