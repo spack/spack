@@ -68,8 +68,8 @@ import spack.error
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.enums import PropagationPolicy
-from spack.llnl.util.tty import color
 from spack.tokenize import Token, TokenBase, Tokenizer
+from spack.util.tty import color
 
 if TYPE_CHECKING:
     import spack.spec

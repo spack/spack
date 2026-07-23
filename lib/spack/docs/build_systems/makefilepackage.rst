@@ -9,6 +9,10 @@
 
 .. _makefilepackage:
 
+.. index::
+   single: build system; Makefile
+   single: MakefilePackage
+
 Makefile
 --------
 

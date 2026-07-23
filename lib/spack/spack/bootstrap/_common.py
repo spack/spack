@@ -16,13 +16,13 @@ from typing import Optional, Sequence, Union
 import spack.vendor.archspec.cpu
 from spack.vendor.typing_extensions import TypedDict
 
-import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.spec
 import spack.store
 import spack.util.environment
 import spack.util.executable
-from spack.llnl.util import tty
+import spack.util.filesystem as fs
+from spack.util import tty
 
 from .config import spec_for_current_python
 
@@ -67,7 +67,7 @@ def _try_import_from_store(
             python, *_ = candidate_spec.dependencies("python")
 
         # if python is installed, ask it for the layout
-        if python.installed:
+        if spack.store.STORE.db.installed(python):
             module_paths = [
                 os.path.join(candidate_spec.prefix, python.package.purelib),
                 os.path.join(candidate_spec.prefix, python.package.platlib),

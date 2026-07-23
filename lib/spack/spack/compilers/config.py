@@ -15,14 +15,14 @@ import spack.config
 import spack.detection
 import spack.detection.path
 import spack.error
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lang
-import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
+import spack.util.filesystem as fs
+import spack.util.lang
 from spack.externals import ExternalSpecsParser, external_spec, extract_dicts_from_configuration
 from spack.operating_systems import windows_os
+from spack.util import tty
 from spack.util.environment import get_path
 
 #: Tag used to identify packages providing a compiler
@@ -197,7 +197,7 @@ class CompilerRemover:
                 def _partition_match(external_yaml):
                     return not external_spec(external_yaml).satisfies(match)
 
-                to_keep, to_remove = spack.llnl.util.lang.stable_partition(
+                to_keep, to_remove = spack.util.lang.stable_partition(
                     externals_config, _partition_match
                 )
                 if not to_remove:
@@ -264,23 +264,21 @@ class CompilerFactory:
         packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
 
         init_external_dicts = extract_dicts_from_configuration(packages_yaml)
-        init_external_dicts = list(
-            x
-            for x in init_external_dicts
-            if spack.spec.Spec(x["spec"]).name in compiler_package_names
-        )
-
-        externals_dicts = []
-        for current in init_external_dicts:
-            if _EXTRA_ATTRIBUTES_KEY not in current:
-                header = f"The external spec '{current['spec']}' cannot be used as a compiler"
-                tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
+        external_parser = ExternalSpecsParser(init_external_dicts)
+        valid_compiler_specs = []
+        for name, external_specs_and_config in external_parser.specs_by_name.items():
+            if name not in compiler_package_names:
                 continue
-
-            externals_dicts.append(current)
-
-        external_parser = ExternalSpecsParser(externals_dicts)
-        return external_parser.all_specs()
+            for spec_with_config in external_specs_and_config:
+                if _EXTRA_ATTRIBUTES_KEY not in spec_with_config.config:
+                    header = (
+                        f"The external spec '{spec_with_config.config['spec']}'"
+                        " cannot be used as a compiler"
+                    )
+                    tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
+                    continue
+                valid_compiler_specs.append(spec_with_config.spec)
+        return valid_compiler_specs
 
     @staticmethod
     def from_legacy_yaml(compiler_dict: Dict[str, Any]) -> List[spack.spec.Spec]:

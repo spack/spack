@@ -13,18 +13,17 @@ import spack
 import spack.caches
 import spack.ci
 import spack.config
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.git
-import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.common import arguments
 from spack.error import SpackError
-from spack.llnl.util.tty import color
+from spack.util import tty
+from spack.util.tty import color
 from spack.version import StandardVersion
 
 from . import doc_dedented, doc_first_line
@@ -103,7 +102,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     add_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
 
@@ -125,7 +124,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     set_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
 
@@ -183,7 +182,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     update_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     update_parser.add_argument(
@@ -207,6 +206,9 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     show_version_updates_parser.add_argument(
         "--only-redistributable", action="store_true", help="exclude non-redistributable packages"
+    )
+    show_version_updates_parser.add_argument(
+        "--no-deprecated", action="store_true", help="exclude deprecated versions"
     )
     show_version_updates_parser.add_argument(
         "repository", help="name or path of the repository to analyze"
@@ -256,7 +258,7 @@ def _add_repo(
             raise SpackError("The 'destination' argument is only valid for git repositories")
         elif paths:
             raise SpackError("The --paths flag is only valid for git repositories")
-        entry = spack.util.path.canonicalize_path(path_or_repo)
+        entry = spack.config.canonicalize_path(path_or_repo)
 
     descriptor = spack.repo.parse_config_descriptor(
         name or "<unnamed>", entry, lock=spack.repo.package_repository_lock()
@@ -318,14 +320,14 @@ def repo_remove(args):
 
 
 def _remove_repo(namespace_or_path, scope):
-    repos: Dict[str, str] = spack.config.get("repos", scope=scope)
+    repos: Dict[str, str] = spack.config.CONFIG.get("repos", scope=scope)
 
     if namespace_or_path in repos:
         # delete by name (from config)
         key = namespace_or_path
     else:
         # delete by namespace or path (requires constructing the repo)
-        canon_path = spack.util.path.canonicalize_path(namespace_or_path)
+        canon_path = spack.config.canonicalize_path(namespace_or_path)
         descriptors = spack.repo.RepoDescriptors.from_config(
             spack.repo.package_repository_lock(), spack.config.CONFIG, scope=scope
         )
@@ -345,7 +347,7 @@ def _remove_repo(namespace_or_path, scope):
             return False
 
     del repos[key]
-    spack.config.set("repos", repos, scope)
+    spack.config.CONFIG.set("repos", repos, scope)
     tty.msg(f"Removed repository '{namespace_or_path}' from scope '{scope}'.")
     return True
 
@@ -528,7 +530,7 @@ def repo_set(args):
     namespace = args.namespace
 
     # First, check if the repository exists across all scopes for validation
-    all_repos: Dict[str, Any] = spack.config.get("repos", default={})
+    all_repos: Dict[str, Any] = spack.config.CONFIG.get("repos", default={})
 
     if namespace not in all_repos:
         raise SpackError(f"No repository with namespace '{namespace}' found in configuration.")
@@ -541,7 +543,7 @@ def repo_set(args):
         )
 
     # Now get the repos for the specific scope we're modifying
-    scope_repos: Dict[str, Any] = spack.config.get("repos", default={}, scope=args.scope)
+    scope_repos: Dict[str, Any] = spack.config.CONFIG.get("repos", default={}, scope=args.scope)
 
     updated_entry = scope_repos[namespace] if namespace in scope_repos else {}
 
@@ -552,7 +554,7 @@ def repo_set(args):
         updated_entry["paths"] = args.path
 
     scope_repos[namespace] = updated_entry
-    spack.config.set("repos", scope_repos, args.scope)
+    spack.config.CONFIG.set("repos", scope_repos, args.scope)
 
     tty.msg(f"Updated repo '{namespace}'")
 
@@ -604,7 +606,7 @@ def repo_update(args):
         )
 
     # Get the repos for the specific scope we're modifying
-    scope_repos: Dict[str, Any] = spack.config.get("repos", default={}, scope=args.scope)
+    scope_repos: Dict[str, Any] = spack.config.CONFIG.get("repos", default={}, scope=args.scope)
 
     for name, descriptor in descriptors.items():
         if not isinstance(descriptor, spack.repo.RemoteRepoDescriptor):
@@ -652,7 +654,7 @@ def repo_update(args):
                 tty.msg(f"{name}: Updated successfully.")
 
     if active_flag:
-        spack.config.set("repos", scope_repos, args.scope)
+        spack.config.CONFIG.set("repos", scope_repos, args.scope)
 
 
 def repo_show_version_updates(args):
@@ -668,11 +670,7 @@ def repo_show_version_updates(args):
 
     # Filter out manual packages if requested
     if args.no_manual_packages:
-        pkgs = {
-            pkg_name
-            for pkg_name in pkgs
-            if not spack.repo.PATH.get_pkg_class(pkg_name).manual_download
-        }
+        pkgs = {pkg_name for pkg_name in pkgs if not repo.get_pkg_class(pkg_name).manual_download}
 
     if not pkgs:
         tty.info("No packages were added or changed between the specified refs", stream=sys.stderr)
@@ -682,8 +680,8 @@ def repo_show_version_updates(args):
     specs_to_output = []
 
     for pkg_name in pkgs:
-        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        path = spack.repo.PATH.package_path(pkg_name)
+        pkg_cls = repo.get_pkg_class(pkg_name)
+        path = repo.filename_for_package_name(pkg_name)
 
         # Get all versions with checksums or commits
         version_to_checksum: Dict[StandardVersion, str] = {}
@@ -712,7 +710,7 @@ def repo_show_version_updates(args):
         specs_to_output = [
             spec
             for spec in specs_to_output
-            if "commit" not in spack.repo.PATH.get_pkg_class(spec.name).versions[spec.version]
+            if "commit" not in repo.get_pkg_class(spec.name).versions[spec.version]
         ]
 
     # Filter out non-redistributable packages if requested
@@ -720,7 +718,15 @@ def repo_show_version_updates(args):
         specs_to_output = [
             spec
             for spec in specs_to_output
-            if spack.repo.PATH.get_pkg_class(spec.name).redistribute_source(spec)
+            if repo.get_pkg_class(spec.name).redistribute_source(spec)
+        ]
+
+    # Filter out deprecated versions if requested
+    if args.no_deprecated:
+        specs_to_output = [
+            spec
+            for spec in specs_to_output
+            if not repo.get_pkg_class(spec.name).versions[spec.version].get("deprecated", False)
         ]
 
     if not specs_to_output:

@@ -13,26 +13,25 @@ from urllib.parse import urlparse, urlunparse
 import spack.binary_distribution
 import spack.ci as spack_ci
 import spack.cmd
-import spack.cmd.buildcache as buildcache
 import spack.cmd.common.arguments
 import spack.config as cfg
 import spack.environment as ev
 import spack.error
 import spack.fetch_strategy
 import spack.hash_types as ht
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty.color as clr
 import spack.mirrors.mirror
 import spack.package_base
 import spack.repo
 import spack.spec
 import spack.stage
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.gpg as gpg_util
-import spack.util.timer as timer
+import spack.util.tty.color as clr
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.llnl.util import tty
+from spack.cmd import buildcache
+from spack.util import timer, tty
 from spack.version import StandardVersion
 
 from . import doc_dedented, doc_first_line
@@ -290,7 +289,7 @@ def ci_rebuild(args):
 
     # Make sure the environment is "gitlab-enabled", or else there's nothing
     # to do.
-    ci_config = cfg.get("ci")
+    ci_config = cfg.CONFIG.get("ci")
     if not ci_config:
         tty.die("spack ci rebuild requires an env containing ci cfg")
 
@@ -318,7 +317,7 @@ def ci_rebuild(args):
     # Fail early if signing is required but we don't have a signing key
     sign_binaries = require_signing is not None and require_signing.lower() == "true"
     if sign_binaries and not spack_ci.can_sign_binaries():
-        gpg_util.list(False, True)
+        gpg_util.glist(False, True)
         tty.die("SPACK_REQUIRE_SIGNING=True => spack must have exactly one signing key")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
@@ -336,7 +335,7 @@ def ci_rebuild(args):
     # Query the environment manifest to find out whether we're reporting to a
     # CDash instance, and if so, gather some information from the manifest to
     # support that task.
-    cdash_config = cfg.get("cdash")
+    cdash_config = cfg.CONFIG.get("cdash")
     cdash_handler = None
     if "build-group" in cdash_config:
         cdash_handler = spack_ci.CDashHandler(cdash_config)
@@ -466,7 +465,7 @@ def ci_rebuild(args):
     # Start with spack arguments
     spack_cmd = [SPACK_COMMAND, "--color=always", "install"]
 
-    config = cfg.get("config")
+    config = cfg.CONFIG.get("config")
     if not config["verify_ssl"]:
         spack_cmd.append("-k")
 
@@ -555,7 +554,7 @@ def ci_rebuild(args):
                 test_stage = fs.join_path(stage_root, "spack-standalone-tests")
                 tty.debug("Configuring test_stage to {0}".format(test_stage))
                 config_test_path = "config:test_stage:{0}".format(test_stage)
-                cfg.add(config_test_path, scope=cfg.default_modify_scope())
+                cfg.CONFIG.add(config_test_path, scope=cfg.CONFIG.default_modify_scope())
 
                 # Run the tests, resorting to junit results if not using cdash
                 log_file = (

@@ -25,6 +25,45 @@ proc ModulesHelp { } {
 }
 {% endblock %}
 
+{% block provides %}
+{# Prepend the path I unlock as a provider of #}
+{# services and set the families of services I provide #}
+{% if has_modulepath_modifications %}
+# Services provided by the package
+{% for name in provides %}
+family {{ name }}
+{% endfor %}
+
+# Loading this module unlocks the path below unconditionally
+{% for path in unlocked_paths %}
+prepend-path MODULEPATH {{ '{' }}{{ path }}{{ '}' }}
+{% endfor %}
+
+{# Try to see if missing providers have already #}
+{# been loaded into the environment #}
+{% if has_conditional_modifications %}
+# Try to load variables into path to see if providers are there
+{% for name in missing %}
+set {{ name }}_name [getenv MODULES_{{ name|upper() }}_NAME]
+set {{ name }}_version [getenv MODULES_{{ name|upper() }}_VERSION]
+{% endfor %}
+
+# Change MODULEPATH based on the result of the tests above
+{% for condition, path in conditionally_unlocked_paths %}
+if { {{ condition }} } {
+    prepend-path MODULEPATH [file join {{ path }}]
+}
+{% endfor %}
+
+# Set variables to notify the provider of the new services
+{% for name in provides %}
+setenv MODULES_{{ name|upper() }}_NAME {{ '{' }}{{ name_part }}{{ '}' }}
+setenv MODULES_{{ name|upper() }}_VERSION {{ '{' }}{{ version_part }}{{ '}' }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endblock %}
+
 {% block autoloads %}
 {% if autoload|length > 0 %}
 # define missing command if using Environment Modules <5.1

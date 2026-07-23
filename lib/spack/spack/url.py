@@ -36,11 +36,11 @@ import re
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import spack.error
-import spack.llnl.url
+import spack.util.url
 import spack.util.web
 import spack.version
-from spack.llnl.path import convert_to_posix_path
-from spack.llnl.util.tty.color import cescape, colorize
+from spack.util.path import convert_to_posix_path
+from spack.util.tty.color import cescape, colorize
 
 #
 # Note: We call the input to most of these functions a "path" but the functions
@@ -144,13 +144,13 @@ def parse_version_offset(path: str) -> Tuple[str, int, int, int, str]:
     # path:   The prefix of the URL, everything before the ext and suffix
     # ext:    The file extension
     # suffix: Any kind of query string that begins with a '?'
-    path, ext, suffix = spack.llnl.url.split_url_extension(path)
+    path, ext, suffix = spack.util.url.split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
     original_stem = os.path.basename(path)
 
     # Try to strip off anything after the version number
-    stem = spack.llnl.url.strip_version_suffixes(original_stem)
+    stem = spack.util.url.strip_version_suffixes(original_stem)
 
     # Assumptions:
     #
@@ -342,7 +342,7 @@ def parse_name_offset(
     # path:   The prefix of the URL, everything before the ext and suffix
     # ext:    The file extension
     # suffix: Any kind of query string that begins with a '?'
-    path, ext, suffix = spack.llnl.url.split_url_extension(path)
+    path, ext, suffix = spack.util.url.split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
     original_stem = os.path.basename(path)
@@ -646,7 +646,7 @@ def find_versions_of_archive(
     if list_url is not None:
         list_urls.add(list_url)
     for aurl in archive_urls:
-        list_urls |= spack.llnl.url.find_list_urls(aurl)
+        list_urls |= spack.util.url.find_list_urls(aurl)
 
     # Add '/' to the end of the URL. Some web servers require this.
     additional_list_urls = set()

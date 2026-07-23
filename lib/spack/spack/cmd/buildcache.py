@@ -8,7 +8,7 @@ import json
 import os
 import sys
 import tempfile
-from typing import List, Optional, Tuple
+from typing import List, Mapping, Optional, Tuple
 
 import spack.binary_distribution
 import spack.cmd
@@ -17,7 +17,6 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
@@ -28,12 +27,15 @@ import spack.util.parallel
 import spack.util.timer as timer_mod
 import spack.util.web as web_util
 from spack import traverse
+from spack.active_environment import active_environment
 from spack.binary_distribution import BINARY_INDEX
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
-from spack.llnl.string import plural
-from spack.llnl.util.lang import elide_list, stable_partition
 from spack.spec import Spec, save_dependency_specfiles
+from spack.util import tty
+from spack.util.lang import elide_list, stable_partition
+from spack.util.string import plural
+from spack.util.tty import colify
 
 from ..buildcache_migrate import migrate
 from ..buildcache_prune import prune_buildcache
@@ -199,6 +201,13 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     keys.add_argument("-t", "--trust", action="store_true", help="trust all downloaded keys")
     keys.add_argument("-f", "--force", action="store_true", help="force new download of keys")
+    arguments.add_common_arguments(keys, ["yes_to_all"])
+    keys.add_argument(
+        "mirrors",
+        nargs=argparse.REMAINDER,
+        type=arguments.mirror_name_or_url,
+        help="mirror name, path, or URL",
+    )
     keys.set_defaults(func=keys_fn, subparser=keys)
 
     # Check if binaries need to be rebuilt on remote mirror
@@ -219,7 +228,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "--scope",
         action=arguments.ConfigScope,
         type=arguments.config_scope_readable_validator,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
 
@@ -392,7 +401,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
 def _matching_specs(specs: List[Spec]) -> List[Spec]:
     """Disambiguate specs and return a list of matching specs"""
     return [
-        spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=InstallRecordStatus.ANY)
+        spack.cmd.disambiguate_spec(s, active_environment(), installed=InstallRecordStatus.ANY)
         for s in specs
     ]
 
@@ -401,21 +410,42 @@ def _format_spec(spec: Spec) -> str:
     return spec.cformat("{name}{@version}{/hash:7}")
 
 
-def _skip_no_redistribute_for_public(specs):
-    remaining_specs = list()
-    removed_specs = list()
+def _skip_no_redistribute_for_public(specs: List[Spec]) -> List[Spec]:
+    remaining_specs: List[Spec] = []
+    removed_specs: List[Spec] = []
     for spec in specs:
         if spec.package.redistribute_binary:
             remaining_specs.append(spec)
         else:
             removed_specs.append(spec)
     if removed_specs:
-        colified_output = tty.colify.colified(list(s.name for s in removed_specs), indent=4)
+        colified_output = colify.colified([s.name for s in removed_specs], indent=4)
         tty.debug(
             "The following specs will not be added to the binary cache"
             " because they cannot be redistributed:\n"
             f"{colified_output}\n"
             "You can use `--private` to include them."
+        )
+    return remaining_specs
+
+
+def _filter_specs_for_push(specs: List[Spec], mirror: spack.mirrors.mirror.Mirror) -> List[Spec]:
+    """Filter specs based on mirror include/exclude buildcache patterns."""
+    remaining_specs: List[Spec] = []
+    removed_specs: List[Spec] = []
+
+    for spec in specs:
+        if mirror.matches_binary(spec, direction="push"):
+            remaining_specs.append(spec)
+        else:
+            removed_specs.append(spec)
+
+    if removed_specs:
+        colified_output = colify.colified([s.name for s in removed_specs], indent=4)
+        tty.debug(
+            "The following specs will not be pushed to the binary cache"
+            " because they do not match the mirror's include/exclude filters:\n"
+            f"{colified_output}"
         )
     return remaining_specs
 
@@ -512,6 +542,8 @@ def push_fn(args):
     if not args.private:
         specs = _skip_no_redistribute_for_public(specs)
 
+    specs = _filter_specs_for_push(specs, mirror)
+
     if len(specs) > 1:
         tty.info(f"Selected {len(specs)} specs to push to {push_url}")
 
@@ -519,8 +551,10 @@ def push_fn(args):
     # push installed package in best effort mode.
     failed: List[Tuple[Spec, BaseException]] = []
     with spack.store.STORE.db.read_transaction():
-        if any(not s.installed for s in specs):
-            specs, not_installed = stable_partition(specs, lambda s: s.installed)
+        if any(not spack.store.STORE.db.installed(s) for s in specs):
+            specs, not_installed = stable_partition(
+                specs, lambda s: spack.store.STORE.db.installed(s)
+            )
             if args.fail_fast and not args.allow_missing:
                 raise PackagesAreNotInstalledError(not_installed)
             elif args.allow_missing:
@@ -626,7 +660,13 @@ def list_fn(args):
 
 def keys_fn(args):
     """get public keys available on mirrors"""
-    spack.binary_distribution.get_keys(args.install, args.trust, args.force)
+    mirror_map: Optional[Mapping[str, spack.mirrors.mirror.Mirror]] = None
+    if args.mirrors:
+        mirror_map = dict([(m.name, m) for m in args.mirrors])
+
+    spack.binary_distribution.trust_keys(
+        args.yes_to_all, args.install, args.trust, args.force, mirrors=mirror_map
+    )
 
 
 def check_fn(args: argparse.Namespace):
@@ -649,7 +689,7 @@ def check_fn(args: argparse.Namespace):
     specs = [spack.concretize.concretize_one(s) for s in specs]
 
     # Next see if there are any configured binary mirrors
-    configured_mirrors = spack.config.get("mirrors", scope=args.scope)
+    configured_mirrors = spack.config.CONFIG.get("mirrors", scope=args.scope)
 
     if args.mirror_url:
         configured_mirrors = {"additionalMirrorUrl": args.mirror_url}
@@ -1058,7 +1098,7 @@ def check_index_fn(args):
         for spec_manifest in manifest_files:
             # Spec manifests have a naming format
             # <name>-<version>-<hash>.spec.manifest.json
-            spec_hash = spec_manifest.rsplit("-", 1)[1].split(".", 1)[0]
+            spec_hash = URLBuildcacheEntry.hash_from_manifest_name(spec_manifest)
             if checking_view_index and spec_hash not in index_hash_list:
                 continue
 

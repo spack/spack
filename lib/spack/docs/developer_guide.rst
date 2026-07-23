@@ -197,13 +197,13 @@ Other Modules
 :mod:`spack.error`
   :class:`~spack.error.SpackError`, the base class for Spack's exception hierarchy.
 
-:mod:`spack.llnl.util.tty`
+:mod:`spack.util.tty`
   Basic output functions for all of the messages Spack writes to the terminal.
 
-:mod:`spack.llnl.util.tty.color`
+:mod:`spack.util.tty.color`
   Implements a color formatting syntax used by ``spack.tty``.
 
-:mod:`spack.llnl.util`
+:mod:`spack.util`
   In this package are a number of utility modules for the rest of Spack.
 
 .. _package-repositories:
@@ -496,26 +496,17 @@ For example, if you were to add this step to the Linux unit test CI, it would lo
 
 .. code-block:: yaml
 
-   - name: Bootstrap clingo
-     if: ${{ matrix.concretizer == 'clingo' }}
-     env:
-       SPACK_PYTHON: python
-     run: |
-       . share/spack/setup-env.sh
-       spack bootstrap disable spack-install
-       spack bootstrap now
-       spack -v solve zlib
+   - uses: ./.github/actions/setup-spack
+     with:
+       python-version: ${{ matrix.python-version }}
    - name: Setup tmate session
      uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
    - name: Run unit tests
      env:
-       SPACK_PYTHON: python
-       SPACK_TEST_PARALLEL: 4
-       COVERAGE: true
        COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
-       UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.14' }}
+       PYTEST_ADDOPTS: ${{ matrix.python-version == '3.14' && '--cov --cov-config=pyproject.toml' || '' }}
      run: |-
-       share/spack/qa/run-unit-tests
+       python3 -m pytest -x --verbose --dist worksteal -n4
 
 
 Note that the ssh session comes after Spack does its setup but before it runs the unit tests.
@@ -592,14 +583,14 @@ Developer commands
 ``spack style``
 ^^^^^^^^^^^^^^^
 
-``spack style`` exists to help the developer check imports and style with mypy, Flake8, isort, and (soon) Black.
+``spack style`` exists to help the developer check imports and style with mypy and Ruff (for formatting and linting).
 To run all style checks, simply do:
 
 .. code-block:: console
 
     $ spack style
 
-To run automatic fixes for isort, you can do:
+To automatically fix formatting and linting issues, you can do:
 
 .. code-block:: console
 
@@ -780,11 +771,11 @@ When working on the ASP-based solver in ``lib/spack/spack/solver/``, it is often
 Generating ASP facts
 ^^^^^^^^^^^^^^^^^^^^
 
-The ``spack solve --show=asp`` flag dumps all ASP facts generated for a given spec to stdout:
+The ``spack spec --show=asp`` flag dumps all ASP facts generated for a given spec to stdout:
 
 .. code-block:: console
 
-   $ spack solve --show=asp zlib-ng > zlib.lp
+   $ spack spec --show=asp zlib-ng > zlib.lp
 
 The resulting file contains both the package facts (versions, variants, dependencies) and the problem-specific facts derived from the user's configuration.
 It can be fed directly to clingo alongside the solver rules.

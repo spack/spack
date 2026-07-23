@@ -43,21 +43,20 @@ from typing import Callable, List, Mapping, Optional, Type
 
 import spack.config
 import spack.error
-import spack.llnl.url
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
 import spack.oci.opener
 import spack.util.archive
-import spack.util.crypto as crypto
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.git
+import spack.util.url
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
-from spack.llnl.string import comma_and, quote
-from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
+from spack.util import crypto, tty
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
+from spack.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
+from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies: List[Type["FetchStrategy"]] = []
@@ -408,7 +407,7 @@ class URLFetchStrategy(FetchStrategy):
             )
 
     def _fetch_from_url(self, url):
-        fetch_method = spack.config.get("config:url_fetch_method", "urllib")
+        fetch_method = spack.config.CONFIG.get("config:url_fetch_method", "urllib")
         if fetch_method.startswith("curl"):
             return self._fetch_curl(url, config_args=fetch_method.split()[1:])
         else:
@@ -565,7 +564,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # TODO: replace this by mime check.
         if not self.extension:
-            self.extension = spack.llnl.url.determine_url_file_extension(self.url)
+            self.extension = spack.util.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
             tty.debug("Source already staged to %s" % self.stage.source_path)
@@ -717,7 +716,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
-        assert spack.llnl.url.extension_from_path(destination) == "tar.gz"
+        assert spack.util.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
         # We need to prepend this dir name to every entry of the tarfile
         top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))
@@ -890,7 +889,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             # If the user asked for insecure fetching, make that work
             # with git as well.
-            if not spack.config.get("config:verify_ssl"):
+            if not spack.config.CONFIG.get("config:verify_ssl"):
                 self._git.add_default_env("GIT_SSL_NO_VERIFY", "true")
 
         return self._git
@@ -951,7 +950,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         tty.debug(f"Cloning git repository: {self._repo_info()}")
 
         git = self.git
-        debug = spack.config.get("config:debug")
+        debug = spack.config.CONFIG.get("config:debug")
 
         # We don't need to worry about which commit/branch/tag is checked out
         clone_args = ["clone", "--bare"]
@@ -971,7 +970,11 @@ class GitFetchStrategy(VCSFetchStrategy):
         checkout_ref = self.commit or self.tag or self.branch
         fetch_ref = self.tag or self.branch
 
-        kwargs = {"debug": spack.config.get("config:debug"), "git_exe": self.git, "dest": name}
+        kwargs = {
+            "debug": spack.config.CONFIG.get("config:debug"),
+            "git_exe": self.git,
+            "dest": name,
+        }
 
         # TODO(psakievich) The use of the minimal clone need clearer justification via package API
         # or something. There is a trade space of storage minimization vs available git information
@@ -1006,7 +1009,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             with working_dir(dest):
                 for submodule_to_delete in self.submodules_delete:
                     args = ["rm", submodule_to_delete]
-                    if not spack.config.get("config:debug"):
+                    if not spack.config.CONFIG.get("config:debug"):
                         args.insert(1, "--quiet")
                     git(*args)
 
@@ -1028,7 +1031,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         with working_dir(dest):
             for args in git_commands:
-                if not spack.config.get("config:debug"):
+                if not spack.config.CONFIG.get("config:debug"):
                     args.insert(1, "--quiet")
                 git(*args)
 
@@ -1037,7 +1040,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         with working_dir(self.stage.source_path):
             co_args = ["checkout", "."]
             clean_args = ["clean", "-f"]
-            if spack.config.get("config:debug"):
+            if spack.config.CONFIG.get("config:debug"):
                 co_args.insert(1, "--quiet")
                 clean_args.insert(1, "--quiet")
 
@@ -1335,7 +1338,7 @@ class HgFetchStrategy(VCSFetchStrategy):
 
         args = ["clone"]
 
-        if not spack.config.get("config:verify_ssl"):
+        if not spack.config.CONFIG.get("config:verify_ssl"):
             args.append("--insecure")
 
         if self.revision:
@@ -1526,7 +1529,7 @@ def _check_version_attributes(fetcher, pkg, version):
     This assumes that we have already determined the fetcher for the
     specific version using ``for_package_version()``
     """
-    all_optionals = set(a for s in all_strategies for a in s.optional_attrs)
+    all_optionals = {a for s in all_strategies for a in s.optional_attrs}
 
     args = pkg.versions[version]
     extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr, "no_cache"])

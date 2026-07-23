@@ -12,11 +12,11 @@ from typing import Callable, Dict, Iterable, Iterator, List, Optional, Set, Tupl
 
 import spack.binary_distribution
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.stage
 import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.util import tty
 
 from .mirrors.mirror import Mirror
 from .url_buildcache import BuildcacheComponent, URLBuildcacheEntry, get_entries_from_cache

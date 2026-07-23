@@ -13,13 +13,13 @@ from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, 
 
 import spack.cmd
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.paths
 import spack.platforms
-from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
-from spack.llnl.util.tty.colify import colify
 from spack.main import SpackArgumentParser, section_descriptions
+from spack.util import tty
+from spack.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
+from spack.util.tty.colify import colify
 
 description = "list available spack commands"
 section = "config"
@@ -773,7 +773,7 @@ def names(args: Namespace, out: IO) -> None:
     commands = copy.copy(spack.cmd.all_commands())
 
     if args.aliases:
-        aliases = spack.config.get("config:aliases")
+        aliases = spack.config.CONFIG.get("config:aliases")
         if aliases:
             commands.extend(aliases.keys())
 
@@ -803,7 +803,7 @@ def bash(args: Namespace, out: IO) -> None:
         out: File object to write to.
     """
     parser = get_all_spack_commands(out)
-    aliases_config = spack.config.get("config:aliases")
+    aliases_config = spack.config.CONFIG.get("config:aliases")
     if aliases_config:
         aliases = ";".join(f"{key}:{val}" for key, val in aliases_config.items())
         out.write(f'SPACK_ALIASES="{aliases}"\n\n')

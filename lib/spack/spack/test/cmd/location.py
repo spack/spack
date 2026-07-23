@@ -13,8 +13,8 @@ import spack.main
 import spack.paths
 import spack.repo
 import spack.stage
-from spack.llnl.util.filesystem import mkdirp
 from spack.main import SpackCommand
+from spack.util.filesystem import mkdirp
 
 # Everything here uses (or can use) the mock config and database.
 pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_database")]

@@ -9,6 +9,10 @@
 
 .. _sconspackage:
 
+.. index::
+   single: build system; SCons
+   single: SConsPackage
+
 SCons
 ------
 

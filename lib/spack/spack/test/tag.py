@@ -8,9 +8,9 @@ import io
 import pytest
 
 import spack.cmd.tags
-import spack.repo
 import spack.tag
 from spack.main import SpackCommand
+from spack.repo import RepoPath
 
 install = SpackCommand("install")
 
@@ -89,9 +89,9 @@ def test_tag_get_installed_packages(mock_packages, mock_archive, mock_fetch, ins
         assert skip or all_pkgs["tag3"] == []
 
 
-def test_tag_index_round_trip(mock_packages):
+def test_tag_index_round_trip(mock_packages: RepoPath):
     # Assumes at least two packages -- mpich and mpich2 -- have tags
-    mock_index = spack.repo.PATH.tag_index
+    mock_index = mock_packages.tag_index
     assert mock_index.tags
 
     ostream = io.StringIO()
@@ -147,6 +147,6 @@ def test_tag_no_tags(mock_packages):
 def test_tag_update_package(mock_packages):
     mock_index = mock_packages.tag_index
     index = spack.tag.TagIndex()
-    index.update_packages(set(spack.repo.all_package_names()), repo=mock_packages)
+    index.update_packages(set(mock_packages.all_package_names()), repo=mock_packages)
 
     ensure_tags_results_equal(mock_index.tags, index.tags)

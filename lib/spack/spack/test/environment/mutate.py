@@ -6,9 +6,9 @@ import platform
 import pytest
 
 import spack.concretize
-import spack.config
 import spack.environment as ev
 import spack.spec
+from spack.config import Configuration
 from spack.main import SpackCommand
 
 pytestmark = [
@@ -37,7 +37,7 @@ change = SpackCommand("change")
         ),
     ],
 )
-def test_mutate_internals(dep, orig_constraint, mutated_constraint):
+def test_mutate_internals(dep, orig_constraint, mutated_constraint, mutable_config: Configuration):
     """
     Check that Environment.mutate and Spec.mutate work for several different constraint types.
 
@@ -46,7 +46,7 @@ def test_mutate_internals(dep, orig_constraint, mutated_constraint):
     ev.create("test")
     env = ev.read("test")
 
-    spack.config.set("packages:cmake", {"require": orig_constraint})
+    mutable_config.set("packages:cmake", {"require": orig_constraint})
 
     root_name = "cmake-client" if dep else "cmake"
     env.add(root_name)

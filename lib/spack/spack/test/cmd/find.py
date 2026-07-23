@@ -18,12 +18,12 @@ import spack.package_base
 import spack.paths
 import spack.repo
 import spack.spec
-import spack.store
 import spack.user_environment as uenv
+from spack.database import Database
 from spack.enums import InstallRecordStatus
-from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
 from spack.test.utilities import SpackCommandArgs
+from spack.util.filesystem import working_dir
 from spack.util.pattern import Bunch
 
 find = SpackCommand("find")
@@ -245,11 +245,7 @@ def test_find_format(database, config):
 
     output = find("--format", "{name}-{^mpi.name}-{hash:7}", "mpileaks")
     elements = output.strip().split("\n")
-    assert set(e[:-7] for e in elements) == {
-        "mpileaks-zmpi-",
-        "mpileaks-mpich-",
-        "mpileaks-mpich2-",
-    }
+    assert {e[:-7] for e in elements} == {"mpileaks-zmpi-", "mpileaks-mpich-", "mpileaks-mpich2-"}
 
     # hashes are in base32
     for e in elements:
@@ -434,12 +430,12 @@ spack:
     assert "libelf" in output
 
 
-def test_find_loaded(database, working_env):
+def test_find_loaded(database: Database, working_env):
     output = find("--loaded", "--group")
     assert output == ""
 
     os.environ[uenv.spack_loaded_hashes_var] = os.pathsep.join(
-        [x.dag_hash() for x in spack.store.STORE.db.query()]
+        [x.dag_hash() for x in database.query()]
     )
     output = find("--loaded")
     expected = find()

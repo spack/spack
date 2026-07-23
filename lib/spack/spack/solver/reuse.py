@@ -9,17 +9,13 @@ from typing import Any, Callable, List, Mapping, Optional
 
 import spack.binary_distribution
 import spack.config
-import spack.llnl.path
 import spack.repo
 import spack.spec
 import spack.store
 import spack.traverse
-from spack.externals import (
-    ExternalSpecsParser,
-    complete_architecture,
-    complete_variants_and_architecture,
-    extract_dicts_from_configuration,
-)
+import spack.util.path
+from spack.active_environment import active_environment
+from spack.externals import ExternalSpecsParser
 from spack.spec_filter import SpecFilter
 
 from .runtimes import all_libcs
@@ -111,7 +107,7 @@ def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) ->
         for entry in packages_with_externals.get(name, {}).get("externals", []):
             expected_prefix = entry.get("prefix")
             if expected_prefix is not None:
-                expected_prefix = spack.llnl.path.path_to_os_path(expected_prefix)[0]
+                expected_prefix = spack.util.path.path_to_os_path(expected_prefix)[0]
             if (
                 spec.satisfies(entry["spec"])
                 and spec.external_path == expected_prefix
@@ -153,22 +149,6 @@ class ReuseStrategy(enum.Enum):
     ROOTS = enum.auto()
     DEPENDENCIES = enum.auto()
     NONE = enum.auto()
-
-
-def create_external_parser(
-    packages_with_externals: Any, completion_mode: str
-) -> ExternalSpecsParser:
-    """Get externals from a pre-processed packages.yaml (with implicit externals)."""
-    external_dicts = extract_dicts_from_configuration(packages_with_externals)
-    if completion_mode == "default_variants":
-        complete_fn = complete_variants_and_architecture
-    elif completion_mode == "architecture_only":
-        complete_fn = complete_architecture
-    else:
-        raise ValueError(
-            f"Unknown value for concretizer:externals:completion: {completion_mode!r}"
-        )
-    return ExternalSpecsParser(external_dicts, complete_node=complete_fn)
 
 
 SpecFiltersFactory = Callable[
@@ -245,7 +225,7 @@ class ReusableSpecsSelector:
                 exclude = source.get("exclude", default_exclude)
                 if source["type"] == "environment" and "path" in source:
                     env_dir = spack.environment.as_env_dir(source["path"])
-                    active_env = spack.environment.active_environment()
+                    active_env = active_environment()
                     if not active_env or env_dir not in active_env.included_concrete_env_root_dirs:
                         # If the environment is not included as a concrete environment, use the
                         # current specs from its lockfile.

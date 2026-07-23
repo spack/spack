@@ -15,7 +15,7 @@ from typing import List
 from urllib.error import URLError
 from urllib.request import BaseHandler
 
-import spack.llnl.util.tty as tty
+from spack.util import tty
 
 
 def gcs_client():

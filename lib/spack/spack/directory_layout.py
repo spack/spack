@@ -12,12 +12,12 @@ from typing import Dict, List, Optional, Tuple
 
 import spack.config
 import spack.hash_types as ht
-import spack.llnl.util.filesystem as fs
 import spack.projections
 import spack.spec
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack.error import SpackError
-from spack.llnl.util.filesystem import readlink
+from spack.util.filesystem import readlink
 
 default_projections = {
     "all": "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
@@ -160,7 +160,7 @@ class DirectoryLayout:
                 else:
                     raise SpecReadError(f"Did not recognize spec file extension: {extension}")
         except Exception as e:
-            if spack.config.get("config:debug"):
+            if spack.config.CONFIG.get("config:debug"):
                 raise
             raise SpecReadError(f"Unable to read file: {path}", f"Cause: {e}")
 

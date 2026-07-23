@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from typing import Callable, Dict, List
 
 import spack.util.spack_json as sjson
-from spack.llnl.util.lang import pretty_seconds_formatter
+from spack.util.lang import pretty_seconds_formatter
 
 TimerEvent = collections.namedtuple("TimerEvent", ("time", "running", "label"))
 TimeTracker = collections.namedtuple("TimeTracker", ("total", "start", "count", "path"))
