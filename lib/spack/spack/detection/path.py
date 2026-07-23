@@ -27,6 +27,7 @@ import spack.util.tty
 from spack.util import environment
 
 from .common import (
+    VisualStudioLayout,
     WindowsCompilerExternalPaths,
     WindowsKitExternalPaths,
     _convert_to_iterable,
@@ -56,6 +57,8 @@ def common_windows_package_paths(pkg_cls=None) -> List[str]:
     paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
+    paths.extend(VisualStudioLayout.find_llvm_paths())
+    paths.extend(VisualStudioLayout.find_sdk_bin_paths())
     if pkg_cls:
         paths.extend(compute_windows_user_path_for_package(pkg_cls))
         paths.extend(compute_windows_program_path_for_package(pkg_cls))
@@ -210,6 +213,10 @@ def libraries_in_windows_paths(path_hints: Optional[List[str]] = None) -> Dict[s
         # SDK and WGL should be handled by above, however on occasion the WDK is in an atypical
         # location, so we handle that case specifically.
         search_paths.extend(WindowsKitExternalPaths.find_windows_driver_development_kit_paths())
+        # SDK and WDK installed via the VS Installer may not appear in the system-wide
+        # registry keys queried above; probe VS instance metadata to cover that case.
+        search_paths.extend(VisualStudioLayout.find_sdk_lib_paths())
+        search_paths.extend(VisualStudioLayout.find_wdk_paths())
     return path_to_dict(search_paths)
 
 

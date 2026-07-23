@@ -15,9 +15,11 @@ detection mechanisms.
 
 import glob
 import itertools
+import json
 import os
 import pathlib
 import re
+import subprocess
 import sys
 from typing import Dict, List, Optional, Set, Tuple, Union
 
@@ -383,6 +385,156 @@ class WindowsKitExternalPaths:
                 )
             )
         return sdk_paths
+
+
+class VisualStudioLayout:
+    """Discovery of packages installed through the Visual Studio Installer.
+
+    Handles VS-managed components such as bundled LLVM/Clang, Windows SDK, and WDK
+    when installed as VS workload components rather than as standalone installations.
+    """
+
+    @staticmethod
+    def _vswhere_exe() -> str:
+        root = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles", "")
+        return os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe")
+
+    @staticmethod
+    def _run_vswhere(*args: str) -> List[str]:
+        """Run vswhere with given arguments; return non-empty output lines or [] on failure."""
+        vswhere = VisualStudioLayout._vswhere_exe()
+        if not os.path.isfile(vswhere):
+            return []
+        try:
+            raw = subprocess.check_output(
+                [vswhere, *args], encoding="mbcs", errors="strict"
+            ).strip()
+            return [line for line in raw.splitlines() if line.strip()]
+        except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
+            return []
+
+    @staticmethod
+    def find_vs_install_paths() -> List[str]:
+        """Return installation root directories for all VS editions and versions."""
+        return VisualStudioLayout._run_vswhere(
+            "-prerelease", "-products", "*", "-property", "installationPath"
+        )
+
+    @staticmethod
+    def find_llvm_paths() -> List[str]:
+        """Return Clang/LLVM bin directories bundled with Visual Studio.
+
+        VS installs LLVM under VC/Tools/Llvm within each VS instance directory,
+        in architecture-specific subdirectories.
+        """
+        paths = []
+        for vs_root in VisualStudioLayout.find_vs_install_paths():
+            for arch in ("x64", "ARM64"):
+                candidate = os.path.join(vs_root, "VC", "Tools", "Llvm", arch, "bin")
+                if os.path.isdir(candidate):
+                    paths.append(candidate)
+            # Older VS / x86-only layout without an architecture subdirectory
+            fallback = os.path.join(vs_root, "VC", "Tools", "Llvm", "bin")
+            if os.path.isdir(fallback):
+                paths.append(fallback)
+        return paths
+
+    @staticmethod
+    def find_sdk_bin_paths() -> List[str]:
+        """Return Windows SDK bin directories for SDKs managed by the VS Installer.
+
+        VS records which SDK versions it owns in per-instance state.json.  The actual
+        SDK files land in the system-wide Windows Kits tree; this method resolves the
+        version-specific bin/<ver>/<arch> directories.
+        """
+        paths = []
+        program_files_x86 = os.environ.get("ProgramFiles(x86)", "")
+        kit_bin = os.path.join(program_files_x86, "Windows Kits", "10", "bin")
+        for vs_root in VisualStudioLayout.find_vs_install_paths():
+            for sdk_ver in VisualStudioLayout._sdk_versions_in_instance(vs_root):
+                for arch_dir in glob.glob(os.path.join(kit_bin, sdk_ver, "*")):
+                    if os.path.isdir(arch_dir):
+                        paths.append(arch_dir)
+        return paths
+
+    @staticmethod
+    def find_sdk_lib_paths() -> List[str]:
+        """Return Windows SDK lib directories for SDKs managed by the VS Installer.
+
+        Returns version-specific Lib/<ver>/<api>/<arch> directories for each SDK
+        version installed by the VS Installer.
+        """
+        paths = []
+        program_files_x86 = os.environ.get("ProgramFiles(x86)", "")
+        kit_lib = os.path.join(program_files_x86, "Windows Kits", "10", "Lib")
+        for vs_root in VisualStudioLayout.find_vs_install_paths():
+            for sdk_ver in VisualStudioLayout._sdk_versions_in_instance(vs_root):
+                for arch_dir in glob.glob(os.path.join(kit_lib, sdk_ver, "*", "*")):
+                    if os.path.isdir(arch_dir):
+                        paths.append(arch_dir)
+        return paths
+
+    @staticmethod
+    def find_wdk_paths() -> List[str]:
+        """Return WDK lib directories for WDK installed via the VS Installer.
+
+        The kernel-mode (km) subdirectory distinguishes WDK libs from the SDK.
+        Falls back to scanning the Windows Kits tree when WDKContentRoot is absent.
+        """
+        wdk_root = os.environ.get("WDKContentRoot")
+        if wdk_root:
+            return WindowsKitExternalPaths.find_windows_kit_lib_paths(wdk_root)
+        program_files_x86 = os.environ.get("ProgramFiles(x86)", "")
+        kit_lib = os.path.join(program_files_x86, "Windows Kits", "10", "Lib")
+        return [
+            arch_dir
+            for arch_dir in glob.glob(os.path.join(kit_lib, "[0-9]*", "km", "*"))
+            if os.path.isdir(arch_dir)
+        ]
+
+    @staticmethod
+    def find_vs_managed_paths() -> List[str]:
+        """Return all VS-managed component paths (LLVM bin, SDK bin, SDK lib)."""
+        return (
+            VisualStudioLayout.find_llvm_paths()
+            + VisualStudioLayout.find_sdk_bin_paths()
+            + VisualStudioLayout.find_sdk_lib_paths()
+        )
+
+    @staticmethod
+    def _sdk_versions_in_instance(vs_root: str) -> List[str]:
+        """Return Windows SDK versions installed in a VS instance.
+
+        Parses the per-instance state.json written by the VS Installer to extract
+        version strings for installed SDK packages.
+        """
+        instances_root = os.path.join(
+            os.environ.get("ProgramData", ""),
+            "Microsoft",
+            "VisualStudio",
+            "Packages",
+            "_Instances",
+        )
+        sdk_pkg_re = re.compile(r"Microsoft\.Windows\.(SDK|UniversalCRT)", re.IGNORECASE)
+        sdk_ver_re = re.compile(r"^10\.\d+\.\d+\.\d+$")
+        versions: List[str] = []
+        for instance_dir in glob.glob(os.path.join(instances_root, "*")):
+            state_path = os.path.join(instance_dir, "state.json")
+            if not os.path.isfile(state_path):
+                continue
+            try:
+                with open(state_path, encoding="utf-8") as fh:
+                    state = json.load(fh)
+                if state.get("installationPath", "").lower() != vs_root.lower():
+                    continue
+                for pkg in state.get("packages", []):
+                    pkg_id = pkg.get("id", "")
+                    pkg_ver = pkg.get("version", "")
+                    if sdk_pkg_re.search(pkg_id) and sdk_ver_re.match(pkg_ver):
+                        versions.append(pkg_ver)
+            except (OSError, ValueError, KeyError):
+                pass
+        return versions
 
 
 def find_win32_additional_install_paths() -> List[str]:
