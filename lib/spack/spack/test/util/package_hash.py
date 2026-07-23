@@ -10,6 +10,7 @@ import pytest
 import spack.concretize
 import spack.directives_meta
 import spack.paths
+import spack.repo
 import spack.util.package_hash as ph
 from spack.repo import RepoPath
 from spack.spec import Spec
@@ -114,6 +115,17 @@ def test_content_hash_not_concretized(mock_packages: RepoPath, config):
     spec1 = Spec("hash-test1")
     spec2 = Spec("hash-test2")
     compare_hash_sans_name(mock_packages, False, spec1, spec2)
+
+
+def test_package_hash_of_shadowed_package(mock_packages: RepoPath, config, repo_builder):
+    """The package hash must describe the package.py of the repository the spec names, also when
+    a repository of higher precedence has a package of the same name."""
+    repo_builder.add_package("pkg-c")
+    with spack.repo.use_repositories(repo_builder.root, override=False):
+        shadowing = Spec(f"{repo_builder.namespace}.pkg-c")
+        shadowed = Spec("builtin_mock.pkg-c")
+
+        assert ph.package_hash(shadowing) != ph.package_hash(shadowed)
 
 
 def test_content_hash_different_variants(mock_packages: RepoPath, config):
