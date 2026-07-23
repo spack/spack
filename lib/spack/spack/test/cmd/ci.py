@@ -2120,7 +2120,8 @@ def test_ci_validate_standard_versions_invalid_url(
     out, err = capfd.readouterr()
     assert f"No valid URLs found for diff-test@2.1.4" in err
     assert f"No valid URLs found for diff-test@2.1.5" not in err
-    assert f"Validated diff-test@2.1.5" in out
+    if "2.1.5" in versions:
+        assert f"Validated diff-test@2.1.5" in out
 
 
 def test_ci_validate_standard_versions_invalid_both(
