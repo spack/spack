@@ -160,7 +160,7 @@ class DirectoryLayout:
                 else:
                     raise SpecReadError(f"Did not recognize spec file extension: {extension}")
         except Exception as e:
-            if spack.config.get("config:debug"):
+            if spack.config.CONFIG.get("config:debug"):
                 raise
             raise SpecReadError(f"Unable to read file: {path}", f"Cause: {e}")
 

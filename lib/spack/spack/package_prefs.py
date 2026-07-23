@@ -161,7 +161,7 @@ class PackagePrefs:
 
 def is_spec_buildable(spec):
     """Return true if the spec is configured as buildable"""
-    allpkgs = spack.config.get("packages")
+    allpkgs = spack.config.CONFIG.get("packages")
     all_buildable = allpkgs.get("all", {}).get("buildable", True)
     so_far = all_buildable  # the default "so far"
 
@@ -187,7 +187,7 @@ def get_package_dir_permissions(spec):
     attribute sticky for the directory. Package-specific settings take
     precedent over settings for ``all``"""
     perms = get_package_permissions(spec)
-    if perms & stat.S_IRWXG and spack.config.get("config:allow_sgid", True):
+    if perms & stat.S_IRWXG and spack.config.CONFIG.get("config:allow_sgid", True):
         perms |= stat.S_ISGID
         if spec.concrete and "/afs/" in spec.prefix:
             warnings.warn(
@@ -206,7 +206,7 @@ def get_package_permissions(spec):
     # Get read permissions level
     for name in (spec.name, "all"):
         try:
-            readable = spack.config.get("packages:%s:permissions:read" % name, "")
+            readable = spack.config.CONFIG.get("packages:%s:permissions:read" % name, "")
             if readable:
                 break
         except AttributeError:
@@ -215,7 +215,7 @@ def get_package_permissions(spec):
     # Get write permissions level
     for name in (spec.name, "all"):
         try:
-            writable = spack.config.get("packages:%s:permissions:write" % name, "")
+            writable = spack.config.CONFIG.get("packages:%s:permissions:write" % name, "")
             if writable:
                 break
         except AttributeError:
@@ -253,7 +253,7 @@ def get_package_group(spec):
     Package-specific settings take precedence over settings for ``all``"""
     for name in (spec.name, "all"):
         try:
-            group = spack.config.get("packages:%s:permissions:group" % name, "")
+            group = spack.config.CONFIG.get("packages:%s:permissions:group" % name, "")
             if group:
                 break
         except AttributeError:

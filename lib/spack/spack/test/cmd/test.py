@@ -35,7 +35,7 @@ def test_test_package_not_installed(
 @pytest.mark.parametrize(
     "arguments,expected",
     [
-        (["run"], spack.config.get("config:dirty")),  # default from config file
+        (["run"], spack.config.CONFIG.get("config:dirty")),  # default from config file
         (["run", "--clean"], False),
         (["run", "--dirty"], True),
     ],

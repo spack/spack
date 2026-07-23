@@ -11,8 +11,8 @@ import spack.deptypes as dt
 import spack.environment as ev
 import spack.main
 import spack.spec
-import spack.store
 import spack.traverse
+from spack.database import Database
 from spack.old_installer import PackageInstaller
 
 gc = spack.main.SpackCommand("gc")
@@ -93,7 +93,7 @@ def test_gc_with_build_dependency_in_environment(mutable_database, mutable_mock_
 
 
 @pytest.mark.db
-def test_gc_except_any_environments(mutable_database, mutable_mock_env_path):
+def test_gc_except_any_environments(mutable_database: Database, mutable_mock_env_path):
     """Tests whether the garbage collector can remove all specs except those still needed in some
     environment (needed in the sense of roots + link/run deps)."""
     assert mutable_database.query_local("zmpi")
@@ -114,7 +114,7 @@ def test_gc_except_any_environments(mutable_database, mutable_mock_env_path):
 
     # All runtime specs in this env should still be installed.
     assert all(
-        spack.store.STORE.db.installed(s)
+        mutable_database.installed(s)
         for s in spack.traverse.traverse_nodes(e.concrete_roots(), deptype=dt.LINK | dt.RUN)
     )
 

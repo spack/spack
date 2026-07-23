@@ -2127,11 +2127,6 @@ REPOS_FINDER = ReposFinder()
 sys.meta_path.append(REPOS_FINDER)
 
 
-def all_package_names(include_virtuals=False):
-    """Convenience wrapper around ``spack.repo.all_package_names()``."""
-    return PATH.all_package_names(include_virtuals)
-
-
 @contextlib.contextmanager
 def use_repositories(
     *paths_and_repos: Union[str, Repo], override: bool = True

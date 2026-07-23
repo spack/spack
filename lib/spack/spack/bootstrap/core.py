@@ -198,7 +198,7 @@ class BuildcacheBootstrapper(Bootstrapper):
         test_fn,
     ) -> bool:
         # Ensure we see only the buildcache being used to bootstrap
-        with spack.config.override(self.mirror_scope):
+        with spack.config.CONFIG.override(self.mirror_scope):
             # This index is currently needed to get the compiler used to build some
             # specs that we know by dag hash.
             spack.binary_distribution.BINARY_INDEX.regenerate_spec_cache()
@@ -289,7 +289,7 @@ class SourceBootstrapper(Bootstrapper):
         tty.debug(msg.format(module, abstract_spec_str))
 
         # Install the spec that should make the module importable
-        with spack.config.override(self.mirror_scope):
+        with spack.config.CONFIG.override(self.mirror_scope):
             spack.installer_dispatch.create_installer(
                 [concrete_spec.package],
                 fail_fast=True,
@@ -317,7 +317,7 @@ class SourceBootstrapper(Bootstrapper):
         concrete_spec = spack.concretize.concretize_one(abstract_spec_str)
         msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
-        with spack.config.override(self.mirror_scope):
+        with spack.config.CONFIG.override(self.mirror_scope):
             spack.installer_dispatch.create_installer([concrete_spec.package]).install()
         if _executables_in_store(executables, concrete_spec, query_info=info):
             self.last_search = info
@@ -333,7 +333,7 @@ def create_bootstrapper(conf: ConfigDictionary):
 
 def source_is_enabled(conf: ConfigDictionary) -> bool:
     """Returns true if the source is not enabled for bootstrapping"""
-    return spack.config.get("bootstrap:trusted").get(conf["name"], False)
+    return spack.config.CONFIG.get("bootstrap:trusted").get(conf["name"], False)
 
 
 def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] = None):
@@ -551,7 +551,7 @@ def ensure_winsdk_external_or_raise() -> None:
     This is different from all other current bootstrap dependency
     checks.
     """
-    if set(["win-sdk", "wgl"]).issubset(spack.config.get("packages").keys()):
+    if set(["win-sdk", "wgl"]).issubset(spack.config.CONFIG.get("packages").keys()):
         return
     tty.debug("Detecting Windows SDK and WGL installations")
     # find the externals sequentially to avoid subprocesses being spawned
@@ -594,7 +594,7 @@ def bootstrapping_sources(scope: Optional[str] = None):
         scope: if a valid configuration scope is given, return the
             list only from that scope
     """
-    source_configs = spack.config.get("bootstrap:sources", default=None, scope=scope)
+    source_configs = spack.config.CONFIG.get("bootstrap:sources", default=None, scope=scope)
     source_configs = source_configs or []
     list_of_sources = []
     for entry in source_configs:

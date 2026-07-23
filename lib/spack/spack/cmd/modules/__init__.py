@@ -107,7 +107,7 @@ def one_spec_or_raise(specs):
 
 
 def check_module_set_name(name):
-    modules = spack.config.get("modules")
+    modules = spack.config.CONFIG.get("modules")
     if name != "prefix_inspections" and name in modules:
         return
 

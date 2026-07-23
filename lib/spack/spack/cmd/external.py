@@ -47,7 +47,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     find_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope("packages"),
+        default=lambda: spack.config.CONFIG.default_modify_scope("packages"),
         help="configuration scope to modify",
     )
     find_parser.add_argument(

@@ -857,7 +857,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def global_license_dir(cls):
         """Returns the directory where license files for all packages are stored."""
-        return spack.config.canonicalize_path(spack.config.get("config:license_dir"))
+        return spack.config.canonicalize_path(spack.config.CONFIG.get("config:license_dir"))
 
     @property
     def global_license_file(self):
@@ -1209,7 +1209,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
             dev_path = dev_path_var.value
-            link_format = spack.config.get("config:develop_stage_link")
+            link_format = spack.config.CONFIG.get("config:develop_stage_link")
             if not link_format:
                 link_format = "build-{arch}-{hash:7}"
             if link_format == "None":
@@ -1603,7 +1603,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             tty.debug("No fetch required for {0}".format(self.name))
             return
 
-        checksum = spack.config.get("config:checksum")
+        checksum = spack.config.CONFIG.get("config:checksum")
         if (
             checksum
             and (self.version not in self.versions)
@@ -1629,7 +1629,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     "Will not fetch %s" % self.spec.format("{name}{@version}"), ck_msg
                 )
 
-        deprecated = spack.config.get("config:deprecated")
+        deprecated = spack.config.CONFIG.get("config:deprecated")
         if not deprecated and self.versions.get(self.version, {}).get("deprecated", False):
             tty.warn(
                 "{0} is deprecated and may be removed in a future Spack release.".format(
@@ -1674,7 +1674,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self.stage.create()
 
         # Fetch/expand any associated code.
-        user_dev_path = spack.config.get(f"develop:{self.name}:path", None)
+        user_dev_path = spack.config.CONFIG.get(f"develop:{self.name}:path", None)
         skip = user_dev_path and os.path.exists(user_dev_path)
         if skip:
             tty.debug("Skipping staging because develop path exists")

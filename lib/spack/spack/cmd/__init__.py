@@ -201,7 +201,7 @@ def _concretize_spec_pairs(
     Any spec with a concrete spec associated with it will concretize to that spec. Any spec
     with ``None`` for its concrete spec will be newly concretized. This method respects unification
     rules from config."""
-    unify = spack.config.get("concretizer:unify", False)
+    unify = spack.config.CONFIG.get("concretizer:unify", False)
 
     # Special case for concretizing a single spec
     if len(to_concretize) == 1:

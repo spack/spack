@@ -99,7 +99,7 @@ def get_test_stage_dir() -> str:
         absolute path to the configured test stage root or, if none, the default test stage path
     """
     return spack.config.canonicalize_path(
-        spack.config.get("config:test_stage", spack.paths.default_test_path)
+        spack.config.CONFIG.get("config:test_stage", spack.paths.default_test_path)
     )
 
 
@@ -361,7 +361,7 @@ class PackageTest:
             method_names: phase-specific callback method names
         """
         verbose = tty.is_verbose()
-        fail_fast = spack.config.get("config:fail_fast", False)
+        fail_fast = spack.config.CONFIG.get("config:fail_fast", False)
 
         with self.test_logger(verbose=verbose, externals=False) as logger:
             # Report running each of the methods in the build log
@@ -525,7 +525,7 @@ def test_part(
             exc = e  # e is deleted after this block
 
             # If we fail fast, raise another error
-            if spack.config.get("config:fail_fast", False):
+            if spack.config.CONFIG.get("config:fail_fast", False):
                 raise TestFailure([(exc, m)])
             else:
                 tester.add_failure(exc, m)

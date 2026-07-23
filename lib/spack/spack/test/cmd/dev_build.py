@@ -13,9 +13,10 @@ import spack.error
 import spack.main
 import spack.repo
 import spack.spec
-import spack.store
 import spack.util.filesystem as fs
 from spack.main import SpackCommand
+from spack.repo import RepoPath
+from spack.store import Store
 
 dev_build = SpackCommand("dev-build")
 install = SpackCommand("install")
@@ -63,7 +64,9 @@ def test_dev_build_before(tmp_path: pathlib.Path, install_mockery, installer_var
 
 
 @pytest.mark.parametrize("last_phase", ["edit", "install"])
-def test_dev_build_until(tmp_path: pathlib.Path, install_mockery, last_phase, installer_variant):
+def test_dev_build_until(
+    tmp_path: pathlib.Path, temporary_store: Store, install_mockery, last_phase, installer_variant
+):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
     )
@@ -79,7 +82,7 @@ def test_dev_build_until(tmp_path: pathlib.Path, install_mockery, last_phase, in
             assert f.read() == spec.package.replacement_string  # type: ignore
 
     assert not os.path.exists(spec.prefix)
-    assert not spack.store.STORE.db.query(spec, installed=True)
+    assert not temporary_store.db.query(spec, installed=True)
 
 
 def test_dev_build_before_until(tmp_path: pathlib.Path, install_mockery, installer_variant):
@@ -303,7 +306,11 @@ spack:
 
 
 def test_dev_build_multiple(
-    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, mock_fetch
+    tmp_path: pathlib.Path,
+    install_mockery,
+    mutable_mock_env_path,
+    mock_fetch,
+    mock_packages: RepoPath,
 ):
     """Test spack install with multiple developer builds
 
@@ -318,7 +325,7 @@ def test_dev_build_multiple(
     leaf_dir = tmp_path / "leaf"
     leaf_dir.mkdir()
     leaf_spec = spack.spec.Spec("dev-build-test-install@=1.0.0")  # non-existing version
-    leaf_pkg_cls = spack.repo.PATH.get_pkg_class(leaf_spec.name)
+    leaf_pkg_cls = mock_packages.get_pkg_class(leaf_spec.name)
     with fs.working_dir(str(leaf_dir)):
         with open(leaf_pkg_cls.filename, "w", encoding="utf-8") as f:  # type: ignore
             f.write(leaf_pkg_cls.original_string)  # type: ignore
@@ -328,7 +335,7 @@ def test_dev_build_multiple(
     root_dir = tmp_path / "root"
     root_dir.mkdir()
     root_spec = spack.spec.Spec("dev-build-test-dependent@0.0.0")
-    root_pkg_cls = spack.repo.PATH.get_pkg_class(root_spec.name)
+    root_pkg_cls = mock_packages.get_pkg_class(root_spec.name)
     with fs.working_dir(str(root_dir)):
         with open(root_pkg_cls.filename, "w", encoding="utf-8") as f:  # type: ignore
             f.write(root_pkg_cls.original_string)  # type: ignore
@@ -372,7 +379,11 @@ spack:
 
 
 def test_dev_build_env_dependency(
-    tmp_path: pathlib.Path, install_mockery, mock_fetch, mutable_mock_env_path
+    tmp_path: pathlib.Path,
+    install_mockery,
+    mock_fetch,
+    mutable_mock_env_path,
+    mock_packages: RepoPath,
 ):
     """
     Test non-root specs in an environment are properly marked for dev builds.
@@ -384,7 +395,7 @@ def test_dev_build_env_dependency(
     dep_spec = spack.spec.Spec("dev-build-test-install")
 
     with fs.working_dir(str(build_dir)):
-        dep_pkg_cls = spack.repo.PATH.get_pkg_class(dep_spec.name)
+        dep_pkg_cls = mock_packages.get_pkg_class(dep_spec.name)
         with open(dep_pkg_cls.filename, "w", encoding="utf-8") as f:  # type: ignore
             f.write(dep_pkg_cls.original_string)  # type: ignore
 

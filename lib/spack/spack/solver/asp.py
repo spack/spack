@@ -594,7 +594,7 @@ class ConcretizationCache:
     VERSION = 1
 
     def __init__(self, root: Union[str, None] = None):
-        root = root or spack.config.get("concretizer:concretization_cache:url", None)
+        root = root or spack.config.CONFIG.get("concretizer:concretization_cache:url", None)
         if root is None:
             root = os.path.join(spack.caches.misc_cache_location(), "concretization")
 
@@ -605,7 +605,7 @@ class ConcretizationCache:
     def cleanup(self):
         """Prunes the concretization cache according to configured entry
         count limits. Cleanup is done in LRU ordering."""
-        entry_limit = spack.config.get("concretizer:concretization_cache:entry_limit", 1000)
+        entry_limit = spack.config.CONFIG.get("concretizer:concretization_cache:entry_limit", 1000)
 
         try:
             entries = list(self.cache_entries())
@@ -1152,7 +1152,7 @@ class PyclingoDriver:
         timer.stop("ordering")
 
         timer.start("cache-check")
-        use_cache = spack.config.get("concretizer:concretization_cache:enable", False)
+        use_cache = spack.config.CONFIG.get("concretizer:concretization_cache:enable", False)
         cache = self._conc_cache if use_cache else None
 
         # load control files to add to the input representation
@@ -1529,7 +1529,7 @@ class SpackSolverSetup:
     def config_compatible_os(self):
         """Facts about compatible os's specified in configs"""
         self.gen.h2("Compatible OS from concretizer config file")
-        os_data = spack.config.get("concretizer:os_compatible", {})
+        os_data = spack.config.CONFIG.get("concretizer:os_compatible", {})
         for recent, reusable in os_data.items():
             for old in reusable:
                 self.gen.fact(fn.os_compatible(recent, old))
@@ -3155,7 +3155,7 @@ class SpackSolverSetup:
         return self.gen
 
     def compiler_mixing(self):
-        should_mix = spack.config.get("concretizer:compiler_mixing", True)
+        should_mix = spack.config.CONFIG.get("concretizer:compiler_mixing", True)
         if should_mix is True:
             return
         # anything besides should_mix: true

@@ -225,8 +225,8 @@ def spec(parser, args):
     solver = asp.Solver()
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {"asp"}
-    unify = spack.config.get("concretizer:unify")
-    allow_deprecated = spack.config.get("config:deprecated", False)
+    unify = spack.config.CONFIG.get("concretizer:unify")
+    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     if unify == "when_possible":
         for idx, result in enumerate(
             solver.solve_in_rounds(

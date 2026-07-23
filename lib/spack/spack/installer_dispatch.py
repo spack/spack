@@ -42,9 +42,9 @@ def create_installer(
     create_reports: bool = False,
 ) -> Union["spack.old_installer.PackageInstaller", "spack.installer.PackageInstaller"]:
     """Create an installer based on the current configuration and feature support."""
-    use_old_installer = spack.config.get("config:installer", "new") == "old"
+    use_old_installer = spack.config.CONFIG.get("config:installer", "new") == "old"
 
-    if spack.config.get("config:sandbox:enable", False):
+    if spack.config.CONFIG.get("config:sandbox:enable", False):
         if use_old_installer:
             raise spack.sandbox.SandboxError(
                 "config:sandbox:enable is only supported with config:installer:new"

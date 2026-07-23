@@ -1359,7 +1359,7 @@ def try_verify(specfile_path):
     Returns:
         ``True`` if the signature could be verified, ``False`` otherwise.
     """
-    suppress = config.get("config:suppress_gpg_warnings", False)
+    suppress = config.CONFIG.get("config:suppress_gpg_warnings", False)
 
     try:
         spack.util.gpg.verify(specfile_path, suppress_warnings=suppress)

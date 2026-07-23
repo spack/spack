@@ -67,7 +67,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def stage(parser, args):
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     exclusion_specs = spack.cmd.parse_specs(args.exclude, concretize=False)
     filter = StageFilter(exclusion_specs, args.skip_installed)

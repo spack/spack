@@ -9,7 +9,6 @@ import pytest
 
 import spack.cmd.modules
 import spack.concretize
-import spack.config
 import spack.error
 import spack.modules
 import spack.modules.common
@@ -18,6 +17,7 @@ import spack.package_base
 import spack.package_prefs
 import spack.repo
 import spack.store
+from spack.config import Configuration
 from spack.modules.common import UpstreamModuleIndex
 from spack.old_installer import PackageInstaller
 from spack.util.filesystem import readlink
@@ -199,11 +199,11 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
 
 
 @pytest.mark.regression("37649")
-def test_check_module_set_name(mutable_config):
+def test_check_module_set_name(mutable_config: Configuration):
     """Tests that modules set name are validated correctly and an error is reported if the
     name we require does not exist or is reserved by the configuration."""
     # Minimal modules.yaml config.
-    spack.config.set(
+    mutable_config.set(
         "modules",
         {
             "prefix_inspections": {"./bin": ["PATH"]},

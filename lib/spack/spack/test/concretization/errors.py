@@ -17,11 +17,11 @@ from typing import List
 import pytest
 
 import spack.concretize
-import spack.config
 import spack.error
 import spack.main
 import spack.solver.asp
 import spack.spec
+from spack.config import Configuration
 
 version_error_messages = [
     "Cannot satisfy",
@@ -58,9 +58,11 @@ external_config = {
         (variant_error_messages, {}, "quantum-espresso+invino^fftw~mpi"),
     ],
 )
-def test_error_messages(error_messages, config_set, spec, mock_packages, mutable_config):
+def test_error_messages(
+    error_messages, config_set, spec, mock_packages, mutable_config: Configuration
+):
     for path, conf in config_set.items():
-        spack.config.set(path, conf)
+        mutable_config.set(path, conf)
 
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as e:
         _ = spack.concretize.concretize_one(spec)
@@ -72,11 +74,11 @@ def test_error_messages(error_messages, config_set, spec, mock_packages, mutable
 @pytest.mark.parametrize(
     "spec", ["deprecated-versions@1.1.0", "deprecated-client ^deprecated-versions@1.1.0"]
 )
-def test_deprecated_version_error(spec, mock_packages, mutable_config):
+def test_deprecated_version_error(spec, mock_packages, mutable_config: Configuration):
     with pytest.raises(spack.solver.asp.DeprecatedVersionError, match="deprecated-versions@1.1.0"):
         _ = spack.concretize.concretize_one(spec)
 
-    spack.config.set("config:deprecated", True)
+    mutable_config.set("config:deprecated", True)
     spack.concretize.concretize_one(spec)
 
 
@@ -257,13 +259,17 @@ def test_input_spec_driven_errors(
     ],
 )
 def test_config_driven_errors(
-    packages_config, input_spec: str, expected_parts: List[str], mock_packages, mutable_config
+    packages_config,
+    input_spec: str,
+    expected_parts: List[str],
+    mock_packages,
+    mutable_config: Configuration,
 ) -> None:
     """Tests errors caused by user configuration, e,g, a setting in packages.yaml. The message must
     identify the package and the config value to fix.
     """
     for path, conf in packages_config.items():
-        spack.config.set(path, conf)
+        mutable_config.set(path, conf)
 
     with pytest.raises(spack.error.SpackError) as exc_info:
         spack.concretize.concretize_one(input_spec)

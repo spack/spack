@@ -55,7 +55,7 @@ def extensions(parser, args):
             tty.info("Extendable packages:")
 
         extendable_pkgs = []
-        for name in spack.repo.all_package_names():
+        for name in spack.repo.PATH.all_package_names():
             pkg_cls = spack.repo.PATH.get_pkg_class(name)
             if pkg_cls.extendable:
                 extendable_pkgs.append(name)

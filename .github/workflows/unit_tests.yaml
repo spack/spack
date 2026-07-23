@@ -31,7 +31,7 @@ jobs:
         # Python 3.7 needs ubuntu-22.04, newer runner images no longer ship it.
         include: >-
           ${{ github.ref == 'refs/heads/develop'
-          && fromJSON('[{"python-version": "3.7", "os": "ubuntu-22.04"}]')
+          && fromJSON('[{"os": "ubuntu-22.04", "python-version": "3.7"}]')
           || fromJSON('[]') }}
 
     steps:

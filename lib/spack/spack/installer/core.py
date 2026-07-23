@@ -270,7 +270,7 @@ class PackageInstaller:
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
         self.ui.on_jobs_changed(self.jobs, self.jobs)
         if concurrent_packages is None:
-            concurrent_packages_config = spack.config.get("config:concurrent_packages", 0)
+            concurrent_packages_config = spack.config.CONFIG.get("config:concurrent_packages", 0)
             # The value 0 in config means no limit (other than self.jobs)
             if concurrent_packages_config == 0:
                 self.capacity = sys.maxsize

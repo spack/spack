@@ -19,7 +19,6 @@ import pytest
 import spack.binary_distribution
 import spack.cmd.mirror
 import spack.concretize
-import spack.config
 import spack.error
 import spack.fetch_strategy
 import spack.package_base
@@ -27,6 +26,7 @@ import spack.stage
 import spack.util.gpg
 import spack.util.url as url_util
 from spack.cmd import buildcache
+from spack.config import Configuration
 from spack.fetch_strategy import URLFetchStrategy
 from spack.old_installer import PackageInstaller
 from spack.paths import mock_gpg_keys_path
@@ -38,7 +38,9 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_gnupghome")
-def test_buildcache(mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_config):
+def test_buildcache(
+    mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_config: Configuration
+):
     # Install a test package
     spec = spack.concretize.concretize_one("trivial-install-test-package")
     monkeypatch.setattr(spec.package, "fetcher", URLFetchStrategy(url=mock_archive.url))
@@ -59,7 +61,7 @@ def test_buildcache(mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_c
 
     # register mirror with spack config
     mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_path)}
-    spack.config.set("mirrors", mirrors)
+    mutable_config.set("mirrors", mirrors)
 
     with spack.stage.Stage(mirrors["spack-mirror-test"], name="build_cache", keep=True):
         parser = argparse.ArgumentParser()
