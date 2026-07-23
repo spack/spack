@@ -15,7 +15,7 @@ import spack.error
 import spack.hash_lookup
 import spack.repo
 import spack.util.parallel
-from spack.spec import ArchSpec, CompilerSpec, Spec
+from spack.spec import Spec
 from spack.util import tty
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
@@ -273,20 +273,3 @@ def concretize_one(
 
     concretized = answer[node]
     return concretized
-
-
-class UnavailableCompilerVersionError(spack.error.SpackError):
-    """Raised when there is no available compiler that satisfies a
-    compiler spec."""
-
-    def __init__(self, compiler_spec: CompilerSpec, arch: Optional[ArchSpec] = None) -> None:
-        err_msg = f"No compilers with spec {compiler_spec} found"
-        if arch:
-            err_msg += f" for operating system {arch.os} and target {arch.target}."
-
-        super().__init__(
-            err_msg,
-            "Run 'spack compiler find' to add compilers or "
-            "'spack compilers' to see which compilers are already recognized"
-            " by spack.",
-        )

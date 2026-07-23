@@ -1734,16 +1734,6 @@ def writable_scopes() -> List[ConfigScope]:
     return scopes
 
 
-def existing_scopes() -> List[ConfigScope]:
-    """Return list of existing scopes. Scopes where Spack is
-    aware of said scope, and the scope has a representation
-    on the filesystem or are internal scopes.
-    Higher-priority scopes come first in the list."""
-    scopes = [x for x in CONFIG.scopes.values() if x.exists]
-    scopes.reverse()
-    return scopes
-
-
 def _validate_section_name(section: str) -> None:
     """Exit if the section is not a valid section."""
     if section not in SECTION_SCHEMAS:

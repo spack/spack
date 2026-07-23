@@ -130,11 +130,6 @@ def path_to_dict(search_paths: List[str]) -> Dict[str, str]:
     return path_to_lib
 
 
-def is_executable(file_path: str) -> bool:
-    """Return True if the path passed as argument is that of an executable"""
-    return os.path.isfile(file_path) and os.access(file_path, os.X_OK)
-
-
 def _convert_to_iterable(single_val_or_multiple):
     x = single_val_or_multiple
     if x is None:
