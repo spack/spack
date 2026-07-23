@@ -1058,6 +1058,19 @@ class PyclingoDriver:
         if sys.platform == "win32":
             tty.debug("Ensuring basic dependencies {win-sdk, wgl} available")
             ensure_winsdk_external_or_raise()
+
+        timer.start("setup")
+        problem_builder = setup.setup(
+            specs,
+            reuse=reuse,
+            packages_with_externals=packages_with_externals,
+            allow_deprecated=allow_deprecated,
+        )
+        timer.stop("setup")
+
+        timer.start("ordering")
+        # assemble a list of the control files needed for this problem. Some are conditionally
+        # included depending on what features we're using in the solve.
         control_files = ["concretize.lp", "heuristic.lp", "display.lp", "direct_dependency.lp"]
         if not setup.concretize_everything:
             control_files.append("when_possible.lp")
@@ -1067,9 +1080,11 @@ class PyclingoDriver:
             control_files.append("os_compatibility.lp")
         if setup.enable_splicing:
             control_files.append("splices.lp")
+        if setup.uses_propagation:
+            control_files.append("propagate.lp")
 
-        timer.start("setup")
-        asp_problem = setup.setup(specs, reuse=reuse, allow_deprecated=allow_deprecated)
+        # print the original ASP program if requested
+        problem = problem_builder.asp_problem
         if output.out is not None:
             output.out.write(asp_problem)
         if output.setup_only:
@@ -1435,27 +1450,19 @@ class SpackSolverSetup:
         # If true, we have to load the code for synthesizing splices
         self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice:automatic")
 
-    def pkg_version_rules(self, pkg):
-        """Output declared versions of a package.
+        # If true, we have to load the code for variant/flag propagation
+        self.uses_propagation: bool = False
 
-        This uses self.declared_versions so that we include any versions
-        that arise from a spec.
-        """
-
-        def key_fn(version):
-            # Origins are sorted by "provenance" first, see the Provenance enumeration above
-            return version.origin, version.idx
-
-        if isinstance(pkg, str):
-            pkg = self.pkg_class(pkg)
-
-        declared_versions = self.declared_versions[pkg.name]
-        partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
-
-        most_to_least_preferred = []
-        for _, group in itertools.groupby(partially_sorted_versions, key=key_fn):
-            most_to_least_preferred.extend(
-                list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
+    def pkg_version_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
+        """Declares known versions, their origins, and their weights."""
+        version_provenance = self.possible_versions[pkg.name]
+        ordered_versions = spack.package_base.sort_by_pkg_preference(
+            self.possible_versions[pkg.name], pkg=pkg
+        )
+        # Account for preferences in packages.yaml, if any
+        if pkg.name in self.versions_from_yaml:
+            ordered_versions = list(
+                spack.llnl.util.lang.dedupe(self.versions_from_yaml[pkg.name] + ordered_versions)
             )
 
         for weight, declared_version in enumerate(most_to_least_preferred):
@@ -2424,9 +2431,10 @@ class SpackSolverSetup:
                         self.variant_values_from_specs.add((spec.name, id(variant_def), value))
 
                 if variant.propagate:
-                    clauses.append(f.propagate(spec.name, fn.variant_value(vname, value)))
-                    if self.pkg_class(spec.name).has_variant(vname):
-                        clauses.append(f.variant_value(spec.name, vname, value))
+                    self.uses_propagation = True
+                    clauses.append(f.propagate(name, fn.variant_value(vname, value)))
+                    if self.pkg_class(name).has_variant(vname):
+                        clauses.append(f.variant_value(name, vname, value))
                 else:
                     variant_clause = f.variant_value(spec.name, vname, value)
                     if (
@@ -2454,6 +2462,7 @@ class SpackSolverSetup:
                     f.node_flag(spec.name, fn.node_flag(flag_type, flag, flag_group, source))
                 )
                 if not spec.concrete and flag.propagate is True:
+                    self.uses_propagation = True
                     clauses.append(
                         f.propagate(
                             spec.name,

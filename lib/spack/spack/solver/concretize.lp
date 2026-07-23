@@ -1429,130 +1429,27 @@ variant_single_value(PackageNode, Variant)
 %-----------------------------------------------------------------------------
 % Propagation semantics
 %-----------------------------------------------------------------------------
-
-non_default_propagation(variant_value(Name, Value)) :- attr("propagate", RootNode, variant_value(Name, Value)).
-
-% Propagation roots have a corresponding attr("propagate", ...)
-propagate(RootNode, PropagatedAttribute) :- attr("propagate", RootNode, PropagatedAttribute), not non_default_propagation(PropagatedAttribute).
-propagate(RootNode, PropagatedAttribute, EdgeTypes) :- attr("propagate", RootNode, PropagatedAttribute, EdgeTypes).
-
-% Special case variants, to inject the source node in the propagated attribute
-propagate(RootNode, variant_value(Name, Value, RootNode)) :- attr("propagate", RootNode, variant_value(Name, Value)).
-
-% Propagate an attribute along edges to child nodes
-propagate(ChildNode, PropagatedAttribute) :-
-  propagate(ParentNode, PropagatedAttribute),
-  depends_on(ParentNode, ChildNode).
-
-propagate(ChildNode, PropagatedAttribute, edge_types(DepType1, DepType2)) :-
-  propagate(ParentNode, PropagatedAttribute, edge_types(DepType1, DepType2)),
-  depends_on(ParentNode, ChildNode),
-  1 { attr("depends_on", ParentNode, ChildNode, DepType1);  attr("depends_on", ParentNode, ChildNode, DepType2) }.
+% The propagation logic for variants and compiler flags has been moved to
+% propagate.lp, which is conditionally loaded when propagation is used in
+% the solve. This improves performance for solves that don't use propagation.
+%
+% See lib/spack/spack/solver/propagate.lp for the implementation.
+%
+% Stub definitions for predicates that may be defined in propagate.lp
+% These are referenced in concretize.lp but only have meaningful values when
+% propagate.lp is loaded. When propagate.lp is not loaded, these are false everywhere.
+#defined propagated_variant_value/3.
+#defined variant_is_propagated/2.
 
 %-----------------------------------------------------------------------------
-% Activation of propagated values
+% Compilers constraints
 %-----------------------------------------------------------------------------
-
-%----
-% Variants
-%----
-
-% If a variant is propagated, and can be accepted, set its value
-attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID) :-
-  propagate(PackageNode, variant_value(Variant, Value, _)),
-  node_has_variant(PackageNode, Variant, VariantID),
-  variant_type(VariantID, VariantType),
-  variant_possible_value(PackageNode, Variant, Value).
-
-% If a variant is propagated, we cannot have extraneous values
-variant_is_propagated(PackageNode, Variant) :-
-  attr("variant_value", PackageNode, Variant, Value),
-  propagate(PackageNode, variant_value(Variant, Value, _)),
-  not attr("variant_set", PackageNode, Variant).
-
-:- variant_is_propagated(PackageNode, Variant),
-   attr("variant_selected", PackageNode, Variant, Value, _, _),
-   not propagate(PackageNode, variant_value(Variant, Value, _)).
-
-error(100, "{0} and {1} cannot both propagate variant '{2}' to the shared dependency: {3}",
-  Package1, Package2, Variant, Dependency) :-
-  % The variant is a singlevalued variant
-  variant_single_value(node(X, Package1), Variant),
-  % Dependency is trying to propagate Variant with different values and is not the source package
-  propagate(node(Z, Dependency), variant_value(Variant, Value1, node(X, Package1))),
-  propagate(node(Z, Dependency), variant_value(Variant, Value2, node(Y, Package2))),
-  % Package1 and Package2 and their values are different
-  Package1 > Package2,  Value1 != Value2,
-  not propagate(node(Z, Dependency), variant_value(Variant, _, node(Z, Dependency))).
-
-% Cannot propagate the same variant from two different packages if one is a dependency of the other
-error(100, "{0} and {1} cannot both propagate variant '{2}'", Package1, Package2, Variant) :-
-  % The variant is a single-valued variant
-  variant_single_value(node(X, Package1), Variant),
-  % Package1 and Package2 and their values are different
-  Package1 != Package2,  Value1 != Value2,
-  % Package2 is set to propagate the value from Package1
-  propagate(node(Y, Package2), variant_value(Variant, Value2, node(X, Package2))),
-  propagate(node(Y, Package2), variant_value(Variant, Value1, node(X, Package1))),
-  variant_is_propagated(node(Y, Package2), Variant).
-
-% Cannot propagate a variant if a different value was set for it in a dependency
-error(100, "Cannot propagate the variant '{0}' from the package: {1} because package: {2} is set to exclude it", Variant, Source, Package) :-
-  % Package has a Variant and Source is propagating Variant
-  attr("variant_set", node(X, Package), Variant, Value1),
-  % The packages and values are different
-  Source != Package,  Value1 != Value2,
-  % The variant is a single-valued variant
-  variant_single_value(node(X, Package1), Variant),
-  % A different value is being propagated from somewhere else
-  propagate(node(X, Package), variant_value(Variant, Value2, node(Y, Source))).
-
-%----
-% Flags
-%----
-
-% A propagated flag implies:
-% 1. The same flag type is not set on this node
-% 2. This node has the same compilers as the propagation source
 
 node_compiler(node(X, Package), node(Y, Compiler)) :- node_compiler(node(X, Package), node(Y, Compiler), Language).
 
 node_compiler(node(X, Package), node(Y, Compiler), Language) :-
      attr("virtual_on_edge", node(X, Package), node(Y, Compiler), Language),
      compiler(Compiler), language(Language).
-
-propagated_flag(node(PackageID, Package), node_flag(FlagType, Flag, FlagGroup, Source), SourceNode) :-
-  propagate(node(PackageID, Package), node_flag(FlagType, Flag, FlagGroup, Source), _),
-  not attr("node_flag_set", node(PackageID, Package), node_flag(FlagType, _, _, "literal")),
-  % Same compilers as propagation source
-  node_compiler(node(PackageID, Package), CompilerNode, Language) : node_compiler(SourceNode, CompilerNode, Language);
-  attr("propagate", SourceNode, node_flag(FlagType, Flag, FlagGroup, Source), _),
-  node(PackageID, Package) != SourceNode,
-  not runtime(Package).
-
-attr("node_flag", PackageNode, NodeFlag) :- propagated_flag(PackageNode, NodeFlag, _).
-
-% Cannot propagate the same flag from two distinct sources
-error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, FlagType, Package) :-
-  propagated_flag(node(ID, Package), node_flag(FlagType, _, _, _), node(_, Source1)),
-  propagated_flag(node(ID, Package), node_flag(FlagType, _, _, _), node(_, Source2)),
-  Source1 < Source2.
-
-%----
-% Compiler constraints
-%----
-
-% If a node is built, impose constraints on the compiler coming from dependents
-attr("node_version_satisfies", node(Y, Compiler), VersionRange) :-
-   propagate(node(X, Package), node_version_satisfies(Compiler, VersionRange)),
-   attr("depends_on", node(X, Package), node(Y, Compiler), "build"),
-   not external(node(X, Package)),
-   not runtime(Package).
-
-attr("node_version_satisfies", node(X, Runtime), VersionRange) :-
-   attr("node", node(X, Runtime)),
-   attr("compatible_runtime", PackageNode, Runtime, VersionRange),
-   concrete(PackageNode).
 
 % If a compiler package is depended on with type link, it's used as a library
 compiler_used_as_a_library(node(X, Child), Hash) :-
@@ -1561,11 +1458,65 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
   compiler_package(Child), % Used to restrict grounding for this rule
   attr("depends_on", _, node(X, Child), "link").
 
+% Compiler-unmixing: 1st rule
+unification_set_compiler("root", CompilerNode, Language) :-
+    node_compiler(node(ID, Package), CompilerNode, Language),
+    no_compiler_mixing(Language),
+    not allow_mixing(Package),
+    unification_set("root", node(ID, Package)).
+
+% Compiler for a reused node
+% This differs from compiler_from_reuse in that this is about x->y
+% where y is a compiler and x is reused (compiler_from_reuse is
+% is concerned with reuse of the compiler itself)
+reused_node_compiler(PackageNode, node(CompilerHash, Compiler), Language) :-
+    concrete(PackageNode),
+    attr("concrete_build_dependency", PackageNode, Compiler, CompilerHash),
+    attr("virtual_on_build_edge", PackageNode, Compiler, Language),
+    language(Language).
+
+% Compiler-unmixing: 2nd rule
+% The compiler appears on a reused node as well as a built node. In
+% that case there will be a generated node() with an ID.
+% While easier to understand than rule 3, in fact this rule addresses
+% a small set of use cases beyond rules 1 and 3: generally speaking
+% rule 1 ensures that all non-reused nodes get a consistent compiler.
+% Rule 3 generates compiler IDs that almost always fail the count
+% rule, but does not "activate" when in combination with rule 1 when
+% it is possible to propagate a compiler to another built node in the
+% unification set. This in fact is only really used when the reused
+% node compiler has a node(), but associated with a different
+% unification set.
+unification_set_compiler("root", CompilerNode, Language) :-
+    reused_node_compiler(node(ID, Package), node(CompilerHash, Compiler), Language),
+    attr("hash", CompilerNode, CompilerHash),
+    no_compiler_mixing(Language),
+    not allow_mixing(Package),
+    unification_set("root", node(ID, Package)).
+
+% Compiler-unmixing: 3rd rule
+% If the compiler only appears in reused nodes, then there is no node()
+% for it; this will always generate an error unless all nodes in the
+% root unification set are reused.
+unification_set_compiler("root", node(CompilerHash, Compiler), Language) :-
+    reused_node_compiler(node(ID, Package), node(CompilerHash, Compiler), Language),
+    not attr("hash", _, CompilerHash),
+    no_compiler_mixing(Language),
+    not allow_mixing(Package),
+    unification_set("root", node(ID, Package)).
+
+#defined no_compiler_mixing/1.
+#defined allow_mixing/1.
+
+% You can't have >1 compiler for a given language if mixing is disabled
+error(100, "Compiler mixing is disabled for the {0} language", Language) :-
+    language(Language),
+	  #count { CompilerNode : unification_set_compiler("root", CompilerNode, Language) } > 1.
+
 % If a compiler is used for C on a package, it must provide C++ too, if need be, and vice-versa
 :-  attr("virtual_on_edge", PackageNode, CompilerNode1, "c"),
     attr("virtual_on_edge", PackageNode, CompilerNode2, "cxx"),
     CompilerNode1 != CompilerNode2.
-
 
 %-----------------------------------------------------------------------------
 % Runtimes
