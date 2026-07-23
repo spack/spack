@@ -2040,8 +2040,17 @@ spack:
 
 @pytest.fixture
 def fetch_url_exists(monkeypatch):
-    """Force URLs to always be valid without attemptying to fetch."""
+    """Force URLs to always be valid without attempting to fetch."""
     monkeypatch.setattr(spack.util.web, "url_exists", lambda url: True)
+
+
+@pytest.fixture
+def fetch_url_maybe_exists(monkeypatch):
+    """Force URLs to be valid *unless* they're version 2.1.4"""
+    def url_exists(url, **kwargs):
+        return "2.1.4" not in url
+
+    monkeypatch.setattr(spack.util.web, "url_exists", url_exists)
 
 
 @pytest.fixture
@@ -2057,7 +2066,7 @@ def fetch_versions_match(monkeypatch):
 
 @pytest.fixture
 def fetch_versions_invalid(monkeypatch):
-    """Fake successful checksums returned from downloaded tarballs."""
+    """Fake *invalid* checksums returned from downloaded tarballs."""
 
     def get_checksums_for_versions(url_by_version, package_name, **kwargs):
         return {
@@ -2066,15 +2075,6 @@ def fetch_versions_invalid(monkeypatch):
         }
 
     monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
-
-
-@pytest.fixture
-def fetch_url_maybe_exists(monkeypatch):
-    def url_exists(url, **kwargs):
-        print("trying", url)
-        return "2.1.4" not in url
-
-    monkeypatch.setattr(spack.util.web, "url_exists", url_exists)
 
 
 @pytest.mark.parametrize("versions", [["2.1.4"], ["2.1.4", "2.1.5"]])
