@@ -2047,6 +2047,7 @@ def fetch_url_exists(monkeypatch):
 @pytest.fixture
 def fetch_url_maybe_exists(monkeypatch):
     """Force URLs to be valid *unless* they're version 2.1.4"""
+
     def url_exists(url, **kwargs):
         return "2.1.4" not in url
 
@@ -2118,10 +2119,10 @@ def test_ci_validate_standard_versions_invalid_url(
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
 
     out, err = capfd.readouterr()
-    assert f"No valid URLs found for diff-test@2.1.4" in err
-    assert f"No valid URLs found for diff-test@2.1.5" not in err
+    assert "No valid URLs found for diff-test@2.1.4" in err
+    assert "No valid URLs found for diff-test@2.1.5" not in err
     if "2.1.5" in versions:
-        assert f"Validated diff-test@2.1.5" in out
+        assert "Validated diff-test@2.1.5" in out
 
 
 def test_ci_validate_standard_versions_invalid_both(
@@ -2135,8 +2136,8 @@ def test_ci_validate_standard_versions_invalid_both(
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
 
     out, err = capfd.readouterr()
-    assert f"No valid URLs found for diff-test@2.1.4" in err
-    assert f"Invalid checksum found diff-test@2.1.5" in err
+    assert "No valid URLs found for diff-test@2.1.4" in err
+    assert "Invalid checksum found diff-test@2.1.5" in err
 
 
 @pytest.mark.parametrize("versions", [[("1.0", -2)], [("1.1", -4), ("2.0", -6)]])
