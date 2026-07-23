@@ -18,7 +18,7 @@ from typing import List, Tuple
 import spack.concretize
 import spack.sandbox
 import spack.store
-from spack.new_installer import _enable_sandbox
+from spack.installer.build import _enable_sandbox
 
 
 class SpyLandlockSandbox(spack.sandbox.LandlockSandbox):
@@ -137,9 +137,9 @@ class MockSandbox(spack.sandbox.Sandbox):
 
 
 def test_enable_sandbox_paths(
-    monkeypatch, mock_packages, temporary_store: spack.store.Store, tmp_path: pathlib.Path
+    config, mock_packages, monkeypatch, temporary_store: spack.store.Store, tmp_path: pathlib.Path
 ):
-    """Test that _enable_sandbox in new_installer calls allow_read/allow_write correctly."""
+    """Test that _enable_sandbox in the installer calls allow_read/allow_write correctly."""
     mock_sandbox = MockSandbox()
     monkeypatch.setattr(spack.sandbox, "get_sandbox", lambda: mock_sandbox)
 

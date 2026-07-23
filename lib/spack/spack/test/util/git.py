@@ -8,7 +8,7 @@ import pytest
 
 import spack.util.executable as exe
 import spack.util.git
-from spack.llnl.util.filesystem import working_dir
+from spack.util.filesystem import working_dir
 
 
 def test_git_not_found(monkeypatch):

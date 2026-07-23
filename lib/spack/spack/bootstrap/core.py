@@ -41,12 +41,11 @@ import spack.spec
 import spack.store
 import spack.user_environment
 import spack.util.executable
-import spack.util.path
 import spack.util.spack_yaml
 import spack.util.url
 import spack.version
-from spack.llnl.util import tty
-from spack.llnl.util.lang import GroupedExceptionHandler
+from spack.util import tty
+from spack.util.lang import GroupedExceptionHandler
 
 from ._common import (
     QueryInfo,
@@ -94,7 +93,7 @@ class Bootstrapper:
     def __init__(self, conf: ConfigDictionary) -> None:
         self.conf = conf
         self.name = conf["name"]
-        self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
+        self.metadata_dir = spack.config.canonicalize_path(conf["metadata"])
 
         # Check for relative paths, and turn them into absolute paths
         # root is the metadata_dir
@@ -199,7 +198,7 @@ class BuildcacheBootstrapper(Bootstrapper):
         test_fn,
     ) -> bool:
         # Ensure we see only the buildcache being used to bootstrap
-        with spack.config.override(self.mirror_scope):
+        with spack.config.CONFIG.override(self.mirror_scope):
             # This index is currently needed to get the compiler used to build some
             # specs that we know by dag hash.
             spack.binary_distribution.BINARY_INDEX.regenerate_spec_cache()
@@ -290,7 +289,7 @@ class SourceBootstrapper(Bootstrapper):
         tty.debug(msg.format(module, abstract_spec_str))
 
         # Install the spec that should make the module importable
-        with spack.config.override(self.mirror_scope):
+        with spack.config.CONFIG.override(self.mirror_scope):
             spack.installer_dispatch.create_installer(
                 [concrete_spec.package],
                 fail_fast=True,
@@ -318,7 +317,7 @@ class SourceBootstrapper(Bootstrapper):
         concrete_spec = spack.concretize.concretize_one(abstract_spec_str)
         msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
-        with spack.config.override(self.mirror_scope):
+        with spack.config.CONFIG.override(self.mirror_scope):
             spack.installer_dispatch.create_installer([concrete_spec.package]).install()
         if _executables_in_store(executables, concrete_spec, query_info=info):
             self.last_search = info
@@ -334,7 +333,7 @@ def create_bootstrapper(conf: ConfigDictionary):
 
 def source_is_enabled(conf: ConfigDictionary) -> bool:
     """Returns true if the source is not enabled for bootstrapping"""
-    return spack.config.get("bootstrap:trusted").get(conf["name"], False)
+    return spack.config.CONFIG.get("bootstrap:trusted").get(conf["name"], False)
 
 
 def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] = None):
@@ -552,7 +551,7 @@ def ensure_winsdk_external_or_raise() -> None:
     This is different from all other current bootstrap dependency
     checks.
     """
-    if set(["win-sdk", "wgl"]).issubset(spack.config.get("packages").keys()):
+    if set(["win-sdk", "wgl"]).issubset(spack.config.CONFIG.get("packages").keys()):
         return
     tty.debug("Detecting Windows SDK and WGL installations")
     # find the externals sequentially to avoid subprocesses being spawned
@@ -595,12 +594,12 @@ def bootstrapping_sources(scope: Optional[str] = None):
         scope: if a valid configuration scope is given, return the
             list only from that scope
     """
-    source_configs = spack.config.get("bootstrap:sources", default=None, scope=scope)
+    source_configs = spack.config.CONFIG.get("bootstrap:sources", default=None, scope=scope)
     source_configs = source_configs or []
     list_of_sources = []
     for entry in source_configs:
         current = copy.copy(entry)
-        metadata_dir = spack.util.path.canonicalize_path(entry["metadata"])
+        metadata_dir = spack.config.canonicalize_path(entry["metadata"])
         metadata_yaml = os.path.join(metadata_dir, METADATA_YAML_FILENAME)
         try:
             with open(metadata_yaml, encoding="utf-8") as stream:

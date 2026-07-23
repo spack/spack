@@ -5,8 +5,8 @@
 import io
 from typing import List, Optional, TextIO, Tuple, Union
 
-from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.ctest_log_parser import BuildError, BuildWarning, CTestLogParser, LogEvent
+from spack.util.tty.color import cescape, colorize
 
 __all__ = ["parse_log_events", "make_log_context"]
 

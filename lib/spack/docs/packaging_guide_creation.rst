@@ -197,9 +197,17 @@ Controlling the editor
 When Spack needs to open an editor for you (e.g., for commands like :ref:`cmd-spack-create` or :ref:`cmd-spack-edit`), it looks at several environment variables to figure out what to use.
 The order of precedence is:
 
-* ``SPACK_EDITOR``: highest precedence, in case you want something specific for Spack;
-* ``VISUAL``: standard environment variable for full-screen editors like ``vim`` or ``emacs``;
-* ``EDITOR``: older environment variable for your editor.
+.. envvar:: SPACK_EDITOR
+
+   Highest precedence, in case you want something specific for Spack.
+
+.. envvar:: VISUAL
+
+   Standard environment variable for full-screen editors like ``vim`` or ``emacs``.
+
+.. envvar:: EDITOR
+
+   Older environment variable for your editor.
 
 You can set any of these to the command you want to run, e.g., in ``bash`` you might run one of these:
 
@@ -420,6 +428,10 @@ Spack packages are designed to be built from source code.
 Typically every package version has a corresponding source code archive, which Spack downloads and verifies before building the package.
 
 .. _versions-and-fetching:
+
+.. index::
+   single: version; directive
+   single: directive; version
 
 Versions and URLs
 ^^^^^^^^^^^^^^^^^
@@ -736,6 +748,9 @@ In this case, you can mark an older version as preferred using the ``preferred=T
 See the section on :ref:`version ordering <version-comparison>` for more details and exceptions on how the latest version is computed.
 
 
+.. index::
+   single: deprecation; of package versions
+
 .. _deprecate:
 
 Deprecating old versions
@@ -841,6 +856,9 @@ The logic behind this sort order is two-fold:
 #. The most-recent development version of a package will usually be newer than any released numeric versions.
    This allows the ``@develop`` version to satisfy dependencies like ``depends_on(abc, when="@x.y.z:")``
 
+
+.. index::
+   single: fetch strategy; version control
 
 .. _vcs-fetch:
 
@@ -1308,6 +1326,10 @@ The example sets permissions on the downloaded file to make it executable, then 
        installer("--prefix=%s" % prefix, "arg1", "arg2", "etc.")
 
 
+.. index::
+   single: resource; adding extra archives
+   single: directive; resource
+
 Extra Resources
 ^^^^^^^^^^^^^^^
 
@@ -1373,7 +1395,10 @@ For example, if the package defines the version ``1.2.3``, we know from :ref:`ve
    Then the specifier ``@=3.1`` is the correct way to select only ``3.1``, whereas ``@3.1`` would be satisfied by all three versions.
 
 
-.. _variants:
+.. index::
+   single: variant; directive
+   single: directive; variant
+   :name: variants
 
 Variants
 --------
@@ -1533,7 +1558,9 @@ In this case, examples of valid options are ``process_managers=auto``, ``process
 
 Both validator functions return a :py:class:`~spack.variant.DisjointSetsOfValues` object, which defines chaining methods to further customize the behavior of the variant.
 
-.. _variant-conditional-values:
+.. index::
+   single: conditional variant
+   :name: variant-conditional-values
 
 Conditional Possible Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1630,7 +1657,10 @@ The default for this variant, when it is present, is always ``True``, regardless
 This allows packages to override variants in packages or build system classes from which they inherit, by modifying the variant values without modifying the ``when`` clause.
 It also allows a package to implement ``or`` semantics for a variant ``when`` clause by duplicating the variant definition.
 
-.. _dependencies:
+.. index::
+   single: dependency; in package.py
+   single: directive; depends_on
+   :name: dependencies
 
 Dependencies
 ------------
@@ -1787,7 +1817,12 @@ In the above example, the project has presumably documented (with pyproject.toml
 It is *not* known whether future versions ``@1.68:`` are incompatible, so they must be included by the range.
 If and when future versions are known incompatible, the version range should be constrained with an upper bound.
 
-.. _dependency-types:
+.. index::
+   single: dependency type; build
+   single: dependency type; link
+   single: dependency type; run
+   single: dependency type; test
+   :name: dependency-types
 
 Dependency types
 ^^^^^^^^^^^^^^^^
@@ -1825,6 +1860,8 @@ If the dependency type is not specified, Spack uses a default of ``("build", "li
 This is the common case for compiler languages.
 Non-compiled packages like Python modules commonly use ``("build", "run")``.
 This means that the compiler wrappers don't need to inject the dependency's ``prefix/lib`` directory, but the package needs to be in ``PATH`` and ``PYTHONPATH`` during the build process and later when a user wants to run the package.
+
+.. index:: conditional dependency
 
 Conditional dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1944,7 +1981,10 @@ As with ``patch`` directives, patches are applied in the order they appear in th
    The patched version coexists with unpatched versions, and Spack's support for :ref:`handling_rpaths` guarantees that each installation finds the right version.
    If two packages depend on ``binutils`` patched *the same* way, they can both use a single installation of ``binutils``.
 
-.. _virtual-dependencies:
+.. index::
+   single: virtual package; defining
+   single: directive; provides
+   :name: virtual-dependencies
 
 Virtual dependencies
 --------------------
@@ -2015,6 +2055,8 @@ If you try to, Spack will report an error:
    ==> Error: concretization failed for the following reasons:
 
       1. Package 'openblas' needs to provide both 'lapack' and 'blas' together, but provides only 'lapack'
+
+.. index:: versioned interface
 
 Versioned Interfaces
 ^^^^^^^^^^^^^^^^^^^^
@@ -2092,7 +2134,10 @@ For example, the ``c`` compiler could be ``clang`` from the ``llvm`` package, wh
 This means that language dependencies translate to one or more compiler packages as build dependencies.
 
 
-.. _packaging_conflicts:
+.. index::
+   single: conflict; in package.py
+   single: directive; conflicts
+   :name: packaging_conflicts
 
 Conflicts
 ---------
@@ -2142,7 +2187,10 @@ means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur
    See :ref:`sec-specs` for more information.
 
 
-.. _packaging_requires:
+.. index::
+   single: requirement; in package.py
+   single: directive; requires
+   :name: packaging_requires
 
 Requires
 --------
@@ -2193,7 +2241,10 @@ Or the package must be built with a GCC or Clang that supports C++ 20, which you
    See :ref:`sec-specs` for more information.
 
 
-.. _patching:
+.. index::
+   single: patch; applying
+   single: directive; patch
+   :name: patching
 
 Patches
 -------
@@ -2469,6 +2520,9 @@ Here you can see that the patch is applied to ``boost`` by ``dealii``, and that 
 
 .. _packaging_extensions:
 
+.. index::
+   single: directive; extends
+
 Extensions
 ----------
 
@@ -2581,7 +2635,9 @@ These mixins should be used as additional base classes for your package, in addi
 
 In the example above ``Cp2k`` inherits the variants and conflicts defined by ``CudaPackage``.
 
-.. _maintainers:
+.. index::
+   single: directive; maintainers
+   :name: maintainers
 
 Maintainers
 -----------
@@ -2659,7 +2715,9 @@ To determine which licenses are validated and which are not, there is the ``chec
 
 When you have validated a package license, either when doing so explicitly or as part of packaging a new package, please set the ``checked_by`` parameter to your Github username to signal that the license has been manually verified.
 
-.. _license:
+.. index::
+   single: directive; license
+   :name: license
 
 Proprietary software
 --------------------
@@ -2835,7 +2893,9 @@ The above is short for:
       depends_on("bar", when="+feature")
       depends_on("baz", when="+baz")  # Note: not when="+feature+baz"
 
-.. _custom-attributes:
+.. index::
+   single: custom attributes
+   :name: custom-attributes
 
 ``home``, ``command``, ``headers``, and ``libs``
 ------------------------------------------------

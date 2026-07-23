@@ -19,6 +19,7 @@ dev = [
   "click",
   "ruff",
   "mypy",
+  "vendoring",
   "vermin",
 ]
 ci = ["pytest-cov", "codecov[toml]"]

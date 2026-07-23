@@ -25,8 +25,8 @@ import spack.platforms
 import spack.platforms.test
 import spack.solver.reuse
 import spack.spec
-import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
+from spack.store import Store
 
 pytestmark = [
     pytest.mark.skipif(
@@ -238,7 +238,7 @@ def generate_openmpi_entries(_common_arch, _common_compiler):
         parameters={"internal-hwloc": False, "fabrics": ["psm"], "missing_variant": True},
     )
 
-    return list(x.to_dict() for x in [openmpi, hwloc])
+    return [x.to_dict() for x in [openmpi, hwloc]]
 
 
 def test_generate_specs_from_manifest(generate_openmpi_entries):
@@ -246,7 +246,7 @@ def test_generate_specs_from_manifest(generate_openmpi_entries):
     including dependency references.
     """
     specs = entries_to_specs(generate_openmpi_entries)
-    (openmpi_spec,) = list(x for x in specs.values() if x.name == "openmpi")
+    (openmpi_spec,) = [x for x in specs.values() if x.name == "openmpi"]
     assert openmpi_spec["hwloc"]
 
 
@@ -334,7 +334,9 @@ def test_read_cray_manifest(temporary_store, manifest_file):
     assert concretized_spec["hwloc"].dag_hash() == "hwlocfakehashaaa"
 
 
-def test_read_cray_manifest_add_compiler_failure(temporary_store, manifest_file, monkeypatch):
+def test_read_cray_manifest_add_compiler_failure(
+    temporary_store: Store, manifest_file, monkeypatch
+):
     """Tests the Cray manifest can be read even if some compilers cannot be added."""
 
     def _mock(entry, *, manifest_path):
@@ -345,7 +347,7 @@ def test_read_cray_manifest_add_compiler_failure(temporary_store, manifest_file,
     monkeypatch.setattr(spack.cray_manifest, "compiler_from_entry", _mock)
 
     spack.cray_manifest.read(str(manifest_file), True)
-    query_specs = spack.store.STORE.db.query("openmpi")
+    query_specs = temporary_store.db.query("openmpi")
     assert any(x.dag_hash() == "openmpifakehasha" for x in query_specs)
 
 

@@ -11,26 +11,26 @@ import spack.bootstrap
 import spack.bootstrap.core
 import spack.cmd.mirror
 import spack.concretize
-import spack.config
 import spack.environment as ev
 import spack.main
 import spack.spec
 import spack.util.spack_yaml as syaml
+from spack.config import Configuration
 
 _bootstrap = spack.main.SpackCommand("bootstrap")
 
 
 @pytest.mark.parametrize("scope", [None, "site", "system", "user"])
-def test_enable_and_disable(mutable_config, scope):
+def test_enable_and_disable(mutable_config: Configuration, scope):
     scope_args = []
     if scope:
         scope_args = ["--scope={0}".format(scope)]
 
     _bootstrap("enable", *scope_args)
-    assert spack.config.get("bootstrap:enable", scope=scope) is True
+    assert mutable_config.get("bootstrap:enable", scope=scope) is True
 
     _bootstrap("disable", *scope_args)
-    assert spack.config.get("bootstrap:enable", scope=scope) is False
+    assert mutable_config.get("bootstrap:enable", scope=scope) is False
 
 
 @pytest.mark.parametrize("scope", [None, "site", "system", "user"])
@@ -50,7 +50,7 @@ def test_reset_in_file_scopes(mutable_config, scopes):
     bootstrap_yaml_files = []
     for s in scopes:
         _bootstrap("disable", "--scope={0}".format(s))
-        scope_path = spack.config.CONFIG.scopes[s].path
+        scope_path = mutable_config.scopes[s].path
         bootstrap_yaml = os.path.join(scope_path, "bootstrap.yaml")
         assert os.path.exists(bootstrap_yaml)
         bootstrap_yaml_files.append(bootstrap_yaml)
@@ -60,17 +60,17 @@ def test_reset_in_file_scopes(mutable_config, scopes):
         assert not os.path.exists(bootstrap_yaml)
 
 
-def test_reset_in_environment(mutable_mock_env_path, mutable_config):
+def test_reset_in_environment(mutable_mock_env_path, mutable_config: Configuration):
     env = spack.main.SpackCommand("env")
     env("create", "bootstrap-test")
     current_environment = ev.read("bootstrap-test")
 
     with current_environment:
         _bootstrap("disable")
-        assert spack.config.get("bootstrap:enable") is False
+        assert mutable_config.get("bootstrap:enable") is False
         _bootstrap("reset", "-y")
         # We have no default settings in tests
-        assert spack.config.get("bootstrap:enable") is None
+        assert mutable_config.get("bootstrap:enable") is None
 
     # Check that reset didn't delete the entire file
     spack_yaml = os.path.join(current_environment.path, "spack.yaml")
@@ -80,7 +80,7 @@ def test_reset_in_environment(mutable_mock_env_path, mutable_config):
 def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     # Create a bootstrap.yaml with some config
     _bootstrap("disable", "--scope=site")
-    scope_path = spack.config.CONFIG.scopes["site"].path
+    scope_path = mutable_config.scopes["site"].path
     bootstrap_yaml = os.path.join(scope_path, "bootstrap.yaml")
     assert os.path.exists(bootstrap_yaml)
 
@@ -155,13 +155,13 @@ def test_list_sources(config):
 
 
 @pytest.mark.parametrize("command,value", [("enable", True), ("disable", False)])
-def test_enable_or_disable_sources(mutable_config, command, value):
+def test_enable_or_disable_sources(mutable_config: Configuration, command, value):
     key = "bootstrap:trusted:github-actions"
-    trusted = spack.config.get(key, default=None)
+    trusted = mutable_config.get(key, default=None)
     assert trusted is None
 
     _bootstrap(command, "github-actions")
-    trusted = spack.config.get(key, default=None)
+    trusted = mutable_config.get(key, default=None)
     assert trusted is value
 
 
@@ -170,7 +170,7 @@ def test_enable_or_disable_fails_with_no_method(mutable_config):
         _bootstrap("enable", "foo")
 
 
-def test_enable_or_disable_fails_with_more_than_one_method(mutable_config):
+def test_enable_or_disable_fails_with_more_than_one_method(mutable_config: Configuration):
     wrong_config = {
         "sources": [
             {"name": "github-actions", "metadata": "$spack/share/spack/bootstrap/github-actions"},
@@ -178,7 +178,7 @@ def test_enable_or_disable_fails_with_more_than_one_method(mutable_config):
         ],
         "trusted": {},
     }
-    with spack.config.override("bootstrap", wrong_config):
+    with mutable_config.override("bootstrap", wrong_config):
         with pytest.raises(RuntimeError, match="more than one"):
             _bootstrap("enable", "github-actions")
 
@@ -220,7 +220,9 @@ def test_remove_and_add_a_source(mutable_config):
 
 @pytest.mark.maybeslow
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
-def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmp_path: pathlib.Path):
+def test_bootstrap_mirror_metadata(
+    mutable_config: Configuration, linux_os, monkeypatch, tmp_path: pathlib.Path
+):
     """Test that `spack bootstrap mirror` creates a folder that can be ingested by
     `spack bootstrap add`. Here we don't download data, since that would be an
     expensive operation for a unit test.
@@ -245,7 +247,7 @@ def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmp_pa
             }
         }
     ]
-    with spack.config.override("compilers", compilers):
+    with mutable_config.override("compilers", compilers):
         _bootstrap("mirror", str(tmp_path))
 
     # Register the mirror

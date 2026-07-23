@@ -16,14 +16,18 @@ import spack.spec_parser
 import spack.traverse
 import spack.util.spack_yaml
 from spack.enums import PropagationPolicy
-from spack.llnl.util import tty
+from spack.util import tty
 from spack.util.spack_yaml import get_mark_from_yaml_data
 
 
 def _mark_str(raw) -> str:
     """Return a 'file:line: ' prefix from the YAML mark on *raw*, or empty string."""
     mark = get_mark_from_yaml_data(raw)
-    return f"{mark.name}:{mark.line + 1}: " if mark else ""
+    if not mark:
+        return ""
+    if mark.line is None:
+        return f"{mark.name}: "
+    return f"{mark.name}:{mark.line + 1}: "
 
 
 def _check_unknown_virtuals_on_edges(raw_strs: List[str], specs: List["spack.spec.Spec"]) -> None:
@@ -428,8 +432,7 @@ class RequirementParser:
             suggestion = spack.util.spack_yaml.dump(data).rstrip()
             suggestions.append(f"{comment}{suggestion}")
         if suggestions:
-            mark = get_mark_from_yaml_data(spec_str)
-            location = f"{mark.name}:{mark.line + 1}: " if mark else ""
+            location = _mark_str(spec_str)
             prefix = (
                 f"{location}'packages: all: {section}: [\"{spec_str}\"]' applies a dependency "
                 f"constraint to all packages"

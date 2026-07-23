@@ -43,10 +43,10 @@ import sys
 from typing import List, Optional, Set, TextIO, Tuple
 
 import spack.deptypes as dt
-import spack.llnl.util.tty.color
 import spack.spec
 import spack.tengine
 import spack.traverse
+import spack.util.tty.color
 from spack.solver.input_analysis import create_graph_analyzer
 
 
@@ -84,7 +84,7 @@ class AsciiGraph:
         self.depflag = dt.ALL
 
         # These are colors in the order they'll be used for edges.
-        # See spack.llnl.util.tty.color for details on color characters.
+        # See spack.util.tty.color for details on color characters.
         self.colors = "rgbmcyRGBMCY"
 
         # Internal vars are used in the graph() function and are initialized there
@@ -319,7 +319,7 @@ class AsciiGraph:
         if color is None:
             color = out.isatty()
 
-        self._out = spack.llnl.util.tty.color.ColorStream(out, color=color)
+        self._out = spack.util.tty.color.ColorStream(out, color=color)
 
         # We'll traverse the spec in topological order as we graph it.
         nodes_in_topological_order = list(spec.traverse(order="topo", deptype=self.depflag))
@@ -439,10 +439,15 @@ def graph_ascii(
     graph.write(spec, color=color, out=out)
 
 
+#: default spec format for DOT node labels
+DEFAULT_NODE_LABEL_FMT = "{name}{@version}"
+
+
 class DotGraphBuilder:
     """Visit edges of a graph a build DOT options for nodes and edges"""
 
-    def __init__(self):
+    def __init__(self, node_label_fmt: str = DEFAULT_NODE_LABEL_FMT):
+        self.node_label_fmt = node_label_fmt
         self.nodes: Set[Tuple[str, str]] = set()
         self.edges: Set[Tuple[str, str, str]] = set()
 
@@ -480,8 +485,7 @@ class SimpleDAG(DotGraphBuilder):
     """Simple DOT graph, with nodes colored uniformly and edges without properties"""
 
     def node_entry(self, node):
-        format_option = "{name}{@version}{/hash:7}{%compiler}"
-        return node.dag_hash(), f'[label="{node.format(format_option)}"]'
+        return node.dag_hash(), f'[label="{node.format(self.node_label_fmt)}"]'
 
     def edge_entry(self, edge):
         return edge.parent.dag_hash(), edge.spec.dag_hash(), None
@@ -502,8 +506,8 @@ class DAGWithDependencyTypes(DotGraphBuilder):
     the dependency types.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, node_label_fmt: str = DEFAULT_NODE_LABEL_FMT):
+        super().__init__(node_label_fmt)
         self.main_unified_space: Set[str] = set()
 
     def visit(self, edge):
@@ -513,7 +517,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
         super().visit(edge)
 
     def node_entry(self, node):
-        node_str = node.format("{name}{@version}{/hash:7}{%compiler}")
+        node_str = node.format(self.node_label_fmt)
         options = f'[label="{node_str}", group="build_dependencies", fillcolor="coral"]'
         if node.dag_hash() in self.main_unified_space:
             options = f'[label="{node_str}", group="main_psid"]'

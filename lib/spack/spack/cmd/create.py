@@ -8,10 +8,8 @@ import sys
 import urllib.parse
 from typing import List, Optional, Tuple
 
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.stage
-from spack.llnl.util.filesystem import mkdirp
 from spack.spec import Spec
 from spack.url import (
     UndetectableNameError,
@@ -20,8 +18,10 @@ from spack.url import (
     parse_name,
     parse_version,
 )
+from spack.util import tty
 from spack.util.editor import editor
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp
 from spack.util.format import get_version_lines
 from spack.util.naming import pkg_name_to_class_name, simplify_name
 
@@ -63,6 +63,10 @@ class {class_name}({base_class_name}):
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
 {url_def}
+
+    # FIXME: Uncomment and add the upstream supplier (organization or author).
+    # If unknown or inapplicable, remove this entire block.
+    # supplier = organization_or_author
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.

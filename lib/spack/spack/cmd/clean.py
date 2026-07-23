@@ -9,13 +9,12 @@ import shutil
 import spack.caches
 import spack.cmd
 import spack.config
-import spack.llnl.util.filesystem
-import spack.llnl.util.tty as tty
 import spack.stage
 import spack.store
-import spack.util.path
+import spack.util.filesystem
 from spack.cmd.common import arguments
 from spack.paths import lib_path, var_path
+from spack.util import tty
 
 description = "remove temporary build files and/or downloaded archives"
 section = "build"
@@ -127,7 +126,9 @@ def clean(parser, args):
         remove_python_cache()
 
     if args.bootstrap:
-        bootstrap_prefix = spack.util.path.canonicalize_path(spack.config.get("bootstrap:root"))
+        bootstrap_prefix = spack.config.canonicalize_path(
+            spack.config.CONFIG.get("bootstrap:root")
+        )
         msg = 'Removing bootstrapped software and configuration in "{0}"'
         tty.msg(msg.format(bootstrap_prefix))
-        spack.llnl.util.filesystem.remove_directory_contents(bootstrap_prefix)
+        spack.util.filesystem.remove_directory_contents(bootstrap_prefix)

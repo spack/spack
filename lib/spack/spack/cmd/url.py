@@ -7,12 +7,9 @@ import urllib.parse
 from collections import defaultdict
 
 import spack.fetch_strategy as fs
-import spack.llnl.util.tty.color as color
 import spack.repo
 import spack.spec
 import spack.url
-import spack.util.crypto as crypto
-from spack.llnl.util import tty
 from spack.url import (
     UndetectableNameError,
     UndetectableVersionError,
@@ -25,7 +22,9 @@ from spack.url import (
     substitute_version,
     substitution_offsets,
 )
+from spack.util import crypto, tty
 from spack.util.naming import simplify_name
+from spack.util.tty import color
 
 description = "debugging tool for url parsing"
 section = "developer"

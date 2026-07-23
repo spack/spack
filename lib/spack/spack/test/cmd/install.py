@@ -22,15 +22,18 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
-import spack.installer
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
+import spack.hooks.sbom_generate
+import spack.old_installer
 import spack.package_base
-import spack.store
+import spack.reporters.cdash
+import spack.util.filesystem as fs
+from spack.config import Configuration
 from spack.error import SpackError, SpecSyntaxError
-from spack.installer import PackageInstaller
 from spack.main import SpackCommand
+from spack.old_installer import PackageInstaller
 from spack.spec import Spec
+from spack.store import Store
+from spack.util import tty
 
 install = SpackCommand("install")
 env = SpackCommand("env")
@@ -46,7 +49,7 @@ def noop_install(monkeypatch):
     def noop(*args, **kwargs):
         pass
 
-    monkeypatch.setattr(spack.installer.PackageInstaller, "install", noop)
+    monkeypatch.setattr(spack.old_installer.PackageInstaller, "install", noop)
 
 
 def test_install_package_and_dependency(
@@ -85,19 +88,19 @@ def _check_runtests_all(pkg):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_notests(monkeypatch, mock_packages, install_mockery):
+def test_install_runtests_notests(monkeypatch, mock_packages, mock_fetch, install_mockery):
     monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_none)
     install("-v", "dttop")
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_root(monkeypatch, mock_packages, install_mockery):
+def test_install_runtests_root(monkeypatch, mock_packages, mock_fetch, install_mockery):
     monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_dttop)
     install("--test=root", "dttop")
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
+def test_install_runtests_all(monkeypatch, mock_packages, mock_fetch, install_mockery):
     monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_all)
     install("--test=all", "pkg-a")
 
@@ -130,7 +133,7 @@ def test_install_package_already_installed(
 @pytest.mark.parametrize(
     "arguments,expected",
     [
-        ([], spack.config.get("config:dirty")),  # default from config file
+        ([], spack.config.CONFIG.get("config:dirty")),  # default from config file
         (["--clean"], False),
         (["--dirty"], True),
     ],
@@ -228,19 +231,26 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mock
 
 
 def test_install_overwrite(
-    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    temporary_store: Store,
+    install_mockery,
+    installer_variant,
 ):
     """Tests installing a spec, and then re-installing it in the same prefix."""
     spec = spack.concretize.concretize_one("pkg-c")
     install("pkg-c")
 
-    # Ignore manifest and install times
+    # Ignore manifest, install times, and sbom
     manifest = os.path.join(
-        spec.prefix,
-        spack.store.STORE.layout.metadata_dir,
-        spack.store.STORE.layout.manifest_file_name,
+        spec.prefix, temporary_store.layout.metadata_dir, temporary_store.layout.manifest_file_name
     )
-    ignores = [manifest, spec.package.times_log_path]
+    ignores = [
+        manifest,
+        spec.package.times_log_path,
+        spack.hooks.sbom_generate.sbom_path(spec, "spdx-2.3"),
+    ]
 
     assert os.path.exists(spec.prefix)
     expected_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
@@ -296,7 +306,12 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
 
 
 def test_install_overwrite_multiple(
-    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    temporary_store: Store,
+    install_mockery,
+    installer_variant,
 ):
     # Try to install a spec and then to reinstall it.
     libdwarf = spack.concretize.concretize_one("libdwarf")
@@ -305,24 +320,33 @@ def test_install_overwrite_multiple(
     install("--fake", "libdwarf")
     install("--fake", "cmake")
 
+    # Ignore manifest, install times, and sbom
     ld_manifest = os.path.join(
         libdwarf.prefix,
-        spack.store.STORE.layout.metadata_dir,
-        spack.store.STORE.layout.manifest_file_name,
+        temporary_store.layout.metadata_dir,
+        temporary_store.layout.manifest_file_name,
     )
 
-    ld_ignores = [ld_manifest, libdwarf.package.times_log_path]
+    ld_ignores = [
+        ld_manifest,
+        libdwarf.package.times_log_path,
+        spack.hooks.sbom_generate.sbom_path(libdwarf, "spdx-2.3"),
+    ]
 
     assert os.path.exists(libdwarf.prefix)
     expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
 
     cm_manifest = os.path.join(
         cmake.prefix,
-        spack.store.STORE.layout.metadata_dir,
-        spack.store.STORE.layout.manifest_file_name,
+        temporary_store.layout.metadata_dir,
+        temporary_store.layout.manifest_file_name,
     )
 
-    cm_ignores = [cm_manifest, cmake.package.times_log_path]
+    cm_ignores = [
+        cm_manifest,
+        cmake.package.times_log_path,
+        spack.hooks.sbom_generate.sbom_path(cmake, "spdx-2.3"),
+    ]
     assert os.path.exists(cmake.prefix)
     expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
 
@@ -410,7 +434,7 @@ def test_junit_output_with_failures(tmp_path: pathlib.Path, exc_typename, msg, i
 
 
 def _throw(task, exc_typename, exc_type, msg):
-    # Self is a spack.installer.Task
+    # Self is a spack.old_installer.Task
     exc_type = getattr(builtins, exc_typename)
     exc = exc_type(msg)
     task.fail(exc)
@@ -444,7 +468,7 @@ def test_junit_output_with_errors(
     monkeypatch,
 ):
     throw = _keyboard_error if expected_exc is KeyboardInterrupt else _runtime_error
-    monkeypatch.setattr(spack.installer.BuildTask, "complete", throw)
+    monkeypatch.setattr(spack.old_installer.BuildTask, "complete", throw)
 
     with fs.working_dir(str(tmp_path)):
         install(
@@ -508,13 +532,18 @@ def test_install_mix_cli_and_files(spec_format, clispecs, filespecs, tmp_path: p
 
 
 def test_extra_files_are_archived(
-    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    temporary_store: Store,
+    install_mockery,
+    installer_variant,
 ):
     s = spack.concretize.concretize_one("archive-files")
 
     install("archive-files")
 
-    archive_dir = os.path.join(spack.store.STORE.layout.metadata_path(s), "archived-files")
+    archive_dir = os.path.join(temporary_store.layout.metadata_path(s), "archived-files")
     config_log = os.path.join(archive_dir, mock_archive.expanded_archive_basedir, "config.log")
     assert os.path.exists(config_log)
 
@@ -541,11 +570,18 @@ def test_cdash_report_concretization_error(
         assert any(x in content for x in expected_messages)
 
 
+def _noop_cdash_upload(self, filename):
+    """Module-level so it can be pickled into the build child process."""
+    return None
+
+
 @pytest.mark.not_on_windows("Windows log_output logs phase header out of order")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_build_error(
-    capfd, tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant
+    capfd, tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant, monkeypatch
 ):
+    # the cdash upload url is fake; never upload reports to it
+    monkeypatch.setattr(spack.reporters.cdash.CDash, "upload", _noop_cdash_upload)
     with fs.working_dir(str(tmp_path)):
         with pytest.raises(SpackError):
             install(
@@ -682,13 +718,13 @@ def test_build_warning_output(mock_fetch, install_mockery):
 
 
 @pytest.mark.disable_clean_stage_check  # new installer keeps a log for build cache installs
-def test_cache_only_fails(mock_fetch, install_mockery, installer_variant):
+def test_cache_only_fails(mock_fetch, temporary_store: Store, install_mockery, installer_variant):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
     out = install("--cache-only", "libdwarf", fail_on_error=False)
     assert isinstance(install.error, spack.error.InstallError)
-    assert not spack.store.STORE.db.query_local("libdwarf")
-    assert not spack.store.STORE.db.query_local("libelf")
+    assert not temporary_store.db.query_local("libdwarf")
+    assert not temporary_store.db.query_local("libelf")
 
     if installer_variant == "old":
         assert "Failed to install gcc-runtime" in out
@@ -697,8 +733,7 @@ def test_cache_only_fails(mock_fetch, install_mockery, installer_variant):
 
         # Check that failure prefix locks are still cached
         failed_packages = [
-            pkg_name
-            for dag_hash, pkg_name in spack.store.STORE.failure_tracker.locker.locks.keys()
+            pkg_name for dag_hash, pkg_name in temporary_store.failure_tracker.locker.locks.keys()
         ]
         assert "libelf" in failed_packages
         assert "libdwarf" in failed_packages
@@ -780,7 +815,12 @@ def test_install_only_dependencies_of_all_in_env(
 
 # Unit tests should not be affected by the user's managed environments
 def test_install_no_add_in_env(
-    tmp_path: pathlib.Path, mutable_mock_env_path, mock_fetch, install_mockery, installer_variant
+    tmp_path: pathlib.Path,
+    mutable_mock_env_path,
+    mock_fetch,
+    temporary_store: Store,
+    install_mockery,
+    installer_variant,
 ):
     # To test behavior of --add option, we create the following environment:
     #
@@ -836,7 +876,12 @@ def test_install_no_add_in_env(
 
         # Without --add, ensure that two packages "a" get installed
         inst_out = install("--fake", "pkg-a")
-        assert len([x for x in e.all_specs() if x.installed and x.name == "pkg-a"]) == 2
+        assert (
+            len(
+                [x for x in e.all_specs() if temporary_store.db.installed(x) and x.name == "pkg-a"]
+            )
+            == 2
+        )
 
         # Install an unambiguous dependency spec (that already exists as a dep
         # in the environment) and make sure it gets installed (w/ deps),
@@ -1101,8 +1146,8 @@ def test_install_use_buildcache(
 @pytest.mark.not_on_windows("Windows logger I/O operation on closed file when install fails")
 @pytest.mark.regression("34006")
 @pytest.mark.disable_clean_stage_check
-def test_padded_install_runtests_root(install_mockery, mock_fetch):
-    spack.config.set("config:install_tree:padded_length", 255)
+def test_padded_install_runtests_root(install_mockery, mock_fetch, mutable_config: Configuration):
+    mutable_config.set("config:install_tree:padded_length", 255)
     output = install(
         "--verbose", "--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False
     )
@@ -1122,11 +1167,11 @@ def test_report_filename_for_cdash(install_mockery, mock_fetch):
     assert filename != "https://blahblah/submit.php?project=debugging"
 
 
-def test_setting_concurrent_packages_flag(mutable_config):
+def test_setting_concurrent_packages_flag(mutable_config: Configuration):
     """Ensure that the number of concurrent packages is properly set from the command-line flag"""
     install = SpackCommand("install")
     install("--concurrent-packages", "8", fail_on_error=False)
-    assert spack.config.get("config:concurrent_packages", scope="command_line") == 8
+    assert mutable_config.get("config:concurrent_packages", scope="command_line") == 8
 
 
 def test_invalid_concurrent_packages_flag(mutable_config):
@@ -1137,9 +1182,9 @@ def test_invalid_concurrent_packages_flag(mutable_config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Feature disabled on windows due to locking")
-def test_concurrent_packages_set_in_config(mutable_config, mock_packages):
+def test_concurrent_packages_set_in_config(mutable_config: Configuration, mock_packages):
     """Ensure that the number of concurrent packages is properly set from adding to config"""
-    spack.config.set("config:concurrent_packages", 3)
+    mutable_config.set("config:concurrent_packages", 3)
     spec = spack.concretize.concretize_one("pkg-a")
-    installer = spack.installer.PackageInstaller([spec.package])
+    installer = spack.old_installer.PackageInstaller([spec.package])
     assert installer.concurrent_packages == 3

@@ -8,7 +8,7 @@ import sys
 import traceback
 from typing import Optional
 
-import spack.config
+from spack.util.cpus import cpus_available
 
 #: Used in tests to disable parallelism, as tests themselves are parallelized
 ENABLE_PARALLELISM = sys.platform != "win32"
@@ -125,6 +125,6 @@ def make_concurrent_executor(
 
     from spack.subprocess_context import GlobalStateMarshaler
 
-    jobs = jobs or spack.config.determine_number_of_jobs(parallel=True)
+    jobs = jobs or min(cpus_available(), 16)
     marshaler = GlobalStateMarshaler(serialize_env=serialize_env)
     return concurrent.futures.ProcessPoolExecutor(jobs, initializer=marshaler.restore)  # novermin

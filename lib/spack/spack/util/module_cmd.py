@@ -12,8 +12,8 @@ import re
 import subprocess
 from typing import MutableMapping, Optional
 
-import spack.llnl.util.tty as tty
 from spack.error import SpackError
+from spack.util import tty
 
 # This list is not exhaustive. Currently we only use load and unload
 # If we need another option that changes the environment, add it here.
@@ -43,7 +43,9 @@ def module(
     module_cmd = module_template or ("module " + " ".join(args))
     environb = environb or os.environb
     if b"MODULESHOME" in environb:
-        module_cmd = module_src_cmd or "source $MODULESHOME/init/bash; " + module_cmd
+        module_cmd = (
+            module_src_cmd or "source $MODULESHOME/init/bash >/dev/null 2>&1; " + module_cmd
+        )
 
     if args[0] in module_change_commands:
         # Suppress module output
@@ -105,6 +107,12 @@ def load_module(mod):
 
     # Store the LOADEDMODULES before trying to load the new module
     loaded_modules_before = os.environ.get("LOADEDMODULES", "")
+
+    # Loading a module that is already loaded is a successful no-op for
+    # module systems such as Lmod. In that case LOADEDMODULES is unchanged,
+    # so treating an unchanged value below as a failure would be incorrect.
+    if mod in loaded_modules_before.split(":"):
+        return
 
     # Load the module now that there are no conflicts
     # Some module systems use stdout and some use stderr

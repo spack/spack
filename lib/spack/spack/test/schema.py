@@ -12,7 +12,7 @@ from spack.vendor import jsonschema
 import spack.schema
 import spack.schema.env
 import spack.util.spack_yaml as syaml
-from spack.llnl.util.lang import list_modules
+from spack.util.lang import list_modules
 
 _draft_07_with_spack_extensions = {
     "$schema": "http://json-schema.org/draft-07/schema#",
