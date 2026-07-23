@@ -26,7 +26,6 @@ RUN apt-get -yqq update \
         subversion \
         python3 \
         python3-pip \
-        python3-setuptools \
         unzip \
         zstd \
  && locale-gen en_US.UTF-8 \

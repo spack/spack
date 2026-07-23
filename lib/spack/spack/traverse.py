@@ -4,6 +4,7 @@
 
 from collections import defaultdict, deque
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Iterable,
@@ -20,7 +21,9 @@ from typing import (
 from spack.vendor.typing_extensions import Literal
 
 import spack.deptypes as dt
-import spack.spec
+
+if TYPE_CHECKING:
+    import spack.spec
 
 # Export only the high-level API.
 __all__ = ["traverse_edges", "traverse_nodes", "traverse_tree"]
@@ -180,7 +183,7 @@ class MixedDepthVisitor:
 
         edges = item.edge.spec.edges_to_dependencies(depflag=follow)
 
-        # filter direct_type edges already followed before becuase they were also transitive_type.
+        # filter direct_type edges already followed before because they were also transitive_type.
         if seen:
             edges = [edge for edge in edges if not edge.depflag & self.transitive_type]
 
@@ -197,7 +200,7 @@ def get_visitor_from_args(
         cover (str): Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a
-            new path, it's accepted, but not recurisvely followed. This traverses
+            new path, it's accepted, but not recursively followed. This traverses
             each 'edge' in the DAG once.
             ``paths`` -- Explore every unique path reachable from the root.
             This descends into visited subtrees and will accept nodes multiple
@@ -227,10 +230,10 @@ def get_visitor_from_args(
 
 def with_artificial_edges(specs):
     """Initialize a deque of edges from an artificial root node to the root specs."""
+    from spack.spec import DependencySpec
+
     return deque(
-        EdgeAndDepth(
-            edge=spack.spec.DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0
-        )
+        EdgeAndDepth(edge=DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0)
         for s in specs
     )
 
@@ -243,7 +246,7 @@ def traverse_depth_first_edges_generator(edges, visitor, post_order=False, root=
 
     Arguments:
         edges (list): List of EdgeAndDepth instances
-        visitor: class instance implementing accept() and neigbors()
+        visitor: class instance implementing accept() and neighbors()
         post_order (bool): Whether to yield nodes when backtracking
         root (bool): whether to yield at depth 0
         depth (bool): when ``True`` yield a tuple of depth and edge, otherwise only the
@@ -511,7 +514,7 @@ def traverse_edges(
         cover: Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a new path, it's
-            accepted, but not recurisvely followed. This traverses each 'edge' in the DAG once.
+            accepted, but not recursively followed. This traverses each 'edge' in the DAG once.
             ``paths`` -- Explore every unique path reachable from the root. This descends into
             visited subtrees and will accept nodes multiple times if they're reachable by multiple
             paths.
@@ -623,7 +626,7 @@ def traverse_nodes(
         cover: Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a new path, it's
-            accepted, but not recurisvely followed. This traverses each 'edge' in the DAG once.
+            accepted, but not recursively followed. This traverses each 'edge' in the DAG once.
             ``paths`` -- Explore every unique path reachable from the root. This descends into
             visited subtrees and will accept nodes multiple times if they're reachable by multiple
             paths.
@@ -670,7 +673,7 @@ def traverse_tree(
         cover: Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a
-            new path, it's accepted, but not recurisvely followed. This traverses each 'edge' in
+            new path, it's accepted, but not recursively followed. This traverses each 'edge' in
             the DAG once.
             ``paths`` -- Explore every unique path reachable from the root. This descends into
             visited subtrees and will accept nodes multiple times if they're reachable by multiple

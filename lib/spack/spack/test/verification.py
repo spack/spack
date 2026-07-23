@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for the `spack.verify` module"""
+
 import os
 import pathlib
 import shutil
@@ -10,12 +11,12 @@ import stat
 
 import pytest
 
-import spack.llnl.util.filesystem as fs
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.verify
-from spack.llnl.util.filesystem import symlink
+from spack.util.filesystem import symlink
 
 pytestmark = pytest.mark.not_on_windows("Tests fail on Win")
 

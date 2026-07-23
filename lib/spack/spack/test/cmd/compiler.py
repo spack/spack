@@ -8,10 +8,10 @@ import pytest
 
 import spack.cmd.compiler
 import spack.compilers.config
-import spack.config
 import spack.main
 import spack.util.pattern
 import spack.version
+from spack.config import Configuration
 
 compiler = spack.main.SpackCommand("compiler")
 
@@ -95,10 +95,10 @@ def test_compiler_remove(mutable_config):
 
 
 @pytest.mark.regression("37996")
-def test_removing_compilers_from_multiple_scopes(mutable_config):
+def test_removing_compilers_from_multiple_scopes(mutable_config: Configuration):
     # Duplicate "site" scope into "user" scope
-    site_config = spack.config.get("packages", scope="site")
-    spack.config.set("packages", site_config, scope="user")
+    site_config = mutable_config.get("packages", scope="site")
+    mutable_config.set("packages", site_config, scope="user")
 
     assert any(
         compiler.satisfies("gcc@=9.4.0") for compiler in spack.compilers.config.all_compilers()
@@ -169,7 +169,9 @@ def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 def test_compiler_find_path_order(no_packages_yaml, working_env, compilers_dir):
-    """Ensure that we look for compilers in the same order as PATH, when there are duplicates"""
+    """When the same compiler version is found in two PATH directories, only the first
+    entry in PATH is kept and a warning is emitted for the duplicate.
+    """
     new_dir = compilers_dir / "first_in_path"
     new_dir.mkdir()
     for name in ("gcc-8", "g++-8", "gfortran-8"):
@@ -177,13 +179,14 @@ def test_compiler_find_path_order(no_packages_yaml, working_env, compilers_dir):
     # Set PATH to have the new folder searched first
     os.environ["PATH"] = f"{str(new_dir)}:{str(compilers_dir)}"
 
-    compiler("find", "--scope=site")
+    with pytest.warns(UserWarning, match="gcc@"):
+        compiler("find", "--scope=site")
 
     compilers = spack.compilers.config.all_compilers(scope="site")
     gcc = [x for x in compilers if x.satisfies("gcc@8.4")]
 
-    # Ensure we found both duplicates
-    assert len(gcc) == 2
+    # Duplicate is dropped. Only the first entry in PATH is kept
+    assert len(gcc) == 1
     assert gcc[0].extra_attributes["compilers"] == {
         "c": str(new_dir / "gcc-8"),
         "cxx": str(new_dir / "g++-8"),
@@ -234,15 +237,15 @@ def test_compiler_list_empty(no_packages_yaml, compilers_dir, monkeypatch):
     ],
 )
 def test_compilers_shows_packages_yaml(
-    external, expected, no_packages_yaml, working_env, compilers_dir
+    external, expected, no_packages_yaml, working_env, compilers_dir, mutable_config: Configuration
 ):
     """Spack should see a single compiler defined from packages.yaml"""
     external["prefix"] = external["prefix"].format(prefix=os.path.dirname(compilers_dir))
     gcc_entry = {"externals": [external]}
 
-    packages = spack.config.get("packages")
+    packages = mutable_config.get("packages")
     packages["gcc"] = gcc_entry
-    spack.config.set("packages", packages)
+    mutable_config.set("packages", packages)
 
     out = compiler("list", fail_on_error=True)
     assert out.count("gcc@7.7.7") == 1

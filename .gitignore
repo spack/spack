@@ -6,15 +6,26 @@
 /var/spack/cache
 /var/spack/environments
 /opt
-# Ignore everything in /etc/spack except /etc/spack/defaults
-/etc/spack/*
-!/etc/spack/defaults
 /share/spack/modules
 /share/spack/lmod
 # Debug logs
 spack-db.*
 *.in.log
 *.out.log
+CLAUDE.md
+
+# Configuration: Ignore everything in /etc/spack,
+# except defaults and site scopes that ship with spack
+/etc/spack/*
+!/etc/spack/defaults
+!/etc/spack/site/README.md
+
+###########################
+# Coding agent state
+###########################
+.claude/
+.gemini/
+.codex/
 
 ###########################
 # Python-specific ignores #

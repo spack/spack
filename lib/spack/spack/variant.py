@@ -5,18 +5,34 @@
 """The variant module contains data structures that are needed to manage
 variants both in packages and in specs.
 """
+
 import collections.abc
 import enum
 import functools
 import inspect
 import itertools
-from typing import Any, Callable, Collection, Iterable, List, Optional, Tuple, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Collection,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 import spack.error
-import spack.llnl.util.lang as lang
-import spack.llnl.util.tty.color
-import spack.spec
 import spack.spec_parser
+import spack.util.tty.color
+from spack.util import lang
+
+if TYPE_CHECKING:
+    import spack.package_base
+    import spack.spec
 
 #: These are variant names used by Spack internally; packages can't use them
 RESERVED_NAMES = {
@@ -42,6 +58,7 @@ class VariantType(enum.IntEnum):
     BOOL = 1
     SINGLE = 2
     MULTI = 3
+    INDICATOR = 4  # special type for placeholder variant values
 
     @property
     def string(self) -> str:
@@ -50,7 +67,10 @@ class VariantType(enum.IntEnum):
             return "bool"
         elif self == VariantType.SINGLE:
             return "single"
-        return "multi"
+        elif self == VariantType.MULTI:
+            return "multi"
+        else:
+            return "indicator"
 
 
 class Variant:
@@ -133,6 +153,9 @@ class Variant:
         self.group_validator = validator
         self.sticky = sticky
         self.precedence = precedence
+
+    def values_defined_by_validator(self) -> bool:
+        return self.values is None
 
     def validate_or_raise(self, vspec: "VariantValue", pkg_name: str):
         """Validate a variant spec against this package variant. Raises an
@@ -482,6 +505,13 @@ def BoolValuedVariant(name: str, value: bool, propagate: bool = False) -> Varian
     return VariantValue(VariantType.BOOL, name, (value,), propagate=propagate)
 
 
+class VariantValueRemoval(VariantValue):
+    """Indicator class for Spec.mutate to remove a variant"""
+
+    def __init__(self, name):
+        super().__init__(VariantType.INDICATOR, name, (None,))
+
+
 # The class below inherit from Sequence to disguise as a tuple and comply
 # with the semantic expected by the 'values' argument of the variant directive
 class DisjointSetsOfValues(collections.abc.Sequence):
@@ -494,23 +524,27 @@ class DisjointSetsOfValues(collections.abc.Sequence):
         *sets (list): mutually exclusive sets of values
     """
 
-    _empty_set = {"none"}
+    _empty_set = ("none",)
 
     def __init__(self, *sets: Tuple[str, ...]) -> None:
-        self.sets = [set(_flatten(x)) for x in sets]
+        self.sets = [tuple(_flatten(x)) for x in sets]
 
-        # 'none' is a special value and can appear only in a set of
-        # a single element
-        if any("none" in s and s != {"none"} for s in self.sets):
+        # 'none' is a special value and can appear only in a set of a single element
+        if any("none" in s and s != self._empty_set for s in self.sets):
             raise spack.error.SpecError(
-                "The value 'none' represents the empty set,"
-                " and must appear alone in a set. Use the "
-                "method 'allow_empty_set' to add it."
+                "The value 'none' represents the empty set, and must appear alone in a set. "
+                "Use the method 'allow_empty_set' to add it."
             )
 
         # Sets should not intersect with each other
-        if any(s1 & s2 for s1, s2 in itertools.combinations(self.sets, 2)):
-            raise spack.error.SpecError("sets in input must be disjoint")
+        cumulated: Set[str] = set()
+        for current_set in self.sets:
+            if not cumulated.isdisjoint(current_set):
+                duplicates = ", ".join(sorted(cumulated.intersection(current_set)))
+                raise spack.error.SpecError(
+                    f"sets in input must be disjoint, but {duplicates} appeared more than once"
+                )
+            cumulated.update(current_set)
 
         #: Attribute used to track values which correspond to
         #: features which can be enabled or disabled as understood by the
@@ -564,11 +598,14 @@ class DisjointSetsOfValues(collections.abc.Sequence):
         )
         return object_without_empty_set
 
+    def __iter__(self):
+        return itertools.chain.from_iterable(self.sets)
+
     def __getitem__(self, idx):
         return tuple(itertools.chain.from_iterable(self.sets))[idx]
 
     def __len__(self):
-        return len(itertools.chain.from_iterable(self.sets))
+        return sum(len(x) for x in self.sets)
 
     @property
     def validator(self):
@@ -579,14 +616,14 @@ class DisjointSetsOfValues(collections.abc.Sequence):
 
             format_args = {"variant": variant_name, "package": pkg_name, "values": values}
             msg = self.error_fmt + " @*r{{[{package}, variant '{variant}']}}"
-            msg = spack.llnl.util.tty.color.colorize(msg.format(**format_args))
+            msg = spack.util.tty.color.colorize(msg.format(**format_args))
             raise spack.error.SpecError(msg)
 
         return _disjoint_set_validator
 
 
-def _a_single_value_or_a_combination(single_value, *values):
-    error = "the value '" + single_value + "' is mutually exclusive with any of the other values"
+def _a_single_value_or_a_combination(single_value: str, *values: str) -> DisjointSetsOfValues:
+    error = f"the value '{single_value}' is mutually exclusive with any of the other values"
     return (
         DisjointSetsOfValues((single_value,), values)
         .with_default(single_value)
@@ -600,12 +637,14 @@ def _a_single_value_or_a_combination(single_value, *values):
 # TODO: a common namespace (like 'multi') in the future.
 
 
-def any_combination_of(*values):
+def any_combination_of(*values: str) -> DisjointSetsOfValues:
     """Multi-valued variant that allows either any combination of the specified values, or none
-     at all (using ``variant=none``). The literal value ``none`` is used as sentinel for the empty
-     set, since in the spec DSL we have to always specify a value for a variant.
+    at all (using ``variant=none``). The literal value ``none`` is used as sentinel for the empty
+    set, since in the spec DSL we have to always specify a value for a variant.
 
     It is up to the package implementation to handle the value ``none`` specially, if at all.
+
+    See also :func:`auto_or_any_combination_of` and :func:`disjoint_sets`.
 
     Args:
         *values: allowed variant values
@@ -620,9 +659,11 @@ def any_combination_of(*values):
     return _a_single_value_or_a_combination("none", *values)
 
 
-def auto_or_any_combination_of(*values):
-    """Multi-valued variant that allows any combination of a set of values
-    (but not the empty set) or `"auto"`.
+def auto_or_any_combination_of(*values: str) -> DisjointSetsOfValues:
+    """Multi-valued variant that allows any combination of a set of values (but not the empty set)
+    or ``auto``.
+
+    See also :func:`any_combination_of` and :func:`disjoint_sets`.
 
     Args:
         *values: allowed variant values
@@ -640,18 +681,16 @@ def auto_or_any_combination_of(*values):
     return _a_single_value_or_a_combination("auto", *values)
 
 
-#: Multi-valued variant that allows any combination picking
-#: from one of multiple disjoint sets
-def disjoint_sets(*sets):
-    """Multi-valued variant that allows any combination picking from one
-    of multiple disjoint sets of values, and also allows the user to specify
-    'none' (as a string) to choose none of them.
+def disjoint_sets(*sets: Tuple[str, ...]) -> DisjointSetsOfValues:
+    """Multi-valued variant that allows any combination picking from one of multiple disjoint sets
+    of values, and also allows the user to specify ``none`` to choose none of them.
 
-    It is up to the package implementation to handle the value 'none'
-    specially, if at all.
+    It is up to the package implementation to handle the value ``none`` specially, if at all.
+
+    See also :func:`any_combination_of` and :func:`auto_or_any_combination_of`.
 
     Args:
-        *sets:
+        *sets: sets of allowed values, each set is a tuple of strings
 
     Returns:
         a properly initialized instance of :class:`~spack.variant.DisjointSetsOfValues`
@@ -792,7 +831,7 @@ class InconsistentValidationError(spack.error.SpecError):
     """Raised if the wrong validator is used to validate a variant."""
 
     def __init__(self, vspec, variant):
-        msg = 'trying to validate variant "{0.name}" ' 'with the validator of "{1.name}"'
+        msg = 'trying to validate variant "{0.name}" with the validator of "{1.name}"'
         super().__init__(msg.format(vspec, variant))
 
 

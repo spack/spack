@@ -96,7 +96,7 @@ class RemoveDirectives(ast.NodeTransformer):
         # opposed to function calls through a variable callback). We remove them.
         #
         # Note that changes to directives (e.g., a preferred version change or a hash
-        # chnage on an archive) are already represented in the spec *outside* the
+        # change on an archive) are already represented in the spec *outside* the
         # package hash.
         return (
             None
@@ -157,7 +157,7 @@ class RemoveDirectives(ast.NodeTransformer):
         if self.in_classdef:
             return node
 
-        # guard against recrusive class definitions
+        # guard against recursive class definitions
         self.in_classdef = True
         self.generic_visit(node)
         self.in_classdef = False
@@ -259,7 +259,7 @@ class ResolveMultiMethods(ast.NodeTransformer):
     when we know that they will not affect package behavior.
 
     If we're at version 4.0, we know that implementation 1 will win, because some @when
-    for 2, 3, and 4 will be `False`. We should only include implementation 1.
+    for 2, 3, and 4 will be ``False``. We should only include implementation 1.
 
     If we're at version 1.0, we know that implementation 2 will win, because it
     overrides implementation 1.  We should only include implementation 2.
@@ -335,7 +335,7 @@ class ResolveMultiMethods(ast.NodeTransformer):
 
 
 def canonical_source(
-    spec, filter_multimethods: bool = True, source: Optional[bytes] = None
+    spec: spack.spec.Spec, filter_multimethods: bool = True, source: Optional[bytes] = None
 ) -> str:
     """Get canonical source for a spec's package.py by unparsing its AST.
 
@@ -347,7 +347,7 @@ def canonical_source(
     return unparse(package_ast(spec, filter_multimethods, source=source), py_ver_consistent=True)
 
 
-def package_hash(spec, source: Optional[bytes] = None) -> str:
+def package_hash(spec: spack.spec.Spec, source: Optional[bytes] = None) -> str:
     """Get a hash of a package's canonical source code.
 
     This function is used to determine whether a spec needs a rebuild when a
@@ -361,7 +361,9 @@ def package_hash(spec, source: Optional[bytes] = None) -> str:
     return spack.util.hash.b32_hash(source)
 
 
-def package_ast(spec, filter_multimethods: bool = True, source: Optional[bytes] = None) -> ast.AST:
+def package_ast(
+    spec: spack.spec.Spec, filter_multimethods: bool = True, source: Optional[bytes] = None
+) -> ast.AST:
     """Get the AST for the ``package.py`` file corresponding to ``spec``.
 
     Arguments:
@@ -369,10 +371,8 @@ def package_ast(spec, filter_multimethods: bool = True, source: Optional[bytes] 
             statically to be unused. Supply False to disable.
         source: Optionally provide a string to read python code from.
     """
-    spec = spack.spec.Spec(spec)
-
     if source is None:
-        filename = spack.repo.PATH.filename_for_package_name(spec.name)
+        filename = spack.repo.PATH.filename_for_package_name(spec.fullname)
         with open(filename, "rb") as f:
             source = f.read()
 

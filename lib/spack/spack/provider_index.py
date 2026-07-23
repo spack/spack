@@ -2,14 +2,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
-from typing import Dict, List, Optional, Set
+
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Union
 
 import spack.error
-import spack.spec
 import spack.util.spack_json as sjson
 
+if TYPE_CHECKING:
+    import spack.repo
+    import spack.spec
 
-class _IndexBase:
+
+class ProviderIndex:
     #: This is a dict of dicts used for finding providers of particular
     #: virtual dependencies. The dict of dicts looks like:
     #:
@@ -26,28 +30,62 @@ class _IndexBase:
     #: Calling providers_for(spec) will find specs that provide a
     #: matching implementation of MPI. Derived class need to construct
     #: this attribute according to the semantics above.
-    providers: Dict[str, Dict[str, Set[str]]]
+    providers: Dict[str, Dict["spack.spec.Spec", Set["spack.spec.Spec"]]]
 
-    def providers_for(self, virtual_spec):
-        """Return a list of specs of all packages that provide virtual
-        packages with the supplied spec.
+    def __init__(
+        self,
+        repository: "spack.repo.RepoType",
+        specs: Optional[Iterable["spack.spec.Spec"]] = None,
+        restrict: bool = False,
+    ):
+        """Provider index based on a single mapping of providers.
 
         Args:
-            virtual_spec: virtual spec to be provided
+            specs: if provided, will call update on each
+                single spec to initialize this provider index.
+
+            restrict: "restricts" values to the verbatim input specs; do not
+                pre-apply package's constraints.
+
+        TODO: rename this.  It is intended to keep things as broad
+        TODO: as possible without overly restricting results, so it is
+        TODO: not the best name.
         """
-        result = set()
-        # Allow string names to be passed as input, as well as specs
-        if isinstance(virtual_spec, str):
-            virtual_spec = spack.spec.Spec(virtual_spec)
+        self.repository = repository
+        self.restrict = restrict
+        self.providers = {}
+        if specs:
+            self.update_packages(specs)
+
+    def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
+        """Return a list of specs of all packages that provide virtual packages with the supplied
+        spec.
+
+        Args:
+            virtual: either a Spec or a string name of a virtual package
+        """
+        result: Set["spack.spec.Spec"] = set()
+
+        if isinstance(virtual, str):
+            # In the common case where just a package name is passed, we can avoid running the
+            # spec parser and intersects, since intersects is always true.
+            if virtual.isalnum():
+                if virtual in self.providers:
+                    for p_spec, spec_set in self.providers[virtual].items():
+                        result.update(spec_set)
+                return list(result)
+
+            from spack.spec import Spec
+
+            virtual = Spec(virtual)
 
         # Add all the providers that satisfy the vpkg spec.
-        if virtual_spec.name in self.providers:
-            for p_spec, spec_set in self.providers[virtual_spec.name].items():
-                if p_spec.intersects(virtual_spec, deps=False):
+        if virtual.name in self.providers:
+            for p_spec, spec_set in self.providers[virtual.name].items():
+                if p_spec.intersects(virtual, deps=False):
                     result.update(spec_set)
 
-        # Return providers in order. Defensively copy.
-        return sorted(s.copy() for s in result)
+        return list(result)
 
     def __contains__(self, name):
         return name in self.providers
@@ -75,90 +113,55 @@ class _IndexBase:
     def __repr__(self):
         return repr(self.providers)
 
-
-class ProviderIndex(_IndexBase):
-    def __init__(
-        self,
-        repository: "spack.repo.RepoType",
-        specs: Optional[List["spack.spec.Spec"]] = None,
-        restrict: bool = False,
-    ):
-        """Provider index based on a single mapping of providers.
-
-        Args:
-            specs: if provided, will call update on each
-                single spec to initialize this provider index.
-
-            restrict: "restricts" values to the verbatim input specs; do not
-                pre-apply package's constraints.
-
-        TODO: rename this.  It is intended to keep things as broad
-        TODO: as possible without overly restricting results, so it is
-        TODO: not the best name.
-        """
-        self.repository = repository
-        self.restrict = restrict
-        self.providers = {}
-
-        specs = specs or []
-        for spec in specs:
-            if not isinstance(spec, spack.spec.Spec):
-                spec = spack.spec.Spec(spec)
-
-            if self.repository.is_virtual_safe(spec.name):
-                continue
-
-            self.update(spec)
-
-    def update(self, spec):
+    def update_packages(self, specs: Iterable[Union[str, "spack.spec.Spec"]]):
         """Update the provider index with additional virtual specs.
 
         Args:
             spec: spec potentially providing additional virtual specs
         """
-        if not isinstance(spec, spack.spec.Spec):
-            spec = spack.spec.Spec(spec)
+        from spack.spec import Spec
 
-        if not spec.name:
-            # Empty specs do not have a package
-            return
+        for spec in specs:
+            if not isinstance(spec, Spec):
+                spec = Spec(spec)
 
-        msg = "cannot update an index passing the virtual spec '{}'".format(spec.name)
-        assert not self.repository.is_virtual_safe(spec.name), msg
+            if not spec.name or self.repository.is_virtual_safe(spec.name):
+                # Only non-virtual packages with name can provide virtual specs.
+                continue
 
-        pkg_provided = self.repository.get_pkg_class(spec.name).provided
-        for provider_spec_readonly, provided_specs in pkg_provided.items():
-            for provided_spec in provided_specs:
-                # TODO: fix this comment.
-                # We want satisfaction other than flags
-                provider_spec = provider_spec_readonly.copy()
-                provider_spec.compiler_flags = spec.compiler_flags.copy()
+            pkg_cls = self.repository.get_pkg_class(spec.name)
+            for provider_spec_readonly, provided_specs in pkg_cls.provided.items():
+                for provided_spec in provided_specs:
+                    # TODO: fix this comment.
+                    # We want satisfaction other than flags
+                    provider_spec = provider_spec_readonly.copy()
+                    provider_spec.compiler_flags = spec.compiler_flags.copy()
 
-                if spec.intersects(provider_spec, deps=False):
-                    provided_name = provided_spec.name
+                    if spec.intersects(provider_spec, deps=False):
+                        provided_name = provided_spec.name
 
-                    provider_map = self.providers.setdefault(provided_name, {})
-                    if provided_spec not in provider_map:
-                        provider_map[provided_spec] = set()
+                        provider_map = self.providers.setdefault(provided_name, {})
+                        if provided_spec not in provider_map:
+                            provider_map[provided_spec] = set()
 
-                    if self.restrict:
-                        provider_set = provider_map[provided_spec]
+                        if self.restrict:
+                            provider_set = provider_map[provided_spec]
 
-                        # If this package existed in the index before,
-                        # need to take the old versions out, as they're
-                        # now more constrained.
-                        old = set([s for s in provider_set if s.name == spec.name])
-                        provider_set.difference_update(old)
+                            # If this package existed in the index before,
+                            # need to take the old versions out, as they're
+                            # now more constrained.
+                            old = {s for s in provider_set if s.name == spec.name}
+                            provider_set.difference_update(old)
 
-                        # Now add the new version.
-                        provider_set.add(spec)
+                            # Now add the new version.
+                            provider_set.add(spec)
 
-                    else:
-                        # Before putting the spec in the map, constrain
-                        # it so that it provides what was asked for.
-                        constrained = spec.copy()
-                        constrained.constrain(provider_spec)
-                        provider_map[provided_spec].add(constrained)
+                        else:
+                            # Before putting the spec in the map, constrain
+                            # it so that it provides what was asked for.
+                            constrained = spec.copy()
+                            constrained.constrain(provider_spec)
+                            provider_map[provided_spec].add(constrained)
 
     def to_json(self, stream=None):
         """Dump a JSON representation of this object.
@@ -193,14 +196,14 @@ class ProviderIndex(_IndexBase):
 
                 spdict[provided_spec] = spdict[provided_spec].union(opdict[provided_spec])
 
-    def remove_provider(self, pkg_name):
+    def remove_providers(self, pkg_names: Set[str]):
         """Remove a provider from the ProviderIndex."""
         empty_pkg_dict = []
         for pkg, pkg_dict in self.providers.items():
             empty_pset = []
             for provided, pset in pkg_dict.items():
-                same_name = set(p for p in pset if p.fullname == pkg_name)
-                pset.difference_update(same_name)
+                to_remove = {spec for spec in pset if spec.name in pkg_names}
+                pset.difference_update(to_remove)
 
                 if not pset:
                     empty_pset.append(provided)
@@ -217,7 +220,7 @@ class ProviderIndex(_IndexBase):
     def copy(self):
         """Return a deep copy of this index."""
         clone = ProviderIndex(repository=self.repository)
-        clone.providers = self._transform(lambda vpkg, pset: (vpkg, set((p.copy() for p in pset))))
+        clone.providers = self._transform(lambda vpkg, pset: (vpkg, {p.copy() for p in pset}))
         return clone
 
     @staticmethod
@@ -237,11 +240,13 @@ class ProviderIndex(_IndexBase):
 
         index = ProviderIndex(repository=repository)
         providers = data["provider_index"]["providers"]
+        from spack.spec import SpecfileLatest
+
         index.providers = _transform(
             providers,
             lambda vpkg, plist: (
-                spack.spec.SpecfileLatest.from_node_dict(vpkg),
-                set(spack.spec.SpecfileLatest.from_node_dict(p) for p in plist),
+                SpecfileLatest.from_node_dict(vpkg),
+                {SpecfileLatest.from_node_dict(p) for p in plist},
             ),
         )
         return index
@@ -267,10 +272,10 @@ def _transform(providers, transform_fun, out_mapping_type=dict):
         else:
             return iter(mappings)
 
-    return dict(
-        (name, out_mapping_type([transform_fun(vpkg, pset) for vpkg, pset in mapiter(mappings)]))
+    return {
+        name: out_mapping_type([transform_fun(vpkg, pset) for vpkg, pset in mapiter(mappings)])
         for name, mappings in providers.items()
-    )
+    }
 
 
 class ProviderIndexError(spack.error.SpackError):

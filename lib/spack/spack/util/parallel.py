@@ -8,7 +8,10 @@ import sys
 import traceback
 from typing import Optional
 
-import spack.config
+from spack.util.cpus import cpus_available
+
+#: Used in tests to disable parallelism, as tests themselves are parallelized
+ENABLE_PARALLELISM = sys.platform != "win32"
 
 
 class ErrorFromWorker:
@@ -57,7 +60,13 @@ class Task:
 
 
 def imap_unordered(
-    f, list_of_args, *, processes: int, maxtaskperchild: Optional[int] = None, debug=False
+    f,
+    list_of_args,
+    *,
+    processes: int,
+    maxtaskperchild: Optional[int] = None,
+    debug=False,
+    serialize_env: bool = False,
 ):
     """Wrapper around multiprocessing.Pool.imap_unordered.
 
@@ -73,13 +82,14 @@ def imap_unordered(
     Raises:
         RuntimeError: if any error occurred in the worker processes
     """
-    from spack.subprocess_context import GlobalStateMarshaler
 
-    if sys.platform in ("darwin", "win32") or len(list_of_args) == 1:
+    if not ENABLE_PARALLELISM or len(list_of_args) <= 1:
         yield from map(f, list_of_args)
         return
 
-    marshaler = GlobalStateMarshaler()
+    from spack.subprocess_context import GlobalStateMarshaler
+
+    marshaler = GlobalStateMarshaler(serialize_env=serialize_env)
     with multiprocessing.Pool(
         processes, initializer=marshaler.restore, maxtasksperchild=maxtaskperchild
     ) as p:
@@ -103,20 +113,18 @@ class SequentialExecutor(concurrent.futures.Executor):
 
 
 def make_concurrent_executor(
-    jobs: Optional[int] = None, *, require_fork: bool = True
+    jobs: Optional[int] = None, *, serialize_env: bool = False
 ) -> concurrent.futures.Executor:
-    """Create a concurrent executor. If require_fork is True, then the executor is sequential
-    if the platform does not enable forking as the default start method. Effectively
-    require_fork=True makes the executor sequential in the current process on Windows, macOS, and
-    Linux from Python 3.14+ (which changes defaults)"""
+    """Create a concurrent executor.
+
+    If serialize_env is False (default), the active Spack environment is not transmitted to the
+    worker processes, which avoids the cost of pickling potentially large environment state."""
+
+    if not ENABLE_PARALLELISM or sys.version_info[:2] == (3, 6):
+        return SequentialExecutor()
+
     from spack.subprocess_context import GlobalStateMarshaler
 
-    if require_fork and multiprocessing.get_start_method() != "fork":
-        return SequentialExecutor()
-
-    if sys.version_info[:2] == (3, 6):
-        return SequentialExecutor()
-
-    jobs = jobs or spack.config.determine_number_of_jobs(parallel=True)
-    marshaler = GlobalStateMarshaler()
+    jobs = jobs or min(cpus_available(), 16)
+    marshaler = GlobalStateMarshaler(serialize_env=serialize_env)
     return concurrent.futures.ProcessPoolExecutor(jobs, initializer=marshaler.restore)  # novermin

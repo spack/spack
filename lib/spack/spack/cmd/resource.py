@@ -5,12 +5,12 @@
 import argparse
 import os
 
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.repo
+from spack.util import tty
+from spack.util.tty import color
 
-description = "list downloadable resources (tarballs, repos, patches, etc.)"
-section = "basic"
+description = "list downloadable resources (tarballs, repos, patches)"
+section = "query"
 level = "long"
 
 
@@ -28,7 +28,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def _show_patch(sha256):
     """Show a record from the patch index."""
-    patches = spack.repo.PATH.patch_index.index
+    patches = spack.repo.PATH.get_patch_index().index
     data = patches.get(sha256)
 
     if not data:
@@ -59,7 +59,7 @@ def _show_patch(sha256):
 
 def resource_list(args):
     """list all resources known to spack (currently just patches)"""
-    patches = spack.repo.PATH.patch_index.index
+    patches = spack.repo.PATH.get_patch_index().index
     for sha256 in patches:
         if args.only_hashes:
             print(sha256)

@@ -8,13 +8,12 @@ import warnings
 
 import spack.vendor.archspec.cpu
 
-import spack.llnl.util.tty.colify as colify
-import spack.llnl.util.tty.color as color
 import spack.platforms
 import spack.spec
+from spack.util.tty import colify, color
 
 description = "print architecture information about this machine"
-section = "system"
+section = "config"
 level = "short"
 
 
@@ -84,7 +83,7 @@ def display_targets(targets):
         for family, group in by_family.items():
             vendor = color.colorize(r"@*B{" + vendor + r"}")
             family = color.colorize(r"@*B{" + family + r"}")
-            header = " - ".join([vendor, family])
+            header = f"{vendor} - {family}"
             group = sorted(group, key=lambda x: len(x.ancestors))
             display_target_group(header, group)
 

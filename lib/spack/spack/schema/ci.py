@@ -6,9 +6,8 @@
 .. literalinclude:: ../spack/schema/ci.py
    :lines: 16-
 """
-from typing import Any, Dict
 
-from spack.llnl.util.lang import union_dicts
+from typing import Any, Dict
 
 # Schema for script fields
 # List of lists and/or strings
@@ -33,10 +32,9 @@ image_schema = {
     ]
 }
 
-# Additional attributes are allow
-# and will be forwarded directly to the
-# CI target YAML for each job.
-attributes_schema = {
+# Additional attributes are allowed and will be forwarded directly to the CI target YAML for each
+# job.
+ci_job_attributes = {
     "type": "object",
     "additionalProperties": True,
     "properties": {
@@ -44,13 +42,15 @@ attributes_schema = {
         "tags": {"type": "array", "items": {"type": "string"}},
         "variables": {
             "type": "object",
-            "patternProperties": {r"[\w\d\-_\.]+": {"type": ["string", "number"]}},
+            "patternProperties": {r"^[\w\-\.]+$": {"type": ["string", "number"]}},
         },
         "before_script": script_schema,
         "script": script_schema,
         "after_script": script_schema,
     },
 }
+
+ref_ci_job_attributes = {"$ref": "#/definitions/ci_job_attributes"}
 
 submapping_schema = {
     "type": "object",
@@ -66,8 +66,8 @@ submapping_schema = {
                 "required": ["match"],
                 "properties": {
                     "match": {"type": "array", "items": {"type": "string"}},
-                    "build-job": attributes_schema,
-                    "build-job-remove": attributes_schema,
+                    "build-job": ref_ci_job_attributes,
+                    "build-job-remove": ref_ci_job_attributes,
                 },
             },
         },
@@ -84,12 +84,12 @@ dynamic_mapping_schema = {
             "required": ["endpoint"],
             "properties": {
                 "name": {"type": "string"},
-                # "endpoint" cannot have http patternProperties constaint as it is a required field
+                # "endpoint" cannot have http patternProperties constraint since it is required
                 # Constrain is applied in code
                 "endpoint": {"type": "string"},
                 "timeout": {"type": "integer", "minimum": 0},
                 "verify_ssl": {"type": "boolean", "default": False},
-                "header": {"type": "object", "additionalProperties": False},
+                "header": {"type": "object", "additionalProperties": {"type": "string"}},
                 "allow": {"type": "array", "items": {"type": "string"}},
                 "require": {"type": "array", "items": {"type": "string"}},
                 "ignore": {"type": "array", "items": {"type": "string"}},
@@ -103,7 +103,10 @@ def job_schema(name: str):
     return {
         "type": "object",
         "additionalProperties": False,
-        "properties": {f"{name}-job": attributes_schema, f"{name}-job-remove": attributes_schema},
+        "properties": {
+            f"{name}-job": ref_ci_job_attributes,
+            f"{name}-job-remove": ref_ci_job_attributes,
+        },
     }
 
 
@@ -124,18 +127,19 @@ pipeline_gen_schema = {
     },
 }
 
-core_shared_properties = union_dicts(
-    {
-        "pipeline-gen": pipeline_gen_schema,
-        "rebuild-index": {"type": "boolean"},
-        "broken-specs-url": {"type": "string"},
-        "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
-        "target": {"type": "string", "enum": ["gitlab"], "default": "gitlab"},
-    }
-)
-
 #: Properties for inclusion in other schemas
-properties: Dict[str, Any] = {"ci": core_shared_properties}
+properties: Dict[str, Any] = {
+    "ci": {
+        "type": "object",
+        "properties": {
+            "pipeline-gen": pipeline_gen_schema,
+            "rebuild-index": {"type": "boolean"},
+            "broken-specs-url": {"type": "string"},
+            "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
+            "target": {"type": "string", "default": "gitlab"},
+        },
+    }
+}
 
 #: Full schema with metadata
 schema = {
@@ -143,5 +147,6 @@ schema = {
     "title": "Spack CI configuration file schema",
     "type": "object",
     "additionalProperties": False,
+    "definitions": {"ci_job_attributes": ci_job_attributes},
     "properties": properties,
 }

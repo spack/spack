@@ -6,127 +6,259 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 17-
 """
+
 from typing import Any, Dict
 
 import spack.schema
 import spack.schema.projections
-from spack.llnl.util.lang import union_dicts
 
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {
     "config": {
         "type": "object",
         "default": {},
+        "description": "Spack's basic configuration options",
         "properties": {
             "flags": {
                 "type": "object",
+                "description": "Build flag configuration options",
                 "properties": {
-                    "keep_werror": {"type": "string", "enum": ["all", "specific", "none"]}
+                    "keep_werror": {
+                        "type": "string",
+                        "enum": ["all", "specific", "none"],
+                        "description": "Whether to keep -Werror flags active in package builds",
+                    }
                 },
             },
             "shared_linking": {
+                "description": "Control how shared libraries are located at runtime on Linux",
                 "anyOf": [
                     {"type": "string", "enum": ["rpath", "runpath"]},
                     {
                         "type": "object",
                         "properties": {
-                            "type": {"type": "string", "enum": ["rpath", "runpath"]},
-                            "bind": {"type": "boolean"},
-                            "missing_library_policy": {"enum": ["error", "warn", "ignore"]},
+                            "type": {
+                                "type": "string",
+                                "enum": ["rpath", "runpath"],
+                                "description": "Whether to use RPATH or RUNPATH for runtime "
+                                "library search paths",
+                            },
+                            "bind": {
+                                "type": "boolean",
+                                "description": "Embed absolute paths of dependent libraries "
+                                "directly in ELF binaries (experimental)",
+                            },
+                            "missing_library_policy": {
+                                "enum": ["error", "warn", "ignore"],
+                                "description": "How to handle missing dynamic libraries after "
+                                "installation",
+                            },
                         },
                     },
-                ]
+                ],
             },
             "install_tree": {
-                "anyOf": [
-                    {
-                        "type": "object",
-                        "properties": union_dicts(
-                            {"root": {"type": "string"}},
-                            {
-                                "padded_length": {
-                                    "oneOf": [
-                                        {"type": "integer", "minimum": 0},
-                                        {"type": "boolean"},
-                                    ]
-                                }
-                            },
-                            spack.schema.projections.properties,
-                        ),
-                    },
-                    {"type": "string"},  # deprecated
-                ]
-            },
-            "concretization_cache": {
                 "type": "object",
+                "description": "Installation tree configuration",
                 "properties": {
-                    "enable": {"type": "boolean"},
-                    "url": {"type": "string"},
-                    "entry_limit": {"type": "integer", "minimum": 0},
-                    "size_limit": {"type": "integer", "minimum": 0},
+                    "root": {
+                        "type": "string",
+                        "description": "The location where Spack will install packages and "
+                        "their dependencies",
+                    },
+                    "padded_length": {
+                        "oneOf": [{"type": "integer", "minimum": 0}, {"type": "boolean"}],
+                        "description": "Length to pad installation paths to allow better "
+                        "relocation of binaries (true for max length, integer for specific "
+                        "length)",
+                    },
+                    **spack.schema.projections.ref_properties,
                 },
             },
-            "install_hash_length": {"type": "integer", "minimum": 1},
-            "install_path_scheme": {"type": "string"},  # deprecated
+            "install_hash_length": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Length of hash used in installation directory names",
+            },
             "build_stage": {
-                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
+                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}],
+                "description": "Temporary locations Spack can try to use for builds",
             },
-            "stage_name": {"type": "string"},
-            "develop_stage_link": {"type": "string"},
-            "test_stage": {"type": "string"},
-            "extensions": {"type": "array", "items": {"type": "string"}},
-            "template_dirs": {"type": "array", "items": {"type": "string"}},
-            "license_dir": {"type": "string"},
-            "source_cache": {"type": "string"},
-            "misc_cache": {"type": "string"},
-            "environments_root": {"type": "string"},
-            "connect_timeout": {"type": "integer", "minimum": 0},
-            "verify_ssl": {"type": "boolean"},
-            "ssl_certs": {"type": "string"},
-            "suppress_gpg_warnings": {"type": "boolean"},
-            "debug": {"type": "boolean"},
-            "checksum": {"type": "boolean"},
-            "deprecated": {"type": "boolean"},
-            "locks": {"type": "boolean"},
-            "dirty": {"type": "boolean"},
-            "build_language": {"type": "string"},
-            "build_jobs": {"type": "integer", "minimum": 1},
-            "concurrent_packages": {"type": "integer", "minimum:": 1},
-            "ccache": {"type": "boolean"},
-            "db_lock_timeout": {"type": "integer", "minimum": 1},
+            "stage_name": {
+                "type": "string",
+                "description": "Name format for build stage directories",
+            },
+            "develop_stage_link": {
+                "type": "string",
+                "description": "Name for development spec build stage directories. Setting to "
+                "None will disable develop stage links.",
+            },
+            "test_stage": {
+                "type": "string",
+                "description": "Directory in which to run tests and store test results",
+            },
+            "extensions": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "List of Spack extensions to load",
+            },
+            "template_dirs": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Locations where templates should be found",
+            },
+            "license_dir": {
+                "type": "string",
+                "description": "Directory where licenses should be located",
+            },
+            "source_cache": {
+                "type": "string",
+                "description": "Location to cache downloaded tarballs and repositories",
+            },
+            "misc_cache": {
+                "type": "string",
+                "description": "Temporary directory to store long-lived cache files, such as "
+                "indices of packages",
+            },
+            "environments_root": {
+                "type": "string",
+                "description": "Directory where Spack managed environments are created and stored",
+            },
+            "connect_timeout": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Abort downloads after this many seconds if no data is received "
+                "(0 disables timeout)",
+            },
+            "verify_ssl": {
+                "type": "boolean",
+                "description": "When true, Spack will verify certificates of remote hosts when "
+                "making SSL connections",
+            },
+            "ssl_certs": {
+                "type": "string",
+                "description": "Path to custom certificates for SSL verification",
+            },
+            "suppress_gpg_warnings": {
+                "type": "boolean",
+                "description": "Suppress GPG warnings from binary package verification",
+            },
+            "debug": {
+                "type": "boolean",
+                "description": "Enable debug mode for additional logging",
+            },
+            "checksum": {
+                "type": "boolean",
+                "description": "When true, Spack verifies downloaded source code using checksums",
+            },
+            "deprecated": {
+                "type": "boolean",
+                "description": "If true, Spack will fetch deprecated versions without warning",
+            },
+            "locks": {
+                "type": "boolean",
+                "description": "When true, concurrent instances of Spack will use locks to avoid "
+                "conflicts (strongly recommended)",
+            },
+            "dirty": {
+                "type": "boolean",
+                "description": "When true, builds will NOT clean potentially harmful variables "
+                "from the environment",
+            },
+            "build_language": {
+                "type": "string",
+                "description": "The language the build environment will use (C for English, "
+                "empty string for user's environment)",
+            },
+            "build_jobs": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "The maximum number of jobs to use for the build system (e.g. "
+                "make -j), defaults to 16",
+            },
+            "concurrent_packages": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "The maximum number of concurrent package builds a single Spack "
+                "instance will run",
+            },
+            "ccache": {
+                "type": "boolean",
+                "description": "When true, Spack's compiler wrapper will use ccache when "
+                "compiling C and C++",
+            },
+            "db_lock_timeout": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "How long to wait to lock the Spack installation database",
+            },
             "package_lock_timeout": {
-                "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]
+                "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}],
+                "description": "How long to wait when attempting to modify a package (null for "
+                "never timeout)",
             },
-            "allow_sgid": {"type": "boolean"},
-            "install_status": {"type": "boolean"},
-            "binary_index_root": {"type": "string"},
-            "url_fetch_method": {"type": "string", "pattern": r"^urllib$|^curl( .*)*"},
-            "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
-            "binary_index_ttl": {"type": "integer", "minimum": 0},
-            "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
+            "allow_sgid": {
+                "type": "boolean",
+                "description": "Allow installation on filesystems that don't allow setgid bit "
+                "manipulation",
+            },
+            "install_status": {
+                "type": "boolean",
+                "description": "Whether to show status information in the terminal title during "
+                "the build",
+            },
+            "url_fetch_method": {
+                "anyOf": [{"enum": ["urllib", "curl"]}, {"type": "string", "pattern": r"^curl "}],
+                "description": "The default URL fetch method to use (urllib or curl)",
+            },
+            "additional_external_search_paths": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Additional paths to search for external packages",
+            },
+            "binary_index_ttl": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of seconds a buildcache's index.json is cached locally "
+                "before probing for updates",
+            },
+            "aliases": {
+                "type": "object",
+                "additionalProperties": {"type": "string"},
+                "description": "A mapping of aliases that can be used to define new "
+                "Spack commands",
+            },
+            "installer": {
+                "type": "string",
+                "enum": ["old", "new"],
+                "description": "Which installer to use. The new installer is experimental.",
+            },
+            "sandbox": {
+                "type": "object",
+                "description": "Restrict filesystem and network access during builds.",
+                "additionalProperties": False,
+                "properties": {
+                    "enable": {
+                        "type": "boolean",
+                        "description": "Enable or disable the build sandbox.",
+                    },
+                    "allow_network": {
+                        "type": "boolean",
+                        "description": "Allow TCP network access during the build phase.",
+                    },
+                    "allow_read": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Additional paths with read and execute permissions.",
+                    },
+                    "allow_write": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Additional paths with write and execute permissions.",
+                    },
+                },
+            },
         },
-        "deprecatedProperties": [
-            {
-                "names": ["concretizer"],
-                "message": "Spack supports only clingo as a concretizer from v0.23. "
-                "The config:concretizer config option is ignored.",
-                "error": False,
-            },
-            {
-                "names": ["install_missing_compilers"],
-                "message": "The config:install_missing_compilers option has been deprecated in "
-                "Spack v0.23, and is currently ignored. It will be removed from config in "
-                "Spack v1.0.",
-                "error": False,
-            },
-            {
-                "names": ["install_path_scheme"],
-                "message": "The config:install_path_scheme option was deprecated in Spack v0.16 "
-                "in favor of config:install_tree:projections:all. It will be removed in Spack "
-                "v1.0.",
-                "error": False,
-            },
-        ],
     }
 }
 
@@ -138,57 +270,24 @@ schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
+    "definitions": {"projections": spack.schema.projections.projections},
 }
 
 
-def update(data):
+def update(data: dict) -> bool:
     """Update the data in place to remove deprecated properties.
 
     Args:
-        data (dict): dictionary to be updated
+        data: dictionary to be updated
 
-    Returns:
-        True if data was changed, False otherwise
+    Returns: True if data was changed, False otherwise
     """
-    # currently deprecated properties are
-    # install_tree: <string>
-    # install_path_scheme: <string>
-    # updated: install_tree: {root: <string>,
-    #                         projections: <projections_dict}
-    # root replaces install_tree, projections replace install_path_scheme
     changed = False
-
     data = data["config"]
-
-    install_tree = data.get("install_tree", None)
-    if isinstance(install_tree, str):
-        # deprecated short-form install tree
-        # add value as `root` in updated install_tree
-        data["install_tree"] = {"root": install_tree}
-        changed = True
-
-    install_path_scheme = data.pop("install_path_scheme", None)
-    if install_path_scheme:
-        projections_data = {"projections": {"all": install_path_scheme}}
-
-        # update projections with install_scheme
-        # whether install_tree was updated or not
-        # we merge the yaml to ensure we don't invalidate other projections
-        update_data = data.get("install_tree", {})
-        update_data = spack.schema.merge_yaml(update_data, projections_data)
-        data["install_tree"] = update_data
-        changed = True
-
-    use_curl = data.pop("use_curl", None)
-    if use_curl is not None:
-        data["url_fetch_method"] = "curl" if use_curl else "urllib"
-        changed = True
-
     shared_linking = data.get("shared_linking", None)
     if isinstance(shared_linking, str):
         # deprecated short-form shared_linking: rpath/runpath
         # add value as `type` in updated shared_linking
         data["shared_linking"] = {"type": shared_linking, "bind": False}
         changed = True
-
     return changed

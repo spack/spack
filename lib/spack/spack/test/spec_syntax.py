@@ -12,12 +12,18 @@ import pytest
 import spack.binary_distribution
 import spack.cmd
 import spack.concretize
-import spack.config
-import spack.llnl.util.filesystem as fs
+import spack.error
+import spack.hash_lookup
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.spec
+import spack.util.filesystem as fs
+from spack.externals import (
+    ExternalSpecsParser,
+    complete_variants_and_architecture,
+    extract_dicts_from_configuration,
+)
 from spack.spec_parser import (
     UNIX_FILENAME,
     WINDOWS_FILENAME,
@@ -25,6 +31,7 @@ from spack.spec_parser import (
     SpecParsingError,
     SpecTokenizationError,
     SpecTokens,
+    expand_toolchains,
     parse_one_or_raise,
 )
 from spack.tokenize import Token
@@ -55,9 +62,9 @@ def dependency_with_version(text):
 
 
 @pytest.fixture()
-def specfile_for(default_mock_concretization):
+def specfile_for(config, mock_packages):
     def _specfile_for(spec_str, filename):
-        s = default_mock_concretization(spec_str)
+        s = spack.concretize.concretize_one(spec_str)
         is_json = str(filename).endswith(".json")
         is_yaml = str(filename).endswith(".yaml")
         if not is_json and not is_yaml:
@@ -92,7 +99,7 @@ def specfile_for(default_mock_concretization):
         (
             "platform=test",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="platform=test")],
-            "arch=test-None-None",
+            "platform=test",
         ),
         # Multiple tokens anonymous specs
         (
@@ -392,36 +399,36 @@ def specfile_for(default_mock_concretization):
         (
             r"os=fe",  # Various translations associated with the architecture
             [Token(SpecTokens.KEY_VALUE_PAIR, value="os=fe")],
-            "arch=test-debian6-None",
+            "platform=test os=debian6",
         ),
         (
             r"os=default_os",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="os=default_os")],
-            "arch=test-debian6-None",
+            "platform=test os=debian6",
         ),
         (
             r"target=be",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="target=be")],
-            f"arch=test-None-{spack.platforms.test.Test.default}",
+            f"platform=test target={spack.platforms.test.Test.default}",
         ),
         (
             r"target=default_target",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="target=default_target")],
-            f"arch=test-None-{spack.platforms.test.Test.default}",
+            f"platform=test target={spack.platforms.test.Test.default}",
         ),
         (
             r"platform=linux",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="platform=linux")],
-            r"arch=linux-None-None",
+            r"platform=linux",
         ),
         # Version hash pair
         (
-            rf"develop-branch-version@{'abc12'*8}=develop",
+            rf"develop-branch-version@{'abc12' * 8}=develop",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="develop-branch-version"),
-                Token(SpecTokens.VERSION_HASH_PAIR, value=f"@{'abc12'*8}=develop"),
+                Token(SpecTokens.VERSION_HASH_PAIR, value=f"@{'abc12' * 8}=develop"),
             ],
-            rf"develop-branch-version@{'abc12'*8}=develop",
+            rf"develop-branch-version@{'abc12' * 8}=develop",
         ),
         # Redundant specs
         (
@@ -495,7 +502,7 @@ def specfile_for(default_mock_concretization):
         (
             r"target=:broadwell,icelake",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="target=:broadwell,icelake")],
-            r"arch=None-None-:broadwell,icelake",
+            r"target=:broadwell,icelake",
         ),
         # Hash pair version followed by a variant
         (
@@ -635,7 +642,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.VERSION, value="@10.4.0:10,11.3.0:"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="target=aarch64:"),
             ],
-            "@10.4.0:10,11.3.0: arch=None-None-aarch64:",
+            "@10.4.0:10,11.3.0: target=aarch64:",
         ),
         (
             "@:0.4 % nvhpc",
@@ -883,7 +890,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.KEY_VALUE_PAIR, "languages:=c,c++"),
                 Token(SpecTokens.KEY_VALUE_PAIR, "target=x86_64"),
             ],
-            "mvapich %gcc languages:='c,c++' arch=None-None-x86_64",
+            "mvapich %gcc languages:='c,c++' target=x86_64",
         ),
         # Test conditional dependencies
         (
@@ -919,6 +926,46 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.END_EDGE_PROPERTIES, "] c=gcc", virtuals="c", substitute="gcc"),
             ],
             "foo ^[when='%c'] c=gcc",
+        ),
+        # Test dependency propagation
+        (
+            "foo %%gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.DEPENDENCY, "%%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+            ],
+            "foo %%gcc",
+        ),
+        (
+            "foo %%c,cxx=gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.DEPENDENCY, "%%c,cxx=gcc", virtuals="c,cxx", substitute="gcc"),
+            ],
+            "foo %%c,cxx=gcc",
+        ),
+        (
+            "foo %%[when='%c'] c=gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, "%%["),
+                Token(SpecTokens.KEY_VALUE_PAIR, "when='%c'"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, "] c=gcc", virtuals="c", substitute="gcc"),
+            ],
+            "foo %%[when='%c'] c=gcc",
+        ),
+        (
+            "foo %%[when='%c' virtuals=c] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, "%%["),
+                Token(SpecTokens.KEY_VALUE_PAIR, "when='%c'"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "virtuals=c"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, "]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+            ],
+            "foo %%[when='%c'] c=gcc",
         ),
     ],
 )
@@ -1169,11 +1216,13 @@ def test_cli_spec_roundtrip(args, expected):
         ),
     ],
 )
-def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config):
-    spack.config.CONFIG.set("toolchains", toolchain)
+def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config, mock_packages):
+    """Tests that toolchains are expanded correctly"""
     parser = SpecParser(spec_str)
     for expected in expected_roundtrip:
-        assert expected == str(parser.next_spec())
+        result = parser.next_spec()
+        expand_toolchains(result, toolchain)
+        assert expected == str(result)
 
 
 @pytest.mark.parametrize(
@@ -1230,22 +1279,22 @@ def test_spec_by_hash(database, monkeypatch, config):
 
     hash_str = f"/{mpileaks.dag_hash()}"
     parsed_spec = SpecParser(hash_str).next_spec()
-    parsed_spec.replace_hash()
+    spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     short_hash_str = f"/{mpileaks.dag_hash()[:5]}"
     parsed_spec = SpecParser(short_hash_str).next_spec()
-    parsed_spec.replace_hash()
+    spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     name_version_and_hash = f"{mpileaks.name}@{mpileaks.version} /{mpileaks.dag_hash()[:5]}"
     parsed_spec = SpecParser(name_version_and_hash).next_spec()
-    parsed_spec.replace_hash()
+    spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     b_hash = f"/{b.dag_hash()}"
     parsed_spec = SpecParser(b_hash).next_spec()
-    parsed_spec.replace_hash()
+    spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == b
 
 
@@ -1259,21 +1308,21 @@ def test_dep_spec_by_hash(database, config):
     assert "zmpi" in mpileaks_zmpi
 
     mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()} ^zmpi").next_spec()
-    mpileaks_hash_fake.replace_hash()
+    spack.hash_lookup.replace_hash(mpileaks_hash_fake)
     assert "fake" in mpileaks_hash_fake
     assert mpileaks_hash_fake["fake"] == fake
     assert "zmpi" in mpileaks_hash_fake
     assert mpileaks_hash_fake["zmpi"] == spack.spec.Spec("zmpi")
 
     mpileaks_hash_zmpi = SpecParser(f"mpileaks ^ /{zmpi.dag_hash()}").next_spec()
-    mpileaks_hash_zmpi.replace_hash()
+    spack.hash_lookup.replace_hash(mpileaks_hash_zmpi)
     assert "zmpi" in mpileaks_hash_zmpi
     assert mpileaks_hash_zmpi["zmpi"] == zmpi
 
     mpileaks_hash_fake_and_zmpi = SpecParser(
         f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}"
     ).next_spec()
-    mpileaks_hash_fake_and_zmpi.replace_hash()
+    spack.hash_lookup.replace_hash(mpileaks_hash_fake_and_zmpi)
     assert "zmpi" in mpileaks_hash_fake_and_zmpi
     assert mpileaks_hash_fake_and_zmpi["zmpi"] == zmpi
 
@@ -1321,7 +1370,7 @@ def test_ambiguous_hash(mutable_database):
     # This is a very sketchy as manually setting hashes easily breaks invariants
     x1 = spack.concretize.concretize_one("pkg-a")
     x2 = x1.copy()
-    x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    x1._hash = "xxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     x2._hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
     assert x1 != x2  # doesn't hold when only the dag hash is modified.
@@ -1330,14 +1379,14 @@ def test_ambiguous_hash(mutable_database):
     mutable_database.add(x2)
 
     # ambiguity in first hash character
-    s1 = SpecParser("/x").next_spec()
+    s1 = SpecParser("/xxx").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        s1.lookup_hash()
+        spack.hash_lookup.lookup_hash(s1)
 
     # ambiguity in first hash character AND spec name
-    s2 = SpecParser("pkg-a/x").next_spec()
+    s2 = SpecParser("pkg-a/xxx").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        s2.lookup_hash()
+        spack.hash_lookup.lookup_hash(s2)
 
 
 @pytest.mark.db
@@ -1348,22 +1397,23 @@ def test_invalid_hash(database, config):
     # name + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"zmpi /{mpich.dag_hash()}").next_spec()
-        parsed_spec.replace_hash()
+        spack.hash_lookup.replace_hash(parsed_spec)
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"mpich /{zmpi.dag_hash()}").next_spec()
-        parsed_spec.replace_hash()
+        spack.hash_lookup.replace_hash(parsed_spec)
 
     # name + dep + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}").next_spec()
-        parsed_spec.replace_hash()
+        spack.hash_lookup.replace_hash(parsed_spec)
 
 
 def test_invalid_hash_dep(database, config):
     mpich = database.query_one("mpich")
     hash = mpich.dag_hash()
     with pytest.raises(spack.spec.InvalidHashError):
-        spack.spec.Spec(f"callpath ^zlib/{hash}").replace_hash()
+        s = spack.spec.Spec(f"callpath ^zlib/{hash}")
+        spack.hash_lookup.replace_hash(s)
 
 
 @pytest.mark.db
@@ -1378,7 +1428,7 @@ def test_nonexistent_hash(database, config):
 
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"/{no_such_hash}").next_spec()
-        parsed_spec.replace_hash()
+        spack.hash_lookup.replace_hash(parsed_spec)
 
 
 @pytest.mark.parametrize(
@@ -1409,7 +1459,7 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
     else:
         spec = spack.spec.Spec("/spec" + constraint)
 
-    assert spec.lookup_hash() == spec1_concrete
+    assert spack.hash_lookup.lookup_hash(spec) == spec1_concrete
 
 
 @pytest.mark.parametrize(
@@ -1470,55 +1520,57 @@ def test_error_conditions(text, match_string):
     [
         # Specfile related errors
         pytest.param(
-            "/bogus/path/libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+            "/bogus/path/libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
-        pytest.param("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
-        pytest.param("./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
+        pytest.param(
+            "../../libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+        ),
+        pytest.param("./libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
         pytest.param(
             "libfoo ^/bogus/path/libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
-            "libfoo ^../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+            "libfoo ^../../libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
         pytest.param(
-            "libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+            "libfoo ^./libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
         pytest.param(
             "/bogus/path/libdwarf.yamlfoobar",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
             "libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
-            "c:\\bogus\\path\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
+            "c:\\bogus\\path\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
-        pytest.param("..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
-        pytest.param(".\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
+        pytest.param("..\\..\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
+        pytest.param(".\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
         pytest.param(
             "libfoo ^c:\\bogus\\path\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_UNIX,
         ),
         pytest.param(
-            "libfoo ^..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
+            "libfoo ^..\\..\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
         pytest.param(
-            "libfoo ^.\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
+            "libfoo ^.\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
         pytest.param(
             "c:\\bogus\\path\\libdwarf.yamlfoobar",
-            spack.spec.SpecFilenameError,
+            spack.error.SpecFilenameError,
             marks=SKIP_ON_UNIX,
         ),
         pytest.param(
             "libdwarf^c:\\bogus\\path\\libelf.yamlfoobar ^c:\\path\\to\\bogus.yaml",
-            spack.spec.SpecFilenameError,
+            spack.error.SpecFilenameError,
             marks=SKIP_ON_UNIX,
         ),
     ],
@@ -1590,9 +1642,9 @@ def test_parse_filename_missing_slash_as_spec(specfile_for, tmp_path: pathlib.Pa
     )
 
 
-def test_parse_specfile_dependency(default_mock_concretization, tmp_path: pathlib.Path):
+def test_parse_specfile_dependency(config, mock_packages, tmp_path: pathlib.Path):
     """Ensure we can use a specfile as a dependency"""
-    s = default_mock_concretization("libdwarf")
+    s = spack.concretize.concretize_one("libdwarf")
 
     specfile = tmp_path / "libelf.json"
     with open(specfile, "w", encoding="utf-8") as f:
@@ -1610,7 +1662,7 @@ def test_parse_specfile_dependency(default_mock_concretization, tmp_path: pathli
 
         # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
         spec = SpecParser(
-            f"libdwarf^..{os.path.sep}{specfile.parent.name}" f"{os.path.sep}{specfile.name}"
+            f"libdwarf^..{os.path.sep}{specfile.parent.name}{os.path.sep}{specfile.name}"
         ).next_spec()
         assert spec and spec["libelf"] == s["libelf"]
 
@@ -1767,3 +1819,14 @@ def test_parse_multiple_edge_attributes(input_args, expected):
     s, *_ = spack.cmd.parse_specs(input_args)
     for c in expected:
         assert s.satisfies(c)
+
+
+@pytest.mark.regression("52375")
+def test_external_spec_hash_can_be_looked_up(config, mock_packages):
+    """Tests that the hash of an external can be successfully looked up."""
+    packages_yaml = config.deepcopy_as_builtin("packages")
+    externals_dict = extract_dicts_from_configuration(packages_yaml)
+    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    abstract_hashes = [f"{x.name}/{x.dag_hash()[:5]}" for x in parser.all_specs()]
+
+    assert all(spack.hash_lookup.lookup_hash(spack.spec.Spec(x)) for x in abstract_hashes)

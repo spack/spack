@@ -8,10 +8,9 @@ import sys
 
 import pytest
 
-import spack
 import spack.cmd
 import spack.fetch_strategy
-from spack.llnl.util.filesystem import mkdirp, working_dir
+from spack.util.filesystem import mkdirp, working_dir
 from spack.version import ver
 
 

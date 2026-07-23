@@ -5,14 +5,14 @@ import argparse
 
 import spack.cmd
 import spack.config
-import spack.environment as ev
 import spack.store
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_dot, static_graph_dot
-from spack.llnl.util import tty
+from spack.util import tty
 
 description = "generate graphs of package dependency relationships"
-section = "basic"
+section = "query"
 level = "long"
 
 
@@ -38,7 +38,7 @@ in the lockfile.
         "-s",
         "--static",
         action="store_true",
-        help="graph static (possible) deps, don't concretize (implies --dot)",
+        help="graph static (possible) deps, don't concretize (implies ``--dot``)",
     )
     subparser.add_argument(
         "-c",
@@ -51,16 +51,16 @@ in the lockfile.
         "-i", "--installed", action="store_true", help="graph specs from the DB"
     )
 
-    arguments.add_common_arguments(subparser, ["deptype", "specs"])
+    arguments.add_common_arguments(subparser, ["deptype", "long", "very_long", "specs"])
 
 
 def graph(parser, args):
-    env = ev.active_environment()
+    env = active_environment()
     if args.installed and env:
-        tty.die("cannot use --installed with an active environment")
+        args.subparser.error("cannot use --installed with an active environment")
 
     if args.color and not args.dot:
-        tty.die("the --color option can be used only with --dot")
+        args.subparser.error("the --color option can be used only with --dot")
 
     if args.installed:
         if not args.specs:
@@ -86,14 +86,21 @@ def graph(parser, args):
         return
 
     if args.dot:
-        builder = SimpleDAG()
+        if args.very_long:
+            node_label_fmt = "{name}{@version}{/hash}"
+        elif args.long:
+            node_label_fmt = "{name}{@version}{/hash:7}"
+        else:
+            node_label_fmt = "{name}{@version}"
         if args.color:
-            builder = DAGWithDependencyTypes()
+            builder = DAGWithDependencyTypes(node_label_fmt)
+        else:
+            builder = SimpleDAG(node_label_fmt)
         graph_dot(specs, builder=builder, depflag=args.deptype)
         return
 
     # ascii is default: user doesn't need to provide it explicitly
-    debug = spack.config.get("config:debug")
+    debug = spack.config.CONFIG.get("config:debug")
     graph_ascii(specs[0], debug=debug, depflag=args.deptype)
     for spec in specs[1:]:
         print()  # extra line bt/w independent graphs

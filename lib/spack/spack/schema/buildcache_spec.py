@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/buildcache_spec.py
    :lines: 15-
 """
+
 from typing import Any, Dict
 
 import spack.schema.spec
@@ -14,11 +15,7 @@ import spack.schema.spec
 properties: Dict[str, Any] = {
     # `buildinfo` is no longer needed as of Spack 0.21
     "buildinfo": {"type": "object"},
-    "spec": {
-        "type": "object",
-        "additionalProperties": True,
-        "items": spack.schema.spec.properties,
-    },
+    "spec": {**spack.schema.spec.spec_node, "additionalProperties": True},
     "buildcache_layout_version": {"type": "number"},
 }
 

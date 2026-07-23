@@ -2,27 +2,35 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """High-level functions to concretize list of specs"""
+
 import importlib
 import sys
 import time
-from typing import Iterable, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import spack.compilers
 import spack.compilers.config
 import spack.config
 import spack.error
-import spack.llnl.util.tty as tty
+import spack.hash_lookup
 import spack.repo
 import spack.util.parallel
 from spack.spec import ArchSpec, CompilerSpec, Spec
+from spack.util import tty
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
 SpecPair = Tuple[Spec, Spec]
 TestsType = Union[bool, Iterable[str]]
 
+if TYPE_CHECKING:
+    from spack.solver.reuse import SpecFiltersFactory
+
 
 def _concretize_specs_together(
-    abstract_specs: Sequence[Spec], tests: TestsType = False
+    abstract_specs: Sequence[Spec],
+    *,
+    tests: TestsType = False,
+    factory: Optional["SpecFiltersFactory"] = None,
 ) -> List[Spec]:
     """Given a number of specs as input, tries to concretize them together.
 
@@ -30,16 +38,22 @@ def _concretize_specs_together(
         abstract_specs: abstract specs to be concretized
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
+        factory: optional factory to produce a list of specs to be reused
     """
     from spack.solver.asp import Solver
 
-    allow_deprecated = spack.config.get("config:deprecated", False)
-    result = Solver().solve(abstract_specs, tests=tests, allow_deprecated=allow_deprecated)
+    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
+    result = Solver(specs_factory=factory).solve(
+        abstract_specs, tests=tests, allow_deprecated=allow_deprecated
+    )
     return [s.copy() for s in result.specs]
 
 
 def concretize_together(
-    spec_list: Sequence[SpecPairInput], tests: TestsType = False
+    spec_list: Sequence[SpecPairInput],
+    *,
+    tests: TestsType = False,
+    factory: Optional["SpecFiltersFactory"] = None,
 ) -> List[SpecPair]:
     """Given a number of specs as input, tries to concretize them together.
 
@@ -48,15 +62,19 @@ def concretize_together(
             already concrete spec or None if not yet concretized
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
+        factory: optional factory to produce a list of specs to be reused
     """
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
     abstract_specs = [abstract for abstract, _ in spec_list]
-    concrete_specs = _concretize_specs_together(to_concretize, tests=tests)
+    concrete_specs = _concretize_specs_together(to_concretize, tests=tests, factory=factory)
     return list(zip(abstract_specs, concrete_specs))
 
 
 def concretize_together_when_possible(
-    spec_list: Sequence[SpecPairInput], tests: TestsType = False
+    spec_list: Sequence[SpecPairInput],
+    *,
+    tests: TestsType = False,
+    factory: Optional["SpecFiltersFactory"] = None,
 ) -> List[SpecPair]:
     """Given a number of specs as input, tries to concretize them together to the extent possible.
 
@@ -68,6 +86,7 @@ def concretize_together_when_possible(
             already concrete spec or None if not yet concretized
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
+        factory: optional factory to produce a list of specs to be reused
     """
     from spack.solver.asp import Solver
 
@@ -76,12 +95,25 @@ def concretize_together_when_possible(
         concrete: abstract for (abstract, concrete) in spec_list if concrete
     }
 
-    result_by_user_spec = {}
-    allow_deprecated = spack.config.get("config:deprecated", False)
-    for result in Solver().solve_in_rounds(
+    result_by_user_spec: Dict[Spec, Spec] = {}
+    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
+    j = 0
+    start = time.monotonic()
+    for result in Solver(specs_factory=factory).solve_in_rounds(
         to_concretize, tests=tests, allow_deprecated=allow_deprecated
     ):
+        now = time.monotonic()
+        duration = now - start
+        percentage = int((j + 1) / len(to_concretize) * 100)
+        for abstract, concrete in result.specs_by_input.items():
+            tty.verbose(
+                f"{duration:6.1f}s [{percentage:3d}%] {concrete.cformat('{hash:7}')} "
+                f"{abstract.colored_str}"
+            )
+            j += 1
+        sys.stdout.flush()
         result_by_user_spec.update(result.specs_by_input)
+        start = now
 
     # If the "abstract" spec is a concrete spec from the previous concretization
     # translate it back to an abstract spec. Otherwise, keep the abstract spec
@@ -92,7 +124,10 @@ def concretize_together_when_possible(
 
 
 def concretize_separately(
-    spec_list: Sequence[SpecPairInput], tests: TestsType = False
+    spec_list: Sequence[SpecPairInput],
+    *,
+    tests: TestsType = False,
+    factory: Optional["SpecFiltersFactory"] = None,
 ) -> List[SpecPair]:
     """Concretizes the input specs separately from each other.
 
@@ -101,12 +136,17 @@ def concretize_separately(
             already concrete spec or None if not yet concretized
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
+        factory: optional factory to produce a list of specs to be reused
     """
-    from spack.bootstrap import ensure_bootstrap_configuration, ensure_clingo_importable_or_raise
+    from spack.bootstrap import (
+        ensure_bootstrap_configuration,
+        ensure_clingo_importable_or_raise,
+        ensure_winsdk_external_or_raise,
+    )
 
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
     args = [
-        (i, str(abstract), tests)
+        (i, str(abstract), tests, factory)
         for i, abstract in enumerate(to_concretize)
         if not abstract.concrete
     ]
@@ -117,6 +157,10 @@ def concretize_separately(
     except ImportError:
         with ensure_bootstrap_configuration():
             ensure_clingo_importable_or_raise()
+
+    # ensure we don't try to detect winsdk in parallel
+    if sys.platform == "win32":
+        ensure_winsdk_external_or_raise()
 
     # Ensure all the indexes have been built or updated, since
     # otherwise the processes in the pool may timeout on waiting
@@ -138,23 +182,28 @@ def concretize_separately(
         ]
 
     # Solve the environment in parallel on Linux
-    # TODO: support parallel concretization on macOS and Windows
     num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
 
     msg = "Starting concretization"
-    if sys.platform not in ("darwin", "win32") and num_procs > 1:
+    # no parallel conc on Windows
+    if not sys.platform == "win32" and num_procs > 1:
         msg += f" pool with {num_procs} processes"
     tty.msg(msg)
 
     for j, (i, concrete, duration) in enumerate(
         spack.util.parallel.imap_unordered(
-            _concretize_task, args, processes=num_procs, debug=tty.is_debug(), maxtaskperchild=1
+            _concretize_task,
+            args,
+            processes=num_procs,
+            debug=tty.is_debug(),
+            maxtaskperchild=1,
+            serialize_env=True,
         )
     ):
         ret.append((i, concrete))
-        percentage = (j + 1) / len(args) * 100
+        percentage = int((j + 1) / len(args) * 100)
         tty.verbose(
-            f"{duration:6.1f}s [{percentage:3.0f}%] {concrete.cformat('{hash:7}')} "
+            f"{duration:6.1f}s [{percentage:3d}%] {concrete.cformat('{hash:7}')} "
             f"{to_concretize[i].colored_str}"
         )
         sys.stdout.flush()
@@ -167,26 +216,33 @@ def concretize_separately(
     ]
 
 
-def _concretize_task(packed_arguments: Tuple[int, str, TestsType]) -> Tuple[int, Spec, float]:
-    index, spec_str, tests = packed_arguments
+def _concretize_task(
+    packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"]],
+) -> Tuple[int, Spec, float]:
+    index, spec_str, tests, factory = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
-        spec = concretize_one(Spec(spec_str), tests=tests)
+        spec = concretize_one(Spec(spec_str), tests=tests, factory=factory)
         return index, spec, time.time() - start
 
 
-def concretize_one(spec: Union[str, Spec], tests: TestsType = False) -> Spec:
+def concretize_one(
+    spec: Union[str, Spec],
+    *,
+    tests: TestsType = False,
+    factory: Optional["SpecFiltersFactory"] = None,
+) -> Spec:
     """Return a concretized copy of the given spec.
 
     Args:
-        tests: if False disregard 'test' dependencies, if a list of names activate them for
-            the packages in the list, if True activate 'test' dependencies for all packages.
+        tests: if False disregard test dependencies, if a list of names activate them for
+            the packages in the list, if True activate test dependencies for all packages.
     """
     from spack.solver.asp import Solver, SpecBuilder
 
     if isinstance(spec, str):
         spec = Spec(spec)
-    spec = spec.lookup_hash()
+    spec = spack.hash_lookup.lookup_hash(spec)
 
     if spec.concrete:
         return spec.copy()
@@ -197,8 +253,10 @@ def concretize_one(spec: Union[str, Spec], tests: TestsType = False) -> Spec:
                 f"Spec {node} has no name; cannot concretize an anonymous spec"
             )
 
-    allow_deprecated = spack.config.get("config:deprecated", False)
-    result = Solver().solve([spec], tests=tests, allow_deprecated=allow_deprecated)
+    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
+    result = Solver(specs_factory=factory).solve(
+        [spec], tests=tests, allow_deprecated=allow_deprecated
+    )
 
     # take the best answer
     opt, i, answer = min(result.answers)
@@ -209,9 +267,9 @@ def concretize_one(spec: Union[str, Spec], tests: TestsType = False) -> Spec:
         name = providers[0]
 
     node = SpecBuilder.make_node(pkg=name)
-    assert (
-        node in answer
-    ), f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
+    assert node in answer, (
+        f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
+    )
 
     concretized = answer[node]
     return concretized

@@ -9,12 +9,12 @@ Spack-installed package file hierarchies.  The union is formed from:
 
 - specs resolved from the package names given by the user (the seeds)
 
-- all dependencies of the seeds unless user specifies `--no-dependencies`
+- all dependencies of the seeds unless user specifies ``--no-dependencies``
 
 - less any specs with names matching the regular expressions given by
-  `--exclude`
+  ``--exclude``
 
-The `view` can be built and tore down via a number of methods (the "actions"):
+The ``view`` can be built and tore down via a number of methods (the "actions"):
 
 - symlink :: a file system view which is a directory hierarchy that is
   the union of the hierarchies of the installed packages in the DAG
@@ -25,27 +25,28 @@ The `view` can be built and tore down via a number of methods (the "actions"):
 - statlink :: a view producing a status report of a symlink or
   hardlink view.
 
-The file system view concept is imspired by Nix, implemented by
-brett.viren@gmail.com ca 2016.
+The file system view concept is inspired by Nix, implemented by
+Brett Viren ca 2016.
 
 All operations on views are performed via proxy objects such as
 YamlFilesystemView.
 
 """
+
 import argparse
 import sys
 
 import spack.cmd
-import spack.environment as ev
 import spack.filesystem_view as fsv
-import spack.llnl.util.tty as tty
 import spack.schema.projections
 import spack.store
+from spack.active_environment import active_environment
 from spack.config import validate
-from spack.llnl.util.link_tree import MergeConflictError
 from spack.util import spack_yaml as s_yaml
+from spack.util import tty
+from spack.util.link_tree import MergeConflictError
 
-description = "project packages to a compact naming scheme on the filesystem"
+description = "manipulate view directories in the filesystem"
 section = "environments"
 level = "short"
 
@@ -225,7 +226,7 @@ def view(parser, args):
 
     elif args.action in actions_link:
         # only link commands need to disambiguate specs
-        env = ev.active_environment()
+        env = active_environment()
         specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
 
     elif args.action in actions_status:

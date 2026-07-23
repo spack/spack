@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import base64
-import codecs
 import json
 import os
 import pathlib
@@ -14,7 +13,7 @@ import subprocess
 import tempfile
 import zipfile
 from collections import namedtuple
-from typing import Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple
 from urllib.request import Request
 
 import spack
@@ -22,9 +21,6 @@ import spack.binary_distribution
 import spack.builder
 import spack.config as cfg
 import spack.environment as ev
-import spack.llnl.path
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.mirrors.mirror
 import spack.paths
@@ -32,16 +28,18 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.gpg as gpg_util
+import spack.util.path
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
-from spack.llnl.util.tty.color import cescape, colorize
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
-from spack.version import GitVersion, StandardVersion
+from spack.util import tty
+from spack.util.tty.color import cescape, colorize
 
 from .common import (
     IS_WINDOWS,
@@ -93,19 +91,17 @@ def get_change_revisions(path: str) -> Tuple[Optional[str], Optional[str]]:
         return None, None
 
 
-def get_added_versions(
-    checksums_version_dict: Dict[str, Union[StandardVersion, GitVersion]],
-    path: str,
-    from_ref: str = "HEAD~1",
-    to_ref: str = "HEAD",
-) -> List[Union[StandardVersion, GitVersion]]:
-    """Get a list of the versions added between `from_ref` and `to_ref`.
+def filter_added_checksums(
+    checksums: Iterable[str], path: str, from_ref: str = "HEAD~1", to_ref: str = "HEAD"
+) -> List[str]:
+    """Get a list of the version checksums added between ``from_ref`` and ``to_ref``.
+
     Args:
-       checksums_version_dict (Dict): all package versions keyed by known checksums.
-       path (str): path to the package.py
-       from_ref (str): oldest git ref, defaults to `HEAD~1`
-       to_ref (str): newer git ref, defaults to `HEAD`
-    Returns: list of versions added between refs
+       checksums: an iterable of checksums to look for in the diff
+       path: path to the package.py
+       from_ref: oldest git ref, defaults to ``HEAD~1``
+       to_ref: newer git ref, defaults to ``HEAD``
+    Returns: list of version checksums added between refs
     """
     git_exe = spack.util.git.git(required=True)
 
@@ -115,13 +111,13 @@ def get_added_versions(
     # Store added and removed versions
     # Removed versions are tracked here to determine when versions are moved in a file
     # and show up as both added and removed in a git diff.
-    added_checksums = set()
-    removed_checksums = set()
+    added_checksums: Set[str] = set()
+    removed_checksums: Set[str] = set()
 
     # Scrape diff for modified versions and prune added versions if they show up
     # as also removed (which means they've actually just moved in the file and
     # we shouldn't need to rechecksum them)
-    for checksum in checksums_version_dict.keys():
+    for checksum in checksums:
         for line in diff_lines:
             if checksum in line:
                 if line.startswith("+"):
@@ -129,15 +125,15 @@ def get_added_versions(
                 if line.startswith("-"):
                     removed_checksums.add(checksum)
 
-    return [checksums_version_dict[c] for c in added_checksums - removed_checksums]
+    return list(added_checksums - removed_checksums)
 
 
 def stack_changed(env_path: str) -> bool:
     """Given an environment manifest path, return whether or not the stack was changed.
     Returns True iff the environment manifest changed between the provided revisions (or
-    additionally if the `.gitlab-ci.yml` file itself changed)."""
+    additionally if the ``.gitlab-ci.yml`` file itself changed)."""
     # git returns posix paths always, normalize input to be compatible with that
-    env_path = spack.llnl.path.convert_to_posix_path(os.path.dirname(env_path))
+    env_path = spack.util.path.convert_to_posix_path(os.path.dirname(env_path))
 
     git = spack.util.git.git(required=True)
     git_dir = get_git_root(env_path)
@@ -258,9 +254,7 @@ def create_already_built_pruner(check_index_only: bool = True) -> PrunerCallback
         if not spec_locations:
             return RebuildDecision(True, "not found anywhere")
 
-        urls = ",".join(
-            [f"{loc.url_and_version.url}@v{loc.url_and_version.version}" for loc in spec_locations]
-        )
+        urls = ",".join(f"{loc:_url@v_version? (view: _view)}" for loc in spec_locations)
         message = f"up-to-date [{urls}]"
         return RebuildDecision(False, message)
 
@@ -375,9 +369,9 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.check_index_only = args.index_only
     options.forward_variables = args.forward_variable or []
 
-    ci_config = cfg.get("ci")
+    ci_config = cfg.CONFIG.get("ci")
 
-    cdash_config = cfg.get("cdash")
+    cdash_config = cfg.CONFIG.get("cdash")
     if "build-group" in cdash_config:
         options.cdash_handler = CDashHandler(cdash_config)
 
@@ -485,7 +479,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     options = collect_pipeline_options(env, args)
 
     # Get the joined "ci" config with all of the current scopes resolved
-    ci_config = cfg.get("ci")
+    ci_config = cfg.CONFIG.get("ci")
     if not ci_config:
         raise SpackCIError("Environment does not have a `ci` configuration")
 
@@ -500,13 +494,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
     # Build a pipeline from the specs in the concrete environment
-    pipeline = PipelineDag(
-        [
-            concrete
-            for abstract, concrete in env.concretized_specs()
-            if abstract in env.spec_lists["specs"]
-        ]
-    )
+    pipeline = PipelineDag([env.specs_by_hash[x.hash] for x in env.concretized_roots])
 
     # Optionally add various pruning filters
     pruning_filters = []
@@ -521,16 +509,19 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         # packagen name not in that list.
         unaffected_pruner = get_unaffected_pruners(env, options.untouched_pruning_dependent_depth)
         if unaffected_pruner:
+            tty.info("Enabling Unaffected Pruner")
             pruning_filters.append(unaffected_pruner)
 
     # Possibly prune specs that are already built on some configured mirror
     if options.prune_up_to_date:
+        tty.info("Enabling Up-to-date Pruner")
         pruning_filters.append(
             create_already_built_pruner(check_index_only=options.check_index_only)
         )
 
     # Possibly prune specs that are external
     if options.prune_external:
+        tty.info("Enabling Externals Pruner")
         pruning_filters.append(create_external_pruner())
 
     # Do all the pruning
@@ -553,7 +544,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     generate_method(pipeline, spack_ci_config, options)
 
     # Use all unpruned specs to populate the build group for this set
-    cdash_config = cfg.get("cdash")
+    cdash_config = cfg.CONFIG.get("cdash")
     if options.cdash_handler and options.cdash_handler.auth_token:
         options.cdash_handler.create_buildgroup()
     elif cdash_config:
@@ -561,17 +552,14 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         tty.warn("Unable to populate buildgroup without CDash credentials")
 
 
-def import_signing_key(base64_signing_key):
-    """Given Base64-encoded gpg key, decode and import it to use for
-        signing packages.
+def import_signing_key(base64_signing_key: str) -> None:
+    """Given Base64-encoded gpg key, decode and import it to use for signing packages.
 
     Arguments:
-        base64_signing_key (str): A gpg key including the secret key,
-            armor-exported and base64 encoded, so it can be stored in a
-            gitlab CI variable.  For an example of how to generate such
-            a key, see:
-
-        https://github.com/spack/spack-infrastructure/blob/main/gitlab-docker/files/gen-key
+        base64_signing_key:
+            A gpg key including the secret key, armor-exported and base64 encoded, so it can be
+            stored in a gitlab CI variable. For an example of how to generate such a key, see
+            https://github.com/spack/spack-infrastructure/blob/main/gitlab-docker/files/gen-key.
     """
     if not base64_signing_key:
         tty.warn("No key found for signing/verifying packages")
@@ -581,27 +569,25 @@ def import_signing_key(base64_signing_key):
 
     # This command has the side-effect of creating the directory referred
     # to as GNUPGHOME in setup_environment()
-    list_output = spack_gpg("list", output=str)
+    list_output = spack_gpg("list")
 
     tty.debug("spack gpg list:")
     tty.debug(list_output)
 
-    decoded_key = base64.b64decode(base64_signing_key)
-    if isinstance(decoded_key, bytes):
-        decoded_key = decoded_key.decode("utf8")
+    decoded_key = base64.b64decode(base64_signing_key).decode("utf-8")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         sign_key_path = os.path.join(tmpdir, "signing_key")
         with open(sign_key_path, "w", encoding="utf-8") as fd:
             fd.write(decoded_key)
 
-        key_import_output = spack_gpg("trust", sign_key_path, output=str)
+        key_import_output = spack_gpg("trust", "-y", sign_key_path)
         tty.debug(f"spack gpg trust {sign_key_path}")
         tty.debug(key_import_output)
 
     # Now print the keys we have for verifying and signing
-    trusted_keys_output = spack_gpg("list", "--trusted", output=str)
-    signing_keys_output = spack_gpg("list", "--signing", output=str)
+    trusted_keys_output = spack_gpg("list", "--trusted")
+    signing_keys_output = spack_gpg("list", "--signing")
 
     tty.debug("spack gpg list --trusted")
     tty.debug(trusted_keys_output)
@@ -704,17 +690,15 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     )
 
 
-def download_and_extract_artifacts(url, work_dir) -> str:
+def download_and_extract_artifacts(url: str, work_dir: str) -> str:
     """Look for gitlab artifacts.zip at the given url, and attempt to download
-        and extract the contents into the given work_dir
+    and extract the contents into the given work_dir
 
     Arguments:
+        url: Complete url to artifacts.zip file
+        work_dir: Path to destination where artifacts should be extracted
 
-        url (str): Complete url to artifacts.zip file
-        work_dir (str): Path to destination where artifacts should be extracted
-
-    Output:
-
+    Returns:
         Artifacts root path relative to the archive root
     """
     tty.msg(f"Fetching artifacts from: {url}")
@@ -730,9 +714,9 @@ def download_and_extract_artifacts(url, work_dir) -> str:
     os.makedirs(work_dir, exist_ok=True)
 
     try:
-        response = urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
-        with open(artifacts_zip_path, "wb") as out_file:
-            shutil.copyfileobj(response, out_file)
+        with urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+            with open(artifacts_zip_path, "wb") as out_file:
+                shutil.copyfileobj(response, out_file)
 
         with zipfile.ZipFile(artifacts_zip_path) as zip_file:
             zip_file.extractall(work_dir)
@@ -769,23 +753,27 @@ def get_spack_info():
     return f"no git repo, use spack {spack.spack_version}"
 
 
-def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
-    """Look in the local spack clone to find the checkout_commit, and if
-        provided, the merge_commit given as arguments.  If those commits can
-        be found locally, then clone spack and attempt to recreate a merge
-        commit with the same parent commits as tested in gitlab.  This looks
-        something like 1) git clone repo && cd repo 2) git checkout
-        <checkout_commit> 3) git merge <merge_commit>.  If there is no
-        merge_commit provided, then skip step (3).
+def setup_spack_repro_version(
+    repro_dir: str, checkout_commit: str, merge_commit: Optional[str] = None
+) -> bool:
+    """Look in the local spack clone to find the checkout_commit, and if provided, the
+    merge_commit given as arguments. If those commits can be found locally, then clone spack and
+    attempt to recreate a merge commit with the same parent commits as tested in gitlab. This looks
+    something like
+
+    1. ``git clone repo && cd repo``
+    2. ``git checkout <checkout_commit>``
+    3. ``git merge <merge_commit>``
+
+    If there is no merge_commit provided, then skip step (3).
 
     Arguments:
 
-        repro_dir (str): Location where spack should be cloned
-        checkout_commit (str): SHA of PR branch commit
-        merge_commit (str): SHA of target branch parent
+        repro_dir: Location where spack should be cloned
+        checkout_commit: SHA of PR branch commit
+        merge_commit: SHA of target branch parent
 
-    Returns: True if git repo state was successfully recreated, or False
-        otherwise.
+    Returns: True iff the git repo state was successfully recreated
     """
     # figure out the path to the spack git version being used for the
     # reproduction
@@ -866,7 +854,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
 
 def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head):
-    """Given a url to gitlab artifacts.zip from a failed 'spack ci rebuild' job,
+    """Given a url to gitlab artifacts.zip from a failed ``spack ci rebuild`` job,
     attempt to setup an environment in which the failure can be reproduced
     locally.  This entails the following:
 
@@ -1000,7 +988,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
 
     # Regular expressions for parsing that HEAD commit.  If the pipeline
     # was on the gitlab spack mirror, it will have been a merge commit made by
-    # gitub and pushed by the sync script.  If the pipeline was run on some
+    # github and pushed by the sync script.  If the pipeline was run on some
     # environment repo, then the tested spack commit will likely have been
     # a regular commit.
     commit_1 = None
@@ -1065,7 +1053,11 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
                 f"share/spack/setup-env.{platform_script_ext}",
             ),
         ],
-        ["spack", "gpg", "trust", mounted_gpg_path if job_image else gpg_path] if gpg_path else [],
+        (
+            ["spack", "gpg", "trust", "-y", mounted_gpg_path if job_image else gpg_path]
+            if gpg_path
+            else []
+        ),
         ["spack", "env", "activate", mounted_env_dir if job_image else repro_dir],
         [
             (
@@ -1107,7 +1099,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
             "--name",
             f"spack_reproducer{container_suffix}",
             "-v",
-            ":".join([work_dir, mounted_workdir, "Z"]),
+            f"{work_dir}:{mounted_workdir}:Z",
             "-v",
             ":".join(
                 [
@@ -1141,7 +1133,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
         process_command("reproducer", entrypoint_script, work_dir, run=autostart)
 
         inst_list.append("\nOnce on the tagged runner:\n\n")
-        inst_list.extent(
+        inst_list.extend(
             [
                 "    - Run the reproducer script",
                 f"       $ {work_dir}/reproducer.{platform_script_ext}",
@@ -1294,9 +1286,7 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
         try:
             with open(file_path, "w", encoding="utf-8") as fd:
                 syaml.dump(broken_spec_details, fd)
-            web_util.push_to_url(
-                file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
-            )
+            web_util.push_to_url(file_path, url, keep_original=False, content_type="text/plain")
         except Exception as err:
             # If there is an S3 error (e.g., access denied or connection
             # error), the first non boto-specific class in the exception
@@ -1310,12 +1300,11 @@ def read_broken_spec(broken_spec_url):
     object.
     """
     try:
-        _, _, fs = web_util.read_from_url(broken_spec_url)
+        broken_spec_contents = web_util.read_text(broken_spec_url)
     except web_util.SpackWebError:
         tty.warn(f"Unable to read broken spec from {broken_spec_url}")
         return None
 
-    broken_spec_contents = codecs.getreader("utf-8")(fs).read()
     return syaml.load(broken_spec_contents)
 
 

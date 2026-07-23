@@ -4,12 +4,12 @@
 
 import os
 
-from spack_repo.builtin_mock.build_systems.generic import Package
+from spack_repo.builtin_mock.build_systems.makefile import MakefilePackage
 
 from spack.package import *
 
 
-class PrintingPackage(Package):
+class PrintingPackage(MakefilePackage):
     """This package prints some output from its install method.
 
     We use this to test whether that output is properly logged.
@@ -27,6 +27,14 @@ class PrintingPackage(Package):
         touch(os.path.join(prefix, "dummyfile"))
 
         print("AFTER INSTALL")
+
+    def check(self):
+        """Run build-time tests."""
+        print("PRINTING PACKAGE CHECK")
+
+    def installcheck(self):
+        """Run install-time tests."""
+        print("PRINTING PACKAGE INSTALLCHECK")
 
     def test_print(self):
         """Test print example."""

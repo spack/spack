@@ -9,11 +9,11 @@ import re
 from collections import defaultdict
 from typing import Dict, Generator
 
-import spack.llnl.util.tty as tty
 import spack.paths
+from spack.util import tty
 
 description = "list and check license headers on files in spack"
-section = "developer"
+section = "query"
 level = "long"
 
 #: SPDX license id must appear in the first <license_lines> lines of a file
@@ -33,12 +33,10 @@ licensed_files_patterns = [
     r"^bin/spack_pwsh\.ps1$",
     r"^bin/sbang$",
     r"^bin/spack-python$",
-    r"^bin/haspywin\.py$",
     # all of spack core except unparse
     r"^lib/spack/spack/(?!vendor/|util/unparse|util/ctest_log_parser|test/util/unparse).*\.py$",
     r"^lib/spack/spack/.*\.sh$",
     r"^lib/spack/spack/.*\.lp$",
-    r"^lib/spack/llnl/.*\.py$",
     # 1 file in vendored packages
     r"^lib/spack/spack/vendor/__init__.py$",
     # special case some test data files that have license headers

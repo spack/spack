@@ -7,8 +7,8 @@ from typing import List, Tuple
 def tokenize_flags(flags_values: str, propagate: bool = False) -> List[Tuple[str, bool]]:
     """Given a compiler flag specification as a string, this returns a list
     where the entries are the flags. For compiler options which set values
-    using the syntax "-flag value", this function groups flags and their
-    values together. Any token not preceded by a "-" is considered the
+    using the syntax ``-flag value``, this function groups flags and their
+    values together. Any token not preceded by a ``-`` is considered the
     value of a prior flag."""
     tokens = flags_values.split()
     if not tokens:

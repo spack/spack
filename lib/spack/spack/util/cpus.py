@@ -9,7 +9,7 @@ import os
 def cpus_available():
     """
     Returns the number of CPUs available for the current process, or the number
-    of phyiscal CPUs when that information cannot be retrieved. The number
+    of physical CPUs when that information cannot be retrieved. The number
     of available CPUs might differ from the number of physical CPUs when
     using spack through Slurm or container runtimes.
     """

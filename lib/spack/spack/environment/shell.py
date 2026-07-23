@@ -7,12 +7,13 @@ from typing import Optional
 
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.schema.environment
 import spack.store
-from spack.llnl.util.tty.color import colorize
+from spack.active_environment import active_environment
+from spack.util import tty
 from spack.util.environment import EnvironmentModifications
+from spack.util.tty.color import colorize
 
 
 def activate_header(env, shell, prompt=None, view: Optional[str] = None):
@@ -180,7 +181,7 @@ def activate(
     # become PATH variables.
     #
 
-    env_vars_yaml = spack.config.get("env_vars", None)
+    env_vars_yaml = spack.config.CONFIG.get("env_vars", None)
     if env_vars_yaml:
         env_mods.extend(spack.schema.environment.parse(env_vars_yaml))
 
@@ -194,7 +195,7 @@ def activate(
             "Environment view is broken due to a missing package or repo.\n",
             "  To activate without views enabled, activate with:\n",
             "    spack env activate -V {0}\n".format(env.name),
-            "  To remove it and resolve the issue, " "force concretize with the command:\n",
+            "  To remove it and resolve the issue, force concretize with the command:\n",
             "    spack -e {0} concretize --force".format(env.name),
         )
 
@@ -212,13 +213,13 @@ def deactivate() -> EnvironmentModifications:
         Environment variables modifications to activate environment.
     """
     env_mods = EnvironmentModifications()
-    active = ev.active_environment()
+    active = active_environment()
 
     if active is None:
         return env_mods
 
     with active.manifest.use_config():
-        env_vars_yaml = spack.config.get("env_vars", None)
+        env_vars_yaml = spack.config.CONFIG.get("env_vars", None)
     if env_vars_yaml:
         env_mods.extend(spack.schema.environment.parse(env_vars_yaml).reversed())
 

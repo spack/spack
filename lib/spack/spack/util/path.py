@@ -6,78 +6,127 @@
 
 TODO: this is really part of spack.config. Consolidate it.
 """
-import contextlib
-import getpass
+
+import functools
 import os
-import pathlib
 import re
 import subprocess
 import sys
-import tempfile
-from datetime import date
-from typing import Optional
+from typing import List, Optional, Union
+from urllib.parse import urlparse
 
-import spack.llnl.util.tty as tty
-import spack.util.spack_yaml as syaml
-from spack.llnl.util.lang import memoized
+from spack.util import tty
+from spack.util.lang import memoized
 
-__all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
+__all__ = []
 
 
-def architecture():
-    # break circular import
-    import spack.platforms
-    import spack.spec
+class Path:
+    """Enum to identify the path-style."""
 
-    host_platform = spack.platforms.host()
-    host_os = host_platform.default_operating_system()
-    host_target = host_platform.default_target()
-
-    return spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
+    unix: int = 0
+    windows: int = 1
+    platform_path: int = windows if sys.platform == "win32" else unix
 
 
-def get_user():
-    # User pwd where available because it accounts for effective uids when using ksu and similar
-    try:
-        # user pwd for unix systems
-        import pwd
+def format_os_path(path: str, mode: int = Path.unix) -> str:
+    """Formats the input path to use consistent, platform specific separators.
 
-        return pwd.getpwuid(os.geteuid()).pw_name
-    except ImportError:
-        # fallback on getpass
-        return getpass.getuser()
+    Absolute paths are converted between drive letters and a prepended ``/`` as per platform
+    requirement.
+
+    Parameters:
+        path: the path to be normalized, must be a string or expose the replace method.
+        mode: the path file separator style to normalize the passed path to.
+            Default is unix style, i.e. ``/``
+    """
+    if not path:
+        return path
+    if mode == Path.windows:
+        path = path.replace("/", "\\")
+    else:
+        path = path.replace("\\", "/")
+    return path
 
 
-# return value for replacements with no match
-NOMATCH = object()
+def convert_to_posix_path(path: str) -> str:
+    """Converts the input path to POSIX style."""
+    return format_os_path(path, mode=Path.unix)
 
 
-# Substitutions to perform
-def replacements():
-    # break circular imports
-    import spack
-    import spack.environment as ev
-    import spack.paths
+def convert_to_platform_path(path: str) -> str:
+    """Converts the input path to the current platform's native style."""
+    return format_os_path(path, mode=Path.platform_path)
 
-    arch = architecture()
 
-    return {
-        "spack": lambda: spack.paths.prefix,
-        "user": lambda: get_user(),
-        "tempdir": lambda: tempfile.gettempdir(),
-        "user_cache_path": lambda: spack.paths.user_cache_path,
-        "spack_instance_id": lambda: spack.paths.spack_instance_id,
-        "architecture": lambda: arch,
-        "arch": lambda: arch,
-        "platform": lambda: arch.platform,
-        "operating_system": lambda: arch.os,
-        "os": lambda: arch.os,
-        "target": lambda: arch.target,
-        "target_family": lambda: arch.target.family,
-        "date": lambda: date.today().strftime("%Y-%m-%d"),
-        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
-        "spack_short_version": lambda: spack.get_short_version(),
-    }
+def path_to_os_path(*parameters: str) -> List[str]:
+    """Takes an arbitrary number of positional parameters, converts each argument of type
+    string to use a normalized filepath separator, and returns a list of all values.
+    """
+
+    def _is_url(path_or_url: str) -> bool:
+        if "\\" in path_or_url:
+            return False
+        url_tuple = urlparse(path_or_url)
+        return bool(url_tuple.scheme) and len(url_tuple.scheme) > 1
+
+    result = []
+    for item in parameters:
+        if isinstance(item, str) and not _is_url(item):
+            item = convert_to_platform_path(item)
+        result.append(item)
+    return result
+
+
+def _system_path_filter(_func=None, arg_slice: Optional[slice] = None):
+    """Filters function arguments to account for platform path separators.
+    Optional slicing range can be specified to select specific arguments
+
+    This decorator takes all (or a slice) of a method's positional arguments
+    and normalizes usage of filepath separators on a per platform basis.
+
+    Note: `**kwargs`, urls, and any type that is not a string are ignored
+    so in such cases where path normalization is required, that should be
+    handled by calling path_to_os_path directly as needed.
+
+    Parameters:
+        arg_slice: a slice object specifying the slice of arguments
+            in the decorated method over which filepath separators are
+            normalized
+    """
+
+    def holder_func(func):
+        @functools.wraps(func)
+        def path_filter_caller(*args, **kwargs):
+            args = list(args)
+            if arg_slice:
+                args[arg_slice] = path_to_os_path(*args[arg_slice])
+            else:
+                args = path_to_os_path(*args)
+            return func(*args, **kwargs)
+
+        return path_filter_caller
+
+    if _func:
+        return holder_func(_func)
+    return holder_func
+
+
+def _noop_decorator(_func=None, arg_slice: Optional[slice] = None):
+    return _func if _func else lambda x: x
+
+
+if sys.platform == "win32":
+    system_path_filter = _system_path_filter
+else:
+    system_path_filter = _noop_decorator
+
+
+def sanitize_win_longpath(path: str) -> str:
+    """Strip Windows extended path prefix from strings
+    Returns sanitized string.
+    no-op if extended path prefix is not present"""
+    return path.lstrip("\\\\?\\")
 
 
 # This is intended to be longer than the part of the install path
@@ -96,8 +145,11 @@ SPACK_MAX_INSTALL_PATH_LENGTH = 300
 
 #: Padded paths comprise directories with this name (or some prefix of it). :
 #: It starts with two underscores to make it unlikely that prefix matches would
-#: include some other component of the intallation path.
+#: include some other component of the installation path.
 SPACK_PATH_PADDING_CHARS = "__spack_path_placeholder__"
+
+#: Bytes equivalent of SPACK_PATH_PADDING_CHARS.
+SPACK_PATH_PADDING_BYTES = SPACK_PATH_PADDING_CHARS.encode("ascii")
 
 #: Special padding char if the padded string would otherwise end with a path
 #: separator (since the path separator would otherwise get collapsed out,
@@ -152,53 +204,6 @@ def get_system_path_max():
     return sys_max_path_length
 
 
-def substitute_config_variables(path):
-    """Substitute placeholders into paths.
-
-    Spack allows paths in configs to have some placeholders, as follows:
-
-    - $env                 The active Spack environment.
-    - $spack               The Spack instance's prefix
-    - $tempdir             Default temporary directory returned by tempfile.gettempdir()
-    - $user                The current user's username
-    - $user_cache_path     The user cache directory (~/.spack, unless overridden)
-    - $spack_instance_id   Hash that distinguishes Spack instances on the filesystem
-    - $architecture        The spack architecture triple for the current system
-    - $arch                The spack architecture triple for the current system
-    - $platform            The spack platform for the current system
-    - $os                  The OS of the current system
-    - $operating_system    The OS of the current system
-    - $target              The ISA target detected for the system
-    - $target_family       The family of the target detected for the system
-    - $date                The current date (YYYY-MM-DD)
-    - $spack_short_version The spack short version
-
-    These are substituted case-insensitively into the path, and users can
-    use either ``$var`` or ``${var}`` syntax for the variables. $env is only
-    replaced if there is an active environment, and should only be used in
-    environment yaml files.
-    """
-    _replacements = replacements()
-
-    # Look up replacements
-    def repl(match):
-        m = match.group(0)
-        key = m.strip("${}").lower()
-        repl = _replacements.get(key, lambda: m)()
-        return m if repl is NOMATCH else str(repl)
-
-    # Replace $var or ${var}.
-    return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
-
-
-def substitute_path_variables(path):
-    """Substitute config vars, expand environment vars, expand user home."""
-    path = substitute_config_variables(path)
-    path = os.path.expandvars(path)
-    path = os.path.expanduser(path)
-    return path
-
-
 def _get_padding_string(length):
     spack_path_padding_size = len(SPACK_PATH_PADDING_CHARS)
     num_reps = int(length / (spack_path_padding_size + 1))
@@ -238,63 +243,6 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
-    """Same as substitute_path_variables, but also take absolute path.
-
-    If the string is a yaml object with file annotations, make absolute paths
-    relative to that file's directory.
-    Otherwise, use ``default_wd`` if specified, otherwise ``os.getcwd()``
-
-    Arguments:
-        path: path being converted as needed
-        default_wd: optional working directory/root for non-yaml string paths
-
-    Returns: An absolute path or non-file URL with path variable substitution
-    """
-    import urllib.parse
-    import urllib.request
-
-    # Get file in which path was written in case we need to make it absolute
-    # relative to that path.
-    filename = None
-    if isinstance(path, syaml.syaml_str):
-        filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
-        assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
-
-    path = substitute_path_variables(path)
-
-    # Ensure properly process a Windows path
-    win_path = pathlib.PureWindowsPath(path)
-    if win_path.drive:
-        # Assume only absolute paths are supported with a Windows drive
-        # (though DOS does allow drive-relative paths).
-        return os.path.normpath(str(win_path))
-
-    # Now process linux-like paths and remote URLs
-    url = urllib.parse.urlparse(path)
-    url_path = urllib.request.url2pathname(url.path)
-    if url.scheme:
-        if url.scheme != "file":
-            # Have a remote URL so simply return it with substitutions
-            return path
-
-        # Drop the URL scheme from the local path
-        path = url_path
-
-    if os.path.isabs(path):
-        return os.path.normpath(path)
-
-    # Have a relative path so prepend the appropriate dir to make it absolute
-    if filename:
-        # Prepend the directory of the syaml path
-        return os.path.normpath(os.path.join(filename, path))
-
-    # Prepend the default, if provided, or current working directory.
-    base = default_wd or os.getcwd()
-    tty.debug(f"Using working directory {base} as base for abspath")
-    return os.path.normpath(os.path.join(base, path))
-
-
 def longest_prefix_re(string, capture=True):
     """Return a regular expression that matches a the longest possible prefix of string.
 
@@ -318,12 +266,29 @@ def longest_prefix_re(string, capture=True):
     )
 
 
-#: regex cache for padding_filter function
-_filter_re = None
+def _build_padding_re(as_bytes: bool = False):
+    """Build and return a compiled regex for filtering path padding placeholders."""
+    pad = re.escape(SPACK_PATH_PADDING_CHARS)
+    extra = SPACK_PATH_PADDING_EXTRA_CHAR
+    longest_prefix = longest_prefix_re(SPACK_PATH_PADDING_CHARS, capture=False)
+
+    regex = (
+        r"((?:/[^/\s]*)*?)"  # zero or more leading non-whitespace path components
+        r"(?:/{pad})+"  # the padding string repeated one or more times
+        # trailing prefix of padding as path component
+        r"(?:/{longest_prefix}|/{longest_prefix}{extra})?(?=/)"
+    )
+    regex = regex.replace("/", re.escape(os.sep))
+    regex = regex.format(pad=pad, extra=extra, longest_prefix=longest_prefix)
+
+    if as_bytes:
+        return re.compile(regex.encode("ascii"))
+    else:
+        return re.compile(regex)
 
 
-def padding_filter(string):
-    """Filter used to reduce output from path padding in log output.
+class _PaddingFilter:
+    """Callable that filters path-padding placeholders from a string or bytes buffer.
 
     This turns paths like this:
 
@@ -335,7 +300,7 @@ def padding_filter(string):
 
     Where ``padded-to-512-chars`` indicates that the prefix was padded with
     placeholders until it hit 512 characters. The actual value of this number
-    depends on what the `install_tree``'s ``padded_length`` is configured to.
+    depends on what the ``install_tree``'s ``padded_length`` is configured to.
 
     For a path to match and be filtered, the placeholder must appear in its
     entirety at least one time. e.g., "/spack/" would not be filtered, but
@@ -343,48 +308,32 @@ def padding_filter(string):
 
     Note that only the first padded path in the string is filtered.
     """
-    global _filter_re
 
-    pad = SPACK_PATH_PADDING_CHARS
-    if not _filter_re:
-        longest_prefix = longest_prefix_re(pad)
-        regex = (
-            r"((?:/[^/\s]*)*?)"  # zero or more leading non-whitespace path components
-            r"(/{pad})+"  # the padding string repeated one or more times
-            # trailing prefix of padding as path component
-            r"(/{longest_prefix}|/{longest_prefix}{extra_pad_character})?(?=/)"
-        )
-        regex = regex.replace("/", re.escape(os.sep))
-        regex = regex.format(
-            pad=pad,
-            extra_pad_character=SPACK_PATH_PADDING_EXTRA_CHAR,
-            longest_prefix=longest_prefix,
-        )
-        _filter_re = re.compile(regex)
+    __slots__ = ("_re", "_needle", "_fmt")
 
-    def replacer(match):
-        return "%s%s[padded-to-%d-chars]" % (match.group(1), os.sep, len(match.group(0)))
+    def __init__(self, as_bytes: bool = False) -> None:
+        self._re = _build_padding_re(as_bytes=as_bytes)
+        if as_bytes:
+            self._needle: Union[str, bytes] = SPACK_PATH_PADDING_BYTES
+            self._fmt: Union[str, bytes] = b"%b" + os.sep.encode("ascii") + b"[padded-to-%d-chars]"
+        else:
+            self._needle = SPACK_PATH_PADDING_CHARS
+            self._fmt = "%s" + os.sep + "[padded-to-%d-chars]"
 
-    return _filter_re.sub(replacer, string)
+    def _replace(self, match):
+        return self._fmt % (match.group(1), len(match.group(0)))
+
+    def __call__(self, data):
+        if self._needle not in data:
+            return data
+        return self._re.sub(self._replace, data)
 
 
-@contextlib.contextmanager
-def filter_padding():
-    """Context manager to safely disable path padding in all Spack output.
+#: Callable that filters path-padding placeholders from strings
+padding_filter = _PaddingFilter(as_bytes=False)
 
-    This is needed because Spack's debug output gets extremely long when we use a
-    long padded installation path.
-    """
-    # circular import
-    import spack.config
-
-    padding = spack.config.get("config:install_tree:padded_length", None)
-    if padding:
-        # filter out all padding from the intsall command output
-        with tty.output_filter(padding_filter):
-            yield
-    else:
-        yield  # no-op: don't filter unless padding is actually enabled
+#: Callable that filters path-padding placeholders from bytes buffers
+padding_filter_bytes = _PaddingFilter(as_bytes=True)
 
 
 def debug_padded_filter(string, level=1):

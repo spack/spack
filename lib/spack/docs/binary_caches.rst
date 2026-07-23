@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -6,32 +7,25 @@
    :description lang=en:
       Discover how to create, use, and manage build caches in Spack to share pre-built binary packages and speed up installations.
 
-.. _binary_caches:
+.. index::
+   single: buildcache; using
+   :name: binary_caches
 
-============
 Build Caches
 ============
 
-Some sites may encourage users to set up their own test environments
-before carrying out central installations, or some users may prefer to set
-up these environments on their own motivation. To reduce the load of
-recompiling otherwise identical package specs in different installations,
-installed packages can be put into build cache tarballs, pushed to
-your Spack mirror, and then downloaded and installed by others.
+To avoid recompilation of Spack packages, installed packages can be pushed to a build cache, and then downloaded and installed by others.
 
-Whenever a mirror provides prebuilt packages, Spack will take these packages
-into account during concretization and installation, making ``spack install``
-significantly faster.
+Whenever a mirror provides prebuilt packages, Spack will take these packages into account during concretization and installation, making ``spack install`` significantly faster.
 
 
 .. note::
 
-    We use the terms "build cache" and "mirror" often interchangeably. Mirrors
-    are used during installation for both sources and prebuilt packages. Build
-    caches refer to mirrors that provide prebuilt packages.
+    We use the terms "build cache" and "mirror" often interchangeably.
+    Mirrors are used during installation for both sources and prebuilt packages.
+    Build caches refer to mirrors that provide prebuilt packages.
 
 
-----------------------
 Creating a Build Cache
 ----------------------
 
@@ -41,15 +35,11 @@ Build caches are created via:
 
     $ spack buildcache push <path/url/mirror name> <spec>
 
-This command takes the locally installed spec and its dependencies and
-creates tarballs of their install prefixes. It also generates metadata files,
-signed with GPG. These tarballs and metadata files are then pushed to the
-provided build cache, which can be a local directory or a remote URL.
+This command takes the locally installed spec and its dependencies, and creates tarballs of their install prefixes.
+It also generates metadata files, signed with GPG.
+These tarballs and metadata files are then pushed to the provided build cache, which can be a local directory or a remote URL.
 
-Here is an example where a build cache is created in a local directory named
-"spack-cache", to which we push the "ninja" spec:
-
-ninja-1.12.1-vmvycib6vmiofkdqgrblo7zsvp7odwut
+Here is an example where a build cache is created in a local directory named "spack-cache", to which we push the "ninja" spec:
 
 .. code-block:: console
 
@@ -62,20 +52,18 @@ Note that ``ninja`` must be installed locally for this to work.
 
 Once you have a build cache, you can add it as a mirror, as discussed next.
 
----------------------------------------
 Finding or Installing Build Cache Files
 ---------------------------------------
 
-To find or install build cache files, a Spack mirror must be configured
-with:
+To find or install build cache files, a Spack mirror must be configured with:
 
 .. code-block:: console
 
     $ spack mirror add <name> <url or path>
 
 
-Both web URLs and local paths on the filesystem can be specified. In the previous
-example, you might add the directory "spack-cache" and call it ``mymirror``:
+Both URLs and local paths on the filesystem can be specified.
+In the previous example, you might add the directory "spack-cache" and call it ``mymirror``:
 
 
 .. code-block:: console
@@ -93,9 +81,11 @@ You can see that the mirror is added with ``spack mirror list`` as follows:
     spack-public       https://spack-llnl-mirror.s3-us-west-2.amazonaws.com/
 
 
-At this point, you've created a build cache, but Spack hasn't indexed it, so if
-you run ``spack buildcache list``, you won't see any results. You need to index
-this new build cache as follows:
+.. index::
+   single: build cache index; updating
+
+At this point, you've created a build cache, but Spack hasn't indexed it, so if you run ``spack buildcache list``, you won't see any results.
+You need to index this new build cache as follows:
 
 .. code-block:: console
 
@@ -111,10 +101,9 @@ Now you can use ``list``:
     [ ... ]
     ninja@1.12.1
 
-With ``mymirror`` configured and an index available, Spack will automatically
-use it during concretization and installation. That means that you can expect
-``spack install ninja`` to fetch prebuilt packages from the mirror. Let's
-verify by reinstalling ninja:
+With ``mymirror`` configured and an index available, Spack will automatically use it during concretization and installation.
+That means that you can expect ``spack install ninja`` to fetch prebuilt packages from the mirror.
+Let's verify by reinstalling ninja:
 
 .. code-block:: spec
 
@@ -132,20 +121,17 @@ verify by reinstalling ninja:
       Search: 0.00s.  Fetch: 0.11s.  Install: 0.11s.  Extract: 0.10s.  Relocate: 0.00s.  Total: 0.22s
     [+] /home/spackuser/spack/opt/spack/linux-ubuntu22.04-sapphirerapids/gcc-12.3.0/ninja-1.12.1-ngldn2kpvb6lqc44oqhhow7fzg7xu7lh
 
-It worked! You've just completed a full example of creating a build cache with
-a spec of interest, adding it as a mirror, updating its index, listing the contents,
-and finally, installing from it.
+It worked!
+You've just completed a full example of creating a build cache with a spec of interest, adding it as a mirror, updating its index, listing the contents, and finally, installing from it.
 
-By default, Spack falls back to building from sources when the mirror is not available
-or when the package is simply not already available. To force Spack to only install
-prebuilt packages, you can use:
+By default, Spack falls back to building from sources when the mirror is not available or when the package is simply not already available.
+To force Spack to install only prebuilt packages, you can use:
 
 .. code-block:: console
 
    $ spack install --use-buildcache only <package>
 
-For example, to combine all of the commands above to add the E4S build cache
-and then install from it exclusively, you would do:
+For example, to combine all of the commands above to add the E4S build cache and then install from it exclusively, you would do:
 
 .. code-block:: console
 
@@ -153,31 +139,97 @@ and then install from it exclusively, you would do:
     $ spack buildcache keys --install --trust
     $ spack install --use-buildcache only <package>
 
-We use ``--install`` and ``--trust`` to say that we are installing keys to our
-keyring and trusting all downloaded keys.
+The ``--install`` and ``--trust`` flags install keys to the keyring and trust all downloaded keys.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Build Cache Index Views
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. note::
+    Introduced in Spack v1.2.
+    The addition of this feature does not increment the build cache version (v3).
+
+.. note::
+   Build cache index views are not supported in OCI build caches.
+
+Build caches can quickly become large and inefficient to search as binaries are added over time.
+A common work around to this problem is to break the build cache into stacks that target specific applications or workflows.
+This allows for curation of binaries as smaller collections of packages that push to their own mirrors that each maintain a smaller search area.
+However, this approach comes with the trade off of requiring much larger storage and computational footprints due to duplication of common dependencies between stacks.
+Splitting build caches can also reduce direct fetch hits by reducing the breadth of binaries available in a single mirror.
+
+To better address the issues with large search areas, build cache index views (or just "views" in this section) were introduced.
+A view is a named index which provides a curated view into a larger build cache.
+This allows build cache maintainers to provide the same granularity of build caches split by stacks without having to pay for the extra storage and compute required for the duplicated dependencies.
+
+Views can be created or updated using an active environment, or a list of environment names or paths.
+The ``spack buildcache`` commands for views are alias of the command ``spack buildcache update-index``.
+
+View indices are stored similarly to the top level build cache index, but use an additional prefix of the view name ``<build cache prefix>/v3/manifests/index/my-stack/index.manifest.json``.
+
+.. _cmd-spack-buildcache-create-view:
+
+Creating a Build Cache Index View
+"""""""""""""""""""""""""""""""""
+
+Here is an example of creating a view using an active environment.
+
+.. code-block:: console
+
+   $ spack env activate my-stack
+   $ spack install
+   $ spack buildcache push my-mirror
+   $ spack buildcache update-index --name my-view my-mirror
+
+It is also possible to create a view from a list of one or more environments by passing the environment names or paths.
+If a list of environments is passed while inside of an active environment, the active environment is ignored and only the passed environments are considered.
+
+.. code-block:: console
+
+   $ spack buildcache update-index --name my-view my-mirror my-stack /path/to/environment/my-other-stack
+
+.. _cmd-spack-buildcache-update-view:
+
+Updating a Build Cache Index View
+"""""""""""""""""""""""""""""""""
+
+To prevent accidentally overwriting an existing view, it is required to specify how a view should be updated.
+It is possible to use one of two options for updating a view index: ``--force`` or ``--append``.
+Using the ``--force`` option will replace the index as if the previous one did not exist.
+The ``--append`` option will first read the existing index, and then add the new specs to it.
+
+.. code-block:: console
+
+   $ spack buildcache push my-mirror
+   $ spack buildcache update-index --append --name my-view my-mirror my-stack
+
+
+.. warning::
+
+   Using the ``--append`` option with build cache index views is a non-atomic operation.
+   In the case where multiple writers are appending to the same view, the result will only include the state of the last to write.
+   When using ``--append`` for build cache workflows it is up to the user to correctly serialize the update operations.
+
+
+
 List of Popular Build Caches
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
+* `Spack Public Build Cache <https://spack.io/>`_: `spack build cache <https://cache.spack.io/>`_
+* `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `e4s build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
 
 
-------------------------------
 Creating and Trusting GPG keys
 ------------------------------
 
 .. _cmd-spack-gpg:
 
-^^^^^^^^^^^^^
 ``spack gpg``
 ^^^^^^^^^^^^^
 
 Spack has support for signing and verifying packages using GPG keys.
 A separate keyring is used for Spack, so any keys available in the user's home directory are not used.
 
-^^^^^^^^^^^^^^^^^^
 ``spack gpg init``
 ^^^^^^^^^^^^^^^^^^
 
@@ -186,7 +238,6 @@ Keys stored in :file:`var/spack/gpg` are the default keys for a Spack installati
 These keys may be imported by running ``spack gpg init``.
 This will import the default keys into the keyring as trusted keys.
 
-^^^^^^^^^^^^^
 Trusting keys
 ^^^^^^^^^^^^^
 
@@ -198,15 +249,14 @@ Additional keys may be added to the keyring using:
 
 Once a key is trusted, packages signed by the owner of the key may be installed.
 
-If you would like to remove keys from your keyring, use instead:
+To remove keys from your keyring, use:
 
 .. code-block:: console
 
    $ spack gpg untrust <keyid>
 
-Key IDs can be email addresses, names, or (best) fingerprints.
+Key IDs can be email addresses, names, or (preferably) fingerprints.
 
-^^^^^^^^^^^^^
 Creating keys
 ^^^^^^^^^^^^^
 
@@ -225,32 +275,24 @@ Secret keys may also be later exported using the ``spack gpg export <location> [
    :class: tip
 
    The creation of a new GPG key requires generating a lot of random numbers.
-   Depending on the entropy produced on your system, the entire process may take a long time (*even appearing to hang*).
+   Depending on the entropy produced on your system, the entire process may take a long time (and may even appear to hang).
    Virtual machines and cloud instances are particularly likely to display this behavior.
 
    To speed it up, you may install tools like ``rngd``, which is usually available as a package in the host OS.
    Another alternative is ``haveged``, which can be installed on RHEL/CentOS machines.
 
-   `This Digital Ocean tutorial
-   <https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged>`_
-   provides a good overview of sources of randomness.
+   `This Digital Ocean tutorial <https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged>`_ provides a good overview of sources of randomness.
 
--------------------
 Build Cache Signing
 -------------------
 
-By default, Spack will add a cryptographic signature to each package pushed to
-a build cache and verify the signature when installing from a build cache.
+By default, Spack will add a cryptographic signature to each package pushed to a build cache and verify the signature when installing from a build cache.
 
-Keys for signing can be managed with the :ref:`spack gpg <cmd-spack-gpg>` command,
-as well as ``spack buildcache keys``, as mentioned above.
+Keys for signing can be managed with the :ref:`spack gpg <cmd-spack-gpg>` command, as well as ``spack buildcache keys``, as mentioned above.
 
-You can disable signing when pushing with ``spack buildcache push --unsigned``
-and disable verification when installing from any build cache with
-``spack install --no-check-signature``.
+You can disable signing when pushing with ``spack buildcache push --unsigned`` and disable verification when installing from any build cache with ``spack install --no-check-signature``.
 
-Alternatively, signing and verification can be enabled or disabled on a per-build-cache
-basis:
+Alternatively, signing and verification can be enabled or disabled on a per-build-cache basis:
 
 .. code-block:: console
 
@@ -260,7 +302,7 @@ basis:
     $ spack mirror set --signed <name>  # enable signing and verification for an existing mirror
     $ spack mirror set --unsigned <name>  # disable signing and verification for an existing mirror
 
-Or you can directly edit the ``mirrors.yaml`` configuration file:
+Alternatively, you can edit the ``mirrors.yaml`` configuration file directly:
 
 .. code-block:: yaml
 
@@ -271,24 +313,43 @@ Or you can directly edit the ``mirrors.yaml`` configuration file:
 
 See also :ref:`mirrors`.
 
-----------
+
+Including and Excluding Specs in Build Caches
+---------------------------------------------
+
+.. versionadded:: 1.2
+
+When pushing to or fetching from a build cache, you can specify include and exclude patterns in the mirror configuration to control which specs are included in or excluded from the build cache.
+If a spec satisfies an include and exclude filter then the exclusion wins.
+By default, all specs are included and none are excluded.
+
+The ``mirrors.yaml`` has to be edited directly to specify include and exclude patterns:
+
+.. code-block:: yaml
+
+   mirrors:
+     <name>:
+       url: <url>
+       include_binary:
+       - "%gcc"  # include only specs that depend on gcc
+       exclude_binary:
+       - "dev_path=*"  # except development specs
+       - "^mpich"  # and any spec that depends on mpich
+
+
+.. index:: relocation
+
 Relocation
 ----------
 
-When using build caches across different machines, it is likely that the install
-root will be different from the one used to build the binaries.
+When using build caches across different machines, it is likely that the install root is different from the one used to build the binaries.
 
-To address this issue, Spack automatically relocates all paths encoded in binaries
-and scripts to their new location upon installation.
+To address this issue, Spack automatically relocates all paths encoded in binaries and scripts to their new location upon installation.
 
-Note that there are some cases where this is not possible: if binaries are built in
-a relatively short path and then installed to a longer path, there may not be enough
-space in the binary to encode the new path. In this case, Spack will fail to install
-the package from the build cache, and a source build is required.
+Note that there are some cases where this is not possible: if binaries are built in a relatively short path and then installed to a longer path, there may not be enough space in the binary to encode the new path.
+In this case, Spack will fail to install the package from the build cache, and a source build is required.
 
-To reduce the likelihood of this happening, it is highly recommended to add padding to
-the install root during the build, as specified in the :ref:`config <config-yaml>`
-section of the configuration:
+To reduce the likelihood of this happening, it is highly recommended to add padding to the install root during the build, as specified in the :ref:`config <config-yaml>` section of the configuration:
 
 .. code-block:: yaml
 
@@ -298,26 +359,27 @@ section of the configuration:
        padded_length: 128
 
 
-.. _binary_caches_oci:
+.. index:: autopush
 
----------------------------------
 Automatic Push to a Build Cache
 ---------------------------------
 
-Sometimes it is convenient to push packages to a build cache as soon as they are installed. Spack can do this by setting the autopush flag when adding a mirror:
+Sometimes it is convenient to push packages to a build cache immediately after they are installed.
+Spack can do this by setting the ``--autopush`` flag when adding a mirror:
 
 .. code-block:: console
 
     $ spack mirror add --autopush <name> <url or path>
 
-Or the autopush flag can be set for an existing mirror:
+Or the ``--autopush`` flag can be set for an existing mirror:
 
 .. code-block:: console
 
     $ spack mirror set --autopush <name>  # enable automatic push for an existing mirror
     $ spack mirror set --no-autopush <name>  # disable automatic push for an existing mirror
 
-Then, after installing a package, it is automatically pushed to all mirrors with ``autopush: true``. The command
+Then, after installing a package, it is automatically pushed to all mirrors with ``autopush: true``.
+The command
 
 .. code-block:: console
 
@@ -334,19 +396,19 @@ will have the same effect as
 
     Packages are automatically pushed to a build cache only if they are built from source.
 
------------------------------------------
+.. index::
+   single: buildcache; OCI registries
+   single: OCI registry
+   :name: binary_caches_oci
+
 OCI / Docker V2 Registries as Build Cache
 -----------------------------------------
 
-Spack can also use OCI or Docker V2 registries such as Docker Hub, Quay.io,
-GitHub Packages, GitLab Container Registry, JFrog Artifactory, and others
-as build caches. This is a convenient way to share binaries using public
-infrastructure or to cache Spack-built binaries in GitHub Actions and
-GitLab CI.
+Spack can also use OCI or Docker V2 registries such as Docker Hub, Quay.io, Amazon ECR, GitHub Packages, GitLab Container Registry, JFrog Artifactory, and others as build caches.
+This is a convenient way to share binaries using public infrastructure or to cache Spack-built binaries in GitHub Actions and GitLab CI.
+These registries can be used not only to share Spack binaries but also to create and distribute runnable container images.
 
-To get started, configure an OCI mirror using ``oci://`` as the scheme
-and optionally specify variables that hold the username and password (or
-personal access token) for the registry:
+To get started, configure an OCI mirror using ``oci://`` as the scheme and optionally specify variables that hold the username and password (or personal access token) for the registry:
 
 .. code-block:: console
 
@@ -354,8 +416,19 @@ personal access token) for the registry:
                        --oci-password-variable REGISTRY_TOKEN \
                        my_registry oci://example.com/my_image
 
-Spack follows the naming conventions of Docker, with Docker Hub as the default
-registry. To use Docker Hub, you can omit the registry domain:
+This registers a mirror in your ``mirrors.yaml`` configuration file that looks as follows:
+
+.. code-block:: yaml
+
+    mirrors:
+      my_registry:
+        url: oci://example.com/my_image
+        access_pair:
+          id_variable: REGISTRY_USER
+          secret_variable: REGISTRY_TOKEN
+
+Spack follows the naming conventions of Docker, with Docker Hub as the default registry.
+To use Docker Hub, you can omit the registry domain:
 
 .. code-block:: console
 
@@ -370,14 +443,79 @@ From here, you can use the mirror as any other build cache:
     $ spack buildcache push my_registry <specs...>  # push to the registry
     $ spack install <specs...>  # or install from the registry
 
-A unique feature of build caches on top of OCI registries is that it's incredibly
-easy to generate a runnable container image with the binaries installed. This
-is a great way to make applications available to users without requiring them to
-install Spack -- all you need is Docker, Podman, or any other OCI-compatible container
-runtime.
+.. note::
 
-To produce container images, all you need to do is add the ``--base-image`` flag
-when pushing to the build cache:
+   Spack defaults to ``https`` for OCI registries, and does not fall back to ``http`` in case of failure.
+   For local registries which use ``http`` instead of ``https``, you can specify ``oci+http://localhost:5000/my_image``.
+
+.. _oci-authentication:
+
+Authentication with popular Container Registries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Below are instructions for authenticating with some of the most popular container registries.
+In all cases, you need to generate a (temporary) token to use as the password -- this is not the same as your account password.
+
+GHCR
+""""""
+
+To authenticate with GitHub Container Registry (GHCR), you can use your GitHub username as the username.
+For the password, you can use either:
+
+#. A personal access token (PAT) with ``write:packages`` scope.
+#. A GitHub Actions token (``GITHUB_TOKEN``) with ``packages:write`` permission.
+
+See also `GitHub's documentation <https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry>`_ and :ref:`github-actions-build-cache` below.
+
+Docker Hub
+""""""""""
+
+To authenticate with Docker Hub, you can use your Docker Hub username as the username.
+For the password, you need to generate a personal access token (PAT) on the Docker Hub website.
+See `Docker's documentation <https://docs.docker.com/security/access-tokens/>`_ for more information.
+
+Amazon ECR
+""""""""""
+
+To authenticate with Amazon ECR, you can use the AWS CLI to generate a temporary password.
+The username is always ``AWS``.
+
+.. code-block:: console
+
+    $ export AWS_ECR_PASSWORD=$(aws ecr get-login-password --region <region>)
+    $ spack mirror add \
+          --oci-username AWS \
+          --oci-password-variable AWS_ECR_PASSWORD \
+          my_registry \
+          oci://XXX.dkr.ecr.<region>.amazonaws.com/my/image
+
+See also `AWS's documentation <https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html>`_.
+
+Azure Container Registry
+""""""""""""""""""""""""
+
+To authenticate with an Azure Container Registry that has RBAC enabled, you can use the Azure CLI to generate a temporary password for your managed identity.
+The username is always ``00000000-0000-0000-0000-000000000000``.
+
+.. code-block:: console
+
+    $ export AZURE_ACR_PASSWORD=$(az acr login --name <registry-name> --expose-token --output tsv --query accessToken)
+    $ spack mirror add \
+          --oci-username 00000000-0000-0000-0000-000000000000 \
+          --oci-password-variable AZURE_ACR_PASSWORD \
+          my_registry \
+          oci://<registry-name>.azurecr.io/my/image
+
+See also `Azure's documentation <https://learn.microsoft.com/en-us/azure/container-registry/container-registry-authentication?tabs=azure-cli#az-acr-login-with---expose-token>`_.
+
+
+Build Cache and Container Images
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A unique feature of build caches on top of OCI registries is that it's incredibly easy to generate a runnable container image with the binaries installed.
+This is a great way to make applications available to users without requiring them to install Spack -- all you need is Docker, Podman, or any other OCI-compatible container runtime.
+
+To produce container images, all you need to do is add the ``--base-image`` flag when pushing to the build cache:
 
 .. code-block:: console
 
@@ -388,39 +526,31 @@ when pushing to the build cache:
     root@e4c2b6f6b3f4:/# ninja --version
     1.11.1
 
-If ``--base-image`` is not specified, distroless images are produced. In practice,
-you won't be able to run these as containers because they don't come with libc and
-other system dependencies. However, they are still compatible with tools like
-``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
+If ``--base-image`` is not specified, Spack produces distroless images.
+In practice, you won't be able to run these as containers because they don't come with libc and other system dependencies.
+However, they are still compatible with tools like ``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
 
-.. note::
-    The Docker ``overlayfs2`` storage driver is limited to 128 layers, above which a
-    ``max depth exceeded`` error may be produced when pulling the image. There
-    are `alternative drivers <https://docs.docker.com/storage/storagedriver/>`_.
+See the section :ref:`exporting-images` for more details on how to create container images with Spack.
 
-------------------------------------
+.. _github-actions-build-cache:
+
 Spack Build Cache for GitHub Actions
 ------------------------------------
 
-To significantly speed up Spack in GitHub Actions, binaries can be cached in
-GitHub Packages. This service is an OCI registry that can be linked to a GitHub
-repository.
+To significantly speed up Spack in GitHub Actions, binaries can be cached in GitHub Packages.
+This service is an OCI registry that can be linked to a GitHub repository.
 
-Spack offers a public build cache for GitHub Actions with a set of common packages,
-which lets you get started quickly. See the following resources for more information:
+Spack offers a public build cache for GitHub Actions with a set of common packages, which lets you get started quickly.
+See the following resources for more information:
 
-* `spack/setup-spack <https://github.com/spack/setup-spack>`_ for setting up Spack in GitHub
-  Actions
-* `spack/github-actions-buildcache <https://github.com/spack/github-actions-buildcache>`_ for
-  more details on the public build cache
+* `spack/setup-spack <https://github.com/spack/setup-spack>`_ for setting up Spack in GitHub Actions
+* `spack/github-actions-buildcache <https://github.com/spack/github-actions-buildcache>`_ for more details on the public build cache
 
 .. _cmd-spack-buildcache:
 
---------------------
 ``spack buildcache``
 --------------------
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache push``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -439,7 +569,6 @@ Arguments       Description
 ``-y``          answer yes to all questions about creating unsigned build caches
 ==============  ========================================================================================================================
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache list``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -453,12 +582,10 @@ Arguments       Description
 
 E.g., ``spack buildcache list gcc`` will print only commands to install ``gcc`` package(s).
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache install``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Retrieves all specs for build caches available on a Spack mirror and installs build caches
-with specs matching the input specs.
+Retrieves all specs for build caches available on a Spack mirror and installs build caches with specs matching the input specs.
 
 ==============  ==============================================================================================
 Arguments       Description
@@ -468,7 +595,6 @@ Arguments       Description
 ``-y``          answer yes to all to don't verify package with gpg questions
 ==============  ==============================================================================================
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache keys``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -481,33 +607,29 @@ Arguments  Description
 ``-y``     answer yes to all trust all keys downloaded
 =========  ==============================================
 
-.. _build_cache_layout:
+.. index::
+   single: buildcache; layout
+   :name: build_cache_layout
 
-------------------
 Build Cache Layout
 ------------------
 
-This section describes the structure and content of URL-style build caches, as
-distinguished from OCI-style build caches.
+This section describes the structure and content of URL-style build caches, as distinguished from OCI-style build caches.
 
-The entry point for a binary package is a manifest JSON file that points to at
-least two other files stored as content-addressed blobs. These files include a spec
-metadata file, as well as the installation directory of the package stored as
-a compressed archive file. Binary package manifest files are named to indicate
-the package name and version, as well as the hash of the concrete spec. For
-example:
+The entry point for a binary package is a manifest JSON file that references at least two other files stored as content-addressed blobs.
+These files include a spec metadata file, as well as the installation directory of the package stored as a compressed archive file.
+Binary package manifest files are named to indicate the package name and version, as well as the hash of the concrete spec.
+For example:
 
 .. code-block:: text
 
    gcc-runtime-12.3.0-qyu2lvgt3nxh7izxycugdbgf5gsdpkjt.spec.manifest.json
 
 would contain the manifest for a binary package of ``gcc-runtime@12.3.0``.
-The ID of the built package is defined to be the DAG hash of the concrete spec
-and exists in the name of the file as well. The ID distinguishes a particular
-binary package from all other binary packages with the same package name and
-version. Below is an example binary package manifest file. Such a file would
-live in the versioned spec manifests directory of a binary mirror, for example,
-``v3/manifests/spec/``:
+The ID of the built package is defined to be the DAG hash of the concrete spec and exists in the name of the file as well.
+The ID distinguishes a particular binary package from all other binary packages with the same package name and version.
+Below is an example binary package manifest file.
+Such a file would live in the versioned spec manifests directory of a binary mirror, for example, ``v3/manifests/spec/``:
 
 .. code-block:: json
 
@@ -531,17 +653,11 @@ live in the versioned spec manifests directory of a binary mirror, for example,
      ]
    }
 
-The manifest points to both the compressed tar file as well as the compressed
-spec metadata file and contains the checksum of each. This checksum
-is also used as the address of the associated file and, hence, must be
-known in order to locate the tarball or spec file within the mirror. Once the
-tarball or spec metadata file is downloaded, the checksum should be computed locally
-and compared to the checksum in the manifest to ensure the contents have not changed
-since the binary package was pushed. Spack stores all data files (including compressed
-tar files, spec metadata, indices, public keys, etc.) within a ``blobs/<hash-algorithm>/``
-directory, using the first two characters of the checksum as a subdirectory
-to reduce the number of files in a single folder. Here is a depiction of the
-organization of binary mirror contents:
+The manifest references both the compressed tar file as well as the compressed spec metadata file, and contains the checksum of each.
+This checksum is also used as the address of the associated file and, hence, must be known in order to locate the tarball or spec file within the mirror.
+Once the tarball or spec metadata file is downloaded, the checksum should be computed locally and compared to the checksum in the manifest to ensure the contents have not changed since the binary package was pushed.
+Spack stores all data files (including compressed tar files, spec metadata, indices, public keys, etc.) within a ``blobs/<hash-algorithm>/`` directory, using the first two characters of the checksum as a subdirectory to reduce the number of files in a single folder.
+Here is a depiction of the organization of binary mirror contents:
 
 .. code-block:: text
 
@@ -571,25 +687,16 @@ organization of binary mirror contents:
            2a21836d206ccf0df780ab0be63fdf76d24501375306a35daa6683c409b7922f
          ...
 
-Files within the ``manifests`` directory are organized into subdirectories by
-the type of entity they represent. Binary package manifests live in the ``spec/``
-directory, build cache index manifests live in the ``index/`` directory, and
-manifests for public keys and their indices live in the ``key/`` subdirectory.
-Regardless of the type of entity they represent, all manifest files are named
-with an extension ``.manifest.json``.
+Files within the ``manifests`` directory are organized into subdirectories by the type of entity they represent.
+Binary package manifests live in the ``spec/`` directory, build cache index manifests live in the ``index/`` directory, and manifests for public keys and their indices live in the ``key/`` subdirectory.
+Regardless of the type of entity they represent, all manifest files are named with an extension ``.manifest.json``.
 
-Every manifest contains a ``data`` array, each element of which refers to an
-associated file stored as a content-addressed blob. Considering the example spec
-manifest shown above, the compressed installation archive can be found by
-picking out the data blob with the appropriate ``mediaType``, which in this
-case would be ``application/vnd.spack.install.v1.tar+gzip``. The associated
-file is found by looking in the blobs directory under ``blobs/sha256/fb/`` for
-the file named with the complete checksum value.
+Every manifest contains a ``data`` array, each element of which refers to an associated file stored as a content-addressed blob.
+Considering the example spec manifest shown above, the compressed installation archive can be found by picking out the data blob with the appropriate ``mediaType``, which in this case would be ``application/vnd.spack.install.v2.tar+gzip``.
+The associated file is found by looking in the blobs directory under ``blobs/sha256/fb/`` for the file named with the complete checksum value.
 
-As mentioned above, every entity in a binary mirror (aka build cache) is stored
-as a content-addressed blob pointed to by a manifest. While an example spec
-manifest (i.e., a manifest for a binary package) is shown above, here is what
-the manifest of a build cache index looks like:
+As mentioned above, every entity in a build cache is stored as a content-addressed blob pointed to by a manifest.
+While an example spec manifest (i.e., a manifest for a binary package) is shown above, here is what the manifest of a build cache index looks like:
 
 .. code-block:: json
 
@@ -606,15 +713,12 @@ the manifest of a build cache index looks like:
      ]
    }
 
-Some things to note about this manifest are that it points to a blob that is not
-compressed (``compression: "none"``) and that the ``mediaType`` is one we have
-not seen yet, ``application/vnd.spack.db.v8+json``. The decision not to compress
-build cache indices stems from the fact that Spack does not yet sign build cache
-index manifests. Once that changes, you may start to see these indices stored as
-compressed blobs.
+Some things to note about this manifest are that it points to a blob that is not compressed (``compression: "none"``) and that the ``mediaType`` is one we have not seen yet, ``application/vnd.spack.db.v8+json``.
+The decision not to compress build cache indices stems from the fact that Spack does not yet sign build cache index manifests.
+Once that changes, you may start to see these indices stored as compressed blobs.
 
-For completeness, here are examples of manifests for the other two types of entities
-you might find in a Spack build cache. First, a public key manifest:
+For completeness, here are examples of manifests for the other two types of entities you might find in a Spack build cache.
+First, a public key manifest:
 
 .. code-block:: json
 
@@ -631,7 +735,8 @@ you might find in a Spack build cache. First, a public key manifest:
      ]
    }
 
-Note the ``mediaType`` of ``application/pgp-keys``. Finally, a public key index manifest:
+Note the ``mediaType`` of ``application/pgp-keys``.
+Finally, a public key index manifest:
 
 .. code-block:: json
 
@@ -648,6 +753,5 @@ Note the ``mediaType`` of ``application/pgp-keys``. Finally, a public key index 
      ]
    }
 
-Again, note the ``mediaType`` of ``application/vnd.spack.keyindex.v1+json``. Also, note
-that both the above manifest examples refer to uncompressed blobs; this is for the same
-reason Spack does not yet compress build cache index blobs.
+Again, note the ``mediaType`` of ``application/vnd.spack.keyindex.v1+json``.
+Also, note that both the above manifest examples refer to uncompressed blobs; this is for the same reason Spack does not yet compress build cache index blobs.

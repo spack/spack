@@ -4,6 +4,7 @@
 """This module provides building blocks for tokenizing strings. Users can define tokens by
 inheriting from TokenBase and defining tokens as ordered enum members. The Tokenizer class can then
 be used to iterate over tokens in a string."""
+
 import enum
 import re
 from typing import Generator, Match, Optional, Type

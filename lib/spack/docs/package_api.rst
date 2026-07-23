@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -6,13 +7,13 @@
    :description lang=en:
       An overview of the Spack Package API, a stable interface for package authors to interact with the Spack framework.
 
-Spack Package API v2.2
-======================
+Spack Package API
+=================
 
 This document describes the Spack Package API (:mod:`spack.package`), the stable interface for Spack package authors.
 It is assumed you have already read the :doc:`Spack Packaging Guide <packaging_guide_creation>`.
 
-The Spack Package API is the *only* module from the Spack codebase considered public API.
+The Spack Package API is the *only* module in the Spack codebase considered public API.
 It re-exports essential functions and classes from various Spack modules, allowing package authors to import them directly from :mod:`spack.package` without needing to know Spack's internal structure.
 
 Spack Package API Versioning
@@ -33,6 +34,38 @@ Compatibility between Spack and :doc:`package repositories <repositories>` is ma
 
 Spack version |spack_version| supports package repositories with a Package API version between |min_package_api_version| and |package_api_version|, inclusive.
 
+Changelog
+---------
+
+**v2.5** *(Spack v1.2.0)*
+
+* Added ``cuda-lang`` and ``hip-lang`` as language virtuals, analogous to ``c``, ``cxx``, and ``fortran``.
+  Packages that use CUDA or HIP can now declare explicit language dependencies on these virtuals.
+
+**v2.4** *(Spack v1.0.3)*
+
+* The ``%%`` operator can be used on input specs to set propagated preferences, which is particularly useful for ``unify: false`` environments.
+
+**v2.3** *(Spack v1.0.3)*
+
+* The :func:`~spack.package.version` directive now supports the ``git_sparse_paths`` parameter, allowing sparse checkouts when fetching from git repositories.
+
+**v2.2** *(Spack v1.0.0)*
+
+* Renamed implicit builder attributes with backward compatibility:
+
+  * ``legacy_buildsystem`` to ``default_buildsystem``,
+  * ``legacy_methods`` to ``package_methods``,
+  * ``legacy_attributes`` to ``package_attributes``,
+  * ``legacy_long_methods`` to ``package_long_methods``.
+
+* Exported :class:`~spack.package.GenericBuilder`, :class:`~spack.package.Package`, and :class:`~spack.package.BuilderWithDefaults` from :mod:`spack.package`.
+* Exported numerous utility functions and classes for file operations, library/header search, macOS/Windows support, compiler detection, and build system helpers.
+
+**v2.1** *(Spack v1.0.0)*
+
+* Exported :class:`~spack.package.CompilerError` and :class:`~spack.package.SpackError` from :mod:`spack.package`.
+
 Spack Package API Reference
 ---------------------------
 
@@ -41,3 +74,4 @@ Spack Package API Reference
    :show-inheritance:
    :undoc-members:
    :no-value:
+   :no-index-entry:

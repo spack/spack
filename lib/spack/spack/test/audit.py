@@ -4,7 +4,7 @@
 import pytest
 
 import spack.audit
-import spack.config
+from spack.config import Configuration
 
 
 @pytest.mark.parametrize(
@@ -28,12 +28,14 @@ import spack.config
         (["invalid-selfhosted-gitlab-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a stand-alone test method in build-time callbacks
         (["fail-test-audit"], ["PKG-PROPERTIES"]),
-        # This package implements and uses several deprecated stand-alone test methods
-        (["fail-test-audit-deprecated"], ["PKG-DEPRECATED-ATTRIBUTES"]),
         # This package has stand-alone test methods without non-trivial docstrings
         (["fail-test-audit-docstring"], ["PKG-PROPERTIES"]),
         # This package has a stand-alone test method without an implementation
         (["fail-test-audit-impl"], ["PKG-PROPERTIES"]),
+        # This package doesn't inherit from a package that creates a builder
+        (["fail-test-audit-builder"], ["PKG-PROPERTIES"]),
+        # This package has maintainers with placeholders
+        (["invalid-maintainer"], ["PKG-DIRECTIVES"]),
         # This package has no issues
         (["mpileaks"], None),
         # This package has a conflict with a trigger which cannot constrain the constraint
@@ -113,7 +115,9 @@ _double_compiler_definition = [
         ),
     ],
 )
-def test_config_audits(config_section, data, failing_check, mock_packages):
-    with spack.config.override(config_section, data):
+def test_config_audits(
+    mutable_config: Configuration, config_section, data, failing_check, mock_packages
+):
+    with mutable_config.override(config_section, data):
         reports = spack.audit.run_group("configs")
         assert any((check == failing_check) and errors for check, errors in reports)

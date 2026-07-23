@@ -8,14 +8,15 @@ Do not import other ``spack`` modules here. This module is used
 throughout Spack and should bring in a minimal number of external
 dependencies.
 """
+
 import os
 from pathlib import PurePath
 
-import spack.llnl.util.filesystem
-import spack.util.hash as hash
+import spack.util.filesystem
+from spack.util import hash
 
 #: This file lives in $prefix/lib/spack/spack/__file__
-prefix = str(PurePath(spack.llnl.util.filesystem.ancestor(__file__, 4)))
+prefix = str(PurePath(spack.util.filesystem.ancestor(__file__, 4)))
 
 #: synonym for prefix
 spack_root = prefix
@@ -115,9 +116,6 @@ default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
 
 #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
 default_misc_cache_path = os.path.join(user_cache_path, spack_instance_id, "cache")
-
-#: concretization cache for Spack concretizations
-default_conc_cache_path = os.path.join(default_misc_cache_path, "concretization")
 
 # Below paths pull configuration from the host environment.
 #

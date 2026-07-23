@@ -8,8 +8,8 @@ import sys
 
 from spack_repo.builtin_mock.build_systems.cmake import CMakePackage
 
-import spack.llnl.util.tty as tty
 from spack.package import *
+from spack.util import tty
 
 
 class Hdf5(CMakePackage):
@@ -269,7 +269,7 @@ class Hdf5(CMakePackage):
                 # starting version 1.8.10) does not produce it. Instead, the
                 # basename of the library file is 'libhdf5_hl_fortran'. Which
                 # means that switching to CMake requires rebuilding of all
-                # dependant packages that use the High-level Fortran interface.
+                # dependent packages that use the High-level Fortran interface.
                 # Therefore, we do not try to preserve backward compatibility
                 # with Autotools installations by creating symlinks. The only
                 # packages that could benefit from it would be those that
@@ -331,7 +331,8 @@ class Hdf5(CMakePackage):
             self.define("HDF5_BUILD_EXAMPLES", False),
             self.define(
                 "BUILD_TESTING",
-                self.run_tests or
+                self.run_tests
+                or
                 # Version 1.8.22 fails to build the tools when shared libraries
                 # are enabled but the tests are disabled.
                 spec.satisfies("@1.8.22+shared+tools"),
@@ -386,9 +387,7 @@ class Hdf5(CMakePackage):
         # 1.10.6 and 1.12.0. The current develop versions do not produce 'h5pfc'
         # at all. Here, we make sure that 'h5pfc' is available when Fortran and
         # MPI support are enabled (only for versions that generate 'h5fc').
-        if self.spec.satisfies(
-            "@1.8.22:1.8," "1.10.6:1.10," "1.12.0:1.12," "develop:" "+fortran+mpi"
-        ):
+        if self.spec.satisfies("@1.8.22:1.8,1.10.6:1.10,1.12.0:1.12,develop:+fortran+mpi"):
             with working_dir(self.prefix.bin):
                 # No try/except here, fix the condition above instead:
                 symlink("h5fc", "h5pfc")
@@ -458,9 +457,7 @@ int main(int argc, char **argv) {
 """
             expected = """\
 HDF5 version {version} {version}
-""".format(
-                version=str(spec.version.up_to(3))
-            )
+""".format(version=str(spec.version.up_to(3)))
             with open("check.c", "w", encoding="utf-8") as f:
                 f.write(source)
             if "+mpi" in spec:
@@ -536,7 +533,7 @@ HDF5 version {version} {version}
             "h5copy", options, [], installed=True, purpose=reason, skip_missing=True, work_dir="."
         )
 
-        reason = "test: ensuring h5diff shows no differences between orig and" " copy"
+        reason = "test: ensuring h5diff shows no differences between orig and copy"
         self.run_test(
             "h5diff",
             [h5_file, "test.h5"],

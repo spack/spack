@@ -23,9 +23,10 @@ avoids overly complicated rat nests of if statements.  Obviously,
 depending on the scenario, regular old conditionals might be clearer,
 so package authors should use their judgement.
 """
+
 import functools
 from contextlib import contextmanager
-from typing import Union
+from typing import Optional, Union
 
 import spack.directives_meta
 import spack.error
@@ -67,15 +68,16 @@ class SpecMultiMethod:
     decorator (see docs below) creates SpecMultiMethods and
     registers method versions with them.
 
-    To register a method, you can do something like this:
+    To register a method, you can do something like this::
+
         mm = SpecMultiMethod()
         mm.register("^chaos_5_x86_64_ib", some_method)
 
     The object registered needs to be a Spec or some string that
     will parse to be a valid spec.
 
-    When the mm is actually called, it selects a version of the
-    method to call based on the sys_type of the object it is
+    When the ``mm`` is actually called, it selects a version of the
+    method to call based on the ``sys_type`` of the object it is
     called on.
 
     See the docs for decorators below for more details.
@@ -154,7 +156,8 @@ class SpecMultiMethod:
 class when:
     """This is a multi-purpose class, which can be used
 
-    1. As a context manager to **group directives together** that share the same `when=` argument.
+    1. As a context manager to **group directives together** that share the same ``when=``
+       argument.
     2. As a **decorator** for defining multi-methods (multiple methods with the same name are
        defined, but the version that is called depends on the condition of the package's spec)
 
@@ -183,7 +186,7 @@ class when:
        depends_on("dependency", when="+foo +bar +baz")
 
     As a **decorator**, it allows packages to declare multiple versions of methods like
-    `install()` that depend on the package's spec. For example::
+    ``install()`` that depend on the package's spec. For example::
 
        class SomePackage(Package):
            ...
@@ -201,7 +204,7 @@ class when:
                # This will be executed if the package's target is in
                # the aarch64 family
 
-    This allows each package to have a default version of install() AND
+    This allows each package to have a default version of ``install()`` AND
     specialized versions for particular platforms.  The version that is
     called depends on the architecture of the instantiated package.
 
@@ -223,9 +226,8 @@ class when:
 
             @when("^openmpi")
             def setup(self):
-                # do something special when this is built with OpenMPI for
-                # its MPI implementations.
-
+                # do something special when this is built with OpenMPI for its MPI implementations.
+                pass
 
             def install(self, prefix):
                 # Do common install stuff
@@ -236,6 +238,8 @@ class when:
     override all of the decorated versions. This is a limitation of the Python language.
     """
 
+    spec: Optional[spack.spec.Spec]
+
     def __init__(self, condition: Union[str, bool]):
         """Can be used both as a decorator, for multimethods, or as a context
         manager to group ``when=`` arguments together.
@@ -244,31 +248,33 @@ class when:
         Args:
             condition (str): condition to be met
         """
-        if isinstance(condition, bool):
-            self.spec = spack.spec.Spec() if condition else None
-        else:
-            self.spec = spack.spec.Spec(condition)
+        self.when = condition
 
     def __call__(self, method):
-        assert (
-            MultiMethodMeta._locals is not None
-        ), "cannot use multimethod, missing MultiMethodMeta metaclass?"
+        assert MultiMethodMeta._locals is not None, (
+            "cannot use multimethod, missing MultiMethodMeta metaclass?"
+        )
 
         # Create a multimethod with this name if there is not one already
         original_method = MultiMethodMeta._locals.get(method.__name__)
         if not isinstance(original_method, SpecMultiMethod):
             original_method = SpecMultiMethod(original_method)
 
-        if self.spec is not None:
-            original_method.register(self.spec, method)
+        if self.when is True:
+            original_method.register(spack.spec.EMPTY_SPEC, method)
+        elif self.when is not False:
+            original_method.register(spack.directives_meta.get_spec(self.when), method)
 
         return original_method
 
     def __enter__(self):
-        spack.directives_meta.DirectiveMeta.push_to_context(str(self.spec))
+        # TODO: support when=False.
+        if isinstance(self.when, str):
+            spack.directives_meta.DirectiveMeta.push_when_constraint(self.when)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        spack.directives_meta.DirectiveMeta.pop_from_context()
+        if isinstance(self.when, str):
+            spack.directives_meta.DirectiveMeta.pop_when_constraint()
 
 
 @contextmanager

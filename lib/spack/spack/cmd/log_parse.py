@@ -3,13 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import io
 import sys
+import warnings
 
-import spack.llnl.util.tty as tty
 from spack.util.log_parse import make_log_context, parse_log_events
 
 description = "filter errors and warnings from build logs"
-section = "build"
+section = "developer"
 level = "long"
 
 event_types = ("errors", "warnings")
@@ -37,21 +38,19 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="print out a profile of time spent in regexes during parse",
     )
     subparser.add_argument(
-        "-w",
-        "--width",
-        action="store",
-        type=int,
-        default=None,
-        help="wrap width: auto-size to terminal by default; 0 for no wrap",
+        "-w", "--width", action="store", type=int, default=None, help=argparse.SUPPRESS
     )
     subparser.add_argument(
-        "-j",
-        "--jobs",
+        "-j", "--jobs", action="store", type=int, default=None, help=argparse.SUPPRESS
+    )
+    subparser.add_argument(
+        "-t",
+        "--tail",
+        metavar="LINES",
         action="store",
         type=int,
-        default=None,
-        help="number of jobs to parse log file (default: 1 for short logs, "
-        "ncpus for long logs)",
+        default=0,
+        help="number of trailing log lines to show (0 to disable)",
     )
 
     subparser.add_argument("file", help="a log file containing build output, or - for stdin")
@@ -60,23 +59,35 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def log_parse(parser, args):
     input = args.file
     if args.file == "-":
-        input = sys.stdin
+        input = io.TextIOWrapper(
+            sys.stdin.buffer, encoding="utf-8", errors="replace", closefd=False
+        )
 
-    errors, warnings = parse_log_events(input, args.context, args.jobs, args.profile)
+    if args.width is not None:
+        warnings.warn("The --width option is deprecated and will be removed in Spack v1.3")
+    if args.jobs is not None:
+        warnings.warn("The --jobs option is deprecated and will be removed in Spack v1.3")
+
+    log_errors, log_warnings, tail = parse_log_events(
+        input, args.context, args.profile, tail=args.tail
+    )
     if args.profile:
         return
 
     types = [s.strip() for s in args.show.split(",")]
     for e in types:
         if e not in event_types:
-            tty.die("Invalid event type: %s" % e)
+            args.subparser.error("invalid event type: %s" % e)
 
     events = []
     if "errors" in types:
-        events.extend(errors)
-        print("%d errors" % len(errors))
+        events.extend(log_errors)
+        print("%d errors" % len(log_errors))
     if "warnings" in types:
-        events.extend(warnings)
-        print("%d warnings" % len(warnings))
+        events.extend(log_warnings)
+        print("%d warnings" % len(log_warnings))
 
-    print(make_log_context(events, args.width))
+    if tail:
+        events.append(tail)
+
+    print(make_log_context(events), end="")

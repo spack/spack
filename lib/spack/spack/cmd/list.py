@@ -10,18 +10,19 @@ import os
 import re
 import sys
 from html import escape
-from typing import Type
+from typing import Optional, Type
 
 import spack.deptypes as dt
-import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.repo
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify
+from spack.util import tty
+from spack.util.tty.colify import colify
+from spack.util.url import path_to_file_url
 from spack.version import VersionList
 
 description = "list and search available packages"
-section = "basic"
+section = "query"
 level = "short"
 
 
@@ -140,10 +141,40 @@ def name_only(pkgs, out):
         tty.msg("%d packages" % len(pkgs))
 
 
-def github_url(pkg: Type[spack.package_base.PackageBase]) -> str:
-    """Link to a package file on github."""
-    mod_path = pkg.__module__.replace(".", "/")
-    return f"https://github.com/spack/spack/blob/develop/var/spack/{mod_path}.py"
+def _is_spack_packages(url: str) -> bool:
+    """True if ``url`` is likely the official github.com/spack/spack-packages repo."""
+    url = url.rstrip("/")
+    if url.endswith(".git"):
+        url = url[:-4]
+    return url.endswith(("github.com/spack/spack-packages", "github.com:spack/spack-packages"))
+
+
+def github_url(pkg: Type[spack.package_base.PackageBase]) -> Optional[str]:
+    """Link to a package file in spack package's github or the path to the file.
+
+    Args:
+        pkg: package instance
+
+    Returns: URL to the package file on github or the local file path; otherwise, ``None``.
+    """
+    module_path = f"{pkg.__module__.replace('.', '/')}.py"
+    for repo in spack.repo.PATH.repos:
+        if not repo.python_path:
+            continue
+
+        path = os.path.join(repo.python_path, module_path)
+        if not os.path.exists(path):
+            continue
+
+        if repo.remote_info is not None and _is_spack_packages(repo.remote_info.url):
+            rel = os.path.relpath(path, repo.remote_info.root).replace(os.sep, "/")
+            return f"https://github.com/spack/spack-packages/blob/develop/{rel}"
+
+        tty.debug(f"Package repository of {pkg} has no github git url, using path URL")
+        return path_to_file_url(path)
+
+    tty.debug(f"Unable to determine the package repository URL for {pkg}")
+    return None
 
 
 def rows_for_ncols(elts, ncols):
@@ -263,7 +294,7 @@ def html(pkg_names, out):
 
         if pkg_cls.homepage:
             out.write(
-                ("<li>" '<a class="reference external" href="%s">%s</a>' "</li>\n")
+                ('<li><a class="reference external" href="%s">%s</a></li>\n')
                 % (pkg_cls.homepage, escape(pkg_cls.homepage, True))
             )
         else:
@@ -273,7 +304,7 @@ def html(pkg_names, out):
         out.write("<dt>Spack package:</dt>\n")
         out.write('<dd><ul class="first last simple">\n')
         out.write(
-            ("<li>" '<a class="reference external" href="%s">%s/package.py</a>' "</li>\n")
+            ('<li><a class="reference external" href="%s">%s/package.py</a></li>\n')
             % (github_url(pkg_cls), pkg_cls.name)
         )
         out.write("</ul></dd>\n")

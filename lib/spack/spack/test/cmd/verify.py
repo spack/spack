@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for the `spack verify` command"""
+
 import os
 import pathlib
 import platform
@@ -11,13 +12,14 @@ import pytest
 
 import spack.cmd.verify
 import spack.concretize
-import spack.installer
-import spack.llnl.util.filesystem as fs
+import spack.old_installer
 import spack.store
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.verify
 from spack.main import SpackCommand, SpackCommandError
+from spack.spec import Spec
 
 verify = SpackCommand("verify")
 install = SpackCommand("install")
@@ -102,7 +104,7 @@ def test_single_spec_verify_cmd(mock_packages, mock_archive, mock_fetch, install
 def test_libraries(tmp_path: pathlib.Path, install_mockery, mock_fetch):
     gcc = spack.util.executable.which("gcc", required=True)
     s = spack.concretize.concretize_one("libelf")
-    spack.installer.PackageInstaller([s.package], fake=True).install()
+    spack.old_installer.PackageInstaller([s.package], fake=True).install()
 
     # There are no ELF files so the verification should pass
     verify("libraries", f"/{s.dag_hash()}")
@@ -144,3 +146,23 @@ def test_libraries(tmp_path: pathlib.Path, install_mockery, mock_fetch):
 
     # And check that we can make it pass by ignoring it.
     assert spack.cmd.verify._verify_libraries(s, ["libf.so"]) is None
+
+
+def test_verify_versions(mock_packages):
+    missing = "thisisnotapackage"
+    unknown = "deprecated-versions@=thisisnotaversion"
+    deprecated = "deprecated-versions@=1.1.0"
+    good = "deprecated-versions@=1.0.0"
+
+    strs = (missing, unknown, deprecated, good)
+
+    specs = [Spec(c) for c in strs] + [Spec(f"deprecated-client@=1.1.0^{c}") for c in strs]
+    for spec in specs:
+        spec._mark_concrete()
+
+    msg_lines = spack.cmd.verify._verify_version(specs)
+    assert "3 installed packages have unknown/deprecated" in msg_lines[0]
+    assert "thisisnotapackage" in msg_lines[1]
+    assert "Cannot load package" in msg_lines[1]
+    assert "version thisisnotaversion unknown to Spack" in msg_lines[2]
+    assert "deprecated version 1.1.0" in msg_lines[3]

@@ -12,8 +12,8 @@ import spack.vendor.archspec.cpu
 
 import spack.compilers.libraries
 import spack.package_base
-from spack.llnl.util import lang
 from spack.package import *
+from spack.util import lang
 
 
 class CompilerWrapper(Package):

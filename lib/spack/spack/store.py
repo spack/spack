@@ -6,9 +6,8 @@
 
 An install tree, or "build store" consists of two parts:
 
-  1. A package database that tracks what is installed.
-  2. A directory layout that determines how the installations
-     are laid out.
+1. A package database that tracks what is installed.
+2. A directory layout that determines how the installations are laid out.
 
 The store contains all the install prefixes for packages installed by
 Spack.  The simplest store could just contain prefixes named by DAG hash,
@@ -16,38 +15,44 @@ but we use a fancier directory layout to make browsing the store and
 debugging easier.
 
 """
+
 import contextlib
+import filecmp
 import os
 import pathlib
 import re
+import shutil
+import sys
 import uuid
-from typing import Any, Callable, Dict, Generator, List, Optional, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union, cast
 
 import spack.config
 import spack.database
 import spack.directory_layout
 import spack.error
-import spack.llnl.util.lang
+import spack.package_prefs
 import spack.paths
 import spack.spec
+import spack.util.lang
 import spack.util.path
-from spack.llnl.util import tty
+from spack.util import filesystem as fs
+from spack.util import tty
 
 #: default installation root, relative to the Spack install path
 DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
 
 
-def parse_install_tree(config_dict):
+def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     """Parse config settings and return values relevant to the store object.
 
     Arguments:
-        config_dict (dict): dictionary of config values, as returned from
-            spack.config.get('config')
+        config_dict: dictionary of config values, as returned from
+            ``spack.config.CONFIG.get("config")``
 
     Returns:
-        (tuple): triple of the install tree root, the unpadded install tree
-            root (before padding was applied), and the projections for the
-            install tree
+        triple of the install tree root, the unpadded install tree
+        root (before padding was applied), and the projections for the
+        install tree
 
     Encapsulate backwards compatibility capabilities for install_tree
     and deprecated values that are now parsed as part of install_tree.
@@ -68,11 +73,11 @@ def parse_install_tree(config_dict):
 
     install_tree = config_dict.get("install_tree", {})
 
-    padded_length = False
+    padded_length: Union[bool, int] = False
     if isinstance(install_tree, str):
         tty.warn("Using deprecated format for configuring install_tree")
         unpadded_root = install_tree
-        unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
+        unpadded_root = spack.config.canonicalize_path(unpadded_root)
         # construct projection from previous values for backwards compatibility
         all_projection = config_dict.get(
             "install_path_scheme", spack.directory_layout.default_projections["all"]
@@ -81,7 +86,7 @@ def parse_install_tree(config_dict):
         projections = {"all": all_projection}
     else:
         unpadded_root = install_tree.get("root", DEFAULT_INSTALL_TREE_ROOT)
-        unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
+        unpadded_root = spack.config.canonicalize_path(unpadded_root)
 
         padded_length = install_tree.get("padded_length", False)
         if padded_length is True:
@@ -125,6 +130,22 @@ def parse_install_tree(config_dict):
         root = unpadded_root
 
     return root, unpadded_root, projections
+
+
+@contextlib.contextmanager
+def filter_padding():
+    """Context manager to safely disable path padding in all Spack output.
+
+    This is needed because Spack's debug output gets extremely long when we use a
+    long padded installation path.
+    """
+    padding = spack.config.CONFIG.get("config:install_tree:padded_length", None)
+    if padding:
+        # filter out all padding from the install command output
+        with tty.output_filter(spack.util.path.padding_filter):
+            yield
+    else:
+        yield  # no-op: don't filter unless padding is actually enabled
 
 
 class Store:
@@ -181,15 +202,59 @@ class Store:
         tty.debug("PACKAGE LOCK TIMEOUT: {0}".format(str(timeout_format_str)))
 
         self.prefix_locker = spack.database.SpecLocker(
-            spack.database.prefix_lock_path(root), default_timeout=lock_cfg.package_timeout
+            spack.database.prefix_lock_path(root), lock_cfg=lock_cfg
         )
-        self.failure_tracker = spack.database.FailureTracker(
-            self.root, default_timeout=lock_cfg.package_timeout
-        )
+        self.failure_tracker = spack.database.FailureTracker(self.root, lock_cfg=lock_cfg)
+
+    def has_padding(self) -> bool:
+        """Returns True if the store layout includes path padding."""
+        return self.root != self.unpadded_root
 
     def reindex(self) -> None:
         """Convenience function to reindex the store DB with its own layout."""
         return self.db.reindex()
+
+    def install_sbang(self) -> None:
+        """Install the sbang script in this store's bin directory.
+
+        sbang is a short shell script that Spack prepends to scripts with shebangs that are too
+        long for the OS. It must live in the store so its path is short enough to fit on a
+        shebang line.
+        """
+
+        if sys.platform == "win32":
+            return
+
+        import grp  # unix only, hence the import here
+
+        sbang_path = os.path.join(self.unpadded_root, "bin", "sbang")
+        try:
+            if filecmp.cmp(sbang_path, spack.paths.sbang_script):
+                return  # installed and up to date
+        except FileNotFoundError:
+            pass
+
+        bin_dir = os.path.dirname(sbang_path)
+        os.makedirs(bin_dir, exist_ok=True)
+
+        all_spec = spack.spec.Spec("all")
+        group_name = spack.package_prefs.get_package_group(all_spec)
+        config_mode = spack.package_prefs.get_package_dir_permissions(all_spec)
+        gid = grp.getgrnam(group_name).gr_gid if group_name else -1
+
+        if group_name:
+            os.chmod(bin_dir, config_mode)
+            os.chown(bin_dir, -1, gid)
+        else:
+            fs.set_install_permissions(bin_dir)
+
+        with fs.write_tmp_and_move(sbang_path, mode="wb") as dst, open(
+            spack.paths.sbang_script, "rb"
+        ) as src:
+            shutil.copyfileobj(src, dst)
+            os.fchmod(dst.fileno(), config_mode | 0o111)  # ensure executable
+            if group_name:
+                os.fchown(dst.fileno(), -1, gid)
 
     def __reduce__(self):
         return Store, (
@@ -209,13 +274,13 @@ def create(configuration: spack.config.Configuration) -> Store:
         configuration: configuration to create a store.
     """
     configuration = configuration or spack.config.CONFIG
-    config_dict = configuration.get("config")
+    config_dict = configuration.get_config("config")
     root, unpadded_root, projections = parse_install_tree(config_dict)
-    hash_length = configuration.get("config:install_hash_length")
+    hash_length = config_dict.get("install_hash_length")
 
     install_roots = [
         install_properties["install_tree"]
-        for install_properties in configuration.get("upstreams", {}).values()
+        for install_properties in configuration.get_config("upstreams").values()
     ]
     upstreams = _construct_upstream_dbs_from_install_roots(install_roots)
 
@@ -235,7 +300,7 @@ def _create_global() -> Store:
 
 
 #: Singleton store instance
-STORE: Store = spack.llnl.util.lang.Singleton(_create_global)  # type: ignore
+STORE = cast(Store, spack.util.lang.Singleton(_create_global))
 
 
 def reinitialize():
@@ -245,7 +310,7 @@ def reinitialize():
     global STORE
 
     token = STORE
-    STORE = spack.llnl.util.lang.Singleton(_create_global)
+    STORE = cast(Store, spack.util.lang.Singleton(_create_global))
 
     return token
 
@@ -263,7 +328,7 @@ def _construct_upstream_dbs_from_install_roots(
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
-            spack.util.path.canonicalize_path(install_root),
+            spack.config.canonicalize_path(install_root),
             is_upstream=True,
             upstream_dbs=upstream_dbs,
         )
@@ -332,7 +397,7 @@ def specfile_matches(filename: str, **kwargs) -> List["spack.spec.Spec"]:
 
     Args:
         filename: YAML or JSON file from which to read the query.
-        **kwargs: keyword arguments forwarded to "find"
+        **kwargs: keyword arguments forwarded to :func:`find`
     """
     query = [spack.spec.Spec.from_specfile(filename)]
     return find(query, **kwargs)
@@ -351,7 +416,7 @@ def use_store(
 
     Args:
         path: path to the store.
-        extra_data: extra configuration under "config:install_tree" to be
+        extra_data: extra configuration under ``config:install_tree`` to be
             taken into account.
 
     Yields:

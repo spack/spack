@@ -10,7 +10,7 @@ import spack.builder
 import spack.concretize
 import spack.paths
 import spack.repo
-from spack.llnl.util.filesystem import touch
+from spack.util.filesystem import touch
 
 
 @pytest.fixture()
@@ -76,7 +76,9 @@ def builder_test_repository(config):
 )
 @pytest.mark.usefixtures("builder_test_repository", "config")
 @pytest.mark.disable_clean_stage_check
-def test_callbacks_and_installation_procedure(spec_str, expected_values, working_env):
+def test_callbacks_and_installation_procedure(
+    spec_str, expected_values, working_env, temporary_store
+):
     """Test the correct execution of callbacks and installation procedures for packages."""
     s = spack.concretize.concretize_one(spec_str)
     builder = spack.builder.create(s.package)
@@ -111,7 +113,7 @@ def test_old_style_compatibility_with_super(spec_str, method_name, expected):
 @pytest.mark.regression("33928")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 @pytest.mark.disable_clean_stage_check
-def test_build_time_tests_are_executed_from_default_builder():
+def test_build_time_tests_are_executed_from_default_builder(temporary_store):
     s = spack.concretize.concretize_one("old-style-autotools")
     builder = spack.builder.create(s.package)
     builder.pkg.run_tests = True
@@ -152,7 +154,9 @@ def test_monkey_patching_test_log_file():
 # Windows context manager's __exit__ fails with ValueError ("I/O operation
 # on closed file").
 @pytest.mark.not_on_windows("Does not run on windows")
-def test_install_time_test_callback(tmp_path: pathlib.Path, config, mock_packages, mock_stage):
+def test_install_time_test_callback(
+    tmp_path: pathlib.Path, config, mock_packages, mock_stage, temporary_store
+):
     """Confirm able to run stand-alone test as a post-install callback."""
     s = spack.concretize.concretize_one("py-test-callback")
     builder = spack.builder.create(s.package)
@@ -215,3 +219,21 @@ def test_reading_api_v22_attributes():
     assert attributes == ("foo", "bar")
     long_methods = spack.builder.package_long_methods(TestBuilder)
     assert long_methods == ("baz", "fee")
+
+
+@pytest.mark.regression("51917")
+@pytest.mark.usefixtures("builder_test_repository", "config")
+def test_builder_when_inheriting_just_package(working_env):
+    """Tests that if we inherit a package from another package that has a builder defined,
+    but we don't need to modify the builder ourselves, we'll get the builder of the base
+    package class.
+    """
+    base_spec = spack.concretize.concretize_one("callbacks")
+    derived_spec = spack.concretize.concretize_one("inheritance-only-package")
+
+    base_builder = spack.builder.create(base_spec.package)
+    derived_builder = spack.builder.create(derived_spec.package)
+
+    # The derived class doesn't redefine a builder, so we should
+    # get the builder of the base class.
+    assert type(base_builder) is type(derived_builder)

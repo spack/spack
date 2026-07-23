@@ -5,25 +5,25 @@
 import filecmp
 import os
 import pathlib
+from typing import Any, Dict
 
 import pytest
 
 import spack.caches
+import spack.cmd.mirror
 import spack.concretize
-import spack.config
 import spack.fetch_strategy
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.patch
 import spack.stage
-import spack.util.executable
-import spack.util.spack_json as sjson
 import spack.util.url as url_util
 from spack.cmd.common.arguments import mirror_name_or_url
-from spack.llnl.util.filesystem import resolve_link_target_relative_to_the_link, working_dir
+from spack.config import Configuration
 from spack.spec import Spec
 from spack.util.executable import which
+from spack.util.filesystem import resolve_link_target_relative_to_the_link, working_dir
 from spack.util.spack_yaml import SpackYAMLError
 
 pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")]
@@ -32,10 +32,17 @@ pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")]
 exclude = [".hg", ".git", ".svn"]
 
 
-repos = {}
+repos: Dict[str, Any] = {}
 
 
-def set_up_package(name, repository, url_attr):
+@pytest.fixture(autouse=True)
+def _clear_repos():
+    # start each test with a clean slate so a failure does not leak into the next test
+    repos.clear()
+    yield
+
+
+def set_up_package(name, repository, url_attr, monkeypatch):
     """Set up a mock package to be mirrored.
     Each package needs us to:
 
@@ -46,22 +53,24 @@ def set_up_package(name, repository, url_attr):
     s = spack.concretize.concretize_one(name)
     repos[name] = repository
 
-    # change the fetch args of the first (only) version.
+    # change the fetch args of the first (only) version. versions is a class-level dict shared
+    # across instances and cached with the package module, so mutate it via monkeypatch to
+    # restore it after the test instead of leaking the mock URL into later tests.
     assert len(s.package.versions) == 1
 
     v = next(iter(s.package.versions))
-    s.package.versions[v][url_attr] = repository.url
+    monkeypatch.setitem(s.package.versions[v], url_attr, repository.url)
 
 
-def check_mirror():
+def check_mirror(mutable_config: Configuration):
     with spack.stage.Stage("spack-mirror-test") as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
         # register mirror with spack config
         mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_root)}
-        with spack.config.override("mirrors", mirrors):
-            with spack.config.override("config:checksum", False):
+        with mutable_config.override("mirrors", mirrors):
+            with mutable_config.override("config:checksum", False):
                 specs = [spack.concretize.concretize_one(x) for x in repos]
-                spack.mirrors.utils.create(mirror_root, specs)
+                spack.cmd.mirror.create(mirror_root, specs)
 
             # Stage directory exists
             assert os.path.isdir(mirror_root)
@@ -80,7 +89,7 @@ def check_mirror():
                 spec = spack.concretize.concretize_one(name)
                 pkg = spec.package
 
-                with spack.config.override("config:checksum", False):
+                with mutable_config.override("config:checksum", False):
                     with pkg.stage:
                         pkg.do_stage(mirror_only=True)
 
@@ -102,37 +111,39 @@ def check_mirror():
                         assert all(left in exclude for left in dcmp.left_only)
 
 
-def test_url_mirror(mock_archive):
-    set_up_package("trivial-install-test-package", mock_archive, "url")
-    check_mirror()
-    repos.clear()
+def test_url_mirror(mock_archive, monkeypatch, mutable_config: Configuration):
+    set_up_package("trivial-install-test-package", mock_archive, "url", monkeypatch)
+    check_mirror(mutable_config)
 
 
-def test_git_mirror(git, mock_git_repository):
-    set_up_package("git-test", mock_git_repository, "git")
-    check_mirror()
-    repos.clear()
+def test_git_mirror(git, mock_git_repository, monkeypatch, mutable_config: Configuration):
+    set_up_package("git-test", mock_git_repository, "git", monkeypatch)
+    check_mirror(mutable_config)
 
 
-def test_svn_mirror(mock_svn_repository):
-    set_up_package("svn-test", mock_svn_repository, "svn")
-    check_mirror()
-    repos.clear()
+def test_svn_mirror(mock_svn_repository, monkeypatch, mutable_config: Configuration):
+    set_up_package("svn-test", mock_svn_repository, "svn", monkeypatch)
+    check_mirror(mutable_config)
 
 
-def test_hg_mirror(mock_hg_repository):
-    set_up_package("hg-test", mock_hg_repository, "hg")
-    check_mirror()
-    repos.clear()
+def test_hg_mirror(mock_hg_repository, monkeypatch, mutable_config: Configuration):
+    set_up_package("hg-test", mock_hg_repository, "hg", monkeypatch)
+    check_mirror(mutable_config)
 
 
-def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository, mock_archive):
-    set_up_package("git-test", mock_git_repository, "git")
-    set_up_package("svn-test", mock_svn_repository, "svn")
-    set_up_package("hg-test", mock_hg_repository, "hg")
-    set_up_package("trivial-install-test-package", mock_archive, "url")
-    check_mirror()
-    repos.clear()
+def test_all_mirror(
+    mock_git_repository,
+    mock_svn_repository,
+    mock_hg_repository,
+    mock_archive,
+    monkeypatch,
+    mutable_config: Configuration,
+):
+    set_up_package("git-test", mock_git_repository, "git", monkeypatch)
+    set_up_package("svn-test", mock_svn_repository, "svn", monkeypatch)
+    set_up_package("hg-test", mock_hg_repository, "hg", monkeypatch)
+    set_up_package("trivial-install-test-package", mock_archive, "url", monkeypatch)
+    check_mirror(mutable_config)
 
 
 @pytest.mark.parametrize(
@@ -146,8 +157,6 @@ def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository
 def test_roundtrip_mirror(mirror: spack.mirrors.mirror.Mirror):
     mirror_yaml = mirror.to_yaml()
     assert spack.mirrors.mirror.Mirror.from_yaml(mirror_yaml) == mirror
-    mirror_json = mirror.to_json()
-    assert spack.mirrors.mirror.Mirror.from_json(mirror_json) == mirror
 
 
 @pytest.mark.parametrize(
@@ -159,58 +168,6 @@ def test_invalid_yaml_mirror(invalid_yaml):
     assert invalid_yaml in str(e.value)
 
 
-@pytest.mark.parametrize("invalid_json, error_message", [("{13:", "Expecting property name")])
-def test_invalid_json_mirror(invalid_json, error_message):
-    with pytest.raises(sjson.SpackJSONError) as e:
-        spack.mirrors.mirror.Mirror.from_json(invalid_json)
-    exc_msg = str(e.value)
-    assert exc_msg.startswith("error parsing JSON mirror:")
-    assert error_message in exc_msg
-
-
-@pytest.mark.parametrize(
-    "mirror_collection",
-    [
-        spack.mirrors.mirror.MirrorCollection(
-            mirrors={
-                "example-mirror": spack.mirrors.mirror.Mirror(
-                    "https://example.com/fetch", "https://example.com/push"
-                ).to_dict()
-            }
-        )
-    ],
-)
-def test_roundtrip_mirror_collection(mirror_collection):
-    mirror_collection_yaml = mirror_collection.to_yaml()
-    assert (
-        spack.mirrors.mirror.MirrorCollection.from_yaml(mirror_collection_yaml)
-        == mirror_collection
-    )
-    mirror_collection_json = mirror_collection.to_json()
-    assert (
-        spack.mirrors.mirror.MirrorCollection.from_json(mirror_collection_json)
-        == mirror_collection
-    )
-
-
-@pytest.mark.parametrize(
-    "invalid_yaml", ["playing_playlist: {{ action }} playlist {{ playlist_name }}"]
-)
-def test_invalid_yaml_mirror_collection(invalid_yaml):
-    with pytest.raises(SpackYAMLError, match="error parsing YAML") as e:
-        spack.mirrors.mirror.MirrorCollection.from_yaml(invalid_yaml)
-    assert invalid_yaml in str(e.value)
-
-
-@pytest.mark.parametrize("invalid_json, error_message", [("{13:", "Expecting property name")])
-def test_invalid_json_mirror_collection(invalid_json, error_message):
-    with pytest.raises(sjson.SpackJSONError) as e:
-        spack.mirrors.mirror.MirrorCollection.from_json(invalid_json)
-    exc_msg = str(e.value)
-    assert exc_msg.startswith("error parsing JSON mirror collection:")
-    assert error_message in exc_msg
-
-
 def test_mirror_archive_paths_no_version(mock_packages, mock_archive):
     spec = spack.concretize.concretize_one(
         Spec("trivial-install-test-package@=nonexistingversion")
@@ -219,7 +176,7 @@ def test_mirror_archive_paths_no_version(mock_packages, mock_archive):
     spack.mirrors.layout.default_mirror_layout(fetcher, "per-package-ref", spec)
 
 
-def test_mirror_with_url_patches(mock_packages, monkeypatch):
+def test_mirror_with_url_patches(mock_packages, monkeypatch, mutable_config: Configuration):
     spec = spack.concretize.concretize_one("patch-several-dependencies")
     files_cached_in_mirror = set()
 
@@ -253,8 +210,8 @@ def test_mirror_with_url_patches(mock_packages, monkeypatch):
             spack.mirrors.layout.DefaultLayout, "make_alias", successful_make_alias
         )
 
-        with spack.config.override("config:checksum", False):
-            spack.mirrors.utils.create(mirror_root, list(spec.traverse()))
+        with mutable_config.override("config:checksum", False):
+            spack.cmd.mirror.create(mirror_root, list(spec.traverse()))
 
         assert {
             "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234",
@@ -271,6 +228,27 @@ class MockFetcher:
     def archive(dst):
         with open(dst, "w", encoding="utf-8"):
             pass
+
+
+def test_cache_store_atomic_on_failure(tmp_path: pathlib.Path):
+    """A failed archive() must not leave a partial file at the final destination."""
+
+    class FailingFetcher:
+        cachable = True
+
+        @staticmethod
+        def archive(dst):
+            with open(dst, "wb") as f:
+                f.write(b"partial")
+            raise RuntimeError("simulated failure mid-archive")
+
+    for cache in [
+        spack.caches.MirrorCache(root=str(tmp_path), skip_unstable_versions=False),
+        spack.fetch_strategy.FsCache(str(tmp_path)),
+    ]:
+        with pytest.raises(RuntimeError, match="simulated failure"):
+            cache.store(FailingFetcher(), "pkg/pkg-1.0.tar.gz")
+        assert not (tmp_path / "pkg" / "pkg-1.0.tar.gz").exists()
 
 
 @pytest.mark.regression("14067")
@@ -433,3 +411,82 @@ def test_mirror_name_or_url_dir_parsing(tmp_path: pathlib.Path):
     with working_dir(curdir):
         assert mirror_name_or_url(".").fetch_url == curdir.as_uri()
         assert mirror_name_or_url("..").fetch_url == tmp_path.as_uri()
+
+
+@pytest.mark.parametrize(
+    "select,exclude,spec_str,expected",
+    [
+        # No filters: everything matches
+        ([], [], "brillig", True),
+        # Select only: matches if spec satisfies a select pattern
+        (["brillig"], [], "brillig", True),
+        (["brillig"], [], "canfail", False),
+        # Exclude only: matches unless spec satisfies an exclude pattern
+        ([], ["brillig"], "brillig", False),
+        ([], ["brillig"], "canfail", True),
+        # Both select and exclude
+        (["brillig", "canfail"], ["canfail"], "brillig", True),
+        (["brillig", "canfail"], ["canfail"], "canfail", False),
+    ],
+)
+def test_spec_matches_filters(mock_packages, mutable_config, select, exclude, spec_str, expected):
+    """Test the spec_matches_filters standalone function."""
+    spec = spack.concretize.concretize_one(spec_str)
+    assert spack.mirrors.mirror._spec_matches_filters(spec, select, exclude) is expected
+
+
+def test_mirror_matches(mock_packages, mutable_config):
+    """Test that Mirror.matches_binary() correctly applies select/exclude filters."""
+    spec = spack.concretize.concretize_one("brillig")
+
+    # No filters: everything matches
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com"})
+    assert m.matches_binary(spec, direction="fetch") is True
+
+    # Exclude matches the spec
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude_binary": ["brillig"]})
+    assert m.matches_binary(spec, direction="fetch") is False
+
+    # Select does not include the spec
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "include_binary": ["canfail"]})
+    assert m.matches_binary(spec, direction="fetch") is False
+
+    # Select includes the spec
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "include_binary": ["brillig"]})
+    assert m.matches_binary(spec, direction="fetch") is True
+
+    # Exclude does not match the spec
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude_binary": ["canfail"]})
+    assert m.matches_binary(spec, direction="fetch") is True
+
+    # Select includes but exclude also matches: exclude wins
+    m = spack.mirrors.mirror.Mirror(
+        {
+            "url": "https://example.com",
+            "include_binary": ["brillig"],
+            "exclude_binary": ["brillig"],
+        }
+    )
+    assert m.matches_binary(spec, direction="fetch") is False
+
+    # Direction-specific filter overrides global filters
+    m = spack.mirrors.mirror.Mirror(
+        {
+            "url": "https://example.com",
+            "include_binary": ["canfail"],
+            "fetch": {"include_binary": ["brillig"]},
+        }
+    )
+    assert m.matches_binary(spec, direction="fetch") is True
+    assert m.matches_binary(spec, direction="push") is False
+
+    # Direction-specific and mirror-level config compose
+    m = spack.mirrors.mirror.Mirror(
+        {
+            "url": "https://example.com",
+            "include_binary": ["brillig"],
+            "fetch": {"exclude_binary": ["brillig"]},
+        }
+    )
+    assert m.matches_binary(spec, direction="fetch") is False
+    assert m.matches_binary(spec, direction="push") is True

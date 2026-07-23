@@ -4,11 +4,12 @@
 
 import argparse
 
+import spack.binary_distribution
 import spack.cmd
 import spack.cmd.common.arguments
 import spack.environment as ev
-import spack.llnl.util.tty as tty
-from spack.llnl.string import plural
+from spack.util import tty
+from spack.util.string import plural
 
 description = "concretize an environment and write a lockfile"
 section = "environments"
@@ -27,11 +28,11 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
     spack.cmd.common.arguments.add_concretizer_args(subparser)
-    spack.cmd.common.arguments.add_common_arguments(subparser, ["jobs"])
+    spack.cmd.common.arguments.add_common_arguments(subparser, ["jobs", "show_non_defaults"])
 
 
 def concretize(parser, args):
-    env = spack.cmd.require_active_env(cmd_name="concretize")
+    env = spack.cmd.require_active_env(args.subparser)
 
     if args.test == "all":
         tests = True
@@ -45,7 +46,13 @@ def concretize(parser, args):
         if not args.quiet:
             if concretized_specs:
                 tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}:")
-                ev.display_specs([concrete for _, concrete in concretized_specs])
+                spack.binary_distribution.load_buildcache_index()
+                status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+                ev.display_specs(
+                    [concrete for _, concrete in concretized_specs],
+                    highlight_non_defaults=args.non_defaults,
+                    status_fn=status_fn,
+                )
             else:
                 tty.msg("No new specs to concretize.")
         env.write()

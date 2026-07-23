@@ -7,13 +7,16 @@ import pathlib
 import pytest
 
 import spack.bootstrap
+import spack.bootstrap.clingo
 import spack.bootstrap.config
 import spack.bootstrap.core
+import spack.bootstrap.status
 import spack.compilers.config
 import spack.config
 import spack.environment
 import spack.store
-import spack.util.path
+import spack.util.executable
+from spack.active_environment import active_environment
 
 from .conftest import _true
 
@@ -81,16 +84,16 @@ def test_install_tree_customization_is_respected(mutable_config, tmp_path: pathl
 )
 def test_store_path_customization(config_value, expected, mutable_config):
     # Set the current configuration to a specific value
-    spack.config.set("bootstrap:root", config_value)
+    spack.config.CONFIG.set("bootstrap:root", config_value)
 
     # Check the store path
     current = spack.bootstrap.config.store_path()
-    assert current == spack.util.path.canonicalize_path(expected)
+    assert current == spack.config.canonicalize_path(expected)
 
 
 def test_raising_exception_if_bootstrap_disabled(mutable_config):
     # Disable bootstrapping in config.yaml
-    spack.config.set("bootstrap:enable", False)
+    spack.config.CONFIG.set("bootstrap:enable", False)
 
     # Check the correct exception is raised
     with pytest.raises(RuntimeError, match="bootstrapping is currently disabled"):
@@ -111,24 +114,24 @@ def test_raising_exception_executables_in_path(config, monkeypatch):
 
 @pytest.mark.regression("25603")
 def test_bootstrap_deactivates_environments(active_mock_environment):
-    assert spack.environment.active_environment() == active_mock_environment
+    assert active_environment() == active_mock_environment
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.environment.active_environment() is None
-    assert spack.environment.active_environment() == active_mock_environment
+        assert active_environment() is None
+    assert active_environment() == active_mock_environment
 
 
 @pytest.mark.regression("25805")
 def test_bootstrap_disables_modulefile_generation(mutable_config):
     # Be sure to enable both lmod and tcl in modules.yaml
-    spack.config.set("modules:default:enable", ["tcl", "lmod"])
+    spack.config.CONFIG.set("modules:default:enable", ["tcl", "lmod"])
 
-    assert "tcl" in spack.config.get("modules:default:enable")
-    assert "lmod" in spack.config.get("modules:default:enable")
+    assert "tcl" in spack.config.CONFIG.get("modules:default:enable")
+    assert "lmod" in spack.config.CONFIG.get("modules:default:enable")
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert "tcl" not in spack.config.get("modules:default:enable")
-        assert "lmod" not in spack.config.get("modules:default:enable")
-    assert "tcl" in spack.config.get("modules:default:enable")
-    assert "lmod" in spack.config.get("modules:default:enable")
+        assert "tcl" not in spack.config.CONFIG.get("modules:default:enable")
+        assert "lmod" not in spack.config.CONFIG.get("modules:default:enable")
+    assert "tcl" in spack.config.CONFIG.get("modules:default:enable")
+    assert "lmod" in spack.config.CONFIG.get("modules:default:enable")
 
 
 @pytest.mark.regression("25992")
@@ -136,6 +139,7 @@ def test_bootstrap_disables_modulefile_generation(mutable_config):
 def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml, mock_packages):
     assert not spack.compilers.config.all_compilers(init_config=False)
     with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.clingo._add_compilers_if_missing()
         assert spack.compilers.config.all_compilers(init_config=False)
     assert not spack.compilers.config.all_compilers(init_config=False)
 
@@ -147,6 +151,7 @@ def test_bootstrap_search_for_compilers_with_environment_active(
 ):
     assert not spack.compilers.config.all_compilers(init_config=False)
     with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.clingo._add_compilers_if_missing()
         assert spack.compilers.config.all_compilers(init_config=False)
     assert not spack.compilers.config.all_compilers(init_config=False)
 
@@ -154,12 +159,12 @@ def test_bootstrap_search_for_compilers_with_environment_active(
 @pytest.mark.regression("26189")
 def test_config_yaml_is_preserved_during_bootstrap(mutable_config):
     expected_dir = "/tmp/test"
-    spack.config.set("config:test_stage", expected_dir, scope="command_line")
+    spack.config.CONFIG.set("config:test_stage", expected_dir, scope="command_line")
 
-    assert spack.config.get("config:test_stage") == expected_dir
+    assert spack.config.CONFIG.get("config:test_stage") == expected_dir
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.config.get("config:test_stage") == expected_dir
-    assert spack.config.get("config:test_stage") == expected_dir
+        assert spack.config.CONFIG.get("config:test_stage") == expected_dir
+    assert spack.config.CONFIG.get("config:test_stage") == expected_dir
 
 
 @pytest.mark.regression("26548")
@@ -176,13 +181,11 @@ spack:
   config:
     install_tree:
       root: {0}
-""".format(
-            install_root
-        )
+""".format(install_root)
     )
     with spack.environment.Environment(str(tmp_path)):
-        assert spack.environment.active_environment()
-        assert spack.config.get("config:install_tree:root") == str(install_root)
+        assert active_environment()
+        assert spack.config.CONFIG.get("config:install_tree:root") == str(install_root)
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
@@ -203,8 +206,6 @@ def test_nested_use_of_context_manager(mutable_config):
 def test_status_function_find_files(
     mutable_config, mock_executable, tmp_path: pathlib.Path, monkeypatch, expected_missing
 ):
-    import spack.bootstrap.status
-
     if not expected_missing:
         mock_executable("foo", "echo Hello WWorld!")
 
@@ -219,6 +220,59 @@ def test_status_function_find_files(
     assert missing is expected_missing
 
 
+@pytest.mark.parametrize(
+    "gpg_in_path,gpg_in_store,expected_missing",
+    [
+        (True, False, False),  # gpg exists in PATH
+        (False, True, False),  # gpg exists in bootstrap store
+        (False, False, True),  # gpg is missing
+    ],
+)
+def test_gpg_status_check(
+    mutable_config,
+    mock_executable,
+    tmp_path: pathlib.Path,
+    monkeypatch,
+    gpg_in_path,
+    gpg_in_store,
+    expected_missing,
+):
+    """Test that gpg/gpg2 status is detected whether it's in PATH or in the bootstrap store."""
+    # Set up mock PATH with or without gpg
+    path_dir = tmp_path / "bin"
+    path_dir.mkdir(exist_ok=True)
+    monkeypatch.setenv("PATH", str(path_dir))
+
+    if gpg_in_path:
+        mock_executable("gpg2", "echo GPG 2.3.4")
+
+    # Mock the bootstrap store function
+    def mock_executables_in_store(exes, query_spec, query_info=None):
+        if not gpg_in_store:
+            return False
+
+        # Simulate found gpg in bootstrap store
+        if query_info is not None:
+            query_info["spec"] = "gnupg@2.5.12"
+            query_info["command"] = spack.util.executable.Executable("gpg")
+        return True
+
+    monkeypatch.setattr(spack.bootstrap.status, "_executables_in_store", mock_executables_in_store)
+
+    # Call only the buildcache requirements function directly to isolate the test
+    requirements = spack.bootstrap.status._buildcache_requirements()
+
+    # Find the gpg entry by examining the calls made to set up requirements
+    # We know the first entry in requirements is the gpg entry because of how
+    # _buildcache_requirements is structured:
+    # Make sure we're not out of bounds
+    assert len(requirements) >= 1, "No gpg requirement found"
+
+    # Check that the gpg requirement matches our expectations
+    gpg_req = requirements[0]
+    assert gpg_req[0] is not expected_missing
+
+
 @pytest.mark.regression("31042")
 def test_source_is_disabled(mutable_config):
     # Get the configuration dictionary of the current bootstrapping source
@@ -228,7 +282,7 @@ def test_source_is_disabled(mutable_config):
     assert not spack.bootstrap.core.source_is_enabled(conf)
 
     # Try to explicitly disable the source and verify that the behavior is the same as above
-    spack.config.add("bootstrap:trusted:{0}:{1}".format(conf["name"], False))
+    spack.config.CONFIG.add("bootstrap:trusted:{0}:{1}".format(conf["name"], False))
     assert not spack.bootstrap.core.source_is_enabled(conf)
 
 

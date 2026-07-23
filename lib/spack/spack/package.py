@@ -12,7 +12,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 from spack.vendor.macholib.MachO import LC_ID_DYLIB, MachO
 
 import spack.builder
-import spack.llnl.util.tty as _tty
+import spack.util.tty as _tty
 from spack.archspec import microarchitecture_flags, microarchitecture_flags_from_target
 from spack.build_environment import (
     MakeExecutable,
@@ -34,7 +34,7 @@ from spack.builder import (
 )
 from spack.compilers.config import find_compilers
 from spack.compilers.libraries import CompilerPropertyDetector, compiler_spec
-from spack.config import determine_number_of_jobs
+from spack.config import determine_number_of_jobs, get_user
 from spack.deptypes import ALL_TYPES as all_deptypes
 from spack.directives import (
     build_system,
@@ -71,7 +71,29 @@ from spack.install_test import (
     install_test_root,
     test_part,
 )
-from spack.llnl.util.filesystem import (
+from spack.mixins import filter_compiler_wrappers
+from spack.multimethod import default_args, when
+from spack.operating_systems.linux_distro import kernel_version
+from spack.operating_systems.mac_os import macos_version
+from spack.package_base import PackageBase, make_package_test_rpath, on_package_attributes
+from spack.package_completions import (
+    bash_completion_path,
+    fish_completion_path,
+    zsh_completion_path,
+)
+from spack.package_test import compare_output, compare_output_file, compile_c_and_execute
+from spack.paths import spack_script
+from spack.phase_callbacks import run_after, run_before
+from spack.platforms import host as host_platform
+from spack.spec import Spec
+from spack.url import substitute_version as substitute_version_in_url
+from spack.user_environment import environment_modifications_for_specs
+from spack.util.elf import delete_needed_from_elf, delete_rpath, get_elf_compat, parse_elf
+from spack.util.environment import EnvironmentModifications, set_env
+from spack.util.environment import filter_system_paths as _filter_system_paths
+from spack.util.environment import is_system_path as _is_system_path
+from spack.util.executable import Executable, ProcessError, which, which_string
+from spack.util.filesystem import (
     FileFilter,
     FileList,
     HeaderList,
@@ -89,6 +111,7 @@ from spack.llnl.util.filesystem import (
     find_headers,
     find_libraries,
     find_system_libraries,
+    fix_darwin_install_name,
     force_remove,
     force_symlink,
     has_shebang,
@@ -98,7 +121,6 @@ from spack.llnl.util.filesystem import (
     join_path,
     keep_modification_time,
     library_extensions,
-    make_package_test_rpath,
     mkdirp,
     path_contains_subdirectory,
     readlink,
@@ -113,42 +135,11 @@ from spack.llnl.util.filesystem import (
     windows_sfn,
     working_dir,
 )
-from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
-from spack.llnl.util.link_tree import LinkTree
-from spack.mixins import filter_compiler_wrappers
-from spack.multimethod import default_args, when
-from spack.operating_systems.linux_distro import kernel_version
-from spack.operating_systems.mac_os import macos_version
-from spack.package_base import (
-    PackageBase,
-    build_system_flags,
-    env_flags,
-    inject_flags,
-    on_package_attributes,
-)
-from spack.package_completions import (
-    bash_completion_path,
-    fish_completion_path,
-    zsh_completion_path,
-)
-from spack.package_test import compare_output, compare_output_file, compile_c_and_execute
-from spack.paths import spack_script
-from spack.phase_callbacks import run_after, run_before
-from spack.platforms import host as host_platform
-from spack.spec import Spec
-from spack.url import substitute_version as substitute_version_in_url
-from spack.user_environment import environment_modifications_for_specs
-from spack.util.elf import delete_needed_from_elf, delete_rpath, get_elf_compat, parse_elf
-from spack.util.environment import EnvironmentModifications
-from spack.util.environment import filter_system_paths as _filter_system_paths
-from spack.util.environment import is_system_path as _is_system_path
-from spack.util.environment import set_env
-from spack.util.executable import Executable, ProcessError, which, which_string
-from spack.util.filesystem import fix_darwin_install_name
+from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.libc import libc_from_dynamic_linker, parse_dynamic_linker
+from spack.util.link_tree import LinkTree
 from spack.util.module_cmd import get_path_args_from_module_line
 from spack.util.module_cmd import module as module_command
-from spack.util.path import get_user
 from spack.util.prefix import Prefix
 from spack.util.url import join as join_url
 from spack.util.windows_registry import HKEY, WindowsRegistryView
@@ -163,9 +154,6 @@ cd = chdir
 
 #: Alias for :func:`os.getcwd`
 pwd = getcwd
-
-#: Alias for :func:`os.rename`
-rename = rename
 
 #: Alias for :func:`os.makedirs`
 makedirs = makedirs
@@ -233,6 +221,50 @@ def filter_system_paths(paths: Iterable[str]) -> List[str]:
         "spack.package.filter_system_paths is deprecated", category=SpackAPIWarning, stacklevel=2
     )
     return _filter_system_paths(paths)
+
+
+#: Assigning this to :attr:`spack.package_base.PackageBase.flag_handler` means that compiler flags
+#: are passed to the build system. This can be used in any package that derives from a build system
+#: class that implements :meth:`spack.package_base.PackageBase.flags_to_build_system_args`.
+#:
+#: See also :func:`env_flags` and :func:`inject_flags`.
+#:
+#: Example::
+#:
+#:     from spack.package import *
+#:
+#:     class MyPackage(CMakePackage):
+#:         flag_handler = build_system_flags
+build_system_flags = PackageBase.build_system_flags
+
+#: Assigning this to :attr:`spack.package_base.PackageBase.flag_handler` means that compiler flags
+#: are set as canonical environment variables.
+#:
+#: See also :func:`build_system_flags` and :func:`inject_flags`.
+#:
+#: Example::
+#:
+#:     from spack.package import *
+#:
+#:     class MyPackage(MakefilePackage):
+#:         flag_handler = env_flags
+env_flags = PackageBase.env_flags
+
+
+#: This is the default value of :attr:`spack.package_base.PackageBase.flag_handler`, which tells
+#: Spack to inject compiler flags through the compiler wrappers, which means that the build system
+#: will not see them directly. This is typically a good default, but in rare case you may need to
+#: use :func:`env_flags` or :func:`build_system_flags` instead.
+#:
+#: See also :func:`build_system_flags` and :func:`env_flags`.
+#:
+#: Example::
+#:
+#:     from spack.package import *
+#:
+#:     class MyPackage(MakefilePackage):
+#:         flag_handler = inject_flags
+inject_flags = PackageBase.inject_flags
 
 
 api: Dict[str, Tuple[str, ...]] = {

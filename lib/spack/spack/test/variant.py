@@ -7,9 +7,9 @@ import pytest
 
 import spack.concretize
 import spack.error
-import spack.repo
 import spack.spec
 import spack.variant
+from spack.repo import RepoPath
 from spack.spec import Spec, VariantMap
 from spack.variant import (
     BoolValuedVariant,
@@ -66,7 +66,7 @@ class TestMultiValuedVariant:
         assert not a.satisfies(c) and not c.satisfies(a)
 
         # SingleValuedVariant and MultiValuedVariant with the same single concrete value do satisfy
-        # eachother
+        # each other
         b_sv = SingleValuedVariant("foo", "bar")
         assert b.satisfies(b_sv) and b_sv.satisfies(b)
         d_sv = SingleValuedVariant("foo", True)
@@ -416,7 +416,7 @@ class TestVariant:
 class TestVariantMapTest:
     def test_invalid_values(self) -> None:
         # Value with invalid type
-        a = VariantMap(Spec())
+        a = VariantMap()
         with pytest.raises(TypeError):
             a["foo"] = 2
 
@@ -437,7 +437,7 @@ class TestVariantMapTest:
 
     def test_set_item(self) -> None:
         # Check that all the three types of variants are accepted
-        a = VariantMap(Spec())
+        a = VariantMap()
 
         a["foo"] = BoolValuedVariant("foo", True)
         a["bar"] = SingleValuedVariant("bar", "baz")
@@ -445,7 +445,7 @@ class TestVariantMapTest:
 
     def test_substitute(self) -> None:
         # Check substitution of a key that exists
-        a = VariantMap(Spec())
+        a = VariantMap()
         a["foo"] = BoolValuedVariant("foo", True)
         a.substitute(SingleValuedVariant("foo", "bar"))
 
@@ -456,34 +456,34 @@ class TestVariantMapTest:
 
     def test_satisfies_and_constrain(self) -> None:
         # foo=bar foobar=fee feebar=foo
-        a = VariantMap(Spec())
-        a["foo"] = MultiValuedVariant("foo", ("bar",))
-        a["foobar"] = SingleValuedVariant("foobar", "fee")
-        a["feebar"] = SingleValuedVariant("feebar", "foo")
+        a = Spec()
+        a.variants["foo"] = MultiValuedVariant("foo", ("bar",))
+        a.variants["foobar"] = SingleValuedVariant("foobar", "fee")
+        a.variants["feebar"] = SingleValuedVariant("feebar", "foo")
 
         # foo=bar,baz foobar=fee shared=True
-        b = VariantMap(Spec())
-        b["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        b["foobar"] = SingleValuedVariant("foobar", "fee")
-        b["shared"] = BoolValuedVariant("shared", True)
+        b = Spec()
+        b.variants["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
+        b.variants["foobar"] = SingleValuedVariant("foobar", "fee")
+        b.variants["shared"] = BoolValuedVariant("shared", True)
 
         # concrete, different values do not intersect / satisfy each other
         assert not a.intersects(b) and not b.intersects(a)
         assert not a.satisfies(b) and not b.satisfies(a)
 
         # foo=bar,baz foobar=fee feebar=foo shared=True
-        c = VariantMap(Spec())
-        c["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        c["foobar"] = SingleValuedVariant("foobar", "fee")
-        c["feebar"] = SingleValuedVariant("feebar", "foo")
-        c["shared"] = BoolValuedVariant("shared", True)
+        c = Spec()
+        c.variants["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
+        c.variants["foobar"] = SingleValuedVariant("foobar", "fee")
+        c.variants["feebar"] = SingleValuedVariant("feebar", "foo")
+        c.variants["shared"] = BoolValuedVariant("shared", True)
 
         # concrete values cannot be constrained
         with pytest.raises(spack.variant.UnsatisfiableVariantSpecError):
-            a.constrain(b)
+            a._constrain_variants(b)
 
     def test_copy(self) -> None:
-        a = VariantMap(Spec())
+        a = VariantMap()
         a["foo"] = BoolValuedVariant("foo", True)
         a["bar"] = SingleValuedVariant("bar", "baz")
         a["foobar"] = MultiValuedVariant("foobar", ("a", "b", "c", "d", "e"))
@@ -492,7 +492,7 @@ class TestVariantMapTest:
         assert a == c
 
     def test_str(self) -> None:
-        c = VariantMap(Spec())
+        c = VariantMap()
         c["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
         c["foobar"] = SingleValuedVariant("foobar", "fee")
         c["feebar"] = SingleValuedVariant("feebar", "foo")
@@ -519,20 +519,20 @@ def test_disjoint_set_initialization():
 
     assert d.default == "none"
     assert d.multi is True
-    assert set(x for x in d) == set(["none", "a", "b", "c", "e", "f"])
+    assert list(d) == ["none", "a", "b", "c", "e", "f"]
 
 
 def test_disjoint_set_fluent_methods():
     # Construct an object without the empty set
     d = disjoint_sets(("a",), ("b", "c"), ("e", "f")).prohibit_empty_set()
-    assert set(("none",)) not in d.sets
+    assert ("none",) not in d.sets
 
     # Call this 2 times to check that no matter whether
     # the empty set was allowed or not before, the state
     # returned is consistent.
     for _ in range(2):
         d = d.allow_empty_set()
-        assert set(("none",)) in d.sets
+        assert ("none",) in d.sets
         assert "none" in d
         assert "none" in [x for x in d]
         assert "none" in d.feature_values
@@ -550,7 +550,7 @@ def test_disjoint_set_fluent_methods():
     # returned is consistent.
     for _ in range(2):
         d = d.prohibit_empty_set()
-        assert set(("none",)) not in d.sets
+        assert ("none",) not in d.sets
         assert "none" not in d
         assert "none" not in [x for x in d]
         assert "none" not in d.feature_values
@@ -601,8 +601,8 @@ def test_wild_card_valued_variants_equivalent_to_str():
     assert str_output.value == wild_output.value
 
 
-def test_variant_definitions(mock_packages):
-    pkg = spack.repo.PATH.get_pkg_class("variant-values")
+def test_variant_definitions(mock_packages: RepoPath):
+    pkg = mock_packages.get_pkg_class("variant-values")
 
     # two variant names
     assert len(pkg.variant_names()) == 2
@@ -652,8 +652,8 @@ def test_variant_definitions(mock_packages):
         ("variant-values-override", "baz", "@4.0", [0]),
     ],
 )
-def test_prevalidate_variant_value(mock_packages, pkg_name, value, spec, def_ids):
-    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
+def test_prevalidate_variant_value(mock_packages: RepoPath, pkg_name, value, spec, def_ids):
+    pkg = mock_packages.get_pkg_class(pkg_name)
 
     all_defs = [vdef for _, vdef in pkg.variant_definitions("v")]
 
@@ -682,8 +682,8 @@ def test_prevalidate_variant_value(mock_packages, pkg_name, value, spec, def_ids
         ("variant-values-override", "foo", "@4.0"),
     ],
 )
-def test_strict_invalid_variant_values(mock_packages, pkg_name, value, spec):
-    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
+def test_strict_invalid_variant_values(mock_packages: RepoPath, pkg_name, value, spec):
+    pkg = mock_packages.get_pkg_class(pkg_name)
 
     with pytest.raises(spack.variant.InvalidVariantValueError):
         spack.variant.prevalidate_variant_value(
@@ -703,9 +703,9 @@ def test_strict_invalid_variant_values(mock_packages, pkg_name, value, spec):
     ],
 )
 def test_concretize_variant_default_with_multiple_defs(
-    mock_packages, config, pkg_name, spec, satisfies, def_id
+    mock_packages: RepoPath, config, pkg_name, spec, satisfies, def_id
 ):
-    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
+    pkg = mock_packages.get_pkg_class(pkg_name)
     pkg_defs = [vdef for _, vdef in pkg.variant_definitions("v")]
 
     spec = spack.concretize.concretize_one(f"{pkg_name}{spec}")

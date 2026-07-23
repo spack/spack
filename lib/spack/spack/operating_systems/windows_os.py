@@ -9,7 +9,7 @@ import platform
 import subprocess
 
 from spack.error import SpackError
-from spack.llnl.util import tty
+from spack.util import tty
 from spack.util import windows_registry as winreg
 from spack.version import Version
 
@@ -21,7 +21,7 @@ def windows_version():
     # include the build number as this provides important information
     # for low lever packages and components like the SDK and WDK
     # The build number is the version component that would otherwise
-    # be the patch version in sematic versioning, i.e. z of x.y.z
+    # be the patch version in semantic versioning, i.e. z of x.y.z
     return Version(platform.version())
 
 

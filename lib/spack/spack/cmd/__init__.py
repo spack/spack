@@ -9,29 +9,32 @@ import os
 import re
 import subprocess
 import sys
+import textwrap
 from collections import Counter
-from typing import Generator, List, Optional, Sequence, Union
+from typing import Callable, Container, Generator, List, Optional, Sequence, Union
 
 import spack.concretize
-import spack.config  # breaks a cycle.
+import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
-import spack.llnl.string
-import spack.llnl.util.tty as tty
+import spack.hash_lookup
 import spack.paths
 import spack.repo
 import spack.spec
 import spack.spec_parser
 import spack.store
-import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.llnl.util.filesystem import join_path
-from spack.llnl.util.lang import attr_setdefault, index_by
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import colorize
+import spack.util.string
+from spack import traverse
+from spack.active_environment import active_environment
+from spack.util import tty
+from spack.util.filesystem import join_path
+from spack.util.lang import attr_setdefault, index_by
+from spack.util.tty.colify import colify
+from spack.util.tty.color import colorize
 
 from ..enums import InstallRecordStatus
 
@@ -181,7 +184,8 @@ def parse_specs(
     args = [args] if isinstance(args, str) else args
     arg_string = " ".join([quote_kvp(arg) for arg in args])
 
-    specs = spack.spec_parser.parse(arg_string)
+    toolchains = spack.config.CONFIG.get("toolchains", {})
+    specs = spack.spec_parser.parse(arg_string, toolchains=toolchains)
     if not concretize:
         return specs
 
@@ -197,7 +201,7 @@ def _concretize_spec_pairs(
     Any spec with a concrete spec associated with it will concretize to that spec. Any spec
     with ``None`` for its concrete spec will be newly concretized. This method respects unification
     rules from config."""
-    unify = spack.config.get("concretizer:unify", False)
+    unify = spack.config.CONFIG.get("concretizer:unify", False)
 
     # Special case for concretizing a single spec
     if len(to_concretize) == 1:
@@ -211,7 +215,8 @@ def _concretize_spec_pairs(
     ):
         # Get all the concrete specs
         ret = [
-            concrete or (abstract if abstract.concrete else abstract.lookup_hash())
+            concrete
+            or (abstract if abstract.concrete else spack.hash_lookup.lookup_hash(abstract))
             for abstract, concrete in to_concretize
         ]
 
@@ -252,7 +257,7 @@ def matching_spec_from_env(spec):
     If no matching spec is found in the environment (or if no environment is
     active), this will return the given spec but concretized.
     """
-    env = ev.active_environment()
+    env = active_environment()
     if env:
         return env.matching_spec(spec) or spack.concretize.concretize_one(spec)
     else:
@@ -267,7 +272,7 @@ def matching_specs_from_env(specs):
     matching spec is found, this will return the given spec but concretized in the
     context of the active environment and other given specs, with unification rules applied.
     """
-    env = ev.active_environment()
+    env = active_environment()
     spec_pairs = [(spec, env.matching_spec(spec) if env else None) for spec in specs]
     additional_concrete_specs = (
         [(concrete, concrete) for _, concrete in env.concretized_specs()] if env else []
@@ -330,7 +335,11 @@ def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 
-    format_string = "{name}{@version}{ arch=architecture} {%compiler.name}{@compiler.version}"
+    format_string = (
+        "{name}{@version}"
+        "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
+        "{compilers}"
+    )
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
         colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
@@ -345,6 +354,28 @@ def gray_hash(spec, length):
         length = 32
     h = spec.dag_hash(length) if spec.concrete else "-" * length
     return colorize("@K{%s}" % h)
+
+
+def buildcache_status_fn(
+    available_hashes: Container[str],
+) -> Callable[["spack.spec.Spec"], "spack.spec.InstallStatus"]:
+    """Return a status_fn that marks not-installed specs present in a buildcache as [b].
+
+    Args:
+        available_hashes: any container supporting ``in`` lookups whose elements are dag hashes
+            known to be available in at least one buildcache.
+    """
+
+    def _status_fn(spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":
+        status = spack.store.STORE.db.install_status(spec)
+        if (
+            status in (spack.spec.InstallStatus.absent, spack.spec.InstallStatus.missing)
+            and spec.dag_hash() in available_hashes
+        ):
+            return spack.spec.InstallStatus.buildcache
+        return status
+
+    return _status_fn
 
 
 def display_specs_as_json(specs, deps=False):
@@ -480,7 +511,8 @@ def display_specs(specs, args=None, **kwargs):
         if flags:
             ffmt += " {compiler_flags}"
         vfmt = "{variants}" if variants else ""
-        format_string = nfmt + "{@version}" + vfmt + ffmt
+        hfmt = "{/abstract_hash}"
+        format_string = nfmt + "{@version}" + vfmt + ffmt + hfmt
 
     if specfile_format:
         format_string = "[{specfile_version}] " + format_string
@@ -568,7 +600,7 @@ def print_how_many_pkgs(specs, pkg_type="", suffix=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % spack.llnl.string.plural(len(specs), pkg_type + " package") + suffix)
+    tty.msg("%s" % spack.util.string.plural(len(specs), pkg_type + " package") + suffix)
 
 
 def spack_is_git_repo():
@@ -632,46 +664,43 @@ def extant_file(f):
     return f
 
 
-def require_active_env(cmd_name):
-    """Used by commands to get the active environment
+def require_active_env(parser):
+    """Used by commands to get the active environment.
 
-    If an environment is not found, print an error message that says the calling
-    command *needs* an active environment.
+    If an environment is not found, calls ``parser.error()`` which prints usage and exits.
 
     Arguments:
-        cmd_name (str): name of calling command
+        parser: the subparser for the command (typically ``args.subparser``)
 
     Returns:
         (spack.environment.Environment): the active environment
     """
-    env = ev.active_environment()
-
+    env = active_environment()
     if env:
         return env
-
-    tty.die(
-        "`spack %s` requires an environment" % cmd_name,
-        "activate an environment first:",
-        "    spack env activate ENV",
-        "or use:",
-        "    spack -e ENV %s ..." % cmd_name,
+    parser.error(
+        "requires an active environment\n"
+        "  activate an environment first:\n"
+        "      spack env activate ENV\n"
+        "  or use:\n"
+        "      spack -e ENV %s ..." % parser.prog.partition(" ")[2]
     )
 
 
-def find_environment(args):
+def find_environment(args: argparse.Namespace) -> Optional[ev.Environment]:
     """Find active environment from args or environment variable.
 
     Check for an environment in this order:
-        1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
-        2. via a path in the spack.environment.spack_env_var environment variable.
+
+    1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
+    2. via a path in the spack.environment.spack_env_var environment variable.
 
     If an environment is found, read it in.  If not, return None.
 
     Arguments:
-        args (argparse.Namespace): argparse namespace with command arguments
+        args: argparse namespace with command arguments
 
-    Returns:
-        (spack.environment.Environment): a found environment, or ``None``
+    Returns: a found environment, or ``None``
     """
 
     # treat env as a name
@@ -701,9 +730,23 @@ def find_environment(args):
     raise ev.SpackEnvironmentError("no environment in %s" % env)
 
 
-def first_line(docstring):
+def doc_first_line(function: object) -> Optional[str]:
     """Return the first line of the docstring."""
-    return docstring.split("\n")[0]
+    return function.__doc__.split("\n", 1)[0].strip() if function.__doc__ else None
+
+
+if sys.version_info >= (3, 13):
+    # indent of __doc__ is automatically removed in 3.13+
+    # see https://github.com/python/cpython/commit/2566b74b26bcce24199427acea392aed644f4b17
+    def doc_dedented(function: object) -> Optional[str]:
+        """Return the docstring with leading indentation removed."""
+        return function.__doc__
+
+else:
+
+    def doc_dedented(function: object) -> Optional[str]:
+        """Return the docstring with leading indentation removed."""
+        return textwrap.dedent(function.__doc__) if function.__doc__ else None
 
 
 def converted_arg_length(arg: str):
@@ -740,8 +783,8 @@ def group_arguments(
         max_group_size: max number of elements in any group (default 500)
         prefix_length: length of any additional arguments (including spaces) to be passed before
             the groups from args; default is 0 characters
-        max_group_length: max length of characters that if a group of args is joined by " "
-            On unix, ths defaults to SC_ARG_MAX from sysconf. On Windows the default is
+        max_group_length: max length of characters that if a group of args is joined by ``" "``
+            On unix, this defaults to SC_ARG_MAX from sysconf. On Windows the default is
             the max usable for CreateProcess (32,768 chars)
 
     """
@@ -751,7 +794,7 @@ def group_arguments(
         max_group_length = 32766
         if hasattr(os, "sysconf"):  # sysconf is only on unix
             try:
-                # returns -1 if an option isn't present (soem older POSIXes)
+                # returns -1 if an option isn't present (some older POSIXes)
                 sysconf_max = os.sysconf("SC_ARG_MAX")
                 max_group_length = sysconf_max if sysconf_max != -1 else max_group_length
             except (ValueError, OSError):
