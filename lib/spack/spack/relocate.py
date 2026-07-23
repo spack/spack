@@ -85,6 +85,7 @@ def _buildcache_import_lib_targets(
                     f"Import lib {lib} does not reference a compatible DLL, skipping relocation..."
                 )
                 continue
+            # normalizing the padding (stripping out an arbitrary number of escaped backslashes)
             norm_dll_path = dll_path[:2] + "\\" + dll_path[2:].lstrip("\\")
             match = regex.match(norm_dll_path)
             if match:
@@ -92,7 +93,6 @@ def _buildcache_import_lib_targets(
                 new_root = all_prefixes[old_root]
                 dll_name = os.path.relpath(dll_path, old_root)
                 new_dll_path = os.path.join(new_root, dll_name)
-                lib_name = os.path.relpath(lib, old_root)
                 coff_for_target[new_dll_path] = lib
             else:
                 tty.debug(
