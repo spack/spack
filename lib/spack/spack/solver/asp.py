@@ -1068,9 +1068,6 @@ class PyclingoDriver:
         )
         timer.stop("setup")
 
-        timer.start("ordering")
-        # assemble a list of the control files needed for this problem. Some are conditionally
-        # included depending on what features we're using in the solve.
         control_files = ["concretize.lp", "heuristic.lp", "display.lp", "direct_dependency.lp"]
         if not setup.concretize_everything:
             control_files.append("when_possible.lp")
@@ -1453,7 +1450,7 @@ class SpackSolverSetup:
         # If true, we have to load the code for variant/flag propagation
         self.uses_propagation: bool = False
 
-    def pkg_version_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
+    def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
 
         This uses self.declared_versions so that we include any versions
