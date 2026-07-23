@@ -1822,9 +1822,6 @@ def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, config):
     for spec in a.traverse():
         assert dag_hashes[spec.name] == spec.dag_hash()
 
-        with pytest.raises(ValueError, match="Cannot call package_hash()"):
-            spec.package_hash()
-
 
 def test_spec_trim(mock_packages, config):
     top = spack.concretize.concretize_one("dt-diamond")

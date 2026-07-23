@@ -2285,17 +2285,6 @@ class Spec:
 
         return hash_string[:length]
 
-    def package_hash(self):
-        """Compute the hash of the contents of the package for this node"""
-        # Concrete specs with the old DAG hash did not have the package hash, so we do
-        # not know what the package looked like at concretization time
-        if self.concrete and not self._package_hash:
-            raise ValueError(
-                "Cannot call package_hash() on concrete specs with the old dag_hash()"
-            )
-
-        return self._cached_hash(ht.package_hash)
-
     def dag_hash(self, length=None):
         """This is Spack's default hash, used to identify installations.
 
@@ -2420,11 +2409,9 @@ class Spec:
             and hasattr(self, "_package_hash")
             and self._package_hash
         ):
-            # We use the attribute here instead of `self.package_hash()` because this
-            # should *always* be assignhed at concretization time. We don't want to try
-            # to compute a package hash for concrete spec where a) the package might not
-            # exist, or b) the `dag_hash` didn't include the package hash when the spec
-            # was concretized.
+            # The package hash is assigned at concretization time, and only read here. We don't
+            # want to compute one for a concrete spec, where a) the package might not exist, or
+            # b) the `dag_hash` didn't include the package hash when the spec was concretized.
             package_hash = self._package_hash
 
             # Full hashes are in bytes
