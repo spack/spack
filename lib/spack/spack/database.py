@@ -197,6 +197,18 @@ class InstallRecord:
         installation_time (datetime.datetime or None): time of the installation
     """
 
+    __slots__ = (
+        "spec",
+        "path",
+        "installed",
+        "ref_count",
+        "explicit",
+        "installation_time",
+        "deprecated_for",
+        "in_buildcache",
+        "origin",
+    )
+
     def __init__(
         self,
         spec: "spack.spec.Spec",
