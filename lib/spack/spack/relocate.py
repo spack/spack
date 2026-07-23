@@ -92,7 +92,8 @@ def _buildcache_import_lib_targets(
                 new_root = all_prefixes[old_root]
                 dll_name = os.path.relpath(dll_path, old_root)
                 new_dll_path = os.path.join(new_root, dll_name)
-                coff_for_target[new_dll_path] = os.path.join(new_root, os.path.basename(lib))
+                lib_name = os.path.relpath(lib, old_root)
+                coff_for_target[new_dll_path] = lib
             else:
                 tty.debug(
                     f"Import lib: {lib} does not reference a DLL "
