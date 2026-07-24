@@ -139,7 +139,7 @@ class NullReportData(ReportData):
     Avoids creating InstallRecords and reading log files on every completed build."""
 
     def __init__(self) -> None:
-        pass
+        super().__init__(roots=[])
 
     def start_record(self, spec: spack.spec.Spec) -> None:
         pass
@@ -291,7 +291,7 @@ class PackageInstaller:
         self.next_database_write = 0.0
 
     def install(self) -> None:
-        #: check what specs we could fetch from binaries (checks against cache, not remotely)
+        # check what specs we could fetch from binaries (checks against cache, not remotely)
         try:
             spack.binary_distribution.BINARY_INDEX.update()
         except spack.binary_distribution.FetchCacheError:
@@ -304,9 +304,9 @@ class PackageInstaller:
             for s in self.build_graph.nodes.values()
         }
 
-        self._installer()
+        self._run_event_loop()
 
-    def _installer(self) -> None:
+    def _run_event_loop(self) -> None:
         self.store.install_sbang()
         jobserver = JobServer(self.jobs, os.environ.get("MAKEFLAGS", ""))
         selector = selectors.DefaultSelector()
@@ -494,7 +494,13 @@ class PackageInstaller:
 
             try:
                 self.ui.render(finalize=True)
+            except Exception:
+                pass
+            try:
                 selector.close()
+            except Exception:
+                pass
+            try:
                 jobserver.close()
             except Exception:
                 pass
@@ -511,7 +517,7 @@ class PackageInstaller:
         try:
             self.report_data.finalize(self.reports, build_graph=self.build_graph)
         except Exception as e:
-            spack.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}]")
+            spack.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}")
 
         # Clean up temp log files of successful builds now that reports have consumed them.
         if not self.keep_stage:
