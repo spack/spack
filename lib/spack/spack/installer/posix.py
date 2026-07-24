@@ -28,6 +28,7 @@ from typing import Callable, Optional, Tuple, Union
 import spack.spec
 import spack.util.tty
 from spack.installer.base import (
+    JOBSERVER_EVENT,
     OUTPUT_BUFFER_SIZE,
     SIGWINCH_EVENT,
     STDIN_EVENT,
@@ -272,14 +273,14 @@ class PosixJobServer(JobServerBase):
 
         fifo_config = get_jobserver_config(makeflags)
 
-        if type(fifo_config) is str:
+        if isinstance(fifo_config, str):
             # FIFO-based jobserver. Try to open the FIFO.
             open_attempt = open_existing_jobserver_fifo(fifo_config)
             if open_attempt:
                 self.r, self.w = open_attempt
                 self.fifo_path = fifo_config
                 return
-        elif type(fifo_config) is tuple:
+        elif isinstance(fifo_config, tuple):
             # Old style pipe-based jobserver. Validate the fds before using them.
             r, w = fifo_config
             try:
@@ -308,7 +309,7 @@ class PosixJobServer(JobServerBase):
 
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
         if wake and self.r not in selector.get_map():
-            selector.register(self.r, selectors.EVENT_READ, "jobserver")
+            selector.register(self.r, selectors.EVENT_READ, JOBSERVER_EVENT)
         elif not wake and self.r in selector.get_map():
             selector.unregister(self.r)
 
@@ -326,10 +327,10 @@ class PosixJobServer(JobServerBase):
         if not self.created or self.target_jobs <= 1:
             return
         self.target_jobs -= 1
-        self._maybe_discard_tokens()
+        self.maybe_discard_tokens()
 
-    def _maybe_discard_tokens(self) -> None:
-        """Try to get reduce parallelism by discarding tokens."""
+    def maybe_discard_tokens(self) -> None:
+        """Try to reduce parallelism to the target by discarding tokens."""
         to_discard = self.num_jobs - self.target_jobs
         if to_discard <= 0:
             return
@@ -407,8 +408,7 @@ def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str,
     matches = re.findall(r" --jobserver-[^=]+=([^ ]+)", makeflags)
     if not matches:
         return None
-    last_match: str = matches[-1]
-    assert isinstance(last_match, str)
+    last_match = matches[-1]
     if last_match.startswith("fifo:"):
         return last_match[5:]
     parts = last_match.split(",", 1)
