@@ -940,6 +940,8 @@ class ClosedOpenRange(VersionType):
 class VersionList(VersionType):
     """Sorted, non-redundant list of Version and ClosedOpenRange elements."""
 
+    __slots__ = ("versions",)
+
     versions: List[VersionType]
 
     def __init__(self, vlist: Optional[Union[str, VersionType, Iterable]] = None):

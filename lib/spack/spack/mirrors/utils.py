@@ -77,9 +77,6 @@ def get_matching_versions(specs, num_versions=1):
                 s = spack.spec.Spec(pkg.name)
                 s.versions = spack.version.VersionList([v])
                 s.variants = spec.variants.copy()
-                # This is needed to avoid hanging references during the
-                # concretization phase
-                s.variants.spec = s
                 matching_spec.append(s)
                 pkg_versions -= 1
 
