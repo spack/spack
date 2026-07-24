@@ -362,9 +362,9 @@ def env_activate(args):
     env_prompt = "[%s]" % short_name
 
     # We only support one active environment at a time, so deactivate the current one.
-    if ev.active_environment():
+    if active_environment():
         # run deactivate script
-        active_env = ev.active_environment()
+        active_env = active_environment()
         env_deactivate_script = generate_script.path_to_env_deactivate_shell_script(
             active_env, shell=args.shell
         )
@@ -401,7 +401,7 @@ def env_activate(args):
     source = "." if args.shell == "sh" else "source"
     print(f"{source} {env_activate_script}")
 
-    generate_script.write_env_deactivate_script(ev.active_environment(), view)
+    generate_script.write_env_deactivate_script(active_environment(), view)
 
 
 #
@@ -462,12 +462,12 @@ def env_deactivate(args):
         tty.die("No environment is currently active.")
 
     env_deactivate_script_path = generate_script.path_to_env_deactivate_shell_script(
-        ev.active_environment(), shell=args.shell
+        active_environment(), shell=args.shell
     )
 
     if not os.path.isfile(env_deactivate_script_path):
         generate_script.write_env_deactivate_script(
-            ev.active_environment(), os.environ.get("SPACK_ENV_VIEW", "")
+            active_environment(), os.environ.get("SPACK_ENV_VIEW", "")
         )
 
     ev.deactivate()
