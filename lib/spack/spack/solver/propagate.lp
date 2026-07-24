@@ -139,8 +139,3 @@ attr("node_version_satisfies", node(Y, Compiler), VersionRange) :-
    propagate(node(X, Package), node_version_satisfies(Compiler, VersionRange)),
    attr("depends_on", node(X, Package), node(Y, Compiler), "build"),
    not runtime(Package).
-
-attr("node_version_satisfies", node(X, Runtime), VersionRange) :-
-   attr("node", node(X, Runtime)),
-   attr("compatible_runtime", PackageNode, Runtime, VersionRange),
-   concrete(PackageNode).

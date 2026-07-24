@@ -1696,6 +1696,11 @@ node_compiler(node(X, Package), node(Y, Compiler), Language) :-
      attr("virtual_on_edge", node(X, Package), node(Y, Compiler), Language),
      compiler(Compiler), language(Language).
 
+attr("node_version_satisfies", node(X, Runtime), VersionRange) :-
+   attr("node", node(X, Runtime)),
+   attr("compatible_runtime", PackageNode, Runtime, VersionRange),
+   concrete(PackageNode).
+
 % If a compiler package is depended on with type link, it's used as a library
 compiler_used_as_a_library(node(X, Child), Hash) :-
   concrete(node(X, Child)),
