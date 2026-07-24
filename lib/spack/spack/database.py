@@ -57,6 +57,7 @@ import spack.hash_types as ht
 import spack.spec
 import spack.traverse as tr
 import spack.util.filesystem as fs
+import spack.util.lang
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
@@ -1804,37 +1805,14 @@ class Database:
         """
         valid_trees = ["all", "upstream", "local", self.root] + [u.root for u in self.upstream_dbs]
         if install_tree not in valid_trees:
-            msg = "Invalid install_tree argument to Database.query()\n"
-            msg += f"Try one of {', '.join(valid_trees)}"
-            tty.error(msg)
-            return []
-
-        upstream_results = []
-        upstreams = self.upstream_dbs
-        if install_tree not in ("all", "upstream"):
-            upstreams = [u for u in self.upstream_dbs if u.root == install_tree]
-        for upstream_db in upstreams:
-            # queries for upstream DBs need to *not* lock - we may not
-            # have permissions to do this and the upstream DBs won't know about
-            # us anyway (so e.g. they should never uninstall specs)
-            upstream_results.extend(
-                upstream_db._query(
-                    query_spec,
-                    predicate_fn=predicate_fn,
-                    installed=installed,
-                    explicit=explicit,
-                    start_date=start_date,
-                    end_date=end_date,
-                    hashes=hashes,
-                    in_buildcache=in_buildcache,
-                    origin=origin,
-                )
-                or []
+            raise ValueError(
+                f"Invalid install_tree argument to Database.query(). Try one of {valid_trees}"
             )
 
-        local_results: Set["spack.spec.Spec"] = set()
+        # Put local results first so that de-duplication below keeps them over upstream copies.
+        results: List["spack.spec.Spec"] = []
         if install_tree in ("all", "local") or self.root == install_tree:
-            local_results = set(
+            results.extend(
                 self.query_local(
                     query_spec,
                     predicate_fn=predicate_fn,
@@ -1848,7 +1826,38 @@ class Database:
                 )
             )
 
-        results = list(local_results) + [x for x in upstream_results if x not in local_results]
+        if install_tree in ("all", "upstream"):
+            upstreams = self.upstream_dbs
+        elif install_tree in ("local", self.root):
+            upstreams = []
+        else:
+            upstreams = [u for u in self.upstream_dbs if u.root == install_tree]
+
+        for upstream_db in upstreams:
+            # Queries on upstream databases must not take a lock. We may not have permission,
+            # and upstreams do not know about us anyway, so they never uninstall our specs.
+            results.extend(
+                upstream_db._query(
+                    query_spec,
+                    predicate_fn=predicate_fn,
+                    installed=installed,
+                    explicit=explicit,
+                    start_date=start_date,
+                    end_date=end_date,
+                    hashes=hashes,
+                    in_buildcache=in_buildcache,
+                    origin=origin,
+                )
+            )
+
+        # Drop duplicates only when more than one database contributed, since a spec can appear
+        # both locally and upstream.
+        if upstreams:
+            results = list(spack.util.lang.dedupe(results, key=lambda s: s.dag_hash()))
+
+        # Sort by name first so the full sort runs on nearly sorted input and compares specs far
+        # fewer times.
+        results.sort(key=lambda s: s.name)
         results.sort()  # type: ignore[call-arg,call-overload]
         return results
 
