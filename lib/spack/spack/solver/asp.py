@@ -1122,8 +1122,6 @@ class PyclingoDriver:
             control_files.append("os_compatibility.lp")
         if setup.enable_splicing:
             control_files.append("splices.lp")
-        if setup.uses_propagation:
-            control_files.append("propagate.lp")
 
         timer.start("setup")
         problem_builder = setup.setup(
@@ -1133,6 +1131,10 @@ class PyclingoDriver:
             allow_deprecated=allow_deprecated,
         )
         timer.stop("setup")
+
+        # uses_propagation is set during setup
+        if setup.uses_propagation:
+            control_files.append("propagate.lp")
 
         timer.start("ordering")
         # print the original ASP program if requested
