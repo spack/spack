@@ -487,7 +487,6 @@ def ci_rebuild(args):
     with spack.bootstrap.ensure_bootstrap_configuration():
         spack.bootstrap.ensure_core_dependencies()
 
-
     # TODO: (kwryankrattiger) Reproduce build is currently broken. Suppress the output of these
     # instructions for now. When the feature is working again move the print to before the
     # installation is printed to avoid the details be lost to install log truncation.
@@ -529,8 +528,6 @@ If this project does not have public pipelines, you will need to first:
         install_cmd(install_args + ["--only=dependencies", spec_hash])
     except spack.error.SpackError as e:
         # If the deps fail to install early exit
-        # Don't try to run tests or push to the cache
-        # Don't add this package to broken-specs list, dependecy install error is not a package error
         tty.error(f"Failed to install dependencies: {e}")
         raise
     finally:
@@ -545,11 +542,10 @@ If this project does not have public pipelines, you will need to first:
 
     tty.debug("Installing {0} from source".format(job_spec.name))
     try:
-
         # Install package
         install_cmd(install_args + ["--verbose", "--keep-stage", "--only=package", spec_hash])
         tty.debug("spack install succeeded")
-    except spack.error.SpackError as e:
+    except spack.error.SpackError:
         # If a spec fails to build in a spack develop pipeline, we add it to a
         # list of known broken hashes.  This allows spack PR pipelines to
         # avoid wasting compute cycles attempting to build those hashes.
@@ -583,11 +579,10 @@ If this project does not have public pipelines, you will need to first:
     finally:
         # Reset the color mode
         clr.set_color_when(reset_color)
-        # Copy logs and archived files from the install metadata (.spack) directory to artifacts now
+        # Copy logs and archived files from the install metadata (.spack) directory to artifacts
         spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
         # Clear the stage directory
         spack.stage.purge()
-
 
     # If the installation succeeded and we're running stand-alone tests for
     # the package, run them and copy the output. Failures of any kind should
@@ -598,7 +593,9 @@ If this project does not have public pipelines, you will need to first:
             and job_spec.name in ci_config["broken-tests-packages"]
         )
         if broken_tests:
-            tty.warn("Unable to run stand-alone tests since listed in ci's 'broken-tests-packages'")
+            tty.warn(
+                "Unable to run stand-alone tests since listed in ci's 'broken-tests-packages'"
+            )
             if cdash_handler:
                 msg = "Package is listed in ci's broken-tests-packages"
                 cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
