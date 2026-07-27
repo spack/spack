@@ -2586,11 +2586,6 @@ class TestConstrainMutationSafety:
                 f"{'raised ' + type(error).__name__ if error else 'succeeded'}"
             )
 
-    @pytest.mark.xfail(
-        reason="ArchSpec._target_constrain empties the target when the lhs has none and the "
-        "rhs has a range, so constraining again raises",
-        strict=True,
-    )
     def test_constrain_is_idempotent(self, mock_packages):
         for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
             if _try_constrain(lhs, rhs)[1] is not None:
@@ -2599,11 +2594,6 @@ class TestConstrainMutationSafety:
             assert lhs.constrain(rhs) is False, f"'{lhs_str}'.constrain('{rhs_str}') twice"
             assert lhs.to_dict() == before
 
-    @pytest.mark.xfail(
-        reason="ArchSpec._target_constrain empties the target when the lhs has none and the "
-        "rhs has a range, dropping the constraint instead of applying it",
-        strict=True,
-    )
     def test_constrained_lhs_satisfies_rhs(self, mock_packages):
         """Guards against making constrain atomic by making it do nothing."""
         for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
@@ -2611,10 +2601,6 @@ class TestConstrainMutationSafety:
                 continue
             assert lhs.satisfies(rhs), f"'{lhs_str}'.constrain('{rhs_str}') gave '{lhs}'"
 
-    @pytest.mark.xfail(
-        reason="ArchSpec._target_constrain empties the target when only one side has one",
-        strict=True,
-    )
     def test_constrain_never_weakens_the_lhs(self, mock_packages):
         """The result is the intersection of both operands, so together with the property above
         this pins that constrain narrows and never drops a constraint."""
