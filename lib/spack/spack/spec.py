@@ -68,6 +68,7 @@ from typing import (
     Iterable,
     List,
     Match,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -907,6 +908,20 @@ class CompilerFlag(str):
         obj.source = kwargs.pop("source", None)
         return obj
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Value and propagation of this flag, unlike ``FlagMap.yaml_entry``, which is its value
+        only. ``flag_group`` and ``source`` are not included: they are bookkeeping for a single
+        solve, and nothing reads them back. Attributes that have their default value are
+        omitted."""
+        d: Dict[str, Any] = {"value": str(self)}
+        if self.propagate:
+            d["propagate"] = True
+        return d
+
+    @staticmethod
+    def from_dict(d: Dict[str, Any]) -> "CompilerFlag":
+        return CompilerFlag(d["value"], propagate=d.get("propagate", False))
+
 
 _valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags"]
 
@@ -972,6 +987,21 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         # intersection specify different behaviors for flag propagation?
 
         return changed
+
+    def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Values and propagation of the flags, unlike ``yaml_entry``, which drops everything but
+        their values."""
+        return {
+            flag_type: [flag.to_dict() for flag in flags]
+            for flag_type, flags in sorted(self.items())
+        }
+
+    @staticmethod
+    def from_dict(d: Dict[str, List[Dict[str, Any]]]) -> "FlagMap":
+        result = FlagMap()
+        for flag_type, flags in d.items():
+            result[flag_type] = [CompilerFlag.from_dict(flag) for flag in flags]
+        return result
 
     @staticmethod
     def valid_compiler_flags():
@@ -2399,6 +2429,15 @@ class Spec:
             )
             d["abstract"] = sorted(v.name for v in self.variants.values() if not v.concrete)
 
+        if not self._concrete:
+            # State that only abstract specs have, or that "parameters" and "propagate" above are
+            # too coarse to express. Concrete node dicts are left alone: they feed the DAG hash.
+            if self.abstract_hash:
+                d["abstract_hash"] = self.abstract_hash
+
+            if self.compiler_flags:
+                d["compiler_flags"] = self.compiler_flags.to_dict()
+
         if self.external:
             d["external"] = {
                 "path": self.external_path,
@@ -2448,6 +2487,11 @@ class Spec:
                     }
                     if dspec.direct:
                         dep_attrs["parameters"]["direct"] = True
+                    if not self._concrete:
+                        if dspec.when != EMPTY_SPEC:
+                            dep_attrs["parameters"]["when"] = str(dspec.when)
+                        if dspec.propagation != PropagationPolicy.NONE:
+                            dep_attrs["parameters"]["propagation"] = dspec.propagation.name
                     dependencies.append(dep_attrs)
 
             d["dependencies"] = dependencies
@@ -5268,7 +5312,18 @@ def reconstruct_virtuals_on_edges(spec: Spec) -> None:
             edge.update_virtuals(virtuals_to_add)
 
 
-DepSpecComponents = Tuple[str, str, List[str], str, Tuple[str, ...], bool]
+class DepSpecComponents(NamedTuple):
+    """A dependency edge as it is stored in a spec file. The fields ``direct``, ``when``, and
+    ``propagation`` only occur on edges of abstract specs, and only from specfile v5 on."""
+
+    name: str
+    hash: str
+    deptypes: List[str]
+    hash_type: str
+    virtuals: Tuple[str, ...]
+    direct: bool
+    when: str = ""
+    propagation: str = PropagationPolicy.NONE.name
 
 
 _SPECFILE_READERS: Dict[int, Type["SpecfileReaderBase"]] = {}
@@ -5316,6 +5371,7 @@ class SpecfileReaderBase(abc.ABC):
         # old anonymous spec files had name=None, we use name="" now
         spec.name = name if isinstance(name, str) else ""
         spec.namespace = node.get("namespace", None)
+        spec.abstract_hash = node.get("abstract_hash", None)
 
         if "version" in node or "versions" in node:
             spec.versions = vn.VersionList.from_dict(node)
@@ -5324,11 +5380,17 @@ class SpecfileReaderBase(abc.ABC):
         if "arch" in node:
             spec.architecture = ArchSpec.from_dict(node)
 
+        # "compiler_flags" supersedes the flags under "parameters": it records propagation per
+        # flag, where "propagate" only records propagation per flag type.
+        spec.compiler_flags = FlagMap.from_dict(node.get("compiler_flags", {}))
+
         propagated_names = node.get("propagate", [])
         abstract_variants = set(node.get("abstract", ()))
         for name, values in node.get("parameters", {}).items():
             propagate = name in propagated_names
             if name in _valid_compiler_flags:
+                if name in spec.compiler_flags:
+                    continue
                 spec.compiler_flags[name] = []
                 for val in values:
                     spec.compiler_flags.add_flag(name, val, propagate)
@@ -5404,10 +5466,10 @@ class SpecfileReaderBase(abc.ABC):
         hash_type = None
         any_deps = False
         for node in nodes:
-            for _, _, _, dhash_type, _, _ in cls.dependencies_from_node_dict(node):
+            for dep in cls.dependencies_from_node_dict(node):
                 any_deps = True
-                if dhash_type:
-                    hash_type = dhash_type
+                if dep.hash_type:
+                    hash_type = dep.hash_type
                     break
 
         if not any_deps:  # If we never see a dependency...
@@ -5440,14 +5502,19 @@ def wire_spec_nodes(
     for node in nodes:
         node_spec = specs_by_hash[node[hash_type]]
 
-        for dname, dhash, dtype, _, virtuals, direct in reader.dependencies_from_node_dict(node):
-            dep_spec = specs_by_hash.get(dhash)
+        for dep in reader.dependencies_from_node_dict(node):
+            dep_spec = specs_by_hash.get(dep.hash)
             if dep_spec is None:
                 raise MissingSpecHashError(
-                    f"node '{node['name']}' references missing dep hash {dname}/{dhash}"
+                    f"node '{node['name']}' references missing dep hash {dep.name}/{dep.hash}"
                 )
             node_spec._add_dependency(
-                dep_spec, depflag=dt.canonicalize(dtype), virtuals=virtuals, direct=direct
+                dep_spec,
+                depflag=dt.canonicalize(dep.deptypes),
+                virtuals=dep.virtuals,
+                direct=dep.direct,
+                when=Spec(dep.when) if dep.when else None,
+                propagation=PropagationPolicy[dep.propagation],
             )
 
         if "build_spec" in node.keys():
@@ -5493,9 +5560,12 @@ class SpecfileV1(SpecfileReaderBase):
         for node in nodes:
             # get dependency dict from the node.
             name, data = cls.name_and_data(node)
-            for dname, _, dtypes, _, virtuals, direct in cls.dependencies_from_node_dict(data):
+            for dep in cls.dependencies_from_node_dict(data):
                 deps[name]._add_dependency(
-                    deps[dname], depflag=dt.canonicalize(dtypes), virtuals=virtuals, direct=direct
+                    deps[dep.name],
+                    depflag=dt.canonicalize(dep.deptypes),
+                    virtuals=dep.virtuals,
+                    direct=dep.direct,
                 )
 
         reconstruct_virtuals_on_edges(result)
@@ -5527,7 +5597,6 @@ class SpecfileV1(SpecfileReaderBase):
                     if h.name in elt:
                         dep_hash, deptypes = elt[h.name], elt["type"]
                         hash_type = h.name
-                        virtuals: Tuple[str, ...] = ()
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
@@ -5535,7 +5604,14 @@ class SpecfileV1(SpecfileReaderBase):
                 raise spack.error.SpecError("Couldn't parse dependency types in spec.")
 
             dspec_list.append(
-                (dep_name, dep_hash, list(deptypes), hash_type, tuple(virtuals), True)
+                DepSpecComponents(
+                    name=dep_name,
+                    hash=dep_hash,
+                    deptypes=list(deptypes),
+                    hash_type=hash_type,
+                    virtuals=(),
+                    direct=True,
+                )
             )
 
         return dspec_list
@@ -5576,31 +5652,29 @@ class SpecfileV2(SpecfileReaderBase):
             raise spack.error.SpecError("Spec dictionary contains malformed dependencies")
 
         result = []
-        for dep in deps:
-            elt = dep
-            dep_name = dep["name"]
+        for elt in deps:
             if isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
                 for h in ht.HASHES:
                     if h.name in elt:
-                        dep_hash, deptypes, hash_type, virtuals, direct = (
-                            cls.extract_info_from_dep(elt, h)
-                        )
+                        result.append(cls.extract_info_from_dep(elt, h))
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError("Couldn't parse dependency types in spec.")
-            result.append((dep_name, dep_hash, list(deptypes), hash_type, tuple(virtuals), direct))
         return result
 
     @classmethod
-    def extract_info_from_dep(cls, elt, hash):
-        dep_hash, deptypes = elt[hash.name], elt["type"]
-        hash_type = hash.name
-        virtuals = []
-        direct = True
-        return dep_hash, deptypes, hash_type, virtuals, direct
+    def extract_info_from_dep(cls, elt, hash) -> DepSpecComponents:
+        return DepSpecComponents(
+            name=elt["name"],
+            hash=elt[hash.name],
+            deptypes=list(elt["type"]),
+            hash_type=hash.name,
+            virtuals=(),
+            direct=True,
+        )
 
     @classmethod
     def extract_build_spec_info_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
@@ -5618,13 +5692,15 @@ class SpecfileV4(SpecfileV2):
     SPEC_VERSION = 4
 
     @classmethod
-    def extract_info_from_dep(cls, elt, hash):
-        dep_hash = elt[hash.name]
-        deptypes = elt["parameters"]["deptypes"]
-        hash_type = hash.name
-        virtuals = elt["parameters"]["virtuals"]
-        direct = True
-        return dep_hash, deptypes, hash_type, virtuals, direct
+    def extract_info_from_dep(cls, elt, hash) -> DepSpecComponents:
+        return DepSpecComponents(
+            name=elt["name"],
+            hash=elt[hash.name],
+            deptypes=list(elt["parameters"]["deptypes"]),
+            hash_type=hash.name,
+            virtuals=tuple(elt["parameters"]["virtuals"]),
+            direct=True,
+        )
 
     @classmethod
     def load(cls, data) -> Spec:
@@ -5633,6 +5709,10 @@ class SpecfileV4(SpecfileV2):
 
 @register_reader
 class SpecfileV5(SpecfileV4):
+    """abstract_hash, compiler_flags, when and propagation are optional node/dependency keys,
+    used only for abstract specs. Not enforcing them is what avoids a version bump: an older
+    reader ignores an unknown key, and a spec file without one stays valid."""
+
     SPEC_VERSION = 5
 
     @classmethod
@@ -5640,13 +5720,18 @@ class SpecfileV5(SpecfileV4):
         raise RuntimeError("The 'compiler' option is unexpected in specfiles at v5 or greater")
 
     @classmethod
-    def extract_info_from_dep(cls, elt, hash):
-        dep_hash = elt[hash.name]
-        deptypes = elt["parameters"]["deptypes"]
-        hash_type = hash.name
-        virtuals = elt["parameters"]["virtuals"]
-        direct = elt["parameters"].get("direct", False)
-        return dep_hash, deptypes, hash_type, virtuals, direct
+    def extract_info_from_dep(cls, elt, hash) -> DepSpecComponents:
+        parameters = elt["parameters"]
+        return DepSpecComponents(
+            name=elt["name"],
+            hash=elt[hash.name],
+            deptypes=list(parameters["deptypes"]),
+            hash_type=hash.name,
+            virtuals=tuple(parameters["virtuals"]),
+            direct=parameters.get("direct", False),
+            when=parameters.get("when", ""),
+            propagation=parameters.get("propagation", PropagationPolicy.NONE.name),
+        )
 
 
 #: Alias to the latest version of specfiles
