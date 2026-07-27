@@ -12,7 +12,6 @@ import pytest
 import spack.concretize
 import spack.environment as ev
 import spack.error
-import spack.main
 import spack.paths
 import spack.reporters.cdash
 import spack.util.filesystem as fs

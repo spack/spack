@@ -15,7 +15,6 @@ import spack.bootstrap
 import spack.ci as spack_ci
 import spack.cmd
 import spack.cmd.common.arguments
-import spack.cmd.install
 import spack.config as cfg
 import spack.environment as ev
 import spack.error
