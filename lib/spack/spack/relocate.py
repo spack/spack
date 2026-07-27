@@ -115,21 +115,13 @@ def relocate_windows_binaries(
     all_prefixes = {**prefixes, **(sfn_prefixes or {})}
     ev = EnvironmentModifications()
     ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in all_prefixes.items()])
-    ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
+    # do not set the spack install prefix for the wrapper here 
     ev.set("SPACK_DEBUG_WRAPPER", "ON")
     print(["|".join((k, v)) for k, v in all_prefixes.items()])
 
     coff_for_target = _buildcache_import_lib_targets(targets, all_prefixes)
     pe_targets = [t for t in targets if t.endswith(".dll") or t.endswith(".exe")]
-    sfs.apply_pe_relocations(
-        pe_targets,
-        coff_for_target,
-        sfs.relocate(spec.package),
-        ev,
-        output=str,
-        error=str,
-        fail_on_error=True,
-    )
+    sfs.apply_pe_relocations(pe_targets, coff_for_target, sfs.relocate(spec.package), ev, fail_on_error=True)
 
 
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
