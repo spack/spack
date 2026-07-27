@@ -8,6 +8,7 @@ import pytest
 import spack.vendor.archspec.cpu
 
 import spack.concretize
+import spack.error
 import spack.operating_systems
 import spack.platforms
 from spack.spec import ArchSpec, Spec
@@ -107,6 +108,27 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
     architecture = ArchSpec(architecture_tuple)
     constraint = ArchSpec(constraint_tuple)
     assert not architecture.satisfies(constraint)
+
+
+@pytest.mark.xfail(
+    reason="_target_intersection returns an empty list when the lhs has no target, and "
+    "_target_constrain turns that into an empty target",
+    strict=True,
+)
+def test_constrain_range_target_onto_missing_target():
+    """A target range from the rhs is adopted as is when the lhs has no target."""
+    architecture = ArchSpec((None, "debian6", None))
+    assert architecture.constrain(ArchSpec((None, None, "x86_64:"))) is True
+    assert architecture.target == ArchSpec((None, None, "x86_64:")).target
+
+
+def test_constrain_is_atomic_when_targets_are_disjoint():
+    """platform and os are applied before the target, so the up-front intersection check is what
+    keeps a failed constrain from leaving them behind."""
+    architecture = ArchSpec(("linux", None, "haswell"))
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        architecture.constrain(ArchSpec((None, "ubuntu18.04", "ppc64le")))
+    assert architecture == ArchSpec(("linux", None, "haswell"))
 
 
 @pytest.mark.parametrize(

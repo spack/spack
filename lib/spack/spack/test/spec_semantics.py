@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import pathlib
 
 import pytest
@@ -2439,6 +2440,188 @@ def test_constrain_symbolically(constraints, expected):
     for c in reversed(constraints):
         reverse_order._constrain_symbolically(c)
     assert reverse_order == Spec(expected)
+
+
+#: Abstract specs covering every dimension ``constrain`` merges, and pairs that conflict within
+#: each dimension. The properties below are checked over the product of this list with itself.
+CONSTRAIN_CORPUS = [
+    # names and namespaces
+    "",
+    "pkg-a",
+    "pkg-b",
+    "builtin_mock.pkg-a",
+    # versions
+    "pkg-a@1:3",
+    "pkg-a@2",
+    "@:1",
+    # variants, including propagation and concrete multi-valued
+    "pkg-a+foo",
+    "pkg-a~foo",
+    "pkg-a++foo",
+    "pkg-a foo=bar",
+    "pkg-a foo=baz",
+    "pkg-a foo=bar,baz",
+    "pkg-a foo:=bar",
+    # compiler flags. The propagating entries are what reaches the propagate reset in
+    # FlagMap.constrain.
+    "pkg-a cflags=-O2",
+    "pkg-a cflags=-g",
+    "pkg-a cflags==-O2",
+    "pkg-a cflags=-g cflags==-O2",
+    # architecture
+    "pkg-a target=haswell",
+    "pkg-a target=x86_64:",
+    "pkg-a target=:icelake",
+    "pkg-a os=debian6",
+    # abstract hashes
+    "pkg-a/abcdef",
+    "pkg-a/abc",
+    # dependency edges
+    "^pkg-b",
+    "^pkg-b@1",
+    "^pkg-b@2",
+    "pkg-a ^pkg-b@1 ^pkg-c",
+    "%pkg-b",
+    "%%pkg-b",
+    "%[deptypes=build] pkg-b",
+    "%[deptypes=link] pkg-b",
+    "pkg-a ^[when='+foo'] pkg-b@1",
+    "pkg-a ^[when='+bar'] pkg-b@2",
+    # virtuals
+    "pkg-a ^[virtuals=mpi] mpich",
+    "mpi",
+]
+
+
+def _constrain_corpus_pairs():
+    for lhs_str, rhs_str in itertools.product(CONSTRAIN_CORPUS, repeat=2):
+        yield lhs_str, rhs_str, Spec(lhs_str), Spec(rhs_str)
+
+
+def _try_constrain(lhs, rhs):
+    """Return ``(changed, error)``, exactly one of which is None."""
+    try:
+        return lhs.constrain(rhs), None
+    except SpecError as e:
+        return None, e
+
+
+class TestConstrainMutationSafety:
+    """``Spec.constrain`` intersects the left-hand side with the right-hand side in place. It
+    must apply the whole intersection or nothing at all, and it must never write to the
+    right-hand side, now or through an object the two ends up sharing.
+
+    These properties are checked over the product of ``CONSTRAIN_CORPUS`` rather than over
+    hand-written cases, so a dimension added later is covered as soon as it appears in the
+    corpus, and a refactor that reintroduces partial mutation in any dimension is caught.
+
+    Specs are snapshotted with ``to_dict()``, which round-trips abstract specs and so compares
+    their state directly. ``Spec.__eq__`` is semantic equality instead: it leaves the propagation
+    policy of an edge out of the comparison, so ``pkg-a %pkg-b`` and ``pkg-a %%pkg-b`` are equal,
+    as they are also mutually satisfying.
+    """
+
+    @pytest.mark.xfail(
+        reason="_constrain assigns abstract_hash and merges node attributes before validating "
+        "the remaining dimensions",
+        strict=True,
+    )
+    def test_lhs_is_unchanged_when_constrain_raises(self, mock_packages):
+        for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
+            before = lhs.to_dict()
+            _, error = _try_constrain(lhs, rhs)
+            if error is None:
+                continue
+            assert lhs.to_dict() == before, f"'{lhs_str}' mutated by failed constrain '{rhs_str}'"
+
+    def test_rhs_is_never_mutated(self, mock_packages):
+        for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
+            before = rhs.to_dict()
+            _try_constrain(lhs, rhs)
+            assert rhs.to_dict() == before, f"'{lhs_str}'.constrain('{rhs_str}') mutated the rhs"
+
+    @pytest.mark.xfail(
+        reason="FlagMap.constrain shares the flag list, and _constrain shares the ArchSpec, "
+        "so a later constrain on the lhs writes through into the rhs",
+        strict=True,
+    )
+    def test_rhs_is_not_corrupted_by_later_constraints(self, mock_packages):
+        """A successful constrain must not leave the two specs sharing a mutable object, which
+        a later constrain on the lhs would then write through into the rhs."""
+        for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
+            if _try_constrain(lhs, rhs)[1] is not None:
+                continue
+            before = rhs.to_dict()
+            for extra_str in CONSTRAIN_CORPUS:
+                _try_constrain(lhs, Spec(extra_str))
+                assert rhs.to_dict() == before, (
+                    f"'{lhs_str}'.constrain('{rhs_str}') shares state with the rhs: "
+                    f"constraining with '{extra_str}' afterwards changed it"
+                )
+
+    @pytest.mark.xfail(
+        reason="extending abstract_hash mutates the lhs without feeding the changed flag",
+        strict=True,
+    )
+    def test_returned_changed_flag_is_honest(self, mock_packages):
+        """Callers use the return value to decide whether to redo work, so it has to report
+        exactly whether the lhs changed."""
+        for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
+            before = lhs.to_dict()
+            changed, error = _try_constrain(lhs, rhs)
+            if error is not None:
+                continue
+            assert changed is (lhs.to_dict() != before), (
+                f"'{lhs_str}'.constrain('{rhs_str}') returned {changed}"
+            )
+
+    def test_intersects_agrees_with_constrain(self, mock_packages):
+        """``intersects`` is the question ``constrain`` answers by raising or not. The product
+        covers both orders, so this also pins the commutativity of ``intersects``."""
+        for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
+            intersects = lhs.intersects(rhs)
+            _, error = _try_constrain(lhs, rhs)
+            assert intersects is (error is None), (
+                f"'{lhs_str}'.intersects('{rhs_str}') is {intersects}, but constrain "
+                f"{'raised ' + type(error).__name__ if error else 'succeeded'}"
+            )
+
+    @pytest.mark.xfail(
+        reason="ArchSpec._target_constrain empties the target when the lhs has none and the "
+        "rhs has a range, so constraining again raises",
+        strict=True,
+    )
+    def test_constrain_is_idempotent(self, mock_packages):
+        for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
+            if _try_constrain(lhs, rhs)[1] is not None:
+                continue
+            before = lhs.to_dict()
+            assert lhs.constrain(rhs) is False, f"'{lhs_str}'.constrain('{rhs_str}') twice"
+            assert lhs.to_dict() == before
+
+    @pytest.mark.xfail(
+        reason="ArchSpec._target_constrain empties the target when the lhs has none and the "
+        "rhs has a range, dropping the constraint instead of applying it",
+        strict=True,
+    )
+    def test_constrained_lhs_satisfies_rhs(self, mock_packages):
+        """Guards against making constrain atomic by making it do nothing."""
+        for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
+            if _try_constrain(lhs, rhs)[1] is not None:
+                continue
+            assert lhs.satisfies(rhs), f"'{lhs_str}'.constrain('{rhs_str}') gave '{lhs}'"
+
+    @pytest.mark.xfail(
+        reason="ArchSpec._target_constrain empties the target when only one side has one",
+        strict=True,
+    )
+    def test_constrain_never_weakens_the_lhs(self, mock_packages):
+        """The result is the intersection of both operands, so together with the property above
+        this pins that constrain narrows and never drops a constraint."""
+        for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
+            if _try_constrain(lhs, rhs)[1] is not None:
+                continue
+            assert lhs.satisfies(Spec(lhs_str)), f"'{lhs_str}'.constrain('{rhs_str}') gave '{lhs}'"
 
 
 @pytest.mark.parametrize(
