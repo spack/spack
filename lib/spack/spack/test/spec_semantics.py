@@ -2540,11 +2540,6 @@ class TestConstrainMutationSafety:
             _try_constrain(lhs, rhs)
             assert rhs.to_dict() == before, f"'{lhs_str}'.constrain('{rhs_str}') mutated the rhs"
 
-    @pytest.mark.xfail(
-        reason="FlagMap.constrain shares the flag list, and _constrain shares the ArchSpec, "
-        "so a later constrain on the lhs writes through into the rhs",
-        strict=True,
-    )
     def test_rhs_is_not_corrupted_by_later_constraints(self, mock_packages):
         """A successful constrain must not leave the two specs sharing a mutable object, which
         a later constrain on the lhs would then write through into the rhs."""
