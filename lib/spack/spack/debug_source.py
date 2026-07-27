@@ -328,14 +328,14 @@ def write_gdbinit(spec, dest_root: str, split_debug_files: Optional[Dict[str, st
     """Write a GDB command file. Always includes the substitute-path rule
     (see module docstring for why one rule against dest_root is correct).
 
-    If split_debug_files is given (path->debug_path per split binary), also
-    emits a commented `symbol-file` line per binary. These are commented
-    out rather than active because debug-file-directory auto-discovery does
-    not apply to this flat cache layout (confirmed experimentally: GDB's
-    build-id and directory-mirror lookup conventions don't match a flat
-    basename dump), and loading multiple symbol-file targets in one script
-    would have only the last one take effect. Uncomment the line matching
-    whichever binary you're actually debugging."""
+    If split_debug_files is given, also emits `set debug-file-directory`
+    pointing at the symbols/ cache. GDB auto-loads split debug info from
+    there via its build-id note lookup at binary/shared-library load time,
+    provided the compiler-wrapper injected --build-id/-Wl,--build-id at
+    link time. This is a no-op, not an  error, on toolchains that don't 
+    emit a build-id note (see _get_build_id): debug-file-directory then 
+    simply finds nothing, so a manual add-symbol-file fallback is always 
+    included as a comment."""
     gdbinit_path = os.path.join(dest_root, "gdbinit")
     symbols_dir = os.path.join(dest_root, "symbols")
     with open(gdbinit_path, "w", encoding="utf-8") as f:
@@ -343,13 +343,16 @@ def write_gdbinit(spec, dest_root: str, split_debug_files: Optional[Dict[str, st
         f.write(f"# dag_hash: {spec.dag_hash()}\n")
         f.write(f"set substitute-path ./build {dest_root}\n")
         if split_debug_files:
+            f.write(f"set debug-file-directory {symbols_dir}\n")
             f.write("#\n")
             f.write(f"# Debug symbols were split for {len(split_debug_files)} binaries into:\n")
             f.write(f"#   {symbols_dir}/\n")
-            f.write("# Load the .debug file matching whichever binary you're debugging, e.g.:\n")
+            f.write("# The debug-file-directory line above auto-loads split symbols via\n")
+            f.write("# build-id lookup, if your toolchain emits build-id notes at link time.\n")
+            f.write("# If it doesn't, or auto-discovery still doesn't trigger, load manually:\n")
             example_bin, example_debug = sorted(split_debug_files.items())[0]
-            f.write(f'# symbol-file "{example_debug}"   # for {example_bin}\n')
-            f.write("# (the .debug filename always matches the binary's own basename)\n")
+            f.write(f'#   add-symbol-file "{example_debug}" <load-address>   # for {example_bin}\n')
+            f.write("#   (get <load-address> from `info sharedlibrary` after `run`)\n")
     tty.msg(f"Wrote GDB command file: {gdbinit_path}")
     tty.msg(f"Use with: gdb -x {gdbinit_path} <your-binary>")
     return gdbinit_path
