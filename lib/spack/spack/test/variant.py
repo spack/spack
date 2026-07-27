@@ -879,6 +879,23 @@ def test_patches_variant():
     assert not Spec("patches:=abcdef").satisfies("patches:=abcdefghi")
 
 
+def test_patches_variant_prefix_intersects_and_constrains():
+    """Prefix matching applies to intersection too, so a spec that satisfies a prefix also
+    overlaps it and can be constrained by it."""
+    assert Spec("patches:=abcdef").intersects("patches=ab")
+    assert Spec("patches=ab").intersects("patches:=abcdef")
+    assert not Spec("patches:=abcdef").intersects("patches=xyz")
+    assert not Spec("patches:=abcdef").intersects("patches=abcdefghi")
+
+    s = Spec("patches:=abcdef")
+    assert s.constrain("patches=ab") is False
+    assert s.variants["patches"].values == ("abcdef",)
+
+    s = Spec("patches=ab")
+    assert s.constrain("patches:=abcdef") is True
+    assert s.variants["patches"].values == ("abcdef",)
+
+
 def test_constrain_narrowing():
     s = Spec("foo=*")
     assert s.variants["foo"].type == spack.variant.VariantType.MULTI
