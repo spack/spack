@@ -27,6 +27,7 @@ import spack.util.parallel
 import spack.util.timer as timer_mod
 import spack.util.web as web_util
 from spack import traverse
+from spack.active_environment import active_environment
 from spack.binary_distribution import BINARY_INDEX
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
@@ -227,7 +228,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "--scope",
         action=arguments.ConfigScope,
         type=arguments.config_scope_readable_validator,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
 
@@ -400,7 +401,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
 def _matching_specs(specs: List[Spec]) -> List[Spec]:
     """Disambiguate specs and return a list of matching specs"""
     return [
-        spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=InstallRecordStatus.ANY)
+        spack.cmd.disambiguate_spec(s, active_environment(), installed=InstallRecordStatus.ANY)
         for s in specs
     ]
 
@@ -688,7 +689,7 @@ def check_fn(args: argparse.Namespace):
     specs = [spack.concretize.concretize_one(s) for s in specs]
 
     # Next see if there are any configured binary mirrors
-    configured_mirrors = spack.config.get("mirrors", scope=args.scope)
+    configured_mirrors = spack.config.CONFIG.get("mirrors", scope=args.scope)
 
     if args.mirror_url:
         configured_mirrors = {"additionalMirrorUrl": args.mirror_url}

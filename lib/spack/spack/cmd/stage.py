@@ -11,6 +11,7 @@ import spack.environment as ev
 import spack.package_base
 import spack.store
 import spack.traverse
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.util import tty
 
@@ -66,13 +67,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def stage(parser, args):
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     exclusion_specs = spack.cmd.parse_specs(args.exclude, concretize=False)
     filter = StageFilter(exclusion_specs, args.skip_installed)
 
     if not args.specs:
-        env = ev.active_environment()
+        env = active_environment()
         if not env:
             args.subparser.error("requires a spec or an active environment")
         return _stage_env(env, filter)

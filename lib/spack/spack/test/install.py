@@ -26,6 +26,7 @@ import spack.store
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack import binary_distribution
+from spack.config import Configuration
 from spack.error import InstallError
 from spack.main import SpackCommand
 from spack.old_installer import PackageInstaller
@@ -37,30 +38,34 @@ from spack.package_base import (
     _spack_configure_argsfile,
     spack_times_log,
 )
+from spack.repo import RepoPath
 from spack.spec import Spec
+from spack.store import Store
 
 
 def find_nothing(*args):
     raise spack.repo.UnknownPackageError("Repo package access is disabled for test")
 
 
-def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
+def test_install_and_uninstall(temporary_store: Store, install_mockery, mock_fetch, monkeypatch):
     spec = spack.concretize.concretize_one("trivial-install-test-package")
 
     PackageInstaller([spec.package], explicit=True).install()
-    assert spack.store.STORE.db.installed(spec)
+    assert temporary_store.db.installed(spec)
 
     spec.package.do_uninstall()
-    assert not spack.store.STORE.db.installed(spec)
+    assert not temporary_store.db.installed(spec)
 
 
 @pytest.mark.regression("11870")
-def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch):
+def test_uninstall_non_existing_package(
+    temporary_store: Store, install_mockery, mock_fetch, monkeypatch
+):
     """Ensure that we can uninstall a package that has been deleted from the repo"""
     spec = spack.concretize.concretize_one("trivial-install-test-package")
 
     PackageInstaller([spec.package], explicit=True).install()
-    assert spack.store.STORE.db.installed(spec)
+    assert temporary_store.db.installed(spec)
 
     # Mock deletion of the package
     spec._package = None
@@ -70,7 +75,7 @@ def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch
 
     # Ensure we can uninstall it
     PackageBase.uninstall_by_spec(spec)
-    assert not spack.store.STORE.db.installed(spec)
+    assert not temporary_store.db.installed(spec)
 
 
 def test_pkg_attributes(install_mockery, mock_fetch, monkeypatch):
@@ -129,7 +134,9 @@ class RemovePrefixChecker:
         self.wrapped_rm_prefix()
 
 
-def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, working_env):
+def test_partial_install_delete_prefix_and_stage(
+    temporary_store: Store, install_mockery, mock_fetch, working_env
+):
     s = spack.concretize.concretize_one("canfail")
     s.package.succeed = False
 
@@ -143,20 +150,20 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
     s.package.remove_prefix = rm_prefix_checker.remove_prefix
 
     # must clear failure markings for the package before re-installing it
-    spack.store.STORE.failure_tracker.clear(s, True)
+    temporary_store.failure_tracker.clear(s, True)
 
     s.package.succeed = True
     spack.builder._BUILDERS.clear()  # the builder is cached with a copy of the pkg's __dict__.
 
     PackageInstaller([s.package], explicit=True, restage=True).install()
     assert rm_prefix_checker.removed
-    assert spack.store.STORE.db.installed(s.package.spec)
+    assert temporary_store.db.installed(s.package.spec)
 
 
 @pytest.mark.not_on_windows("Fails spuriously on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_failing_overwrite_install_should_keep_previous_installation(
-    mock_fetch, install_mockery, working_env
+    mock_fetch, temporary_store, install_mockery, working_env
 ):
     """
     Make sure that whenever `spack install --overwrite` fails, spack restores
@@ -175,7 +182,7 @@ def test_failing_overwrite_install_should_keep_previous_installation(
     with pytest.raises(Exception):
         PackageInstaller([s.package], explicit=True, **kwargs).install()
 
-    assert spack.store.STORE.db.installed(s.package.spec)
+    assert temporary_store.db.installed(s.package.spec)
     assert os.path.exists(s.prefix)
 
 
@@ -288,7 +295,9 @@ def test_installed_upstream(install_upstream, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, working_env):
+def test_partial_install_keep_prefix(
+    temporary_store: Store, install_mockery, mock_fetch, monkeypatch, working_env
+):
     s = spack.concretize.concretize_one("canfail")
     s.package.succeed = False
 
@@ -299,35 +308,39 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, w
     assert os.path.exists(s.package.prefix)
 
     # must clear failure markings for the package before re-installing it
-    spack.store.STORE.failure_tracker.clear(s, True)
+    temporary_store.failure_tracker.clear(s, True)
 
     s.package.succeed = True
     spack.builder._BUILDERS.clear()  # the builder is cached with a copy of the pkg's __dict__.
     PackageInstaller([s.package], explicit=True, keep_prefix=True).install()
-    assert spack.store.STORE.db.installed(s.package.spec)
+    assert temporary_store.db.installed(s.package.spec)
 
 
-def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypatch):
+def test_second_install_no_overwrite_first(
+    temporary_store: Store, install_mockery, mock_fetch, monkeypatch
+):
     s = spack.concretize.concretize_one("canfail")
     monkeypatch.setattr(spack.package_base.PackageBase, "remove_prefix", mock_remove_prefix)
 
     s.package.succeed = True
     PackageInstaller([s.package], explicit=True).install()
-    assert spack.store.STORE.db.installed(s.package.spec)
+    assert temporary_store.db.installed(s.package.spec)
 
     # If Package.install is called after this point, it will fail
     s.package.succeed = False
     PackageInstaller([s.package], explicit=True).install()
 
 
-def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmp_path: pathlib.Path):
+def test_install_prefix_collision_fails(
+    config: Configuration, mock_fetch, mock_packages, tmp_path: pathlib.Path
+):
     """
     Test that different specs with coinciding install prefixes will fail
     to install.
     """
     projections = {"projections": {"all": "one-prefix-per-package-{name}"}}
     with spack.store.use_store(str(tmp_path), extra_data=projections):
-        with spack.config.override("config:checksum", False):
+        with config.override("config:checksum", False):
             pkg_a = spack.concretize.concretize_one("libelf@0.8.13").package
             pkg_b = spack.concretize.concretize_one("libelf@0.8.12").package
             PackageInstaller([pkg_a], explicit=True, fake=True).install()
@@ -531,10 +544,10 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
     shutil.rmtree(log_dir)
 
 
-def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
+def test_unconcretized_install(install_mockery, mock_fetch, mock_packages: RepoPath):
     """Test attempts to perform install phases with unconcretized spec."""
     spec = Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = mock_packages.get_pkg_class(spec.name)
 
     with pytest.raises(ValueError, match="must have a concrete spec"):
         PackageInstaller([pkg_cls(spec)], explicit=True).install()
@@ -613,7 +626,9 @@ def test_install_from_binary_with_missing_patch_succeeds(
 
 
 @pytest.mark.parametrize("transitive", [True, False])
-def test_install_spliced(install_mockery, mock_fetch, monkeypatch, transitive, installer_variant):
+def test_install_spliced(
+    temporary_store: Store, install_mockery, mock_fetch, monkeypatch, transitive, installer_variant
+):
     """Test installing a spliced spec"""
     spec = spack.concretize.concretize_one("splice-t")
     dep = spack.concretize.concretize_one("splice-h+foo")
@@ -625,13 +640,13 @@ def test_install_spliced(install_mockery, mock_fetch, monkeypatch, transitive, i
     )
     installer.install()
     for node in out.traverse():
-        assert spack.store.STORE.db.installed(node)
-        assert spack.store.STORE.db.installed(node.build_spec)
+        assert temporary_store.db.installed(node)
+        assert temporary_store.db.installed(node.build_spec)
 
 
 @pytest.mark.parametrize("transitive", [True, False])
 def test_install_spliced_build_spec_installed(
-    install_mockery, mock_fetch, transitive, installer_variant
+    temporary_store: Store, install_mockery, mock_fetch, transitive, installer_variant
 ):
     """Test installing a spliced spec with the build spec already installed"""
     spec = spack.concretize.concretize_one("splice-t")
@@ -646,8 +661,8 @@ def test_install_spliced_build_spec_installed(
     )
     installer.install()
     for node in out.traverse():
-        assert spack.store.STORE.db.installed(node)
-        assert spack.store.STORE.db.installed(node.build_spec)
+        assert temporary_store.db.installed(node)
+        assert temporary_store.db.installed(node.build_spec)
 
 
 # Unit tests should not be affected by the user's managed environments
@@ -658,6 +673,7 @@ def test_install_spliced_build_spec_installed(
 )
 def test_install_splice_root_from_binary(
     mutable_mock_env_path,
+    temporary_store: Store,
     install_mockery,
     mock_fetch,
     temporary_mirror,
@@ -691,7 +707,7 @@ def test_install_splice_root_from_binary(
 
     spack.installer_dispatch.create_installer([out.package], unsigned=True).install()
 
-    assert len(spack.store.STORE.db.query()) == len(list(out.traverse()))
+    assert len(temporary_store.db.query()) == len(list(out.traverse()))
 
 
 @pytest.mark.disable_clean_stage_check

@@ -8,12 +8,12 @@ import pytest
 
 import spack.cmd
 import spack.concretize
-import spack.config
 import spack.environment as ev
 import spack.error
 import spack.spec
-import spack.store
+from spack.config import Configuration
 from spack.main import SpackCommand, SpackCommandError
+from spack.store import Store
 
 buildcache = SpackCommand("buildcache")
 install = SpackCommand("install")
@@ -53,7 +53,7 @@ def test_spec_concretizer_args(mutable_database):
     uninstall("-y", "mpileaks^mpich2")
 
     # get the hash of mpileaks^zmpi
-    mpileaks_zmpi = spack.store.STORE.db.query_one("mpileaks^zmpi")
+    mpileaks_zmpi = mutable_database.query_one("mpileaks^zmpi")
     h = mpileaks_zmpi.dag_hash()[:7]
 
     output = spec("--fresh", "-l", "mpileaks")
@@ -212,12 +212,18 @@ def test_spec_version_assigned_git_ref_as_version(name, version, error):
     ],
 )
 def test_spec_unification_from_cli(
-    install_mockery, mutable_config, mutable_database, unify, spec_hash_args, match, error
+    install_mockery,
+    mutable_config: Configuration,
+    mutable_database,
+    unify,
+    spec_hash_args,
+    match,
+    error,
 ):
     """Ensure specs grouped together on the CLI are concretized together when unify:true."""
-    spack.config.set("concretizer:unify", unify)
+    mutable_config.set("concretizer:unify", unify)
 
-    db = spack.store.STORE.db
+    db = mutable_database
     spec_lookup = {
         "mpileaks_mpich": db.query_one("mpileaks ^mpich").dag_hash(),
         "mpileaks_zmpi": db.query_one("mpileaks ^zmpi").dag_hash(),
@@ -233,10 +239,12 @@ def test_spec_unification_from_cli(
         assert match in output
 
 
-def test_buildcache_status_fn_marks_absent_spec(install_mockery, mock_packages):
+def test_buildcache_status_fn_marks_absent_spec(
+    temporary_store: Store, install_mockery, mock_packages
+):
     """Tests the basic semantics of build_cache_status_fn."""
     s = spack.concretize.concretize_one("mpileaks")
-    assert spack.store.STORE.db.install_status(s) == spack.spec.InstallStatus.absent
+    assert temporary_store.db.install_status(s) == spack.spec.InstallStatus.absent
 
     status_fn = spack.cmd.buildcache_status_fn({s.dag_hash()})
     assert status_fn(s) == spack.spec.InstallStatus.buildcache
@@ -247,8 +255,8 @@ def test_buildcache_status_fn_marks_absent_spec(install_mockery, mock_packages):
 
 def test_buildcache_status_fn_installed_not_overridden(mutable_database):
     """Tests that an installed spec stays installed even if its hash is in the cache."""
-    s = spack.store.STORE.db.query_one("mpileaks^mpich")
-    assert spack.store.STORE.db.install_status(s) == spack.spec.InstallStatus.installed
+    s = mutable_database.query_one("mpileaks^mpich")
+    assert mutable_database.install_status(s) == spack.spec.InstallStatus.installed
 
     status_fn = spack.cmd.buildcache_status_fn({s.dag_hash()})
     assert status_fn(s) == spack.spec.InstallStatus.installed

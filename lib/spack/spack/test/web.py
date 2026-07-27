@@ -13,13 +13,13 @@ from typing import Any, Dict, List, Tuple
 
 import pytest
 
-import spack.config
 import spack.mirrors.mirror
 import spack.paths
 import spack.url
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
+from spack.config import Configuration
 from spack.util import tty
 from spack.util.filesystem import working_dir
 from spack.version import Version
@@ -389,12 +389,12 @@ def test_detailed_http_error_pickle(tmp_path: pathlib.Path):
 
 
 @pytest.fixture()
-def ssl_scrubbed_env(mutable_config, monkeypatch):
+def ssl_scrubbed_env(mutable_config: Configuration, monkeypatch):
     """clear out environment variables that could give false positives for SSL Cert tests"""
     monkeypatch.delenv("SSL_CERT_FILE", raising=False)
     monkeypatch.delenv("SSL_CERT_DIR", raising=False)
     monkeypatch.delenv("CURL_CA_BUNDLE", raising=False)
-    spack.config.set("config:verify_ssl", True)
+    mutable_config.set("config:verify_ssl", True)
 
 
 @pytest.mark.parametrize(
@@ -413,12 +413,17 @@ def ssl_scrubbed_env(mutable_config, monkeypatch):
     ],
 )
 def test_ssl_urllib(
-    cert_path, cert_creator, tmp_path: pathlib.Path, ssl_scrubbed_env, mutable_config, monkeypatch
+    cert_path,
+    cert_creator,
+    tmp_path: pathlib.Path,
+    ssl_scrubbed_env,
+    mutable_config: Configuration,
+    monkeypatch,
 ):
     """
     create a proposed cert type and then verify that they exist inside ssl's checks
     """
-    spack.config.set("config:url_fetch_method", "urllib")
+    mutable_config.set("config:url_fetch_method", "urllib")
 
     def mock_verify_locations(self, cafile, capath, cadata):
         """overwrite ssl's verification to simply check for valid file/path"""
@@ -433,9 +438,9 @@ def test_ssl_urllib(
     with working_dir(str(tmp_path)):
         mock_cert = cert_path(str(tmp_path))
         cert_creator(mock_cert)
-        spack.config.set("config:ssl_certs", mock_cert)
+        mutable_config.set("config:ssl_certs", mock_cert)
 
-        assert mock_cert == spack.config.get("config:ssl_certs", None)
+        assert mock_cert == mutable_config.get("config:ssl_certs", None)
 
         ssl_context = spack.util.web.ssl_create_default_context()
         assert ssl_context.verify_mode == ssl.CERT_REQUIRED
@@ -443,16 +448,20 @@ def test_ssl_urllib(
 
 @pytest.mark.parametrize("cert_exists", [True, False], ids=["exists", "missing"])
 def test_ssl_curl_cert_file(
-    cert_exists, tmp_path: pathlib.Path, ssl_scrubbed_env, mutable_config, monkeypatch
+    cert_exists,
+    tmp_path: pathlib.Path,
+    ssl_scrubbed_env,
+    mutable_config: Configuration,
+    monkeypatch,
 ):
     """
     Assure that if a valid cert file is specified curl executes
     with CURL_CA_BUNDLE in the env
     """
-    spack.config.set("config:url_fetch_method", "curl")
+    mutable_config.set("config:url_fetch_method", "curl")
     with working_dir(str(tmp_path)):
         mock_cert = str(tmp_path / "mock_cert.crt")
-        spack.config.set("config:ssl_certs", mock_cert)
+        mutable_config.set("config:ssl_certs", mock_cert)
         if cert_exists:
             open(mock_cert, "w", encoding="utf-8").close()
             assert os.path.isfile(mock_cert)

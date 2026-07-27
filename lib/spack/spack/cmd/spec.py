@@ -10,10 +10,10 @@ import spack
 import spack.binary_distribution
 import spack.cmd
 import spack.config
-import spack.environment
 import spack.hash_types as ht
 import spack.package_base
 import spack.spec
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.solver import asp
 from spack.util import tty
@@ -214,7 +214,7 @@ def spec(parser, args):
     required_format = args.format
 
     # If we have an active environment, pick the specs from there
-    env = spack.environment.active_environment()
+    env = active_environment()
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs)
     elif env:
@@ -225,8 +225,8 @@ def spec(parser, args):
     solver = asp.Solver()
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {"asp"}
-    unify = spack.config.get("concretizer:unify")
-    allow_deprecated = spack.config.get("config:deprecated", False)
+    unify = spack.config.CONFIG.get("concretizer:unify")
+    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     if unify == "when_possible":
         for idx, result in enumerate(
             solver.solve_in_rounds(

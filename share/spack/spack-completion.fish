@@ -2222,8 +2222,8 @@ complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command isolate' -l path -r -f -a path
 complete -c spack -n '__fish_spack_using_command isolate' -l path -r -d 'path to data isolation directory'
-complete -c spack -n '__fish_spack_using_command isolate' -l self -f -a path
-complete -c spack -n '__fish_spack_using_command isolate' -l self -d 'use spack'"'"'s own prefix as isolation directory'
+complete -c spack -n '__fish_spack_using_command isolate' -l self -f -a use_self
+complete -c spack -n '__fish_spack_using_command isolate' -l self -d 'store isolation directory in Spack'"'"'s prefix'
 complete -c spack -n '__fish_spack_using_command isolate' -l undo -f -a undo
 complete -c spack -n '__fish_spack_using_command isolate' -l undo -d 'undo the result of calling isolate'
 complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -f -a overwrite
@@ -3296,7 +3296,7 @@ complete -c spack -n '__fish_spack_using_command undevelop' -s a -l all -f -a al
 complete -c spack -n '__fish_spack_using_command undevelop' -s a -l all -d 'remove all specs from (clear) the environment'
 
 # spack uninstall
-set -g __fish_spack_optspecs_spack_uninstall h/help f/force remove R/dependents y/yes-to-all a/all origin=
+set -g __fish_spack_optspecs_spack_uninstall h/help f/force remove R/dependents r/implicit-dependents y/yes-to-all a/all origin=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 uninstall' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command uninstall' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command uninstall' -s h -l help -d 'show this help message and exit'
@@ -3306,6 +3306,8 @@ complete -c spack -n '__fish_spack_using_command uninstall' -l remove -f -a remo
 complete -c spack -n '__fish_spack_using_command uninstall' -l remove -d 'if in an environment, then the spec should also be removed from the environment description'
 complete -c spack -n '__fish_spack_using_command uninstall' -s R -l dependents -f -a dependents
 complete -c spack -n '__fish_spack_using_command uninstall' -s R -l dependents -d 'also uninstall any packages that depend on the ones given via command line'
+complete -c spack -n '__fish_spack_using_command uninstall' -s r -l implicit-dependents -f -a implicit_dependents
+complete -c spack -n '__fish_spack_using_command uninstall' -s r -l implicit-dependents -d 'recursively uninstall any implicitly installed dependents of the ones given via command line, but still error if any explicitly installed package depends on them'
 complete -c spack -n '__fish_spack_using_command uninstall' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command uninstall' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 complete -c spack -n '__fish_spack_using_command uninstall' -s a -l all -f -a all

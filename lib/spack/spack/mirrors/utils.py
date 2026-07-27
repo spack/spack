@@ -77,9 +77,6 @@ def get_matching_versions(specs, num_versions=1):
                 s = spack.spec.Spec(pkg.name)
                 s.versions = spack.version.VersionList([v])
                 s.variants = spec.variants.copy()
-                # This is needed to avoid hanging references during the
-                # concretization phase
-                s.variants.spec = s
                 matching_spec.append(s)
                 pkg_versions -= 1
 
@@ -114,7 +111,7 @@ def get_mirror_cache(path, skip_unstable_versions=False):
 
 def add(mirror: Mirror, scope=None):
     """Add a named mirror in the given scope"""
-    mirrors = spack.config.get("mirrors", scope=scope)
+    mirrors = spack.config.CONFIG.get("mirrors", scope=scope)
     if not mirrors:
         mirrors = syaml.syaml_dict()
 
@@ -124,17 +121,17 @@ def add(mirror: Mirror, scope=None):
     items = [(n, u) for n, u in mirrors.items()]
     items.insert(0, (mirror.name, mirror.to_dict()))
     mirrors = syaml.syaml_dict(items)
-    spack.config.set("mirrors", mirrors, scope=scope)
+    spack.config.CONFIG.set("mirrors", mirrors, scope=scope)
 
 
 def remove(name, scope):
     """Remove the named mirror in the given scope"""
-    mirrors = spack.config.get("mirrors", scope=scope)
+    mirrors = spack.config.CONFIG.get("mirrors", scope=scope)
     if not mirrors:
         mirrors = syaml.syaml_dict()
 
     removed = mirrors.pop(name, False)
-    spack.config.set("mirrors", mirrors, scope=scope)
+    spack.config.CONFIG.set("mirrors", mirrors, scope=scope)
     return bool(removed)
 
 
@@ -225,7 +222,7 @@ def create_mirror_from_package_object(
         except Exception as e:
             pkg_obj.stage.destroy()
             if num_retries + 1 == max_retries:
-                if spack.config.get("config:debug"):
+                if spack.config.CONFIG.get("config:debug"):
                     traceback.print_exc()
                 else:
                     tty.warn(

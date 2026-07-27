@@ -10,13 +10,13 @@ import spack.caches
 import spack.cmd
 import spack.concretize
 import spack.config
-import spack.environment as ev
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.repo
 import spack.spec
 import spack.util.parallel
 import spack.util.web as web_util
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.error import SpackError
 from spack.util import lang, tty
@@ -108,7 +108,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     add_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     add_parser.add_argument(
@@ -176,7 +176,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     set_url_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     arguments.add_connection_args(set_url_parser, False)
@@ -236,7 +236,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     set_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     arguments.add_connection_args(set_parser, False)
@@ -380,7 +380,7 @@ def mirror_remove(args):
 
 
 def _configure_mirror(args):
-    mirrors = spack.config.get("mirrors", scope=args.scope)
+    mirrors = spack.config.CONFIG.get("mirrors", scope=args.scope)
 
     if args.name not in mirrors:
         tty.die(f"No mirror found with name {args.name}.")
@@ -432,7 +432,7 @@ def _configure_mirror(args):
 
     if changed:
         mirrors[args.name] = entry.to_dict()
-        spack.config.set("mirrors", mirrors, scope=args.scope)
+        spack.config.CONFIG.set("mirrors", mirrors, scope=args.scope)
     else:
         tty.msg("No changes made to mirror %s." % args.name)
 
@@ -562,7 +562,7 @@ class IncludeFilter:
 
 
 def concrete_specs_from_environment():
-    env = ev.active_environment()
+    env = active_environment()
     assert env, "an active environment is required"
     mirror_specs = env.all_specs()
     mirror_specs = filter_externals(mirror_specs)
@@ -570,7 +570,7 @@ def concrete_specs_from_environment():
 
 
 def all_specs_with_all_versions():
-    specs = [spack.spec.Spec(n) for n in spack.repo.all_package_names()]
+    specs = [spack.spec.Spec(n) for n in spack.repo.PATH.all_package_names()]
     mirror_specs = spack.mirrors.utils.get_all_versions(specs)
     mirror_specs.sort(key=lambda s: (s.name, s.version))
     return mirror_specs
@@ -655,9 +655,9 @@ def mirror_create(args):
 def _specs_to_mirror(args):
     include_fn = IncludeFilter(args)
 
-    if args.all and not ev.active_environment():
+    if args.all and not active_environment():
         mirror_specs = all_specs_with_all_versions()
-    elif args.all and ev.active_environment():
+    elif args.all and active_environment():
         mirror_specs = concrete_specs_from_environment()
     else:
         mirror_specs = concrete_specs_from_user(args)
@@ -746,6 +746,6 @@ def mirror(parser, args):
     }
 
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     action[args.mirror_command](args)

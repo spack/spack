@@ -255,10 +255,9 @@ def list_packages(rev: str, repo: "Repo") -> List[str]:
     ]
 
     # take the directory names with one-level-deep package files
+    naming_scheme = nm.get_naming_scheme(repo.package_api)
     package_names = [
-        nm.pkg_dir_to_pkg_name(line[0], repo.package_api)
-        for line in package_paths
-        if len(line) == 2
+        naming_scheme.pkg_dir_to_pkg_name(line[0]) for line in package_paths if len(line) == 2
     ]
 
     return sorted(set(package_names))
@@ -296,11 +295,12 @@ def get_all_package_diffs(type: str, repo: "Repo", rev1="HEAD^1", rev2="HEAD") -
 
     lines = [] if not out else re.split(r"\s+", out)
     changed: Set[str] = set()
+    naming_scheme = nm.get_naming_scheme(repo.package_api)
     for path in lines:
         dir_name, _, _ = path.partition("/")
-        if not nm.valid_module_name(dir_name, repo.package_api):
+        if not naming_scheme.valid_module_name(dir_name):
             continue
-        pkg_name = nm.pkg_dir_to_pkg_name(dir_name, repo.package_api)
+        pkg_name = naming_scheme.pkg_dir_to_pkg_name(dir_name)
         if pkg_name not in added and pkg_name not in removed:
             changed.add(pkg_name)
 
@@ -415,6 +415,7 @@ class FastPackageChecker(Mapping[str, float]):
         cache: Dict[str, float] = {}
         # Don't use os.path.join in the loop cause it's slow and redundant.
         package_py_suffix = f"{os.path.sep}{package_file_name}"
+        naming_scheme = nm.get_naming_scheme(self.package_api)
 
         # Use a file descriptor for the packages directory to avoid repeated path resolution.
         with _directory_fd(self.packages_path) as fd, os.scandir(self.packages_path) as entries:
@@ -443,7 +444,7 @@ class FastPackageChecker(Mapping[str, float]):
 
                 # Only consider package.py files in directories that are valid module names under
                 # the current package API
-                if not nm.valid_module_name(entry.name, self.package_api):
+                if not naming_scheme.valid_module_name(entry.name):
                     x, y = self.package_api
                     pkg_file = os.path.join(self.packages_path, entry.name, package_file_name)
                     tty.warn(
@@ -453,7 +454,7 @@ class FastPackageChecker(Mapping[str, float]):
                     continue
 
                 # Store the mtime by package name.
-                cache[nm.pkg_dir_to_pkg_name(entry.name, self.package_api)] = sinfo.st_mtime
+                cache[naming_scheme.pkg_dir_to_pkg_name(entry.name)] = sinfo.st_mtime
 
         return cache
 
@@ -1141,6 +1142,7 @@ class Repo:
         config = self._read_config()
 
         self.package_api = _parse_package_api_version(config)
+        self.naming_scheme = nm.get_naming_scheme(self.package_api)
         self.subdirectory = _validate_and_normalize_subdir(
             config.get("subdirectory", packages_dir_name), root, self.package_api
         )
@@ -1201,7 +1203,7 @@ class Repo:
 
             # check that all subdirectories are valid module names
             check(
-                all(nm.valid_module_name(x, self.package_api) for x in self.namespace.split(".")),
+                all(self.naming_scheme.valid_module_name(x) for x in self.namespace.split(".")),
                 f"Invalid namespace '{self.namespace}' in repo '{self.root}'",
             )
 
@@ -1245,7 +1247,7 @@ class Repo:
         * ``foo_bar_baz`` -> ``foo_bar_baz``, ``foo-bar-baz``, ``foo_bar-baz``, ``foo-bar_baz``
         """
         if self.package_api >= (2, 0):
-            if nm.pkg_dir_to_pkg_name(import_name, package_api=self.package_api) in self:
+            if self.naming_scheme.pkg_dir_to_pkg_name(import_name) in self:
                 return import_name
             return None
 
@@ -1392,7 +1394,7 @@ class Repo:
         """Given a package name, get the directory containing its package.py file."""
         _, unqualified_name = self.partition_package_name(pkg_name)
         return os.path.join(
-            self.packages_path, nm.pkg_name_to_pkg_dir(unqualified_name, self.package_api)
+            self.packages_path, self.naming_scheme.pkg_name_to_pkg_dir(unqualified_name)
         )
 
     def filename_for_package_name(self, pkg_name: str) -> str:
@@ -1423,7 +1425,7 @@ class Repo:
     def package_path(self, name: str) -> str:
         """Get path to package.py file for this repo."""
         return os.path.join(
-            self.packages_path, nm.pkg_name_to_pkg_dir(name, self.package_api), package_file_name
+            self.packages_path, self.naming_scheme.pkg_name_to_pkg_dir(name), package_file_name
         )
 
     def all_package_paths(self) -> Generator[str, None, None]:
@@ -1484,7 +1486,7 @@ class Repo:
         according to Spack's naming convention.
         """
         _, pkg_name = self.partition_package_name(pkg_name)
-        fullname = f"{self.full_namespace}.{nm.pkg_name_to_pkg_dir(pkg_name, self.package_api)}"
+        fullname = f"{self.full_namespace}.{self.naming_scheme.pkg_name_to_pkg_dir(pkg_name)}"
         if self.package_api >= (2, 0):
             fullname += ".package"
 
@@ -1622,7 +1624,7 @@ def get_repo_yaml_dir(
     namespace_components = namespace.split(".")
 
     if not all(nm.valid_module_name(n, package_api=package_api) for n in namespace_components):
-        raise InvalidNamespaceError(f"'{namespace}' is not a valid namespace." % namespace)
+        raise InvalidNamespaceError(f"'{namespace}' is not a valid namespace.")
 
     return os.path.join(root, "spack_repo", *namespace_components), namespace
 
@@ -2125,11 +2127,6 @@ PATH = cast(RepoPath, Singleton(lambda: create_and_enable(spack.config.CONFIG)))
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
 sys.meta_path.append(REPOS_FINDER)
-
-
-def all_package_names(include_virtuals=False):
-    """Convenience wrapper around ``spack.repo.all_package_names()``."""
-    return PATH.all_package_names(include_virtuals)
 
 
 @contextlib.contextmanager

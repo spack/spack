@@ -4,17 +4,14 @@
 import collections
 import pathlib
 
-import pytest
-
-import spack.config
 import spack.detection
 import spack.detection.common
 import spack.detection.path
-import spack.repo
 import spack.spec
+from spack.config import Configuration
 
 
-def test_detection_update_config(mutable_config):
+def test_detection_update_config(mutable_config: Configuration):
     # mock detected package
     detected_packages = collections.defaultdict(list)
     detected_packages["cmake"] = [spack.spec.Spec("cmake@3.27.5", external_path="/usr/bin")]
@@ -22,7 +19,7 @@ def test_detection_update_config(mutable_config):
     # update config for new package
     spack.detection.common.update_configuration(detected_packages)
     # Check entries in 'packages.yaml'
-    packages_yaml = spack.config.get("packages")
+    packages_yaml = mutable_config.get("packages")
     assert "cmake" in packages_yaml
     assert "externals" in packages_yaml["cmake"]
     externals = packages_yaml["cmake"]["externals"]
@@ -57,8 +54,7 @@ def test_dedupe_paths(tmp_path: pathlib.Path):
     assert spack.detection.path.dedupe_paths([str(y), str(z), str(x)]) == [str(y), str(x)]
 
 
-@pytest.mark.usefixtures("mock_packages")
-def test_detect_specs_deduplicates_across_prefixes(tmp_path, monkeypatch):
+def test_detect_specs_deduplicates_across_prefixes(tmp_path, monkeypatch, mock_packages):
     """Tests that the same spec detected at two different prefixes should yield only one result.
 
     Returning both causes duplicate externals in packages.yaml and non-deterministic hashes
@@ -74,7 +70,7 @@ def test_detect_specs_deduplicates_across_prefixes(tmp_path, monkeypatch):
     exe_a.touch()
     exe_b.touch()
 
-    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    cmake_cls = mock_packages.get_pkg_class("cmake")
 
     # Patch determine_spec_details to always return the same spec, regardless of prefix.
     @classmethod
@@ -85,7 +81,7 @@ def test_detect_specs_deduplicates_across_prefixes(tmp_path, monkeypatch):
 
     finder = spack.detection.path.ExecutablesFinder()
     detected = finder.detect_specs(
-        pkg=cmake_cls, paths=[str(exe_a), str(exe_b)], repo_path=spack.repo.PATH
+        pkg=cmake_cls, paths=[str(exe_a), str(exe_b)], repo_path=mock_packages
     )
 
     # Both prefixes produce cmake@3.17.1; only the first should be kept.

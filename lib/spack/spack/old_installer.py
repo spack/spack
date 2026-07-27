@@ -155,7 +155,7 @@ class InstallStatus:
             self.pkg_ids.add(pkg_id)
 
     def set_term_title(self, text: str):
-        if not spack.config.get("config:install_status", True):
+        if not spack.config.CONFIG.get("config:install_status", True):
             return
 
         if not sys.stdout.isatty():
@@ -613,7 +613,7 @@ def install_msg(name: str, pid: int, install_status: InstallStatus) -> str:
     pre = f"{pid}: " if tty.show_pid() else ""
     post = (
         " @*{%s}" % install_status.get_progress()
-        if install_status and spack.config.get("config:install_status", True)
+        if install_status and spack.config.CONFIG.get("config:install_status", True)
         else ""
     )
     return pre + colorize("@*{Installing} @*g{%s}%s" % (name, post))
@@ -1524,7 +1524,7 @@ class PackageInstaller:
             explicit = {pkg.spec.dag_hash() for pkg in packages} if explicit else set()
 
         if concurrent_packages is None:
-            concurrent_packages = spack.config.get("config:concurrent_packages", default=1)
+            concurrent_packages = spack.config.CONFIG.get("config:concurrent_packages", default=1)
         # The value 0 means no concurrency in the old installer.
         if concurrent_packages == 0:
             concurrent_packages = 1
@@ -2626,7 +2626,7 @@ class BuildProcessInstaller:
         self.timer = timer.Timer()
 
         # If we are using a padded path, filter the output to compress padded paths
-        padding = spack.config.get("config:install_tree:padded_length", None)
+        padding = spack.config.CONFIG.get("config:install_tree:padded_length", None)
         self.filter_fn = spack.util.path.padding_filter if padding else None
 
         # info/debug information

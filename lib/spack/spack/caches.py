@@ -19,7 +19,7 @@ def misc_cache_location():
     Currently the ``MISC_CACHE`` stores indexes for virtual dependency
     providers and for which packages provide which tags.
     """
-    path = spack.config.get("config:misc_cache", spack.paths.default_misc_cache_path)
+    path = spack.config.CONFIG.get("config:misc_cache", spack.paths.default_misc_cache_path)
     return spack.config.canonicalize_path(path)
 
 
@@ -40,7 +40,7 @@ def fetch_cache_location():
     This prevents Spack from repeatedly fetch the same files when
     building the same package different ways or multiple times.
     """
-    path = spack.config.get("config:source_cache")
+    path = spack.config.CONFIG.get("config:source_cache")
     if not path:
         path = spack.paths.default_fetch_cache_path
     path = spack.config.canonicalize_path(path)

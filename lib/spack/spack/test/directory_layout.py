@@ -18,7 +18,9 @@ import spack.paths
 import spack.repo
 import spack.util.file_cache
 from spack.directory_layout import DirectoryLayout, InvalidDirectoryLayoutParametersError
+from spack.repo import RepoPath
 from spack.spec import Spec
+from spack.store import Store
 from spack.util.path import path_to_os_path
 
 # number of packages to test (to reduce test time)
@@ -83,7 +85,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
     layout.
     """
     layout = temporary_store.layout
-    pkg_names = list(spack.repo.PATH.all_package_names())[:max_packages]
+    pkg_names = list(mock_packages.all_package_names())[:max_packages]
 
     for name in pkg_names:
         if name.startswith("external"):
@@ -144,7 +146,9 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         assert not os.path.exists(install_dir)
 
 
-def test_handle_unknown_package(temporary_store, config, mock_packages, tmp_path: pathlib.Path):
+def test_handle_unknown_package(
+    temporary_store: Store, config, mock_packages: RepoPath, tmp_path: pathlib.Path
+):
     """This test ensures that spack can at least do *some*
     operations with packages that are installed but that it
     does not know about.  This is actually not such an uncommon
@@ -161,7 +165,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages, tmp_path
     mock_db = spack.repo.Repo(spack.paths.mock_packages_path, cache=repo_cache)
 
     not_in_mock = set.difference(
-        set(spack.repo.all_package_names()), set(mock_db.all_package_names())
+        set(mock_packages.all_package_names()), set(mock_db.all_package_names())
     )
     packages = list(not_in_mock)[:max_packages]
 
@@ -192,10 +196,10 @@ def test_handle_unknown_package(temporary_store, config, mock_packages, tmp_path
             assert spec.dag_hash() == spec_from_file.dag_hash()
 
 
-def test_find(temporary_store, config, mock_packages):
+def test_find(temporary_store: Store, config, mock_packages: RepoPath):
     """Test that finding specs within an install layout works."""
     layout = temporary_store.layout
-    package_names = list(spack.repo.PATH.all_package_names())[:max_packages]
+    package_names = list(mock_packages.all_package_names())[:max_packages]
 
     # Create install prefixes for all packages in the list
     installed_specs = {}

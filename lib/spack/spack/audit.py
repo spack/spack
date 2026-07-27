@@ -196,7 +196,9 @@ def _search_duplicate_compilers(error_cls):
     """Report compilers with the same spec and two different definitions"""
     errors = []
 
-    compilers = list(sorted(spack.config.get("compilers"), key=lambda x: x["compiler"]["spec"]))
+    compilers = list(
+        sorted(spack.config.CONFIG.get("compilers"), key=lambda x: x["compiler"]["spec"])
+    )
     for spec, group in itertools.groupby(compilers, key=lambda x: x["compiler"]["spec"]):
         group = list(group)
         if len(group) == 1:
@@ -227,7 +229,7 @@ config_repos = AuditClass(
 def _search_duplicate_specs_in_externals(error_cls):
     """Search for duplicate specs declared as externals"""
     errors, externals = [], collections.defaultdict(list)
-    packages_yaml = spack.config.get("packages")
+    packages_yaml = spack.config.CONFIG.get("packages")
 
     for name, pkg_config in packages_yaml.items():
         # No externals can be declared under all

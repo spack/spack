@@ -35,7 +35,7 @@ def install_specs(mutable_database, mock_packages, mutable_config, install_mocke
 
 
 def _enable_splicing():
-    spack.config.set("concretizer:splice", {"automatic": True})
+    spack.config.CONFIG.set("concretizer:splice", {"automatic": True})
 
 
 @pytest.mark.parametrize("spec_str", ["splice-z", "splice-h@1"])

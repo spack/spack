@@ -102,7 +102,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     add_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
 
@@ -124,7 +124,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     set_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
 
@@ -182,7 +182,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     update_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     update_parser.add_argument(
@@ -320,7 +320,7 @@ def repo_remove(args):
 
 
 def _remove_repo(namespace_or_path, scope):
-    repos: Dict[str, str] = spack.config.get("repos", scope=scope)
+    repos: Dict[str, str] = spack.config.CONFIG.get("repos", scope=scope)
 
     if namespace_or_path in repos:
         # delete by name (from config)
@@ -347,7 +347,7 @@ def _remove_repo(namespace_or_path, scope):
             return False
 
     del repos[key]
-    spack.config.set("repos", repos, scope)
+    spack.config.CONFIG.set("repos", repos, scope)
     tty.msg(f"Removed repository '{namespace_or_path}' from scope '{scope}'.")
     return True
 
@@ -530,7 +530,7 @@ def repo_set(args):
     namespace = args.namespace
 
     # First, check if the repository exists across all scopes for validation
-    all_repos: Dict[str, Any] = spack.config.get("repos", default={})
+    all_repos: Dict[str, Any] = spack.config.CONFIG.get("repos", default={})
 
     if namespace not in all_repos:
         raise SpackError(f"No repository with namespace '{namespace}' found in configuration.")
@@ -543,7 +543,7 @@ def repo_set(args):
         )
 
     # Now get the repos for the specific scope we're modifying
-    scope_repos: Dict[str, Any] = spack.config.get("repos", default={}, scope=args.scope)
+    scope_repos: Dict[str, Any] = spack.config.CONFIG.get("repos", default={}, scope=args.scope)
 
     updated_entry = scope_repos[namespace] if namespace in scope_repos else {}
 
@@ -554,7 +554,7 @@ def repo_set(args):
         updated_entry["paths"] = args.path
 
     scope_repos[namespace] = updated_entry
-    spack.config.set("repos", scope_repos, args.scope)
+    spack.config.CONFIG.set("repos", scope_repos, args.scope)
 
     tty.msg(f"Updated repo '{namespace}'")
 
@@ -606,7 +606,7 @@ def repo_update(args):
         )
 
     # Get the repos for the specific scope we're modifying
-    scope_repos: Dict[str, Any] = spack.config.get("repos", default={}, scope=args.scope)
+    scope_repos: Dict[str, Any] = spack.config.CONFIG.get("repos", default={}, scope=args.scope)
 
     for name, descriptor in descriptors.items():
         if not isinstance(descriptor, spack.repo.RemoteRepoDescriptor):
@@ -654,7 +654,7 @@ def repo_update(args):
                 tty.msg(f"{name}: Updated successfully.")
 
     if active_flag:
-        spack.config.set("repos", scope_repos, args.scope)
+        spack.config.CONFIG.set("repos", scope_repos, args.scope)
 
 
 def repo_show_version_updates(args):

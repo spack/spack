@@ -130,7 +130,7 @@ def find_and_patch_sonames(prefix, exclude_list, patchelf):
 
 def post_install(spec, explicit=None):
     # Skip if disabled
-    if not spack.config.get("config:shared_linking:bind", False):
+    if not spack.config.CONFIG.get("config:shared_linking:bind", False):
         return
 
     # Skip externals

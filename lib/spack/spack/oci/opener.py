@@ -28,7 +28,7 @@ def _urlopen():
     opener = create_opener()
 
     def dispatch_open(fullurl, data=None, timeout=None):
-        timeout = timeout or spack.config.get("config:connect_timeout", 10)
+        timeout = timeout or spack.config.CONFIG.get("config:connect_timeout", 10)
         return opener.open(fullurl, data, timeout)
 
     return dispatch_open

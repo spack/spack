@@ -2031,7 +2031,7 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
         ),
     ],
 )
-def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
+def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_packages):
     lhs = factory(lhs_str)
     rhs = factory(rhs_str)
 

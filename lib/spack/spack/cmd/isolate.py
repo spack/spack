@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import shutil
+import sys
 import textwrap
 from argparse import ArgumentParser
 from typing import cast
@@ -63,7 +64,7 @@ def _isolate_config_config(new_user_path):
 
 
 def _isolate_repos_config(new_user_path):
-    current_repos_config = spack.config.get("repos")
+    current_repos_config = spack.config.CONFIG.get("repos")
     new_repos_config = {}
     for key, value in current_repos_config.items():
         if isinstance(value, str):
@@ -78,12 +79,17 @@ def _isolate_repos_config(new_user_path):
 
 
 def _setup_isolate_scope(new_user_path, overwrite: bool):
+    # Bypass overwriting/pre-existing when using --self
     if os.path.exists(ISOLATE_SCOPE_PATH):
-        if overwrite:
+        if os.path.samefile(new_user_path, ISOLATE_SCOPE_PATH):
+            pass
+        elif overwrite:
             shutil.rmtree(ISOLATE_SCOPE_PATH)
+            os.mkdir(ISOLATE_SCOPE_PATH)
         else:
             raise Exception("An isolation already exists for this Spack instance")
-    os.mkdir(ISOLATE_SCOPE_PATH)
+    else:
+        os.mkdir(ISOLATE_SCOPE_PATH)
     isolate_dict = {}
     isolate_dict["name"] = "isolate"
     isolate_dict["path"] = ISOLATE_SCOPE_PATH
@@ -129,10 +135,9 @@ def setup_parser(subparser: ArgumentParser):
     )
     isolate_group.add_argument(
         "--self",
-        dest="path",
-        action="store_const",
-        const=spack.paths.prefix,
-        help="use spack's own prefix as isolation directory",
+        dest="use_self",
+        action="store_true",
+        help="store isolation directory in Spack's prefix",
     )
     isolate_group.add_argument(
         "--undo", action="store_true", help="undo the result of calling isolate"
@@ -145,19 +150,21 @@ def setup_parser(subparser: ArgumentParser):
 def _do_isolate(args):
     destination = _ensure_destination_setup(args.path, args.overwrite)
     include_config: list = _preserve_and_extract_include()
-    user_index, site_index, system_index, old_isolate_index = _get_scope_indices(include_config)
     isolate_scope = _setup_isolate_scope(destination, args.overwrite)
-    # insert the isolate scope above the below user and site but above system
-    if old_isolate_index is not None:  # first try the old isolate index (--overwrite)
-        include_config[old_isolate_index] = isolate_scope
-    elif site_index is not None:  # otherwise put it below the site scope
-        include_config.insert(site_index + 1, isolate_scope)
-    elif system_index is not None:  # if there is no site scope, put it above the system scope
-        include_config.insert(system_index, isolate_scope)
-    elif user_index is not None:  # if there is no system scope, put it below the user scope
-        include_config.insert(user_index + 1, isolate_scope)
-    else:  # Strange changes have been made if there is no site, system, or user scope
-        include_config.append(isolate_scope)
+    user_index, site_index, system_index, old_isolate_index = _get_scope_indices(include_config)
+    # No need for a separate isolation scope when using --self
+    if not os.path.samefile(destination, ISOLATE_SCOPE_PATH):
+        # insert the isolate scope above the below user and site but above system
+        if old_isolate_index is not None:  # first try the old isolate index (--overwrite)
+            include_config[old_isolate_index] = isolate_scope
+        elif site_index is not None:  # otherwise put it below the site scope
+            include_config.insert(site_index + 1, isolate_scope)
+        elif system_index is not None:  # if there is no site scope, put it above the system scope
+            include_config.insert(system_index, isolate_scope)
+        elif user_index is not None:  # if there is no system scope, put it below the user scope
+            include_config.insert(user_index + 1, isolate_scope)
+        else:  # Strange changes have been made if there is no site, system, or user scope
+            include_config.append(isolate_scope)
 
     new_user_scope = _get_new_user_scope(destination)
     if user_index is not None:
@@ -181,16 +188,21 @@ def _undo_isolate():
 def isolate(parser, args):
     if args.undo:
         _undo_isolate()
+        sys.exit(0)
+    elif args.use_self:
+        if args.path is not None:
+            tty.die("Cannot provide both --self and --path")
+        else:
+            args.path = ISOLATE_SCOPE_PATH
     elif args.path is None:
         tty.die("Must provide one of --path, --self, or --undo")
-    else:
-        _do_isolate(args)
-        tty.warn(
-            "\n".join(
-                textwrap.wrap(
-                    "Due to current limitations in Spack's configuration, adding repos without an"
-                    " explicit destination will default to $SPACK_USER_CACHE_PATH or ~/.spack."
-                    " This behavior will be fixed with shared spack in v1.3."
-                )
+    _do_isolate(args)
+    tty.warn(
+        "\n".join(
+            textwrap.wrap(
+                "Due to current limitations in Spack's configuration, adding repos without an"
+                " explicit destination will default to $SPACK_USER_CACHE_PATH or ~/.spack."
+                " This behavior will be fixed with shared spack in v1.3."
             )
         )
+    )

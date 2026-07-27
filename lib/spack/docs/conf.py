@@ -17,6 +17,10 @@
 # serve to show the default.
 
 import os
+
+# Set this before importing sphinx.
+os.environ["SPHINX_APIDOC_OPTIONS"] = "members,undoc-members,show-inheritance,no-index-entry"
+
 import subprocess
 import sys
 from glob import glob

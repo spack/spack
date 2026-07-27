@@ -73,7 +73,7 @@ def tutorial(parser, args):
     )
     mirror_config = syaml_dict()
     mirror_config["tutorial"] = tutorial_mirror
-    spack.config.set("mirrors", mirror_config, scope="user")
+    spack.config.CONFIG.set("mirrors", mirror_config, scope="user")
 
     tty.msg("Ensuring that we trust tutorial binaries", f"spack gpg trust {tutorial_key}")
     spack.util.gpg.trust(tutorial_key)

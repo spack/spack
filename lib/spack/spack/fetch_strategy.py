@@ -407,7 +407,7 @@ class URLFetchStrategy(FetchStrategy):
             )
 
     def _fetch_from_url(self, url):
-        fetch_method = spack.config.get("config:url_fetch_method", "urllib")
+        fetch_method = spack.config.CONFIG.get("config:url_fetch_method", "urllib")
         if fetch_method.startswith("curl"):
             return self._fetch_curl(url, config_args=fetch_method.split()[1:])
         else:
@@ -889,7 +889,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             # If the user asked for insecure fetching, make that work
             # with git as well.
-            if not spack.config.get("config:verify_ssl"):
+            if not spack.config.CONFIG.get("config:verify_ssl"):
                 self._git.add_default_env("GIT_SSL_NO_VERIFY", "true")
 
         return self._git
@@ -950,7 +950,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         tty.debug(f"Cloning git repository: {self._repo_info()}")
 
         git = self.git
-        debug = spack.config.get("config:debug")
+        debug = spack.config.CONFIG.get("config:debug")
 
         # We don't need to worry about which commit/branch/tag is checked out
         clone_args = ["clone", "--bare"]
@@ -970,7 +970,11 @@ class GitFetchStrategy(VCSFetchStrategy):
         checkout_ref = self.commit or self.tag or self.branch
         fetch_ref = self.tag or self.branch
 
-        kwargs = {"debug": spack.config.get("config:debug"), "git_exe": self.git, "dest": name}
+        kwargs = {
+            "debug": spack.config.CONFIG.get("config:debug"),
+            "git_exe": self.git,
+            "dest": name,
+        }
 
         # TODO(psakievich) The use of the minimal clone need clearer justification via package API
         # or something. There is a trade space of storage minimization vs available git information
@@ -1005,7 +1009,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             with working_dir(dest):
                 for submodule_to_delete in self.submodules_delete:
                     args = ["rm", submodule_to_delete]
-                    if not spack.config.get("config:debug"):
+                    if not spack.config.CONFIG.get("config:debug"):
                         args.insert(1, "--quiet")
                     git(*args)
 
@@ -1027,7 +1031,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         with working_dir(dest):
             for args in git_commands:
-                if not spack.config.get("config:debug"):
+                if not spack.config.CONFIG.get("config:debug"):
                     args.insert(1, "--quiet")
                 git(*args)
 
@@ -1036,7 +1040,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         with working_dir(self.stage.source_path):
             co_args = ["checkout", "."]
             clean_args = ["clean", "-f"]
-            if spack.config.get("config:debug"):
+            if spack.config.CONFIG.get("config:debug"):
                 co_args.insert(1, "--quiet")
                 clean_args.insert(1, "--quiet")
 
@@ -1334,7 +1338,7 @@ class HgFetchStrategy(VCSFetchStrategy):
 
         args = ["clone"]
 
-        if not spack.config.get("config:verify_ssl"):
+        if not spack.config.CONFIG.get("config:verify_ssl"):
             args.append("--insecure")
 
         if self.revision:

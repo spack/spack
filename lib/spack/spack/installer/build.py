@@ -337,7 +337,7 @@ def worker_function(
     tee_control_w: Optional[IpcChannel],
     jobserver_info: JobserverInfo,
     global_state: GlobalStateMarshaler,
-):
+) -> None:
     """
     Function run in the build child process. Installs the requested spec, sending state updates
     and build output back to the parent process.
@@ -363,7 +363,7 @@ def worker_function(
 
     if sys.platform != "win32":
         # Isolate the process group to shield against Ctrl+C and enable safe killpg() cleanup. In
-        # constrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
+        # contrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
         os.setpgid(0, 0)
 
         # Reset SIGTSTP to default in case the parent had a custom handler.
@@ -398,19 +398,17 @@ def worker_function(
 
     # Detach stdin from the terminal like `./build < /dev/null`. This would not be necessary if we
     # used os.setsid() instead of os.setpgid(), but that would "break" pstree output.
-    devnull_fd = os.open(os.devnull, os.O_RDONLY)
-    os.dup2(devnull_fd, 0)
-    os.close(devnull_fd)
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
+    os.dup2(sys.stdin.fileno(), 0)
 
     # Start the tee thread to forward output to the log file and parent process.
     tee = Tee(tee_control_r, tee_control_w, parent, log_path)
 
-    # Use closedfd=false because of the connection objects. Use line buffering.
-    # Replace sys.stdout/stderr AFTER Tee.dup2() so Python creates FileIO (WriteFile) rather
-    # than ConsoleIO (WriteConsoleW). On Windows, if fds 1/2 are still console handles when
-    # os.fdopen() is called, Python picks ConsoleIO; WriteConsoleW on a pipe handle returns
-    # ERROR_INVALID_FUNCTION. Post-dup2 the fds are pipe handles, so FileIO is chosen.
+    # Use closefd=False because of the connection objects. Use line buffering.
+    # Replace sys.stdout/stderr AFTER the Tee redirected fds 1/2 so Python creates FileIO
+    # (WriteFile) rather than ConsoleIO (WriteConsoleW). On Windows, if fds 1/2 are still console
+    # handles when os.fdopen() is called, Python picks ConsoleIO; WriteConsoleW on a pipe handle
+    # returns ERROR_INVALID_FUNCTION. Post-redirect the fds are pipe handles, so FileIO is chosen.
     sys.stdout = os.fdopen(
         sys.stdout.fileno(), "w", buffering=1, encoding=_stdout_enc, closefd=False
     )
@@ -667,7 +665,7 @@ def _install(
         if stop_at is not None and stop_at not in builder.phases:
             raise spack.error.InstallError(f"'{stop_at}' is not a valid phase for {pkg.name}")
 
-        _enable_sandbox(spack.config.get("config:sandbox", {}), spec, stage.path)
+        _enable_sandbox(spack.config.CONFIG.get("config:sandbox", {}), spec, stage.path)
 
         for phase in builder:
             if stop_before is not None and phase.name == stop_before:

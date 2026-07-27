@@ -479,8 +479,10 @@ def test_ci_run_standalone_tests_missing_requirements(working_env, config, capfd
 
 @pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_junit(
-    tmp_path: pathlib.Path, repro_dir, working_env, mock_test_stage, capfd
+    tmp_path: pathlib.Path, repro_dir, working_env, mock_test_stage, capfd, monkeypatch
 ):
+    # the generated test script runs `spack` from PATH
+    monkeypatch.setenv("PATH", f"{spack.paths.bin_path}{os.pathsep}{os.environ['PATH']}")
     log_file = tmp_path / "junit.xml"
 
     ci.run_standalone_tests(
@@ -496,9 +498,11 @@ def test_ci_run_standalone_tests_not_installed_junit(
 
 @pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_cdash(
-    tmp_path: pathlib.Path, repro_dir, working_env, mock_test_stage, capfd
+    tmp_path: pathlib.Path, repro_dir, working_env, mock_test_stage, capfd, monkeypatch
 ):
     """Test run_standalone_tests with cdash and related options."""
+    # the generated test script runs `spack` from PATH
+    monkeypatch.setenv("PATH", f"{spack.paths.bin_path}{os.pathsep}{os.environ['PATH']}")
     log_file = tmp_path / "junit.xml"
 
     # Cover when CDash handler provided (with the log file as well)

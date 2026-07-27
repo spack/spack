@@ -7,7 +7,10 @@
    :description lang=en:
       Learn how to use include directives to modularize your Spack YAML configuration files for better organization and reusability.
 
-.. _include-yaml:
+.. index::
+   single: include.yaml
+   single: include chain; configuring
+   :name: include-yaml
 
 Include Settings (include.yaml)
 ===============================
@@ -238,7 +241,7 @@ The default ``user``, ``system``, and ``site`` scopes are defined using ``includ
 
 You can see that all three of these scopes are given meaningful names, and all three are ``optional``, i.e., they'll be ignored if their directories do not exist.
 The ``user`` and ``system`` scopes can also be disabled by setting ``SPACK_DISABLE_LOCAL_CONFIG``.
-Finally, the ``user`` scope can be overridden with a path in ``SPACK_USER_CONFIG_PATH`` if it is set.
+Finally, the ``user`` scope can be overridden with a path in ``SPACK_USER_CONFIG_PATH`` if it is set (see :ref:`local-config-overrides`).
 
 Overriding scopes by name
 ^^^^^^^^^^^^^^^^^^^^^^^^^

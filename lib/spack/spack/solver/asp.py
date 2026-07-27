@@ -66,6 +66,7 @@ import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
+from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
@@ -278,39 +279,50 @@ def _reorder_flags(flag_list: List[spack.spec.CompilerFlag]) -> List[spack.spec.
 
 
 def spec_dict_to_json(spec_dict: SpecDict) -> Dict:
-    """Serialize a SpecDict to JSON, taking care to preserve node structure in serialized specs."""
-    # A SpecDict has one entry for each spec in a solution, but some are abstract and some
-    # are concrete. We need DAG hashes for the abstract specs to serialize them, so force-cache
-    # them to avoid lots of redundant computation.
-    # TODO: spec serialization was really designed for concrete and small abstract specs.
-    # This should really be handled by Spec, but it will take some work to adjust the format.
-    for spec in spec_dict.values():
-        if not spec.concrete:
-            spec._cached_hash(ht.dag_hash, force=True)
+    """Serialize a SpecDict to JSON, taking care to preserve node structure in serialized specs.
 
+    Note: this does not yet handle spliced specs and will raise an error if they're passed in.
+
+    Raises:
+        SpliceSerializationError: if any node in ``spec_dict`` has a ``build_spec``.
+    """
     # Specs are keyed in spec_dict by their solver-assigned NodeId, but reused concrete
-    # specs may have transitive dependencies or build_specs that do not have a NodeId.
+    # specs may have transitive dependencies that do not have a NodeId.
     # Make a dictionary preserving the NodeIds from input.
     node_id_for: Dict[int, NodeId] = {id(spec): nid for nid, spec in spec_dict.items()}
 
-    # make a list of all nodes in specs and their build_specs
     specs = list(spec_dict.values())
-    specs += [spec.build_spec for spec in specs if spec.build_spec is not spec]
 
-    # Traverse every spec reachable from spec_dict's values, deduped by hash, and add them
-    # to the serialized entries either a) with their original NodeId, or b) with None if they
-    # don't have a NodeId. This ensures that all nodes are added and NodeIds are preserved.
-    entries = []
-    for dep in spack.traverse.traverse_nodes(specs, key=lambda s: s.dag_hash()):
-        node = dep.to_node_dict()
-        node["hash"] = dep.dag_hash()
-        entries.append((node_id_for.get(id(dep)), node))
+    try:
+        # A SpecDict has one entry for each spec in a solution, but some are abstract and some
+        # are concrete. We need DAG hashes for the abstract specs to serialize them, so
+        # force-cache them, taking care to do so bottom-up, to avoid exponential recomputation.
+        # TODO: spec serialization was really designed for concrete and small abstract specs.
+        # This should really be handled by Spec, but it will take some work to adjust the format.
+        for spec in spack.traverse.traverse_nodes(specs, key=id, order="post"):
+            if spec.build_spec is not spec:
+                raise SpliceSerializationError(
+                    f"cannot serialize spliced spec {spec.name}; SpecDicts with spliced "
+                    "specs are not serializable."
+                )
+            if not spec.concrete:
+                spec._cached_hash(ht.dag_hash, force=True)
 
-    # Clear the hashes cached above, as they will need to be recomputed after post-concretization.
-    # They're only used here as keys for reading and writing spec DAGs.
-    for spec in spec_dict.values():
-        if not spec.concrete:
-            spec.clear_caches()
+        # Traverse every spec reachable from spec_dict's values, deduped by hash, and add them
+        # to the serialized entries either a) with their original NodeId, or b) with None if they
+        # don't have a NodeId. This ensures that all nodes are added and NodeIds are preserved.
+        entries = []
+        for dep in spack.traverse.traverse_nodes(specs, key=lambda s: s.dag_hash()):
+            node = dep.to_node_dict()
+            node["hash"] = dep.dag_hash()
+            entries.append((node_id_for.get(id(dep)), node))
+
+    finally:
+        # Clear hashes cached above, which must be recomputed in post-concretization
+        # They're only used here as keys for reading and writing spec DAGs.
+        for spec in spack.traverse.traverse_nodes(specs, key=id):
+            if not spec.concrete:
+                spec.clear_caches()
 
     return {"_meta": {"spec_version": spack.spec.SpecfileLatest.SPEC_VERSION}, "specs": entries}
 
@@ -525,7 +537,7 @@ class ConcretizationCache:
     VERSION = 1
 
     def __init__(self, root: Union[str, None] = None):
-        root = root or spack.config.get("concretizer:concretization_cache:url", None)
+        root = root or spack.config.CONFIG.get("concretizer:concretization_cache:url", None)
         if root is None:
             root = os.path.join(spack.caches.misc_cache_location(), "concretization")
 
@@ -536,12 +548,10 @@ class ConcretizationCache:
     def cleanup(self):
         """Prunes the concretization cache according to configured entry
         count limits. Cleanup is done in LRU ordering."""
-        entry_limit = spack.config.get("concretizer:concretization_cache:entry_limit", 1000)
+        entry_limit = spack.config.CONFIG.get("concretizer:concretization_cache:entry_limit", 1000)
 
         try:
-            with os.scandir(self.root) as it:
-                # skip dotfiles and old-style directory entries
-                entries = [e for e in it if not e.name.startswith(".") and e.is_file()]
+            entries = list(self.cache_entries())
         except FileNotFoundError:
             return
 
@@ -564,6 +574,17 @@ class ConcretizationCache:
         # Try to remove the oldest half of the cache.
         for _, path in removal_queue[: entry_limit // 2]:
             self._remove_entry(pathlib.Path(path))
+
+    def cache_entries(self) -> Iterator["os.DirEntry"]:
+        """Yield a ``DirEntry`` for every entry in the cache.
+
+        Raises ``FileNotFoundError`` if the cache root doesn't exist.
+        """
+        with os.scandir(self.root) as it:
+            for entry in it:
+                # skip dotfiles and old-style directory entries
+                if not entry.name.startswith(".") and entry.is_file():
+                    yield entry
 
     def _prefix_digest(self, problem: str) -> str:
         """Return the first two characters of, and the full, sha256 of the given asp problem"""
@@ -593,9 +614,16 @@ class ConcretizationCache:
         """
         cache_path = self._cache_path_from_problem(problem)
 
+        try:
+            results_dict = result.to_dict()
+        except SpliceSerializationError:
+            # Results with spliced specs can't be serialized (yet).
+            tty.debug(f"Not caching result with spliced specs for {cache_path}")
+            return
+
         cache_dict = {
             "_meta": {"version": ConcretizationCache.VERSION},
-            "results": result.to_dict(),
+            "results": results_dict,
             "statistics": statistics,
         }
 
@@ -671,7 +699,13 @@ class ConcretizationCache:
 
         try:
             result = Result.from_dict(results, specs)
-        except (KeyError, TypeError, ValueError, spack.error.SpecSyntaxError) as e:
+        except (
+            KeyError,
+            TypeError,
+            ValueError,
+            spack.error.SpecError,
+            spack.error.SpecSyntaxError,
+        ) as e:
             tty.debug(
                 f"ConcretizationCache.fetch(): force-removing {cache_path}. "
                 f"Valid JSON but spec data is malformed or incompatible: {e}"
@@ -1061,7 +1095,7 @@ class PyclingoDriver:
         timer.stop("ordering")
 
         timer.start("cache-check")
-        use_cache = spack.config.get("concretizer:concretization_cache:enable", False)
+        use_cache = spack.config.CONFIG.get("concretizer:concretization_cache:enable", False)
         cache = self._conc_cache if use_cache else None
 
         # load control files to add to the input representation
@@ -1438,7 +1472,7 @@ class SpackSolverSetup:
     def config_compatible_os(self):
         """Facts about compatible os's specified in configs"""
         self.gen.h2("Compatible OS from concretizer config file")
-        os_data = spack.config.get("concretizer:os_compatible", {})
+        os_data = spack.config.CONFIG.get("concretizer:os_compatible", {})
         for recent, reusable in os_data.items():
             for old in reusable:
                 self.gen.fact(fn.os_compatible(recent, old))
@@ -2898,9 +2932,6 @@ class SpackSolverSetup:
         Return:
             A ProblemInstanceBuilder populated with facts and rules for an ASP solve.
         """
-        # TODO: remove this local import and get rid of dependency on globals
-        import spack.environment as ev
-
         reuse = reuse or []
         if packages_with_externals is None:
             packages_with_externals = (
@@ -2964,7 +2995,7 @@ class SpackSolverSetup:
         # they will be used in addition to command line specs
         # in determining known versions/targets/os
         dev_specs: Tuple[spack.spec.Spec, ...] = ()
-        env = ev.active_environment()
+        env = active_environment()
         if env:
             dev_specs = tuple(
                 spack.spec.Spec(info["spec"]).constrained(
@@ -3067,7 +3098,7 @@ class SpackSolverSetup:
         return self.gen
 
     def compiler_mixing(self):
-        should_mix = spack.config.get("concretizer:compiler_mixing", True)
+        should_mix = spack.config.CONFIG.get("concretizer:compiler_mixing", True)
         if should_mix is True:
             return
         # anything besides should_mix: true
@@ -3750,9 +3781,6 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     This method updates the SpecDict in place.
 
     """
-    # TODO: remove this local import and get rid of dependency on globals
-    import spack.environment as ev
-
     # inject patches -- note that we can't use set() to unique the
     # roots here, because the specs aren't complete, and the hash
     # function will loop forever.
@@ -3764,7 +3792,7 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     for s in specs.values():
         # Add external paths to specs with just external modules
         _ensure_external_path_if_external(s)
-        _develop_specs_from_env(s, ev.active_environment())
+        _develop_specs_from_env(s, active_environment())
 
         # check for commits must happen after all version adaptations are complete
         _specs_with_commits(s)
@@ -4147,6 +4175,10 @@ class SolverError(InternalConcretizerError):
 
 class InvalidSpliceError(spack.error.SpackError):
     """For cases in which the splice configuration is invalid."""
+
+
+class SpliceSerializationError(spack.error.SpackError):
+    """Attempt to serialize a SpecDict that contains spliced specs (currently unsupported)."""
 
 
 class NoCompilerFoundError(spack.error.SpackError):

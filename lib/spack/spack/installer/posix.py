@@ -28,6 +28,7 @@ from typing import Callable, Optional, Tuple, Union
 import spack.spec
 import spack.util.tty
 from spack.installer.base import (
+    JOBSERVER_EVENT,
     OUTPUT_BUFFER_SIZE,
     SIGWINCH_EVENT,
     STDIN_EVENT,
@@ -83,7 +84,7 @@ class PosixTerminalState(BaseTerminalState):
 
         # Start correctly depending on whether we're foregrounded or backgrounded
         self._set_headless(True)
-        if not _is_background_tty(sys.stdin):
+        if self._should_enter_foreground():
             self.enter_foreground()
 
     def teardown_input(self) -> None:
@@ -169,10 +170,10 @@ class PosixTerminalState(BaseTerminalState):
 
     def handle_continue(self) -> None:
         """Detect whether the process is in the foreground or background and adjust accordingly."""
-        if _is_background_tty(sys.stdin):
-            self.enter_background()
-        else:
+        if self._should_enter_foreground():
             self.enter_foreground()
+        else:
+            self.enter_background()
 
     def drain_sigwinch(self) -> None:
         os.read(self.sigwinch_r, 64)
@@ -212,18 +213,18 @@ class PosixTee(Tee):
         control_r = self.control_r.fileno()
         parent_w = self.parent.fileno()
         echo_on = False
-        exit = False
+        stop = False
         selector = selectors.DefaultSelector()
         selector.register(log_r, selectors.EVENT_READ)
         selector.register(control_r, selectors.EVENT_READ)
 
         try:
-            with log_file, open(parent_w, "wb", closefd=False) as parent:
+            with selector, log_file, open(parent_w, "wb", closefd=False) as parent:
                 while True:
                     # If not done, block until log/control has data. If done, do one more iteration
                     # to drain the log.
-                    events = selector.select(0 if exit else None)
-                    if exit and not events:
+                    events = selector.select(0 if stop else None)
+                    if stop and not events:
                         return
                     for key, _ in events:
                         if key.fd == log_r:
@@ -241,7 +242,7 @@ class PosixTee(Tee):
                             if not control_data or control_data == TEE_STOP:
                                 # EOF or TEE_STOP: exit the thread after draining the log.
                                 selector.unregister(control_r)
-                                exit = True
+                                stop = True
                             else:
                                 echo_on = control_data == b"1"
         except OSError:  # do not raise
@@ -272,14 +273,14 @@ class PosixJobServer(JobServerBase):
 
         fifo_config = get_jobserver_config(makeflags)
 
-        if type(fifo_config) is str:
+        if isinstance(fifo_config, str):
             # FIFO-based jobserver. Try to open the FIFO.
             open_attempt = open_existing_jobserver_fifo(fifo_config)
             if open_attempt:
                 self.r, self.w = open_attempt
                 self.fifo_path = fifo_config
                 return
-        elif type(fifo_config) is tuple:
+        elif isinstance(fifo_config, tuple):
             # Old style pipe-based jobserver. Validate the fds before using them.
             r, w = fifo_config
             try:
@@ -308,7 +309,7 @@ class PosixJobServer(JobServerBase):
 
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
         if wake and self.r not in selector.get_map():
-            selector.register(self.r, selectors.EVENT_READ, "jobserver")
+            selector.register(self.r, selectors.EVENT_READ, JOBSERVER_EVENT)
         elif not wake and self.r in selector.get_map():
             selector.unregister(self.r)
 
@@ -326,10 +327,10 @@ class PosixJobServer(JobServerBase):
         if not self.created or self.target_jobs <= 1:
             return
         self.target_jobs -= 1
-        self._maybe_discard_tokens()
+        self.maybe_discard_tokens()
 
-    def _maybe_discard_tokens(self) -> None:
-        """Try to get reduce parallelism by discarding tokens."""
+    def maybe_discard_tokens(self) -> None:
+        """Try to reduce parallelism to the target by discarding tokens."""
         to_discard = self.num_jobs - self.target_jobs
         if to_discard <= 0:
             return
@@ -407,8 +408,7 @@ def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str,
     matches = re.findall(r" --jobserver-[^=]+=([^ ]+)", makeflags)
     if not matches:
         return None
-    last_match: str = matches[-1]
-    assert isinstance(last_match, str)
+    last_match = matches[-1]
     if last_match.startswith("fifo:"):
         return last_match[5:]
     parts = last_match.split(",", 1)
@@ -437,12 +437,10 @@ def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
             os.unlink(fifo_path)
         except OSError as e:
             spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO: {e}", level=3)
-            pass
         try:
             os.rmdir(tmpdir)
         except OSError as e:
             spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO dir: {e}", level=3)
-            pass
         raise
 
 

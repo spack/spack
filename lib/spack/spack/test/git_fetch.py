@@ -10,15 +10,15 @@ import shutil
 import pytest
 
 import spack.concretize
-import spack.config
 import spack.error
 import spack.fetch_strategy
 import spack.package_base
 import spack.platforms
-import spack.repo
 import spack.util.git
+from spack.config import Configuration
 from spack.fetch_strategy import GitFetchStrategy
 from spack.package_base import PackageBase
+from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.filesystem import mkdirp, touch, working_dir
@@ -85,8 +85,8 @@ def test_fetch(
     type_of_test,
     secure,
     mock_git_repository,
-    config,
-    mutable_mock_repo,
+    config: Configuration,
+    mutable_mock_repo: RepoPath,
     git_version,
     monkeypatch,
 ):
@@ -103,7 +103,7 @@ def test_fetch(
     t = mock_git_repository.checks[type_of_test]
     h = mock_git_repository.hash
 
-    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    pkg_class = mutable_mock_repo.get_pkg_class("git-test")
     # This would fail using the default-no-per-version-git check but that
     # isn't included in this test
     monkeypatch.delattr(pkg_class, "git")
@@ -117,7 +117,7 @@ def test_fetch(
 
     # Enter the stage directory and check some properties
     with s.package.stage:
-        with spack.config.override("config:verify_ssl", secure):
+        with config.override("config:verify_ssl", secure):
             s.package.do_stage()
 
         with working_dir(s.package.stage.source_path):
@@ -144,7 +144,7 @@ def test_fetch(
 
 @pytest.mark.disable_clean_stage_check
 def test_fetch_pkg_attr_submodule_init(
-    mock_git_repository, config, mutable_mock_repo, monkeypatch, mock_stage
+    mock_git_repository, config, mutable_mock_repo: RepoPath, monkeypatch, mock_stage
 ):
     """In this case the version() args do not contain a 'git' URL, so
     the fetcher must be assembled using the Package-level 'git' attribute.
@@ -153,7 +153,7 @@ def test_fetch_pkg_attr_submodule_init(
     """
 
     t = mock_git_repository.checks["default-no-per-version-git"]
-    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    pkg_class = mutable_mock_repo.get_pkg_class("git-test")
     # For this test, the version args don't specify 'git' (which is
     # the majority of version specifications)
     monkeypatch.setattr(pkg_class, "git", mock_git_repository.url)
@@ -183,14 +183,14 @@ def test_fetch_pkg_attr_submodule_init(
 def test_adhoc_version_submodules(
     mock_git_repository,
     config,
-    mutable_mock_repo,
+    mutable_mock_repo: RepoPath,
     monkeypatch,
     mock_stage,
     override_git_repos_cache_path,
 ):
     t = mock_git_repository.checks["tag"]
     # Construct the package under test
-    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    pkg_class = mutable_mock_repo.get_pkg_class("git-test")
     monkeypatch.setitem(pkg_class.versions, Version("git"), t.args)
     monkeypatch.setattr(pkg_class, "git", mock_git_repository.url, raising=False)
 
@@ -206,7 +206,9 @@ def test_adhoc_version_submodules(
 
 
 @pytest.mark.parametrize("type_of_test", ["branch", "commit"])
-def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config, monkeypatch):
+def test_debug_fetch(
+    mock_packages, type_of_test, mock_git_repository, config: Configuration, monkeypatch
+):
     """Fetch the repo with debug enabled."""
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
@@ -217,7 +219,7 @@ def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config, m
 
     # Fetch then ensure source path exists
     with s.package.stage:
-        with spack.config.override("config:debug", True):
+        with config.override("config:debug", True):
             s.package.do_fetch()
             assert os.path.isdir(s.package.stage.source_path)
 
@@ -249,7 +251,7 @@ def test_get_full_repo(
     use_commit,
     git_version,
     mock_git_repository,
-    config,
+    config: Configuration,
     mutable_mock_repo,
     monkeypatch,
 ):
@@ -284,7 +286,7 @@ def test_get_full_repo(
             git_exe("-C", path, "config", "uploadpack.allowReachableSHA1InWant", "true")
 
     with s.package.stage:
-        with spack.config.override("config:verify_ssl", secure):
+        with config.override("config:verify_ssl", secure):
             s.package.do_stage()
             with working_dir(s.package.stage.source_path):
                 branches = mock_git_repository.git_exe("branch", "-a", output=str).splitlines()

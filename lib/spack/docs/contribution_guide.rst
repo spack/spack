@@ -141,13 +141,6 @@ If you are modifying core Spack libraries or adding new functionality, please ad
 You will likely be asked to do this if you submit a pull request to the Spack project on GitHub.
 Check out the `pytest documentation <http://pytest.org/>`_ and feel free to ask for guidance on how to write tests!
 
-.. note::
-
-   You may notice the ``share/spack/qa/run-unit-tests`` script in the repository.
-   This script is designed for CI.
-   It runs the unit tests and reports coverage statistics back to Codecov.
-   If you want to run the unit tests yourself, we suggest you use ``spack unit-test``.
-
 Style Tests
 ^^^^^^^^^^^^
 
@@ -274,6 +267,13 @@ If you see any warning or error messages, you will have to correct those before 
 If you are editing the documentation, you should be running the documentation tests to make sure there are no errors.
 Documentation changes can result in some obfuscated warning messages.
 If you do not understand what they mean, feel free to ask when you submit your PR.
+
+Glossary and Index
+^^^^^^^^^^^^^^^^^^
+
+The documentation maintains a :doc:`glossary <glossary>` of Spack terminology and a :ref:`general index <genindex>`.
+Every glossary term is indexed automatically, so ``.. index::`` directives in the documentation pages must not repeat a glossary term verbatim; instead they carry a descriptive subentry (``single: environment; activating``) placed at the most specific section.
+The full set of indexing conventions is documented in a comment at the top of ``lib/spack/docs/glossary.rst`` — please follow it when adding index entries or glossary terms.
 
 .. _spack-builders-and-pipelines:
 

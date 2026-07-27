@@ -30,6 +30,7 @@ import spack.util.filesystem as fs
 import spack.util.lock
 import spack.util.tty
 from spack.installer.base import (
+    JOBSERVER_EVENT,
     OUTPUT_BUFFER_SIZE,
     SIGWINCH_EVENT,
     STDIN_EVENT,
@@ -138,7 +139,7 @@ class NullReportData(ReportData):
     Avoids creating InstallRecords and reading log files on every completed build."""
 
     def __init__(self) -> None:
-        pass
+        super().__init__(roots=[])
 
     def start_record(self, spec: spack.spec.Spec) -> None:
         pass
@@ -270,7 +271,7 @@ class PackageInstaller:
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
         self.ui.on_jobs_changed(self.jobs, self.jobs)
         if concurrent_packages is None:
-            concurrent_packages_config = spack.config.get("config:concurrent_packages", 0)
+            concurrent_packages_config = spack.config.CONFIG.get("config:concurrent_packages", 0)
             # The value 0 in config means no limit (other than self.jobs)
             if concurrent_packages_config == 0:
                 self.capacity = sys.maxsize
@@ -290,7 +291,7 @@ class PackageInstaller:
         self.next_database_write = 0.0
 
     def install(self) -> None:
-        #: check what specs we could fetch from binaries (checks against cache, not remotely)
+        # check what specs we could fetch from binaries (checks against cache, not remotely)
         try:
             spack.binary_distribution.BINARY_INDEX.update()
         except spack.binary_distribution.FetchCacheError:
@@ -303,9 +304,9 @@ class PackageInstaller:
             for s in self.build_graph.nodes.values()
         }
 
-        self._installer()
+        self._run_event_loop()
 
-    def _installer(self) -> None:
+    def _run_event_loop(self) -> None:
         self.store.install_sbang()
         jobserver = JobServer(self.jobs, os.environ.get("MAKEFLAGS", ""))
         selector = selectors.DefaultSelector()
@@ -398,8 +399,8 @@ class PackageInstaller:
                         assert terminal is not None
                         terminal.drain_sigwinch()
                         self.ui.on_resize()
-                    elif data == "jobserver" and not jobserver.has_target_parallelism():
-                        jobserver._maybe_discard_tokens()
+                    elif data == JOBSERVER_EVENT and not jobserver.has_target_parallelism():
+                        jobserver.maybe_discard_tokens()
                         self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
 
                 current_time = time.monotonic()
@@ -493,7 +494,13 @@ class PackageInstaller:
 
             try:
                 self.ui.render(finalize=True)
+            except Exception:
+                pass
+            try:
                 selector.close()
+            except Exception:
+                pass
+            try:
                 jobserver.close()
             except Exception:
                 pass
@@ -510,7 +517,7 @@ class PackageInstaller:
         try:
             self.report_data.finalize(self.reports, build_graph=self.build_graph)
         except Exception as e:
-            spack.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}]")
+            spack.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}")
 
         # Clean up temp log files of successful builds now that reports have consumed them.
         if not self.keep_stage:

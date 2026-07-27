@@ -13,7 +13,7 @@ from spack.util.filesystem import visit_directory_tree
 
 def post_install(spec, explicit):
     """Check whether shared libraries can be resolved in RPATHs."""
-    policy = spack.config.get("config:shared_linking:missing_library_policy", "ignore")
+    policy = spack.config.CONFIG.get("config:shared_linking:missing_library_policy", "ignore")
 
     # Currently only supported for ELF files.
     if policy == "ignore" or spec.external or spec.platform not in ("linux", "freebsd"):
