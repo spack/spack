@@ -121,6 +121,16 @@ dependencies_v4_plus = {
                         "type": "boolean",
                         "description": "Whether the dependency is direct (only on abstract specs)",
                     },
+                    "when": {
+                        "type": "string",
+                        "description": "Condition under which the dependency holds, as a spec "
+                        "string (only on abstract specs)",
+                    },
+                    "propagation": {
+                        "type": "string",
+                        "description": "Propagation policy of a direct dependency (only on "
+                        "abstract specs)",
+                    },
                 },
             },
         },
@@ -188,6 +198,24 @@ spec_node = {
             "dependencies)",
         },
         "namespace": {"type": "string", "description": "Package repository namespace"},
+        "abstract_hash": {
+            "type": "string",
+            "description": "Hash prefix of the concrete spec this refers to (for abstract specs)",
+        },
+        "compiler_flags": {
+            "type": "object",
+            "description": "Compiler flags with their propagation (for abstract specs). "
+            "Supersedes the flags under parameters",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["value"],
+                    "properties": {"value": {"type": "string"}, "propagate": {"type": "boolean"}},
+                },
+            },
+        },
         "parameters": {
             "type": "object",
             "additionalProperties": True,

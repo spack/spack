@@ -523,15 +523,38 @@ def test_pickle_roundtrip_for_abstract_specs(spec_str):
 
 
 @pytest.mark.parametrize(
-    "spec_str", ["zlib os=redhat6", "zlib platform=test", "zlib os=debian6 target=x86_64"]
+    "spec_str",
+    [
+        # partial architectures. Regression test: ArchSpec.to_dict crashed with AttributeError
+        # when target was None.
+        "zlib os=redhat6",
+        "zlib platform=test",
+        "zlib os=debian6 target=x86_64",
+        # abstract hash
+        "zlib/abcdef",
+        # conditional edges
+        "zlib ^[when='+mpi'] mpich@1",
+        "zlib ^[when='+mpi'] mpich@1 ^[when='~mpi'] mpich@2",
+        # propagated direct dependencies
+        "zlib %%gcc",
+        # flags that propagate and flags that don't, on the same flag type
+        "zlib cflags=-g cflags==-O2",
+        # several flags given as a single group
+        'zlib cflags="-O2 -g"',
+        # several dimensions at once
+        "zlib ++mpi cflags==-g foo=bar,baz target=x86_64:",
+    ],
 )
-def test_dict_roundtrip_for_abstract_specs_with_partial_arch(spec_str):
-    """Abstract specs with a partial architecture survive to_dict/from_dict.
-    Regression test: ArchSpec.to_dict crashed with AttributeError when target was None."""
+def test_dict_roundtrip_for_abstract_specs(spec_str):
+    """Abstract specs survive to_dict/from_dict.
+
+    This compares the spec objects, their string representation and the dicts themselves, since
+    `Spec.__eq__` is blind to some of what is serialized, and vice versa."""
     s = spack.spec.Spec(spec_str)
     t = spack.spec.Spec.from_dict(s.to_dict())
     assert s == t
     assert str(s) == str(t)
+    assert s.to_dict() == t.to_dict()
 
 
 def test_specfile_alias_is_updated():
