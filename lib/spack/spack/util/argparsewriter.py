@@ -8,10 +8,49 @@ import io
 import re
 import sys
 from argparse import ArgumentParser
-from typing import IO, Any, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import IO, Any, Iterable, List, NamedTuple, Optional, Sequence, Union
 
 
-class Command:
+class Positional(NamedTuple):
+    """A positional argument of a command."""
+
+    #: Name of the argument as it appears in the usage string
+    name: str
+    #: Allowed values, if the argument is restricted to a set of choices
+    choices: Optional[Iterable[Any]]
+    #: Number of values the argument takes
+    nargs: Union[int, str, None]
+    #: First line of the help message
+    help: str
+
+
+class Option(NamedTuple):
+    """An optional argument of a command."""
+
+    #: Flags that select this option, such as ``-h`` and ``--help``
+    flags: Sequence[str]
+    #: Allowed values if the option is restricted to a set of choices, otherwise the destination
+    dest: List[str]
+    #: Flags with their arguments, as they appear in the usage string
+    dest_flags: str
+    #: Number of values the option takes
+    nargs: Union[int, str, None]
+    #: First line of the help message
+    help: str
+
+
+class Subcommand(NamedTuple):
+    """A subcommand of a command."""
+
+    #: Parser of the subcommand
+    parser: ArgumentParser
+    #: Name of the subcommand, which is an alias if the command was reached through one
+    name: str
+    #: First line of the help message
+    help: str
+
+
+class Command(NamedTuple):
     """Parsed representation of a command from argparse.
 
     This is a single command from an argparse parser. ``ArgparseWriter`` creates these and returns
@@ -19,31 +58,18 @@ class Command:
     take an action for a single command.
     """
 
-    def __init__(
-        self,
-        prog: str,
-        description: Optional[str],
-        usage: str,
-        positionals: List[Tuple[str, Optional[Iterable[Any]], Union[int, str, None], str]],
-        optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
-        subcommands: List[Tuple[ArgumentParser, str, str]],
-    ) -> None:
-        """Initialize a new Command instance.
-
-        Args:
-            prog: Program name.
-            description: Command description.
-            usage: Command usage.
-            positionals: List of positional arguments.
-            optionals: List of optional arguments.
-            subcommands: List of subcommand parsers.
-        """
-        self.prog = prog
-        self.description = description
-        self.usage = usage
-        self.positionals = positionals
-        self.optionals = optionals
-        self.subcommands = subcommands
+    #: Program name.
+    prog: str
+    #: Command description.
+    description: Optional[str]
+    #: Command usage.
+    usage: str
+    #: List of positional arguments.
+    positionals: List[Positional]
+    #: List of optional arguments.
+    optionals: List[Option]
+    #: List of subcommands.
+    subcommands: List[Subcommand]
 
 
 # NOTE: The only reason we subclass argparse.HelpFormatter is to get access to self._expand_help(),
@@ -88,14 +114,12 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
         usage = fmt._format_usage(None, actions, groups, "").strip()
 
         # Go through actions and split them into optionals, positionals, and subcommands
-        optionals = []
-        positionals = []
-        subcommands = []
+        optionals: List[Option] = []
+        positionals: List[Positional] = []
+        subcommands: List[Subcommand] = []
         for action in actions:
             if action.option_strings:
-                flags = action.option_strings
                 dest_flags = fmt._format_action_invocation(action)
-                nargs = action.nargs
                 help = (
                     self._expand_help(action)
                     if action.help and action.help != argparse.SUPPRESS
@@ -108,7 +132,9 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                 else:
                     dest = [action.dest]
 
-                optionals.append((flags, dest, dest_flags, nargs, help))
+                optionals.append(
+                    Option(action.option_strings, dest, dest_flags, action.nargs, help)
+                )
             elif isinstance(action, argparse._SubParsersAction):
                 for subaction in action._choices_actions:
                     subparser = action._name_parser_map[subaction.dest]
@@ -118,7 +144,7 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                         else ""
                     )
                     help = help.split("\n")[0]
-                    subcommands.append((subparser, subaction.dest, help))
+                    subcommands.append(Subcommand(subparser, subaction.dest, help))
 
                     # Look for aliases of the form 'name (alias, ...)'
                     if self.aliases and isinstance(subaction.metavar, str):
@@ -133,16 +159,16 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                                     else ""
                                 )
                                 help = help.split("\n")[0]
-                                subcommands.append((subparser, alias, help))
+                                subcommands.append(Subcommand(subparser, alias, help))
             else:
-                args = fmt._format_action_invocation(action)
+                name = fmt._format_action_invocation(action)
                 help = (
                     self._expand_help(action)
                     if action.help and action.help != argparse.SUPPRESS
                     else ""
                 )
                 help = help.split("\n")[0]
-                positionals.append((args, action.choices, action.nargs, help))
+                positionals.append(Positional(name, action.choices, action.nargs, help))
 
         return Command(prog, description, usage, positionals, optionals, subcommands)
 
@@ -172,8 +198,8 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
         cmd = self.parse(parser, prog)
         self.out.write(self.format(cmd))
 
-        for subparser, prog, help in cmd.subcommands:
-            self._write(subparser, prog, level=level + 1)
+        for subcommand in cmd.subcommands:
+            self._write(subcommand.parser, subcommand.name, level=level + 1)
 
     def write(self, parser: ArgumentParser) -> None:
         """Write out details about an ArgumentParser.
@@ -231,14 +257,14 @@ class ArgparseRstWriter(ArgparseWriter):
 
         if cmd.positionals:
             string.write(self.begin_positionals())
-            for args, choices, nargs, help in cmd.positionals:
-                string.write(self.positional(args, help))
+            for positional in cmd.positionals:
+                string.write(self.positional(positional.name, positional.help))
             string.write(self.end_positionals())
 
         if cmd.optionals:
             string.write(self.begin_optionals())
-            for flags, dest, dest_flags, nargs, help in cmd.optionals:
-                string.write(self.optional(dest_flags, help))
+            for option in cmd.optionals:
+                string.write(self.optional(option.dest_flags, option.help))
             string.write(self.end_optionals())
 
         if cmd.subcommands:
@@ -356,7 +382,7 @@ class ArgparseRstWriter(ArgparseWriter):
         """
         return ""
 
-    def begin_subcommands(self, subcommands: List[Tuple[ArgumentParser, str, str]]) -> str:
+    def begin_subcommands(self, subcommands: List[Subcommand]) -> str:
         """Table with links to other subcommands.
 
         Arguments:
@@ -373,8 +399,9 @@ class ArgparseRstWriter(ArgparseWriter):
 
 """
 
-        for cmd, _, _ in subcommands:
-            prog = re.sub(r"^[^ ]* ", "", cmd.prog)
-            string += "   * :ref:`{0} <{1}>`\n".format(prog, cmd.prog.replace(" ", "-"))
+        for subcommand in subcommands:
+            full_prog = subcommand.parser.prog
+            prog = re.sub(r"^[^ ]* ", "", full_prog)
+            string += "   * :ref:`{0} <{1}>`\n".format(prog, full_prog.replace(" ", "-"))
 
         return string + "\n"
