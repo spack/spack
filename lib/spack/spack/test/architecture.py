@@ -135,6 +135,50 @@ def test_constrain_is_atomic_when_targets_are_disjoint():
 
 
 @pytest.mark.parametrize(
+    "architecture_tuple,constraint_tuple",
+    [
+        (("linux", "ubuntu18.04", "x86_64"), ("*", None, None)),
+        (("linux", "ubuntu18.04", "x86_64"), (None, "*", None)),
+        (("linux", "ubuntu18.04", "x86_64"), (None, None, "*")),
+        (("linux", "ubuntu18.04", "x86_64"), ("*", "*", "*")),
+        (("linux", None, None), ("*", None, None)),
+    ],
+)
+def test_star_is_satisfied_and_intersected_and_does_not_constrain(
+    architecture_tuple, constraint_tuple
+):
+    """A star requires the attribute to be set, so a spec that sets it satisfies the star, the
+    two overlap in both directions, and merging changes nothing."""
+    architecture = ArchSpec(architecture_tuple)
+    constraint = ArchSpec(constraint_tuple)
+
+    assert architecture.satisfies(constraint)
+    assert architecture.intersects(constraint)
+    assert constraint.intersects(architecture)
+
+    merged = architecture.copy()
+    assert merged.constrain(constraint) is False
+    assert merged == architecture
+
+
+def test_star_does_not_short_circuit_the_other_attributes():
+    """A star on one attribute used to return from satisfies straight away, leaving the
+    remaining attributes unchecked."""
+    architecture = ArchSpec(("linux", "ubuntu18.04", "x86_64"))
+    assert not architecture.satisfies(ArchSpec(("*", "rhel6", None)))
+    assert not architecture.satisfies(ArchSpec(("*", None, "aarch64")))
+    assert not architecture.intersects(ArchSpec(("*", "rhel6", None)))
+
+
+def test_star_target_is_replaced_by_a_real_target_when_constrained():
+    """target=* names no target, so the other side is the intersection. It is concrete by the
+    definition in ArchSpec, which would otherwise make it override a real target."""
+    architecture = ArchSpec((None, None, "*"))
+    assert architecture.constrain(ArchSpec((None, None, "x86_64"))) is True
+    assert str(architecture.target) == "x86_64"
+
+
+@pytest.mark.parametrize(
     "root_target_range,dep_target_range,result",
     [
         ("x86_64:nocona", "x86_64:core2", "nocona"),  # pref not in intersection
