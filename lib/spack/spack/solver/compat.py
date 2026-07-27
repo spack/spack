@@ -240,7 +240,12 @@ def default_clingo_control() -> Any:
     if clingo_flavor() is ClingoFlavor.V6:
         # clingo 6 has no `.configuration` API; pass equivalents as CLI options.
         return _ClingoV6Control(
-            ("--configuration=tweety", "--heuristic=Domain", "--opt-strategy=usc", "--opt-heuristic=model")
+            (
+                "--configuration=tweety",
+                "--heuristic=Domain",
+                "--opt-strategy=usc",
+                "--opt-heuristic=model",
+            )
         )
     control = clingo().Control()
     control.configuration.configuration = "tweety"
