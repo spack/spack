@@ -2540,6 +2540,14 @@ CONSTRAIN_CORPUS = [
     "%[deptypes=link] pkg-b",
     "pkg-a ^[when='+foo'] pkg-b@1",
     "pkg-a ^[when='+bar'] pkg-b@2",
+    # architecture wildcards, which stand for "this attribute is set"
+    "pkg-a platform=test",
+    "pkg-a platform=*",
+    "pkg-a os=*",
+    "pkg-a target=*",
+    # patches, where an abstract value may be a prefix of a concrete one
+    "pkg-a patches=abcdef",
+    "pkg-a patches:=abcdef1234567890",
     # virtuals
     "pkg-a ^[virtuals=mpi] mpich",
     "mpi",
@@ -2647,6 +2655,51 @@ class TestConstrainMutationSafety:
             if _try_constrain(lhs, rhs)[1] is not None:
                 continue
             assert lhs.satisfies(Spec(lhs_str)), f"'{lhs_str}'.constrain('{rhs_str}') gave '{lhs}'"
+
+    def test_satisfies_implies_intersects(self, mock_packages):
+        """Satisfaction is subset and intersection is non-empty overlap, so a spec that is inside
+        another one also overlaps it. Each dimension implements the two separately, which is why
+        they can diverge, as they did for patch prefixes and architecture wildcards."""
+        for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
+            if not lhs.satisfies(rhs):
+                continue
+            assert lhs.intersects(rhs), (
+                f"'{lhs_str}' satisfies '{rhs_str}' but does not intersect it"
+            )
+
+    def test_satisfies_implies_constrain_succeeds(self, mock_packages):
+        """Constrain is only undefined where the two are disjoint, so it cannot reject a
+        constraint the lhs already satisfies."""
+        for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
+            if not lhs.satisfies(rhs):
+                continue
+            _, error = _try_constrain(lhs, rhs)
+            assert error is None, (
+                f"'{lhs_str}' satisfies '{rhs_str}' but constrain raised {type(error).__name__}"
+            )
+
+    def test_satisfies_implies_variants_are_unchanged(self, mock_packages):
+        """An lhs that is already inside the rhs has nothing left to intersect in the variant
+        dimension.
+
+        Only variants are asserted. Names, namespaces and edges whose when condition does not
+        apply are read as satisfied when the lhs leaves them unset, so constrain legitimately
+        fills those in without narrowing the set the lhs denotes. Propagated variants follow a
+        non-contradiction rule rather than subset semantics: a spec without such a variant
+        satisfies one that propagates it, and still acquires it when constrained; see
+        test_abstract_specs_with_propagation.
+        """
+        for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
+            if not lhs.satisfies(rhs):
+                continue
+            if any(value.propagate for value in rhs.variants.values()):
+                continue
+            before = {name: str(value) for name, value in lhs.variants.items()}
+            _try_constrain(lhs, rhs)
+            after = {name: str(value) for name, value in lhs.variants.items()}
+            assert after == before, (
+                f"'{lhs_str}' satisfies '{rhs_str}' but constrain changed its variants to '{lhs}'"
+            )
 
 
 @pytest.mark.parametrize(
