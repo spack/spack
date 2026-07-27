@@ -525,7 +525,7 @@ If this project does not have public pipelines, you will need to first:
     tty.debug("Installing dependencies for {0} from cache ".format(job_spec.name))
     try:
         # Install deps
-        install_cmd(install_args + ["--only=dependencies", spec_hash])
+        install_cmd(*install_args, "--only=dependencies", spec_hash)
     except spack.error.SpackError as e:
         # If the deps fail to install early exit
         tty.error(f"Failed to install dependencies: {e}")
@@ -543,7 +543,7 @@ If this project does not have public pipelines, you will need to first:
     tty.debug("Installing {0} from source".format(job_spec.name))
     try:
         # Install package
-        install_cmd(install_args + ["--verbose", "--keep-stage", "--only=package", spec_hash])
+        install_cmd(*install_args, "--verbose", "--keep-stage", "--only=package", spec_hash)
         tty.debug("spack install succeeded")
     except spack.error.SpackError:
         # If a spec fails to build in a spack develop pipeline, we add it to a
