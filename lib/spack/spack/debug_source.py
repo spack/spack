@@ -324,18 +324,25 @@ def stage_source(pkg, *, force: bool = False) -> str:
 # ---------------------------------------------------------------------------
 
 
-def write_gdbinit(spec, dest_root: str, split_debug_files: Optional[Dict[str, str]] = None) -> str:
-    """Write a GDB command file. Always includes the substitute-path rule
-    (see module docstring for why one rule against dest_root is correct).
+def write_gdbinit(
+        spec,
+        dest_root: str,
+        split_debug_files: Optional[Dict[str, str]] = None,
+        bytes_saved: Optional[int] = None
+) -> str:
+    """Write a GDB command file. Always includes the substitute-path rule.
 
     If split_debug_files is given, also emits `set debug-file-directory`
     pointing at the symbols/ cache. GDB auto-loads split debug info from
     there via its build-id note lookup at binary/shared-library load time,
     provided the compiler-wrapper injected --build-id/-Wl,--build-id at
-    link time. This is a no-op, not an  error, on toolchains that don't 
-    emit a build-id note (see _get_build_id): debug-file-directory then 
-    simply finds nothing, so a manual add-symbol-file fallback is always 
-    included as a comment."""
+    link time. This is a no-op, not an error, on toolchains that don't
+    emit a build-id note (see _get_build_id): debug-file-directory then
+    simply finds nothing, so a manual add-symbol-file fallback is always
+    included as a comment.
+
+    bytes_saved, if given, is reported as a comment for reference (see
+    split_debug_symbols(), which measures it during the split)."""
     gdbinit_path = os.path.join(dest_root, "gdbinit")
     symbols_dir = os.path.join(dest_root, "symbols")
     with open(gdbinit_path, "w", encoding="utf-8") as f:
@@ -347,6 +354,8 @@ def write_gdbinit(spec, dest_root: str, split_debug_files: Optional[Dict[str, st
             f.write("#\n")
             f.write(f"# Debug symbols were split for {len(split_debug_files)} binaries into:\n")
             f.write(f"#   {symbols_dir}/\n")
+            if bytes_saved is not None:
+                f.write(f"# Prefix size reduced by ~{bytes_saved / (1024 * 1024):.1f} MiB\n")
             f.write("# The debug-file-directory line above auto-loads split symbols via\n")
             f.write("# build-id lookup, if your toolchain emits build-id notes at link time.\n")
             f.write("# If it doesn't, or auto-discovery still doesn't trigger, load manually:\n")
@@ -551,7 +560,7 @@ def _write_build_id_link(symbols_dir: str, build_id: str, debug_path: str) -> No
         os.symlink(os.path.relpath(debug_path, subdir), link_path)
 
 
-def split_debug_symbols(pkg: "spack.package_base.PackageBase") -> Dict[str, str]:
+def split_debug_symbols(pkg: "spack.package_base.PackageBase") -> Tuple[Dict[str, str], int]:
     """Split debug symbols out of every ELF binary in the package's install
     prefix into debug_source_dir(spec)/symbols/, stripping them from the
     installed binaries. Must be called from inside the installer while the
@@ -571,16 +580,28 @@ def split_debug_symbols(pkg: "spack.package_base.PackageBase") -> Dict[str, str]
     prefix = str(pkg.spec.prefix)
 
     split_debug_files: Dict[str, str] = {}
+    total_before = 0
+    total_after = 0
     for root, _, files in os.walk(prefix):
         for filename in files:
             filepath = os.path.join(root, filename)
             if os.path.islink(filepath) or not _is_elf_with_debug_sections(filepath):
                 continue
-            debug_path = _split_one_binary(filepath, symbols_dir, pre)
-            if debug_path:
+            result = _split_one_binary(filepath, symbols_dir, pre)
+            if result:
+                debug_path, size_before, size_after = result
                 split_debug_files[filepath] = debug_path
+                total_before += size_before
+                total_after += size_after
 
-    if not split_debug_files:
+    if split_debug_files:
+        saved = total_before - total_after
+        tty.msg(
+            f"{pre} Prefix size reduced by {saved / (1024 * 1024):.1f} MiB "
+            f"across {len(split_debug_files)} binaries "
+            f"({total_before / (1024 * 1024):.1f} MiB -> {total_after / (1024 * 1024):.1f} MiB)"
+        )
+    else:
         tty.debug(f"[debuggable] {pkg_id}: no ELF binaries with debug sections were split")
 
-    return split_debug_files
+    return split_debug_files, total_before - total_after
