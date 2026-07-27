@@ -3116,11 +3116,15 @@ class Spec:
             self._dup(other)
             return True
 
-        if other.abstract_hash:
-            if not self.abstract_hash or other.abstract_hash.startswith(self.abstract_hash):
-                self.abstract_hash = other.abstract_hash
-            elif not self.abstract_hash.startswith(other.abstract_hash):
-                raise InvalidHashError(self, other.abstract_hash)
+        # Every dimension is validated before any of them is merged, so that a conflict in one
+        # dimension does not leave the others already applied to self.
+        if (
+            self.abstract_hash
+            and other.abstract_hash
+            and not other.abstract_hash.startswith(self.abstract_hash)
+            and not self.abstract_hash.startswith(other.abstract_hash)
+        ):
+            raise InvalidHashError(self, other.abstract_hash)
 
         if not (self.name == other.name or (not self.name) or (not other.name)):
             raise UnsatisfiableSpecNameError(self.name, other.name)
@@ -3139,6 +3143,11 @@ class Spec:
             if not self.variants[v].intersects(other.variants[v]):
                 raise vt.UnsatisfiableVariantSpecError(self.variants[v], other.variants[v])
 
+        if other._concrete:
+            for v in self.variants:
+                if v not in other.variants:
+                    raise vt.UnsatisfiableVariantSpecError(self.variants[v], "<absent>")
+
         sarch, oarch = self.architecture, other.architecture
         if (
             sarch is not None
@@ -3147,7 +3156,23 @@ class Spec:
         ):
             raise UnsatisfiableArchitectureSpecError(sarch, oarch)
 
+        if deps and other._dependencies:
+            # TODO: might want more detail than this, e.g. specific deps
+            # in violation. if this becomes a priority get rid of this
+            # check and be more specific about what's wrong.
+            if not other._intersects_dependencies(self, resolve_virtuals=resolve_virtuals):
+                raise UnsatisfiableDependencySpecError(other, self)
+
+            for d in other.traverse(root=False):
+                if not d.name:
+                    raise UnconstrainableDependencySpecError(other)
+
         changed = False
+
+        if other.abstract_hash and (
+            not self.abstract_hash or other.abstract_hash.startswith(self.abstract_hash)
+        ):
+            self.abstract_hash = other.abstract_hash
 
         if not self.name and other.name:
             self.name = other.name
@@ -3171,24 +3196,18 @@ class Spec:
             changed = True
 
         if deps:
-            changed |= self._constrain_dependencies(other, resolve_virtuals=resolve_virtuals)
+            changed |= self._constrain_dependencies(other)
 
         return changed
 
-    def _constrain_dependencies(self, other: "Spec", resolve_virtuals: bool = True) -> bool:
-        """Apply constraints of other spec's dependencies to this spec."""
+    def _constrain_dependencies(self, other: "Spec") -> bool:
+        """Apply constraints of other spec's dependencies to this spec.
+
+        Precondition: ``_constrain`` has checked that the two intersect and that every
+        dependency of other is named."""
         if not other._dependencies:
             return False
 
-        # TODO: might want more detail than this, e.g. specific deps
-        # in violation. if this becomes a priority get rid of this
-        # check and be more specific about what's wrong.
-        if not other._intersects_dependencies(self, resolve_virtuals=resolve_virtuals):
-            raise UnsatisfiableDependencySpecError(other, self)
-
-        for d in other.traverse(root=False):
-            if not d.name:
-                raise UnconstrainableDependencySpecError(other)
         changed = False
         for other_edge in other.edges_to_dependencies():
             # Find the first edge in self that matches other_edge by name and when clause.

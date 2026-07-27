@@ -2521,11 +2521,6 @@ class TestConstrainMutationSafety:
     as they are also mutually satisfying.
     """
 
-    @pytest.mark.xfail(
-        reason="_constrain assigns abstract_hash and merges node attributes before validating "
-        "the remaining dimensions",
-        strict=True,
-    )
     def test_lhs_is_unchanged_when_constrain_raises(self, mock_packages):
         for lhs_str, rhs_str, lhs, rhs in _constrain_corpus_pairs():
             before = lhs.to_dict()
