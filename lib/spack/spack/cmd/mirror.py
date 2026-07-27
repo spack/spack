@@ -368,7 +368,7 @@ def mirror_remove(args):
     removed = False
     skipped_scopes = []
     # Traverse scopes in order from highest to lowest
-    for scope in reversed(scopes):
+    for scope in scopes:
         try:
             removed_from_this_scope = spack.mirrors.utils.remove(name, scope)
         except spack.config.ConfigFileError as e:
