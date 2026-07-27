@@ -449,8 +449,9 @@ class TestSpecSemantics:
         """Test that Specs specified only by their hashes can constrain each other."""
         mpich_dag_hash = "/" + database.query_one("mpich").dag_hash()
         spec = Spec(mpich_dag_hash[:7])
-        assert spec.constrain(Spec(mpich_dag_hash)) is False
+        assert spec.constrain(Spec(mpich_dag_hash)) is True
         assert spec.abstract_hash == mpich_dag_hash[1:]
+        assert spec.constrain(Spec(mpich_dag_hash[:7])) is False
 
     def test_mismatched_constrain_spec_by_hash(self, database):
         """Test that Specs specified only by their incompatible hashes fail appropriately."""
@@ -2549,10 +2550,6 @@ class TestConstrainMutationSafety:
                     f"constraining with '{extra_str}' afterwards changed it"
                 )
 
-    @pytest.mark.xfail(
-        reason="extending abstract_hash mutates the lhs without feeding the changed flag",
-        strict=True,
-    )
     def test_returned_changed_flag_is_honest(self, mock_packages):
         """Callers use the return value to decide whether to redo work, so it has to report
         exactly whether the lhs changed."""

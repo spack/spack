@@ -3170,9 +3170,10 @@ class Spec:
         changed = False
 
         if other.abstract_hash and (
-            not self.abstract_hash or other.abstract_hash.startswith(self.abstract_hash)
+            not self.abstract_hash or len(other.abstract_hash) > len(self.abstract_hash)
         ):
             self.abstract_hash = other.abstract_hash
+            changed = True
 
         if not self.name and other.name:
             self.name = other.name
