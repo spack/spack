@@ -935,6 +935,8 @@ def _shared_subset_pair_iterate(container1, container2):
 
 
 class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
+    __slots__ = ()
+
     def satisfies(self, other):
         return all(f in self and set(self[f]) >= set(other[f]) for f in other)
 
@@ -1436,6 +1438,8 @@ def tree(
 
 
 class SpecAnnotations:
+    __slots__ = ("original_spec_format", "compiler_node_attribute")
+
     def __init__(self) -> None:
         self.original_spec_format = SPECFILE_FORMAT_VERSION
         self.compiler_node_attribute: Optional["Spec"] = None
@@ -3598,7 +3602,6 @@ class Spec:
         self.versions = other.versions.copy()
         self.architecture = other.architecture.copy() if other.architecture else None
         self.compiler_flags = other.compiler_flags.copy()
-        self.compiler_flags.spec = self
         self.variants = other.variants.copy()
         self._build_spec = other._build_spec
 
@@ -3614,7 +3617,6 @@ class Spec:
             if patches:
                 self.variants[k]._patches_in_order_of_appearance = patches
 
-        self.variants.spec = self
         self.external_path = other.external_path
         self.external_modules = other.external_modules
         self.extra_attributes = other.extra_attributes
@@ -5037,6 +5039,8 @@ class Spec:
 class VariantMap(lang.HashableMap[str, vt.VariantValue]):
     """Map containing variant instances. New values can be added only
     if the key is not already present."""
+
+    __slots__ = ()
 
     def __setitem__(self, name, vspec):
         # Raise a TypeError if vspec is not of the right type

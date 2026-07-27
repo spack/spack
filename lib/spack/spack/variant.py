@@ -287,7 +287,15 @@ class VariantValue:
     type: VariantType
     _values: ValueType
 
-    slots = ("name", "propagate", "concrete", "type", "_values")
+    # _patches_in_order_of_appearance is attached to the "patches" variant after concretization
+    __slots__ = (
+        "name",
+        "propagate",
+        "concrete",
+        "type",
+        "_values",
+        "_patches_in_order_of_appearance",
+    )
 
     def __init__(
         self,
@@ -507,6 +515,8 @@ def BoolValuedVariant(name: str, value: bool, propagate: bool = False) -> Varian
 
 class VariantValueRemoval(VariantValue):
     """Indicator class for Spec.mutate to remove a variant"""
+
+    __slots__ = ()
 
     def __init__(self, name):
         super().__init__(VariantType.INDICATOR, name, (None,))
