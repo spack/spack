@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import os
 import pathlib
 import sys
+import warnings
 
 import pytest
 
@@ -13,6 +15,7 @@ import spack.detection.path
 import spack.repo
 import spack.spec
 from spack.config import Configuration
+from spack.detection.common import VisualStudioLayout
 from spack.test.utilities import UnusableGlobal
 
 
@@ -179,3 +182,45 @@ def test_detect_specs_validates_variants_with_injected_repo(tmp_path, monkeypatc
     assert len(detected) == 1
     assert detected[0].external_path == str(prefixes["valid"] / "bin")
     assert detected[0].satisfies("languages=c,c++")
+
+
+# Years for which VisualStudioLayout path heuristics have been verified.
+_KNOWN_VS_YEARS = frozenset({2017, 2019, 2022, 2026})
+_MAX_KNOWN_VS_YEAR = max(_KNOWN_VS_YEARS)
+
+_vswhere_present = pytest.mark.skipif(
+    not sys.platform == "win32" or not os.path.isfile(VisualStudioLayout._vswhere_exe()),
+    reason="vswhere not found; Visual Studio is not installed",
+)
+
+
+@_vswhere_present
+class TestVisualStudioLayoutReal:
+    @pytest.fixture(scope="class")
+    def vs_roots(self):
+        roots = VisualStudioLayout.find_vs_install_paths()
+        if not roots:
+            pytest.skip("vswhere found but no VS installations detected")
+        return roots
+
+    def test_vs_version_is_known_or_warns(self, vs_roots):
+        """Each installed VS should be a recognized release year; newer ones get a warning."""
+        years = VisualStudioLayout._run_vswhere(
+            "-prerelease", "-products", "*", "-property", "catalog_productLineVersion"
+        )
+        for year_str in years:
+            try:
+                year = int(year_str)
+            except ValueError:
+                continue
+            if year > _MAX_KNOWN_VS_YEAR:
+                warnings.warn(
+                    f"Visual Studio {year} is newer than the latest version known to "
+                    f"VisualStudioLayout ({_MAX_KNOWN_VS_YEAR}). Path heuristics may not "
+                    "match this release; update _KNOWN_VS_YEARS and verify the layout.",
+                    stacklevel=1,
+                )
+            else:
+                assert year in _KNOWN_VS_YEARS, (
+                    f"VS release year {year} is not in the known set {_KNOWN_VS_YEARS}"
+                )
