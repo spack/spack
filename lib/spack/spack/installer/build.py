@@ -693,12 +693,16 @@ def _install(
             spack.debug_source.install_debug_artifacts(pkg)
 
         split_debug_files = None
+        bytes_saved = None
         if request.debug_symbols:
-            split_debug_files = spack.debug_source.split_debug_symbols(pkg)
+            split_debug_files, bytes_saved = spack.debug_source.split_debug_symbols(pkg)
 
         if request.debug_source or request.debug_symbols:
             spack.debug_source.write_gdbinit(
-                spec, spack.debug_source.debug_source_dir(spec), split_debug_files
+                spec,
+                spack.debug_source.debug_source_dir(spec),
+                split_debug_files,
+                bytes_saved
             )
 
         _archive_build_metadata(pkg)
