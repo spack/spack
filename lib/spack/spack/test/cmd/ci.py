@@ -640,7 +640,11 @@ def test_ci_rebuild_mock_success(
     pkg_name = "archive-files"
     rebuild_env = create_rebuild_env(tmp_path, pkg_name, broken_tests)
 
-    monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "echo")
+    def _install_echo_cmd(cmd, *args, **kwargs):
+        print("spack install " + " ".join(cmd))
+        return 0
+
+    monkeypatch.setattr(spack.cmd.ci, "install_cmd", _install_echo_cmd)
     # the cdash url in the environment is fake; never upload reports to it
     monkeypatch.setattr(spack.reporters.cdash.CDash, "upload", lambda self, filename: None)
 
@@ -679,7 +683,7 @@ def test_ci_rebuild_mock_failure_to_push(
     def mock_success(*args, **kwargs):
         return 0
 
-    monkeypatch.setattr(ci, "process_command", mock_success)
+    monkeypatch.setattr(spack.cmd.ci, "install_cmd", mock_success)
 
     # Mock failure to push to the build cache
     def mock_push_or_raise(*args, **kwargs):
