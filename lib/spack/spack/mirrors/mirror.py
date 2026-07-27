@@ -123,8 +123,8 @@ class Mirror:
     def display(self, max_len: int = 0) -> None:
         fetch, push = self.fetch_url, self.push_url
         fetch_view, push_view = self.fetch_view, self.push_view
-        fetch = ":".join([fetch, fetch_view]) if fetch_view else fetch
-        push = ":".join([push, push_view]) if push_view else push
+        fetch = f"{fetch}:{fetch_view}" if fetch_view else fetch
+        push = f"{push}:{push_view}" if push_view else push
         # don't print the same URL twice
         url = fetch if fetch == push else f"fetch: {fetch} push: {push}"
         source = "s" if self.source else " "
