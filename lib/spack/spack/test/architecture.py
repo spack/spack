@@ -110,16 +110,19 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
     assert not architecture.satisfies(constraint)
 
 
-@pytest.mark.xfail(
-    reason="_target_intersection returns an empty list when the lhs has no target, and "
-    "_target_constrain turns that into an empty target",
-    strict=True,
+@pytest.mark.parametrize(
+    "lhs_tuple,rhs_tuple,expected_target",
+    [
+        ((None, "debian6", None), (None, None, "x86_64:"), "x86_64:"),
+        ((None, None, "x86_64:"), (None, "debian6", None), "x86_64:"),
+        ((None, "debian6", None), (None, None, "haswell"), "haswell"),
+    ],
 )
-def test_constrain_range_target_onto_missing_target():
-    """A target range from the rhs is adopted as is when the lhs has no target."""
-    architecture = ArchSpec((None, "debian6", None))
-    assert architecture.constrain(ArchSpec((None, None, "x86_64:"))) is True
-    assert architecture.target == ArchSpec((None, None, "x86_64:")).target
+def test_constrain_target_when_only_one_side_has_one(lhs_tuple, rhs_tuple, expected_target):
+    """The side that has a target wins, ranges included."""
+    architecture = ArchSpec(lhs_tuple)
+    architecture.constrain(ArchSpec(rhs_tuple))
+    assert architecture.target == ArchSpec((None, None, expected_target)).target
 
 
 def test_constrain_is_atomic_when_targets_are_disjoint():
