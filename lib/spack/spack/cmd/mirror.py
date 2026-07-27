@@ -142,13 +142,16 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         dest="signed",
     )
-    add_parser.add_argument(
+    add_parser_view = add_parser.add_mutually_exclusive_group(required=False)
+    add_parser_view.add_argument(
         "--view",
-        "--name",
-        "-n",
         action="store",
         dest="view_name",
         help="Name of the index view for a binary mirror",
+    )
+    # This option name is deprecated, use --view
+    add_parser_view.add_argument(
+        "--name", "-n", action="store", dest="view_name", help=argparse.SUPPRESS
     )
     arguments.add_connection_args(add_parser, False)
     # Remove
@@ -242,8 +245,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     set_parser.add_argument(
         "--view",
-        "--name",
-        "-n",
         action="store",
         dest="view_name",
         help="Name of the index view for a binary mirror",
