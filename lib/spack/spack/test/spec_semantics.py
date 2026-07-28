@@ -2037,7 +2037,6 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
         (Spec, "cppflags=-foo", "cflags=-foo", True, "cppflags=-foo cflags=-foo"),
         # Target ranges
         (Spec, "target=x86_64:", "target=x86_64:", False, "target=x86_64:"),
-        (Spec, "target=x86_64:", "target=:haswell", True, "target=x86_64:haswell"),
         (
             Spec,
             "target=x86_64:haswell",
@@ -2059,6 +2058,27 @@ def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_pack
     rhs = factory(rhs_str)
     rhs.constrain(lhs)
     assert rhs == factory(constrained_str)
+
+
+def test_constrain_target_range_representation_depends_on_operand_order():
+    """':haswell' is a strict subset of 'x86_64:' (x86_64 is the family root, and broadwell and
+    later are in 'x86_64:' but not '<=haswell'), so constraining it narrows nothing and it stays
+    ':haswell'. Constraining the other way narrows 'x86_64:' down to the same set, but through
+    'x86_64:haswell': _target_intersection resolves an unbounded end to the other operand's bound
+    when there is one, rather than reconstructing the tighter side's own spelling. The two results
+    denote the same set of targets, unlike test_constrain's invariant assumes."""
+    narrower = Spec("target=:haswell")
+    wider = Spec("target=x86_64:")
+
+    assert narrower.intersects(wider)
+    assert narrower.satisfies(wider)
+    assert not wider.satisfies(narrower)
+
+    assert narrower.copy().constrain(wider) is False
+    assert narrower == Spec("target=:haswell")
+
+    assert wider.copy().constrain(narrower) is True
+    assert wider.constrained(narrower) == Spec("target=x86_64:haswell")
 
 
 def test_constrain_dependencies_copies(mock_packages):

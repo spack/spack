@@ -543,6 +543,12 @@ class ArchSpec:
             self.target = other.target
             return True
 
+        # self already inside other: the intersection is self, textually different or not (an
+        # unbounded ":icelake" and its resolved "x86_64:icelake" denote the same range, but are
+        # not the same string, which the equality check below would otherwise miss).
+        if self._target_satisfies(other, strict=True):
+            return False
+
         # Compute the intersection of every combination of ranges in the lists
         results = self._target_intersection(other)
         attribute_str = ",".join(results)
