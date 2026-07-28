@@ -1260,7 +1260,6 @@ class TestBuildGraphCircularDeps:
             hash_a = spec_a.dag_hash()
             hash_b = spec_a["circ-b"].dag_hash()
 
-            db = spack.store.STORE.db
             graph = BuildGraph(
                 [spec_a],
                 root_policy="auto",
@@ -1268,7 +1267,7 @@ class TestBuildGraphCircularDeps:
                 include_build_deps=False,
                 install_package=True,
                 install_deps=True,
-                database=db,
+                store=spack.store.STORE,
                 tests=False,
             )
 
@@ -1291,7 +1290,6 @@ class TestBuildGraphCircularDeps:
             hash_a = spec_a.dag_hash()
             hash_b = spec_a["mixed-b"].dag_hash()
 
-            db = spack.store.STORE.db
             graph = BuildGraph(
                 [spec_a],
                 root_policy="auto",
@@ -1299,7 +1297,7 @@ class TestBuildGraphCircularDeps:
                 include_build_deps=False,
                 install_package=True,
                 install_deps=True,
-                database=db,
+                store=spack.store.STORE,
                 tests=False,
             )
 
@@ -1325,7 +1323,6 @@ class TestBuildGraphCircularDeps:
             hash_b = spec_a["cyc3-b"].dag_hash()
             hash_c = spec_a["cyc3-c"].dag_hash()
 
-            db = spack.store.STORE.db
             graph = BuildGraph(
                 [spec_a],
                 root_policy="auto",
@@ -1333,7 +1330,7 @@ class TestBuildGraphCircularDeps:
                 include_build_deps=False,
                 install_package=True,
                 install_deps=True,
-                database=db,
+                store=spack.store.STORE,
                 tests=False,
             )
 
@@ -1364,7 +1361,6 @@ class TestBuildGraphCircularDeps:
             hash_b = spec_a["cyc-b"].dag_hash()
             hash_c = spec_a["link-c"].dag_hash()
 
-            db = spack.store.STORE.db
             graph = BuildGraph(
                 [spec_a],
                 root_policy="auto",
@@ -1372,7 +1368,7 @@ class TestBuildGraphCircularDeps:
                 include_build_deps=False,
                 install_package=True,
                 install_deps=True,
-                database=db,
+                store=spack.store.STORE,
                 tests=False,
             )
 

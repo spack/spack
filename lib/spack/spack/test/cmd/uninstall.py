@@ -145,7 +145,7 @@ def test_uninstall_circular_run_deps_all_in_list(
     when both are named, only their combined dependents excluding themselves are considered for
     reference counting.
     """
-    spack.config.set("config:installer", "new")
+    spack.config.CONFIG.set("config:installer", "new")
     repo_builder.add_package("circ-a", dependencies=[("circ-b", "run", None)])
     repo_builder.add_package("circ-b", dependencies=[("circ-a", "run", None)])
 
@@ -166,7 +166,7 @@ def test_uninstall_circular_run_deps_implicit_dependents(
     mock_packages, mock_archive, mock_fetch, install_mockery, mutable_config, repo_builder
 ):
     """``spack uninstall -r`` uninstalls a cycle by naming only the explicitly installed member."""
-    spack.config.set("config:installer", "new")
+    spack.config.CONFIG.set("config:installer", "new")
     repo_builder.add_package("circ-a", dependencies=[("circ-b", "run", None)])
     repo_builder.add_package("circ-b", dependencies=[("circ-a", "run", None)])
 
