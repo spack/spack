@@ -359,6 +359,13 @@ class TestSpecSemantics:
                 "%[when='%c' virtuals=c]gcc@10.3.1",
                 "libelf %[when='+c' virtuals=c]gcc %[when='%c' virtuals=c]gcc@10.3.1",
             ),
+            # Edges under different when conditions are never in effect at the same time, so
+            # they are two separate constraints even when they cannot both be met at once.
+            (
+                "libelf ^[when='+foo'] mpich@3.0",
+                "^[when='+bar'] mpich@4.0",
+                "libelf ^[when='+foo'] mpich@3.0 ^[when='+bar'] mpich@4.0",
+            ),
         ],
     )
     def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
