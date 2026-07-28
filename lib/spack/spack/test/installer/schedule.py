@@ -19,6 +19,7 @@ import spack.traverse
 from spack.config import Configuration
 from spack.database import Database
 from spack.installer.base import ExitCode, JobServerBase, NoopJobServer
+from spack.installer.core import PackageInstaller
 from spack.installer.schedule import BuildGraph, ScheduleResult, _node_to_roots, schedule_builds
 from spack.spec import Spec
 from spack.store import Store
@@ -1250,7 +1251,6 @@ class TestBuildGraphCircularDeps:
 
     def test_build_graph_circular_run_deps(self, repo_builder):
         """Test BuildGraph with circular run dependencies A<->B."""
-        from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("circ-a", dependencies=[("circ-b", "run", None)])
         repo_builder.add_package("circ-b", dependencies=[("circ-a", "run", None)])
@@ -1282,7 +1282,6 @@ class TestBuildGraphCircularDeps:
 
     def test_build_graph_mixed_deps_cycle(self, repo_builder):
         """Test A->B (link), B->A (run) creates correct ordering."""
-        from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("mixed-a", dependencies=[("mixed-b", "link", None)])
         repo_builder.add_package("mixed-b", dependencies=[("mixed-a", "run", None)])
@@ -1315,7 +1314,6 @@ class TestBuildGraphCircularDeps:
 
     def test_build_graph_three_node_run_cycle(self, repo_builder):
         """Test A->B->C->A (all run) creates no ordering constraints."""
-        from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("cyc3-a", dependencies=[("cyc3-b", "run", None)])
         repo_builder.add_package("cyc3-b", dependencies=[("cyc3-c", "run", None)])
@@ -1351,7 +1349,6 @@ class TestBuildGraphCircularDeps:
 
     def test_build_graph_cycle_with_link_dep(self, repo_builder):
         """Test A<->B (run) with both depending on non-circular C (link)."""
-        from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("link-c")
         repo_builder.add_package(
@@ -1391,14 +1388,12 @@ class TestBuildGraphCircularDeps:
             assert hash_a not in graph.parent_to_child.get(hash_b, set())
 
 
-
 @pytest.mark.usefixtures("install_mockery", "mock_fetch")
 class TestInstallerCircular:
     """Integration tests for installing packages with circular run dependencies."""
 
     def test_install_simple_circular_run_deps(self, repo_builder):
         """Test actual installation with A<->B circular run dependencies."""
-        from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("install-circ-a", dependencies=[("install-circ-b", "run", None)])
         repo_builder.add_package("install-circ-b", dependencies=[("install-circ-a", "run", None)])
@@ -1424,7 +1419,6 @@ class TestInstallerCircular:
 
     def test_install_mixed_circular_deps(self, repo_builder):
         """Test A->B (link), B->A (run) - should install B first, then A."""
-        from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("mixed-inst-a", dependencies=[("mixed-inst-b", "link", None)])
         repo_builder.add_package("mixed-inst-b", dependencies=[("mixed-inst-a", "run", None)])

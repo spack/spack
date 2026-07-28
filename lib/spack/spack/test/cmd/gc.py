@@ -15,7 +15,6 @@ import spack.spec
 import spack.store
 import spack.traverse
 from spack.database import Database
-
 from spack.installer import PackageInstaller as NewInstaller
 from spack.old_installer import PackageInstaller
 
