@@ -247,6 +247,37 @@ def _attr_intersects(lhs: Optional[str], rhs: Optional[str]) -> bool:
     return lhs == "*" or rhs == "*" or lhs == rhs
 
 
+def _target_range_contains(container: str, target: str) -> bool:
+    """Whether every microarchitecture ``target`` (a single ``min:max`` range, or the name of a
+    concrete one) denotes is also denoted by ``container``, in the same sense."""
+    t_min, t_sep, t_max = target.partition(":")
+    c_min, c_sep, c_max = container.partition(":")
+
+    if not t_sep:
+        # target is concrete: contained iff it falls within container's bounds.
+        t = _make_microarchitecture(t_min)
+        if not c_sep:
+            return t_min == c_min
+        return (not c_min or t >= c_min) and (not c_max or t <= c_max)
+
+    if not c_sep:
+        # container is a single point: a range is inside it only by denoting that point too.
+        return t_min == t_max == c_min
+
+    # Both are ranges. An empty target bound resolves to the family root (floor) or stays
+    # unbounded (ceiling): nothing but an unbounded container range covers an unbounded one.
+    if c_min:
+        if not t_min and not t_max:
+            return False
+        floor = _make_microarchitecture(t_min) if t_min else _make_microarchitecture(t_max).family
+        if not floor >= c_min:
+            return False
+    if c_max:
+        if not t_max or not _make_microarchitecture(t_max) <= c_max:
+            return False
+    return True
+
+
 @lang.lazy_lexicographic_ordering
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
@@ -467,7 +498,17 @@ class ArchSpec:
         if not strict and self.target == ArchSpec.ANY_TARGET:
             return True
 
-        return bool(self._target_intersection(other))
+        if not strict:
+            return bool(self._target_intersection(other))
+
+        # Subset test: every target self's ranges denote must be covered by one of other's.
+        return all(
+            any(
+                _target_range_contains(o_range, s_range)
+                for o_range in str(other.target).split(",")
+            )
+            for s_range in str(self.target).split(",")
+        )
 
     def _target_constrain(self, other: "ArchSpec") -> bool:
         # An unconstrained target on either side means the other side is the intersection.
