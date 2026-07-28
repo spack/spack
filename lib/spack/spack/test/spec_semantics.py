@@ -2548,6 +2548,30 @@ def test_edge_propagation_is_merged(mock_packages):
     assert forward.edges_to_dependencies()[0].propagation == PropagationPolicy.PREFERENCE
 
 
+def test_str_round_trips_to_the_same_set(mock_packages):
+    for spec_str in CONSTRAIN_CORPUS:
+        spec = Spec(spec_str)
+        if "patches" in spec.variants and spec.variants["patches"].concrete:
+            continue  # see test_concrete_patches_are_truncated_by_formatting
+        round_tripped = Spec(str(spec))
+        assert round_tripped.satisfies(spec) and spec.satisfies(round_tripped), (
+            f"'{spec_str}' prints as '{spec}', which reads back as something else"
+        )
+
+
+def test_copy_is_faithful_and_independent(mock_packages):
+    for spec_str in CONSTRAIN_CORPUS:
+        spec = Spec(spec_str)
+        before = spec.to_dict()
+        duplicate = spec.copy()
+        assert duplicate.to_dict() == before, f"copying '{spec_str}' changed it"
+        for other_str in CONSTRAIN_CORPUS:
+            _try_constrain(duplicate, Spec(other_str))
+            assert spec.to_dict() == before, (
+                f"constraining a copy of '{spec_str}' with '{other_str}' reached the original"
+            )
+
+
 def test_flag_order_survives_formatting(mock_packages):
     """Compiler flags are printed in the order they are stored, in runs of flags that agree on
     whether they propagate, so a propagating flag followed by a plain one comes back in that

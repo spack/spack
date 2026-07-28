@@ -558,6 +558,86 @@ def test_dict_roundtrip_for_abstract_specs(spec_str):
     assert s.to_dict() == t.to_dict()
 
 
+#: Abstract specs covering every dimension ``constrain`` merges, reused from spec_algebra.py's
+#: wider corpus. A duplicated list is cheaper than a cross-module import.
+_DICT_ROUNDTRIP_CORPUS = [
+    "",
+    "pkg-a",
+    "pkg-b",
+    "builtin_mock.pkg-a",
+    "pkg-a@1:3",
+    "pkg-a@2",
+    "pkg-a@1,3:4",
+    "pkg-a@=2",
+    "pkg-a@develop",
+    "@:1",
+    "pkg-a+foo",
+    "pkg-a~foo",
+    "pkg-a++foo",
+    "pkg-a foo=bar",
+    "pkg-a foo=baz",
+    "pkg-a foo=bar,baz",
+    "pkg-a foo:=bar",
+    "pkg-a cflags=-O2",
+    "pkg-a cflags=-g",
+    "pkg-a cflags==-O2",
+    "pkg-a cflags=-g cflags==-O2",
+    "pkg-a ldflags=-L/x",
+    "pkg-a target=haswell",
+    "pkg-a target=zen2",
+    "pkg-a target=x86_64:",
+    "pkg-a target=:icelake",
+    "pkg-a target=x86_64:icelake",
+    "pkg-a target=haswell,zen2",
+    "pkg-a os=debian6",
+    "pkg-a arch=test-debian6-haswell",
+    "pkg-a/abcdef",
+    "pkg-a/abc",
+    "^pkg-b",
+    "^pkg-b@1",
+    "^pkg-b@2",
+    "pkg-a ^pkg-b@1 ^pkg-c",
+    "%pkg-b",
+    "%%pkg-b",
+    "%[deptypes=build] pkg-b",
+    "%[deptypes=link] pkg-b",
+    "pkg-a ^[when='+foo'] pkg-b@1",
+    "pkg-a ^[when='+bar'] pkg-b@2",
+    "pkg-a platform=test",
+    "pkg-a platform=*",
+    "pkg-a os=*",
+    "pkg-a target=*",
+    "pkg-a patches=abcdef",
+    "pkg-a patches:=abcdef1234567890",
+    "pkg-a ^[virtuals=mpi] mpich",
+    "pkg-a ^[virtuals=mpi] mpich@3",
+    "pkg-a ^[virtuals=mpi] mpich+debug",
+    "pkg-a ^[virtuals=mpi] mpich target=haswell",
+    "pkg-a ^[virtuals=mpi,lapack] openblas-with-lapack",
+    "mpi",
+    "pkg-a ^mpi",
+    "pkg-a ^mpi@3",
+    "pkg-a ^mpi+debug",
+    "pkg-a ^mpi target=haswell",
+    "pkg-a ^pkg-b",
+    "pkg-a %pkg-b",
+    "pkg-a %%pkg-b",
+    "pkg-a ^[deptypes=build] pkg-b",
+    "pkg-a ^[deptypes=link] pkg-b",
+    "pkg-a ^pkg-b ^pkg-c ^pkg-d",
+    "pkg-a %pkg-b@1 ^pkg-c",
+    "pkg-a platform=* os=* target=*",
+]
+
+
+def test_dict_round_trips_exactly(mock_packages):
+    """Unlike the string form, the dictionary form is the storage format, so it has to keep
+    the state itself rather than only the set it denotes."""
+    for spec_str in _DICT_ROUNDTRIP_CORPUS:
+        spec = spack.spec.Spec(spec_str)
+        assert spack.spec.Spec.from_dict(spec.to_dict()).to_dict() == spec.to_dict(), spec_str
+
+
 def test_specfile_alias_is_updated():
     """Tests that the SpecfileLatest alias gets updated on a Specfile version bump"""
     specfile_class_name = f"SpecfileV{spack.spec.SPECFILE_FORMAT_VERSION}"

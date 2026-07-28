@@ -430,6 +430,162 @@ def _pairs():
         yield lhs_str, rhs_str, Spec(lhs_str), Spec(rhs_str)
 
 
+def _try_constrain(lhs, rhs):
+    """Return ``(changed, error)``, exactly one of which is None."""
+    try:
+        return lhs.constrain(rhs), None
+    except SpecError as e:
+        return None, e
+
+
+def _narrowing_dimensions(spec: Spec):
+    """The state of the dimensions in which leaving a value unset is an absent constraint rather
+    than a constraint satisfied by default, as a comparable snapshot."""
+    return (
+        str(spec.versions),
+        {name: str(value) for name, value in spec.variants.items()},
+        str(spec.architecture),
+        {name: [str(flag) for flag in flags] for name, flags in spec.compiler_flags.items()},
+        spec.abstract_hash,
+    )
+
+
+class TestConstrainMutationSafety:
+    """``Spec.constrain`` intersects the left-hand side with the right-hand side in place. It
+    must apply the whole intersection or nothing at all, and it must never write to the
+    right-hand side, now or through an object the two ends up sharing.
+
+    Specs are snapshotted with ``to_dict()``, which round-trips abstract specs and so compares
+    their state directly. ``Spec.__eq__`` is semantic equality instead: it leaves the propagation
+    policy of an edge out of the comparison, so ``pkg-a %pkg-b`` and ``pkg-a %%pkg-b`` are equal,
+    as they are also mutually satisfying.
+    """
+
+    def test_lhs_is_unchanged_when_constrain_raises(self, mock_packages):
+        for lhs_str, rhs_str, lhs, rhs in _pairs():
+            before = lhs.to_dict()
+            _, error = _try_constrain(lhs, rhs)
+            if error is not None:
+                assert lhs.to_dict() == before, f"'{lhs_str}' mutated by a failed '{rhs_str}'"
+
+    def test_rhs_is_never_mutated(self, mock_packages):
+        for lhs_str, rhs_str, lhs, rhs in _pairs():
+            before = rhs.to_dict()
+            _try_constrain(lhs, rhs)
+            assert rhs.to_dict() == before, f"'{lhs_str}'.constrain('{rhs_str}') mutated the rhs"
+
+    def test_rhs_is_not_corrupted_by_later_constraints(self, mock_packages):
+        """A successful constrain must not leave the two specs sharing a mutable object, which
+        a later constrain on the lhs would then write through into the rhs."""
+        for lhs_str, rhs_str, lhs, rhs in _pairs():
+            if _try_constrain(lhs, rhs)[1] is not None:
+                continue
+            before = rhs.to_dict()
+            for extra_str in CORPUS:
+                _try_constrain(lhs, Spec(extra_str))
+                assert rhs.to_dict() == before, (
+                    f"'{lhs_str}'.constrain('{rhs_str}') shares state with the rhs: "
+                    f"constraining with '{extra_str}' afterwards changed it"
+                )
+
+    def test_returned_changed_flag_is_honest(self, mock_packages):
+        """Callers use the return value to decide whether to redo work, so it has to report
+        exactly whether the lhs changed."""
+        for lhs_str, rhs_str, lhs, rhs in _pairs():
+            before = lhs.to_dict()
+            changed, error = _try_constrain(lhs, rhs)
+            if error is None:
+                assert changed is (lhs.to_dict() != before), (
+                    f"'{lhs_str}'.constrain('{rhs_str}') returned {changed}"
+                )
+
+    def test_intersects_agrees_with_constrain(self, mock_packages):
+        """``intersects`` is the question ``constrain`` answers by raising or not."""
+        for lhs_str, rhs_str, lhs, rhs in _pairs():
+            intersects = lhs.intersects(rhs)
+            _, error = _try_constrain(lhs, rhs)
+            assert intersects is (error is None), (
+                f"'{lhs_str}'.intersects('{rhs_str}') is {intersects}, but constrain "
+                f"{'raised ' + type(error).__name__ if error else 'succeeded'}"
+            )
+
+    def test_constrain_is_idempotent(self, mock_packages):
+        for lhs_str, rhs_str, lhs, rhs in _pairs():
+            if _try_constrain(lhs, rhs)[1] is None:
+                before = lhs.to_dict()
+                assert lhs.constrain(rhs) is False, f"'{lhs_str}'.constrain('{rhs_str}') twice"
+                assert lhs.to_dict() == before
+
+    def test_constrained_lhs_satisfies_rhs(self, mock_packages):
+        """Guards against making constrain atomic by making it do nothing."""
+        for lhs_str, rhs_str, lhs, rhs in _pairs():
+            if _try_constrain(lhs, rhs)[1] is None:
+                assert lhs.satisfies(rhs), f"'{lhs_str}'.constrain('{rhs_str}') gave '{lhs}'"
+
+    def test_constrain_never_weakens_the_lhs(self, mock_packages):
+        """The result is the intersection of both operands, so together with the property above
+        this pins that constrain narrows and never drops a constraint."""
+        for lhs_str, rhs_str, lhs, rhs in _pairs():
+            if _try_constrain(lhs, rhs)[1] is None:
+                assert lhs.satisfies(Spec(lhs_str)), (
+                    f"'{lhs_str}'.constrain('{rhs_str}') gave '{lhs}'"
+                )
+
+    def test_satisfies_implies_intersects(self, mock_packages):
+        """Satisfaction is subset and intersection is non-empty overlap, so a spec that is inside
+        another one also overlaps it. Each dimension implements the two separately, which is why
+        they can diverge, as they did for patch prefixes and architecture wildcards."""
+        for lhs_str, rhs_str, lhs, rhs in _pairs():
+            if lhs.satisfies(rhs):
+                assert lhs.intersects(rhs), (
+                    f"'{lhs_str}' satisfies '{rhs_str}' but does not intersect it"
+                )
+
+    def test_satisfies_implies_constrain_succeeds(self, mock_packages):
+        """Constrain is only undefined where the two are disjoint, so it cannot reject a
+        constraint the lhs already satisfies."""
+        for lhs_str, rhs_str, lhs, rhs in _pairs():
+            if lhs.satisfies(rhs):
+                _, error = _try_constrain(lhs, rhs)
+                assert error is None, (
+                    f"'{lhs_str}' satisfies '{rhs_str}' but constrain raised "
+                    f"{type(error).__name__}"
+                )
+
+    def test_satisfies_implies_the_narrowing_dimensions_are_unchanged(self, mock_packages):
+        """An lhs that is already inside the rhs has nothing left to intersect, which is
+        absorption over the product of the corpus.
+
+        The dimensions asserted are the ones in which an unset value on the lhs really is an
+        absent constraint. Names, namespaces and edges whose when condition does not apply are
+        read as satisfied when the lhs leaves them unset, so constrain legitimately fills those
+        in without narrowing the set the lhs denotes. Propagated variants follow a
+        non-contradiction rule rather than subset semantics: a spec without such a variant
+        satisfies one that propagates it, and still acquires it when constrained; see
+        test_a_propagated_variant_follows_non_contradiction. Compiler
+        flags are compared by value, since merging a propagating flag with a plain one of the
+        same value demotes it; see
+        test_flag_propagation_is_invisible_to_satisfies_but_demoted_by_constrain.
+        """
+        for lhs_str, rhs_str, lhs, rhs in _pairs():
+            propagating = any(value.propagate for value in rhs.variants.values())
+            if lhs.satisfies(rhs) and not propagating:
+                before = _narrowing_dimensions(lhs)
+                _try_constrain(lhs, rhs)
+                assert _narrowing_dimensions(lhs) == before, (
+                    f"'{lhs_str}' satisfies '{rhs_str}' but constrain changed it to '{lhs}'"
+                )
+
+    def test_constrain_with_itself_is_a_no_op(self, mock_packages):
+        """The same object on both sides, which is the case in which a merge that reads its own
+        output as it writes it has nothing to stop it."""
+        for spec_str in CORPUS:
+            spec = Spec(spec_str)
+            before = spec.to_dict()
+            assert spec.constrain(spec) is False, f"'{spec_str}' constrained with itself"
+            assert spec.to_dict() == before, f"'{spec_str}' constrained with itself"
+
+
 def _ordered_corpus():
     """The corpus entries the laws below are checked over, which is all of them but the specs
     propagating a variant: those follow non-contradiction rather than subset semantics, and a law
