@@ -586,6 +586,20 @@ def test_direct_edges_and_round_tripping_to_dict(spec_str, config, mock_packages
             assert "direct" not in dependency_data["parameters"]
 
 
+def test_parallel_edges_are_serialized_in_a_canonical_order(mock_packages):
+    """Two edges to the same package with the same dependency types are told apart by their when
+    condition, their virtuals and the rest of their attributes, so a meet that produces both is
+    one state with one hash however the operands were ordered."""
+    forward = Spec("%pkg-b").copy()
+    forward.constrain(Spec("pkg-a ^[when='+foo'] pkg-b@1"))
+    backward = Spec("pkg-a ^[when='+foo'] pkg-b@1").copy()
+    backward.constrain(Spec("%pkg-b"))
+
+    assert len(forward.edges_to_dependencies()) == 2
+    assert forward.to_dict() == backward.to_dict()
+    assert forward.dag_hash() == backward.dag_hash()
+
+
 def test_pickle_preserves_identity_and_prefix(config, mock_packages):
     """When pickling multiple specs that share dependencies, the identity of those dependencies
     should be preserved when unpickling."""
