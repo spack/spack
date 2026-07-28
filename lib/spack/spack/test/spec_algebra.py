@@ -30,6 +30,7 @@ from typing import Optional
 
 import pytest
 
+import spack.version
 from spack.error import SpecError
 from spack.spec import Spec
 
@@ -427,3 +428,119 @@ CORPUS = [
 def _pairs():
     for lhs_str, rhs_str in itertools.product(CORPUS, repeat=2):
         yield lhs_str, rhs_str, Spec(lhs_str), Spec(rhs_str)
+
+
+def _ordered_corpus():
+    """The corpus entries the laws below are checked over, which is all of them but the specs
+    propagating a variant: those follow non-contradiction rather than subset semantics, and a law
+    provably fails on them for the reason pinned above in
+    test_a_propagated_variant_follows_non_contradiction.
+    """
+    result = []
+    for spec_str in CORPUS:
+        spec = Spec(spec_str)
+        if not any(value.propagate for value in spec.variants.values()):
+            result.append(spec_str)
+    return result
+
+
+def _denote_the_same_set(lhs: Optional[Spec], rhs: Optional[Spec]) -> bool:
+    """Whether two meets denote the same set of concrete specs, or are both undefined. The two
+    are not compared by state: a spelling of a target range and an ordering of compiler flags
+    survive the merge, so the same set comes out in more than one shape depending on the order of
+    the operands; see test_target_range_representation_breaks_commutativity_of_constrain and
+    test_flag_order_is_significant_so_the_meet_is_not_commutative."""
+    if lhs is None or rhs is None:
+        return lhs is rhs
+    return lhs.satisfies(rhs) and rhs.satisfies(lhs)
+
+
+def _has_unpaired_virtual_edge(spec: Spec) -> bool:
+    """Whether a spec has an edge naming a virtual and constraining its version next to an edge
+    naming a package providing that virtual. Those two the merge leaves side by side, since the
+    version of a virtual has no home on the node providing it; see
+    test_virtual_edge_breaks_monotonicity_of_constrain."""
+    edges = spec.edges_to_dependencies()
+    provided = {virtual for edge in edges for virtual in edge.virtuals}
+    return any(
+        edge.spec.name in provided and edge.spec.versions != spack.version.any_version
+        for edge in edges
+    )
+
+
+class TestLatticeLaws:
+    """The laws checked over hand-picked cases at the top of this file, checked over the corpus
+    instead. The hand-picked cases say what each law means on an example a reader can follow; the
+    ones here cover the combinations nobody thought to write down, which is where a dimension
+    that implements only half of a law shows up.
+    """
+
+    def test_satisfies_is_transitive(self, mock_packages):
+        corpus = _ordered_corpus()
+        satisfies = {
+            (a, b): Spec(a).satisfies(Spec(b)) for a, b in itertools.product(corpus, repeat=2)
+        }
+        for a, b, c in itertools.product(corpus, repeat=3):
+            if satisfies[(a, b)] and satisfies[(b, c)]:
+                assert satisfies[(a, c)], f"'{a}' is inside '{b}' is inside '{c}'"
+
+    def test_constrain_is_the_greatest_lower_bound(self, mock_packages):
+        """Anything inside both operands is inside their meet too, which is what makes the meet
+        the intersection rather than merely some spec contained in both."""
+        corpus = _ordered_corpus()
+        satisfies = {
+            (a, b): Spec(a).satisfies(Spec(b)) for a, b in itertools.product(corpus, repeat=2)
+        }
+        for a, b in itertools.combinations(corpus, 2):
+            result = meet(Spec(a), Spec(b))
+            for c in corpus:
+                if not (satisfies[(c, a)] and satisfies[(c, b)]):
+                    continue
+                assert result is not None, (
+                    f"'{c}' is inside both '{a}' and '{b}', which are disjoint"
+                )
+                assert Spec(c).satisfies(result), (
+                    f"'{c}' is inside both '{a}' and '{b}', but not inside their meet '{result}'"
+                )
+
+    def test_constrain_is_commutative(self, mock_packages):
+        corpus = _ordered_corpus()
+        for a, b in itertools.combinations(corpus, 2):
+            forward, backward = meet(Spec(a), Spec(b)), meet(Spec(b), Spec(a))
+            assert _denote_the_same_set(forward, backward), (
+                f"'{a}' meet '{b}' is '{forward}', the other way around it is '{backward}'"
+            )
+
+    def test_constrain_is_associative(self, mock_packages):
+        corpus = _ordered_corpus()
+        for a, b, c in itertools.combinations(corpus, 3):
+            ab, bc = meet(Spec(a), Spec(b)), meet(Spec(b), Spec(c))
+            left = meet(ab, Spec(c)) if ab is not None else None
+            right = meet(Spec(a), bc) if bc is not None else None
+            assert _denote_the_same_set(left, right), (
+                f"('{a}' meet '{b}') meet '{c}' is '{left}', "
+                f"'{a}' meet ('{b}' meet '{c}') is '{right}'"
+            )
+
+    def test_constrain_is_monotonic(self, mock_packages):
+        """Narrowing an operand narrows the meet, so a smaller spec cannot produce a larger
+        result."""
+        corpus = _ordered_corpus()
+        for a_str, b_str in itertools.product(corpus, repeat=2):
+            a, b = Spec(a_str), Spec(b_str)
+            if not a.satisfies(b):
+                continue
+            for c_str in corpus:
+                c = Spec(c_str)
+                narrowed, widened = meet(a, c), meet(b, c)
+                if narrowed is None:
+                    continue
+                assert widened is not None, (
+                    f"'{a_str}' is inside '{b_str}' and meets '{c_str}', but '{b_str}' does not"
+                )
+                if _has_unpaired_virtual_edge(narrowed):
+                    continue  # see test_virtual_edge_breaks_monotonicity_of_constrain
+                assert narrowed.satisfies(widened), (
+                    f"'{a_str}' is inside '{b_str}', but their meets with '{c_str}', "
+                    f"'{narrowed}' and '{widened}', are the other way around"
+                )
