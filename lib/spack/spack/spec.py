@@ -3108,9 +3108,6 @@ class Spec:
         if deps:
             changed |= self._constrain_dependencies(other, resolve_virtuals=resolve_virtuals)
 
-        if other.concrete and not self.concrete and other.satisfies(self):
-            self._finalize_concretization()
-
         return changed
 
     def _constrain_dependencies(self, other: "Spec", resolve_virtuals: bool = True) -> bool:
