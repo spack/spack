@@ -25,6 +25,7 @@ the corpus-wide checks say which of them they step around. Some gaps are what a 
 say so; the rest are defects that are not fixed yet, and should start failing the day they are.
 """
 
+import itertools
 from typing import Optional
 
 import pytest
@@ -349,3 +350,80 @@ def test_target_range_representation_breaks_commutativity_of_constrain(mock_pack
     forward = meet(lhs, rhs)
     backward = meet(rhs, lhs)
     assert forward.architecture.target != backward.architecture.target
+
+
+#: Abstract specs covering every dimension ``constrain`` merges, used to fuzz the mutation-safety
+#: invariants below over many more combinations than the laws above spell out by hand.
+CORPUS = [
+    "",
+    "pkg-a",
+    "pkg-b",
+    "builtin_mock.pkg-a",
+    "pkg-a@1:3",
+    "pkg-a@2",
+    "pkg-a@1,3:4",
+    "pkg-a@=2",
+    "pkg-a@develop",
+    "@:1",
+    "pkg-a+foo",
+    "pkg-a~foo",
+    "pkg-a++foo",
+    "pkg-a foo=bar",
+    "pkg-a foo=baz",
+    "pkg-a foo=bar,baz",
+    "pkg-a foo:=bar",
+    "pkg-a cflags=-O2",
+    "pkg-a cflags=-g",
+    "pkg-a cflags==-O2",
+    "pkg-a cflags=-g cflags==-O2",
+    "pkg-a ldflags=-L/x",
+    "pkg-a target=haswell",
+    "pkg-a target=zen2",
+    "pkg-a target=x86_64:",
+    "pkg-a target=:icelake",
+    "pkg-a target=x86_64:icelake",
+    "pkg-a target=haswell,zen2",
+    "pkg-a os=debian6",
+    "pkg-a arch=test-debian6-haswell",
+    "pkg-a/abcdef",
+    "pkg-a/abc",
+    "^pkg-b",
+    "^pkg-b@1",
+    "^pkg-b@2",
+    "pkg-a ^pkg-b@1 ^pkg-c",
+    "%pkg-b",
+    "%%pkg-b",
+    "%[deptypes=build] pkg-b",
+    "%[deptypes=link] pkg-b",
+    "pkg-a ^[when='+foo'] pkg-b@1",
+    "pkg-a ^[when='+bar'] pkg-b@2",
+    "pkg-a platform=test",
+    "pkg-a platform=*",
+    "pkg-a os=*",
+    "pkg-a target=*",
+    "pkg-a patches=abcdef",
+    "pkg-a patches:=abcdef1234567890",
+    "pkg-a ^[virtuals=mpi] mpich",
+    "pkg-a ^[virtuals=mpi] mpich@3",
+    "pkg-a ^[virtuals=mpi] mpich+debug",
+    "pkg-a ^[virtuals=mpi] mpich target=haswell",
+    "pkg-a ^[virtuals=mpi,lapack] openblas-with-lapack",
+    "mpi",
+    "pkg-a ^mpi",
+    "pkg-a ^mpi@3",
+    "pkg-a ^mpi+debug",
+    "pkg-a ^mpi target=haswell",
+    "pkg-a ^pkg-b",
+    "pkg-a %pkg-b",
+    "pkg-a %%pkg-b",
+    "pkg-a ^[deptypes=build] pkg-b",
+    "pkg-a ^[deptypes=link] pkg-b",
+    "pkg-a ^pkg-b ^pkg-c ^pkg-d",
+    "pkg-a %pkg-b@1 ^pkg-c",
+    "pkg-a platform=* os=* target=*",
+]
+
+
+def _pairs():
+    for lhs_str, rhs_str in itertools.product(CORPUS, repeat=2):
+        yield lhs_str, rhs_str, Spec(lhs_str), Spec(rhs_str)
