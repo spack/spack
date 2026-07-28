@@ -467,6 +467,11 @@ class VariantValue:
         """Constrain self with other if they intersect. Returns true iff self was changed."""
         if not self.intersects(other):
             raise UnsatisfiableVariantSpecError(self, other)
+        return self._merge(other)
+
+    def _merge(self, other: "VariantValue") -> bool:
+        """Constrain self with other, which is known to intersect. Never raises, so that a
+        caller merging several variants cannot apply some of them and then fail."""
         old_values = self.values
         self.set(*self._merged_values(other))
         changed = old_values != self.values
