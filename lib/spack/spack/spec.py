@@ -1083,15 +1083,12 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
 
         result = ""
         for flag_type, flags in sorted_items:
-            normal = [f for f in flags if not f.propagate]
-            if normal:
-                value = spack.spec_parser.quote_if_needed(" ".join(normal))
-                result += f" {flag_type}={value}"
-
-            propagated = [f for f in flags if f.propagate]
-            if propagated:
-                value = spack.spec_parser.quote_if_needed(" ".join(propagated))
-                result += f" {flag_type}=={value}"
+            # The order of the flags of one type is significant, so they are printed in the order
+            # they are stored, in runs of flags that agree on whether they propagate.
+            for propagate, group in itertools.groupby(flags, key=lambda flag: flag.propagate):
+                sigil = "==" if propagate else "="
+                value = spack.spec_parser.quote_if_needed(" ".join(group))
+                result += f" {flag_type}{sigil}{value}"
 
         # TODO: somehow add this space only if something follows in Spec.format()
         if sorted_items:
