@@ -783,7 +783,7 @@ def test_transient_concretization_restores_state(mutable_mock_env_path):
     with env:
         env.concretize()
         env.write()
-    lock_content = pathlib.Path(env.lock_path).read_text()
+    lock_content = pathlib.Path(env.lock_path).read_text(encoding="utf-8")
     old_roots = env.concretized_roots[:]
     old_hashes = set(env.specs_by_hash)
 
@@ -796,7 +796,7 @@ def test_transient_concretization_restores_state(mutable_mock_env_path):
 
     assert env.concretized_roots == old_roots
     assert set(env.specs_by_hash) == old_hashes
-    assert pathlib.Path(env.lock_path).read_text() == lock_content
+    assert pathlib.Path(env.lock_path).read_text(encoding="utf-8") == lock_content
 
 
 def test_transient_concretization_restores_state_on_error(mutable_mock_env_path):

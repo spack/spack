@@ -210,7 +210,7 @@ def test_spec_env_force_reconcretizes_without_modifying(
     env = ev.create("test")
     env.add("mpileaks")
     _concretize_and_lock(env)
-    lock_content = env.lock_path and open(env.lock_path).read()
+    lock_content = env.lock_path and open(env.lock_path, encoding="utf-8").read()
 
     mutable_config.set("packages", {"mpileaks": {"require": ["@2.2"]}})
 
@@ -223,7 +223,7 @@ def test_spec_env_force_reconcretizes_without_modifying(
     assert {s.dag_hash() for s in reread.concrete_roots()} == {
         s.dag_hash() for s in env.concrete_roots()
     }
-    assert open(env.lock_path).read() == lock_content
+    assert open(env.lock_path, encoding="utf-8").read() == lock_content
     assert any(s.satisfies("mpileaks@2.3") for s in env.concrete_roots())
 
 
@@ -238,7 +238,7 @@ def test_spec_env_concretizes_only_new_specs(
     env.add("mpileaks")
     _concretize_and_lock(env)
     mpileaks_hash = next(iter(s.dag_hash() for s in env.concrete_roots()))
-    lock_content = open(env.lock_path).read()
+    lock_content = open(env.lock_path, encoding="utf-8").read()
 
     # A fresh solve of mpileaks would now pick 2.2: proof it isn't re-solved
     mutable_config.set("packages", {"mpileaks": {"version": ["2.2"]}})
@@ -254,7 +254,7 @@ def test_spec_env_concretizes_only_new_specs(
     # the new root was not committed to the environment
     reread = ev.Environment(env.path)
     assert {s.name for s in reread.concrete_roots()} == {"mpileaks"}
-    assert open(env.lock_path).read() == lock_content
+    assert open(env.lock_path, encoding="utf-8").read() == lock_content
 
 
 def test_spec_env_fully_concrete_skips_solver(mutable_mock_env_path, monkeypatch):
@@ -306,13 +306,13 @@ def test_spec_env_show_asp(mutable_mock_env_path):
     env = ev.create("test")
     env.add("mpileaks")
     _concretize_and_lock(env)
-    lock_content = open(env.lock_path).read()
+    lock_content = open(env.lock_path, encoding="utf-8").read()
 
     with env:
         env.add("libelf")
         output = spec("--show", "asp")
     assert "Target Constraints" in output
-    assert open(env.lock_path).read() == lock_content
+    assert open(env.lock_path, encoding="utf-8").read() == lock_content
 
 
 def test_spec_env_diagnostics_per_spec_blocks(
