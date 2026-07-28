@@ -887,8 +887,9 @@ class DependencySpec:
 
     def _merge(self, other: "DependencySpec") -> bool:
         """Merge another edge into this one. Precondition: the two were paired by
-        ``_paired_edges``, so they point at the same package under the same when condition, and
-        their target specs have been checked to intersect. Total, see ``Spec._merge``.
+        ``_paired_edges``, so they point at the same package under the same when condition or one
+        of them names a virtual the other provides, and their target specs have been checked to
+        intersect. Total, see ``Spec._merge``.
 
         Args:
             other: edge to use as constraint
@@ -897,6 +898,11 @@ class DependencySpec:
             True if the current edge was changed, False otherwise.
         """
         changed = False
+        # A node named after a virtual becomes the package providing it. The dependency map of
+        # each of its dependents is keyed by name, so the rename goes through them.
+        if self.spec.name in other.virtuals:
+            changed = True
+            _rename_node(self.spec, other.spec.name)
         changed |= self.spec._merge(other.spec, deps=True)
         changed |= self.update_deptypes(other.depflag)
         changed |= self.update_virtuals(other.virtuals)
@@ -1162,6 +1168,25 @@ def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> None:
         lst.sort()  # type: ignore[call-arg,call-overload]
     else:
         edge_map[key] = [edge]
+
+
+def _rename_node(spec: "Spec", name: str) -> None:
+    """Rename a node, keeping the dependency map of each of its dependents keyed by the new name.
+
+    Used when the merge resolves a node named after a virtual into the provider it is merged
+    with. Total, so that it can be used from a merge that has to apply in full."""
+    incoming = spec.edges_from_dependents()
+    for edge in incoming:
+        siblings = [e for e in edge.parent._dependencies[spec.name] if e is not edge]
+        if siblings:
+            edge.parent._dependencies[spec.name] = siblings
+        else:
+            del edge.parent._dependencies[spec.name]
+
+    spec.name = name
+
+    for edge in incoming:
+        _add_edge_to_map(edge.parent._dependencies, name, edge)
 
 
 def _select_edges(
@@ -1588,6 +1613,24 @@ def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
     return "*" if dep.spec.architecture else ""
 
 
+def _virtual_pairing(lhs: DependencySpec, rhs: DependencySpec) -> bool:
+    """Whether one of two edges names a virtual that the other declares it provides, and states
+    only what the provider node can take on.
+
+    A version on the virtual side bounds the version of the virtual rather than the version of
+    the package providing it, and a node has nowhere to record that, so an edge carrying one is
+    left on its own. The same goes for one carrying dependencies of its own.
+    """
+    if rhs.spec.name in lhs.virtuals:
+        virtual = rhs
+    elif lhs.spec.name in rhs.virtuals:
+        virtual = lhs
+    else:
+        return False
+
+    return virtual.spec.versions == spack.version.any_version and not virtual.spec._dependencies
+
+
 def _paired_edges(
     node: "Spec", other: "Spec"
 ) -> List[Tuple[Optional[DependencySpec], DependencySpec]]:
@@ -1596,22 +1639,62 @@ def _paired_edges(
     Two edges match when they point at the same package name under the same ``when`` condition.
     The matching is a greedy injection over the edges ``node`` has right now, so each of them is
     claimed by at most one edge of ``other``, and an edge added during a merge cannot be claimed
-    by a later one. Edges without a match are paired with None and get copied in.
+    by a later one.
+
+    An edge left over after that - same name, but no same-when edge of ``node`` to match - can
+    still pair across ``when``: if a same-named edge of ``node`` already satisfies it (or is
+    already satisfied by it), that one-sided satisfaction is grounds to pair them too, the same
+    way an unconditional edge already answers a conditional one to the same target. Failing that,
+    an edge naming a virtual that a same-when edge of a different name declares it provides (or
+    vice versa) is paired the same way, since it constrains the same provider node. Edges without
+    a match are paired with None and get copied in.
 
     Both the intersection test and the merge pair edges here, so the test cannot accept a pairing
     that the merge would not perform, and the merge never has to re-check one.
     """
-    result: List[Tuple[Optional[DependencySpec], DependencySpec]] = []
+    other_edges = other.edges_to_dependencies()
+    matches: Dict[int, DependencySpec] = {}
     claimed: Set[int] = set()
-    for other_edge in other.edges_to_dependencies():
-        match = None
+
+    for other_edge in other_edges:
         for candidate in node.edges_to_dependencies(other_edge.spec.name):
-            if candidate.when == other_edge.when and id(candidate) not in claimed:
-                match = candidate
+            if candidate.when != other_edge.when or id(candidate) in claimed:
+                continue
+            matches[id(other_edge)] = candidate
+            claimed.add(id(candidate))
+            break
+
+    # An edge already answered by a same-named edge of a different when condition states nothing
+    # new. Either direction can hold: node's edge can be the broader one that already covers
+    # other_edge, or other_edge can be the broader one that should widen node's own (narrower)
+    # edge once merged.
+    for other_edge in other_edges:
+        if id(other_edge) in matches:
+            continue
+        for candidate in node.edges_to_dependencies(other_edge.spec.name):
+            if id(candidate) in claimed:
+                continue
+            if _satisfies_edge(candidate, other_edge) or _satisfies_edge(other_edge, candidate):
+                matches[id(other_edge)] = candidate
                 claimed.add(id(candidate))
                 break
-        result.append((match, other_edge))
-    return result
+
+    # Only once every edge naming a package has claimed the edge naming the same package, so that
+    # a match on the name is never lost to a match through a virtual.
+    for other_edge in other_edges:
+        if id(other_edge) in matches:
+            continue
+        for candidate in node.edges_to_dependencies():
+            if (
+                candidate.when == other_edge.when
+                and id(candidate) not in claimed
+                and _virtual_pairing(candidate, other_edge)
+            ):
+                matches[id(other_edge)] = candidate
+                claimed.add(id(candidate))
+                break
+
+    return [(matches.get(id(edge)), edge) for edge in other_edges]
 
 
 def _get_satisfying_edge(lhs_node: "Spec", rhs_edge: DependencySpec) -> Optional[DependencySpec]:
@@ -3244,6 +3327,19 @@ class Spec:
         """Node half of :meth:`_disjoint_reason`, which never looks at edges.
 
         Precondition: neither side is concrete."""
+        # Two abstract nodes with different names do not intersect. We cannot look up whether
+        # one provides the other, because that would make intersection stateful.
+        if self.name != other.name and self.name and other.name:
+            return UnsatisfiableSpecNameError(self.name, other.name)
+
+        if not self.versions.intersects(other.versions):
+            return UnsatisfiableVersionSpecError(self.versions, other.versions)
+
+        return self._disjoint_node_attributes_reason(other)
+
+    def _disjoint_node_attributes_reason(self, other: "Spec") -> Optional[spack.error.SpecError]:
+        """The dimensions of :meth:`_disjoint_node_reason` that do not depend on how the name and
+        the version were matched: abstract hash, namespace, variants and architecture."""
         if (
             self.abstract_hash
             and other.abstract_hash
@@ -3252,20 +3348,12 @@ class Spec:
         ):
             return InvalidHashError(self, other.abstract_hash)
 
-        # Two abstract nodes with different names do not intersect. We cannot look up whether
-        # one provides the other, because that would make intersection stateful.
-        if self.name != other.name and self.name and other.name:
-            return UnsatisfiableSpecNameError(self.name, other.name)
-
         if (
             self.namespace is not None
             and other.namespace is not None
             and self.namespace != other.namespace
         ):
             return UnsatisfiableSpecNameError(self.fullname, other.fullname)
-
-        if not self.versions.intersects(other.versions):
-            return UnsatisfiableVersionSpecError(self.versions, other.versions)
 
         self_variants = self.variants.dict
         for name, other_variant in other.variants.dict.items():
@@ -3313,6 +3401,13 @@ class Spec:
             if self_edge is None:
                 continue
             # TODO: might want more detail than this, e.g. specific deps in violation.
+            if self_edge.spec.name != other_edge.spec.name:
+                # Paired through a virtual, so the name and the version are settled the way
+                # _satisfies_edge settles them and only the attributes are left to check -
+                # constrain is not virtual-aware and would fail the name check on its own.
+                if self_edge.spec._disjoint_node_attributes_reason(other_edge.spec) is not None:
+                    return UnsatisfiableDependencySpecError(other, self)
+                continue
             if self_edge.spec._disjoint_reason(other_edge.spec, deps=True) is not None:
                 return UnsatisfiableDependencySpecError(other, self)
 
