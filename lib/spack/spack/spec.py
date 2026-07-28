@@ -216,6 +216,39 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
     )
 
 
+def _satisfies_target_range(lhs: str, rhs: str) -> bool:
+    """Whether every microarchitecture in ``rhs`` is also in ``lhs``."""
+    lhs_min, lhs_sep, lhs_max = lhs.partition(":")
+    rhs_min, rhs_sep, rhs_max = rhs.partition(":")
+
+    if not rhs_sep:
+        # rhs is concrete: contained iff it falls within lhs's bounds.
+        t = _make_microarchitecture(rhs_min)
+        if not lhs_sep:
+            return rhs_min == lhs_min
+        return (not lhs_min or t >= lhs_min) and (not lhs_max or t <= lhs_max)
+
+    if not lhs_sep:
+        # lhs is concrete: a range is inside it only by denoting that point too.
+        return rhs_min == rhs_max == lhs_min
+
+    # Both are ranges
+    if lhs_min:
+        if not rhs_min and not rhs_max:
+            return False
+        floor = (
+            _make_microarchitecture(rhs_min)
+            if rhs_min
+            else _make_microarchitecture(rhs_max).family
+        )
+        if not floor >= lhs_min:
+            return False
+    if lhs_max:
+        if not rhs_max or not _make_microarchitecture(rhs_max) <= lhs_max:
+            return False
+    return True
+
+
 @lang.lazy_lexicographic_ordering
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
@@ -452,7 +485,17 @@ class ArchSpec:
         if not strict and self.target == ArchSpec.ANY_TARGET:
             return True
 
-        return bool(self._target_intersection(other))
+        if not strict:
+            return bool(self._target_intersection(other))
+
+        # Subset test: every target self's ranges denote must be covered by one of other's.
+        return all(
+            any(
+                _satisfies_target_range(o_range, s_range)
+                for o_range in str(other.target).split(",")
+            )
+            for s_range in str(self.target).split(",")
+        )
 
     def _target_constrain(self, other: "ArchSpec") -> bool:
         if self.target is None and other.target is None:

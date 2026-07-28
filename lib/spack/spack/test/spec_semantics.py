@@ -1995,8 +1995,9 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "target=x86_64:", "target=:power9", (False, False, False)),
         (Spec, "target=:haswell", "target=:power9", (False, False, False)),
         (Spec, "target=:haswell", "target=ppc64le:", (False, False, False)),
-        # Intersection among target ranges for the same architecture
-        (Spec, "target=:haswell", "target=x86_64:", (True, True, True)),
+        # Target ranges in one family: ":haswell" is a strict subset of "x86_64:", since x86_64
+        # is the family root and broadwell and later are above haswell.
+        (Spec, "target=:haswell", "target=x86_64:", (True, True, False)),
         (Spec, "target=:haswell", "target=x86_64_v4:", (False, False, False)),
         # Edge case of uarch that split in a diamond structure, from a common ancestor
         (Spec, "target=:cascadelake", "target=:cannonlake", (False, False, False)),
