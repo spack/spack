@@ -637,14 +637,9 @@ def test_ci_rebuild_mock_success(
     monkeypatch,
     broken_tests,
 ):
-    pkg_name = "archive-files"
+    pkg_name = "simple-standalone-test"
     rebuild_env = create_rebuild_env(tmp_path, pkg_name, broken_tests)
 
-    def _install_echo_cmd(cmd, *args, **kwargs):
-        print("spack install " + " ".join(cmd))
-        return 0
-
-    monkeypatch.setattr(spack.cmd.ci, "install_cmd", _install_echo_cmd)
     # the cdash url in the environment is fake; never upload reports to it
     monkeypatch.setattr(spack.reporters.cdash.CDash, "upload", lambda self, filename: None)
 
@@ -662,7 +657,7 @@ def test_ci_rebuild_mock_success(
             assert "Unable to run stand-alone tests" in out
         else:
             # No installation means no package to test and no test log to copy
-            assert "Cannot copy test logs" in out
+            assert "Testing package " in out
 
 
 def test_ci_rebuild_mock_failure_to_push(
@@ -2275,7 +2270,6 @@ def test_ci_verify_versions_standard_duplicates(
         monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
 
         out = ci_cmd("verify-versions", commits[-3], commits[-4], fail_on_error=False)
-        print(f"'{out}'")
         assert "Validated diff-test@2.1.7" in out
         assert "Invalid checksum found diff-test@2.1.8" in out
 

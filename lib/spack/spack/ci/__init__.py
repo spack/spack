@@ -683,7 +683,7 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     """
     tty.debug(f"test stage: {test_stage}")
     if not os.path.exists(test_stage):
-        tty.error(f"Cannot copy test logs: job test stage ({test_stage}) does not exist")
+        tty.warn(f"Cannot copy test logs: job test stage ({test_stage}) does not exist")
         return
 
     copy_files_to_artifacts(

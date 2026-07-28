@@ -466,7 +466,7 @@ def ci_rebuild(args):
 
     # No hash match anywhere means we need to rebuild spec
 
-    install_args = ['--use-buildcache="package:never,dependencies:only"']
+    install_args = ["--use-buildcache", "package:never,dependencies:only"]
 
     can_verify = spack_ci.can_verify_binaries()
     verify_binaries = can_verify and spack_is_pr_pipeline is False
@@ -478,7 +478,7 @@ def ci_rebuild(args):
 
     fail_fast = bool(os.environ.get("SPACK_CI_FAIL_FAST", str(args.fail_fast)))
     if fail_fast:
-        install_args.append("--fail_fast")
+        install_args.append("--fail-fast")
 
     spec_hash = "/" + job_spec.dag_hash()
 
@@ -524,14 +524,11 @@ If this project does not have public pipelines, you will need to first:
     tty.debug("Installing dependencies for {0} from cache ".format(job_spec.name))
     try:
         # Install deps
-        install_cmd(*install_args, "--only=dependencies", spec_hash)
+        install_cmd(*install_args, "--only=dependencies", spec_hash, capture=False)
     except spack.error.SpackError as e:
         # If the deps fail to install early exit
         tty.error(f"Failed to install dependencies: {e}")
         raise
-    finally:
-        # Reset the color mode
-        clr.set_color_when(reset_color)
 
     # CDash reporting for the current spec
     if cdash_handler:
@@ -542,7 +539,9 @@ If this project does not have public pipelines, you will need to first:
     tty.debug("Installing {0} from source".format(job_spec.name))
     try:
         # Install package
-        install_cmd(*install_args, "--verbose", "--keep-stage", "--only=package", spec_hash)
+        install_cmd(
+            *install_args, "--verbose", "--keep-stage", "--only=package", spec_hash, capture=False
+        )
         tty.debug("spack install succeeded")
     except spack.error.SpackError:
         # If a spec fails to build in a spack develop pipeline, we add it to a
@@ -603,7 +602,7 @@ If this project does not have public pipelines, you will need to first:
             try:
                 # First ensure we will use a reasonable test stage directory
                 stage_root = os.path.dirname(str(job_spec.package.stage.path))
-                test_stage = fs.join_path(stage_root, "spack-standalone-tests")
+                test_stage = fs.join_path(stage_root, "spack-stage-standalone-tests")
                 tty.debug("Configuring test_stage to {0}".format(test_stage))
                 config_test_path = "config:test_stage:{0}".format(test_stage)
                 cfg.CONFIG.add(config_test_path, scope=cfg.CONFIG.default_modify_scope())
@@ -617,7 +616,6 @@ If this project does not have public pipelines, you will need to first:
                     job_spec=job_spec,
                     fail_fast=fail_fast,
                     log_file=log_file,
-                    repro_dir=repro_dir,
                     timeout=args.timeout,
                 )
 
@@ -635,6 +633,8 @@ If this project does not have public pipelines, you will need to first:
                     spack_ci.copy_files_to_artifacts(log_file, job_test_dir)
                 else:
                     tty.warn("No recognized test results reporting option")
+
+                spack.stage.purge()
 
     # If the install succeeded, push it to the buildcache destination. Failure to push
     # will result in a non-zero exit code. Pushing is best-effort.
