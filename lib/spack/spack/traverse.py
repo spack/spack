@@ -9,12 +9,14 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    Iterator,
     List,
     NamedTuple,
     Optional,
     Sequence,
     Set,
     Tuple,
+    TypeVar,
     Union,
     overload,
 )
@@ -777,22 +779,6 @@ def by_dag_hash(s: "spack.spec.Spec") -> str:
     return s.dag_hash()
 
 
-class _TarjanFrame:
-    """A work-stack frame for the iterative Tarjan's SCC search in ``find_sccs_tarjan``, standing
-    in for a recursive call. A frame stays on the work stack while its successors are processed (it
-    is peeked, not popped, until done), so its fields are mutated in place to record progress
-    between visits."""
-
-    __slots__ = ("node", "successors", "next_idx")
-
-    def __init__(self, node: Any) -> None:
-        self.node = node
-        # ``successors`` is None until the frame is first entered, mirroring the top of the
-        # recursive call where index/lowlink are assigned before iterating successors.
-        self.successors: Optional[List[Any]] = None
-        self.next_idx = 0
-
-
 def find_sccs(spec, deptype="all", key: Callable[[Any], Any] = id) -> List[List[Any]]:
     """Find strongly connected components of a spec using Tarjan's algorithm.
 
@@ -807,15 +793,16 @@ def find_sccs(spec, deptype="all", key: Callable[[Any], Any] = id) -> List[List[
     return find_sccs_tarjan(
         nodes=spec.traverse(deptype=deptype, cover="nodes", key=key),
         successors=lambda s: s.dependencies(deptype=deptype),
-        key=id,
+        key=key,
     )
 
 
+T = TypeVar("T")
+
+
 def find_sccs_tarjan(
-    nodes: Iterable[Any],
-    successors: Callable[[Any], Iterable[Any]],
-    key: Callable[[Any], Any] = id,
-) -> List[List[Any]]:
+    nodes: Iterable[T], successors: Callable[[T], Iterable[T]], key: Callable[[T], Any] = id
+) -> List[List[T]]:
     """Find strongly connected components of a directed graph using Tarjan's algorithm.
 
     This is a generalized helper method for find_sccs, which can operate on non-spec graphs
@@ -831,69 +818,87 @@ def find_sccs_tarjan(
         order (a property of Tarjan's algorithm): if SCC A depends on SCC B, then B appears first.
     """
     # Iterative Tarjan's algorithm. An explicit work stack replaces recursion so that deep
-    # dependency chains cannot overflow Python's call stack (a recursive implementation crashes
-    # the interpreter on chains of a few hundred nodes). ``index``/``lowlinks`` carry the usual
-    # Tarjan bookkeeping; ``stack``/``on_stack`` are the SCC stack.
-    index_counter = 0
-    stack: List[Any] = []
-    lowlinks: Dict[Any, int] = {}
-    index: Dict[Any, int] = {}
-    on_stack: Set[Any] = set()
-    sccs: List[List[Any]] = []
+    # dependency chains cannot overflow Python's call stack. Each node gets a monotonic discovery
+    # number ``index``; a node's *lowlink* is the smallest index reachable from its DFS subtree
+    # using at most one edge back to a node still on the SCC stack. A node whose lowlink equals
+    # its own index is the root of an SCC.
+    next_index = 0
+    stack_nodes: List[T] = []  # nodes on the SCC stack, in discovery order
+    stack_ids: List[Any] = []  # their ids, in parallel, so stack members are never re-keyed
+    index: Dict[Any, int] = {}  # node id -> discovery number; also marks a node as visited
+    on_stack: Set[Any] = set()  # ids currently on the SCC stack, for O(1) membership tests
+    sccs: List[List[T]] = []
 
-    for start in nodes:
-        if key(start) in index:
-            continue
+    # Each frame is a suspended strongconnect call: (node id, iterator over its successors,
+    # its position on the SCC stack). ``lowlink_stack`` shadows ``work`` -- lowlink_stack[-1]
+    # is the lowlink of the frame on top.
+    work: List[Tuple[Any, Iterator[T], int]] = []
+    lowlink_stack: List[int] = []
 
-        work = [_TarjanFrame(start)]
+    def add_work(node_id: Any, node: T):
+        """Add the requested node to all tracking stacks"""
+        # next_index needs to be nonlocal because we assign to it
+        nonlocal next_index
+
+        index[node_id] = next_index
+        next_index += 1
+        stack_nodes.append(node)
+        stack_ids.append(node_id)
+        on_stack.add(node_id)
+
+        # work and lowlink_stack pick up the new values for each new node
+        work.append((node_id, iter(successors(node)), len(stack_nodes) - 1))
+        lowlink_stack.append(index[node_id])
+
+    for node in nodes:
+        node_id = key(node)
+        if node_id in index:
+            continue  # already reached by an earlier DFS tree
+
+        # Each node gets its own work stack to track the per-node strongconnect call in the
+        # recursive algorithm, and it's own lowlink_stack to track lowlinks per call
+        work = []
+        lowlink_stack = []
+
+        # Enter strongconnect(node) for a fresh DFS-tree root: number it, push it onto the SCC
+        # stack, and seed its lowlink to its own index.
+        add_work(node_id, node)
+
         while work:
-            frame = work[-1]  # frame remains on the stack until all its successors are done
-            node = frame.node
-            node_id = key(node)
+            node_id, children, stack_pos = work[-1]
 
-            if frame.successors is None:
-                # First visit to this node: assign index/lowlink and push onto the SCC stack.
-                index[node_id] = index_counter
-                lowlinks[node_id] = index_counter
-                index_counter += 1
-                stack.append(node)
-                on_stack.add(node_id)
-                frame.successors = list(successors(node))
-
-            pushed_child = False
-            while frame.next_idx < len(frame.successors):
-                dep = frame.successors[frame.next_idx]
-                frame.next_idx += 1
-                dep_id = key(dep)
-                if dep_id not in index:
-                    # Unvisited successor: descend into it (equivalent to recursing). The
-                    # parent's lowlink is updated from the child's when the child frame pops.
-                    work.append(_TarjanFrame(dep))
-                    pushed_child = True
+            for child in children:
+                child_id = key(child)
+                if child_id not in index:
+                    # Tree edge: descend into the unvisited successor (the recursive call). Number
+                    # it, push it, and suspend the current node until the child frame finishes.
+                    add_work(child_id, child)
                     break
-                elif dep_id in on_stack:
-                    # Successor is on the stack and hence in the current SCC.
-                    lowlinks[node_id] = min(lowlinks[node_id], index[dep_id])
 
-            if pushed_child:
-                continue
+                elif child_id in on_stack:
+                    # Back/cross edge to a node still on the stack: it is in the current node's
+                    # SCC, so pull the lowlink down to the successor's discovery index. (A visited
+                    # successor no longer on the stack belongs to a finished SCC and is ignored.)
+                    lowlink_stack[-1] = min(lowlink_stack[-1], index[child_id])
+            else:
+                # Every successor explored: strongconnect(node) returns.
+                work.pop()
+                lowlink = lowlink_stack.pop()
 
-            # All successors processed. If node is a root node, pop the stack into an SCC.
-            if lowlinks[node_id] == index[node_id]:
-                scc = []
-                while True:
-                    w = stack.pop()
-                    on_stack.remove(key(w))
-                    scc.append(w)
-                    if key(w) == node_id:
-                        break
-                sccs.append(scc)
+                # lowlink == index means nothing above node on the stack is reachable, so node is
+                # an SCC root and the SCC is exactly the stack suffix from its position upwards.
+                if lowlink == index[node_id]:
+                    scc = stack_nodes[stack_pos:]
+                    del stack_nodes[stack_pos:]
 
-            # Pop this frame and propagate its lowlink to the parent (the post-recursion
-            # ``min`` update in the recursive formulation).
-            work.pop()
-            if work:
-                parent_id = key(work[-1].node)
-                lowlinks[parent_id] = min(lowlinks[parent_id], lowlinks[node_id])
+                    on_stack.difference_update(stack_ids[stack_pos:])
+                    del stack_ids[stack_pos:]
+
+                    scc.reverse()  # emit deepest-first, matching the recursive pop-order
+                    sccs.append(scc)
+
+                # Fold node's lowlink into its parent's (the post-recursion min in strongconnect).
+                if work:
+                    lowlink_stack[-1] = min(lowlink_stack[-1], lowlink)
 
     return sccs
