@@ -3363,6 +3363,12 @@ class Spec:
                 changed |= self_edge._merge(other_edge)
                 continue
 
+            # An edge whose when condition cannot hold for self states nothing about it.
+            # Node attributes are merged before dependencies, so this reads the final
+            # condition, and satisfies skips the same edges.
+            if other_edge.when is not EMPTY_SPEC and not self.intersects(other_edge.when):
+                continue
+
             # _paired_edges established that this edge is new to self, so it is registered
             # directly: add_dependency_edge would look for an edge to merge with and can
             # raise, which would leave self half-way through the intersection.
