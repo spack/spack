@@ -487,7 +487,7 @@ def traverse_topo_edges_generator(edges, visitor, key=id, root=True, all_edges=F
         # Find the next SCC that still has unreleased members and release it. An SCC is ready to
         # release once all of its cross-SCC in-edges have been consumed, which -- because we
         # process SCCs in topological order -- is guaranteed by the time we reach it.
-        while next_scc < len(sccs):
+        if next_scc < len(sccs):
             scc = sccs[next_scc]
             next_scc += 1
             # Seed the earliest-discovered scc member so within-cycle release is deterministic
@@ -502,7 +502,6 @@ def traverse_topo_edges_generator(edges, visitor, key=id, root=True, all_edges=F
                 if root or edge.parent is not None:
                     yield edge
             queue.append(seed)
-            break
         else:
             # No nontrivial SCC remains to release, yet some nodes still have unconsumed in-edges.
             # This is not a cycle: it happens when a node's only in-edges come from a parent that
