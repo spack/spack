@@ -851,6 +851,11 @@ class DependencySpec:
         if not self.direct and other.direct:
             changed = True
             self.direct = True
+        # A propagated edge constrains the whole DAG, so it is the narrower of the two policies.
+        # It is also always direct, which the assignment above has already taken care of.
+        if self.propagation == PropagationPolicy.NONE and other.propagation != self.propagation:
+            changed = True
+            self.propagation = other.propagation
         return changed
 
     def _cmp_iter(self):

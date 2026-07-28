@@ -2395,6 +2395,18 @@ def test_flag_propagation_is_invisible_to_satisfies(mock_packages):
     assert merged.compiler_flags["cflags"][0].propagate
 
 
+def test_edge_propagation_is_merged(mock_packages):
+    """A propagated edge constrains the whole DAG, so it is the narrower of the two policies and
+    the meet takes it from whichever operand has it."""
+    lhs, rhs = Spec("pkg-a ^pkg-b"), Spec("pkg-a %%pkg-b")
+    forward = lhs.copy()
+    forward.constrain(rhs)
+    backward = rhs.copy()
+    backward.constrain(lhs)
+    assert forward.to_dict() == backward.to_dict()
+    assert forward.edges_to_dependencies()[0].propagation == PropagationPolicy.PREFERENCE
+
+
 def test_flag_order_survives_formatting(mock_packages):
     """Compiler flags are printed in the order they are stored, in runs of flags that agree on
     whether they propagate, so a propagating flag followed by a plain one comes back in that
