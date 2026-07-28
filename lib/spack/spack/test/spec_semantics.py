@@ -2450,6 +2450,15 @@ def test_concrete_patches_are_truncated_by_formatting(mock_packages):
     assert not spec.intersects(round_tripped)
 
 
+def test_an_anonymous_spec_is_the_top_of_the_order_only(mock_packages):
+    """A spec that leaves the name unset denotes every package, so everything is inside it and it
+    is inside nothing that names one. Being the bottom of the order as well would break
+    transitivity, since 'pkg-a' would be inside '' inside 'pkg-b'."""
+    assert Spec("pkg-a").satisfies("")
+    assert Spec("").satisfies("")
+    assert not Spec("").satisfies("pkg-b")
+
+
 def test_a_direct_dependency_is_inside_a_transitive_one(mock_packages):
     """'pkg-a ^pkg-b' means pkg-b is somewhere in the DAG and 'pkg-a %pkg-b' means it is a direct
     dependency, so the second is inside the first and not the other way around."""

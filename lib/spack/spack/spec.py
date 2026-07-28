@@ -3495,6 +3495,11 @@ class Spec:
             # objects.
             return self.concrete and self.dag_hash() == other.dag_hash()
 
+        if other.name and not self.name:
+            # A spec that leaves the name unset denotes every package, so it is not inside one
+            # that names a package, however little else it constrains.
+            return False
+
         if self.name != other.name and self.name and other.name:
             # Name mismatch can still be satisfiable if lhs provides the virtual mentioned by
             # rhs. other.versions constrains the virtual's provided-version range there, which
