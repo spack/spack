@@ -71,6 +71,7 @@ from spack.compilers.libraries import CompilerPropertyDetector
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
 from spack.util.lang import elide_list
+from spack.util.tty import color
 
 from .compat import default_clingo_control, make_error_control
 from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
@@ -89,19 +90,21 @@ class OutputConfiguration(NamedTuple):
     """Data class that contains configuration on what a clingo solve should output."""
 
     #: Print out coarse timers for different solve phases
-    timers: bool
+    timers: bool = False
     #: Whether to output Clingo's internal solver statistics
-    stats: bool
+    stats: bool = False
     #: Optional output stream for the generated ASP program
-    out: Optional[IO[str]]
+    out: Optional[IO[str]] = None
     #: If True, stop after setup and don't solve
-    setup_only: bool
+    setup_only: bool = False
+    #: Whether to print the optimization criteria of the best model
+    criteria: bool = False
+    #: Destination stream for timers, statistics and criteria (defaults to stdout)
+    stream: Optional[IO[str]] = None
 
 
 #: Default output configuration for a solve
-DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
-    timers=False, stats=False, out=None, setup_only=False
-)
+DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration()
 
 
 # type aliases for the data structures we get back from the solver
@@ -479,6 +482,60 @@ class Result:
             else:
                 msg += "\n\t(No candidate specs from solver)"
         return msg
+
+    def show_criteria(self, stream: Optional[IO[str]] = None) -> None:
+        """Print a table of the optimization criteria for the best model.
+
+        Args:
+            stream: destination stream (defaults to stdout)
+        """
+        stream = stream or sys.stdout
+
+        def cprint(string: str) -> None:
+            color.cprint(string, stream=stream)
+
+        cprint(f"@*b{{==>}} Best of {self.nmodels} considered solutions.")
+        cprint("")
+        maxlen = max(len(s.name) for s in self.criteria)
+        cprint("@*{  Priority  Value  Criterion}")
+
+        # Width of a data row past its 2-space indent, matching the row format below:
+        # 8-wide priority + 2 gap + 5-wide value + 2 gap + maxlen-wide criterion name.
+        divider_width = 8 + 2 + 5 + 2 + maxlen
+        prev_band = None
+
+        for i, criterion in enumerate(self.criteria, 1):
+            # Criteria are grouped into priority bands; print a header when the band changes.
+            band = optimization_band(criterion.priority)
+            if band != prev_band:
+                label = f"-- {band.value}"
+                dashes = "-" * max(0, divider_width - len(label) - 1)
+                cprint(f"  @*{{{label}}} @K{{{dashes}}}")
+                prev_band = band
+
+            value = f"@K{{{criterion.value:>5}}}"
+            grey_out = True
+            if criterion.value > 0:
+                value = f"@*{{{criterion.value:>5}}}"
+                grey_out = False
+
+            if grey_out:
+                lc = "@K"
+            elif criterion.kind == OptimizationKind.CONCRETE:
+                lc = "@b"
+            elif criterion.kind == OptimizationKind.BUILD:
+                lc = "@g"
+            else:
+                lc = "@y"
+
+            cprint(f"  @K{{{i:8}}}  {value}  {lc}{{{criterion.name:<{maxlen}}}}")
+        cprint("")
+        cprint("")
+        cprint("  @*{Legend:}")
+        cprint("    @g{Specs to be built}")
+        cprint("    @b{Reused specs}")
+        cprint("    @y{Other criteria}")
+        cprint("")
 
     def to_dict(self) -> dict:
         """Produces dict representation of Result object
@@ -1146,13 +1203,18 @@ class PyclingoDriver:
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
 
+        stream = output.stream or sys.stdout
+
         if output.timers:
-            timer.write_tty()
-            print()
+            timer.write_tty(out=stream)
+            print(file=stream)
 
         if output.stats:
-            print("Statistics:")
-            pprint.pprint(concretization_stats)
+            print("Statistics:", file=stream)
+            pprint.pprint(concretization_stats, stream=stream)
+
+        if output.criteria:
+            result.show_criteria(stream=stream)
 
         return result, timer, concretization_stats
 
@@ -4006,6 +4068,7 @@ class Solver:
         tests: spack.concretize.TestsType = False,
         setup_only: bool = False,
         allow_deprecated: bool = False,
+        output: Optional[OutputConfiguration] = None,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
         """
         Concretize a set of specs and track the timing and statistics for the solve
@@ -4020,12 +4083,17 @@ class Solver:
             packages (defaults to False: do not concretize test dependencies).
           setup_only: if True, stop after setup and don't solve (default False).
           allow_deprecated: allow deprecated version in the solve
+          output: full output configuration for the solve; takes precedence over
+            the individual ``out``, ``timers``, ``stats`` and ``setup_only`` arguments
         """
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
+        if output is None:
+            output = OutputConfiguration(
+                timers=timers, stats=stats, out=out, setup_only=setup_only
+            )
 
         result = self.driver.solve(
             setup,
@@ -4054,6 +4122,7 @@ class Solver:
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
         allow_deprecated: bool = False,
+        output: Optional[OutputConfiguration] = None,
     ) -> Generator[Result, None, None]:
         """Solve for a stable model of specs in multiple rounds.
 
@@ -4070,6 +4139,9 @@ class Solver:
             stats (bool): print internal statistics if set to True
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
+            output: full output configuration for the solve; takes precedence over
+                the individual ``out``, ``timers`` and ``stats`` arguments. Note that
+                ``setup_only`` stops after the setup of the first round.
         """
         # "when_possible" requires at least one literal to be solved, so an empty input is unsat
         if not specs:
@@ -4084,7 +4156,8 @@ class Solver:
         setup.concretize_everything = False
 
         input_specs = specs
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
+        if output is None:
+            output = OutputConfiguration(timers=timers, stats=stats, out=out)
         while True:
             result, _, _ = self.driver.solve(
                 setup,
@@ -4095,6 +4168,10 @@ class Solver:
                 allow_deprecated=allow_deprecated,
             )
             yield result
+
+            # With setup_only there is no answer to base further rounds on
+            if output.setup_only:
+                break
 
             # If we don't have unsolved specs we are done
             if not result.unsolved_specs:
