@@ -3297,6 +3297,18 @@ class Spec:
             if not dependency.name:
                 return UnconstrainableDependencySpecError(other)
 
+        # A package gets a virtual from exactly one of its dependencies, so an edge bringing a
+        # virtual that another package already provides under a condition that can hold at the
+        # same time contradicts it. The edges say which virtuals they provide, so this needs no
+        # lookup of what a package provides.
+        for other_edge in other.edges_to_dependencies():
+            for virtual in other_edge.virtuals:
+                for edge in self.edges_to_dependencies(virtuals=virtual):
+                    if edge.spec.name != other_edge.spec.name and edge.when.intersects(
+                        other_edge.when
+                    ):
+                        return UnsatisfiableDependencySpecError(other, self)
+
         for self_edge, other_edge in _paired_edges(self, other):
             if self_edge is None:
                 continue
