@@ -4872,9 +4872,6 @@ class Spec:
         if mutator.name and mutator.name != self.name:
             raise SpecMutationError(f"Cannot mutate spec name: spec {self} mutator {mutator}")
 
-        if mutator.namespace and mutator.namespace != self.namespace:
-            raise SpecMutationError(f"Cannot mutate spec namespace: spec {self} mutator {mutator}")
-
         if len(mutator.dependencies()) > 0:
             raise SpecMutationError(f"Cannot mutate dependencies: spec {self} mutator {mutator}")
 
@@ -4890,6 +4887,10 @@ class Spec:
             raise SpecMutationError(f"Cannot mutate abstract_hash: spec {self} mutator {mutator}")
 
         changed = False
+
+        if mutator.namespace and mutator.namespace != self.namespace:
+            self.namespace = mutator.namespace
+            changed = True
 
         if mutator.versions != vn.VersionList(":") and self.versions != mutator.versions:
             self.versions = mutator.versions
