@@ -1769,6 +1769,7 @@ class Database:
         hashes: Optional[List[str]] = None,
         origin: Optional[str] = None,
         install_tree: str = "all",
+        sort: bool = True,
     ) -> List["spack.spec.Spec"]:
         """Queries the Spack database including all upstream databases.
 
@@ -1802,6 +1803,9 @@ class Database:
             install_tree: query ``"all"`` (default), ``"local"``, ``"upstream"``, or upstream path
 
             origin: origin of the spec
+
+            sort: if ``True`` (default), sort the results. Sorting is relatively expensive, so
+                callers that do not care about order should pass ``False``.
         """
         valid_trees = ["all", "upstream", "local", self.root] + [u.root for u in self.upstream_dbs]
         if install_tree not in valid_trees:
@@ -1855,10 +1859,11 @@ class Database:
         if upstreams:
             results = list(spack.util.lang.dedupe(results, key=lambda s: s.dag_hash()))
 
-        # Sort by name first so the full sort runs on nearly sorted input and compares specs far
-        # fewer times.
-        results.sort(key=lambda s: s.name)
-        results.sort()  # type: ignore[call-arg,call-overload]
+        if sort:
+            # Sort by name first so the full sort runs on nearly sorted input and compares specs
+            # far fewer times.
+            results.sort(key=lambda s: s.name)
+            results.sort()  # type: ignore[call-arg,call-overload]
         return results
 
     def query_one(
