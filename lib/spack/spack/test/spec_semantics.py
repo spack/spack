@@ -390,10 +390,10 @@ class TestSpecSemantics:
             (
                 'mpich cflags="-O3 -g"',
                 'mpich cflags=="-O3"',
-                'mpich cflags="-O3 -g"',
-                'mpich cflags="-O3 -g"',
-                [],
-                [],
+                'mpich cflags=="-O3" cflags="-g"',
+                'mpich cflags=="-O3" cflags="-g"',
+                [("cflags", "-O3")],
+                [("cflags", "-O3")],
             ),
             (
                 'mpich cflags=="-O3 -g"',
@@ -2375,6 +2375,24 @@ def test_the_default_format_leaves_out_the_namespace(mock_packages):
     assert spec.namespace == "builtin_mock"
     assert round_tripped.namespace is None
     assert round_tripped.satisfies(spec) and spec.satisfies(round_tripped)
+
+
+def test_flag_propagation_is_invisible_to_satisfies(mock_packages):
+    """A propagating flag applies to a package and to the packages it is built against, which is
+    a condition on the whole DAG that concretization discharges into plain flags on every node it
+    reaches, so satisfies follows non-contradiction here the same way it does for a propagating
+    variant. CompilerFlag subclasses str, so == and hash ignore the propagation and that falls
+    out by itself.
+
+    The merge does keep the propagation of either side, though, which is what makes the meet the
+    narrower of the two constraints rather than the plain flag."""
+    propagating, plain = Spec("pkg-a cflags==-O2"), Spec("pkg-a cflags=-O2")
+    assert propagating.satisfies(plain)
+    assert plain.satisfies(propagating)
+
+    merged = plain.copy()
+    merged.constrain(propagating)
+    assert merged.compiler_flags["cflags"][0].propagate
 
 
 def test_flag_order_survives_formatting(mock_packages):
