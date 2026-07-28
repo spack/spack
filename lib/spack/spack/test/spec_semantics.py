@@ -2365,6 +2365,14 @@ def test_satisfies_and_subscript_with_compilers(config, mock_packages):
     assert s["pkg-a"].dependencies(name="gmake")[0] == s["pkg-a"]["gmake"]
 
 
+def test_an_anonymous_spec_is_the_top_of_the_order_only(mock_packages):
+    """A spec that leaves the name unset denotes every package, so everything is inside it and it
+    is inside nothing that names one. Being the bottom too would break transitivity."""
+    assert Spec("pkg-a").satisfies("")
+    assert Spec("").satisfies("")
+    assert not Spec("").satisfies("pkg-b")
+
+
 @pytest.mark.parametrize(
     "spec_str,spec_fmt,expected",
     [
