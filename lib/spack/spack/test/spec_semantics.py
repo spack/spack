@@ -2058,6 +2058,17 @@ def test_constrain_dependencies_copies(mock_packages):
     assert y == Spec("^foo")
 
 
+def test_edge_propagation_is_merged(mock_packages):
+    """A propagated edge constrains the whole DAG, so it is the narrower of the two policies and
+    the meet takes it from whichever spec has it."""
+    lhs, rhs = Spec("pkg-a ^pkg-b"), Spec("pkg-a %%pkg-b")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    assert forward.edges_to_dependencies()[0].propagation == PropagationPolicy.PREFERENCE
+    assert backward.edges_to_dependencies()[0].propagation == PropagationPolicy.PREFERENCE
+
+
 def test_abstract_hash_intersects_and_satisfies(config, mock_packages):
     concrete: Spec = spack.concretize.concretize_one("pkg-a")
     hash = concrete.dag_hash()
