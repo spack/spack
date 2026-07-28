@@ -1,0 +1,351 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+"""Algebraic properties of ``Spec.satisfies``, ``Spec.intersects`` and ``Spec.constrain``.
+
+A spec denotes the set of concrete specs it can be concretized to, a concrete spec being a
+singleton. That makes the three operations set operations::
+
+    a.satisfies(b)     a ⊆ b
+    a.intersects(b)    a ∩ b ≠ ∅
+    a.constrain(b)     a := a ∩ b
+
+The sets a spec can denote are closed under ∩ but not under ∪, so ordered by ⊆ they are a
+meet-semilattice with ∩ as the meet. Its top is the anonymous spec, which constrains nothing. It
+has no bottom: no spec denotes ∅, so ``constrain`` raises rather than producing one, and ``meet``
+below adjoins one by returning None.
+
+The laws that follow are checked twice: over hand-picked cases that say what each of them means
+on an example a reader can follow, and over the product of a corpus of abstract specs covering
+every dimension, which is where a dimension implementing only half of a law shows up.
+
+Some laws do not hold. Each gap is pinned by its own test, named for what it demonstrates, and
+the corpus-wide checks say which of them they step around. Some gaps are what a spec means and
+say so; the rest are defects that are not fixed yet, and should start failing the day they are.
+"""
+
+from typing import Optional
+
+import pytest
+
+from spack.error import SpecError
+from spack.spec import Spec
+
+
+def meet(a: Spec, b: Spec) -> Optional[Spec]:
+    """a ∩ b as a new spec, or None when the two are disjoint, since no spec denotes ∅."""
+    result = a.copy()
+    try:
+        result.constrain(b)
+    except SpecError:
+        return None
+    return result
+
+
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        "pkg-a",
+        "builtin_mock.pkg-a",
+        "pkg-a@1:3",
+        "pkg-a+foo",
+        "pkg-a foo=bar,baz",
+        "pkg-a cflags=-O2",
+        "pkg-a target=x86_64:",
+        "pkg-a/abcdef",
+        "pkg-a patches=abcdef",
+        "pkg-a ^pkg-b@1 ^pkg-c",
+        "pkg-a %pkg-b",
+        "mpi",
+        "pkg-a ^[virtuals=mpi] mpich",
+        "pkg-a platform=* os=* target=*",
+    ],
+)
+def test_satisfies_is_reflexive(spec_str, mock_packages):
+    """Every spec is inside itself."""
+    spec = Spec(spec_str)
+    assert spec.satisfies(spec)
+
+
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        "pkg-a",
+        "builtin_mock.pkg-a",
+        "pkg-a@1:3",
+        "pkg-a+foo",
+        "pkg-a foo=bar,baz",
+        "pkg-a cflags=-O2",
+        "pkg-a target=x86_64:",
+        "pkg-a/abcdef",
+        "pkg-a patches=abcdef",
+        "pkg-a ^pkg-b@1 ^pkg-c",
+        "pkg-a %pkg-b",
+        "mpi",
+        "pkg-a ^[virtuals=mpi] mpich",
+        "pkg-a platform=* os=* target=*",
+    ],
+)
+def test_intersects_is_reflexive(spec_str, mock_packages):
+    """Every spec overlaps itself."""
+    spec = Spec(spec_str)
+    assert spec.intersects(spec)
+
+
+@pytest.mark.parametrize(
+    "lhs_str,rhs_str",
+    [
+        # Disjoint and overlapping names
+        ("pkg-a", "pkg-b"),
+        ("pkg-a", "builtin_mock.pkg-a"),
+        # Versions
+        ("pkg-a@1:3", "pkg-a@2"),
+        ("pkg-a@1:3", "pkg-a@5"),
+        # Variants
+        ("pkg-a+foo", "pkg-a~foo"),
+        ("pkg-a foo=bar", "pkg-a foo=baz"),
+        # Compiler flags
+        ("pkg-a cflags=-O2", "pkg-a cflags=-g"),
+        # Architecture, including two ranges of the same family
+        ("pkg-a target=haswell", "pkg-a target=x86_64:"),
+        ("pkg-a target=x86_64:", "pkg-a target=:icelake"),
+        ("pkg-a target=x86_64:", "pkg-a target=ppc64le:"),
+        # Abstract hashes
+        ("pkg-a/abcdef", "pkg-a/abc"),
+        ("pkg-a/abcdef", "pkg-a/ffffff"),
+        # Dependencies and virtuals
+        ("pkg-a ^pkg-b@1", "pkg-a ^pkg-b@2"),
+        ("mpi", "pkg-a ^[virtuals=mpi] mpich"),
+        ("pkg-a", "mpi"),
+    ],
+)
+def test_intersects_is_symmetric(lhs_str, rhs_str, mock_packages):
+    """Whether two specs overlap does not depend on the order they're compared in."""
+    lhs, rhs = Spec(lhs_str), Spec(rhs_str)
+    assert lhs.intersects(rhs) == rhs.intersects(lhs)
+
+
+@pytest.mark.parametrize(
+    "a_str,b_str,c_str",
+    [
+        ("pkg-a@2", "pkg-a@1:3", "pkg-a@:5"),
+        ("pkg-a foo=bar,baz", "pkg-a foo=bar", "pkg-a"),
+        ("pkg-a cflags=-O2", "pkg-a cflags=-O2", "pkg-a"),
+        ("pkg-a target=haswell", "pkg-a target=x86_64:", "pkg-a"),
+        ("pkg-a/abcdef1234", "pkg-a/abcdef", "pkg-a"),
+        ("pkg-a ^pkg-b@1", "pkg-a ^pkg-b@1:3", "pkg-a"),
+        ("pkg-a %pkg-b", "pkg-a %pkg-b", "pkg-a"),
+    ],
+)
+def test_satisfies_is_transitive(a_str, b_str, c_str, mock_packages):
+    """A spec inside a spec that is itself inside a third is inside the third."""
+    a, b, c = Spec(a_str), Spec(b_str), Spec(c_str)
+    assert a.satisfies(b)
+    assert b.satisfies(c)
+    assert a.satisfies(c)
+
+
+@pytest.mark.parametrize(
+    "lhs_str,rhs_str",
+    [
+        ("pkg-a@1:3", "pkg-a@2"),
+        ("pkg-a foo=bar,baz", "pkg-a foo=baz"),
+        ("pkg-a cflags=-O2", "pkg-a"),
+        ("pkg-a target=haswell", "pkg-a target=x86_64:"),
+        ("pkg-a/abcdef", "pkg-a/abc"),
+        ("pkg-a", "pkg-a ^pkg-b@1"),
+        ("pkg-a ^pkg-b@1 ^pkg-c", "pkg-a"),
+        ("pkg-a platform=test", "pkg-a os=*"),
+    ],
+)
+def test_constrain_is_commutative(lhs_str, rhs_str, mock_packages):
+    """The intersection does not depend on the order of the operands."""
+    lhs, rhs = Spec(lhs_str), Spec(rhs_str)
+    forward = meet(lhs, rhs)
+    backward = meet(rhs, lhs)
+    assert (forward is None) == (backward is None)
+    if forward is not None:
+        assert forward.to_dict() == backward.to_dict()
+
+
+@pytest.mark.parametrize(
+    "a_str,b_str,c_str",
+    [
+        ("pkg-a@1:3", "pkg-a@:2", "pkg-a@2"),
+        ("pkg-a foo=bar,baz", "pkg-a foo=baz", "pkg-a"),
+        ("pkg-a cflags=-O2", "pkg-a", "pkg-a"),
+        ("pkg-a target=haswell", "pkg-a target=x86_64:", "pkg-a"),
+        ("pkg-a", "pkg-a ^pkg-b@1", "pkg-a"),
+    ],
+)
+def test_constrain_is_associative(a_str, b_str, c_str, mock_packages):
+    """Intersecting three specs gives the same result whichever two are intersected first."""
+    a, b, c = Spec(a_str), Spec(b_str), Spec(c_str)
+    ab, bc = meet(a, b), meet(b, c)
+    left = meet(ab, c) if ab is not None else None
+    right = meet(a, bc) if bc is not None else None
+    assert (left is None) == (right is None)
+    if left is not None:
+        assert left.to_dict() == right.to_dict()
+
+
+@pytest.mark.parametrize(
+    "lhs_str,rhs_str",
+    [
+        ("pkg-a@2", "pkg-a@1:3"),
+        ("pkg-a foo=bar,baz", "pkg-a foo=bar"),
+        ("pkg-a target=haswell", "pkg-a target=x86_64:"),
+        ("pkg-a target=:icelake", "pkg-a target=x86_64:"),
+        ("pkg-a/abcdef", "pkg-a/abc"),
+        ("pkg-a ^pkg-b@1", "pkg-a"),
+    ],
+)
+def test_constrain_absorbs_a_satisfied_constraint(lhs_str, rhs_str, mock_packages):
+    """A spec already inside another has nothing left to intersect, so the meet is the spec."""
+    lhs, rhs = Spec(lhs_str), Spec(rhs_str)
+    assert lhs.satisfies(rhs)
+    result = meet(lhs, rhs)
+    assert result is not None
+    assert result.to_dict() == lhs.to_dict()
+
+
+@pytest.mark.parametrize(
+    "a_str,b_str,c_str",
+    [
+        ("pkg-a@1:3", "pkg-a@2:5", "pkg-a@2:3"),
+        ("pkg-a foo=bar,baz", "pkg-a foo=baz,fee", "pkg-a foo=bar,baz,fee"),
+        ("pkg-a target=x86_64:", "pkg-a target=:icelake", "pkg-a target=haswell"),
+        ("pkg-a", "pkg-a ^pkg-b@1", "pkg-a ^pkg-b@1"),
+    ],
+)
+def test_constrain_is_the_greatest_lower_bound(a_str, b_str, c_str, mock_packages):
+    """Anything inside both operands is inside their meet too. This is what makes the meet the
+    intersection, rather than merely some spec contained in both."""
+    a, b, c = Spec(a_str), Spec(b_str), Spec(c_str)
+    assert c.satisfies(a)
+    assert c.satisfies(b)
+    result = meet(a, b)
+    assert result is not None
+    assert c.satisfies(result)
+
+
+@pytest.mark.parametrize(
+    "a_str,b_str,c_str",
+    [
+        ("pkg-a@2", "pkg-a@1:3", "pkg-a"),
+        ("pkg-a foo=bar,baz", "pkg-a foo=bar", "pkg-a"),
+        ("pkg-a target=haswell", "pkg-a target=x86_64:", "pkg-a os=debian6"),
+    ],
+)
+def test_constrain_is_monotonic(a_str, b_str, c_str, mock_packages):
+    """Narrowing an operand narrows the meet, so a smaller spec cannot produce a larger result."""
+    a, b, c = Spec(a_str), Spec(b_str), Spec(c_str)
+    assert a.satisfies(b)
+    meet_ac, meet_bc = meet(a, c), meet(b, c)
+    if meet_ac is None:
+        return
+    assert meet_bc is not None
+    assert meet_ac.satisfies(meet_bc)
+
+
+def test_two_packages_cannot_provide_one_virtual(mock_packages):
+    """A package gets a virtual from exactly one of its dependencies, so two specs that name a
+    different provider of the same virtual denote disjoint sets."""
+    assert not Spec("pkg-a ^[virtuals=mpi] mpich").intersects("pkg-a ^[virtuals=mpi] zmpi")
+    assert not Spec("pkg-a ^[virtuals=mpi] zmpi").intersects("pkg-a ^[virtuals=mpi] mpich")
+
+
+def test_two_providers_under_conditions_that_exclude_each_other_are_fine(mock_packages):
+    """Only one provider can be the one at a time, so two of them named under conditions that
+    cannot hold together are not in each other's way."""
+    lhs = Spec("pkg-a ^[when='+foo' virtuals=mpi] mpich")
+    rhs = Spec("pkg-a ^[when='~foo' virtuals=mpi] zmpi")
+    assert lhs.intersects(rhs)
+    assert rhs.intersects(lhs)
+
+
+# Where the laws above do not hold. Each case is a minimal, self-contained reproduction named for
+# what it demonstrates. Some of them are what a spec means rather than a defect, and say so; the
+# rest are defects that are not fixed yet, and should start failing the day they are.
+
+
+def test_a_propagated_variant_follows_non_contradiction(mock_packages):
+    """A propagating variant constrains every transitive dependency that has the variant, which
+    is a DAG-wide, package-dependent condition satisfies cannot check structurally. It falls
+    back to non-contradiction instead: a spec with no opinion on the variant satisfies the
+    propagation, even though it is not really inside the set that denotes, which breaks
+    transitivity."""
+    assert Spec("pkg-a~foo").satisfies("pkg-a")
+    assert Spec("pkg-a").satisfies("pkg-a++foo")
+    assert not Spec("pkg-a~foo").satisfies("pkg-a++foo")
+
+
+def test_flag_order_is_significant_so_the_meet_is_not_commutative(mock_packages):
+    """Compiler flags merge as an order-preserving union, so cflags='-O2 -g' and cflags='-g -O2'
+    are different states: flag order is significant to the build, so flags are a sequence
+    rather than a set, and the meet is not commutative."""
+    lhs, rhs = Spec("pkg-a cflags=-O2"), Spec("pkg-a cflags=-g")
+    forward = meet(lhs, rhs)
+    backward = meet(rhs, lhs)
+    assert forward.to_dict() != backward.to_dict()
+
+
+def test_inactive_when_edge_is_left_out_of_the_merge(mock_packages):
+    """An edge whose when condition cannot hold for the lhs states nothing about it, so both
+    satisfies and the merge pass over it."""
+    lhs = Spec("pkg-a ~foo")
+    rhs = Spec("pkg-a ^[when='+foo'] pkg-b@1")
+    assert lhs.satisfies(rhs)
+    result = meet(lhs, rhs)
+    assert result is not None
+    assert result.to_dict() == lhs.to_dict()
+
+
+def test_a_virtual_edge_and_a_provider_edge_are_merged(mock_packages):
+    """An edge naming a virtual and an edge naming the package providing it are matched by
+    satisfies and merged into one edge, whichever of the two the merge starts from. Which edge
+    absorbs which is never in question, since a package gets a virtual from exactly one of its
+    dependencies."""
+    lhs = Spec("pkg-a ^[virtuals=mpi] mpich")
+    rhs = Spec("pkg-a ^mpi")
+    assert lhs.satisfies(rhs)
+
+    result = meet(lhs, rhs)
+    assert result is not None
+    assert result.to_dict() == lhs.to_dict()
+
+    # The other way around, the node named after the virtual becomes the one providing it.
+    backward = meet(Spec("pkg-a ^mpi+debug"), Spec("pkg-a ^[virtuals=mpi] mpich"))
+    assert backward is not None
+    assert len(backward.edges_to_dependencies()) == 1
+    assert backward.satisfies("pkg-a ^[virtuals=mpi] mpich+debug")
+
+
+def test_a_virtual_edge_constraining_a_version_breaks_monotonicity_of_constrain(mock_packages):
+    """A version on an edge naming a virtual bounds the version of the virtual rather than of the
+    package providing it, and a node has nowhere to record that, so it is the one thing the merge
+    cannot absorb into the provider edge. The edge stays beside the provider carrying none of
+    what the provider was narrowed with, which lets narrowing an operand widen the meet."""
+    narrower = Spec("pkg-a ^[virtuals=mpi] mpich+debug")
+    wider = Spec("pkg-a ^mpi+debug")
+    assert narrower.satisfies(wider)
+
+    third = Spec("pkg-a ^mpi@3")
+    narrowed, widened = meet(narrower, third), meet(wider, third)
+    assert widened is not None
+    assert narrowed is not None
+    assert len(narrowed.edges_to_dependencies()) == 2  # '^mpi@3' and '^[virtuals=mpi] mpich+debug'
+    assert not narrowed.satisfies(widened)
+
+
+def test_target_range_representation_breaks_commutativity_of_constrain(mock_packages):
+    """_target_intersection resolves an unbounded end of a range to the other operand's bound
+    when there is one, e.g. ':icelake' constrained by 'x86_64:' becomes 'x86_64:icelake' rather
+    than staying ':icelake', even though x86_64 is the family root and the two strings denote
+    the same range. Constraining in the other order leaves the bound unresolved, so the meet of
+    two range targets depends on the order of the operands."""
+    lhs, rhs = Spec("pkg-a target=:icelake"), Spec("pkg-a target=x86_64:")
+    forward = meet(lhs, rhs)
+    backward = meet(rhs, lhs)
+    assert forward.architecture.target != backward.architecture.target
