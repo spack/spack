@@ -2364,6 +2364,45 @@ def test_satisfies_and_subscript_with_compilers(config, mock_packages):
     assert s["pkg-a"].dependencies(name="gmake")[0] == s["pkg-a"]["gmake"]
 
 
+def test_the_default_format_leaves_out_the_namespace(mock_packages):
+    """The default format prints the namespace only for an anonymous spec, since every concrete
+    spec has one and printing it everywhere would be noise, so a named spec that has one loses it
+    when it goes through a string. The two still denote the same set, since an unset namespace on
+    the left is read as no constraint."""
+    spec = Spec("builtin_mock.pkg-a")
+    round_tripped = Spec(str(spec))
+
+    assert spec.namespace == "builtin_mock"
+    assert round_tripped.namespace is None
+    assert round_tripped.satisfies(spec) and spec.satisfies(round_tripped)
+
+
+def test_flag_order_survives_formatting(mock_packages):
+    """Compiler flags are printed in the order they are stored, in runs of flags that agree on
+    whether they propagate, so a propagating flag followed by a plain one comes back in that
+    order. Flag order is significant to the build, so losing it would change the hash."""
+    spec = Spec("pkg-a cflags==-O2").copy()
+    spec.constrain(Spec("pkg-a cflags=-g"))
+    assert [str(flag) for flag in spec.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert str(spec) == "pkg-a cflags==-O2 cflags=-g"
+
+    round_tripped = Spec(str(spec))
+    assert [str(flag) for flag in round_tripped.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert round_tripped.dag_hash() == spec.dag_hash()
+
+
+def test_concrete_patches_are_truncated_by_formatting(mock_packages):
+    """Patch checksums are abbreviated to seven characters when printed. A concrete patches value
+    takes exactly the values it lists, so the abbreviation is not a prefix constraint that the
+    full checksum satisfies: the spec that comes back out of a string is disjoint from the one
+    that went in."""
+    spec = Spec("pkg-a patches:=abcdef1234567890")
+    round_tripped = Spec(str(spec))
+
+    assert round_tripped.variants["patches"].value == ("abcdef1",)
+    assert not spec.intersects(round_tripped)
+
+
 @pytest.mark.parametrize(
     "spec_str,spec_fmt,expected",
     [
