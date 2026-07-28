@@ -30,7 +30,7 @@ do_not_impose(EffectID, node(X, Package)) :-
   trigger_requestor_node(TriggerID, node(X, Package)).
 
 opt_criterion(1, "high", "", 0, "number of input specs not concretized").
-#minimize { 
+#minimize {
     1@Priority, ID
     : literal_not_solved(ID),
     opt_priority(Priority, _, _, _, "number of input specs not concretized")

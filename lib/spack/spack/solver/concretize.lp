@@ -2171,11 +2171,11 @@ build(PackageNode) :- attr("node", PackageNode), not concrete(PackageNode).
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
 %-----------------------------------------------------------------------------
-% 
+%
 % +-----+-----------------------------------------------------------------+
 % |prio |     high <---                                    ---> low       |
 % |-----|-------+------+-----------------+-------+-----------------+------|
-% |loc  | error | high |      built      | hinge |    concrete     | low  | 
+% |loc  | error | high |      built      | hinge |    concrete     | low  |
 % |-----|-------|------|-----------------|-------|-----------------|------|
 % |type | n/a   | n/a  |  fixed & level  | n/a   |  fixed & level  | n/a  |
 % |-----|-------|------|------+------+---|-------|------+------+---|------|
@@ -2200,8 +2200,8 @@ build(PackageNode) :- attr("node", PackageNode), not concrete(PackageNode).
 %   "level" share the same index "namespace" per level. "fixed" criteria are
 %   only active level specified by `opt_criterion`.
 %
-% Note that level(PackageNode, Level)  is a computed value from the DAG and 
-% is only used for "level" criteria. 
+% Note that level(PackageNode, Level)  is a computed value from the DAG and
+% is only used for "level" criteria.
 
 % Constants for calculating optimization criterion priority
 %   level_opt is level & fixed per level
@@ -2230,7 +2230,7 @@ build_priority(PackageNode, concr_offset) :- concrete(PackageNode), attr("node",
 %-----------------------------------------------------------------------------
 % We define the "level" of a package node as its minimum depth in the DAG. For
 % convenience of optimization priority computation, level values are
-% reversed: roots are set to `max_depth` with level decreasing further into 
+% reversed: roots are set to `max_depth` with level decreasing further into
 % the DAG.
 %
 % if max_depth = 6:
@@ -2243,28 +2243,28 @@ build_priority(PackageNode, concr_offset) :- concrete(PackageNode), attr("node",
 %     |/
 %     E         level = 4
 %
-% Computing exact depth for package nodes during search is costly and 
-% inefficient for the solver. For all possible paths to a node, all edges must 
-% be assigned for clingo to derive a depth. What we really want is a depth 
-% value that can change when new packages nodes are created during the search. 
-% First order logic is monotonic, so we cannot "disprove" a level with additional 
+% Computing exact depth for package nodes during search is costly and
+% inefficient for the solver. For all possible paths to a node, all edges must
+% be assigned for clingo to derive a depth. What we really want is a depth
+% value that can change when new packages nodes are created during the search.
+% First order logic is monotonic, so we cannot "disprove" a level with additional
 % facts.
 %
 % Since dependency paths cannot be deleted without backtracking, level is a
 % monotonically increasing property of package nodes. Thus we can treat level
-% facts as "level is at least N", written as `level(PackageNode, N)`. If shorter 
-% paths are derived, we derive a new `level(PackageNode, M)` fact. We avoid 
+% facts as "level is at least N", written as `level(PackageNode, N)`. If shorter
+% paths are derived, we derive a new `level(PackageNode, M)` fact. We avoid
 % taking the minimum of these facts with the following trick.
 %
 % Package nodes can have multiple `level(PackageNode, _)` facts derived from
 % different paths, so we enforce that `level(PackageNode, N)` implies
 % `level(PackageNode, N-1)`. Because optimization criteria is lexicographically
-% optimized by priority, an optimal solution with a cost of [x_1, x_2, x_3, ...] 
-% will also be the optimal solution if cost is "prefix summed": 
+% optimized by priority, an optimal solution with a cost of [x_1, x_2, x_3, ...]
+% will also be the optimal solution if cost is "prefix summed":
 % [x_1, x_1 + x_2, x_1 + x_2 + x_3, ...]. This prefix sum effect is removed when
 % displaying optimization criteria to the user for clarity.
 %
-% Because all level(PackageNode, _) facts are derived easily by unit propagation, 
+% Because all level(PackageNode, _) facts are derived easily by unit propagation,
 % it should be easier for clingo to find unsat cores for optimization.
 
 #const max_depth = 2.
@@ -2372,7 +2372,7 @@ opt_priority(Priority, concr_offset, "concr", "level", Description) :-
 
 opt_priority(Priority, low_offset, "low", "", Description) :-
     opt_criterion(N, "low", _, _, Description),
-    Priority = N + low_offset. 
+    Priority = N + low_offset.
 
 % show criteria
 #minimize {
@@ -2503,7 +2503,7 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
 #minimize{
     1@Priority, Hash
     : compiler_penalty_from_reuse(Hash),
-      opt_priority(Priority, concr_offset, _, _, "compiler penalty from reuse")    
+      opt_priority(Priority, concr_offset, _, _, "compiler penalty from reuse")
 }.
 
 
@@ -2536,7 +2536,7 @@ compiler_penalty(PackageNode, C-1) :-
 
 #minimize{
     Penalty@Priority, PackageNode
-    : compiler_penalty(PackageNode, Penalty), 
+    : compiler_penalty(PackageNode, Penalty),
       build_priority(PackageNode, BuildPriority),
       opt_priority(Priority, BuildPriority, _, _, "number of compilers used on the same node")
 }.
@@ -2661,7 +2661,7 @@ compiler_penalty(PackageNode, C-1) :-
 
 % Reduce symmetry on duplicates
 #minimize{
-    Weight@Priority, PackageNode,Reason 
+    Weight@Priority, PackageNode,Reason
     : duplicate_penalty(PackageNode, Weight, Reason),
       opt_priority(Priority, _, _, _, "penalty on symmetric duplicates")
 }.
