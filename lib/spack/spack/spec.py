@@ -2919,6 +2919,10 @@ class Spec:
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
         self._concrete = value
+        # A direct dependency is a constraint written with %, so the flag belongs on abstract
+        # specs only. Every edge of a materialized DAG is a direct dependency in fact.
+        for edge in self.edges_to_dependencies():
+            edge.direct = not value
         self._validate_version()
         for variant in self.variants.values():
             variant.concrete = True

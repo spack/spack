@@ -14,11 +14,14 @@ import spack.bootstrap.status
 import spack.compilers.config
 import spack.config
 import spack.environment
+import spack.spec
 import spack.store
 import spack.util.executable
 from spack.active_environment import active_environment
 
 from .conftest import _true
+
+PROTOTYPE_DIR = pathlib.Path(spack.bootstrap.clingo.__file__).parent / "prototypes"
 
 
 @pytest.fixture
@@ -308,3 +311,17 @@ def test_use_store_does_not_try_writing_outside_root(
     with spack.store.use_store(user_store):
         assert spack.config.CONFIG.get("config:install_tree:root") == str(user_store)
     assert spack.config.CONFIG.get("config:install_tree:root") == initial_store
+
+
+@pytest.mark.parametrize("prototype", sorted(x.name for x in PROTOTYPE_DIR.glob("*.json")))
+def test_prototype_answers_a_constraint_on_its_compiler(prototype):
+    """The bootstrap concretizer edits a prototype with the concreteness flag cleared, and then
+    picks the patches to apply from conditions such as '%msvc@19.38:'. Its edges are still the
+    edges of a concrete DAG there, so the compiler it records answers such a condition."""
+    s = spack.spec.Spec.from_specfile(str(PROTOTYPE_DIR / prototype))
+    compiler = next(x.spec for x in s.edges_to_dependencies() if "cxx" in x.virtuals)
+
+    s._mark_concrete(False)
+
+    assert s.satisfies(f"%{compiler.name}")
+    assert s.satisfies(f"%{compiler.name}@{compiler.version}")
