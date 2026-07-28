@@ -5,11 +5,13 @@
 import argparse
 import re
 import sys
+from typing import List, Optional
 
 import spack
 import spack.binary_distribution
 import spack.cmd
 import spack.config
+import spack.environment as ev
 import spack.hash_types as ht
 import spack.package_base
 import spack.spec
@@ -17,7 +19,6 @@ from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.solver import asp
 from spack.util import tty
-from spack.util.tty import color
 
 description = "show what would be installed, given a spec"
 section = "build"
@@ -103,74 +104,70 @@ for further documentation regarding the spec syntax, see:
     )
 
 
-def _process_result(result, show, required_format, kwargs):
-    opt, _, _ = min(result.answers)
-    if ("opt" in show) and (not required_format):
-        tty.msg("Best of %d considered solutions." % result.nmodels)
-
-        print()
-        maxlen = max(len(s.name) for s in result.criteria)
-        color.cprint("@*{  Priority  Value  Criterion}")
-
-        # Width of a data row past its 2-space indent, matching the row format below:
-        # 8-wide priority + 2 gap + 5-wide value + 2 gap + maxlen-wide criterion name.
-        divider_width = 8 + 2 + 5 + 2 + maxlen
-        prev_band = None
-
-        for i, criterion in enumerate(result.criteria, 1):
-            # Criteria are grouped into priority bands; print a header when the band changes.
-            band = criterion.band
-            if band != prev_band:
-                label = f"-- {band}"
-                dashes = "-" * max(0, divider_width - len(label) - 1)
-                color.cprint(f"  @*{{{label}}} @K{{{dashes}}}")
-                prev_band = band
-
-            value = f"@K{{{criterion.value:>5}}}"
-            grey_out = True
-            if criterion.value > 0:
-                value = f"@*{{{criterion.value:>5}}}"
-                grey_out = False
-
-            if grey_out:
-                lc = "@K"
-            elif criterion.kind == asp.OptimizationKind.CONCRETE:
-                lc = "@b"
-            elif criterion.kind == asp.OptimizationKind.BUILD:
-                lc = "@g"
+def _display_specs(specs: List[spack.spec.Spec], required_format: Optional[str], kwargs) -> None:
+    """Print concrete specs in the requested format (tree by default)."""
+    if required_format:
+        for spec in specs:
+            # With -y, just print YAML to output.
+            if required_format == "yaml":
+                # use write because to_yaml already has a newline.
+                sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
+            elif required_format == "json":
+                sys.stdout.write(spec.to_json(hash=ht.dag_hash))
             else:
-                lc = "@y"
+                print(spec.format(required_format))
+    else:
+        tree_str = spack.spec.tree(specs, color=sys.stdout.isatty(), **kwargs)
+        sys.stdout.write(tree_str)
+    print()
 
-            color.cprint(f"  @K{{{i:8}}}  {value}  {lc}{{{criterion.name:<{maxlen}}}}")
-        print()
-        print()
-        color.cprint("  @*{Legend:}")
-        color.cprint("    @g{Specs to be built}")
-        color.cprint("    @b{Reused specs}")
-        color.cprint("    @y{Other criteria}")
-        print()
+
+def _process_result(result, show, required_format, kwargs):
+    if ("opt" in show) and (not required_format):
+        result.show_criteria()
 
     # dump the solutions as concretized specs
     if "solutions" in show:
-        if required_format:
-            for spec in result.specs:
-                # With -y, just print YAML to output.
-                if required_format == "yaml":
-                    # use write because to_yaml already has a newline.
-                    sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
-                elif required_format == "json":
-                    sys.stdout.write(spec.to_json(hash=ht.dag_hash))
-                else:
-                    print(spec.format(required_format))
-        else:
-            tree_str = spack.spec.tree(
-                result.specs, color=color.get_color_when(sys.stdout), **kwargs
-            )
-            sys.stdout.write(tree_str)
-        print()
+        _display_specs(result.specs, required_format, kwargs)
 
     if result.unsolved_specs and "solutions" in show:
         tty.msg(asp.Result.format_unsolved(result.unsolved_specs))
+
+
+def _env_spec(env: ev.Environment, args, show, required_format, kwargs) -> None:
+    """Show the environment roots, concretizing only the ones that aren't yet concrete.
+
+    The environment is not modified, in memory or on disk. Solver diagnostics (asp
+    program, optimization criteria, timers, statistics) cover only the new solves.
+    """
+    diagnostics = asp.OutputConfiguration(
+        timers=args.timers,
+        stats=args.stats,
+        out=sys.stdout if "asp" in show else None,
+        setup_only=set(show) == {"asp"},
+        criteria="opt" in show and not required_format,
+    )
+    wants_diagnostics = any(diagnostics)
+
+    # With setup_only nothing concretizes, so we can't use the result to detect a
+    # fully concrete environment; check the roots upfront instead.
+    force = spack.config.CONFIG.get("concretizer:force")
+    already_concrete = {x.root for x in env.concretized_roots}
+    fully_concrete = not force and all(s in already_concrete for s in env.user_specs)
+
+    if wants_diagnostics and fully_concrete:
+        tty.msg(
+            "The environment is already concrete, so there is nothing to solve and no"
+            " solver diagnostics to show. Re-run with --force to see diagnostics for a"
+            " full re-concretization."
+        )
+
+    with env.transient_concretization():
+        env.concretize(output=diagnostics if wants_diagnostics else None)
+        concrete_specs = [concrete for _, concrete in env.concretized_specs()]
+
+    if "solutions" in show and not diagnostics.setup_only:
+        _display_specs(concrete_specs, required_format, kwargs)
 
 
 def spec(parser, args):
@@ -220,7 +217,10 @@ def spec(parser, args):
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs)
     elif env:
-        specs = list(env.user_specs)
+        # Concretize through the environment, so specs that are already concrete
+        # are kept as-is and only new user specs are solved for.
+        _env_spec(env, args, show, required_format, kwargs)
+        return
     else:
         args.subparser.error("requires at least one spec or an active environment")
 

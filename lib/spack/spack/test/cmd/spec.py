@@ -10,6 +10,7 @@ import spack.cmd
 import spack.concretize
 import spack.environment as ev
 import spack.error
+import spack.solver.asp
 import spack.spec
 from spack.config import Configuration
 from spack.main import SpackCommand, SpackCommandError
@@ -172,6 +173,165 @@ def test_env_aware_spec(mutable_mock_env_path):
         assert "libdwarf@20130729" in output
         assert "libelf@0.8.1" in output
         assert "mpich@3.0.4" in output
+
+
+def _concretize_and_lock(env: ev.Environment) -> None:
+    with env:
+        env.concretize()
+        env.write()
+
+
+@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+def test_spec_does_not_reconcretize_concrete_env(
+    unify, mutable_mock_env_path, mutable_config: Configuration
+):
+    """A concrete environment's roots must be shown as-is, even if a fresh solve
+    would pick something different (regression for spack/spack#...)."""
+    mutable_config.set("concretizer:unify", unify)
+    env = ev.create("test")
+    env.add("mpileaks")
+    _concretize_and_lock(env)
+    locked_hashes = {s.dag_hash() for s in env.concrete_roots()}
+
+    # A fresh solve would now pick a different mpileaks version
+    mutable_config.set("packages", {"mpileaks": {"require": ["@2.2"]}})
+
+    with env:
+        output = spec("-l")
+    assert "mpileaks@2.3" in output
+    assert any(h[:7] in output for h in locked_hashes)
+    assert "mpileaks@2.2" not in output
+
+
+def test_spec_env_force_reconcretizes_without_modifying(
+    mutable_mock_env_path, mutable_config: Configuration
+):
+    """--force shows a full re-solve, but the environment is not modified."""
+    env = ev.create("test")
+    env.add("mpileaks")
+    _concretize_and_lock(env)
+    lock_content = env.lock_path and open(env.lock_path).read()
+
+    mutable_config.set("packages", {"mpileaks": {"require": ["@2.2"]}})
+
+    with env:
+        output = spec("--force")
+    assert "mpileaks@2.2" in output
+
+    # neither the in-memory state nor the lockfile changed
+    reread = ev.Environment(env.path)
+    assert {s.dag_hash() for s in reread.concrete_roots()} == {
+        s.dag_hash() for s in env.concrete_roots()
+    }
+    assert open(env.lock_path).read() == lock_content
+    assert any(s.satisfies("mpileaks@2.3") for s in env.concrete_roots())
+
+
+@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+def test_spec_env_concretizes_only_new_specs(
+    unify, mutable_mock_env_path, mutable_config: Configuration
+):
+    """Only not-yet-concrete user specs are solved; kept roots are not changed, and
+    the environment is not modified."""
+    mutable_config.set("concretizer:unify", unify)
+    env = ev.create("test")
+    env.add("mpileaks")
+    _concretize_and_lock(env)
+    mpileaks_hash = next(iter(s.dag_hash() for s in env.concrete_roots()))
+    lock_content = open(env.lock_path).read()
+
+    # A fresh solve of mpileaks would now pick 2.2: proof it isn't re-solved
+    mutable_config.set("packages", {"mpileaks": {"version": ["2.2"]}})
+
+    with env:
+        env.add("libelf")
+        output = spec("-l")
+
+    assert "libelf" in output
+    assert "mpileaks@2.3" in output
+    assert mpileaks_hash[:7] in output
+
+    # the new root was not committed to the environment
+    reread = ev.Environment(env.path)
+    assert {s.name for s in reread.concrete_roots()} == {"mpileaks"}
+    assert open(env.lock_path).read() == lock_content
+
+
+def test_spec_env_fully_concrete_skips_solver(mutable_mock_env_path, monkeypatch):
+    """Displaying a fully concrete environment must not invoke the solver."""
+    env = ev.create("test")
+    env.add("mpileaks")
+    _concretize_and_lock(env)
+
+    def no_solve(*args, **kwargs):
+        raise AssertionError("solver should not run for a fully concrete environment")
+
+    monkeypatch.setattr(spack.solver.asp.PyclingoDriver, "solve", no_solve)
+    with env:
+        output = spec()
+    assert "mpileaks@2.3" in output
+
+
+def test_spec_env_show_opt_reports_fully_concrete(mutable_mock_env_path):
+    """--show opt on a fully concrete environment explains there is nothing to solve."""
+    env = ev.create("test")
+    env.add("mpileaks")
+    _concretize_and_lock(env)
+
+    with env:
+        output = spec("--show", "opt")
+    assert "already concrete" in output
+    assert "Priority" not in output
+
+
+@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+def test_spec_env_show_opt_for_new_specs(
+    unify, mutable_mock_env_path, mutable_config: Configuration
+):
+    """--show opt prints optimization criteria for the newly solved portion."""
+    mutable_config.set("concretizer:unify", unify)
+    env = ev.create("test")
+    env.add("mpileaks")
+    _concretize_and_lock(env)
+
+    with env:
+        env.add("libelf")
+        output = spec("--show", "opt")
+    assert "Priority" in output
+    assert "considered solutions" in output
+
+
+def test_spec_env_show_asp(mutable_mock_env_path):
+    """--show asp prints the ASP program for the new solve, without concretizing."""
+    env = ev.create("test")
+    env.add("mpileaks")
+    _concretize_and_lock(env)
+    lock_content = open(env.lock_path).read()
+
+    with env:
+        env.add("libelf")
+        output = spec("--show", "asp")
+    assert "Target Constraints" in output
+    assert open(env.lock_path).read() == lock_content
+
+
+def test_spec_env_diagnostics_per_spec_blocks(
+    mutable_mock_env_path, mutable_config: Configuration
+):
+    """With unify:false, each newly solved spec gets its own labeled diagnostics block."""
+    mutable_config.set("concretizer:unify", False)
+    env = ev.create("test")
+    env.add("mpileaks")
+    _concretize_and_lock(env)
+
+    with env:
+        env.add("libelf")
+        env.add("libdwarf")
+        output = spec("--show", "opt")
+
+    blocks = re.findall(r"Solve diagnostics for (\S+)", output)
+    assert sorted(blocks) == ["libdwarf", "libelf"]
+    assert output.count("considered solutions") == 2
 
 
 @pytest.mark.parametrize(
