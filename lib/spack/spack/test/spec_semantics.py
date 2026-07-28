@@ -2425,6 +2425,26 @@ def test_a_spec_that_stopped_being_concrete_matches_a_direct_constraint(config, 
     assert not mpileaks.satisfies("mpileaks %libelf")
 
 
+def test_a_direct_dependency_is_inside_a_transitive_one(mock_packages):
+    """'pkg-a ^pkg-b' means pkg-b is somewhere in the DAG and 'pkg-a %pkg-b' means it is a direct
+    dependency, so the second is inside the first and not the other way around."""
+    anywhere_in_dag = Spec("pkg-a ^pkg-b")
+    direct_dependency = Spec("pkg-a %pkg-b")
+    assert direct_dependency.satisfies(anywhere_in_dag)
+    assert not anywhere_in_dag.satisfies(direct_dependency)
+
+
+def test_every_edge_of_a_concrete_node_is_a_direct_dependency(mock_packages, config):
+    """A concrete spec records its edges without the direct flag, but each of them is a direct
+    dependency in fact, so it matches a direct constraint. A package further down does not."""
+    mpileaks = spack.concretize.concretize_one("mpileaks")
+    assert not mpileaks.edges_to_dependencies(name="callpath")[0].direct
+
+    assert mpileaks.satisfies("mpileaks %callpath")
+    assert mpileaks.satisfies("mpileaks ^libelf")
+    assert not mpileaks.satisfies("mpileaks %libelf")
+
+
 @pytest.mark.parametrize(
     "spec_str,spec_fmt,expected",
     [

@@ -1538,8 +1538,13 @@ def _get_satisfying_edge(
     lhs_node: "Spec", rhs_edge: DependencySpec, *, resolve_virtuals: bool
 ) -> Optional[DependencySpec]:
     """Search for an edge in ``lhs_node`` that satisfies ``rhs_edge``."""
-    # First check direct deps of all types.
+    # First check direct deps of all types. There is a subtlety: only abstract specs distinguish
+    # between direct and indirect edges, whereas concrete specs always have direct edges (without
+    # setting the direct flag).
+    require_direct = rhs_edge.direct and not lhs_node.concrete
     for lhs_edge in lhs_node.edges_to_dependencies():
+        if require_direct and not lhs_edge.direct:
+            continue
         if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
             return lhs_edge
 
