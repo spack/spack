@@ -1605,16 +1605,17 @@ def _satisfies_edge(lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtua
     if not name_mismatch:
         return lhs.spec._satisfies_node(rhs.spec, resolve_virtuals=resolve_virtuals)
 
-    # Right-hand side is virtual provided by left-hand side. The only node attribute supported is
-    # the version of the virtual. Avoid expensive lookups for provider metadata if there's no
-    # version constraint to check.
-    if rhs.spec.versions == spack.version.any_version:
-        return True
+    # rhs.spec.name being in lhs.virtuals above already established that lhs provides this
+    # virtual: an abstract lhs has no _provided_virtuals to check that against, only the
+    # edge's own declared virtuals. Only fall back to the node's frozen versions when rhs
+    # narrows them; skip it in the common case where rhs is unconstrained, e.g. %cxx.
+    if rhs.spec.versions != spack.version.any_version:
+        if not resolve_virtuals:
+            return False
+        if not lhs.spec._provides_virtual(rhs.spec):
+            return False
 
-    if not resolve_virtuals:
-        return False
-
-    return lhs.spec._provides_virtual(rhs.spec)
+    return lhs.spec._satisfies_node_attributes(rhs.spec)
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
@@ -3492,11 +3493,22 @@ class Spec:
             return self.concrete and self.dag_hash() == other.dag_hash()
 
         if self.name != other.name and self.name and other.name:
-            # Name mismatch can still be satisfiable if lhs provides the virtual mentioned by rhs.
+            # Name mismatch can still be satisfiable if lhs provides the virtual mentioned by
+            # rhs. other.versions constrains the virtual's provided-version range there, which
+            # _provides_virtual already checks, not self's own version, so self.versions is not
+            # compared in this branch. Every other dimension still has to hold of the provider.
             if not resolve_virtuals:
                 return False
-            return self._provides_virtual(other)
+            return self._provides_virtual(other) and self._satisfies_node_attributes(other)
 
+        if not self.versions.satisfies(other.versions):
+            return False
+
+        return self._satisfies_node_attributes(other)
+
+    def _satisfies_node_attributes(self, other: "Spec") -> bool:
+        """The dimensions of _satisfies_node that do not depend on how the name and version were
+        matched: abstract hash, namespace, variants, architecture and compiler flags."""
         # If the right-hand side has an abstract hash, make sure it's a prefix of the
         # left-hand side's (abstract) hash.
         if other.abstract_hash:
@@ -3510,9 +3522,6 @@ class Spec:
             and self.namespace is not None
             and self.namespace != other.namespace
         ):
-            return False
-
-        if not self.versions.satisfies(other.versions):
             return False
 
         if not self._satisfies_variants(other):

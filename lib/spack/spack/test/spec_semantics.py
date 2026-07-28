@@ -618,6 +618,23 @@ class TestSpecSemantics:
         assert concrete.satisfies("^[when='^notapackage'] zmpi")
         assert not concrete.satisfies("^[when='^mpi'] zmpi")
 
+    def test_virtual_name_on_the_rhs_decides_only_the_name(self):
+        """A virtual the lhs provides settles the name dimension. Every other dimension the rhs
+        constrains still has to hold of the provider."""
+        mpich = spack.concretize.concretize_one("mpileaks ^mpich")["mpich"]
+
+        assert mpich.satisfies("mpi")
+
+        # A variant the provider does not have, an architecture it does not have, and a hash it
+        # does not have, all asked for through the virtual name.
+        assert not mpich.satisfies("mpi+no-such-variant")
+        assert not mpich.satisfies("mpi platform=no-such-platform")
+        assert not mpich.satisfies("mpi/abcdef")
+
+        # Its own hash still matches, through the virtual name as well as the package name.
+        assert mpich.satisfies(f"mpi/{mpich.dag_hash()}")
+        assert mpich.satisfies(f"mpich/{mpich.dag_hash()}")
+
     def test_concrete_satisfies_does_not_consult_repo(self, monkeypatch):
         """Tests that `satisfies()` on a concrete lhs doesn't need the provider index, when the rhs
         contains a virtual name.
