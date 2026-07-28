@@ -1542,8 +1542,13 @@ def _get_satisfying_edge(
     lhs_node: "Spec", rhs_edge: DependencySpec, *, resolve_virtuals: bool
 ) -> Optional[DependencySpec]:
     """Search for an edge in ``lhs_node`` that satisfies ``rhs_edge``."""
-    # First check direct deps of all types.
+    # First check direct deps of all types. An abstract edge that is not direct says its target
+    # is somewhere in the DAG, which does not answer a question about a direct dependency. On a
+    # concrete node the flag is not set at all and every edge is a direct dependency in fact.
+    require_direct = rhs_edge.direct and not lhs_node.concrete
     for lhs_edge in lhs_node.edges_to_dependencies():
+        if require_direct and not lhs_edge.direct:
+            continue
         if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
             return lhs_edge
 
