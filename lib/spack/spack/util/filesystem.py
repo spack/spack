@@ -3474,7 +3474,10 @@ def bootstrap_relocate() -> Executable:
 def relocate(package=None) -> Executable:
     wrapper_spec = None
     if package:
-        wrapper_spec = package.spec["compiler-wrapper"]
+            try:
+                wrapper_spec = package.spec["compiler-wrapper"]
+            except KeyError:
+                pass
     if not wrapper_spec or not wrapper_spec.installed:
         # Don't have one associated with our package installed
         # fine, pull from local db, the functionality we need is
