@@ -5496,14 +5496,18 @@ def wire_spec_nodes(
                 raise MissingSpecHashError(
                     f"node '{node['name']}' references missing dep hash {dep.name}/{dep.hash}"
                 )
-            node_spec._add_dependency(
+            # Add edges exactly as they are stored
+            edge = DependencySpec(
+                node_spec,
                 dep_spec,
                 depflag=dt.canonicalize(dep.deptypes),
                 virtuals=dep.virtuals,
                 direct=dep.direct,
-                when=Spec(dep.when) if dep.when else None,
+                when=Spec(dep.when) if dep.when else EMPTY_SPEC,
                 propagation=PropagationPolicy[dep.propagation],
             )
+            _add_edge_to_map(node_spec._dependencies, edge.spec.name, edge)
+            _add_edge_to_map(edge.spec._dependents, edge.parent.name, edge)
 
         if "build_spec" in node.keys():
             bname, bhash, _ = reader.extract_build_spec_info_from_node_dict(
