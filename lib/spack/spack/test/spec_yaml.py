@@ -23,6 +23,7 @@ import spack.vendor.ruamel.yaml
 
 import spack.concretize
 import spack.config
+import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
 import spack.paths
@@ -584,6 +585,18 @@ def test_direct_edges_and_round_tripping_to_dict(spec_str, config, mock_packages
             continue
         for dependency_data in node["dependencies"]:
             assert "direct" not in dependency_data["parameters"]
+
+
+def test_parallel_deptype_edges_survive_round_trip(mock_packages):
+    """Two parallel edges to one package, differing only in deptype, hash the same on the child
+    side and so share one object once read back from JSON. That must not fold them into a single
+    edge: to_node_dict already emits one entry per edge, with no uniqueness constraint on
+    dependencies, so a round trip needs to keep both."""
+    original = Spec("pkg-a ^[deptypes=build] pkg-b ^[deptypes=link] pkg-b")
+    reconstructed = Spec.from_dict(original.to_dict())
+    edges = reconstructed.edges_to_dependencies("pkg-b")
+    assert len(edges) == 2
+    assert {e.depflag for e in edges} == {dt.BUILD, dt.LINK}
 
 
 def test_pickle_preserves_identity_and_prefix(config, mock_packages):

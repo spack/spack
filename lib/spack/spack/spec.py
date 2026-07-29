@@ -5508,14 +5508,24 @@ def wire_spec_nodes(
                 raise MissingSpecHashError(
                     f"node '{node['name']}' references missing dep hash {dep.name}/{dep.hash}"
                 )
-            node_spec._add_dependency(
+            # Register the edge directly instead of going through _add_dependency: each entry
+            # here is already a fully resolved, distinct edge from a concrete DAG, so there is
+            # nothing to merge. Two entries can reference the same dep hash (a build-only edge
+            # and a link-only edge to the same node, say), which would make dep_spec the same
+            # object both times - _add_dependency's identity-based merge detection exists for
+            # incrementally building up one edge's deptypes call by call, and would wrongly fold
+            # this into one edge instead of registering a second, parallel one.
+            edge = DependencySpec(
+                node_spec,
                 dep_spec,
                 depflag=dt.canonicalize(dep.deptypes),
                 virtuals=dep.virtuals,
                 direct=dep.direct,
-                when=Spec(dep.when) if dep.when else None,
+                when=Spec(dep.when) if dep.when else EMPTY_SPEC,
                 propagation=PropagationPolicy[dep.propagation],
             )
+            _add_edge_to_map(node_spec._dependencies, edge.spec.name, edge)
+            _add_edge_to_map(edge.spec._dependents, edge.parent.name, edge)
 
         if "build_spec" in node.keys():
             bname, bhash, _ = reader.extract_build_spec_info_from_node_dict(
