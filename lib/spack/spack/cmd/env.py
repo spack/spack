@@ -369,8 +369,7 @@ def env_activate(args):
             active_env, shell=args.shell
         )
 
-        source = "." if args.shell == "sh" else "source"
-        print(f"{source} {env_deactivate_script}")
+        print(generate_script.source_env_script(env_deactivate_script, args.shell))
 
     # Activate new environment
     active_env = ev.Environment(env_path)
@@ -398,8 +397,7 @@ def env_activate(args):
     if cmds:
         sys.stdout.write(cmds)
 
-    source = "." if args.shell == "sh" else "source"
-    print(f"{source} {env_activate_script}")
+    print(generate_script.source_env_script(env_activate_script, args.shell))
 
     generate_script.write_env_deactivate_script(active_environment(), view)
 
@@ -472,8 +470,7 @@ def env_deactivate(args):
 
     ev.deactivate()
 
-    source = "." if args.shell == "sh" else "source"
-    print(f"{source} {env_deactivate_script_path}")
+    print(generate_script.source_env_script(env_deactivate_script_path, args.shell))
 
 
 #
@@ -852,9 +849,6 @@ def env_view(args):
     elif args.action == ViewAction.disable:
         env.update_default_view(path_or_bool=False)
         env.write()
-
-        generate_script.write_env_activate_script(env, os.environ.get("SPACK_ENV_VIEW", ""))
-        generate_script.write_env_deactivate_script(env, os.environ.get("SPACK_ENV_VIEW", ""))
 
 
 #

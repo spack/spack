@@ -37,10 +37,8 @@ def path_to_env_deactivate_shell_script(env, shell: str) -> str:
         shell: the shell that the user is running
     """
     extension = shell
-    if shell == "bat":
-        extension = ".bat"
-    elif shell == "pwsh":
-        extension = ".ps1"
+    if shell == "pwsh":
+        extension = "ps1"
 
     return os.path.join(env.path, ".spack-env", f"deactivate.{extension}")
 
@@ -176,3 +174,18 @@ def write_env_deactivate_script(env, view: str):
                 comments = "::"
 
             _generate_script(deactivate_script_path, cmds, comments)
+
+
+def source_env_script(env_script_path, shell: str) -> str:
+    """Returns the command to source a shell script for the given shell.
+
+    Args:
+        script_path: Path to the shell script.
+        shell: The shell that the user is running
+    """
+    if shell in ("csh", "fish"):
+        return f"source {env_script_path}\n"
+    elif shell == "bat":
+        return f"call {env_script_path}\n"
+    else:  # sh, pwsh
+        return f". {env_script_path}\n"
