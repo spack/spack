@@ -36,7 +36,8 @@ from spack.spec import Spec
 
 
 def meet(a: Spec, b: Spec) -> Optional[Spec]:
-    """a ∩ b as a new spec, or None when the two are disjoint, since no spec denotes ∅."""
+    """The meet of a and b as a new spec, or None when the two are disjoint, since no spec
+    denotes the empty set."""
     result = a.copy()
     try:
         result.constrain(b)
