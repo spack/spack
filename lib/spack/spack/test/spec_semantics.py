@@ -2521,6 +2521,21 @@ def test_parallel_edges_sort_with_differing_propagation(mock_packages):
     assert spec.copy() == spec
 
 
+def test_edge_already_answered_is_not_copied_in(mock_packages):
+    """An unconditional edge already covers a conditional edge to the same target, so meeting
+    them states nothing new: the conditional edge is paired with the one that answers it,
+    rather than copied in beside it, regardless of which operand is which."""
+    unconditional, conditional = Spec("%pkg-e"), Spec("%[when='+bvv'] pkg-e")
+    assert unconditional.intersects(conditional)
+    assert conditional.intersects(unconditional)
+
+    forward = unconditional.constrained(conditional)
+    backward = conditional.constrained(unconditional)
+    assert forward == unconditional
+    assert backward == unconditional
+    assert forward.to_dict() == backward.to_dict()
+
+
 def test_edge_propagation_is_merged(mock_packages):
     """A propagated edge constrains the whole DAG, so it is the narrower of the two policies and
     the meet takes it from whichever operand has it."""

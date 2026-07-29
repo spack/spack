@@ -903,6 +903,13 @@ class DependencySpec:
         if self.spec.name in other.virtuals:
             changed = True
             _rename_node(self.spec, other.spec.name)
+        # An edge applies whenever its own condition holds, so the broader of the two conditions
+        # wins: if self's condition is the narrower one (other's already holds whenever self's
+        # does), the merged edge must adopt other's, or it would stop applying in cases the
+        # unconditional (or simply broader) side required it in.
+        if self.when != other.when and self.when.satisfies(other.when):
+            changed = True
+            self.when = other.when
         changed |= self.spec._merge(other.spec, deps=True)
         changed |= self.update_deptypes(other.depflag)
         changed |= self.update_virtuals(other.virtuals)
@@ -1665,16 +1672,22 @@ def _paired_edges(
             break
 
     # An edge already answered by a same-named edge of a different when condition states nothing
-    # new. Either direction can hold: node's edge can be the broader one that already covers
-    # other_edge, or other_edge can be the broader one that should widen node's own (narrower)
-    # edge once merged.
+    # new. Either direction can hold. When node's edge is the broader one that already covers
+    # other_edge, merging it is a no-op, so it is not exclusively claimed - the same unconditional
+    # edge can go on to answer several different conditional other_edges this way (e.g. one for
+    # '+v' and one for '~v'), each independently. When other_edge is the broader one, merging
+    # will widen node's own (narrower) edge, which only one other_edge can decide, so that
+    # direction does claim it.
     for other_edge in other_edges:
         if id(other_edge) in matches:
             continue
         for candidate in node.edges_to_dependencies(other_edge.spec.name):
             if id(candidate) in claimed:
                 continue
-            if _satisfies_edge(candidate, other_edge) or _satisfies_edge(other_edge, candidate):
+            if _satisfies_edge(candidate, other_edge):
+                matches[id(other_edge)] = candidate
+                break
+            if _satisfies_edge(other_edge, candidate):
                 matches[id(other_edge)] = candidate
                 claimed.add(id(candidate))
                 break
