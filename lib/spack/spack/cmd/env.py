@@ -383,23 +383,23 @@ def env_activate(args):
     elif not args.without_view and active_env.has_view(ev.default_view_name):
         view = ev.default_view_name
 
-    env_activate_script = generate_script.path_to_env_activate_shell_script(
-        active_env, shell=args.shell
-    )
-
     active_env.manifest.prepare_config_scope()
 
     ev.activate(active_env, use_env_repo=True)
 
-    generate_script.write_env_activate_script(active_env, view)
+    env_activate_script = generate_script.path_to_env_activate_shell_script(
+        active_env, shell=args.shell
+    )
+
+    if not os.path.isfile(env_activate_script):
+        generate_script.write_env_activate_script(active_env, view)
+
     cmds = generate_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
 
     if cmds:
         sys.stdout.write(cmds)
 
     print(generate_script.source_env_script(env_activate_script, args.shell))
-
-    generate_script.write_env_deactivate_script(active_environment(), view)
 
 
 #

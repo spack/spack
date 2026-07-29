@@ -229,7 +229,7 @@ The activation scripts are automatically regenerated when:
 
 1. A new environment is created
 2. An environment view is regenerated
-3. The environment is activated and the lockfile has been modified since the last activation
+3. The environment's lockfile has been modified since the last activation
 
 This ensures that the environment variables and setup always reflect the current state of your environment and its views.
 
