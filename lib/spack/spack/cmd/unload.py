@@ -108,16 +108,10 @@ def unload(parser, args):
                         spec, shell, cached_repo
                     )
 
-                    comments = "::" if shell == "bat" else "###"
-                    generate_script.generate_script(unload_script_path, mods, comments)
+                    generate_script.write_script(unload_script_path, mods, shell)
                 except Exception as err:
                     tty.die(f"Error writing to {unload_script_path}\n{err}")
 
-            if shell in ("csh", "fish"):
-                commands = f"source {unload_script_path}\n"
-            elif shell == "bat":
-                commands = f"call {unload_script_path}\n"
-            else:  # sh, pwsh
-                commands = f". {unload_script_path}\n"
+            commands = generate_script.source_script(unload_script_path, shell)
 
         sys.stdout.write(commands)

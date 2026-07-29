@@ -119,16 +119,10 @@ def load(parser, args):
                     mods, _ = generate_script.get_environment_modifications(
                         spec, shell, cached_repo
                     )
-                    comments = "::" if shell == "bat" else "###"
-                    generate_script.generate_script(load_script_path, mods, comments)
+                    generate_script.write_script(load_script_path, mods, shell)
                 except Exception as err:
                     tty.die(f"Error writing to {load_script_path}\n{err}")
 
-            if shell in ("csh", "fish"):
-                commands = f"source {load_script_path}\n"
-            elif shell == "bat":
-                commands = f"call {load_script_path}\n"
-            else:  # sh, pwsh
-                commands = f". {load_script_path}\n"
+            commands = generate_script.source_script(load_script_path, shell)
 
         sys.stdout.write(commands)

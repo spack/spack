@@ -230,7 +230,7 @@ def test_generate_script_creates_directory(
     assert not os.path.exists(nonexistent_dir)
 
     # generate_script should create the directory
-    spec_script.generate_script(script_path, "Test script content", "###")
+    spec_script.write_script(script_path, "Test script content", "###")
 
     # Now the directory and file should exist
     assert os.path.exists(nonexistent_dir)
