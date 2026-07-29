@@ -842,10 +842,11 @@ For Windows systems, additional scripts are generated with platform-specific ext
 The shell scripts contain all the environment modifications needed for the package, including:
 
 1. Updating PATH to include the package's bin directory
-2. Setting LD_LIBRARY_PATH for shared libraries
-3. Setting MANPATH for man pages
-4. Setting other package-specific environment variables
-5. Tracking which packages are loaded via SPACK_LOADED_HASHES environment variable
+2. Setting MANPATH for man pages
+3. Setting other package-specific environment variables
+4. Tracking which packages are loaded via SPACK_LOADED_HASHES environment variable
+
+To customize which environment variables are modified, see `customize-env-modifications https://spack.readthedocs.io/en/latest/configuration.html#environment-modifications`.
 
 .. index:: ambiguous spec
 
