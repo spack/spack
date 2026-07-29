@@ -95,6 +95,20 @@ def setup_combined_multiple_env():
     return test1, test2, combined
 
 
+def get_activation_script_content(env, shell: str) -> str:
+    """Returns the content of the activation script for the specified env and shell."""
+    path_to_activate_script = env_script.path_to_env_activate_shell_script(env, shell)
+    with open(path_to_activate_script, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+def get_deactivation_script_content(env, shell: str) -> str:
+    """Returns the content of the deactivation script for the specified env and shell."""
+    path_to_deactivate_script = env_script.path_to_env_deactivate_shell_script(env, shell)
+    with open(path_to_deactivate_script, "r", encoding="utf-8") as f:
+        return f.read()
+
+
 @pytest.fixture()
 def environment_from_manifest(tmp_path: pathlib.Path):
     """Returns a new environment named 'test' from the content of a manifest file."""
@@ -423,9 +437,10 @@ def test_env_activate_with_view_name(shell, tmp_path: pathlib.Path):
     assert test_env.views["view1"].root == view1_path
     assert test_env.views["view2"].root == view2_path
 
-    activate_output = env("activate", f"--{shell}", "--with-view", "view2", "multi_view_test")
+    env("activate", f"--{shell}", "--with-view", "view2", "multi_view_test")
+    activate_content = get_activation_script_content(test_env, shell)
 
-    assert "_spack_env_set SPACK_ENV_VIEW view2" in activate_output
+    assert "_spack_env_set SPACK_ENV_VIEW view2" in activate_content
 
 
 def test_env_track_existing_env_fails():

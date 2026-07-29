@@ -37,8 +37,10 @@ def path_to_env_deactivate_shell_script(env, shell: str) -> str:
         shell: the shell that the user is running
     """
     extension = shell
-    if shell == "pwsh":
-        extension = "ps1"
+    if shell == "bat":
+        extension = ".bat"
+    elif shell == "pwsh":
+        extension = ".ps1"
 
     return os.path.join(env.path, ".spack-env", f"deactivate.{extension}")
 
@@ -55,9 +57,8 @@ def get_shell_unique_env_cmds(shell, prompt: str, view: str) -> str:
 
     despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
     prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)
-    view_cmd = spack.environment.shell.activate_view_cmds(view)
 
-    cmds = despactivate_cmd + prompt_cmds + view_cmd
+    cmds = despactivate_cmd + prompt_cmds
 
     return cmds
 
@@ -79,7 +80,7 @@ def _lockfile_newer_than_script(lockfile_date, script_path) -> bool:
     return lockfile_date > script_path_date
 
 
-def generate_script(shell_script_path: str, mods: str, comments: str):
+def _generate_script(shell_script_path: str, mods: str, comments: str):
     """Helper function to write spec's shell scripts
 
     Args:
@@ -118,33 +119,6 @@ def write_env_activate_script(env: "spack.environment.Environment", view: str = 
 
     # ensure .env subdir actually exists as we'll be writing to it
     env.ensure_env_directory_exists(dot_env=True)
-    for shell in shells_avail:
-        env_mods = EnvironmentModifications()
-
-        cmds = spack.environment.shell.activate_commands(env, view)
-        cmds += env_mods.shell_modifications(shell)
-
-        activate_script_path = path_to_env_activate_shell_script(env, shell)
-
-        if shell == "bat":
-            comments = "::"
-
-        generate_script(activate_script_path, cmds, comments=comments)
-
-
-def update_env_activate_script(env, view: str = "default"):
-    """Overwrite existing environment activation script with new environment modifications
-
-    Args:
-        env: the environment the activation script is written for
-        view: the name of the environment's view
-    """
-
-    shells_avail = ["sh"]  # csh & fish have the same script as sh
-    comments = "###"
-
-    if sys.platform == "win32":
-        shells_avail = ["bat", "pwsh"]
 
     # Check if the lockfile exists and get its modification time
     lockfile_date = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.00
@@ -159,13 +133,13 @@ def update_env_activate_script(env, view: str = "default"):
         if lockfile_date == 0.00 or _lockfile_newer_than_script(
             lockfile_date, activate_script_path
         ):
-            cmds = spack.environment.shell.activate_commands(env, view=view)
+            cmds = spack.environment.shell.activate_commands(env, view)
             cmds += env_mods.shell_modifications(shell)
 
             if shell == "bat":
                 comments = "::"
 
-            generate_script(activate_script_path, cmds, comments)
+            _generate_script(activate_script_path, cmds, comments=comments)
 
 
 def write_env_deactivate_script(env, view: str):
@@ -201,4 +175,4 @@ def write_env_deactivate_script(env, view: str):
             if shell == "bat":
                 comments = "::"
 
-            generate_script(deactivate_script_path, cmds, comments)
+            _generate_script(deactivate_script_path, cmds, comments)

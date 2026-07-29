@@ -392,7 +392,7 @@ def env_activate(args):
 
     ev.activate(active_env, use_env_repo=True)
 
-    generate_script.update_env_activate_script(active_env, view)
+    generate_script.write_env_activate_script(active_env, view)
     cmds = generate_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
 
     if cmds:
@@ -774,7 +774,7 @@ def env_rename(args):
             " regenerate view with @c{spack env view regenerate}"
         )
     )
-    generate_script.update_env_activate_script(
+    generate_script.write_env_activate_script(
         ev.Environment(to_path), os.environ.get("SPACK_VIEW", "default")
     )
     generate_script.write_env_deactivate_script(

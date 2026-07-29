@@ -65,7 +65,7 @@ from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
-from .generate_env_scripts import update_env_activate_script, write_env_deactivate_script
+from .generate_env_scripts import write_env_activate_script, write_env_deactivate_script
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = Tuple[Spec, Spec]
@@ -2526,7 +2526,7 @@ class Environment:
 
         for x in self.concretized_roots:
             x.new = False
-        update_env_activate_script(self, os.environ.get(spack_env_view_var, "default"))
+        write_env_activate_script(self, os.environ.get(spack_env_view_var, "default"))
         write_env_deactivate_script(self, os.environ.get(spack_env_view_var, "default"))
 
     def update_lockfile(self) -> None:

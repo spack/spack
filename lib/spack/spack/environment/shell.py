@@ -18,14 +18,8 @@ def activate_commands(env, view: Optional[str] = None):
     # Construct the commands to run
     # TODO: figure out how to make color work for csh & bat
     cmds = f"_spack_env_set SPACK_ENV {env.path}\n"
-
-    if view:
-        cmds += activate_view_cmds(view)
+    cmds += f"_spack_env_set SPACK_ENV_VIEW {view}\n"
     return cmds
-
-
-def activate_view_cmds(view):
-    return f"_spack_env_set SPACK_ENV_VIEW {view}\n"
 
 
 def despacktivate_cmds(shell):
