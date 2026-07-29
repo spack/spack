@@ -2395,6 +2395,15 @@ def test_flag_propagation_is_invisible_to_satisfies(mock_packages):
     assert merged.compiler_flags["cflags"][0].propagate
 
 
+def test_parallel_edges_sort_with_differing_propagation(mock_packages):
+    """Parallel edges to one package are sorted to give ``_add_edge_to_map`` a canonical order.
+    ``DependencySpec._cmp_iter`` yields ``propagation``, so two edges that differ only in it must
+    be orderable, which requires ``PropagationPolicy`` to support ``<`` and not just ``==``."""
+    spec = Spec("pkg-a %%pkg-e %[when='+bvv'] pkg-e")
+    spec.to_dict()
+    assert spec.copy() == spec
+
+
 def test_edge_propagation_is_merged(mock_packages):
     """A propagated edge constrains the whole DAG, so it is the narrower of the two policies and
     the meet takes it from whichever operand has it."""
