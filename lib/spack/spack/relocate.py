@@ -115,7 +115,7 @@ def relocate_windows_binaries(
     all_prefixes = {**prefixes, **(sfn_prefixes or {})}
     ev = EnvironmentModifications()
     ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in all_prefixes.items()])
-    # do not set the spack install prefix for the wrapper here 
+    ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
     ev.set("SPACK_DEBUG_WRAPPER", "ON")
     print(["|".join((k, v)) for k, v in all_prefixes.items()])
 
