@@ -2502,6 +2502,23 @@ def test_edge_representation(parent_str, child_str, kwargs, expected_str, expect
     assert repr(edge) == expected_repr
 
 
+def test_parallel_edges_sort_with_differing_propagation(mock_packages):
+    """Two edges to one package that differ only in propagation are compared on that field, so
+    ``PropagationPolicy`` needs ``<`` and not just ``==``."""
+    edges = [
+        DependencySpec(Spec("pkg-a"), Spec("pkg-e"), depflag=0, virtuals=(), direct=True),
+        DependencySpec(
+            Spec("pkg-a"),
+            Spec("pkg-e"),
+            depflag=0,
+            virtuals=(),
+            direct=True,
+            propagation=PropagationPolicy.PREFERENCE,
+        ),
+    ]
+    assert sorted(edges) == edges
+
+
 @pytest.mark.parametrize(
     "spec_str,assertions",
     [

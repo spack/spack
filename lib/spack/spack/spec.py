@@ -843,7 +843,7 @@ class DependencySpec:
             keywords.append(f"when={self.when}")
 
         if self.propagation != PropagationPolicy.NONE:
-            keywords.append(f"propagation={self.propagation}")
+            keywords.append(f"propagation=PropagationPolicy.{self.propagation.name}")
 
         keywords_str = ", ".join(keywords)
         return f"DependencySpec({self.parent.format()!r}, {self.spec.format()!r}, {keywords_str})"
