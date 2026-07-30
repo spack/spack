@@ -121,7 +121,7 @@ def _process_result(result, show, required_format, kwargs):
             # Criteria are grouped into priority bands; print a header when the band changes.
             band = criterion.band
             if band != prev_band:
-                label = f"-- {band.value}"
+                label = f"-- {band}"
                 dashes = "-" * max(0, divider_width - len(label) - 1)
                 color.cprint(f"  @*{{{label}}} @K{{{dashes}}}")
                 prev_band = band

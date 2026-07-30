@@ -136,7 +136,7 @@ class OptimizationCriteria(NamedTuple):
     priority: int
     value: int
     name: str
-    band: OptimizationBand
+    band: str
     kind: OptimizationKind
 
 
@@ -155,13 +155,13 @@ def build_criteria_names(costs, arg_tuples):
     }
 
     for args in arg_tuples:
-        priority, band, name = args[0], band_names[args[2]], args[4]
+        priority, band, name = args[0], band_names[args[2]].value, args[4]
         priority = int(priority)
 
-        if band == OptimizationBand.REUSED:
+        if band == OptimizationBand.REUSED.value:
             # Reused/concrete criterion
             priorities_names.append((priority, name, band, OptimizationKind.CONCRETE))
-        elif band == OptimizationBand.BUILD:
+        elif band == OptimizationBand.BUILD.value:
             # Build criterion
             priorities_names.append((priority, name, band, OptimizationKind.BUILD))
         else:
