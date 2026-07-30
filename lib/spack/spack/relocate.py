@@ -13,6 +13,7 @@ from typing import IO, Dict, Iterable, List, Optional
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
 
+import spack.bootstrap
 import spack.spec
 import spack.store
 import spack.util.elf as elf
@@ -60,9 +61,7 @@ def setup_relocate_run(wrapper_spec) -> executable.Executable:
 
 
 def bootstrap_relocate() -> executable.Executable:
-    import spack.bootstrap as spack_bootstrap
-
-    with spack_bootstrap.ensure_bootstrap_configuration():
+    with spack.bootstrap.ensure_bootstrap_configuration():
         # ensure_msvc_relocate_or_raise() may hand back a bare relocate.exe found
         # via a PATH search, with no MSVC environment attached (see the early
         # return in ensure_executables_in_path_or_raise). relocate.exe needs the
@@ -70,7 +69,7 @@ def bootstrap_relocate() -> executable.Executable:
         # dumpbin.exe, ...), so don't trust its return value: look up the
         # concrete compiler-wrapper spec ourselves and always attach its
         # environment, the same way setup_relocate_run does.
-        spack_bootstrap.ensure_msvc_relocate_or_raise()
+        spack.bootstrap.ensure_msvc_relocate_or_raise()
         wrapper_spec = next(
             iter(spack.store.STORE.db.query_local("compiler-wrapper", installed=True)), None
         )
@@ -266,6 +265,7 @@ def get_importlib_target(lib, package=None) -> Optional[str]:
     if match:
         pe_name = match.group(1).strip("\r")
         return pe_name
+    return None
 
 
 def verify_import_lib(lib: str, package=None) -> bool:
