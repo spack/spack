@@ -176,7 +176,8 @@ def _env_create(
         tty.msg(colorize(f"Created independent environment in: @c{{{cescape(env.path)}}}"))
     tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")
 
-    generate_script.write_env_activate_script(env)
+    generate_script.write_env_activate_script(env, "default")
+    generate_script.write_env_deactivate_script(env, "default")
     return env
 
 
@@ -391,15 +392,17 @@ def env_activate(args):
         active_env, shell=args.shell
     )
 
-    if not os.path.isfile(env_activate_script):
+    if not os.path.isfile(env_activate_script) or args.with_view:
         generate_script.write_env_activate_script(active_env, view)
 
     cmds = generate_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
-
-    if cmds:
-        sys.stdout.write(cmds)
+    sys.stdout.write(cmds)
 
     print(generate_script.source_env_script(env_activate_script, args.shell))
+
+    env_deactivate_script = generate_script.path_to_env_deactivate_shell_script(active_env, shell=args.shell)
+    if not os.path.isfile(env_deactivate_script) or args.with_view:
+        generate_script.write_env_deactivate_script(active_env, view)
 
 
 #
