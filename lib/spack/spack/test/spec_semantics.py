@@ -2093,6 +2093,20 @@ def test_abstract_hash_intersects_and_satisfies(config, mock_packages):
     assert_disjoint(abstract_none, abstract_5)
 
 
+def test_a_blank_sets_the_abstract_hash_off_from_any_value(mock_packages):
+    """str() prints a blank before the abstract hash, so a value that can absorb a slash, a
+    namespace, variant, flag or target, does not swallow it and the hash survives reparsing."""
+    for spec_str in (
+        "namespace=builtin_mock /abcdef",
+        "foo=bar /abcdef",
+        "pkg-a cflags=-O2 /abcdef",
+        "pkg-a target=haswell /abcdef",
+    ):
+        spec = Spec(spec_str)
+        round_tripped = Spec(str(spec))
+        assert round_tripped.abstract_hash == spec.abstract_hash, spec_str
+
+
 def test_edge_equality_does_not_depend_on_virtual_order():
     """Tests that two edges that are constructed with just a different order of the virtuals in
     the input parameters are equal to each other.
