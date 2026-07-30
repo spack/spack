@@ -802,7 +802,7 @@ class ErrorHandler:
         self.model = model
         self.input_specs = input_specs
         self.full_model = None
-        self.printed = set()
+        self.printed: Set[str] = set()
 
     def multiple_values_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
