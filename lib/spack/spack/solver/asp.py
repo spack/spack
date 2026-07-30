@@ -920,7 +920,7 @@ class ErrorHandler:
         tty.error(
             header,
             simple_error_message,
-            "Analyzing the cause of the failure, this may take a moment..."
+            "Analyzing the cause of the failure, this may take a moment...",
         )
 
         error_causation = make_error_control()
