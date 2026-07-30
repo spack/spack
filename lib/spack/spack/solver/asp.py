@@ -887,12 +887,11 @@ class ErrorHandler:
 
         return msg
 
-    def format_errors(self, error_args, primary=True):
+    def format_errors(self, error_args):
         errors = sorted(
             [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
         )
         try:
-            input_specs = ", ".join(elide_list([f"`{s}`" for s in self.input_specs], 5))
             error_messages = [self.handle_error(msg, *args) for (_, msg, args) in errors]
             messages = [
                 f"    {idx + 1 + len(self.printed):2}. {error_msg}"
@@ -901,15 +900,7 @@ class ErrorHandler:
             ]
             # Track already printed messages to not re-print them
             self.printed.update(error_messages)
-
-            if primary:
-                header = f"failed to concretize {input_specs} for the following reasons:"
-            elif not messages:
-                header = "No additional failure causes detected."
-            else:
-                header = "Additional failure causes:"
-
-            return "\n".join((header, *messages))
+            return "\n".join(messages)
         except Exception as e:
             msg = (
                 f"unexpected error during concretization [{e}]. "
@@ -923,9 +914,13 @@ class ErrorHandler:
             return
 
         # Print initial error message before starting secondary solve for causal trees
+        input_specs = ", ".join(elide_list([f"`{s}`" for s in self.input_specs], 5))
+        header = f"failed to concretize {input_specs} for the following reasons:"
         simple_error_message = self.format_errors(initial_error_args)
         tty.error(
-            simple_error_message, "Analyzing the cause of the failure, this may take a moment..."
+            header,
+            simple_error_message,
+            "Analyzing the cause of the failure, this may take a moment..."
         )
 
         error_causation = make_error_control()
@@ -947,8 +942,11 @@ class ErrorHandler:
 
         # No choices so there will be only one model
         error_args = extract_args(self.full_model, "error")
-        print(" ", self.format_errors(error_args, primary=False))
-        raise UnsatisfiableSpecError("Concretization failed")
+        error_messages = self.format_errors(error_args)
+        if not error_messages:
+            print("  No additional error causes discovered")
+            error_messages = "Concretization failed"
+        raise UnsatisfiableSpecError(error_messages)
 
 
 def _strip_asp_problem(asp_problem: Iterable[str]) -> List[str]:
