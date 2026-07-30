@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
-import itertools
 import ctypes
+import itertools
 import os
 import re
 import struct
@@ -46,11 +46,10 @@ def _decode_macho_data(bytestring):
     return bytestring.rstrip(b"\x00").decode("ascii")
 
 
-
 def setup_relocate_run(wrapper_spec) -> executable.Executable:
     import spack.user_environment
 
-    relocate_exe = Executable(str(wrapper_spec.package.bin_dir() / "relocate.exe"))  # type: ignore
+    relocate_exe = executable.Executable(str(wrapper_spec.package.bin_dir() / "relocate.exe"))  # type: ignore
     # get msvc context from wrapper - needed for finding msvc utils during relocate run
     relocate_exe.add_default_envmod(
         spack.user_environment.environment_modifications_for_specs(
@@ -86,10 +85,10 @@ def bootstrap_relocate() -> executable.Executable:
 def relocate(package=None) -> executable.Executable:
     wrapper_spec = None
     if package:
-            try:
-                wrapper_spec = package.spec["compiler-wrapper"]
-            except KeyError:
-                pass
+        try:
+            wrapper_spec = package.spec["compiler-wrapper"]
+        except KeyError:
+            pass
     if not wrapper_spec or not wrapper_spec.installed:
         # Don't have one associated with our package installed
         # fine, pull from local db, the functionality we need is
@@ -322,8 +321,8 @@ def _buildcache_import_lib_targets(
         # but import libraries reference dlls, so although
         # the DLLs are our "relocation targets" we drive that
         # via import libs to determine the proper association
-        if sfs.verify_import_lib(lib):
-            dll_path = sfs.get_importlib_target(lib)
+        if verify_import_lib(lib):
+            dll_path = get_importlib_target(lib)
             print(f"imp lib target {dll_path}")
             if not dll_path:
                 tty.debug(
@@ -366,7 +365,9 @@ def relocate_windows_binaries(
 
     coff_for_target = _buildcache_import_lib_targets(targets, all_prefixes)
     pe_targets = [t for t in targets if t.endswith(".dll") or t.endswith(".exe")]
-    apply_pe_relocations(pe_targets, coff_for_target, relocate(spec.package), ev, fail_on_error=True)
+    apply_pe_relocations(
+        pe_targets, coff_for_target, relocate(spec.package), ev, fail_on_error=True
+    )
 
 
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
