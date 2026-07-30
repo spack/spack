@@ -55,6 +55,7 @@ from spack.compilers.adaptor import DeprecatedCompiler
 from spack.enums import Deprecation
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
+from spack.relocate import relocate_win_rpath
 from spack.resource import Resource
 from spack.util import tty
 from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
@@ -139,7 +140,7 @@ class WindowsRPath:
         if sys.platform == "win32" and self.spec.satisfies("%compiler-wrapper"):
             cw = self.spec["compiler-wrapper"]
             if cw.package.has_code:
-                fsys.relocate_win_rpath(self)
+                relocate_win_rpath(self)
             else:
                 win_rpath = WindowsSimulatedRPath(self)
                 win_rpath.add_library_dependent(*self.win_add_library_dependent())
