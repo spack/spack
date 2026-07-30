@@ -15,7 +15,7 @@
 #show attr/5.
 #show attr/6.
 % names of optimization criteria
-#show opt_priority/5.
+#show opt_priority/6.
 
 % error types
 #show error/2.

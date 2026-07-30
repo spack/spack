@@ -155,7 +155,7 @@ def build_criteria_names(costs, arg_tuples):
     }
 
     for args in arg_tuples:
-        priority, band, name = args[0], band_names[args[2]].value, args[4]
+        priority, band, name = args[0], band_names[args[2]].value, args[5]
         priority = int(priority)
 
         if band == OptimizationBand.REUSED.value:
