@@ -151,7 +151,7 @@ def build_criteria_names(costs, arg_tuples):
         "concr": OptimizationBand.REUSED,
         "hinge": OptimizationBand.FIXED,
         "built": OptimizationBand.BUILD,
-        "high": OptimizationBand.HIGHEST
+        "high": OptimizationBand.HIGHEST,
     }
 
     for args in arg_tuples:
