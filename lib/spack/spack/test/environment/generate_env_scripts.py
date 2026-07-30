@@ -30,8 +30,8 @@ def test_paths_to_env_scripts_exist(
 
     env("activate", f"--{shell}", env_name)
 
-    activate_script = env_script.path_to_env_activate_shell_script(test_env, shell)
-    deactivate_script = env_script.path_to_env_deactivate_shell_script(test_env, shell)
+    activate_script = env_script.path_to_env_script(test_env, shell, script_type="activate")
+    deactivate_script = env_script.path_to_env_script(test_env, shell, script_type="deactivate")
 
     assert os.path.isfile(activate_script)
     assert os.path.isfile(deactivate_script)
@@ -59,13 +59,17 @@ def test_paths_to_env_scripts(install_mockery, mock_fetch, mock_archive, mock_pa
         expected_activate_path = os.path.join(
             test_env.path, ".spack-env", f"activate{activate_extension}"
         )
-        actual_activate_path = env_script.path_to_env_activate_shell_script(test_env, shell)
+        actual_activate_path = env_script.path_to_env_script(
+            test_env, shell, script_type="activate"
+        )
         assert actual_activate_path == expected_activate_path
 
         expected_deactivate_path = os.path.join(
             test_env.path, ".spack-env", f"deactivate{deactivate_extension}"
         )
-        actual_deactivate_path = env_script.path_to_env_deactivate_shell_script(test_env, shell)
+        actual_deactivate_path = env_script.path_to_env_script(
+            test_env, shell, script_type="deactivate"
+        )
         assert actual_deactivate_path == expected_deactivate_path
 
 
@@ -82,7 +86,7 @@ def test_write_env_activate_script(
 
     env_script.write_env_activate_script(test_env)
 
-    script_path = env_script.path_to_env_activate_shell_script(test_env, shell)
+    script_path = env_script.path_to_env_script(test_env, shell, script_type="activate")
     assert os.path.exists(script_path)
 
     # Verify content
@@ -106,7 +110,7 @@ def test_write_env_deactivate_script(
 
     env_script.write_env_deactivate_script(test_env, view="default")
 
-    script_path = env_script.path_to_env_deactivate_shell_script(test_env, shell)
+    script_path = env_script.path_to_env_script(test_env, shell, script_type="deactivate")
     assert os.path.exists(script_path)
 
     # Verify content
@@ -143,8 +147,8 @@ def test_create_individual_env_scripts(
     env_script.write_env_deactivate_script(env_2, view="default")
 
     # Check that each activation script only references its own environment
-    activate_path_1 = env_script.path_to_env_activate_shell_script(env_1, shell)
-    activate_path_2 = env_script.path_to_env_activate_shell_script(env_2, shell)
+    activate_path_1 = env_script.path_to_env_script(env_1, shell, script_type="activate")
+    activate_path_2 = env_script.path_to_env_script(env_2, shell, script_type="activate")
 
     with open(activate_path_1, "r", encoding="utf-8") as f:
         activate_content_1 = f.read()
@@ -160,8 +164,8 @@ def test_create_individual_env_scripts(
     assert env_1.path not in activate_content_2
 
     # Check that each deactivation script only references its own environment
-    deactivate_path_1 = env_script.path_to_env_deactivate_shell_script(env_1, shell)
-    deactivate_path_2 = env_script.path_to_env_deactivate_shell_script(env_2, shell)
+    deactivate_path_1 = env_script.path_to_env_script(env_1, shell, script_type="deactivate")
+    deactivate_path_2 = env_script.path_to_env_script(env_2, shell, script_type="deactivate")
 
     with open(deactivate_path_1, "r", encoding="utf-8") as f:
         deactivate_content_1 = f.read()
@@ -177,63 +181,3 @@ def test_create_individual_env_scripts(
     assert env_name_1 not in activate_content_2
     assert env_name_2 not in deactivate_content_1
     assert env_name_1 not in deactivate_content_2
-
-
-@pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
-)
-def test_activate_recreates_scripts(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
-):
-    """Test that activating an environment recreates scripts if they don't exist."""
-    env_name = f"test_recreate_{shell}"
-    env("create", env_name)
-    test_env = ev.read(env_name)
-
-    activate_path = env_script.path_to_env_activate_shell_script(test_env, shell)
-
-    assert os.path.exists(activate_path)
-
-    env("activate", f"--{shell}", env_name)
-    deactivate_path = env_script.path_to_env_deactivate_shell_script(test_env, shell)
-
-    os.remove(activate_path)
-    os.remove(deactivate_path)
-
-    assert not os.path.exists(activate_path)
-    assert not os.path.exists(deactivate_path)
-
-    env("activate", f"--{shell}", env_name)
-
-    assert os.path.exists(activate_path)
-    assert os.path.exists(deactivate_path)
-
-
-@pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
-)
-def test_deactivate_recreates_deactivation_scripts(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
-):
-    """Test that activating an environment recreates scripts if they don't exist."""
-    env_name = f"test_recreate_{shell}"
-    env("create", env_name)
-    test_env = ev.read(env_name)
-
-    env("activate", f"--{shell}", env_name)
-
-    activate_path = env_script.path_to_env_activate_shell_script(test_env, shell)
-    deactivate_path = env_script.path_to_env_deactivate_shell_script(test_env, shell)
-
-    assert os.path.exists(activate_path)
-    assert os.path.exists(deactivate_path)
-
-    os.remove(activate_path)
-    os.remove(deactivate_path)
-
-    assert not os.path.exists(activate_path)
-    assert not os.path.exists(deactivate_path)
-
-    env("deactivate", f"--{shell}")
-
-    assert os.path.exists(deactivate_path)

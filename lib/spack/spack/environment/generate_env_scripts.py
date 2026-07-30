@@ -10,83 +10,71 @@ import spack.util.filesystem as fs
 import spack.util.tty as tty
 from spack.util.environment import EnvironmentModifications
 
+# Shell configuration
+UNIX_SHELLS = ["sh", "csh", "fish"]
+WINDOWS_SHELLS = ["bat", "pwsh"]
 
-def path_to_env_activate_shell_script(env, shell: str) -> str:
-    """Returns to path to the shell script to activate the specified env for the shell that
-    the user is running
-
-    Args:
-        env: the environment whose shell script we are returning the path of
-        shell: the shell that the user is running
-    """
-    extension = ""
-    if shell == "bat":
-        extension = ".bat"
-    elif shell == "pwsh":
-        extension = ".ps1"
-
-    return os.path.join(env.path, ".spack-env", f"activate{extension}")
-
-
-def path_to_env_deactivate_shell_script(env, shell: str) -> str:
-    """Returns to path to the shell script to activate the specified env for the shell that
-    the user is running
+def path_to_env_script(env, shell: str, script_type: str) -> str:
+    """Returns path to the shell script for activating or deactivating an environment.
 
     Args:
         env: the environment whose shell script we are returning the path of
         shell: the shell that the user is running
+        script_type: Either 'activate' or 'deactivate'
     """
-    extension = shell
-    if shell == "pwsh":
-        extension = "ps1"
+    if script_type == "activate":
+        activate_extensions = {"sh": "", "csh": "", "fish": "", "bat": ".bat", "pwsh": ".ps1"}
+        extension = activate_extensions.get(shell, "")
 
-    return os.path.join(env.path, ".spack-env", f"deactivate.{extension}")
-
-
-def get_shell_unique_env_cmds(shell, prompt: str, view: str) -> str:
-    """Returns the prompt, view, and despacktivate commands which are unique
-    to each shell
-
-    Args:
-        shell: the shell that the user is running
-        prompt: name of user's prompt
-        view: name of environment's view
-    """
-
-    despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
-    prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)
-
-    cmds = despactivate_cmd + prompt_cmds
-
-    return cmds
-
-
-def _lockfile_newer_than_script(lockfile_date, script_path) -> bool:
-    """Returns true if the environment's lockfile has been change more recently than the
-    activation or deactivations script
-
-    Args:
-        lockfile_date: a timestamp of when the lockfile was last updated
-        script_path: a path to the cached activation/deactivation script
-    """
-
-    if os.path.isfile(script_path):
-        script_path_date = os.stat(script_path).st_mtime
+        return os.path.join(env.path, ".spack-env", f"activate{extension}")
     else:
+        extension = ".ps1" if shell == "pwsh" else f".{shell}"
+
+        return os.path.join(env.path, ".spack-env", f"deactivate{extension}")
+
+
+def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
+    """Check if a script needs to be regenerated.
+
+    Args:
+        lockfile_mtime: The modification time of the environment's lockfile
+        script_path: Path to the cached activation/deactivation script
+
+    Returns:
+        True if the script doesn't exist or is older than the lockfile
+    """
+    if not os.path.isfile(script_path):
         return True
 
-    return lockfile_date > script_path_date
+    if lockfile_mtime == 0.0:
+        return True
+
+    script_mtime = os.stat(script_path).st_mtime
+    return lockfile_mtime > script_mtime
 
 
-def _generate_script(shell_script_path: str, mods: str, comments: str):
-    """Helper function to write spec's shell scripts
+def _get_comment_char(shell: str) -> str:
+    """Get the comment character(s) for the given shell.
 
     Args:
-        shell_script_path: Path to the shell script.
-        mods: Modifications to write to the script.
-        comments: Comment character(s) to use in the script
-            (e.g. "::" for bat and ### for all other shells)
+        shell: The shell type
+
+    Returns:
+        The comment character(s) to use (e.g., "::" for bat, "###" for others)
     """
+    comments = {"bat": "::", "pwsh": "###", "default": "###"}
+    return comments.get(shell, comments["default"])
+
+
+def _generate_script(shell_script_path: str, mods: str, shell: str):
+    """Write a shell script with proper header and modifications.
+
+    Args:
+        shell_script_path: Path to the shell script
+        mods: Modifications to write to the script
+        shell: Shell type (used to determine comment character)
+    """
+    comments = _get_comment_char(shell)
 
     try:
         header = (
@@ -97,83 +85,83 @@ def _generate_script(shell_script_path: str, mods: str, comments: str):
             f.write(header)
             f.write(mods)
     except OSError as e:
-        tty.error(f"Error generating to {shell_script_path}: {e}")
+        tty.error(f"Error generating {shell_script_path}: {e}")
 
 
 def write_env_activate_script(env: "spack.environment.Environment", view: str = "default"):
-    """Gets and writes the environment modifications for an activated environment to a
-    cached shell script
+    """Generate and write activation scripts for an environment.
 
     Args:
         env: the environment the activation script is written for
         view: the name of the environment's view
     """
-
-    shells_avail = ["sh"]  # csh & fish have the same script as sh
-    comments = "###"
-
-    if sys.platform == "win32":
-        shells_avail = ["bat", "pwsh"]
-
-    # ensure .env subdir actually exists as we'll be writing to it
+    # Ensure .env subdir exists
     env.ensure_env_directory_exists(dot_env=True)
 
-    # Check if the lockfile exists and get its modification time
-    lockfile_date = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.00
+    # Get lockfile modification time
+    lockfile_mtime = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.0
 
-    for shell in shells_avail:
-        env_mods = EnvironmentModifications()
-        env_mods.extend(spack.environment.shell.activate(env=env, view=view))
+    # Generate script for sh only on Unix (csh & fish source the same script)
+    shells = WINDOWS_SHELLS if sys.platform == "win32" else UNIX_SHELLS
+    if sys.platform != "win32":
+        shells = ["sh"]
 
-        activate_script_path = path_to_env_activate_shell_script(env, shell)
+    for shell in shells:
+        activate_script_path = path_to_env_script(env, shell, "activate")
 
-        # Update the script only if the lockfile doesn't exist or is newer than script
-        if lockfile_date == 0.00 or _lockfile_newer_than_script(
-            lockfile_date, activate_script_path
-        ):
+        # Update the script only if needed
+        if _script_needs_update(lockfile_mtime, activate_script_path):
+            env_mods = EnvironmentModifications()
+            env_mods.extend(spack.environment.shell.activate(env=env, view=view))
+
             cmds = spack.environment.shell.activate_commands(env, view)
             cmds += env_mods.shell_modifications(shell)
 
-            if shell == "bat":
-                comments = "::"
-
-            _generate_script(activate_script_path, cmds, comments=comments)
+            _generate_script(activate_script_path, cmds, shell)
 
 
 def write_env_deactivate_script(env, view: str):
-    """Gets and writes the environment modifications to deactivate the specified
-    environment to a cached shell script
+    """Generate and write deactivation scripts for an environment.
 
     Args:
         env: the environment the deactivation script is written for
         view: the name of the environment's view
     """
+    # Ensure .env subdir exists
+    env.ensure_env_directory_exists(dot_env=True)
 
-    shells_avail = ["sh", "csh", "fish"]
-    comments = "###"
+    # Get lockfile modification time
+    lockfile_mtime = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.0
 
-    if sys.platform == "win32":
-        shells_avail = ["bat", "pwsh"]
+    shells = WINDOWS_SHELLS if sys.platform == "win32" else UNIX_SHELLS
 
-    # Check if the lockfile exists and get its modification time
-    lockfile_date = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.00
+    for shell in shells:
+        deactivate_script_path = path_to_env_script(env, shell, "deactivate")
 
-    for shell in shells_avail:
-        deactivate_script_path = path_to_env_deactivate_shell_script(env, shell)
-
-        # Update the script only if the lockfile doesn't exist or is newer than script
-        if lockfile_date == 0.00 or _lockfile_newer_than_script(
-            lockfile_date, deactivate_script_path
-        ):
+        # Update the script only if needed
+        if _script_needs_update(lockfile_mtime, deactivate_script_path):
             env_mods = spack.environment.shell.deactivate(env, view)
 
             cmds = spack.environment.shell.deactivate_commands(shell)
             cmds += env_mods.shell_modifications(shell)
 
-            if shell == "bat":
-                comments = "::"
+            _generate_script(deactivate_script_path, cmds, shell)
 
-            _generate_script(deactivate_script_path, cmds, comments)
+
+def get_shell_unique_env_cmds(shell, prompt: str, view: str) -> str:
+    """Returns the prompt, view, and despacktivate commands which are unique to each shell.
+
+    Args:
+        shell: the shell that the user is running
+        prompt: name of user's prompt
+        view: name of environment's view
+    """
+    despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
+    prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)
+
+    cmds = despactivate_cmd + prompt_cmds
+
+    return cmds
 
 
 def source_env_script(env_script_path, shell: str) -> str:

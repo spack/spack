@@ -97,14 +97,14 @@ def setup_combined_multiple_env():
 
 def get_activation_script_content(env, shell: str) -> str:
     """Returns the content of the activation script for the specified env and shell."""
-    path_to_activate_script = env_script.path_to_env_activate_shell_script(env, shell)
+    path_to_activate_script = env_script.path_to_env_script(env, shell, script_type="activate")
     with open(path_to_activate_script, "r", encoding="utf-8") as f:
         return f.read()
 
 
 def get_deactivation_script_content(env, shell: str) -> str:
     """Returns the content of the deactivation script for the specified env and shell."""
-    path_to_deactivate_script = env_script.path_to_env_deactivate_shell_script(env, shell)
+    path_to_deactivate_script = env_script.path_to_env_script(env, shell, script_type="deactivate")
     with open(path_to_deactivate_script, "r", encoding="utf-8") as f:
         return f.read()
 
@@ -150,8 +150,8 @@ def test_env_write_env_scripts(shell):
     env("create", "script_test")
     environ = ev.read("script_test")
 
-    path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, shell)
-    path_to_deactivate_script = env_script.path_to_env_deactivate_shell_script(environ, shell)
+    path_to_activate_script = env_script.path_to_env_script(environ, shell, script_type="activate")
+    path_to_deactivate_script = env_script.path_to_env_script(environ, shell, script_type="deactivate")
 
     assert os.path.isfile(path_to_activate_script)
     assert os.path.isfile(path_to_deactivate_script)
@@ -180,14 +180,14 @@ def test_env_update_activate_script(shell):
 
     env("activate", f"--{shell}", "test")
 
-    path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, shell)
+    path_to_activate_script = env_script.path_to_env_script(environ, shell, script_type="activate")
     script_creation = os.stat(path_to_activate_script).st_mtime
 
     environ.add("mpi")
     environ.concretize()
     environ.write()
 
-    path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, shell)
+    path_to_activate_script = env_script.path_to_env_script(environ, shell, script_type="activate")
     script_update = os.stat(path_to_activate_script).st_mtime
 
     assert script_update > script_creation
@@ -210,8 +210,8 @@ def test_env_scripts_regenerate_after_lockfile_change(shell):
 
     env("activate", f"--{shell}", "test")
 
-    path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, shell)
-    path_to_deactivate_script = env_script.path_to_env_deactivate_shell_script(environ, shell)
+    path_to_activate_script = env_script.path_to_env_script(environ, shell, script_type="activate")
+    path_to_deactivate_script = env_script.path_to_env_script(environ, shell, script_type="deactivate")
 
     initial_activate_mtime = os.stat(path_to_activate_script).st_mtime
     initial_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
@@ -243,7 +243,7 @@ def test_env_missing_deactivate_script(shell):
 
     env("activate", f"--{shell}", "test")
 
-    path_to_deactivate_script = env_script.path_to_env_deactivate_shell_script(environ, shell)
+    path_to_deactivate_script = env_script.path_to_env_script(environ, shell, script_type="deactivate")
     os.remove(path_to_deactivate_script)
 
     assert not os.path.isfile(path_to_deactivate_script)
@@ -261,8 +261,8 @@ def test_env_scripts_path_after_relocation(shell):
 
     env("activate", f"--{shell}", "orig")
 
-    orig_activate_script_path = env_script.path_to_env_activate_shell_script(orig_env, shell)
-    orig_deactivate_script_path = env_script.path_to_env_deactivate_shell_script(orig_env, shell)
+    orig_activate_script_path = env_script.path_to_env_script(orig_env, shell, script_type="activate")
+    orig_deactivate_script_path = env_script.path_to_env_script(orig_env, shell, script_type="deactivate")
 
     activate_content = get_activation_script_content(orig_env, shell)
     deactivate_content = get_deactivation_script_content(orig_env, shell)
@@ -277,8 +277,8 @@ def test_env_scripts_path_after_relocation(shell):
     env("rename", "orig", "new")
     new_env = ev.read("new")
 
-    new_activate_script_path = env_script.path_to_env_activate_shell_script(new_env, shell)
-    new_deactivate_script_path = env_script.path_to_env_deactivate_shell_script(new_env, shell)
+    new_activate_script_path = env_script.path_to_env_script(new_env, shell, script_type="activate")
+    new_deactivate_script_path = env_script.path_to_env_script(new_env, shell, script_type="deactivate")
 
     assert os.path.isfile(new_activate_script_path)
     assert os.path.isfile(new_deactivate_script_path)
@@ -304,7 +304,8 @@ def test_env_activate_script_content_consistency(shell):
 
     # Generate script first time
     env("activate", f"--{shell}", "consistent_test")
-    activate_script_path = env_script.path_to_env_activate_shell_script(test_env, shell)
+
+    activate_script_path = env_script.path_to_env_script(test_env, shell, script_type="activate")
 
     first_content = get_activation_script_content(test_env, shell)
 
@@ -356,8 +357,8 @@ def test_env_activate_deactivate_directory_env(shell, tmp_path: pathlib.Path):
 
         env("activate", f"--{shell}", ".")
 
-        activate_script = env_script.path_to_env_activate_shell_script(test_env, shell)
-        deactivate_script = env_script.path_to_env_deactivate_shell_script(test_env, shell)
+        activate_script = env_script.path_to_env_script(test_env, shell, script_type="activate")
+        deactivate_script = env_script.path_to_env_script(test_env, shell, script_type="deactivate")
 
         assert os.path.exists(activate_script)
         assert os.path.exists(deactivate_script)
@@ -3620,14 +3621,14 @@ def test_env_activate_sh_script_output():
     activate_output = env("activate", "--sh", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    activate_script = get_activation_script_content(environ, "sh")
+    activate_content = get_activation_script_content(environ, "sh")
 
     assert "_spack_env_set SPACK_ENV " not in activate_output
-    assert "_spack_env_set SPACK_ENV " in activate_script
+    assert "_spack_env_set SPACK_ENV " in activate_content
     assert "export PS1=" in activate_output
-    assert "export PS1=" not in activate_script
+    assert "export PS1=" not in activate_content
     assert "alias despacktivate=" in activate_output
-    assert "alias despacktivate=" not in activate_script
+    assert "alias despacktivate=" not in activate_content
 
 
 def test_env_activate_csh_script_output():
@@ -3637,14 +3638,14 @@ def test_env_activate_csh_script_output():
     activate_output = env("activate", "--csh", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    activate_script = get_activation_script_content(environ, "csh")
+    activate_content = get_activation_script_content(environ, "csh")
 
     assert "_spack_env_set SPACK_ENV " not in activate_output
-    assert "_spack_env_set SPACK_ENV " in activate_script
+    assert "_spack_env_set SPACK_ENV " in activate_content
     assert "_spack_env_set prompt" in activate_output
-    assert "_spack_env_set prompt" not in activate_script
+    assert "_spack_env_set prompt" not in activate_content
     assert "alias despacktivate" in activate_output
-    assert "alias despacktivate" not in activate_script
+    assert "alias despacktivate" not in activate_content
 
 
 def test_env_activate_fish_script_output():
@@ -3654,12 +3655,12 @@ def test_env_activate_fish_script_output():
     activate_output = env("activate", "--fish", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    activate_script = get_activation_script_content(environ, "fish")
+    activate_content = get_activation_script_content(environ, "fish")
 
     assert "_spack_env_set SPACK_ENV " not in activate_output
-    assert "_spack_env_set SPACK_ENV " in activate_script
+    assert "_spack_env_set SPACK_ENV " in activate_content
     assert "function despacktivate;" in activate_output
-    assert "function despacktivate;" not in activate_script
+    assert "function despacktivate;" not in activate_content
 
 
 @pytest.mark.regression("12719")

@@ -176,8 +176,8 @@ def _env_create(
         tty.msg(colorize(f"Created independent environment in: @c{{{cescape(env.path)}}}"))
     tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")
 
-    generate_script.write_env_activate_script(env, "default")
-    generate_script.write_env_deactivate_script(env, "default")
+    generate_script.write_env_activate_script(env, view=ev.default_view_name)
+    generate_script.write_env_deactivate_script(env, view=ev.default_view_name)
     return env
 
 
@@ -366,8 +366,8 @@ def env_activate(args):
     if active_environment():
         # run deactivate script
         active_env = active_environment()
-        env_deactivate_script = generate_script.path_to_env_deactivate_shell_script(
-            active_env, shell=args.shell
+        env_deactivate_script = generate_script.path_to_env_script(
+            active_env, shell=args.shell, script_type="deactivate"
         )
 
         print(generate_script.source_env_script(env_deactivate_script, args.shell))
@@ -376,7 +376,7 @@ def env_activate(args):
     active_env = ev.Environment(env_path)
 
     # Check if runtime environment variables are requested, and if so, for what view.
-    view = ""
+    view = ev.default_view_name
     if args.with_view:
         view = args.with_view
         if not active_env.has_view(view):
@@ -386,21 +386,24 @@ def env_activate(args):
 
     active_env.manifest.prepare_config_scope()
 
-    ev.activate(active_env, use_env_repo=True)
-
-    env_activate_script = generate_script.path_to_env_activate_shell_script(
-        active_env, shell=args.shell
+    env_activate_script = generate_script.path_to_env_script(
+        active_env, shell=args.shell, script_type="activate"
     )
 
     if not os.path.isfile(env_activate_script) or args.with_view:
         generate_script.write_env_activate_script(active_env, view)
+        generate_script.write_env_deactivate_script(active_env, view)
+
+    ev.activate(active_env, use_env_repo=True)
 
     cmds = generate_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
     sys.stdout.write(cmds)
 
     print(generate_script.source_env_script(env_activate_script, args.shell))
 
-    env_deactivate_script = generate_script.path_to_env_deactivate_shell_script(active_env, shell=args.shell)
+    env_deactivate_script = generate_script.path_to_env_script(
+        active_env, shell=args.shell, script_type="deactivate"
+    )
     if not os.path.isfile(env_deactivate_script) or args.with_view:
         generate_script.write_env_deactivate_script(active_env, view)
 
@@ -462,8 +465,8 @@ def env_deactivate(args):
     if active_environment() is None:
         tty.die("No environment is currently active.")
 
-    env_deactivate_script_path = generate_script.path_to_env_deactivate_shell_script(
-        active_environment(), shell=args.shell
+    env_deactivate_script_path = generate_script.path_to_env_script(
+        active_environment(), shell=args.shell, script_type="deactivate"
     )
 
     if not os.path.isfile(env_deactivate_script_path):
