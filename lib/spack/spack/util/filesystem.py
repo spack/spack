@@ -47,7 +47,6 @@ from typing import (
 from spack.vendor.typing_extensions import Literal
 
 from spack.util import lang, tty
-from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable, which
 from spack.util.lang import dedupe, fnmatch_translate_multiple, memoized
 from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_filter
