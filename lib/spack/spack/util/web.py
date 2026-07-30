@@ -115,6 +115,23 @@ def is_transient_error(e: Exception) -> bool:
     return False
 
 
+def is_precondition_error(e: Exception) -> bool:
+    """Return True if HTTP/Boto3 error is related to a precondition error.
+
+    Examples of precontition errors:
+        HTTP status code 412
+        Boto error 'PreconditionFailed'
+    """
+    if isinstance(e, HTTPError) and 412 == e.code:
+        return True
+
+    # Handle boto errors types by string name to avoid import
+    if "PreconditionFailed" in str(e):
+        return True
+
+    return False
+
+
 _P = ParamSpec("_P")
 _R = TypeVar("_R")
 
