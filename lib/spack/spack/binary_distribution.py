@@ -601,21 +601,6 @@ def buildcache_relative_blobs_path(layout_version: int = CURRENT_BUILD_CACHE_LAY
     return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.BLOB))
 
 
-def buildcache_relative_blobs_url(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
-    cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.BLOB))
-
-
-def buildcache_relative_index_path(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
-    cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.INDEX))
-
-
-def buildcache_relative_index_url(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
-    cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.INDEX))
-
-
 @spack.util.lang.memoized
 def warn_v2_layout(mirror_url: str, action: str) -> bool:
     lines = textwrap.wrap(
@@ -1678,28 +1663,6 @@ def _oci_update_index(
     upload_manifest_with_retry(image_ref.with_tag(default_index_tag), oci_manifest)
 
 
-def try_fetch(url_to_fetch):
-    """Utility function to try and fetch a file from a url, stage it
-    locally, and return the path to the staged file.
-
-    Args:
-        url_to_fetch (str): Url pointing to remote resource to fetch
-
-    Returns:
-        Path to locally staged resource or ``None`` if it could not be fetched.
-    """
-    stage = Stage(url_to_fetch, keep=True)
-    stage.create()
-
-    try:
-        stage.fetch()
-    except spack.error.FetchError:
-        stage.destroy()
-        return None
-
-    return stage
-
-
 def download_tarball(
     spec: spack.spec.Spec,
     unsigned: Optional[bool] = False,
@@ -2570,10 +2533,6 @@ class FetchIndexError(Exception):
             return "{}, due to: {}".format(self.args[0], self.args[1])
 
 
-class BuildcacheIndexError(spack.error.SpackError):
-    """Raised when a buildcache cannot be read for any reason"""
-
-
 class BuildcacheIndexNotExists(Exception):
     """Buildcache does not contain an index"""
 
@@ -2931,15 +2890,6 @@ class NoOverwriteException(spack.error.SpackError):
         super().__init__(f"Refusing to overwrite the following file: {file_path}")
 
 
-class NoGpgException(spack.error.SpackError):
-    """
-    Raised when gpg2 is not in PATH
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
 class NoKeyException(spack.error.SpackError):
     """
     Raised when gpg has no default key added.
@@ -2967,13 +2917,6 @@ class NewLayoutException(spack.error.SpackError):
 
     def __init__(self, msg):
         super().__init__(msg)
-
-
-class UnsignedPackageException(spack.error.SpackError):
-    """
-    Raised if installation of unsigned package is attempted without
-    the use of ``--no-check-signature``.
-    """
 
 
 class GenerateIndexError(spack.error.SpackError):

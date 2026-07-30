@@ -2689,23 +2689,5 @@ class InvalidPackageOpError(PackageError):
     """Raised when someone tries perform an invalid operation on a package."""
 
 
-class ExtensionError(PackageError):
-    """Superclass for all errors having to do with extension packages."""
-
-
-class ActivationError(ExtensionError):
-    """Raised when there are problems activating an extension."""
-
-    def __init__(self, msg, long_msg=None):
-        super().__init__(msg, long_msg)
-
-
-class DependencyConflictError(spack.error.SpackError):
-    """Raised when the dependencies cannot be flattened as asked for."""
-
-    def __init__(self, conflict):
-        super().__init__("%s conflicts with another file in the flattened directory." % (conflict))
-
-
 class ManualDownloadRequiredError(InvalidPackageOpError):
     """Raised when attempting an invalid operation on a package that requires a manual download."""

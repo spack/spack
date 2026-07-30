@@ -4238,14 +4238,6 @@ class SpliceSerializationError(spack.error.SpackError):
     """Attempt to serialize a SpecDict that contains spliced specs (currently unsupported)."""
 
 
-class NoCompilerFoundError(spack.error.SpackError):
-    """Raised when there is no possible compiler"""
-
-
-class InvalidExternalError(spack.error.SpackError):
-    """Raised when there is no possible compiler"""
-
-
 class DeprecatedVersionError(spack.error.SpackError):
     """Raised when user directly requests a deprecated version."""
 

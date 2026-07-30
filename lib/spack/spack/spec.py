@@ -5915,37 +5915,8 @@ class SpecFormatSigilError(SpecFormatStringError):
         super().__init__(msg)
 
 
-class ConflictsInSpecError(spack.error.SpecError, RuntimeError):
-    def __init__(self, spec, matches):
-        message = 'Conflicts in concretized spec "{0}"\n'.format(spec.short_spec)
-
-        visited = set()
-
-        long_message = ""
-
-        match_fmt_default = '{0}. "{1}" conflicts with "{2}"\n'
-        match_fmt_custom = '{0}. "{1}" conflicts with "{2}" [{3}]\n'
-
-        for idx, (s, c, w, msg) in enumerate(matches):
-            if s not in visited:
-                visited.add(s)
-                long_message += "List of matching conflicts for spec:\n\n"
-                long_message += s.tree(indent=4) + "\n"
-
-            if msg is None:
-                long_message += match_fmt_default.format(idx + 1, c, w)
-            else:
-                long_message += match_fmt_custom.format(idx + 1, c, w, msg)
-
-        super().__init__(message, long_message)
-
-
 class SpecDeprecatedError(spack.error.SpecError):
     """Raised when a spec concretizes to a deprecated spec or dependency."""
-
-
-class InvalidSpecDetected(spack.error.SpecError):
-    """Raised when a detected spec doesn't pass validation checks."""
 
 
 class SpliceError(spack.error.SpecError):

@@ -24,7 +24,6 @@ import spack.util.crypto
 import spack.util.lang
 import spack.util.lock
 import spack.util.parallel
-import spack.util.path as sup
 import spack.util.string
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
@@ -208,18 +207,6 @@ def get_stage_root():
         _stage_root = path
 
     return _stage_root
-
-
-def _mirror_roots():
-    mirrors = spack.config.CONFIG.get("mirrors")
-    return [
-        (
-            sup.substitute_path_variables(root)
-            if root.endswith(os.sep)
-            else sup.substitute_path_variables(root) + os.sep
-        )
-        for root in mirrors.values()
-    ]
 
 
 class AbstractStage(abc.ABC):
@@ -1368,15 +1355,3 @@ def _fetch_and_checksum(
 
 class StageError(spack.error.SpackError):
     """Superclass for all errors encountered during staging."""
-
-
-class StagePathError(StageError):
-    """Error encountered with stage path."""
-
-
-class RestageError(StageError):
-    """Error encountered during restaging."""
-
-
-class VersionFetchError(StageError):
-    """Raised when we can't determine a URL to fetch a package."""

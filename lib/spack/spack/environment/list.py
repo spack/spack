@@ -295,7 +295,3 @@ class SpecListError(SpackError):
 
 class UndefinedReferenceError(SpecListError):
     """Error class for undefined references in Spack stacks."""
-
-
-class InvalidSpecConstraintError(SpecListError):
-    """Error class for invalid spec constraints at concretize time."""
