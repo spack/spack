@@ -794,7 +794,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     env_by_name = env_mods.group_by_name()
     for x in env_by_name["SPACK_COMPILER_WRAPPER_PATH"]:
         assert isinstance(x, PrependPath), (
-            f"unexpected setting {type(x)} used for SPACK_COMPILER_WRAPPER_PATH"
+            "unexpected setting used for SPACK_COMPILER_WRAPPER_PATH"
         )
         env_mods.prepend_path("PATH", x.value)
 
