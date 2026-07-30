@@ -915,7 +915,10 @@ class ErrorHandler:
 
         # Print initial error message before starting secondary solve for causal trees
         simple_error_message = self.format_errors(initial_error_args)
-        msg = f"{simple_error_message}\n    Starting secondary solve for error causes."
+        msg = (
+            f"{simple_error_message}"
+            f"\nAnalyzing the cause of the failure, this may take a moment..."
+        )
         tty.error(msg)
 
         error_causation = make_error_control()
