@@ -154,9 +154,6 @@ def test_env_write_env_scripts(shell):
     path_to_deactivate_script = env_script.path_to_env_deactivate_shell_script(environ, shell)
 
     assert os.path.isfile(path_to_activate_script)
-
-    env("activate", f"--{shell}", environ.name)
-
     assert os.path.isfile(path_to_deactivate_script)
 
 
@@ -168,12 +165,9 @@ def test_env_env_script_content(shell):
     env("create", "script_test")
     environ = ev.read("script_test")
 
-    path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, shell)
+    activate_content = get_activation_script_content(environ, shell)
 
-    with open(path_to_activate_script, "r", encoding="utf-8") as f:
-        out = f.read()
-
-    assert f"_spack_env_set SPACK_ENV {environ.path}" in out
+    assert f"_spack_env_set SPACK_ENV {environ.path}" in activate_content
 
 
 @pytest.mark.parametrize(
@@ -270,11 +264,8 @@ def test_env_scripts_path_after_relocation(shell):
     orig_activate_script_path = env_script.path_to_env_activate_shell_script(orig_env, shell)
     orig_deactivate_script_path = env_script.path_to_env_deactivate_shell_script(orig_env, shell)
 
-    with open(orig_activate_script_path, "r", encoding="utf-8") as f:
-        activate_content = f.read()
-
-    with open(orig_deactivate_script_path, "r", encoding="utf-8") as f:
-        deactivate_content = f.read()
+    activate_content = get_activation_script_content(orig_env, shell)
+    deactivate_content = get_deactivation_script_content(orig_env, shell)
 
     assert os.path.isfile(orig_activate_script_path)
     assert os.path.isfile(orig_deactivate_script_path)
@@ -294,10 +285,8 @@ def test_env_scripts_path_after_relocation(shell):
     assert not os.path.isfile(orig_activate_script_path)
     assert not os.path.isfile(orig_deactivate_script_path)
 
-    with open(new_activate_script_path, "r", encoding="utf-8") as f:
-        new_activate_content = f.read()
-    with open(new_deactivate_script_path, "r", encoding="utf-8") as f:
-        new_deactivate_content = f.read()
+    new_activate_content = get_activation_script_content(new_env, shell)
+    new_deactivate_content = get_deactivation_script_content(new_env, shell)
 
     assert new_env.path in new_activate_content
     assert new_env.path in new_deactivate_content
@@ -317,14 +306,12 @@ def test_env_activate_script_content_consistency(shell):
     env("activate", f"--{shell}", "consistent_test")
     activate_script_path = env_script.path_to_env_activate_shell_script(test_env, shell)
 
-    with open(activate_script_path, "r", encoding="utf-8") as f:
-        first_content = f.read()
+    first_content = get_activation_script_content(test_env, shell)
 
     os.remove(activate_script_path)
     env("activate", f"--{shell}", "consistent_test")
 
-    with open(activate_script_path, "r", encoding="utf-8") as f:
-        second_content = f.read()
+    second_content = get_activation_script_content(test_env, shell)
 
     first_lines = [line for line in first_content.splitlines() if "Generated on:" not in line]
     second_lines = [line for line in second_content.splitlines() if "Generated on:" not in line]
@@ -376,9 +363,7 @@ def test_env_activate_deactivate_directory_env(shell, tmp_path: pathlib.Path):
         assert os.path.exists(deactivate_script)
 
         # Verify scripts contain correct paths
-        with open(activate_script, "r", encoding="utf-8") as f:
-            activate_content = f.read()
-
+        activate_content = get_activation_script_content(test_env, shell)
         assert str(tmp_path) in activate_content or test_env.path in activate_content
 
 
@@ -400,12 +385,9 @@ def test_env_scripts_with_view(shell, tmp_path: pathlib.Path, install_mockery, m
 
     env("activate", f"--{shell}", "view_test")
 
-    activate_script = env_script.path_to_env_activate_shell_script(test_env, shell)
+    activate_content = get_activation_script_content(test_env, shell)
 
-    with open(activate_script, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    assert str(view_dir) in content
+    assert str(view_dir) in activate_content
 
 
 @pytest.mark.parametrize(
@@ -3493,14 +3475,11 @@ def test_stack_view_activate_from_default(
         environ = ev.read("test")
         env("activate", "--sh", "test")
 
-        path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, "sh")
+        activate_content = get_activation_script_content(environ, "sh")
 
-        with open(path_to_activate_script, "r", encoding="utf-8") as f:
-            shell_output = f.read()
-
-        assert "PATH" in shell_output
-        assert str(view_dir / "bin") in shell_output
-        assert "_spack_env_set FOOBAR mpileaks" in shell_output
+        assert "PATH" in activate_content
+        assert str(view_dir / "bin") in activate_content
+        assert "_spack_env_set FOOBAR mpileaks" in activate_content
 
 
 def test_envvar_set_in_activate(tmp_path: pathlib.Path, mock_packages, install_mockery):
@@ -3535,28 +3514,20 @@ spack:
     test_env = ev.read("test")
     env("activate", "--sh", "test")
 
-    path_to_activate_script = env_script.path_to_env_activate_shell_script(test_env, "sh")
+    activate_content = get_activation_script_content(test_env, "sh")
 
-    with open(path_to_activate_script, "r", encoding="utf-8") as f:
-        output = f.read()
-
-    assert "_spack_env_set SPACK_ENVAR_SET_IN_ENV_LOAD True" in output
-    assert "_spack_env_set CONFIG_ENVAR_SET_IN_ENV_LOAD True" in output
+    assert "_spack_env_set SPACK_ENVAR_SET_IN_ENV_LOAD True" in activate_content
+    assert "_spack_env_set CONFIG_ENVAR_SET_IN_ENV_LOAD True" in activate_content
 
     with test_env:
         with spack.util.environment.set_env(
             SPACK_ENVAR_SET_IN_ENV_LOAD="True", CONFIG_ENVAR_SET_IN_ENV_LOAD="True"
         ):
             env("deactivate", "--sh")
-            path_to_deactivate_script = env_script.path_to_env_deactivate_shell_script(
-                test_env, "sh"
-            )
+            deactivate_content = get_deactivation_script_content(test_env, "sh")
 
-            with open(path_to_deactivate_script, "r", encoding="utf-8") as f:
-                output = f.read()
-
-            assert "_spack_env_unset SPACK_ENVAR_SET_IN_ENV_LOAD" in output
-            assert "_spack_env_unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in output
+            assert "_spack_env_unset SPACK_ENVAR_SET_IN_ENV_LOAD" in deactivate_content
+            assert "_spack_env_unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in deactivate_content
 
 
 def test_stack_view_no_activate_without_default(
@@ -3646,58 +3617,49 @@ def test_env_activate_sh_script_output():
     """
     env("create", "test")
 
-    out = env("activate", "--sh", "test")
+    activate_output = env("activate", "--sh", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    env_activate_script = env_script.path_to_env_activate_shell_script(environ, shell="sh")
+    activate_script = get_activation_script_content(environ, "sh")
 
-    with open(env_activate_script, "r", encoding="utf-8") as f:
-        script = f.read()
-
-    assert "_spack_env_set SPACK_ENV " not in out
-    assert "_spack_env_set SPACK_ENV " in script
-    assert "export PS1=" in out
-    assert "export PS1=" not in script
-    assert "alias despacktivate=" in out
-    assert "alias despacktivate=" not in script
+    assert "_spack_env_set SPACK_ENV " not in activate_output
+    assert "_spack_env_set SPACK_ENV " in activate_script
+    assert "export PS1=" in activate_output
+    assert "export PS1=" not in activate_script
+    assert "alias despacktivate=" in activate_output
+    assert "alias despacktivate=" not in activate_script
 
 
 def test_env_activate_csh_script_output():
     """Check the shell commands output by ``spack env activate --csh``."""
     env("create", "test")
 
-    out = env("activate", "--csh", "test")
+    activate_output = env("activate", "--csh", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    env_activate_script = env_script.path_to_env_activate_shell_script(environ, shell="csh")
+    activate_script = get_activation_script_content(environ, "csh")
 
-    with open(env_activate_script, "r", encoding="utf-8") as f:
-        script = f.read()
-
-    assert "_spack_env_set SPACK_ENV " not in out
-    assert "_spack_env_set SPACK_ENV " in script
-    assert "_spack_env_set prompt" in out
-    assert "_spack_env_set prompt" not in script
-    assert "alias despacktivate" in out
-    assert "alias despacktivate" not in script
+    assert "_spack_env_set SPACK_ENV " not in activate_output
+    assert "_spack_env_set SPACK_ENV " in activate_script
+    assert "_spack_env_set prompt" in activate_output
+    assert "_spack_env_set prompt" not in activate_script
+    assert "alias despacktivate" in activate_output
+    assert "alias despacktivate" not in activate_script
 
 
 def test_env_activate_fish_script_output():
     """Check the shell commands output by ``spack env activate --fish``."""
     env("create", "test")
 
-    out = env("activate", "--fish", "test")
+    activate_output = env("activate", "--fish", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    env_activate_script = env_script.path_to_env_activate_shell_script(environ, shell="fish")
+    activate_script = get_activation_script_content(environ, "fish")
 
-    with open(env_activate_script, "r", encoding="utf-8") as f:
-        script = f.read()
-
-    assert "_spack_env_set SPACK_ENV " not in out
-    assert "_spack_env_set SPACK_ENV " in script
-    assert "function despacktivate;" in out
-    assert "function despacktivate;" not in script
+    assert "_spack_env_set SPACK_ENV " not in activate_output
+    assert "_spack_env_set SPACK_ENV " in activate_script
+    assert "function despacktivate;" in activate_output
+    assert "function despacktivate;" not in activate_script
 
 
 @pytest.mark.regression("12719")
@@ -3712,17 +3674,14 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     env("activate", "--sh", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    env_activate_script = env_script.path_to_env_activate_shell_script(environ, shell="sh")
-
-    with open(env_activate_script, "r", encoding="utf-8") as f:
-        out = f.read()
+    activate_content = get_activation_script_content(environ, "sh")
 
     viewdir_bin = os.path.join(viewdir, "bin")
 
     assert (
-        "spack_env_prepend PATH {0}".format(viewdir_bin) in out
-        or "export PATH='{0}".format(viewdir_bin) in out
-        or 'export PATH="{0}'.format(viewdir_bin) in out
+        "spack_env_prepend PATH {0}".format(viewdir_bin) in activate_content
+        or "export PATH='{0}".format(viewdir_bin) in activate_content
+        or 'export PATH="{0}'.format(viewdir_bin) in activate_content
     )
 
 
@@ -3746,12 +3705,9 @@ spack:
     env("activate", "--sh", "--with-view", "nondefault", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    env_activate_script = env_script.path_to_env_activate_shell_script(environ, shell="sh")
+    activate_content = get_activation_script_content(environ, "sh")
 
-    with open(env_activate_script, "r", encoding="utf-8") as f:
-        shell = f.read()
-
-    assert os.path.join(nondefaultdir, "bin") in shell
+    assert os.path.join(nondefaultdir, "bin") in activate_content
 
 
 def test_concretize_user_specs_together(mutable_config):
@@ -4236,11 +4192,9 @@ def test_activate_temp(monkeypatch, tmp_path: pathlib.Path):
 
     environ = ev.environment_from_name_or_dir(str(tmp_path))
 
-    path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, shell="sh")
-    with open(path_to_activate_script, "r", encoding="utf-8") as f:
-        shell_output = f.read()
+    activate_content = get_activation_script_content(environ, "sh")
 
-    active_env_var = next(line for line in shell_output.splitlines() if ev.spack_env_var in line)
+    active_env_var = next(line for line in activate_content.splitlines() if ev.spack_env_var in line)
     assert str(tmp_path) in active_env_var
     assert ev.is_env_dir(str(tmp_path))
 
@@ -4259,13 +4213,11 @@ def test_create_and_activate_managed(tmp_path: pathlib.Path):
 
         environ = ev.read("foo")
 
-        path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, shell="sh")
-        with open(path_to_activate_script, "r", encoding="utf-8") as f:
-            shell_output = f.read()
-
+        activate_content = get_activation_script_content(environ, "sh")
         active_env_var = next(
-            line for line in shell_output.splitlines() if ev.spack_env_var in line
+            line for line in activate_content.splitlines() if ev.spack_env_var in line
         )
+
         assert str(tmp_path) in active_env_var
         active_ev = active_environment()
         assert active_ev and "foo" == active_ev.name
@@ -4278,13 +4230,10 @@ def test_create_and_activate_independent(tmp_path: pathlib.Path):
         env("activate", "--without-view", "--create", "--sh", env_dir)
 
         environ = ev.environment_from_name_or_dir(env_dir)
-
-        path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, shell="sh")
-        with open(path_to_activate_script, "r", encoding="utf-8") as f:
-            shell_output = f.read()
+        activate_content = get_activation_script_content(environ, "sh")
 
         active_env_var = next(
-            line for line in shell_output.splitlines() if ev.spack_env_var in line
+            line for line in activate_content.splitlines() if ev.spack_env_var in line
         )
         assert str(env_dir) in active_env_var
         assert ev.is_env_dir(env_dir)
