@@ -151,7 +151,9 @@ def test_env_write_env_scripts(shell):
     environ = ev.read("script_test")
 
     path_to_activate_script = env_script.path_to_env_script(environ, shell, script_type="activate")
-    path_to_deactivate_script = env_script.path_to_env_script(environ, shell, script_type="deactivate")
+    path_to_deactivate_script = env_script.path_to_env_script(
+        environ, shell, script_type="deactivate"
+    )
 
     assert os.path.isfile(path_to_activate_script)
     assert os.path.isfile(path_to_deactivate_script)
@@ -211,7 +213,9 @@ def test_env_scripts_regenerate_after_lockfile_change(shell):
     env("activate", f"--{shell}", "test")
 
     path_to_activate_script = env_script.path_to_env_script(environ, shell, script_type="activate")
-    path_to_deactivate_script = env_script.path_to_env_script(environ, shell, script_type="deactivate")
+    path_to_deactivate_script = env_script.path_to_env_script(
+        environ, shell, script_type="deactivate"
+    )
 
     initial_activate_mtime = os.stat(path_to_activate_script).st_mtime
     initial_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
@@ -243,7 +247,9 @@ def test_env_missing_deactivate_script(shell):
 
     env("activate", f"--{shell}", "test")
 
-    path_to_deactivate_script = env_script.path_to_env_script(environ, shell, script_type="deactivate")
+    path_to_deactivate_script = env_script.path_to_env_script(
+        environ, shell, script_type="deactivate"
+    )
     os.remove(path_to_deactivate_script)
 
     assert not os.path.isfile(path_to_deactivate_script)
@@ -261,8 +267,12 @@ def test_env_scripts_path_after_relocation(shell):
 
     env("activate", f"--{shell}", "orig")
 
-    orig_activate_script_path = env_script.path_to_env_script(orig_env, shell, script_type="activate")
-    orig_deactivate_script_path = env_script.path_to_env_script(orig_env, shell, script_type="deactivate")
+    orig_activate_script_path = env_script.path_to_env_script(
+        orig_env, shell, script_type="activate"
+    )
+    orig_deactivate_script_path = env_script.path_to_env_script(
+        orig_env, shell, script_type="deactivate"
+    )
 
     activate_content = get_activation_script_content(orig_env, shell)
     deactivate_content = get_deactivation_script_content(orig_env, shell)
@@ -277,8 +287,12 @@ def test_env_scripts_path_after_relocation(shell):
     env("rename", "orig", "new")
     new_env = ev.read("new")
 
-    new_activate_script_path = env_script.path_to_env_script(new_env, shell, script_type="activate")
-    new_deactivate_script_path = env_script.path_to_env_script(new_env, shell, script_type="deactivate")
+    new_activate_script_path = env_script.path_to_env_script(
+        new_env, shell, script_type="activate"
+    )
+    new_deactivate_script_path = env_script.path_to_env_script(
+        new_env, shell, script_type="deactivate"
+    )
 
     assert os.path.isfile(new_activate_script_path)
     assert os.path.isfile(new_deactivate_script_path)
@@ -358,7 +372,9 @@ def test_env_activate_deactivate_directory_env(shell, tmp_path: pathlib.Path):
         env("activate", f"--{shell}", ".")
 
         activate_script = env_script.path_to_env_script(test_env, shell, script_type="activate")
-        deactivate_script = env_script.path_to_env_script(test_env, shell, script_type="deactivate")
+        deactivate_script = env_script.path_to_env_script(
+            test_env, shell, script_type="deactivate"
+        )
 
         assert os.path.exists(activate_script)
         assert os.path.exists(deactivate_script)
@@ -4195,7 +4211,9 @@ def test_activate_temp(monkeypatch, tmp_path: pathlib.Path):
 
     activate_content = get_activation_script_content(environ, "sh")
 
-    active_env_var = next(line for line in activate_content.splitlines() if ev.spack_env_var in line)
+    active_env_var = next(
+        line for line in activate_content.splitlines() if ev.spack_env_var in line
+    )
     assert str(tmp_path) in active_env_var
     assert ev.is_env_dir(str(tmp_path))
 

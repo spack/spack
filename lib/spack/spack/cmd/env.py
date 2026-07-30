@@ -19,6 +19,7 @@ import spack.config
 import spack.environment as ev
 import spack.environment.environment
 import spack.environment.generate_env_scripts as generate_script
+import spack.environment.shell
 import spack.tengine
 import spack.util.filesystem as fs
 from spack.active_environment import active_environment
@@ -395,6 +396,7 @@ def env_activate(args):
         generate_script.write_env_deactivate_script(active_env, view)
 
     ev.activate(active_env, use_env_repo=True)
+    spack.environment.shell.activate(active_env, view)
 
     cmds = generate_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
     sys.stdout.write(cmds)

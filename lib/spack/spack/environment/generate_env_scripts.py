@@ -14,6 +14,7 @@ from spack.util.environment import EnvironmentModifications
 UNIX_SHELLS = ["sh", "csh", "fish"]
 WINDOWS_SHELLS = ["bat", "pwsh"]
 
+
 def path_to_env_script(env, shell: str, script_type: str) -> str:
     """Returns path to the shell script for activating or deactivating an environment.
 
