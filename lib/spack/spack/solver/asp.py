@@ -893,6 +893,7 @@ class ErrorHandler:
         )
         try:
             error_messages = [self.handle_error(msg, *args) for (_, msg, args) in errors]
+            error_messages = filter(lambda em: em not in self.printed, error_messages)
             messages = [
                 f"    {idx + 1 + len(self.printed):2}. {error_msg}"
                 for idx, error_msg in enumerate(error_messages)
