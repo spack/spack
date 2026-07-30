@@ -211,9 +211,42 @@ def ensure_modern_format_string(fmt: str) -> None:
 def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchitecture:
     if isinstance(name, spack.vendor.archspec.cpu.Microarchitecture):
         return name
+    if ":" in name or "," in name:
+        name = _canonical_target_range(name)
     return spack.vendor.archspec.cpu.TARGETS.get(
         name, spack.vendor.archspec.cpu.generic_microarchitecture(name)
     )
+
+
+def _canonical_target_range(name: str) -> str:
+    """The canonical string representation of a target. For example, `x86_64:icelake` is
+    canonicalized to `:icelake`, and redundant elements are dropped in case of a list."""
+    elements = set()
+    for element in name.split(","):
+        t_min, t_sep, t_max = element.partition(":")
+        if (
+            t_sep
+            and t_min
+            and t_max
+            and _make_microarchitecture(t_max).family == _make_microarchitecture(t_min)
+        ):
+            element = f":{t_max}"
+        elements.add(element)
+
+    ordered = sorted(elements)
+    kept = []
+    for i, element in enumerate(ordered):
+        subsumed = False
+        for j, container in enumerate(ordered):
+            if i == j or not _satisfies_target_range(container, element):
+                continue
+            # two elements that denote the same set contain each other, so keep the first of them
+            if j < i or not _satisfies_target_range(element, container):
+                subsumed = True
+                break
+        if not subsumed:
+            kept.append(element)
+    return ",".join(kept)
 
 
 def _satisfies_target_range(lhs: str, rhs: str) -> bool:

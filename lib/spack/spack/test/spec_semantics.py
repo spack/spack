@@ -2103,6 +2103,23 @@ def test_edge_propagation_is_part_of_spec_identity(mock_packages):
     assert len({plain, propagated}) == 2
 
 
+def test_one_target_range_is_one_canonical_state(mock_packages):
+    """':icelake' and 'x86_64:icelake' denote the same range, since x86_64 is the family root.
+    Ranges are stored canonicalized, so the two are one state with one hash."""
+    long, short = Spec("pkg-a target=x86_64:icelake"), Spec("pkg-a target=:icelake")
+    assert long.to_dict() == short.to_dict()
+    assert long.dag_hash() == short.dag_hash()
+
+
+def test_a_target_range_inside_another_one_is_dropped_from_the_list(mock_packages):
+    """A list of ranges denotes their union, so a range inside another adds nothing to it and is
+    dropped, leaving one canonical state for that union."""
+    assert (
+        Spec("pkg-a target=cannonlake:,icelake:").to_dict()
+        == Spec("pkg-a target=cannonlake:").to_dict()
+    )
+
+
 def test_constrain_dependencies_copies(mock_packages):
     """Tests that constraining a spec with new deps makes proper copies, and does not accidentally
     share dependency instances, leading to corruption of unrelated Spec instances."""
