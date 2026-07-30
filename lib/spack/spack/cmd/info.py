@@ -112,6 +112,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="group variants, dependencies, etc. first by when condition, then by name",
     )
 
+    subparser.add_argument(
+        "--show",
+        action="append",
+        default=[],
+        metavar="SECTIONS",
+        help="show only the specified comma-separated sections; may be repeated",
+    )
+
     options = [
         ("--detectable", print_detectable.__doc__),
         ("--maintainers", print_maintainers.__doc__),
@@ -643,43 +651,99 @@ def info(parser: argparse.ArgumentParser, args: Namespace) -> None:
     if len(specs) == 0:
         args.subparser.error("requires a spec")
 
+    requested_sections = set()
+
+    valid_sections = {
+        "package",
+        "description",
+        "homepage",
+        "maintainers",
+        "namespace",
+        "detectable",
+        "tags",
+        "versions",
+        "variants",
+        "phases",
+        "dependencies",
+        "virtuals",
+        "tests",
+        "licenses",
+    }
+
+    for arg in args.show:
+        for section in arg.split(","):
+            requested_sections.add(section.strip())
+
+    unknown_sections = requested_sections - valid_sections
+    if unknown_sections:
+        args.subparser.error(f"unknown section(s): {', '.join(sorted(unknown_sections))}")
+
+    other_section_option_requested = any(
+        (
+            args.all,
+            args.maintainers,
+            args.namespace,
+            args.detectable,
+            args.tags,
+            args.phases,
+            args.virtuals,
+            args.tests,
+            args.no_dependencies,
+            args.no_variants,
+            args.no_versions,
+        )
+    )
+
+    if args.show and other_section_option_requested:
+        args.subparser.error("--show cannot be combined with other section-selection options")
+
     spec = specs[0]
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.fullname)
     pkg_cls.validate_variant_names(spec)
     pkg = pkg_cls(spec)
 
+    def should_show(section: str, default: bool) -> bool:
+        if args.show:
+            return section in requested_sections
+        return default
+
     # Output core package information
-    header = section_title("{0}:   ").format(pkg.build_system_class) + pkg.name
-    color.cprint(header)
+    if should_show("package", True):
+        header = section_title("{0}:   ").format(pkg.build_system_class) + pkg.name
+        color.cprint(header)
 
-    color.cprint("")
-    color.cprint(section_title("Description:"))
-    if pkg.__doc__:
-        color.cprint(color.cescape(pkg.format_doc(indent=4)))
-    else:
-        color.cprint("    None")
+    if should_show("description", True):
+        color.cprint("")
+        color.cprint(section_title("Description:"))
+        if pkg.__doc__:
+            color.cprint(color.cescape(pkg.format_doc(indent=4)))
+        else:
+            color.cprint("    None")
 
-    if getattr(pkg, "homepage"):
+    if should_show("homepage", True) and getattr(pkg, "homepage"):
         color.cprint(section_title("Homepage: ") + str(pkg.homepage))
 
-    # Now output optional information in expected order
+    show_dependencies = should_show("dependencies", args.all or not args.no_dependencies)
+
     sections = [
-        (args.all or args.maintainers, print_maintainers),
-        (args.all or args.namespace, print_namespace),
-        (args.all or args.detectable, print_detectable),
-        (args.all or args.tags, print_tags),
-        (args.all or not args.no_versions, print_versions),
-        (args.all or not args.no_variants, print_variants),
-        (args.all or args.phases, print_phases),
-        (args.all or not args.no_dependencies, print_dependencies),
-        (args.all or args.virtuals, print_virtuals),
-        (args.all or args.tests, print_tests),
-        (True, print_licenses),
+        (should_show("maintainers", args.all or args.maintainers), print_maintainers),
+        (should_show("namespace", args.all or args.namespace), print_namespace),
+        (should_show("detectable", args.all or args.detectable), print_detectable),
+        (should_show("tags", args.all or args.tags), print_tags),
+        (should_show("versions", args.all or not args.no_versions), print_versions),
+        (should_show("variants", args.all or not args.no_variants), print_variants),
+        (should_show("phases", args.all or args.phases), print_phases),
+        (show_dependencies, print_dependencies),
+        (should_show("virtuals", args.all or args.virtuals), print_virtuals),
+        (should_show("tests", args.all or args.tests), print_tests),
+        (should_show("licenses", True), print_licenses),
     ]
+
     for print_it, func in sections:
         if print_it:
             func(pkg, args)
 
-    print_dependency_suggestion(pkg)
+    if show_dependencies:
+        print_dependency_suggestion(pkg)
 
     color.cprint("")

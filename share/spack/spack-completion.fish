@@ -2097,7 +2097,7 @@ complete -c spack -n '__fish_spack_using_command help' -l spec -f -a guide
 complete -c spack -n '__fish_spack_using_command help' -l spec -d 'help on the package specification syntax'
 
 # spack info
-set -g __fish_spack_optspecs_spack_info h/help a/all by-name by-when detectable maintainers namespace no-dependencies no-variants no-versions phases tags tests virtuals
+set -g __fish_spack_optspecs_spack_info h/help a/all by-name by-when show= detectable maintainers namespace no-dependencies no-variants no-versions phases tags tests virtuals
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 info' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command info' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command info' -s h -l help -d 'show this help message and exit'
@@ -2107,6 +2107,8 @@ complete -c spack -n '__fish_spack_using_command info' -l by-name -f -a by_name
 complete -c spack -n '__fish_spack_using_command info' -l by-name -d 'list variants, dependency, etc. in name order, then by when condition'
 complete -c spack -n '__fish_spack_using_command info' -l by-when -f -a by_name
 complete -c spack -n '__fish_spack_using_command info' -l by-when -d 'group variants, dependencies, etc. first by when condition, then by name'
+complete -c spack -n '__fish_spack_using_command info' -l show -r -f -a show
+complete -c spack -n '__fish_spack_using_command info' -l show -r -d 'show only the specified comma-separated sections; may be repeated'
 complete -c spack -n '__fish_spack_using_command info' -l detectable -f -a detectable
 complete -c spack -n '__fish_spack_using_command info' -l detectable -d 'output information on external detection'
 complete -c spack -n '__fish_spack_using_command info' -l maintainers -f -a maintainers

@@ -72,6 +72,36 @@ def test_info_fields(pkg_query, extra_args):
 
 
 @pytest.mark.parametrize(
+    "args",
+    [
+        ["--show", "unknown", "vtk-m"],
+        ["--show", "phases", "--all", "vtk-m"],
+        ["--show", "phases", "--maintainers", "vtk-m"],
+    ],
+)
+def test_info_show_failures(args):
+    with pytest.raises(SpackCommandError):
+        info(*args)
+
+
+@pytest.mark.parametrize(
+    "show_args", [["--show", "phases,homepage"], ["--show", "phases", "--show", "homepage"]]
+)
+def test_info_show_sections(show_args):
+    output = info(*show_args, "vtk-m")
+
+    assert "Homepage:" in output
+    assert "Installation Phases:" in output
+
+    assert "CMakePackage" not in output
+    assert "Description:" not in output
+    assert "Safe versions:" not in output
+    assert "Variants:" not in output
+    assert "Dependencies:" not in output
+    assert "Licenses:" not in output
+
+
+@pytest.mark.parametrize(
     "args,in_output,not_in_output",
     [
         # no variants
