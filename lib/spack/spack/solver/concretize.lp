@@ -2319,23 +2319,7 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
     Priority = N + low_offset.
 
 % show criteria
-#minimize {
-    % high
-    0@Priority:
-        opt_priority(Priority, high_offset, "high", _, _);
-    % built
-    0@Priority:
-        opt_priority(Priority, built_offset, "built", "fixed", _);
-    % hinge
-    0@Priority:
-        opt_priority(Priority, hinge_offset, "hinge", _, _);
-    % concrete
-    0@Priority:
-        opt_priority(Priority, concr_offset, "concr", "fixed", _);
-    % low
-    0@Priority:
-        opt_priority(Priority, low_offset, "low", _, _)
-}.
+#minimize { 0@Priority: opt_priority(Priority, _, _, _, _) }.
 
 %-----------------------------------------------------------------------------
 % Optimization minimize blocks
