@@ -15,7 +15,6 @@ import spack.vendor.macholib.MachO
 
 import spack.spec
 import spack.store
-import spack.user_environment
 import spack.util.elf as elf
 import spack.util.executable as executable
 import spack.util.filesystem as fs
@@ -49,6 +48,8 @@ def _decode_macho_data(bytestring):
 
 
 def setup_relocate_run(wrapper_spec) -> executable.Executable:
+    import spack.user_environment
+
     relocate_exe = Executable(str(wrapper_spec.package.bin_dir() / "relocate.exe"))  # type: ignore
     # get msvc context from wrapper - needed for finding msvc utils during relocate run
     relocate_exe.add_default_envmod(
