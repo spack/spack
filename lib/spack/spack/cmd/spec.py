@@ -119,7 +119,7 @@ def _process_result(result, show, required_format, kwargs):
 
         for i, criterion in enumerate(result.criteria, 1):
             # Criteria are grouped into priority bands; print a header when the band changes.
-            band = asp.optimization_band(criterion.priority)
+            band = criterion.band
             if band != prev_band:
                 label = f"-- {band.value}"
                 dashes = "-" * max(0, divider_width - len(label) - 1)
