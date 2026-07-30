@@ -91,21 +91,6 @@ def macos_sdk_path():
     return xcrun("--show-sdk-path", output=str).rstrip()
 
 
-def macos_sdk_version():
-    """Return the version of the active macOS SDK.
-
-    The SDK version usually corresponds to the installed Xcode version and can
-    affect how some packages (especially those that use the GUI) can fail. This
-    information should somehow be embedded into the future "compilers are
-    dependencies" feature.
-
-    The macOS deployment target cannot be greater than the SDK version, but
-    usually it can be at least a few versions less.
-    """
-    xcrun = Executable("xcrun")
-    return Version(xcrun("--show-sdk-version", output=str).rstrip())
-
-
 mac_releases = {
     "10.0": "cheetah",
     "10.1": "puma",

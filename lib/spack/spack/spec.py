@@ -935,6 +935,8 @@ def _shared_subset_pair_iterate(container1, container2):
 
 
 class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
+    __slots__ = ()
+
     def satisfies(self, other):
         return all(f in self and set(self[f]) >= set(other[f]) for f in other)
 
@@ -1436,6 +1438,8 @@ def tree(
 
 
 class SpecAnnotations:
+    __slots__ = ("original_spec_format", "compiler_node_attribute")
+
     def __init__(self) -> None:
         self.original_spec_format = SPECFILE_FORMAT_VERSION
         self.compiler_node_attribute: Optional["Spec"] = None
@@ -3104,9 +3108,6 @@ class Spec:
         if deps:
             changed |= self._constrain_dependencies(other, resolve_virtuals=resolve_virtuals)
 
-        if other.concrete and not self.concrete and other.satisfies(self):
-            self._finalize_concretization()
-
         return changed
 
     def _constrain_dependencies(self, other: "Spec", resolve_virtuals: bool = True) -> bool:
@@ -3598,7 +3599,6 @@ class Spec:
         self.versions = other.versions.copy()
         self.architecture = other.architecture.copy() if other.architecture else None
         self.compiler_flags = other.compiler_flags.copy()
-        self.compiler_flags.spec = self
         self.variants = other.variants.copy()
         self._build_spec = other._build_spec
 
@@ -3614,7 +3614,6 @@ class Spec:
             if patches:
                 self.variants[k]._patches_in_order_of_appearance = patches
 
-        self.variants.spec = self
         self.external_path = other.external_path
         self.external_modules = other.external_modules
         self.extra_attributes = other.extra_attributes
@@ -4870,9 +4869,6 @@ class Spec:
         if mutator.name and mutator.name != self.name:
             raise SpecMutationError(f"Cannot mutate spec name: spec {self} mutator {mutator}")
 
-        if mutator.namespace and mutator.namespace != self.namespace:
-            raise SpecMutationError(f"Cannot mutate spec namespace: spec {self} mutator {mutator}")
-
         if len(mutator.dependencies()) > 0:
             raise SpecMutationError(f"Cannot mutate dependencies: spec {self} mutator {mutator}")
 
@@ -4888,6 +4884,10 @@ class Spec:
             raise SpecMutationError(f"Cannot mutate abstract_hash: spec {self} mutator {mutator}")
 
         changed = False
+
+        if mutator.namespace and mutator.namespace != self.namespace:
+            self.namespace = mutator.namespace
+            changed = True
 
         if mutator.versions != vn.VersionList(":") and self.versions != mutator.versions:
             self.versions = mutator.versions
@@ -5037,6 +5037,8 @@ class Spec:
 class VariantMap(lang.HashableMap[str, vt.VariantValue]):
     """Map containing variant instances. New values can be added only
     if the key is not already present."""
+
+    __slots__ = ()
 
     def __setitem__(self, name, vspec):
         # Raise a TypeError if vspec is not of the right type
@@ -5913,37 +5915,8 @@ class SpecFormatSigilError(SpecFormatStringError):
         super().__init__(msg)
 
 
-class ConflictsInSpecError(spack.error.SpecError, RuntimeError):
-    def __init__(self, spec, matches):
-        message = 'Conflicts in concretized spec "{0}"\n'.format(spec.short_spec)
-
-        visited = set()
-
-        long_message = ""
-
-        match_fmt_default = '{0}. "{1}" conflicts with "{2}"\n'
-        match_fmt_custom = '{0}. "{1}" conflicts with "{2}" [{3}]\n'
-
-        for idx, (s, c, w, msg) in enumerate(matches):
-            if s not in visited:
-                visited.add(s)
-                long_message += "List of matching conflicts for spec:\n\n"
-                long_message += s.tree(indent=4) + "\n"
-
-            if msg is None:
-                long_message += match_fmt_default.format(idx + 1, c, w)
-            else:
-                long_message += match_fmt_custom.format(idx + 1, c, w, msg)
-
-        super().__init__(message, long_message)
-
-
 class SpecDeprecatedError(spack.error.SpecError):
     """Raised when a spec concretizes to a deprecated spec or dependency."""
-
-
-class InvalidSpecDetected(spack.error.SpecError):
-    """Raised when a detected spec doesn't pass validation checks."""
 
 
 class SpliceError(spack.error.SpecError):

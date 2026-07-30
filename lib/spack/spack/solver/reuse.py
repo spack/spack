@@ -121,7 +121,8 @@ def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) ->
 def _specs_from_store(configuration):
     store = spack.store.create(configuration)
     with store.db.read_transaction():
-        return store.db.query(installed=True)
+        # The order of reused specs does not matter to the solver, so skip sorting.
+        return store.db.query(installed=True, sort=False)
 
 
 def _specs_from_mirror():

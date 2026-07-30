@@ -7,6 +7,7 @@ import pytest
 
 import spack.concretize
 import spack.environment as ev
+import spack.repo
 import spack.spec
 from spack.config import Configuration
 from spack.main import SpackCommand
@@ -122,6 +123,35 @@ def test_mutate_internals_multiple_mutations():
 
     new_hash = next(env.roots()).dag_hash()
     assert new_hash != orig_hash
+
+
+def test_mutate_namespace(repo_builder):
+    """
+    Check that Environment.mutate and Spec.mutate can change the namespace of a Spec.
+    """
+    repo_builder.add_package("cmake")
+
+    ev.create("test")
+    env = ev.read("test")
+
+    env.add("cmake-client")
+    env.concretize()
+
+    root_spec = next(env.roots()).copy()
+    cmake_spec = root_spec["cmake"]
+    assert cmake_spec.namespace == "builtin_mock"
+
+    selector = spack.spec.Spec("cmake")
+    mutator = spack.spec.Spec(f"{repo_builder.namespace}.cmake")
+
+    with spack.repo.use_repositories(repo_builder.root, override=False):
+        env.mutate(selectors=[selector], mutators=[mutator])
+        cmake_spec.mutate(mutator)
+
+    for spec in env.all_specs_generator():
+        if spec.name == "cmake":
+            assert spec.namespace == repo_builder.namespace
+    assert cmake_spec.namespace == repo_builder.namespace
 
 
 @pytest.mark.parametrize("constraint", ["foo", "foo.bar", "foo%cmake@1.0", "foo@1.1:", "foo/abc"])
