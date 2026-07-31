@@ -24,7 +24,7 @@ import time
 import warnings
 from ctypes import wintypes
 from multiprocessing import Process
-from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Optional
 
 from spack.installer.base import (
     OUTPUT_BUFFER_SIZE,
@@ -33,6 +33,7 @@ from spack.installer.base import (
     BaseTerminalState,
     BuildChannels,
     JobServerBase,
+    JobserverInfo,
     ProcessExitNotifier,
     StdinReader,
     Tee,
@@ -40,7 +41,6 @@ from spack.installer.base import (
 
 if TYPE_CHECKING:
     import spack.spec
-    from spack.installer.base import BuildStatus
 
 # Windows console mode flags
 ENABLE_LINE_INPUT = 0x0002
@@ -92,9 +92,8 @@ _k32.CloseHandle.argtypes = [wintypes.HANDLE]
 def _handle_is_console(handle_id: int) -> bool:
     """Use GetConsoleMode so this works correctly through Windows Terminal's ConPTY."""
     mode = wintypes.DWORD()
-    kernel32 = ctypes.windll.kernel32
-    handle = kernel32.GetStdHandle(handle_id)
-    return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))
+    handle = _k32.GetStdHandle(handle_id)
+    return bool(_k32.GetConsoleMode(handle, ctypes.byref(mode)))
 
 
 class WindowsTerminalState(BaseTerminalState):
@@ -124,9 +123,8 @@ class WindowsTerminalState(BaseTerminalState):
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
         super().__init__(selector, on_headless, on_suspend, on_resume)
-        self.kernel32 = ctypes.windll.kernel32
-        self.hStdin = self.kernel32.GetStdHandle(WIN_STD_INPUT_HANDLE)
-        self.hStdout = self.kernel32.GetStdHandle(WIN_STD_OUTPUT_HANDLE)
+        self.hStdin = _k32.GetStdHandle(WIN_STD_INPUT_HANDLE)
+        self.hStdout = _k32.GetStdHandle(WIN_STD_OUTPUT_HANDLE)
         self.old_stdin_settings = wintypes.DWORD()
         self.old_stdout_settings = wintypes.DWORD()
         _k32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
@@ -291,24 +289,16 @@ class WindowsTee(Tee):
             self._echo = data == b"1"
 
     def _setup_handles(self) -> None:
-        kernel32 = ctypes.windll.kernel32
-        self._saved_win32_stdout = kernel32.GetStdHandle(WIN_STD_OUTPUT_HANDLE)
-        self._saved_win32_stderr = kernel32.GetStdHandle(WIN_STD_ERROR_HANDLE)
+        self._saved_win32_stdout = _k32.GetStdHandle(WIN_STD_OUTPUT_HANDLE)
+        self._saved_win32_stderr = _k32.GetStdHandle(WIN_STD_ERROR_HANDLE)
         h_write = msvcrt.get_osfhandle(1)
         os.set_handle_inheritable(h_write, True)
-        kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, h_write)
-        kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, h_write)
+        _k32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, h_write)
+        _k32.SetStdHandle(WIN_STD_ERROR_HANDLE, h_write)
 
     def _restore_handles(self) -> None:
-        kernel32 = ctypes.windll.kernel32
-        kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, self._saved_win32_stdout)
-        kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, self._saved_win32_stderr)
-
-
-SYNCHRONIZE = 0x00100000
-SEMAPHORE_MODIFY_STATE = 0x00000002
-WAIT_OBJECT_0 = 0
-SEMAPHORE_MAX_COUNT = 65536
+        _k32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, self._saved_win32_stdout)
+        _k32.SetStdHandle(WIN_STD_ERROR_HANDLE, self._saved_win32_stderr)
 
 
 def get_jobserver_semaphore_name(makeflags: Optional[str] = None) -> Optional[str]:
@@ -327,10 +317,11 @@ class WindowsJobServer(JobServerBase):
     """Win32 named-semaphore jobserver: attaches to a parent semaphore named in MAKEFLAGS,
     or creates one for child processes to inherit via their environment."""
 
-    def __init__(self, num_jobs: int) -> None:
-        super().__init__(num_jobs)
+    def __init__(self, num_jobs: int, makeflags: Optional[str] = None) -> None:
+        super().__init__(num_jobs, makeflags)
+        #: Keep track of how many tokens Spack itself has acquired, which is used to release them.
         self.tokens_acquired = 0
-        self._created = False
+        self.created = False
         self.semaphore_name: str = ""
         self.semaphore: int = 0
         self.wake_r, self.wake_w = socket.socketpair()
@@ -340,10 +331,10 @@ class WindowsJobServer(JobServerBase):
         self._watcher_active = False
         self._watcher_generation = 0
         self._watcher_thread: Optional[threading.Thread] = None
-        self._setup()
+        self._setup(makeflags)
 
-    def _setup(self) -> None:
-        existing = get_jobserver_semaphore_name()
+    def _setup(self, makeflags: Optional[str] = None) -> None:
+        existing = get_jobserver_semaphore_name(makeflags)
         if existing:
             h = _k32.OpenSemaphoreW(SYNCHRONIZE | SEMAPHORE_MODIFY_STATE, False, existing)
             if h:
@@ -358,28 +349,37 @@ class WindowsJobServer(JobServerBase):
         h = _k32.CreateSemaphoreW(None, max(0, self.num_jobs - 1), SEMAPHORE_MAX_COUNT, name)
         if not h:
             raise OSError(ctypes.WinError())
-        self.semaphore, self.semaphore_name, self._created = h, name, True
+        self.semaphore, self.semaphore_name, self.created = h, name, True
 
-    def makeflags_and_data(self, gmake: "Optional[spack.spec.Spec]") -> Tuple[Optional[str], Any]:
-        return (f" -j{self.num_jobs} --jobserver-auth={self.semaphore_name}", None)
+    def makeflags_and_data(self, gmake: "Optional[spack.spec.Spec]") -> JobserverInfo:
+        # The semaphore is inherited by name through MAKEFLAGS, so no extra data is needed.
+        return JobserverInfo(f" -j{self.num_jobs} --jobserver-auth={self.semaphore_name}", None)
 
     def acquire(self, jobs: int) -> int:
-        # WaitForSingleObject takes exactly one token at a time; `jobs` is advisory only.
-        if _k32.WaitForSingleObject(self.semaphore, 0) == WAIT_OBJECT_0:
-            self.tokens_acquired += 1
-            return 1
-        return 0
+        # Each wait decrements the semaphore by one, so loop to take up to `jobs` tokens. A zero
+        # timeout keeps every wait non-blocking, so this stops at the first unavailable token the
+        # same way the POSIX read stops short when the pipe runs dry.
+        acquired = 0
+        while acquired < jobs and _k32.WaitForSingleObject(self.semaphore, 0) == WAIT_OBJECT_0:
+            acquired += 1
+        self.tokens_acquired += acquired
+        return acquired
 
     def release(self) -> None:
+        # The last job to quit has an implicit token, so don't release if we have none.
         if self.tokens_acquired == 0:
             return
         self.tokens_acquired -= 1
         if self.target_jobs < self.num_jobs:
+            # If a decrease in parallelism is requested, discard a token instead of releasing it.
             self.num_jobs -= 1
         else:
             _k32.ReleaseSemaphore(self.semaphore, 1, None)
 
     def _maybe_discard_tokens(self) -> None:
+        """Try to reduce parallelism by discarding tokens."""
+        # Deliberately not acquire(): discarded token shrinks the pool rather than being held
+        # so must not count toward tokens_acquired.
         to_discard = self.num_jobs - self.target_jobs
         while to_discard > 0:
             if _k32.WaitForSingleObject(self.semaphore, 0) != WAIT_OBJECT_0:
@@ -388,7 +388,7 @@ class WindowsJobServer(JobServerBase):
             to_discard -= 1
 
     def increase_parallelism(self) -> None:
-        if not self._created:
+        if not self.created:
             return
         self.target_jobs += 1
         if self.target_jobs > self.num_jobs:
@@ -396,7 +396,7 @@ class WindowsJobServer(JobServerBase):
             self.num_jobs += 1
 
     def decrease_parallelism(self) -> None:
-        if not self._created or self.target_jobs <= 1:
+        if not self.created or self.target_jobs <= 1:
             return
         self.target_jobs -= 1
         self._maybe_discard_tokens()
@@ -448,21 +448,20 @@ class WindowsJobServer(JobServerBase):
             thread = self._watcher_thread
         if thread is not None:
             thread.join(timeout=0.5)
-        if self._created:
+        if self.created:
             total = self.num_jobs - 1
             if self.tokens_acquired != 0:
+                # It's a non-fatal internal error to close the jobserver with acquired tokens.
                 warnings.warn("Spack failed to release jobserver tokens", stacklevel=2)
             elif total > 0:
-                drained = sum(
-                    1
-                    for _ in range(total)
-                    if _k32.WaitForSingleObject(self.semaphore, 0) == WAIT_OBJECT_0
-                )
+                # Verify that all build processes released the tokens they acquired.
+                drained = self.acquire(total)
                 if drained != total:
                     n = total - drained
                     warnings.warn(
-                        f"{n} jobserver tokens were not released by the build processes. "
-                        "This can indicate that the build ran with limited parallelism.",
+                        f"{n} jobserver {'token was' if n == 1 else 'tokens were'} not released "
+                        "by the build processes. This can indicate that the build ran with "
+                        "limited parallelism.",
                         stacklevel=2,
                     )
         if self.semaphore:
