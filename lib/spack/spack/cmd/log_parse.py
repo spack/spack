@@ -59,9 +59,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def log_parse(parser, args):
     input = args.file
     if args.file == "-":
-        input = io.TextIOWrapper(
-            sys.stdin.buffer, encoding="utf-8", errors="replace", closefd=False
-        )
+        input = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8", errors="replace")
 
     if args.width is not None:
         warnings.warn("The --width option is deprecated and will be removed in Spack v1.3")
@@ -82,12 +80,15 @@ def log_parse(parser, args):
     events = []
     if "errors" in types:
         events.extend(log_errors)
-        print("%d errors" % len(log_errors))
     if "warnings" in types:
         events.extend(log_warnings)
-        print("%d warnings" % len(log_warnings))
 
     if tail:
         events.append(tail)
 
     print(make_log_context(events), end="")
+
+    if "errors" in types:
+        print("%d errors" % len(log_errors))
+    if "warnings" in types:
+        print("%d warnings" % len(log_warnings))
