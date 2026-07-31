@@ -391,7 +391,8 @@ def env_activate(args):
         active_env, shell=args.shell, script_type="activate"
     )
 
-    if not os.path.isfile(env_activate_script) or args.with_view:
+    new_view = True if view is not os.environ.get("SPACK_ENV_VIEW", None) else False
+    if not os.path.isfile(env_activate_script) or new_view:
         generate_script.write_env_activate_script(active_env, view)
         generate_script.write_env_deactivate_script(active_env, view)
 
