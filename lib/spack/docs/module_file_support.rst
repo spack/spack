@@ -396,6 +396,9 @@ The table below lists the default inspections:
 +--------------------------------+--------------------------------+
 
 On Linux, ``LD_LIBRARY_PATH`` is omitted: Spack packages embed RPATHs, making it unnecessary, and setting it globally affects system executables.
+On macOS Big Sur and newer, System Integrity Protection may remove ``DYLD_FALLBACK_LIBRARY_PATH`` from the environment of protected system executables.
+After loading a module, the variable can appear in the current shell but be absent from subprocesses launched through protected executables such as ``/usr/bin/env``.
+Run the target program directly, or through a non-system interpreter or launcher, when a package depends on ``DYLD_FALLBACK_LIBRARY_PATH``.
 
 To suppress a variable from all module files, use ``exclude_env_vars``:
 
