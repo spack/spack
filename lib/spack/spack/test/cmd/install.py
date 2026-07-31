@@ -230,6 +230,22 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mock
     assert "See build log for details:" in out
 
 
+@pytest.mark.disable_clean_stage_check
+def test_show_log_on_error_new_installer(
+    mock_packages, mock_archive, mock_fetch, install_mockery, mutable_config
+):
+    """The new installer dumps the build log itself, and its error carries no package."""
+    mutable_config.set("config:installer", "new")
+    out = install("--show-log-on-error", "build-error", fail_on_error=False)
+
+    assert isinstance(install.error, spack.error.InstallError)
+    assert install.error.pkg is None
+
+    # The whole log is shown, with the failing lines highlighted.
+    assert "checking build system type" in out
+    assert "> configure: error: cannot run C compiled programs." in out
+
+
 def test_install_overwrite(
     mock_packages,
     mock_archive,
