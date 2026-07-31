@@ -58,35 +58,57 @@ SEMAPHORE_MODIFY_STATE = 0x00000002
 WAIT_OBJECT_0 = 0
 SEMAPHORE_MAX_COUNT = 65536
 
-# Module-level kernel32 handle with fully typed Win32 API signatures.
-_k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
 
-_k32.GetStdHandle.restype = wintypes.HANDLE
-_k32.GetStdHandle.argtypes = [wintypes.DWORD]
+def _load_kernel32() -> ctypes.WinDLL:  # type: ignore[name-defined]
+    """Load a private kernel32 handle with fully typed Win32 API signatures.
 
-_k32.GetConsoleMode.restype = wintypes.BOOL
-_k32.GetConsoleMode.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+    The signatures are not cosmetic: without argtypes ctypes passes handles as a C int, which
+    truncates 64-bit HANDLEs, and returns DWORDs signed (so WAIT_FAILED reads as -1).
 
-_k32.SetConsoleMode.restype = wintypes.BOOL
-_k32.SetConsoleMode.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+    This deliberately uses ctypes.WinDLL rather than ctypes.windll.kernel32. The latter is a
+    process-wide cached object, so declaring argtypes on it mutates global state shared with
+    every other user in the process -- spack.util.tty.log declares its own signatures on that
+    same object. A private instance keeps these declarations local to this module. The three
+    classes below (WindowsTerminalState, WindowsTee, WindowsJobServer) share it because
+    GetStdHandle is used by all of them, so no single class can own the declarations."""
+    k32 = ctypes.WinDLL("kernel32")  # type: ignore[attr-defined]
 
-_k32.SetStdHandle.restype = wintypes.BOOL
-_k32.SetStdHandle.argtypes = [wintypes.DWORD, wintypes.HANDLE]
+    k32.GetStdHandle.restype = wintypes.HANDLE
+    k32.GetStdHandle.argtypes = [wintypes.DWORD]
 
-_k32.OpenSemaphoreW.restype = wintypes.HANDLE
-_k32.OpenSemaphoreW.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.LPCWSTR]
+    k32.GetConsoleMode.restype = wintypes.BOOL
+    k32.GetConsoleMode.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
 
-_k32.CreateSemaphoreW.restype = wintypes.HANDLE
-_k32.CreateSemaphoreW.argtypes = [ctypes.c_void_p, wintypes.LONG, wintypes.LONG, wintypes.LPCWSTR]
+    k32.SetConsoleMode.restype = wintypes.BOOL
+    k32.SetConsoleMode.argtypes = [wintypes.HANDLE, wintypes.DWORD]
 
-_k32.WaitForSingleObject.restype = wintypes.DWORD
-_k32.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+    k32.SetStdHandle.restype = wintypes.BOOL
+    k32.SetStdHandle.argtypes = [wintypes.DWORD, wintypes.HANDLE]
 
-_k32.ReleaseSemaphore.restype = wintypes.BOOL
-_k32.ReleaseSemaphore.argtypes = [wintypes.HANDLE, wintypes.LONG, ctypes.c_void_p]
+    k32.OpenSemaphoreW.restype = wintypes.HANDLE
+    k32.OpenSemaphoreW.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.LPCWSTR]
 
-_k32.CloseHandle.restype = wintypes.BOOL
-_k32.CloseHandle.argtypes = [wintypes.HANDLE]
+    k32.CreateSemaphoreW.restype = wintypes.HANDLE
+    k32.CreateSemaphoreW.argtypes = [
+        ctypes.c_void_p,
+        wintypes.LONG,
+        wintypes.LONG,
+        wintypes.LPCWSTR,
+    ]
+
+    k32.WaitForSingleObject.restype = wintypes.DWORD
+    k32.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+
+    k32.ReleaseSemaphore.restype = wintypes.BOOL
+    k32.ReleaseSemaphore.argtypes = [wintypes.HANDLE, wintypes.LONG, ctypes.c_void_p]
+
+    k32.CloseHandle.restype = wintypes.BOOL
+    k32.CloseHandle.argtypes = [wintypes.HANDLE]
+
+    return k32
+
+
+_k32 = _load_kernel32()
 
 
 def _handle_is_console(handle_id: int) -> bool:
@@ -376,8 +398,8 @@ class WindowsJobServer(JobServerBase):
         else:
             _k32.ReleaseSemaphore(self.semaphore, 1, None)
 
-    def _maybe_discard_tokens(self) -> None:
-        """Try to reduce parallelism by discarding tokens."""
+    def maybe_discard_tokens(self) -> None:
+        """Try to reduce parallelism to the target by discarding tokens."""
         # Deliberately not acquire(): discarded token shrinks the pool rather than being held
         # so must not count toward tokens_acquired.
         to_discard = self.num_jobs - self.target_jobs
@@ -399,7 +421,7 @@ class WindowsJobServer(JobServerBase):
         if not self.created or self.target_jobs <= 1:
             return
         self.target_jobs -= 1
-        self._maybe_discard_tokens()
+        self.maybe_discard_tokens()
 
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
         if wake:
