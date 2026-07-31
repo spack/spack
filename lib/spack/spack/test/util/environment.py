@@ -194,4 +194,3 @@ def test_shell_cmd_string(shell, set_expected, unset_expected, join_sep):
         shell_cmd.join([set_expected, unset_expected])
         == set_expected + join_sep + unset_expected + join_sep
     )
-

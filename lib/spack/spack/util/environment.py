@@ -48,6 +48,7 @@ SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYS
 #: used in the compiler wrapper's ``/usr/lib|/usr/lib64|...)`` case entry
 SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for suff in ("", "/")))
 
+
 class ShellCmdString:
     """Formats commands to set or unset an environment variable for a given shell."""
 
@@ -68,13 +69,7 @@ class ShellCmdString:
     }
 
     #: separator used to terminate a statement and join it with the next one
-    _JOIN_STRINGS = {
-        "sh": ";\n",
-        "csh": ";\n",
-        "fish": ";\n",
-        "bat": "\n",
-        "pwsh": "\n",
-    }
+    _JOIN_STRINGS = {"sh": ";\n", "csh": ";\n", "fish": ";\n", "bat": "\n", "pwsh": "\n"}
 
     def __init__(self, shell: str):
         self.shell = shell
