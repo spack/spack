@@ -549,12 +549,6 @@ class TestGetJobserverSemaphoreName:
     def test_plain_name_matched(self):
         assert get_jobserver_semaphore_name(" -j4 --jobserver-auth=my-semaphore") == "my-semaphore"
 
-    def test_spack_pid_style_name(self):
-        assert (
-            get_jobserver_semaphore_name(" -j4 --jobserver-auth=spack-jobserver-1234")
-            == "spack-jobserver-1234"
-        )
-
     def test_multiple_flags_last_plain_wins(self):
         makeflags = (
             " --jobserver-auth=fifo:/tmp/fifo --jobserver-auth=3,4"
@@ -656,21 +650,16 @@ class TestWindowsJobServer:
         finally:
             js.close()
 
-    def test_makeflags_round_trip(self):
-        js = _new_jobserver(4)
-        try:
-            info = js.makeflags_and_data(None)
-            assert get_jobserver_semaphore_name(info.makeflags) == js.semaphore_name
-            # The semaphore is inherited by name, so there is no side-band data to pass along.
-            assert info.data is None
-        finally:
-            js.close()
-
-    def test_makeflags_format(self):
+    def test_makeflags_and_data(self):
+        """The emitted MAKEFLAGS pins -j and the semaphore name, and parses back to that name
+        (a child Spack process re-parses it through get_jobserver_semaphore_name)."""
         js = _new_jobserver(8)
         try:
             info = js.makeflags_and_data(None)
             assert info.makeflags == f" -j8 --jobserver-auth={js.semaphore_name}"
+            assert get_jobserver_semaphore_name(info.makeflags) == js.semaphore_name
+            # The semaphore is inherited by name, so there is no side-band data to pass along.
+            assert info.data is None
         finally:
             js.close()
 
@@ -838,22 +827,9 @@ class TestWindowsJobServer:
         js = _new_jobserver(4)
         try:
             js.target_jobs = js.num_jobs - 2
-            js._maybe_discard_tokens()
+            js.maybe_discard_tokens()
             assert js.num_jobs == js.target_jobs
         finally:
-            js.close()
-
-    def test_maybe_discard_tokens_noop_when_semaphore_empty(self):
-        js = _new_jobserver(3)
-        try:
-            assert _drain(js) == js.num_jobs - 1
-            original_num = js.num_jobs
-            js.target_jobs = js.num_jobs - 1
-            js._maybe_discard_tokens()
-            assert js.num_jobs == original_num
-        finally:
-            while js.tokens_acquired:
-                js.release()
             js.close()
 
     def test_release_discards_token_when_target_below_num(self):

@@ -279,9 +279,6 @@ class JobServerBase(abc.ABC):
     def release(self) -> None:
         """Release a token back to the jobserver."""
 
-    def _maybe_discard_tokens(self) -> None:
-        """Discard tokens to reduce parallelism toward target_jobs. Default: no-op."""
-
     @abc.abstractmethod
     def close(self) -> None:
         """Close any resources associated with the jobserver."""
