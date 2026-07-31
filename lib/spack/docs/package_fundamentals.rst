@@ -846,7 +846,7 @@ The shell scripts contain all the environment modifications needed for the packa
 3. Setting other package-specific environment variables
 4. Tracking which packages are loaded via SPACK_LOADED_HASHES environment variable
 
-To customize which environment variables are modified, see `customize-env-modifications https://spack.readthedocs.io/en/latest/configuration.html#environment-modifications`.
+To customize which environment variables are modified, see `customize-env-modifications https://spack.readthedocs.io/en/latest/module_file_support.html#global-environment-modifications`.
 
 .. index:: ambiguous spec
 
