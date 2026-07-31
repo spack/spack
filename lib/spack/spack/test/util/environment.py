@@ -172,3 +172,26 @@ def test_shell_modifications_are_properly_escaped():
     script = changes.shell_modifications(shell="sh")
     assert f"export VAR='$PATH{os.pathsep}$ANOTHER_PATH'" in script
     assert "export RM_RF='$(rm -rf /)'" in script
+
+
+@pytest.mark.parametrize(
+    "shell,set_expected,unset_expected,join_sep",
+    [
+        ("sh", "export FOO=bar", "unset FOO", ";\n"),
+        ("csh", "setenv FOO bar", "unsetenv FOO", ";\n"),
+        ("fish", "set -gx FOO bar", "set -e FOO", ";\n"),
+        ("bat", 'set "FOO=bar"', 'set "FOO="', "\n"),
+        ("pwsh", "$Env:FOO='bar'", "Set-Item -Path Env:FOO", "\n"),
+    ],
+)
+def test_shell_cmd_string(shell, set_expected, unset_expected, join_sep):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.set("FOO", "bar") == set_expected
+    assert shell_cmd.unset("FOO") == unset_expected
+    assert shell_cmd.join([]) == ""
+    assert shell_cmd.join([set_expected]) == set_expected + join_sep
+    assert (
+        shell_cmd.join([set_expected, unset_expected])
+        == set_expected + join_sep + unset_expected + join_sep
+    )
+
