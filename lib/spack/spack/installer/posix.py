@@ -23,7 +23,7 @@ import tty
 import warnings
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
-from typing import Callable, Optional, Tuple, Union
+from typing import Callable, MutableMapping, Optional, Tuple
 
 import spack.spec
 import spack.util.tty
@@ -36,7 +36,7 @@ from spack.installer.base import (
     BaseTerminalState,
     BuildChannels,
     JobServerBase,
-    JobserverInfo,
+    Makeflags,
     ProcessExitNotifier,
     StdinReader,
     Tee,
@@ -251,61 +251,74 @@ class PosixTee(Tee):
             os.close(log_r)
 
 
+class FifoMakeflags(Makeflags):
+    """MAKEFLAGS in fifo style, which gmake 4.4 and later understand."""
+
+    __slots__ = ("fifo_path", "num_jobs")
+
+    def __init__(self, fifo_path: str, num_jobs: int) -> None:
+        self.fifo_path = fifo_path
+        self.num_jobs = num_jobs
+
+    def apply(self, env: MutableMapping[str, str]) -> None:
+        env["MAKEFLAGS"] = f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}"
+
+
+class PipeMakeflags(Makeflags):
+    """Compatibility wrapper for old gmake that requires a pipe-based jobserver.
+
+    Args:
+        fifo_path: path of the jobserver FIFO to open
+        flag: "--jobserver-auth" (gmake >= 4.0) or "--jobserver-fds" (gmake < 4.0)
+    """
+
+    __slots__ = ("fifo_path", "flag")
+
+    def __init__(self, fifo_path: str, flag: str) -> None:
+        self.fifo_path = fifo_path
+        self.flag = flag
+
+    def apply(self, env: MutableMapping[str, str]) -> None:
+        # O_NONBLOCK avoids block on open, but make needs blocking, so fcntl immediately clears it.
+        r = os.open(self.fifo_path, os.O_RDONLY | os.O_NONBLOCK)
+        w = os.open(self.fifo_path, os.O_WRONLY)
+        fcntl.fcntl(r, fcntl.F_SETFL, fcntl.fcntl(r, fcntl.F_GETFL) & ~os.O_NONBLOCK)
+        os.set_inheritable(r, True)
+        os.set_inheritable(w, True)
+        # passing -jN here would make old gmake ignore the jobserver
+        env["MAKEFLAGS"] = f" -j {self.flag}={r},{w}"
+
+
 class PosixJobServer(JobServerBase):
-    """Attach to an existing POSIX jobserver or create a FIFO-based one."""
+    """Attach to an existing POSIX FIFO-based jobserver or create one."""
 
     def __init__(self, num_jobs: int, makeflags: Optional[str] = None) -> None:
         super().__init__(num_jobs, makeflags)
         #: Keep track of how many tokens Spack itself has acquired, which is used to release them.
         self.tokens_acquired = 0
-        self.fifo_path: Optional[str] = None
         self.created = False
-        self._setup(makeflags)
-        # Ensure that Executable()(...) in build processes ultimately inherit jobserver fds.
-        os.set_inheritable(self.r, True)
-        os.set_inheritable(self.w, True)
-        # r_conn and w_conn are used to make build processes inherit the jobserver fds if needed.
-        # Connection objects close the fd as they are garbage collected, so store them.
-        self.r_conn = Connection(self.r)
-        self.w_conn = Connection(self.w)
+        self.r, self.w, self.fifo_path = self._setup(makeflags)
 
-    def _setup(self, makeflags: Optional[str] = None) -> None:
+    def _setup(self, makeflags: Optional[str] = None) -> Tuple[int, int, str]:
+        fifo_path = get_jobserver_config(makeflags)
 
-        fifo_config = get_jobserver_config(makeflags)
-
-        if isinstance(fifo_config, str):
-            # FIFO-based jobserver. Try to open the FIFO.
-            open_attempt = open_existing_jobserver_fifo(fifo_config)
+        if fifo_path is not None:
+            # Try to attach to the existing FIFO-based jobserver.
+            open_attempt = open_existing_jobserver_fifo(fifo_path)
             if open_attempt:
-                self.r, self.w = open_attempt
-                self.fifo_path = fifo_config
-                return
-        elif isinstance(fifo_config, tuple):
-            # Old style pipe-based jobserver. Validate the fds before using them.
-            r, w = fifo_config
-            try:
-                fcntl.fcntl(r, fcntl.F_GETFD)
-                fcntl.fcntl(w, fcntl.F_GETFD)
-                self.r, self.w = r, w
-                return
-            except OSError:  # raised if invalid
-                pass
+                r, w = open_attempt
+                return r, w, fifo_path
 
         # No existing jobserver we can connect to: create a FIFO-based one.
-        self.r, self.w, self.fifo_path = create_jobserver_fifo(self.num_jobs)
+        r, w, fifo_path = create_jobserver_fifo(self.num_jobs)
         self.created = True
+        return r, w, fifo_path
 
-    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> JobserverInfo:
-        if self.fifo_path and (not gmake or gmake.satisfies("@4.4:")):
-            return JobserverInfo(
-                f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}", None
-            )
-        # For non-FIFO jobservers, ensure the pipes are inherited by the child process
-        pipes = (self.r_conn, self.w_conn)
-        if not gmake or gmake.satisfies("@4.0:"):
-            return JobserverInfo(f" -j{self.num_jobs} --jobserver-auth={self.r},{self.w}", pipes)
-        else:
-            return JobserverInfo(f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}", pipes)
+    def makeflags(self, gmake: Optional[spack.spec.Spec]) -> Makeflags:
+        if not gmake or gmake.satisfies("@4.4:"):
+            return FifoMakeflags(self.fifo_path, self.num_jobs)
+        flag = "--jobserver-auth" if gmake.satisfies("@4.0:") else "--jobserver-fds"
+        return PipeMakeflags(self.fifo_path, flag)
 
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
         if wake and self.r not in selector.get_map():
@@ -377,11 +390,11 @@ class PosixJobServer(JobServerBase):
                         stacklevel=2,
                     )
 
-        self.r_conn.close()
-        self.w_conn.close()
+        os.close(self.r)
+        os.close(self.w)
 
         # Remove the FIFO if we created it.
-        if self.created and self.fifo_path:
+        if self.created:
             try:
                 os.unlink(self.fifo_path)
             except OSError:
@@ -392,8 +405,9 @@ class PosixJobServer(JobServerBase):
                 pass
 
 
-def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
-    """Parse MAKEFLAGS for jobserver. Either it's a FIFO or (r, w) pair of file descriptors.
+def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[str]:
+    """Parse MAKEFLAGS for a FIFO-based jobserver, returning its path. Old-style pipe-based
+    jobservers are not recognized.
 
     Args:
         makeflags: MAKEFLAGS string to parse. If None, reads from os.environ.
@@ -401,23 +415,12 @@ def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str,
     makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
     if not makeflags:
         return None
-    # We can have the following flags:
-    # --jobserver-fds=R,W (before GNU make 4.2)
-    # --jobserver-auth=fifo:PATH or --jobserver-auth=R,W (after GNU make 4.2)
-    # In case of multiple, the last one wins.
+    # In case of multiple --jobserver-* flags, the last one wins, regardless of its format.
     matches = re.findall(r" --jobserver-[^=]+=([^ ]+)", makeflags)
     if not matches:
         return None
     last_match = matches[-1]
-    if last_match.startswith("fifo:"):
-        return last_match[5:]
-    parts = last_match.split(",", 1)
-    if len(parts) != 2:
-        return None
-    try:
-        return int(parts[0]), int(parts[1])
-    except ValueError:
-        return None
+    return last_match[5:] if last_match.startswith("fifo:") else None
 
 
 def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:

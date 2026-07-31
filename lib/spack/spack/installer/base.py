@@ -14,7 +14,7 @@ import socket
 import sys
 import threading
 from multiprocessing.connection import Connection
-from typing import Any, Callable, NamedTuple, Optional, Union
+from typing import Callable, MutableMapping, NamedTuple, Optional, Union
 
 from spack.vendor.typing_extensions import Literal
 
@@ -205,15 +205,25 @@ class FdInfo:
         self.name = name
 
 
-class JobserverInfo(NamedTuple):
-    """What a build process needs to participate in the jobserver, produced by
-    :meth:`JobServerBase.makeflags_and_data`."""
+class Makeflags(abc.ABC):
+    """Sets MAKEFLAGS for a build process, so that it participates in Spack's jobserver. It is
+    applied in the build process itself, since the value can depend on file descriptors that
+    process has to open."""
 
-    #: MAKEFLAGS value to set in the build process environment, or None if there is no jobserver.
-    makeflags: Optional[str]
-    #: Implementation specific data serialized to the build process (e.g. pipe-based jobserver
-    #: connections that the build process must inherit).
-    data: Any
+    __slots__ = ()
+
+    @abc.abstractmethod
+    def apply(self, env: MutableMapping[str, str]) -> None:
+        """Set MAKEFLAGS in the given environment, if there is anything to set."""
+
+
+class NoMakeflags(Makeflags):
+    """No jobserver, nothing to set."""
+
+    __slots__ = ()
+
+    def apply(self, env: MutableMapping[str, str]) -> None:
+        pass
 
 
 class ProcessExitNotifier(abc.ABC):
@@ -250,9 +260,9 @@ class JobServerBase(abc.ABC):
         return self.num_jobs == self.target_jobs
 
     @abc.abstractmethod
-    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> JobserverInfo:
-        """Return the :class:`~spack.installer.base.JobserverInfo` to be passed to the child
-        process."""
+    def makeflags(self, gmake: Optional[spack.spec.Spec]) -> Makeflags:
+        """Return the :class:`~spack.installer.base.Makeflags` to be serialized to the build
+        process and applied there."""
 
     @abc.abstractmethod
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
@@ -287,8 +297,8 @@ class JobServerBase(abc.ABC):
 class NoopJobServer(JobServerBase):
     """Dummy jobserver for platforms lacking jobserver support."""
 
-    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> JobserverInfo:
-        return JobserverInfo(None, None)
+    def makeflags(self, gmake: Optional[spack.spec.Spec]) -> Makeflags:
+        return NoMakeflags()
 
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None: ...
 
