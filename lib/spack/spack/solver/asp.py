@@ -137,6 +137,7 @@ class OptimizationCriteria(NamedTuple):
     value: int
     name: str
     band: str
+    level: int
     kind: OptimizationKind
 
 
@@ -155,17 +156,18 @@ def build_criteria_names(costs, arg_tuples):
     }
 
     for args in arg_tuples:
-        priority, band, name = args[0], band_names[args[2]].value, args[5]
+        priority, band, level, name = args[0], band_names[args[2]].value, args[4], args[5]
         priority = int(priority)
+        level = int(level)
 
         if band == OptimizationBand.REUSED.value:
             # Reused/concrete criterion
-            priorities_names.append((priority, name, band, OptimizationKind.CONCRETE))
+            priorities_names.append((priority, name, band, level, OptimizationKind.CONCRETE))
         elif band == OptimizationBand.BUILD.value:
             # Build criterion
-            priorities_names.append((priority, name, band, OptimizationKind.BUILD))
+            priorities_names.append((priority, name, band, level, OptimizationKind.BUILD))
         else:
-            priorities_names.append((priority, name, band, OptimizationKind.OTHER))
+            priorities_names.append((priority, name, band, level, OptimizationKind.OTHER))
 
     # sort the criteria by priority
     priorities_names = sorted(priorities_names, reverse=True)
@@ -176,8 +178,8 @@ def build_criteria_names(costs, arg_tuples):
     costs = costs[error_criteria:]
 
     return [
-        OptimizationCriteria(priority, value, name, band, status)
-        for (priority, name, band, status), value in zip(priorities_names, costs)
+        OptimizationCriteria(priority, value, name, band, level, status)
+        for (priority, name, band, level, status), value in zip(priorities_names, costs)
     ]
 
 

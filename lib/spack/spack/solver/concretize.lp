@@ -2217,8 +2217,6 @@ build(PackageNode) :- attr("node", PackageNode), not concrete(PackageNode).
 #const built_offset = hinge_offset + indep_opt.
 #const high_offset  = built_offset + max_depth * level_opt.
 #const error_offset = high_offset + indep_opt.
-%   type
-#const fixed_offset = (max_depth - 1) * level_opt.
 
 % Build priority
 
@@ -2296,50 +2294,50 @@ level(Package, L-1) :-
 %-----------------------------------------------------------------------------
 % Optimization Criteria
 %-----------------------------------------------------------------------------
-% opt_criterion(Priority, Location, Type, Level (for fixed only), Description)
+% opt_criterion(Priority, Location, Type, Level, Description)
 
-opt_criterion(0, "high", "", 0, "requirement weight").
+opt_criterion(0, "high", "", max_depth-1, "requirement weight").
 
-opt_criterion(12, "built", "fixed", 0, "deprecated versions used").
-opt_criterion(11, "built", "fixed", 0, "version badness (roots)").
-opt_criterion(10, "built", "fixed", 0, "variant penalty (roots)").
-opt_criterion(9, "built", "fixed", 0, "default values of variants not being used (roots)").
-opt_criterion(8, "built", "fixed", 0, "preferred compilers").
-opt_criterion(7, "built", "fixed", 0, "compiler penalty from reuse").
-opt_criterion(6, "built", "level", 1, "variant penalty (non-roots)").
-opt_criterion(5, "built", "fixed", 1, "preferred providers (excluded compilers and language runtimes)").
-opt_criterion(4, "built", "fixed", 1, "number of compilers used on the same node").
-opt_criterion(3, "built", "fixed", 1, "non-preferred OS's").
-opt_criterion(2, "built", "level", 1, "version badness (non roots)").
-opt_criterion(1, "built", "level", 1, "default values of variants not being used (non-roots)").
-opt_criterion(0, "built", "fixed", 1, "preferred providers (language runtimes)").
+opt_criterion(12, "built", "fixed", max_depth-1, "deprecated versions used").
+opt_criterion(11, "built", "fixed", max_depth-1, "version badness (roots)").
+opt_criterion(10, "built", "fixed", max_depth-1, "variant penalty (roots)").
+opt_criterion(9, "built", "fixed", max_depth-1, "default values of variants not being used (roots)").
+opt_criterion(8, "built", "fixed", max_depth-1, "preferred compilers").
+opt_criterion(7, "built", "fixed", max_depth-1, "compiler penalty from reuse").
+opt_criterion(6, "built", "level", 0, "variant penalty (non-roots)").
+opt_criterion(5, "built", "fixed", 0, "preferred providers (excluded compilers and language runtimes)").
+opt_criterion(4, "built", "fixed", 0, "number of compilers used on the same node").
+opt_criterion(3, "built", "fixed", 0, "non-preferred OS's").
+opt_criterion(2, "built", "level", 0, "version badness (non roots)").
+opt_criterion(1, "built", "level", 0, "default values of variants not being used (non-roots)").
+opt_criterion(0, "built", "fixed", 0, "preferred providers (language runtimes)").
 
-opt_criterion(2, "hinge", "", 0, "number of packages to build (vs. reuse)").
-opt_criterion(1, "hinge", "", 0, "number of nodes from the same package").
-opt_criterion(0, "hinge", "", 0, "build unification sets").
+opt_criterion(2, "hinge", "", max_depth-1, "number of packages to build (vs. reuse)").
+opt_criterion(1, "hinge", "", max_depth-1, "number of nodes from the same package").
+opt_criterion(0, "hinge", "", max_depth-1, "build unification sets").
 
-opt_criterion(12, "concr", "fixed", 0, "deprecated versions used").
-opt_criterion(11, "concr", "fixed", 0, "version badness (roots)").
-opt_criterion(10, "concr", "fixed", 0, "variant penalty (roots)").
-opt_criterion(9, "concr", "fixed", 0, "default values of variants not being used (roots)").
-opt_criterion(8, "concr", "fixed", 0, "preferred compilers").
-opt_criterion(7, "concr", "fixed", 0, "compiler penalty from reuse").
-opt_criterion(6, "concr", "level", 1, "variant penalty (non-roots)").
-opt_criterion(5, "concr", "fixed", 1, "preferred providers (excluded compilers and language runtimes)").
-opt_criterion(4, "concr", "fixed", 1, "number of compilers used on the same node").
-opt_criterion(3, "concr", "fixed", 1, "non-preferred OS's").
-opt_criterion(2, "concr", "level", 1, "version badness (non roots)").
-opt_criterion(1, "concr", "level", 1, "default values of variants not being used (non-roots)").
-opt_criterion(0, "concr", "fixed", 1, "preferred providers (language runtimes)").
+opt_criterion(12, "concr", "fixed", max_depth-1, "deprecated versions used").
+opt_criterion(11, "concr", "fixed", max_depth-1, "version badness (roots)").
+opt_criterion(10, "concr", "fixed", max_depth-1, "variant penalty (roots)").
+opt_criterion(9, "concr", "fixed", max_depth-1, "default values of variants not being used (roots)").
+opt_criterion(8, "concr", "fixed", max_depth-1, "preferred compilers").
+opt_criterion(7, "concr", "fixed", max_depth-1, "compiler penalty from reuse").
+opt_criterion(6, "concr", "level", 0, "variant penalty (non-roots)").
+opt_criterion(5, "concr", "fixed", 0, "preferred providers (excluded compilers and language runtimes)").
+opt_criterion(4, "concr", "fixed", 0, "number of compilers used on the same node").
+opt_criterion(3, "concr", "fixed", 0, "non-preferred OS's").
+opt_criterion(2, "concr", "level", 0, "version badness (non roots)").
+opt_criterion(1, "concr", "level", 0, "default values of variants not being used (non-roots)").
+opt_criterion(0, "concr", "fixed", 0, "preferred providers (language runtimes)").
 
-opt_criterion(7, "low", "", 0, "target mismatches (built nodes)").
-opt_criterion(6, "low", "", 0, "non-preferred targets").
-opt_criterion(5, "low", "", 0, "target mismatches (reused nodes)").
-opt_criterion(4, "low", "", 0, "version badness (runtimes)").
-opt_criterion(3, "low", "", 0, "non-preferred targets (runtimes)").
-opt_criterion(2, "low", "", 0, "providers on edges").
-opt_criterion(1, "low", "", 0, "version badness on edges").
-opt_criterion(0, "low", "", 0, "penalty on symmetric duplicates").
+opt_criterion(7, "low", "", max_depth-1, "target mismatches (built nodes)").
+opt_criterion(6, "low", "", max_depth-1, "non-preferred targets").
+opt_criterion(5, "low", "", max_depth-1, "target mismatches (reused nodes)").
+opt_criterion(4, "low", "", max_depth-1, "version badness (runtimes)").
+opt_criterion(3, "low", "", max_depth-1, "non-preferred targets (runtimes)").
+opt_criterion(2, "low", "", max_depth-1, "providers on edges").
+opt_criterion(1, "low", "", max_depth-1, "version badness on edges").
+opt_criterion(0, "low", "", max_depth-1, "penalty on symmetric duplicates").
 
 %----------------------------------------------------------------------------
 % Show optimization criteria
@@ -2349,23 +2347,18 @@ opt_criterion(0, "low", "", 0, "penalty on symmetric duplicates").
 % be used when writing the actual minimization criteria
 
 % compute criteria priority
-
-% !!!-- TODO --!!!
-% levelized criteria are currently from 0 to max_depth-2 instead of max_depth-1
-% in order to match the output of develop branch
-
 opt_priority(Priority, high_offset, "high", "", Level, Description) :-
     opt_criterion(N, "high", _, Level, Description),
     Priority = N + high_offset.
 
 opt_priority(Priority, built_offset, "built", "fixed", Level, Description) :-
     opt_criterion(N, "built", "fixed", Level, Description),
-    Priority = N + built_offset + fixed_offset - (Level*level_opt).
+    Priority = N + built_offset + (Level*level_opt).
 
 opt_priority(Priority, built_offset, "built", "level", Level, Description) :-
     opt_criterion(N, "built", "level", _, Description),
     Priority = N + built_offset + (Level*level_opt),
-    Level = 0..(max_depth-2).
+    Level = 0..(max_depth-1).
 
 opt_priority(Priority, hinge_offset, "hinge", "", Level, Description) :-
     opt_criterion(N, "hinge", _, Level, Description),
@@ -2373,12 +2366,12 @@ opt_priority(Priority, hinge_offset, "hinge", "", Level, Description) :-
 
 opt_priority(Priority, concr_offset, "concr", "fixed", Level, Description) :-
     opt_criterion(N, "concr", "fixed", Level, Description),
-    Priority = N + concr_offset + fixed_offset - (Level*level_opt).
+    Priority = N + concr_offset + (Level*level_opt).
 
 opt_priority(Priority, concr_offset, "concr", "level", Level, Description) :-
     opt_criterion(N, "concr", "level", _, Description),
     Priority = N + concr_offset + (Level*level_opt),
-    Level = 0..(max_depth-2).
+    Level = 0..(max_depth-1).
 
 opt_priority(Priority, low_offset, "low", "", Level, Description) :-
     opt_criterion(N, "low", _, Level, Description),
