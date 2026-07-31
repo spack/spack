@@ -7,6 +7,7 @@ import urllib.parse
 from collections import defaultdict
 
 import spack.fetch_strategy as fs
+import spack.package_base
 import spack.repo
 import spack.spec
 import spack.url
@@ -340,7 +341,7 @@ def url_stats(args):
         for v in list(pkg_cls.versions):
             try:
                 pkg = pkg_cls(spack.spec.Spec(pkg_cls.name))
-                fetcher = fs.for_package_version(pkg, v)
+                fetcher = spack.package_base.for_package_version(pkg, v)
             except (fs.InvalidArgsError, fs.FetcherConflict):
                 continue
             version_stats.add(pkg_cls.name, fetcher)

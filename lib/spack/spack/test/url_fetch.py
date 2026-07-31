@@ -14,6 +14,7 @@ import pytest
 import spack.concretize
 import spack.error
 import spack.fetch_strategy as fs
+import spack.package_base
 import spack.url
 import spack.util.web as web_util
 import spack.version
@@ -342,11 +343,11 @@ def test_candidate_urls(
     """
     with mutable_config.override("config:url_fetch_method", _fetch_method):
         pkg = pkg_factory(url, urls)
-        f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
+        f = spack.package_base._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
         assert f.candidate_urls == expected
         assert f.extra_options == {}
         pkg = pkg_factory(url, urls, fetch_options={"timeout": 60})
-        f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
+        f = spack.package_base._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
         assert f.extra_options == {"timeout": 60}
 
 
