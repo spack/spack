@@ -46,7 +46,7 @@ from spack.installer.base import (
     InstallPolicy,
     IpcChannel,
     JobServerBase,
-    JobserverInfo,
+    Makeflags,
     ProcessExitNotifier,
 )
 from spack.old_installer import _do_fake_install, dump_packages
@@ -335,7 +335,7 @@ def worker_function(
     parent: IpcChannel,
     tee_control_r: IpcChannel,
     tee_control_w: Optional[IpcChannel],
-    jobserver_info: JobserverInfo,
+    makeflags: Makeflags,
     global_state: GlobalStateMarshaler,
 ) -> None:
     """
@@ -348,9 +348,7 @@ def worker_function(
         parent: Connection to send build output to
         tee_control_r: Read end of the control pipe; the parent sends echo on/off here
         tee_control_w: Write end of the control pipe; used to stop the tee thread on POSIX
-        jobserver_info: MAKEFLAGS to set, so that the build process uses the POSIX jobserver, and
-            opaque data only to be serialized (e.g. old style jobserver r/w pipes, only to be
-            inherited in the build process)
+        makeflags: Sets MAKEFLAGS in this process, so that the build uses Spack's jobserver
         global_state: Global state to restore
     """
     spec, log_path = request.spec, request.log_path
@@ -388,8 +386,7 @@ def worker_function(
 
     signal.signal(signal.SIGTERM, handle_sigterm)
 
-    if jobserver_info.makeflags is not None:
-        os.environ["MAKEFLAGS"] = jobserver_info.makeflags
+    makeflags.apply(os.environ)
 
     # Save encodings before the Tee redirects fds 1/2 to the pipe. We need them to create the
     # line-buffered wrappers after the Tee starts.
@@ -693,10 +690,9 @@ def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
     spec = request.spec
     channels = create_build_channels()
 
-    # Obtain the MAKEFLAGS to be set in the child process, and determine whether it's necessary
-    # for the child process to inherit our jobserver fds.
+    # Obtain the MAKEFLAGS to be set in the child process, in a style the package's gmake accepts.
     gmake = next(iter(spec.dependencies("gmake")), None)
-    jobserver_details = jobserver.makeflags_and_data(gmake)
+    makeflags = jobserver.makeflags(gmake)
 
     # As a performance optimization, we do not serialize the environment which
     # is slow to serialize and not needed in the build job
@@ -708,7 +704,7 @@ def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
             channels.output_w,
             channels.control_r,
             channels.tee_control_w,
-            jobserver_details,
+            makeflags,
             GlobalStateMarshaler(serialize_env=False),
         ),
     )
