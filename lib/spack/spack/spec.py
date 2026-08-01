@@ -3553,9 +3553,11 @@ class Spec:
                     self._patches = spack.repo.PATH.get_patches_for_package(sha256s, pkg_cls)
                 except spack.error.PatchLookupError as e:
                     raise spack.error.SpecError(
-                        f"{e}. This usually means the patch was modified or removed. "
-                        "To fix this, either reconcretize or use the original package "
-                        "repository"
+                        f"{e}. This may mean the patch was modified or removed. "
+                        "To fix this, try: "
+                        "(1) reconcretizing, "
+                        "(2) clearing the cache with `spack clean -m`, or "
+                        "(3) resetting the package repository."
                     ) from e
 
         return self._patches
