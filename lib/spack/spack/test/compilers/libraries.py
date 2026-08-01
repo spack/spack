@@ -10,6 +10,7 @@ import pytest
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.util.executable
+import spack.util.file_cache
 import spack.util.filesystem as fs
 import spack.util.module_cmd
 
@@ -143,3 +144,24 @@ class TestCompilerPropertyDetector:
         with pytest.raises(spack.util.module_cmd.ModuleLoadError):
             with detector.compiler_environment():
                 pass
+
+
+class TestFileCompilerCache:
+    def test_failed_compiler_output_is_retried(self, mock_gcc, monkeypatch, tmp_path):
+        file_cache = spack.util.file_cache.FileCache(tmp_path)
+        cache = spack.compilers.libraries.FileCompilerCache(file_cache)
+
+        outputs = iter([None, "successful compiler output"])
+
+        def compiler_output(compiler):
+            return {"c_compiler_output": next(outputs)}
+
+        monkeypatch.setattr(cache, "value", compiler_output)
+
+        first = cache.get(mock_gcc)
+        second = cache.get(mock_gcc)
+        third = cache.get(mock_gcc)
+
+        assert first.c_compiler_output is None
+        assert second.c_compiler_output == "successful compiler output"
+        assert third.c_compiler_output == "successful compiler output"
