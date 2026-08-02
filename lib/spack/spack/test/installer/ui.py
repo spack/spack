@@ -772,6 +772,7 @@ class TestLogFollowing:
         # Switch to log-following mode
         tui.overview_mode = False
         tui.tracked_build_id = build_id
+        tui.translate_log_newlines = False
 
         # Send some log data
         log_data = b"Building package...\nRunning tests...\n"
@@ -779,6 +780,46 @@ class TestLogFollowing:
 
         # Check that logs were echoed to stdout
         assert fake_stdout._buffer.getvalue() == log_data
+
+    @pytest.mark.parametrize(
+        "chunks,expected",
+        [
+            # Bare line feeds, as cmake emits, gain a carriage return.
+            ([b"a\nb\n"], b"a\r\nb\r\n"),
+            # Output that already has them, as ninja emits, is left alone.
+            ([b"a\r\nb\r\n"], b"a\r\nb\r\n"),
+            # A lone carriage return, used for progress lines, is not a newline.
+            ([b"50%\r100%\r"], b"50%\r100%\r"),
+            # A carriage return and line feed split across chunks stay a single newline.
+            ([b"a\r", b"\nb"], b"a\r\nb"),
+            # A bare line feed opening a chunk still gains one.
+            ([b"a", b"\nb"], b"a\r\nb"),
+        ],
+    )
+    def test_log_newlines_translated_for_console(self, chunks, expected):
+        """Bare line feeds stair-step on a VT-enabled Windows console, so they are translated."""
+        tui, _, fake_stdout = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+        tui.overview_mode = False
+        tui.tracked_build_id = build_id
+        tui.translate_log_newlines = True
+
+        for chunk in chunks:
+            tui.on_log_output(build_id, chunk)
+
+        assert fake_stdout._buffer.getvalue() == expected
+
+    def test_log_newlines_untranslated_when_disabled(self):
+        """Log bytes are forwarded verbatim when the console needs no translation."""
+        tui, _, fake_stdout = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+        tui.overview_mode = False
+        tui.tracked_build_id = build_id
+        tui.translate_log_newlines = False
+
+        tui.on_log_output(build_id, b"a\nb\n")
+
+        assert fake_stdout._buffer.getvalue() == b"a\nb\n"
 
     def test_print_logs_discarded_when_in_overview_mode(self):
         """Test that logs are discarded when in overview mode"""
@@ -1048,6 +1089,7 @@ class TestToggle:
         """Ensure newline is inserted before mode transitions when log doesn't end with newline."""
         tui, _, fake_stdout = create_tui(total=2)
         build_a, build_b = add_mock_builds(tui, 2)
+        tui.translate_log_newlines = False
 
         # Follow a build, toggle back and forth between logs and overview mode, and receive logs
         # that may or may not end with newlines.

@@ -10,6 +10,7 @@ for the overall design."""
 
 import io
 import os
+import re
 import sys
 import time
 from typing import Callable, Dict, Generator, List, NamedTuple, Optional, Union, cast
@@ -24,6 +25,9 @@ if sys.platform == "win32":
     from spack.installer.windows import WindowsTerminalState as TerminalState
 else:
     from spack.installer.posix import PosixTerminalState as TerminalState
+
+#: Matches a line feed that is not already preceded by a carriage return.
+_BARE_LINE_FEED = re.compile(rb"(?<!\r)\n")
 
 
 class SetEcho(NamedTuple):
@@ -208,7 +212,9 @@ class TerminalUI(InstallerUI):
         self.actual_jobs: int = 0
         self.target_jobs: int = 0
         self.blocked: bool = False
-
+        #: Whether the previous log chunk ended in a carriage return, so a line feed opening the
+        #: next chunk is not mistaken for a bare one.
+        self.log_ends_with_carriage_return = False
         self.stdout = stdout
         self.get_terminal_size = get_terminal_size
         self.terminal_size = os.terminal_size((0, 0))
@@ -226,6 +232,9 @@ class TerminalUI(InstallerUI):
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
+        #: Windows consoles are put in VT processing mode, where a bare line feed does not return
+        #: the carriage, so forwarded log bytes need the translation that text-mode writes do.
+        self.translate_log_newlines = sys.platform == "win32" and self.is_tty
         #: When True, suppress all terminal output (process is in background).
         self.headless = False
         self.term_title = spack.config.CONFIG.get("config:install_status", True) and self.is_tty
@@ -276,7 +285,7 @@ class TerminalUI(InstallerUI):
             self.next()
         else:
             if not self.log_ends_with_newline:
-                self.stdout.buffer.write(b"\n")
+                self.stdout.buffer.write(b"\r\n" if self.translate_log_newlines else b"\n")
                 self.log_ends_with_newline = True
             self.active_area_rows = 0
             self.search_term = ""
@@ -610,6 +619,23 @@ class TerminalUI(InstallerUI):
         else:
             buffer.write("\033[0m\033[K\033[1B\r")  # reset, clear to EOL, move to next line
 
+    def _to_console_newlines(self, data: bytes) -> bytes:
+        """Turn bare line feeds in child output into carriage return + line feed.
+
+        Log bytes are forwarded verbatim, so they miss the newline translation that our own
+        text-mode writes to stdout get. The Windows console runs with
+        ENABLE_VIRTUAL_TERMINAL_PROCESSING, where a lone line feed moves down a row but leaves
+        the column untouched, so output from tools that emit bare line feeds (cmake does, ninja
+        does not) would stair-step across the screen.
+        """
+        if self.log_ends_with_carriage_return and data.startswith(b"\n"):
+            # The carriage return arrived in the previous chunk.
+            leading, data = b"\n", data[1:]
+        else:
+            leading = b""
+        self.log_ends_with_carriage_return = data.endswith(b"\r")
+        return leading + _BARE_LINE_FEED.sub(b"\r\n", data)
+
     def on_log_output(self, build_id: str, data: bytes) -> None:
         if self.headless:
             return
@@ -620,9 +646,11 @@ class TerminalUI(InstallerUI):
             return
         if self.filter_padding:
             data = padding_filter_bytes(data)
+        self.log_ends_with_newline = data.endswith(b"\n")
+        if self.translate_log_newlines:
+            data = self._to_console_newlines(data)
         self.stdout.buffer.write(data)
         self.stdout.flush()
-        self.log_ends_with_newline = data.endswith(b"\n")
 
     def _render_build(
         self, build_info: BuildInfo, buffer: io.StringIO, max_width: int = 0, now: float = 0.0
