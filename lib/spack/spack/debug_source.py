@@ -40,8 +40,8 @@ from typing import TYPE_CHECKING, Dict, Optional, Set, Tuple
 
 import spack.builder
 import spack.config
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
+import spack.util.filesystem as fs
+import spack.util.tty as tty
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -509,6 +509,8 @@ def _split_one_binary(filepath: str, symbols_dir: str, pre: str) -> Optional[str
         tty.debug(f"{pre} Skipping symbol split for archive {filepath} (not yet supported)")
         return None
 
+    size_before = os.path.getsize(filepath)
+
     build_id = _get_build_id(filepath)
     debug_filename = os.path.basename(filepath) + ".debug"
     debug_path = os.path.join(symbols_dir, debug_filename)
@@ -540,6 +542,7 @@ def _split_one_binary(filepath: str, symbols_dir: str, pre: str) -> Optional[str
         tty.warn(f"{pre} objcopy failed on {filepath}: {e.stderr.decode(errors='replace')}")
         return None
 
+    size_after = os.path.getsize(filepath)
     tty.msg(f"{pre} Split debug symbols for {os.path.basename(filepath)} -> {debug_path}")
 
     if build_id and len(build_id) >= 3:
@@ -547,7 +550,7 @@ def _split_one_binary(filepath: str, symbols_dir: str, pre: str) -> Optional[str
     elif not build_id:
         tty.debug(f"{pre} No build-id found for {filepath}; skipping build-id symlink")
 
-    return debug_path
+    return debug_path, size_before, size_after
 
 
 def _write_build_id_link(symbols_dir: str, build_id: str, debug_path: str) -> None:
