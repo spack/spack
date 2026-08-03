@@ -230,6 +230,20 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
     )
 
 
+def _attr_satisfies(lhs: Optional[str], rhs: Optional[str]) -> bool:
+    """Whether a platform or operating system on the lhs satisfies the one on the rhs."""
+    if not rhs:
+        return True
+    return bool(lhs) if rhs == "*" else lhs == rhs
+
+
+def _attr_intersects(lhs: Optional[str], rhs: Optional[str]) -> bool:
+    """Whether a platform or operating system on either side intersect."""
+    if not lhs or not rhs:
+        return True
+    return lhs == "*" or rhs == "*" or lhs == rhs
+
+
 @lang.lazy_lexicographic_ordering
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
@@ -405,16 +419,8 @@ class ArchSpec:
         """
         other = self._autospec(other)
 
-        # Check platform and os
         for attribute in ("platform", "os"):
-            other_attribute = getattr(other, attribute)
-            self_attribute = getattr(self, attribute)
-
-            # platform=* or os=*
-            if self_attribute and other_attribute == "*":
-                return True
-
-            if other_attribute and self_attribute != other_attribute:
+            if not _attr_satisfies(getattr(self, attribute), getattr(other, attribute)):
                 return False
 
         return self._target_satisfies(other, strict=True)
@@ -431,11 +437,8 @@ class ArchSpec:
         """
         other = self._autospec(other)
 
-        # Check platform and os
         for attribute in ("platform", "os"):
-            other_attribute = getattr(other, attribute)
-            self_attribute = getattr(self, attribute)
-            if other_attribute and self_attribute and self_attribute != other_attribute:
+            if not _attr_intersects(getattr(self, attribute), getattr(other, attribute)):
                 return False
 
         return self._target_satisfies(other, strict=False)
@@ -455,6 +458,10 @@ class ArchSpec:
 
         # self.target is not None, and other is target=*
         if other.target == ArchSpec.ANY_TARGET:
+            return True
+
+        # target=* on the lhs overlaps any target, but is too broad to satisfy a specific one
+        if not strict and self.target == ArchSpec.ANY_TARGET:
             return True
 
         return bool(self._target_intersection(other))
@@ -584,7 +591,9 @@ class ArchSpec:
         constrained = False
         for attr in ("platform", "os"):
             svalue, ovalue = getattr(self, attr), getattr(other, attr)
-            if svalue is None and ovalue is not None:
+            # a star constrains the value to be set, so it is kept when there is none yet and
+            # is replaced by a named value from the other side
+            if ovalue is not None and (svalue is None or (svalue == "*" and ovalue != "*")):
                 setattr(self, attr, ovalue)
                 constrained = True
 
