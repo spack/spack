@@ -908,7 +908,7 @@ class CompilerFlag(str):
         return obj
 
 
-_valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags"]
+_valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags", "hipflags"]
 
 
 def _shared_subset_pair_iterate(container1, container2):
