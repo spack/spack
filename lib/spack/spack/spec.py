@@ -282,6 +282,72 @@ def _satisfies_target_range(lhs: str, rhs: str) -> bool:
     return True
 
 
+def _parse_target_range(
+    element: str,
+) -> Tuple[
+    Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    Optional[spack.vendor.archspec.cpu.Microarchitecture],
+]:
+    """Returns a tuple of (min, max) with None meaning unbounded. For concrete targets
+    min == max."""
+    t_min, t_sep, t_max = element.partition(":")
+    if not t_sep:
+        t = _make_microarchitecture(t_min)
+        return t, t
+    return (
+        _make_microarchitecture(t_min) if t_min else None,
+        _make_microarchitecture(t_max) if t_max else None,
+    )
+
+
+def _minimal_upper_bounds(
+    a: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    b: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+) -> List[Optional[spack.vendor.archspec.cpu.Microarchitecture]]:
+    """The minimal targets above both a and b. The target graph is not a lattice, so there is
+    not always a unique least upper bound: incomparable bounds can have several minimal common
+    upper bounds."""
+    if a is None:
+        return [b]
+    if b is None:
+        return [a]
+    if a.name == b.name:
+        return [a]
+    if a.family != b.family:
+        return []
+    if a >= b:
+        return [a]
+    if b > a:
+        return [b]
+    above = [
+        t
+        for t in spack.vendor.archspec.cpu.TARGETS.values()
+        if t.family == a.family and t >= a and t >= b
+    ]
+    return [t for t in above if not any(other < t for other in above)]
+
+
+def _maximal_lower_bounds(
+    a: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    b: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+) -> List[Optional[spack.vendor.archspec.cpu.Microarchitecture]]:
+    """The dual of ``_minimal_upper_bounds``: the maximal targets below both a and b."""
+    if a is None:
+        return [b]
+    if b is None:
+        return [a]
+    if a.name == b.name:
+        return [a]
+    if a.family != b.family:
+        return []
+    if a <= b:
+        return [a]
+    if b < a:
+        return [b]
+    below = set(a.ancestors) & set(b.ancestors)
+    return [t for t in below if not any(t < other for other in below)]
+
+
 @lang.lazy_lexicographic_ordering
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
@@ -531,11 +597,30 @@ class ArchSpec:
         )
 
     def _target_constrain(self, other: "ArchSpec") -> bool:
-        if self.target is None and other.target is None:
+        # An unconstrained target on either side means the other side is the intersection.
+        # _target_intersection cannot express that: it returns an empty list whenever one of
+        # the two has no target, which would turn into an empty target below.
+        if other.target is None:
             return False
+
+        # target=* constrains a target to be set without naming one, so any target already
+        # satisfies it and a side without one becomes the star. It is concrete by the definition
+        # below, so it is handled here rather than overriding a named target further down.
+        if other.target == ArchSpec.ANY_TARGET:
+            if self.target is not None:
+                return False
+            self.target = other.target
+            return True
+        if self.target == ArchSpec.ANY_TARGET:
+            self.target = other.target
+            return True
 
         if not other._target_satisfies(self, strict=False):
             raise UnsatisfiableArchitectureSpecError(self, other)
+
+        if self.target is None:
+            self.target = other.target
+            return True
 
         if self.target_concrete:
             return False
@@ -543,6 +628,10 @@ class ArchSpec:
         elif other.target_concrete:
             self.target = other.target
             return True
+
+        # self already inside other: the intersection is self, so skip computing it.
+        if self._target_satisfies(other, strict=True):
+            return False
 
         # Compute the intersection of every combination of ranges in the lists
         results = self._target_intersection(other)
@@ -555,82 +644,33 @@ class ArchSpec:
         self.target = intersection_target
         return True
 
-    def _target_intersection(self, other):
-        results = []
+    def _target_intersection(self, other: "ArchSpec") -> List[str]:
+        """The elements of the target list denoting the targets both sides contain. Every element
+        is an interval, so the overlap of two of them starts at a common upper bound of their
+        lower bounds and ends at a common lower bound of their upper bounds. Those bounds are not
+        always unique, so one pair of intervals can produce several intervals: one per
+        combination."""
+        results: List[str] = []
 
         if not self.target or not other.target:
             return results
 
-        for s_target_range in str(self.target).split(","):
-            s_min, s_sep, s_max = s_target_range.partition(":")
-            for o_target_range in str(other.target).split(","):
-                o_min, o_sep, o_max = o_target_range.partition(":")
-
-                if not s_sep:
-                    # s_target_range is a concrete target
-                    # get a microarchitecture reference for at least one side
-                    # of each comparison so we can use archspec comparators
-                    s_comp = _make_microarchitecture(s_min)
-                    if not o_sep:
-                        if s_min == o_min:
-                            results.append(s_min)
-                    elif (not o_min or s_comp >= o_min) and (not o_max or s_comp <= o_max):
-                        results.append(s_min)
-                elif not o_sep:
-                    # "cast" to microarchitecture
-                    o_comp = _make_microarchitecture(o_min)
-                    if (not s_min or o_comp >= s_min) and (not s_max or o_comp <= s_max):
-                        results.append(o_min)
-                else:
-                    # Take the "min" of the two max, if there is a partial ordering.
-                    n_max = ""
-                    if s_max and o_max:
-                        _s_max = _make_microarchitecture(s_max)
-                        _o_max = _make_microarchitecture(o_max)
-                        if _s_max.family != _o_max.family:
+        for s_element in str(self.target).split(","):
+            s_min, s_max = _parse_target_range(s_element)
+            for o_element in str(other.target).split(","):
+                o_min, o_max = _parse_target_range(o_element)
+                for n_min in _minimal_upper_bounds(s_min, o_min):
+                    for n_max in _maximal_lower_bounds(s_max, o_max):
+                        if n_min is None and n_max is None:
                             continue
-                        if _s_max <= _o_max:
-                            n_max = s_max
-                        elif _o_max < _s_max:
-                            n_max = o_max
-                        else:
-                            continue
-                    elif s_max:
-                        n_max = s_max
-                    elif o_max:
-                        n_max = o_max
-
-                    # Take the "max" of the two min.
-                    n_min = ""
-                    if s_min and o_min:
-                        _s_min = _make_microarchitecture(s_min)
-                        _o_min = _make_microarchitecture(o_min)
-                        if _s_min.family != _o_min.family:
-                            continue
-                        if _s_min >= _o_min:
-                            n_min = s_min
-                        elif _o_min > _s_min:
-                            n_min = o_min
-                        else:
-                            continue
-                    elif s_min:
-                        n_min = s_min
-                    elif o_min:
-                        n_min = o_min
-
-                    if n_min and n_max:
-                        _n_min = _make_microarchitecture(n_min)
-                        _n_max = _make_microarchitecture(n_max)
-                        if _n_min.family != _n_max.family or not _n_min <= _n_max:
-                            continue
-                        if n_min == n_max:
-                            results.append(n_min)
-                        else:
+                        elif n_min is None:
+                            results.append(f":{n_max}")
+                        elif n_max is None:
+                            results.append(f"{n_min}:")
+                        elif n_min.name == n_max.name:
+                            results.append(n_min.name)
+                        elif n_min.family == n_max.family and n_min <= n_max:
                             results.append(f"{n_min}:{n_max}")
-                    elif n_min:
-                        results.append(f"{n_min}:")
-                    elif n_max:
-                        results.append(f":{n_max}")
 
         return results
 

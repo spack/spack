@@ -1999,8 +1999,11 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         # is the family root and broadwell and later are above haswell.
         (Spec, "target=:haswell", "target=x86_64:", (True, True, False)),
         (Spec, "target=:haswell", "target=x86_64_v4:", (False, False, False)),
-        # Edge case of uarch that split in a diamond structure, from a common ancestor
-        (Spec, "target=:cascadelake", "target=:cannonlake", (False, False, False)),
+        # Microarchitectures splitting in a diamond: targets up to the common ancestor (skylake)
+        # are below both bounds, so the ranges intersect without either containing the other.
+        (Spec, "target=:cascadelake", "target=:cannonlake", (True, False, False)),
+        # The same diamond seen from below: targets from icelake up are above both bounds.
+        (Spec, "target=cascadelake:", "target=cannonlake:", (True, False, False)),
         # Spec with compilers
         (Spec, "mpileaks %gcc@5", "mpileaks %gcc@6", (False, False, False)),
         # %gcc sits behind an unpinned ^callpath edge, so callpath need not be one node:
@@ -2066,6 +2069,8 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
             True,
             "target=x86_64_v2:haswell",
         ),
+        # a range already inside the other is the intersection, so there is nothing to narrow
+        (Spec, "target=:icelake", "target=x86_64:", False, "target=:icelake"),
     ],
 )
 def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_packages):
@@ -2118,6 +2123,38 @@ def test_a_target_range_inside_another_one_is_dropped_from_the_list(mock_package
         Spec("pkg-a target=cannonlake:,icelake:").to_dict()
         == Spec("pkg-a target=cannonlake:").to_dict()
     )
+
+
+def test_incomparable_target_bounds_meet_as_a_union_of_ranges(mock_packages):
+    """Microarchitectures are ordered by a DAG, not a lattice, so two ranges can have more than one
+    minimal common bound. The intersection is then a list of ranges."""
+    lhs, rhs = Spec("pkg-a target=cascadelake:"), Spec("pkg-a target=cannonlake:")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    assert str(forward.architecture.target) == "icelake:"
+    assert forward.to_dict() == backward.to_dict()
+
+    # the intersection is the greatest lower bound, not merely some spec inside both
+    assert Spec("pkg-a target=icelake").satisfies(forward)
+
+    # armv8.6a and neoverse_n1 have two minimal common upper bounds, so the result is a list
+    lhs, rhs = Spec("pkg-a target=armv8.6a:"), Spec("pkg-a target=neoverse_n1:")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    assert str(forward.architecture.target) == "ampere1:,ampere1a:"
+    assert forward.to_dict() == backward.to_dict()
+
+    # the most extreme case in the target graph: armv8.3a and cortex_a72 have five minimal
+    # common upper bounds, none of which contains another
+    lhs, rhs = Spec("pkg-a target=armv8.3a:"), Spec("pkg-a target=cortex_a72:")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    expected = "ampere1:,ampere1a:,neoverse_n2:,neoverse_v1:,neoverse_v2:"
+    assert str(forward.architecture.target) == expected
+    assert forward.to_dict() == backward.to_dict()
 
 
 def test_constrain_dependencies_copies(mock_packages):
