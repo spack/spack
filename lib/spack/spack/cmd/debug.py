@@ -17,7 +17,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.util.git
-from spack.llnl.util import tty
+from spack.util import tty
 
 description = "debugging commands for troubleshooting Spack"
 section = "developer"
