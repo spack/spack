@@ -2409,9 +2409,9 @@ class Spec:
             and hasattr(self, "_package_hash")
             and self._package_hash
         ):
-            # The package hash is assigned at concretization time, and only read here. We don't
-            # want to compute one for a concrete spec, where a) the package might not exist, or
-            # b) the `dag_hash` didn't include the package hash when the spec was concretized.
+            # The package hash is assigned at concretization time. We don't want to compute one for
+            # a concrete spec, where a) the package might not exist, or b) the `dag_hash` didn't
+            # include the package hash when the spec was concretized.
             package_hash = self._package_hash
 
             # Full hashes are in bytes
