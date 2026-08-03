@@ -80,7 +80,7 @@ def _is_elf_with_debug_sections(filepath: str) -> bool:
         result = subprocess.run(
             ["readelf", "--sections", "--wide", filepath],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True,
+            universal_newlines=True,
             timeout=10,
         )
         return ".debug_info" in result.stdout or ".debug_str" in result.stdout
@@ -150,7 +150,7 @@ def _extract_compilation_unit_paths(pkg: "spack.package_base.PackageBase") -> Se
                 result = subprocess.run(
                     ["readelf", "--debug-dump=info", "--dwarf-depth=1", filepath],
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                    text=True,
+                    universal_newlines=True,
                     timeout=60,
                 )
                 _parse_dwarf_comp_unit_paths(result.stdout, pairs)
@@ -482,7 +482,7 @@ def _get_build_id(filepath: str) -> Optional[str]:
     """Extract the hex build-id from .note.gnu.build-id via readelf."""
     try:
         result = subprocess.run(
-            ["readelf", "-n", filepath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=10
+            ["readelf", "-n", filepath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=10
         )
         m = re.search(r"Build ID:\s*([0-9a-f]+)", result.stdout)
         return m.group(1) if m else None
