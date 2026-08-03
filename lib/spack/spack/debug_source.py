@@ -79,7 +79,7 @@ def _is_elf_with_debug_sections(filepath: str) -> bool:
                 return False
         result = subprocess.run(
             ["readelf", "--sections", "--wide", filepath],
-            capture_output=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True,
             timeout=10,
         )
@@ -149,7 +149,7 @@ def _extract_compilation_unit_paths(pkg: "spack.package_base.PackageBase") -> Se
             try:
                 result = subprocess.run(
                     ["readelf", "--debug-dump=info", "--dwarf-depth=1", filepath],
-                    capture_output=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                     text=True,
                     timeout=60,
                 )
@@ -482,7 +482,7 @@ def _get_build_id(filepath: str) -> Optional[str]:
     """Extract the hex build-id from .note.gnu.build-id via readelf."""
     try:
         result = subprocess.run(
-            ["readelf", "-n", filepath], capture_output=True, text=True, timeout=10
+            ["readelf", "-n", filepath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=10
         )
         m = re.search(r"Build ID:\s*([0-9a-f]+)", result.stdout)
         return m.group(1) if m else None
@@ -520,16 +520,16 @@ def _split_one_binary(filepath: str, symbols_dir: str, pre: str) -> Optional[str
         subprocess.run(
             ["objcopy", "--only-keep-debug", filepath, debug_path],
             check=True,
-            capture_output=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             timeout=60,
         )
         subprocess.run(
-            ["objcopy", "--strip-debug", filepath], check=True, capture_output=True, timeout=60
+            ["objcopy", "--strip-debug", filepath], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60
         )
         subprocess.run(
             ["objcopy", f"--add-gnu-debuglink={debug_path}", filepath],
             check=True,
-            capture_output=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             timeout=60,
         )
     except FileNotFoundError:
