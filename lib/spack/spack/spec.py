@@ -2545,6 +2545,10 @@ class Spec:
 
                 # Second: compute individual hashes using cycle_hash
                 for spec in scc:
+                    if id(spec) in spec_hashes:
+                        # Should not be reachable, since we compute the whole scc at once
+                        # But do not overwrite the hash if it's already cached
+                        continue
                     node_dict = spec._to_cycle_node_dict(cycle_hash, hash_descriptor)
                     spec_hashes[id(spec)] = self._hash_from_node_dict(node_dict)
 
