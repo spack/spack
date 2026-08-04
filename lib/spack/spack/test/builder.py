@@ -237,3 +237,29 @@ def test_builder_when_inheriting_just_package(working_env):
     # The derived class doesn't redefine a builder, so we should
     # get the builder of the base class.
     assert type(base_builder) is type(derived_builder)
+
+
+def test_builder_resolution_survives_same_name_registration(mock_packages, config, monkeypatch):
+    """The adapter base for an old-style package comes from the module chain the package
+    inherits from: a registration for the same build system from another repo, however late
+    it is imported, does not affect resolution."""
+    from spack_repo.builtin_mock.build_systems.makefile import (  # type: ignore[import]
+        MakefileBuilder,
+    )
+
+    class PoisonBuilder(MakefileBuilder):
+        pass
+
+    PoisonBuilder.__module__ = "spack_repo.other.build_systems.makefile"
+
+    monkeypatch.setitem(
+        spack.builder.BUILDER_CLS,
+        ("spack_repo.other.build_systems.makefile", "makefile"),
+        PoisonBuilder,
+    )
+
+    spec = spack.concretize.concretize_one("printing-package")
+    builder = spack.builder._create(spec.package)
+
+    assert isinstance(builder, MakefileBuilder)
+    assert not isinstance(builder, PoisonBuilder)

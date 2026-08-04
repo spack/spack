@@ -20,8 +20,10 @@ import spack.util.environment
 from spack.error import SpackError
 from spack.util.prefix import Prefix
 
-#: Builder classes, as registered by the ``builder`` decorator
-BUILDER_CLS: Dict[str, Type["Builder"]] = {}
+#: Builder classes, as registered by the ``register_builder`` decorator, keyed by
+#: (defining module, build system name) so that repos registering the same build system
+#: coexist.
+BUILDER_CLS: Dict[Tuple[str, str], Type["Builder"]] = {}
 
 #: Map id(pkg) to a builder, to avoid creating multiple
 #: builders for the same package object.
@@ -45,10 +47,22 @@ def register_builder(build_system_name: str):
 
     def _decorator(cls):
         cls.build_system = build_system_name
-        BUILDER_CLS[build_system_name] = cls
+        BUILDER_CLS[(cls.__module__, build_system_name)] = cls
         return cls
 
     return _decorator
+
+
+def default_builder_cls(
+    pkg_cls: Type[spack.package_base.PackageBase], build_system_name: str
+) -> Type["Builder"]:
+    """The builder for the given build system registered by the nearest module in the package
+    class's MRO"""
+    for base in pkg_cls.__mro__:
+        builder_cls = BUILDER_CLS.get((base.__module__, build_system_name))
+        if builder_cls is not None:
+            return builder_cls
+    raise KeyError(build_system_name)
 
 
 def create(pkg: spack.package_base.PackageBase) -> "Builder":
@@ -102,8 +116,8 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
         pkg: package object for which we need a builder
     """
     package_buildsystem = buildsystem_name(pkg)
-    default_builder_cls = BUILDER_CLS[package_buildsystem]
-    builder_cls_name = default_builder_cls.__name__
+    base_builder_cls = default_builder_cls(type(pkg), package_buildsystem)
+    builder_cls_name = base_builder_cls.__name__
     builder_class = get_builder_class(pkg, builder_cls_name)
 
     if builder_class:
@@ -113,7 +127,7 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
     # base classes and specialize certain phases or methods or attributes.
     # In that case they can store their builder class as a class level attribute.
     # See e.g. AspellDictPackage as an example.
-    base_cls = getattr(pkg, builder_cls_name, default_builder_cls)
+    base_cls = getattr(pkg, builder_cls_name, base_builder_cls)
 
     # From here on we define classes to construct a special builder that adapts to the
     # old, single class, package format. The adapter forwards any call or access to an
