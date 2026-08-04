@@ -2566,6 +2566,18 @@ class Spec:
 
         return spec_hashes
 
+    def _make_hash_splice_safe(self, hash_string: str, hash: ht.SpecHashDescriptor) -> str:
+        """Utility method for computing frakenhashes of spliced specs.
+
+        We preserve the last 7 digits of a spliced spec's hash to mitigate the potential for bugs
+        from linker optimizations that can reuse the trailing bytes of one string as a substring.
+        """
+        # Does nothing for non-spliced specs
+        if self.build_spec is self:
+            return hash_string
+
+        return hash_string[:-7] + self.build_spec.spec_hash(hash)[-7:]
+
     def spec_hash(self, hash: ht.SpecHashDescriptor) -> str:
         """Utility method for computing different types of Spec hashes.
 
@@ -2578,9 +2590,7 @@ class Spec:
         # Use cycle-aware hash computation
         all_hashes = self._compute_graph_hash_with_cycles(hash)
         out = all_hashes[id(self)]
-        if self.build_spec is not self:
-            return out[:-7] + self.build_spec.spec_hash(hash)[-7:]
-        return out
+        return self._make_hash_splice_safe(out, hash)
 
     def _cached_hash(
         self, hash: ht.SpecHashDescriptor, length: Optional[int] = None, force: bool = False
