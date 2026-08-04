@@ -163,7 +163,7 @@ def test_view_no_dir_symlinks(mock_packages, tmp_path: pathlib.Path):
 @pytest.mark.regression("13387")
 @pytest.mark.parametrize("when,colored", [(True, True), (False, False)])
 def test_view_messages_respect_color_setting(
-    mock_packages, tmp_path: pathlib.Path, monkeypatch, when, colored
+    mock_packages, config, tmp_path: pathlib.Path, monkeypatch, when, colored
 ):
     """--color has to win over stdout being a terminal.
 
