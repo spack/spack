@@ -2532,7 +2532,7 @@ class Spec:
                     spec_hashes, hash_descriptor
                 )
                 hash_str = self._hash_from_node_dict(node_dict)
-                spec_hashes[id(spec)] = hash_str
+                spec_hashes[id(spec)] = spec._make_hash_splice_safe(hash_str, hash_descriptor)
             else:
                 # Cycle case: compute cycle hash first, then individual node hashes.
                 # Cached hashes for a cycle are all-or-nothing (computed together below), so skip
@@ -2550,17 +2550,14 @@ class Spec:
                         # But do not overwrite the hash if it's already cached
                         continue
                     node_dict = spec._to_cycle_node_dict(cycle_hash, hash_descriptor)
-                    spec_hashes[id(spec)] = self._hash_from_node_dict(node_dict)
+                    hash_str = self._hash_from_node_dict(node_dict)
+                    spec_hashes[id(spec)] = spec._make_hash_splice_safe(hash_str, hash_descriptor)
 
-        # Cache computed hashes back onto concrete, non-spliced specs so subsequent hash calls
-        # (e.g. the per-node loop in _finalize_concretization) short-circuit instead of recomputing
-        # the whole subgraph. Spliced specs are skipped here; their cached attribute is set by
-        # _cached_hash after the splice is applied, and we cannot do the frankenhash computation
-        # here because the build_spec is not in the spec_hashes dict.
+        # Cache computed hashes back onto concrete, specs so subsequent hash calls (e.g. the
+        # per-node loop in _finalize_concretization) short-circuit instead of recomputing the whole
+        # subgraph.
         for spec_id, spec_hash in spec_hashes.items():
             spec = all_specs[spec_id]
-            if spec.build_spec is not spec or not spec.concrete:
-                continue
             if not getattr(spec, hash_descriptor.attr, None):
                 setattr(spec, hash_descriptor.attr, spec_hash)
 
