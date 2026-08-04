@@ -2,13 +2,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import io
 import re
+import sys
 import textwrap
 
 import pytest
 
 from spack.util.tty import color
 from spack.util.tty.color import cescape, colorize, csub
+
+#: "red" with and without ANSI codes, as written by ``cwrite("@r{red}")``
+RED = "\033[0;31mred\033[0m"
+PLAIN = "red"
 
 test_text = [
     "@r{The quick brown fox jumps over the lazy yellow dog.",
@@ -70,3 +76,47 @@ def test_colorize_top_level_consecutive_escaped_ats():
     """Consecutive @@ at the top level (outside braces) must each unescape independently."""
     assert colorize("@@@@", color=False) == "@@"
     assert colorize("@@@@@@", color=False) == "@@@"
+
+
+class MockStream(io.StringIO):
+    """A stream whose ``isatty()`` can be set independently of the underlying buffer."""
+
+    def __init__(self, isatty: bool) -> None:
+        super().__init__()
+        self._isatty = isatty
+
+    def isatty(self) -> bool:
+        return self._isatty
+
+
+@pytest.mark.parametrize("when,expected", [(True, RED), (False, PLAIN), (None, PLAIN)])
+def test_cwrite_follows_the_stream_it_writes_to(monkeypatch, when, expected):
+    """Tests that cwrite decides on color from its own stream, not from sys.stdout."""
+    monkeypatch.setattr(sys, "stdout", MockStream(isatty=True))
+    stream = MockStream(isatty=False)
+
+    with color.color_when(when):
+        color.cwrite("@r{red}", stream=stream)
+
+    assert stream.getvalue() == expected
+
+
+@pytest.mark.parametrize("when,expected", [(True, RED), (False, PLAIN), (None, RED)])
+def test_cwrite_color_setting_overrides_a_tty_stream(when, expected):
+    stream = MockStream(isatty=True)
+
+    with color.color_when(when):
+        color.cwrite("@r{red}", stream=stream)
+
+    assert stream.getvalue() == expected
+
+
+@pytest.mark.parametrize("when,expected", [(True, RED), (False, PLAIN), (None, PLAIN)])
+def test_color_stream_follows_the_stream_it_wraps(monkeypatch, when, expected):
+    monkeypatch.setattr(sys, "stdout", MockStream(isatty=True))
+    stream = MockStream(isatty=False)
+
+    with color.color_when(when):
+        color.ColorStream(stream).write("@r{red}")
+
+    assert stream.getvalue() == expected
