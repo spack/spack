@@ -1561,6 +1561,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def command(self) -> spack.util.executable.Executable:
         """Returns the main executable for this package."""
         path = os.path.join(self.home.bin, self.spec.name)
+        # On Windows, executables have a .exe extension. os.path.isfile/is_exe do not
+        # automatically resolve missing extensions (unlike subprocess.Popen), so we
+        # must append .exe ourselves when the path has no extension.
+        if sys.platform == "win32" and not pathlib.Path(path).suffix:
+            path += ".exe"
         if fsys.is_exe(path):
             return spack.util.executable.Executable(path)
         raise RuntimeError(f"Unable to locate {self.spec.name} command in {self.home.bin}")
