@@ -21,6 +21,14 @@ import spack.traverse
 import spack.util.lock
 from spack.installer.base import InstallPolicy, JobServerBase
 
+#: Dependency types that create ordering constraints for installation.
+#: LINK and BUILD dependencies must be installed before a package can build.
+#: TEST dependencies must be installed before tests run (if tests are enabled).
+#: RUN-only dependencies do not create ordering constraints because they are
+#: not needed at build time. This distinction enables circular run dependencies:
+#: if A and B have run-only dependencies on each other, neither blocks the other.
+ORDERING_DEPTYPES = dt.BUILD | dt.LINK | dt.TEST
+
 
 class DatabaseAction(abc.ABC):
     """Base class for objects that need to be persisted to the database."""
@@ -138,24 +146,36 @@ class BuildGraph:
                 ):
                     depflag |= dt.BUILD
 
-                dependencies = list(spec.dependencies(deptype=depflag))
+                # get all dependencies that need to be installed
+                all_dependencies = list(spec.dependencies(deptype=depflag))
 
-                # For spliced specs built from source, add build_spec as a pseudo-dependency
-                # so it gets built before the spliced spec.
+                # Ordering dependencies create installation constraints; RUN-only dependencies do
+                # not block (not needed at build time). Intersect with depflag so ordering deps are
+                # always a subset of the enqueued nodes: build/test deps that are deferred (and
+                # thus not in the graph) must not appear here, or the parent would wait forever on
+                # a child that never gets installed.
+                ordering_dependencies = list(
+                    spec.dependencies(deptype=depflag & ORDERING_DEPTYPES)
+                )
+
+                # For spliced specs built from source, add build_spec as a pseudo-dependency so it
+                # gets built before the spliced spec is rewired. It is both enqueued for install
+                # and an ordering constraint on the spliced spec.
                 if spec.build_spec is not spec and key not in self.pruned and (depflag & dt.BUILD):
                     bs = spec.build_spec
                     bh = bs.dag_hash()
                     if bh not in self.pruned:
                         _, bs_record = database.query_by_spec_hash(bh)
                         if not (bs_record and bs_record.installed):
-                            dependencies.append(bs)
+                            all_dependencies.append(bs)
+                            ordering_dependencies.append(bs)
                         else:
                             self.done.add(bh)
 
-                self.parent_to_child[key] = {d.dag_hash() for d in dependencies}
+                self.parent_to_child[key] = {d.dag_hash() for d in ordering_dependencies}
 
-                # Enqueue new dependencies
-                for d in dependencies:
+                # # Enqueue all new dependencies for installation (ensures run deps are installed)
+                for d in all_dependencies:
                     if d.dag_hash() in self.nodes:
                         continue
                     self.nodes[d.dag_hash()] = d
@@ -288,9 +308,13 @@ class BuildGraph:
             # If already in the graph (e.g. overwrite build in progress), add edge but don't
             # re-add node. This must be checked before the DB installed check, because an
             # overwrite build is installed in the DB but not yet done.
+            parent_spec = self.nodes[parent_hash]
+            is_ordering_dep = dep in parent_spec.dependencies(deptype=ORDERING_DEPTYPES)
             if dep_hash in self.nodes:
-                self.parent_to_child.setdefault(parent_hash, set()).add(dep_hash)
-                self.child_to_parent.setdefault(dep_hash, set()).add(parent_hash)
+                # Add edge only if it's an ordering dependency
+                if is_ordering_dep:
+                    self.parent_to_child.setdefault(parent_hash, set()).add(dep_hash)
+                    self.child_to_parent.setdefault(dep_hash, set()).add(parent_hash)
                 continue
 
             _, record = database.query_by_spec_hash(dep_hash)
@@ -299,14 +323,16 @@ class BuildGraph:
                 continue
 
             # Add forward/reverse edge
-            self.parent_to_child.setdefault(parent_hash, set()).add(dep_hash)
-            self.child_to_parent.setdefault(dep_hash, set()).add(parent_hash)
+            if is_ordering_dep:
+                self.parent_to_child.setdefault(parent_hash, set()).add(dep_hash)
+                self.child_to_parent.setdefault(dep_hash, set()).add(parent_hash)
 
-            # New node: add to graph and recurse into its link/run/test deps
+            # New node: add to graph and recurse into all its deps (not just ordering)
             self.nodes[dep_hash] = dep
             self.parent_to_child.setdefault(dep_hash, set())
             newly_added.append(dep_hash)
 
+            # Recurse into all dependencies (including run-only) to ensure they get installed
             deptype = self._base_deptypes(dep)
             if dependencies_policy == "source_only":
                 deptype |= dt.BUILD

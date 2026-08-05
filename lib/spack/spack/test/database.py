@@ -1370,3 +1370,129 @@ def test_database_installed(
     abstract = spack.spec.Spec("not-a-real-package")
     assert not downstream_db.installed(abstract)
     assert not downstream_db.installed_upstream(abstract)
+
+
+def _tracked_dep_names(record):
+    """Sorted names of a record's tracked dependency edges."""
+    return sorted(d.spec.name for d in record.spec.edges_to_dependencies())
+
+
+def test_add_circular_run_deps_two_node(mutable_database, repo_builder: RepoBuilder):
+    """A run-dependency cycle A<->B must have both edges recorded, with correct ref counts.
+
+    The back edge (B->A) closes the cycle and cannot be connected during the recursive add
+    because A's record does not exist yet; it must be restored by the second pass.
+    """
+    repo_builder.add_package("circ-a", dependencies=[("circ-b", "run", None)])
+    repo_builder.add_package("circ-b", dependencies=[("circ-a", "run", None)])
+
+    with spack.repo.use_repositories(repo_builder.root):
+        spec_a = spack.concretize.concretize_one("circ-a")
+        hash_a = spec_a.dag_hash()
+        hash_b = spec_a["circ-b"].dag_hash()
+
+        db = spack.store.STORE.db
+        db.add(spec_a, explicit=True)
+
+        with db.read_transaction():
+            _, rec_a = db.query_by_spec_hash(hash_a)
+            _, rec_b = db.query_by_spec_hash(hash_b)
+
+            # Both directed edges of the cycle are present.
+            assert _tracked_dep_names(rec_a) == ["circ-b"]
+            assert _tracked_dep_names(rec_b) == ["circ-a"]
+
+            # Each node has exactly one dependent (the other cycle member).
+            assert rec_a and rec_a.ref_count == 1
+            assert rec_b and rec_b.ref_count == 1
+
+            # Ref counts are internally consistent.
+            db._check_ref_counts()
+
+
+def test_add_circular_run_deps_survives_reread(mutable_database, repo_builder: RepoBuilder):
+    """A run cycle must survive a reread: edges and ref counts are reconstructed from disk."""
+    repo_builder.add_package("circ-a", dependencies=[("circ-b", "run", None)])
+    repo_builder.add_package("circ-b", dependencies=[("circ-a", "run", None)])
+
+    with spack.repo.use_repositories(repo_builder.root):
+        spec_a = spack.concretize.concretize_one("circ-a")
+        hash_a = spec_a.dag_hash()
+        hash_b = spec_a["circ-b"].dag_hash()
+
+        db = spack.store.STORE.db
+        db.add(spec_a, explicit=True)
+
+        # Force a re-read from disk and confirm the cycle is intact.
+        db._state_is_inconsistent = True
+        with db.read_transaction():
+            _, rec_a = db.query_by_spec_hash(hash_a)
+            _, rec_b = db.query_by_spec_hash(hash_b)
+            assert _tracked_dep_names(rec_a) == ["circ-b"]
+            assert _tracked_dep_names(rec_b) == ["circ-a"]
+            assert rec_a and rec_a.ref_count == 1
+            assert rec_b and rec_b.ref_count == 1
+            db._check_ref_counts()
+
+
+def test_add_three_node_run_cycle(mutable_database, repo_builder: RepoBuilder):
+    """A three-node run cycle A->B->C->A records all edges and ref counts."""
+    repo_builder.add_package("tri-a", dependencies=[("tri-b", "run", None)])
+    repo_builder.add_package("tri-b", dependencies=[("tri-c", "run", None)])
+    repo_builder.add_package("tri-c", dependencies=[("tri-a", "run", None)])
+
+    with spack.repo.use_repositories(repo_builder.root):
+        spec_a = spack.concretize.concretize_one("tri-a")
+        hashes = {name: spec_a[name].dag_hash() for name in ("tri-a", "tri-b", "tri-c")}
+
+        db = spack.store.STORE.db
+        db.add(spec_a, explicit=True)
+
+        with db.read_transaction():
+            _, rec_a = db.query_by_spec_hash(hashes["tri-a"])
+            _, rec_b = db.query_by_spec_hash(hashes["tri-b"])
+            _, rec_c = db.query_by_spec_hash(hashes["tri-c"])
+
+            assert _tracked_dep_names(rec_a) == ["tri-b"]
+            assert _tracked_dep_names(rec_b) == ["tri-c"]
+            assert _tracked_dep_names(rec_c) == ["tri-a"]
+
+            # Each node has exactly one dependent within the cycle.
+            assert rec_a and rec_a.ref_count == 1
+            assert rec_b and rec_b.ref_count == 1
+            assert rec_c and rec_c.ref_count == 1
+
+            db._check_ref_counts()
+
+
+def test_circular_run_dep_ref_count_includes_dependent_outside_cycle(
+    mutable_database, repo_builder: RepoBuilder
+):
+    """A cycle member depended on from outside the cycle must count both dependents.
+
+    root --link--> A, and A <->(run) B. ``A`` therefore has two dependents: ``root`` and ``B``.
+    If the in-cycle B->A edge were dropped, A's ref count would be understated to 1, which would
+    let A be garbage-collected while B still needs it. This guards that unsafe-uninstall scenario.
+    """
+    repo_builder.add_package("circ-a", dependencies=[("circ-b", "run", None)])
+    repo_builder.add_package("circ-b", dependencies=[("circ-a", "run", None)])
+    repo_builder.add_package("root", dependencies=[("circ-a", "link", None)])
+
+    with spack.repo.use_repositories(repo_builder.root):
+        root = spack.concretize.concretize_one("root")
+        hash_a = root["circ-a"].dag_hash()
+        hash_b = root["circ-b"].dag_hash()
+
+        db = spack.store.STORE.db
+        db.add(root, explicit=True)
+
+        with db.read_transaction():
+            _, rec_a = db.query_by_spec_hash(hash_a)
+            _, rec_b = db.query_by_spec_hash(hash_b)
+
+            # circ-a is depended on by both root (link) and circ-b (run, in-cycle).
+            assert rec_a and rec_a.ref_count == 2
+            # circ-b is depended on only by circ-a.
+            assert rec_b and rec_b.ref_count == 1
+
+            db._check_ref_counts()

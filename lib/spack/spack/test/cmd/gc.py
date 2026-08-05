@@ -10,9 +10,12 @@ import spack.concretize
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.main
+import spack.repo
 import spack.spec
+import spack.store
 import spack.traverse
 from spack.database import Database
+from spack.installer import PackageInstaller as NewInstaller
 from spack.old_installer import PackageInstaller
 
 gc = spack.main.SpackCommand("gc")
@@ -232,3 +235,28 @@ spack:
 
     for query in expected_explicit:
         assert f"Successfully uninstalled {query}" not in output
+
+
+@pytest.mark.db
+def test_gc_collects_unused_circular_run_deps(
+    mock_packages, mock_archive, mock_fetch, install_mockery, repo_builder
+):
+    """An unused circular run-dependency (a <-> b, reachable from no explicit root) should be
+    garbage collected.
+    """
+    repo_builder.add_package("gc-cyc-a", dependencies=[("gc-cyc-b", "run", None)])
+    repo_builder.add_package("gc-cyc-b", dependencies=[("gc-cyc-a", "run", None)])
+
+    with spack.repo.use_repositories(repo_builder.root, override=False):
+        s = spack.concretize.concretize_one("gc-cyc-a")
+        NewInstaller([s.package], explicit=False, fake=True).install()
+
+        # Sanity check: the cycle is correctly identified as unused.
+        unused = {s.name for s in spack.store.STORE.db.unused_specs()}
+        assert {"gc-cyc-a", "gc-cyc-b"} <= unused
+
+        gc("-y")
+
+        # Both members of the unused cycle should be gone.
+        assert not spack.store.STORE.db.query("gc-cyc-a", installed=True)
+        assert not spack.store.STORE.db.query("gc-cyc-b", installed=True)

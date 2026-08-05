@@ -7,13 +7,16 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Dict,
     Iterable,
+    Iterator,
     List,
     NamedTuple,
     Optional,
     Sequence,
     Set,
     Tuple,
+    TypeVar,
     Union,
     overload,
 )
@@ -26,7 +29,7 @@ if TYPE_CHECKING:
     import spack.spec
 
 # Export only the high-level API.
-__all__ = ["traverse_edges", "traverse_nodes", "traverse_tree"]
+__all__ = ["traverse_edges", "traverse_nodes", "traverse_tree", "find_sccs"]
 
 
 #: Data class that stores a directed edge together with depth at
@@ -415,27 +418,97 @@ def traverse_topo_edges_generator(edges, visitor, key=id, root=True, all_edges=F
     # maps parent identifier to a list of edges, where None is a special identifier
     # for the artificial root/source.
     node_to_edges = defaultdict(list)
+    # discovery order of node identifiers, used to break ties deterministically when a cycle
+    # forces us to pick a node to release (see below).
+    discovery_order: Dict[Any, int] = {}
+    # the first (breadth-first) in-edge that discovered each node. Used as the representative edge
+    # to yield for a node we release out of a cycle, since no ordinary in-edge will drop its count.
+    discovery_edge: Dict[Any, EdgeAndDepth] = {}
     for edge in traverse_breadth_first_edges_generator(edges, visitor, root=True, depth=False):
-        in_edge_count[key(edge.spec)] += 1
+        child_id = key(edge.spec)
+        in_edge_count[child_id] += 1
+        if child_id not in discovery_order:
+            discovery_order[child_id] = len(discovery_order)
+            discovery_edge[child_id] = edge
         parent_id = key(edge.parent) if edge.parent is not None else None
         node_to_edges[parent_id].append(edge)
 
     queue = deque((None,))
 
-    while queue:
-        for edge in node_to_edges[queue.popleft()]:
-            child_id = key(edge.spec)
-            in_edge_count[child_id] -= 1
+    # SCCs of the collected sub-DAG, computed lazily and only if a cycle stalls Kahn's algorithm.
+    # ``sccs`` holds SCCs of size > 1 in topological order (dependencies first); ``next_scc`` is
+    # the index of the next one to release.
+    sccs: Optional[List[List[Any]]] = None
+    next_scc = 0
 
-            should_yield = root or edge.parent is not None
+    while True:
+        assert queue, "topo sort: Returned from seeding loop without seeding queue"
 
-            if all_edges and should_yield:
-                yield edge
+        # This is Kahn's algorithm for topological ordering. We use this instead of relying on
+        # Tarjan's SCC algorithm to preserve the BFS flavor of topo ordering.
+        while queue:
+            for edge in node_to_edges[queue.popleft()]:
+                child_id = key(edge.spec)
+                in_edge_count[child_id] -= 1
 
-            if in_edge_count[child_id] == 0:
-                if not all_edges and should_yield:
+                should_yield = root or edge.parent is not None
+
+                if all_edges and should_yield:
                     yield edge
-                queue.append(key(edge.spec))
+
+                if in_edge_count[child_id] == 0:
+                    if not all_edges and should_yield:
+                        yield edge
+                    queue.append(child_id)
+
+        # Kahn's algorithm drained the queue. If every node has been emitted (all in-edge counts
+        # are zero) we are done. Otherwise the remaining nodes are all either in a cycle or
+        # depended on by a node in a cycle.
+        # We break the deadlock by releasing one strongly connected component at a time, in
+        # topological order, seeding its earliest-discovered member into the queue so the normal
+        # Kahn's loop can drain it and anything blocked by it.
+        if not any(count > 0 for count in in_edge_count.values()):
+            return
+
+        # Use Tarjan's algorithm to find SCCs and return them in TOPO order
+        # Runs once
+        if sccs is None:
+            all_ids = set(discovery_order)  # Converting from dict, not relied on for deduplication
+
+            # Tarjan returns SCCs in reverse topological order
+            # Keep only nontrivial SCCs (the cycles) since singletons drain via Kahn's.
+            all_sccs = find_sccs_tarjan(
+                all_ids,
+                lambda nid: [key(edge.spec) for edge in node_to_edges[nid]],
+                key=lambda nid: nid,
+            )
+            sccs = [scc for scc in reversed(all_sccs) if len(scc) > 1]
+
+        # Find the next SCC that still has unreleased members and release it. An SCC is ready to
+        # release once all of its cross-SCC in-edges have been consumed, which -- because we
+        # process SCCs in topological order -- is guaranteed by the time we reach it.
+        if next_scc < len(sccs):
+            scc = sccs[next_scc]
+            next_scc += 1
+            # Seed the earliest-discovered scc member so within-cycle release is deterministic
+            # and as breadth-first as possible; force its in-edge count to zero to enqueue it.
+            seed = min(scc, key=lambda nid: discovery_order[nid])
+            in_edge_count[seed] = 0
+            # In node-cover mode the seed is emitted here, via its discovery edge, since no
+            # ordinary in-edge decrement will reach it. In edge-cover mode its in-edges were
+            # already yielded as they were encountered.
+            if not all_edges:
+                edge = discovery_edge[seed]
+                if root or edge.parent is not None:
+                    yield edge
+            queue.append(seed)
+        else:
+            # No nontrivial SCC remains to release, yet some nodes still have unconsumed in-edges.
+            # This is not a cycle: it happens when a node's only in-edges come from a parent that
+            # is not itself reached and processed from the traversal source (e.g. with
+            # ``root=False``, or when starting traversal from a node in the middle of a spec.
+            # Such edges must not be yielded, so we stop
+            return
 
 
 # High-level API: traverse_edges, traverse_nodes, traverse_tree.
@@ -703,3 +776,128 @@ def traverse_tree(
 def by_dag_hash(s: "spack.spec.Spec") -> str:
     """Used very often as a key function for traversals."""
     return s.dag_hash()
+
+
+def find_sccs(spec, deptype="all", key: Callable[[Any], Any] = id) -> List[List[Any]]:
+    """Find strongly connected components of a spec using Tarjan's algorithm.
+
+    Arguments:
+        deptype: allowed dependency types
+        key: function that takes a spec and outputs a key for uniqueness tests
+
+    Returns:
+        List of SCCs, where each SCC is a list of nodes. SCCs are returned in reverse topological
+        order (a property of Tarjan's algorithm): if SCC A depends on SCC B, then B appears first.
+    """
+    return find_sccs_tarjan(
+        nodes=spec.traverse(deptype=deptype, cover="nodes", key=key),
+        successors=lambda s: s.dependencies(deptype=deptype),
+        key=key,
+    )
+
+
+T = TypeVar("T")
+
+
+def find_sccs_tarjan(
+    nodes: Iterable[T], successors: Callable[[T], Iterable[T]], key: Callable[[T], Any] = id
+) -> List[List[T]]:
+    """Find strongly connected components of a directed graph using Tarjan's algorithm.
+
+    This is a generalized helper method for find_sccs, which can operate on non-spec graphs
+    like the internal representation in ``traverse_topo_edges_generator``.
+
+    Args:
+        nodes: iterable of all nodes in the graph
+        successors: callable mapping a node to an iterable of its successor nodes
+        key: callable mapping a node to a hashable identity (defaults to ``id``)
+
+    Returns:
+        List of SCCs, where each SCC is a list of nodes. SCCs are returned in reverse topological
+        order (a property of Tarjan's algorithm): if SCC A depends on SCC B, then B appears first.
+    """
+    # Iterative Tarjan's algorithm. An explicit work stack replaces recursion so that deep
+    # dependency chains cannot overflow Python's call stack. Each node gets a monotonic discovery
+    # number ``index``; a node's *lowlink* is the smallest index reachable from its DFS subtree
+    # using at most one edge back to a node still on the SCC stack. A node whose lowlink equals
+    # its own index is the root of an SCC.
+    next_index = 0
+    stack_nodes: List[T] = []  # nodes on the SCC stack, in discovery order
+    stack_ids: List[Any] = []  # their ids, in parallel, so stack members are never re-keyed
+    index: Dict[Any, int] = {}  # node id -> discovery number; also marks a node as visited
+    on_stack: Set[Any] = set()  # ids currently on the SCC stack, for O(1) membership tests
+    sccs: List[List[T]] = []
+
+    # Each frame is a suspended strongconnect call: (node id, iterator over its successors,
+    # its position on the SCC stack). ``lowlink_stack`` shadows ``work`` -- lowlink_stack[-1]
+    # is the lowlink of the frame on top.
+    work: List[Tuple[Any, Iterator[T], int]] = []
+    lowlink_stack: List[int] = []
+
+    def add_work(node_id: Any, node: T):
+        """Add the requested node to all tracking stacks"""
+        # next_index needs to be nonlocal because we assign to it
+        nonlocal next_index
+
+        index[node_id] = next_index
+        next_index += 1
+        stack_nodes.append(node)
+        stack_ids.append(node_id)
+        on_stack.add(node_id)
+
+        # work and lowlink_stack pick up the new values for each new node
+        work.append((node_id, iter(successors(node)), len(stack_nodes) - 1))
+        lowlink_stack.append(index[node_id])
+
+    for node in nodes:
+        node_id = key(node)
+        if node_id in index:
+            continue  # already reached by an earlier DFS tree
+
+        # Each node gets its own work stack to track the per-node strongconnect call in the
+        # recursive algorithm, and it's own lowlink_stack to track lowlinks per call
+        work = []
+        lowlink_stack = []
+
+        # Enter strongconnect(node) for a fresh DFS-tree root: number it, push it onto the SCC
+        # stack, and seed its lowlink to its own index.
+        add_work(node_id, node)
+
+        while work:
+            node_id, children, stack_pos = work[-1]
+
+            for child in children:
+                child_id = key(child)
+                if child_id not in index:
+                    # Tree edge: descend into the unvisited successor (the recursive call). Number
+                    # it, push it, and suspend the current node until the child frame finishes.
+                    add_work(child_id, child)
+                    break
+
+                elif child_id in on_stack:
+                    # Back/cross edge to a node still on the stack: it is in the current node's
+                    # SCC, so pull the lowlink down to the successor's discovery index. (A visited
+                    # successor no longer on the stack belongs to a finished SCC and is ignored.)
+                    lowlink_stack[-1] = min(lowlink_stack[-1], index[child_id])
+            else:
+                # Every successor explored: strongconnect(node) returns.
+                work.pop()
+                lowlink = lowlink_stack.pop()
+
+                # lowlink == index means nothing above node on the stack is reachable, so node is
+                # an SCC root and the SCC is exactly the stack suffix from its position upwards.
+                if lowlink == index[node_id]:
+                    scc = stack_nodes[stack_pos:]
+                    del stack_nodes[stack_pos:]
+
+                    on_stack.difference_update(stack_ids[stack_pos:])
+                    del stack_ids[stack_pos:]
+
+                    scc.reverse()  # emit deepest-first, matching the recursive pop-order
+                    sccs.append(scc)
+
+                # Fold node's lowlink into its parent's (the post-recursion min in strongconnect).
+                if work:
+                    lowlink_stack[-1] = min(lowlink_stack[-1], lowlink)
+
+    return sccs

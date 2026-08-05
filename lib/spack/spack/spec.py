@@ -191,7 +191,7 @@ DISPLAY_FORMAT = (
 )
 
 #: specfile format version. Must increase monotonically
-SPECFILE_FORMAT_VERSION = 5
+SPECFILE_FORMAT_VERSION = 6
 
 
 class InstallStatus(enum.Enum):
@@ -2045,19 +2045,6 @@ class Spec:
         return not self.name and not self.abstract_hash
 
     @property
-    def root(self):
-        """Follow dependent links and find the root of this spec's DAG.
-
-        Spack specs have a single root (the package being installed).
-        """
-        # FIXME: In the case of multiple parents this property does not
-        # FIXME: make sense. Should we revisit the semantics?
-        if not self._dependents:
-            return self
-        edges_by_package = next(iter(self._dependents.values()))
-        return edges_by_package[0].parent.root
-
-    @property
     def package(self):
         assert self.concrete, "{0}: Spec.package can only be called on concrete specs".format(
             self.name
@@ -2240,26 +2227,340 @@ class Spec:
     def set_prefix(self, value: str) -> None:
         self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
+    def _to_node_attributes_dict(self, hash_descriptor: ht.SpecHashDescriptor) -> Dict[str, Any]:
+        """Extract non-dependency attributes for this spec.
+
+        Args:
+            hash_descriptor: Hash descriptor for configuration
+
+        Returns:
+            Dictionary of spec attributes (excluding dependencies)
+        """
+        attrs: Dict[str, Any] = {"name": self.name}
+
+        if self.versions:
+            attrs.update(self.versions.to_dict())
+        if self.architecture:
+            attrs.update(self.architecture.to_dict())
+        if self.namespace:
+            attrs["namespace"] = self.namespace
+
+        # Variants and compiler flags
+        params: Dict[str, Any] = dict(sorted(v.yaml_entry() for v in self.variants.values()))
+        params.update(
+            sorted(self.compiler_flags.yaml_entry(flag_type) for flag_type in self.compiler_flags)
+        )
+        if params:
+            attrs["parameters"] = params
+
+        # Propagation and abstract variants
+        if params and not self.concrete:
+            flag_names = [
+                name
+                for name, flags in self.compiler_flags.items()
+                if any(x.propagate for x in flags)
+            ]
+            attrs["propagate"] = sorted(
+                itertools.chain(
+                    [v.name for v in self.variants.values() if v.propagate], flag_names
+                )
+            )
+            attrs["abstract"] = sorted(v.name for v in self.variants.values() if not v.concrete)
+
+        # External packages
+        if self.external:
+            attrs["external"] = {
+                "path": self.external_path,
+                "module": self.external_modules or None,
+                "extra_attributes": syaml.sorted_dict(self.extra_attributes),
+            }
+
+        if not self._concrete:
+            attrs["concrete"] = False
+
+        # Patches
+        if "patches" in self.variants:
+            variant = self.variants["patches"]
+            if hasattr(variant, "_patches_in_order_of_appearance"):
+                attrs["patches"] = variant._patches_in_order_of_appearance
+
+        # Package hash
+        if (
+            self._concrete
+            and hash_descriptor.package_hash
+            and hasattr(self, "_package_hash")
+            and self._package_hash
+        ):
+            # The package hash is assigned at concretization time. We don't want to compute one for
+            # a concrete spec, where a) the package might not exist, or b) the `dag_hash` didn't
+            # include the package hash when the spec was concretized.
+            package_hash = self._package_hash
+
+            # Full hashes are in bytes
+            if not isinstance(package_hash, str) and isinstance(package_hash, bytes):
+                package_hash = package_hash.decode("utf-8")
+            attrs["package_hash"] = package_hash
+
+        # Note: relies on sorting dict by keys in caller
+        return attrs
+
+    def _to_node_dict_with_precomputed_hashes(
+        self, computed_hashes: Dict[int, str], hash_descriptor: ht.SpecHashDescriptor
+    ) -> Dict[str, Any]:
+        """Build node dict using precomputed hashes for dependencies.
+
+        This method is only used for hashing. It is required to be able to hash specs with
+        cyclic dependencies, because the hashes for cycles must be co-computed all at once. This
+        method is used for specs not in any cycle during that process. The dictionary from
+        ``Spec.to_node_dict`` is capable of expressing cyclic dependencies (just not hashing them)
+        and is still used for serialization. The original serialization method is preserved because
+        it allows partial serialization per-node.
+
+        Args:
+            computed_hashes: Dictionary of already-computed hashes for dependencies
+            hash_descriptor: Hash descriptor for configuration
+
+        Returns:
+            Dictionary representation of the spec with cycles
+        """
+        d = self._to_node_attributes_dict(hash_descriptor)
+
+        # Dependencies - use precomputed hashes (ensures all dep hashes are included)
+        deps = self._dependencies_dict(depflag=hash_descriptor.depflag)
+        if deps:
+            dependencies = []
+            for name, edges_for_name in sorted(deps.items()):
+                for dspec in edges_for_name:
+                    dep_attrs = {
+                        "name": name,
+                        hash_descriptor.name: computed_hashes[id(dspec.spec)],  # Include dep hash
+                        "parameters": {
+                            "deptypes": dt.flag_to_tuple(dspec.depflag),
+                            "virtuals": dspec.virtuals,
+                        },
+                    }
+                    if dspec.direct:
+                        dep_attrs["parameters"]["direct"] = True
+                    dependencies.append(dep_attrs)
+            d["dependencies"] = dependencies
+
+        # Build spec
+        if self._build_spec:
+            d["build_spec"] = {
+                "name": self.build_spec.name,
+                hash_descriptor.name: computed_hashes.get(
+                    id(self.build_spec), self.build_spec._cached_hash(hash_descriptor)
+                ),
+            }
+
+        # Annotations
+        d["annotations"] = {"original_specfile_version": self.annotations.original_spec_format}
+        if self.annotations.original_spec_format < 5:
+            d["annotations"]["compiler"] = str(self.annotations.compiler_node_attribute)
+
+        return d
+
+    @staticmethod
+    def _to_cycle_representation(
+        scc_specs: List["Spec"],
+        computed_hashes: Dict[int, str],
+        hash_descriptor: ht.SpecHashDescriptor,
+    ) -> Dict[str, Any]:
+        """Build canonical dictionary representation of an entire cycle.
+
+        This dictionary is used in hash computation, but not in spec serialization.
+
+        Args:
+            scc_specs: List of specs in the strongly connected component
+            computed_hashes: Dictionary of already-computed hashes for external dependencies
+            hash_descriptor: Hash descriptor for configuration
+
+        Returns:
+            Dictionary representing the full cycle structure, including all external dep hashes
+        """
+        scc_set = set(id(s) for s in scc_specs)
+        cycle_nodes: List[Dict[str, Any]] = []
+
+        for spec in sorted(scc_specs, key=lambda s: (s.name, str(s.versions))):
+            internal_deps = []
+            external_deps = []
+
+            for edge in spec.edges_to_dependencies(depflag=hash_descriptor.depflag):
+                dep_info: Dict[str, Any] = {
+                    "name": edge.spec.name,
+                    "deptypes": dt.flag_to_tuple(edge.depflag),
+                    "virtuals": edge.virtuals,
+                }
+                if edge.direct:
+                    dep_info["direct"] = True
+
+                if id(edge.spec) in scc_set:
+                    # Internal dependency (within cycle) - no hash to avoid circularity
+                    internal_deps.append(dep_info)
+                else:
+                    # External dependency - include its precomputed hash
+                    dep_info["hash"] = computed_hashes[id(edge.spec)]
+                    external_deps.append(dep_info)
+
+            node_attrs = spec._to_node_attributes_dict(hash_descriptor)
+            cycle_nodes.append(
+                {
+                    "name": spec.name,
+                    "attributes": node_attrs,
+                    "internal_deps": sorted(internal_deps, key=lambda d: d["name"]),
+                    "external_deps": sorted(external_deps, key=lambda d: d["name"]),
+                }
+            )
+
+        return {"cycle_nodes": cycle_nodes}
+
+    def _to_cycle_node_dict(
+        self, cycle_hash: str, hash_descriptor: ht.SpecHashDescriptor
+    ) -> Dict[str, Any]:
+        """Build dictionary for this node within a cycle.
+
+        This representation is used in hashing, but not in spec serialization.
+
+        Args:
+            cycle_hash: Hash of the entire cycle (precomputed)
+            hash_descriptor: Hash descriptor for configuration
+
+        Returns:
+            Dictionary for this node including cycle_hash and its role
+        """
+        node_dict = self._to_node_attributes_dict(hash_descriptor)
+        node_dict["cycle_hash"] = cycle_hash
+        node_dict["cycle_role"] = {
+            "name": self.name,
+            "dependencies": sorted(
+                [
+                    {
+                        "name": edge.spec.name,
+                        "deptypes": dt.flag_to_tuple(edge.depflag),
+                        "virtuals": edge.virtuals,
+                    }
+                    for edge in self.edges_to_dependencies(depflag=hash_descriptor.depflag)
+                ],
+                key=lambda d: d["name"],
+            ),
+        }
+        return node_dict
+
+    @staticmethod
+    def _hash_from_node_dict(node_dict: Dict[str, Any]) -> str:
+        """Compute hash from a node dictionary.
+
+        Separate method so we can reuse dict-building logic.
+
+        Args:
+            node_dict: Dictionary to hash
+
+        Returns:
+            Hash string
+        """
+        json_text = json.dumps(
+            node_dict, ensure_ascii=True, indent=None, separators=(",", ":"), sort_keys=False
+        )
+        return spack.util.hash.b32_hash(json_text)
+
+    def _compute_graph_hash_with_cycles(
+        self, hash_descriptor: ht.SpecHashDescriptor
+    ) -> Dict[int, str]:
+        """Compute hashes for all specs with cycle support.
+
+        Uses Tarjan's SCC detection algorithm, which produces SCCs in reverse topological
+        order as a side effect (per Knuth's observation in the literature).
+
+        Args:
+            hash_descriptor: Hash descriptor for configuration
+
+        Returns:
+            Dictionary mapping spec id to hash
+        """
+        # Collect all reachable specs
+        all_specs = {
+            id(spec): spec
+            for spec in self.traverse(
+                root=True, deptype=hash_descriptor.depflag, cover="nodes", key=id
+            )
+        }
+
+        # Find SCCs (returns reverse topological order which is what we need here anyway)
+        sccs = spack.traverse.find_sccs(self, deptype=hash_descriptor.depflag, key=id)
+
+        # Seed from already-cached hashes so we don't recompute subgraphs whose hashes are known.
+        spec_hashes: Dict[int, str] = {}
+        for spec_id, spec in all_specs.items():
+            cached = getattr(spec, hash_descriptor.attr, None)
+            if cached:
+                spec_hashes[spec_id] = cached
+
+        for scc in sccs:
+            if len(scc) == 1:
+                # Simple case: no cycle
+                spec = scc[0]
+                if id(spec) in spec_hashes:
+                    continue  # already known from a cached hash
+                node_dict = spec._to_node_dict_with_precomputed_hashes(
+                    spec_hashes, hash_descriptor
+                )
+                hash_str = self._hash_from_node_dict(node_dict)
+                spec_hashes[id(spec)] = spec._make_hash_splice_safe(hash_str, hash_descriptor)
+            else:
+                # Cycle case: compute cycle hash first, then individual node hashes.
+                # Cached hashes for a cycle are all-or-nothing (computed together below), so skip
+                # only when every member is already known.
+                if all(id(spec) in spec_hashes for spec in scc):
+                    continue
+                # First: compute cycle hash from full cycle representation
+                cycle_repr = self._to_cycle_representation(scc, spec_hashes, hash_descriptor)
+                cycle_hash = self._hash_from_node_dict(cycle_repr)
+
+                # Second: compute individual hashes using cycle_hash
+                for spec in scc:
+                    if id(spec) in spec_hashes:
+                        # Should not be reachable, since we compute the whole scc at once
+                        # But do not overwrite the hash if it's already cached
+                        continue
+                    node_dict = spec._to_cycle_node_dict(cycle_hash, hash_descriptor)
+                    hash_str = self._hash_from_node_dict(node_dict)
+                    spec_hashes[id(spec)] = spec._make_hash_splice_safe(hash_str, hash_descriptor)
+
+        # Cache computed hashes back onto concrete, specs so subsequent hash calls (e.g. the
+        # per-node loop in _finalize_concretization) short-circuit instead of recomputing the whole
+        # subgraph.
+        for spec_id, spec_hash in spec_hashes.items():
+            spec = all_specs[spec_id]
+            if not getattr(spec, hash_descriptor.attr, None):
+                setattr(spec, hash_descriptor.attr, spec_hash)
+
+        return spec_hashes
+
+    def _make_hash_splice_safe(self, hash_string: str, hash: ht.SpecHashDescriptor) -> str:
+        """Utility method for computing frakenhashes of spliced specs.
+
+        We preserve the last 7 digits of a spliced spec's hash to mitigate the potential for bugs
+        from linker optimizations that can reuse the trailing bytes of one string as a substring.
+        """
+        # Does nothing for non-spliced specs
+        if self.build_spec is self:
+            return hash_string
+
+        return hash_string[:-7] + self.build_spec.spec_hash(hash)[-7:]
+
     def spec_hash(self, hash: ht.SpecHashDescriptor) -> str:
         """Utility method for computing different types of Spec hashes.
 
         Arguments:
             hash: type of hash to generate.
         """
-        # TODO: currently we strip build dependencies by default.  Rethink
-        # this when we move to using package hashing on all specs.
         if hash.override is not None:
             return hash.override(self)
-        node_dict = self.to_node_dict(hash=hash)
-        json_text = json.dumps(
-            node_dict, ensure_ascii=True, indent=None, separators=(",", ":"), sort_keys=False
-        )
-        # This implements "frankenhashes", preserving the last 7 characters of the
-        # original hash when splicing so that we can avoid relocation issues
-        out = spack.util.hash.b32_hash(json_text)
-        if self.build_spec is not self:
-            return out[:-7] + self.build_spec.spec_hash(hash)[-7:]
-        return out
+
+        # Use cycle-aware hash computation
+        all_hashes = self._compute_graph_hash_with_cycles(hash)
+        out = all_hashes[id(self)]
+        return self._make_hash_splice_safe(out, hash)
 
     def _cached_hash(
         self, hash: ht.SpecHashDescriptor, length: Optional[int] = None, force: bool = False
@@ -2338,7 +2639,7 @@ class Spec:
                     },
                     ...
                 ],
-                "annotations": {"original_specfile_version": 5},
+                "annotations": {"original_specfile_version": 6},
             }
 
 
@@ -2351,107 +2652,15 @@ class Spec:
         Arguments:
             hash: type of hash to generate.
         """
-        d: Dict[str, Any] = {"name": self.name}
-
-        if self.versions:
-            d.update(self.versions.to_dict())
-
-        if self.architecture:
-            d.update(self.architecture.to_dict())
-
-        if self.namespace:
-            d["namespace"] = self.namespace
-
-        params: Dict[str, Any] = dict(sorted(v.yaml_entry() for v in self.variants.values()))
-
-        # Only need the string compiler flag for yaml file
-        params.update(
-            sorted(
-                self.compiler_flags.yaml_entry(flag_type)
-                for flag_type in self.compiler_flags.keys()
-            )
-        )
-
-        if params:
-            d["parameters"] = params
-
-        if params and not self.concrete:
-            flag_names = [
-                name
-                for name, flags in self.compiler_flags.items()
-                if any(x.propagate for x in flags)
-            ]
-            d["propagate"] = sorted(
-                itertools.chain(
-                    [v.name for v in self.variants.values() if v.propagate], flag_names
-                )
-            )
-            d["abstract"] = sorted(v.name for v in self.variants.values() if not v.concrete)
-
-        if self.external:
-            d["external"] = {
-                "path": self.external_path,
-                "module": self.external_modules or None,
-                "extra_attributes": syaml.sorted_dict(self.extra_attributes),
-            }
-
-        if not self._concrete:
-            d["concrete"] = False
-
-        if "patches" in self.variants:
-            variant = self.variants["patches"]
-            if hasattr(variant, "_patches_in_order_of_appearance"):
-                d["patches"] = variant._patches_in_order_of_appearance
-
-        if (
-            self._concrete
-            and hash.package_hash
-            and hasattr(self, "_package_hash")
-            and self._package_hash
-        ):
-            # The package hash is assigned at concretization time. We don't want to compute one for
-            # a concrete spec, where a) the package might not exist, or b) the `dag_hash` didn't
-            # include the package hash when the spec was concretized.
-            package_hash = self._package_hash
-
-            # Full hashes are in bytes
-            if not isinstance(package_hash, str) and isinstance(package_hash, bytes):
-                package_hash = package_hash.decode("utf-8")
-            d["package_hash"] = package_hash
-
-        # Note: Relies on sorting dict by keys later in algorithm.
-        deps = self._dependencies_dict(depflag=hash.depflag)
-        if deps:
-            dependencies = []
-            for name, edges_for_name in sorted(deps.items()):
-                for dspec in edges_for_name:
-                    dep_attrs = {
-                        "name": name,
-                        hash.name: dspec.spec._cached_hash(hash),
-                        "parameters": {
-                            "deptypes": dt.flag_to_tuple(dspec.depflag),
-                            "virtuals": dspec.virtuals,
-                        },
-                    }
-                    if dspec.direct:
-                        dep_attrs["parameters"]["direct"] = True
-                    dependencies.append(dep_attrs)
-
-            d["dependencies"] = dependencies
-
-        # Name is included in case this is replacing a virtual.
+        computed_hashes = {
+            id(dspec.spec): dspec.spec._cached_hash(hash)
+            for edges_for_name in self._dependencies_dict(depflag=hash.depflag).values()
+            for dspec in edges_for_name
+        }
         if self._build_spec:
-            d["build_spec"] = {
-                "name": self.build_spec.name,
-                hash.name: self.build_spec._cached_hash(hash),
-            }
+            computed_hashes[id(self.build_spec)] = self.build_spec._cached_hash(hash)
 
-        # Annotations
-        d["annotations"] = {"original_specfile_version": self.annotations.original_spec_format}
-        if self.annotations.original_spec_format < 5:
-            d["annotations"]["compiler"] = str(self.annotations.compiler_node_attribute)
-
-        return d
+        return self._to_node_dict_with_precomputed_hashes(computed_hashes, hash)
 
     def to_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary suitable for writing this spec to YAML or JSON.
@@ -2461,7 +2670,7 @@ class Spec:
 
             {
                 "spec": {
-                    "_meta": {"version": 5},
+                    "_meta": {"version": 6},
                     "nodes": [
                         {
                             "name": "sqlite",
@@ -2500,7 +2709,7 @@ class Spec:
                                 },
                                 ...
                             ],
-                            "annotations": {"original_specfile_version": 5},
+                            "annotations": {"original_specfile_version": 6},
                             "hash": "a2ubvvqnula6zdppckwqrjf3zmsdzpoh",
                         },
                         ...
@@ -5638,8 +5847,15 @@ class SpecfileV5(SpecfileV4):
         return dep_hash, deptypes, hash_type, virtuals, direct
 
 
+@register_reader
+class SpecfileV6(SpecfileV5):
+    # v6 shares the v5 format; the version was bumped only so that older Spack refuses to read
+    # specfiles that may contain circular run dependencies. See SPECFILE_FORMAT_VERSION.
+    SPEC_VERSION = 6
+
+
 #: Alias to the latest version of specfiles
-SpecfileLatest = SpecfileV5
+SpecfileLatest = SpecfileV6
 
 
 def specfile_reader_for_version(version: int) -> Type[SpecfileReaderBase]:

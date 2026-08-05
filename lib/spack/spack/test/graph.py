@@ -5,6 +5,7 @@ import io
 
 import spack.concretize
 import spack.graph
+import spack.repo
 
 
 def test_dynamic_dot_graph_mpileaks(config, mock_packages):
@@ -113,3 +114,35 @@ o | | | | mpich
 o gcc
 """
     )
+
+
+def test_ascii_graph_cyclic_run_deps(config, mock_packages, repo_builder, monkeypatch):
+    """`spack graph` (ASCII) renders a spec containing a circular run dependency.
+
+    ``graph-cyc-a <-> graph-cyc-b`` depend on each other at runtime. The edge that closes the
+    cycle cannot be drawn, so its source node is marked with ``*`` and a footnote explains it. The
+    graph must render (without crashing) and mention both members of the cycle.
+    """
+    repo_builder.add_package("graph-cyc-a", dependencies=[("graph-cyc-b", "run", None)])
+    repo_builder.add_package("graph-cyc-b", dependencies=[("graph-cyc-a", "run", None)])
+
+    with spack.repo.use_repositories(repo_builder.root):
+        s = spack.concretize.concretize_one("graph-cyc-a")
+
+    stream = io.StringIO()
+    spack.graph.AsciiGraph().write(s, out=stream, color=False)
+    graph_str = stream.getvalue()
+
+    # Both cycle members are rendered.
+    assert "graph-cyc-a" in graph_str
+    assert "graph-cyc-b" in graph_str
+
+    # Exactly one node is marked with '*' (the source of the cycle-closing back edge), and the
+    # footnote explaining the marker is printed.
+    node_lines = [line for line in graph_str.splitlines() if "graph-cyc-" in line]
+    assert sum(line.rstrip().endswith("*") for line in node_lines) == 1
+    assert "circular run dependency that is not shown" in graph_str
+
+    # Footnote contains test description of skipped edge
+    spec_format = "{name}@{version}/{hash:7}"
+    assert f"{s['graph-cyc-b'].format(spec_format)} -> {s.format(spec_format)}" in graph_str

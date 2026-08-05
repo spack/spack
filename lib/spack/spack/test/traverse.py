@@ -454,6 +454,72 @@ def test_topo_is_bfs_for_trees(cover):
     )
 
 
+# The topo cycle-handling tests run with both key functions used in production: object identity
+# (the default) and dag-hash identity (used by the new_installer, environment, and splicing topo
+# callers). The SCC fallback must stay consistent with the traversal's own node deduplication under
+# either key.
+_TOPO_KEYS = [id, traverse.by_dag_hash]
+
+
+@pytest.mark.parametrize("key", _TOPO_KEYS)
+@pytest.mark.parametrize("cover", ["nodes", "edges"])
+def test_topo_covers_all_nodes_with_cycle(cover, key):
+    """A topological traversal must still visit every reachable node when the graph contains a
+    cycle. (Kahn's algorithm alone silently drops cycle nodes, since their in-edge counts never
+    reach zero; the SCC-based fallback fixes this.)"""
+    graph = create_dag(
+        nodes=["root", "a", "b"],
+        edges=(("root", "a", "link"), ("a", "b", "run"), ("b", "a", "run")),
+    )
+    topo = list(traverse.traverse_nodes([graph["root"]], order="topo", cover=cover, key=key))
+    pre = list(traverse.traverse_nodes([graph["root"]], order="pre", cover=cover, key=key))
+    assert set(topo) == set(pre)
+    # root has no in-edges and must come first regardless of the cycle below it.
+    assert topo[0] == graph["root"]
+
+
+@pytest.mark.parametrize("key", _TOPO_KEYS)
+def test_topo_cycle_in_middle_preserves_order(key):
+    """A cycle buried between an acyclic top and bottom must not break the topological invariant
+    (every node appears after all its ancestors) nor the breadth-first flavor for the acyclic part.
+
+    root -> x -> a <-> b, with a -> leaf. The cycle {a, b} sits in the middle.
+    """
+    graph = create_dag(
+        nodes=["root", "x", "a", "b", "leaf"],
+        edges=(
+            ("root", "x", "link"),
+            ("x", "a", "link"),
+            ("a", "b", "run"),
+            ("b", "a", "run"),
+            ("a", "leaf", "link"),
+        ),
+    )
+    specs = list(traverse.traverse_nodes([graph["root"]], order="topo", cover="nodes", key=key))
+    names = [s.name for s in specs]
+
+    # All nodes are covered.
+    assert set(names) == {"root", "x", "a", "b", "leaf"}
+
+    # Topological invariant across the acyclic parts: ancestors precede descendants.
+    assert names.index("root") < names.index("x") < names.index("a")
+    assert names.index("a") < names.index("leaf")
+    # The cycle entry point is released before its cyclic peer.
+    assert names.index("a") < names.index("b")
+
+
+@pytest.mark.parametrize("key", _TOPO_KEYS)
+def test_topo_root_in_cycle(key):
+    """A traversal whose root is itself part of a cycle must not hang or drop nodes."""
+    graph = create_dag(nodes=["root", "b"], edges=(("root", "b", "run"), ("b", "root", "run")))
+    names = [
+        s.name
+        for s in traverse.traverse_nodes([graph["root"]], order="topo", cover="nodes", key=key)
+    ]
+    assert set(names) == {"root", "b"}
+    assert names[0] == "root"
+
+
 @pytest.mark.parametrize("roots", [["A"], ["A", "B"], ["B", "A"], ["A", "B", "A"]])
 @pytest.mark.parametrize("order", ["breadth", "post", "pre"])
 @pytest.mark.parametrize("include_root", [True, False])

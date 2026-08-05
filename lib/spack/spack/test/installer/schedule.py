@@ -9,14 +9,17 @@ from typing import Dict, List, Optional, Set, Tuple
 
 import pytest
 
+import spack.concretize
 import spack.deptypes as dt
 import spack.error
+import spack.repo
 import spack.spec
 import spack.store
 import spack.traverse
 from spack.config import Configuration
 from spack.database import Database
 from spack.installer.base import ExitCode, JobServerBase, NoopJobServer
+from spack.installer.core import PackageInstaller
 from spack.installer.schedule import BuildGraph, ScheduleResult, _node_to_roots, schedule_builds
 from spack.spec import Spec
 from spack.store import Store
@@ -1240,3 +1243,193 @@ def test_expand_build_deps_source_only_includes_nested_build_deps(temporary_stor
     # nested_build_tool must also be added (BUILD dep of build_tool). This is the bug: without the
     # fix, expand_build_deps only traverses LINK|RUN, so nested_build_tool is missing.
     assert specs["nested_build_tool"].dag_hash() in added_hashes
+
+
+@pytest.mark.usefixtures("mutable_database")
+class TestBuildGraphCircularDeps:
+    """Tests for BuildGraph with circular run dependencies."""
+
+    def test_build_graph_circular_run_deps(self, repo_builder):
+        """Test BuildGraph with circular run dependencies A<->B."""
+
+        repo_builder.add_package("circ-a", dependencies=[("circ-b", "run", None)])
+        repo_builder.add_package("circ-b", dependencies=[("circ-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec_a = spack.concretize.concretize_one("circ-a")
+            hash_a = spec_a.dag_hash()
+            hash_b = spec_a["circ-b"].dag_hash()
+
+            graph = BuildGraph(
+                [spec_a],
+                root_policy="auto",
+                dependencies_policy="auto",
+                include_build_deps=False,
+                install_package=True,
+                install_deps=True,
+                store=spack.store.STORE,
+                tests=False,
+            )
+
+            # Both specs should be in the graph
+            assert hash_a in graph.nodes
+            assert hash_b in graph.nodes
+
+            # Neither should have ordering children (run-only deps excluded)
+            assert hash_a not in graph.parent_to_child or not graph.parent_to_child[hash_a]
+            assert hash_b not in graph.parent_to_child or not graph.parent_to_child[hash_b]
+
+    def test_build_graph_mixed_deps_cycle(self, repo_builder):
+        """Test A->B (link), B->A (run) creates correct ordering."""
+
+        repo_builder.add_package("mixed-a", dependencies=[("mixed-b", "link", None)])
+        repo_builder.add_package("mixed-b", dependencies=[("mixed-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec_a = spack.concretize.concretize_one("mixed-a")
+            hash_a = spec_a.dag_hash()
+            hash_b = spec_a["mixed-b"].dag_hash()
+
+            graph = BuildGraph(
+                [spec_a],
+                root_policy="auto",
+                dependencies_policy="auto",
+                include_build_deps=False,
+                install_package=True,
+                install_deps=True,
+                store=spack.store.STORE,
+                tests=False,
+            )
+
+            # A should wait for B (link dependency)
+            assert hash_b in graph.parent_to_child[hash_a]
+
+            # B should not wait for A (run-only dependency)
+            assert hash_a not in graph.parent_to_child.get(hash_b, set())
+
+            # A should be recorded as a parent of B in child_to_parent
+            assert hash_a in graph.child_to_parent[hash_b]
+
+    def test_build_graph_three_node_run_cycle(self, repo_builder):
+        """Test A->B->C->A (all run) creates no ordering constraints."""
+
+        repo_builder.add_package("cyc3-a", dependencies=[("cyc3-b", "run", None)])
+        repo_builder.add_package("cyc3-b", dependencies=[("cyc3-c", "run", None)])
+        repo_builder.add_package("cyc3-c", dependencies=[("cyc3-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec_a = spack.concretize.concretize_one("cyc3-a")
+            hash_a = spec_a.dag_hash()
+            hash_b = spec_a["cyc3-b"].dag_hash()
+            hash_c = spec_a["cyc3-c"].dag_hash()
+
+            graph = BuildGraph(
+                [spec_a],
+                root_policy="auto",
+                dependencies_policy="auto",
+                include_build_deps=False,
+                install_package=True,
+                install_deps=True,
+                store=spack.store.STORE,
+                tests=False,
+            )
+
+            # All three should be in graph
+            assert hash_a in graph.nodes
+            assert hash_b in graph.nodes
+            assert hash_c in graph.nodes
+
+            # None should have ordering children (all run-only)
+            assert not graph.parent_to_child.get(hash_a, set())
+            assert not graph.parent_to_child.get(hash_b, set())
+            assert not graph.parent_to_child.get(hash_c, set())
+
+    def test_build_graph_cycle_with_link_dep(self, repo_builder):
+        """Test A<->B (run) with both depending on non-circular C (link)."""
+
+        repo_builder.add_package("link-c")
+        repo_builder.add_package(
+            "cyc-a", dependencies=[("cyc-b", "run", None), ("link-c", "link", None)]
+        )
+        repo_builder.add_package(
+            "cyc-b", dependencies=[("cyc-a", "run", None), ("link-c", "link", None)]
+        )
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec_a = spack.concretize.concretize_one("cyc-a")
+            hash_a = spec_a.dag_hash()
+            hash_b = spec_a["cyc-b"].dag_hash()
+            hash_c = spec_a["link-c"].dag_hash()
+
+            graph = BuildGraph(
+                [spec_a],
+                root_policy="auto",
+                dependencies_policy="auto",
+                include_build_deps=False,
+                install_package=True,
+                install_deps=True,
+                store=spack.store.STORE,
+                tests=False,
+            )
+
+            # All three in graph
+            assert hash_a in graph.nodes
+            assert hash_b in graph.nodes
+            assert hash_c in graph.nodes
+
+            # A and B should wait for C (link), not each other (run)
+            assert hash_c in graph.parent_to_child[hash_a]
+            assert hash_c in graph.parent_to_child[hash_b]
+            assert hash_b not in graph.parent_to_child.get(hash_a, set())
+            assert hash_a not in graph.parent_to_child.get(hash_b, set())
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_fetch")
+class TestInstallerCircular:
+    """Integration tests for installing packages with circular run dependencies."""
+
+    def test_install_simple_circular_run_deps(self, repo_builder):
+        """Test actual installation with A<->B circular run dependencies."""
+
+        repo_builder.add_package("install-circ-a", dependencies=[("install-circ-b", "run", None)])
+        repo_builder.add_package("install-circ-b", dependencies=[("install-circ-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec = spack.concretize.concretize_one("install-circ-a")
+
+            # Attempt installation
+            installer = PackageInstaller([spec.package])
+            installer.install()
+
+            # Verify both were installed
+            assert spec.installed
+            assert spec["install-circ-b"].installed
+
+            # Verify both in database
+            db = spack.store.STORE.db
+            found_a = db.query_one("install-circ-a")
+            found_b = db.query_one("install-circ-b")
+
+            assert found_a is not None
+            assert found_b is not None
+
+    def test_install_mixed_circular_deps(self, repo_builder):
+        """Test A->B (link), B->A (run) - should install B first, then A."""
+
+        repo_builder.add_package("mixed-inst-a", dependencies=[("mixed-inst-b", "link", None)])
+        repo_builder.add_package("mixed-inst-b", dependencies=[("mixed-inst-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec = spack.concretize.concretize_one("mixed-inst-b")
+
+            installer = PackageInstaller([spec.package])
+            installer.install()
+
+            # Both should be installed
+            assert spec.installed
+            assert spec["mixed-inst-a"].installed
+
+            # Verify in database
+            db = spack.store.STORE.db
+            assert db.query_one("mixed-inst-a") is not None
+            assert db.query_one("mixed-inst-b") is not None

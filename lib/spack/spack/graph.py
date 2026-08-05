@@ -39,6 +39,7 @@ kind of like the graph git shows with ``git log --graph``, e.g.
 """
 
 import enum
+import itertools
 import sys
 from typing import List, Optional, Set, TextIO, Tuple
 
@@ -94,6 +95,10 @@ class AsciiGraph:
         self._prev_state = None  # State of previous line
         self._prev_index = None  # Index of expansion point of prev line
         self._pos = None
+        # dag hashes of nodes that have a circular dependency edge which could not be drawn (it
+        # points back to an already-drawn node). These are marked with '*' and a footnote
+        # describing the edge(s)
+        self._nodes_with_cycle = {}
 
     def _indent(self):
         self._out.write(self.indent * " ")
@@ -262,6 +267,8 @@ class AsciiGraph:
             self._write_edge("| ", c)
 
         self._out.write(self._node_label(node))
+        if node.dag_hash() in self._nodes_with_cycle:
+            self._out.write(" *")
         self._set_state(_GraphLineState.NODE, index)
         self._out.write("\n")
 
@@ -324,6 +331,11 @@ class AsciiGraph:
         # We'll traverse the spec in topological order as we graph it.
         nodes_in_topological_order = list(spec.traverse(order="topo", deptype=self.depflag))
         nodes_in_topological_order.reverse()
+
+        # Track hashes of nodes we have drawn. A dependency edge whose target is in this set points
+        # back to an already drawn node (it closes a cycle).
+        # These nodes cannot be represented in the ASCII graph, but are tracked for a footnote
+        drawn = set()
 
         # Work on a copy to be nondestructive
         spec = spec.copy()
@@ -411,20 +423,42 @@ class AsciiGraph:
             else:
                 # Nothing to expand; add dependencies for a node.
                 node = nodes_in_topological_order.pop()
+                drawn.add(node.dag_hash())
+
+                # Compute the drawable dependencies. Edges pointing back at an already-drawn node
+                # close a cycle (only run deps can) and cannot be drawn, so we drop them and record
+                # this node as having an unrepresented circular dependency. This must happen before
+                # drawing the node line so it can be marked with '*'.
+                edges = sorted(node.edges_to_dependencies(depflag=self.depflag), reverse=True)
+                deps = [e.spec.dag_hash() for e in edges if e.spec.dag_hash() not in drawn]
+                if len(deps) != len(edges):
+                    self._nodes_with_cycle[node.dag_hash()] = set(
+                        e for e in edges if e.spec.dag_hash() in drawn
+                    )
 
                 # Find the named node in the frontier and draw it.
                 i = find(self._frontier, lambda f: node.dag_hash() in f)
                 self._node_line(i, node)
 
-                # Replace node with its dependencies
+                # Replace node with its (drawable) dependencies.
                 self._frontier.pop(i)
-                edges = sorted(node.edges_to_dependencies(depflag=self.depflag), reverse=True)
-                if edges:
-                    deps = [e.spec.dag_hash() for e in edges]
+                if deps:
                     self._connect_deps(i, deps, "new-deps")  # anywhere.
 
                 elif self._frontier:
                     self._collapse_line(i)
+
+        # Explain the '*' markers, if any node had an undrawable circular dependency.
+        if self._nodes_with_cycle:
+            self._out.write("\n")
+            self._indent()
+            self._out.write(
+                "* This node has a circular run dependency that is not shown in the graph above.\n"
+            )
+            for edge in itertools.chain(*self._nodes_with_cycle.values()):
+                self._out.write(
+                    f"    {self._node_label(edge.parent)} -> {self._node_label(edge.spec)}\n"
+                )
 
 
 def graph_ascii(
