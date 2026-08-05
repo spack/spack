@@ -98,13 +98,13 @@ class GlobalStateMarshaler:
         ctx: Optional[Optional[multiprocessing.context.BaseContext]] = None,
         serialize_env: bool = False,
     ) -> None:
-        import spack.util.path
+        import spack.config
 
         ctx = ctx or multiprocessing.get_context()
         self.is_forked = ctx.get_start_method() == "fork"
 
         # Capture XDG env vars before fork/spawn - needed for consistent path resolution
-        self.home_vars = spack.util.path.collect()
+        self.home_vars = spack.config.collect()
 
         if self.is_forked:
             return
@@ -121,9 +121,9 @@ class GlobalStateMarshaler:
             self.env = None
 
     def restore(self):
-        import spack.util.path
+        import spack.config
 
-        spack.util.path.freeze(self.home_vars)
+        spack.config.freeze(self.home_vars)
         if self.is_forked:
             # Erase singletons that hold open SSL contexts / boto3 clients, since OpenSSL
             # and botocore connection pools are not fork-safe.

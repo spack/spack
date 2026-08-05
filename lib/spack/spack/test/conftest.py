@@ -109,6 +109,10 @@ def clear_env_vars(working_env, monkeypatch):
         monkeypatch.delenv(f"XDG_{location}_HOME", raising=False)
         monkeypatch.delenv(f"SPACK_{location}_HOME", raising=False)
 
+    # Clear frozen home vars (used by subprocess isolation)
+    import spack.config
+    spack.config._frozen_home = {}
+
 
 @pytest.fixture
 def set_home(working_env):

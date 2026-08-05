@@ -1411,7 +1411,7 @@ class OptionalInclude:
             # directories are treated as regular ConfigScopes
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
             return DirectoryConfigScope(
-                config_name, config_path, prefer_modify=self.prefer_modify, included=True
+                config_name, config_path, prefer_modify=self.prefer_modify, included=True, when=self.when
             )
         elif ext == ".yaml" or ext == ".yml":
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
@@ -1421,6 +1421,7 @@ class OptionalInclude:
                 spack.schema.merged.schema,
                 prefer_modify=self.prefer_modify,
                 included=True,
+                when=self.when,
             )
         elif exists:
             raise ValueError(
@@ -2315,6 +2316,76 @@ def get_user():
 NOMATCH = object()
 
 
+_frozen_home = {}
+
+
+def freeze(home_vars):
+    global _frozen_home
+
+    _frozen_home = home_vars
+
+
+def is_frozen():
+    """Indicates that config-based variables have been set in place in
+    such a way that applying new configuration to them would be ignored."""
+    return bool(_frozen_home)
+
+
+def collect():
+    return {
+        "data": _resolve_location_var("data"),
+        "state": _resolve_location_var("state"),
+        "cache": _resolve_location_var("cache"),
+    }
+
+
+def _resolve_location_var(location_key):
+    """Resolve a config:locations entry to a concrete path.
+
+    Args:
+        location_key: one of 'data', 'cache', or 'state'
+
+    Returns:
+        A resolved path string or None
+    """
+    if _frozen_home and location_key in _frozen_home:
+        return _frozen_home[location_key]
+
+    location_list = CONFIG.get(f"config:locations:{location_key}", default=[])
+
+    if isinstance(location_list, str):
+        # Schema allows specifying a single item as a string in place of list
+        location_list = [location_list]
+
+    for item in location_list:
+        # Attempt to resolve all variables in the entry
+        try:
+            candidate = os.path.normpath(substitute_path_variables(item))
+        except RecursionError:
+            # Catch recursion error in case someone tries `data: $data_home` or
+            # a cycle among the three
+            tty.warn(f"Skipping recursive definition in locations config: {item}.")
+        # Look for unresolved env var or config vars in candidate
+        var_pattern = r"\$\{?([a-zA-Z_][a-zA-Z0-9_]*)\}?"
+        unresolved_vars = re.search(var_pattern, candidate)
+
+        if unresolved_vars:
+            continue
+        return candidate
+
+    # Fallback to XDG defaults if nothing in config matched (e.g. if a user set
+    # config::)
+    expanded_home = os.path.expanduser("~")
+    if location_key == "data":
+        return os.path.join(expanded_home, ".local", "share", "spack")
+    elif location_key == "state":
+        return os.path.join(expanded_home, ".local", "state", "spack")
+    elif location_key == "cache":
+        return os.path.join(expanded_home, ".cache", "spack")
+    else:
+        raise ValueError(f"Unexpected request: {location_key}")
+
+
 # Substitutions to perform
 def replacements():
     arch = architecture()
@@ -2335,6 +2406,9 @@ def replacements():
         "date": lambda: __import__("datetime").date.today().strftime("%Y-%m-%d"),
         "env": lambda: CONFIG.env_path or NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
+        "data_home": lambda: _resolve_location_var("data"),
+        "cache_home": lambda: _resolve_location_var("cache"),
+        "state_home": lambda: _resolve_location_var("state"),
     }
 
 

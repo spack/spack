@@ -116,9 +116,9 @@ class SpackPaths:
 
     @property
     def user_cache_path(self):
-        import spack.util.path
+        import spack.config
 
-        return spack.util.path._resolve_location_var("state") or self.default_state_home
+        return spack.config._resolve_location_var("state") or self.default_state_home
 
     @property
     def reports_path(self):

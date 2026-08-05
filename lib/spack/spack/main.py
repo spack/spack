@@ -917,11 +917,11 @@ def _old_dotspack_warning():
 
     # Check if user has explicitly configured $data_home, $state_home, or $cache_home
     # to point to ~/.spack - if so, they've made a conscious choice and we shouldn't warn
-    import spack.util.path
+    import spack.config
 
     for config_var in ["$data_home", "$state_home", "$cache_home"]:
         try:
-            resolved = spack.util.path.substitute_config_variables(config_var)
+            resolved = spack.config.substitute_config_variables(config_var)
             if uses_old_dotspack(resolved):
                 tty.debug(
                     f"Skip .spack warning: user explicitly configured "

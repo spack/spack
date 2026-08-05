@@ -170,11 +170,11 @@ class SetAnXdgVarAndReadDataHome:
         # Set XDG_DATA_HOME to a bogus value in the subprocess
         os.environ["XDG_DATA_HOME"] = "/made-up-value-that-shouldnt-matter"
 
-        import spack.util.path
+        import spack.config
 
         # Resolve $data_home - it should use the frozen value from the parent
         # process, not the XDG_DATA_HOME we just set
-        actual = spack.util.path.substitute_path_variables("$data_home")
+        actual = spack.config.substitute_path_variables("$data_home")
 
         assert actual == self.expected_data_home, (
             f"Subprocess should use frozen parent value, not XDG_DATA_HOME.\n"
@@ -302,6 +302,6 @@ def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkey
 
 
 def test_substitute_user_cache(mock_spack_instance):
-    assert os.path.join(spack.paths.user_cache_path, "baz") == spack.util.path.canonicalize_path(
+    assert os.path.join(spack.paths.user_cache_path, "baz") == spack.config.canonicalize_path(
         os.path.join("$user_cache_path", "baz")
     )
