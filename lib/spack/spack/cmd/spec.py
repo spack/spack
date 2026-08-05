@@ -221,7 +221,9 @@ def spec(parser, args):
         specs = list(env.user_specs)
 
         if not specs:
-            args.subparser.error("active environment has no root specs, please provide at least one spec")
+            args.subparser.error(
+                "active environment has no root specs, please provide at least one spec"
+            )
     else:
         args.subparser.error("requires at least one spec or an active environment")
 
