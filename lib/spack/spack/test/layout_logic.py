@@ -13,7 +13,6 @@ import pytest
 
 import spack.config
 import spack.paths
-import spack.util.path
 
 
 def _ensure_dir(pathlike):

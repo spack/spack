@@ -7,7 +7,6 @@ import os
 import shutil
 
 import spack.config
-import spack.util.path
 from spack.util import tty
 
 description = "migrate user config from ~/.spack to ~/.config/spack"
