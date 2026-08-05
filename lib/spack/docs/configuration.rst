@@ -731,6 +731,8 @@ Currently, ``spack isolate`` is a best-effort approach to isolation of a Spack i
 The default location Spack uses for cloning Git based package repositories can only be configured by the ``SPACK_USER_CACHE_PATH`` environment variable (see :ref:`automatic-repo-cloning`).
 ``spack isolate --path ISO_PATH`` will explicitly set the destination of repositories that it knows about when invoked to a subdirectory of ``ISO_PATH``; however, newly added repositories without an explicit destination will be cloned to ``~/.spack``.
 To avoid this, either explicitly set ``SPACK_USER_CACHE_PATH`` or explicitly set the destination of newly added repositories to a different location (see :ref:`customizing-clone-location`).
+Furthermore, since ``spack isolate`` uses the user scope for isolation, setting ``SPACK_DISABLE_LOCAL_CONFIG`` will prevent future configuration changes from taking place in the isolated scope.
+You should unset this variable when using ``spack isolate``. 
 
   .. warning::
 
