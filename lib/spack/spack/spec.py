@@ -3901,9 +3901,7 @@ class Spec:
             # Level 1: direct dependencies
             # we can yield these in sorted order without tracking visited nodes
             deps_have_deps = False
-            sorted_l1_edges = self.edges_to_dependencies(depflag=dt.ALL)
-            if len(sorted_l1_edges) > 1:
-                sorted_l1_edges = spack.traverse.sort_edges(sorted_l1_edges)
+            sorted_l1_edges = spack.traverse.sort_edges(self.edges_to_dependencies(depflag=dt.ALL))
 
             for edge in sorted_l1_edges:
                 yield edge.spec._cmp_node
