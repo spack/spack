@@ -219,6 +219,9 @@ def spec(parser, args):
         specs = spack.cmd.parse_specs(args.specs)
     elif env:
         specs = list(env.user_specs)
+
+        if not specs:
+            args.subparser.error("active environment has no root specs, please provide at least one spec")
     else:
         args.subparser.error("requires at least one spec or an active environment")
 

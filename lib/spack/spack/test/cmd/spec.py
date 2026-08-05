@@ -174,6 +174,14 @@ def test_env_aware_spec(mutable_mock_env_path):
         assert "mpich@3.0.4" in output
 
 
+def test_env_without_spec_error(mutable_mock_env_path):
+    """Verify that `spack spec` fails when the active environment has no root specs."""
+    env = ev.create("test")
+    with env:
+        with pytest.raises(SpackCommandError):
+            spec()
+
+
 @pytest.mark.parametrize(
     "name, version, error",
     [
