@@ -358,39 +358,39 @@ A ``post_uninstall`` hook runs after package uninstallation finishes.
 It receives the spec as its only argument and is primarily used for cleaning up module files during uninstall operations.
 
 
-Adding a New Hook
-^^^^^^^^^^^^^^^^^
+Adding a New Hook Modules
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To implement a hook, create a Python module in ``lib/spack/spack/hooks/`` with functions named after the hooks you want to implement:
 
 1. Create a module file (e.g., ``lib/spack/spack/hooks/my_hooks.py``)
 2. Add functions matching the hook names:
 
-.. code-block:: python
+   .. code-block:: python
 
-    # lib/spack/spack/hooks/my_hooks.py
-
-
-    def pre_install(spec):
-        """This runs before each package is installed."""
-        print(f"About to install {spec.name}@{spec.version}")
+      # lib/spack/spack/hooks/my_hooks.py
 
 
-    def post_install(spec, explicit=None):
-        """This runs after each package is installed."""
-        print(f"Finished installing {spec.name}@{spec.version}")
+      def pre_install(spec):
+          """This runs before each package is installed."""
+          print(f"About to install {spec.name}@{spec.version}")
+
+
+      def post_install(spec, explicit=None):
+          """This runs after each package is installed."""
+          print(f"Finished installing {spec.name}@{spec.version}")
 
 3. Add your module to the ``HOOK_ORDER`` list in ``lib/spack/spack/hooks/__init__.py``:
 
-.. code-block:: python
+   .. code-block:: python
 
-    class _HookRunner:
-        HOOK_ORDER = [
-            "spack.hooks.module_file_generation",
-            "spack.hooks.licensing",
-            # ...
-            "spack.hooks.my_hooks",  # <- Add your module here
-        ]
+      class _HookRunner:
+          HOOK_ORDER = [
+              "spack.hooks.module_file_generation",
+              "spack.hooks.licensing",
+              # ...
+              "spack.hooks.my_hooks",  # <- Add your module here
+          ]
 
 
 Example: Implementing a Build Notification Hook
@@ -402,7 +402,7 @@ Here's a complete example that sends notifications when builds start and finish:
 
     # lib/spack/spack/hooks/build_notifications.py
 
-    from spack.llnl.util import tty
+    from spack.util import tty
     import time
 
     # Track build start times
@@ -434,11 +434,11 @@ You would add it as follows:
 .. code-block:: python
 
     # pre/post install and run by the install subprocess
-    pre_install = HookRunner("pre_install")
-    post_install = HookRunner("post_install")
+    pre_install = _HookRunner("pre_install")
+    post_install = _HookRunner("post_install")
 
     # hooks related to logging
-    post_log_write = HookRunner("post_log_write")  # <- here is my new hook!
+    post_log_write = _HookRunner("post_log_write")  # <- here is my new hook!
 
 
 You then need to decide what arguments your hook would expect.
