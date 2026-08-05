@@ -21,9 +21,6 @@ import spack.binary_distribution
 import spack.builder
 import spack.config as cfg
 import spack.environment as ev
-import spack.llnl.path
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.mirrors.mirror
 import spack.paths
@@ -31,15 +28,18 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.gpg as gpg_util
+import spack.util.path
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
-from spack.llnl.util.tty.color import cescape, colorize
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
+from spack.util import tty
+from spack.util.tty.color import cescape, colorize
 
 from .common import (
     IS_WINDOWS,
@@ -133,7 +133,7 @@ def stack_changed(env_path: str) -> bool:
     Returns True iff the environment manifest changed between the provided revisions (or
     additionally if the ``.gitlab-ci.yml`` file itself changed)."""
     # git returns posix paths always, normalize input to be compatible with that
-    env_path = spack.llnl.path.convert_to_posix_path(os.path.dirname(env_path))
+    env_path = spack.util.path.convert_to_posix_path(os.path.dirname(env_path))
 
     git = spack.util.git.git(required=True)
     git_dir = get_git_root(env_path)
@@ -369,9 +369,9 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.check_index_only = args.index_only
     options.forward_variables = args.forward_variable or []
 
-    ci_config = cfg.get("ci")
+    ci_config = cfg.CONFIG.get("ci")
 
-    cdash_config = cfg.get("cdash")
+    cdash_config = cfg.CONFIG.get("cdash")
     if "build-group" in cdash_config:
         options.cdash_handler = CDashHandler(cdash_config)
 
@@ -479,7 +479,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     options = collect_pipeline_options(env, args)
 
     # Get the joined "ci" config with all of the current scopes resolved
-    ci_config = cfg.get("ci")
+    ci_config = cfg.CONFIG.get("ci")
     if not ci_config:
         raise SpackCIError("Environment does not have a `ci` configuration")
 
@@ -544,7 +544,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     generate_method(pipeline, spack_ci_config, options)
 
     # Use all unpruned specs to populate the build group for this set
-    cdash_config = cfg.get("cdash")
+    cdash_config = cfg.CONFIG.get("cdash")
     if options.cdash_handler and options.cdash_handler.auth_token:
         options.cdash_handler.create_buildgroup()
     elif cdash_config:
@@ -1099,7 +1099,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
             "--name",
             f"spack_reproducer{container_suffix}",
             "-v",
-            ":".join([work_dir, mounted_workdir, "Z"]),
+            f"{work_dir}:{mounted_workdir}:Z",
             "-v",
             ":".join(
                 [
@@ -1286,9 +1286,7 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
         try:
             with open(file_path, "w", encoding="utf-8") as fd:
                 syaml.dump(broken_spec_details, fd)
-            web_util.push_to_url(
-                file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
-            )
+            web_util.push_to_url(file_path, url, keep_original=False, content_type="text/plain")
         except Exception as err:
             # If there is an S3 error (e.g., access denied or connection
             # error), the first non boto-specific class in the exception

@@ -10,7 +10,7 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.solver.asp import SolverError, UnsatisfiableSpecError
 
 
@@ -35,7 +35,7 @@ def install_specs(mutable_database, mock_packages, mutable_config, install_mocke
 
 
 def _enable_splicing():
-    spack.config.set("concretizer:splice", {"automatic": True})
+    spack.config.CONFIG.set("concretizer:splice", {"automatic": True})
 
 
 @pytest.mark.parametrize("spec_str", ["splice-z", "splice-h@1"])

@@ -27,7 +27,7 @@ import spack.deptypes
 import spack.repo
 import spack.spec
 from spack.error import SpackError
-from spack.llnl.util import tty
+from spack.util import tty
 
 
 class DependencyDict(TypedDict, total=False):

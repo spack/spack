@@ -84,14 +84,9 @@ import spack
 import spack.aliases
 import spack.compilers.flags
 import spack.deptypes as dt
+import spack.enums
 import spack.error
 import spack.hash_types as ht
-import spack.llnl.path
-import spack.llnl.string
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lang as lang
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as clr
 import spack.patch
 import spack.paths
 import spack.platforms
@@ -99,17 +94,22 @@ import spack.provider_index
 import spack.repo
 import spack.spec_parser
 import spack.traverse
+import spack.util.filesystem as fs
 import spack.util.gpg
 import spack.util.hash
+import spack.util.path
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.string
+import spack.util.tty.color as clr
 import spack.variant as vt
 import spack.version
 import spack.version as vn
 import spack.version.git_ref_lookup
+from spack.util import lang, tty
 
-from .enums import InstallRecordStatus, PropagationPolicy
+from .enums import PropagationPolicy
 
 __all__ = [
     "CompilerSpec",
@@ -158,13 +158,19 @@ IDENTIFIER_RE = r"\w[\w-]*"
 
 # Coloring of specs when using color output. Fields are printed with
 # different colors to enhance readability.
-# See spack.llnl.util.tty.color for descriptions of the color codes.
+# See spack.util.tty.color for descriptions of the color codes.
 COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
 VARIANT_COLOR = "@B"  #: color for highlighting variants
 HASH_COLOR = "@K"  #: color for highlighting package hashes
 HIGHLIGHT_COLOR = "@_R"  #: color for highlighting spec parts on demand
+DIM_COLOR = "@K"  #: color for dimmed (grey-out) spec parts
+#: Maps PartStyle to a color override; NORMAL is absent so .get(style, default) preserves default
+_STYLE_COLOR_MAP = {
+    spack.enums.PartStyle.HIGHLIGHT: HIGHLIGHT_COLOR,
+    spack.enums.PartStyle.DIM: DIM_COLOR,
+}
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
@@ -199,6 +205,7 @@ class InstallStatus(enum.Enum):
     external = "@M{[e]}  "
     absent = "@K{ - }  "
     missing = "@r{[-]}  "
+    buildcache = "@g{[b]}  "
 
 
 # regexes used in spec formatting
@@ -602,9 +609,12 @@ class ArchSpec:
         )
 
     def to_dict(self):
+        # Abstract specs may have no target
+        if self.target is None:
+            target_data = None
         # Generic targets represent either an architecture family (like x86_64)
         # or a custom micro-architecture
-        if self.target.vendor == "generic":
+        elif self.target.vendor == "generic":
             target_data = str(self.target)
         else:
             # Get rid of compiler flag information before turning the uarch into a dict
@@ -617,6 +627,8 @@ class ArchSpec:
         """Import an ArchSpec from raw YAML/JSON data"""
         arch = d["arch"]
         target_name = arch["target"]
+        if target_name is None:
+            return ArchSpec((arch["platform"], arch["platform_os"], None))
         if not isinstance(target_name, str):
             target_name = target_name["name"]
         target = _make_microarchitecture(target_name)
@@ -923,6 +935,8 @@ def _shared_subset_pair_iterate(container1, container2):
 
 
 class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
+    __slots__ = ()
+
     def satisfies(self, other):
         return all(f in self and set(self[f]) >= set(other[f]) for f in other)
 
@@ -942,9 +956,9 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
             else:
                 extra_other = set(other[flag_type]) - set(self[flag_type])
                 if extra_other:
-                    self[flag_type] = list(self[flag_type]) + list(
+                    self[flag_type] = list(self[flag_type]) + [
                         x for x in other[flag_type] if x in extra_other
-                    )
+                    ]
                     changed = True
 
                 # Next, if any flags in other propagate, we force them to propagate in our case
@@ -1320,8 +1334,9 @@ def tree(
     status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
     prefix: Optional[Callable[["Spec"], str]] = None,
     key: Callable[["Spec"], Any] = id,
-    highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
-    highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
+    version_style_fn: Optional[Callable[["Spec"], spack.enums.PartStyle]] = None,
+    variant_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
+    architecture_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
 ) -> str:
     """Prints out specs and their dependencies, tree-formatted with indentation.
 
@@ -1329,7 +1344,7 @@ def tree(
 
     Args:
         color: if True, always colorize the tree. If False, don't colorize the tree. If None,
-            use the default from spack.llnl.tty.color
+            use the default from spack.util.tty.color
         depth: print the depth from the root
         hashes: if True, print the hash of each node
         hashlen: length of the hash to be printed
@@ -1344,10 +1359,11 @@ def tree(
             installation status
         prefix: optional callable that takes a node as an argument and return its
             installation prefix
-        highlight_version_fn: optional callable that returns true on nodes where the version
-            needs to be highlighted
-        highlight_variant_fn: optional callable that returns true on variants that need
-            to be highlighted
+        version_style_fn: optional callable ``(node) -> PartStyle`` controlling version rendering
+        variant_style_fn: optional callable ``(node, key) -> PartStyle`` controlling variant
+            rendering
+        architecture_style_fn: optional callable ``(node, part) -> PartStyle`` controlling
+            architecture part rendering
     """
     out = ""
 
@@ -1407,8 +1423,9 @@ def tree(
             node.format(
                 format,
                 color=color,
-                highlight_version_fn=highlight_version_fn,
-                highlight_variant_fn=highlight_variant_fn,
+                version_style_fn=version_style_fn,
+                variant_style_fn=variant_style_fn,
+                architecture_style_fn=architecture_style_fn,
             )
             + "\n"
         )
@@ -1421,6 +1438,8 @@ def tree(
 
 
 class SpecAnnotations:
+    __slots__ = ("original_spec_format", "compiler_node_attribute")
+
     def __init__(self) -> None:
         self.original_spec_format = SPECFILE_FORMAT_VERSION
         self.compiler_node_attribute: Optional["Spec"] = None
@@ -1643,7 +1662,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return spack.llnl.path.path_to_os_path(self._external_path)[0]
+        return spack.util.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -2070,11 +2089,7 @@ class Spec:
 
     @property
     def installed(self):
-        """Installation status of a package.
-
-        Returns:
-            True if the package has been installed, False otherwise.
-        """
+        """Whether the spec is installed, locally or in an upstream."""
         if not self.concrete:
             return False
 
@@ -2091,11 +2106,7 @@ class Spec:
 
     @property
     def installed_upstream(self):
-        """Whether the spec is installed in an upstream repository.
-
-        Returns:
-            True if the package is installed in an upstream, False otherwise.
-        """
+        """Whether the spec is installed in an upstream database."""
         if not self.concrete:
             return False
 
@@ -2227,7 +2238,7 @@ class Spec:
         return self._prefix
 
     def set_prefix(self, value: str) -> None:
-        self._prefix = spack.util.prefix.Prefix(spack.llnl.path.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
     def spec_hash(self, hash: ht.SpecHashDescriptor) -> str:
         """Utility method for computing different types of Spec hashes.
@@ -2274,17 +2285,6 @@ class Spec:
 
         return hash_string[:length]
 
-    def package_hash(self):
-        """Compute the hash of the contents of the package for this node"""
-        # Concrete specs with the old DAG hash did not have the package hash, so we do
-        # not know what the package looked like at concretization time
-        if self.concrete and not self._package_hash:
-            raise ValueError(
-                "Cannot call package_hash() on concrete specs with the old dag_hash()"
-            )
-
-        return self._cached_hash(ht.package_hash)
-
     def dag_hash(self, length=None):
         """This is Spack's default hash, used to identify installations.
 
@@ -2297,73 +2297,6 @@ class Spec:
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
-
-    def _lookup_hash(self):
-        """Lookup just one spec with an abstract hash, returning a spec from the the environment,
-        store, or finally, binary caches."""
-        from spack.binary_distribution import BinaryCacheQuery
-        from spack.environment import active_environment
-        from spack.store import STORE
-
-        active_env = active_environment()
-
-        # First env, then store, then binary cache
-        matches = (
-            (active_env.all_matching_specs(self) if active_env else [])
-            or STORE.db.query(self, installed=InstallRecordStatus.ANY)
-            or BinaryCacheQuery(True)(self)
-        )
-
-        if not matches:
-            raise InvalidHashError(self, self.abstract_hash)
-
-        if len(matches) != 1:
-            raise AmbiguousHashError(
-                f"Multiple packages specify hash beginning '{self.abstract_hash}'.", *matches
-            )
-
-        return matches[0]
-
-    def lookup_hash(self):
-        """Given a spec with an abstract hash, return a copy of the spec with all properties and
-        dependencies by looking up the hash in the environment, store, or finally, binary caches.
-        This is non-destructive."""
-        if self.concrete or not any(node.abstract_hash for node in self.traverse()):
-            return self
-
-        spec = self.copy(deps=False)
-        # root spec is replaced
-        if spec.abstract_hash:
-            spec._dup(self._lookup_hash())
-            return spec
-
-        # Map the dependencies that need to be replaced
-        node_lookup = {
-            id(node): node._lookup_hash()
-            for node in self.traverse(root=False)
-            if node.abstract_hash
-        }
-
-        # Reconstruct dependencies
-        for edge in self.traverse_edges(root=False):
-            key = edge.parent.name
-            current_node = spec if key == spec.name else spec[key]
-            child_node = node_lookup.get(id(edge.spec), edge.spec.copy())
-            current_node._add_dependency(
-                child_node, depflag=edge.depflag, virtuals=edge.virtuals, direct=edge.direct
-            )
-
-        return spec
-
-    def replace_hash(self):
-        """Given a spec with an abstract hash, attempt to populate all properties and dependencies
-        by looking up the hash in the environment, store, or finally, binary caches.
-        This is destructive."""
-
-        if not any(node for node in self.traverse(order="post") if node.abstract_hash):
-            return
-
-        self._dup(self.lookup_hash())
 
     def to_node_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary representing the state of this Spec.
@@ -2476,11 +2409,9 @@ class Spec:
             and hasattr(self, "_package_hash")
             and self._package_hash
         ):
-            # We use the attribute here instead of `self.package_hash()` because this
-            # should *always* be assignhed at concretization time. We don't want to try
-            # to compute a package hash for concrete spec where a) the package might not
-            # exist, or b) the `dag_hash` didn't include the package hash when the spec
-            # was concretized.
+            # The package hash is assigned at concretization time. We don't want to compute one for
+            # a concrete spec, where a) the package might not exist, or b) the `dag_hash` didn't
+            # include the package hash when the spec was concretized.
             package_hash = self._package_hash
 
             # Full hashes are in bytes
@@ -2907,34 +2838,8 @@ class Spec:
 
         return True
 
-    @staticmethod
-    def ensure_no_deprecated(root: "Spec") -> None:
-        """Raise if a deprecated spec is in the dag of the given root spec.
-
-        Raises:
-            spack.spec.SpecDeprecatedError: if any deprecated spec is found
-        """
-        deprecated = []
-        from spack.store import STORE
-
-        with STORE.db.read_transaction():
-            for x in root.traverse():
-                _, rec = STORE.db.query_by_spec_hash(x.dag_hash())
-                if rec and rec.deprecated_for:
-                    deprecated.append(rec)
-        if deprecated:
-            msg = "\n    The following specs have been deprecated"
-            msg += " in favor of specs with the hashes shown:\n"
-            for rec in deprecated:
-                msg += "        %s  --> %s\n" % (rec.spec, rec.deprecated_for)
-            msg += "\n"
-            msg += "    For each package listed, choose another spec\n"
-            raise SpecDeprecatedError(msg)
-
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
-        if (not value) and self.concrete and self.installed:
-            return
         self._concrete = value
         self._validate_version()
         for variant in self.variants.values():
@@ -2968,9 +2873,7 @@ class Spec:
         # if set to false, clear out all hashes (set to None or remove attr)
         # may need to change references to respect None
         for s in self.traverse():
-            if (not value) and s.concrete and s.installed:
-                continue
-            elif not value:
+            if not value:
                 s.clear_caches()
             s._mark_root_concrete(value)
 
@@ -3191,9 +3094,6 @@ class Spec:
 
         if deps:
             changed |= self._constrain_dependencies(other, resolve_virtuals=resolve_virtuals)
-
-        if other.concrete and not self.concrete and other.satisfies(self):
-            self._finalize_concretization()
 
         return changed
 
@@ -3635,14 +3535,16 @@ class Spec:
             # translate patch sha256sums to patch objects by consulting the index
             if self._patches_assigned():
                 sha256s = list(self.variants["patches"]._patches_in_order_of_appearance)
-                pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
+                pkg_cls = spack.repo.PATH.get_pkg_class(self.fullname)
                 try:
                     self._patches = spack.repo.PATH.get_patches_for_package(sha256s, pkg_cls)
                 except spack.error.PatchLookupError as e:
                     raise spack.error.SpecError(
-                        f"{e}. This usually means the patch was modified or removed. "
-                        "To fix this, either reconcretize or use the original package "
-                        "repository"
+                        f"{e}. This may mean the patch was modified or removed. "
+                        "To fix this, try: "
+                        "(1) reconcretizing, "
+                        "(2) clearing the cache with `spack clean -m`, or "
+                        "(3) resetting the package repository."
                     ) from e
 
         return self._patches
@@ -3686,7 +3588,6 @@ class Spec:
         self.versions = other.versions.copy()
         self.architecture = other.architecture.copy() if other.architecture else None
         self.compiler_flags = other.compiler_flags.copy()
-        self.compiler_flags.spec = self
         self.variants = other.variants.copy()
         self._build_spec = other._build_spec
 
@@ -3702,7 +3603,6 @@ class Spec:
             if patches:
                 self.variants[k]._patches_in_order_of_appearance = patches
 
-        self.variants.spec = self
         self.external_path = other.external_path
         self.external_modules = other.external_modules
         self.extra_attributes = other.extra_attributes
@@ -4068,18 +3968,6 @@ class Spec:
     def namespace_if_anonymous(self):
         return self.namespace if not self.name else None
 
-    @property
-    def spack_root(self):
-        """Special field for using ``{spack_root}`` in :meth:`format`."""
-        return spack.paths.spack_root
-
-    @property
-    def spack_install(self):
-        """Special field for using ``{spack_install}`` in :meth:`format`."""
-        from spack.store import STORE
-
-        return STORE.layout.root
-
     def _format_default(self) -> str:
         """Fast path for formatting with DEFAULT_FORMAT and no color.
 
@@ -4125,8 +4013,9 @@ class Spec:
         format_string: str = DEFAULT_FORMAT,
         color: Optional[bool] = False,
         *,
-        highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
-        highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
+        version_style_fn: Optional[Callable[["Spec"], spack.enums.PartStyle]] = None,
+        variant_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
+        architecture_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
     ) -> str:
         r"""Prints out attributes of a spec according to a format string.
 
@@ -4159,7 +4048,6 @@ class Spec:
 
            hash[:len]    The DAG hash with optional length argument
            spack_root    The spack root directory
-           spack_install The spack install directory
 
         The ``^`` sigil can be used to access dependencies by name.
         ``s.format({^mpi.name})`` will print the name of the MPI implementation in the
@@ -4208,13 +4096,23 @@ class Spec:
         Args:
             format_string: string containing the format to be expanded
             color: True for colorized result; False for no color; None for auto color.
-            highlight_version_fn: optional callable that returns true on nodes where the version
-                needs to be highlighted
-            highlight_variant_fn: optional callable that returns true on variants that need
-                to be highlighted
+            version_style_fn: optional callable ``(node) -> PartStyle`` controlling how the
+                version part is rendered. ``HIGHLIGHT`` uses highlight color, ``DIM`` uses
+                grey-out color, ``HIDDEN`` suppresses the part entirely.
+            variant_style_fn: optional callable ``(node, key) -> PartStyle`` controlling how
+                each individual variant is rendered.
+            architecture_style_fn: optional callable ``(node, part) -> PartStyle`` controlling
+                how architecture parts are rendered. ``part`` is one of ``"platform"``,
+                ``"os"``, ``"target"``, or ``"architecture"`` for the whole ArchSpec.
         """
-        # Fast path for the common case: default format with no color
-        if format_string == DEFAULT_FORMAT and color is False:
+        # Fast path for the common case: default format with no color and no style callbacks
+        if (
+            format_string == DEFAULT_FORMAT
+            and color is False
+            and version_style_fn is None
+            and variant_style_fn is None
+            and architecture_style_fn is None
+        ):
             return self._format_default()
 
         ensure_modern_format_string(format_string)
@@ -4229,7 +4127,7 @@ class Spec:
             return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
         def format_attribute(match_object: Match) -> str:
-            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
+            esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace = (
                 match_object.groups()
             )
             if esc:
@@ -4259,7 +4157,6 @@ class Spec:
 
             attribute = attribute.lower()
             parts = attribute.split(".")
-            assert parts
 
             # check that the sigil is valid for the attribute.
             if not sig:
@@ -4270,6 +4167,10 @@ class Spec:
                 raise SpecFormatSigilError(sig, "compilers", attribute)
             elif sig == "/" and attribute != "abstract_hash":
                 raise SpecFormatSigilError(sig, "DAG hashes", attribute)
+
+            # spack_root is a spec-independent special field: Spack's source root.
+            if attribute == "spack_root":
+                return safe_color(sig, spack.paths.spack_root, None)
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
@@ -4317,47 +4218,51 @@ class Spec:
                     # not printing anything
                     return ""
 
-            # Set color codes for various attributes
-            color = None
-            if "architecture" in parts:
-                color = ARCHITECTURE_COLOR
-            elif "variants" in parts or sig.endswith("="):
-                color = VARIANT_COLOR
+            is_version_part = "version" in parts or "versions" in parts
+            is_arch_part = "architecture" in parts
+            is_variant_part = "variants" in parts
+
+            color_code = None
+            if is_arch_part:
+                color_code = ARCHITECTURE_COLOR
+            elif is_variant_part or sig.endswith("="):
+                color_code = VARIANT_COLOR
             elif any(c in parts for c in ("compiler", "compilers", "compiler_flags")):
-                color = COMPILER_COLOR
-            elif "version" in parts or "versions" in parts:
-                color = VERSION_COLOR
-                if highlight_version_fn and highlight_version_fn(current_node):
-                    color = HIGHLIGHT_COLOR
+                color_code = COMPILER_COLOR
+            elif is_version_part:
+                color_code = VERSION_COLOR
 
-            # return empty string if the value of the attribute is None.
-            if current is None:
-                return ""
+            if version_style_fn and is_version_part:
+                style = version_style_fn(current_node)
+                if style == spack.enums.PartStyle.HIDDEN:
+                    return ""
+                color_code = _STYLE_COLOR_MAP.get(style, color_code)
 
-            # Override the color for single variants, if need be
-            if color and highlight_variant_fn and isinstance(current, VariantMap):
+            if architecture_style_fn and is_arch_part:
+                style = architecture_style_fn(current_node, parts[-1])
+                if style == spack.enums.PartStyle.HIDDEN:
+                    return ""
+                color_code = _STYLE_COLOR_MAP.get(style, color_code)
+
+            if variant_style_fn and is_variant_part and isinstance(current, VariantMap):
                 bool_keys, kv_keys = current.partition_keys()
+                key_and_prefix = [(k, "") for k in bool_keys] + [(k, " ") for k in kv_keys]
                 result = ""
-
-                for key in bool_keys:
-                    current_color = color
-                    if highlight_variant_fn(current_node, key):
-                        current_color = HIGHLIGHT_COLOR
-
-                    result += safe_color(sig, str(current[key]), current_color)
-
-                for key in kv_keys:
-                    current_color = color
-                    if highlight_variant_fn(current_node, key):
-                        current_color = HIGHLIGHT_COLOR
-
-                    # Don't highlight the space before the key/value pair
-                    result += " " + safe_color(sig, f"{current[key]}", current_color)
-
+                for key, prefix in key_and_prefix:
+                    style = variant_style_fn(current_node, key)
+                    if style == spack.enums.PartStyle.HIDDEN:
+                        continue
+                    key_color: Optional[str] = _STYLE_COLOR_MAP.get(style, color_code)
+                    result += prefix + safe_color(sig, str(current[key]), key_color)
                 return result
 
-            # return colored output
-            return safe_color(sig, str(current), color)
+            if variant_style_fn and is_variant_part and not isinstance(current, VariantMap):
+                style = variant_style_fn(current_node, parts[-1])
+                if style == spack.enums.PartStyle.HIDDEN:
+                    return ""
+                color_code = _STYLE_COLOR_MAP.get(style, color_code)
+
+            return safe_color(sig, str(current), color_code)
 
         return SPEC_FORMAT_RE.sub(format_attribute, format_string).strip()
 
@@ -4582,38 +4487,6 @@ class Spec:
         """String representation of this spec."""
         return self._str(color=False)
 
-    def install_status(self) -> InstallStatus:
-        """Helper for tree to print DB install status."""
-        if not self.concrete:
-            return InstallStatus.absent
-
-        if self.external:
-            return InstallStatus.external
-
-        from spack.store import STORE
-
-        upstream, record = STORE.db.query_by_spec_hash(self.dag_hash())
-        if not record:
-            return InstallStatus.absent
-        elif upstream and record.installed:
-            return InstallStatus.upstream
-        elif record.installed:
-            return InstallStatus.installed
-        else:
-            return InstallStatus.missing
-
-    def _installed_explicitly(self):
-        """Helper for tree to print DB install status."""
-        if not self.concrete:
-            return None
-        try:
-            from spack.store import STORE
-
-            record = STORE.db.get_record(self)
-            return record.explicit
-        except KeyError:
-            return None
-
     def tree(
         self,
         *,
@@ -4631,8 +4504,9 @@ class Spec:
         status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
         key=id,
-        highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
-        highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
+        version_style_fn: Optional[Callable[["Spec"], spack.enums.PartStyle]] = None,
+        variant_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
+        architecture_style_fn: Optional[Callable[["Spec", str], spack.enums.PartStyle]] = None,
     ) -> str:
         """Prints out this spec and its dependencies, tree-formatted with indentation.
 
@@ -4641,7 +4515,7 @@ class Spec:
         Args:
             specs: List of specs to format.
             color: if True, always colorize the tree. If False, don't colorize the tree. If None,
-                use the default from spack.llnl.tty.color
+                use the default from spack.util.tty.color
             depth: print the depth from the root
             hashes: if True, print the hash of each node
             hashlen: length of the hash to be printed
@@ -4656,10 +4530,12 @@ class Spec:
                 installation status
             prefix: optional callable that takes a node as an argument and return its
                 installation prefix
-            highlight_version_fn: optional callable that returns true on nodes where the version
-                needs to be highlighted
-            highlight_variant_fn: optional callable that returns true on variants that need
-                to be highlighted
+            version_style_fn: optional callable ``(node) -> PartStyle`` controlling version
+                rendering
+            variant_style_fn: optional callable ``(node, key) -> PartStyle`` controlling variant
+                rendering
+            architecture_style_fn: optional callable ``(node, part) -> PartStyle`` controlling
+                architecture part rendering
         """
         return tree(
             [self],
@@ -4677,8 +4553,9 @@ class Spec:
             status_fn=status_fn,
             prefix=prefix,
             key=key,
-            highlight_version_fn=highlight_version_fn,
-            highlight_variant_fn=highlight_variant_fn,
+            version_style_fn=version_style_fn,
+            variant_style_fn=variant_style_fn,
+            architecture_style_fn=architecture_style_fn,
         )
 
     def __repr__(self):
@@ -4722,7 +4599,7 @@ class Spec:
         """Return set of virtuals provided by self in the context of root"""
         if root is self:
             # Could be using any virtual the package can provide
-            return set(v.name for v in self.package.virtuals_provided)
+            return {v.name for v in self.package.virtuals_provided}
 
         hashes = [s.dag_hash() for s in root.traverse()]
         in_edges = set(
@@ -4802,7 +4679,7 @@ class Spec:
                 for evaluating whether ``replacement`` is a match for each node of ``self``. See
                 ``Spec._splice_match`` and ``Spec._virtuals_provided`` for details.
         """
-        ids = set(id(s) for s in replacement.traverse())
+        ids = {id(s) for s in replacement.traverse()}
 
         # Sort all possible replacements by name and virtual for easy access later
         replacements_by_name = collections.defaultdict(list)
@@ -4981,9 +4858,6 @@ class Spec:
         if mutator.name and mutator.name != self.name:
             raise SpecMutationError(f"Cannot mutate spec name: spec {self} mutator {mutator}")
 
-        if mutator.namespace and mutator.namespace != self.namespace:
-            raise SpecMutationError(f"Cannot mutate spec namespace: spec {self} mutator {mutator}")
-
         if len(mutator.dependencies()) > 0:
             raise SpecMutationError(f"Cannot mutate dependencies: spec {self} mutator {mutator}")
 
@@ -4999,6 +4873,10 @@ class Spec:
             raise SpecMutationError(f"Cannot mutate abstract_hash: spec {self} mutator {mutator}")
 
         changed = False
+
+        if mutator.namespace and mutator.namespace != self.namespace:
+            self.namespace = mutator.namespace
+            changed = True
 
         if mutator.versions != vn.VersionList(":") and self.versions != mutator.versions:
             self.versions = mutator.versions
@@ -5148,6 +5026,8 @@ class Spec:
 class VariantMap(lang.HashableMap[str, vt.VariantValue]):
     """Map containing variant instances. New values can be added only
     if the key is not already present."""
+
+    __slots__ = ()
 
     def __setitem__(self, name, vspec):
         # Raise a TypeError if vspec is not of the right type
@@ -5313,9 +5193,9 @@ def substitute_abstract_variants(spec: Spec):
         spec.variants.substitute(new_variant)
 
     if unknown:
-        variants = spack.llnl.string.plural(len(unknown), "variant")
+        variants = spack.util.string.plural(len(unknown), "variant")
         raise vt.UnknownVariantError(
-            f"Tried to set {variants} {spack.llnl.string.comma_and(unknown)}. "
+            f"Tried to set {variants} {spack.util.string.comma_and(unknown)}. "
             f"{spec.name} has no such {variants}",
             unknown_variants=unknown,
         )
@@ -5961,7 +5841,7 @@ class InvalidDependencyError(spack.error.SpecError):
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super().__init__(
-            "Package {0} does not depend on {1}".format(pkg, spack.llnl.string.comma_or(deps))
+            "Package {0} does not depend on {1}".format(pkg, spack.util.string.comma_or(deps))
         )
 
 
@@ -6039,37 +5919,8 @@ class SpecFormatSigilError(SpecFormatStringError):
         super().__init__(msg)
 
 
-class ConflictsInSpecError(spack.error.SpecError, RuntimeError):
-    def __init__(self, spec, matches):
-        message = 'Conflicts in concretized spec "{0}"\n'.format(spec.short_spec)
-
-        visited = set()
-
-        long_message = ""
-
-        match_fmt_default = '{0}. "{1}" conflicts with "{2}"\n'
-        match_fmt_custom = '{0}. "{1}" conflicts with "{2}" [{3}]\n'
-
-        for idx, (s, c, w, msg) in enumerate(matches):
-            if s not in visited:
-                visited.add(s)
-                long_message += "List of matching conflicts for spec:\n\n"
-                long_message += s.tree(indent=4) + "\n"
-
-            if msg is None:
-                long_message += match_fmt_default.format(idx + 1, c, w)
-            else:
-                long_message += match_fmt_custom.format(idx + 1, c, w, msg)
-
-        super().__init__(message, long_message)
-
-
 class SpecDeprecatedError(spack.error.SpecError):
     """Raised when a spec concretizes to a deprecated spec or dependency."""
-
-
-class InvalidSpecDetected(spack.error.SpecError):
-    """Raised when a detected spec doesn't pass validation checks."""
 
 
 class SpliceError(spack.error.SpecError):
@@ -6093,6 +5944,7 @@ class _ImmutableSpec(Spec):
     """An immutable Spec that prevents a class of accidental mutations."""
 
     _mutable: bool
+    _str_cache: str
 
     def __init__(self, spec_like: Optional[str] = None) -> None:
         object.__setattr__(self, "_mutable", True)
@@ -6111,6 +5963,15 @@ class _ImmutableSpec(Spec):
     def add_dependency_edge(self, *args, **kwargs):
         assert self._mutable
         return super().add_dependency_edge(*args, **kwargs)
+
+    def __str__(self) -> str:
+        # Cache the str value of immutable specs as an optimization
+        try:
+            return self._str_cache
+        except AttributeError:
+            s = self._str(color=False)
+            object.__setattr__(self, "_str_cache", s)
+            return s
 
     def __setattr__(self, name, value) -> None:
         assert self._mutable

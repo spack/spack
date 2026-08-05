@@ -6,14 +6,14 @@ import os
 import platform as py_platform
 import re
 
-import spack.llnl.util.lang
+import spack.util.lang
 from spack.util.executable import Executable
 from spack.version import StandardVersion, Version
 
 from ._operating_system import OperatingSystem
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def macos_version() -> StandardVersion:
     """Get the current macOS version as a version object.
 
@@ -60,7 +60,7 @@ def macos_version() -> StandardVersion:
     return StandardVersion.from_string(py_platform.mac_ver()[0])
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def macos_cltools_version():
     """Find the last installed version of the CommandLineTools.
 
@@ -84,26 +84,11 @@ def macos_cltools_version():
     return None
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def macos_sdk_path():
     """Return path to the active macOS SDK."""
     xcrun = Executable("xcrun")
     return xcrun("--show-sdk-path", output=str).rstrip()
-
-
-def macos_sdk_version():
-    """Return the version of the active macOS SDK.
-
-    The SDK version usually corresponds to the installed Xcode version and can
-    affect how some packages (especially those that use the GUI) can fail. This
-    information should somehow be embedded into the future "compilers are
-    dependencies" feature.
-
-    The macOS deployment target cannot be greater than the SDK version, but
-    usually it can be at least a few versions less.
-    """
-    xcrun = Executable("xcrun")
-    return Version(xcrun("--show-sdk-version", output=str).rstrip())
 
 
 mac_releases = {
@@ -130,6 +115,7 @@ mac_releases = {
     "14": "sonoma",
     "15": "sequoia",
     "26": "tahoe",
+    "27": "goldengate",
 }
 
 

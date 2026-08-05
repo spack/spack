@@ -9,11 +9,12 @@ from typing import Any, Callable, List, Mapping, Optional
 
 import spack.binary_distribution
 import spack.config
-import spack.llnl.path
 import spack.repo
 import spack.spec
 import spack.store
 import spack.traverse
+import spack.util.path
+from spack.active_environment import active_environment
 from spack.externals import ExternalSpecsParser
 from spack.spec_filter import SpecFilter
 
@@ -106,7 +107,7 @@ def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) ->
         for entry in packages_with_externals.get(name, {}).get("externals", []):
             expected_prefix = entry.get("prefix")
             if expected_prefix is not None:
-                expected_prefix = spack.llnl.path.path_to_os_path(expected_prefix)[0]
+                expected_prefix = spack.util.path.path_to_os_path(expected_prefix)[0]
             if (
                 spec.satisfies(entry["spec"])
                 and spec.external_path == expected_prefix
@@ -120,7 +121,8 @@ def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) ->
 def _specs_from_store(configuration):
     store = spack.store.create(configuration)
     with store.db.read_transaction():
-        return store.db.query(installed=True)
+        # The order of reused specs does not matter to the solver, so skip sorting.
+        return store.db.query(installed=True, sort=False)
 
 
 def _specs_from_mirror():
@@ -224,7 +226,7 @@ class ReusableSpecsSelector:
                 exclude = source.get("exclude", default_exclude)
                 if source["type"] == "environment" and "path" in source:
                     env_dir = spack.environment.as_env_dir(source["path"])
-                    active_env = spack.environment.active_environment()
+                    active_env = active_environment()
                     if not active_env or env_dir not in active_env.included_concrete_env_root_dirs:
                         # If the environment is not included as a concrete environment, use the
                         # current specs from its lockfile.

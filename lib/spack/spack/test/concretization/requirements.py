@@ -8,7 +8,7 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.error
-import spack.installer
+import spack.old_installer
 import spack.package_base
 import spack.paths
 import spack.platforms
@@ -18,9 +18,11 @@ import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 import spack.version
+from spack.config import Configuration
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
+from spack.solver.requirements import RequirementParser
 from spack.solver.reuse import spec_filter_from_packages_yaml
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
@@ -28,7 +30,7 @@ from spack.util.url import path_to_file_url
 
 def update_packages_config(conf_str):
     conf = syaml.load_config(conf_str)
-    spack.config.set("packages", conf["packages"], scope="concretize")
+    spack.config.CONFIG.set("packages", conf["packages"], scope="concretize")
 
 
 @pytest.fixture
@@ -319,7 +321,7 @@ def test_require_hash(mock_fetch, install_mockery, concretize_scope, test_repo):
     s1 = spack.concretize.concretize_one("x@1.1")
     s2 = spack.concretize.concretize_one("x@1.0")
 
-    builder = spack.installer.PackageInstaller([s1.package, s2.package], fake=True)
+    builder = spack.old_installer.PackageInstaller([s1.package, s2.package], fake=True)
     builder.install()
 
     conf_str = f"""\
@@ -452,7 +454,9 @@ packages:
     assert s2.satisfies("@2.5")
 
 
-def test_reuse_oneof(concretize_scope, test_repo, tmp_path: pathlib.Path, mock_fetch):
+def test_reuse_oneof(
+    concretize_scope, test_repo, tmp_path: pathlib.Path, mock_fetch, mutable_config: Configuration
+):
     conf_str = """\
 packages:
   y:
@@ -467,7 +471,7 @@ packages:
 
         update_packages_config(conf_str)
 
-        with spack.config.override("concretizer:reuse", True):
+        with mutable_config.override("concretizer:reuse", True):
             s2 = spack.concretize.concretize_one("y")
             assert not s2.satisfies("@2.5~shared")
 
@@ -477,7 +481,12 @@ packages:
     [(True, ["@=2.3", "%gcc"], []), (False, ["%gcc"], ["@=2.3"])],
 )
 def test_requirements_and_deprecated_versions(
-    allow_deprecated, expected, not_expected, concretize_scope, test_repo
+    allow_deprecated,
+    expected,
+    not_expected,
+    concretize_scope,
+    test_repo,
+    mutable_config: Configuration,
 ):
     """Tests the expected behavior of requirements and deprecated versions.
 
@@ -496,7 +505,7 @@ packages:
 """
     update_packages_config(conf_str)
 
-    with spack.config.override("config:deprecated", allow_deprecated):
+    with mutable_config.override("config:deprecated", allow_deprecated):
         s1 = spack.concretize.concretize_one("y")
         for constrain in expected:
             assert s1.satisfies(constrain)
@@ -1154,14 +1163,16 @@ def test_forward_multi_valued_variant_using_requires(
         assert not s.satisfies(constraint)
 
 
-def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_packages):
+def test_strong_preferences_higher_priority_than_reuse(
+    concretize_scope, mock_packages, mutable_config: Configuration
+):
     """Tests that strong preferences have a higher priority than reusing specs."""
     reused_spec = spack.concretize.concretize_one("adios2~bzip2")
     reuse_nodes = list(reused_spec.traverse())
     root_specs = [Spec("ascent+adios2")]
 
     # Check that without further configuration adios2 is reused
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
@@ -1177,7 +1188,7 @@ def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_pa
         - "+bzip2"
 """
     )
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
@@ -1187,7 +1198,7 @@ def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_pa
     assert ascent["adios2"].satisfies("+bzip2")
 
     # A preference is still preference, so we can override from input
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(
@@ -1303,7 +1314,7 @@ packages:
 def test_requirements_on_compilers_and_reuse(
     concretize_scope,
     mock_packages,
-    mutable_config,
+    mutable_config: Configuration,
     packages_yaml,
     expected_reuse,
     expected_contraints,
@@ -1326,7 +1337,7 @@ def test_requirements_on_compilers_and_reuse(
         exclude=[],
     ).selected_specs()
 
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(setup, root_specs, reuse=reused_nodes + external_specs)
@@ -1350,7 +1361,7 @@ def test_requirements_on_compilers_and_reuse(
     ],
 )
 def test_requirements_conditional_deps(
-    abstract, req_is_noop, mutable_config, mock_packages, config_two_gccs
+    abstract, req_is_noop, mutable_config: Configuration, mock_packages, config_two_gccs
 ):
     required_spec = (
         "%[when='^c' virtuals=c]gcc@10.3.1 "
@@ -1361,7 +1372,7 @@ def test_requirements_conditional_deps(
     abstract = spack.spec.Spec(abstract)
 
     no_requirements = spack.concretize.concretize_one(abstract)
-    spack.config.CONFIG.set(f"packages:{abstract.name}", {"require": required_spec})
+    mutable_config.set(f"packages:{abstract.name}", {"require": required_spec})
     requirements = spack.concretize.concretize_one(abstract)
 
     assert requirements.satisfies(required_spec)
@@ -1481,7 +1492,7 @@ def test_language_preferences_and_reuse(
     current_preference,
     constraint_kind,
     concretize_scope,
-    mutable_config,
+    mutable_config: Configuration,
     mock_packages,
 ):
     """Tests that language preferences are respected when reusing specs."""
@@ -1517,7 +1528,7 @@ packages:
     ).selected_specs()
 
     # Ask for just "mpileaks" and check the spec is reused
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(
@@ -1546,7 +1557,7 @@ packages:
           cxx: /path1/bin/clang++
 """
     update_packages_config(packages_yaml)
-    with spack.config.override("concretizer:reuse", True):
+    with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(
@@ -1663,3 +1674,24 @@ packages:
     # With clang as compiler, condition does not fire -> default highest version @2.3
     s_clang = spack.concretize.concretize_one("multivalue-variant %clang")
     assert s_clang.satisfies("@2.3 %c=clang"), f"expected @2.3 with clang, got {s_clang.version}"
+
+
+@pytest.mark.regression("52636")
+def test_compiler_in_all_from_internal_scope_warns(mock_packages):
+    """Tests that building a warning on an InternalConfigScope doesn't raise because
+    there's no "line" attribute.
+    """
+    scope = spack.config.InternalConfigScope(
+        "env:groups:libs", {"packages": {"all": {"require": ["%gcc"]}}}
+    )
+    config = spack.config.Configuration()
+    config.push_scope(scope)
+    parser = RequirementParser(config)
+
+    require = config.get("packages:all:require")
+    # The mark on the requirement string has a name but no line number.
+    mark = syaml.get_mark_from_yaml_data(require[0])
+    assert mark is not None and mark.line is None
+
+    with pytest.warns(UserWarning, match="applies a dependency constraint to all packages"):
+        parser._maybe_warn_compiler_in_all(require, "require")

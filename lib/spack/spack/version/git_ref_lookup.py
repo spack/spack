@@ -14,7 +14,7 @@ import spack.repo
 import spack.util.executable
 import spack.util.hash
 import spack.util.spack_json as sjson
-from spack.llnl.util.filesystem import mkdirp, working_dir
+from spack.util.filesystem import mkdirp, working_dir
 
 from .common import VersionLookupError
 from .lookup import AbstractRefLookup

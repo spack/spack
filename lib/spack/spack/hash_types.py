@@ -56,7 +56,7 @@ dag_hash = SpecHashDescriptor(
 
 
 def _content_hash_override(spec: "spack.spec.Spec") -> str:
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.fullname)
     pkg = pkg_cls(spec)
     return pkg.content_hash()
 

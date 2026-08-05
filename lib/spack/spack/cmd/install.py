@@ -8,19 +8,21 @@ import shutil
 import sys
 from typing import List
 
+import spack.binary_distribution
 import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.installer_dispatch
-import spack.llnl.util.filesystem as fs
 import spack.paths
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
-from spack.installer import InstallPolicy
-from spack.llnl.string import plural
-from spack.llnl.util import tty
+from spack.old_installer import InstallPolicy
+from spack.util import tty
+from spack.util.string import plural
 
 description = "build and install packages"
 section = "build"
@@ -313,7 +315,7 @@ def install(parser, args):
         return
 
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     if args.log_file and not args.log_format:
         msg = "the '--log-format' must be specified when using '--log-file'"
@@ -323,7 +325,7 @@ def install(parser, args):
 
     reporter = args.reporter() if args.log_format else None
     install_kwargs = install_kwargs_from_args(args)
-    env = ev.active_environment()
+    env = active_environment()
 
     if not env and not args.spec:
         _die_require_env(args.subparser)
@@ -359,7 +361,9 @@ def _maybe_add_and_concretize(args, env, specs):
         concretized_specs = env.concretize(tests=tests)
         if concretized_specs:
             tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
-            ev.display_specs([concrete for _, concrete in concretized_specs])
+            spack.binary_distribution.load_buildcache_index()
+            status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+            ev.display_specs([concrete for _, concrete in concretized_specs], status_fn=status_fn)
 
         # save view regeneration for later, so that we only do it
         # once, as it can be slow.

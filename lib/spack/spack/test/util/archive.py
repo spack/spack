@@ -13,12 +13,12 @@ import pytest
 
 import spack.util.crypto
 import spack.version
-from spack.llnl.util.filesystem import working_dir
 from spack.util.archive import (
     gzip_compressed_tarfile,
     reproducible_tarfile_from_prefix,
     retrieve_commit_from_archive,
 )
+from spack.util.filesystem import working_dir
 
 
 def test_gzip_compressed_tarball_is_reproducible(tmp_path: Path, monkeypatch):

@@ -1,0 +1,48 @@
+name: Set up Spack for testing
+description: Install Python and test dependencies, configure git and bootstrapping
+
+inputs:
+  python-version:
+    description: Python version to install
+    required: true
+  pip-install:
+    description: Arguments appended to pip install --upgrade
+    required: false
+    default: -r .github/workflows/requirements/unit_tests/requirements.txt
+  bootstrap:
+    description: Either "now" to bootstrap clingo, or "none" to disable all sources
+    required: false
+    default: now
+
+runs:
+  using: composite
+  steps:
+  - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+    with:
+      python-version: ${{ inputs.python-version }}
+  - name: Install Python packages
+    shell: bash
+    run: pip install --upgrade pip ${{ inputs.pip-install }}
+  - name: Setup git configuration
+    shell: bash
+    run: |
+        # Need this for the git tests to succeed.
+        git --version
+        . .github/workflows/bin/setup_git.sh
+  - name: Configure bootstrapping
+    shell: bash
+    run: |
+        . share/spack/setup-env.sh
+        spack bootstrap disable spack-install
+        if [ "${{ inputs.bootstrap }}" = "now" ]; then
+            spack bootstrap now
+        else
+            spack bootstrap disable github-actions-v0.6
+            spack bootstrap disable github-actions-v2
+        fi
+  - name: Smoke tests
+    shell: bash
+    run: |
+        bin/spack -h
+        bin/spack help -a
+        bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"

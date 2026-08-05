@@ -4,7 +4,7 @@
 import pytest
 
 import spack.audit
-import spack.config
+from spack.config import Configuration
 
 
 @pytest.mark.parametrize(
@@ -32,6 +32,8 @@ import spack.config
         (["fail-test-audit-docstring"], ["PKG-PROPERTIES"]),
         # This package has a stand-alone test method without an implementation
         (["fail-test-audit-impl"], ["PKG-PROPERTIES"]),
+        # This package doesn't inherit from a package that creates a builder
+        (["fail-test-audit-builder"], ["PKG-PROPERTIES"]),
         # This package has maintainers with placeholders
         (["invalid-maintainer"], ["PKG-DIRECTIVES"]),
         # This package has no issues
@@ -113,7 +115,9 @@ _double_compiler_definition = [
         ),
     ],
 )
-def test_config_audits(config_section, data, failing_check, mock_packages):
-    with spack.config.override(config_section, data):
+def test_config_audits(
+    mutable_config: Configuration, config_section, data, failing_check, mock_packages
+):
+    with mutable_config.override(config_section, data):
         reports = spack.audit.run_group("configs")
         assert any((check == failing_check) and errors for check, errors in reports)

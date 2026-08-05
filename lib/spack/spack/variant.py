@@ -26,9 +26,9 @@ from typing import (
 )
 
 import spack.error
-import spack.llnl.util.lang as lang
-import spack.llnl.util.tty.color
 import spack.spec_parser
+import spack.util.tty.color
+from spack.util import lang
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -287,7 +287,15 @@ class VariantValue:
     type: VariantType
     _values: ValueType
 
-    slots = ("name", "propagate", "concrete", "type", "_values")
+    # _patches_in_order_of_appearance is attached to the "patches" variant after concretization
+    __slots__ = (
+        "name",
+        "propagate",
+        "concrete",
+        "type",
+        "_values",
+        "_patches_in_order_of_appearance",
+    )
 
     def __init__(
         self,
@@ -508,6 +516,8 @@ def BoolValuedVariant(name: str, value: bool, propagate: bool = False) -> Varian
 class VariantValueRemoval(VariantValue):
     """Indicator class for Spec.mutate to remove a variant"""
 
+    __slots__ = ()
+
     def __init__(self, name):
         super().__init__(VariantType.INDICATOR, name, (None,))
 
@@ -598,6 +608,9 @@ class DisjointSetsOfValues(collections.abc.Sequence):
         )
         return object_without_empty_set
 
+    def __iter__(self):
+        return itertools.chain.from_iterable(self.sets)
+
     def __getitem__(self, idx):
         return tuple(itertools.chain.from_iterable(self.sets))[idx]
 
@@ -613,7 +626,7 @@ class DisjointSetsOfValues(collections.abc.Sequence):
 
             format_args = {"variant": variant_name, "package": pkg_name, "values": values}
             msg = self.error_fmt + " @*r{{[{package}, variant '{variant}']}}"
-            msg = spack.llnl.util.tty.color.colorize(msg.format(**format_args))
+            msg = spack.util.tty.color.colorize(msg.format(**format_args))
             raise spack.error.SpecError(msg)
 
         return _disjoint_set_validator

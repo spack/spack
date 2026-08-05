@@ -16,7 +16,7 @@ import spack.deptypes as dt
 import spack.environment.environment as ev
 import spack.paths
 import spack.spec
-import spack.traverse as traverse
+from spack import traverse
 
 
 class UseBuildCache(Enum):
@@ -51,7 +51,7 @@ class DepfileNode:
         self, target: spack.spec.Spec, prereqs: List[spack.spec.Spec], buildcache: UseBuildCache
     ):
         self.target = MakefileSpec(target)
-        self.prereqs = list(MakefileSpec(x) for x in prereqs)
+        self.prereqs = [MakefileSpec(x) for x in prereqs]
         if buildcache == UseBuildCache.ONLY:
             self.buildcache_flag = "--use-buildcache=only"
         elif buildcache == UseBuildCache.NEVER:
@@ -145,7 +145,7 @@ class MakefileModel:
         self.env_path = env.path
 
         # These specs are built in the default target.
-        self.roots = list(MakefileSpec(x) for x in roots)
+        self.roots = [MakefileSpec(x) for x in roots]
 
         # The SPACK_PACKAGE_IDS variable is "exported", which can be used when including
         # generated makefiles to add post-install hooks, like pushing to a buildcache,

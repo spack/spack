@@ -12,20 +12,20 @@ import pytest
 
 import spack.vendor.archspec.cpu
 
-import spack.config
 import spack.error
 import spack.repo
 import spack.util.file_cache
 import spack.util.spack_yaml as syaml
 from spack.concretize import concretize_one
+from spack.config import Configuration
 from spack.main import SpackCommand
 
 solve = SpackCommand("solve")
 
 
-def update_packages_config(conf_str):
+def update_packages_config(conf_str, config: Configuration):
     conf = syaml.load_config(conf_str)
-    spack.config.set("packages", conf["packages"], scope="concretize")
+    config.set("packages", conf["packages"], scope="concretize")
 
 
 _pkgx1 = (
@@ -328,7 +328,7 @@ from spack.package import Package
     )
 
 
-all_pkgs = list((x, _add_import(y)) for (x, y) in all_pkgs)
+all_pkgs = [(x, _add_import(y)) for (x, y) in all_pkgs]
 
 
 _repo_name_id = 0
@@ -486,7 +486,7 @@ def test_errmsg_requirements_1(concretize_scope, test_repo):
         concretize_one("w4@:2.0 ^w3@2.1")
 
 
-def test_errmsg_requirements_cfg(concretize_scope, test_repo):
+def test_errmsg_requirements_cfg(concretize_scope, test_repo, mutable_config: Configuration):
     conf_str = """\
 packages:
   w2:
@@ -494,7 +494,7 @@ packages:
     - one_of: ["~v1"]
       when: "@2.0"
 """
-    update_packages_config(conf_str)
+    update_packages_config(conf_str, mutable_config)
 
     important_points = [
         r"~v1 is a requirement for package w2 when @2.0",
@@ -525,7 +525,9 @@ def test_errmsg_requirements_directives(concretize_scope, test_repo):
 
 # Simulates a user error: package is specified as external with a version,
 # but a different version was required in config.
-def test_errmsg_requirements_external_mismatch(concretize_scope, test_repo):
+def test_errmsg_requirements_external_mismatch(
+    concretize_scope, test_repo, mutable_config: Configuration
+):
     conf_str = """\
 packages:
   t1:
@@ -536,7 +538,7 @@ packages:
     require:
     - spec: "t1@2.0"
 """
-    update_packages_config(conf_str)
+    update_packages_config(conf_str, mutable_config)
 
     important_points = ["no externals satisfy the request"]
 
@@ -545,9 +547,11 @@ packages:
 
 
 @pytest.mark.parametrize("section", ["prefer", "require"])
-def test_warns_on_compiler_constraint_in_all(concretize_scope, mock_packages, section):
+def test_warns_on_compiler_constraint_in_all(
+    concretize_scope, mock_packages, section, mutable_config: Configuration
+):
     """Compiler constraints under packages:all: are a footgun and should warn."""
-    update_packages_config(f"packages:\n  all:\n    {section}:\n    - '%c=gcc'\n")
+    update_packages_config(f"packages:\n  all:\n    {section}:\n    - '%c=gcc'\n", mutable_config)
     with pytest.warns(UserWarning, match="packages: all:"):
         concretize_one("gmake")
 
@@ -564,7 +568,9 @@ def test_unknown_concrete_target_in_input_spec(concretize_scope, test_repo):
 
 
 @pytest.mark.regression("52209")
-def test_require_single_unknown_target_errors(concretize_scope, test_repo):
+def test_require_single_unknown_target_errors(
+    concretize_scope, test_repo, mutable_config: Configuration
+):
     """Tests that a single-option require with an unknown target raises a clear error."""
     target_str = "target=not-a-real-uarch"
     update_packages_config(
@@ -572,7 +578,8 @@ def test_require_single_unknown_target_errors(concretize_scope, test_repo):
 packages:
   x4:
     require: {target_str}
-"""
+""",
+        mutable_config,
     )
     with pytest.raises(spack.error.SpackError) as exc_info:
         concretize_one("x4")
@@ -580,7 +587,9 @@ packages:
 
 
 @pytest.mark.regression("52209")
-def test_require_all_unknown_targets_errors(concretize_scope, test_repo):
+def test_require_all_unknown_targets_errors(
+    concretize_scope, test_repo, mutable_config: Configuration
+):
     """Tests that a group where every option has an unknown target also raises a clear error."""
     update_packages_config(
         """\
@@ -588,7 +597,8 @@ packages:
   x4:
     require:
     - any_of: ["target=not-a-real-uarch", "target=also-fake"]
-"""
+""",
+        mutable_config,
     )
     with pytest.raises(spack.error.SpackError) as exc_info:
         concretize_one("x4")
@@ -602,7 +612,9 @@ packages:
 @pytest.mark.skipif(
     str(spack.vendor.archspec.cpu.host().family) != "x86_64", reason="test assumes x86_64 uarchs"
 )
-def test_require_mixed_unknown_and_valid_target_warns(concretize_scope, test_repo):
+def test_require_mixed_unknown_and_valid_target_warns(
+    concretize_scope, test_repo, mutable_config: Configuration
+):
     """Tests that a "require" group with at least one valid option just warns."""
     update_packages_config(
         """\
@@ -610,21 +622,23 @@ packages:
   x4:
     require:
     - one_of: ["target=not-a-real-uarch", "target=x86_64"]
-"""
+""",
+        mutable_config,
     )
     with pytest.warns(UserWarning, match="not-a-real-uarch"):
         concretize_one("x4")
 
 
 @pytest.mark.regression("52209")
-def test_prefer_unknown_target_warns(concretize_scope, test_repo):
+def test_prefer_unknown_target_warns(concretize_scope, test_repo, mutable_config: Configuration):
     """A preference with an unknown target has the @: fallback, so it only warns."""
     update_packages_config(
         """\
 packages:
   x4:
     prefer: ["target=not-a-real-uarch"]
-"""
+""",
+        mutable_config,
     )
     with pytest.warns(UserWarning, match="not-a-real-uarch"):
         concretize_one("x4")

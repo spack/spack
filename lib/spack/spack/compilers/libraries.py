@@ -13,17 +13,17 @@ import tempfile
 from typing import Dict, List, Optional, Set, Tuple, cast
 
 import spack.caches
-import spack.llnl.path
-import spack.llnl.util.lang
 import spack.schema.environment
 import spack.spec
 import spack.util.executable
+import spack.util.lang
 import spack.util.libc
 import spack.util.module_cmd
-from spack.llnl.util import tty
-from spack.llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
+import spack.util.path
+from spack.util import tty
 from spack.util.environment import filter_system_paths
 from spack.util.file_cache import FileCache
+from spack.util.filesystem import path_contains_subdirectory, paths_containing_libs
 
 #: regex for parsing linker lines
 _LINKER_LINE = re.compile(r"^( *|.*[/\\])" r"(link|ld|([^/\\]+-)?ld|collect2)" r"[^/\\]*( |$)")
@@ -38,7 +38,7 @@ _LINK_DIR_ARG = re.compile(r"^-L(.:)?(?P<dir>[/\\].*)")
 _LIBPATH_ARG = re.compile(r"^[-/](LIBPATH|libpath):(?P<dir>.*)")
 
 
-@spack.llnl.path.system_path_filter
+@spack.util.path.system_path_filter
 def parse_non_system_link_dirs(compiler_debug_output: str) -> List[str]:
     """Parses link paths out of compiler debug output.
 
@@ -59,7 +59,7 @@ def parse_non_system_link_dirs(compiler_debug_output: str) -> List[str]:
     # exact match, while 'in_system_subdirectory' checks if a path contains
     # a system directory as a subdirectory
     link_dirs = filter_system_paths(link_dirs)
-    return list(p for p in link_dirs if not in_system_subdirectory(p))
+    return [p for p in link_dirs if not in_system_subdirectory(p)]
 
 
 def filter_non_existing_dirs(dirs):
@@ -443,4 +443,4 @@ def _make_compiler_cache():
     return FileCompilerCache(spack.caches.MISC_CACHE)
 
 
-COMPILER_CACHE = cast(CompilerCache, spack.llnl.util.lang.Singleton(_make_compiler_cache))
+COMPILER_CACHE = cast(CompilerCache, spack.util.lang.Singleton(_make_compiler_cache))

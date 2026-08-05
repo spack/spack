@@ -15,12 +15,11 @@ import spack.bootstrap.core
 import spack.cmd.mirror
 import spack.concretize
 import spack.config
-import spack.llnl.util.filesystem
-import spack.llnl.util.tty
-import spack.llnl.util.tty.color
 import spack.stage
-import spack.util.path
+import spack.util.filesystem
 import spack.util.spack_yaml
+import spack.util.tty
+import spack.util.tty.color
 from spack.cmd.common import arguments
 
 description = "manage bootstrap configuration"
@@ -145,12 +144,12 @@ def _enable_or_disable(args):
     value = args.subcommand == "enable"
     if args.name is None:
         # Set to True if we called "enable", otherwise set to false
-        old_value = spack.config.get("bootstrap:enable", scope=args.scope)
+        old_value = spack.config.CONFIG.get("bootstrap:enable", scope=args.scope)
         if old_value == value:
-            spack.llnl.util.tty.msg("Bootstrapping is already {}d".format(args.subcommand))
+            spack.util.tty.msg("Bootstrapping is already {}d".format(args.subcommand))
         else:
-            spack.config.set("bootstrap:enable", value, scope=args.scope)
-            spack.llnl.util.tty.msg("Bootstrapping has been {}d".format(args.subcommand))
+            spack.config.CONFIG.set("bootstrap:enable", value, scope=args.scope)
+            spack.util.tty.msg("Bootstrapping has been {}d".format(args.subcommand))
         return
 
     if value is True:
@@ -166,7 +165,7 @@ def _reset(args):
             "Current configuration will be lost.\n",
             "Do you want to continue?",
         ]
-        ok_to_continue = spack.llnl.util.tty.get_yes_or_no("".join(msg), default=True)
+        ok_to_continue = spack.util.tty.get_yes_or_no("".join(msg), default=True)
         if not ok_to_continue:
             raise RuntimeError("Aborting")
 
@@ -177,8 +176,8 @@ def _reset(args):
 
         # If we are in an env scope we can't delete a file, but the best we
         # can do is nullify the corresponding configuration
-        if scope.name.startswith("env") and spack.config.get("bootstrap", scope=scope.name):
-            spack.config.set("bootstrap", {}, scope=scope.name)
+        if scope.name.startswith("env") and spack.config.CONFIG.get("bootstrap", scope=scope.name):
+            spack.config.CONFIG.set("bootstrap", {}, scope=scope.name)
             continue
 
         # If we are outside of an env scope delete the bootstrap.yaml file
@@ -192,27 +191,27 @@ def _reset(args):
 
 def _root(args):
     if args.path:
-        spack.config.set("bootstrap:root", args.path, scope=args.scope)
+        spack.config.CONFIG.set("bootstrap:root", args.path, scope=args.scope)
     elif args.scope:
-        if args.scope not in spack.config.existing_scope_names():
-            spack.llnl.util.tty.die(
+        if args.scope not in spack.config.CONFIG.existing_scope_names():
+            spack.util.tty.die(
                 f"The argument --scope={args.scope} must refer to an existing scope."
             )
 
-    root = spack.config.get("bootstrap:root", default=None, scope=args.scope)
+    root = spack.config.CONFIG.get("bootstrap:root", default=None, scope=args.scope)
     if root:
-        root = spack.util.path.canonicalize_path(root)
+        root = spack.config.canonicalize_path(root)
     print(root)
 
 
 def _list(args):
     sources = spack.bootstrap.core.bootstrapping_sources(scope=args.scope)
     if not sources:
-        spack.llnl.util.tty.msg("No method available for bootstrapping Spack's dependencies")
+        spack.util.tty.msg("No method available for bootstrapping Spack's dependencies")
         return
 
     def _print_method(source, trusted):
-        color = spack.llnl.util.tty.color
+        color = spack.util.tty.color
 
         def fmt(header, content):
             header_fmt = "@*b{{{0}:}} {1}"
@@ -242,7 +241,7 @@ def _list(args):
 
             fmt("  Description", "".join(description_lines))
 
-    trusted = spack.config.get("bootstrap:trusted", {})
+    trusted = spack.config.CONFIG.get("bootstrap:trusted", {})
 
     def sort_fn(x):
         x_trust = trusted.get(x["name"], None)
@@ -265,7 +264,7 @@ def _write_bootstrapping_source_status(name, enabled, scope=None):
         enabled (bool): True if the source is enabled, False if it is disabled.
         scope (None or str): configuration scope to modify. If none use the default scope.
     """
-    sources = spack.config.get("bootstrap:sources")
+    sources = spack.config.CONFIG.get("bootstrap:sources")
 
     matches = [s for s in sources if s["name"] == name]
     if not matches:
@@ -285,20 +284,20 @@ def _write_bootstrapping_source_status(name, enabled, scope=None):
 
     # Setting the scope explicitly is needed to not copy over to a new scope
     # the entire default configuration for bootstrap.yaml
-    scope = scope or spack.config.default_modify_scope("bootstrap")
-    spack.config.add("bootstrap:trusted:{0}:{1}".format(name, str(enabled)), scope=scope)
+    scope = scope or spack.config.CONFIG.default_modify_scope("bootstrap")
+    spack.config.CONFIG.add("bootstrap:trusted:{0}:{1}".format(name, str(enabled)), scope=scope)
 
 
 def _enable_source(args):
     _write_bootstrapping_source_status(args.name, enabled=True, scope=args.scope)
     msg = '"{0}" is now enabled for bootstrapping'
-    spack.llnl.util.tty.msg(msg.format(args.name))
+    spack.util.tty.msg(msg.format(args.name))
 
 
 def _disable_source(args):
     _write_bootstrapping_source_status(args.name, enabled=False, scope=args.scope)
     msg = '"{0}" is now disabled and will not be used for bootstrapping'
-    spack.llnl.util.tty.msg(msg.format(args.name))
+    spack.util.tty.msg(msg.format(args.name))
 
 
 def _status(args):
@@ -311,7 +310,7 @@ def _status(args):
     header = "@*b{{Spack v{0} - {1}}}".format(
         spack.spack_version, spack.bootstrap.config.spec_for_current_python()
     )
-    print(spack.llnl.util.tty.color.colorize(header))
+    print(spack.util.tty.color.colorize(header))
     print()
     # Use the context manager here to avoid swapping between user and
     # bootstrap config many times
@@ -321,7 +320,7 @@ def _status(args):
             status_msg, fail = spack.bootstrap.status_message(section=current_section)
             missing = missing or fail
             if status_msg:
-                print(spack.llnl.util.tty.color.colorize(status_msg))
+                print(spack.util.tty.color.colorize(status_msg))
         print()
     legend = (
         "Spack will take care of bootstrapping any missing dependency marked"
@@ -329,7 +328,7 @@ def _status(args):
         " to be found on the system."
     )
     if missing:
-        print(spack.llnl.util.tty.color.colorize(legend))
+        print(spack.util.tty.color.colorize(legend))
         print()
         sys.exit(1)
 
@@ -344,7 +343,7 @@ def _add(args):
         raise RuntimeError(msg.format(args.name))
 
     # Check that the metadata file exists
-    metadata_dir = spack.util.path.canonicalize_path(args.metadata_dir)
+    metadata_dir = spack.config.canonicalize_path(args.metadata_dir)
     if not os.path.exists(metadata_dir) or not os.path.isdir(metadata_dir):
         raise RuntimeError('the directory "{0}" does not exist'.format(args.metadata_dir))
 
@@ -353,13 +352,13 @@ def _add(args):
         raise RuntimeError('the file "{0}" does not exist'.format(file))
 
     # Insert the new source as the highest priority one
-    write_scope = args.scope or spack.config.default_modify_scope(section="bootstrap")
-    sources = spack.config.get("bootstrap:sources", scope=write_scope) or []
+    write_scope = args.scope or spack.config.CONFIG.default_modify_scope(section="bootstrap")
+    sources = spack.config.CONFIG.get("bootstrap:sources", scope=write_scope) or []
     sources = [{"name": args.name, "metadata": args.metadata_dir}] + sources
-    spack.config.set("bootstrap:sources", sources, scope=write_scope)
+    spack.config.CONFIG.set("bootstrap:sources", sources, scope=write_scope)
 
     msg = 'New bootstrapping source "{0}" added in the "{1}" configuration scope'
-    spack.llnl.util.tty.msg(msg.format(args.name, write_scope))
+    spack.util.tty.msg(msg.format(args.name, write_scope))
     if args.trust:
         _enable_source(args)
 
@@ -374,25 +373,25 @@ def _remove(args):
         )
         raise RuntimeError(msg.format(args.name))
 
-    for current_scope in spack.config.scopes():
-        sources = spack.config.get("bootstrap:sources", scope=current_scope) or []
+    for current_scope in spack.config.CONFIG.scopes:
+        sources = spack.config.CONFIG.get("bootstrap:sources", scope=current_scope) or []
         if args.name in [s["name"] for s in sources]:
             sources = [s for s in sources if s["name"] != args.name]
-            spack.config.set("bootstrap:sources", sources, scope=current_scope)
+            spack.config.CONFIG.set("bootstrap:sources", sources, scope=current_scope)
             msg = (
                 'Removed the bootstrapping source named "{0}" from the "{1}" configuration scope.'
             )
-            spack.llnl.util.tty.msg(msg.format(args.name, current_scope))
-        trusted = spack.config.get("bootstrap:trusted", scope=current_scope) or []
+            spack.util.tty.msg(msg.format(args.name, current_scope))
+        trusted = spack.config.CONFIG.get("bootstrap:trusted", scope=current_scope) or []
         if args.name in trusted:
             trusted.pop(args.name)
-            spack.config.set("bootstrap:trusted", trusted, scope=current_scope)
+            spack.config.CONFIG.set("bootstrap:trusted", trusted, scope=current_scope)
             msg = 'Deleting information on "{0}" from list of trusted sources'
-            spack.llnl.util.tty.msg(msg.format(args.name))
+            spack.util.tty.msg(msg.format(args.name))
 
 
 def _mirror(args):
-    mirror_dir = spack.util.path.canonicalize_path(os.path.join(args.root_dir, LOCAL_MIRROR_DIR))
+    mirror_dir = spack.config.canonicalize_path(os.path.join(args.root_dir, LOCAL_MIRROR_DIR))
 
     # TODO: Here we are adding gnuconfig manually, but this can be fixed
     # TODO: as soon as we have an option to add to a mirror all the possible
@@ -403,20 +402,20 @@ def _mirror(args):
 
     for spec_str in root_specs:
         msg = 'Adding "{0}" and dependencies to the mirror at {1}'
-        spack.llnl.util.tty.msg(msg.format(spec_str, mirror_dir))
+        spack.util.tty.msg(msg.format(spec_str, mirror_dir))
         # Suppress tty from the call below for terser messages
-        spack.llnl.util.tty.set_msg_enabled(False)
+        spack.util.tty.set_msg_enabled(False)
         spec = spack.concretize.concretize_one(spec_str)
         for node in spec.traverse():
             if node.external:
                 continue
             spack.cmd.mirror.create(mirror_dir, [node])
-        spack.llnl.util.tty.set_msg_enabled(True)
+        spack.util.tty.set_msg_enabled(True)
 
     if args.binary_packages:
         msg = 'Adding binary packages from "{0}" to the mirror at {1}'
-        spack.llnl.util.tty.msg(msg.format(BINARY_TARBALL, mirror_dir))
-        spack.llnl.util.tty.set_msg_enabled(False)
+        spack.util.tty.msg(msg.format(BINARY_TARBALL, mirror_dir))
+        spack.util.tty.set_msg_enabled(False)
         stage = spack.stage.Stage(BINARY_TARBALL, path=tempfile.mkdtemp())
         stage.create()
         stage.fetch()
@@ -424,12 +423,12 @@ def _mirror(args):
         stage_dir = pathlib.Path(stage.source_path)
         for entry in stage_dir.iterdir():
             shutil.move(str(entry), mirror_dir)
-        spack.llnl.util.tty.set_msg_enabled(True)
+        spack.util.tty.set_msg_enabled(True)
 
     def write_metadata(subdir, metadata):
         metadata_rel_dir = os.path.join("metadata", subdir)
         metadata_yaml = os.path.join(args.root_dir, metadata_rel_dir, "metadata.yaml")
-        spack.llnl.util.filesystem.mkdirp(os.path.dirname(metadata_yaml))
+        spack.util.filesystem.mkdirp(os.path.dirname(metadata_yaml))
         with open(metadata_yaml, mode="w", encoding="utf-8") as f:
             spack.util.spack_yaml.dump(metadata, stream=f)
         return os.path.dirname(metadata_yaml), metadata_rel_dir
@@ -444,9 +443,9 @@ def _mirror(args):
     instructions += cmd.format("local-sources", rel_directory)
     if args.binary_packages:
         abs_directory, rel_directory = write_metadata(subdir="binaries", metadata=BINARY_METADATA)
-        shutil.copy(spack.util.path.canonicalize_path(CLINGO_JSON), abs_directory)
-        shutil.copy(spack.util.path.canonicalize_path(GNUPG_JSON), abs_directory)
-        shutil.copy(spack.util.path.canonicalize_path(PATCHELF_JSON), abs_directory)
+        shutil.copy(spack.config.canonicalize_path(CLINGO_JSON), abs_directory)
+        shutil.copy(spack.config.canonicalize_path(GNUPG_JSON), abs_directory)
+        shutil.copy(spack.config.canonicalize_path(PATCHELF_JSON), abs_directory)
         instructions += cmd.format("local-binaries", rel_directory)
     print(instructions)
 

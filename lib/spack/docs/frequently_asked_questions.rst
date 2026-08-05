@@ -166,7 +166,7 @@ If it is not obvious *why* the solver made a particular decision -- for example,
 
 .. code-block:: console
 
-   $ spack solve <spec>
+   $ spack spec --show opt,solutions <spec>
 
 The output shows the optimization criteria and the weights assigned to each choice.
 This makes it possible to trace which preference or requirement is driving an unexpected result.

@@ -10,15 +10,15 @@ import sys
 from typing import Optional, Union
 
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.git
 import spack.util.spack_json as sjson
 from spack.cmd import spack_is_git_repo
-from spack.llnl.util.filesystem import working_dir
-from spack.llnl.util.lang import pretty_date
-from spack.llnl.util.tty.colify import colify_table
+from spack.util import tty
 from spack.util.executable import ProcessError
+from spack.util.filesystem import working_dir
+from spack.util.lang import pretty_date
+from spack.util.tty.colify import colify_table
 
 description = "show contributors to packages"
 section = "query"

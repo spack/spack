@@ -10,7 +10,6 @@ import pytest
 import spack.binary_distribution
 import spack.cmd.mirror
 import spack.concretize
-import spack.config
 import spack.environment as ev
 import spack.mirrors.utils
 import spack.package_base
@@ -18,6 +17,7 @@ import spack.spec
 import spack.util.git
 import spack.util.url as url_util
 import spack.version
+from spack.config import Configuration
 from spack.main import SpackCommand, SpackCommandError
 from spack.mirrors.utils import MirrorStatsForAllSpecs, MirrorStatsForOneSpec
 
@@ -43,7 +43,13 @@ def test_regression_8083(tmp_path: pathlib.Path, mock_packages, mock_fetch, conf
 
 # Unit tests should not be affected by the user's managed environments
 @pytest.mark.regression("12345")
-def test_mirror_from_env(mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mock_fetch):
+def test_mirror_from_env(
+    mutable_mock_env_path,
+    tmp_path: pathlib.Path,
+    mock_packages,
+    mock_fetch,
+    mutable_config: Configuration,
+):
     mirror_dir = str(tmp_path / "mirror")
     env_name = "test"
 
@@ -52,7 +58,7 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path: pathlib.Path, mock_pac
         add("trivial-install-test-package")
         add("git-test")
         concretize()
-        with spack.config.override("config:checksum", False):
+        with mutable_config.override("config:checksum", False):
             mirror("create", "-d", mirror_dir, "--all")
 
     e = ev.read(env_name)
@@ -64,7 +70,12 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path: pathlib.Path, mock_pac
 
 
 def test_mirror_cli_parallel_args(
-    tmp_path, mock_packages, mock_fetch, mutable_mock_env_path, monkeypatch
+    tmp_path,
+    mock_packages,
+    mock_fetch,
+    mutable_mock_env_path,
+    monkeypatch,
+    mutable_config: Configuration,
 ):
     """Test the CLI parallel args"""
     mirror_dir = str(tmp_path / "mirror")
@@ -83,11 +94,13 @@ def test_mirror_cli_parallel_args(
         add("trivial-install-test-package")
         add("git-test")
         concretize()
-        with spack.config.override("config:checksum", False):
+        with mutable_config.override("config:checksum", False):
             mirror("create", "-d", mirror_dir, "--all", "-j", "2")
 
 
-def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_mock_env_path):
+def test_mirror_from_env_parallel(
+    tmp_path, mock_packages, mock_fetch, mutable_mock_env_path, mutable_config: Configuration
+):
     """Directly test create_mirror_for_all_specs with parallel option"""
     mirror_dir = str(tmp_path / "mirror")
     env_name = "test-parallel"
@@ -101,7 +114,7 @@ def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_m
     e = ev.read(env_name)
     specs = list(e.specs_by_hash.values())
 
-    with spack.config.override("config:checksum", False):
+    with mutable_config.override("config:checksum", False):
         mirror_stats = spack.cmd.mirror.create_mirror_for_all_specs(
             specs, mirror_dir, False, workers=2
         )
@@ -166,7 +179,11 @@ def test_mirror_stats_merge():
 
 # Test for command line-specified spec in concretized environment
 def test_mirror_spec_from_env(
-    mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mock_fetch
+    mutable_mock_env_path,
+    tmp_path: pathlib.Path,
+    mock_packages,
+    mock_fetch,
+    mutable_config: Configuration,
 ):
     mirror_dir = str(tmp_path / "mirror-B")
     env_name = "test"
@@ -175,7 +192,7 @@ def test_mirror_spec_from_env(
     with ev.read(env_name):
         add("simple-standalone-test@0.9")
         concretize()
-        with spack.config.override("config:checksum", False):
+        with mutable_config.override("config:checksum", False):
             mirror("create", "-d", mirror_dir, "simple-standalone-test")
 
     e = ev.read(env_name)
@@ -241,10 +258,10 @@ def test_exclude_specs(mock_packages, config):
     )
 
     mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
-    expected_include = set(
+    expected_include = {
         spack.concretize.concretize_one(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
-    )
-    expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
+    }
+    expected_exclude = {spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"]}
     assert expected_include <= set(mirror_specs)
     assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
 
@@ -275,10 +292,10 @@ mpich@1.0
     args = MockMirrorArgs(specs=["mpich"], versions_per_spec="all", exclude_file=str(exclude_path))
 
     mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
-    expected_include = set(
+    expected_include = {
         spack.concretize.concretize_one(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
-    )
-    expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
+    }
+    expected_exclude = {spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"]}
     assert expected_include <= set(mirror_specs)
     assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
 
@@ -458,6 +475,18 @@ def test_mirror_crud(mutable_config):
     assert "No mirrors configured" in output
 
 
+def test_mirror_set_view(mutable_config):
+    mirror("add", "mirror", "http://spack.io")
+    output = mirror("list")
+    assert "http://spack.io" in output
+    assert "http://spack.io:someview" not in output
+
+    mirror("set", "--view", "someview", "mirror")
+
+    output = mirror("list")
+    assert "http://spack.io:someview" in output
+
+
 def test_mirror_nonexisting(mutable_config):
     with pytest.raises(SpackCommandError):
         mirror("remove", "not-a-mirror")
@@ -591,37 +620,37 @@ class TestMirrorCreate:
         assert all(s.concrete for s in specs)
 
 
-def test_mirror_type(mutable_config):
+def test_mirror_type(mutable_config: Configuration):
     """Test the mirror set command"""
     mirror("add", "example", "--type", "binary", "http://example.com")
-    assert spack.config.get("mirrors:example") == {
+    assert mutable_config.get("mirrors:example") == {
         "url": "http://example.com",
         "source": False,
         "binary": True,
     }
 
     mirror("set", "example", "--type", "source")
-    assert spack.config.get("mirrors:example") == {
+    assert mutable_config.get("mirrors:example") == {
         "url": "http://example.com",
         "source": True,
         "binary": False,
     }
 
     mirror("set", "example", "--type", "binary")
-    assert spack.config.get("mirrors:example") == {
+    assert mutable_config.get("mirrors:example") == {
         "url": "http://example.com",
         "source": False,
         "binary": True,
     }
     mirror("set", "example", "--type", "binary", "--type", "source")
-    assert spack.config.get("mirrors:example") == {
+    assert mutable_config.get("mirrors:example") == {
         "url": "http://example.com",
         "source": True,
         "binary": True,
     }
 
 
-def test_mirror_set_2(mutable_config):
+def test_mirror_set_2(mutable_config: Configuration):
     """Test the mirror set command"""
     mirror("add", "example", "http://example.com")
     mirror(
@@ -636,7 +665,7 @@ def test_mirror_set_2(mutable_config):
         "password",
     )
 
-    assert spack.config.get("mirrors:example") == {
+    assert mutable_config.get("mirrors:example") == {
         "url": "http://example.com",
         "push": {
             "url": "http://example2.com",
@@ -645,36 +674,45 @@ def test_mirror_set_2(mutable_config):
     }
 
 
-def test_mirror_add_set_signed(mutable_config):
+def test_mirror_add_set_signed(mutable_config: Configuration):
     mirror("add", "--signed", "example", "http://example.com")
-    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": True}
+    assert mutable_config.get("mirrors:example") == {"url": "http://example.com", "signed": True}
     mirror("set", "--unsigned", "example")
-    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": False}
+    assert mutable_config.get("mirrors:example") == {"url": "http://example.com", "signed": False}
     mirror("set", "--signed", "example")
-    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": True}
+    assert mutable_config.get("mirrors:example") == {"url": "http://example.com", "signed": True}
 
 
-def test_mirror_add_set_autopush(mutable_config):
+def test_mirror_add_set_autopush(mutable_config: Configuration):
     # Add mirror without autopush
     mirror("add", "example", "http://example.com")
-    assert spack.config.get("mirrors:example") == "http://example.com"
+    assert mutable_config.get("mirrors:example") == "http://example.com"
     mirror("set", "--no-autopush", "example")
-    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": False}
+    assert mutable_config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "autopush": False,
+    }
     mirror("set", "--autopush", "example")
-    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    assert mutable_config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
     mirror("set", "--no-autopush", "example")
-    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": False}
+    assert mutable_config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "autopush": False,
+    }
     mirror("remove", "example")
 
     # Add mirror with autopush
     mirror("add", "--autopush", "example", "http://example.com")
-    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    assert mutable_config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
     mirror("set", "--autopush", "example")
-    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    assert mutable_config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
     mirror("set", "--no-autopush", "example")
-    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": False}
+    assert mutable_config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "autopush": False,
+    }
     mirror("set", "--autopush", "example")
-    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    assert mutable_config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
     mirror("remove", "example")
 
 

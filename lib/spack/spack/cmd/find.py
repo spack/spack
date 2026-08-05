@@ -5,20 +5,23 @@
 import argparse
 import copy
 import sys
+from typing import List, Optional, Tuple
 
-import spack.cmd as cmd
+import spack.binary_distribution
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.lang
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.repo
 import spack.solver.reuse
 import spack.spec
 import spack.store
+import spack.util.lang
+from spack import cmd
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
-from spack.llnl.util.tty.color import colorize
+from spack.util import tty
+from spack.util.tty import color
+from spack.util.tty.color import colorize
 
 from ..enums import InstallRecordStatus
 
@@ -218,7 +221,7 @@ def query_arguments(args):
     q_args = {"installed": installed, "predicate_fn": predicate_fn, "explicit": explicit}
 
     install_tree = args.install_tree
-    upstreams = spack.config.get("upstreams", {})
+    upstreams = spack.config.CONFIG.get("upstreams", {})
     if install_tree in upstreams.keys():
         install_tree = upstreams[install_tree]["install_tree"]
     q_args["install_tree"] = install_tree
@@ -227,7 +230,7 @@ def query_arguments(args):
     for attribute in ("start_date", "end_date"):
         date = getattr(args, attribute)
         if date:
-            q_args[attribute] = spack.llnl.util.lang.pretty_string_to_date(date)
+            q_args[attribute] = spack.util.lang.pretty_string_to_date(date)
 
     return q_args
 
@@ -250,7 +253,7 @@ def make_env_decorator(env):
     return decorator
 
 
-def display_env(env, args, decorator, results):
+def display_env(env, args, decorator, results, status_fn=None):
     """Display extra find output when running in an environment.
 
     In an environment, ``spack find`` outputs a preliminary section
@@ -262,12 +265,13 @@ def display_env(env, args, decorator, results):
     tty.msg(f"In environment {env.name} ({root_spec_str})")
 
     concrete_specs = {x.root: env.specs_by_hash[x.hash] for x in env.concretized_roots}
+    _status_fn = status_fn if status_fn is not None else spack.store.STORE.db.install_status
 
     def root_decorator(spec, string):
         """Decorate root specs with their install status if needed"""
         concrete = concrete_specs.get(spec)
         if concrete:
-            status = color.colorize(concrete.install_status().value)
+            status = color.colorize(_status_fn(concrete).value)
             hash = concrete.dag_hash()
         else:
             status = color.colorize(spack.spec.InstallStatus.absent.value)
@@ -335,7 +339,9 @@ def display_env(env, args, decorator, results):
         print()
 
 
-def _find_query(args, env):
+def _find_query(
+    args: argparse.Namespace, env: Optional[ev.Environment]
+) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
     q_args = query_arguments(args)
     concretized_but_not_installed = []
     if args.show_configured_externals:
@@ -355,13 +361,13 @@ def _find_query(args, env):
         else:
             env_specs = all_env_specs
 
-        spec_hashes = set(x.dag_hash() for x in env_specs)
-        specs_meeting_q_args = set(spack.store.STORE.db.query(hashes=spec_hashes, **q_args))
+        spec_hashes = {x.dag_hash() for x in env_specs}
+        specs_meeting_q_args = set(spack.store.STORE.db.query(hashes=list(spec_hashes), **q_args))
 
         results = list()
         with spack.store.STORE.db.read_transaction():
             for spec in env_specs:
-                if not spec.installed:
+                if not spack.store.STORE.db.installed(spec):
                     concretized_but_not_installed.append(spec)
                 if spec in specs_meeting_q_args:
                     results.append(spec)
@@ -398,7 +404,7 @@ def _find_query(args, env):
 
 
 def find(parser, args):
-    env = ev.active_environment()
+    env = active_environment()
 
     if not env and args.only_roots:
         args.subparser.error("-r / --only-roots requires an active environment")
@@ -413,7 +419,8 @@ def find(parser, args):
         tty.die(f"No package matches the query: {' '.join(args.constraint)}")
 
     if args.install_status or args.show_concretized:
-        status_fn = spack.spec.Spec.install_status
+        spack.binary_distribution.load_buildcache_index()
+        status_fn = cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
     else:
         status_fn = None
 
@@ -425,7 +432,7 @@ def find(parser, args):
 
         if not args.format:
             if env:
-                display_env(env, args, decorator, results)
+                display_env(env, args, decorator, results, status_fn=status_fn)
 
         if not args.only_roots:
             display_results = list(results)

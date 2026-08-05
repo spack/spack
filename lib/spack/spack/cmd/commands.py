@@ -10,17 +10,24 @@ import re
 import shlex
 import sys
 from argparse import ArgumentParser, Namespace
-from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import IO, Any, Callable, Dict, List, Optional, Sequence, Set, Union
 
 import spack.cmd
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.paths
 import spack.platforms
-from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
-from spack.llnl.util.tty.colify import colify
 from spack.main import SpackArgumentParser, section_descriptions
+from spack.util import tty
+from spack.util.argparsewriter import (
+    ArgparseRstWriter,
+    ArgparseWriter,
+    Command,
+    Option,
+    Positional,
+    Subcommand,
+)
+from spack.util.tty.colify import colify
 
 description = "list available spack commands"
 section = "config"
@@ -203,18 +210,12 @@ class BashCompletionWriter(ArgparseWriter):
         assert not (cmd.positionals and cmd.subcommands)  # one or the other
 
         # We only care about the arguments/flags, not the help messages
-        positionals = cmd.positionals or ()
-        optionals, _, _, _, _ = zip(*cmd.optionals)
-        subcommands: Tuple[str, ...] = ()
-        if cmd.subcommands:
-            _, subcommands, _ = zip(*cmd.subcommands)
-
-        # Flatten lists of lists
-        optionals = [x for xx in optionals for x in xx]
+        flags = [flag for option in cmd.optionals for flag in option.flags]
+        subcommands = [subcommand.name for subcommand in cmd.subcommands]
 
         return (
             self.start_function(cmd.prog)
-            + self.body(positionals, optionals, subcommands)
+            + self.body(cmd.positionals, flags, subcommands)
             + self.end_function(cmd.prog)
         )
 
@@ -242,14 +243,17 @@ class BashCompletionWriter(ArgparseWriter):
         return "}\n"
 
     def body(
-        self, positionals: Sequence, optionals: Sequence[str], subcommands: Sequence[str]
+        self,
+        positionals: Sequence[Positional],
+        optionals: Sequence[str],
+        subcommands: Sequence[str],
     ) -> str:
         """Return the body of the function.
 
         Args:
-            positionals: List of positional argument tuples (name, choices, nargs, help).
-            optionals: List of optional arguments.
-            subcommands: List of subcommand parsers.
+            positionals: List of positional arguments.
+            optionals: List of option flags.
+            subcommands: List of subcommand names.
 
         Returns:
             Function body.
@@ -277,22 +281,23 @@ class BashCompletionWriter(ArgparseWriter):
     {self.optionals(optionals)}
 """
 
-    def positionals(self, positionals: Sequence) -> str:
+    def positionals(self, positionals: Sequence[Positional]) -> str:
         """Return the syntax for reporting positional arguments.
 
         Args:
-            positionals: List of positional argument tuples (name, choices, nargs, help).
+            positionals: List of positional arguments.
 
         Returns:
             Syntax for positional arguments.
         """
-        for name, choices, nargs, help in positionals:
+        for positional in positionals:
             # Check for a predefined subroutine mapping
             for key, value in _positional_to_subroutine.items():
-                if name.startswith(key):
+                if positional.name.startswith(key):
                     return value
 
             # Use choices if available
+            choices = positional.choices
             if choices is not None:
                 if isinstance(choices, dict):
                     choices = sorted(choices.keys())
@@ -427,21 +432,13 @@ class FishCompletionWriter(ArgparseWriter):
 
         # We also need help messages and how arguments are used
         # So we pass everything to completion writer
-        positionals = cmd.positionals
-        optionals = cmd.optionals
-        subcommands = cmd.subcommands
-
         return (
             self.prog_comment(cmd.prog)
-            + self.optspecs(cmd.prog, optionals)
-            + self.complete(cmd.prog, positionals, optionals, subcommands)
+            + self.optspecs(cmd.prog, cmd.optionals)
+            + self.complete(cmd.prog, cmd.positionals, cmd.optionals, cmd.subcommands)
         )
 
-    def optspecs(
-        self,
-        prog: str,
-        optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
-    ) -> str:
+    def optspecs(self, prog: str, optionals: List[Option]) -> str:
         """Read the optionals and return the command to set optspec.
 
         Args:
@@ -460,7 +457,8 @@ class FishCompletionWriter(ArgparseWriter):
         # Build optspec by iterating over options
         args = []
 
-        for flags, dest, _, nargs, _ in optionals:
+        for option in optionals:
+            flags = option.flags
             if len(flags) == 0:
                 continue
 
@@ -469,7 +467,7 @@ class FishCompletionWriter(ArgparseWriter):
             # Because nargs '?' is treated differently in fish, we treat it as required.
             # Because multi-argument options are not supported, we treat it like one argument.
             required = "="
-            if nargs == 0:
+            if option.nargs == 0:
                 required = ""
 
             # Pair short options with long options
@@ -528,9 +526,9 @@ class FishCompletionWriter(ArgparseWriter):
     def complete(
         self,
         prog: str,
-        positionals: List[Tuple[str, Optional[Iterable[Any]], Union[int, str, None], str]],
-        optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
-        subcommands: List[Tuple[ArgumentParser, str, str]],
+        positionals: List[Positional],
+        optionals: List[Option],
+        subcommands: List[Subcommand],
     ) -> str:
         """Return all the completion commands.
 
@@ -556,11 +554,7 @@ class FishCompletionWriter(ArgparseWriter):
 
         return "".join(commands)
 
-    def positionals(
-        self,
-        prog: str,
-        positionals: List[Tuple[str, Optional[Iterable[Any]], Union[int, str, None], str]],
-    ) -> str:
+    def positionals(self, prog: str, positionals: List[Positional]) -> str:
         """Return the completion for positional arguments.
 
         Args:
@@ -572,7 +566,9 @@ class FishCompletionWriter(ArgparseWriter):
         """
         commands = []
 
-        for idx, (args, choices, nargs, help) in enumerate(positionals):
+        for idx, positional in enumerate(positionals):
+            choices = positional.choices
+
             # Make sure we always get same order of output
             if isinstance(choices, dict):
                 choices = sorted(choices.keys())
@@ -587,14 +583,14 @@ class FishCompletionWriter(ArgparseWriter):
                         valid_choices.append(choice)
                 choices = valid_choices
 
-            head = self.complete_head(prog, idx, nargs)
+            head = self.complete_head(prog, idx, positional.nargs)
 
             if choices is not None:
                 # If there are choices, we provide a completion for all possible values.
                 commands.append(f"{head} -f -a {shlex.quote(' '.join(choices))}")
             else:
                 # Otherwise, we try to find a predefined completion for it
-                value = _fish_dest_get_complete(prog, args)
+                value = _fish_dest_get_complete(prog, positional.name)
                 if value is not None:
                     commands.append(f"{head} {value}")
 
@@ -604,11 +600,7 @@ class FishCompletionWriter(ArgparseWriter):
         """Return a comment line for the command."""
         return f"\n# {prog}\n"
 
-    def optionals(
-        self,
-        prog: str,
-        optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
-    ) -> str:
+    def optionals(self, prog: str, optionals: List[Option]) -> str:
         """Return the completion for optional arguments.
 
         Args:
@@ -621,7 +613,9 @@ class FishCompletionWriter(ArgparseWriter):
         commands = []
         head = self.complete_head(prog)
 
-        for flags, dest, _, nargs, help in optionals:
+        for option in optionals:
+            dest = option.dest
+
             # Make sure we always get same order of output
             if isinstance(dest, dict):
                 dest = sorted(dest.keys())
@@ -642,7 +636,7 @@ class FishCompletionWriter(ArgparseWriter):
             prefix = head
 
             # Add all flags to the completion
-            for f in flags:
+            for f in option.flags:
                 if f.startswith("--"):
                     long = f[2:]
                     prefix = f"{prefix} -l {long}"
@@ -653,7 +647,7 @@ class FishCompletionWriter(ArgparseWriter):
 
             # Check if option require argument.
             # Currently multi-argument options are not supported, so we treat it like one argument.
-            if nargs != 0:
+            if option.nargs != 0:
                 prefix = f"{prefix} -r"
 
             if dest is not None:
@@ -665,12 +659,12 @@ class FishCompletionWriter(ArgparseWriter):
                 if value is not None:
                     commands.append(f"{prefix} {value}")
 
-            if help:
-                commands.append(f"{prefix} -d {shlex.quote(help)}")
+            if option.help:
+                commands.append(f"{prefix} -d {shlex.quote(option.help)}")
 
         return "\n".join(commands) + "\n"
 
-    def subcommands(self, prog: str, subcommands: List[Tuple[ArgumentParser, str, str]]) -> str:
+    def subcommands(self, prog: str, subcommands: List[Subcommand]) -> str:
         """Return the completion for subcommands.
 
         Args:
@@ -683,11 +677,11 @@ class FishCompletionWriter(ArgparseWriter):
         commands = []
         head = self.complete_head(prog, 0)
 
-        for _, subcommand, help in subcommands:
-            command = f"{head} -f -a {shlex.quote(subcommand)}"
+        for subcommand in subcommands:
+            command = f"{head} -f -a {shlex.quote(subcommand.name)}"
 
-            if help is not None and len(help) > 0:
-                help = help.split("\n")[0]
+            if subcommand.help:
+                help = subcommand.help.split("\n")[0]
                 command = f"{command} -d {shlex.quote(help)}"
 
             commands.append(command)
@@ -780,7 +774,7 @@ def names(args: Namespace, out: IO) -> None:
     commands = copy.copy(spack.cmd.all_commands())
 
     if args.aliases:
-        aliases = spack.config.get("config:aliases")
+        aliases = spack.config.CONFIG.get("config:aliases")
         if aliases:
             commands.extend(aliases.keys())
 
@@ -810,7 +804,7 @@ def bash(args: Namespace, out: IO) -> None:
         out: File object to write to.
     """
     parser = get_all_spack_commands(out)
-    aliases_config = spack.config.get("config:aliases")
+    aliases_config = spack.config.CONFIG.get("config:aliases")
     if aliases_config:
         aliases = ";".join(f"{key}:{val}" for key, val in aliases_config.items())
         out.write(f'SPACK_ALIASES="{aliases}"\n\n')

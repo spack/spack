@@ -15,7 +15,7 @@
 #show attr/5.
 #show attr/6.
 % names of optimization criteria
-#show opt_criterion/2.
+#show opt_priority/5.
 
 % error types
 #show error/2.
@@ -48,5 +48,6 @@
 #show trigger_node/3.
 #show imposed_nodes/2.
 #show variant_single_value/2.
+#show has_provider/1.
 
 % debug

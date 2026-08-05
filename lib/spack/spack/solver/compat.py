@@ -57,7 +57,6 @@ def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
     # These are imports that may be problematic at top level (circular imports). They are used
     # only to provide exhaustive details when erroring due to a broken clingo module.
     import spack.config
-    import spack.util.path as sup
 
     try:
         clingo_mod.Symbol
@@ -81,7 +80,7 @@ def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
         # check whether Spack is responsible
         if (
             pathlib.Path(
-                sup.canonicalize_path(
+                spack.config.canonicalize_path(
                     spack.config.CONFIG.get("bootstrap:root", "$state_home/bootstrap")
                 )
             )

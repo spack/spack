@@ -78,7 +78,7 @@ def get_s3_session(url, method="fetch"):
 
 def _parse_s3_endpoint_url(endpoint_url):
     if not urllib.parse.urlparse(endpoint_url, scheme="").scheme:
-        endpoint_url = "://".join(("https", endpoint_url))
+        endpoint_url = f"https://{endpoint_url}"
 
     return endpoint_url
 
@@ -89,7 +89,7 @@ def get_mirror_s3_connection_info(mirror, method):
     from spack.mirrors.mirror import Mirror
 
     s3_connection = {}
-    s3_client_args = {"use_ssl": spack.config.get("config:verify_ssl")}
+    s3_client_args = {"use_ssl": spack.config.CONFIG.get("config:verify_ssl")}
 
     # access token
     if isinstance(mirror, Mirror):

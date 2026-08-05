@@ -12,10 +12,11 @@ import spack.compilers
 import spack.compilers.config
 import spack.config
 import spack.error
-import spack.llnl.util.tty as tty
+import spack.hash_lookup
 import spack.repo
 import spack.util.parallel
-from spack.spec import ArchSpec, CompilerSpec, Spec
+from spack.spec import Spec
+from spack.util import tty
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
 SpecPair = Tuple[Spec, Spec]
@@ -41,7 +42,7 @@ def _concretize_specs_together(
     """
     from spack.solver.asp import Solver
 
-    allow_deprecated = spack.config.get("config:deprecated", False)
+    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     result = Solver(specs_factory=factory).solve(
         abstract_specs, tests=tests, allow_deprecated=allow_deprecated
     )
@@ -95,7 +96,7 @@ def concretize_together_when_possible(
     }
 
     result_by_user_spec: Dict[Spec, Spec] = {}
-    allow_deprecated = spack.config.get("config:deprecated", False)
+    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     j = 0
     start = time.monotonic()
     for result in Solver(specs_factory=factory).solve_in_rounds(
@@ -241,7 +242,7 @@ def concretize_one(
 
     if isinstance(spec, str):
         spec = Spec(spec)
-    spec = spec.lookup_hash()
+    spec = spack.hash_lookup.lookup_hash(spec)
 
     if spec.concrete:
         return spec.copy()
@@ -252,7 +253,7 @@ def concretize_one(
                 f"Spec {node} has no name; cannot concretize an anonymous spec"
             )
 
-    allow_deprecated = spack.config.get("config:deprecated", False)
+    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     result = Solver(specs_factory=factory).solve(
         [spec], tests=tests, allow_deprecated=allow_deprecated
     )
@@ -272,20 +273,3 @@ def concretize_one(
 
     concretized = answer[node]
     return concretized
-
-
-class UnavailableCompilerVersionError(spack.error.SpackError):
-    """Raised when there is no available compiler that satisfies a
-    compiler spec."""
-
-    def __init__(self, compiler_spec: CompilerSpec, arch: Optional[ArchSpec] = None) -> None:
-        err_msg = f"No compilers with spec {compiler_spec} found"
-        if arch:
-            err_msg += f" for operating system {arch.os} and target {arch.target}."
-
-        super().__init__(
-            err_msg,
-            "Run 'spack compiler find' to add compilers or "
-            "'spack compilers' to see which compilers are already recognized"
-            " by spack.",
-        )

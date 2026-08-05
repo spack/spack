@@ -20,8 +20,7 @@ import spack.spec
 import spack.stage
 import spack.tengine
 import spack.util.gpg
-import spack.util.path
-from spack.llnl.util import tty
+from spack.util import tty
 
 from .config import root_path, spec_for_current_python, store_path
 from .core import _add_externals_if_missing
@@ -54,7 +53,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
         environment_dir = f"{python_part}-{arch_part}-{interpreter_part}"
         return pathlib.Path(
-            spack.util.path.canonicalize_path(
+            spack.config.canonicalize_path(
                 os.path.join(bootstrap_root_path, "environments", environment_dir)
             )
         )
@@ -100,7 +99,7 @@ class BootstrapEnvironment(spack.environment.Environment):
                     download_and_trust_key()
                     fetch_policy = (
                         "cache_only"
-                        if not spack.config.get("bootstrap:dev:enable_source", False)
+                        if not spack.config.CONFIG.get("bootstrap:dev:enable_source", False)
                         else "auto"
                     )
                     try:

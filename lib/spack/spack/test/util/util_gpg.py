@@ -160,6 +160,33 @@ def test_gpg_key_algorithm():
         assert "2048" in f"{e:2048}"
 
 
+@pytest.mark.maybeslow
+@pytest.mark.not_on_windows("does not run on windows")
+def test_trust_secret_key_file(tmp_path: pathlib.Path, mock_gnupghome):
+    """Verify that `spack gpg trust` can import secret keys from a keyfile."""
+    # Create a signing key.
+    spack.util.gpg.create(
+        name="Spack CI test", email="ci@spack.io", comment="regression test key", expires="0"
+    )
+    signing = spack.util.gpg.signing_keys()
+    assert len(signing) == 1, "expected exactly one signing key after create"
+    original_fpr = signing[0].fpr
+
+    # Export it to file.
+    secret_keyfile = str(tmp_path / "secret.gpg")
+    spack.util.gpg.export_keys(secret_keyfile, signing, secret=True)
+
+    # Use gpg.untrust() to remove the key from the keyring.
+    spack.util.gpg.untrust(True, original_fpr)
+    assert spack.util.gpg.signing_keys() == [], "keyring should be empty after untrust"
+
+    # Use gpg.trust() to re-import the key.
+    spack.util.gpg.trust(secret_keyfile, yes_to_all=True)
+    restored = spack.util.gpg.signing_keys()
+    assert len(restored) == 1, "signing key should be restored after trusting secret key file"
+    assert restored[0].fpr == original_fpr, "restored key fingerprint should match original"
+
+
 def test_gpg_key_type():
     str_to_type = [
         ("pub", spack.util.gpg.GpgKeyType.PUBLIC),

@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.binary_distribution
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+from spack.util import tty
 
 
 def post_install(spec, explicit):
@@ -21,6 +21,12 @@ def post_install(spec, explicit):
 
     # Push the package to all autopush mirrors
     for mirror in spack.mirrors.mirror.MirrorCollection(binary=True, autopush=True).values():
+        if not mirror.matches_binary(spec, direction="push"):
+            tty.debug(
+                f"{spec.name}: Skipped push to '{mirror.name}' due to include/exclude filters"
+            )
+            continue
+
         signing_key = spack.binary_distribution.select_signing_key() if mirror.signed else None
         with spack.binary_distribution.make_uploader(
             mirror=mirror, force=True, signing_key=signing_key

@@ -16,8 +16,8 @@ import types
 from pathlib import Path, PurePath
 from typing import TYPE_CHECKING
 
-import spack.llnl.util.filesystem
-import spack.util.hash as hash
+import spack.util.filesystem
+from spack.util import hash
 
 
 def dir_is_occupied(x, except_for=None):
@@ -37,7 +37,7 @@ class SpackPaths:
 
     def __init__(self, _prefix=None):
         #: This file lives in $prefix/lib/spack/spack/__file__
-        self.prefix = _prefix or str(PurePath(spack.llnl.util.filesystem.ancestor(__file__, 4)))
+        self.prefix = _prefix or str(PurePath(spack.util.filesystem.ancestor(__file__, 4)))
 
         #: synonym for prefix
         self.spack_root = self.prefix

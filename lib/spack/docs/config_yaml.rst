@@ -3,11 +3,13 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-.. _config-yaml:
-
 .. meta::
    :description lang=en:
       A detailed guide to the config.yaml file in Spack, which allows you to set core configuration options like installation paths, build parallelism, and trusted sources.
+
+.. index::
+   single: config.yaml; reference
+   :name: config-yaml
 
 Spack Settings (config.yaml)
 ============================
@@ -20,6 +22,9 @@ You can see the default settings by looking at ``etc/spack/defaults/config.yaml`
 
 These settings can be overridden in ``etc/spack/config.yaml``, or ``~/.config/spack/config.yaml``, or in an active environment.
 See :ref:`configuration-scopes` for details.
+
+.. index::
+   single: install_tree (config.yaml)
 
 ``install_tree:root``
 ---------------------
@@ -173,21 +178,25 @@ Be aware that this will reduce the reproducibility of builds.
 
 .. _build-jobs:
 
+.. index::
+   single: build_jobs (config.yaml)
+
 ``build_jobs``
 --------------
 
-Unless overridden in a package or on the command line, Spack builds all packages in parallel.
-The default parallelism is equal to the number of cores available to the process, up to 16 (the default of ``build_jobs``).
-For a build system that uses Makefiles, ``spack install`` runs:
+``build_jobs`` sets the default total number of concurrent :term:`build jobs <build job>` when ``-j`` is not given on the command line.
+It defaults to the number of cores available to the process, capped at 16.
 
-- ``make -j<build_jobs>``, when ``build_jobs`` is less than the number of cores available
-- ``make -j<ncores>``, when ``build_jobs`` is greater or equal to the number of cores available
+Spack exposes this budget as a :term:`POSIX jobserver <jobserver>` and forwards it through ``MAKEFLAGS`` to every package's build environment.
+Child build tools (``make``, ``cmake``, ``ninja``, ...) acquire tokens from the jobserver instead of spawning ``-j<N>`` jobs each, so the total number of in-flight compile jobs stays bounded --- even when Spack builds several packages concurrently.
+The effect is similar to a single top-level ``make -j<N>``, but it spans all packages rather than one at a time.
 
-If you work on a shared login node or have a strict ulimit, it may be necessary to set the default to a lower value.
-By setting ``build_jobs`` to 4, for example, commands like ``spack install`` will run ``make -j4`` instead of using every core.
-To build all software in serial, set ``build_jobs`` to 1.
+If you work on a shared login node or have a strict ulimit, lower the default: setting ``build_jobs`` to 4 caps Spack at 4 concurrent build jobs across all packages.
+Set ``build_jobs`` to 1 to build serially.
 
-Note that specifying the number of jobs on the command line always takes priority, so that ``spack install -j<n>`` always runs ``make -j<n>``, even when that exceeds the number of cores available.
+A ``-j<n>`` on the command line overrides ``build_jobs`` and is honored as-is, even when it exceeds the number of cores available.
+
+See :ref:`installing` for the full story, including the ``-p`` / ``--concurrent-packages`` flag and how to adjust parallelism dynamically while a build is running.
 
 ``ccache``
 --------------------
@@ -201,6 +210,10 @@ Some systems come with ``ccache``, but it can also be installed using ``spack in
 ``ccache`` comes with reasonable defaults for cache size and location.
 (See the *Configuration settings* section of ``man ccache`` to learn more about the default settings and how to change them.)
 Please note that we currently disable ccache's ``hash_dir`` feature to avoid an issue with the stage directory (see https://github.com/spack/spack/pull/3761#issuecomment-294352232).
+
+.. index::
+   single: shared_linking (config.yaml)
+   :name: shared-linking-type
 
 ``shared_linking:type``
 -----------------------
@@ -282,7 +295,7 @@ When set to ``true``, Spack will utilize a cache of solver outputs from successf
 When enabled, Spack will check the concretization cache prior to running the solver.
 If a previous request to solve a given problem is present in the cache, Spack will load the concrete specs and other solver data from the cache rather than running the solver.
 Specs not previously concretized will be added to the cache on a successful solve.
-The cache additionally holds solver statistics, so commands like ``spack solve`` will still return information about the run that produced a given solver result.
+The cache additionally holds solver statistics, so commands like ``spack spec --show opt <spec>`` will still return information about the run that produced a given solver result.
 
 This cache is a subcache of the :ref:`Misc Cache` and as such will be cleaned when the Misc Cache is cleaned.
 

@@ -6,6 +6,7 @@ from typing import Set, Tuple
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.config
+import spack.hash_lookup
 import spack.repo
 import spack.spec
 import spack.util.libc
@@ -13,6 +14,9 @@ import spack.version
 
 from .core import SourceContext, fn
 from .versions import Provenance
+
+#: Language virtuals wrapped by the compiler wrapper (same ones for which a flag exists)
+COMPILER_WRAPPER_LANGUAGES = ("c", "cxx", "fortran")
 
 
 class RuntimePropertyRecorder:
@@ -165,6 +169,7 @@ class RuntimePropertyRecorder:
 
         imposed_spec = spack.spec.Spec(f"{self.current_package}{impose}")
         when_spec = spack.spec.Spec(f"{self.current_package}{when}")
+        when_spec = spack.hash_lookup.lookup_hash(when_spec)
 
         assert imposed_spec.versions.concrete, f"{impose} must have a concrete version"
 
@@ -207,9 +212,6 @@ class RuntimePropertyRecorder:
             self.reset()
             return
 
-        when_spec = spack.spec.Spec(f"%[deptypes=build] {spec}")
-        body_str, node_variable = self.rule_body_from(when_spec)
-
         node_placeholder = "XXX"
         flags = spec.extra_attributes["flags"]
         root_spec_str = f"{node_placeholder}"
@@ -220,12 +222,18 @@ class RuntimePropertyRecorder:
             root_spec, body=False, context=SourceContext(source="compiler")
         )
         self.rules.append(f"% Default compiler flags for {spec}\n")
-        for clause in head_clauses:
-            if clause.args[0] == "node":
-                continue
-            head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
-            rule = f"{head_str} :-\n{body_str}."
-            self.rules.append(rule)
+
+        # Inject the flags only when the compiler is actually used to compile the dependent,
+        # i.e. the build edge provides one of the language virtuals.
+        for language in COMPILER_WRAPPER_LANGUAGES:
+            when_spec = spack.spec.Spec(f"%[deptypes=build virtuals={language}] {spec}")
+            body_str, node_variable = self.rule_body_from(when_spec)
+            for clause in head_clauses:
+                if clause.args[0] == "node":
+                    continue
+                head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
+                rule = f"{head_str} :-\n{body_str}."
+                self.rules.append(rule)
 
         self.reset()
 

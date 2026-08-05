@@ -13,11 +13,17 @@ import spack.binary_distribution
 import spack.cmd
 import spack.concretize
 import spack.error
-import spack.llnl.util.filesystem as fs
+import spack.hash_lookup
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.spec
+import spack.util.filesystem as fs
+from spack.externals import (
+    ExternalSpecsParser,
+    complete_variants_and_architecture,
+    extract_dicts_from_configuration,
+)
 from spack.spec_parser import (
     UNIX_FILENAME,
     WINDOWS_FILENAME,
@@ -56,9 +62,9 @@ def dependency_with_version(text):
 
 
 @pytest.fixture()
-def specfile_for(default_mock_concretization):
+def specfile_for(config, mock_packages):
     def _specfile_for(spec_str, filename):
-        s = default_mock_concretization(spec_str)
+        s = spack.concretize.concretize_one(spec_str)
         is_json = str(filename).endswith(".json")
         is_yaml = str(filename).endswith(".yaml")
         if not is_json and not is_yaml:
@@ -1210,7 +1216,7 @@ def test_cli_spec_roundtrip(args, expected):
         ),
     ],
 )
-def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config):
+def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config, mock_packages):
     """Tests that toolchains are expanded correctly"""
     parser = SpecParser(spec_str)
     for expected in expected_roundtrip:
@@ -1273,22 +1279,22 @@ def test_spec_by_hash(database, monkeypatch, config):
 
     hash_str = f"/{mpileaks.dag_hash()}"
     parsed_spec = SpecParser(hash_str).next_spec()
-    parsed_spec.replace_hash()
+    spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     short_hash_str = f"/{mpileaks.dag_hash()[:5]}"
     parsed_spec = SpecParser(short_hash_str).next_spec()
-    parsed_spec.replace_hash()
+    spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     name_version_and_hash = f"{mpileaks.name}@{mpileaks.version} /{mpileaks.dag_hash()[:5]}"
     parsed_spec = SpecParser(name_version_and_hash).next_spec()
-    parsed_spec.replace_hash()
+    spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     b_hash = f"/{b.dag_hash()}"
     parsed_spec = SpecParser(b_hash).next_spec()
-    parsed_spec.replace_hash()
+    spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == b
 
 
@@ -1302,21 +1308,21 @@ def test_dep_spec_by_hash(database, config):
     assert "zmpi" in mpileaks_zmpi
 
     mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()} ^zmpi").next_spec()
-    mpileaks_hash_fake.replace_hash()
+    spack.hash_lookup.replace_hash(mpileaks_hash_fake)
     assert "fake" in mpileaks_hash_fake
     assert mpileaks_hash_fake["fake"] == fake
     assert "zmpi" in mpileaks_hash_fake
     assert mpileaks_hash_fake["zmpi"] == spack.spec.Spec("zmpi")
 
     mpileaks_hash_zmpi = SpecParser(f"mpileaks ^ /{zmpi.dag_hash()}").next_spec()
-    mpileaks_hash_zmpi.replace_hash()
+    spack.hash_lookup.replace_hash(mpileaks_hash_zmpi)
     assert "zmpi" in mpileaks_hash_zmpi
     assert mpileaks_hash_zmpi["zmpi"] == zmpi
 
     mpileaks_hash_fake_and_zmpi = SpecParser(
         f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}"
     ).next_spec()
-    mpileaks_hash_fake_and_zmpi.replace_hash()
+    spack.hash_lookup.replace_hash(mpileaks_hash_fake_and_zmpi)
     assert "zmpi" in mpileaks_hash_fake_and_zmpi
     assert mpileaks_hash_fake_and_zmpi["zmpi"] == zmpi
 
@@ -1364,7 +1370,7 @@ def test_ambiguous_hash(mutable_database):
     # This is a very sketchy as manually setting hashes easily breaks invariants
     x1 = spack.concretize.concretize_one("pkg-a")
     x2 = x1.copy()
-    x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    x1._hash = "xxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     x2._hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
     assert x1 != x2  # doesn't hold when only the dag hash is modified.
@@ -1373,14 +1379,14 @@ def test_ambiguous_hash(mutable_database):
     mutable_database.add(x2)
 
     # ambiguity in first hash character
-    s1 = SpecParser("/x").next_spec()
+    s1 = SpecParser("/xxx").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        s1.lookup_hash()
+        spack.hash_lookup.lookup_hash(s1)
 
     # ambiguity in first hash character AND spec name
-    s2 = SpecParser("pkg-a/x").next_spec()
+    s2 = SpecParser("pkg-a/xxx").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        s2.lookup_hash()
+        spack.hash_lookup.lookup_hash(s2)
 
 
 @pytest.mark.db
@@ -1391,22 +1397,23 @@ def test_invalid_hash(database, config):
     # name + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"zmpi /{mpich.dag_hash()}").next_spec()
-        parsed_spec.replace_hash()
+        spack.hash_lookup.replace_hash(parsed_spec)
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"mpich /{zmpi.dag_hash()}").next_spec()
-        parsed_spec.replace_hash()
+        spack.hash_lookup.replace_hash(parsed_spec)
 
     # name + dep + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}").next_spec()
-        parsed_spec.replace_hash()
+        spack.hash_lookup.replace_hash(parsed_spec)
 
 
 def test_invalid_hash_dep(database, config):
     mpich = database.query_one("mpich")
     hash = mpich.dag_hash()
     with pytest.raises(spack.spec.InvalidHashError):
-        spack.spec.Spec(f"callpath ^zlib/{hash}").replace_hash()
+        s = spack.spec.Spec(f"callpath ^zlib/{hash}")
+        spack.hash_lookup.replace_hash(s)
 
 
 @pytest.mark.db
@@ -1421,7 +1428,7 @@ def test_nonexistent_hash(database, config):
 
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"/{no_such_hash}").next_spec()
-        parsed_spec.replace_hash()
+        spack.hash_lookup.replace_hash(parsed_spec)
 
 
 @pytest.mark.parametrize(
@@ -1452,7 +1459,7 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
     else:
         spec = spack.spec.Spec("/spec" + constraint)
 
-    assert spec.lookup_hash() == spec1_concrete
+    assert spack.hash_lookup.lookup_hash(spec) == spec1_concrete
 
 
 @pytest.mark.parametrize(
@@ -1635,9 +1642,9 @@ def test_parse_filename_missing_slash_as_spec(specfile_for, tmp_path: pathlib.Pa
     )
 
 
-def test_parse_specfile_dependency(default_mock_concretization, tmp_path: pathlib.Path):
+def test_parse_specfile_dependency(config, mock_packages, tmp_path: pathlib.Path):
     """Ensure we can use a specfile as a dependency"""
-    s = default_mock_concretization("libdwarf")
+    s = spack.concretize.concretize_one("libdwarf")
 
     specfile = tmp_path / "libelf.json"
     with open(specfile, "w", encoding="utf-8") as f:
@@ -1812,3 +1819,14 @@ def test_parse_multiple_edge_attributes(input_args, expected):
     s, *_ = spack.cmd.parse_specs(input_args)
     for c in expected:
         assert s.satisfies(c)
+
+
+@pytest.mark.regression("52375")
+def test_external_spec_hash_can_be_looked_up(config, mock_packages):
+    """Tests that the hash of an external can be successfully looked up."""
+    packages_yaml = config.deepcopy_as_builtin("packages")
+    externals_dict = extract_dicts_from_configuration(packages_yaml)
+    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    abstract_hashes = [f"{x.name}/{x.dag_hash()[:5]}" for x in parser.all_specs()]
+
+    assert all(spack.hash_lookup.lookup_hash(spack.spec.Spec(x)) for x in abstract_hashes)

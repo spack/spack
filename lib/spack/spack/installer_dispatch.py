@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 from typing import TYPE_CHECKING, List, Optional, Set, Union
 
 from spack.vendor.typing_extensions import Literal
@@ -12,7 +11,7 @@ import spack.sandbox
 
 if TYPE_CHECKING:
     import spack.installer
-    import spack.new_installer
+    import spack.old_installer
     import spack.package_base
 
 
@@ -41,13 +40,11 @@ def create_installer(
     root_policy: Literal["auto", "cache_only", "source_only"] = "auto",
     dependencies_policy: Literal["auto", "cache_only", "source_only"] = "auto",
     create_reports: bool = False,
-) -> Union["spack.installer.PackageInstaller", "spack.new_installer.PackageInstaller"]:
+) -> Union["spack.old_installer.PackageInstaller", "spack.installer.PackageInstaller"]:
     """Create an installer based on the current configuration and feature support."""
-    use_old_installer = (
-        sys.platform == "win32" or spack.config.get("config:installer", "new") == "old"
-    )
+    use_old_installer = spack.config.CONFIG.get("config:installer", "new") == "old"
 
-    if spack.config.get("config:sandbox:enable", False):
+    if spack.config.CONFIG.get("config:sandbox:enable", False):
         if use_old_installer:
             raise spack.sandbox.SandboxError(
                 "config:sandbox:enable is only supported with config:installer:new"
@@ -56,9 +53,9 @@ def create_installer(
         spack.sandbox.get_sandbox()
 
     if use_old_installer:
-        from spack.installer import PackageInstaller  # type: ignore
+        from spack.old_installer import PackageInstaller  # type: ignore
     else:
-        from spack.new_installer import PackageInstaller  # type: ignore
+        from spack.installer import PackageInstaller  # type: ignore
 
     return PackageInstaller(
         packages,

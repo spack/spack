@@ -9,6 +9,10 @@
 
 .. _octavepackage:
 
+.. index::
+   single: build system; Octave
+   single: OctavePackage
+
 Octave
 ------
 
