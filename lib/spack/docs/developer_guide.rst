@@ -358,8 +358,8 @@ A ``post_uninstall`` hook runs after package uninstallation finishes.
 It receives the spec as its only argument and is primarily used for cleaning up module files during uninstall operations.
 
 
-Adding a New Hook Modules
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding a New Hook Module
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 To implement a hook, create a Python module in ``lib/spack/spack/hooks/`` with functions named after the hooks you want to implement:
 
