@@ -1055,6 +1055,8 @@ def test_database_works_with_empty_dir(tmp_path: pathlib.Path):
         db.query()
     # Check that reading an empty directory didn't create a new index.json
     assert not os.path.exists(db._index_path)
+    # Restore write permissions, or pytest cannot remove the tmp dir.
+    tmp_path.chmod(mode=0o755)
 
 
 @pytest.mark.parametrize(
