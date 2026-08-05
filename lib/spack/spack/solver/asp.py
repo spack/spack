@@ -3801,12 +3801,18 @@ def post_process_concretization_result(specs: SpecDict) -> None:
 
     """
     # inject patches -- note that we can't use set() to unique the
-    # roots here, because the specs aren't complete, and the hash
+    # specs here, because the specs aren't complete, and the hash
     # function will loop forever.
-    roots = [spec.root for spec in specs.values()]
-    roots = {id(r): r for r in roots}
-    for root in roots.values():
-        spack.spec._inject_patches_variant(root)
+    #
+    # Sort specs by size to ensure ordering of parents before children without knowing the roots.
+    # This is no worse for performance than traversing towards parents to determine roots, but
+    # avoids ambiguity about the root of circular specs and specs with multiple parents.
+    #
+    # When multiple parents form a run-dep cycle and multiple nodes in that cycle apply patches
+    # to a shared dependency, the ordering of those patches is inherently arbitrary.
+    # We break ties by secondarily sorting by package name for a deterministic order
+    for spec in sorted(specs.values(), key=lambda s: (len(list(s.traverse())), s.name)):
+        spack.spec._inject_patches_variant(spec)
 
     for s in specs.values():
         # Add external paths to specs with just external modules
@@ -3817,8 +3823,8 @@ def post_process_concretization_result(specs: SpecDict) -> None:
         _specs_with_commits(s)
 
     # mark concrete and assign hashes to all specs in the solve
-    for root in roots.values():
-        root._finalize_concretization()
+    for spec in specs.values():
+        spec._finalize_concretization()
 
     # Unify hashes (this is to avoid duplicates of runtimes and compilers)
     unifier = ConcreteSpecsByHash()
@@ -3835,12 +3841,9 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     # Add git version lookup info to concrete Specs (this is generated for
     # abstract specs as well but the Versions may be replaced during the
     # concretization process)
-    for root in specs.values():
-        for spec in root.traverse():
-            if isinstance(spec.version, vn.GitVersion):
-                spec.version.attach_lookup(
-                    spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
-                )
+    for spec in spack.traverse.traverse_nodes(specs.values()):
+        if isinstance(spec.version, vn.GitVersion):
+            spec.version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(spec.fullname))
 
     new_specs = execute_explicit_splices(specs)
     specs.clear()

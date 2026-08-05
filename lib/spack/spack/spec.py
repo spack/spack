@@ -2045,33 +2045,6 @@ class Spec:
         return not self.name and not self.abstract_hash
 
     @property
-    def root(self):
-        """Follow dependent links and find the root of this spec's DAG.
-
-        Spack specs have a single root (the package being installed).
-        With circular dependencies, we detect cycles and return the node with no dependents.
-        """
-        # FIXME: In the case of multiple parents this property does not
-        # FIXME: make sense. Should we revisit the semantics?
-        if not self._dependents:
-            return self
-
-        # Use cycle detection to avoid infinite recursion with circular dependencies
-        visited = set()
-        current = self
-
-        while current._dependents:
-            if id(current) in visited:
-                # We've hit a cycle - return the current node
-                # In a circular dependency, there's no true "root", so return self
-                return self
-            visited.add(id(current))
-            edges_by_package = next(iter(current._dependents.values()))
-            current = edges_by_package[0].parent
-
-        return current
-
-    @property
     def package(self):
         assert self.concrete, "{0}: Spec.package can only be called on concrete specs".format(
             self.name
