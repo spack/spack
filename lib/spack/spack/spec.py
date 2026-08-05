@@ -1091,8 +1091,13 @@ def _select_edges(
         depflag: allowed dependency types in flag form
         virtuals: list of virtuals or specific virtual on the edge
     """
-    if not depflag:
+    if not depflag or not edge_map:
         return []
+
+    if parent is None and child is None and depflag == dt.ALL and virtuals is None:
+        if len(edge_map) == 1:
+            return next(iter(edge_map.values())).copy()
+        return list(itertools.chain.from_iterable(edge_map.values()))
 
     # Start from all the edges we store
     selected: Iterable[DependencySpec] = itertools.chain.from_iterable(edge_map.values())
