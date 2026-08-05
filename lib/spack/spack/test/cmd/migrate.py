@@ -16,7 +16,7 @@ migrate = spack.main.SpackCommand("migrate")
 
 
 @pytest.fixture
-def migrate_setup(tmp_path, set_home, monkeypatch, clear_env_vars, mutable_config):
+def migrate_setup(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config):
     """Set up common test environment for migrate tests."""
     spack_root = tmp_path / "spack-root"
     spack_root.mkdir()

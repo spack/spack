@@ -1132,7 +1132,7 @@ spack:
             assert concrete_spec.dag_hash() + " callpath" in output
 
 
-def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
+def test_ci_get_stack_changed(mock_git_repo, monkeypatch, modifies_spackpaths):
     """Test that we can detect the change to .gitlab-ci.yml in a
     mock spack git repo."""
 

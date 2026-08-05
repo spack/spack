@@ -24,19 +24,7 @@ def _ensure_dir(pathlike):
 
 
 @pytest.fixture
-def clear_env_vars_and_frozen_home(clear_env_vars):
-    """Clear env vars and also reset _frozen_home for layout_logic tests.
-
-    This fixture combines clear_env_vars with clearing spack.config._frozen_home,
-    which is needed by tests that manipulate spack.paths and subprocess isolation.
-    """
-    import spack.config
-    spack.config._frozen_home = {}
-    yield
-
-
-@pytest.fixture
-def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars_and_frozen_home):
+def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths):
     """Create a mock Spack instance with simulated home and base prefix.
 
     Returns:

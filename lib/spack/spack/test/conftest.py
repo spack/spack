@@ -111,6 +111,29 @@ def clear_env_vars(working_env, monkeypatch):
 
 
 @pytest.fixture
+def modifies_spackpaths():
+    """Clear _frozen_home before and after tests that modify spack.paths.locations.
+
+    This fixture is strictly necessary only for tests that BOTH:
+    - Modify spack.paths.locations (change the spack prefix/paths)
+    - Create subprocesses that might freeze path values
+
+    However, it's applied to all tests that modify spack.paths.locations to avoid
+    fragility - if a test starts creating subprocesses later, frozen values from
+    prior tests won't leak in.
+
+    Used in:
+    - lib/spack/spack/test/layout_logic.py (modifies paths + creates subprocs)
+    - lib/spack/spack/test/cmd/migrate.py (modifies paths, no subprocs currently)
+    - lib/spack/spack/test/cmd/ci.py (modifies paths, no subprocs currently)
+    """
+    import spack.config
+    spack.config._frozen_home = {}
+    yield
+    spack.config._frozen_home = {}
+
+
+@pytest.fixture
 def set_home(working_env):
     """Fixture to set HOME environment variable for both Windows and Linux."""
 
