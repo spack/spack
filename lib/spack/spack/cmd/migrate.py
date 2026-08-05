@@ -6,8 +6,9 @@ import argparse
 import os
 import shutil
 
-import spack.llnl.util.tty as tty
+import spack.config
 import spack.util.path
+from spack.util import tty
 
 description = "migrate user config from ~/.spack to ~/.config/spack"
 section = "config"
@@ -16,7 +17,7 @@ level = "long"
 
 def backup_location():
     """Return the backup location for ~/.spack (in $state_home/dotspack_backup)."""
-    state_home = spack.util.path.substitute_path_variables("$state_home")
+    state_home = spack.config.substitute_path_variables("$state_home")
     return os.path.join(state_home, "dotspack_backup")
 
 
