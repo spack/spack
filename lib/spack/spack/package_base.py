@@ -1563,9 +1563,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         path = os.path.join(self.home.bin, self.spec.name)
         # On Windows, executables have a .exe extension. os.path.isfile/is_exe do not
         # automatically resolve missing extensions (unlike subprocess.Popen), so we
-        # must append .exe ourselves when the path has no extension.
+        # try the .exe path first, then fall back to the bare path.
         if sys.platform == "win32" and not pathlib.Path(path).suffix:
-            path += ".exe"
+            exe_path = f"{path}.exe"
+            if fsys.is_exe(exe_path):
+                return spack.util.executable.Executable(exe_path)
         if fsys.is_exe(path):
             return spack.util.executable.Executable(path)
         raise RuntimeError(f"Unable to locate {self.spec.name} command in {self.home.bin}")
