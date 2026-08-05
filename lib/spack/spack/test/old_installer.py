@@ -516,7 +516,7 @@ def test_clear_failures_success(tmp_path: pathlib.Path):
 
 @pytest.mark.not_on_windows("chmod does not prevent removal on Win")
 @pytest.mark.skipif(fs.getuid() == 0, reason="user is root")
-def test_clear_failures_errs(tmp_path: pathlib.Path, capfd):
+def test_clear_failures_errs(tmp_path: pathlib.Path, capfd, request):
     """Test the clear_failures exception paths."""
     failures = spack.database.FailureTracker(
         str(tmp_path),
@@ -529,6 +529,7 @@ def test_clear_failures_errs(tmp_path: pathlib.Path, capfd):
     failures.mark(spec)
 
     # Make the file marker not writeable, so that clearing_failures fails
+    request.addfinalizer(lambda: failures.dir.chmod(0o750))
     failures.dir.chmod(0o000)
 
     # Clear failure tracking
@@ -537,7 +538,6 @@ def test_clear_failures_errs(tmp_path: pathlib.Path, capfd):
     # Ensure expected warning generated
     out = str(capfd.readouterr()[1])
     assert "Unable to remove failure" in out
-    failures.dir.chmod(0o750)
 
 
 def test_combine_phase_logs(tmp_path: pathlib.Path):
