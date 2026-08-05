@@ -5610,3 +5610,65 @@ def test_terminal_ui_announces_pool_only_when_solving(total, announced, capsys):
     )
 
     assert ("Starting concretization" in capsys.readouterr().out) is announced
+
+
+@pytest.mark.parametrize("reuse,expected_reused", [(True, True), (False, False)])
+def test_reuse_of_compiler_dependencies_follows_reuse_config(
+    reuse, expected_reused, temporary_store, mutable_config: Configuration, mock_packages
+):
+    """Tests that we don't accidentally reuse compiler dependencies, for compilers installed
+    by Spack.
+    """
+    # Scenario: compiler-with-deps is installed with an old zlib in its subtree. An unrelated
+    # package is then concretized with gcc as its compiler, so the compiler owning that zlib is
+    # not part of the DAG. With reuse:true the old zlib is reused, with reuse:false a fresh
+    # zlib@1.2.11 must be built instead.
+    compiler = spack.concretize.concretize_one("compiler-with-deps ^zlib@1.2.8")
+    assert compiler["zlib"].satisfies("@1.2.8")
+    PackageInstaller([compiler.package], fake=True, explicit=True).install()
+
+    with mutable_config.override("concretizer:reuse", reuse):
+        s = spack.concretize.concretize_one("pkg-with-zlib-dep %c=gcc")
+
+    # The compiler that owns the old zlib is not part of the DAG at all
+    assert "compiler-with-deps" not in s, s.tree()
+    assert (s["zlib"].dag_hash() == compiler["zlib"].dag_hash()) is expected_reused, s.tree()
+    if not expected_reused:
+        assert s["zlib"].satisfies("@1.2.11"), s.tree()
+
+
+def test_compiler_with_dependencies_is_reused_when_reuse_is_false(
+    temporary_store, mutable_config: Configuration, mock_packages
+):
+    """Tests that a compiler installed by Spack can still be reused with reuse:false, together
+    with the dependencies it was installed with.
+    """
+    # The dependencies of a compiler are not selectable with reuse:false, but they must still be
+    # imposable by the compiler being reused, otherwise a compiler with dependencies could never
+    # be used without rebuilding it.
+    compiler = spack.concretize.concretize_one("compiler-with-deps ^zlib@1.2.8")
+    PackageInstaller([compiler.package], fake=True, explicit=True).install()
+
+    with mutable_config.override("concretizer:reuse", False):
+        s = spack.concretize.concretize_one("pkg-with-zlib-dep %c=compiler-with-deps")
+
+    assert s["compiler-with-deps"].dag_hash() == compiler.dag_hash(), s.tree()
+    assert s["compiler-with-deps"]["zlib"].dag_hash() == compiler["zlib"].dag_hash(), s.tree()
+
+
+def test_compiler_dependencies_can_be_excluded_from_reuse(
+    temporary_store, mutable_config: Configuration, mock_packages
+):
+    """Tests that the dependencies of a compiler installed by Spack are subject to the
+    include/exclude filters of the reuse sources, like any other installed spec.
+    """
+    compiler = spack.concretize.concretize_one("compiler-with-deps ^zlib@1.2.8")
+    PackageInstaller([compiler.package], fake=True, explicit=True).install()
+
+    with mutable_config.override(
+        "concretizer:reuse", {"from": [{"type": "local", "exclude": ["zlib"]}]}
+    ):
+        s = spack.concretize.concretize_one("pkg-with-zlib-dep %c=gcc")
+
+    assert s["zlib"].dag_hash() != compiler["zlib"].dag_hash(), s.tree()
+    assert s["zlib"].satisfies("@1.2.11"), s.tree()
