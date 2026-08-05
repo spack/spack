@@ -7,7 +7,11 @@
    :description lang=en:
       Learn how to generate and run automated build pipelines in Spack for CI instances, enabling the building and deployment of binaries and reporting to CDash.
 
-.. _pipelines:
+.. index::
+   single: CI pipeline; generating
+   single: GitLab pipeline
+   single: spack ci
+   :name: pipelines
 
 CI Pipelines
 ============
@@ -704,3 +708,16 @@ Optional.
 Only needed if you want ``spack ci rebuild`` to trust the key you store in this variable, in which case, it will subsequently be used to sign and verify binary packages (when installing or creating build caches).
 You could also have already trusted a key Spack knows about, or if no key is present anywhere, Spack will install specs using ``--no-check-signature`` and create build caches using ``-u`` (for unsigned binaries).
 
+``SPACK_CI_BUILDCACHE_VIEW``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Optional.
+Only needed when using a ``buildcache-destination`` mirror that points at a build cache view.
+This option affects the behavior of the ``reindex`` job (:ref:`rebuild_index`) and can have the values ``force`` or ``append``.
+The behavior of each option is described in more detail by :ref:`cmd-spack-buildcache-update-view`.
+The default option is ``append`` because that is what is used by the Spack build farm.
+
+.. warning::
+
+   Using the ``append`` option with build cache index views is a non-atomic operation.
+   It is up to the CI maintainer to ensure that concurrent writes to the build cache are handled appropriately.

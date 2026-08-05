@@ -8,6 +8,12 @@ concurrency:
   group: unit_tests-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
+env:
+  # RUNNER_TEMP is set by the runner on every platform, and is the only temporary directory
+  # Windows runners guarantee to be writable. The runner context is not available here, so
+  # the plugin expands the variable itself.
+  SPACK_TEST_CONCRETIZATION_CACHE: ${RUNNER_TEMP}/spack-concretization-cache
+
 jobs:
   # Run unit tests with different configurations on linux
   ubuntu:
@@ -15,34 +21,23 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.14']
-        on_develop:
-        - ${{ github.ref == 'refs/heads/develop' }}
-        include:
-        - python-version: '3.7'
-          os: ubuntu-22.04
-          on_develop: ${{ github.ref == 'refs/heads/develop' }}
-        exclude:
-        - python-version: '3.8'
-          os: ubuntu-latest
-          on_develop: false
-        - python-version: '3.9'
-          os: ubuntu-latest
-          on_develop: false
-        - python-version: '3.10'
-          os: ubuntu-latest
-          on_develop: false
-        - python-version: '3.11'
-          os: ubuntu-latest
-          on_develop: false
+        # On develop test every supported Python, on pull requests only the newest to keep
+        # feedback fast. Python 3.6 is covered at runtime by rhel8-platform-python, since
+        # setup-python cannot provide it on current runners.
+        python-version: >-
+          ${{ github.ref == 'refs/heads/develop'
+          && fromJSON('["3.8", "3.9", "3.10", "3.11", "3.14"]')
+          || fromJSON('["3.14"]') }}
+        # Python 3.7 needs ubuntu-22.04, newer runner images no longer ship it.
+        include: >-
+          ${{ github.ref == 'refs/heads/develop'
+          && fromJSON('[{"os": "ubuntu-22.04", "python-version": "3.7"}]')
+          || fromJSON('[]') }}
 
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
-      with:
-        python-version: ${{ matrix.python-version }}
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -50,41 +45,23 @@ jobs:
           sudo apt-get -y install \
               coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build \
               cmake bison libbison-dev subversion
-    # On ubuntu 24.04, kcov was removed. It may come back in some future Ubuntu
-    - name: Set up Homebrew
-      id: set-up-homebrew
-      uses: Homebrew/actions/setup-homebrew@40e9946c182a64b3db1bf51be0dcb915f7802aa9
-    - name: Install kcov with brew
-      run: "brew install kcov"
-    - name: Install Python packages
-      run: |
-          # See https://github.com/coveragepy/coveragepy/issues/2082
-          pip install --upgrade pip pytest pytest-xdist pytest-cov "coverage<=7.11.0"
-          pip install --upgrade "mypy>=0.900" "click" "ruff"
-    - name: Setup git configuration
-      run: |
-          # Need this for the git tests to succeed.
-          git --version
-          . .github/workflows/bin/setup_git.sh
-    - name: Bootstrap clingo
-      if: ${{ matrix.concretizer == 'clingo' }}
-      env:
-          SPACK_PYTHON: python
-      run: |
-          . share/spack/setup-env.sh
-          spack bootstrap disable spack-install
-          spack bootstrap now
-          spack -v solve zlib
+    # This job tests older Python versions, which the pins in the requirements file do
+    # not support, so it installs unpinned. mypy and ruff are needed by the tests
+    # covering "spack style". See coveragepy issue 2082 for the coverage bound.
+    - name: Setup Spack
+      uses: ./.github/actions/setup-spack
+      with:
+        python-version: ${{ matrix.python-version }}
+        pip-install: >-
+          pytest pytest-xdist pytest-cov "coverage<=7.11.0" "mypy>=0.900" ruff
     - name: Run unit tests
       env:
-          SPACK_PYTHON: python
-          SPACK_TEST_PARALLEL: 4
-          COVERAGE: true
           COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
-          UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.14' }}
+          PYTEST_ADDOPTS: ${{ matrix.python-version == '3.14' && '--cov --cov-config=pyproject.toml' || '' }}
       run: |
-          share/spack/qa/run-unit-tests
+          python3 -m pytest -x --verbose --dist worksteal -n4
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+      if: ${{ matrix.python-version == '3.14' }}
       with:
         name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
         path: coverage
@@ -93,12 +70,9 @@ jobs:
   shell:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
-      with:
-        python-version: '3.11'
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -110,14 +84,10 @@ jobs:
       uses: Homebrew/actions/setup-homebrew@40e9946c182a64b3db1bf51be0dcb915f7802aa9
     - name: Install kcov with brew
       run: "brew install kcov"
-    - name: Install Python packages
-      run: |
-          pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
-    - name: Setup git configuration
-      run: |
-          # Need this for the git tests to succeed.
-          git --version
-          . .github/workflows/bin/setup_git.sh
+    - name: Setup Spack
+      uses: ./.github/actions/setup-spack
+      with:
+        python-version: '3.11'
     - name: Run shell tests
       env:
           COVERAGE: true
@@ -140,7 +110,7 @@ jobs:
           dnf install -y \
               bzip2 curl gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -149,87 +119,64 @@ jobs:
           . .github/workflows/bin/setup_git.sh
     - name: Setup a virtual environment with platform-python
       run: |
+          # platform-python is the only runtime coverage we have of Python 3.6
           /usr/libexec/platform-python -m venv ~/platform-spack
-          source ~/platform-spack/bin/activate
-          pip install --upgrade pip pytest coverage[toml] pytest-xdist
-    - name: Bootstrap Spack development environment and run unit tests
+          echo "$HOME/platform-spack/bin" >> $GITHUB_PATH
+          ~/platform-spack/bin/pip install --upgrade pip pytest coverage[toml] pytest-xdist
+    - name: Bootstrap Spack development environment
       run: |
-          source ~/platform-spack/bin/activate
           source share/spack/setup-env.sh
           spack debug report
           spack -d bootstrap now
-          pytest --verbose -x -n3 --dist loadfile -k 'not cvs and not svn and not hg'
-  # Test for the clingo based solver (using clingo-cffi)
-  clingo-cffi:
+    - name: Smoke tests
+      run: |
+          bin/spack -h
+          bin/spack help -a
+          bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
+    - name: Run unit tests
+      run: |
+          python3 -m pytest --verbose -x -n3 --dist loadfile -k 'not cvs and not svn and not hg'
+  # Test the concretizer against clingo builds published on PyPI, rather than the binaries
+  # we bootstrap. clingo v6 is still pre-release, so that variant is allowed to fail
+  # without blocking the workflow.
+  clingo:
+    name: clingo-${{ matrix.variant }}
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - variant: cffi
+          install: clingo==5.8.0
+          experimental: false
+        - variant: v6
+          install: --pre --extra-index-url https://test.pypi.org/simple clingo
+          experimental: true
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
-      with:
-        python-version: '3.13'
     - name: Install System packages
       run: |
           sudo apt-get -y update
           sudo apt-get -y install coreutils gfortran graphviz gnupg2
-    - name: Install Python packages
-      run: |
-          pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
-          pip install --upgrade -r .github/workflows/requirements/style/requirements.txt
-    - name: Run unit tests (full suite with coverage)
-      env:
-          COVERAGE: true
-          COVERAGE_FILE: coverage/.coverage-clingo-cffi
-      run: |
-        . share/spack/setup-env.sh
-        spack bootstrap disable spack-install
-        spack bootstrap disable github-actions-v0.6
-        spack bootstrap disable github-actions-v2
-        spack bootstrap status
-        spack solve zlib
-        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
-      with:
-        name: coverage-clingo-cffi
-        path: coverage
-        include-hidden-files: true
-  # Test for the clingo based solver (using the development clingo v6 from Test PyPI).
-  # clingo v6 is still pre-release; allow this job to fail without blocking the workflow.
-  clingo-v6:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+    - name: Setup Spack
+      uses: ./.github/actions/setup-spack
       with:
         python-version: '3.13'
-    - name: Install System packages
-      run: |
-          sudo apt-get -y update
-          sudo apt-get -y install coreutils gfortran graphviz gnupg2
-    - name: Install Python packages
-      run: |
-          pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
-          pip install --upgrade -r .github/workflows/requirements/style/requirements.txt
-          pip install --upgrade --pre --extra-index-url https://test.pypi.org/simple clingo
+        pip-install: >-
+          -r .github/workflows/requirements/unit_tests/requirements.txt
+          ${{ matrix.install }}
+        bootstrap: none
     - name: Run unit tests (full suite with coverage)
       env:
-          COVERAGE: true
-          COVERAGE_FILE: coverage/.coverage-clingo-v6
+          COVERAGE_FILE: coverage/.coverage-clingo-${{ matrix.variant }}
       run: |
-        . share/spack/setup-env.sh
-        spack bootstrap disable spack-install
-        spack bootstrap disable github-actions-v0.6
-        spack bootstrap disable github-actions-v2
-        spack bootstrap status
-        spack solve zlib
-        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/
+        python3 -m pytest --verbose --cov --cov-config=pyproject.toml -x -n3 --dist worksteal lib/spack/spack/test/concretization/
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
-        name: coverage-clingo-v6
+        name: coverage-clingo-${{ matrix.variant }}
         path: coverage
         include-hidden-files: true
   # Run unit tests on MacOS
@@ -240,30 +187,21 @@ jobs:
         os: [macos-15-intel, macos-latest]
         python-version: ["3.14"]
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install Python packages
-      run: |
-          pip install --upgrade pip
-          # See https://github.com/coveragepy/coveragepy/issues/2082
-          pip install --upgrade -r .github/workflows/requirements/unit_tests/requirements.txt
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg kcov
+    - name: Setup Spack
+      uses: ./.github/actions/setup-spack
+      with:
+        python-version: ${{ matrix.python-version }}
     - name: Run unit tests
       env:
         COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
       run: |
-        git --version
-        . .github/workflows/bin/setup_git.sh
-        . share/spack/setup-env.sh
-        spack bootstrap disable spack-install
-        spack solve zlib
-        python3 -m pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --dist loadfile -x -n4
+        python3 -m pytest --verbose --cov --cov-config=pyproject.toml --dist worksteal -x -n4
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
@@ -277,19 +215,29 @@ jobs:
           powershell Invoke-Expression -Command "./share/spack/qa/windows_test_setup.ps1"; {0}
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
       with:
         python-version: '3.14'
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
-          python -m pip install --upgrade pip -r .github/workflows/requirements/style/requirements.txt
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade -r .github/workflows/requirements/unit_tests/requirements.txt -r .github/workflows/requirements/style/requirements.txt
+          # There are no prebuilt clingo binaries for Windows to bootstrap from
+          python -m pip install --upgrade clingo==5.8.0
     - name: Create local develop
       run: |
         ./.github/workflows/bin/setup_git.ps1
+    - name: Smoke tests
+      run: |
+        spack -h
+        ./share/spack/qa/validate_last_exit.ps1
+        spack help -a
+        ./share/spack/qa/validate_last_exit.ps1
+        spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
+        ./share/spack/qa/validate_last_exit.ps1
     - name: Unit Test
       env:
         COVERAGE_FILE: coverage/.coverage-windows
@@ -310,16 +258,16 @@ jobs:
 
     steps:
       - name: Checkout Spack (current)
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           path: spack-current
       - name: Checkout Spack (previous)
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           path: spack-previous
           ref: ${{ github.event.pull_request.base.sha || github.event.before }}
       - name: Checkout Spack Packages
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           repository: spack/spack-packages
           path: spack-packages

@@ -9,7 +9,7 @@ import platform
 import subprocess
 
 from spack.error import SpackError
-from spack.llnl.util import tty
+from spack.util import tty
 from spack.util import windows_registry as winreg
 from spack.version import Version
 

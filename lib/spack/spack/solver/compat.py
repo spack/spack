@@ -58,7 +58,6 @@ def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
     # only to provide exhaustive details when erroring due to a broken clingo module.
     import spack.config
     import spack.paths as sp
-    import spack.util.path as sup
 
     try:
         clingo_mod.Symbol
@@ -82,7 +81,7 @@ def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
         # check whether Spack is responsible
         if (
             pathlib.Path(
-                sup.canonicalize_path(
+                spack.config.canonicalize_path(
                     spack.config.CONFIG.get("bootstrap:root", sp.default_user_bootstrap_path)
                 )
             )

@@ -27,11 +27,10 @@ import spack.config
 import spack.dependency
 import spack.deptypes as dt
 import spack.directives_meta
+import spack.enums
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
-import spack.llnl.util.filesystem as fsys
-import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.multimethod
@@ -45,6 +44,7 @@ import spack.url
 import spack.util.archive
 import spack.util.environment
 import spack.util.executable
+import spack.util.filesystem as fsys
 import spack.util.git
 import spack.util.naming
 import spack.util.path
@@ -53,14 +53,10 @@ import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
-from spack.llnl.util.filesystem import (
-    AlreadyExistsError,
-    find_all_shared_libraries,
-    islink,
-    symlink,
-)
-from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
+from spack.util import tty
+from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
+from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
@@ -357,7 +353,7 @@ class PackageViewMixin:
         Alternative implementations may allow some of the files to exist in
         the view (in this case they would be omitted from the results).
         """
-        return set(dst for dst in merge_map.values() if os.path.lexists(dst))
+        return {dst for dst in merge_map.values() if os.path.lexists(dst)}
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
@@ -525,9 +521,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
        provide the constraints that are used as input to the concretizer.
 
     2. **Package instances**. Once instantiated with a concrete spec, a package can be passed to
-       the :py:class:`spack.installer.PackageInstaller`. It calls methods like :meth:`do_stage` on
-       the package instance, and it uses those to drive user-implemented methods like ``def patch``
-       and install phases like ``def configure`` and ``def install``.
+       the ``PackageInstaller``. It calls methods like :meth:`do_stage` on the package instance,
+       and it uses those to drive user-implemented methods like ``def patch`` and install phases
+       like ``def configure`` and ``def install``.
 
     Packages are imported from package repositories (see :py:mod:`spack.repo`).
 
@@ -861,7 +857,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def global_license_dir(cls):
         """Returns the directory where license files for all packages are stored."""
-        return spack.util.path.canonicalize_path(spack.config.get("config:license_dir"))
+        return spack.config.canonicalize_path(spack.config.CONFIG.get("config:license_dir"))
 
     @property
     def global_license_file(self):
@@ -1122,15 +1118,22 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # if no version-bearing URLs can be found, try them raw
         if not urls:
-            default_url = getattr(self, "url", getattr(self, "urls", [None])[0])
+            default_url = getattr(self, "url", None)
+
+            if not default_url:
+                default_urls = getattr(self, "urls", None)
+
+                if isinstance(default_urls, list) and len(default_urls) > 0:
+                    default_url = default_urls[0]
 
             # if no exact match AND no class-level default, use the nearest URL
             if not default_url:
                 default_url = self.nearest_url(version)
 
-                # if there are NO URLs to go by, then we can't do anything
-                if not default_url:
-                    raise NoURLError(self.__class__)
+            # if there are NO URLs to go by, then we can't do anything
+            if not default_url:
+                raise NoURLError(self.__class__)
+
             urls.append(spack.url.substitute_version(default_url, self.url_version(version)))
 
         return urls
@@ -1206,7 +1209,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
             dev_path = dev_path_var.value
-            link_format = spack.config.get("config:develop_stage_link")
+            link_format = spack.config.CONFIG.get("config:develop_stage_link")
             if not link_format:
                 link_format = "build-{arch}-{hash:7}"
             if link_format == "None":
@@ -1539,7 +1542,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def provided_virtual_names(cls):
         """Return sorted list of names of virtuals that can be provided by this package."""
         return sorted(
-            set(vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals))
+            {vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals)}
         )
 
     @property
@@ -1600,7 +1603,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             tty.debug("No fetch required for {0}".format(self.name))
             return
 
-        checksum = spack.config.get("config:checksum")
+        checksum = spack.config.CONFIG.get("config:checksum")
         if (
             checksum
             and (self.version not in self.versions)
@@ -1626,7 +1629,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     "Will not fetch %s" % self.spec.format("{name}{@version}"), ck_msg
                 )
 
-        deprecated = spack.config.get("config:deprecated")
+        deprecated = spack.config.CONFIG.get("config:deprecated")
         if not deprecated and self.versions.get(self.version, {}).get("deprecated", False):
             tty.warn(
                 "{0} is deprecated and may be removed in a future Spack release.".format(
@@ -1671,7 +1674,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self.stage.create()
 
         # Fetch/expand any associated code.
-        user_dev_path = spack.config.get(f"develop:{self.name}:path", None)
+        user_dev_path = spack.config.CONFIG.get(f"develop:{self.name}:path", None)
         skip = user_dev_path and os.path.exists(user_dev_path)
         if skip:
             tty.debug("Skipping staging because develop path exists")
@@ -2447,7 +2450,11 @@ class WindowsSimulatedRPath:
                 new_pth = pathlib.Path(pth).parent
             else:
                 new_pth = pathlib.Path(pth)
-            path_is_in_prefix = new_pth.is_relative_to(self.base_modification_prefix)
+
+            path_is_in_prefix = (
+                self.base_modification_prefix == new_pth
+                or self.base_modification_prefix in new_pth.parents
+            )
             if not path_is_in_prefix:
                 raise RuntimeError(
                     f"Attempting to generate rpath symlink out of rpath context:\
@@ -2602,25 +2609,35 @@ def preferred_version(
     return version
 
 
-def non_preferred_version(node: spack.spec.Spec) -> bool:
-    """Returns True if the spec version is not the preferred one, according to the package.py"""
+def non_preferred_version(node: spack.spec.Spec) -> spack.enums.PartStyle:
+    """Returns :attr:`~spack.enums.PartStyle.HIGHLIGHT` if the spec version is not the preferred
+    one according to package.py, :attr:`~spack.enums.PartStyle.NORMAL` otherwise.
+    """
     if not node.versions.concrete:
-        return False
+        return spack.enums.PartStyle.NORMAL
 
     try:
-        return node.version != preferred_version(node.package)
+        is_preferred = node.version == preferred_version(node.package)
     except ValueError:
-        return False
+        return spack.enums.PartStyle.NORMAL
+
+    return spack.enums.PartStyle.NORMAL if is_preferred else spack.enums.PartStyle.HIGHLIGHT
 
 
-def non_default_variant(node: spack.spec.Spec, variant_name: str) -> bool:
-    """Returns True if the variant in the spec has a non-default value."""
+def non_default_variant(node: spack.spec.Spec, variant_name: str) -> spack.enums.PartStyle:
+    """Return :attr:`~spack.enums.PartStyle.HIGHLIGHT` if the variant has a non-default value,
+    :attr:`~spack.enums.PartStyle.NORMAL` otherwise.
+
+    Intended for use as ``variant_style_fn`` in :meth:`~spack.spec.Spec.format`.
+    """
     try:
         default_variant = node.package.get_variant(variant_name).make_default()
-        return not node.satisfies(str(default_variant))
+        is_non_default = not node.satisfies(str(default_variant))
     except ValueError:
-        # This is the case for special variants like "patches" etc.
-        return False
+        # Special variants like "patches" have no meaningful default.
+        return spack.enums.PartStyle.NORMAL
+
+    return spack.enums.PartStyle.HIGHLIGHT if is_non_default else spack.enums.PartStyle.NORMAL
 
 
 def sort_by_pkg_preference(

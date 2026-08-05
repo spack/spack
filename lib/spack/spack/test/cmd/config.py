@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import functools
 import json
 import os
 import pathlib
@@ -15,34 +14,17 @@ import spack.concretize
 import spack.config
 import spack.database
 import spack.environment as ev
-import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.schema.config
-import spack.store
+import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
+from spack.config import Configuration
+from spack.store import Store
 
 config = spack.main.SpackCommand("config")
 env = spack.main.SpackCommand("env")
 
 pytestmark = pytest.mark.usefixtures("mock_packages")
-
-
-def _create_config(scope=None, data={}, section="packages"):
-    scope = scope or spack.config.default_modify_scope()
-    cfg_file = spack.config.CONFIG.get_config_filename(scope, section)
-    with open(cfg_file, "w", encoding="utf-8") as f:
-        syaml.dump(data, stream=f)
-    return cfg_file
-
-
-@pytest.fixture()
-def config_yaml_v015(mutable_config):
-    """Create a packages.yaml in the old format"""
-    old_data = {
-        "config": {"install_tree": "/fake/path", "install_path_scheme": "{name}-{version}"}
-    }
-    return functools.partial(_create_config, data=old_data, section="config")
-
 
 scope_path_re = r"\(([^\)]+)\)"
 
@@ -220,9 +202,9 @@ repos:
 def test_config_edit(mutable_config, working_env):
     """Ensure `spack config edit` edits the right paths."""
 
-    dms = spack.config.default_modify_scope("compilers")
-    dms_path = spack.config.CONFIG.scopes[dms].path
-    user_path = spack.config.CONFIG.scopes["user"].path
+    dms = mutable_config.default_modify_scope("compilers")
+    dms_path = mutable_config.scopes[dms].path
+    user_path = mutable_config.scopes["user"].path
 
     comp_path = os.path.join(dms_path, "compilers.yaml")
     repos_path = os.path.join(user_path, "repos.yaml")
@@ -245,12 +227,12 @@ def test_config_edit_edits_spack_yaml(mutable_mock_env_path):
         assert config("edit", "--print-file").strip() == env.manifest_path
 
 
-def test_config_add_with_scope_adds_to_scope(mutable_config, mutable_mock_env_path):
+def test_config_add_with_scope_adds_to_scope(mutable_config: Configuration, mutable_mock_env_path):
     """Test adding to non-env config scope with an active environment"""
     env = ev.create("test")
     with env:
         config("--scope=user", "add", "config:install_tree:root:/usr")
-    assert spack.config.get("config:install_tree:root", scope="user") == "/usr"
+    assert mutable_config.get("config:install_tree:root", scope="user") == "/usr"
 
 
 def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
@@ -646,26 +628,27 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     assert "dirty: true" not in output
 
 
-def test_config_update_not_needed(mutable_config):
-    data_before = spack.config.get("repos")
+def test_config_update_not_needed(mutable_config: Configuration):
+    data_before = mutable_config.get("repos")
     config("update", "-y", "repos")
-    data_after = spack.config.get("repos")
+    data_after = mutable_config.get("repos")
     assert data_before == data_after
 
 
-def test_config_update_shared_linking(mutable_config):
+def test_config_update_shared_linking(mutable_config: Configuration):
     # Old syntax: config:shared_linking:rpath/runpath
     # New syntax: config:shared_linking:{type:rpath/runpath,bind:True/False}
-    with spack.config.override("config:shared_linking", "runpath"):
-        assert spack.config.get("config:shared_linking:type") == "runpath"
-        assert not spack.config.get("config:shared_linking:bind")
+    with mutable_config.override("config:shared_linking", "runpath"):
+        assert mutable_config.get("config:shared_linking:type") == "runpath"
+        assert not mutable_config.get("config:shared_linking:bind")
 
 
 def test_config_prefer_upstream(
     tmp_path_factory: pytest.TempPathFactory,
+    temporary_store: Store,
     install_mockery,
     mock_fetch,
-    mutable_config,
+    mutable_config: Configuration,
     gen_mock_layout,
     monkeypatch,
 ):
@@ -682,11 +665,11 @@ def test_config_prefer_upstream(
 
     downstream_db_root = str(tmp_path_factory.mktemp("mock_downstream_db_root"))
     db_for_test = spack.database.Database(downstream_db_root, upstream_dbs=[prepared_db])
-    monkeypatch.setattr(spack.store.STORE, "db", db_for_test)
+    monkeypatch.setattr(temporary_store, "db", db_for_test)
 
     output = config("prefer-upstream")
-    scope = spack.config.default_modify_scope("packages")
-    cfg_file = spack.config.CONFIG.get_config_filename(scope, "packages")
+    scope = mutable_config.default_modify_scope("packages")
+    cfg_file = mutable_config.get_config_filename(scope, "packages")
     packages = syaml.load(open(cfg_file, encoding="utf-8"))["packages"]
 
     # Make sure only the non-default variants are set.
@@ -774,7 +757,7 @@ def test_config_with_unknown_group_gives_clear_error(cmd_str, tmp_path, mutable_
 @pytest.mark.regression("52152")
 def test_config_edit_creates_scope_dir(mutable_config, working_env, monkeypatch):
     """Tests that `spack config edit` can create the scope directory if it does not exist."""
-    scope_name = spack.config.default_modify_scope("config")
+    scope_name = mutable_config.default_modify_scope("config")
     scope_dir = pathlib.Path(mutable_config.scopes[scope_name].path)
 
     # Remove the scope directory to simulate a "fresh start" with no ~/.spack

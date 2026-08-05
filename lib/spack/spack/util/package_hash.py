@@ -372,7 +372,7 @@ def package_ast(
         source: Optionally provide a string to read python code from.
     """
     if source is None:
-        filename = spack.repo.PATH.filename_for_package_name(spec.name)
+        filename = spack.repo.PATH.filename_for_package_name(spec.fullname)
         with open(filename, "rb") as f:
             source = f.read()
 

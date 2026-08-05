@@ -9,13 +9,14 @@ import sys
 import pytest
 
 import spack.concretize
-import spack.config
+import spack.database
 import spack.install_test
 import spack.spec
 import spack.util.executable
+from spack.config import Configuration
 from spack.install_test import TestStatus
-from spack.llnl.util.filesystem import touch
 from spack.util.executable import which
+from spack.util.filesystem import touch
 
 
 def _true(*args, **kwargs):
@@ -106,7 +107,7 @@ def test_test_external(
     spec = spack.concretize.concretize_one(name)
     spec.external_path = "/path/to/external/{0}".format(name)
 
-    monkeypatch.setattr(spack.spec.Spec, "installed", _true)
+    monkeypatch.setattr(spack.database.Database, "installed", _true)
 
     test_suite = spack.install_test.TestSuite([spec])
     test_suite(**arguments)
@@ -153,7 +154,7 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
 @pytest.mark.not_on_windows("Cannot find echo executable")
 def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monkeypatch):
     spec = spack.concretize.concretize_one("simple-standalone-test")
-    monkeypatch.setattr(spack.spec.Spec, "installed", _true)
+    monkeypatch.setattr(spack.database.Database, "installed", _true)
     test_suite = spack.install_test.TestSuite([spec])
     test_suite()
 
@@ -338,7 +339,11 @@ def test_test_part_skip(install_mockery, mock_fetch, mock_test_stage):
 
 
 def test_test_part_missing_exe_fail_fast(
-    tmp_path: pathlib.Path, install_mockery, mock_fetch, mock_test_stage
+    tmp_path: pathlib.Path,
+    install_mockery,
+    mock_fetch,
+    mock_test_stage,
+    mutable_config: Configuration,
 ):
     """Confirm test_part with fail fast enabled raises exception."""
     s = spack.concretize.concretize_one("trivial-smoke-test")
@@ -347,7 +352,7 @@ def test_test_part_missing_exe_fail_fast(
     touch(pkg.tester.test_log_file)
 
     name = "test_fail_fast"
-    with spack.config.override("config:fail_fast", True):
+    with mutable_config.override("config:fail_fast", True):
         with pytest.raises(spack.install_test.TestFailure, match="object is not callable"):
             with spack.install_test.test_part(pkg, name, "fail fast"):
                 missing = which("no-possible-program")

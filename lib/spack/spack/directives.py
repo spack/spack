@@ -51,11 +51,11 @@ from typing import Any, Callable, List, Optional, Tuple, Type, Union
 import spack.deptypes as dt
 import spack.error
 import spack.fetch_strategy
-import spack.llnl.util.tty.color
 import spack.package_base
 import spack.patch
 import spack.spec
 import spack.util.crypto
+import spack.util.tty.color
 import spack.variant
 from spack.dependency import Dependency
 from spack.directives_meta import DirectiveError, directive, get_spec
@@ -697,7 +697,7 @@ def variant(
 
 def _format_error(msg, pkg, name):
     msg += " @*r{{[{0}, variant '{1}']}}"
-    return spack.llnl.util.tty.color.colorize(msg.format(pkg.name, name))
+    return spack.util.tty.color.colorize(msg.format(pkg.name, name))
 
 
 def _execute_variant(

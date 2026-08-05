@@ -7,29 +7,29 @@ import pytest
 
 import spack.concretize
 import spack.directives
-import spack.repo
 import spack.spec
 import spack.version
 from spack.directives import _make_when_spec, depends_on, extends, patch
 from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
+from spack.repo import RepoPath
 from spack.spec import Spec
 
 
-def test_false_directives_do_not_exist(mock_packages):
+def test_false_directives_do_not_exist(mock_packages: RepoPath):
     """Ensure directives that evaluate to False at import time are added to
     dicts on packages.
     """
-    cls = spack.repo.PATH.get_pkg_class("when-directives-false")
+    cls = mock_packages.get_pkg_class("when-directives-false")
     assert not cls.dependencies
     assert not cls.resources
     assert not cls.patches
 
 
-def test_true_directives_exist(mock_packages):
+def test_true_directives_exist(mock_packages: RepoPath):
     """Ensure directives that evaluate to True at import time are added to
     dicts on packages.
     """
-    cls = spack.repo.PATH.get_pkg_class("when-directives-true")
+    cls = mock_packages.get_pkg_class("when-directives-true")
 
     assert cls.dependencies
     assert "extendee" in cls.dependencies[spack.spec.Spec()]
@@ -42,8 +42,8 @@ def test_true_directives_exist(mock_packages):
     assert spack.spec.Spec() in cls.patches
 
 
-def test_constraints_from_context(mock_packages):
-    pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
+def test_constraints_from_context(mock_packages: RepoPath):
+    pkg_cls = mock_packages.get_pkg_class("with-constraint-met")
 
     assert pkg_cls.dependencies
     assert "pkg-b" in pkg_cls.dependencies[spack.spec.Spec("@1.0")]
@@ -53,8 +53,8 @@ def test_constraints_from_context(mock_packages):
 
 
 @pytest.mark.regression("26656")
-def test_constraints_from_context_are_merged(mock_packages):
-    pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
+def test_constraints_from_context_are_merged(mock_packages: RepoPath):
+    pkg_cls = mock_packages.get_pkg_class("with-constraint-met")
 
     assert pkg_cls.dependencies
     assert "pkg-c" in pkg_cls.dependencies[spack.spec.Spec("@0.14:15 ^pkg-b@3.8:4.0")]
@@ -84,8 +84,8 @@ def test_conditionally_extends_direct_dep(config, mock_packages):
 
 
 @pytest.mark.regression("34368")
-def test_error_on_anonymous_dependency(config, mock_packages):
-    pkg = spack.repo.PATH.get_pkg_class("pkg-a")
+def test_error_on_anonymous_dependency(config, mock_packages: RepoPath):
+    pkg = mock_packages.get_pkg_class("pkg-a")
     with pytest.raises(spack.directives.DependencyError):
         spack.directives._execute_depends_on(pkg, spack.spec.Spec("@4.5"))
 
@@ -101,16 +101,16 @@ def test_error_on_anonymous_dependency(config, mock_packages):
         ("maintainers-3", ["user0", "user1", "user2", "user3"]),
     ],
 )
-def test_maintainer_directive(config, mock_packages, package_name, expected_maintainers):
-    pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
+def test_maintainer_directive(config, mock_packages: RepoPath, package_name, expected_maintainers):
+    pkg_cls = mock_packages.get_pkg_class(package_name)
     assert pkg_cls.maintainers == expected_maintainers
 
 
 @pytest.mark.parametrize(
     "package_name,expected_licenses", [("licenses-1", [("MIT", "+foo"), ("Apache-2.0", "~foo")])]
 )
-def test_license_directive(config, mock_packages, package_name, expected_licenses):
-    pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
+def test_license_directive(config, mock_packages: RepoPath, package_name, expected_licenses):
+    pkg_cls = mock_packages.get_pkg_class(package_name)
     for license in expected_licenses:
         assert spack.spec.Spec(license[1]) in pkg_cls.licenses
         assert license[0] == pkg_cls.licenses[spack.spec.Spec(license[1])]
@@ -173,9 +173,11 @@ def test_version_type_validation():
         ("redistribute-y@2.1+bar", False, False),
     ],
 )
-def test_redistribute_directive(config, mock_packages, spec_str, distribute_src, distribute_bin):
+def test_redistribute_directive(
+    config, mock_packages: RepoPath, spec_str, distribute_src, distribute_bin
+):
     spec = spack.spec.Spec(spec_str)
-    assert spack.repo.PATH.get_pkg_class(spec.fullname).redistribute_source(spec) == distribute_src
+    assert mock_packages.get_pkg_class(spec.fullname).redistribute_source(spec) == distribute_src
     concretized_spec = spack.concretize.concretize_one(spec)
     assert concretized_spec.package.redistribute_binary == distribute_bin
 
@@ -202,11 +204,11 @@ def test_redistribute_override_when():
 
 
 @pytest.mark.regression("51248")
-def test_direct_dependencies_from_when_context_are_retained(mock_packages):
+def test_direct_dependencies_from_when_context_are_retained(mock_packages: RepoPath):
     """Tests that direct dependencies from the "when" context manager don't lose the "direct"
     attribute when turned into directives on the package class.
     """
-    pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
+    pkg_cls = mock_packages.get_pkg_class("with-constraint-met")
     # Direct dependency in a "when" single context manager
     assert spack.spec.Spec("%pkg-b") in pkg_cls.dependencies
     # Direct dependency in a "when" nested context manager

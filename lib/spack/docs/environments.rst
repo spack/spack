@@ -7,7 +7,9 @@
    :description lang=en:
       Learn how to use Spack environments to manage reproducible software stacks, making it easy to share and recreate specific sets of packages and their dependencies.
 
-.. _environments:
+.. index::
+   single: environment; overview
+   :name: environments
 
 Environments (spack.yaml, spack.lock)
 =====================================
@@ -41,6 +43,10 @@ Spack environments provide some distinctive features though:
 #. A spec installed "in" an environment is no different from the same spec installed anywhere else in Spack.
 #. Spack environments may contain more than one spec of the same package.
 
+.. index::
+   single: spack.yaml; manifest and lock model
+   single: spack.lock; manifest and lock model
+
 Spack uses a "manifest and lock" model similar to `Bundler gemfiles <https://bundler.io/man/gemfile.5.html>`_ and other package managers.
 The environment's user input file (or manifest), is named ``spack.yaml``.
 The lock file, which contains the fully configured and concretized specs, is named ``spack.lock``.
@@ -53,6 +59,10 @@ Using Environments
 Here we follow a typical use case of creating, concretizing, installing and loading an environment.
 
 .. _cmd-spack-env-create:
+
+.. index::
+   single: environment; creating
+   single: environment; managed
 
 Creating a managed Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -138,6 +148,9 @@ Changing ``environment_root`` can therefore also be used to make a whole group o
 .. _cmd-spack-env-activate:
 .. _cmd-spack-env-deactivate:
 
+.. index::
+   single: environment; activating
+
 Activating an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -184,6 +197,9 @@ or the shortcut alias
 If the environment was activated with its view, deactivating the environment will remove the view from the user environment.
 
 .. _independent_environments:
+
+.. index::
+   single: environment; independent (anonymous)
 
 Independent Environments
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -357,16 +373,11 @@ Otherwise, ``spack install`` will concretize the environment before installing t
 
 .. note::
 
-   Every ``spack install`` process builds one package at a time with multiple build jobs, controlled by the ``-j`` flag and the ``config:build_jobs`` option (see :ref:`build-jobs`).
-   To speed up environment builds further, independent packages can be installed in parallel by launching more Spack instances.
-   For example, the following will build at most four packages in parallel using three background jobs:
+   ``spack install`` builds multiple packages concurrently by default, bounded by a single :term:`POSIX jobserver <jobserver>` (``-j``, see :ref:`build-jobs`).
+   Use ``-p`` / ``--concurrent-packages`` to cap how many packages may build at once (unbounded by default).
+   See :ref:`installing` for the full picture.
 
-   .. code-block:: console
-
-      [myenv]$ spack install & spack install & spack install & spack install
-
-   Another option is to generate a ``Makefile`` and run ``make -j<N>`` to control the number of parallel install processes.
-   See :ref:`cmd-spack-env-depfile` for details.
+   Alternatively, generate a ``Makefile`` with :ref:`spack env depfile <cmd-spack-env-depfile>` and drive the install through ``make`` instead.
 
 
 As it installs, ``spack install`` creates symbolic links in the ``logs/`` directory in the environment, allowing for easy inspection of build logs related to that environment.
@@ -377,7 +388,10 @@ For root specs provided to ``spack install`` on the command line, ``--no-add`` i
 In other words, if there is an unambiguous match in the active concrete environment for a root spec provided to ``spack install`` on the command line, Spack does not require you to specify the ``--no-add`` option to prevent the spec from being added again.
 At the same time, a spec that already exists in the environment, but only as a dependency, will be added to the environment as a root spec without the ``--no-add`` option.
 
-.. _cmd-spack-develop:
+.. index::
+   single: develop spec; usage
+   single: spack develop
+   :name: cmd-spack-develop
 
 Developing Packages in a Spack Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -491,7 +505,9 @@ Sourcing that file in Bash will make the environment available to the user, and 
 The ``loads`` file may also be copied out of the environment, renamed, etc.
 
 
-.. _environment_include_concrete:
+.. index::
+   single: include concrete
+   :name: environment_include_concrete
 
 Including Concrete Environments
 -------------------------------
@@ -761,7 +777,10 @@ The last two concretization options are typically useful for system administrato
    This may prevent it from finding a solution when using ``unify: true``, and it may prevent it from finding a minimal solution when using ``unify: when_possible``.
    You can force Spack to ignore the existing concrete environment with ``spack concretize -f``.
 
-.. _environment-spec-matrices:
+.. index::
+   single: matrix
+   single: spec matrix
+   :name: environment-spec-matrices
 
 Spec Matrices
 ^^^^^^^^^^^^^
@@ -922,7 +941,9 @@ For example, the following environment has three root packages: ``gcc@8.1.0``, `
 
 This allows for a much-needed reduction in redundancy between packages and constraints.
 
-.. _environment-spec-groups:
+.. index::
+   single: spec group; defining
+   :name: environment-spec-groups
 
 Spec Groups
 ^^^^^^^^^^^
@@ -974,25 +995,26 @@ That can be done with the following manifest file:
 .. code-block:: yaml
 
    spack:
-   - group: apps-x86_64_v3
      specs:
-     - gromacs
-     - quantum-espresso
-     override:
-       packages:
-         all:
-           prefer:
-           - target=x86_64_v3
+     - group: apps-x86_64_v3
+       specs:
+       - gromacs
+       - quantum-espresso
+       override:
+         packages:
+           all:
+             prefer:
+             - target=x86_64_v3
 
-   - group: apps-x86_64_v4
-     specs:
-     - gromacs
-     - quantum-espresso
-     override:
-       packages:
-         all:
-           prefer:
-           - target=x86_64_v4
+     - group: apps-x86_64_v4
+       specs:
+       - gromacs
+       - quantum-espresso
+       override:
+         packages:
+           all:
+             prefer:
+             - target=x86_64_v4
 
 The ``override:`` attribute allows us to override the configuration for a single group of specs.
 The overridden part is always added as the *topmost* scope when the current group is concretized.
@@ -1052,6 +1074,9 @@ The environment can be configured to set, unset, prepend, or append using ``env_
       remove_path:
         PATH_LIST: "path/to/remove"
 
+.. index::
+   single: view; of an environment
+
 Environment Views
 -----------------
 
@@ -1071,7 +1096,12 @@ Spack prepends its ``<view>/bin`` dir to ``PATH`` when the environment is activa
 
 Views are highly customizable: you can control where they are put, modify their structure, include and exclude specs, change how files are linked, and you can even generate multiple views for a single environment.
 
-.. _configuring_environment_views:
+.. index::
+   single: view; configuration
+   single: view; symlink
+   single: view; hardlink
+   single: view; copy
+   :name: configuring_environment_views
 
 Minimal view configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1168,7 +1198,9 @@ The subcommand ``spack env view disable`` will remove the view named ``default``
 The subcommand ``spack env view regenerate`` will regenerate the views for the environment.
 This will apply any updates in the environment configuration that have not yet been applied.
 
-.. _view_projections:
+.. index::
+   single: view projection
+   :name: view_projections
 
 View Projections
 """"""""""""""""
@@ -1272,13 +1304,10 @@ The ``spack env deactivate`` command will remove the active view of the Spack en
 Generating Depfiles from Environments
 ------------------------------------------
 
-Spack can generate ``Makefile``\s to make it easier to build multiple packages in an environment in parallel.
+Spack can generate ``Makefile``\s that install an environment through ``make``.
 
-.. note::
-
-   Since Spack v1.1, there is a new experimental installer that supports package-level parallelism out of the box with POSIX jobserver support.
-   You can enable it with ``spack config add config:installer:new``.
-   This new installer may provide a simpler alternative to the ``spack env depfile`` workflow described in this section for users primarily interested in speeding up environment installations.
+This is *not* needed to install an environment in parallel: ``spack install`` already builds packages concurrently using a POSIX jobserver (see :ref:`installing`).
+``spack env depfile`` is useful when you want to drive a Spack install from your *own* ``Makefile``, embed it in a larger build, or hand off scheduling to ``make`` (for example, to depend on individual specs from other ``make`` targets).
 
 Generated ``Makefile``\s expose targets that can be included in existing ``Makefile``\s, to allow other targets to depend on the environment installation.
 
@@ -1293,7 +1322,7 @@ A typical workflow is as follows:
    $ make -j64
 
 This generates a ``Makefile`` from a concretized environment in the current working directory, and ``make -j64`` installs the environment, exploiting parallelism across packages as much as possible.
-Spack respects the Make jobserver and forwards it to the build environment of packages, meaning that a single ``-j`` flag is enough to control the load, even when packages are built in parallel.
+Each ``make`` target invokes ``spack install`` for one spec; Spack forwards ``make``'s jobserver into every package's build environment, so the same ``-j64`` budget bounds compile jobs across all in-flight installs.
 
 By default the following phony convenience targets are available:
 

@@ -10,6 +10,10 @@
 
 .. _luapackage:
 
+.. index::
+   single: build system; Lua
+   single: LuaPackage
+
 Lua
 ------
 

@@ -9,6 +9,10 @@
 
 .. _rubypackage:
 
+.. index::
+   single: build system; Ruby
+   single: RubyPackage
+
 Ruby
 ------
 

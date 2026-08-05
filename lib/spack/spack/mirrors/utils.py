@@ -7,15 +7,15 @@ from collections import Counter
 
 import spack.caches
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
 import spack.version
 from spack.error import MirrorError
-from spack.llnl.util.filesystem import mkdirp
 from spack.mirrors.mirror import Mirror, MirrorCollection
 from spack.package import InstallError
+from spack.util import tty
+from spack.util.filesystem import mkdirp
 
 
 def get_all_versions(specs):
@@ -114,7 +114,7 @@ def get_mirror_cache(path, skip_unstable_versions=False):
 
 def add(mirror: Mirror, scope=None):
     """Add a named mirror in the given scope"""
-    mirrors = spack.config.get("mirrors", scope=scope)
+    mirrors = spack.config.CONFIG.get("mirrors", scope=scope)
     if not mirrors:
         mirrors = syaml.syaml_dict()
 
@@ -124,17 +124,17 @@ def add(mirror: Mirror, scope=None):
     items = [(n, u) for n, u in mirrors.items()]
     items.insert(0, (mirror.name, mirror.to_dict()))
     mirrors = syaml.syaml_dict(items)
-    spack.config.set("mirrors", mirrors, scope=scope)
+    spack.config.CONFIG.set("mirrors", mirrors, scope=scope)
 
 
 def remove(name, scope):
     """Remove the named mirror in the given scope"""
-    mirrors = spack.config.get("mirrors", scope=scope)
+    mirrors = spack.config.CONFIG.get("mirrors", scope=scope)
     if not mirrors:
         mirrors = syaml.syaml_dict()
 
     removed = mirrors.pop(name, False)
-    spack.config.set("mirrors", mirrors, scope=scope)
+    spack.config.CONFIG.set("mirrors", mirrors, scope=scope)
     return bool(removed)
 
 
@@ -225,7 +225,7 @@ def create_mirror_from_package_object(
         except Exception as e:
             pkg_obj.stage.destroy()
             if num_retries + 1 == max_retries:
-                if spack.config.get("config:debug"):
+                if spack.config.CONFIG.get("config:debug"):
                     traceback.print_exc()
                 else:
                     tty.warn(

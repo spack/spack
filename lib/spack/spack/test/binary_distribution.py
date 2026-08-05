@@ -21,9 +21,7 @@ import pytest
 
 import spack.binary_distribution
 import spack.concretize
-import spack.config
 import spack.environment as ev
-import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirrors.mirror
 import spack.oci.image
@@ -36,9 +34,10 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.binary_distribution import CannotListKeys, GenerateIndexError
+from spack.config import Configuration
 from spack.database import INDEX_JSON_FILE
-from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import join_path, readlink, working_dir
+from spack.hooks import sbang
+from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
@@ -51,6 +50,7 @@ from spack.url_buildcache import (
     get_url_buildcache_class,
     get_valid_spec_file,
 )
+from spack.util.filesystem import join_path, readlink, working_dir
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
@@ -92,7 +92,7 @@ def dummy_prefix(tmp_path: pathlib.Path):
 
 
 @pytest.mark.maybeslow
-def test_buildcache_cmd_smoke_test(tmp_path: pathlib.Path, install_mockery):
+def test_buildcache_cmd_smoke_test(tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path):
     """
     Test the creation and installation of buildcaches with default rpaths
     into the default directory layout scheme.
@@ -151,7 +151,7 @@ def test_push_and_fetch_keys(mock_gnupghome, tmp_path: pathlib.Path):
 
         keys = spack.util.gpg.public_keys()
         assert len(keys) == 1
-        fpr = keys[0]
+        fpr = str(keys[0])
 
         spack.binary_distribution._url_push_keys(
             mirror, keys=[fpr], tmpdir=str(tmp_path), update_index=True
@@ -162,11 +162,13 @@ def test_push_and_fetch_keys(mock_gnupghome, tmp_path: pathlib.Path):
     with spack.util.gpg.gnupghome_override(gpg_dir2):
         assert len(spack.util.gpg.public_keys()) == 0
 
-        spack.binary_distribution.get_keys(mirrors=mirrors, install=True, trust=True, force=True)
+        spack.binary_distribution.trust_keys(
+            mirrors=mirrors, yes_to_all=True, install=True, trust=True, force=True
+        )
 
         new_keys = spack.util.gpg.public_keys()
         assert len(new_keys) == 1
-        assert new_keys[0] == fpr
+        assert str(new_keys[0]) == fpr
 
 
 @pytest.mark.maybeslow
@@ -227,13 +229,15 @@ def test_spec_needs_rebuild(monkeypatch, tmp_path: pathlib.Path):
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
-def test_generate_index_missing(monkeypatch, tmp_path: pathlib.Path, mutable_config):
+def test_generate_index_missing(
+    monkeypatch, tmp_path: pathlib.Path, mutable_config: Configuration
+):
     """Ensure spack buildcache index only reports available packages"""
 
     # Create a temp mirror directory for buildcache usage
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": mirror_url})
+    mutable_config.set("mirrors", {"test": mirror_url})
 
     s = spack.concretize.concretize_one("libdwarf")
 
@@ -262,7 +266,7 @@ def test_generate_index_missing(monkeypatch, tmp_path: pathlib.Path, mutable_con
     # Update index
     buildcache_cmd("update-index", str(mirror_dir))
 
-    with spack.config.override("config:binary_index_ttl", 0):
+    with mutable_config.override("config:binary_index_ttl", 0):
         # Check dependency not in buildcache
         cache_list = buildcache_cmd("list", "--allarch")
         assert "libdwarf" in cache_list
@@ -270,7 +274,7 @@ def test_generate_index_missing(monkeypatch, tmp_path: pathlib.Path, mutable_con
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
-def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
+def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config: Configuration):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
     """
@@ -285,7 +289,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
     # put it in the mirror
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": mirror_url})
+    mutable_config.set("mirrors", {"test": mirror_url})
     s = spack.concretize.concretize_one("libdwarf")
     install_cmd("--fake", "--no-cache", s.name)
     buildcache_cmd("push", "-u", str(mirror_dir), s.name)
@@ -302,7 +306,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
 def test_use_bin_index_active_env_with_view(
-    monkeypatch, tmp_path: pathlib.Path, mutable_config, mutable_mock_env_path
+    monkeypatch, tmp_path: pathlib.Path, mutable_config: Configuration, mutable_mock_env_path
 ):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
@@ -318,7 +322,7 @@ def test_use_bin_index_active_env_with_view(
     # put it in the mirror
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
+    mutable_config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
     s = spack.concretize.concretize_one("libdwarf")
 
     # Create an environment and install specs for the view
@@ -339,7 +343,7 @@ def test_use_bin_index_active_env_with_view(
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
 def test_use_bin_index_with_view(
-    monkeypatch, tmp_path: pathlib.Path, mutable_config, mutable_mock_env_path
+    monkeypatch, tmp_path: pathlib.Path, mutable_config: Configuration, mutable_mock_env_path
 ):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
@@ -355,7 +359,7 @@ def test_use_bin_index_with_view(
     # put it in the mirror
     mirror_dir = tmp_path / "mirror_dir"
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    spack.config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
+    mutable_config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
     s = spack.concretize.concretize_one("libdwarf")
 
     # Create an environment and install specs for the view
@@ -1483,6 +1487,56 @@ def test_mirror_metadata():
         spack.binary_distribution.MirrorMetadata.from_string("https://dummy.io/__v3@@4")
 
 
+def mirror_metadata_check_format(data, fmt, result):
+    assert fmt.format(data) == result.format(data)
+
+
+def test_mirror_metadata_format():
+    mirror_metadata = spack.binary_distribution.MirrorMetadata("https://dummy.io/__v3", 3)
+
+    # Check pass-through formatting
+    mirror_metadata_check_format(mirror_metadata, "{0:_url}", "{0.url}")
+    mirror_metadata_check_format(mirror_metadata, "{0:_version}", "{0.version}")
+    mirror_metadata_check_format(mirror_metadata, "{0:_view}", "{0.view}")
+    mirror_metadata_check_format(mirror_metadata, "{0}", "{0.url}@{0.version}")
+
+    # Empty view
+    mirror_metadata_check_format(mirror_metadata, "{0:?_view}", "")
+    mirror_metadata_check_format(
+        mirror_metadata, "{0:_url?^_view^_version?^_version}", "{0.url}^{0.version}"
+    )
+    mirror_metadata_check_format(
+        mirror_metadata,
+        "{0:_url?^_view^_version?^_version?^_view^_version?^_url}",
+        "{0.url}^{0.version}^{0.url}",
+    )
+
+
+def test_mirror_metadata_format_with_view():
+    mirror_metadata = spack.binary_distribution.MirrorMetadata(
+        "https://dummy.io/__v3__@aview", 3, "aview"
+    )
+
+    # Check pass-through formatting
+    mirror_metadata_check_format(mirror_metadata, "{0:_url}", "{0.url}")
+    mirror_metadata_check_format(mirror_metadata, "{0:_version}", "{0.version}")
+    mirror_metadata_check_format(mirror_metadata, "{0:_view}", "{0.view}")
+    mirror_metadata_check_format(mirror_metadata, "{0}", "{0.url}@{0.version}-{0.view}")
+
+    # View exists
+    mirror_metadata_check_format(mirror_metadata, "{0:?_view}", "{0.view}")
+    mirror_metadata_check_format(
+        mirror_metadata,
+        "{0:_url?^_view^_version?^_version}",
+        "{0.url}^{0.view}^{0.version}^{0.version}",
+    )
+    mirror_metadata_check_format(
+        mirror_metadata,
+        "{0:_url?^_view^_version?^_version?^_view^_version?^_url}",
+        "{0.url}^{0.view}^{0.version}^{0.version}^{0.view}^{0.version}^{0.url}",
+    )
+
+
 def test_mirror_metadata_with_view():
     mirror_metadata = spack.binary_distribution.MirrorMetadata(
         "https://dummy.io/__v3__@aview", 3, "aview"
@@ -1524,3 +1578,75 @@ def test_update_does_not_warn_on_mirror_with_no_index(monkeypatch, tmp_path, mut
     ]
     assert not concretization_warnings, "update() must not warn about concretization"
     assert binary_index.mirrors_without_index == {mirror_url, mirror_url2}
+
+
+def test_load_buildcache_index(monkeypatch, tmp_path):
+    """Tests that load_buildcache_index uses the local cache (no network call)."""
+    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+    regenerate_calls = []
+    update_calls = []
+
+    def fake_regenerate(clear_existing=False):
+        regenerate_calls.append(clear_existing)
+
+    def fake_update(with_cooldown=False):
+        update_calls.append(with_cooldown)
+
+    monkeypatch.setattr(mock_index, "regenerate_spec_cache", fake_regenerate)
+    monkeypatch.setattr(mock_index, "update", fake_update)
+    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
+
+    spack.binary_distribution.load_buildcache_index()
+
+    assert regenerate_calls == [False] and update_calls == []
+
+
+def test_load_buildcache_index_degrades_gracefully(monkeypatch, tmp_path):
+    """Tests that load_buildcache_index swallows errors; status display never breaks a command."""
+    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+
+    def exploding_regenerate(clear_existing=False):
+        raise OSError("disk error")
+
+    monkeypatch.setattr(mock_index, "regenerate_spec_cache", exploding_regenerate)
+    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
+
+    # Should not raise.
+    spack.binary_distribution.load_buildcache_index()
+
+
+@pytest.mark.parametrize(
+    ("spec_manifest", "result"),
+    [
+        (
+            "mock/prefix/long{:_<256}/manifest/spec/package-1.1.1-asdf1234asdf1234asdf1234asdf1234.spec.manifest.json".format(
+                ""
+            ),
+            "asdf1234asdf1234asdf1234asdf1234",
+        ),
+        (
+            "mock/invalid/prefix/package-1.1.1-asdf1234asdf1234asdf1234asdf1234.spec.manifest.json",
+            "asdf1234asdf1234asdf1234asdf1234",
+        ),
+        (
+            "mock/v3/manifest/spec/package-1.1.1-asdf1234asdf1234asdf1234asdf1234.spec.manifest.json",
+            "asdf1234asdf1234asdf1234asdf1234",
+        ),
+        (
+            "mock/v3/manifest/spec/package-1.1.1-asdf1234asdf1234asdf1234asdf1234",
+            "asdf1234asdf1234asdf1234asdf1234",
+        ),
+        (
+            "mock/v3/manifest/spec/package-with-long-name-and-many-dashes-1.1.1-asdf1234asdf1234asdf1234asdf1234",
+            "asdf1234asdf1234asdf1234asdf1234",
+        ),
+        ("mock/v3/manifest/spec/missing-hash", ValueError),
+        ("mock/v3/manifest/spec/malformed-package-1.1.1-shorthash", ValueError),
+    ],
+)
+def test_url_buildcache_hash_from_manifest_name(spec_manifest, result):
+    if result is ValueError:
+        with pytest.raises(ValueError):
+            result = URLBuildcacheEntry.hash_from_manifest_name(spec_manifest)
+    else:
+        assert result == URLBuildcacheEntry.hash_from_manifest_name(spec_manifest)

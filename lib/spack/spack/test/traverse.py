@@ -5,7 +5,7 @@
 import pytest
 
 import spack.deptypes as dt
-import spack.traverse as traverse
+from spack import traverse
 from spack.spec import Spec
 
 

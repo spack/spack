@@ -5,10 +5,10 @@ import argparse
 import warnings
 
 import spack.audit
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.colify
-import spack.llnl.util.tty.color as cl
 import spack.repo
+import spack.util.tty.colify
+import spack.util.tty.color as cl
+from spack.util import tty
 
 description = "audit configuration files, packages, etc."
 section = "packaging"
@@ -79,7 +79,7 @@ def externals(parser, args):
     if args.list_externals:
         msg = "@*{The following packages have detection tests:}"
         tty.msg(cl.colorize(msg))
-        spack.llnl.util.tty.colify.colify(spack.audit.packages_with_detection_tests(), indent=2)
+        spack.util.tty.colify.colify(spack.audit.packages_with_detection_tests(), indent=2)
         return
 
     pkgs = args.name or spack.repo.PATH.all_package_names()
