@@ -154,15 +154,12 @@ done
 def test_compiler_find_skips_installed_packages(mutable_config, monkeypatch, tmp_path, subdir):
     """Tests that 'spack compiler find' does not add a compiler that lives inside a
     Spack install prefix — whether the detected external_path is exactly the install
-    prefix (subdir=False) or a subdirectory of it (subdir=True, e.g. intel-oneapi-compilers
-    whose binaries live in <prefix>/compiler/<version>/bin/).
+    prefix (subdir=False) or a subdirectory of it (subdir=True).
     """
     expected_version = "4.5.3"
 
-    # install_root is the Spack install prefix recorded in the DB.
-    # When subdir=True, the compiler binaries live in a subdirectory of it,
-    # simulating packages like intel-oneapi-compilers whose detected external_path
-    # is <install-prefix>/compiler rather than <install-prefix> itself.
+    # We put a mock compiler executable in a prefix, and we will also mock
+    # db.query to report that as a spack installation prefix
     install_root = tmp_path / "install_root"
     bin_parent = (install_root / "compiler") if subdir else install_root
     bin_dir = bin_parent / "bin"
@@ -175,8 +172,6 @@ def test_compiler_find_skips_installed_packages(mutable_config, monkeypatch, tmp
     )
     gcc.chmod(0o755)
 
-    # _installed_spec_prefixes() calls db.query() and reads .prefix from each result.
-    # A simple namespace is enough — no need for a real concrete Spec.
     mock_installed = types.SimpleNamespace(prefix=str(install_root))
     monkeypatch.setattr(spack.store.STORE.db, "query", lambda *a, **kw: [mock_installed])
 
