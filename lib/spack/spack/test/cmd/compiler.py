@@ -6,10 +6,13 @@ import shutil
 
 import pytest
 
+import types
+
 import spack.cmd.compiler
 import spack.compilers.config
 import spack.detection.common
 import spack.main
+import spack.store
 import spack.util.pattern
 import spack.version
 from spack.config import Configuration
@@ -172,9 +175,10 @@ def test_compiler_find_skips_installed_packages(mutable_config, monkeypatch, tmp
     )
     gcc.chmod(0o755)
 
-    monkeypatch.setattr(
-        spack.detection.common, "_installed_spec_prefixes", lambda: {str(install_root)}
-    )
+    # _installed_spec_prefixes() calls db.query() and reads .prefix from each result.
+    # A simple namespace is enough — no need for a real concrete Spec.
+    mock_installed = types.SimpleNamespace(prefix=str(install_root))
+    monkeypatch.setattr(spack.store.STORE.db, "query", lambda *a, **kw: [mock_installed])
 
     compilers_before_find = set(spack.compilers.config.all_compilers())
     args = spack.util.pattern.Bunch(
