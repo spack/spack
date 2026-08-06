@@ -225,12 +225,14 @@ def update_configuration(
     installed_prefixes = _installed_spec_prefixes()
     pkg_to_cfg, all_new_specs = {}, []
     for package_name, entries in detected_packages.items():
-        new_entries = [
-            s
-            for s in entries
-            if s not in predefined_external_specs
-            and not _is_subdir_of_installed_prefix(s.external_path, installed_prefixes)
-        ]
+        new_entries = []
+        for s in entries:
+            if s in predefined_external_specs:
+                continue
+            if _is_subdir_of_installed_prefix(s.external_path, installed_prefixes):
+                tty.debug(f"Skipping {s} (Spack-installed package at {s.external_path})")
+                continue
+            new_entries.append(s)
 
         pkg_config = _pkg_config_dict(new_entries)
         external_entries = pkg_config.get("externals", [])
