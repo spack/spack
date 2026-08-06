@@ -26,6 +26,7 @@ import spack.error
 import spack.operating_systems.windows_os as winOs
 import spack.schema
 import spack.spec
+import spack.store
 import spack.util.environment
 import spack.util.spack_yaml
 import spack.util.windows_registry
@@ -40,6 +41,11 @@ def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
         for item in package_configuration.get("externals", []):
             already_defined_specs.add(spack.spec.Spec(item["spec"]))
     return already_defined_specs
+
+
+def _installed_spec_prefixes() -> Set[str]:
+    """Returns the install prefixes of all specs currently in the Spack install database."""
+    return {spec.prefix for spec in spack.store.STORE.db.query()}
 
 
 ExternalEntryType = Union[str, Dict[str, str]]
@@ -209,9 +215,15 @@ def update_configuration(
         buildable: whether the detected packages are buildable or not
     """
     predefined_external_specs = _externals_in_packages_yaml()
+    installed_prefixes = _installed_spec_prefixes()
     pkg_to_cfg, all_new_specs = {}, []
     for package_name, entries in detected_packages.items():
-        new_entries = [s for s in entries if s not in predefined_external_specs]
+        new_entries = [
+            s
+            for s in entries
+            if s not in predefined_external_specs
+            and s.external_path not in installed_prefixes
+        ]
 
         pkg_config = _pkg_config_dict(new_entries)
         external_entries = pkg_config.get("externals", [])

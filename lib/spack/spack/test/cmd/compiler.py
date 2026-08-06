@@ -8,6 +8,7 @@ import pytest
 
 import spack.cmd.compiler
 import spack.compilers.config
+import spack.detection.common
 import spack.main
 import spack.util.pattern
 import spack.version
@@ -143,6 +144,45 @@ done
     assert len(compilers_added_by_find) == 1
     new_compiler = compilers_added_by_find.pop()
     assert new_compiler.version == spack.version.Version(expected_version)
+
+
+@pytest.mark.not_on_windows("Cannot execute bash script on Windows")
+def test_compiler_find_skips_installed_packages(mutable_config, mock_executable, monkeypatch):
+    """Tests that 'spack compiler find' does not add a compiler already in the install DB."""
+    expected_version = "4.5.3"
+    gcc_path = mock_executable(
+        "gcc",
+        output=f"""\
+for arg in "$@"; do
+    if [ "$arg" = -dumpversion ]; then
+        echo '{expected_version}'
+    fi
+done
+""",
+    )
+    root_dir = gcc_path.parent.parent
+
+    # Simulate the compiler's root being in the install DB by returning it as an installed prefix
+    monkeypatch.setattr(
+        spack.detection.common,
+        "_installed_spec_prefixes",
+        lambda: {str(root_dir)},
+    )
+
+    compilers_before_find = set(spack.compilers.config.all_compilers())
+    args = spack.util.pattern.Bunch(
+        all=None,
+        compiler_spec=None,
+        add_paths=[str(root_dir)],
+        scope=None,
+        mixed_toolchain=False,
+        jobs=1,
+    )
+    spack.cmd.compiler.compiler_find(args)
+    compilers_after_find = set(spack.compilers.config.all_compilers())
+
+    compilers_added_by_find = compilers_after_find - compilers_before_find
+    assert len(compilers_added_by_find) == 0
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
