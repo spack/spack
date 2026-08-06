@@ -167,15 +167,13 @@ def test_compiler_find_skips_installed_packages(mutable_config, monkeypatch, tmp
 
     gcc = bin_dir / "gcc"
     gcc.write_text(
-        f"#!/bin/sh\nfor arg in \"$@\"; do\n  if [ \"$arg\" = -dumpversion ];"
+        f'#!/bin/sh\nfor arg in "$@"; do\n  if [ "$arg" = -dumpversion ];'
         f" then echo '{expected_version}'; fi\ndone\n"
     )
     gcc.chmod(0o755)
 
     monkeypatch.setattr(
-        spack.detection.common,
-        "_installed_spec_prefixes",
-        lambda: {str(install_root)},
+        spack.detection.common, "_installed_spec_prefixes", lambda: {str(install_root)}
     )
 
     compilers_before_find = set(spack.compilers.config.all_compilers())
