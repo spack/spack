@@ -147,33 +147,42 @@ done
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
-def test_compiler_find_skips_installed_packages(mutable_config, mock_executable, monkeypatch):
-    """Tests that 'spack compiler find' does not add a compiler already in the install DB."""
+@pytest.mark.parametrize("subdir", [False, True])
+def test_compiler_find_skips_installed_packages(mutable_config, monkeypatch, tmp_path, subdir):
+    """Tests that 'spack compiler find' does not add a compiler that lives inside a
+    Spack install prefix — whether the detected external_path is exactly the install
+    prefix (subdir=False) or a subdirectory of it (subdir=True, e.g. intel-oneapi-compilers
+    whose binaries live in <prefix>/compiler/<version>/bin/).
+    """
     expected_version = "4.5.3"
-    gcc_path = mock_executable(
-        "gcc",
-        output=f"""\
-for arg in "$@"; do
-    if [ "$arg" = -dumpversion ]; then
-        echo '{expected_version}'
-    fi
-done
-""",
-    )
-    root_dir = gcc_path.parent.parent
 
-    # Simulate the compiler's root being in the install DB by returning it as an installed prefix
+    # install_root is the Spack install prefix recorded in the DB.
+    # When subdir=True, the compiler binaries live in a subdirectory of it,
+    # simulating packages like intel-oneapi-compilers whose detected external_path
+    # is <install-prefix>/compiler rather than <install-prefix> itself.
+    install_root = tmp_path / "install_root"
+    bin_parent = (install_root / "compiler") if subdir else install_root
+    bin_dir = bin_parent / "bin"
+    bin_dir.mkdir(parents=True)
+
+    gcc = bin_dir / "gcc"
+    gcc.write_text(
+        f"#!/bin/sh\nfor arg in \"$@\"; do\n  if [ \"$arg\" = -dumpversion ];"
+        f" then echo '{expected_version}'; fi\ndone\n"
+    )
+    gcc.chmod(0o755)
+
     monkeypatch.setattr(
         spack.detection.common,
         "_installed_spec_prefixes",
-        lambda: {str(root_dir)},
+        lambda: {str(install_root)},
     )
 
     compilers_before_find = set(spack.compilers.config.all_compilers())
     args = spack.util.pattern.Bunch(
         all=None,
         compiler_spec=None,
-        add_paths=[str(root_dir)],
+        add_paths=[str(bin_parent)],
         scope=None,
         mixed_toolchain=False,
         jobs=1,

@@ -44,8 +44,15 @@ def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
 
 
 def _installed_spec_prefixes() -> Set[str]:
-    """Returns the install prefixes of all specs currently in the Spack install database."""
-    return {spec.prefix for spec in spack.store.STORE.db.query()}
+    """Returns the real (symlink-resolved) install prefixes of all specs in the Spack DB."""
+    return {os.path.realpath(spec.prefix) for spec in spack.store.STORE.db.query()}
+
+
+def _is_subdir_of_installed_prefix(path: str, installed_prefixes: Set[str]) -> bool:
+    """Returns True if path (or any of its ancestors) is a Spack install prefix."""
+    real = os.path.realpath(path)
+    p = pathlib.Path(real)
+    return any(str(ancestor) in installed_prefixes for ancestor in (p, *p.parents))
 
 
 ExternalEntryType = Union[str, Dict[str, str]]
@@ -222,7 +229,7 @@ def update_configuration(
             s
             for s in entries
             if s not in predefined_external_specs
-            and s.external_path not in installed_prefixes
+            and not _is_subdir_of_installed_prefix(s.external_path, installed_prefixes)
         ]
 
         pkg_config = _pkg_config_dict(new_entries)
