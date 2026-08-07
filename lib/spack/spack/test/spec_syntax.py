@@ -1810,3 +1810,10 @@ def test_parse_multiple_edge_attributes(input_args, expected):
     s, *_ = spack.cmd.parse_specs(input_args)
     for c in expected:
         assert s.satisfies(c)
+
+
+def test_when_edge_attribute_keeps_commas():
+    """A when value is one spec string, where a comma is part of the syntax, unlike the
+    comma-separated deptypes and virtuals lists."""
+    edge = spack.spec.Spec("foo ^[when='@1,2'] bar").edges_to_dependencies(name="bar")[0]
+    assert edge.when == spack.spec.Spec("@1,2")
