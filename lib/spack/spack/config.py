@@ -1411,7 +1411,11 @@ class OptionalInclude:
             # directories are treated as regular ConfigScopes
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
             return DirectoryConfigScope(
-                config_name, config_path, prefer_modify=self.prefer_modify, included=True, when=self.when
+                config_name,
+                config_path,
+                prefer_modify=self.prefer_modify,
+                included=True,
+                when=self.when,
             )
         elif ext == ".yaml" or ext == ".yml":
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")

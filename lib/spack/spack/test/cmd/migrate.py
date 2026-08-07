@@ -16,7 +16,9 @@ migrate = spack.main.SpackCommand("migrate")
 
 
 @pytest.fixture
-def migrate_setup(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config):
+def migrate_setup(
+    tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config
+):
     """Set up common test environment for migrate tests."""
     spack_root = tmp_path / "spack-root"
     spack_root.mkdir()
@@ -155,7 +157,9 @@ def test_migrate_restore(migrate_setup):
         assert (dotspack / config_file).exists()
 
 
-def test_migrate_with_relative_paths(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config):
+def test_migrate_with_relative_paths(
+    tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config
+):
     """Test that relative paths in config files are absolutized (except in include sections)."""
     spack_root = tmp_path / "spack-root"
     spack_root.mkdir()
@@ -209,6 +213,7 @@ packages:
 
     # Read the migrated config.yaml - relative paths should be absolutized
     import spack.util.spack_yaml as syaml
+
     with open(new_config / "config.yaml") as f:
         migrated_config = syaml.load(f)
 
@@ -227,7 +232,9 @@ packages:
     assert include_path == "../config.yaml"
 
 
-def test_migrate_recursive_discovery(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config):
+def test_migrate_recursive_discovery(
+    tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config
+):
     """Test that migrate finds config files recursively in subdirectories."""
     spack_root = tmp_path / "spack-root"
     spack_root.mkdir()
@@ -266,7 +273,9 @@ def test_migrate_recursive_discovery(tmp_path, set_home, monkeypatch, clear_env_
     assert (new_config / "linux" / "x86_64" / "compilers.yaml").exists()
 
 
-def test_migrate_rewrites_absolute_include_paths(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config):
+def test_migrate_rewrites_absolute_include_paths(
+    tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config
+):
     """Test that absolute include paths pointing to ~/.spack are rewritten to ~/.config/spack."""
     spack_root = tmp_path / "spack-root"
     spack_root.mkdir()
@@ -306,6 +315,7 @@ def test_migrate_rewrites_absolute_include_paths(tmp_path, set_home, monkeypatch
 
     # Read the migrated include.yaml - absolute path should be rewritten
     import spack.util.spack_yaml as syaml
+
     with open(new_config / "include.yaml") as f:
         migrated_include = syaml.load(f)
 

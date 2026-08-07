@@ -128,6 +128,7 @@ def modifies_spackpaths():
     - lib/spack/spack/test/cmd/ci.py (modifies paths, no subprocs currently)
     """
     import spack.config
+
     spack.config._frozen_home = {}
     yield
     spack.config._frozen_home = {}
