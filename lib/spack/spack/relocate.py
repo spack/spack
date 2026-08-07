@@ -48,6 +48,8 @@ def _decode_macho_data(bytestring):
 
 
 def setup_relocate_run(wrapper_spec) -> executable.Executable:
+    """Establishes environment neccesary to run the relocate utility, returns the
+    executable with the properly established environment."""
     import spack.user_environment
 
     relocate_exe = executable.Executable(str(wrapper_spec.package.bin_dir() / "relocate.exe"))  # type: ignore
@@ -61,6 +63,8 @@ def setup_relocate_run(wrapper_spec) -> executable.Executable:
 
 
 def bootstrap_relocate() -> executable.Executable:
+    """Bootstraps and returns an executable reference to the Windows compiler
+    wrappers relocate utility"""
     with spack.bootstrap.ensure_bootstrap_configuration():
         # ensure_msvc_relocate_or_raise() may hand back a bare relocate.exe found
         # via a PATH search, with no MSVC environment attached (see the early
@@ -81,11 +85,12 @@ def bootstrap_relocate() -> executable.Executable:
         return setup_relocate_run(wrapper_spec)
 
 
-def relocate(package=None) -> executable.Executable:
+def relocate(spec=None) -> executable.Executable:
+    """Relocate binaries for 'spec' on Windows."""
     wrapper_spec = None
-    if package:
+    if spec:
         try:
-            wrapper_spec = package.spec["compiler-wrapper"]
+            wrapper_spec = spec["compiler-wrapper"]
         except KeyError:
             pass
     if not wrapper_spec or not wrapper_spec.installed:
@@ -101,13 +106,6 @@ def relocate(package=None) -> executable.Executable:
         # We need to bootstrap
         return bootstrap_relocate()
     return setup_relocate_run(wrapper_spec)
-
-
-@memoized
-def dumpbin(pkg) -> executable.Executable:
-    db_bin_dir = os.path.dirname(pkg["msvc"].cc)
-    dumpbin = executable.which("dumpbin", path=db_bin_dir, required=True)
-    return dumpbin
 
 
 def apply_pe_relocations(
@@ -133,56 +131,118 @@ def apply_pe_relocations(
         reloc_exe(*args, extra_env=ev, **reloc_kwargs)
 
 
-def _win_rpath_import_lib_targets(package, pe_stage_to_prefix: dict) -> Dict[str, str]:
-    """Match each import library under the package prefix against the stage
-    locations recorded in ``pe_stage_to_prefix`` (extracted from each PE's embedded
-    SPACKRESOURCE) and return a mapping from PE path to its associated import
-    library path, for use as the ``--coff`` argument when relocating that PE.
+def _import_lib_targets(
+    targets: List[str], all_prefixes: Dict[str, str], stage: Optional[bool] = False
+) -> Dict[str, str]:
+    """Match each import library's referenced DLL against ``all_prefixes`` (old
+    prefix -> new prefix, including any SFN forms) for the buildcache
+    or a straightforward stage -> install prefix mapping for the stage.
+    Returns a mapping from the DLL's new absolute path to the import library's
+    new absolute path, for use as the ``--coff`` argument when relocating that DLL/exe.
     """
+    libs = [t for t in targets if t.endswith(".lib")]
+    regex = re.compile("|".join(re.escape(p) for p in all_prefixes.keys()))
     coff_for_target: Dict[str, str] = {}
-    for lib in fs.find(package.spec.prefix, "*.lib"):
-        print(f"processing lib {lib}")
-        if verify_import_lib(lib, package=package):
-            # we have an import lib, determine associated DLL
-            dll_name = get_importlib_target(lib, package=package)
-            if dll_name:
-                print(f"dll name: {dll_name}")
-                prefix_pe = pe_stage_to_prefix.get(dll_name, None)
-                print(f"prefix dll {prefix_pe}")
-                if prefix_pe:
-                    coff_for_target[prefix_pe] = lib
+    for lib in libs:
+        # we relocate exes and dlls, import libraries are regenerated
+        # with a new dll pointer from the existing import library
+        # static .libs are ignored (.lib is any coff library on Windows,
+        # which covers both import and static libraries)
+        # Dlls have no references to their import libraries
+        # but import libraries reference dlls, so although
+        # the DLLs are our "relocation targets" we drive that
+        # via import libs to determine the proper association
+        if verify_import_lib(lib):
+            dll_path = get_importlib_target(lib)
+            if not dll_path:
+                tty.debug(
+                    f"Import lib {lib} does not reference a compatible DLL, skipping relocation..."
+                )
+                continue
+            # normalizing the padding (stripping out an arbitrary number of escaped backslashes)
+            norm_dll_path = os.path.normpath(dll_path)
+            match = regex.match(norm_dll_path)
+            if match:
+                old_root = match.group()
+                new_root = all_prefixes[old_root]
+                if stage:
+                    new_dll_path = new_root
+                else:
+                    dll_name = os.path.relpath(dll_path, old_root)
+                    new_dll_path = os.path.join(new_root, dll_name)
+                coff_for_target[new_dll_path] = lib
+            else:
+                tty.debug(
+                    f"Import lib: {lib} does not reference a DLL "
+                    "in this prefix, skipping relocation..."
+                )
     return coff_for_target
 
 
-def relocate_win_rpath(package):
-    dlls = fs.find(package.spec.prefix, "*.dll")
-    exes = fs.find(package.spec.prefix, "*.exe")
+def relocate_win_rpath(spec):
+    """Relocates Windows binaries from the stage to the install prefix
+
+    When built with the Windows compiler wrappers, all dll references in
+    binaries are absolute paths to the dll location in the stage.
+    We need to re-map these to point at the dll's location in the install
+    tree so the references make sense at runtime.
+
+    import libraries and the dlls they define are only associated by
+    a "dll name" which is impossible to directly resolve after the
+    dll has been moved to the install tree. Instead we read a resource entry
+    the compiler wrapper injects into all dlls so we can obtain the association
+    between a dll's stage location and its install tree location, and remap the
+    correct dll for the correct import library.
+    """
+    dlls = fs.find(spec.prefix, "*.dll")
+    exes = fs.find(spec.prefix, "*.exe")
+    libs = fs.find(spec.prefix, "*.lib")
     pes = dlls + exes
+    targets = pes + libs
     pe_stage_to_prefix = {}
     # map all PE (dll,exe) prefix locations to the stage
     for pe in pes:
         # we don't want to update the rpath to symlinked files
         if fs.islink(pe):
             continue
-        print(f"Processing {pe}")
         # location of PE file at link time (in stage)
         # is baked into PE file as a resource
         # extract it
         stage_pe_loc = extract_spack_id_from_win_pe(pe)
         if stage_pe_loc:
-            print(f"Discovered stage pe location {stage_pe_loc} for pe {pe}")
-            pe_stage_to_prefix[stage_pe_loc] = pe
-        else:
-            print(f"unable to determine stage pe location for {pe}")
+            norm_stage_pe_loc = os.path.normpath(stage_pe_loc)
+            pe_stage_to_prefix[norm_stage_pe_loc] = pe
+    relocate_windows_binaries(targets, spec, pe_stage_to_prefix, stage=True)
 
+
+def relocate_windows_binaries(
+    targets,
+    spec: spack.spec.Spec,
+    prefixes: Dict[str, str],
+    sfn_prefixes: Optional[Dict[str, str]] = None,
+    stage: Optional[bool] = False,
+):
+    """Relocate Windows PE binaries based on the mappings of "prefixes" and "sfn_prefixes"
+    "prefixes" and "sfn_prefixes" provide mappings from one tree to another. This method
+    parses the Windows binaries via the relocate feature of the compiler wrapper and
+    remaps any dll references.
+    """
+    pe_targets = [t for t in targets if t.endswith(".dll") or t.endswith(".exe")]
+    # Import libraries may reference their DLL by an 8.3 short filename (SFN) if the
+    # build host truncated the path. We can't expand such a path back to its long
+    # form here, since the old prefix no longer exists on this host, so instead we
+    # also match directly against the SFN form of each old prefix.
+    all_prefixes = {**prefixes, **(sfn_prefixes or {})}
+    coff_for_target = _import_lib_targets(targets, all_prefixes, stage=stage)
+    relocate_pe(all_prefixes, pe_targets, coff_for_target, spec)
+
+
+def relocate_pe(prefix_mapping, pe_targets, coff_mapping, spec):
     ev = EnvironmentModifications()
-    ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in pe_stage_to_prefix.items()])
+    ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in prefix_mapping.items()])
     ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
     ev.set("SPACK_DEBUG_WRAPPER", "ON")
-    coff_for_target = _win_rpath_import_lib_targets(package, pe_stage_to_prefix)
-    apply_pe_relocations(
-        pes, coff_for_target, relocate(package), ev, output=str, error=str, fail_on_error=True
-    )
+    apply_pe_relocations(pe_targets, coff_mapping, relocate(spec.package), ev, fail_on_error=True)
 
 
 def extract_spack_id_from_win_pe(lib: str) -> Optional[str]:
@@ -257,8 +317,11 @@ handle for {lib}: {ctypes.get_last_error()}"
     return str_id_data if res_size else None
 
 
-def get_importlib_target(lib, package=None) -> Optional[str]:
-    reloc = relocate(package)
+def get_importlib_target(lib, spec=None) -> Optional[str]:
+    """Extract and return the dll corresponding to the given import library.
+    Drives the windows compiler wrapper to obtain the DLL for which the given import
+    library provides the linker interface for"""
+    reloc = relocate(spec)
     info = reloc("--coff", lib, "--report", output=str)
     regex = re.compile("DLL: (.*)")
     match = regex.search(info)
@@ -268,106 +331,20 @@ def get_importlib_target(lib, package=None) -> Optional[str]:
     return None
 
 
-def verify_import_lib(lib: str, package=None) -> bool:
-    relocate_exe = relocate(package)
+def verify_import_lib(lib: str, spec=None) -> bool:
+    """Verifies that a given binary is a windows import library
+    using the Windows compiler-wrappers 'relocate' feature
+    Behind the scenes, the binary does some basic inspection of the
+    structure of the library file provided and discriminates between
+    import library coff files and true archive coff files. Supports
+    long and short import library formats.
+    """
+    relocate_exe = relocate(spec)
     try:
         relocate_exe("--coff", lib, "--verify", ignore_errors=[1])
     except executable.ProcessError:
         tty.debug(f"Cannot verify library {lib} as COFF.")
     return relocate_exe.returncode == 0
-
-
-def collect_import_exports(pkg, lib):
-    db = dumpbin(pkg)
-    raw_exports = db("/NOLOGO", "/EXPORTS", lib, output=str).split("\n")
-    # first 8 lines are boilerplate and not useful
-    raw_exports = raw_exports[8:]
-    exports = []
-    for export_line in raw_exports:
-        if export_line == "  Summary\r":
-            # exports end just before this section, terminate
-            break
-        sanitized_line = export_line.strip("\r").strip(" ")
-        # some lines define a mangled symbol and their unmangled
-        # method declaration, delinated by a whitespace
-        # we only care about the mangled symbol name to
-        # match with the PE output
-        if " " in sanitized_line:
-            sanitized_line = sanitized_line.split(" ")[0]
-        if not sanitized_line:
-            # there are a couple blank lines, just skip them
-            continue
-        exports.append(sanitized_line)
-    return exports
-
-
-def _buildcache_import_lib_targets(
-    targets: List[str], all_prefixes: Dict[str, str]
-) -> Dict[str, str]:
-    """Match each import library's referenced DLL against ``all_prefixes`` (old
-    prefix -> new prefix, including any SFN forms) and return a mapping from the
-    DLL's new absolute path to the import library's new absolute path, for use as
-    the ``--coff`` argument when relocating that DLL/exe.
-    """
-    libs = [t for t in targets if t.endswith(".lib")]
-    regex = re.compile("|".join(re.escape(p) for p in all_prefixes.keys()))
-    coff_for_target: Dict[str, str] = {}
-    for lib in libs:
-        # we relocate exes and dlls, import libraries are regenerated
-        # with a new dll pointer from the existing import library
-        # static .libs are ignored (.lib is any coff library on Windows,
-        # which covers both import and static libraries)
-        # Dlls have no references to their import libraries
-        # but import libraries reference dlls, so although
-        # the DLLs are our "relocation targets" we drive that
-        # via import libs to determine the proper association
-        if verify_import_lib(lib):
-            dll_path = get_importlib_target(lib)
-            print(f"imp lib target {dll_path}")
-            if not dll_path:
-                tty.debug(
-                    f"Import lib {lib} does not reference a compatible DLL, skipping relocation..."
-                )
-                continue
-            # normalizing the padding (stripping out an arbitrary number of escaped backslashes)
-            norm_dll_path = dll_path[:2] + "\\" + dll_path[2:].lstrip("\\")
-            match = regex.match(norm_dll_path)
-            if match:
-                old_root = match.group()
-                new_root = all_prefixes[old_root]
-                dll_name = os.path.relpath(dll_path, old_root)
-                new_dll_path = os.path.join(new_root, dll_name)
-                coff_for_target[new_dll_path] = lib
-            else:
-                tty.debug(
-                    f"Import lib: {lib} does not reference a DLL "
-                    "in this prefix, skipping relocation..."
-                )
-    return coff_for_target
-
-
-def relocate_windows_binaries(
-    targets,
-    spec: spack.spec.Spec,
-    prefixes: Dict[str, str],
-    sfn_prefixes: Optional[Dict[str, str]] = None,
-):
-    # Import libraries may reference their DLL by an 8.3 short filename (SFN) if the
-    # build host truncated the path. We can't expand such a path back to its long
-    # form here, since the old prefix no longer exists on this host, so instead we
-    # also match directly against the SFN form of each old prefix.
-    all_prefixes = {**prefixes, **(sfn_prefixes or {})}
-    ev = EnvironmentModifications()
-    ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in all_prefixes.items()])
-    ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
-    ev.set("SPACK_DEBUG_WRAPPER", "ON")
-    print(["|".join((k, v)) for k, v in all_prefixes.items()])
-
-    coff_for_target = _buildcache_import_lib_targets(targets, all_prefixes)
-    pe_targets = [t for t in targets if t.endswith(".dll") or t.endswith(".exe")]
-    apply_pe_relocations(
-        pe_targets, coff_for_target, relocate(spec.package), ev, fail_on_error=True
-    )
 
 
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
