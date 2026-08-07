@@ -1970,7 +1970,6 @@ def relocate_package(spec: spack.spec.Spec) -> None:
 
     # Delete identity mappings from prefix_to_prefix
     prefix_to_prefix = {k: v for k, v in prefix_to_prefix.items() if k != v}
-    sfn_prefix_to_prefix = {k: v for k, v in sfn_prefix_to_prefix.items() if k != v}
 
     # If there's nothing to relocate, we're done.
     if not prefix_to_prefix:
