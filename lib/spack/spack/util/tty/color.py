@@ -65,7 +65,7 @@ import re
 import sys
 import textwrap
 from contextlib import contextmanager
-from typing import IO, Iterator, List, NamedTuple, Optional, Tuple, Union
+from typing import IO, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 
 class ColorParseError(Exception):
@@ -186,6 +186,29 @@ def try_enable_terminal_color_on_windows() -> None:
             _force_color = False
 
 
+#: isatty cache for fd 0-2. Must be cleared when a std fd is redirected with dup2.
+_isatty_cache: Dict[int, bool] = {}
+
+
+def _cached_isatty(stream) -> bool:
+    """``stream.isatty()``, cached by file descriptor for the std fds 0-2."""
+    try:
+        fd = stream.fileno()
+    except (AttributeError, ValueError, OSError):
+        return stream.isatty()  # in-memory streams like StringIO: no syscall involved
+    if fd > 2:
+        return stream.isatty()  # short-lived fds: fd number reuse would leave stale entries
+    result = _isatty_cache.get(fd)
+    if result is None:
+        result = _isatty_cache[fd] = bool(stream.isatty())
+    return result
+
+
+def clear_isatty_cache() -> None:
+    """Forget cached isatty() results, after a std fd was redirected with dup2."""
+    _isatty_cache.clear()
+
+
 def get_color_when(stream=None) -> bool:
     """Return whether output written to ``stream`` should be colored or not.
 
@@ -196,7 +219,7 @@ def get_color_when(stream=None) -> bool:
         return _force_color
     if stream is None:
         stream = sys.stdout
-    return stream.isatty()
+    return _cached_isatty(stream)
 
 
 def set_color_when(when: Union[str, bool, None]) -> None:
