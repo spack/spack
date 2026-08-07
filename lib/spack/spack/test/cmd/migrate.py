@@ -264,3 +264,53 @@ def test_migrate_recursive_discovery(tmp_path, set_home, monkeypatch, clear_env_
     assert (new_config / "config.yaml").exists()
     assert (new_config / "linux" / "packages.yaml").exists()
     assert (new_config / "linux" / "x86_64" / "compilers.yaml").exists()
+
+
+def test_migrate_rewrites_absolute_include_paths(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config):
+    """Test that absolute include paths pointing to ~/.spack are rewritten to ~/.config/spack."""
+    spack_root = tmp_path / "spack-root"
+    spack_root.mkdir()
+    home = tmp_path / "home"
+    home.mkdir()
+
+    set_home(str(home))
+
+    # Create ~/.spack
+    dotspack = home / ".spack"
+    dotspack.mkdir()
+
+    # Create a target config file
+    subdir = dotspack / "linux"
+    subdir.mkdir()
+    (subdir / "packages.yaml").write_text("packages:\n  all:\n    compiler: [gcc]\n")
+
+    # Create an include.yaml with absolute path pointing to ~/.spack
+    absolute_include_path = str(subdir / "packages.yaml")
+    include_yaml = dotspack / "include.yaml"
+    include_yaml.write_text(f"""include:
+  - path: {absolute_include_path}
+""")
+
+    new_config = home / ".config" / "spack"
+
+    # Create fresh SpackPaths object and patch the module
+    paths = SpackPaths(_prefix=str(spack_root))
+    monkeypatch.setattr(spack.paths, "locations", paths)
+
+    # Run migration
+    migrate()
+
+    # Check that files were migrated
+    assert (new_config / "include.yaml").exists()
+    assert (new_config / "linux" / "packages.yaml").exists()
+
+    # Read the migrated include.yaml - absolute path should be rewritten
+    import spack.util.spack_yaml as syaml
+    with open(new_config / "include.yaml") as f:
+        migrated_include = syaml.load(f)
+
+    # The include path should now point to the new location
+    rewritten_path = migrated_include["include"][0]["path"]
+    assert rewritten_path == str(new_config / "linux" / "packages.yaml")
+    # Should still be absolute
+    assert pathlib.Path(rewritten_path).is_absolute()
