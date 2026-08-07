@@ -3697,14 +3697,20 @@ class Spec:
                 new_specs[spid(edge.spec)] = edge.spec.copy(deps=False)
 
             edge_propagation = edge.propagation if propagation is None else propagation
-            new_specs[spid(edge.parent)].add_dependency_edge(
-                new_specs[spid(edge.spec)],
+            new_parent = new_specs[spid(edge.parent)]
+            new_child = new_specs[spid(edge.spec)]
+            new_edge = DependencySpec(
+                new_parent,
+                new_child,
                 depflag=edge.depflag,
                 virtuals=edge.virtuals,
                 propagation=edge_propagation,
                 direct=edge.direct,
                 when=edge.when,
             )
+            # Don't use add_dependency_edge here, copy edges verbatim
+            _add_edge_to_map(new_parent._dependencies, new_child.name, new_edge)
+            _add_edge_to_map(new_child._dependents, new_parent.name, new_edge)
 
     def copy(self, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, **kwargs):
         """Make a copy of this spec.
