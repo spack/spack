@@ -163,7 +163,9 @@ def _process_result(result, show, required_format, kwargs):
                 else:
                     print(spec.format(required_format))
         else:
-            tree_str = spack.spec.tree(result.specs, color=sys.stdout.isatty(), **kwargs)
+            tree_str = spack.spec.tree(
+                result.specs, color=color.get_color_when(sys.stdout), **kwargs
+            )
             sys.stdout.write(tree_str)
         print()
 

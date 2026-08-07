@@ -186,13 +186,17 @@ def try_enable_terminal_color_on_windows() -> None:
             _force_color = False
 
 
-def get_color_when(stdout=None) -> bool:
-    """Return whether commands should print color or not."""
+def get_color_when(stream=None) -> bool:
+    """Return whether output written to ``stream`` should be colored or not.
+
+    ``--color`` and ``SPACK_COLOR`` take precedence over the stream being a tty. When no stream is
+    given, the decision is made for ``sys.stdout``.
+    """
     if _force_color is not None:
         return _force_color
-    if stdout is None:
-        stdout = sys.stdout
-    return stdout.isatty()
+    if stream is None:
+        stream = sys.stdout
+    return stream.isatty()
 
 
 def set_color_when(when: Union[str, bool, None]) -> None:
@@ -384,7 +388,7 @@ def cwrite(string: str, stream: Optional[IO[str]] = None, color: Optional[bool] 
     """
     stream = sys.stdout if stream is None else stream
     if color is None:
-        color = get_color_when()
+        color = get_color_when(stream)
     stream.write(colorize(string, color=color))
 
 
@@ -425,5 +429,5 @@ class ColorStream:
             if raw:
                 color = True
             else:
-                color = get_color_when()
+                color = get_color_when(self._stream)
         raw_write(colorize(string, color=color))
