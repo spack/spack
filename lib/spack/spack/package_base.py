@@ -130,7 +130,7 @@ class WindowsRPath:
         if sys.platform == "win32" and self.spec.satisfies("%compiler-wrapper"):
             cw = self.spec["compiler-wrapper"]
             if cw.package.has_code:
-                relocate_win_rpath(self)
+                relocate_win_rpath(self.spec)
             else:
                 win_rpath = WindowsSimulatedRPath(self)
                 win_rpath.add_library_dependent(*self.win_add_library_dependent())
