@@ -371,6 +371,76 @@ class ArchSpec:
         return lhs == "*" or rhs == "*" or lhs == rhs
 
     @staticmethod
+    def _target_satisfies(
+        lhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+        rhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    ) -> bool:
+        """Whether every microarchitecture in the lhs target is also in the rhs one."""
+        if not rhs:
+            return True
+
+        if lhs is None:
+            return False
+
+        if rhs == ArchSpec.ANY_TARGET:
+            return True
+
+        # Subset test: every target the lhs ranges denote must be covered by one of the rhs ranges.
+        return all(
+            any(_satisfies_target_range(r_range, l_range) for r_range in str(rhs).split(","))
+            for l_range in str(lhs).split(",")
+        )
+
+    @staticmethod
+    def _target_intersects(
+        lhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+        rhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    ) -> bool:
+        """Whether there is a microarchitecture in both targets."""
+        if not lhs or not rhs:
+            return True
+
+        # a star overlaps any target, but is too broad to satisfy a specific one
+        if ArchSpec.ANY_TARGET in (lhs, rhs):
+            return True
+
+        return bool(ArchSpec._target_intersection(lhs, rhs))
+
+    @staticmethod
+    def _target_intersection(
+        lhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+        rhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    ) -> List[str]:
+        """The elements of the target list denoting the targets both sides contain. Every element
+        is an interval, so the overlap of two of them starts at a common upper bound of their
+        lower bounds and ends at a common lower bound of their upper bounds. Those bounds are not
+        always unique, so one pair of intervals can produce several intervals: one per
+        combination."""
+        results: List[str] = []
+
+        if not lhs or not rhs:
+            return results
+
+        for l_element in str(lhs).split(","):
+            l_min, l_max = _parse_target_range(l_element)
+            for r_element in str(rhs).split(","):
+                r_min, r_max = _parse_target_range(r_element)
+                for n_min in _minimal_upper_bounds(l_min, r_min):
+                    for n_max in _maximal_lower_bounds(l_max, r_max):
+                        if n_min is None and n_max is None:
+                            continue
+                        elif n_min is None:
+                            results.append(f":{n_max}")
+                        elif n_max is None:
+                            results.append(f"{n_min}:")
+                        elif n_min.name == n_max.name:
+                            results.append(n_min.name)
+                        elif n_min.family == n_max.family and n_min <= n_max:
+                            results.append(f"{n_min}:{n_max}")
+
+        return results
+
+    @staticmethod
     def default_arch():
         """Return the default architecture"""
         platform = spack.platforms.host()
@@ -539,11 +609,11 @@ class ArchSpec:
         """
         other = self._autospec(other)
 
-        for attribute in ("platform", "os"):
-            if not self._attr_satisfies(getattr(self, attribute), getattr(other, attribute)):
-                return False
-
-        return self._target_satisfies(other, strict=True)
+        return (
+            self._attr_satisfies(self.platform, other.platform)
+            and self._attr_satisfies(self.os, other.os)
+            and self._target_satisfies(self.target, other.target)
+        )
 
     def intersects(self, other: "ArchSpec") -> bool:
         """Return True if there exists at least one concrete spec that matches both
@@ -557,43 +627,10 @@ class ArchSpec:
         """
         other = self._autospec(other)
 
-        for attribute in ("platform", "os"):
-            if not self._attr_intersects(getattr(self, attribute), getattr(other, attribute)):
-                return False
-
-        return self._target_satisfies(other, strict=False)
-
-    def _target_satisfies(self, other: "ArchSpec", strict: bool) -> bool:
-        if strict is True:
-            need_to_check = bool(other.target)
-        else:
-            need_to_check = bool(other.target and self.target)
-
-        if not need_to_check:
-            return True
-
-        # other_target is there and strict=True
-        if self.target is None:
-            return False
-
-        # self.target is not None, and other is target=*
-        if other.target == ArchSpec.ANY_TARGET:
-            return True
-
-        # target=* on the lhs overlaps any target, but is too broad to satisfy a specific one
-        if not strict and self.target == ArchSpec.ANY_TARGET:
-            return True
-
-        if not strict:
-            return bool(self._target_intersection(other))
-
-        # Subset test: every target self's ranges denote must be covered by one of other's.
-        return all(
-            any(
-                _satisfies_target_range(o_range, s_range)
-                for o_range in str(other.target).split(",")
-            )
-            for s_range in str(self.target).split(",")
+        return (
+            self._attr_intersects(self.platform, other.platform)
+            and self._attr_intersects(self.os, other.os)
+            and self._target_intersects(self.target, other.target)
         )
 
     def _target_constrain(self, other: "ArchSpec") -> bool:
@@ -615,7 +652,7 @@ class ArchSpec:
             self.target = other.target
             return True
 
-        if not other._target_satisfies(self, strict=False):
+        if not self._target_intersects(self.target, other.target):
             raise UnsatisfiableArchitectureSpecError(self, other)
 
         if self.target is None:
@@ -630,12 +667,11 @@ class ArchSpec:
             return True
 
         # self already inside other: the intersection is self, so skip computing it.
-        if self._target_satisfies(other, strict=True):
+        if self._target_satisfies(self.target, other.target):
             return False
 
         # Compute the intersection of every combination of ranges in the lists
-        results = self._target_intersection(other)
-        attribute_str = ",".join(results)
+        attribute_str = ",".join(self._target_intersection(self.target, other.target))
 
         intersection_target = _make_microarchitecture(attribute_str)
         if self.target == intersection_target:
@@ -643,36 +679,6 @@ class ArchSpec:
 
         self.target = intersection_target
         return True
-
-    def _target_intersection(self, other: "ArchSpec") -> List[str]:
-        """The elements of the target list denoting the targets both sides contain. Every element
-        is an interval, so the overlap of two of them starts at a common upper bound of their
-        lower bounds and ends at a common lower bound of their upper bounds. Those bounds are not
-        always unique, so one pair of intervals can produce several intervals: one per
-        combination."""
-        results: List[str] = []
-
-        if not self.target or not other.target:
-            return results
-
-        for s_element in str(self.target).split(","):
-            s_min, s_max = _parse_target_range(s_element)
-            for o_element in str(other.target).split(","):
-                o_min, o_max = _parse_target_range(o_element)
-                for n_min in _minimal_upper_bounds(s_min, o_min):
-                    for n_max in _maximal_lower_bounds(s_max, o_max):
-                        if n_min is None and n_max is None:
-                            continue
-                        elif n_min is None:
-                            results.append(f":{n_max}")
-                        elif n_max is None:
-                            results.append(f"{n_min}:")
-                        elif n_min.name == n_max.name:
-                            results.append(n_min.name)
-                        elif n_min.family == n_max.family and n_min <= n_max:
-                            results.append(f"{n_min}:{n_max}")
-
-        return results
 
     def constrain(self, other: "ArchSpec") -> bool:
         """Projects all architecture fields that are specified in the given
