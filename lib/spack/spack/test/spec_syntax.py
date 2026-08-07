@@ -716,6 +716,63 @@ def specfile_for(config, mock_packages):
             ],
             "^[deptypes=build,link] zlib",
         ),
+        # A bare duplicate ^pkg-b is redundant, on either side of the % edge.
+        (
+            "pkg-a ^pkg-b %pkg-c ^pkg-b",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-a"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-c"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+            ],
+            "pkg-a ^pkg-b %pkg-c",
+        ),
+        # A ^ dependency is merged only once its trailing % edges are parsed: the % edge
+        # survives on the merged node.
+        (
+            "pkg-a ^pkg-b ^pkg-b %pkg-c",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-a"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-c"),
+            ],
+            "pkg-a ^pkg-b %pkg-c",
+        ),
+        (
+            "pkg-a ^pkg-b ^pkg-b@1 %pkg-c",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-a"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.VERSION, value="@1"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-c"),
+            ],
+            "pkg-a ^pkg-b@1 %pkg-c",
+        ),
+        (
+            "pkg-a ^pkg-b@1 ^pkg-b %pkg-c",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-a"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.VERSION, value="@1"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-c"),
+            ],
+            "pkg-a ^pkg-b@1 %pkg-c",
+        ),
         (
             "^[deptypes=link] zlib ^[deptypes=build] zlib",
             [
