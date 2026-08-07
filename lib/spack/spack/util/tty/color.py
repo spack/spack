@@ -64,7 +64,6 @@ import os
 import re
 import sys
 import textwrap
-import weakref
 from contextlib import contextmanager
 from typing import IO, Iterator, List, NamedTuple, Optional, Tuple, Union
 
@@ -189,10 +188,8 @@ def try_enable_terminal_color_on_windows() -> None:
 
 # Memoized ``sys.stdout.isatty()``, as a ``(stream, isatty)`` pair. The stream is part of the key,
 # so the entry is dropped as soon as ``sys.stdout`` is replaced (``log_output`` wraps it, pytest
-# captures it, ...). It is held weakly, so that caching does not keep a replaced stream alive; a
-# weak reference is also what makes the identity check sound, since the id of a dead object can be
-# reused by a new one.
-_STDOUT_ISATTY: Tuple[Optional["weakref.ref"], bool] = (None, False)
+# captures it, ...).
+_STDOUT_ISATTY: Tuple[Optional[IO[str]], bool] = (None, False)
 
 
 def _isatty(stream) -> bool:
@@ -200,14 +197,9 @@ def _isatty(stream) -> bool:
     global _STDOUT_ISATTY
     if stream is not sys.stdout:
         return stream.isatty()
-    ref, is_a_tty = _STDOUT_ISATTY
-    if ref is None or ref() is not stream:
-        is_a_tty = stream.isatty()
-        try:
-            _STDOUT_ISATTY = (weakref.ref(stream), is_a_tty)
-        except TypeError:  # not weak-referenceable, don't memoize
-            _STDOUT_ISATTY = (None, is_a_tty)
-    return is_a_tty
+    if _STDOUT_ISATTY[0] is not stream:
+        _STDOUT_ISATTY = (stream, stream.isatty())
+    return _STDOUT_ISATTY[1]
 
 
 def get_color_when(stream=None) -> bool:
