@@ -2435,8 +2435,9 @@ class Spec:
             if self.abstract_hash:
                 d["abstract_hash"] = self.abstract_hash
 
-            if self.compiler_flags:
-                d["compiler_flags"] = self.compiler_flags.to_dict()
+            compiler_flags = self.compiler_flags.to_dict()
+            if compiler_flags:
+                d["compiler_flags"] = compiler_flags
 
         if self.external:
             d["external"] = {
