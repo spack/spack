@@ -1821,6 +1821,13 @@ def test_parse_multiple_edge_attributes(input_args, expected):
         assert s.satisfies(c)
 
 
+def test_when_edge_attribute_keeps_commas():
+    """A when value is one spec string, where a comma is part of the syntax, unlike the
+    comma-separated deptypes and virtuals lists."""
+    edge = spack.spec.Spec("foo ^[when='@1,2'] bar").edges_to_dependencies(name="bar")[0]
+    assert edge.when == spack.spec.Spec("@1,2")
+
+
 @pytest.mark.regression("52375")
 def test_external_spec_hash_can_be_looked_up(config, mock_packages):
     """Tests that the hash of an external can be successfully looked up."""
