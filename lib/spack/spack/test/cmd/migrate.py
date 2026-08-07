@@ -153,3 +153,114 @@ def test_migrate_restore(migrate_setup):
     # Verify original files are back
     for config_file in created["config_files"]:
         assert (dotspack / config_file).exists()
+
+
+def test_migrate_with_relative_paths(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config):
+    """Test that relative paths in config files are absolutized (except in include sections)."""
+    spack_root = tmp_path / "spack-root"
+    spack_root.mkdir()
+    home = tmp_path / "home"
+    home.mkdir()
+
+    set_home(str(home))
+
+    # Create ~/.spack with test files
+    dotspack = home / ".spack"
+    dotspack.mkdir()
+
+    # Create a subdirectory with a config file
+    subdir = dotspack / "linux"
+    subdir.mkdir()
+
+    # Create a dummy file that paths can reference
+    dummy_dir = dotspack / "my_packages"
+    dummy_dir.mkdir()
+    (dummy_dir / "dummy.py").write_text("# dummy")
+
+    # Create config with relative paths
+    config_yaml = dotspack / "config.yaml"
+    config_yaml.write_text("""config:
+  install_tree:
+    root: my_packages
+  source_cache: my_packages
+""")
+
+    # Create an include config with relative paths (should be kept relative)
+    include_yaml = subdir / "packages.yaml"
+    include_yaml.write_text("""include:
+  - path: ../config.yaml
+packages:
+  all:
+    compiler: [gcc]
+""")
+
+    new_config = home / ".config" / "spack"
+
+    # Create fresh SpackPaths object and patch the module
+    paths = SpackPaths(_prefix=str(spack_root))
+    monkeypatch.setattr(spack.paths, "locations", paths)
+
+    # Run migration
+    migrate()
+
+    # Check that files were migrated
+    assert (new_config / "config.yaml").exists()
+    assert (new_config / "linux" / "packages.yaml").exists()
+
+    # Read the migrated config.yaml - relative paths should be absolutized
+    import spack.util.spack_yaml as syaml
+    with open(new_config / "config.yaml") as f:
+        migrated_config = syaml.load(f)
+
+    # The relative path 'my_packages' should now be absolute
+    install_root = migrated_config["config"]["install_tree"]["root"]
+    assert pathlib.Path(install_root).is_absolute()
+    assert install_root == str(dotspack / "my_packages")
+
+    # Read the migrated packages.yaml - include path should remain relative
+    with open(new_config / "linux" / "packages.yaml") as f:
+        migrated_include = syaml.load(f)
+
+    # The include path should still be relative
+    include_path = migrated_include["include"][0]["path"]
+    assert not pathlib.Path(include_path).is_absolute()
+    assert include_path == "../config.yaml"
+
+
+def test_migrate_recursive_discovery(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths, mutable_config):
+    """Test that migrate finds config files recursively in subdirectories."""
+    spack_root = tmp_path / "spack-root"
+    spack_root.mkdir()
+    home = tmp_path / "home"
+    home.mkdir()
+
+    set_home(str(home))
+
+    # Create ~/.spack with nested structure
+    dotspack = home / ".spack"
+    dotspack.mkdir()
+
+    # Create files at different levels
+    (dotspack / "config.yaml").write_text("config:\n  build_jobs: 8\n")
+
+    subdir1 = dotspack / "linux"
+    subdir1.mkdir()
+    (subdir1 / "packages.yaml").write_text("packages:\n  all:\n    compiler: [gcc]\n")
+
+    subdir2 = subdir1 / "x86_64"
+    subdir2.mkdir()
+    (subdir2 / "compilers.yaml").write_text("compilers: []\n")
+
+    new_config = home / ".config" / "spack"
+
+    # Create fresh SpackPaths object and patch the module
+    paths = SpackPaths(_prefix=str(spack_root))
+    monkeypatch.setattr(spack.paths, "locations", paths)
+
+    # Run migration
+    migrate()
+
+    # Check that all files were found and migrated, preserving directory structure
+    assert (new_config / "config.yaml").exists()
+    assert (new_config / "linux" / "packages.yaml").exists()
+    assert (new_config / "linux" / "x86_64" / "compilers.yaml").exists()
