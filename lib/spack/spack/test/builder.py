@@ -241,11 +241,7 @@ def test_builder_when_inheriting_just_package(working_env):
 
 @pytest.mark.usefixtures("builder_test_repository", "config")
 def test_get_builder_class_accepts_objects_and_classes():
-    """Tests that get_builder_class works on both package objects and package classes.
-
-    The package audits inspect classes, while the builder machinery works on objects,
-    so walking the MRO must start from the package class in either case.
-    """
+    """Tests that get_builder_class works on both package objects and package classes."""
     pkg_cls = spack.repo.PATH.get_pkg_class("callbacks")
     builder_cls = spack.builder.get_builder_class(pkg_cls, "GenericBuilder")
 

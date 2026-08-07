@@ -71,11 +71,7 @@ class _PhaseAdapter:
 def get_builder_class(
     pkg: Union["spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]], name: str
 ) -> Optional[Type["Builder"]]:
-    """Return the builder class if a package module defines it.
-
-    Accepts either a package object or a package class, since the audits inspect
-    classes while the builder machinery works on objects.
-    """
+    """Return the builder class if a package module defines it."""
     pkg_cls = pkg if isinstance(pkg, type) else type(pkg)
     for current_cls in pkg_cls.__mro__:
         if not hasattr(current_cls, "module"):
