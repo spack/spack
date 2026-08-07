@@ -186,22 +186,6 @@ def try_enable_terminal_color_on_windows() -> None:
             _force_color = False
 
 
-# Memoized ``sys.stdout.isatty()``, as a ``(stream, isatty)`` pair. The stream is part of the key,
-# so the entry is dropped as soon as ``sys.stdout`` is replaced (``log_output`` wraps it, pytest
-# captures it, ...).
-_STDOUT_ISATTY: Tuple[Optional[IO[str]], bool] = (None, False)
-
-
-def _isatty(stream) -> bool:
-    """Return ``stream.isatty()``, memoized for ``sys.stdout``"""
-    global _STDOUT_ISATTY
-    if stream is not sys.stdout:
-        return stream.isatty()
-    if _STDOUT_ISATTY[0] is not stream:
-        _STDOUT_ISATTY = (stream, stream.isatty())
-    return _STDOUT_ISATTY[1]
-
-
 def get_color_when(stream=None) -> bool:
     """Return whether output written to ``stream`` should be colored or not.
 
@@ -210,7 +194,9 @@ def get_color_when(stream=None) -> bool:
     """
     if _force_color is not None:
         return _force_color
-    return _isatty(sys.stdout if stream is None else stream)
+    if stream is None:
+        stream = sys.stdout
+    return stream.isatty()
 
 
 def set_color_when(when: Union[str, bool, None]) -> None:
