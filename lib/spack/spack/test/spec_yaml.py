@@ -597,6 +597,19 @@ def test_parallel_deptype_edges_survive_round_trip(mock_packages):
     assert {e.depflag for e in edges} == {dt.BUILD, dt.LINK}
 
 
+def test_parallel_edges_are_serialized_in_a_canonical_order(mock_packages):
+    """Two edges to one package with the same dependency types are told apart by their when
+    condition and their virtuals, so a meet producing both is one state with one hash."""
+    forward = Spec("%pkg-b").copy()
+    forward.constrain(Spec("pkg-a ^[when='+foo'] pkg-b@1"))
+    backward = Spec("pkg-a ^[when='+foo'] pkg-b@1").copy()
+    backward.constrain(Spec("%pkg-b"))
+
+    assert len(forward.edges_to_dependencies()) == 2
+    assert forward.to_dict() == backward.to_dict()
+    assert forward.dag_hash() == backward.dag_hash()
+
+
 def test_pickle_preserves_identity_and_prefix(config, mock_packages):
     """When pickling multiple specs that share dependencies, the identity of those dependencies
     should be preserved when unpickling."""

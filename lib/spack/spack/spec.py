@@ -726,7 +726,7 @@ class DeprecatedCompilerSpec(lang.DeprecatedProperty):
         raise AttributeError(f"{instance} has no C, C++, or Fortran compiler")
 
 
-@lang.lazy_lexicographic_ordering
+@lang.lazy_lexicographic_ordering(set_hash=False)
 class DependencySpec:
     """DependencySpecs represent an edge in the DAG, and contain dependency types
     and information on the virtuals being provided.
@@ -831,6 +831,21 @@ class DependencySpec:
         yield self.direct
         yield self.propagation
         yield self.when
+        yield self.spec  # tie-breaker for parallel edges: `^foo@1 ^foo+bar`
+
+    def __hash__(self):
+        # Hash edge properties, do not include the node.
+        return hash(
+            (
+                self.parent.name if self.parent else None,
+                self.spec.name if self.spec else None,
+                self.depflag,
+                self.virtuals,
+                self.direct,
+                self.propagation,
+                self.when,
+            )
+        )
 
     def __str__(self) -> str:
         return self.format()
@@ -1080,10 +1095,6 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         return result
 
 
-def _sort_by_dep_types(dspec: DependencySpec):
-    return dspec.depflag
-
-
 EdgeMap = Dict[str, List[DependencySpec]]
 
 
@@ -1091,7 +1102,7 @@ def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> None:
     if key in edge_map:
         lst = edge_map[key]
         lst.append(edge)
-        lst.sort(key=_sort_by_dep_types)
+        lst.sort()  # type: ignore[call-arg,call-overload]
     else:
         edge_map[key] = [edge]
 
@@ -1855,11 +1866,11 @@ class Spec:
         Args:
             deptype: allowed dependency types
         """
-        _sort_fn = lambda x: (x.spec.name, _sort_by_dep_types(x))
         _group_fn = lambda x: x.spec.name
         selected_edges = _select_edges(self._dependencies, depflag=depflag)
+        edges = sorted(selected_edges)  # type: ignore[type-var]
         result = {}
-        for key, group in itertools.groupby(sorted(selected_edges, key=_sort_fn), key=_group_fn):
+        for key, group in itertools.groupby(edges, key=_group_fn):
             result[key] = list(group)
         return result
 
