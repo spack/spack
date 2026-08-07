@@ -159,8 +159,10 @@ def _import_lib_targets(
                     f"Import lib {lib} does not reference a compatible DLL, skipping relocation..."
                 )
                 continue
-            # normalizing the padding (stripping out an arbitrary number of escaped backslashes)
             norm_dll_path = os.path.normpath(dll_path)
+            # matches prefix component in dll_path inside import library
+            # which is the absolute path to the dll the import library corresponds to
+            # on the machine/stage where this import library was built
             match = regex.match(norm_dll_path)
             if match:
                 old_root = match.group()
@@ -172,9 +174,10 @@ def _import_lib_targets(
                     new_dll_path = os.path.join(new_root, dll_name)
                 coff_for_target[new_dll_path] = lib
             else:
-                tty.debug(
+                tty.warn(
                     f"Import lib: {lib} does not reference a DLL "
-                    "in this prefix, skipping relocation..."
+                    "in this prefix, skipping relocation...\n"
+                    f"Prefixes failed to map: {all_prefixes}"
                 )
     return coff_for_target
 
@@ -314,7 +317,12 @@ handle for {lib}: {ctypes.get_last_error()}"
     raw_id_data = ctypes.string_at(data_pointer, res_size)
     str_id_data = raw_id_data.decode(encoding="utf-8").strip("\x00")  # strip null terminator
     kernel32.FreeLibrary(module_handle)
-    return str_id_data if res_size else None
+    if not res_size:
+        tty.debug(
+            "Unexpected lack of resource file in Spack based dll, something may be corrupted"
+        )
+        return None
+    return str_id_data
 
 
 def get_importlib_target(lib, spec=None) -> Optional[str]:
@@ -340,10 +348,11 @@ def verify_import_lib(lib: str, spec=None) -> bool:
     long and short import library formats.
     """
     relocate_exe = relocate(spec)
+    out = ""
     try:
-        relocate_exe("--coff", lib, "--verify", ignore_errors=[1])
+        out = relocate_exe("--coff", lib, "--verify", output=str, error=str, ignore_errors=[1])
     except executable.ProcessError:
-        tty.debug(f"Cannot verify library {lib} as COFF.")
+        tty.debug(f"Cannot verify library {lib} as COFF. Failed with output {out}")
     return relocate_exe.returncode == 0
 
 
