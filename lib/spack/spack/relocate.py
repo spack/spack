@@ -13,7 +13,6 @@ from typing import IO, Dict, Iterable, List, Optional
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
 
-import spack.bootstrap
 import spack.spec
 import spack.store
 import spack.util.elf as elf
@@ -65,7 +64,8 @@ def setup_relocate_run(wrapper_spec) -> executable.Executable:
 def bootstrap_relocate() -> executable.Executable:
     """Bootstraps and returns an executable reference to the Windows compiler
     wrappers relocate utility"""
-    with spack.bootstrap.ensure_bootstrap_configuration():
+    import spack.bootstrap as bootstrapper
+    with bootstrapper.ensure_bootstrap_configuration():
         # ensure_msvc_relocate_or_raise() may hand back a bare relocate.exe found
         # via a PATH search, with no MSVC environment attached (see the early
         # return in ensure_executables_in_path_or_raise). relocate.exe needs the
@@ -73,7 +73,7 @@ def bootstrap_relocate() -> executable.Executable:
         # dumpbin.exe, ...), so don't trust its return value: look up the
         # concrete compiler-wrapper spec ourselves and always attach its
         # environment, the same way setup_relocate_run does.
-        spack.bootstrap.ensure_msvc_relocate_or_raise()
+        bootstrapper.ensure_msvc_relocate_or_raise()
         wrapper_spec = next(
             iter(spack.store.STORE.db.query_local("compiler-wrapper", installed=True)), None
         )
@@ -93,15 +93,6 @@ def relocate(spec=None) -> executable.Executable:
             wrapper_spec = spec["compiler-wrapper"]
         except KeyError:
             pass
-    if not wrapper_spec or not wrapper_spec.installed:
-        # Don't have one associated with our package installed
-        # fine, pull from local db, the functionality we need is
-        # origin agnostic
-        # NOTE: this will need updating if we ever introduce breaking changes
-        # in our relocate behavior
-        wrapper_spec = next(
-            iter(spack.store.STORE.db.query_local("compiler-wrapper", installed=True)), None
-        )
     if not wrapper_spec:
         # We need to bootstrap
         return bootstrap_relocate()
