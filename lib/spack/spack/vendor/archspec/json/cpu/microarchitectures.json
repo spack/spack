@@ -1633,6 +1633,197 @@
         ]
       }
     },
+    "alderlake": {
+      "from": [
+        "skylake"
+      ],
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "abm",
+        "lahf_lm",
+        "xsave",
+        "cx16",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt",
+        "avx_vnni",
+        "sha_ni",
+        "clwb",
+        "rdpid",
+        "gfni",
+        "vaes",
+        "vpclmulqdq",
+        "movdiri",
+        "movdir64b",
+        "serialize",
+        "waitpkg"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "11.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "arrowlake": {
+      "from": [
+        "alderlake"
+      ],
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "abm",
+        "lahf_lm",
+        "xsave",
+        "cx16",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt",
+        "avx_vnni",
+        "sha_ni",
+        "clwb",
+        "rdpid",
+        "gfni",
+        "vaes",
+        "vpclmulqdq",
+        "movdiri",
+        "movdir64b",
+        "serialize",
+        "waitpkg",
+        "avx_ifma",
+        "avx_ne_convert",
+        "avx_vnni_int8",
+        "cmpccxadd"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "14.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "arrowlake_s": {
+      "from": [
+        "arrowlake"
+      ],
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "abm",
+        "lahf_lm",
+        "xsave",
+        "cx16",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt",
+        "avx_vnni",
+        "sha_ni",
+        "clwb",
+        "rdpid",
+        "gfni",
+        "vaes",
+        "vpclmulqdq",
+        "movdiri",
+        "movdir64b",
+        "serialize",
+        "waitpkg",
+        "avx_ifma",
+        "avx_ne_convert",
+        "avx_vnni_int8",
+        "cmpccxadd",
+        "avx_vnni_int16",
+        "sha512",
+        "sm3",
+        "sm4"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "14.0:",
+            "name": "arrowlake-s",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "18.0:",
+            "name": "arrowlake-s",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
     "k10": {
       "from": [
         "x86_64"
