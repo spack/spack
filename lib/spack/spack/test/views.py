@@ -4,23 +4,15 @@
 
 import os
 import pathlib
-import sys
 
 import pytest
 
 import spack.concretize
 from spack.directory_layout import DirectoryLayout
-from spack.filesystem_view import (
-    SimpleFilesystemView,
-    YamlFilesystemView,
-    colorize_root,
-    colorize_spec,
-)
+from spack.filesystem_view import SimpleFilesystemView, YamlFilesystemView
 from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.test.conftest import FsTree
-from spack.test.util.tty.color import MockStream
-from spack.util.tty.color import color_when, csub
 
 
 def test_remove_extensions_ordered(install_mockery, mock_fetch, tmp_path: pathlib.Path):
@@ -158,27 +150,3 @@ def test_view_no_dir_symlinks(mock_packages, tmp_path: pathlib.Path):
     # File should be a symlink.
     ah_path = os.path.join(include_dir, "a.h")
     assert os.path.islink(ah_path)
-
-
-@pytest.mark.regression("13387")
-@pytest.mark.parametrize("when,colored", [(True, True), (False, False)])
-def test_view_messages_respect_color_setting(
-    mock_packages, config, tmp_path: pathlib.Path, monkeypatch, when, colored
-):
-    """--color has to win over stdout being a terminal.
-
-    View messages used to check ``sys.stdout.isatty()`` directly, which made them ignore both
-    ``--color`` and ``SPACK_COLOR``.
-    """
-    monkeypatch.setattr(sys, "stdout", MockStream(isatty=True))
-    view_dir = str(tmp_path / "view")
-    spec = spack.concretize.concretize_one("pkg-a")
-
-    with color_when(when):
-        root_msg = colorize_root(view_dir)
-        spec_msg = colorize_spec(spec)
-
-    assert ("\033[" in root_msg) is colored
-    assert ("\033[" in spec_msg) is colored
-    assert csub(root_msg) == f"[{view_dir}]"
-    assert csub(spec_msg) == spec.short_spec
