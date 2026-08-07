@@ -65,6 +65,7 @@ def bootstrap_relocate() -> executable.Executable:
     """Bootstraps and returns an executable reference to the Windows compiler
     wrappers relocate utility"""
     import spack.bootstrap as bootstrapper
+
     with bootstrapper.ensure_bootstrap_configuration():
         # ensure_msvc_relocate_or_raise() may hand back a bare relocate.exe found
         # via a PATH search, with no MSVC environment attached (see the early
