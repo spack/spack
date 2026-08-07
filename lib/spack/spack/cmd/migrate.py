@@ -13,6 +13,11 @@ import spack.util.spack_yaml as syaml
 from spack.util import tty
 
 
+description = "migrate user config from ~/.spack to ~/.config/spack"
+section = "config"
+level = "long"
+
+
 class Index:
     """Represents a list index in a YAML path."""
 
@@ -21,10 +26,6 @@ class Index:
 
     def __repr__(self):
         return f"Index({self.idx})"
-
-description = "migrate user config from ~/.spack to ~/.config/spack"
-section = "config"
-level = "long"
 
 
 def backup_location():
@@ -63,14 +64,12 @@ def walk_yaml_for_paths(
             is_include_section = key == "include"
             child_in_include = in_include or is_include_section
 
-            # Recurse into nested structures
             if isinstance(value, (dict, list)):
                 nested = walk_yaml_for_paths(
                     value, config_file_dir, key_path + [key], child_in_include
                 )
                 results.extend(nested)
             elif isinstance(value, str):
-                # Check if this string is a path that exists
                 abs_path = resolve_and_check_path(value, config_file_dir)
                 if abs_path:
                     results.append((key_path + [key], value, abs_path, child_in_include))
@@ -83,7 +82,6 @@ def walk_yaml_for_paths(
                 )
                 results.extend(nested)
             elif isinstance(item, str):
-                # Check if this string is a path that exists
                 abs_path = resolve_and_check_path(item, config_file_dir)
                 if abs_path:
                     results.append((key_path + [Index(idx)], item, abs_path, in_include))
@@ -104,11 +102,12 @@ def resolve_and_check_path(value: str, config_file_dir: str) -> str:
     if not value or not isinstance(value, str):
         return ""
 
-    # Skip Spack path variables (they're not filesystem paths yet)
+    # Skip env/config vars:
+    # - They are already absolute
+    # - The ones that point into ~, include: cannot use
     if value.startswith("$"):
         return ""
 
-    # Check if it's already absolute and exists
     if os.path.isabs(value):
         return value if os.path.exists(value) else ""
 
@@ -134,14 +133,12 @@ def absolutize_path_in_yaml(
     """
     current = data
 
-    # Navigate to parent
     for key in key_path_parts[:-1]:
         if isinstance(key, Index):
             current = current[key.idx]
         else:
             current = current[key]
 
-    # Update the final key
     final_key = key_path_parts[-1]
     if isinstance(final_key, Index):
         current[final_key.idx] = new_value
@@ -180,7 +177,6 @@ def process_config_file_paths(
     path_info = []
     modified = False
 
-    # Normalize paths for comparison
     old_location_norm = os.path.normpath(os.path.abspath(old_location))
     new_config_location_norm = os.path.normpath(os.path.abspath(new_config_location))
 
@@ -188,21 +184,23 @@ def process_config_file_paths(
         # Build human-readable path string for reporting
         path_parts = []
         for part in key_path:
-            if isinstance(part, Index):
+            if isinstance(
+                part, Index
+            ):  # Implement __str__ for Index so we can just str() everything
                 path_parts.append(f"[{part.idx}]")
             else:
                 path_parts.append(part)
         key_path_str = ".".join(path_parts)
 
         if os.path.isabs(original_value):
-            # Absolute path
             if in_include:
                 # Check if it points to something under old_location
                 abs_path_norm = os.path.normpath(os.path.abspath(original_value))
                 try:
                     rel_path = os.path.relpath(abs_path_norm, old_location_norm)
                     # If relpath doesn't start with "..", it's under old_location
-                    if not rel_path.startswith(".."):
+                    # (os.pardir is ".." on Unix/Windows, but use string check after normpath)
+                    if not os.path.normpath(rel_path).startswith(".."):
                         # Rewrite to point to new location
                         new_path = os.path.join(new_config_location_norm, rel_path)
                         absolutize_path_in_yaml(data, key_path, new_path)
@@ -213,7 +211,9 @@ def process_config_file_paths(
                     pass
         else:
             # Relative path
-            path_info.append((key_path_str, original_value, "kept-relative" if in_include else "absolutized"))
+            path_info.append(
+                (key_path_str, original_value, "kept-relative" if in_include else "absolutized")
+            )
 
             # Only absolutize if NOT in an include section
             if not in_include:
@@ -374,8 +374,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
             _, path_info = process_config_file_paths(old_path, old_location, new_config_location)
             if path_info:
                 all_path_info.extend(
-                    (config_file, key_path, value, action)
-                    for key_path, value, action in path_info
+                    (config_file, key_path, value, action) for key_path, value, action in path_info
                 )
                 tty.msg(f"    - {config_file} (contains {len(path_info)} path(s) to process)")
             else:
@@ -384,15 +383,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         if all_path_info:
             tty.msg("\n  Paths that would be processed:")
             for config_file, key_path, value, action in all_path_info:
-                if action == "absolutized":
-                    status = "(would absolutize)"
-                elif action == "kept-relative":
-                    status = "(would keep relative - in include)"
-                elif action == "rewritten":
-                    status = "(would rewrite to new location)"
-                else:
-                    status = f"({action})"
-                tty.msg(f"    {config_file}:{key_path} = {value} {status}")
+                tty.msg(f"    {config_file}:{key_path} = {value} (would {action})")
 
         if args.clear:
             tty.msg(f"\nWould then move {old_location} to {backup_loc}")
@@ -409,13 +400,14 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         new_path = os.path.join(new_config_location, config_file)
 
         # Process the file to handle paths
-        modified_data, path_info = process_config_file_paths(old_path, old_location, new_config_location)
+        modified_data, path_info = process_config_file_paths(
+            old_path, old_location, new_config_location
+        )
 
         # Track paths for reporting
         if path_info:
             all_path_info.extend(
-                (config_file, key_path, value, action)
-                for key_path, value, action in path_info
+                (config_file, key_path, value, action) for key_path, value, action in path_info
             )
 
         # Write the file (modified if needed, otherwise copy)
@@ -438,15 +430,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if all_path_info:
         tty.warn("Processed paths in config files:")
         for config_file, key_path, value, action in all_path_info:
-            if action == "absolutized":
-                status = "(converted to absolute)"
-            elif action == "kept-relative":
-                status = "(kept relative - in include)"
-            elif action == "rewritten":
-                status = "(rewritten to new location)"
-            else:
-                status = f"({action})"
-            tty.msg(f"  {config_file}:{key_path} = {value} {status}")
+            tty.msg(f"  {config_file}:{key_path} = {value} ({action})")
 
     # Handle --clear: move ~/.spack to backup
     if args.clear:
