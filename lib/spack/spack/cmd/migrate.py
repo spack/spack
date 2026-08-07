@@ -326,8 +326,14 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     config_files = []
     if os.path.isdir(old_location):
         found = fs.find(old_location, ["*.yaml", "*.yml"], recursive=True)
+        # Exclude package_repos directory (old location for cloned repos, contains repo.yaml)
+        package_repos_dir = os.path.join(old_location, "package_repos")
         # Convert absolute paths to relative paths from old_location
-        config_files = [os.path.relpath(f, old_location) for f in found]
+        config_files = [
+            os.path.relpath(f, old_location)
+            for f in found
+            if not fs.path_contains_subdirectory(f, package_repos_dir)
+        ]
 
     if not config_files:
         tty.msg("No config files found in ~/.spack to migrate.")
