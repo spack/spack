@@ -544,8 +544,10 @@ class EdgeAttributeParser:
                 name, value = self.ctx.current_token.value.split("=", maxsplit=1)
                 if name.endswith(":"):
                     name = name[:-1]
-                value = value.strip("'\" ").split(",")
-                attributes[name] = value
+                value = value.strip("'\" ")
+                # A when value is one spec string, where a comma is part of the syntax, e.g.
+                # when='@1,2'; deptypes and virtuals values are comma-separated lists.
+                attributes[name] = value if name == "when" else value.split(",")
                 if name not in ("deptypes", "virtuals", "when"):
                     msg = (
                         "the only edge attributes that are currently accepted "
@@ -569,7 +571,7 @@ class EdgeAttributeParser:
 
         # Turn "when" into a spec
         if "when" in attributes:
-            attributes["when"] = parse_one_or_raise(attributes["when"][0])
+            attributes["when"] = parse_one_or_raise(attributes["when"])
 
         return attributes
 
