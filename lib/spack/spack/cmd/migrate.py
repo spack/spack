@@ -5,12 +5,22 @@
 import argparse
 import os
 import shutil
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import spack.config
 import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
 from spack.util import tty
+
+
+class Index:
+    """Represents a list index in a YAML path."""
+
+    def __init__(self, idx: int):
+        self.idx = idx
+
+    def __repr__(self):
+        return f"Index({self.idx})"
 
 description = "migrate user config from ~/.spack to ~/.config/spack"
 section = "config"
@@ -24,19 +34,23 @@ def backup_location():
 
 
 def walk_yaml_for_paths(
-    data: Any, config_file_dir: str, key_path: List[str] = None, in_include: bool = False
-) -> List[Tuple[str, str, str, bool]]:
+    data: Any,
+    config_file_dir: str,
+    key_path: List[Union[str, Index]] = None,
+    in_include: bool = False,
+) -> List[Tuple[List[Union[str, Index]], str, str, bool]]:
     """Walk YAML data and find all string values that exist as filesystem paths.
 
     Args:
         data: YAML data structure (dict, list, or scalar)
         config_file_dir: Directory containing the config file (for resolving relative paths)
-        key_path: Current path through the YAML structure
+        key_path: Current path through the YAML structure (list of str keys or Index objects)
         in_include: Whether we're currently inside an include: section
 
     Returns:
-        List of (key_path_str, original_value, resolved_abs_path, in_include) tuples
-        for all string values that exist as filesystem paths
+        List of (key_path, original_value, resolved_abs_path, in_include) tuples
+        for all string values that exist as filesystem paths.
+        key_path is a list of str (dict keys) or Index (list indices).
     """
     if key_path is None:
         key_path = []
@@ -59,22 +73,20 @@ def walk_yaml_for_paths(
                 # Check if this string is a path that exists
                 abs_path = resolve_and_check_path(value, config_file_dir)
                 if abs_path:
-                    path_str = ".".join(str(k) for k in key_path + [key])
-                    results.append((path_str, value, abs_path, child_in_include))
+                    results.append((key_path + [key], value, abs_path, child_in_include))
 
     elif isinstance(data, list):
         for idx, item in enumerate(data):
             if isinstance(item, (dict, list)):
                 nested = walk_yaml_for_paths(
-                    item, config_file_dir, key_path + [f"[{idx}]"], in_include
+                    item, config_file_dir, key_path + [Index(idx)], in_include
                 )
                 results.extend(nested)
             elif isinstance(item, str):
                 # Check if this string is a path that exists
                 abs_path = resolve_and_check_path(item, config_file_dir)
                 if abs_path:
-                    path_str = ".".join(str(k) for k in key_path + [f"[{idx}]"])
-                    results.append((path_str, item, abs_path, in_include))
+                    results.append((key_path + [Index(idx)], item, abs_path, in_include))
 
     return results
 
@@ -105,52 +117,52 @@ def resolve_and_check_path(value: str, config_file_dir: str) -> str:
     return candidate if os.path.exists(candidate) else ""
 
 
-def absolutize_path_in_yaml(data: Any, key_path_parts: List[str], new_value: str) -> bool:
+def absolutize_path_in_yaml(
+    data: Any, key_path_parts: List[Union[str, Index]], new_value: str
+) -> None:
     """Navigate to a location in YAML data and replace the value.
 
     Args:
         data: Root YAML data structure
-        key_path_parts: Path components to navigate (e.g., ['config', 'paths', '[0]'])
+        key_path_parts: Path components to navigate (list of str or Index objects)
         new_value: New value to set
 
-    Returns:
-        True if the value was updated, False otherwise
+    Raises:
+        KeyError: If a dict key in the path doesn't exist
+        IndexError: If a list index in the path is out of range
+        TypeError: If trying to index into a non-dict/non-list
     """
     current = data
 
     # Navigate to parent
     for key in key_path_parts[:-1]:
-        if key.startswith("[") and key.endswith("]"):
-            # List index
-            idx = int(key.strip("[]"))
-            current = current[idx]
+        if isinstance(key, Index):
+            current = current[key.idx]
         else:
-            # Dict key
             current = current[key]
 
     # Update the final key
     final_key = key_path_parts[-1]
-    if final_key.startswith("[") and final_key.endswith("]"):
-        idx = int(final_key.strip("[]"))
-        current[idx] = new_value
+    if isinstance(final_key, Index):
+        current[final_key.idx] = new_value
     else:
         current[final_key] = new_value
-
-    return True
 
 
 def process_config_file_paths(
     file_path: str,
-) -> Tuple[Dict[str, Any], List[Tuple[str, str, bool]]]:
+) -> Tuple[Optional[Dict[str, Any]], List[Tuple[str, str, bool]]]:
     """Process a config file to absolutize relative paths (except in include sections).
 
     Args:
         file_path: Path to the config file
 
     Returns:
-        Tuple of (modified_data or None, relative_paths_info)
-        where relative_paths_info is [(key_path, original_value, in_include), ...]
-        modified_data is None if no changes were made
+        Tuple of (modified_data, relative_paths_info) where:
+        - modified_data is the modified YAML dict if changes were made,
+          None if no changes were needed or if the file was empty
+        - relative_paths_info is [(key_path_str, original_value, in_include), ...]
+          where key_path_str is a human-readable dot-notation path
     """
     with open(file_path, "r", encoding="utf-8") as f:
         data = syaml.load(f)
@@ -164,19 +176,23 @@ def process_config_file_paths(
     relative_paths_info = []
     modified = False
 
-    for key_path_str, original_value, abs_path, in_include in found_paths:
+    for key_path, original_value, abs_path, in_include in found_paths:
         # If it's a relative path (not absolute originally)
         if not os.path.isabs(original_value):
+            # Build human-readable path string for reporting
+            path_parts = []
+            for part in key_path:
+                if isinstance(part, Index):
+                    path_parts.append(f"[{part.idx}]")
+                else:
+                    path_parts.append(part)
+            key_path_str = ".".join(path_parts)
+
             relative_paths_info.append((key_path_str, original_value, in_include))
 
             # Only absolutize if NOT in an include section
             if not in_include:
-                key_parts = []
-                # Parse the key path string back into parts
-                for part in key_path_str.split("."):
-                    key_parts.append(part)
-
-                absolutize_path_in_yaml(data, key_parts, abs_path)
+                absolutize_path_in_yaml(data, key_path, abs_path)
                 modified = True
 
     return data if modified else None, relative_paths_info
