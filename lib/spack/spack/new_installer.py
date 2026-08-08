@@ -58,6 +58,7 @@ import spack.build_environment
 import spack.builder
 import spack.config
 import spack.database
+import spack.debug_source
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
@@ -387,6 +388,8 @@ def worker_function(
     skip_patch: bool,
     fake: bool,
     install_source: bool,
+    debug_source: bool,
+    debug_symbols: bool,
     run_tests: bool,
     state: IpcChannel,
     parent: IpcChannel,
@@ -505,6 +508,8 @@ def worker_function(
                 skip_patch,
                 fake,
                 install_source,
+                debug_source,
+                debug_symbols,
                 state_stream,
                 log_path,
                 spack.store.STORE,
@@ -676,6 +681,8 @@ def _install(
     skip_patch: bool,
     fake: bool,
     install_source: bool,
+    debug_source: bool,
+    debug_symbols: bool,
     state_stream: io.TextIOWrapper,
     log_path: str,
     store: spack.store.Store = spack.store.STORE,
@@ -791,6 +798,22 @@ def _install(
                 send_state(f"stopped after {stop_at}", state_stream)
                 raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
 
+        if debug_source:
+            spack.debug_source.install_debug_artifacts(pkg)
+
+        split_debug_files = None
+        bytes_saved = None
+        if debug_symbols:
+            split_debug_files, bytes_saved = spack.debug_source.split_debug_symbols(pkg)
+
+        if debug_source or debug_symbols:
+            spack.debug_source.write_gdbinit(
+                spec,
+                spack.debug_source.debug_source_dir(spec),
+                split_debug_files,
+                bytes_saved,
+            )
+
         _archive_build_metadata(pkg)
         spack.hooks.post_install(spec, explicit)
 
@@ -808,6 +831,8 @@ def start_build(
     skip_patch: bool,
     fake: bool,
     install_source: bool,
+    debug_source: bool,
+    debug_symbols: bool,
     run_tests: bool,
     jobserver: JobServerBase,
     log_path: str,
@@ -851,6 +876,8 @@ def start_build(
             skip_patch,
             fake,
             install_source,
+            debug_source,
+            debug_symbols,
             run_tests,
             state_w_conn,
             output_w_conn,
@@ -2008,6 +2035,8 @@ class PackageInstaller:
         install_deps: bool = True,
         install_package: bool = True,
         install_source: bool = False,
+        debug_source: bool = False,
+        debug_symbols: bool = False,
         keep_prefix: bool = False,
         keep_stage: bool = False,
         restage: bool = True,
@@ -2025,6 +2054,8 @@ class PackageInstaller:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
         self.install_source = install_source
+        self.debug_source = debug_source
+        self.debug_symbols = debug_symbols
         self.stop_at = stop_at
         self.stop_before = stop_before
         self.tests: Union[bool, List[str], Set[str]] = tests
@@ -2585,6 +2616,8 @@ class PackageInstaller:
             skip_patch=self.skip_patch,
             fake=self.fake,
             install_source=self.install_source,
+            debug_source=self.debug_source,
+            debug_symbols=self.debug_symbols,
             run_tests=run_tests,
             jobserver=jobserver,
             log_path=self.log_paths[dag_hash],
