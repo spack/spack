@@ -214,7 +214,7 @@ packages:
     # Read the migrated config.yaml - relative paths should be absolutized
     import spack.util.spack_yaml as syaml
 
-    with open(new_config / "config.yaml") as f:
+    with open(new_config / "config.yaml", encoding="utf-8") as f:
         migrated_config = syaml.load(f)
 
     # The relative path 'my_packages' should now be absolute
@@ -223,7 +223,7 @@ packages:
     assert install_root == str(dotspack / "my_packages")
 
     # Read the migrated packages.yaml - include path should remain relative
-    with open(new_config / "linux" / "packages.yaml") as f:
+    with open(new_config / "linux" / "packages.yaml", encoding="utf-8") as f:
         migrated_include = syaml.load(f)
 
     # The include path should still be relative
@@ -316,7 +316,7 @@ def test_migrate_rewrites_absolute_include_paths(
     # Read the migrated include.yaml - absolute path should be rewritten
     import spack.util.spack_yaml as syaml
 
-    with open(new_config / "include.yaml") as f:
+    with open(new_config / "include.yaml", encoding="utf-8") as f:
         migrated_include = syaml.load(f)
 
     # The include path should now point to the new location
