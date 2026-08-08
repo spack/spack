@@ -12,7 +12,6 @@ import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
 from spack.util import tty
 
-
 description = "migrate user config from ~/.spack to ~/.config/spack"
 section = "config"
 level = "long"
