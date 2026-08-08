@@ -36,7 +36,7 @@ def backup_location():
 def walk_yaml_for_paths(
     data: Any,
     config_file_dir: str,
-    key_path: List[Union[str, Index]] = None,
+    key_path: Optional[List[Union[str, Index]]] = None,
     in_include: bool = False,
 ) -> List[Tuple[List[Union[str, Index]], str, str, bool]]:
     """Walk YAML data and find all string values that exist as filesystem paths.
@@ -366,7 +366,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         tty.msg("Would migrate the following:")
         tty.msg(f"\n  Config files from {old_location}/ to {new_config_location}/:")
 
-        all_path_info = []
+        all_path_info: List[Tuple[str, str, str, str]] = []
         for config_file in config_files:
             old_path = os.path.join(old_location, config_file)
             # Check for paths even in dry-run
