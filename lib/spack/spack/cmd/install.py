@@ -54,6 +54,8 @@ def install_kwargs_from_args(args):
         "keep_stage": args.keep_stage,
         "restage": not args.dont_restage,
         "install_source": args.install_source,
+        "debug_source": args.debug_source,
+        "debug_symbols": args.debug_symbols,
         "verbose": args.verbose or args.install_verbose,
         "fake": args.fake,
         "dirty": args.dirty,
@@ -175,6 +177,18 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store_true",
         dest="install_source",
         help="install source files in prefix",
+    )
+    subparser.add_argument(
+        "--debug-source",
+        action="store_true",
+        dest="debug_source",
+        help="capture DWARF-referenced source into an out-of-prefix debug cache",
+    )
+    subparser.add_argument(
+        "--debug-symbols",
+        action="store_true",
+        dest="debug_symbols",
+        help="split debug symbols into an out-of-prefix debug cache",
     )
     arguments.add_common_arguments(subparser, ["no_checksum"])
     subparser.add_argument(
