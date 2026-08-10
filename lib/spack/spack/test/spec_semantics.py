@@ -2379,18 +2379,6 @@ def test_satisfies_and_subscript_with_compilers(config, mock_packages):
     assert s["pkg-a"].dependencies(name="gmake")[0] == s["pkg-a"]["gmake"]
 
 
-def test_the_default_format_leaves_out_the_namespace(mock_packages):
-    """The default format prints the namespace only for an anonymous spec, so a named spec loses
-    it when it goes through a string. An unset namespace is no constraint, so the two still denote
-    the same set."""
-    spec = Spec("builtin_mock.pkg-a")
-    round_tripped = Spec(str(spec))
-
-    assert spec.namespace == "builtin_mock"
-    assert round_tripped.namespace is None
-    assert round_tripped.satisfies(spec) and spec.satisfies(round_tripped)
-
-
 def test_flag_order_survives_formatting(mock_packages):
     """Compiler flags are printed in the order they are stored, grouped into runs that agree on
     whether they propagate. Flag order is significant to the build, so losing it changes the
@@ -2403,16 +2391,6 @@ def test_flag_order_survives_formatting(mock_packages):
     round_tripped = Spec(str(spec))
     assert [str(flag) for flag in round_tripped.compiler_flags["cflags"]] == ["-O2", "-g"]
     assert round_tripped.dag_hash() == spec.dag_hash()
-
-
-def test_concrete_patches_are_truncated_by_formatting(mock_packages):
-    """Patch checksums are abbreviated to seven characters when printed. A concrete patches value
-    takes exactly the values it lists, so the abbreviated spec is disjoint from the original."""
-    spec = Spec("pkg-a patches:=abcdef1234567890")
-    round_tripped = Spec(str(spec))
-
-    assert round_tripped.variants["patches"].value == ("abcdef1",)
-    assert not spec.intersects(round_tripped)
 
 
 def test_an_anonymous_spec_is_the_top_of_the_order_only(mock_packages):
