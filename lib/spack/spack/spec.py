@@ -1870,8 +1870,6 @@ class Spec:
         for edge in _select_edges(self._dependencies, depflag=depflag):
             result.setdefault(edge.spec.name, []).append(edge)
 
-        # Only edges to the same package name can be parallel, and callers sort the groups by name
-        # themselves, so we can restrict the comparison sort to groups with more than one edge
         for edges in result.values():
             if len(edges) > 1:
                 edges.sort()  # type: ignore[call-arg,call-overload]
