@@ -2093,6 +2093,20 @@ def test_abstract_hash_intersects_and_satisfies(config, mock_packages):
     assert_disjoint(abstract_none, abstract_5)
 
 
+def test_a_blank_sets_the_abstract_hash_off_from_any_value(mock_packages):
+    """str() prints a blank before the abstract hash, so a value that can absorb a slash, a
+    namespace, variant, flag or target, does not swallow it and the hash survives reparsing."""
+    for spec_str in (
+        "namespace=builtin_mock /abcdef",
+        "foo=bar /abcdef",
+        "pkg-a cflags=-O2 /abcdef",
+        "pkg-a target=haswell /abcdef",
+    ):
+        spec = Spec(spec_str)
+        round_tripped = Spec(str(spec))
+        assert round_tripped.abstract_hash == spec.abstract_hash, spec_str
+
+
 def test_edge_equality_does_not_depend_on_virtual_order():
     """Tests that two edges that are constructed with just a different order of the virtuals in
     the input parameters are equal to each other.
@@ -2401,6 +2415,14 @@ def test_concrete_patches_are_truncated_by_formatting(mock_packages):
     assert not spec.intersects(round_tripped)
 
 
+def test_an_anonymous_spec_is_the_top_of_the_order_only(mock_packages):
+    """A spec that leaves the name unset denotes every package, so everything is inside it and it
+    is inside nothing that names one. Being the bottom too would break transitivity."""
+    assert Spec("pkg-a").satisfies("")
+    assert Spec("").satisfies("")
+    assert not Spec("").satisfies("pkg-b")
+
+
 @pytest.mark.parametrize(
     "spec_str,spec_fmt,expected",
     [
@@ -2536,6 +2558,23 @@ def test_edge_representation(parent_str, child_str, kwargs, expected_str, expect
     edge = DependencySpec(parent, child, depflag=0, **kwargs)
     assert str(edge) == expected_str
     assert repr(edge) == expected_repr
+
+
+def test_parallel_edges_sort_with_differing_propagation(mock_packages):
+    """Two edges to one package that differ only in propagation are compared on that field, so
+    ``PropagationPolicy`` needs ``<`` and not just ``==``."""
+    edges = [
+        DependencySpec(Spec("pkg-a"), Spec("pkg-e"), depflag=0, virtuals=(), direct=True),
+        DependencySpec(
+            Spec("pkg-a"),
+            Spec("pkg-e"),
+            depflag=0,
+            virtuals=(),
+            direct=True,
+            propagation=PropagationPolicy.PREFERENCE,
+        ),
+    ]
+    assert sorted(edges) == edges
 
 
 @pytest.mark.parametrize(

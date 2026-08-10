@@ -805,27 +805,28 @@ class Database:
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _, virtuals, direct in spec_reader.read_specfile_dep_specs(
-                yaml_deps
-            ):
+            for dep in spec_reader.read_specfile_dep_specs(yaml_deps):
                 # It is important that we always check upstream installations in the same order,
                 # and that we always check the local installation first: if a downstream Spack
                 # installs a package then dependents in that installation could be using it. If a
                 # hash is installed locally and upstream, there isn't enough information to
                 # determine which one a local package depends on, so the convention ensures that
                 # this isn't an issue.
-                _, record = self.query_by_spec_hash(dhash, data=data)
+                _, record = self.query_by_spec_hash(dep.hash, data=data)
                 child = record.spec if record else None
 
                 if not child:
                     tty.warn(
                         f"Missing dependency not in database: "
-                        f"{spec.cformat('{name}{/hash:7}')} needs {dname}-{dhash[:7]}"
+                        f"{spec.cformat('{name}{/hash:7}')} needs {dep.name}-{dep.hash[:7]}"
                     )
                     continue
 
                 spec._add_dependency(
-                    child, depflag=dt.canonicalize(dtypes), virtuals=virtuals, direct=direct
+                    child,
+                    depflag=dt.canonicalize(dep.deptypes),
+                    virtuals=dep.virtuals,
+                    direct=dep.direct,
                 )
 
     def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
@@ -1863,7 +1864,7 @@ class Database:
             # Sort by name first so the full sort runs on nearly sorted input and compares specs
             # far fewer times.
             results.sort(key=lambda s: s.name)
-            results.sort()  # type: ignore[call-arg,call-overload]
+            results.sort()
         return results
 
     def query_one(
