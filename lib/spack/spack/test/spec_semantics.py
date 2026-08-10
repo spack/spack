@@ -2604,3 +2604,17 @@ def test_highlighting_spec_parts(spec_str, expected_fmt, default_mock_concretiza
         highlight_variant_fn=spack.package_base.non_default_variant,
     )
     assert expected in colorized_str
+
+
+def test_flag_order_survives_formatting(mock_packages):
+    """Compiler flags are printed in the order they are stored, grouped into runs that agree on
+    whether they propagate. Flag order is significant to the build, so losing it changes the
+    hash."""
+    spec = Spec("pkg-a cflags==-O2").copy()
+    spec.constrain(Spec("pkg-a cflags=-g"))
+    assert [str(flag) for flag in spec.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert str(spec) == "pkg-a cflags==-O2 cflags=-g"
+
+    round_tripped = Spec(str(spec))
+    assert [str(flag) for flag in round_tripped.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert round_tripped.dag_hash() == spec.dag_hash()
