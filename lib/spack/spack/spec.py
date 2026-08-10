@@ -180,7 +180,7 @@ DEFAULT_FORMAT = (
     "{name}{@versions}{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}"
     "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
-    "{/abstract_hash}"
+    "{ /abstract_hash}"
 )
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
@@ -188,7 +188,7 @@ DISPLAY_FORMAT = (
     "{name}{@version}{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}"
     "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
-    "{/abstract_hash}"
+    "{ /abstract_hash}"
     "{compilers}"
 )
 
@@ -4079,8 +4079,10 @@ class Spec:
             if self.architecture.target:
                 parts.append(f" target={self.architecture.target}")
 
+        # The blank is required for round-tripping: ``key=value /abc`` parses as variant and
+        # abstract hash, whereas ``key=value/abc`` is parsed as a variant with value ``value/abc``.
         if self.abstract_hash:
-            parts.append(f"/{self.abstract_hash}")
+            parts.append(f" /{self.abstract_hash}")
 
         return "".join(parts).strip()
 
