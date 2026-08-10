@@ -208,7 +208,7 @@ The first two sections are `implicit variables <https://www.gnu.org/software/mak
   This includes variables like ``MPI``, ``OPENMP``, ``PIC``, and ``DEBUG``.
   These flags often require you to create a variant so that you can either build with or without MPI support, for example.
   These flags are often compiler-dependent.
-  You should replace them with the appropriate compiler flags, such as ``self['cxx'].openmp_flag`` or ``self["cxx"].pic_flag``.
+  You should replace them with the appropriate compiler flags, such as ``self["cxx"].openmp_flag`` or ``self["cxx"].pic_flag``.
 
 * **Platform flags**
 
