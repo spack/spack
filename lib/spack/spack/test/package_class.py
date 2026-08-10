@@ -157,6 +157,88 @@ def test_possible_dependencies_with_multiple_classes(
     assert set(expected) == real_pkgs
 
 
+@pytest.fixture()
+def make_static_analyzer(mutable_config, mock_packages):
+    """Factory for StaticAnalysis instances: the analyzer accumulates per-solve state, so
+    each query needs a fresh one, like each solve gets one from create_graph_analyzer()."""
+    mutable_config.set("concretizer:reuse", False)
+
+    def _factory():
+        return StaticAnalysis(
+            configuration=mutable_config,
+            repo=mock_packages,
+            store=spack.store.STORE,
+            binary_index=spack.binary_distribution.BINARY_INDEX,
+        )
+
+    return _factory
+
+
+def test_variant_pruning_of_unreachable_conditionals(make_static_analyzer):
+    """A conditional dependency behind a non-default variant that nothing can set is
+    pruned; version-gated dependencies are kept."""
+    graph = make_static_analyzer().possible_dependencies(
+        spack.spec.Spec("optional-dep-test"), allowed_deps=dt.ALL
+    )
+    assert "pkg-a" not in graph.real_pkgs  # depends_on("pkg-a", when="+a")
+    assert "pkg-b" in graph.real_pkgs  # depends_on("pkg-b", when="@1.1")
+
+
+def test_variant_pruning_keeps_input_imposition(make_static_analyzer):
+    graph = make_static_analyzer().possible_dependencies(
+        spack.spec.Spec("optional-dep-test+a"), allowed_deps=dt.ALL
+    )
+    assert "pkg-a" in graph.real_pkgs
+
+
+def test_variant_pruning_keeps_depends_on_imposition(make_static_analyzer):
+    """optional-dep-test-2 +mpi imposes optional-dep-test+mpi, so an input that can
+    reach that condition keeps the mpi providers."""
+    graph = make_static_analyzer().possible_dependencies(
+        spack.spec.Spec("optional-dep-test-2+mpi"), allowed_deps=dt.ALL
+    )
+    assert "optional-dep-test" in graph.real_pkgs
+    assert "mpi" in graph.virtuals
+
+    graph = make_static_analyzer().possible_dependencies(
+        spack.spec.Spec("optional-dep-test-2"), allowed_deps=dt.ALL
+    )
+    assert "optional-dep-test" not in graph.real_pkgs
+    assert "mpi" not in graph.virtuals
+
+
+def test_variant_pruning_keeps_config_requirement(mutable_config, mock_packages):
+    mutable_config.set("concretizer:reuse", False)
+    mutable_config.set("packages:optional-dep-test:require", "+a")
+    analyzer = StaticAnalysis(
+        configuration=mutable_config,
+        repo=mock_packages,
+        store=spack.store.STORE,
+        binary_index=spack.binary_distribution.BINARY_INDEX,
+    )
+    graph = analyzer.possible_dependencies(
+        spack.spec.Spec("optional-dep-test"), allowed_deps=dt.ALL
+    )
+    assert "pkg-a" in graph.real_pkgs
+
+
+def test_variant_pruning_keeps_conflict_complement(make_static_analyzer):
+    """conflicts("~foo", when="@2.0") can force +foo, so the +foo dependency stays."""
+    graph = make_static_analyzer().possible_dependencies(
+        spack.spec.Spec("forced-variant"), allowed_deps=dt.ALL
+    )
+    assert "pkg-b" in graph.real_pkgs
+
+
+def test_variant_pruning_keeps_input_mentioned_packages(make_static_analyzer):
+    """A package mentioned in the input is part of the closure, and the packages that
+    can lead to it keep their conditional dependencies."""
+    graph = make_static_analyzer().possible_dependencies(
+        spack.spec.Spec("optional-dep-test-2 ^optional-dep-test"), allowed_deps=dt.ALL
+    )
+    assert "optional-dep-test" in graph.real_pkgs
+
+
 def setup_install_test(source_paths, test_root):
     """
     Set up the install test by creating sources and install test roots.

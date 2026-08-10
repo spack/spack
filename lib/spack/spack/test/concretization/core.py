@@ -5493,3 +5493,37 @@ def test_concretization_cache_skips_automatic_splice(
     spec2 = spack.concretize.concretize_one(goal)
     assert fetches and all(outcome == (None, None) for outcome in fetches)
     assert spec1 == spec2
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages")
+class TestStaticAnalysisPruning:
+    """Concretization with static analysis pruning the possible-dependency closure."""
+
+    @pytest.fixture(autouse=True)
+    def _enable_static_analysis(self, mutable_config):
+        mutable_config.set("concretizer:static_analysis", True)
+
+    def test_same_result_as_full_closure(self, mutable_config):
+        pruned = spack.concretize.concretize_one("optional-dep-test-2")
+        mutable_config.set("concretizer:static_analysis", False)
+        full = spack.concretize.concretize_one("optional-dep-test-2")
+        assert pruned.dag_hash() == full.dag_hash()
+
+    def test_input_mention_toggles_variant(self):
+        # optional-dep-test is only reachable behind non-default variants of the root,
+        # but naming it in the input keeps those conditions available to the solver
+        concrete = spack.concretize.concretize_one("optional-dep-test-2 ^optional-dep-test")
+        assert "optional-dep-test" in concrete
+
+    def test_conflict_can_force_variant(self):
+        # conflicts("~foo", when="@2.0") forces +foo, whose dependency must stay
+        concrete = spack.concretize.concretize_one("forced-variant@2.0")
+        assert concrete.satisfies("+foo")
+        assert "pkg-b" in concrete
+
+    def test_unsat_falls_back_to_full_problem(self):
+        # +var rules out the ~var conditional dependency on pkg-a: unsat with and
+        # without pruning, and the error comes from the fallback solve on the full
+        # problem
+        with pytest.raises(spack.error.UnsatisfiableSpecError):
+            spack.concretize.concretize_one("optional-dep-test-3+var ^pkg-a")

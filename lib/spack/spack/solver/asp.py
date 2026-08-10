@@ -4027,15 +4027,31 @@ class Solver:
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
 
-        result = self.driver.solve(
-            setup,
-            specs,
-            reuse=reusable_specs,
-            packages_with_externals=self.packages_with_externals,
-            output=output,
-            allow_deprecated=allow_deprecated,
-        )
-        return result
+        try:
+            return self.driver.solve(
+                setup,
+                specs,
+                reuse=reusable_specs,
+                packages_with_externals=self.packages_with_externals,
+                output=output,
+                allow_deprecated=allow_deprecated,
+            )
+        except spack.error.UnsatisfiableSpecError:
+            if not spack.config.CONFIG.get("concretizer:static_analysis", False):
+                raise
+            # Static analysis may have pruned a package that only an unmodeled corner
+            # case can reach: retry on the full problem before reporting an error
+            tty.warn("solve failed with static analysis enabled, retrying without it")
+            with spack.config.CONFIG.override("concretizer:static_analysis", False):
+                setup = SpackSolverSetup(tests=tests)
+                return self.driver.solve(
+                    setup,
+                    specs,
+                    reuse=reusable_specs,
+                    packages_with_externals=self.packages_with_externals,
+                    output=output,
+                    allow_deprecated=allow_deprecated,
+                )
 
     def solve(self, specs: Sequence[spack.spec.Spec], **kwargs) -> Result:
         """
