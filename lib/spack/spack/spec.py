@@ -2913,14 +2913,17 @@ class Spec:
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
+        if self._concrete == value:
+            return
         self._concrete = value
         # A direct dependency is a constraint written with %, so the flag belongs on abstract
         # specs only; every edge of a materialized DAG is one anyway.
         for edge in self.edges_to_dependencies():
             edge.direct = not value
-        self._validate_version()
-        for variant in self.variants.values():
-            variant.concrete = True
+        if value:
+            self._validate_version()
+            for variant in self.variants.values():
+                variant.concrete = True
 
     def _validate_version(self):
         # Specs that were concretized with just a git sha as version, without associated

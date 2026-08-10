@@ -2414,6 +2414,17 @@ def test_the_direct_flag_follows_concreteness(config, mock_packages):
     assert not any(edge.direct for edge in mpileaks.traverse_edges(root=False))
 
 
+def test_marking_an_abstract_spec_abstract_again_changes_nothing(mock_packages):
+    """The direct flag only flips when the concreteness actually changes, so marking an abstract
+    spec abstract leaves its transitive edges alone."""
+    spec = Spec("mpileaks ^callpath")
+    spec._mark_concrete(False)
+
+    assert not spec.edges_to_dependencies(name="callpath")[0].direct
+    assert not spec.satisfies("mpileaks %callpath")
+    assert spec.satisfies("mpileaks ^callpath")
+
+
 def test_a_spec_that_stopped_being_concrete_matches_a_direct_constraint(config, mock_packages):
     """A spec that stops being concrete keeps every edge it had, so a direct dependency
     constraint is matched by the package it depends on, and not by one further down."""
