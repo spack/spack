@@ -23,6 +23,7 @@ import spack.vendor.ruamel.yaml
 
 import spack.concretize
 import spack.config
+import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
 import spack.paths
@@ -584,6 +585,29 @@ def test_direct_edges_and_round_tripping_to_dict(spec_str, config, mock_packages
             continue
         for dependency_data in node["dependencies"]:
             assert "direct" not in dependency_data["parameters"]
+
+
+def test_parallel_deptype_edges_survive_round_trip(mock_packages):
+    """Two parallel edges to one package, differing only in deptype, share one child node once
+    read back from JSON. Sharing the child must not merge them into one edge."""
+    original = Spec("pkg-a ^[deptypes=build] pkg-b ^[deptypes=link] pkg-b")
+    reconstructed = Spec.from_dict(original.to_dict())
+    edges = reconstructed.edges_to_dependencies("pkg-b")
+    assert len(edges) == 2
+    assert {e.depflag for e in edges} == {dt.BUILD, dt.LINK}
+
+
+def test_parallel_edges_are_serialized_in_a_canonical_order(mock_packages):
+    """Two edges to one package with the same dependency types are told apart by their when
+    condition and their virtuals, so a meet producing both is one state with one hash."""
+    forward = Spec("%pkg-b").copy()
+    forward.constrain(Spec("pkg-a ^[when='+foo'] pkg-b@1"))
+    backward = Spec("pkg-a ^[when='+foo'] pkg-b@1").copy()
+    backward.constrain(Spec("%pkg-b"))
+
+    assert len(forward.edges_to_dependencies()) == 2
+    assert forward.to_dict() == backward.to_dict()
+    assert forward.dag_hash() == backward.dag_hash()
 
 
 def test_pickle_preserves_identity_and_prefix(config, mock_packages):
