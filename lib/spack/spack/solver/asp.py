@@ -1815,7 +1815,7 @@ class SpackSolverSetup:
             self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
 
         for when, provided in pkg.provided.items():
-            for vpkg in sorted(provided):  # type: ignore[type-var]
+            for vpkg in sorted(provided):
                 if vpkg.name not in self.possible_virtuals:
                     continue
 
@@ -2976,8 +2976,7 @@ class SpackSolverSetup:
         candidate_compilers.update(compilers_from_reuse)
         self.possible_compilers = list(candidate_compilers)
 
-        # TODO: warning is because mypy doesn't know Spec supports rich comparison via decorator
-        self.possible_compilers.sort()  # type: ignore[call-arg,call-overload]
+        self.possible_compilers.sort()
 
         self.compiler_mixing()
 
@@ -2991,7 +2990,7 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
-        self.libcs = sorted(all_libcs())  # type: ignore[type-var]
+        self.libcs = sorted(all_libcs())
 
         for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:

@@ -1864,7 +1864,7 @@ class Database:
             # Sort by name first so the full sort runs on nearly sorted input and compares specs
             # far fewer times.
             results.sort(key=lambda s: s.name)
-            results.sort()  # type: ignore[call-arg,call-overload]
+            results.sort()
         return results
 
     def query_one(
