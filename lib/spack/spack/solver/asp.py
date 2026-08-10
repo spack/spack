@@ -224,6 +224,62 @@ def dependency_holds(
     return _transform_fn
 
 
+@functools.lru_cache(maxsize=None)
+def _pkg_variant_hard_forces(pkg_name: str) -> "frozenset[Tuple[str, str]]":
+    """Return (target_pkg, variant_name) pairs that ``pkg_name``'s package.py could
+    hard-force via ``depends_on`` target specs or ``requires`` clauses.
+
+    Depends only on the loaded package class, so it's stable across solves in the
+    same process and safe to cache module-wide. Used by variant-based dep-clause
+    pruning (see ``SpackSolverSetup._compute_pinned_variants``).
+    """
+    try:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+    except spack.repo.UnknownPackageError:
+        return frozenset()
+    result: Set[Tuple[str, str]] = set()
+    for _cond, deps in pkg_cls.dependencies.items():
+        for dep_name, dep in deps.items():
+            for vname in dep.spec.variants:
+                result.add((dep_name, vname))
+    try:
+        for _cond, when_reqs in pkg_cls.requirements.items():
+            for req_specs, _, _ in when_reqs:
+                for rs in req_specs:
+                    for node in rs.traverse():
+                        if node.name is None:
+                            continue
+                        for vname in node.variants:
+                            result.add((node.name, vname))
+    except Exception:
+        pass
+    return frozenset(result)
+
+
+@functools.lru_cache(maxsize=None)
+def _pkg_boolean_default_variants(pkg_name: str) -> Dict[str, bool]:
+    """Return {variant_name: default} for ``pkg_name``'s *unconditional* boolean variants.
+
+    Only variants declared without a ``when=`` guard are included. Cached
+    module-wide since it depends only on the package class.
+    """
+    try:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+    except spack.repo.UnknownPackageError:
+        return {}
+    result: Dict[str, bool] = {}
+    for when_spec, defs_by_name in pkg_cls.variants.items():
+        if when_spec is not None and str(when_spec):
+            continue  # only unconditional variant definitions
+        for vname, variant_def in defs_by_name.items():
+            if vname in result:
+                continue
+            default = getattr(variant_def, "default", None)
+            if isinstance(default, bool):
+                result[vname] = default
+    return result
+
+
 def dag_closure_by_deptype(
     name: str, spec: spack.spec.Spec, facts: List[AspFunction]
 ) -> List[AspFunction]:
@@ -1354,6 +1410,38 @@ class SpackSolverSetup:
         self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
             set
         )
+        # pkg_name -> version -> preference weight (lower == better), used to pick the
+        # min-weight representative of each version equivalence class.
+        self.version_weights: Dict[str, Dict[GitOrStandardVersion, int]] = collections.defaultdict(
+            dict
+        )
+        # number of versions removed from the solve by equivalence-class pruning
+        self.pruned_version_count = 0
+        self.total_version_count = 0
+        # number of candidate targets removed by reachability pruning
+        self.pruned_target_count = 0
+        self.total_target_count = 0
+        # compiler packages fully skipped in pkg_rules (not selectable, not depended on directly)
+        self.pruned_compilers_fully: Set[str] = set()
+        # compiler packages kept as normal deps but with the compiler role stripped
+        self.pruned_compilers_role_only: Set[str] = set()
+        # count of dep-when blocks skipped because their version constraint could not be met
+        self.pruned_dep_blocks_version = 0
+        self.pruned_dep_blocks_variant = 0
+        self.total_dep_blocks = 0
+        # boolean variants provably pinned to their declared default in every optimal model.
+        # (pkg_name, variant_name) -> default (True/False)
+        self.pinned_default_variants: Dict[Tuple[str, str], bool] = {}
+        # per-solve memo for _when_versions_dead: (pkg_name, versions_str) -> bool
+        self._when_version_cache: Dict[Tuple[str, str], bool] = {}
+
+        # Static-prune toggles from ``concretizer:pruning:*`` config, cached at setup
+        # init so each prune site reads a bool instead of hitting the config layer.
+        pruning_cfg = spack.config.get("concretizer:pruning", {}) or {}
+        self._prune_dominated_versions: bool = pruning_cfg.get("dominated_versions", True)
+        self._prune_unreachable_targets: bool = pruning_cfg.get("unreachable_targets", True)
+        self._prune_unusable_compilers: bool = pruning_cfg.get("unusable_compilers", True)
+        self._prune_dead_dep_blocks: bool = pruning_cfg.get("dead_dep_blocks", True)
 
         self.possible_compilers: List[spack.spec.Spec] = []
         self.rejected_compilers: Set[spack.spec.Spec] = set()
@@ -1409,6 +1497,7 @@ class SpackSolverSetup:
             )
 
         for weight, declared_version in enumerate(ordered_versions):
+            self.version_weights[pkg.name][declared_version] = weight
             self.gen.fact(fn.pkg_fact(pkg.name, fn.version_declared(declared_version, weight)))
             for origin in version_provenance[declared_version]:
                 self.gen.fact(
@@ -1809,14 +1898,19 @@ class SpackSolverSetup:
         return condition_id
 
     def package_provider_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
+        skip_langs = pkg.name in self.pruned_compilers_role_only
         for vpkg_name in pkg.provided_virtual_names():
             if vpkg_name not in self.possible_virtuals:
+                continue
+            if skip_langs and vpkg_name in self._COMPILER_LANGUAGE_VIRTUALS:
                 continue
             self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
 
         for when, provided in pkg.provided.items():
             for vpkg in sorted(provided):  # type: ignore[type-var]
                 if vpkg.name not in self.possible_virtuals:
+                    continue
+                if skip_langs and vpkg.name in self._COMPILER_LANGUAGE_VIRTUALS:
                     continue
 
                 msg = f"{pkg.name} provides {vpkg}{'' if when == EMPTY_SPEC else f' when {when}'}"
@@ -1839,7 +1933,19 @@ class SpackSolverSetup:
 
     def package_dependencies_rules(self, pkg):
         """Translate ``depends_on`` directives into ASP logic."""
+        dep_prune = self._prune_dead_dep_blocks
         for cond, deps_by_name in pkg.dependencies.items():
+            self.total_dep_blocks += 1
+            # Skip the whole block if the when-clause's version constraint cannot
+            # be satisfied by any version we've registered for this package. None
+            # of the deps in the block can fire, so we can save the ``condition()``
+            # machinery entirely. Controlled by concretizer:pruning:dead_dep_blocks.
+            if dep_prune and self._when_versions_dead(pkg.name, cond):
+                self.pruned_dep_blocks_version += 1
+                continue
+            if dep_prune and self._when_variants_dead(pkg.name, cond):
+                self.pruned_dep_blocks_variant += 1
+                continue
             cond_str = str(cond)
             cond_str_suffix = f" when {cond_str}" if cond_str else ""
             for _, dep in deps_by_name.items():
@@ -2622,10 +2728,13 @@ class SpackSolverSetup:
         platform = spack.platforms.host()
         uarch = spack.vendor.archspec.cpu.TARGETS.get(platform.default)
         best_targets = {uarch.family.name}
+        # name -> set of targets supported by each compiler, used by target-reachability pruning
+        supported_by_compiler: List[Set[str]] = []
         for compiler in self.possible_compilers:
             supported, unsupported = self._supported_targets(
                 compiler.name, compiler.version, candidate_targets
             )
+            supported_by_compiler.append({t.name for t in supported})
 
             for target in supported:
                 best_targets.add(target.name)
@@ -2643,19 +2752,25 @@ class SpackSolverSetup:
 
             self.gen.newline()
 
+        kept_targets = self._reachable_targets(specs, candidate_targets, supported_by_compiler)
+        self.pruned_target_count += len(candidate_targets) - len(kept_targets)
+        self.total_target_count += len(candidate_targets)
+
         i = 0
         for target in candidate_targets:
-            self.gen.fact(fn.target(target.name))
-            self.gen.fact(fn.target_family(target.name, target.family.name))
-            self.gen.fact(fn.target_compatible(target.name, target.name))
-            # Code for ancestor can run on target
-            for ancestor in target.ancestors:
-                self.gen.fact(fn.target_compatible(target.name, ancestor.name))
+            if target.name in kept_targets:
+                self.gen.fact(fn.target(target.name))
+                self.gen.fact(fn.target_family(target.name, target.family.name))
+                self.gen.fact(fn.target_compatible(target.name, target.name))
+                # Code for ancestor can run on target
+                for ancestor in target.ancestors:
+                    self.gen.fact(fn.target_compatible(target.name, ancestor.name))
 
             # prefer best possible targets; weight others poorly so
             # they're not used unless set explicitly
             # these are stored to be generated as facts later offset by the
-            # number of preferred targets
+            # number of preferred targets. Weights are computed over ALL candidates so
+            # that pruning never changes a surviving target's weight.
             if target.name in best_targets:
                 self.default_targets.append((i, target.name))
                 i += 1
@@ -2666,15 +2781,375 @@ class SpackSolverSetup:
         self.default_targets = list(sorted(set(self.default_targets)))
         self.target_preferences()
 
+        if self._prune_unreachable_targets and self.pruned_target_count:
+            tty.debug(
+                f"target-reachability pruning removed {self.pruned_target_count} of "
+                f"{self.total_target_count} candidate targets from the solve"
+            )
+
+    def _version_class_representatives(self, pkg_name, sorted_versions):
+        """Return the subset of ``sorted_versions`` that must be kept in the solve.
+
+        Versions are grouped into maximal contiguous runs that are indistinguishable to
+        the solver -- they satisfy exactly the same version constraints and share the same
+        per-version attributes (deprecation, origin, git commit). Every member of such a
+        run is statically dominated by the lowest-weight (best) member, since version
+        weight is the only thing that distinguishes them in the objective. We keep that one
+        representative and prune the rest. Indices are left untouched, so the gaps are
+        harmless: ``version_range`` facts compare numerically against the original order.
+        """
+        # Controlled by ``concretizer:pruning:dominated_versions`` (default true).
+        if not self._prune_dominated_versions:
+            return set(sorted_versions)
+
+        weights = self.version_weights.get(pkg_name)
+        # If we don't have a weight for every version (e.g. synthetic virtual versions),
+        # don't prune this package -- keep everything to stay safe.
+        if not weights or any(v not in weights for v in sorted_versions):
+            return set(sorted_versions)
+
+        constraints = sorted(self.version_constraints.get(pkg_name, ()))
+        origins = self.possible_versions[pkg_name]
+        deprecated = self.deprecated_versions[pkg_name]
+        git_versions = self.git_commit_versions[pkg_name]
+
+        def signature(v):
+            return (
+                tuple(v.satisfies(c) for c in constraints),
+                v in deprecated,
+                tuple(sorted(str(o) for o in set(origins[v]))),
+                git_versions.get(v) if v in git_versions else None,
+            )
+
+        representatives = set()
+        group: List = []
+        group_sig = None
+        for v in sorted_versions:
+            sig = signature(v)
+            if group and sig != group_sig:
+                representatives.add(min(group, key=lambda x: weights[x]))
+                group = []
+            group.append(v)
+            group_sig = sig
+        if group:
+            representatives.add(min(group, key=lambda x: weights[x]))
+        return representatives
+
+    def _reachable_targets(self, specs, candidate_targets, supported_by_compiler):
+        """Names of candidate targets that can actually be selected by some node.
+
+        Targets are *not* amenable to the version-style equivalence prune: ``target_compatible``
+        is the directional ancestor relation, so every target in a host's ancestor set has a
+        unique compatibility profile and nothing collapses. Instead we prune by *reachability*:
+        in any optimal model a node's target is the min-weight target that (a) satisfies the
+        node's target constraints and (b) is supported by the node's compiler; cross-edge
+        compatibility then resolves onto those same targets (a dependency forced below a parent
+        target just shares the parent's kept target or a kept ancestor). So the only targets that
+        can ever appear are:
+
+          * the overall best target and the best in each family (always-feasible baseline),
+          * the min-weight candidate satisfying each target constraint, under each compiler's
+            support set (the feasible-best for a constrained node),
+          * the best target each compiler supports (compiler fallback),
+          * any target pinned/explicitly requested in an input spec, and
+          * any target used by a reusable/concrete spec (else reuse would be blocked).
+
+        Everything else is statically unselectable and removed. Controlled by
+        ``concretizer:pruning:unreachable_targets`` (default true).
+        """
+        names = [t.name for t in candidate_targets]
+        if not self._prune_unreachable_targets:
+            return set(names)
+
+        archspec = spack.vendor.archspec.cpu
+        # weight order: mirror target_preferences (lower index == more preferred)
+        prefs_key = spack.package_prefs.PackagePrefs("all", "target")
+        ordered = sorted((spack.spec.Spec(f"target={n}") for n in names), key=prefs_key)
+        weight = {s.architecture.target.name: i for i, s in enumerate(ordered)}
+        by_weight = sorted(names, key=lambda n: weight.get(n, len(names)))
+
+        def satisfies(tname, constraint):
+            target = archspec.TARGETS.get(tname)
+            if target is None:
+                return False
+            for single in str(constraint).split(","):
+                if ":" not in single:
+                    if single == tname:
+                        return True
+                    continue
+                t_min, _, t_max = single.partition(":")
+                if t_min and not t_min <= target:
+                    continue
+                if t_max and not t_max >= target:
+                    continue
+                return True
+            return False
+
+        kept: Set[str] = set()
+        # always-feasible baseline: overall best, and best per family
+        best_per_family: Dict[str, str] = {}
+        for n in by_weight:
+            fam = archspec.TARGETS[n].family.name
+            best_per_family.setdefault(fam, n)
+        kept.update(best_per_family.values())
+        if by_weight:
+            kept.add(by_weight[0])
+
+        # per target constraint, per compiler support set: the min-weight feasible target
+        constraints = list(self.target_constraints)
+        support_sets = supported_by_compiler or [set(names)]
+        for constraint in constraints:
+            for supp in support_sets:
+                for n in by_weight:  # by_weight is best-first
+                    if satisfies(n, constraint) and (not supp or n in supp):
+                        kept.add(n)
+                        break
+        # compiler fallback: best supported target for each compiler
+        for supp in support_sets:
+            for n in by_weight:
+                if not supp or n in supp:
+                    kept.add(n)
+                    break
+
+        # preserve explicitly-requested targets and targets of reusable/concrete specs,
+        # so pruning never blocks a pin or a reuse
+        candidate_names = set(names)
+
+        def keep_spec_targets(spec):
+            for node in spec.traverse():
+                tgt = getattr(getattr(node, "architecture", None), "target", None)
+                tname = getattr(tgt, "name", None) or (str(tgt) if tgt else None)
+                if tname in candidate_names:
+                    kept.add(tname)
+
+        for spec in specs:
+            try:
+                keep_spec_targets(spec)
+            except Exception:
+                return candidate_names  # bail out safely: keep everything
+        try:
+            for _h, spec in self.reusable_and_possible.explicit_items():
+                keep_spec_targets(spec)
+        except Exception:
+            return candidate_names
+
+        return kept
+
+    #: Language virtuals that can only be provided by "reuse" compilers.
+    #: A provider of any of these that ``build(N)`` triggers error(10) at concretize.lp:1980,
+    #: so any compiler package that is not in the reuse universe (externals, installed,
+    #: buildcache-injected) is statically unselectable as a provider for these virtuals.
+    _COMPILER_LANGUAGE_VIRTUALS = frozenset(
+        {"c", "cxx", "fortran", "cuda-lang", "hip-lang", "fortran-rt"}
+    )
+
+    def _compute_compiler_pruning(self):
+        """Partition compiler packages into three sets based on selectability + direct-dep use.
+
+        Categories:
+          * *selectable*: name is in ``self.possible_compilers`` (externals / installed /
+            buildcache-injected). Never pruned.
+          * *role-only-pruned*: not selectable, but at least one package in ``self.pkgs`` names
+            it as a direct (non-virtual) dependency (e.g. hip depends_on("llvm") for libLLVM).
+            The package must still be selectable as a normal dep, so we keep ``pkg_rules``
+            but suppress its language-virtual provider facts.
+          * *fully-pruned*: not selectable and not directly depended on by name. The package
+            is pure dead weight in this solve; skip ``pkg_rules`` entirely.
+
+        Controlled by ``concretizer:pruning:unusable_compilers`` (default true).
+        """
+        self.pruned_compilers_fully = set()
+        self.pruned_compilers_role_only = set()
+        if not self._prune_unusable_compilers:
+            return
+
+        all_compiler_pkgs = set(spack.compilers.config.supported_compilers())
+        selectable = {c.name for c in self.possible_compilers}
+        candidates = {p for p in self.pkgs if p in all_compiler_pkgs} - selectable
+        if not candidates:
+            return
+
+        direct_dep_targets: Set[str] = set()
+        for pkg_name in self.pkgs:
+            try:
+                pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            except spack.repo.UnknownPackageError:
+                continue
+            for _when, deps in pkg_cls.dependencies.items():
+                for dep_name in deps:
+                    if dep_name in candidates:
+                        direct_dep_targets.add(dep_name)
+
+        self.pruned_compilers_role_only = candidates & direct_dep_targets
+        self.pruned_compilers_fully = candidates - direct_dep_targets
+
+        # Suppress the "Only external, or concrete, compilers are allowed" error rule
+        # in concretize.lp -- our prune has statically enforced that invariant, so the
+        # rule can't fire in this solve and grounding it is dead weight.
+        self.gen.fact(fn.compiler_pruning_enabled())
+
+        tty.debug(
+            f"compiler-provider pruning: "
+            f"{len(self.pruned_compilers_fully)} compiler packages fully pruned, "
+            f"{len(self.pruned_compilers_role_only)} kept as deps with compiler role removed"
+        )
+
+    def _compute_pinned_variants(self, input_specs, reuse_specs) -> None:
+        """Populate ``self.pinned_default_variants`` with (pkg, variant) pairs whose
+        boolean value must be the declared default in every optimal model.
+
+        A pair is pinned only when we can't find any hard-force that could push it
+        away from default: input specs, reuse specs, cross-package ``depends_on``
+        that names the variant, ``requires`` clauses that name the variant, or
+        packages.yaml overrides. We over-approximate the "constrained" set on
+        purpose -- being too conservative here just gives up prunes, being too
+        aggressive silently changes concretization. When-clauses that merely
+        *check* the variant (``depends_on(X, when="+V")``) do not count as a
+        hard-force: they gate a dep, they don't require the value.
+
+        Per-package data (hard-forced variant mentions from ``depends_on``/
+        ``requires`` and boolean-default variant maps) is cached module-wide via
+        ``_pkg_variant_hard_forces`` and ``_pkg_boolean_default_variants`` since
+        it depends only on the package class, not the solve inputs. Repeated
+        solves in the same process (environment concretization, tests, batch
+        operations) reuse the cached data.
+        """
+        self.pinned_default_variants = {}
+        if not self._prune_dead_dep_blocks:
+            return
+
+        constrained: Set[Tuple[str, str]] = set()
+
+        def add_from_spec(spec):
+            for node in spec.traverse():
+                if node.name is None:
+                    continue
+                for vname in node.variants:
+                    constrained.add((node.name, vname))
+
+        # Input specs and reuse specs directly express variant values.
+        for s in input_specs or ():
+            add_from_spec(s)
+        for s in reuse_specs or ():
+            add_from_spec(s)
+
+        # Cross-package hard forces: cached per-package.
+        for pkg_name in self.pkgs:
+            constrained.update(_pkg_variant_hard_forces(pkg_name))
+
+        # packages.yaml preferences and requires (cheap, per-solve since config can change).
+        packages_cfg = spack.config.CONFIG.get("packages", {}) or {}
+        for pkg_key, cfg in packages_cfg.items():
+            variants_pref = cfg.get("variants", [])
+            if isinstance(variants_pref, str):
+                variants_pref = [variants_pref]
+            for vstr in variants_pref:
+                if not isinstance(vstr, str):
+                    continue
+                try:
+                    add_from_spec(spack.spec.Spec(vstr))
+                except Exception:
+                    pass
+            req_pref = cfg.get("require", [])
+            if isinstance(req_pref, str):
+                req_pref = [req_pref]
+            for r in req_pref:
+                if not isinstance(r, str):
+                    continue
+                try:
+                    add_from_spec(spack.spec.Spec(r))
+                except Exception:
+                    pass
+
+        # Compute the pinned set: unconstrained boolean variants with an unconditional
+        # default. Boolean-default map is cached per-package.
+        for pkg_name in self.pkgs:
+            for vname, default in _pkg_boolean_default_variants(pkg_name).items():
+                if (pkg_name, vname) in constrained:
+                    continue
+                self.pinned_default_variants[(pkg_name, vname)] = default
+
+    def _when_variants_dead(self, pkg_name, cond) -> bool:
+        """Is any variant constraint in ``cond`` provably unsatisfiable for pkg_name?
+
+        Returns True if some (variant, required_value) in the when-clause references
+        a variant we've pinned to a *different* default. The whole clause is then dead.
+        """
+        variants = getattr(cond, "variants", None)
+        if not variants:
+            return False
+        for vname, vsel in variants.items():
+            pinned = self.pinned_default_variants.get((pkg_name, vname))
+            if pinned is None:
+                continue
+            required = vsel.value
+            if not isinstance(required, bool):
+                continue
+            if required != pinned:
+                return True
+        return False
+
+    def _when_versions_dead(self, pkg_name, cond) -> bool:
+        """Is ``cond``'s version constraint provably unsatisfiable for pkg_name?
+
+        The pruning is sound: if no version in ``self.possible_versions[pkg_name]``
+        satisfies ``cond.versions``, then no reachable model can select a version
+        that fires ``cond``, so any dep gated on ``cond`` is dead. Returns False
+        for the degenerate cases (no version constraint on ``cond``, or no known
+        versions yet for ``pkg_name``) so callers stay conservative.
+        """
+        versions = getattr(cond, "versions", None)
+        if versions is None or versions == vn.any_version:
+            return False
+        possible = self.possible_versions.get(pkg_name)
+        if not possible:
+            return False
+        key = (pkg_name, str(versions))
+        cached = self._when_version_cache.get(key)
+        if cached is not None:
+            return cached
+        result = not any(v.satisfies(versions) for v in possible)
+        self._when_version_cache[key] = result
+        return result
+
+    def _prune_transitively_unreachable(self, root_names, edges) -> Set[str]:
+        """Remove from ``self.pkgs`` any package no longer reachable from ``root_names``.
+
+        Called after another prune has removed packages from ``self.pkgs``. Walks
+        the (virtual-expanded) adjacency map ``edges`` from the roots, only
+        following edges to nodes still in ``self.pkgs``. Previously-pruned nodes
+        act as walls, so any package whose only path from the roots went through
+        one becomes unreachable and is dropped. Returns the set of packages removed.
+        """
+        reachable: Set[str] = set()
+        stack: List[str] = [n for n in root_names if n in self.pkgs]
+        while stack:
+            p = stack.pop()
+            if p in reachable:
+                continue
+            reachable.add(p)
+            for dep in edges.get(p, ()):
+                if dep in self.pkgs and dep not in reachable:
+                    stack.append(dep)
+        to_remove = self.pkgs - reachable
+        self.pkgs -= to_remove
+        return to_remove
+
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
-
         sorted_versions = {}
         for pkg_name in self.possible_versions:
             possible_versions = list(self.possible_versions[pkg_name])
             possible_versions.sort()
             sorted_versions[pkg_name] = possible_versions
+
+            representatives = self._version_class_representatives(pkg_name, possible_versions)
+            self.pruned_version_count += len(possible_versions) - len(representatives)
+            self.total_version_count += len(possible_versions)
+
             for idx, v in enumerate(possible_versions):
+                if v not in representatives:
+                    continue
                 self.gen.fact(fn.pkg_fact(pkg_name, fn.version_order(v, idx)))
                 if v in self.git_commit_versions[pkg_name]:
                     sha = self.git_commit_versions[pkg_name].get(v)
@@ -2684,6 +3159,12 @@ class SpackSolverSetup:
                         self.gen.fact(fn.pkg_fact(pkg_name, fn.version_needs_commit(v)))
             self.gen.newline()
         self.gen.newline()
+
+        if self.pruned_version_count:
+            tty.debug(
+                f"version-class pruning removed {self.pruned_version_count} of "
+                f"{self.total_version_count} versions from the solve"
+            )
 
         for pkg_name, set_of_versions in sorted(self.version_constraints.items()):
             possible_versions = sorted_versions.get(pkg_name)
@@ -2991,6 +3472,20 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
+        self._compute_compiler_pruning()
+        if self.pruned_compilers_fully:
+            self.pkgs -= self.pruned_compilers_fully
+            root_names = {s.name for s in list(specs) + injected_dependencies}
+            dead_transitive = self._prune_transitively_unreachable(
+                root_names, node_counter.edges()
+            )
+            if dead_transitive:
+                sample = ", ".join(sorted(dead_transitive)[:5])
+                more = "..." if len(dead_transitive) > 5 else ""
+                tty.debug(
+                    f"transitive dead-dep pruning removed {len(dead_transitive)} "
+                    f"more package(s): {sample}{more}"
+                )
         self.libcs = sorted(all_libcs())  # type: ignore[type-var]
 
         for node in traverse.traverse_nodes(specs):
@@ -3071,11 +3566,23 @@ class SpackSolverSetup:
             allow_deprecated=allow_deprecated, require_checksum=checksummed
         )
 
+        self._compute_pinned_variants(specs, reuse)
+
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
             self.gen.h2(f"Package rules: {pkg}")
             self.pkg_rules(pkg, tests=self.tests)
             self.preferred_variants(pkg)
+
+        if self._prune_dead_dep_blocks and (
+            self.pruned_dep_blocks_version or self.pruned_dep_blocks_variant
+        ):
+            total_dead = self.pruned_dep_blocks_version + self.pruned_dep_blocks_variant
+            tty.debug(
+                f"dep-block pruning removed {total_dead} of {self.total_dep_blocks} "
+                f"depends_on blocks: {self.pruned_dep_blocks_version} by dead version "
+                f"constraint, {self.pruned_dep_blocks_variant} by pinned-default variant"
+            )
 
         self.gen.h1("Condition Triggers and Imposed Effects")
         self.trigger_rules()

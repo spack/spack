@@ -215,6 +215,41 @@ properties: Dict[str, Any] = {
                 "description": "Enable static analysis to reduce concretization time by "
                 "generating smaller ASP problems",
             },
+            "pruning": {
+                "type": "object",
+                "description": "Toggles for static prunes applied before grounding to shrink "
+                "the ASP problem. Each prune is sound: it never changes concretization, only "
+                "removes facts/rules that provably cannot fire. Defaults are on; disable "
+                "individually for A/B benchmarking or if a bug is suspected.",
+                "properties": {
+                    "dominated_versions": {
+                        "type": "boolean",
+                        "description": "Collapse versions that share an identical "
+                        "constraint-satisfaction signature to a single representative "
+                        "(the min-weight member of the equivalence class).",
+                    },
+                    "unreachable_targets": {
+                        "type": "boolean",
+                        "description": "Keep only microarchitecture targets a node could "
+                        "actually be driven to (host/family-best, per-constraint "
+                        "feasible-best, compiler fallbacks, pinned/reused).",
+                    },
+                    "unusable_compilers": {
+                        "type": "boolean",
+                        "description": "Drop compiler packages not present in the reuse "
+                        "universe (externals + installed + buildcache). Compilers cannot be "
+                        "bootstrapped in a single solve, so unusable ones can never be "
+                        "selected as language-virtual providers.",
+                    },
+                    "dead_dep_blocks": {
+                        "type": "boolean",
+                        "description": "Skip depends_on blocks whose when-clause cannot fire "
+                        "(version constraint not intersecting the parent's possible versions, "
+                        "or a boolean variant pinned to a default incompatible with what the "
+                        "when-clause requires).",
+                    },
+                },
+            },
             "timeout": {
                 "type": "integer",
                 "minimum": 0,
