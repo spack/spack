@@ -153,7 +153,7 @@ class SpackPaths:
         """GPG home directory - reads from config."""
         import spack.config
 
-        cfg = spack.config.get("config:gpg_path", None)
+        cfg = spack.config.CONFIG.get("config:gpg_path", None)
         if cfg:
             return spack.config.canonicalize_path(cfg)
         # Fallback if config not set (shouldn't happen with defaults)
@@ -165,7 +165,7 @@ class SpackPaths:
         """GPG keys directory - reads from config."""
         import spack.config
 
-        cfg = spack.config.get("config:gpg_keys_path", None)
+        cfg = spack.config.CONFIG.get("config:gpg_keys_path", None)
         if cfg:
             return spack.config.canonicalize_path(cfg)
         # Fallback if config not set (shouldn't happen with defaults)
@@ -177,7 +177,7 @@ class SpackPaths:
         """Source cache directory - reads from config."""
         import spack.config
 
-        cfg = spack.config.get("config:source_cache", None)
+        cfg = spack.config.CONFIG.get("config:source_cache", None)
         if cfg:
             return spack.config.canonicalize_path(cfg)
         # Fallback if config not set (shouldn't happen with defaults)
