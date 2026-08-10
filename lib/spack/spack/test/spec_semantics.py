@@ -2379,6 +2379,20 @@ def test_satisfies_and_subscript_with_compilers(config, mock_packages):
     assert s["pkg-a"].dependencies(name="gmake")[0] == s["pkg-a"]["gmake"]
 
 
+def test_flag_order_survives_formatting(mock_packages):
+    """Compiler flags are printed in the order they are stored, grouped into runs that agree on
+    whether they propagate. Flag order is significant to the build, so losing it changes the
+    hash."""
+    spec = Spec("pkg-a cflags==-O2").copy()
+    spec.constrain(Spec("pkg-a cflags=-g"))
+    assert [str(flag) for flag in spec.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert str(spec) == "pkg-a cflags==-O2 cflags=-g"
+
+    round_tripped = Spec(str(spec))
+    assert [str(flag) for flag in round_tripped.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert round_tripped.dag_hash() == spec.dag_hash()
+
+
 def test_an_anonymous_spec_is_the_top_of_the_order_only(mock_packages):
     """A spec that leaves the name unset denotes every package, so everything is inside it and it
     is inside nothing that names one. Being the bottom too would break transitivity."""
