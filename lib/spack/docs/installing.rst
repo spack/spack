@@ -19,8 +19,10 @@ This page covers the ``spack install`` experience in detail, including the inter
 Before diving in, ensure you are familiar with :doc:`package_fundamentals` for basic usage and spec syntax.
 
 .. versionadded:: 1.2
-   The TUI and POSIX jobserver are new in Spack 1.2 and require a Unix-like platform.
+   The TUI and GNU Make jobserver support are new in Spack 1.2.
+   Spack supports the POSIX jobserver, Windows jobserver support will be added in a future release.
 
+.. index:: TUI
 
 Interactive terminal UI
 -----------------------
@@ -61,6 +63,10 @@ Parallelism
 
 Spack controls parallelism at two levels: the number of build jobs shared across all packages (``-j``), and the number of packages building concurrently (``-p``).
 
+.. index::
+   single: jobserver; in spack install
+   single: build job; in spack install
+
 Build-level parallelism (``-j``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -78,6 +84,9 @@ Child build systems automatically respect it through ``MAKEFLAGS``, so total CPU
 .. note::
 
    If an external jobserver is already present in ``MAKEFLAGS``, for example when Spack itself is invoked from inside a larger ``make`` build, Spack attaches to the existing jobserver instead of creating its own.
+
+.. index::
+   single: concurrent packages; in spack install
 
 Package-level parallelism (``-p``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -114,6 +123,13 @@ When a process encounters a prefix that was already installed, it simply skips i
 For best results on a cluster, it's recommended to limit per-process package-level parallelism (e.g., ``spack install -p2``) for better load balancing.
 
 
+.. admonition:: Windows Support
+
+   On Windows, due to a lack of file lock support, concurrent Spack processes are not guaranteed to function.
+   On Windows, due to a lack of jobserver support, jobserver orchestration and dynamic adjustment of build parallelism is not supported.
+
+.. index:: non-interactive
+
 Non-interactive mode
 --------------------
 
@@ -129,7 +145,7 @@ You can also background builds:
 
 .. tip::
 
-   You don't need a new terminal or SSH session to keep a build running — just suspend it with ``Ctrl-Z`` and ``bg``, then continue working.
+   You don't need a new terminal or SSH session to keep a build running --- just suspend it with ``Ctrl-Z`` and ``bg``, then continue working.
 
 
 Handling failures
@@ -146,3 +162,36 @@ Failed builds show ``[x]`` in the overview.
 Navigate to a failed build and press ``v`` to see a parsed error summary and the path to the full log.
 
 See :ref:`spack install <spack-install>` for the full set of flags related to debugging and controlling build behavior.
+
+
+.. index::
+   single: sandbox; configuring
+
+Build isolation and sandboxing (Linux)
+--------------------------------------
+
+Spack can run builds in an unprivileged sandbox to restrict filesystem and network access.
+This opt-in feature requires Linux 5.13+ with Landlock support (network restrictions require Linux 6.7+).
+Sandboxing is meant for build reproducibility and bug containment rather than acting as a strict security boundary, as package recipes still execute outside the sandbox ahead of the build.
+
+When enabled, the stage directory, install prefix, system temp directory and ``/dev/null`` are implicitly writable.
+Spack-installed dependencies (excluding externals) are implicitly readable.
+All other paths must be explicitly allowed in configuration:
+
+.. code-block:: yaml
+
+   config:
+     sandbox:
+       enable: true          # Enable for all builds
+       allow_network: false  # Disable TCP network access during the build phase
+       allow_read:           # Additional paths with read and execute permissions
+       - /usr
+       allow_write:          # Additional paths with write and execute permissions
+       - /scratch
+
+The sandbox activates immediately after source extraction and prefix creation.
+Note that network restrictions only apply during the build phases, leaving Spack's own fetch operations unaffected.
+
+File system restrictions are complementary to existing file permissions and ACLs; they cannot grant access to files the user does not already have permission to read or write.
+
+Spack's sandboxing complements external containerization tools like Podman or Bubblewrap: while a container must grant the main Spack process write access to the entire software store, Landlock dynamically confines each build subprocess strictly to its exact, package-specific install prefix.

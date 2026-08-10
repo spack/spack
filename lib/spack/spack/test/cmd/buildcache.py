@@ -25,9 +25,8 @@ import spack.mirrors.mirror
 import spack.spec
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import copy_tree, find, getuid
-from spack.llnl.util.lang import nullcontext
+from spack.active_environment import active_environment
+from spack.old_installer import PackageInstaller
 from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,
@@ -36,6 +35,8 @@ from spack.url_buildcache import (
     check_mirror_for_layout,
     get_url_buildcache_class,
 )
+from spack.util.filesystem import copy_tree, find, getuid
+from spack.util.lang import nullcontext
 
 buildcache = spack.main.SpackCommand("buildcache")
 install = spack.main.SpackCommand("install")
@@ -285,7 +286,7 @@ def test_buildcache_sync(
 
         manifest_file = str(tmp_path / "manifest_dest.json")
         with open(manifest_file, "w", encoding="utf-8") as fd:
-            test_env = ev.active_environment()
+            test_env = active_environment()
             assert test_env is not None
 
             manifest: Dict[str, Dict[str, str]] = {}
@@ -360,6 +361,21 @@ def test_buildcache_create_install(
     cache_entry.destroy()
 
 
+def _mock_uploader(tmp_path: pathlib.Path):
+    class DontUpload(spack.binary_distribution.Uploader):
+        def __init__(self):
+            super().__init__(
+                spack.mirrors.mirror.Mirror.from_local_path(str(tmp_path)), False, False
+            )
+            self.pushed = []
+
+        def push(self, specs: List[spack.spec.Spec]):
+            self.pushed.extend(s.name for s in specs)
+            return [], []
+
+    return DontUpload()
+
+
 @pytest.mark.parametrize(
     "things_to_install,expected",
     [
@@ -404,25 +420,15 @@ def test_correct_specs_are_pushed(
     expected,
     tmp_path: pathlib.Path,
     monkeypatch,
-    default_mock_concretization,
+    config,
+    mock_packages,
     temporary_store,
 ):
-    spec = default_mock_concretization("dttop")
+    spec = spack.concretize.concretize_one("dttop")
     PackageInstaller([spec.package], explicit=True, fake=True).install()
     slash_hash = f"/{spec.dag_hash()}"
 
-    class DontUpload(spack.binary_distribution.Uploader):
-        def __init__(self):
-            super().__init__(
-                spack.mirrors.mirror.Mirror.from_local_path(str(tmp_path)), False, False
-            )
-            self.pushed = []
-
-        def push(self, specs: List[spack.spec.Spec]):
-            self.pushed.extend(s.name for s in specs)
-            return [], []  # nothing skipped, nothing errored
-
-    uploader = DontUpload()
+    uploader = _mock_uploader(tmp_path)
 
     monkeypatch.setattr(
         spack.binary_distribution, "make_uploader", lambda *args, **kwargs: uploader
@@ -483,6 +489,35 @@ def test_skip_no_redistribute(mock_packages, config):
     assert any(s.name == "no-redistribute-dependent" for s in filtered)
 
 
+def test_filter_specs_for_push_with_exclude(mock_packages, mutable_config):
+    """Test that _filter_specs_for_push excludes specs matching the mirror's exclude patterns."""
+    specs = [
+        spack.concretize.concretize_one("brillig"),
+        spack.concretize.concretize_one("canfail"),
+    ]
+    mirror = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "exclude_binary": ["brillig"]}
+    )
+    filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
+    assert not any(s.name == "brillig" for s in filtered)
+    assert any(s.name == "canfail" for s in filtered)
+
+
+def test_filter_specs_for_push_with_include(mock_packages, mutable_config):
+    """Test that _filter_specs_for_push only includes specs matching the mirror's include
+    patterns."""
+    specs = [
+        spack.concretize.concretize_one("brillig"),
+        spack.concretize.concretize_one("canfail"),
+    ]
+    mirror = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "include_binary": ["canfail"]}
+    )
+    filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
+    assert not any(s.name == "brillig" for s in filtered)
+    assert any(s.name == "canfail" for s in filtered)
+
+
 def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path: pathlib.Path, mutable_database):
     """When --fail-fast is passed, the push command should fail if it immediately finds an
     uninstalled dependency. Otherwise, failure to push one dependency shouldn't prevent the
@@ -507,6 +542,26 @@ def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path: pathlib.Path,
     specs = spack.binary_distribution.update_cache_and_get_specs()
 
     # everything but mpich should be pushed
+    mpileaks = mutable_database.query_local("mpileaks^mpich")[0]
+    assert set(specs) == {s for s in mpileaks.traverse() if s.name != "mpich"}
+
+
+def test_allow_missing_when_dep_not_installed(tmp_path: pathlib.Path, mutable_database):
+    """When --allow-missing is passed, the push command should push installed specs and skip specs
+    that are not installed without raising an error."""
+
+    mirror("add", "--unsigned", "my-mirror", str(tmp_path))
+
+    # Uninstall mpich so that its dependent mpileaks can't be pushed
+    for s in mutable_database.query_local("mpich"):
+        s.package.do_uninstall(force=True)
+
+    # There should be warnings but no errors
+    buildcache("push", "--update-index", "--allow-missing", "my-mirror", "mpileaks^mpich")
+
+    specs = spack.binary_distribution.update_cache_and_get_specs()
+
+    # Everything but mpich should be pushed
     mpileaks = mutable_database.query_local("mpileaks^mpich")[0]
     assert set(specs) == {s for s in mpileaks.traverse() if s.name != "mpich"}
 
@@ -612,7 +667,7 @@ def test_install_v2_layout(
     mirror("add", "my-mirror", str(test_mirror_path))
 
     # Trust original signing key (no-op if this is the unsigned pass)
-    buildcache("keys", "--install", "--trust")
+    buildcache("keys", "-y", "--install", "--trust")
 
     output = install("--fake", "--no-check-signature", "libdwarf")
 
@@ -687,7 +742,7 @@ def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_conf
 
     # Trust original signing key (since it's in the original layout location,
     # this is where the monkeypatched attribute is used)
-    output = buildcache("keys", "--install", "--trust")
+    output = buildcache("keys", "-y", "--install", "--trust")
 
     output = buildcache("migrate", "my-mirror")
 
@@ -1020,9 +1075,9 @@ def read_specs_in_index(mirror_directory, view):
         database -> installs -> hashes...
     """
     mirror_metadata = spack.binary_distribution.MirrorMetadata(
-        f"file://{mirror_directory}", spack.mirrors.mirror.SUPPORTED_LAYOUT_VERSIONS[0], view
+        f"file://{mirror_directory}", spack.mirrors.mirror.SUPPORTED_URL_LAYOUT_VERSIONS[0], view
     )
-    fetcher = spack.binary_distribution.DefaultIndexFetcher(mirror_metadata, None)
+    fetcher = spack.binary_distribution.DefaultIndexHandler(mirror_metadata, None)
     result = fetcher.conditional_fetch()
     db_dict = json.loads(result.data)
     return set([h for h in db_dict["database"]["installs"]])
@@ -1321,3 +1376,151 @@ def test_buildcache_check_index_full(
         assert "The index blob is missing" in out
         assert "Unindexed specs: 15" in out
         assert "Missing blobs: 1"
+
+
+def test_buildcache_push_with_group(
+    tmp_path: pathlib.Path, monkeypatch, install_mockery, mock_fetch, mutable_mock_env_path
+):
+    """Tests that --group pushes only specs from the requested group."""
+    env_dir = tmp_path / "myenv"
+    env_dir.mkdir()
+    (env_dir / "spack.yaml").write_text(
+        """\
+spack:
+  specs:
+  - libelf
+  - group: extra
+    specs:
+    - libdwarf
+  view: false
+"""
+    )
+
+    mirror_dir = tmp_path / "mirror"
+    mirror_dir.mkdir()
+
+    uploader = _mock_uploader(mirror_dir)
+    monkeypatch.setattr(
+        spack.binary_distribution, "make_uploader", lambda *args, **kwargs: uploader
+    )
+
+    with ev.Environment(env_dir) as e:
+        e.concretize()
+        e.write()
+        for _, root in e.concretized_specs():
+            PackageInstaller([root.package], explicit=True, fake=True).install()
+
+        buildcache("push", "--unsigned", "--only", "package", "--group", "extra", str(mirror_dir))
+
+    assert uploader.pushed == ["libdwarf"]
+
+
+def test_buildcache_push_with_multiple_groups(
+    tmp_path: pathlib.Path, monkeypatch, install_mockery, mock_fetch, mutable_mock_env_path
+):
+    """Tests that --group can be repeated to push specs from multiple groups."""
+    env_dir = tmp_path / "myenv"
+    env_dir.mkdir()
+    (env_dir / "spack.yaml").write_text(
+        """\
+spack:
+  specs:
+  - libelf
+  - group: extra
+    specs:
+    - libdwarf
+  view: false
+"""
+    )
+
+    mirror_dir = tmp_path / "mirror"
+    mirror_dir.mkdir()
+
+    uploader = _mock_uploader(mirror_dir)
+    monkeypatch.setattr(
+        spack.binary_distribution, "make_uploader", lambda *args, **kwargs: uploader
+    )
+
+    with ev.Environment(env_dir) as e:
+        e.concretize()
+        e.write()
+        for _, root in e.concretized_specs():
+            PackageInstaller([root.package], explicit=True, fake=True).install()
+
+        buildcache(
+            "push",
+            "--unsigned",
+            "--only",
+            "package",
+            "--group",
+            "default",
+            "--group",
+            "extra",
+            str(mirror_dir),
+        )
+
+    assert set(uploader.pushed) == {"libelf", "libdwarf"}
+    assert len(uploader.pushed) == len(set(uploader.pushed))
+
+
+def test_buildcache_push_group_nonexistent_errors(tmp_path: pathlib.Path, mutable_mock_env_path):
+    """Tests that --group with a nonexistent group name raises an error."""
+    env_dir = tmp_path / "myenv"
+    env_dir.mkdir()
+    (env_dir / "spack.yaml").write_text(
+        """\
+spack:
+  specs:
+  - libelf
+  view: false
+"""
+    )
+
+    mirror_dir = tmp_path / "mirror"
+    mirror_dir.mkdir()
+
+    with ev.Environment(env_dir):
+        with pytest.raises(spack.main.SpackCommandError):
+            buildcache(
+                "push", "--unsigned", "--group", "nonexistent", str(mirror_dir), fail_on_error=True
+            )
+
+
+def test_buildcache_push_group_and_specs_mutually_exclusive(
+    tmp_path: pathlib.Path, mutable_mock_env_path
+):
+    """Tests that --group and explicit specs on the command line are mutually exclusive."""
+    env_dir = tmp_path / "myenv"
+    env_dir.mkdir()
+    (env_dir / "spack.yaml").write_text(
+        """\
+spack:
+  specs:
+  - libelf
+  view: false
+"""
+    )
+
+    mirror_dir = tmp_path / "mirror"
+    mirror_dir.mkdir()
+
+    with ev.Environment(env_dir):
+        with pytest.raises(spack.main.SpackCommandError):
+            buildcache(
+                "push",
+                "--unsigned",
+                "--group",
+                "default",
+                str(mirror_dir),
+                "libelf",
+                fail_on_error=True,
+            )
+
+
+def test_buildcache_push_group_requires_active_env(tmp_path: pathlib.Path):
+    """Tests that ck--group without an active environment produces an error."""
+    mirror_dir = tmp_path / "mirror"
+    mirror_dir.mkdir()
+
+    with pytest.raises(spack.main.SpackCommandError):
+        buildcache("push", "--unsigned", "--group", "default", str(mirror_dir), fail_on_error=True)

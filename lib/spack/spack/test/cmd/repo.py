@@ -15,9 +15,10 @@ import spack.environment as ev
 import spack.main
 import spack.repo
 import spack.repo_migrate
+from spack.config import Configuration
 from spack.error import SpackError
-from spack.llnl.util.filesystem import working_dir
 from spack.util.executable import Executable
+from spack.util.filesystem import working_dir
 
 repo = spack.main.SpackCommand("repo")
 env = spack.main.SpackCommand("env")
@@ -82,7 +83,11 @@ def test_repo_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
 
 
 def test_env_repo_path_vars_substitution(
-    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, monkeypatch
+    tmp_path: pathlib.Path,
+    install_mockery,
+    mutable_mock_env_path,
+    monkeypatch,
+    mutable_config: Configuration,
 ):
     """Test Spack correctly substitutes repo paths with environment variables when creating an
     environment from a manifest file."""
@@ -108,7 +113,7 @@ spack:
         # check that repo path was correctly substituted with the environment variable
         current_dir = os.getcwd()
         with ev.read("test") as newenv:
-            repos_specs = spack.config.get("repos", default={}, scope=newenv.scope_name)
+            repos_specs = mutable_config.get("repos", default={}, scope=newenv.scope_name)
             assert current_dir in repos_specs.values()
 
 
@@ -700,24 +705,24 @@ def test_add_repo_git_url_detection_edge_cases(monkeypatch, test_url, expected_t
         assert isinstance(entry, str)
 
 
-def test_repo_set_git_config(mutable_config):
+def test_repo_set_git_config(mutable_config: Configuration):
     """Test that 'spack repo set' properly modifies git repository configurations."""
     # Set up initial git repository config in defaults scope
     git_url = "https://github.com/example/test-repo.git"
     initial_config = {"repos": {"test-repo": {"git": git_url}}}
-    spack.config.set("repos", initial_config["repos"], scope="site")
+    mutable_config.set("repos", initial_config["repos"], scope="site")
 
     # Test setting destination and paths
     repo("set", "--scope=user", "--destination", "/custom/path", "test-repo")
     repo("set", "--scope=user", "--path", "subdir1", "--path", "subdir2", "test-repo")
 
     # Check that the user config has the updated entry
-    user_repos = spack.config.get("repos", scope="user")
+    user_repos = mutable_config.get("repos", scope="user")
     assert user_repos["test-repo"]["paths"] == ["subdir1", "subdir2"]
     assert user_repos["test-repo"]["destination"] == "/custom/path"
 
     # Check that site scope is unchanged
-    site_repos = spack.config.get("repos", scope="site")
+    site_repos = mutable_config.get("repos", scope="site")
     assert "destination" not in site_repos["test-repo"]
 
 
@@ -726,8 +731,8 @@ def test_repo_set_nonexistent_repo(mutable_config):
         repo("set", "--destination", "/some/path", "nonexistent")
 
 
-def test_repo_set_does_not_work_on_local_path(mutable_config):
-    spack.config.set("repos", {"local-repo": "/local/path"}, scope="site")
+def test_repo_set_does_not_work_on_local_path(mutable_config: Configuration):
+    mutable_config.set("repos", {"local-repo": "/local/path"}, scope="site")
     with pytest.raises(SpackError, match="is not a git repository"):
         repo("set", "--destination", "/some/path", "local-repo")
 
@@ -899,7 +904,9 @@ def test_repo_list_json_output(mutable_config: spack.config.Configuration, tmp_p
         ("new_repo", ["--commit", "abc123"]),
     ],
 )
-def test_repo_update_successful_flags(monkeypatch, mutable_config, repo_name, flags):
+def test_repo_update_successful_flags(
+    monkeypatch, mutable_config: Configuration, repo_name, flags
+):
     """Test repo update with flags."""
 
     def mock_parse_config_descriptor(name, entry, lock):
@@ -908,14 +915,14 @@ def test_repo_update_successful_flags(monkeypatch, mutable_config, repo_name, fl
     monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
     monkeypatch.setattr(spack.repo, "RemoteRepoDescriptor", MockDescriptor)
 
-    repos_config = spack.config.get("repos")
+    repos_config = mutable_config.get("repos")
     repos_config[repo_name] = {"git": "https://github.com/example/repo.git"}
-    spack.config.set("repos", repos_config)
+    mutable_config.set("repos", repos_config)
 
     repo("update", repo_name, *flags)
 
     # check that the branch,tag,commit was updated in the configuration
-    repos_config = spack.config.get("repos")
+    repos_config = mutable_config.get("repos")
 
     if "--branch" in flags:
         assert repos_config[repo_name]["branch"] == "develop"
@@ -940,3 +947,138 @@ def test_repo_update_invalid_flags(monkeypatch, mutable_config, flags):
 
     with pytest.raises(SpackError):
         repo("update", *flags)
+
+
+def test_repo_show_version_updates_no_changes(mock_git_package_changes):
+    """Test that show-version-updates handles empty results gracefully"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # Use the same commit for both refs - no changes
+        output = repo("show-version-updates", test_repo.root, commits[-1], commits[-1])
+
+        # Should have warning message
+        assert "No packages were added or changed" in output
+
+        # Should not have any specs
+        assert "diff-test@" not in output
+
+
+def test_repo_show_version_updates_success(mock_git_package_changes):
+    """Test that show-version-updates successfully outputs the correct specs"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # commits are ordered from newest to oldest after reversal
+        # commits[-2] = add v2.1.5, commits[-4] = add v2.1.7 and v2.1.8
+        # Find versions added between these commits
+        # Includes v2.1.6 (git version), v2.1.7, and v2.1.8 (sha256 versions)
+        output = repo("show-version-updates", test_repo.root, commits[-2], commits[-4])
+
+        # Verify all three versions are included
+        assert "diff-test@" in output
+        assert "2.1.6" in output
+        assert "2.1.7" in output
+        assert "2.1.8" in output
+
+        # Should have three specs
+        lines = [
+            line.strip()
+            for line in output.strip().split("\n")
+            if line.strip() and "Warning" not in line
+        ]
+        assert len(lines) == 3
+
+
+def test_repo_show_version_updates_excludes_manual_packages(monkeypatch, mock_git_package_changes):
+    """Test --no-manual-packages flag excludes packages with manual_download=True"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # Set manual_download=True on the package
+        pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
+        monkeypatch.setattr(pkg_class, "manual_download", True)
+
+        # Run show-version-updates with --no-manual-packages flag
+        output = repo(
+            "show-version-updates",
+            "--no-manual-packages",
+            test_repo.root,
+            commits[-2],
+            commits[-4],
+        )
+
+        # Package should be excluded
+        assert "diff-test@" not in output
+        assert "No packages were added or changed" in output
+
+
+def test_repo_show_version_updates_excludes_non_redistributable(
+    monkeypatch, mock_git_package_changes
+):
+    """Test --only-redistributable flag excludes packages if redistribute_source returns False"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # Set redistribute_source to return False
+        pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
+        monkeypatch.setattr(pkg_class, "redistribute_source", classmethod(lambda cls, spec: False))
+
+        # Run show-version-updates with --only-redistributable flag
+        output = repo(
+            "show-version-updates",
+            "--only-redistributable",
+            test_repo.root,
+            commits[-2],
+            commits[-4],
+        )
+
+        # Package should be excluded
+        assert "diff-test@" not in output
+        assert "No new package versions found" in output
+
+
+def test_repo_show_version_updates_excludes_git_versions(mock_git_package_changes):
+    """Test --no-git-versions flag excludes versions from git (tag/commit)"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # commits[-3] = add v2.1.6 (git version), commits[-4] = add v2.1.7 and v2.1.8 (sha256)
+        # Without --no-git-versions, v2.1.6 would be included
+        output = repo(
+            "show-version-updates", "--no-git-versions", test_repo.root, commits[-3], commits[-4]
+        )
+
+        # v2.1.6 (git version) should be excluded
+        assert "2.1.6" not in output
+
+        # v2.1.7 and v2.1.8 (sha256 versions) should be included
+        assert "diff-test@" in output
+        assert "2.1.7" in output
+        assert "2.1.8" in output
+
+
+def test_repo_show_version_updates_excludes_deprecated(monkeypatch, mock_git_package_changes):
+    """Test --no-deprecated flag excludes versions marked with deprecated=True"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # Mark version 2.1.7 as deprecated
+        pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
+        for v in pkg_class.versions:
+            if str(v) == "2.1.7":
+                pkg_class.versions[v]["deprecated"] = True
+                break
+
+        # Run show-version-updates with --no-deprecated flag
+        output = repo(
+            "show-version-updates", "--no-deprecated", test_repo.root, commits[-2], commits[-4]
+        )
+
+        # v2.1.7 (deprecated) should be excluded
+        assert "2.1.7" not in output
+
+        # v2.1.6 and v2.1.8 (not deprecated) should be included
+        assert "diff-test@" in output
+        assert "2.1.6" in output
+        assert "2.1.8" in output

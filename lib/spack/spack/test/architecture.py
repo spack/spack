@@ -65,11 +65,11 @@ def test_user_input_combination(config, target_str, os_str):
     assert spec.architecture.target == TEST_PLATFORM.target(target_str)
 
 
-def test_default_os_and_target(default_mock_concretization):
+def test_default_os_and_target(config, mock_packages):
     """Test that is we don't specify `os=` or `target=` we get the default values
     after concretization.
     """
-    spec = default_mock_concretization("libelf")
+    spec = spack.concretize.concretize_one("libelf")
     assert spec.architecture.os == str(TEST_PLATFORM.default_operating_system())
     assert spec.architecture.target == TEST_PLATFORM.default_target()
 
@@ -133,3 +133,30 @@ def test_concretize_target_ranges(root_target_range, dep_target_range, result, m
         f"pkg-a foobar=bar target={root_target_range} %gcc@10 ^pkg-b target={dep_target_range}"
     )
     assert spec.target == spec["pkg-b"].target == result
+
+
+def test_instantiate_non_default_macos(mock_packages):
+    darwin = spack.platforms.Darwin()
+
+    for name, macos in darwin.operating_sys.items():
+        if name != darwin.default_os:
+            non_default_macos_name = name
+            non_default_macos = macos
+            break
+    else:
+        assert False, "Failed to find non-default macos version in test"
+
+    with spack.platforms.use_platform(darwin):
+        # zlib isn't important but we need a spec with no compiler because our test environment
+        # has no macos compilers
+        target = str(spack.vendor.archspec.cpu.host().family)
+        spec = spack.concretize.concretize_one(
+            f"zlib platform=darwin os={non_default_macos_name} target={target}"
+        )
+
+    # Primarily testing that these lines doesn't throw
+    os = spec.os
+    os_object = spack.platforms.by_name(spec.platform).operating_system(os)
+
+    assert os == non_default_macos_name
+    assert os_object == non_default_macos

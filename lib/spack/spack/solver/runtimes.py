@@ -1,19 +1,22 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import itertools
-from typing import Any, Dict, Set, Tuple
+from typing import Set, Tuple
 
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.config
+import spack.hash_lookup
 import spack.repo
 import spack.spec
 import spack.util.libc
 import spack.version
 
-from .core import SourceContext, fn, using_libc_compatibility
+from .core import SourceContext, fn
 from .versions import Provenance
+
+#: Language virtuals wrapped by the compiler wrapper (same ones for which a flag exists)
+COMPILER_WRAPPER_LANGUAGES = ("c", "cxx", "fortran")
 
 
 class RuntimePropertyRecorder:
@@ -115,7 +118,7 @@ class RuntimePropertyRecorder:
                     f"  provider(ProviderNode, {runtime_node}),\n"
                 )
 
-            rule = f"{head_str} :-\n" f"{depends_on_constraint}" f"{body_str}."
+            rule = f"{head_str} :-\n{depends_on_constraint}{body_str}."
             self.rules.append(rule)
 
         self.reset()
@@ -166,6 +169,7 @@ class RuntimePropertyRecorder:
 
         imposed_spec = spack.spec.Spec(f"{self.current_package}{impose}")
         when_spec = spack.spec.Spec(f"{self.current_package}{when}")
+        when_spec = spack.hash_lookup.lookup_hash(when_spec)
 
         assert imposed_spec.versions.concrete, f"{impose} must have a concrete version"
 
@@ -208,9 +212,6 @@ class RuntimePropertyRecorder:
             self.reset()
             return
 
-        when_spec = spack.spec.Spec(f"%[deptypes=build] {spec}")
-        body_str, node_variable = self.rule_body_from(when_spec)
-
         node_placeholder = "XXX"
         flags = spec.extra_attributes["flags"]
         root_spec_str = f"{node_placeholder}"
@@ -221,12 +222,18 @@ class RuntimePropertyRecorder:
             root_spec, body=False, context=SourceContext(source="compiler")
         )
         self.rules.append(f"% Default compiler flags for {spec}\n")
-        for clause in head_clauses:
-            if clause.args[0] == "node":
-                continue
-            head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
-            rule = f"{head_str} :-\n{body_str}."
-            self.rules.append(rule)
+
+        # Inject the flags only when the compiler is actually used to compile the dependent,
+        # i.e. the build edge provides one of the language virtuals.
+        for language in COMPILER_WRAPPER_LANGUAGES:
+            when_spec = spack.spec.Spec(f"%[deptypes=build virtuals={language}] {spec}")
+            body_str, node_variable = self.rule_body_from(when_spec)
+            for clause in head_clauses:
+                if clause.args[0] == "node":
+                    continue
+                head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
+                rule = f"{head_str} :-\n{body_str}."
+                self.rules.append(rule)
 
         self.reset()
 
@@ -255,52 +262,6 @@ class RuntimePropertyRecorder:
 
         self._setup.trigger_rules()
         self._setup.effect_rules()
-
-
-def _normalize_packages_yaml(packages_yaml: Dict[str, Any]) -> None:
-    for pkg_name in list(packages_yaml.keys()):
-        is_virtual = spack.repo.PATH.is_virtual(pkg_name)
-        if pkg_name == "all" or not is_virtual:
-            continue
-
-        # Remove the virtual entry from the normalized configuration
-        data = packages_yaml.pop(pkg_name)
-        is_buildable = data.get("buildable", True)
-        if not is_buildable:
-            for provider in spack.repo.PATH.providers_for(pkg_name):
-                entry = packages_yaml.setdefault(provider.name, {})
-                entry["buildable"] = False
-
-        externals = data.get("externals", [])
-
-        def keyfn(x):
-            return spack.spec.Spec(x["spec"]).name
-
-        for provider, specs in itertools.groupby(externals, key=keyfn):
-            entry = packages_yaml.setdefault(provider, {})
-            entry.setdefault("externals", []).extend(specs)
-
-
-def external_config_with_implicit_externals(
-    configuration: spack.config.Configuration,
-) -> Dict[str, Any]:
-    # Read packages.yaml and normalize it so that it will not contain entries referring to
-    # virtual packages.
-    packages_yaml = configuration.deepcopy_as_builtin("packages", line_info=True)
-    _normalize_packages_yaml(packages_yaml)
-
-    # Add externals for libc from compilers on Linux
-    if not using_libc_compatibility():
-        return packages_yaml
-
-    seen = set()
-    for compiler in spack.compilers.config.all_compilers_from(configuration):
-        libc = spack.compilers.libraries.CompilerPropertyDetector(compiler).default_libc()
-        if libc and libc not in seen:
-            seen.add(libc)
-            entry = {"spec": f"{libc}", "prefix": libc.external_path}
-            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
-    return packages_yaml
 
 
 def all_libcs() -> Set[spack.spec.Spec]:

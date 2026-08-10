@@ -13,26 +13,25 @@ from urllib.parse import urlparse, urlunparse
 import spack.binary_distribution
 import spack.ci as spack_ci
 import spack.cmd
-import spack.cmd.buildcache as buildcache
 import spack.cmd.common.arguments
 import spack.config as cfg
 import spack.environment as ev
 import spack.error
 import spack.fetch_strategy
 import spack.hash_types as ht
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty.color as clr
 import spack.mirrors.mirror
 import spack.package_base
 import spack.repo
 import spack.spec
 import spack.stage
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.gpg as gpg_util
-import spack.util.timer as timer
+import spack.util.tty.color as clr
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.llnl.util import tty
+from spack.cmd import buildcache
+from spack.util import timer, tty
 from spack.version import StandardVersion
 
 from . import doc_dedented, doc_first_line
@@ -149,7 +148,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="Environment variables to forward from the generate environment "
         "to the generated jobs.",
     )
-    generate.set_defaults(func=ci_generate)
+    generate.set_defaults(func=ci_generate, subparser=generate)
 
     spack.cmd.common.arguments.add_concretizer_args(generate)
     spack.cmd.common.arguments.add_common_arguments(generate, ["jobs"])
@@ -159,7 +158,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     index = subparsers.add_parser(
         "rebuild-index", description=doc_dedented(ci_reindex), help=doc_first_line(ci_reindex)
     )
-    index.set_defaults(func=ci_reindex)
+    index.set_defaults(func=ci_reindex, subparser=index)
 
     # Handle steps of a ci build/rebuild
     rebuild = subparsers.add_parser(
@@ -192,7 +191,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         help="maximum time (in seconds) that tests are allowed to run",
     )
-    rebuild.set_defaults(func=ci_rebuild)
+    rebuild.set_defaults(func=ci_rebuild, subparser=rebuild)
     spack.cmd.common.arguments.add_common_arguments(rebuild, ["jobs"])
 
     # Facilitate reproduction of a failed CI build job
@@ -231,7 +230,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--gpg-url", help="URL to public GPG key for validating binary cache installs"
     )
 
-    reproduce.set_defaults(func=ci_reproduce)
+    reproduce.set_defaults(func=ci_reproduce, subparser=reproduce)
 
     # Verify checksums inside of ci workflows
     verify_versions = subparsers.add_parser(
@@ -241,7 +240,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     verify_versions.add_argument("from_ref", help="git ref from which start looking at changes")
     verify_versions.add_argument("to_ref", help="git ref to end looking at changes")
-    verify_versions.set_defaults(func=ci_verify_versions)
+    verify_versions.set_defaults(func=ci_verify_versions, subparser=verify_versions)
 
 
 def ci_generate(args):
@@ -252,7 +251,7 @@ def ci_generate(args):
     before invoking this command. the value must be the CDash authorization token needed to create
     a build group and register all generated jobs under it
     """
-    env = spack.cmd.require_active_env(cmd_name="ci generate")
+    env = spack.cmd.require_active_env(args.subparser)
     spack_ci.generate_pipeline(env, args)
 
 
@@ -263,7 +262,7 @@ def ci_reindex(args):
     use the active, gitlab-enabled environment to rebuild the buildcache index for the associated
     mirror
     """
-    env = spack.cmd.require_active_env(cmd_name="ci rebuild-index")
+    env = spack.cmd.require_active_env(args.subparser)
     yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
 
     if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
@@ -286,11 +285,11 @@ def ci_rebuild(args):
     """
     rebuild_timer = timer.Timer()
 
-    env = spack.cmd.require_active_env(cmd_name="ci rebuild")
+    env = spack.cmd.require_active_env(args.subparser)
 
     # Make sure the environment is "gitlab-enabled", or else there's nothing
     # to do.
-    ci_config = cfg.get("ci")
+    ci_config = cfg.CONFIG.get("ci")
     if not ci_config:
         tty.die("spack ci rebuild requires an env containing ci cfg")
 
@@ -318,7 +317,7 @@ def ci_rebuild(args):
     # Fail early if signing is required but we don't have a signing key
     sign_binaries = require_signing is not None and require_signing.lower() == "true"
     if sign_binaries and not spack_ci.can_sign_binaries():
-        gpg_util.list(False, True)
+        gpg_util.glist(False, True)
         tty.die("SPACK_REQUIRE_SIGNING=True => spack must have exactly one signing key")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
@@ -336,7 +335,7 @@ def ci_rebuild(args):
     # Query the environment manifest to find out whether we're reporting to a
     # CDash instance, and if so, gather some information from the manifest to
     # support that task.
-    cdash_config = cfg.get("cdash")
+    cdash_config = cfg.CONFIG.get("cdash")
     cdash_handler = None
     if "build-group" in cdash_config:
         cdash_handler = spack_ci.CDashHandler(cdash_config)
@@ -466,7 +465,7 @@ def ci_rebuild(args):
     # Start with spack arguments
     spack_cmd = [SPACK_COMMAND, "--color=always", "install"]
 
-    config = cfg.get("config")
+    config = cfg.CONFIG.get("config")
     if not config["verify_ssl"]:
         spack_cmd.append("-k")
 
@@ -555,7 +554,7 @@ def ci_rebuild(args):
                 test_stage = fs.join_path(stage_root, "spack-standalone-tests")
                 tty.debug("Configuring test_stage to {0}".format(test_stage))
                 config_test_path = "config:test_stage:{0}".format(test_stage)
-                cfg.add(config_test_path, scope=cfg.default_modify_scope())
+                cfg.CONFIG.add(config_test_path, scope=cfg.CONFIG.default_modify_scope())
 
                 # Run the tests, resorting to junit results if not using cdash
                 log_file = (
@@ -740,9 +739,9 @@ def validate_standard_versions(
 
     for version in versions:
         url = pkg.find_valid_url_for_version(version)
-        assert (
-            url is not None
-        ), f"Package {pkg.name} does not have a valid URL for version {version}"
+        assert url is not None, (
+            f"Package {pkg.name} does not have a valid URL for version {version}"
+        )
         url_dict[version] = url
 
     version_hashes = spack.stage.get_checksums_for_versions(
@@ -776,7 +775,7 @@ def validate_git_versions(
     """
     valid_commit = True
     for version in versions:
-        fetcher = spack.fetch_strategy.for_package_version(pkg, version)
+        fetcher = spack.package_base.for_package_version(pkg, version)
         assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
         with spack.stage.Stage(fetcher) as stage:
             known_commit = pkg.versions[version]["commit"]

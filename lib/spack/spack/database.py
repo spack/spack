@@ -25,6 +25,7 @@ import sys
 import time
 from json import JSONDecoder
 from typing import (
+    IO,
     Any,
     Callable,
     Container,
@@ -53,10 +54,10 @@ except ImportError:
 
 import spack.deptypes as dt
 import spack.hash_types as ht
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
 import spack.spec
 import spack.traverse as tr
+import spack.util.filesystem as fs
+import spack.util.lang
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
@@ -66,6 +67,7 @@ from spack.directory_layout import (
     InconsistentInstallDirectoryError,
 )
 from spack.error import SpackError
+from spack.util import tty
 from spack.util.crypto import bit_length
 from spack.util.socket import _gethostname
 
@@ -196,6 +198,18 @@ class InstallRecord:
         installation_time (datetime.datetime or None): time of the installation
     """
 
+    __slots__ = (
+        "spec",
+        "path",
+        "installed",
+        "ref_count",
+        "explicit",
+        "installation_time",
+        "deprecated_for",
+        "in_buildcache",
+        "origin",
+    )
+
     def __init__(
         self,
         spec: "spack.spec.Spec",
@@ -256,18 +270,6 @@ class InstallRecord:
         return InstallRecord(spec, **d)
 
 
-class ForbiddenLockError(SpackError):
-    """Raised when an upstream DB attempts to acquire a lock"""
-
-
-class ForbiddenLock:
-    def __getattr__(self, name):
-        raise ForbiddenLockError(f"Cannot access attribute '{name}' of lock")
-
-    def __reduce__(self):
-        return ForbiddenLock, tuple()
-
-
 class LockConfiguration(NamedTuple):
     """Data class to configure locks in Database objects
 
@@ -278,8 +280,8 @@ class LockConfiguration(NamedTuple):
     """
 
     enable: bool
-    database_timeout: Optional[int]
-    package_timeout: Optional[int]
+    database_timeout: Optional[float]
+    package_timeout: Optional[float]
 
 
 #: Configure a database to avoid using locks
@@ -331,9 +333,10 @@ def failures_lock_path(root_dir: Union[str, pathlib.Path]) -> pathlib.Path:
 class SpecLocker:
     """Manages acquiring and releasing read or write locks on concrete specs."""
 
-    def __init__(self, lock_path: Union[str, pathlib.Path], default_timeout: Optional[float]):
+    def __init__(self, lock_path: Union[str, pathlib.Path], lock_cfg: LockConfiguration):
         self.lock_path = pathlib.Path(lock_path)
-        self.default_timeout = default_timeout
+        self.default_timeout = lock_cfg.package_timeout
+        self._enable = lock_cfg.enable
 
         # Maps (spec.dag_hash(), spec.name) to the corresponding lock object
         self.locks: Dict[Tuple[str, str], lk.Lock] = {}
@@ -368,6 +371,7 @@ class SpecLocker:
             length=1,
             default_timeout=timeout,
             desc=spec.name,
+            enable=self._enable,
         )
 
     def has_lock(self, spec: "spack.spec.Spec") -> bool:
@@ -427,11 +431,11 @@ class FailureTracker:
     #: File for locking particular concrete spec hashes
     locker: SpecLocker
 
-    def __init__(self, root_dir: Union[str, pathlib.Path], default_timeout: Optional[float]):
+    def __init__(self, root_dir: Union[str, pathlib.Path], lock_cfg: LockConfiguration):
         #: Ensure a persistent location for dealing with parallel installation
         #: failures (e.g., across near-concurrent processes).
         self.dir = pathlib.Path(root_dir) / _DB_DIRNAME / "failures"
-        self.locker = SpecLocker(failures_lock_path(root_dir), default_timeout=default_timeout)
+        self.locker = SpecLocker(failures_lock_path(root_dir), lock_cfg=lock_cfg)
 
     def _ensure_parent_directories(self) -> None:
         """Ensure that parent directories of the FailureTracker exist.
@@ -610,9 +614,10 @@ class Database:
         self.db_lock_timeout = lock_cfg.database_timeout
         tty.debug(f"DATABASE LOCK TIMEOUT: {str(self.db_lock_timeout)}s")
 
-        self.lock: Union[ForbiddenLock, lk.Lock]
         if self.is_upstream:
-            self.lock = ForbiddenLock()
+            self.lock = lk.Lock.forbidden(
+                str(self._lock_path), "Cannot lock an upstream database", desc="database"
+            )
         else:
             self.lock = lk.Lock(
                 str(self._lock_path),
@@ -656,6 +661,19 @@ class Database:
         """Get a read lock context manager for use in a ``with`` block."""
         return self._read_transaction_impl(self.lock, acquire=self._read)
 
+    def try_write_transaction(self) -> lk.TryWriteTransaction:
+        """Non-blocking variant of :meth:`write_transaction`: the context manager yields True if
+        the write lock was acquired (the database is re-read from disk on entry and written back on
+        exit, unless an exception occurred), or False if acquiring the lock would block, in which
+        case the body must skip its work."""
+        return lk.TryWriteTransaction(self.lock, acquire=self._read, release=self._write)
+
+    def try_read_transaction(self) -> lk.TryReadTransaction:
+        """Non-blocking variant of :meth:`read_transaction`: the context manager yields True if the
+        read lock was acquired (the database is re-read from disk on entry), or False if acquiring
+        the lock would block, in which case the body must skip its work."""
+        return lk.TryReadTransaction(self.lock, acquire=self._read)
+
     def _write_to_file(self, stream):
         """Write out the database in JSON format to the stream passed
         as argument.
@@ -665,9 +683,7 @@ class Database:
         self._ensure_parent_directories()
 
         # map from per-spec hash code to installation record.
-        installs = dict(
-            (k, v.to_dict(include_fields=self.record_fields)) for k, v in self._data.items()
-        )
+        installs = {k: v.to_dict(include_fields=self.record_fields) for k, v in self._data.items()}
 
         # database includes installation list and version.
 
@@ -688,7 +704,7 @@ class Database:
         try:
             sjson.dump(database, stream)
         except (TypeError, ValueError) as e:
-            raise sjson.SpackJSONError("error writing JSON database:", str(e))
+            raise sjson.SpackJSONError("error writing JSON database:", e)
 
     def _read_spec_from_dict(self, spec_reader, hash_key, installs, hash=ht.dag_hash):
         """Recursively construct a spec from a hash in a YAML database.
@@ -814,24 +830,31 @@ class Database:
 
     def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
         """Fill database from file, do not maintain old data.
+
+        Does not do any locking.
+        """
+        with filename.open("r", encoding="utf-8") as f:
+            self._read_from_stream(f, reindex=reindex)
+
+    def _read_from_stream(self, stream: IO[str], *, reindex: bool = False) -> None:
+        """Fill database from a text stream, do not maintain old data.
         Translate the spec portions from node-dict form to spec form.
 
         Does not do any locking.
         """
+        source = getattr(stream, "name", None) or self._index_path
         try:
             # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
-            fdata, _ = JSONDecoder().raw_decode(filename.read_text(encoding="utf-8"))
+            fdata, _ = JSONDecoder().raw_decode(stream.read())
         except Exception as e:
-            raise CorruptDatabaseError(f"error parsing database at {filename}:", str(e)) from e
+            raise CorruptDatabaseError(f"error parsing database at {source}:", str(e)) from e
 
         if fdata is None:
             return
 
         def check(cond, msg):
             if not cond:
-                raise CorruptDatabaseError(
-                    f"Spack database is corrupt: {msg}", str(self._index_path)
-                )
+                raise CorruptDatabaseError(f"Spack database is corrupt: {msg}", str(source))
 
         check("database" in fdata, "no 'database' attribute in JSON DB.")
 
@@ -853,7 +876,7 @@ class Database:
             return CorruptDatabaseError(
                 f"Invalid record in Spack database: hash: {hash_key}, cause: "
                 f"{type(error).__name__}: {error}",
-                str(self._index_path),
+                str(source),
             )
 
         # Build up the database in three passes:
@@ -963,8 +986,10 @@ class Database:
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
             try:
-                if self._index_path.is_file():
-                    self._read_from_file(self._index_path, reindex=True)
+                with self._index_path.open("r", encoding="utf-8") as f:
+                    self._read_from_stream(f, reindex=True)
+            except FileNotFoundError:
+                pass
             except (CorruptDatabaseError, DatabaseNotReadableError):
                 self._data = {}
                 self._installed_prefixes = set()
@@ -1148,24 +1173,28 @@ class Database:
 
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""
-        if self._index_path.is_file():
+        try:
+            index_file = self._index_path.open("r", encoding="utf-8")
+        except FileNotFoundError:
+            if self.is_upstream:
+                tty.warn(f"upstream not found: {self._index_path}")
+            return
+
+        with index_file as f:
             current_verifier = ""
             if _use_uuid:
                 try:
-                    with self._verifier_path.open("r", encoding="utf-8") as f:
-                        current_verifier = f.read()
+                    with self._verifier_path.open("r", encoding="utf-8") as vf:
+                        current_verifier = vf.read()
                 except BaseException:
                     pass
             if (current_verifier != self.last_seen_verifier) or (current_verifier == ""):
                 self.last_seen_verifier = current_verifier
                 # Read from file if a database exists
-                self._read_from_file(self._index_path)
+                self._read_from_stream(f)
             elif self._state_is_inconsistent:
-                self._read_from_file(self._index_path)
+                self._read_from_stream(f)
                 self._state_is_inconsistent = False
-            return
-        elif self.is_upstream:
-            tty.warn(f"upstream not found: {self._index_path}")
 
     def _add(
         self,
@@ -1303,6 +1332,40 @@ class Database:
         key = self._get_matching_spec_key(spec, **kwargs)
         _, record = self.query_by_spec_hash(key)
         return record
+
+    def installed(self, spec: "spack.spec.Spec") -> bool:
+        """Return whether the spec is installed, locally or in an upstream."""
+        if not spec.concrete:
+            return False
+        try:
+            return self.get_record(spec).installed
+        except KeyError:
+            return False
+
+    def installed_upstream(self, spec: "spack.spec.Spec") -> bool:
+        """Return whether the spec is installed in an upstream database."""
+        if not spec.concrete:
+            return False
+        upstream, record = self.query_by_spec_hash(spec.dag_hash())
+        return bool(upstream and record and record.installed)
+
+    def install_status(self, spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":
+        """Return the installation status of a spec (helper for tree display)."""
+        if not spec.concrete:
+            return spack.spec.InstallStatus.absent
+
+        if spec.external:
+            return spack.spec.InstallStatus.external
+
+        upstream, record = self.query_by_spec_hash(spec.dag_hash())
+        if not record:
+            return spack.spec.InstallStatus.absent
+        elif upstream and record.installed:
+            return spack.spec.InstallStatus.upstream
+        elif record.installed:
+            return spack.spec.InstallStatus.installed
+        else:
+            return spack.spec.InstallStatus.missing
 
     def _decrement_ref_count(self, spec: "spack.spec.Spec") -> None:
         key = spec.dag_hash()
@@ -1706,6 +1769,7 @@ class Database:
         hashes: Optional[List[str]] = None,
         origin: Optional[str] = None,
         install_tree: str = "all",
+        sort: bool = True,
     ) -> List["spack.spec.Spec"]:
         """Queries the Spack database including all upstream databases.
 
@@ -1739,40 +1803,20 @@ class Database:
             install_tree: query ``"all"`` (default), ``"local"``, ``"upstream"``, or upstream path
 
             origin: origin of the spec
+
+            sort: if ``True`` (default), sort the results. Sorting is relatively expensive, so
+                callers that do not care about order should pass ``False``.
         """
         valid_trees = ["all", "upstream", "local", self.root] + [u.root for u in self.upstream_dbs]
         if install_tree not in valid_trees:
-            msg = "Invalid install_tree argument to Database.query()\n"
-            msg += f"Try one of {', '.join(valid_trees)}"
-            tty.error(msg)
-            return []
-
-        upstream_results = []
-        upstreams = self.upstream_dbs
-        if install_tree not in ("all", "upstream"):
-            upstreams = [u for u in self.upstream_dbs if u.root == install_tree]
-        for upstream_db in upstreams:
-            # queries for upstream DBs need to *not* lock - we may not
-            # have permissions to do this and the upstream DBs won't know about
-            # us anyway (so e.g. they should never uninstall specs)
-            upstream_results.extend(
-                upstream_db._query(
-                    query_spec,
-                    predicate_fn=predicate_fn,
-                    installed=installed,
-                    explicit=explicit,
-                    start_date=start_date,
-                    end_date=end_date,
-                    hashes=hashes,
-                    in_buildcache=in_buildcache,
-                    origin=origin,
-                )
-                or []
+            raise ValueError(
+                f"Invalid install_tree argument to Database.query(). Try one of {valid_trees}"
             )
 
-        local_results: Set["spack.spec.Spec"] = set()
+        # Put local results first so that de-duplication below keeps them over upstream copies.
+        results: List["spack.spec.Spec"] = []
         if install_tree in ("all", "local") or self.root == install_tree:
-            local_results = set(
+            results.extend(
                 self.query_local(
                     query_spec,
                     predicate_fn=predicate_fn,
@@ -1786,8 +1830,40 @@ class Database:
                 )
             )
 
-        results = list(local_results) + list(x for x in upstream_results if x not in local_results)
-        results.sort()  # type: ignore[call-arg,call-overload]
+        if install_tree in ("all", "upstream"):
+            upstreams = self.upstream_dbs
+        elif install_tree in ("local", self.root):
+            upstreams = []
+        else:
+            upstreams = [u for u in self.upstream_dbs if u.root == install_tree]
+
+        for upstream_db in upstreams:
+            # Queries on upstream databases must not take a lock. We may not have permission,
+            # and upstreams do not know about us anyway, so they never uninstall our specs.
+            results.extend(
+                upstream_db._query(
+                    query_spec,
+                    predicate_fn=predicate_fn,
+                    installed=installed,
+                    explicit=explicit,
+                    start_date=start_date,
+                    end_date=end_date,
+                    hashes=hashes,
+                    in_buildcache=in_buildcache,
+                    origin=origin,
+                )
+            )
+
+        # Drop duplicates only when more than one database contributed, since a spec can appear
+        # both locally and upstream.
+        if upstreams:
+            results = list(spack.util.lang.dedupe(results, key=lambda s: s.dag_hash()))
+
+        if sort:
+            # Sort by name first so the full sort runs on nearly sorted input and compares specs
+            # far fewer times.
+            results.sort(key=lambda s: s.name)
+            results.sort()  # type: ignore[call-arg,call-overload]
         return results
 
     def query_one(
@@ -1843,7 +1919,7 @@ class Database:
 
         with self.read_transaction():
             roots = [rec.spec for key, rec in self._data.items() if root(key, rec)]
-            needed = set(id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype))
+            needed = {id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype)}
             return [
                 rec.spec
                 for rec in self._data.values()

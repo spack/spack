@@ -6,6 +6,7 @@
 We try to maintain compatibility with RPM's version semantics
 where it makes sense.
 """
+
 import os
 import pathlib
 
@@ -15,7 +16,7 @@ import spack.concretize
 import spack.package_base
 import spack.spec
 import spack.version
-from spack.llnl.util.filesystem import working_dir
+from spack.util.filesystem import working_dir
 from spack.version import (
     ClosedOpenRange,
     EmptyRangeError,

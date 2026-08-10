@@ -11,13 +11,13 @@ specified editor fails (e.g. no DISPLAY for a graphical editor). If
 neither variable is set, we fall back to one of several common editors,
 raising an OSError if we are unable to find one.
 """
+
 import os
 import shlex
 from typing import Callable, List
 
-import spack.config
-import spack.llnl.util.tty as tty
 import spack.util.executable
+from spack.util import tty
 
 #: editors to try if VISUAL and EDITOR are not set
 _default_editors = ["vim", "vi", "emacs", "nano", "notepad"]
@@ -97,9 +97,6 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
             return exec_fn(exe, args) == 0
 
         except (OSError, spack.util.executable.ProcessError) as e:
-            if spack.config.get("config:debug"):
-                raise
-
             # Show variable we were trying to use, if it's from one
             if var:
                 exe = "$%s (%s)" % (var, exe)

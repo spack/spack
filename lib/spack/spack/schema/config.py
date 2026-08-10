@@ -6,6 +6,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 17-
 """
+
 from typing import Any, Dict
 
 import spack.schema
@@ -89,7 +90,8 @@ properties: Dict[str, Any] = {
             },
             "develop_stage_link": {
                 "type": "string",
-                "description": "Name for development spec build stage directories",
+                "description": "Name for development spec build stage directories. Setting to "
+                "None will disable develop stage links.",
             },
             "test_stage": {
                 "type": "string",
@@ -230,6 +232,31 @@ properties: Dict[str, Any] = {
                 "type": "string",
                 "enum": ["old", "new"],
                 "description": "Which installer to use. The new installer is experimental.",
+            },
+            "sandbox": {
+                "type": "object",
+                "description": "Restrict filesystem and network access during builds.",
+                "additionalProperties": False,
+                "properties": {
+                    "enable": {
+                        "type": "boolean",
+                        "description": "Enable or disable the build sandbox.",
+                    },
+                    "allow_network": {
+                        "type": "boolean",
+                        "description": "Allow TCP network access during the build phase.",
+                    },
+                    "allow_read": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Additional paths with read and execute permissions.",
+                    },
+                    "allow_write": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Additional paths with write and execute permissions.",
+                    },
+                },
             },
         },
     }

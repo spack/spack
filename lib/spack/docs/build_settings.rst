@@ -7,6 +7,10 @@
    :description lang=en:
       Understand how to control the build process in Spack by customizing package-specific build settings and environment variables.
 
+.. index::
+   single: concretizer; configuring
+   single: microarchitecture; target granularity
+
 .. _concretizer-options:
 
 Concretization Settings (concretizer.yaml)
@@ -36,6 +40,10 @@ This attribute currently allows two possible values:
 - ``architecture_only``: only the mandatory architectural information is completed on externals
 - ``default_variants``: external specs are also completed with missing variants, using their default values
 
+
+.. index::
+   single: reuse; configuring
+   single: fresh; configuring
 
 Reuse Already Installed Packages
 --------------------------------
@@ -173,6 +181,10 @@ For instance, in the figure below, the latest `py-shapely` requires a newer `py-
 
 Up to Spack v0.20, ``duplicates:strategy:none`` was the default (and only) behavior.
 From Spack v0.21, the default behavior is ``duplicates:strategy:minimal``.
+
+.. index::
+   single: splicing; in config
+   :name: splicing
 
 Splicing
 --------

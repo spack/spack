@@ -10,9 +10,9 @@ import sys
 import pytest
 
 import spack.cmd
-import spack.config
 import spack.extensions
 import spack.main
+from spack.config import Configuration
 
 
 class Extension:
@@ -50,7 +50,7 @@ class Extension:
 
 
 @pytest.fixture(scope="function")
-def extension_creator(tmp_path: pathlib.Path, config):
+def extension_creator(tmp_path: pathlib.Path, config: Configuration):
     """Create a basic extension command directory structure"""
 
     @contextlib.contextmanager
@@ -58,7 +58,7 @@ def extension_creator(tmp_path: pathlib.Path, config):
         root = tmp_path / ("spack-" + extension_name)
         root.mkdir()
         extension = Extension(extension_name, root)
-        with spack.config.override("config:extensions", [str(extension.root)]):
+        with config.override("config:extensions", [str(extension.root)]):
             yield extension
 
     list_of_modules = list(sys.modules.keys())
@@ -143,9 +143,7 @@ def hello(parser, args):
         hello_folks()
     elif args.subcommand == 'global':
         print(global_message)
-""".format(
-                    ext_pname=extension.pname
-                ),
+""".format(ext_pname=extension.pname),
             )
 
             init_file = extension.main / "__init__.py"
@@ -230,17 +228,19 @@ def test_missing_command():
     ],
     ids=["no_stem", "vacuous", "leading_hyphen", "basic_good", "trailing_slash", "hyphenated"],
 )
-def test_extension_naming(tmp_path: pathlib.Path, extension_path, expected_exception, config):
+def test_extension_naming(
+    tmp_path: pathlib.Path, extension_path, expected_exception, config: Configuration
+):
     """Ensure that we are correctly validating configured extension paths
     for conformity with the rules: the basename should match
     ``spack-<name>``; <name> may have embedded hyphens but not begin with one.
     """
     # NOTE: if the directory is a valid extension directory name the "vacuous" test will
     # fail because it resolves to current working directory
-    import spack.llnl.util.filesystem as fs
+    import spack.util.filesystem as fs
 
     with fs.working_dir(str(tmp_path)):
-        with spack.config.override("config:extensions", [extension_path]):
+        with config.override("config:extensions", [extension_path]):
             with pytest.raises(expected_exception):
                 spack.cmd.get_module("no-such-command")
 
@@ -257,7 +257,7 @@ def test_missing_command_function(extension_creator, capfd):
         assert "must define function 'bad_cmd'." in capture[1]
 
 
-def test_get_command_paths(config):
+def test_get_command_paths(config: Configuration):
     """Exercise the construction of extension command search paths."""
     extensions = ("extension-1", "extension-2")
     ext_paths = []
@@ -269,11 +269,11 @@ def test_get_command_paths(config):
         path = os.path.abspath(path)
         expected_cmd_paths.append(path)
 
-    with spack.config.override("config:extensions", ext_paths):
+    with config.override("config:extensions", ext_paths):
         assert spack.extensions.get_command_paths() == expected_cmd_paths
 
 
-def test_variable_in_extension_path(config, working_env):
+def test_variable_in_extension_path(config: Configuration, working_env):
     """Test variables in extension paths."""
     os.environ["_MY_VAR"] = os.path.join("my", "var")
     ext_paths = [os.path.join("~", "${_MY_VAR}", "spack-extension-1")]
@@ -282,7 +282,7 @@ def test_variable_in_extension_path(config, working_env):
     expected_ext_paths = [
         os.path.join(os.environ[home_env], os.environ["_MY_VAR"], "spack-extension-1")
     ]
-    with spack.config.override("config:extensions", ext_paths):
+    with config.override("config:extensions", ext_paths):
         assert spack.extensions.get_extension_paths() == expected_ext_paths
 
 

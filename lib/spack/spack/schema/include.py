@@ -6,6 +6,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/include.py
    :lines: 12-
 """
+
 from typing import Any, Dict
 
 #: Properties for inclusion in other schemas

@@ -27,11 +27,10 @@ import spack.config
 import spack.dependency
 import spack.deptypes as dt
 import spack.directives_meta
+import spack.enums
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
-import spack.llnl.util.filesystem as fsys
-import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.multimethod
@@ -45,23 +44,23 @@ import spack.url
 import spack.util.archive
 import spack.util.environment
 import spack.util.executable
+import spack.util.filesystem as fsys
 import spack.util.git
 import spack.util.naming
 import spack.util.path
 import spack.util.web
 import spack.variant
+import spack.version
+import spack.version.git_ref_lookup
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
-from spack.llnl.util.filesystem import (
-    AlreadyExistsError,
-    find_all_shared_libraries,
-    islink,
-    symlink,
-)
-from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
+from spack.util import tty
+from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
+from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
+from spack.util.string import comma_and, quote
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
 
@@ -320,9 +319,7 @@ def on_package_attributes(**attr_dict):
             has_all_attributes = all([hasattr(instance, key) for key in attr_dict])
             if has_all_attributes:
                 has_the_right_values = all(
-                    [
-                        getattr(instance, key) == value for key, value in attr_dict.items()
-                    ]  # NOQA: ignore=E501
+                    [getattr(instance, key) == value for key, value in attr_dict.items()]  # NOQA: ignore=E501
                 )
                 if has_the_right_values:
                     func(instance, *args, **kwargs)
@@ -359,7 +356,7 @@ class PackageViewMixin:
         Alternative implementations may allow some of the files to exist in
         the view (in this case they would be omitted from the results).
         """
-        return set(dst for dst in merge_map.values() if os.path.lexists(dst))
+        return {dst for dst in merge_map.values() if os.path.lexists(dst)}
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
@@ -527,9 +524,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
        provide the constraints that are used as input to the concretizer.
 
     2. **Package instances**. Once instantiated with a concrete spec, a package can be passed to
-       the :py:class:`spack.installer.PackageInstaller`. It calls methods like :meth:`do_stage` on
-       the package instance, and it uses those to drive user-implemented methods like ``def patch``
-       and install phases like ``def configure`` and ``def install``.
+       the ``PackageInstaller``. It calls methods like :meth:`do_stage` on the package instance,
+       and it uses those to drive user-implemented methods like ``def patch`` and install phases
+       like ``def configure`` and ``def install``.
 
     Packages are imported from package repositories (see :py:mod:`spack.repo`).
 
@@ -863,7 +860,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def global_license_dir(cls):
         """Returns the directory where license files for all packages are stored."""
-        return spack.util.path.canonicalize_path(spack.config.get("config:license_dir"))
+        return spack.config.canonicalize_path(spack.config.CONFIG.get("config:license_dir"))
 
     @property
     def global_license_file(self):
@@ -924,7 +921,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def version(self):
         if not self.spec.versions.concrete:
             raise ValueError(
-                "Version requested for a package that" " does not have a concrete version."
+                "Version requested for a package that does not have a concrete version."
             )
         return self.spec.versions[0]
 
@@ -1124,15 +1121,22 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # if no version-bearing URLs can be found, try them raw
         if not urls:
-            default_url = getattr(self, "url", getattr(self, "urls", [None])[0])
+            default_url = getattr(self, "url", None)
+
+            if not default_url:
+                default_urls = getattr(self, "urls", None)
+
+                if isinstance(default_urls, list) and len(default_urls) > 0:
+                    default_url = default_urls[0]
 
             # if no exact match AND no class-level default, use the nearest URL
             if not default_url:
                 default_url = self.nearest_url(version)
 
-                # if there are NO URLs to go by, then we can't do anything
-                if not default_url:
-                    raise NoURLError(self.__class__)
+            # if there are NO URLs to go by, then we can't do anything
+            if not default_url:
+                raise NoURLError(self.__class__)
+
             urls.append(spack.url.substitute_version(default_url, self.url_version(version)))
 
         return urls
@@ -1208,10 +1212,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
             dev_path = dev_path_var.value
-            link_format = spack.config.get("config:develop_stage_link")
+            link_format = spack.config.CONFIG.get("config:develop_stage_link")
             if not link_format:
                 link_format = "build-{arch}-{hash:7}"
-            stage_link = self.spec.format_path(link_format)
+            if link_format == "None":
+                stage_link = None
+            else:
+                stage_link = self.spec.format_path(link_format)
             source_stage = stg.DevelopStage(
                 stg.compute_stage_name(self.spec), dev_path, stage_link
             )
@@ -1391,7 +1398,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             raise ValueError("Cannot retrieve fetcher for package without concrete version.")
         if not self._fetcher:
             # assign private member with the public setter api for error checking
-            self.fetcher = fs.for_package_version(self)
+            self.fetcher = for_package_version(self)
         return self._fetcher
 
     @fetcher.setter
@@ -1554,7 +1561,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def provided_virtual_names(cls):
         """Return sorted list of names of virtuals that can be provided by this package."""
         return sorted(
-            set(vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals))
+            {vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals)}
         )
 
     @property
@@ -1615,7 +1622,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             tty.debug("No fetch required for {0}".format(self.name))
             return
 
-        checksum = spack.config.get("config:checksum")
+        checksum = spack.config.CONFIG.get("config:checksum")
         if (
             checksum
             and (self.version not in self.versions)
@@ -1641,11 +1648,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     "Will not fetch %s" % self.spec.format("{name}{@version}"), ck_msg
                 )
 
-        deprecated = spack.config.get("config:deprecated")
+        deprecated = spack.config.CONFIG.get("config:deprecated")
         if not deprecated and self.versions.get(self.version, {}).get("deprecated", False):
             tty.warn(
-                "{0} is deprecated and may be removed in a future Spack "
-                "release.".format(self.spec.format("{name}{@version}"))
+                "{0} is deprecated and may be removed in a future Spack release.".format(
+                    self.spec.format("{name}{@version}")
+                )
             )
 
             # Ask the user whether to install deprecated version if we're
@@ -1685,7 +1693,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self.stage.create()
 
         # Fetch/expand any associated code.
-        user_dev_path = spack.config.get(f"develop:{self.name}:path", None)
+        user_dev_path = spack.config.CONFIG.get(f"develop:{self.name}:path", None)
         skip = user_dev_path and os.path.exists(user_dev_path)
         if skip:
             tty.debug("Skipping staging because develop path exists")
@@ -1863,7 +1871,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # TODO: resources
         if self.spec.versions.concrete:
             try:
-                source_id = fs.for_package_version(self).source_id()
+                source_id = for_package_version(self).source_id()
             except (fs.ExtrapolationError, fs.InvalidArgsError, spack.error.NoURLError):
                 # ExtrapolationError happens if the package has no fetchers defined.
                 # InvalidArgsError happens when there are version directives with args,
@@ -2461,7 +2469,11 @@ class WindowsSimulatedRPath:
                 new_pth = pathlib.Path(pth).parent
             else:
                 new_pth = pathlib.Path(pth)
-            path_is_in_prefix = new_pth.is_relative_to(self.base_modification_prefix)
+
+            path_is_in_prefix = (
+                self.base_modification_prefix == new_pth
+                or self.base_modification_prefix in new_pth.parents
+            )
             if not path_is_in_prefix:
                 raise RuntimeError(
                     f"Attempting to generate rpath symlink out of rpath context:\
@@ -2581,6 +2593,208 @@ def make_package_test_rpath(pkg: PackageBase, test_dir: Union[str, pathlib.Path]
     mini_rpath.establish_link()
 
 
+def check_pkg_attributes(pkg):
+    """Find ambiguous top-level fetch attributes in a package.
+
+    Currently this only ensures that two or more VCS fetch strategies are
+    not specified at once.
+    """
+    # a single package cannot have URL attributes for multiple VCS fetch
+    # strategies *unless* they are the same attribute.
+    conflicts = set([s.url_attr for s in fs.all_strategies if hasattr(pkg, s.url_attr)])
+
+    # URL isn't a VCS fetch method. We can use it with a VCS method.
+    conflicts -= set(["url"])
+
+    if len(conflicts) > 1:
+        raise fs.FetcherConflict(
+            "Package %s cannot specify %s together. Pick at most one."
+            % (pkg.name, comma_and(quote(conflicts)))
+        )
+
+
+def _check_version_attributes(fetcher, pkg, version):
+    """Ensure that the fetcher for a version is not ambiguous.
+
+    This assumes that we have already determined the fetcher for the
+    specific version using ``for_package_version()``
+    """
+    all_optionals = {a for s in fs.all_strategies for a in s.optional_attrs}
+
+    args = pkg.versions[version]
+    extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr, "no_cache"])
+    extra.intersection_update(all_optionals)
+
+    if extra:
+        legal_attrs = [fetcher.url_attr] + list(fetcher.optional_attrs)
+        raise fs.FetcherConflict(
+            "%s version '%s' has extra arguments: %s"
+            % (pkg.name, version, comma_and(quote(extra))),
+            "Valid arguments for a %s fetcher are: \n    %s"
+            % (fetcher.url_attr, comma_and(quote(legal_attrs))),
+        )
+
+
+def _extrapolate(pkg, version):
+    """Create a fetcher from an extrapolated URL for this version."""
+    try:
+        return fs.URLFetchStrategy(
+            url=pkg.url_for_version(version), fetch_options=pkg.fetch_options
+        )
+    except spack.error.NoURLError:
+        raise fs.ExtrapolationError(
+            f"Can't extrapolate a URL for version {version} because "
+            f"package {pkg.name} defines no URLs"
+        )
+
+
+def _from_merged_attrs(fetcher, pkg, version):
+    """Create a fetcher from merged package and version attributes."""
+    if fetcher.url_attr == "url":
+        mirrors = pkg.all_urls_for_version(version)
+        url = mirrors[0]
+        mirrors = mirrors[1:]
+        attrs = {fetcher.url_attr: url, "mirrors": mirrors}
+    else:
+        url = getattr(pkg, fetcher.url_attr)
+        attrs = {fetcher.url_attr: url}
+
+    attrs["fetch_options"] = pkg.fetch_options
+    attrs.update(pkg.versions[version])
+
+    if fetcher.url_attr == "git":
+        pkg_attr_list = ["submodules", "git_sparse_paths"]
+        for pkg_attr in pkg_attr_list:
+            if hasattr(pkg, pkg_attr):
+                attrs.setdefault(pkg_attr, getattr(pkg, pkg_attr))
+
+    return fetcher(**attrs)
+
+
+def for_package_version(pkg, version=None):
+    saved_versions = None
+    if version is not None:
+        saved_versions = pkg.spec.versions
+
+    try:
+        return _for_package_version(pkg, version)
+    finally:
+        if saved_versions is not None:
+            pkg.spec.versions = saved_versions
+
+
+def _for_package_version(pkg, version=None):
+    """Determine a fetch strategy based on the arguments supplied to
+    version() in the package description."""
+
+    # No-code packages have a custom fetch strategy to work around issues
+    # with resource staging.
+    if not pkg.has_code:
+        return fs.BundleFetchStrategy()
+
+    check_pkg_attributes(pkg)
+
+    if version is not None:
+        assert not pkg.spec.concrete, "concrete specs should not pass the 'version=' argument"
+        # Specs are initialized with the universe range, if no version information is given,
+        # so here we make sure we always match the version passed as argument
+        if not isinstance(version, spack.version.StandardVersion):
+            version = spack.version.Version(version)
+
+        version_list = spack.version.VersionList()
+        version_list.add(version)
+        pkg.spec.versions = version_list
+    else:
+        version = pkg.version
+
+    # if it's a commit, we must use a fs.GitFetchStrategy
+    commit_var = pkg.spec.variants.get("commit", None)
+    commit = commit_var.value if commit_var else None
+    tag = None
+    if isinstance(version, spack.version.GitVersion) or commit:
+        git_url = pkg.version_or_package_attr("git", version)
+        if not git_url:
+            raise spack.error.FetchError(
+                f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
+            )
+        if isinstance(version, spack.version.GitVersion):
+            # Populate the version with comparisons to other commits
+            version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(pkg.name))
+
+            if not commit and version.is_commit:
+                commit = version.ref
+            version_meta_data = pkg.versions.get(version.std_version)
+        else:
+            version_meta_data = pkg.versions.get(version)
+
+        # For GitVersion, we have no way to determine whether a ref is a branch or tag
+        # Fortunately, we handle branches and tags identically, except tags are
+        # handled slightly more conservatively for older versions of git.
+        # We call all non-commit refs tags in this context, at the cost of a slight
+        # performance hit for branches on older versions of git.
+        # Branches cannot be cached, so we tell the fetcher not to cache tags/branches
+
+        # TODO(psakiev) eventually we should  only need to clone based on the commit
+
+        # commit stashed on version
+        if version_meta_data:
+            if not commit:
+                commit = version_meta_data.get("commit")
+            tag = version_meta_data.get("tag") or version_meta_data.get("branch")
+
+        kwargs = {"commit": commit, "tag": tag, "no_cache": bool(not commit)}
+        kwargs["git"] = git_url
+        kwargs["submodules"] = pkg.version_or_package_attr("submodules", version, False)
+        kwargs["git_sparse_paths"] = pkg.version_or_package_attr("git_sparse_paths", version, None)
+        kwargs["get_full_repo"] = pkg.version_or_package_attr("get_full_repo", version, False)
+
+        # if the ref_version is a known version from the package, use that version's
+        # attributes
+        ref_version = getattr(pkg.version, "ref_version", None)
+        if ref_version:
+            kwargs["git"] = pkg.version_or_package_attr("git", ref_version)
+            kwargs["submodules"] = pkg.version_or_package_attr("submodules", ref_version, False)
+
+        fetcher = fs.GitFetchStrategy(**kwargs)
+        return fetcher
+
+    # If it's not a known version, try to extrapolate one by URL
+    if version not in pkg.versions:
+        return _extrapolate(pkg, version)
+
+    # Set package args first so version args can override them
+    args = {"fetch_options": pkg.fetch_options}
+    # Grab a dict of args out of the package version dict
+    args.update(pkg.versions[version])
+
+    # If the version specifies a `url_attr` directly, use that.
+    for fetcher in fs.all_strategies:
+        if fetcher.url_attr in args:
+            _check_version_attributes(fetcher, pkg, version)
+            if fetcher.url_attr == "git" and hasattr(pkg, "submodules"):
+                args.setdefault("submodules", pkg.submodules)
+            return fetcher(**args)
+
+    # if a version's optional attributes imply a particular fetch
+    # strategy, and we have the `url_attr`, then use that strategy.
+    for fetcher in fs.all_strategies:
+        if hasattr(pkg, fetcher.url_attr) or fetcher.url_attr == "url":
+            optionals = fetcher.optional_attrs
+            if optionals and any(a in args for a in optionals):
+                _check_version_attributes(fetcher, pkg, version)
+                return _from_merged_attrs(fetcher, pkg, version)
+
+    # if the optional attributes tell us nothing, then use any `url_attr`
+    # on the package.  This prefers URL vs. VCS, b/c fs.URLFetchStrategy is
+    # defined first in this file.
+    for fetcher in fs.all_strategies:
+        if hasattr(pkg, fetcher.url_attr):
+            _check_version_attributes(fetcher, pkg, version)
+            return _from_merged_attrs(fetcher, pkg, version)
+
+    raise fs.InvalidArgsError(pkg, version, **args)
+
+
 def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -> bool:
     """Return True iff the version is deprecated.
 
@@ -2616,25 +2830,35 @@ def preferred_version(
     return version
 
 
-def non_preferred_version(node: spack.spec.Spec) -> bool:
-    """Returns True if the spec version is not the preferred one, according to the package.py"""
+def non_preferred_version(node: spack.spec.Spec) -> spack.enums.PartStyle:
+    """Returns :attr:`~spack.enums.PartStyle.HIGHLIGHT` if the spec version is not the preferred
+    one according to package.py, :attr:`~spack.enums.PartStyle.NORMAL` otherwise.
+    """
     if not node.versions.concrete:
-        return False
+        return spack.enums.PartStyle.NORMAL
 
     try:
-        return node.version != preferred_version(node.package)
+        is_preferred = node.version == preferred_version(node.package)
     except ValueError:
-        return False
+        return spack.enums.PartStyle.NORMAL
+
+    return spack.enums.PartStyle.NORMAL if is_preferred else spack.enums.PartStyle.HIGHLIGHT
 
 
-def non_default_variant(node: spack.spec.Spec, variant_name: str) -> bool:
-    """Returns True if the variant in the spec has a non-default value."""
+def non_default_variant(node: spack.spec.Spec, variant_name: str) -> spack.enums.PartStyle:
+    """Return :attr:`~spack.enums.PartStyle.HIGHLIGHT` if the variant has a non-default value,
+    :attr:`~spack.enums.PartStyle.NORMAL` otherwise.
+
+    Intended for use as ``variant_style_fn`` in :meth:`~spack.spec.Spec.format`.
+    """
     try:
         default_variant = node.package.get_variant(variant_name).make_default()
-        return not node.satisfies(str(default_variant))
+        is_non_default = not node.satisfies(str(default_variant))
     except ValueError:
-        # This is the case for special variants like "patches" etc.
-        return False
+        # Special variants like "patches" have no meaningful default.
+        return spack.enums.PartStyle.NORMAL
+
+    return spack.enums.PartStyle.HIGHLIGHT if is_non_default else spack.enums.PartStyle.NORMAL
 
 
 def sort_by_pkg_preference(
@@ -2684,24 +2908,6 @@ class PackageStillNeededError(InstallError):
 
 class InvalidPackageOpError(PackageError):
     """Raised when someone tries perform an invalid operation on a package."""
-
-
-class ExtensionError(PackageError):
-    """Superclass for all errors having to do with extension packages."""
-
-
-class ActivationError(ExtensionError):
-    """Raised when there are problems activating an extension."""
-
-    def __init__(self, msg, long_msg=None):
-        super().__init__(msg, long_msg)
-
-
-class DependencyConflictError(spack.error.SpackError):
-    """Raised when the dependencies cannot be flattened as asked for."""
-
-    def __init__(self, conflict):
-        super().__init__("%s conflicts with another file in the flattened directory." % (conflict))
 
 
 class ManualDownloadRequiredError(InvalidPackageOpError):

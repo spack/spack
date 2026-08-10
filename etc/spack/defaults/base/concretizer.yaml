@@ -51,15 +51,18 @@ concretizer:
       c: 2
       cxx: 2
       fortran: 1
+      nmake: 2
       # Regular packages
       cmake: 2
       gmake: 2
+      jom: 2
       python: 2
       python-venv: 2
       py-cython: 2
       py-flit-core: 2
       py-pip: 2
       py-setuptools: 2
+      py-setuptools-scm: 2
       py-versioneer: 2
       py-wheel: 2
       xcb-proto: 2
@@ -96,10 +99,8 @@ concretizer:
 
   # If enabled, concretizations are cached in the misc_cache. The cache is keyed by the hash
   # of solver inputs, so we only need to run setup (not solve) if there is a cache hit.
-  # Feature is experimental: enabling may result in potentially invalid concretizations
-  # if package recipes are changed, see: https://github.com/spack/spack/issues/51553
   concretization_cache:
-    enable: false
+    enable: true
 
   # Options to control the behavior of the concretizer with external specs
   externals:

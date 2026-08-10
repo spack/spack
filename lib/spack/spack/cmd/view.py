@@ -32,18 +32,19 @@ All operations on views are performed via proxy objects such as
 YamlFilesystemView.
 
 """
+
 import argparse
 import sys
 
 import spack.cmd
-import spack.environment as ev
 import spack.filesystem_view as fsv
-import spack.llnl.util.tty as tty
 import spack.schema.projections
 import spack.store
+from spack.active_environment import active_environment
 from spack.config import validate
-from spack.llnl.util.link_tree import MergeConflictError
 from spack.util import spack_yaml as s_yaml
+from spack.util import tty
+from spack.util.link_tree import MergeConflictError
 
 description = "manipulate view directories in the filesystem"
 section = "environments"
@@ -225,7 +226,7 @@ def view(parser, args):
 
     elif args.action in actions_link:
         # only link commands need to disambiguate specs
-        env = ev.active_environment()
+        env = active_environment()
         specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
 
     elif args.action in actions_status:

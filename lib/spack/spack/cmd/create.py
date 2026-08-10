@@ -8,10 +8,8 @@ import sys
 import urllib.parse
 from typing import List, Optional, Tuple
 
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.stage
-from spack.llnl.util.filesystem import mkdirp
 from spack.spec import Spec
 from spack.url import (
     UndetectableNameError,
@@ -20,8 +18,10 @@ from spack.url import (
     parse_name,
     parse_version,
 )
+from spack.util import tty
 from spack.util.editor import editor
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp
 from spack.util.format import get_version_lines
 from spack.util.naming import pkg_name_to_class_name, simplify_name
 
@@ -63,6 +63,10 @@ class {class_name}({base_class_name}):
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
 {url_def}
+
+    # FIXME: Uncomment and add the upstream supplier (organization or author).
+    # If unknown or inapplicable, remove this entire block.
+    # supplier = organization_or_author
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
@@ -414,7 +418,7 @@ class PythonPackageTemplate(PackageTemplate):
         # e.g. https://files.pythonhosted.org/packages/source/n/numpy/numpy-1.19.4.zip
 
         # PyPI URLs containing hash:
-        # https://<hostname>/packages/<two character hash>/<two character hash>/<longer hash>/<download file>
+        # https://<hostname>/packages/<two character hash>/<two character hash>/<longer hash>/<download file> # noqa: E501
         # e.g. https://pypi.io/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip#sha256=141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512
@@ -491,7 +495,7 @@ class RPackageTemplate(PackageTemplate):
         bioc = re.search(r"(?:bioconductor)[^/]+/packages" + "/([^/]+)" * 5, url)
 
         if bioc:
-            self.url_line = '    url = "{0}"\n' '    bioc = "{1}"'.format(url, r_name)
+            self.url_line = '    url = "{0}"\n    bioc = "{1}"'.format(url, r_name)
 
         super().__init__(name, url, versions, languages)
 
@@ -1061,8 +1065,9 @@ def get_repository(args: argparse.Namespace, name: str) -> spack.repo.Repo:
         repo = spack.repo.from_path(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die(
-                "Can't create package with namespace {0} in repo with "
-                "namespace {1}".format(spec.namespace, repo.namespace)
+                "Can't create package with namespace {0} in repo with namespace {1}".format(
+                    spec.namespace, repo.namespace
+                )
             )
     else:
         if spec.namespace:

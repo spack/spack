@@ -11,20 +11,17 @@ import pickle
 
 import pytest
 
-import spack.config
 import spack.environment as ev
-import spack.llnl.util.filesystem as fs
+import spack.package_base
 import spack.platforms
 import spack.solver.asp
 import spack.spec
 import spack.spec_parser
+import spack.util.filesystem as fs
+from spack.config import Configuration
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
-from spack.environment.environment import (
-    EnvironmentManifestFile,
-    SpackEnvironmentViewError,
-    _error_on_nonempty_view_dir,
-)
+from spack.environment.environment import EnvironmentManifestFile
 from spack.environment.list import UndefinedReferenceError
 from spack.traverse import traverse_nodes
 
@@ -291,7 +288,12 @@ spack:
       link_type: symlink
 """,
             "./another-view",
-            {"root": "./another-view", "select": ["%gcc"], "link_type": "symlink"},
+            {
+                "root": "./another-view",
+                "select": ["%gcc"],
+                "link_type": "symlink",
+                "link_dirs": True,
+            },
         ),
         (
             """
@@ -305,7 +307,7 @@ spack:
       link_type: symlink
 """,
             True,
-            {"root": "./view-gcc", "select": ["%gcc"], "link_type": "symlink"},
+            {"root": "./view-gcc", "select": ["%gcc"], "link_type": "symlink", "link_dirs": True},
         ),
     ],
 )
@@ -355,34 +357,6 @@ def test_environment_pickle(tmp_path: pathlib.Path):
     obj = pickle.dumps(env1)
     env2 = pickle.loads(obj)
     assert isinstance(env2, ev.Environment)
-
-
-def test_error_on_nonempty_view_dir(tmp_path: pathlib.Path):
-    """Error when the target is not an empty dir"""
-    with fs.working_dir(str(tmp_path)):
-        os.mkdir("empty_dir")
-        os.mkdir("nonempty_dir")
-        with open(os.path.join("nonempty_dir", "file"), "wb"):
-            pass
-        os.symlink("empty_dir", "symlinked_empty_dir")
-        os.symlink("does_not_exist", "broken_link")
-        os.symlink("broken_link", "file")
-
-        # This is OK.
-        _error_on_nonempty_view_dir("empty_dir")
-
-        # This is not OK.
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("nonempty_dir")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("symlinked_empty_dir")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("broken_link")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("file")
 
 
 def test_can_add_specs_to_environment_without_specs_attribute(tmp_path: pathlib.Path, config):
@@ -563,7 +537,9 @@ spack:
 
 
 @pytest.mark.parametrize("unify_in_config", [True, False, "when_possible"])
-def test_environment_config_scheme_used(tmp_path: pathlib.Path, unify_in_config):
+def test_environment_config_scheme_used(
+    mutable_config: Configuration, tmp_path: pathlib.Path, unify_in_config
+):
     """Tests that "unify" settings in lower configuration scopes is taken into account,
     if absent in spack.yaml.
     """
@@ -576,9 +552,9 @@ spack:
 """
     )
 
-    with spack.config.override("concretizer:unify", unify_in_config):
+    with mutable_config.override("concretizer:unify", unify_in_config):
         with ev.Environment(manifest.parent):
-            assert spack.config.CONFIG.get("concretizer:unify") == unify_in_config
+            assert mutable_config.get("concretizer:unify") == unify_in_config
 
 
 @pytest.mark.parametrize(
@@ -882,14 +858,56 @@ def test_env_view_on_empty_dir_is_fine(tmp_path: pathlib.Path, config, temporary
     env.concretize()
     env.install_all(fake=True)
     env.regenerate_views()
-    assert view_dir.is_symlink()
+    assert list(view_dir.iterdir())  # view dir should not be empty after regeneration
 
 
-def test_env_view_on_non_empty_dir_errors(tmp_path: pathlib.Path, config, temporary_store):
-    """Tests that creating a view pointing to a non-empty dir errors."""
+def test_view_projection_path_is_final_after_regenerate(
+    tmp_path: pathlib.Path, config, temporary_store, monkeypatch
+):
+    """Paths embedded into file *contents* by ``add_files_to_view`` (e.g. shebangs,
+    ``pyvenv.cfg``) must reference the final view directory, not the temporary directory
+    the view is built in. Regression test for views being built in a sibling staging dir
+    and renamed into place, which left dangling staging paths baked into files."""
+
+    original = spack.package_base.PackageBase.add_files_to_view
+
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        original(self, view, merge_map, skip_if_exists=skip_if_exists)
+        # Emulate packages like python that bake the projection into file contents.
+        projection = view.get_projection_for_spec(self.spec)
+        with open(os.path.join(projection, f"{self.name}.projection"), "w", encoding="utf-8") as f:
+            f.write(projection)
+
+    monkeypatch.setattr(spack.package_base.PackageBase, "add_files_to_view", add_files_to_view)
+
     view_dir = tmp_path / "view"
-    view_dir.mkdir()
-    (view_dir / "file").write_text("")
+    env = ev.create_in_dir(tmp_path, with_view="view")
+    env.add("mpileaks")
+    env.concretize()
+    env.install_all(fake=True)
+    env.regenerate_views()
+
+    recorded = list(view_dir.glob("*.projection"))
+    assert recorded, "expected add_files_to_view to have written marker files"
+    for marker in recorded:
+        assert marker.read_text() == str(view_dir)
+
+    # No staging/backup siblings should be left behind after a successful regeneration.
+    assert not list(tmp_path.glob("view.new.*"))
+    assert not list(tmp_path.glob("view.old.*"))
+
+
+@pytest.mark.parametrize("as_file", [False, True], ids=["non_empty_dir", "plain_file"])
+def test_env_view_on_non_empty_dir_errors(
+    tmp_path: pathlib.Path, config, temporary_store, as_file: bool
+):
+    """Tests that creating a view pointing to a non-empty dir or plain file errors."""
+    view_dir = tmp_path / "view"
+    if as_file:
+        view_dir.write_text("")
+    else:
+        view_dir.mkdir()
+        (view_dir / "file").write_text("")
     env = ev.create_in_dir(tmp_path, with_view="view")
     env.add("mpileaks")
     env.concretize()
@@ -967,7 +985,7 @@ def test_environment_from_name_or_dir(mutable_mock_env_path):
         _ = ev.environment_from_name_or_dir("fake-env")
 
 
-def test_env_include_configs(mutable_mock_env_path):
+def test_env_include_configs(mutable_mock_env_path, mutable_config: Configuration):
     """check config and package values using new include schema"""
     env_path = mutable_mock_env_path
     env_path.mkdir()
@@ -1008,9 +1026,9 @@ spack:
 
     e = ev.Environment(env_path)
     with e.manifest.use_config():
-        assert not spack.config.get("config:verify_ssl")
-        python_reqs = spack.config.get("packages")["python"]["require"]
-        req_specs = set(x["spec"] for x in python_reqs)
+        assert not mutable_config.get("config:verify_ssl")
+        python_reqs = mutable_config.get("packages")["python"]["require"]
+        req_specs = {x["spec"] for x in python_reqs}
         assert req_specs == set(["@3.11:"])
 
 
@@ -1197,6 +1215,27 @@ spack:
     assert mpileaks_clang.satisfies("%[virtuals=mpi] mpich")
     assert not mpileaks_clang.satisfies("%[virtuals=mpi] zmpi")
     assert mpileaks_clang["mpich"].satisfies("%[virtuals=fortran] gcc")
+
+
+def test_matrix_exclude_from_environment_manifest(tmp_path: pathlib.Path, mutable_config):
+    """Tests that matrix excludes are preserved when the environment manifest is read."""
+    spack_yaml = """
+spack:
+  definitions:
+  - packages: [foo, bar]
+  specs:
+  - matrix:
+    - [$packages]
+    exclude:
+    - "bar"
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+
+    e = ev.Environment(tmp_path)
+
+    assert e.manifest.user_specs() == [{"matrix": [["$packages"]], "exclude": ["bar"]}]
+    assert e.user_specs.specs == [spack.spec.Spec("foo")]
 
 
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
@@ -1585,7 +1624,7 @@ def test_static_analysis_in_environments(spack_yaml, tmp_path, mutable_config):
 
 
 @pytest.mark.regression("51606")
-def test_ids_when_using_toolchain_twice_in_a_spec(tmp_path, mutable_config):
+def test_ids_when_using_toolchain_twice_in_a_spec(tmp_path, mutable_config: Configuration):
     """Tests that using the same toolchain twice in a spec constructs different objects"""
     spack_yaml = """
 spack:
@@ -1607,7 +1646,7 @@ spack:
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path):
         # We rely on this behavior when emitting facts for the solver
-        toolchains = spack.config.CONFIG.get("toolchains", {})
+        toolchains = mutable_config.get("toolchains", {})
         s = spack.spec_parser.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
         assert id(s["gcc"]) != id(s["callpath"]["gcc"])
 
@@ -2133,3 +2172,22 @@ def test_unified_environment_with_mixed_compilers_and_fortran(tmp_path, config):
     assert mpich.satisfies("%fortran=gcc")
     assert openblas.satisfies("%c,fortran=gcc")
     assert mpich["fortran"].dag_hash() == openblas["fortran"].dag_hash()
+
+
+@pytest.mark.parametrize("enable_locks", [True, False])
+def test_environment_pickle_preserves_lock_state(
+    mutable_config: Configuration, enable_locks, tmp_path: pathlib.Path
+):
+    """Tests that an environment round-trips through pickle with its lock-enable state intact."""
+    with mutable_config.override("config:locks", enable_locks):
+        env = ev.create_in_dir(tmp_path)
+    original_enabled = env.txlock.enabled
+
+    blob = pickle.dumps(env)
+
+    # Flip the global config, then unpickle: the rebuilt transaction lock must keep the state
+    # that was pickled, not the (now different) global one.
+    with mutable_config.override("config:locks", not enable_locks):
+        restored = pickle.loads(blob)
+
+    assert restored.txlock.enabled == original_enabled

@@ -13,13 +13,15 @@ import spack
 import spack.config
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.paths
 import spack.platforms
 import spack.util.executable as exe
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.spack_yaml as syaml
+from spack.active_environment import active_environment
+from spack.config import Configuration
 
 pytestmark = pytest.mark.not_on_windows(
     "Test functionality supported but tests are failing on Win"
@@ -28,6 +30,8 @@ pytestmark = pytest.mark.not_on_windows(
 
 @pytest.fixture(autouse=True)
 def _clear_commit_cache():
+    spack.get_spack_commit.cache_clear()
+    yield
     spack.get_spack_commit.cache_clear()
 
 
@@ -67,9 +71,7 @@ def test_git_sha_output(tmp_path: pathlib.Path, working_env, monkeypatch):
         f.write(
             """#!/bin/sh
 echo {0}
-""".format(
-                sha
-            )
+""".format(sha)
         )
     fs.set_executable(str(git))
 
@@ -96,6 +98,10 @@ def test_main_calls_get_version(capfd, working_env, monkeypatch):
     spack.main.main(["-V"])
     out, err = capfd.readouterr()
     assert spack.spack_version == out.strip()
+
+
+def test_unrecognized_top_level_flag():
+    assert spack.main.main(["-o", "mirror", "list"]) != 0
 
 
 def test_get_version_bad_git(tmp_path: pathlib.Path, working_env, monkeypatch):
@@ -176,7 +182,7 @@ spack:
     assert len(config.scopes) == 2
     assert config.get("config:install_tree:root") == "/tmp/first"
 
-    assert ev.active_environment() is None  # shouldn't cause an environment to be activated
+    assert active_environment() is None  # shouldn't cause an environment to be activated
 
 
 def test_include_cfg(mock_low_high_config, write_config_file, tmp_path: pathlib.Path):
@@ -238,13 +244,13 @@ packages:
     include_cfg = {"include": include_entries}
     filename = write_config_file("include", include_cfg, "low")
 
-    assert not spack.config.get("config:dirty")
+    assert not mock_low_high_config.get("config:dirty")
 
     spack.main.add_command_line_scopes(mock_low_high_config, [os.path.dirname(filename)])
 
-    assert spack.config.get("config:dirty")
-    python_reqs = spack.config.get("packages")["python"]["require"]
-    req_specs = set(x["spec"] for x in python_reqs)
+    assert mock_low_high_config.get("config:dirty")
+    python_reqs = mock_low_high_config.get("packages")["python"]["require"]
+    req_specs = {x["spec"] for x in python_reqs}
     assert req_specs == set(["@3.11:", "+ssl", "+tk"])
 
 
@@ -337,3 +343,18 @@ include:
         assert mutable_config.get("config:debug") is expected
     except AssertionError:
         pytest.xfail("recursive includes are not processed in the expected order")
+
+
+@pytest.mark.regression("52664")
+def test_env_substitution_via_main_entrypoint(
+    mutable_mock_env_path, mutable_config: Configuration
+):
+    """Tests that an environment activated through the CLI entrypoint can substitute ``$env``"""
+    env = ev.create("test")
+    assert mutable_config.env_path is None
+
+    # Just call a fast command
+    spack.main._main(["-e", "test", "config", "scopes"])
+
+    assert mutable_config.env_path == env.path
+    assert spack.config.substitute_path_variables("$env/foo") == f"{env.path}/foo"

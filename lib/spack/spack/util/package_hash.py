@@ -7,7 +7,6 @@ import sys
 from typing import Any, Dict, List, Optional, Tuple
 
 import spack.directives_meta
-import spack.error
 import spack.fetch_strategy
 import spack.repo
 import spack.spec
@@ -372,7 +371,7 @@ def package_ast(
         source: Optionally provide a string to read python code from.
     """
     if source is None:
-        filename = spack.repo.PATH.filename_for_package_name(spec.name)
+        filename = spack.repo.PATH.filename_for_package_name(spec.fullname)
         with open(filename, "rb") as f:
             source = f.read()
 
@@ -392,7 +391,3 @@ def package_ast(
         root = ResolveMultiMethods(tagger.methods).visit(root)
 
     return root
-
-
-class PackageHashError(spack.error.SpackError):
-    """Raised for all errors encountered during package hashing."""

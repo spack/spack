@@ -23,6 +23,7 @@ avoids overly complicated rat nests of if statements.  Obviously,
 depending on the scenario, regular old conditionals might be clearer,
 so package authors should use their judgement.
 """
+
 import functools
 from contextlib import contextmanager
 from typing import Optional, Union
@@ -250,9 +251,9 @@ class when:
         self.when = condition
 
     def __call__(self, method):
-        assert (
-            MultiMethodMeta._locals is not None
-        ), "cannot use multimethod, missing MultiMethodMeta metaclass?"
+        assert MultiMethodMeta._locals is not None, (
+            "cannot use multimethod, missing MultiMethodMeta metaclass?"
+        )
 
         # Create a multimethod with this name if there is not one already
         original_method = MultiMethodMeta._locals.get(method.__name__)
@@ -302,13 +303,6 @@ def default_args(**kwargs):
     spack.directives_meta.DirectiveMeta.push_default_args(kwargs)
     yield
     spack.directives_meta.DirectiveMeta.pop_default_args()
-
-
-class MultiMethodError(spack.error.SpackError):
-    """Superclass for multimethod dispatch errors"""
-
-    def __init__(self, message):
-        super().__init__(message)
 
 
 class NoSuchMethodError(spack.error.SpackError):

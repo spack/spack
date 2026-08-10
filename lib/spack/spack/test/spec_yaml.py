@@ -7,6 +7,7 @@
 The YAML and JSON formats preserve DAG information in the spec.
 
 """
+
 import collections
 import collections.abc
 import gzip
@@ -22,6 +23,7 @@ import spack.vendor.ruamel.yaml
 
 import spack.concretize
 import spack.config
+import spack.error
 import spack.hash_types as ht
 import spack.paths
 import spack.repo
@@ -100,10 +102,10 @@ def test_invalid_json_spec(invalid_json, error_message):
         "mpileaks",
     ],
 )
-def test_roundtrip_concrete_specs(abstract_spec, default_mock_concretization):
+def test_roundtrip_concrete_specs(abstract_spec, config, mock_packages):
     check_yaml_round_trip(Spec(abstract_spec))
     check_json_round_trip(Spec(abstract_spec))
-    concrete_spec = default_mock_concretization(abstract_spec)
+    concrete_spec = spack.concretize.concretize_one(abstract_spec)
     check_yaml_round_trip(concrete_spec)
     check_json_round_trip(concrete_spec)
 
@@ -119,7 +121,7 @@ def test_yaml_subdag(config, mock_packages):
 
 
 @pytest.mark.parametrize("spec_str", ["mpileaks ^zmpi", "dttop", "dtuse"])
-def test_using_ordered_dict(default_mock_concretization, spec_str):
+def test_using_ordered_dict(config, mock_packages, spec_str):
     """Checks that we use syaml_dicts for spec serialization.
 
     Necessary to make sure that dag_hash is stable across python
@@ -138,7 +140,7 @@ def test_using_ordered_dict(default_mock_concretization, spec_str):
                     max_level = nlevel
         return max_level
 
-    s = default_mock_concretization(spec_str)
+    s = spack.concretize.concretize_one(spec_str)
     level = descend_and_check(s.to_node_dict())
     # level just makes sure we are doing something here
     assert level >= 5
@@ -185,8 +187,8 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
     # Dump to YAML and JSON
     yaml_string = syaml.dump(spec_dict, default_flow_style=False)
     yaml_string_rev = syaml.dump(spec_dict_rev, default_flow_style=False)
-    json_string = sjson.dump(spec_dict)
-    json_string_rev = sjson.dump(spec_dict_rev)
+    json_string = sjson.dumps(spec_dict)
+    json_string_rev = sjson.dumps(spec_dict_rev)
 
     # spec yaml is ordered like the spec dict
     assert yaml_string == spec_yaml
@@ -409,7 +411,7 @@ ordered_spec = collections.OrderedDict(
         ("specfiles/hdf5.v020.json.gz", "vlirlcgazhvsvtundz4kug75xkkqqgou", spack.spec.SpecfileV4),
     ],
 )
-def test_load_json_specfiles(specfile, expected_hash, reader_cls):
+def test_load_json_specfiles(specfile, expected_hash, reader_cls, mock_packages):
     fullpath = os.path.join(spack.paths.test_path, "data", specfile)
     with gzip.open(fullpath, "rt", encoding="utf-8") as f:
         data = json.load(f)
@@ -520,6 +522,18 @@ def test_pickle_roundtrip_for_abstract_specs(spec_str):
     assert str(s) == str(t)
 
 
+@pytest.mark.parametrize(
+    "spec_str", ["zlib os=redhat6", "zlib platform=test", "zlib os=debian6 target=x86_64"]
+)
+def test_dict_roundtrip_for_abstract_specs_with_partial_arch(spec_str):
+    """Abstract specs with a partial architecture survive to_dict/from_dict.
+    Regression test: ArchSpec.to_dict crashed with AttributeError when target was None."""
+    s = spack.spec.Spec(spec_str)
+    t = spack.spec.Spec.from_dict(s.to_dict())
+    assert s == t
+    assert str(s) == str(t)
+
+
 def test_specfile_alias_is_updated():
     """Tests that the SpecfileLatest alias gets updated on a Specfile version bump"""
     specfile_class_name = f"SpecfileV{spack.spec.SPECFILE_FORMAT_VERSION}"
@@ -528,14 +542,14 @@ def test_specfile_alias_is_updated():
 
 
 @pytest.mark.parametrize("spec_str", ["mpileaks %gcc", "mpileaks ^zmpi ^callpath%gcc"])
-def test_direct_edges_and_round_tripping_to_dict(spec_str, default_mock_concretization):
+def test_direct_edges_and_round_tripping_to_dict(spec_str, config, mock_packages):
     """Tests that we preserve edge information when round-tripping to dict"""
     original = Spec(spec_str)
     reconstructed = Spec.from_dict(original.to_dict())
     assert original == reconstructed
     assert original.to_dict() == reconstructed.to_dict()
 
-    concrete = default_mock_concretization(spec_str)
+    concrete = spack.concretize.concretize_one(spec_str)
     concrete_reconstructed = Spec.from_dict(concrete.to_dict())
     assert concrete == concrete_reconstructed
     assert concrete.to_dict() == concrete_reconstructed.to_dict()
@@ -549,10 +563,10 @@ def test_direct_edges_and_round_tripping_to_dict(spec_str, default_mock_concreti
             assert "direct" not in dependency_data["parameters"]
 
 
-def test_pickle_preserves_identity_and_prefix(default_mock_concretization):
+def test_pickle_preserves_identity_and_prefix(config, mock_packages):
     """When pickling multiple specs that share dependencies, the identity of those dependencies
     should be preserved when unpickling."""
-    mpileaks_before: Spec = default_mock_concretization("mpileaks")
+    mpileaks_before: Spec = spack.concretize.concretize_one("mpileaks")
     callpath_before = mpileaks_before.dependencies("callpath")[0]
     callpath_before.set_prefix("/fake/prefix/callpath")
     specs_before = [mpileaks_before, callpath_before]
@@ -569,3 +583,43 @@ def test_pickle_preserves_identity_and_prefix(default_mock_concretization):
 
     # Test that the specs are the same as dicts
     assert mpileaks_before.to_dict() == mpileaks_after.to_dict()
+
+
+def test_load_specfile_with_no_nodes():
+    """Test that _load raises an error when the spec dict has an empty nodes list."""
+    data = {"spec": {"_meta": {"version": 4}, "nodes": []}}
+    with pytest.raises(spack.error.SpecError, match="contains no nodes"):
+        spack.spec.SpecfileV4.load(data)
+
+
+@pytest.mark.parametrize("version", [0, -1])
+def test_specfile_reader_for_invalid_version(version):
+    """Test that requesting an invalid specfile version raises."""
+    with pytest.raises(ValueError, match="Unknown Specfile version"):
+        spack.spec.specfile_reader_for_version(version)
+
+
+def test_wire_spec_nodes_missing_dep_hash():
+    """wire_spec_nodes raises when a dep edge references a hash not in the node list."""
+    nodes = [
+        {
+            "name": "root",
+            "hash": "r" * 32,
+            "dependencies": [
+                {
+                    "name": "ghost",
+                    "hash": "g" * 32,
+                    "parameters": {"deptypes": ("link",), "virtuals": ()},
+                }
+            ],
+        }
+    ]
+    with pytest.raises(spack.spec.MissingSpecHashError, match=r"missing dep hash ghost/g+"):
+        spack.spec.wire_spec_nodes(nodes, "hash", spack.spec.SpecfileLatest)
+
+
+def test_wire_spec_nodes_missing_build_spec_hash():
+    """wire_spec_nodes raises when a build_spec references a hash not in the node list."""
+    nodes = [{"name": "root", "hash": "r" * 32, "build_spec": {"name": "ghost", "hash": "g" * 32}}]
+    with pytest.raises(spack.spec.MissingSpecHashError, match=r"missing build_spec hash ghost/g+"):
+        spack.spec.wire_spec_nodes(nodes, "hash", spack.spec.SpecfileLatest)

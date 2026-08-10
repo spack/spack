@@ -32,6 +32,27 @@ If issues are found, they are reported to stdout:
        the variant 'adios' does not exist
        in spack_repo/builtin/packages/lammps/package.py
 
+.. index::
+   single: SBOM; format and location
+
+.. _sbom:
+
+Software Bill of Materials (SBOM)
+==================================
+
+Every installation through Spack produces an SBOM that follows SPDX-2.3 format, including NTIA minimum elements.
+The SBOM for each package installation can be found in the ``.spack/sbom`` directory of the package's prefix.
+To locate the package prefix, run:
+
+.. code-block:: console
+
+   $ spack location -i <package>
+
+This feature adds a new field in the package template: ``supplier``.
+The supplier field refers to organization, project, or individual responsible for distributing the software.
+
+Support for additional SBOM formats will be added in future releases.
+
 .. _cmd-spack-verify:
 
 Verifying Installations
@@ -70,7 +91,9 @@ This typically indicates that a package was linked against a system library inst
 
 This verification can also be enabled as a post-install hook by setting ``config:shared_linking:missing_library_policy`` to ``error`` or ``warn`` in :ref:`config.yaml <config-yaml>`.
 
-.. _filesystem-requirements:
+.. index::
+   single: filesystem requirements
+   :name: filesystem-requirements
 
 Filesystem Requirements
 =======================
@@ -123,8 +146,8 @@ This issue typically manifests with the error below:
      if self._enter() and self._acquire_fn:
    File "./spack/lib/spack/spack/database.py", line 608, in _enter
      return self._db.lock.acquire_read(self._timeout)
-   File "./spack/lib/spack/llnl/util/lock.py", line 103, in acquire_read
+   File "./spack/lib/spack/util/lock.py", line 103, in acquire_read
      self._lock(fcntl.LOCK_SH, timeout)   # can raise LockError.
-   File "./spack/lib/spack/llnl/util/lock.py", line 64, in _lock
+   File "./spack/lib/spack/util/lock.py", line 64, in _lock
      fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
    IOError: [Errno 38] Function not implemented

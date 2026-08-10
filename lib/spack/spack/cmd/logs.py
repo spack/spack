@@ -12,9 +12,10 @@ import sys
 
 import spack.cmd
 import spack.spec
-import spack.util.compression as compression
+import spack.store
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.util import compression
 
 description = "print out logs for packages"
 section = "query"
@@ -32,7 +33,7 @@ def _dump_byte_stream_to_stdout(instream: io.BufferedIOBase) -> None:
 
 
 def _logs(cmdline_spec: spack.spec.Spec, concrete_spec: spack.spec.Spec):
-    if concrete_spec.installed:
+    if spack.store.STORE.db.installed(concrete_spec):
         log_path = concrete_spec.package.install_log_path
     elif os.path.exists(concrete_spec.package.stage.path):
         # TODO: `spack logs` can currently not show the logs while a package is being built, as the
@@ -61,10 +62,10 @@ def logs(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
 
     if not specs:
-        raise SpackError("You must supply a spec.")
+        args.subparser.error("requires a spec")
 
     if len(specs) != 1:
-        raise SpackError("Too many specs. Supply only one.")
+        args.subparser.error("too many specs, supply only one")
 
     concrete_spec = spack.cmd.matching_spec_from_env(specs[0])
 

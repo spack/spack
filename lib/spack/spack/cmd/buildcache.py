@@ -8,7 +8,7 @@ import json
 import os
 import sys
 import tempfile
-from typing import List, Optional, Tuple
+from typing import List, Mapping, Optional, Tuple
 
 import spack.binary_distribution
 import spack.cmd
@@ -17,7 +17,6 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
@@ -28,12 +27,15 @@ import spack.util.parallel
 import spack.util.timer as timer_mod
 import spack.util.web as web_util
 from spack import traverse
+from spack.active_environment import active_environment
 from spack.binary_distribution import BINARY_INDEX
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
-from spack.llnl.string import plural
-from spack.llnl.util.lang import elide_list, stable_partition
 from spack.spec import Spec, save_dependency_specfiles
+from spack.util import tty
+from spack.util.lang import elide_list, stable_partition
+from spack.util.string import plural
+from spack.util.tty import colify
 
 from ..buildcache_migrate import migrate
 from ..buildcache_prune import prune_buildcache
@@ -120,6 +122,12 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="stop pushing on first failure (default is best effort)",
     )
     push.add_argument(
+        "--allow-missing",
+        action="store_true",
+        help="allow not installed specs to continue without failure (default fails on missing "
+        "specs)",
+    )
+    push.add_argument(
         "--base-image", default=None, help="specify the base image for the buildcache"
     )
     push.add_argument(
@@ -134,8 +142,17 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="for a private mirror, include non-redistributable packages",
     )
+    push.add_argument(
+        "--group",
+        action="append",
+        default=None,
+        dest="groups",
+        metavar="GROUP",
+        help="push only specs from the given environment group "
+        "(can be specified multiple times, requires an active environment)",
+    )
     arguments.add_common_arguments(push, ["specs", "jobs"])
-    push.set_defaults(func=push_fn)
+    push.set_defaults(func=push_fn, subparser=push)
 
     install = subparsers.add_parser("install", help=install_fn.__doc__)
     install.add_argument(
@@ -158,7 +175,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     arguments.add_common_arguments(install, ["specs"])
-    install.set_defaults(func=install_fn)
+    install.set_defaults(func=install_fn, subparser=install)
 
     listcache = subparsers.add_parser("list", help=list_fn.__doc__)
     arguments.add_common_arguments(listcache, ["long", "very_long", "namespaces"])
@@ -176,7 +193,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="list specs for all available architectures instead of default platform and OS",
     )
     arguments.add_common_arguments(listcache, ["specs"])
-    listcache.set_defaults(func=list_fn)
+    listcache.set_defaults(func=list_fn, subparser=listcache)
 
     keys = subparsers.add_parser("keys", help=keys_fn.__doc__)
     keys.add_argument(
@@ -184,7 +201,14 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     keys.add_argument("-t", "--trust", action="store_true", help="trust all downloaded keys")
     keys.add_argument("-f", "--force", action="store_true", help="force new download of keys")
-    keys.set_defaults(func=keys_fn)
+    arguments.add_common_arguments(keys, ["yes_to_all"])
+    keys.add_argument(
+        "mirrors",
+        nargs=argparse.REMAINDER,
+        type=arguments.mirror_name_or_url,
+        help="mirror name, path, or URL",
+    )
+    keys.set_defaults(func=keys_fn, subparser=keys)
 
     # Check if binaries need to be rebuilt on remote mirror
     check = subparsers.add_parser("check", help=check_fn.__doc__)
@@ -204,13 +228,13 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "--scope",
         action=arguments.ConfigScope,
         type=arguments.config_scope_readable_validator,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
 
     arguments.add_common_arguments(check, ["specs"])
 
-    check.set_defaults(func=check_fn)
+    check.set_defaults(func=check_fn, subparser=check)
 
     # Download tarball and specfile
     download = subparsers.add_parser("download", help=download_fn.__doc__)
@@ -222,7 +246,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=None,
         help="path to directory where tarball should be downloaded",
     )
-    download.set_defaults(func=download_fn)
+    download.set_defaults(func=download_fn, subparser=download)
 
     prune = subparsers.add_parser("prune", help=prune_fn.__doc__)
     prune.add_argument(
@@ -239,7 +263,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="do not actually delete anything from the buildcache, but log what would be deleted",
     )
-    prune.set_defaults(func=prune_fn)
+    prune.set_defaults(func=prune_fn, subparser=prune)
 
     # Given the root spec, save the yaml of the dependent spec to a file
     savespecfile = subparsers.add_parser("save-specfile", help=save_specfile_fn.__doc__)
@@ -254,7 +278,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     savespecfile.add_argument(
         "--specfile-dir", required=True, help="path to directory where spec yamls should be saved"
     )
-    savespecfile.set_defaults(func=save_specfile_fn)
+    savespecfile.set_defaults(func=save_specfile_fn, subparser=savespecfile)
 
     # Sync buildcache entries from one mirror to another
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
@@ -289,7 +313,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="destination mirror name, path, or URL",
     )
 
-    sync.set_defaults(func=sync_fn)
+    sync.set_defaults(func=sync_fn, subparser=sync)
 
     # Check the validity of a buildcache
     check_index = subparsers.add_parser("check-index", help=check_index_fn.__doc__)
@@ -309,7 +333,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     check_index.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
     )
-    check_index.set_defaults(func=check_index_fn)
+    check_index.set_defaults(func=check_index_fn, subparser=check_index)
 
     # Update buildcache index without copying any additional packages
     update_index = subparsers.add_parser(
@@ -350,7 +374,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="if provided, key index will be updated as well as package index",
     )
     arguments.add_common_arguments(update_index, ["yes_to_all"])
-    update_index.set_defaults(func=update_index_fn)
+    update_index.set_defaults(func=update_index_fn, subparser=update_index)
 
     # Migrate a buildcache from layout_version 2 to version 3
     migrate = subparsers.add_parser("migrate", help=migrate_fn.__doc__)
@@ -371,13 +395,13 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     arguments.add_common_arguments(migrate, ["yes_to_all"])
     # TODO: add -y argument to prompt if user really means to delete existing
-    migrate.set_defaults(func=migrate_fn)
+    migrate.set_defaults(func=migrate_fn, subparser=migrate)
 
 
 def _matching_specs(specs: List[Spec]) -> List[Spec]:
     """Disambiguate specs and return a list of matching specs"""
     return [
-        spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=InstallRecordStatus.ANY)
+        spack.cmd.disambiguate_spec(s, active_environment(), installed=InstallRecordStatus.ANY)
         for s in specs
     ]
 
@@ -386,21 +410,42 @@ def _format_spec(spec: Spec) -> str:
     return spec.cformat("{name}{@version}{/hash:7}")
 
 
-def _skip_no_redistribute_for_public(specs):
-    remaining_specs = list()
-    removed_specs = list()
+def _skip_no_redistribute_for_public(specs: List[Spec]) -> List[Spec]:
+    remaining_specs: List[Spec] = []
+    removed_specs: List[Spec] = []
     for spec in specs:
         if spec.package.redistribute_binary:
             remaining_specs.append(spec)
         else:
             removed_specs.append(spec)
     if removed_specs:
-        colified_output = tty.colify.colified(list(s.name for s in removed_specs), indent=4)
+        colified_output = colify.colified([s.name for s in removed_specs], indent=4)
         tty.debug(
             "The following specs will not be added to the binary cache"
             " because they cannot be redistributed:\n"
             f"{colified_output}\n"
             "You can use `--private` to include them."
+        )
+    return remaining_specs
+
+
+def _filter_specs_for_push(specs: List[Spec], mirror: spack.mirrors.mirror.Mirror) -> List[Spec]:
+    """Filter specs based on mirror include/exclude buildcache patterns."""
+    remaining_specs: List[Spec] = []
+    removed_specs: List[Spec] = []
+
+    for spec in specs:
+        if mirror.matches_binary(spec, direction="push"):
+            remaining_specs.append(spec)
+        else:
+            removed_specs.append(spec)
+
+    if removed_specs:
+        colified_output = colify.colified([s.name for s in removed_specs], indent=4)
+        tty.debug(
+            "The following specs will not be pushed to the binary cache"
+            " because they do not match the mirror's include/exclude filters:\n"
+            f"{colified_output}"
         )
     return remaining_specs
 
@@ -446,10 +491,23 @@ def _specs_to_be_packaged(
 
 def push_fn(args):
     """create a binary package and push it to a mirror"""
-    if args.specs:
+    if args.specs and args.groups:
+        args.subparser.error("--group and explicit specs are mutually exclusive")
+
+    if args.groups:
+        env = spack.cmd.require_active_env(args.subparser)
+        available_groups = env.manifest.groups()
+        if any(g not in available_groups for g in args.groups):
+            tty.die(
+                f"Some of the groups do not exist in the environment. "
+                f"Available groups are: {', '.join(sorted(available_groups))}"
+            )
+
+        roots = [c for g in args.groups for _, c in env.concretized_specs_by(group=g)]
+    elif args.specs:
         roots = _matching_specs(spack.cmd.parse_specs(args.specs))
     else:
-        roots = spack.cmd.require_active_env(cmd_name="buildcache push").concrete_roots()
+        roots = spack.cmd.require_active_env(args.subparser).concrete_roots()
 
     mirror = args.mirror
     assert isinstance(mirror, spack.mirrors.mirror.Mirror)
@@ -484,6 +542,8 @@ def push_fn(args):
     if not args.private:
         specs = _skip_no_redistribute_for_public(specs)
 
+    specs = _filter_specs_for_push(specs, mirror)
+
     if len(specs) > 1:
         tty.info(f"Selected {len(specs)} specs to push to {push_url}")
 
@@ -491,10 +551,18 @@ def push_fn(args):
     # push installed package in best effort mode.
     failed: List[Tuple[Spec, BaseException]] = []
     with spack.store.STORE.db.read_transaction():
-        if any(not s.installed for s in specs):
-            specs, not_installed = stable_partition(specs, lambda s: s.installed)
-            if args.fail_fast:
+        if any(not spack.store.STORE.db.installed(s) for s in specs):
+            specs, not_installed = stable_partition(
+                specs, lambda s: spack.store.STORE.db.installed(s)
+            )
+            if args.fail_fast and not args.allow_missing:
                 raise PackagesAreNotInstalledError(not_installed)
+            elif args.allow_missing:
+                tty.warn(
+                    f"The following {len(not_installed)} specs are not installed and will be "
+                    "skipped: \n"
+                    + "\n".join(elide_list([f"    {_format_spec(s)}" for s in not_installed], 5))
+                )
             else:
                 failed.extend(
                     (s, PackageNotInstalledError("package not installed")) for s in not_installed
@@ -555,7 +623,7 @@ def push_fn(args):
 def install_fn(args):
     """install from a binary package"""
     if not args.specs:
-        tty.die("a spec argument is required to install from a buildcache")
+        args.subparser.error("a spec argument is required to install from a buildcache")
 
     query = spack.binary_distribution.BinaryCacheQuery(all_architectures=args.otherarch)
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
@@ -592,7 +660,13 @@ def list_fn(args):
 
 def keys_fn(args):
     """get public keys available on mirrors"""
-    spack.binary_distribution.get_keys(args.install, args.trust, args.force)
+    mirror_map: Optional[Mapping[str, spack.mirrors.mirror.Mirror]] = None
+    if args.mirrors:
+        mirror_map = dict([(m.name, m) for m in args.mirrors])
+
+    spack.binary_distribution.trust_keys(
+        args.yes_to_all, args.install, args.trust, args.force, mirrors=mirror_map
+    )
 
 
 def check_fn(args: argparse.Namespace):
@@ -606,7 +680,7 @@ def check_fn(args: argparse.Namespace):
     if specs_arg:
         specs = _matching_specs(spack.cmd.parse_specs(specs_arg))
     else:
-        specs = spack.cmd.require_active_env("buildcache check").all_specs()
+        specs = spack.cmd.require_active_env(args.subparser).all_specs()
 
     if not specs:
         tty.msg("No specs provided, exiting.")
@@ -615,7 +689,7 @@ def check_fn(args: argparse.Namespace):
     specs = [spack.concretize.concretize_one(s) for s in specs]
 
     # Next see if there are any configured binary mirrors
-    configured_mirrors = spack.config.get("mirrors", scope=args.scope)
+    configured_mirrors = spack.config.CONFIG.get("mirrors", scope=args.scope)
 
     if args.mirror_url:
         configured_mirrors = {"additionalMirrorUrl": args.mirror_url}
@@ -643,7 +717,7 @@ def download_fn(args):
     specs = _matching_specs(spack.cmd.parse_specs(args.spec))
 
     if len(specs) != 1:
-        tty.die("a single spec argument is required to download from a buildcache")
+        args.subparser.error("requires a single spec argument")
 
     spack.binary_distribution.download_single_spec(specs[0], args.path)
 
@@ -658,7 +732,7 @@ def save_specfile_fn(args):
     specs = spack.cmd.parse_specs(args.root_spec)
 
     if len(specs) != 1:
-        tty.die("a single spec argument is required to save specfile")
+        args.subparser.error("requires a single spec argument")
 
     root = specs[0]
 
@@ -764,7 +838,7 @@ def sync_fn(args):
         return 0
 
     if args.src_mirror is None or args.dest_mirror is None:
-        tty.die("Provide mirrors to sync from and to.")
+        args.subparser.error("provide mirrors to sync from and to")
 
     src_mirror = args.src_mirror
     dest_mirror = args.dest_mirror
@@ -773,7 +847,7 @@ def sync_fn(args):
     dest_mirror_url = dest_mirror.push_url
 
     # Get the active environment
-    env = spack.cmd.require_active_env(cmd_name="buildcache sync")
+    env = spack.cmd.require_active_env(args.subparser)
 
     tty.msg(
         "Syncing environment buildcache files from {0} to {1}".format(
@@ -870,6 +944,7 @@ def update_view(
     name: Optional[str] = None,
     update_keys: bool = False,
     yes_to_all: bool = False,
+    parser,
 ):
     """update a buildcache view index"""
     # OCI images do not support views.
@@ -929,7 +1004,7 @@ def update_view(
             hashes.extend(env.all_hashes())
     else:
         # Get hashes in the current active environment
-        hashes = spack.cmd.require_active_env(cmd_name="buildcache update-view").all_hashes()
+        hashes = spack.cmd.require_active_env(parser).all_hashes()
 
     if not hashes:
         tty.warn("No specs found for view, creating an empty index")
@@ -946,7 +1021,9 @@ def update_view(
             cache_index = BINARY_INDEX._local_index_cache.get(str(mirror_metadata))
             if cache_index:
                 cache_key = cache_index["index_path"]
-                db._read_from_file(BINARY_INDEX._index_file_cache.cache_path(cache_key))
+                with BINARY_INDEX._index_file_cache.read_transaction(cache_key) as f:
+                    if f is not None:
+                        db._read_from_stream(f)
 
         spack.binary_distribution._url_generate_package_index(url, tmpdir, db, name, filter_fn)
 
@@ -1006,9 +1083,9 @@ def check_index_fn(args):
             db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
             cache_entry = BINARY_INDEX._local_index_cache[str(mirror_metadata)]
             cache_key = cache_entry["index_path"]
-            cache_path = BINARY_INDEX._index_file_cache.cache_path(cache_key)
-            with BINARY_INDEX._index_file_cache.read_transaction(cache_key):
-                db._read_from_file(cache_path)
+            with BINARY_INDEX._index_file_cache.read_transaction(cache_key) as f:
+                if f is not None:
+                    db._read_from_stream(f)
 
             index_hash_list = set(
                 [
@@ -1019,10 +1096,9 @@ def check_index_fn(args):
             )
 
         for spec_manifest in manifest_files:
-
             # Spec manifests have a naming format
             # <name>-<version>-<hash>.spec.manifest.json
-            spec_hash = spec_manifest.rsplit("-", 1)[1].split(".", 1)[0]
+            spec_hash = URLBuildcacheEntry.hash_from_manifest_name(spec_manifest)
             if checking_view_index and spec_hash not in index_hash_list:
                 continue
 
@@ -1107,6 +1183,7 @@ def update_index_fn(args):
             name=args.name,
             update_keys=args.keys,
             yes_to_all=args.yes_to_all,
+            parser=args.subparser,
         )
     else:
         update_index(args.mirror, update_keys=args.keys, timer=t)

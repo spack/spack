@@ -9,8 +9,9 @@ import spack.cmd.common.confirmation
 import spack.cmd.uninstall
 import spack.deptypes as dt
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.store
+from spack.active_environment import active_environment
+from spack.util import tty
 
 description = "remove specs that are now no longer needed"
 section = "build"
@@ -67,7 +68,7 @@ def roots_from_environments(args, active_env):
     # add root hashes from all considered environments to list of roots
     root_hashes = set()
     for env in all_environments:
-        root_hashes |= {x.hash for x in env.concretized_roots}
+        root_hashes |= {x.hash for x in env.explicit_roots()}
 
     return root_hashes
 
@@ -77,7 +78,7 @@ def gc(parser, args):
     if args.keep_build_dependencies:
         deptype |= dt.BUILD
 
-    active_env = ev.active_environment()
+    active_env = active_environment()
 
     # wrap the whole command with a read transaction to avoid multiple
     with spack.store.STORE.db.read_transaction():
@@ -91,7 +92,8 @@ def gc(parser, args):
             tty.msg(f"Restricting garbage collection to environment '{active_env.name}'")
             root_hashes = set(spack.store.STORE.db.all_hashes())  # keep everything
             root_hashes -= set(active_env.all_hashes())  # except this env
-            root_hashes |= {x.hash for x in active_env.concretized_roots}  # but keep its roots
+            # but keep its explicit roots
+            root_hashes |= {x.hash for x in active_env.explicit_roots()}
         else:
             # consider all explicit specs roots (the default for db.unused_specs())
             root_hashes = None
@@ -100,7 +102,7 @@ def gc(parser, args):
 
         # limit search to constraint specs if provided
         if args.constraint:
-            hashes = set(spec.dag_hash() for spec in args.specs())
+            hashes = {spec.dag_hash() for spec in args.specs()}
             specs = [spec for spec in specs if spec.dag_hash() in hashes]
 
         if not specs:

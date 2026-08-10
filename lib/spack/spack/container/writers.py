@@ -4,6 +4,7 @@
 """Writers for different kind of recipes and related
 convenience functions.
 """
+
 import copy
 import shlex
 from collections import namedtuple
@@ -14,8 +15,8 @@ import spack.vendor.jsonschema
 import spack.environment as ev
 import spack.error
 import spack.schema.env
-import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
+from spack import tengine
 
 from .images import (
     bootstrap_template_for,
@@ -85,7 +86,7 @@ def _stage_base_images(images_config):
     # Check the OS is mentioned in the internal data stored in a JSON file
     images_json = data()["images"]
     if not any(os_name == operating_system for os_name in images_json):
-        msg = 'invalid operating system name "{0}". ' "[Allowed values are {1}]"
+        msg = 'invalid operating system name "{0}". [Allowed values are {1}]'
         msg = msg.format(operating_system, ", ".join(data()["images"]))
         raise ValueError(msg)
 
@@ -98,7 +99,7 @@ def _stage_base_images(images_config):
         image_name, tag = build_info(operating_system, spack_version)
         build_stage = "bootstrap"
         if image_name:
-            build_stage = ":".join([image_name, tag])
+            build_stage = f"{image_name}:{tag}"
 
     # Retrieve the bootstrap stage
     bootstrap_stage = None

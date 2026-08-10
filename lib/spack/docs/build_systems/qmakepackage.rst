@@ -9,6 +9,10 @@
 
 .. _qmakepackage:
 
+.. index::
+   single: build system; QMake
+   single: QMakePackage
+
 QMake
 ------
 

@@ -5,7 +5,7 @@ import enum
 from typing import Dict, List
 
 import spack.spec
-from spack.llnl.util import lang
+from spack.util import lang
 
 from .libraries import CompilerPropertyDetector
 

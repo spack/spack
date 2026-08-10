@@ -11,13 +11,13 @@ from spack.oci.image import Digest, ImageReference
     "image_ref, expected",
     [
         (
-            f"example.com:1234/a/b/c:tag@sha256:{'a'*64}",
+            f"example.com:1234/a/b/c:tag@sha256:{'a' * 64}",
             ("example.com:1234", "a/b/c", "tag", Digest.from_sha256("a" * 64)),
         ),
         ("example.com:1234/a/b/c:tag", ("example.com:1234", "a/b/c", "tag", None)),
         ("example.com:1234/a/b/c", ("example.com:1234", "a/b/c", "latest", None)),
         (
-            f"example.com:1234/a/b/c@sha256:{'a'*64}",
+            f"example.com:1234/a/b/c@sha256:{'a' * 64}",
             ("example.com:1234", "a/b/c", "latest", Digest.from_sha256("a" * 64)),
         ),
         # ipv4
@@ -45,7 +45,7 @@ def test_name_parsing(image_ref, expected):
     "image_ref",
     [
         # wrong order of tag and sha
-        f"example.com:1234/a/b/c@sha256:{'a'*64}:tag",
+        f"example.com:1234/a/b/c@sha256:{'a' * 64}:tag",
         # double tag
         "example.com:1234/a/b/c:tag:tag",
         # empty tag
@@ -53,9 +53,9 @@ def test_name_parsing(image_ref, expected):
         # empty digest
         "example.com:1234/a/b/c@sha256:",
         # unsupported digest algorithm
-        f"example.com:1234/a/b/c@sha512:{'a'*128}",
+        f"example.com:1234/a/b/c@sha512:{'a' * 128}",
         # invalid digest length
-        f"example.com:1234/a/b/c@sha256:{'a'*63}",
+        f"example.com:1234/a/b/c@sha256:{'a' * 63}",
         # whitespace
         "example.com:1234/a/b/c :tag",
         "example.com:1234/a/b/c: tag",

@@ -34,6 +34,7 @@ Calls to each of these functions are triggered by the ``run`` method of
 the decorator object, that will forward the keyword arguments passed
 as input.
 """
+
 import ast
 import collections
 import collections.abc
@@ -52,15 +53,15 @@ from urllib.request import urlopen
 import spack.builder
 import spack.config
 import spack.enums
-import spack.fetch_strategy
-import spack.llnl.util.lang
+import spack.package_base
 import spack.patch
 import spack.repo
 import spack.spec
 import spack.util.crypto
+import spack.util.lang
 import spack.util.spack_yaml as syaml
 import spack.variant
-from spack.llnl.string import plural
+from spack.util.string import plural
 
 #: Map an audit tag to a list of callables implementing checks
 CALLBACKS = {}
@@ -195,7 +196,9 @@ def _search_duplicate_compilers(error_cls):
     """Report compilers with the same spec and two different definitions"""
     errors = []
 
-    compilers = list(sorted(spack.config.get("compilers"), key=lambda x: x["compiler"]["spec"]))
+    compilers = list(
+        sorted(spack.config.CONFIG.get("compilers"), key=lambda x: x["compiler"]["spec"])
+    )
     for spec, group in itertools.groupby(compilers, key=lambda x: x["compiler"]["spec"]):
         group = list(group)
         if len(group) == 1:
@@ -226,7 +229,7 @@ config_repos = AuditClass(
 def _search_duplicate_specs_in_externals(error_cls):
     """Search for duplicate specs declared as externals"""
     errors, externals = [], collections.defaultdict(list)
-    packages_yaml = spack.config.get("packages")
+    packages_yaml = spack.config.CONFIG.get("packages")
 
     for name, pkg_config in packages_yaml.items():
         # No externals can be declared under all
@@ -599,13 +602,31 @@ def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         pkg = pkg_cls(spack.spec.Spec(pkg_name))
         try:
-            spack.fetch_strategy.check_pkg_attributes(pkg)
+            spack.package_base.check_pkg_attributes(pkg)
             for version in pkg.versions:
-                assert spack.fetch_strategy.for_package_version(pkg, version)
+                assert spack.package_base.for_package_version(pkg, version)
         except Exception as e:
             error_msg = "The package '{}' cannot produce a fetcher for some of its versions"
             details = ["{}".format(str(e))]
             errors.append(error_cls(error_msg.format(pkg_name), details))
+    return errors
+
+
+@package_properties
+def _ensure_package_builders(pkgs, error_cls):
+    """Ensure all packages can produce a builder"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        pkg = pkg_cls(spack.spec.Spec(pkg_name))
+        try:
+            b = spack.builder.buildsystem_name(pkg)
+            if not isinstance(b, str):
+                raise TypeError("invalid builder type {!s}".format(type(b)))
+        except Exception as e:
+            errors.append(
+                error_cls("The package '{pkg_name}' does not have a build system", [str(e)])
+            )
     return errors
 
 
@@ -662,7 +683,7 @@ def _ensure_all_packages_use_sha256_checksums(pkgs, error_cls):
         error_msg = f"Package '{pkg_name}' does not use sha256 checksum"
         details = []
         for v, args in pkg.versions.items():
-            fetcher = spack.fetch_strategy.for_package_version(pkg, v)
+            fetcher = spack.package_base.for_package_version(pkg, v)
             digest, is_bad = invalid_sha256_digest(fetcher)
             if is_bad:
                 details.append(f"{pkg_name}@{v} uses {digest}")
@@ -686,11 +707,11 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
         # values are either ConditionalValue objects or the values themselves
-        build_system_names = set(
+        build_system_names = {
             v.value if isinstance(v, spack.variant.ConditionalValue) else v
             for _, variant in pkg_cls.variant_definitions("build_system")
             for v in variant.values
-        )
+        }
         builder_cls_names = [spack.builder.BUILDER_CLS[x].__name__ for x in build_system_names]
 
         has_builders_in_package_py = any(
@@ -898,7 +919,7 @@ def _linting_package_file(pkgs, error_cls):
                 errors.append(error_cls(msg.format(pkg_cls.name), [str(e)]))
                 continue
 
-    return spack.llnl.util.lang.dedupe(errors)
+    return spack.util.lang.dedupe(errors)
 
 
 @package_directives
@@ -990,7 +1011,7 @@ def _variant_issues_in_directives(pkgs, error_cls):
                 )
             )
 
-    return spack.llnl.util.lang.dedupe(errors)
+    return spack.util.lang.dedupe(errors)
 
 
 @package_directives
@@ -1187,6 +1208,22 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
     return errors
 
 
+@package_directives
+def _ensure_maintainers_are_not_placeholders(pkgs, error_cls):
+    """Ensure placeholder maintainers are not defined in the package."""
+    errors = []
+    placeholder_maintainers = ("github_user1", "github_user2")
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        found_placeholders = set(pkg_cls.maintainers).intersection(placeholder_maintainers)
+
+        if found_placeholders:
+            summary = f"Package '{pkg_name}' has placeholder maintainer(s)"
+            details = [f"Remove placeholder maintainer(s): {found_placeholders}"]
+            errors.append(error_cls(summary, details))
+    return errors
+
+
 def _issues_in_directive_constraint(pkg, constraint, *, directive, error_cls, filename, requestor):
     errors = []
     errors.extend(
@@ -1315,7 +1352,7 @@ def _named_specs_in_when_arguments(pkgs, error_cls):
                 error_cls(f"{pkg_name}: wrong 'when=' condition in 'resource' directives", details)
             )
 
-    return spack.llnl.util.lang.dedupe(errors)
+    return spack.util.lang.dedupe(errors)
 
 
 #: Sanity checks on package directives
