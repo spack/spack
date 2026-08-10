@@ -230,25 +230,27 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
     )
 
 
-def _attr_satisfies(lhs: Optional[str], rhs: Optional[str]) -> bool:
-    """Whether a platform or operating system on the lhs satisfies the one on the rhs."""
-    if not rhs:
-        return True
-    return bool(lhs) if rhs == "*" else lhs == rhs
-
-
-def _attr_intersects(lhs: Optional[str], rhs: Optional[str]) -> bool:
-    """Whether a platform or operating system on either side intersect."""
-    if not lhs or not rhs:
-        return True
-    return lhs == "*" or rhs == "*" or lhs == rhs
-
-
 @lang.lazy_lexicographic_ordering
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
 
     ANY_TARGET = _make_microarchitecture("*")
+
+    @staticmethod
+    def _attr_satisfies(lhs: Optional[str], rhs: Optional[str]) -> bool:
+        """Whether a platform or operating system on the lhs satisfies the one on the rhs."""
+        if not rhs:
+            return True
+        if rhs == "*":
+            return lhs is not None
+        return lhs == rhs
+
+    @staticmethod
+    def _attr_intersects(lhs: Optional[str], rhs: Optional[str]) -> bool:
+        """Whether a platform or operating system on either side intersect."""
+        if not lhs or not rhs:
+            return True
+        return lhs == "*" or rhs == "*" or lhs == rhs
 
     @staticmethod
     def default_arch():
@@ -420,7 +422,7 @@ class ArchSpec:
         other = self._autospec(other)
 
         for attribute in ("platform", "os"):
-            if not _attr_satisfies(getattr(self, attribute), getattr(other, attribute)):
+            if not self._attr_satisfies(getattr(self, attribute), getattr(other, attribute)):
                 return False
 
         return self._target_satisfies(other, strict=True)
@@ -438,7 +440,7 @@ class ArchSpec:
         other = self._autospec(other)
 
         for attribute in ("platform", "os"):
-            if not _attr_intersects(getattr(self, attribute), getattr(other, attribute)):
+            if not self._attr_intersects(getattr(self, attribute), getattr(other, attribute)):
                 return False
 
         return self._target_satisfies(other, strict=False)
