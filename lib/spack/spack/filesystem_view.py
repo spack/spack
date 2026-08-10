@@ -43,9 +43,6 @@ from spack.util.link_tree import (
 from spack.util.string import comma_or
 from spack.util.tty.color import colorize
 
-__all__ = ["FilesystemView", "YamlFilesystemView"]
-
-
 _projections_path = ".spack/projections.yaml"
 
 
