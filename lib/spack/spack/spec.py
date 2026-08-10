@@ -61,6 +61,7 @@ import re
 import socket
 import warnings
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     ClassVar,
@@ -746,6 +747,13 @@ class DependencySpec:
 
     __slots__ = "parent", "spec", "depflag", "virtuals", "direct", "when", "propagation"
 
+    if TYPE_CHECKING:
+        # lazy_lexicographic_ordering installs these with setattr, unseen by type checkers
+        def __lt__(self, other: Any) -> bool: ...
+        def __le__(self, other: Any) -> bool: ...
+        def __gt__(self, other: Any) -> bool: ...
+        def __ge__(self, other: Any) -> bool: ...
+
     def __init__(
         self,
         parent: "Spec",
@@ -1102,7 +1110,7 @@ def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> None:
     if key in edge_map:
         lst = edge_map[key]
         lst.append(edge)
-        lst.sort()  # type: ignore[call-arg,call-overload]
+        lst.sort()
     else:
         edge_map[key] = [edge]
 
@@ -1419,8 +1427,7 @@ def tree(
         ):
             deptype_lookup[edge.spec.dag_hash()] |= edge.depflag
 
-    # SupportsRichComparisonT issue with List[Spec]
-    sorted_specs: List["Spec"] = sorted(specs)  # type: ignore[type-var]
+    sorted_specs: List["Spec"] = sorted(specs)
 
     for d, dep_spec in spack.traverse.traverse_tree(
         sorted_specs, cover=cover, deptype=deptypes, depth_first=depth_first, key=key
@@ -1611,6 +1618,13 @@ def _satisfies_edge(lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtua
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec:
     compiler = DeprecatedCompilerSpec()
+
+    if TYPE_CHECKING:
+        # lazy_lexicographic_ordering installs these with setattr, unseen by type checkers
+        def __lt__(self, other: Any) -> bool: ...
+        def __le__(self, other: Any) -> bool: ...
+        def __gt__(self, other: Any) -> bool: ...
+        def __ge__(self, other: Any) -> bool: ...
 
     @staticmethod
     def default_arch():
@@ -1857,7 +1871,7 @@ class Spec:
             deptype = dt.canonicalize(deptype)
         return [d.parent for d in self.edges_from_dependents(name, depflag=deptype)]
 
-    def _dependencies_dict(self, depflag: dt.DepFlag = dt.ALL):
+    def _dependencies_dict(self, depflag: dt.DepFlag = dt.ALL) -> EdgeMap:
         """Return a dictionary, keyed by package name, of the direct
         dependencies.
 
@@ -1866,12 +1880,14 @@ class Spec:
         Args:
             deptype: allowed dependency types
         """
-        _group_fn = lambda x: x.spec.name
-        selected_edges = _select_edges(self._dependencies, depflag=depflag)
-        edges = sorted(selected_edges)  # type: ignore[type-var]
-        result = {}
-        for key, group in itertools.groupby(edges, key=_group_fn):
-            result[key] = list(group)
+        result: EdgeMap = {}
+        for edge in _select_edges(self._dependencies, depflag=depflag):
+            result.setdefault(edge.spec.name, []).append(edge)
+
+        for edges in result.values():
+            if len(edges) > 1:
+                edges.sort()
+
         return result
 
     def _add_flag(
@@ -2476,7 +2492,7 @@ class Spec:
             dependencies = []
             for name, edges_for_name in sorted(deps.items()):
                 for dspec in edges_for_name:
-                    dep_attrs = {
+                    dep_attrs: Dict[str, Any] = {
                         "name": name,
                         hash.name: dspec.spec._cached_hash(hash),
                         "parameters": {
