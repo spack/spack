@@ -3465,6 +3465,9 @@ class Spec:
             # objects.
             return self.concrete and self.dag_hash() == other.dag_hash()
 
+        if other.name and not self.name:
+            return False
+
         if self.name != other.name and self.name and other.name:
             # Name mismatch can still be satisfiable if lhs provides the virtual mentioned by rhs.
             if not resolve_virtuals:
