@@ -1866,12 +1866,18 @@ class Spec:
         Args:
             deptype: allowed dependency types
         """
-        _group_fn = lambda x: x.spec.name
-        selected_edges = _select_edges(self._dependencies, depflag=depflag)
-        edges = sorted(selected_edges)  # type: ignore[type-var]
-        result = {}
-        for key, group in itertools.groupby(edges, key=_group_fn):
-            result[key] = list(group)
+        result: Dict[str, List[DependencySpec]] = {}
+        for edge in _select_edges(self._dependencies, depflag=depflag):
+            result.setdefault(edge.spec.name, []).append(edge)
+
+        # Comparing two DependencySpec is expensive, since it falls back on comparing the
+        # child specs to tell parallel edges apart. Only edges to the same package name can
+        # be parallel, and callers sort the groups by name themselves, so we can restrict
+        # the comparison sort to groups with more than one edge, which are rare.
+        for edges in result.values():
+            if len(edges) > 1:
+                edges.sort()  # type: ignore[call-arg,call-overload]
+
         return result
 
     def _add_flag(
