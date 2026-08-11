@@ -2532,22 +2532,19 @@ def test_constrain_does_not_share_flags_or_architecture_with_the_rhs(mock_packag
     lhs.constrain(rhs)
     before = rhs.to_dict()
 
-    lhs.constrain(Spec("pkg-a cflags=-g target=haswell"))
+    # -g extends the flag list, ==-O2 constrains the propagation of -O2, haswell the range
+    lhs.constrain(Spec("pkg-a cflags==-O2 cflags=-g target=haswell"))
     assert rhs.to_dict() == before
 
 
-def test_copy_does_not_share_mutable_state(mock_packages):
-    """Ensure that mutable operations on compiler flags do not mutate the original spec"""
-    lhs, rhs = Spec("pkg-a"), Spec("pkg-a cflags=-O2")
-    lhs.constrain(rhs)
-    before = rhs.to_dict()
-    lhs.constrain("pkg-a cflags==-O2")
-    assert rhs.to_dict() == before
-
-    original = Spec("pkg-a cflags=-O2")
-    before = original.to_dict()
-    original.copy().constrain("pkg-a cflags==-O2")
-    assert original.to_dict() == before
+def test_copy_does_not_share_flag_instances(mock_packages):
+    """CompilerFlag instances have mutable attributes; those should not be shared with copies."""
+    old = Spec("pkg-a cflags=-O2 cflags==-g")
+    new = old.copy()
+    assert len(new.compiler_flags["cflags"]) == len(old.compiler_flags["cflags"]) == 2
+    for x, y in zip(old.compiler_flags["cflags"], new.compiler_flags["cflags"]):
+        assert x is not y
+        assert x == y and x.propagate == y.propagate and x.flag_group == y.flag_group
 
 
 @pytest.mark.parametrize(
