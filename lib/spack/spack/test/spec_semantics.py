@@ -2538,7 +2538,7 @@ def test_constrain_does_not_share_flags_or_architecture_with_the_rhs(mock_packag
 
 
 def test_copy_does_not_share_flag_instances(mock_packages):
-    """CompilerFlag instances have mutable attributes; those should not be shared with copies."""
+    """CompilerFlag is a mutable string in FlagMap; it should not be shared on copy."""
     old = Spec("pkg-a cflags=-O2 cflags==-g")
     new = old.copy()
     assert len(new.compiler_flags["cflags"]) == len(old.compiler_flags["cflags"]) == 2
