@@ -2641,6 +2641,20 @@ def test_parallel_edges_sort_with_differing_propagation(mock_packages):
     assert sorted(edges) == edges
 
 
+def test_satisfies_tries_every_parallel_edge(mock_packages):
+    """Satisfies is exhaustive when there are duplicates on abstract specs."""
+    spec = Spec("pkg-a ^[deptypes=link] pkg-b %pkg-c ^[deptypes=build] pkg-b %pkg-e")
+    assert spec.satisfies("pkg-a ^pkg-b %pkg-c")
+    assert spec.satisfies("pkg-a ^pkg-b %pkg-e")
+    assert not spec.satisfies("pkg-a ^pkg-b %pkg-c %pkg-e")
+
+
+def test_satisfies_tries_every_parallel_edge_of_a_concrete_spec(config, mock_packages):
+    """Satisfies is exhaustive when there are duplicates on concrete specs."""
+    spec = spack.concretize.concretize_one("dupe-tool-root")
+    assert spec.satisfies("^dupe-tool@2.0 %gmake ^[deptypes=link] dupe-tool@2")
+
+
 @pytest.mark.parametrize(
     "spec_str,assertions",
     [
