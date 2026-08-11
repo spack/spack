@@ -2532,8 +2532,19 @@ def test_constrain_does_not_share_flags_or_architecture_with_the_rhs(mock_packag
     lhs.constrain(rhs)
     before = rhs.to_dict()
 
-    lhs.constrain(Spec("pkg-a cflags=-g target=haswell"))
+    # -g extends the flag list, ==-O2 constrains the propagation of -O2, haswell the range
+    lhs.constrain(Spec("pkg-a cflags==-O2 cflags=-g target=haswell"))
     assert rhs.to_dict() == before
+
+
+def test_copy_does_not_share_flag_instances(mock_packages):
+    """CompilerFlag is a mutable string in FlagMap; it should not be shared on copy."""
+    old = Spec("pkg-a cflags=-O2 cflags==-g")
+    new = old.copy()
+    assert len(new.compiler_flags["cflags"]) == len(old.compiler_flags["cflags"]) == 2
+    for x, y in zip(old.compiler_flags["cflags"], new.compiler_flags["cflags"]):
+        assert x is not y
+        assert x == y and x.propagate == y.propagate and x.flag_group == y.flag_group
 
 
 @pytest.mark.parametrize(
