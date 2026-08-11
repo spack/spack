@@ -665,8 +665,8 @@ class TerminalUI(InstallerUI):
         yield " "
         yield f"{self.color.BLACK.bright}{build_info.hash}{self.color.RESET}"
         yield " "
-        # Package name in bold white if explicit, default otherwise
-        name_color = self.color.WHITE.bright if build_info.explicit else ""
+        # Package name in bold if explicit, default otherwise
+        name_color = self.color.BOLD if build_info.explicit else ""
         yield f"{name_color}{build_info.name}{self.color.RESET}"
         yield f"{self.color.CYAN}@{build_info.version}{self.color.RESET}"
 
