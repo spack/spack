@@ -24,7 +24,7 @@ import spack.util.url as url_util
 from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import Executable
+from spack.util.executable import Executable, ProcessError
 from spack.util.filesystem import mkdirp, touch, working_dir
 
 # various sha256 sums (using variables for legibility)
@@ -575,3 +575,21 @@ def test_patch_lookup_for_shadowed_package(mock_packages, config, repo_builder):
         # raises SpecError if the lookup uses the bare name: the shadowing
         # class's patch index has no such sha256
         assert {p.sha256 for p in spec.patches} == {foo_sha256, baz_sha256}
+
+
+def test_patch_reversed_patch_no_prompt(mock_packages, install_mockery, mock_fetch, capfd):
+    """Test to ensure patches that prompt for user interaction do not and correctly fail to apply"""
+    spec = spack.concretize.concretize_one("reversed-patch")
+    with spec.package.stage as stage:
+        if not os.path.isdir(stage.source_path):
+            os.makedirs(stage.source_path)
+        with working_dir(stage.source_path):
+            with open("message.txt", "w+", encoding="utf-8") as f:
+                f.write("fixed\n")
+        with pytest.raises(ProcessError):
+            spec.package.do_patch()
+        cap = capfd.readouterr()
+        # ensure it was a reverse patch that failed
+        assert "Reversed (or previously applied) patch detected" in cap.out
+        # ensure the user was not prompted
+        assert "Assume -R?" not in cap.out
