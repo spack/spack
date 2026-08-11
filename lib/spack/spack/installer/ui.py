@@ -691,4 +691,4 @@ class TerminalUI(InstallerUI):
             else (now - build_info.start_time)
         )
         if elapsed > 0:
-            yield f"{self.color.BLACK.bright} {pretty_duration(elapsed)}{self.color.RESET}"
+            yield f"{self.color.BLACK.bright} ({pretty_duration(elapsed)}){self.color.RESET}"
