@@ -925,6 +925,11 @@ class CompilerFlag(str):
         obj.source = kwargs.pop("source", None)
         return obj
 
+    def copy(self) -> "CompilerFlag":
+        return CompilerFlag(
+            self, propagate=self.propagate, flag_group=self.flag_group, source=self.source
+        )
+
     def to_dict(self) -> Dict[str, Any]:
         """Value and propagation of this flag, unlike ``FlagMap.yaml_entry``, which is its value
         only. ``flag_group`` and ``source`` are not included: they are bookkeeping for a single
@@ -983,15 +988,15 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         changed = False
         for flag_type in other:
             if flag_type not in self:
-                # copy the list, so that self and other do not share it
-                self[flag_type] = list(other[flag_type])
+                # copy the list and its flags, so that self and other share no mutable state
+                self[flag_type] = [f.copy() for f in other[flag_type]]
                 changed = True
                 continue
 
             extra_other = set(other[flag_type]) - set(self[flag_type])
             if extra_other:
                 self[flag_type] = list(self[flag_type]) + [
-                    x for x in other[flag_type] if x in extra_other
+                    x.copy() for x in other[flag_type] if x in extra_other
                 ]
                 changed = True
 
@@ -1039,8 +1044,8 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
 
     def copy(self):
         clone = FlagMap()
-        for name, compiler_flag in self.items():
-            clone[name] = compiler_flag
+        for flag_type, flags in self.items():
+            clone[flag_type] = [f.copy() for f in flags]
         return clone
 
     def add_flag(self, flag_type, value, propagation, flag_group=None, source=None):

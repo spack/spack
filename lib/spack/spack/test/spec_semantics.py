@@ -2536,6 +2536,20 @@ def test_constrain_does_not_share_flags_or_architecture_with_the_rhs(mock_packag
     assert rhs.to_dict() == before
 
 
+def test_copy_does_not_share_mutable_state(mock_packages):
+    """Ensure that mutable operations on compiler flags do not mutate the original spec"""
+    lhs, rhs = Spec("pkg-a"), Spec("pkg-a cflags=-O2")
+    lhs.constrain(rhs)
+    before = rhs.to_dict()
+    lhs.constrain("pkg-a cflags==-O2")
+    assert rhs.to_dict() == before
+
+    original = Spec("pkg-a cflags=-O2")
+    before = original.to_dict()
+    original.copy().constrain("pkg-a cflags==-O2")
+    assert original.to_dict() == before
+
+
 @pytest.mark.parametrize(
     "parent_str,child_str,kwargs,expected_str,expected_repr",
     [
