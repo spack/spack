@@ -37,7 +37,7 @@ def concretize(parser, args):
     if args.test == "all":
         tests = True
     elif args.test == "root":
-        tests = [spec.name for spec in env.user_specs]
+        tests = [spec.name for spec in env.all_user_specs]
     else:
         tests = False
 

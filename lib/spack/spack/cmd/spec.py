@@ -218,7 +218,7 @@ def spec(parser, args):
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs)
     elif env:
-        specs = list(env.user_specs)
+        specs = list(env.all_user_specs)
 
         if not specs:
             args.subparser.error(
