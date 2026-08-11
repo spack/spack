@@ -389,10 +389,10 @@ class TestSpecSemantics:
             (
                 'mpich cflags="-O3 -g"',
                 'mpich cflags=="-O3"',
-                'mpich cflags="-O3 -g"',
-                'mpich cflags="-O3 -g"',
-                [],
-                [],
+                'mpich cflags=="-O3" cflags="-g"',
+                'mpich cflags=="-O3" cflags="-g"',
+                [("cflags", "-O3")],
+                [("cflags", "-O3")],
             ),
             (
                 'mpich cflags=="-O3 -g"',
@@ -401,6 +401,14 @@ class TestSpecSemantics:
                 'mpich cflags=="-O3 -g"',
                 [("cflags", "-O3"), ("cflags", "-g")],
                 [("cflags", "-O3"), ("cflags", "-g")],
+            ),
+            (
+                "mpich cflags=-O2 cflags=-g cflags=-fPIC cflags==-pipe",
+                "mpich cflags==-O2 cflags=-g cflags==-fPIC cflags=-pipe",
+                "mpich cflags==-O2 cflags=-g cflags==-fPIC cflags==-pipe",
+                "mpich cflags==-O2 cflags=-g cflags==-fPIC cflags==-pipe",
+                [("cflags", "-O2"), ("cflags", "-fPIC"), ("cflags", "-pipe")],
+                [("cflags", "-O2"), ("cflags", "-fPIC"), ("cflags", "-pipe")],
             ),
         ],
     )
