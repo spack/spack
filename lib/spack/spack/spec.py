@@ -2152,10 +2152,8 @@ class Spec:
 
     @property
     def spliced(self):
-        """Returns whether or not this Spec is being deployed as built i.e.
-        whether or not this Spec has ever been spliced.
-        """
-        return any(s.build_spec is not s for s in self.traverse(root=True))
+        """Returns whether this Spec is being deployed as built i.e. whether it has been spliced"""
+        return self.build_spec is not self
 
     @property
     def installed(self):
