@@ -989,22 +989,35 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         changed = False
         for flag_type in other:
             if flag_type not in self:
-                self[flag_type] = other[flag_type]
+                # copy the list, so that self and other do not share it
+                self[flag_type] = list(other[flag_type])
                 changed = True
-            else:
-                extra_other = set(other[flag_type]) - set(self[flag_type])
-                if extra_other:
-                    self[flag_type] = list(self[flag_type]) + [
-                        x for x in other[flag_type] if x in extra_other
-                    ]
-                    changed = True
+                continue
 
-                # Next, if any flags in other propagate, we force them to propagate in our case
-                shared = list(sorted(set(other[flag_type]) - extra_other))
-                for x, y in _shared_subset_pair_iterate(shared, sorted(self[flag_type])):
-                    if y.propagate is True and x.propagate is False:
-                        changed = True
-                        y.propagate = False
+            extra_other = set(other[flag_type]) - set(self[flag_type])
+            if extra_other:
+                self[flag_type] = list(self[flag_type]) + [
+                    x for x in other[flag_type] if x in extra_other
+                ]
+                changed = True
+
+            # Next, if any flags in other propagate, we force them to propagate in our case.
+            # CompilerFlag objects can be shared with other specs, so they are replaced rather
+            # than modified in place.
+            shared = sorted(set(other[flag_type]) - extra_other)
+            demoted = {
+                id(y)
+                for x, y in _shared_subset_pair_iterate(shared, sorted(self[flag_type]))
+                if y.propagate is True and x.propagate is False
+            }
+            if demoted:
+                changed = True
+                self[flag_type] = [
+                    CompilerFlag(f, propagate=False, flag_group=f.flag_group, source=f.source)
+                    if id(f) in demoted
+                    else f
+                    for f in self[flag_type]
+                ]
 
         # TODO: what happens if flag groups with a partial (but not complete)
         # intersection specify different behaviors for flag propagation?
@@ -3157,7 +3170,8 @@ class Spec:
         if sarch is not None and oarch is not None:
             changed |= self.architecture.constrain(other.architecture)
         elif oarch is not None:
-            self.architecture = oarch
+            # copy, so that a later constrain on self does not write through into other
+            self.architecture = oarch.copy()
             changed = True
 
         if deps:

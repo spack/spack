@@ -2475,6 +2475,17 @@ def test_constrain_symbolically(constraints, expected):
     assert reverse_order == Spec(expected)
 
 
+def test_constrain_does_not_share_flags_or_architecture_with_the_rhs(mock_packages):
+    """A successful constrain copies what it takes from the right-hand side instead of aliasing
+    it, so narrowing the left-hand side further cannot reach a spec that was only ever read."""
+    lhs, rhs = Spec("pkg-a"), Spec("pkg-a cflags=-O2 target=x86_64:")
+    lhs.constrain(rhs)
+    before = rhs.to_dict()
+
+    lhs.constrain(Spec("pkg-a cflags=-g target=haswell"))
+    assert rhs.to_dict() == before
+
+
 @pytest.mark.parametrize(
     "parent_str,child_str,kwargs,expected_str,expected_repr",
     [
