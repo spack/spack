@@ -50,7 +50,7 @@ def apply_patch(
             git_root = git_root / "usr" / "bin"
             git_utils_path = os.pathsep.join([str(git_root), git_utils_path])
 
-    args = ["-s", "-p", str(level), "-i", patch_path, "-d", working_dir]
+    args = ["-s", "-t", "-p", str(level), "-i", patch_path, "-d", working_dir]
     if reverse:
         args.append("-R")
 
