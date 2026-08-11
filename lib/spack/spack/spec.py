@@ -1534,8 +1534,13 @@ def _get_satisfying_edge(
     lhs_node: "Spec", rhs_edge: DependencySpec, *, resolve_virtuals: bool
 ) -> Optional[DependencySpec]:
     """Search for an edge in ``lhs_node`` that satisfies ``rhs_edge``."""
-    # First check direct deps of all types.
+    # First check direct deps of all types. There is a subtlety: only abstract specs distinguish
+    # between direct and indirect edges, whereas concrete specs always have direct edges (without
+    # setting the direct flag).
+    require_direct = rhs_edge.direct and not lhs_node.concrete
     for lhs_edge in lhs_node.edges_to_dependencies():
+        if require_direct and not lhs_edge.direct:
+            continue
         if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
             return lhs_edge
 
@@ -2904,10 +2909,17 @@ class Spec:
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
+        if self._concrete == value:
+            return
         self._concrete = value
-        self._validate_version()
-        for variant in self.variants.values():
-            variant.concrete = True
+        # A direct dependency is a constraint written with %, so the flag belongs on abstract
+        # specs only; every edge of a materialized DAG is one anyway.
+        for edge in self.edges_to_dependencies():
+            edge.direct = not value
+        if value:
+            self._validate_version()
+            for variant in self.variants.values():
+                variant.concrete = True
 
     def _validate_version(self):
         # Specs that were concretized with just a git sha as version, without associated
