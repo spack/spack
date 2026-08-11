@@ -1598,69 +1598,78 @@ def _oci_config_from_tag(image_ref_and_tag: Tuple[ImageReference, str]) -> Optio
 
 
 def _oci_update_index(
-    image_ref: ImageReference, tmpdir: str, pool: concurrent.futures.Executor
+    image_ref: ImageReference,
+    tmpdir: str,
+    pool: concurrent.futures.Executor,
+    *,
+    timer=timer.NULL_TIMER,
 ) -> None:
-    tags = list_tags(image_ref)
+    with timer.measure("list"):
+        tags = list_tags(image_ref)
 
-    # Fetch all image config files in parallel
-    spec_dicts = pool.map(
-        _oci_config_from_tag, ((image_ref, tag) for tag in tags if tag_is_spec(tag))
-    )
+    with timer.measure("read"):
+        # Fetch all image config files in parallel
+        spec_dicts = pool.map(
+            _oci_config_from_tag, ((image_ref, tag) for tag in tags if tag_is_spec(tag))
+        )
 
-    # Populate the database
-    db_root_dir = os.path.join(tmpdir, "db_root")
-    db = BuildCacheDatabase(db_root_dir)
+        # Populate the database
+        db_root_dir = os.path.join(tmpdir, "db_root")
+        db = BuildCacheDatabase(db_root_dir)
 
-    for spec_dict in spec_dicts:
-        spec = spack.spec.Spec.from_dict(spec_dict)
-        db.add(spec)
-        db.mark(spec, "in_buildcache", True)
+        for spec_dict in spec_dicts:
+            spec = spack.spec.Spec.from_dict(spec_dict)
+            db.add(spec)
+            db.mark(spec, "in_buildcache", True)
 
-    # Create the index.json file
-    index_json_path = os.path.join(tmpdir, spack.database.INDEX_JSON_FILE)
-    with open(index_json_path, "w", encoding="utf-8") as f:
-        db._write_to_file(f)
+    with timer.measure("push"):
+        # Create the index.json file
+        index_json_path = os.path.join(tmpdir, spack.database.INDEX_JSON_FILE)
+        with open(index_json_path, "w", encoding="utf-8") as f:
+            db._write_to_file(f)
 
-    # Create an empty config.json file
-    empty_config_json_path = os.path.join(tmpdir, "config.json")
-    with open(empty_config_json_path, "wb") as f:
-        f.write(b"{}")
+        # Create an empty config.json file
+        empty_config_json_path = os.path.join(tmpdir, "config.json")
+        with open(empty_config_json_path, "wb") as f:
+            f.write(b"{}")
 
-    # Upload the index.json file
-    index_shasum = Digest.from_sha256(spack.util.crypto.checksum(hashlib.sha256, index_json_path))
-    upload_blob_with_retry(image_ref, file=index_json_path, digest=index_shasum)
+        # Upload the index.json file
+        index_shasum = Digest.from_sha256(
+            spack.util.crypto.checksum(hashlib.sha256, index_json_path)
+        )
+        upload_blob_with_retry(image_ref, file=index_json_path, digest=index_shasum)
 
-    # Upload the config.json file
-    empty_config_digest = Digest.from_sha256(
-        spack.util.crypto.checksum(hashlib.sha256, empty_config_json_path)
-    )
-    upload_blob_with_retry(image_ref, file=empty_config_json_path, digest=empty_config_digest)
+        # Upload the config.json file
+        empty_config_digest = Digest.from_sha256(
+            spack.util.crypto.checksum(hashlib.sha256, empty_config_json_path)
+        )
+        upload_blob_with_retry(image_ref, file=empty_config_json_path, digest=empty_config_digest)
 
-    # Push a manifest file that references the index.json file as a layer
-    # Notice that we push this as if it is an image, which it of course is not.
-    # When the ORAS spec becomes official, we can use that instead of a fake image.
-    # For now we just use the OCI image spec, so that we don't run into issues with
-    # automatic garbage collection of blobs that are not referenced by any image manifest.
-    oci_manifest = {
-        "mediaType": "application/vnd.oci.image.manifest.v1+json",
-        "schemaVersion": 2,
-        # Config is just an empty {} file for now, and irrelevant
-        "config": {
-            "mediaType": "application/vnd.oci.image.config.v1+json",
-            "digest": str(empty_config_digest),
-            "size": os.path.getsize(empty_config_json_path),
-        },
-        # The buildcache index is the only layer, and is not a tarball, we lie here.
-        "layers": [
-            {
-                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
-                "digest": str(index_shasum),
-                "size": os.path.getsize(index_json_path),
-            }
-        ],
-    }
+        # Push a manifest file that references the index.json file as a layer
+        # Notice that we push this as if it is an image, which it of course is not.
+        # When the ORAS spec becomes official, we can use that instead of a fake image.
+        # For now we just use the OCI image spec, so that we don't run into issues with
+        # automatic garbage collection of blobs that are not referenced by any image manifest.
+        oci_manifest = {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "schemaVersion": 2,
+            # Config is just an empty {} file for now, and irrelevant
+            "config": {
+                "mediaType": "application/vnd.oci.image.config.v1+json",
+                "digest": str(empty_config_digest),
+                "size": os.path.getsize(empty_config_json_path),
+            },
+            # The buildcache index is the only layer, and is not a tarball, we lie here.
+            "layers": [
+                {
+                    "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                    "digest": str(index_shasum),
+                    "size": os.path.getsize(index_json_path),
+                }
+            ],
+        }
 
-    upload_manifest_with_retry(image_ref.with_tag(default_index_tag), oci_manifest)
+        upload_manifest_with_retry(image_ref.with_tag(default_index_tag), oci_manifest)
 
 
 def download_tarball(

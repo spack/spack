@@ -913,7 +913,7 @@ def update_index(
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
         ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
-            spack.binary_distribution._oci_update_index(image_ref, tmpdir, executor)
+            spack.binary_distribution._oci_update_index(image_ref, tmpdir, executor, timer=timer)
         return
 
     # Otherwise, assume a normal mirror.
