@@ -771,11 +771,11 @@ When working on the ASP-based solver in ``lib/spack/spack/solver/``, it is often
 Generating ASP facts
 ^^^^^^^^^^^^^^^^^^^^
 
-The ``spack spec --show=asp`` flag dumps all ASP facts generated for a given spec to stdout:
+The ``spack solve --show=asp`` flag dumps all ASP facts generated for a given spec to stdout:
 
 .. code-block:: console
 
-   $ spack spec --show=asp zlib-ng > zlib.lp
+   $ spack solve --show=asp zlib-ng > zlib.lp
 
 The resulting file contains both the package facts (versions, variants, dependencies) and the problem-specific facts derived from the user's configuration.
 It can be fed directly to clingo alongside the solver rules.
