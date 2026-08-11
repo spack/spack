@@ -3128,15 +3128,15 @@ complete -c spack -n '__fish_spack_using_command style' -s b -l base -r -d 'bran
 complete -c spack -n '__fish_spack_using_command style' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command style' -s a -l all -d 'check all files, not just changed files (applies only to Import Check)'
 complete -c spack -n '__fish_spack_using_command style' -s r -l root-relative -f -a root_relative
-complete -c spack -n '__fish_spack_using_command style' -s r -l root-relative -d 'print root-relative paths (default: cwd-relative or repo-relative if --repo is specified)'
+complete -c spack -n '__fish_spack_using_command style' -s r -l root-relative -d 'print root-relative paths (default: cwd-relative, or repo-relative with --repo)'
 complete -c spack -n '__fish_spack_using_command style' -s U -l no-untracked -f -a untracked
 complete -c spack -n '__fish_spack_using_command style' -s U -l no-untracked -d 'exclude untracked files from checks'
 complete -c spack -n '__fish_spack_using_command style' -s f -l fix -f -a fix
 complete -c spack -n '__fish_spack_using_command style' -s f -l fix -d 'format and fix issues automatically (e.g., with ruff)'
 complete -c spack -n '__fish_spack_using_command style' -l root -r -f -a root
-complete -c spack -n '__fish_spack_using_command style' -l root -r -d 'style check a different spack or repo instance. If --repo is specified, --root should be the root of the repo repository, not the repo root.'
+complete -c spack -n '__fish_spack_using_command style' -l root -r -d 'style check a different spack instance'
 complete -c spack -n '__fish_spack_using_command style' -l repo -r -f -a repo
-complete -c spack -n '__fish_spack_using_command style' -l repo -r -d 'repositories to perform style checks against, specified by namespace. (default: builtin)'
+complete -c spack -n '__fish_spack_using_command style' -l repo -r -d 'check a package repo instead of core spack, by namespace (default: builtin)'
 complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -f -a tool
 complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -d 'specify which tools to run (default: import, ruff-format, ruff-check, mypy)'
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -f -a skip

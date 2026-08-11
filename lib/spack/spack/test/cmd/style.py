@@ -16,7 +16,7 @@ import spack.main
 import spack.paths
 import spack.repo
 from spack.cmd.style import _run_import_check, changed_files, changed_files_repo
-from spack.util.filesystem import FileFilter, working_dir
+from spack.repo import RepoPath
 from spack.test.conftest import RepoBuilder
 from spack.util.executable import which
 from spack.util.filesystem import FileFilter, working_dir
@@ -81,12 +81,6 @@ def ruff_package_with_errors(scope="function"):
         "from spack.package import *", "from spack.package import *\nimport os", string=True
     )
     yield tmp
-
-
-def make_pyproject_config(repo_root: pathlib.Path):
-    with working_dir(str(repo_root)):
-        (repo_root / "packages" / "repo_test_package").mkdir(parents=True, exist_ok=True)
-        (repo_root / "pyproject.toml").touch()
 
 
 def test_changed_files_from_git_rev_base(git, tmp_path: pathlib.Path):
@@ -334,7 +328,7 @@ def something(y: spack.util.url.Url): ...
         out=output_buf,
         root_relative=False,
         root=pathlib.Path(spack.paths.prefix),
-        working_dir=pathlib.Path(root),
+        report_dir=pathlib.Path(root),
     )
     output = output_buf.getvalue()
 
@@ -357,7 +351,7 @@ def something(y: spack.util.url.Url): ...
         out=output_buf,
         root_relative=False,
         root=pathlib.Path(spack.paths.prefix),
-        working_dir=pathlib.Path(root),
+        report_dir=pathlib.Path(root),
     )
     output = output_buf.getvalue()
     assert exit_code == 1
@@ -375,7 +369,7 @@ def something(y: spack.util.url.Url): ...
         out=output_buf,
         root_relative=False,
         root=pathlib.Path(spack.paths.prefix),
-        working_dir=pathlib.Path(root),
+        report_dir=pathlib.Path(root),
     )
     output = output_buf.getvalue()
     assert exit_code == 0
@@ -400,7 +394,7 @@ def test_run_import_check_syntax_error_and_missing(tmp_path: pathlib.Path):
         out=output_buf,
         root_relative=True,
         root=tmp_path,
-        working_dir=tmp_path / "does-not-matter",
+        report_dir=tmp_path / "does-not-matter",
     )
     output = output_buf.getvalue()
     assert "syntax-error.py: could not parse" in output
@@ -424,71 +418,111 @@ def test_pkg_imports():
     assert spack.cmd.style._module_part(pathlib.Path(spack.paths.prefix), "spack.pkg") is None
 
 
+def add_package_file(repo_root: pathlib.Path, name: str = "repo_test_package") -> pathlib.Path:
+    """Add an empty ``package.py`` to a repo and return its path."""
+    package_py = repo_root / "packages" / name / "package.py"
+    package_py.parent.mkdir(parents=True, exist_ok=True)
+    package_py.touch()
+    return package_py
+
+
 def test_changed_files_repo(git, repo_builder: RepoBuilder):
     with spack.repo.use_repositories(repo_builder.root) as repo_path:
         repo = repo_path.get_repo(repo_builder.namespace)
         with working_dir(repo.root):
-            repo_root = pathlib.Path(repo.root)
             git("init")
             git("checkout", "-b", "main")
             git("config", "user.name", "test user")
             git("config", "user.email", "test@user.com")
             git("commit", "--no-gpg-sign", "--allow-empty", "-m", "initial commit")
 
-            (repo_root / "packages" / "repo_test_package").mkdir(parents=True, exist_ok=True)
-            (repo_root / "packages" / "repo_test_package" / "package.py").touch()
-        assert repo_root / pathlib.Path(
-            "packages/repo_test_package/package.py"
-        ) in changed_files_repo(repo, base="HEAD")
-        assert repo_root / pathlib.Path(
-            "packages/repo_test_package/package.py"
-        ) in changed_files_repo(repo, base="main")
+            package_py = add_package_file(pathlib.Path(repo.root))
+        assert package_py in changed_files_repo(repo, base="HEAD")
+        assert package_py in changed_files_repo(repo, base="main")
 
 
-def test_changed_files_repo_no_git(repo_builder):
+def test_changed_files_repo_no_git(repo_builder: RepoBuilder):
+    """A repo that isn't a git checkout falls back to every Python file in it."""
+    with spack.repo.use_repositories(repo_builder.root) as repo_path:
+        repo = repo_path.get_repo(repo_builder.namespace)
+        package_py = add_package_file(pathlib.Path(repo.root))
+        assert package_py in changed_files_repo(repo)
+
+
+def test_changed_files_repo_no_base(git, repo_builder: RepoBuilder, capfd):
+    """A repo without the base revision falls back to every Python file, without dying."""
     with spack.repo.use_repositories(repo_builder.root) as repo_path:
         repo = repo_path.get_repo(repo_builder.namespace)
         with working_dir(repo.root):
-            repo_root = pathlib.Path(repo.root)
-            (repo_root / "packages" / "repo_test_package").mkdir(parents=True, exist_ok=True)
-            (repo_root / "packages" / "repo_test_package" / "package.py").touch()
-        assert repo_root / pathlib.Path(
-            "packages/repo_test_package/package.py"
-        ) in changed_files_repo(repo)
+            git("init")
+            git("config", "user.name", "test user")
+            git("config", "user.email", "test@user.com")
+            git("commit", "--no-gpg-sign", "--allow-empty", "-m", "initial commit")
+
+            package_py = add_package_file(pathlib.Path(repo.root))
+        assert package_py in changed_files_repo(repo, base="not-a-branch")
+
+        _, err = capfd.readouterr()
+        assert "does not have a 'not-a-branch' revision" not in err
 
 
 def test_get_repo_config_file(repo_builder: RepoBuilder):
-    repo_builder.add_package("pkg-c")
-    repo_builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
-    repo_builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
     with spack.repo.use_repositories(repo_builder.root) as repo_path:
         repo = repo_path.get_repo(repo_builder.namespace)
         repo_root = pathlib.Path(repo.root)
-        make_pyproject_config(repo_root)
-        config_file = spack.cmd.style.repo_config_file(repo, "pyproject.toml")
-        assert config_file == str(repo_root / "pyproject.toml")
 
+        # no config anywhere at or above the repo root
+        assert spack.cmd.style.repo_config_file(repo, "ruff.toml") is None
 
-@pytest.mark.skipif(not RUFF, reason="ruff not installed")
-def test_repo_style(repo_builder: RepoBuilder, ruff_package_with_errors, external_style_root):
-    tmp_path, _ = external_style_root
-    repo_builder.add_package("pkg-c")
-    repo_builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
-    repo_builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
-    with spack.repo.use_repositories(repo_builder.root) as repo_path:
-        repo = repo_path.get_repo(repo_builder.namespace)
-        repo_root = pathlib.Path(repo.root)
-        make_pyproject_config(repo_root)
-        repo_name = repo.namespace
-        bad_file = pathlib.Path(repo_builder._recipe_filename("bad_package"))
-        bad_file.parent.mkdir(parents=True)
-        bad_file.touch()
-        shutil.copy(ruff_package_with_errors, bad_file)
-        output = style(
-            "--root", str(tmp_path), "--repo", repo_name, "-t", "ruff-check", fail_on_error=False
+        # the repo's own config wins
+        (repo_root / "ruff.toml").touch()
+        assert spack.cmd.style.repo_config_file(repo, "ruff.toml") == str(repo_root / "ruff.toml")
+
+        # a config above the repo root is found too
+        (repo_root / "ruff.toml").unlink()
+        (repo_root.parent / "ruff.toml").touch()
+        assert spack.cmd.style.repo_config_file(repo, "ruff.toml") == str(
+            repo_root.parent / "ruff.toml"
         )
-        # check that we ran on repo
-        bad_file_rel_path = os.path.relpath(bad_file, repo.root)
-        assert bad_file_rel_path in output
-        # check that we still ran on core
-        assert "lib/spack/spack/dummy.py" not in output
+
+
+def test_repo_and_root_are_mutually_exclusive(tmp_path: pathlib.Path):
+    output = style("--root", str(tmp_path), "--repo", "builtin", fail_on_error=False)
+    assert "--repo and --root are mutually exclusive" in output
+    assert style.returncode == 1
+
+
+def test_unknown_repo():
+    """An unknown namespace raises a SpackError, which ``spack.main`` dies gracefully on."""
+    style("--repo", "not-a-namespace", fail_on_error=False)
+    assert isinstance(style.error, spack.repo.UnknownNamespaceError)
+
+
+@pytest.mark.skipif(not RUFF, reason="ruff is not installed.")
+def test_repo_style(repo_builder: RepoBuilder, ruff_package_with_errors):
+    """``--repo`` checks a package repo with its own config, and leaves core spack alone."""
+    with spack.repo.use_repositories(repo_builder.root) as repo_path:
+        repo = repo_path.get_repo(repo_builder.namespace)
+        repo_root = pathlib.Path(repo.root)
+        (repo_root / "pyproject.toml").touch()
+
+        bad_file = pathlib.Path(repo_builder._recipe_filename("bad-package"))
+        bad_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(ruff_package_with_errors, bad_file)
+
+        output = style("--repo", repo.namespace, "-t", "ruff-check", fail_on_error=False)
+
+    assert style.returncode == 1
+    assert f"Running style checks on spack repository {repo.namespace}" in output
+    # the repo's bad package is reported, relative to the repo root
+    assert os.path.relpath(bad_file, repo.root) in output
+    # core spack was not checked
+    assert "lib/spack/spack" not in output
+
+
+def test_repo_skips_mypy(repo_builder: RepoBuilder):
+    """mypy type checks an importable spack, so it is dropped for package repos."""
+    with spack.repo.use_repositories(repo_builder.root) as repo_path:
+        repo = repo_path.get_repo(repo_builder.namespace)
+        output = style("--repo", repo.namespace, "-t", "mypy", fail_on_error=False)
+    assert "Nothing to run" in output
