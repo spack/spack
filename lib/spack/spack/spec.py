@@ -113,23 +113,6 @@ from spack.util import lang, tty
 
 from .enums import PropagationPolicy
 
-__all__ = [
-    "CompilerSpec",
-    "Spec",
-    "UnsupportedPropagationError",
-    "DuplicateDependencyError",
-    "UnsupportedCompilerError",
-    "DuplicateArchitectureError",
-    "InvalidDependencyError",
-    "UnsatisfiableSpecNameError",
-    "UnsatisfiableVersionSpecError",
-    "UnsatisfiableArchitectureSpecError",
-    "UnsatisfiableDependencySpecError",
-    "AmbiguousHashError",
-    "InvalidHashError",
-    "SpecDeprecatedError",
-]
-
 SPEC_FORMAT_RE = re.compile(
     r"(?:"  # this is one big or, with matches ordered by priority
     # OPTION 1: escaped character (needs to be first to catch opening \{)
