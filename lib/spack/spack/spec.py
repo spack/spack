@@ -943,29 +943,6 @@ class CompilerFlag(str):
 _valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags"]
 
 
-def _shared_subset_pair_iterate(container1, container2):
-    """
-    [0, a, c, d, f]
-    [a, d, e, f]
-
-    yields [(a, a), (d, d), (f, f)]
-
-    no repeated elements
-    """
-    a_idx, b_idx = 0, 0
-    max_a, max_b = len(container1), len(container2)
-    while a_idx < max_a and b_idx < max_b:
-        if container1[a_idx] == container2[b_idx]:
-            yield (container1[a_idx], container2[b_idx])
-            a_idx += 1
-            b_idx += 1
-        else:
-            while container1[a_idx] < container2[b_idx]:
-                a_idx += 1
-            while container1[a_idx] > container2[b_idx]:
-                b_idx += 1
-
-
 class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
     __slots__ = ()
 
@@ -996,22 +973,11 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
                 changed = True
 
             # Next, if any flags in other propagate, we force them to propagate in our case.
-            # CompilerFlag objects can be shared with other specs, so they are replaced rather
-            # than modified in place.
-            shared = sorted(set(other[flag_type]) - extra_other)
-            demoted = {
-                id(y)
-                for x, y in _shared_subset_pair_iterate(shared, sorted(self[flag_type]))
-                if y.propagate is True and x.propagate is False
-            }
-            if demoted:
-                changed = True
-                self[flag_type] = [
-                    CompilerFlag(f, propagate=False, flag_group=f.flag_group, source=f.source)
-                    if id(f) in demoted
-                    else f
-                    for f in self[flag_type]
-                ]
+            other_propagate = {f for f in other[flag_type] if f.propagate}
+            for f in self[flag_type]:
+                if not f.propagate and f in other_propagate:
+                    f.propagate = True
+                    changed = True
 
         # TODO: what happens if flag groups with a partial (but not complete)
         # intersection specify different behaviors for flag propagation?
