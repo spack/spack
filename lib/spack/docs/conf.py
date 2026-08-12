@@ -369,6 +369,7 @@ nitpick_ignore = [
     ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.vendor.jinja2.Environment"),
     ("py:class", "SpecFiltersFactory"),
+    ("py:class", "OutputConfiguration"),  # because it's imported only when TYPE_CHECKING
     ("py:exc", "CoreCompilersNotFoundError"),
     # TypeVar that is not handled correctly
     ("py:class", "spack.util.lang.ClassPropertyType"),
