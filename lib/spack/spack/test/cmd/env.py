@@ -10,12 +10,13 @@ import pathlib
 import shutil
 import sys
 from argparse import Namespace
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
 
 import spack.cmd.env
 import spack.concretize
+import spack.concretize_ui
 import spack.config
 import spack.environment as ev
 import spack.error
@@ -5072,3 +5073,38 @@ def test_exists_consistent_with_all_environment_names(
 
     listed = "myenv" in ev.all_environment_names()
     assert ev.exists("myenv") == listed
+
+
+class RecordingUI(spack.concretize_ui.ConcretizerUI):
+    """Frontend that records the groups it is notified about, instead of announcing them."""
+
+    def __init__(self) -> None:
+        self.groups: List[Tuple[str, bool]] = []
+
+    def on_group_started(self, group: str, is_default: bool) -> None:
+        self.groups.append((group, is_default))
+
+
+def test_concretization_reports_groups(environment_from_manifest):
+    """Tests that each group of user specs is reported to the frontend, which is what decides
+    whether the default group is worth announcing."""
+    e = environment_from_manifest(
+        """\
+spack:
+  specs:
+  - libelf
+  - group: apps1
+    specs:
+    - pkg-a
+  - group: apps2
+    specs:
+    - pkg-b
+"""
+    )
+    ui = RecordingUI()
+    with e:
+        e.concretize(ui=ui)
+
+    # "default" is concretized first, the groups that don't need each other follow in any order
+    assert ui.groups[0] == ("default", True)
+    assert set(ui.groups[1:]) == {("apps1", False), ("apps2", False)}

@@ -8,7 +8,7 @@ import pathlib
 import platform
 import re
 import sys
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 import pytest
 
@@ -21,6 +21,7 @@ import spack.cmd
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.concretize
+import spack.concretize_ui
 import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
@@ -5500,3 +5501,60 @@ def test_solve_in_rounds_with_no_specs(mock_packages, config):
     """Tests that solving no specs at all yields no result, instead of being unsatisfiable."""
     solver = spack.solver.asp.Solver()
     assert list(solver.solve_in_rounds([])) == []
+
+
+class RecordingUI(spack.concretize_ui.ConcretizerUI):
+    """Frontend that records the events it receives, instead of rendering them."""
+
+    def __init__(self) -> None:
+        self.groups: List[Tuple[str, bool]] = []
+        self.batches: List[Tuple[int, int]] = []
+        self.concretized: List[Tuple[Spec, Spec, int, int, float]] = []
+
+    def on_group_started(self, group: str, is_default: bool) -> None:
+        self.groups.append((group, is_default))
+
+    def on_batch_started(self, total: int, processes: int) -> None:
+        self.batches.append((total, processes))
+
+    def on_spec_concretized(
+        self, abstract: Spec, concrete: Spec, index: int, total: int, duration: float
+    ) -> None:
+        self.concretized.append((abstract, concrete, index, total, duration))
+
+
+def test_concretize_separately_reports_progress(mutable_config, mock_packages):
+    """Tests that concretizing separately reports one batch, and one event per spec, to the
+    injected frontend."""
+    ui = RecordingUI()
+    spack.concretize.concretize_separately([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+
+    # Parallelism is disabled in tests, so the batch runs in a single process
+    assert ui.batches == [(2, 1)]
+    assert [(index, total) for _, _, index, total, _ in ui.concretized] == [(0, 2), (1, 2)]
+    assert {abstract.name for abstract, _, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
+    assert all(concrete.concrete for _, concrete, _, _, _ in ui.concretized)
+    assert not ui.groups
+
+
+def test_concretize_together_when_possible_reports_progress(mutable_config, mock_packages):
+    """Tests that concretizing when possible reports one event per spec, and no batch, since it
+    is a single solve."""
+    ui = RecordingUI()
+    spack.concretize.concretize_together_when_possible(
+        [(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui
+    )
+
+    assert not ui.batches
+    assert [(index, total) for _, _, index, total, _ in ui.concretized] == [(0, 2), (1, 2)]
+    assert {abstract.name for abstract, _, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
+
+
+def test_concretize_together_reports_nothing(mutable_config, mock_packages):
+    """Tests that concretizing together is a single solve, and reports no progress at all."""
+    ui = RecordingUI()
+    spack.concretize.concretize_together([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+
+    assert not ui.batches
+    assert not ui.concretized
+    assert not ui.groups
