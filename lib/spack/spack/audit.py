@@ -1298,7 +1298,7 @@ def _analize_propagated_deps_in_directive(
 ):
     errors = []
     summary = f"{requestor}: dependency propagation ('%%') in '{directive}' directive"
-    for edge in constraint.traverse_edges():
+    for edge in constraint.traverse_edges(root=False):
         if edge.propagation != spack.enums.PropagationPolicy.NONE:
             msg = f"'{edge.spec}' contains a propagated dependency"
             errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))

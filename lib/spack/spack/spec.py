@@ -4026,9 +4026,6 @@ class Spec:
                     yield edge.spec._cmp_node
                     node_ids[id(edge.spec)]
 
-                if edge.parent is None:  # skip fake edge to root
-                    continue
-
                 edge_list.append(
                     (
                         node_ids[id(edge.parent)],

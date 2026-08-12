@@ -510,7 +510,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
         super().__init__(node_label_fmt)
         self.main_unified_space: Set[str] = set()
 
-    def visit(self, edge):
+    def visit(self, edge: spack.traverse.EdgeType):
         if edge.parent is None:
             for node in spack.traverse.traverse_nodes([edge.spec], deptype=dt.LINK | dt.RUN):
                 self.main_unified_space.add(node.dag_hash())

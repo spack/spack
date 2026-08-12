@@ -577,6 +577,7 @@ def traverse_edges(
 
 def traverse_edges(
     specs: Sequence["spack.spec.Spec"],
+    *,
     root: bool = True,
     order: OrderType = "pre",
     cover: CoverType = "nodes",
