@@ -381,7 +381,7 @@ class AppendFlagsEnv(NameValueModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         quoted_value = shell_quote(str(self.value), shell)
-        quoted_sep = shell_quote(self.separator, shell)
+        quoted_sep = self.separator
         return f"_spack_env_append {self.name} {quoted_value} {quoted_sep}"
 
 
@@ -406,7 +406,7 @@ class RemoveFlagsEnv(NameValueModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         quoted_value = shell_quote(str(self.value), shell)
-        quoted_sep = shell_quote(self.separator, shell)
+        quoted_sep = self.separator
         return f"_spack_env_remove_value {self.name} {quoted_value} {quoted_sep}"
 
 
@@ -429,7 +429,7 @@ class SetPath(NameValueModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         quoted_value = shell_quote(str(self.value), shell)
-        quoted_sep = shell_quote(self.separator, shell)
+        quoted_sep = self.separator
         return f"_spack_env_set {self.name} {quoted_value} {quoted_sep}"
 
 
@@ -444,7 +444,7 @@ class AppendPath(NamePathModifier):
     def cache_command(self, shell: str = DEFAULT_SHELL):
         value = path_to_os_path(os.path.normpath(self.value)).pop()
         quoted_value = shell_quote(value, shell)
-        quoted_sep = shell_quote(self.separator, shell)
+        quoted_sep = self.separator
         return f"_spack_env_append {self.name} {quoted_value} {quoted_sep}"
 
 
@@ -459,7 +459,7 @@ class PrependPath(NamePathModifier):
     def cache_command(self, shell: str = DEFAULT_SHELL):
         value = path_to_os_path(os.path.normpath(self.value)).pop()
         quoted_value = shell_quote(value, shell)
-        quoted_sep = shell_quote(self.separator, shell)
+        quoted_sep = self.separator
         return f"_spack_env_prepend {self.name} {quoted_value} {quoted_sep}"
 
 
@@ -476,7 +476,7 @@ class RemoveFirstPath(NamePathModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         quoted_value = shell_quote(str(self.value), shell)
-        quoted_sep = shell_quote(self.separator, shell)
+        quoted_sep = self.separator
         return f"_spack_env_remove_first {self.name} {quoted_value} {quoted_sep}"
 
 
@@ -493,7 +493,7 @@ class RemoveLastPath(NamePathModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         quoted_value = shell_quote(str(self.value), shell)
-        quoted_sep = shell_quote(self.separator, shell)
+        quoted_sep = self.separator
         return f"_spack_env_remove_last {self.name} {quoted_value} {quoted_sep}"
 
 
@@ -512,7 +512,7 @@ class RemovePath(NamePathModifier):
     def cache_command(self, shell: str = DEFAULT_SHELL):
         value = path_to_os_path(os.path.normpath(self.value)).pop()
         quoted_value = shell_quote(value, shell)
-        quoted_sep = shell_quote(self.separator, shell)
+        quoted_sep = self.separator
         return f"_spack_env_remove_value {self.name} {quoted_value} {quoted_sep}"
 
 
@@ -894,6 +894,10 @@ class EnvironmentModifications:
             for _, actions in sorted(modifications.items()):
                 for modifier in actions:
                     cache_commands += f"{modifier.cache_command(shell)}\n"
+
+            if "MANPATH" in modifications:
+                cache_commands += "_spack_env_append MANPATH '' :\n"
+
             return cache_commands
 
     @staticmethod
