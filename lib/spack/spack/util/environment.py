@@ -66,6 +66,48 @@ _SHELL_UNSET_STRINGS = {
 }
 
 
+def shell_quote(value: str, shell: str = "sh") -> str:
+    """Quote a string for safe use in a shell script.
+
+    Args:
+        value: The string to quote
+        shell: The target shell (sh, csh, fish, bat, pwsh)
+
+    Returns:
+        A properly quoted string safe for the target shell
+    """
+    if shell == "sh":
+        # POSIX shell - use shlex.quote
+        return shlex.quote(value)
+    elif shell == "csh":
+        # csh - escape special chars and wrap in single quotes if needed
+        # In csh, single quotes protect everything except other single quotes
+        if "'" in value or any(c in value for c in ' \t\n$`\\";&|<>(){}[]!*?'):
+            # Replace ' with '\'' (end quote, escaped quote, start quote)
+            return "'" + value.replace("'", "'\\''") + "'"
+        return value
+    elif shell == "fish":
+        # fish - similar to POSIX but with different escaping rules
+        # Single quotes in fish protect everything except other single quotes
+        if "'" in value or any(c in value for c in ' \t\n$`\\";&|<>(){}[]!*?'):
+            return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
+        return value
+    elif shell == "bat":
+        # Windows batch - escape special chars and wrap in quotes
+        # In batch, quotes protect most things but internal quotes need escaping
+        if any(c in value for c in " \t&|<>^%"):
+            return '"' + value.replace('"', '""') + '"'
+        return value
+    elif shell == "pwsh":
+        # PowerShell - use single quotes, escape internal single quotes
+        if "'" in value or any(c in value for c in " \t\n$`;&|<>(){}[]"):
+            return "'" + value.replace("'", "''") + "'"
+        return value
+    else:
+        # Unknown shell - default to sh quoting
+        return shlex.quote(value)
+
+
 TRACING_ENABLED = False
 
 Path = str
@@ -254,7 +296,7 @@ class NameModifier:
         """Apply the modification to the mapping passed as input"""
         raise NotImplementedError("must be implemented by derived classes")
 
-    def cache_command(self):
+    def cache_command(self, shell: str = DEFAULT_SHELL):
         raise NotImplementedError("must be implemented by derived classes")
 
 
@@ -284,7 +326,7 @@ class NameValueModifier:
         """Apply the modification to the mapping passed as input"""
         raise NotImplementedError("must be implemented by derived classes")
 
-    def cache_command(self):
+    def cache_command(self, shell: str = DEFAULT_SHELL):
         raise NotImplementedError(f"must be implemented by derived classes\n{self}")
 
 
@@ -325,8 +367,8 @@ class SetEnv(NameValueModifier):
         tty.debug(f"SetEnv: {self.name}={self.value}", level=3)
         env[self.name] = self.value
 
-    def cache_command(self):
-        return f"_spack_env_set {self.name} {str(self.value)}"
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        return f"_spack_env_set {self.name} {shell_quote(str(self.value), shell)}"
 
 
 class AppendFlagsEnv(NameValueModifier):
@@ -337,8 +379,10 @@ class AppendFlagsEnv(NameValueModifier):
         else:
             env[self.name] = self.value
 
-    def cache_command(self):
-        return f"_spack_env_append {self.name} {str(self.value)} {self.separator}"
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        quoted_value = shell_quote(str(self.value), shell)
+        quoted_sep = shell_quote(self.separator, shell)
+        return f"_spack_env_append {self.name} {quoted_value} {quoted_sep}"
 
 
 class UnsetEnv(NameModifier):
@@ -347,7 +391,8 @@ class UnsetEnv(NameModifier):
         # Avoid throwing if the variable was not set
         env.pop(self.name, None)
 
-    def cache_command(self):
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        # Variable names don't need quoting, but we'll keep the signature consistent
         return f"_spack_env_unset {self.name}"
 
 
@@ -359,8 +404,10 @@ class RemoveFlagsEnv(NameValueModifier):
         flags = [f for f in flags if f != self.value]
         env[self.name] = self.separator.join(flags)
 
-    def cache_command(self):
-        return f"_spack_env_remove_value {self.name} {str(self.value)} {self.separator}"
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        quoted_value = shell_quote(str(self.value), shell)
+        quoted_sep = shell_quote(self.separator, shell)
+        return f"_spack_env_remove_value {self.name} {quoted_value} {quoted_sep}"
 
 
 class SetPath(NameValueModifier):
@@ -380,8 +427,10 @@ class SetPath(NameValueModifier):
         tty.debug(f"SetPath: {self.name}={self.value}", level=3)
         env[self.name] = self.value
 
-    def cache_command(self):
-        return f"_spack_env_set {self.name} {str(self.value)} {self.separator}"
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        quoted_value = shell_quote(str(self.value), shell)
+        quoted_sep = shell_quote(self.separator, shell)
+        return f"_spack_env_set {self.name} {quoted_value} {quoted_sep}"
 
 
 class AppendPath(NamePathModifier):
@@ -392,9 +441,11 @@ class AppendPath(NamePathModifier):
         directories.append(path_to_os_path(os.path.normpath(self.value)).pop())
         env[self.name] = self.separator.join(directories)
 
-    def cache_command(self):
+    def cache_command(self, shell: str = DEFAULT_SHELL):
         value = path_to_os_path(os.path.normpath(self.value)).pop()
-        return f"_spack_env_append {self.name} {value} {self.separator}"
+        quoted_value = shell_quote(value, shell)
+        quoted_sep = shell_quote(self.separator, shell)
+        return f"_spack_env_append {self.name} {quoted_value} {quoted_sep}"
 
 
 class PrependPath(NamePathModifier):
@@ -405,9 +456,11 @@ class PrependPath(NamePathModifier):
         directories = [path_to_os_path(os.path.normpath(self.value)).pop()] + directories
         env[self.name] = self.separator.join(directories)
 
-    def cache_command(self):
+    def cache_command(self, shell: str = DEFAULT_SHELL):
         value = path_to_os_path(os.path.normpath(self.value)).pop()
-        return f"_spack_env_prepend {self.name} {value} {self.separator}"
+        quoted_value = shell_quote(value, shell)
+        quoted_sep = shell_quote(self.separator, shell)
+        return f"_spack_env_prepend {self.name} {quoted_value} {quoted_sep}"
 
 
 class RemoveFirstPath(NamePathModifier):
@@ -421,8 +474,10 @@ class RemoveFirstPath(NamePathModifier):
             directories.remove(val)
         env[self.name] = self.separator.join(directories)
 
-    def cache_command(self):
-        return f"_spack_env_remove_first {self.name} {str(self.value)} {self.separator}"
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        quoted_value = shell_quote(str(self.value), shell)
+        quoted_sep = shell_quote(self.separator, shell)
+        return f"_spack_env_remove_first {self.name} {quoted_value} {quoted_sep}"
 
 
 class RemoveLastPath(NamePathModifier):
@@ -436,8 +491,10 @@ class RemoveLastPath(NamePathModifier):
             directories.remove(val)
         env[self.name] = self.separator.join(directories[::-1])
 
-    def cache_command(self):
-        return f"_spack_env_remove_last {self.name} {str(self.value)} {self.separator}"
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        quoted_value = shell_quote(str(self.value), shell)
+        quoted_sep = shell_quote(self.separator, shell)
+        return f"_spack_env_remove_last {self.name} {quoted_value} {quoted_sep}"
 
 
 class RemovePath(NamePathModifier):
@@ -452,9 +509,11 @@ class RemovePath(NamePathModifier):
         ]
         env[self.name] = self.separator.join(directories)
 
-    def cache_command(self):
+    def cache_command(self, shell: str = DEFAULT_SHELL):
         value = path_to_os_path(os.path.normpath(self.value)).pop()
-        return f"_spack_env_remove_value {self.name} {value} {self.separator}"
+        quoted_value = shell_quote(value, shell)
+        quoted_sep = shell_quote(self.separator, shell)
+        return f"_spack_env_remove_value {self.name} {quoted_value} {quoted_sep}"
 
 
 class PruneDuplicatePaths(NameModifier):
@@ -467,8 +526,8 @@ class PruneDuplicatePaths(NameModifier):
         )
         env[self.name] = self.separator.join(directories)
 
-    def cache_command(self):
-        return f"_spack_env_prune_duplicates {self.name} {self.separator}"
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        return f"_spack_env_prune_duplicates {self.name} {shell_quote(self.separator, shell)}"
 
 
 def _validate_path_value(name: str, value: Any) -> Union[str, pathlib.PurePath]:
@@ -806,7 +865,7 @@ class EnvironmentModifications:
 
         for _, actions in sorted(modifications.items()):
             for modifier in actions:
-                cache_commands += f"{modifier.cache_command()}\n"
+                cache_commands += f"{modifier.cache_command(shell)}\n"
 
         if "MANPATH" in new_env and not new_env["MANPATH"].endswith(os.pathsep):
             new_env["MANPATH"] += os.pathsep

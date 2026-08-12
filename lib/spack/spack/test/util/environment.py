@@ -163,6 +163,9 @@ def test_shell_modifications_are_properly_escaped():
     changes.set("RM_RF", "$(rm -rf /)")
 
     script = changes.shell_modifications(shell="sh")
-    assert "_spack_env_set VAR $PATH" in script
-    assert f"_spack_env_append VAR $ANOTHER_PATH {os.pathsep}" in script
-    assert "_spack_env_set RM_RF $(rm -rf /)" in script
+    # Values should be properly quoted to prevent shell injection
+    assert "_spack_env_set VAR '$PATH'" in script
+    # Separator : doesn't need quoting, but the path value does
+    assert "_spack_env_append VAR '$ANOTHER_PATH' :" in script
+    # Command substitution should be escaped
+    assert "_spack_env_set RM_RF '$(rm -rf /)'" in script
