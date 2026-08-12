@@ -495,7 +495,7 @@ class Result:
             color.cprint(string, stream=stream)
 
         cprint(f"@*b{{==>}} Best of {self.nmodels} considered solutions.")
-        cprint("")
+        print()
         maxlen = max(len(s.name) for s in self.criteria)
         cprint("@*{  Priority  Value  Criterion}")
 
@@ -506,9 +506,9 @@ class Result:
 
         for i, criterion in enumerate(self.criteria, 1):
             # Criteria are grouped into priority bands; print a header when the band changes.
-            band = optimization_band(criterion.priority)
+            band = criterion.band
             if band != prev_band:
-                label = f"-- {band.value}"
+                label = f"-- {band}"
                 dashes = "-" * max(0, divider_width - len(label) - 1)
                 cprint(f"  @*{{{label}}} @K{{{dashes}}}")
                 prev_band = band
@@ -529,13 +529,13 @@ class Result:
                 lc = "@y"
 
             cprint(f"  @K{{{i:8}}}  {value}  {lc}{{{criterion.name:<{maxlen}}}}")
-        cprint("")
-        cprint("")
+        print()
+        print()
         cprint("  @*{Legend:}")
         cprint("    @g{Specs to be built}")
         cprint("    @b{Reused specs}")
         cprint("    @y{Other criteria}")
-        cprint("")
+        print()
 
     def to_dict(self) -> dict:
         """Produces dict representation of Result object
