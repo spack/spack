@@ -176,19 +176,18 @@ def solve(parser, args):
         args.subparser.error("requires at least one spec or an active environment")
 
     solver = asp.Solver()
-    output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {"asp"}
+    output = asp.OutputConfiguration(
+        timers=args.timers,
+        stats=args.stats,
+        out=sys.stdout if "asp" in show else None,
+        setup_only=setup_only,
+    )
     unify = spack.config.CONFIG.get("concretizer:unify")
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     if unify == "when_possible":
         for idx, result in enumerate(
-            solver.solve_in_rounds(
-                specs,
-                out=output,
-                timers=args.timers,
-                stats=args.stats,
-                allow_deprecated=allow_deprecated,
-            )
+            solver.solve_in_rounds(specs, allow_deprecated=allow_deprecated, output=output)
         ):
             if "solutions" in show:
                 tty.msg("ROUND {0}".format(idx))
@@ -200,26 +199,12 @@ def solve(parser, args):
     elif unify:
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
-        result = solver.solve(
-            specs,
-            out=output,
-            timers=args.timers,
-            stats=args.stats,
-            setup_only=setup_only,
-            allow_deprecated=allow_deprecated,
-        )
+        result = solver.solve(specs, allow_deprecated=allow_deprecated, output=output)
         if not setup_only:
             _process_result(result, show, required_format, kwargs)
     else:
         for spec in specs:
             tty.msg("SOLVING SPEC:", spec)
-            result = solver.solve(
-                [spec],
-                out=output,
-                timers=args.timers,
-                stats=args.stats,
-                setup_only=setup_only,
-                allow_deprecated=allow_deprecated,
-            )
+            result = solver.solve([spec], allow_deprecated=allow_deprecated, output=output)
             if not setup_only:
                 _process_result(result, show, required_format, kwargs)

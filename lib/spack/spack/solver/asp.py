@@ -4000,32 +4000,28 @@ class Solver:
     def solve_with_stats(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[IO[str]] = None,
-        timers: bool = False,
-        stats: bool = False,
+        *,
         tests: spack.concretize.TestsType = False,
-        setup_only: bool = False,
         allow_deprecated: bool = False,
+        output: Optional[OutputConfiguration] = None,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
         """
         Concretize a set of specs and track the timing and statistics for the solve
 
         Arguments:
           specs: List of ``Spec`` objects to solve for.
-          out: Optionally write the generate ASP program to a file-like object.
-          timers: Print out coarse timers for different solve phases.
-          stats: Print out detailed stats from clingo.
           tests: If True, concretize test dependencies for all packages.
             If a tuple of package names, concretize test dependencies for named
             packages (defaults to False: do not concretize test dependencies).
-          setup_only: if True, stop after setup and don't solve (default False).
           allow_deprecated: allow deprecated version in the solve
+          output: what the solve should print out, besides returning a result. Defaults to
+            ``DEFAULT_OUTPUT_CONFIGURATION``, which prints nothing.
         """
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
+        output = output or DEFAULT_OUTPUT_CONFIGURATION
 
         result = self.driver.solve(
             setup,
@@ -4049,11 +4045,10 @@ class Solver:
     def solve_in_rounds(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[IO[str]] = None,
-        timers: bool = False,
-        stats: bool = False,
+        *,
         tests: spack.concretize.TestsType = False,
         allow_deprecated: bool = False,
+        output: Optional[OutputConfiguration] = None,
     ) -> Generator[Result, None, None]:
         """Solve for a stable model of specs in multiple rounds.
 
@@ -4065,11 +4060,10 @@ class Solver:
 
         Arguments:
             specs (list): list of Specs to solve.
-            out: Optionally write the generate ASP program to a file-like object.
-            timers (bool): print timing if set to True
-            stats (bool): print internal statistics if set to True
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
+            output: what the solve should print out, besides yielding results. Defaults to
+                ``DEFAULT_OUTPUT_CONFIGURATION``, which prints nothing.
         """
         # "when_possible" requires at least one literal to be solved, so an empty input is unsat
         if not specs:
@@ -4084,7 +4078,8 @@ class Solver:
         setup.concretize_everything = False
 
         input_specs = specs
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
+        # Rounds are driven by the specs left unsolved, so we can never stop after setup
+        output = (output or DEFAULT_OUTPUT_CONFIGURATION)._replace(setup_only=False)
         while True:
             result, _, _ = self.driver.solve(
                 setup,
