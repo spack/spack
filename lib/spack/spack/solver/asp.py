@@ -802,7 +802,6 @@ class ErrorHandler:
         self.model = model
         self.input_specs = input_specs
         self.full_model = None
-        self.printed: Set[str] = set()
 
     def multiple_values_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
@@ -887,27 +886,25 @@ class ErrorHandler:
 
         return msg
 
-    def format_errors(self, error_args):
+    def error_messages(self, error_args) -> List[str]:
+        """Convert ``error()`` args from a solver model into error message strings."""
         errors = sorted(
             [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
         )
         try:
-            error_messages = [self.handle_error(msg, *args) for (_, msg, args) in errors]
-            error_messages = filter(lambda em: em not in self.printed, error_messages)
-            messages = [
-                f"    {idx + 1 + len(self.printed):2}. {error_msg}"
-                for idx, error_msg in enumerate(error_messages)
-                if error_msg not in self.printed
-            ]
-            # Track already printed messages to not re-print them
-            self.printed.update(error_messages)
-            return "\n".join(messages)
+            return [self.handle_error(msg, *args) for (_, msg, args) in errors]
         except Exception as e:
             msg = (
                 f"unexpected error during concretization [{e}]. "
                 f"Please report a bug at https://github.com/spack/spack/issues"
             )
             raise spack.error.SpackError(msg) from e
+
+    @staticmethod
+    def _numbered(messages: List[str], start: int = 1) -> str:
+        return "\n".join(
+            f"    {number:2}. {msg}" for number, msg in enumerate(messages, start=start)
+        )
 
     def raise_if_errors(self):
         initial_error_args = extract_args(self.model, "error")
@@ -917,10 +914,10 @@ class ErrorHandler:
         # Print initial error message before starting secondary solve for causal trees
         input_specs = ", ".join(elide_list([f"`{s}`" for s in self.input_specs], 5))
         header = f"failed to concretize {input_specs} for the following reasons:"
-        simple_error_message = self.format_errors(initial_error_args)
+        initial_messages = self.error_messages(initial_error_args)
         tty.error(
             header,
-            simple_error_message,
+            self._numbered(initial_messages),
             "Analyzing the cause of the failure, this may take a moment...",
         )
 
@@ -943,11 +940,22 @@ class ErrorHandler:
 
         # No choices so there will be only one model
         error_args = extract_args(self.full_model, "error")
-        error_messages = self.format_errors(error_args)
-        if not error_messages:
-            print("  No additional error causes discovered")
-            error_messages = "Concretization failed"
-        raise UnsatisfiableSpecError(error_messages)
+        final_messages = self.error_messages(error_args)
+
+        # Print only the messages that were not part of the initial report, continuing
+        # its numbering
+        already_printed = set(initial_messages)
+        new_messages = [m for m in final_messages if m not in already_printed]
+        if new_messages:
+            tty.error(self._numbered(new_messages, start=len(initial_messages) + 1))
+        else:
+            tty.msg("No additional error causes discovered")
+
+        # The exception carries the full report so that it is self-contained for callers,
+        # but is marked as printed so the top-level handler does not print it again.
+        error = UnsatisfiableSpecError(f"{header}\n{self._numbered(final_messages)}")
+        error.printed = True
+        raise error
 
 
 def _strip_asp_problem(asp_problem: Iterable[str]) -> List[str]:
