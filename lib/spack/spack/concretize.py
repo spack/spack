@@ -15,6 +15,7 @@ import spack.error
 import spack.hash_lookup
 import spack.repo
 import spack.util.parallel
+from spack.concretize_ui import ConcretizerUI
 from spack.spec import Spec
 from spack.util import tty
 
@@ -54,6 +55,7 @@ def concretize_together(
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    ui: Optional[ConcretizerUI] = None,
 ) -> List[SpecPair]:
     """Given a number of specs as input, tries to concretize them together.
 
@@ -63,6 +65,7 @@ def concretize_together(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
+        ui: frontend to report progress to. Defaults to a headless frontend.
     """
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
     abstract_specs = [abstract for abstract, _ in spec_list]
@@ -75,6 +78,7 @@ def concretize_together_when_possible(
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    ui: Optional[ConcretizerUI] = None,
 ) -> List[SpecPair]:
     """Given a number of specs as input, tries to concretize them together to the extent possible.
 
@@ -87,8 +91,11 @@ def concretize_together_when_possible(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
+        ui: frontend to report progress to. Defaults to a headless frontend.
     """
     from spack.solver.asp import Solver
+
+    ui = ui or ConcretizerUI()
 
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
     old_concrete_to_abstract = {
@@ -104,14 +111,9 @@ def concretize_together_when_possible(
     ):
         now = time.monotonic()
         duration = now - start
-        percentage = int((j + 1) / len(to_concretize) * 100)
         for abstract, concrete in result.specs_by_input.items():
-            tty.verbose(
-                f"{duration:6.1f}s [{percentage:3d}%] {concrete.cformat('{hash:7}')} "
-                f"{abstract.colored_str}"
-            )
+            ui.on_spec_concretized(abstract, concrete, j, len(to_concretize), duration)
             j += 1
-        sys.stdout.flush()
         result_by_user_spec.update(result.specs_by_input)
         start = now
 
@@ -128,6 +130,7 @@ def concretize_separately(
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    ui: Optional[ConcretizerUI] = None,
 ) -> List[SpecPair]:
     """Concretizes the input specs separately from each other.
 
@@ -137,6 +140,7 @@ def concretize_separately(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
+        ui: frontend to report progress to. Defaults to a headless frontend.
     """
     from spack.bootstrap import (
         ensure_bootstrap_configuration,
@@ -144,6 +148,7 @@ def concretize_separately(
         ensure_winsdk_external_or_raise,
     )
 
+    ui = ui or ConcretizerUI()
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
     args = [
         (i, str(abstract), tests, factory)
@@ -184,11 +189,10 @@ def concretize_separately(
     # Solve the environment in parallel on Linux
     num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
 
-    msg = "Starting concretization"
-    # no parallel conc on Windows
-    if not sys.platform == "win32" and num_procs > 1:
-        msg += f" pool with {num_procs} processes"
-    tty.msg(msg)
+    # imap_unordered falls back to a serial map when parallelism is disabled (e.g. Windows)
+    if not spack.util.parallel.ENABLE_PARALLELISM:
+        num_procs = 1
+    ui.on_batch_started(len(args), num_procs)
 
     for j, (i, concrete, duration) in enumerate(
         spack.util.parallel.imap_unordered(
@@ -201,12 +205,7 @@ def concretize_separately(
         )
     ):
         ret.append((i, concrete))
-        percentage = int((j + 1) / len(args) * 100)
-        tty.verbose(
-            f"{duration:6.1f}s [{percentage:3d}%] {concrete.cformat('{hash:7}')} "
-            f"{to_concretize[i].colored_str}"
-        )
-        sys.stdout.flush()
+        ui.on_spec_concretized(to_concretize[i], concrete, j, len(args), duration)
 
     # Add specs in original order
     ret.sort(key=lambda x: x[0])
