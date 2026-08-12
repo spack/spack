@@ -434,7 +434,16 @@ class SpecNodeParser:
 
             initial_spec = Spec()
 
-        if not self.ctx.next_token or self.ctx.expect(SpecTokens.DEPENDENCY):
+        def raise_parsing_error(string: str, cause: Optional[Exception] = None):
+            """Raise a spec parsing error with token context."""
+            raise SpecParsingError(string, self.ctx.current_token, self.literal_str) from cause
+
+        if not self.ctx.next_token:
+            raise_parsing_error(
+                "Expected an abstract or anonymous (*) spec but got an empty string"
+            )
+
+        if self.ctx.expect(SpecTokens.DEPENDENCY):
             return initial_spec
 
         # If we start with a package name we have a named spec, we cannot
@@ -453,10 +462,6 @@ class SpecNodeParser:
 
         elif self.ctx.accept(SpecTokens.FILENAME):
             return FileParser(self.ctx).parse(initial_spec)
-
-        def raise_parsing_error(string: str, cause: Optional[Exception] = None):
-            """Raise a spec parsing error with token context."""
-            raise SpecParsingError(string, self.ctx.current_token, self.literal_str) from cause
 
         def add_flag(name: str, value: Union[str, bool], propagate: bool, concrete: bool):
             """Wrapper around ``Spec._add_flag()`` that adds parser context to errors raised."""

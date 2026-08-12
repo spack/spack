@@ -1551,6 +1551,7 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x os=debian6 platform=test target=default_target os=redhat6", "two architectures"),
         ("x target=default_target platform=test os=redhat6 os=debian6", "'platform'"),
         # Dependencies
+        ("x@1.2 ^", "abstract or anonymous"),
         ("^[@foo] zlib", "edge attributes"),
         ("x ^[deptypes=link]foo ^[deptypes=run]foo", "conflicting dependency types"),
         ("x ^[deptypes=build,link]foo ^[deptypes=link]foo", "conflicting dependency types"),
