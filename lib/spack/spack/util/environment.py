@@ -855,22 +855,46 @@ class EnvironmentModifications:
         explicit: bool = False,
         env: Optional[MutableMapping[str, str]] = None,
     ) -> str:
-        """Return shell code to apply the modifications."""
+        """Return shell code to apply the modifications.
+
+        Args:
+            shell: Target shell type (sh, csh, fish, bat, pwsh)
+            explicit: If True, generate resolved export statements for provenance.
+                     If False, generate _spack_env_* function calls for runtime.
+            env: Base environment to apply modifications to when explicit=True.
+        """
         modifications = self.group_by_name()
 
-        env = os.environ if env is None else env
-        new_env = dict(env.items())
+        if explicit:
+            env = os.environ if env is None else env
+            new_env = dict(env.items())
 
-        cache_commands = ""
+            for _, actions in sorted(modifications.items()):
+                for modifier in actions:
+                    modifier.execute(new_env)
 
-        for _, actions in sorted(modifications.items()):
-            for modifier in actions:
-                cache_commands += f"{modifier.cache_command(shell)}\n"
+            if "MANPATH" in new_env and not new_env["MANPATH"].endswith(os.pathsep):
+                new_env["MANPATH"] += os.pathsep
 
-        if "MANPATH" in new_env and not new_env["MANPATH"].endswith(os.pathsep):
-            new_env["MANPATH"] += os.pathsep
-
-        return cache_commands
+            cmds = ""
+            for name in sorted(set(modifications)):
+                new = new_env.get(name, None)
+                old = env.get(name, None)
+                if new != old:
+                    if new is None:
+                        cmds += _SHELL_UNSET_STRINGS[shell].format(name)
+                    else:
+                        value = new_env[name]
+                        value = shell_quote(value, shell)
+                        cmd = _SHELL_SET_STRINGS[shell].format(name, value)
+                        cmds += cmd
+            return cmds
+        else:
+            cache_commands = ""
+            for _, actions in sorted(modifications.items()):
+                for modifier in actions:
+                    cache_commands += f"{modifier.cache_command(shell)}\n"
+            return cache_commands
 
     @staticmethod
     def from_sourcing_file(

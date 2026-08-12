@@ -163,9 +163,24 @@ def test_shell_modifications_are_properly_escaped():
     changes.set("RM_RF", "$(rm -rf /)")
 
     script = changes.shell_modifications(shell="sh")
-    # Values should be properly quoted to prevent shell injection
+
     assert "_spack_env_set VAR '$PATH'" in script
-    # Separator : doesn't need quoting, but the path value does
     assert "_spack_env_append VAR '$ANOTHER_PATH' :" in script
-    # Command substitution should be escaped
     assert "_spack_env_set RM_RF '$(rm -rf /)'" in script
+
+
+def test_shell_modifications_explicit_true():
+    """Test that explicit=True generates resolved export statements for build provenance."""
+    changes = envutil.EnvironmentModifications()
+    changes.set("NEW_VAR", "value1")
+    changes.prepend_path("PATH", "/new/path")
+    changes.set("DANGEROUS", "$PATH; rm -rf /")
+
+    test_env = {"PATH": "/usr/bin:/bin"}
+
+    script = changes.shell_modifications(shell="sh", explicit=True, env=test_env)
+
+    assert "export NEW_VAR=value1" in script
+    assert "export PATH=/new/path:/usr/bin:/bin" in script
+
+    assert "export DANGEROUS='$PATH; rm -rf /'" in script
