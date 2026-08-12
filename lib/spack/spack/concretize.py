@@ -388,7 +388,7 @@ def concretize_one(
     return concretized
 
 
-def short_circuit_all_concrete(to_concretize: List[SpecPairInput]) -> Optional[List[SpecPair]]:
+def short_circuit_all_concrete(to_concretize: List[SpecPairInput]) -> Optional[List[Spec]]:
     unify = spack.config.CONFIG.get("concretizer:unify", False)
 
     if all(
@@ -420,3 +420,4 @@ def short_circuit_all_concrete(to_concretize: List[SpecPairInput]) -> Optional[L
                     f"    specs depend on multiple versions of {comma_and(conflicts)}",
                 )
         return ret
+    return None
