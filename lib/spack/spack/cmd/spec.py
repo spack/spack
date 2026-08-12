@@ -130,8 +130,8 @@ def _process_result(result, show, required_format, kwargs):
     if "solutions" in show:
         _display_specs(result.specs, required_format, kwargs)
 
-    if result.unsolved_specs and "solutions" in show:
-        tty.msg(asp.Result.format_unsolved(result.unsolved_specs))
+        if result.unsolved_specs:
+            tty.msg(asp.Result.format_unsolved(result.unsolved_specs))
 
 
 def _env_spec(env: ev.Environment, args, show, required_format, kwargs) -> None:
