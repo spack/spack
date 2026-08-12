@@ -772,6 +772,18 @@ class TestSpecDag:
         s2 = s1.copy()
         self.check_diamond_deptypes(s2)
 
+    def test_copy_preserves_parallel_deptype_edges(self):
+        """Parallel edges to one shared child, as from_dict builds them, must not merge into one
+        edge on copy."""
+        original = Spec.from_dict(
+            Spec("pkg-a ^[deptypes=build] pkg-b ^[deptypes=link] pkg-b").to_dict()
+        )
+        copied = original.copy()
+        edges = copied.edges_to_dependencies("pkg-b")
+        assert len(edges) == 2
+        assert {e.depflag for e in edges} == {dt.BUILD, dt.LINK}
+        assert copied.to_dict() == original.to_dict()
+
     def test_getitem_query(self):
         s = spack.concretize.concretize_one("mpileaks")
 

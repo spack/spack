@@ -511,7 +511,7 @@ def display_specs(specs, args=None, **kwargs):
         if flags:
             ffmt += " {compiler_flags}"
         vfmt = "{variants}" if variants else ""
-        hfmt = "{/abstract_hash}"
+        hfmt = "{ /abstract_hash}"
         format_string = nfmt + "{@version}" + vfmt + ffmt + hfmt
 
     if specfile_format:

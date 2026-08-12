@@ -324,12 +324,7 @@ class TestSpecSemantics:
             (
                 "libelf patches=ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2",
                 "libelf patches=ba5e3",  # constrain by a patch sha256 prefix
-                # TODO: the result below is not ideal. Prefix satisfies() works for patches, but
-                # constrain() isn't similarly special-cased to do the same thing
-                (
-                    "libelf patches=ba5e3,"
-                    "ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2"
-                ),
+                "libelf patches=ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2",
             ),
             # deptypes on direct deps
             (
@@ -394,10 +389,10 @@ class TestSpecSemantics:
             (
                 'mpich cflags="-O3 -g"',
                 'mpich cflags=="-O3"',
-                'mpich cflags="-O3 -g"',
-                'mpich cflags="-O3 -g"',
-                [],
-                [],
+                'mpich cflags=="-O3" cflags="-g"',
+                'mpich cflags=="-O3" cflags="-g"',
+                [("cflags", "-O3")],
+                [("cflags", "-O3")],
             ),
             (
                 'mpich cflags=="-O3 -g"',
@@ -406,6 +401,14 @@ class TestSpecSemantics:
                 'mpich cflags=="-O3 -g"',
                 [("cflags", "-O3"), ("cflags", "-g")],
                 [("cflags", "-O3"), ("cflags", "-g")],
+            ),
+            (
+                "mpich cflags=-O2 cflags=-g cflags=-fPIC cflags==-pipe",
+                "mpich cflags==-O2 cflags=-g cflags==-fPIC cflags=-pipe",
+                "mpich cflags==-O2 cflags=-g cflags==-fPIC cflags==-pipe",
+                "mpich cflags==-O2 cflags=-g cflags==-fPIC cflags==-pipe",
+                [("cflags", "-O2"), ("cflags", "-fPIC"), ("cflags", "-pipe")],
+                [("cflags", "-O2"), ("cflags", "-fPIC"), ("cflags", "-pipe")],
             ),
         ],
     )
@@ -2093,6 +2096,20 @@ def test_abstract_hash_intersects_and_satisfies(config, mock_packages):
     assert_disjoint(abstract_none, abstract_5)
 
 
+def test_a_blank_sets_the_abstract_hash_off_from_any_value(mock_packages):
+    """str() prints a blank before the abstract hash, so a value that can absorb a slash, a
+    namespace, variant, flag or target, does not swallow it and the hash survives reparsing."""
+    for spec_str in (
+        "namespace=builtin_mock /abcdef",
+        "foo=bar /abcdef",
+        "pkg-a cflags=-O2 /abcdef",
+        "pkg-a target=haswell /abcdef",
+    ):
+        spec = Spec(spec_str)
+        round_tripped = Spec(str(spec))
+        assert round_tripped.abstract_hash == spec.abstract_hash, spec_str
+
+
 def test_edge_equality_does_not_depend_on_virtual_order():
     """Tests that two edges that are constructed with just a different order of the virtuals in
     the input parameters are equal to each other.
@@ -2365,6 +2382,83 @@ def test_satisfies_and_subscript_with_compilers(config, mock_packages):
     assert s["pkg-a"].dependencies(name="gmake")[0] == s["pkg-a"]["gmake"]
 
 
+def test_flag_order_survives_formatting(mock_packages):
+    """Compiler flags are printed in the order they are stored, grouped into runs that agree on
+    whether they propagate. Flag order is significant to the build, so losing it changes the
+    hash."""
+    spec = Spec("pkg-a cflags==-O2").copy()
+    spec.constrain(Spec("pkg-a cflags=-g"))
+    assert [str(flag) for flag in spec.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert str(spec) == "pkg-a cflags==-O2 cflags=-g"
+
+    round_tripped = Spec(str(spec))
+    assert [str(flag) for flag in round_tripped.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert round_tripped.dag_hash() == spec.dag_hash()
+
+
+def test_an_anonymous_spec_is_the_top_of_the_order_only(mock_packages):
+    """A spec that leaves the name unset denotes every package, so everything is inside it and it
+    is inside nothing that names one. Being the bottom too would break transitivity."""
+    assert Spec("pkg-a").satisfies("")
+    assert Spec("").satisfies("")
+    assert not Spec("").satisfies("pkg-b")
+
+
+def test_the_direct_flag_follows_concreteness(config, mock_packages):
+    """A direct dependency is a constraint written with %, so the flag is set when a spec stops
+    being concrete and cleared when it becomes concrete again."""
+    mpileaks = spack.concretize.concretize_one("mpileaks")
+    assert not any(edge.direct for edge in mpileaks.traverse_edges(root=False))
+
+    mpileaks._mark_concrete(False)
+    assert all(edge.direct for edge in mpileaks.traverse_edges(root=False))
+
+    mpileaks._mark_concrete(True)
+    assert not any(edge.direct for edge in mpileaks.traverse_edges(root=False))
+
+
+def test_marking_an_abstract_spec_abstract_again_changes_nothing(mock_packages):
+    """The direct flag only flips when the concreteness actually changes, so marking an abstract
+    spec abstract leaves its transitive edges alone."""
+    spec = Spec("mpileaks ^callpath")
+    spec._mark_concrete(False)
+
+    assert not spec.edges_to_dependencies(name="callpath")[0].direct
+    assert not spec.satisfies("mpileaks %callpath")
+    assert spec.satisfies("mpileaks ^callpath")
+
+
+def test_a_spec_that_stopped_being_concrete_matches_a_direct_constraint(config, mock_packages):
+    """A spec that stops being concrete keeps every edge it had, so a direct dependency
+    constraint is matched by the package it depends on, and not by one further down."""
+    mpileaks = spack.concretize.concretize_one("mpileaks")
+    mpileaks._mark_concrete(False)
+
+    assert mpileaks.satisfies("mpileaks %callpath")
+    assert mpileaks.satisfies("mpileaks ^libelf")
+    assert not mpileaks.satisfies("mpileaks %libelf")
+
+
+def test_a_direct_dependency_is_inside_a_transitive_one(mock_packages):
+    """'pkg-a ^pkg-b' means pkg-b is somewhere in the DAG and 'pkg-a %pkg-b' means it is a direct
+    dependency, so the second is inside the first and not the other way around."""
+    anywhere_in_dag = Spec("pkg-a ^pkg-b")
+    direct_dependency = Spec("pkg-a %pkg-b")
+    assert direct_dependency.satisfies(anywhere_in_dag)
+    assert not anywhere_in_dag.satisfies(direct_dependency)
+
+
+def test_every_edge_of_a_concrete_node_is_a_direct_dependency(mock_packages, config):
+    """A concrete spec records its edges without the direct flag, but each of them is a direct
+    dependency in fact, so it matches a direct constraint. A package further down does not."""
+    mpileaks = spack.concretize.concretize_one("mpileaks")
+    assert not mpileaks.edges_to_dependencies(name="callpath")[0].direct
+
+    assert mpileaks.satisfies("mpileaks %callpath")
+    assert mpileaks.satisfies("mpileaks ^libelf")
+    assert not mpileaks.satisfies("mpileaks %libelf")
+
+
 @pytest.mark.parametrize(
     "spec_str,spec_fmt,expected",
     [
@@ -2439,6 +2533,28 @@ def test_constrain_symbolically(constraints, expected):
     assert reverse_order == Spec(expected)
 
 
+def test_constrain_does_not_share_flags_or_architecture_with_the_rhs(mock_packages):
+    """A successful constrain copies what it takes from the right-hand side instead of aliasing
+    it, so narrowing the left-hand side further cannot reach a spec that was only ever read."""
+    lhs, rhs = Spec("pkg-a"), Spec("pkg-a cflags=-O2 target=x86_64:")
+    lhs.constrain(rhs)
+    before = rhs.to_dict()
+
+    # -g extends the flag list, ==-O2 constrains the propagation of -O2, haswell the range
+    lhs.constrain(Spec("pkg-a cflags==-O2 cflags=-g target=haswell"))
+    assert rhs.to_dict() == before
+
+
+def test_copy_does_not_share_flag_instances(mock_packages):
+    """CompilerFlag is a mutable string in FlagMap; it should not be shared on copy."""
+    old = Spec("pkg-a cflags=-O2 cflags==-g")
+    new = old.copy()
+    assert len(new.compiler_flags["cflags"]) == len(old.compiler_flags["cflags"]) == 2
+    for x, y in zip(old.compiler_flags["cflags"], new.compiler_flags["cflags"]):
+        assert x is not y
+        assert x == y and x.propagate == y.propagate and x.flag_group == y.flag_group
+
+
 @pytest.mark.parametrize(
     "parent_str,child_str,kwargs,expected_str,expected_repr",
     [
@@ -2500,6 +2616,23 @@ def test_edge_representation(parent_str, child_str, kwargs, expected_str, expect
     edge = DependencySpec(parent, child, depflag=0, **kwargs)
     assert str(edge) == expected_str
     assert repr(edge) == expected_repr
+
+
+def test_parallel_edges_sort_with_differing_propagation(mock_packages):
+    """Two edges to one package that differ only in propagation are compared on that field, so
+    ``PropagationPolicy`` needs ``<`` and not just ``==``."""
+    edges = [
+        DependencySpec(Spec("pkg-a"), Spec("pkg-e"), depflag=0, virtuals=(), direct=True),
+        DependencySpec(
+            Spec("pkg-a"),
+            Spec("pkg-e"),
+            depflag=0,
+            virtuals=(),
+            direct=True,
+            propagation=PropagationPolicy.PREFERENCE,
+        ),
+    ]
+    assert sorted(edges) == edges
 
 
 @pytest.mark.parametrize(

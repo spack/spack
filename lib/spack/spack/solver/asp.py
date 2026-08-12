@@ -6,7 +6,6 @@ import collections.abc
 import enum
 import functools
 import gzip
-import io
 import itertools
 import json
 import os
@@ -19,6 +18,7 @@ import tempfile
 import time
 import warnings
 from typing import (
+    IO,
     Any,
     Callable,
     Dict,
@@ -93,7 +93,7 @@ class OutputConfiguration(NamedTuple):
     #: Whether to output Clingo's internal solver statistics
     stats: bool
     #: Optional output stream for the generated ASP program
-    out: Optional[io.IOBase]
+    out: Optional[IO[str]]
     #: If True, stop after setup and don't solve
     setup_only: bool
 
@@ -1815,7 +1815,7 @@ class SpackSolverSetup:
             self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
 
         for when, provided in pkg.provided.items():
-            for vpkg in sorted(provided):  # type: ignore[type-var]
+            for vpkg in sorted(provided):
                 if vpkg.name not in self.possible_virtuals:
                     continue
 
@@ -2976,8 +2976,7 @@ class SpackSolverSetup:
         candidate_compilers.update(compilers_from_reuse)
         self.possible_compilers = list(candidate_compilers)
 
-        # TODO: warning is because mypy doesn't know Spec supports rich comparison via decorator
-        self.possible_compilers.sort()  # type: ignore[call-arg,call-overload]
+        self.possible_compilers.sort()
 
         self.compiler_mixing()
 
@@ -2991,7 +2990,7 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
-        self.libcs = sorted(all_libcs())  # type: ignore[type-var]
+        self.libcs = sorted(all_libcs())
 
         for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:
@@ -4001,7 +4000,7 @@ class Solver:
     def solve_with_stats(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[io.IOBase] = None,
+        out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
@@ -4050,7 +4049,7 @@ class Solver:
     def solve_in_rounds(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[io.IOBase] = None,
+        out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
@@ -4072,6 +4071,10 @@ class Solver:
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
         """
+        # "when_possible" requires at least one literal to be solved, so an empty input is unsat
+        if not specs:
+            return
+
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
