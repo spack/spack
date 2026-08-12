@@ -110,7 +110,7 @@ def _process_result(result, show, required_format, kwargs):
                     # use write because to_yaml already has a newline.
                     sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
                 elif required_format == "json":
-                    sys.stdout.write(spec.to_json(hash=ht.dag_hash))
+                    print(spec.to_json(hash=ht.dag_hash))
                 else:
                     print(spec.format(required_format))
         else:
@@ -174,6 +174,10 @@ def solve(parser, args):
         specs = list(env.user_specs)
     else:
         args.subparser.error("requires at least one spec or an active environment")
+
+    # Early exit in case of empty environment
+    if not specs:
+        return
 
     solver = asp.Solver()
     output = sys.stdout if "asp" in show else None
