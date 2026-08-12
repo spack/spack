@@ -145,7 +145,6 @@ def try_enable_terminal_color_on_windows() -> None:
 
         try:
             ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
-            DISABLE_NEWLINE_AUTO_RETURN = 0x0008
             kernel32 = ctypes.WinDLL("kernel32")
 
             def _err_check(result, func, args):
