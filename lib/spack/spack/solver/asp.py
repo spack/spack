@@ -6,7 +6,6 @@ import collections.abc
 import enum
 import functools
 import gzip
-import io
 import itertools
 import json
 import os
@@ -19,6 +18,7 @@ import tempfile
 import time
 import warnings
 from typing import (
+    IO,
     Any,
     Callable,
     Dict,
@@ -93,7 +93,7 @@ class OutputConfiguration(NamedTuple):
     #: Whether to output Clingo's internal solver statistics
     stats: bool
     #: Optional output stream for the generated ASP program
-    out: Optional[io.IOBase]
+    out: Optional[IO[str]]
     #: If True, stop after setup and don't solve
     setup_only: bool
 
@@ -4000,7 +4000,7 @@ class Solver:
     def solve_with_stats(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[io.IOBase] = None,
+        out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
@@ -4049,7 +4049,7 @@ class Solver:
     def solve_in_rounds(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[io.IOBase] = None,
+        out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
@@ -4071,6 +4071,10 @@ class Solver:
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
         """
+        # "when_possible" requires at least one literal to be solved, so an empty input is unsat
+        if not specs:
+            return
+
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))

@@ -5493,3 +5493,10 @@ def test_concretization_cache_skips_automatic_splice(
     spec2 = spack.concretize.concretize_one(goal)
     assert fetches and all(outcome == (None, None) for outcome in fetches)
     assert spec1 == spec2
+
+
+@pytest.mark.regression("52832")
+def test_solve_in_rounds_with_no_specs(mock_packages, config):
+    """Tests that solving no specs at all yields no result, instead of being unsatisfiable."""
+    solver = spack.solver.asp.Solver()
+    assert list(solver.solve_in_rounds([])) == []

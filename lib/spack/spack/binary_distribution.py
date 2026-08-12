@@ -314,7 +314,7 @@ class BinaryIndexCache:
         """
         return list(self._mirrors_for_spec.get(dag_hash, []))
 
-    def __contains__(self, dag_hash: str) -> bool:
+    def __contains__(self, dag_hash: object) -> bool:
         """Returns True if *dag_hash* is known to be available in at least one buildcache."""
         return dag_hash in self._mirrors_for_spec
 
