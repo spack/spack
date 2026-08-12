@@ -367,7 +367,12 @@ def test_spec_version_assigned_git_ref_as_version(name, version, error):
         (False, ["mpileaks_mpich", "dyninst"], "mpich", None),
         (False, ["mpileaks_zmpi", "dyninst"], "zmpi", None),
         # cases with unfiy:false
-        (True, ["mpileaks_mpich", "mpileaks_zmpi"], "mpileaks.*, mpileaks", spack.error.SpecError),
+        (
+            True,
+            ["mpileaks_mpich", "mpileaks_zmpi"],
+            "callpath and mpileaks",
+            spack.error.SpecError
+        ),
         (False, ["mpileaks_mpich", "mpileaks_zmpi"], "zmpi", None),
     ],
 )
