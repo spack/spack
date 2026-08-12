@@ -17,9 +17,7 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
-import spack.hash_lookup
 import spack.paths
-import spack.repo
 import spack.spec
 import spack.spec_parser
 import spack.store

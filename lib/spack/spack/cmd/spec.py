@@ -10,6 +10,7 @@ from typing import List, Optional
 import spack
 import spack.binary_distribution
 import spack.cmd
+import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
