@@ -207,7 +207,7 @@ def _concretize_spec_pairs(
         abstract, concrete = to_concretize[0]
         return [concrete or spack.concretize.concretize_one(abstract, tests=tests)]
 
-    all_concrete = spack.concretize.short_circuit_all_concrete()
+    all_concrete = spack.concretize.short_circuit_all_concrete(to_concretize)
     if all_concrete:
         return all_concrete
 

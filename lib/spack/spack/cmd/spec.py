@@ -227,9 +227,7 @@ def spec(parser, args):
     # If we only need the solutions, don't go through the solver if everything is from hashes
     solutions_only = set(show) == {"solutions"}
     if solutions_only:
-        all_concrete = spack.concretize.short_circuit_all_concrete(
-            [(s, None) for s in specs]
-        )
+        all_concrete = spack.concretize.short_circuit_all_concrete([(s, None) for s in specs])
         if all_concrete:
             _display_specs(all_concrete, required_format, kwargs)
             return
