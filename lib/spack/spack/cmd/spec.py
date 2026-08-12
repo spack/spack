@@ -110,38 +110,85 @@ def _process_result(result, show, required_format, kwargs):
 
         print()
         maxlen = max(len(s.name) for s in result.criteria)
-        color.cprint("@*{  Priority  Value  Criterion}")
 
-        # Width of a data row past its 2-space indent, matching the row format below:
-        # 8-wide priority + 2 gap + 5-wide value + 2 gap + maxlen-wide criterion name.
-        divider_width = 8 + 2 + 5 + 2 + maxlen
+        # Build a 2D array: (name, band) => list of values by level
+        criteria_by_priority = sorted(result.criteria, key=lambda x: x.priority, reverse=True)
+        row_order = []
+        row_kinds = {}  # Store the kind for each (name, band)
+        seen = set()
+        for criterion in criteria_by_priority:
+            key = (criterion.name, criterion.band)
+            if key not in seen:
+                row_order.append(key)
+                row_kinds[key] = criterion.kind
+                seen.add(key)
+
+        max_level = max(criterion.level for criterion in result.criteria) if result.criteria else 0
+        num_levels = max_level + 1
+        rows = {key: [None] * num_levels for key in row_order}
+
+        for criterion in result.criteria:
+            key = (criterion.name, criterion.band)
+            rows[key][max_level - criterion.level] = criterion.value
+
+        # Remove prefix sum effect from criteria values
+        for key in rows:
+            row = rows[key]
+            prev_cumulative = 0
+            for i in range(len(row)):
+                if row[i] is not None:
+                    cumulative_value = row[i]
+                    row[i] = cumulative_value - prev_cumulative
+                    prev_cumulative = cumulative_value
+
+        # Print header with level labels (L0 for highest level, L1, L2... for lower)
+        level_headers = "  ".join(f"L{i}".rjust(5) for i in range(num_levels))
+        color.cprint(f"@*{{  {level_headers}  Criterion}}")
+
+        # Width of a data row:
+        # (5-wide value + 2 gap) * num_levels + maxlen-wide criterion name
+        divider_width = (5 + 2) * num_levels + maxlen
         prev_band = None
 
-        for i, criterion in enumerate(result.criteria, 1):
-            # Criteria are grouped into priority bands; print a header when the band changes.
-            band = criterion.band
+        # Print criteria using the 2D table
+        for name, band in row_order:
+            # Print band header when it changes
             if band != prev_band:
                 label = f"-- {band}"
                 dashes = "-" * max(0, divider_width - len(label) - 1)
                 color.cprint(f"  @*{{{label}}} @K{{{dashes}}}")
                 prev_band = band
 
-            value = f"@K{{{criterion.value:>5}}}"
-            grey_out = True
-            if criterion.value > 0:
-                value = f"@*{{{criterion.value:>5}}}"
-                grey_out = False
+            # Build the values string for all levels (highest level first, on the left)
+            row_data = rows[(name, band)]
+            values_parts = []
+            has_nonzero = False
+            # Iterate through the row
+            for value in row_data:
+                if value is not None:
+                    if value > 0:
+                        has_nonzero = True
+                        values_parts.append(f"@*{{{value:>5}}}")
+                    else:
+                        values_parts.append(f"@K{{{value:>5}}}")
+                else:
+                    values_parts.append(f"@K{{{'    -'}}}")
 
-            if grey_out:
-                lc = "@K"
-            elif criterion.kind == asp.OptimizationKind.CONCRETE:
-                lc = "@b"
-            elif criterion.kind == asp.OptimizationKind.BUILD:
-                lc = "@g"
+            values_str = "  ".join(values_parts)
+
+            # Determine color: only color if there's a non-zero value
+            kind = row_kinds[(name, band)]
+            if has_nonzero:
+                if kind == asp.OptimizationKind.CONCRETE:
+                    lc = "@b"
+                elif kind == asp.OptimizationKind.BUILD:
+                    lc = "@g"
+                else:
+                    lc = "@y"
             else:
-                lc = "@y"
+                lc = "@K"
 
-            color.cprint(f"  @K{{{i:8}}}  {value}  {lc}{{{criterion.name:<{maxlen}}}}")
+            color.cprint(f"  {values_str}  {lc}{{{name:<{maxlen}}}}")
         print()
         print()
         color.cprint("  @*{Legend:}")
