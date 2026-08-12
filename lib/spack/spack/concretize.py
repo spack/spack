@@ -7,6 +7,7 @@ import importlib
 import io
 import sys
 import time
+from collections import Counter
 from typing import (
     TYPE_CHECKING,
     Dict,
@@ -25,9 +26,11 @@ import spack.config
 import spack.error
 import spack.hash_lookup
 import spack.repo
+import spack.traverse as traverse
 import spack.util.parallel
 from spack.spec import Spec
 from spack.util import tty
+from spack.util.string import comma_and
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
 SpecPair = Tuple[Spec, Spec]
@@ -383,3 +386,37 @@ def concretize_one(
 
     concretized = answer[node]
     return concretized
+
+
+def short_circuit_all_concrete(to_concretize: List[SpecPairInput]) -> Optional[List[SpecPair]]:
+    unify = spack.config.CONFIG.get("concretizer:unify", False)
+
+    if all(
+        concrete or abstract.concrete or abstract.abstract_hash
+        for abstract, concrete in to_concretize
+    ):
+        ret = [
+            concrete
+            or (abstract if abstract.concrete else spack.hash_lookup.lookup_hash(abstract))
+            for abstract, concrete in to_concretize
+        ]
+
+        # If unify: true, check that specs don't conflict
+        # Since all concrete, "when_possible" is not relevant
+        if unify is True:  # True, "when_possible", False are possible values
+            runtimes = spack.repo.PATH.packages_with_tags("runtime")
+            specs_per_name = Counter(
+                spec.name
+                for spec in traverse.traverse_nodes(
+                    ret, deptype=("link", "run"), key=traverse.by_dag_hash
+                )
+                if spec.name not in runtimes  # runtimes are allowed multiple times
+            )
+
+            conflicts = sorted(name for name, count in specs_per_name.items() if count > 1)
+            if conflicts:
+                raise spack.error.SpecError(
+                    "Specs conflict and `concretizer:unify` is configured true.",
+                    f"    specs depend on multiple versions of {comma_and(conflicts)}",
+                )
+        return ret
