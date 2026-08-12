@@ -371,7 +371,7 @@ def test_spec_version_assigned_git_ref_as_version(name, version, error):
             True,
             ["mpileaks_mpich", "mpileaks_zmpi"],
             "callpath and mpileaks",
-            spack.error.SpecError
+            spack.error.SpecError,
         ),
         (False, ["mpileaks_mpich", "mpileaks_zmpi"], "zmpi", None),
     ],
