@@ -91,3 +91,42 @@ def test_add_none_multiple(trie):
 
     assert not trie.is_prefix("foo.bar.baz")
     assert not trie.has_value("foo.bar.baz")
+
+
+@pytest.mark.parametrize(
+    ("name", "path"), (("simple", "simple"), ("with-hyphen", "with-hyphen"), ("0", "0"))
+)
+def test_naming_scheme_v1(name, path):
+    assert path == spack.util.naming._NAMING_SCHEME_V1.pkg_name_to_pkg_dir(name)
+    assert name == spack.util.naming._NAMING_SCHEME_V1.pkg_dir_to_pkg_name(path)
+
+
+@pytest.mark.parametrize(
+    ("name", "path"),
+    (
+        ("simple", "simple"),
+        ("with-hyphen", "with_hyphen"),
+        ("0", "_0"),
+        ("with/slash", spack.util.naming.NamingSchemeError),
+        ("with.dot", spack.util.naming.NamingSchemeError),
+        ("", spack.util.naming.NamingSchemeError),
+    ),
+)
+def test_naming_scheme_v2(name, path):
+    if path == spack.util.naming.NamingSchemeError:
+        with pytest.raises(spack.util.naming.NamingSchemeError):
+            spack.util.naming._NAMING_SCHEME_V2.pkg_name_to_pkg_dir(name)
+
+        with pytest.raises(spack.util.naming.NamingSchemeError):
+            spack.util.naming._NAMING_SCHEME_V2.pkg_dir_to_pkg_name(name)
+    else:
+        assert path == spack.util.naming._NAMING_SCHEME_V2.pkg_name_to_pkg_dir(name)
+        assert name == spack.util.naming._NAMING_SCHEME_V2.pkg_dir_to_pkg_name(path)
+
+
+def test_naming_scheme_v2_reserved_names():
+    for name in spack.util.naming.RESERVED_NAMES_ONLY_LOWERCASE:
+        path = "_" + name
+
+        assert path == spack.util.naming._NAMING_SCHEME_V2.pkg_name_to_pkg_dir(name)
+        assert name == spack.util.naming._NAMING_SCHEME_V2.pkg_dir_to_pkg_name(path)
