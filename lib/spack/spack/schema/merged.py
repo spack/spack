@@ -21,7 +21,6 @@ import spack.schema.definitions
 import spack.schema.develop
 import spack.schema.env_vars
 import spack.schema.environment
-import spack.schema.filter
 import spack.schema.include
 import spack.schema.mirrors
 import spack.schema.modules
@@ -44,7 +43,6 @@ sections: Dict[str, Any] = {
     **spack.schema.definitions.properties,
     **spack.schema.develop.properties,
     **spack.schema.env_vars.properties,
-    **spack.schema.filter.properties,
     **spack.schema.include.properties,
     **spack.schema.mirrors.properties,
     **spack.schema.modules.properties,

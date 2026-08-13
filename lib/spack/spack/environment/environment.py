@@ -43,6 +43,7 @@ import spack.package_base
 import spack.paths
 import spack.repo
 import spack.schema.env
+import spack.schema.filter
 import spack.schema.spec_list
 import spack.spec
 import spack.store
@@ -356,7 +357,7 @@ def create(
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
     include_concrete: Optional[List[str]] = None,
-    filter_env: bool = False,
+    filter_file: Optional[Union[str, pathlib.Path]] = None,
 ) -> "Environment":
     """Create a managed environment in Spack and returns it.
 
@@ -374,7 +375,7 @@ def create(
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
         include_concrete: list of concrete environment names/paths to be included
-        filter_env: if True, create a filtered environment from init_file
+        filter_file: optional filter configuration file
     """
     environment_dir = environment_dir_from_name(name, exists_ok=False)
     return create_in_dir(
@@ -383,7 +384,7 @@ def create(
         with_view=with_view,
         keep_relative=keep_relative,
         include_concrete=include_concrete,
-        filter_env=filter_env,
+        filter_file=filter_file,
     )
 
 
@@ -393,7 +394,7 @@ def create_in_dir(
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
     include_concrete: Optional[List[str]] = None,
-    filter_env: bool = False,
+    filter_file: Optional[Union[str, pathlib.Path]] = None,
 ) -> "Environment":
     """Create an environment in the directory passed as input and returns it.
 
@@ -408,16 +409,17 @@ def create_in_dir(
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
         include_concrete: concrete environment names/paths to be included
-        filter_env: if True, create a filtered environment from init_file
+        filter_file: optional filter configuration file
     """
     # If the initfile is a named environment, get its path
     if init_file and exists(str(init_file)):
         init_file = read(str(init_file)).path
 
-    if filter_env:
+    if filter_file is not None:
         return _create_filtered_environment_in_dir(
             root,
             init_file=init_file,
+            filter_file=filter_file,
             with_view=with_view,
             keep_relative=keep_relative,
             include_concrete=include_concrete,
@@ -523,9 +525,20 @@ def _merged_scope_filter_configuration(configuration: Optional[Dict[str, Any]]) 
     return merged_scoped
 
 
-def _source_filter_configuration(source_env: "Environment") -> Dict[str, Any]:
-    with source_env:
-        return _merged_scope_filter_configuration(spack.config.get("filter"))
+def _read_filter_configuration(filter_file: Union[str, pathlib.Path]) -> Dict[str, Any]:
+    filter_path = pathlib.Path(filter_file)
+    if not filter_path.is_file():
+        raise SpackEnvironmentError(
+            f"filter configuration file does not exist or is not readable: {filter_path}"
+        )
+
+    data = spack.config.read_config_file(str(filter_path), spack.schema.filter.schema)
+    if not data or "filter" not in data:
+        raise SpackEnvironmentError(
+            f"filter configuration file must contain a top-level filter section: {filter_path}"
+        )
+
+    return _merged_scope_filter_configuration(data["filter"])
 
 
 def _matches_any_spec(spec: Spec, patterns: Sequence[str]) -> bool:
@@ -689,7 +702,7 @@ def _filtered_configuration(
     filtered = {}
 
     for key, value in source_configuration.items():
-        if key in ("specs", lockfile_include_key) or key in blocked_sections:
+        if key in ("specs", "filter", lockfile_include_key) or key in blocked_sections:
             continue
         if allowed_sections and key not in allowed_sections:
             continue
@@ -783,6 +796,7 @@ def _create_filtered_environment_in_dir(
     root: Union[str, pathlib.Path],
     *,
     init_file: Optional[Union[str, pathlib.Path]],
+    filter_file: Union[str, pathlib.Path],
     with_view: Optional[Union[str, pathlib.Path, bool]],
     keep_relative: bool,
     include_concrete: Optional[List[str]],
@@ -796,7 +810,7 @@ def _create_filtered_environment_in_dir(
         )
 
     with _filtered_source_environment(init_file) as (source_env, source_path, is_source_dir):
-        filter_configuration = _source_filter_configuration(source_env)
+        filter_configuration = _read_filter_configuration(filter_file)
 
         if filter_configuration["concrete"]:
             if not is_source_dir:

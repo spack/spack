@@ -2085,9 +2085,15 @@ def test_env_include_concrete_env_yaml(env_name):
     assert test.path in combined_yaml[ev.lockfile_include_key]
 
 
-def test_env_create_filter_requires_source():
+def _write_filter_yaml(tmp_path: pathlib.Path, content: str = "filter: {}\n") -> str:
+    filter_yaml = tmp_path / "filter.yaml"
+    filter_yaml.write_text(content)
+    return str(filter_yaml)
+
+
+def test_env_create_filter_requires_source(tmp_path: pathlib.Path):
     with pytest.raises(ev.SpackEnvironmentError):
-        env("create", "--filter", "filtered")
+        env("create", "--filter", _write_filter_yaml(tmp_path), "filtered")
 
 
 def test_env_create_filter_rejects_lockfile(tmp_path: pathlib.Path):
@@ -2099,10 +2105,10 @@ def test_env_create_filter_rejects_lockfile(tmp_path: pathlib.Path):
     source.write()
 
     with pytest.raises(ev.SpackEnvironmentError):
-        env("create", "--filter", "filtered", source.lock_path)
+        env("create", "--filter", _write_filter_yaml(tmp_path), "filtered", source.lock_path)
 
 
-def test_env_create_filter_defaults_to_concrete_allow_all():
+def test_env_create_filter_defaults_to_concrete_allow_all(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2111,29 +2117,33 @@ def test_env_create_filter_defaults_to_concrete_allow_all():
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    env("create", "--filter", _write_filter_yaml(tmp_path), "filtered", "source")
 
     filtered = ev.read("filtered")
-    filtered_yaml = filtered.manifest["spack"]
 
     assert {"callpath", "libelf", "mpileaks"}.issubset(spec.name for spec in filtered.user_specs)
     assert {"callpath", "libelf", "mpileaks"}.issubset(
         spec.name for spec in filtered.concrete_roots()
     )
     assert os.path.exists(filtered.lock_path)
-    assert "filter" not in filtered_yaml
 
 
-def test_env_create_filter_can_select_concrete_dependency():
+def test_env_create_filter_can_select_concrete_dependency(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
         add("mpileaks")
-        config("add", "filter:specs:allow:[callpath]")
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  specs:
+    allow: [callpath]
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
 
@@ -2141,20 +2151,24 @@ def test_env_create_filter_can_select_concrete_dependency():
     assert [spec.name for spec in filtered.concrete_roots()] == ["callpath"]
 
 
-def test_env_create_filter_accepts_projection_that_formats_to_spec():
+def test_env_create_filter_accepts_projection_that_formats_to_spec(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
         add("mpileaks")
-        spack.config.set(
-            "filter",
-            {"specs": {"allow": ["mpileaks"]}, "projections": {"all": "{name}@{version}"}},
-            scope=source.scope_name,
-        )
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  specs:
+    allow: [mpileaks]
+  projections:
+    all: "{name}@{version}"
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
     assert [spec.name for spec in filtered.user_specs] == ["mpileaks"]
@@ -2167,24 +2181,25 @@ def test_env_create_filter_accepts_projection_that_formats_to_spec():
     assert [spec.name for spec in root_specs] == ["mpileaks"]
 
 
-def test_env_create_filter_rejects_projection_that_formats_to_path():
+def test_env_create_filter_rejects_projection_that_formats_to_path(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
         add("mpileaks")
-        spack.config.set(
-            "filter",
-            {
-                "specs": {"allow": ["mpileaks"]},
-                "projections": {"all": "{name}/{version}-{hash:7}"},
-            },
-            scope=source.scope_name,
-        )
     source.concretize()
     source.write()
 
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  specs:
+    allow: [mpileaks]
+  projections:
+    all: "{name}/{version}-{hash:7}"
+""",
+    )
     with pytest.raises(ev.SpackEnvironmentError, match="invalid spec string"):
-        env("create", "--filter", "filtered", "source")
+        env("create", "--filter", filter_yaml, "filtered", "source")
 
 
 def test_env_create_filter_drops_include_concrete_even_when_allowed(tmp_path: pathlib.Path):
@@ -2202,32 +2217,41 @@ def test_env_create_filter_drops_include_concrete_even_when_allowed(tmp_path: pa
   - mpileaks
   {ev.lockfile_include_key}:
   - {included.path}
-  filter:
-    concrete: false
-    config:
-      allow: [filter, {ev.lockfile_include_key}]
 """
     )
 
-    env("create", "--filter", "filtered", str(spack_yaml))
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        f"""filter:
+  concrete: false
+  config:
+    allow: [{ev.lockfile_include_key}]
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", str(spack_yaml))
 
     filtered_yaml = ev.read("filtered").manifest["spack"]
 
-    assert filtered_yaml["filter"]["concrete"] is False
     assert ev.lockfile_include_key not in filtered_yaml
     assert ev.manifest_include_name not in filtered_yaml
 
 
-def test_env_create_filter_blocks_external_concrete_specs_with_specs_block():
+def test_env_create_filter_blocks_external_concrete_specs_with_specs_block(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
         add("externaltool")
-        config("add", "filter:specs:block:[externaltool]")
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  specs:
+    block: [externaltool]
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
 
@@ -2235,7 +2259,7 @@ def test_env_create_filter_blocks_external_concrete_specs_with_specs_block():
     assert not filtered.concrete_roots()
 
 
-def test_env_create_filter_includes_versioned_external_concrete_specs():
+def test_env_create_filter_includes_versioned_external_concrete_specs(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2243,7 +2267,7 @@ def test_env_create_filter_includes_versioned_external_concrete_specs():
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    env("create", "--filter", _write_filter_yaml(tmp_path), "filtered", "source")
 
     filtered = ev.read("filtered")
 
@@ -2251,16 +2275,22 @@ def test_env_create_filter_includes_versioned_external_concrete_specs():
     assert [str(spec.version) for spec in filtered.concrete_roots()] == ["0.9"]
 
 
-def test_env_create_filter_blocks_versioned_external_concrete_specs():
+def test_env_create_filter_blocks_versioned_external_concrete_specs(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
         add("externaltool@0.9")
-        config("add", "filter:specs:block:[externaltool@0.9]")
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  specs:
+    block: [externaltool@0.9]
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
 
@@ -2268,7 +2298,7 @@ def test_env_create_filter_blocks_versioned_external_concrete_specs():
     assert not filtered.concrete_roots()
 
 
-def test_env_create_filter_from_concrete_env():
+def test_env_create_filter_from_concrete_env(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2289,19 +2319,25 @@ def test_env_create_filter_from_concrete_env():
             },
             scope=source.scope_name,
         )
-        config("add", "filter:specs:allow:[mpileaks]")
-        config("add", "filter:config:allow:[packages,concretizer]")
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  specs:
+    allow: [mpileaks]
+  config:
+    allow: [packages, concretizer]
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
     filtered_yaml = filtered.manifest["spack"]
 
     assert [spec.name for spec in filtered.user_specs] == ["mpileaks"]
     assert [spec.name for spec in filtered.concrete_roots()] == ["mpileaks"]
-    assert "filter" not in filtered_yaml
     assert set(filtered_yaml["packages"]) == {"all", "cmake", "libelf"}
     assert filtered_yaml["packages"]["all"]["compiler"] == ["gcc"]
     assert "externals" in filtered_yaml["packages"]["cmake"]
@@ -2327,16 +2363,20 @@ def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
   - mpileaks
   include:
   - {included.lock_path}
-  filter:
-    specs:
-      allow: [mpileaks]
 """
     )
     source = ev.create("source", spack_yaml)
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  specs:
+    allow: [mpileaks]
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
     filtered_yaml = filtered.manifest["spack"]
@@ -2346,7 +2386,7 @@ def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
     assert [spec.name for spec in filtered.concrete_roots()] == ["mpileaks"]
 
 
-def test_env_create_filter_packages_externals_only():
+def test_env_create_filter_packages_externals_only(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2363,15 +2403,18 @@ def test_env_create_filter_packages_externals_only():
             },
             scope=source.scope_name,
         )
-        spack.config.set(
-            "filter",
-            {"config": {"allow": ["packages"]}, "packages": "externals_only"},
-            scope=source.scope_name,
-        )
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  config:
+    allow: [packages]
+  packages: externals_only
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered_yaml = ev.read("filtered").manifest["spack"]
 
@@ -2379,7 +2422,7 @@ def test_env_create_filter_packages_externals_only():
     assert filtered_yaml["packages"]["cmake"]["externals"][0]["spec"] == "cmake@3.27.0"
 
 
-def test_env_create_filter_packages_include_all_by_default():
+def test_env_create_filter_packages_include_all_by_default(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2396,11 +2439,17 @@ def test_env_create_filter_packages_include_all_by_default():
             },
             scope=source.scope_name,
         )
-        config("add", "filter:config:allow:[packages]")
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  config:
+    allow: [packages]
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered_yaml = ev.read("filtered").manifest["spack"]
 
@@ -2410,7 +2459,7 @@ def test_env_create_filter_packages_include_all_by_default():
     assert filtered_yaml["packages"]["mpileaks"]["require"] == ["+debug"]
 
 
-def test_env_create_filter_packages_allow_block_entries():
+def test_env_create_filter_packages_allow_block_entries(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2431,18 +2480,20 @@ def test_env_create_filter_packages_allow_block_entries():
             },
             scope=source.scope_name,
         )
-        spack.config.set(
-            "filter",
-            {
-                "config": {"allow": ["packages"]},
-                "packages": {"allow": ["all", "cmake", "mpileaks"], "block": ["cmake"]},
-            },
-            scope=source.scope_name,
-        )
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  config:
+    allow: [packages]
+  packages:
+    allow: [all, cmake, mpileaks]
+    block: [cmake]
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered_yaml = ev.read("filtered").manifest["spack"]
 
@@ -2451,7 +2502,9 @@ def test_env_create_filter_packages_allow_block_entries():
     assert filtered_yaml["packages"]["mpileaks"]["require"] == ["+debug"]
 
 
-def test_env_create_filter_packages_externals_only_excludes_non_external_entries():
+def test_env_create_filter_packages_externals_only_excludes_non_external_entries(
+    tmp_path: pathlib.Path,
+):
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2472,15 +2525,18 @@ def test_env_create_filter_packages_externals_only_excludes_non_external_entries
             },
             scope=source.scope_name,
         )
-        spack.config.set(
-            "filter",
-            {"config": {"allow": ["packages"]}, "packages": "externals_only"},
-            scope=source.scope_name,
-        )
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  config:
+    allow: [packages]
+  packages: externals_only
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered_yaml = ev.read("filtered").manifest["spack"]
 
@@ -2488,7 +2544,9 @@ def test_env_create_filter_packages_externals_only_excludes_non_external_entries
     assert all("externals" in pkg for pkg in filtered_yaml["packages"].values())
 
 
-def test_env_create_filter_packages_externals_only_preserves_external_entries():
+def test_env_create_filter_packages_externals_only_preserves_external_entries(
+    tmp_path: pathlib.Path,
+):
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2506,15 +2564,18 @@ def test_env_create_filter_packages_externals_only_preserves_external_entries():
             },
             scope=source.scope_name,
         )
-        spack.config.set(
-            "filter",
-            {"config": {"allow": ["packages"]}, "packages": "externals_only"},
-            scope=source.scope_name,
-        )
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  config:
+    allow: [packages]
+  packages: externals_only
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered_yaml = ev.read("filtered").manifest["spack"]
 
@@ -2523,7 +2584,7 @@ def test_env_create_filter_packages_externals_only_preserves_external_entries():
     assert filtered_yaml["packages"]["externaltool"]["buildable"] is False
 
 
-def test_env_create_filter_packages_allow_block_external_package_entries():
+def test_env_create_filter_packages_allow_block_external_package_entries(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2545,18 +2606,20 @@ def test_env_create_filter_packages_allow_block_external_package_entries():
             },
             scope=source.scope_name,
         )
-        spack.config.set(
-            "filter",
-            {
-                "config": {"allow": ["packages"]},
-                "packages": {"allow": ["cmake", "externaltool"], "block": ["externaltool"]},
-            },
-            scope=source.scope_name,
-        )
     source.concretize()
     source.write()
 
-    env("create", "--filter", "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  config:
+    allow: [packages]
+  packages:
+    allow: [cmake, externaltool]
+    block: [externaltool]
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered_yaml = ev.read("filtered").manifest["spack"]
 
@@ -2574,16 +2637,20 @@ def test_env_create_filter_from_manifest(tmp_path: pathlib.Path):
   packages:
     all:
       compiler: [gcc]
-  filter:
-    concrete: false
-    specs:
-      allow: [libelf]
-    config:
-      allow: [packages]
 """
     )
 
-    env("create", "--filter", "filtered", str(spack_yaml))
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  concrete: false
+  specs:
+    allow: [libelf]
+  config:
+    allow: [packages]
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", str(spack_yaml))
 
     filtered = ev.read("filtered")
     filtered_yaml = filtered.manifest["spack"]
@@ -2591,7 +2658,6 @@ def test_env_create_filter_from_manifest(tmp_path: pathlib.Path):
     assert [spec.name for spec in filtered.user_specs] == ["libelf"]
     assert not os.path.exists(filtered.lock_path)
     assert filtered_yaml["packages"] == {"all": {"compiler": ["gcc"]}}
-    assert "filter" not in filtered_yaml
 
 
 def test_env_create_filter_from_manifest_preserves_grouped_specs(tmp_path: pathlib.Path):
@@ -2603,12 +2669,16 @@ def test_env_create_filter_from_manifest_preserves_grouped_specs(tmp_path: pathl
     specs:
     - mpileaks
     - libelf
-  filter:
-    concrete: false
 """
     )
 
-    env("create", "--filter", "filtered", str(spack_yaml))
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  concrete: false
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", str(spack_yaml))
 
     filtered = ev.read("filtered")
     filtered_yaml = filtered.manifest["spack"]
@@ -2619,27 +2689,25 @@ def test_env_create_filter_from_manifest_preserves_grouped_specs(tmp_path: pathl
     assert not os.path.exists(filtered.lock_path)
 
 
-def test_env_create_filter_reads_filter_from_include(tmp_path: pathlib.Path):
-    filter_yaml = tmp_path / "filter.yaml"
-    filter_yaml.write_text(
+def test_env_create_filter_reads_filter_from_file(tmp_path: pathlib.Path):
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
         """filter:
   concrete: false
   specs:
     allow: [libelf]
-"""
+""",
     )
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(
-        f"""spack:
+        """spack:
   specs:
   - mpileaks
   - libelf
-  include:
-  - {filter_yaml}
 """
     )
 
-    env("create", "--filter", "filtered", str(spack_yaml))
+    env("create", "--filter", filter_yaml, "filtered", str(spack_yaml))
 
     filtered = ev.read("filtered")
 
@@ -2653,14 +2721,18 @@ def test_env_create_filter_manifest_requires_non_concrete(tmp_path: pathlib.Path
         """spack:
   specs:
   - mpileaks
-  filter:
-    specs:
-      allow: [mpileaks]
 """
     )
 
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        """filter:
+  specs:
+    allow: [mpileaks]
+""",
+    )
     with pytest.raises(ev.SpackEnvironmentError):
-        env("create", "--filter", "filtered", str(spack_yaml))
+        env("create", "--filter", filter_yaml, "filtered", str(spack_yaml))
 
 
 @pytest.mark.regression("45766")
