@@ -2309,7 +2309,8 @@ class Environment:
             return [{"hash": x.hash, "spec": x.root.to_dict()} for x in self.concretized_roots]
 
         return [
-            {"hash": x.hash, "spec": x.root.to_dict(), "group": x.group} for x in self.concretized_roots
+            {"hash": x.hash, "spec": x.root.to_dict(), "group": x.group}
+            for x in self.concretized_roots
         ]
 
     def has_groups(self) -> bool:
