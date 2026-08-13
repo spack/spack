@@ -16,10 +16,12 @@ import warnings
 from collections.abc import KeysView
 from itertools import zip_longest
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
     Iterable,
+    Iterator,
     List,
     Mapping,
     Optional,
@@ -66,6 +68,9 @@ from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
 from .list import SpecList, SpecListError, SpecListParser
+
+if TYPE_CHECKING:
+    from spack.solver.asp import OutputConfiguration
 
 SpecPair = Tuple[Spec, Spec]
 
@@ -1100,6 +1105,9 @@ class Environment:
         self._previous_active = None
         self._dev_specs = None
 
+        #: When True (set by ``transient_concretization()``), ``write()`` is a no-op
+        self._transient = False
+
         # Load the manifest file contents into memory
         self._load_manifest_file()
 
@@ -1711,8 +1719,60 @@ class Environment:
         if modified_roots:
             self.write()
 
+    def _concrete_state_snapshot(self) -> Dict[str, Any]:
+        """Return a snapshot of the in-memory concrete state of this environment.
+
+        The snapshot contains everything that concretization may modify, copied by value
+        the correct portion of the way down the stack.
+        """
+        return {
+            "concretized_roots": self.concretized_roots[:],
+            "specs_by_hash": self.specs_by_hash.copy(),
+            "included_concrete_spec_data": {
+                env_name: env_data.copy()
+                for env_name, env_data in self.included_concrete_spec_data.items()
+            },
+            "included_specs_by_hash": {
+                env_name: env_by_hash.copy()
+                for env_name, env_by_hash in self.included_specs_by_hash.items()
+            },
+            "included_concretized_roots": {
+                env_name: roots[:] for env_name, roots in self.included_concretized_roots.items()
+            },
+        }
+
+    def _restore_concrete_state(self, snapshot: Dict[str, Any]) -> None:
+        """Restore the in-memory concrete state taken with ``_concrete_state_snapshot``."""
+        self.concretized_roots = snapshot["concretized_roots"]
+        self.specs_by_hash = snapshot["specs_by_hash"]
+        self.included_concrete_spec_data = snapshot["included_concrete_spec_data"]
+        self.included_specs_by_hash = snapshot["included_specs_by_hash"]
+        self.included_concretized_roots = snapshot["included_concretized_roots"]
+
+    @contextlib.contextmanager
+    def transient_concretization(self) -> Iterator["Environment"]:
+        """Context manager within which concretization does not modify this environment.
+
+        Any changes to the in-memory concrete state (e.g. from ``concretize()``) are
+        visible inside the context, and rolled back on exit. ``write()`` is a no-op
+        within the context, so nothing reaches disk either.
+        """
+        snapshot = self._concrete_state_snapshot()
+        # write() also flips ConcretizedRootInfo.new in place on objects shared with the
+        # snapshot; the transient flag makes it a no-op so the snapshot stays intact.
+        self._transient = True
+        try:
+            yield self
+        finally:
+            self._transient = False
+            self._restore_concrete_state(snapshot)
+
     def concretize(
-        self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
+        self,
+        *,
+        force: Optional[bool] = None,
+        tests: Union[bool, Sequence[str]] = False,
+        output: Optional["OutputConfiguration"] = None,
     ) -> Sequence[SpecPair]:
         """Concretize user_specs in this environment.
 
@@ -1726,32 +1786,19 @@ class Environment:
                 defaults to ``spack.config.CONFIG.get("concretizer:force")``
             tests: False to run no tests, True to test all packages, or a list of
                 package names to run tests for some
+            output: optional configuration for solver diagnostics (ASP program, timers,
+                statistics, optimization criteria). Diagnostics cover only the solves
+                performed for specs that were not already concrete.
 
         Returns:
             List of specs that have been concretized. Each entry is a tuple of
             the user spec and the corresponding concretized spec.
         """
-        old_concretized_roots = self.concretized_roots[:]
-        old_specs_by_hash = self.specs_by_hash.copy()
-
-        # This is slightly complicated to pass by value the correct portion of the way
-        # down the stack
-        old_concrete_data = {
-            env_name: env_data.copy()
-            for env_name, env_data in self.included_concrete_spec_data.items()
-        }
-        old_included_by_hash = {
-            env_name: env_by_hash.copy()
-            for env_name, env_by_hash in self.included_specs_by_hash.items()
-        }
-
+        snapshot = self._concrete_state_snapshot()
         try:
-            return EnvironmentConcretizer(self).concretize(force=force, tests=tests)
+            return EnvironmentConcretizer(self).concretize(force=force, tests=tests, output=output)
         except BaseException:
-            self.concretized_roots = old_concretized_roots
-            self.specs_by_hash = old_specs_by_hash
-            self.included_specs_by_hash = old_included_by_hash
-            self.included_concrete_spec_data = old_concrete_data
+            self._restore_concrete_state(snapshot)
             raise
 
     def sync_concretized_specs(self) -> None:
@@ -2503,6 +2550,9 @@ class Environment:
         Args:
             regenerate: regenerate views and run post-write hooks as well as writing if True.
         """
+        if self._transient:
+            tty.debug(f"Skipping write of transient environment {self.name}")
+            return
         self.manifest_uptodate_or_warn()
         if self.specs_by_hash or self.included_concrete_env_root_dirs:
             self.ensure_env_directory_exists(dot_env=True)
@@ -2702,12 +2752,20 @@ class ReusableSpecsFactory:
 
 
 class EnvironmentConcretizer:
-    def __init__(self, env: Environment):
+    def __init__(self, env: Environment, *, output: Optional["OutputConfiguration"] = None):
         self.env = env
+        #: Optional configuration for solver diagnostics
+        self.output = output
 
     def concretize(
-        self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
+        self,
+        *,
+        force: Optional[bool] = None,
+        tests: Union[bool, Sequence[str]] = False,
+        output: Optional["OutputConfiguration"] = None,
     ) -> List[SpecPair]:
+        if output is not None:
+            self.output = output
         if force is None:
             force = spack.config.CONFIG.get("concretizer:force")
         self._prepare_environment_for_concretization(force=force)
@@ -2837,7 +2895,7 @@ class EnvironmentConcretizer:
 
         specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
         result = spack.concretize.concretize_together_when_possible(
-            specs_to_concretize, tests=tests, factory=factory
+            specs_to_concretize, tests=tests, factory=factory, output=self.output
         )
         result = [x for x in result if x[0] in to_compute]
         for abstract, concrete in result:
@@ -2859,7 +2917,7 @@ class EnvironmentConcretizer:
         to_concretize = self._user_spec_pairs(to_compute, to_keep)
         try:
             concrete_pairs = spack.concretize.concretize_together(
-                to_concretize, tests=tests, factory=factory
+                to_concretize, tests=tests, factory=factory, output=self.output
             )
         except spack.error.UnsatisfiableSpecError as e:
             # "Enhance" the error message for multiple root specs, suggest a less strict
@@ -2897,7 +2955,7 @@ class EnvironmentConcretizer:
 
         to_concretize = [(x, None) for x in to_compute]
         concrete_pairs = spack.concretize.concretize_separately(
-            to_concretize, tests=tests, factory=factory
+            to_concretize, tests=tests, factory=factory, output=self.output
         )
 
         for abstract, concrete in concrete_pairs:

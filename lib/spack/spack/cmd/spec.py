@@ -3,23 +3,30 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import re
 import sys
+from typing import List, Optional
 
 import spack
 import spack.binary_distribution
 import spack.cmd
+import spack.concretize
+import spack.config
+import spack.environment as ev
 import spack.hash_types as ht
 import spack.package_base
 import spack.spec
-import spack.store
-import spack.traverse
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
-from spack.util.lang import nullcontext
+from spack.solver import asp
+from spack.util import tty
 
 description = "show what would be installed, given a spec"
 section = "build"
 level = "short"
+
+#: output options
+show_options = ("asp", "opt", "solutions")
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
@@ -75,21 +82,100 @@ for further documentation regarding the spec syntax, see:
     arguments.add_common_arguments(subparser, ["specs"])
     arguments.add_concretizer_args(subparser)
 
+    # debugging arguments
+    subparser.add_argument(
+        "--show",
+        action="store",
+        default="solutions",
+        help="select outputs\n\ncomma-separated list of:\n"
+        "  asp          asp program text\n"
+        "  opt          optimization criteria for best model\n"
+        "  output       raw clingo output\n"
+        "  solutions    models found by asp program\n"
+        "  all          all of the above",
+    )
+    subparser.add_argument(
+        "--timers",
+        action="store_true",
+        default=False,
+        help="print out timers for different solve phases",
+    )
+    subparser.add_argument(
+        "--stats", action="store_true", default=False, help="print out statistics from clingo"
+    )
+
+
+def _display_specs(specs: List[spack.spec.Spec], required_format: Optional[str], kwargs) -> None:
+    """Print concrete specs in the requested format (tree by default)."""
+    if required_format:
+        for spec in specs:
+            # With -y, just print YAML to output.
+            if required_format == "yaml":
+                # use write because to_yaml already has a newline.
+                sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
+            elif required_format == "json":
+                sys.stdout.write(spec.to_json(hash=ht.dag_hash))
+            else:
+                print(spec.format(required_format))
+    else:
+        tree_str = spack.spec.tree(specs, color=sys.stdout.isatty(), **kwargs)
+        sys.stdout.write(tree_str)
+    print()
+
+
+def _process_result(result, show, required_format, kwargs):
+    if ("opt" in show) and (not required_format):
+        result.show_criteria()
+
+    # dump the solutions as concretized specs
+    if "solutions" in show:
+        _display_specs(result.specs, required_format, kwargs)
+
+        if result.unsolved_specs:
+            tty.msg(asp.Result.format_unsolved(result.unsolved_specs))
+
+
+def _env_spec(env: ev.Environment, args, show, required_format, kwargs) -> None:
+    """Show the environment roots, concretizing only the ones that aren't yet concrete.
+
+    The environment is not modified, in memory or on disk. Solver diagnostics (asp
+    program, optimization criteria, timers, statistics) cover only the new solves.
+    """
+    diagnostics = asp.OutputConfiguration(
+        timers=args.timers,
+        stats=args.stats,
+        out=sys.stdout if "asp" in show else None,
+        setup_only=set(show) == {"asp"},
+        criteria="opt" in show and not required_format,
+    )
+    wants_diagnostics = any(diagnostics)
+
+    # With setup_only nothing concretizes, so we can't use the result to detect a
+    # fully concrete environment; check the roots upfront instead.
+    force = spack.config.CONFIG.get("concretizer:force")
+    already_concrete = {x.root for x in env.concretized_roots}
+    fully_concrete = not force and all(s in already_concrete for s in env.user_specs)
+
+    if wants_diagnostics and fully_concrete:
+        tty.msg(
+            "The environment is already concrete, so there is nothing to solve and no"
+            " solver diagnostics to show. Re-run with --force to see diagnostics for a"
+            " full re-concretization."
+        )
+
+    with env.transient_concretization():
+        env.concretize(output=diagnostics if wants_diagnostics else None)
+        concrete_specs = [concrete for _, concrete in env.concretized_specs()]
+
+    if "solutions" in show and not diagnostics.setup_only:
+        _display_specs(concrete_specs, required_format, kwargs)
+
 
 def spec(parser, args):
+    # these are the same options as `spack spec`
     fmt = spack.spec.DISPLAY_FORMAT
     if args.namespaces:
         fmt = "{namespace}." + fmt
-
-    env = active_environment()
-
-    if args.specs:
-        concrete_specs = spack.cmd.parse_specs(args.specs, concretize=True)
-    elif env:
-        env.concretize()
-        concrete_specs = env.concrete_roots()
-    else:
-        args.subparser.error("requires at least one spec or an active environment")
 
     show_status = args.install_status
     if show_status:
@@ -98,38 +184,99 @@ def spec(parser, args):
     else:
         status_fn = None
 
-    # use a read transaction if we are getting install status for every
-    # spec in the DAG.  This avoids repeatedly querying the DB.
-    tree_context = spack.store.STORE.db.read_transaction if show_status else nullcontext
+    kwargs = {
+        "cover": args.cover,
+        "format": fmt,
+        "hashlen": None if args.very_long else 7,
+        "show_types": args.types,
+        "status_fn": status_fn,
+        "hashes": args.long or args.very_long,
+        "version_style_fn": (
+            spack.package_base.non_preferred_version if args.non_defaults else None
+        ),
+        "variant_style_fn": (
+            spack.package_base.non_default_variant if args.non_defaults else None
+        ),
+    }
 
-    # With --yaml, --json, or --format, just print the raw specs to output
-    if args.format:
-        for spec in concrete_specs:
-            if args.format == "yaml":
-                # use write because to_yaml already has a newline.
-                sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
-            elif args.format == "json":
-                print(spec.to_json(hash=ht.dag_hash))
-            else:
-                print(spec.format(args.format))
-        return
-
-    with tree_context():
-        print(
-            spack.spec.tree(
-                concrete_specs,
-                cover=args.cover,
-                format=fmt,
-                hashlen=None if args.very_long else 7,
-                show_types=args.types,
-                status_fn=status_fn,
-                hashes=args.long or args.very_long,
-                key=spack.traverse.by_dag_hash,
-                version_style_fn=(
-                    spack.package_base.non_preferred_version if args.non_defaults else None
-                ),
-                variant_style_fn=(
-                    spack.package_base.non_default_variant if args.non_defaults else None
-                ),
+    # process output options
+    show = re.split(r"\s*,\s*", args.show)
+    if "all" in show:
+        show = show_options
+    for d in show:
+        if d not in show_options:
+            raise ValueError(
+                "Invalid option for '--show': '%s'\nchoose from: (%s)"
+                % (d, ", ".join(show_options + ("all",)))
             )
+
+    # Format required for the output (JSON, YAML or None)
+    required_format = args.format
+
+    # If we have an active environment, pick the specs from there
+    env = active_environment()
+    if args.specs:
+        specs = spack.cmd.parse_specs(args.specs)
+    elif env:
+        # Concretize through the environment, so specs that are already concrete
+        # are kept as-is and only new user specs are solved for.
+        _env_spec(env, args, show, required_format, kwargs)
+        return
+    else:
+        args.subparser.error("requires at least one spec or an active environment")
+
+    # If we only need the solutions, don't go through the solver if everything is from hashes
+    solutions_only = set(show) == {"solutions"}
+    if solutions_only:
+        all_concrete = spack.concretize.short_circuit_all_concrete([(s, None) for s in specs])
+        if all_concrete:
+            _display_specs(all_concrete, required_format, kwargs)
+            return
+
+    solver = asp.Solver()
+    output = sys.stdout if "asp" in show else None
+    setup_only = set(show) == {"asp"}
+    unify = spack.config.CONFIG.get("concretizer:unify")
+    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
+    if unify == "when_possible":
+        for idx, result in enumerate(
+            solver.solve_in_rounds(
+                specs,
+                out=output,
+                timers=args.timers,
+                stats=args.stats,
+                allow_deprecated=allow_deprecated,
+            )
+        ):
+            if "solutions" in show:
+                tty.msg("ROUND {0}".format(idx))
+                tty.msg("")
+            else:
+                print("% END ROUND {0}\n".format(idx))
+            if not setup_only:
+                _process_result(result, show, required_format, kwargs)
+    elif unify:
+        # set up solver parameters
+        # Note: reuse and other concretizer prefs are passed as configuration
+        result = solver.solve(
+            specs,
+            out=output,
+            timers=args.timers,
+            stats=args.stats,
+            setup_only=setup_only,
+            allow_deprecated=allow_deprecated,
         )
+        if not setup_only:
+            _process_result(result, show, required_format, kwargs)
+    else:
+        for spec in specs:
+            result = solver.solve(
+                [spec],
+                out=output,
+                timers=args.timers,
+                stats=args.stats,
+                setup_only=setup_only,
+                allow_deprecated=allow_deprecated,
+            )
+            if not setup_only:
+                _process_result(result, show, required_format, kwargs)

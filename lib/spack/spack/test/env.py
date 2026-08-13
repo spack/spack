@@ -775,6 +775,46 @@ def test_env_with_include_def_missing(mutable_mock_env_path):
         _ = ev.Environment(env_path)
 
 
+def test_transient_concretization_restores_state(mutable_mock_env_path):
+    """Concrete state changes inside transient_concretization() are visible within the
+    context and rolled back on exit; write() is a no-op inside the context."""
+    env = ev.create("test")
+    env.add("mpileaks")
+    with env:
+        env.concretize()
+        env.write()
+    lock_content = pathlib.Path(env.lock_path).read_text(encoding="utf-8")
+    old_roots = env.concretized_roots[:]
+    old_hashes = set(env.specs_by_hash)
+
+    with env:
+        env.add("libelf")
+        with env.transient_concretization():
+            env.concretize()
+            assert {s.name for s in env.concrete_roots()} == {"mpileaks", "libelf"}
+            env.write()  # no-op: nothing must reach disk
+
+    assert env.concretized_roots == old_roots
+    assert set(env.specs_by_hash) == old_hashes
+    assert pathlib.Path(env.lock_path).read_text(encoding="utf-8") == lock_content
+
+
+def test_transient_concretization_restores_state_on_error(mutable_mock_env_path):
+    """The snapshot is restored even when the body raises."""
+    env = ev.create("test")
+    env.add("mpileaks")
+    with env:
+        env.concretize()
+    old_roots = env.concretized_roots[:]
+
+    with pytest.raises(RuntimeError, match="boom"):
+        with env.transient_concretization():
+            env.clear_concretized_specs()
+            raise RuntimeError("boom")
+
+    assert env.concretized_roots == old_roots
+
+
 @pytest.mark.regression("41292")
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
 def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, unify):
