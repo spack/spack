@@ -449,6 +449,31 @@ def test_changed_files_repo_no_git(repo_builder: RepoBuilder):
         assert package_py in changed_files_repo(repo)
 
 
+def test_changed_files_repo_symlinked_root(git, repo_builder: RepoBuilder, tmp_path: pathlib.Path):
+    """A repo whose configured root goes through a symlink still reports its files.
+
+    ``repos.yaml`` paths are only normalized, not resolved, while git reports a physical
+    checkout root -- so the two have to be resolved before they can be compared.
+    """
+    repo_root = pathlib.Path(repo_builder.root)
+    # the checkout holds the repo in a subdirectory, as spack-packages does
+    checkout_root = repo_root.parents[1]
+    with working_dir(str(checkout_root)):
+        git("init")
+        git("config", "user.name", "test user")
+        git("config", "user.email", "test@user.com")
+        git("commit", "--no-gpg-sign", "--allow-empty", "-m", "initial commit")
+
+        package_py = add_package_file(repo_root)
+
+    link = tmp_path / "symlinked-checkout"
+    link.symlink_to(checkout_root)
+    linked_repo = spack.repo.from_path(str(link / "spack_repo" / repo_builder.namespace))
+    assert linked_repo.root != str(repo_root)  # the symlink survives into the repo object
+
+    assert package_py in changed_files_repo(linked_repo, base="HEAD")
+
+
 def test_changed_files_repo_no_base(git, repo_builder: RepoBuilder, capfd):
     """A repo without the base revision falls back to every Python file, without dying."""
     with spack.repo.use_repositories(repo_builder.root) as repo_path:
@@ -466,24 +491,35 @@ def test_changed_files_repo_no_base(git, repo_builder: RepoBuilder, capfd):
         assert "does not have a 'not-a-branch' revision" not in err
 
 
-def test_get_repo_config_file(repo_builder: RepoBuilder):
+@pytest.mark.skipif(not RUFF, reason="ruff is not installed.")
+def test_repo_style_config_is_left_to_ruff(repo_builder: RepoBuilder, ruff_package_with_errors):
+    """Spack passes no --config for a package repo, so ruff resolves it as it would anywhere.
+
+    The fixture package has both an unused import (F401, which ruff selects by default) and
+    unsorted imports (I001, which only a config that selects "I" enables, as spack's does), so
+    the rules that fire say which configuration was in effect.
+    """
     with spack.repo.use_repositories(repo_builder.root) as repo_path:
         repo = repo_path.get_repo(repo_builder.namespace)
         repo_root = pathlib.Path(repo.root)
 
-        # no config anywhere at or above the repo root
-        assert spack.cmd.style.repo_config_file(repo, "ruff.toml") is None
+        bad_file = pathlib.Path(repo_builder._recipe_filename("bad-package"))
+        bad_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(ruff_package_with_errors, bad_file)
 
-        # the repo's own config wins
-        (repo_root / "ruff.toml").touch()
-        assert spack.cmd.style.repo_config_file(repo, "ruff.toml") == str(repo_root / "ruff.toml")
+        no_config = style("--repo", repo.namespace, "-t", "ruff-check", fail_on_error=False)
 
-        # a config above the repo root is found too
-        (repo_root / "ruff.toml").unlink()
-        (repo_root.parent / "ruff.toml").touch()
-        assert spack.cmd.style.repo_config_file(repo, "ruff.toml") == str(
-            repo_root.parent / "ruff.toml"
-        )
+        # a config above the repo root is found by searching upward
+        (repo_root.parent / "ruff.toml").write_text('[lint]\nselect = ["I"]\n')
+        from_above = style("--repo", repo.namespace, "-t", "ruff-check", fail_on_error=False)
+
+    # with no config to find, ruff falls back to its own defaults rather than spack's
+    assert "F401" in no_config
+    assert "I001" not in no_config
+
+    # and spack does not override what ruff resolved
+    assert "I001" in from_above
+    assert "F401" not in from_above
 
 
 def test_repo_and_root_are_mutually_exclusive(tmp_path: pathlib.Path):
@@ -504,7 +540,9 @@ def test_repo_style(repo_builder: RepoBuilder, ruff_package_with_errors):
     with spack.repo.use_repositories(repo_builder.root) as repo_path:
         repo = repo_path.get_repo(repo_builder.namespace)
         repo_root = pathlib.Path(repo.root)
-        (repo_root / "pyproject.toml").touch()
+        # enable only F401, so the reported errors show which config was used: spack's would
+        # also flag the fixture's unsorted imports (I001)
+        (repo_root / "ruff.toml").write_text('[lint]\nselect = ["F401"]\n')
 
         bad_file = pathlib.Path(repo_builder._recipe_filename("bad-package"))
         bad_file.parent.mkdir(parents=True, exist_ok=True)
@@ -512,12 +550,25 @@ def test_repo_style(repo_builder: RepoBuilder, ruff_package_with_errors):
 
         output = style("--repo", repo.namespace, "-t", "ruff-check", fail_on_error=False)
 
+        # naming an explicit file in the repo works too, and reports the same path
+        explicit = style(
+            "--repo", repo.namespace, "-t", "ruff-check", str(bad_file), fail_on_error=False
+        )
+
+    rel_path = os.path.relpath(bad_file, repo.root)
+
     assert style.returncode == 1
     assert f"Running style checks on spack repository {repo.namespace}" in output
     # the repo's bad package is reported, relative to the repo root
-    assert os.path.relpath(bad_file, repo.root) in output
+    assert rel_path in output
     # core spack was not checked
     assert "lib/spack/spack" not in output
+    # the repo's own ruff config was used, not spack's
+    assert "F401" in output
+    assert "I001" not in output
+
+    assert f"Checking Files:\n  {rel_path}" in explicit
+    assert rel_path in explicit
 
 
 def test_repo_skips_mypy(repo_builder: RepoBuilder):

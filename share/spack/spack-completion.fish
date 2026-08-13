@@ -3128,7 +3128,7 @@ complete -c spack -n '__fish_spack_using_command style' -s b -l base -r -d 'bran
 complete -c spack -n '__fish_spack_using_command style' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command style' -s a -l all -d 'check all files, not just changed files (applies only to Import Check)'
 complete -c spack -n '__fish_spack_using_command style' -s r -l root-relative -f -a root_relative
-complete -c spack -n '__fish_spack_using_command style' -s r -l root-relative -d 'print root-relative paths (default: cwd-relative, or repo-relative with --repo)'
+complete -c spack -n '__fish_spack_using_command style' -s r -l root-relative -d 'print root-relative paths (default: cwd-relative; --repo is always repo-relative)'
 complete -c spack -n '__fish_spack_using_command style' -s U -l no-untracked -f -a untracked
 complete -c spack -n '__fish_spack_using_command style' -s U -l no-untracked -d 'exclude untracked files from checks'
 complete -c spack -n '__fish_spack_using_command style' -s f -l fix -f -a fix

@@ -121,8 +121,10 @@ def changed_files_repo(
     """
     root = get_repo_git_root(repo)
     if root and base_sha(str(root), base):
-        # the repo may be a subdirectory of its checkout, so only keep files below it
-        prefix = Path(os.path.relpath(repo.root, root))
+        # The repo may be a subdirectory of its checkout, so only keep files below it.
+        # git reports a physical path, so resolve the repo's too or a symlinked repo root
+        # yields a "../" prefix that matches nothing and silently hides every file.
+        prefix = Path(os.path.relpath(os.path.realpath(repo.root), os.path.realpath(root)))
         files = changed_files(root=str(root), base=base, untracked=untracked, all_files=all_files)
         return [root / f for f in files if prefix in f.parents]
     return list(Path(repo.root).rglob("*.py"))
@@ -208,7 +210,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--root-relative",
         action="store_true",
         default=False,
-        help="print root-relative paths (default: cwd-relative, or repo-relative with --repo)",
+        help="print root-relative paths (default: cwd-relative; --repo is always repo-relative)",
     )
     subparser.add_argument(
         "-U",
@@ -274,16 +276,6 @@ def cwd_relative(path: Path, root: Union[Path, str], report_dir: Union[Path, str
     return Path(os.path.relpath((root / path), report_dir))
 
 
-def repo_config_file(repo: spack.repo.Repo, *config_file_names: str) -> Optional[str]:
-    """Nearest tool configuration file at or above the root of ``repo``, if there is one."""
-    repo_root = Path(repo.root)
-    for curr_dir in [repo_root, *repo_root.parents]:
-        for name in config_file_names:
-            if (curr_dir / name).is_file():
-                return str(curr_dir / name)
-    return None
-
-
 def rewrite_and_print_output(
     output,
     root,
@@ -322,14 +314,15 @@ def print_tool_result(tool, returncode):
 def setup_baseline_ruff_config(args, repo: Optional[spack.repo.Repo] = None):
     """Common ruff args, the directory to run in, and the one to report paths relative to."""
     if repo:
-        # a package repo brings its own config; fall back to spack's if it doesn't have one
-        config = repo_config_file(repo, "pyproject.toml", "ruff.toml", ".ruff.toml")
-        root = report_dir = Path(repo.root)
-    else:
-        config, root, report_dir = None, args.root, args.initial_working_dir
-    if not config:
-        config = os.path.join(spack.paths.prefix, "pyproject.toml")
-    return ["--config", config, "--quiet"], root, report_dir
+        # Let ruff locate a package repo's config itself, by searching up from the files it
+        # checks, as it would for any other project. Passing --config would override that, and
+        # picking the file ourselves would mean reimplementing ruff's rules for which files
+        # count -- a pyproject.toml only configures ruff if it has a [tool.ruff] section.
+        # A repo inside a spack prefix finds spack's config this way; one outside with no
+        # config of its own gets ruff's defaults, same as running ruff there by hand.
+        return ["--quiet"], Path(repo.root), Path(repo.root)
+    config = os.path.join(spack.paths.prefix, "pyproject.toml")
+    return ["--config", config, "--quiet"], args.root, args.initial_working_dir
 
 
 @tool("ruff-check", cmd="ruff")
@@ -462,7 +455,13 @@ def _run_import_check(
         to_add: Set[str] = set()
         to_remove: List[str] = []
 
-        pretty_path = file if root_relative else cwd_relative(file, root, report_dir)
+        if repo:
+            # repo file paths are absolute; report them relative to the repo, like the header
+            pretty_path = Path(os.path.relpath(file, repo.root))
+        elif root_relative:
+            pretty_path = file
+        else:
+            pretty_path = cwd_relative(file, root, report_dir)
 
         try:
             with open(file, "r", encoding="utf-8") as f:

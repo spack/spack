@@ -596,6 +596,22 @@ To automatically fix formatting and linting issues, you can do:
 
     $ spack style --fix
 
+Packages live in repositories separate from Spack itself. To check one, pass its namespace to
+``--repo`` (which defaults to ``builtin``):
+
+.. code-block:: console
+
+    $ spack style --repo builtin
+
+Spack does not choose a Ruff configuration for a package repository; Ruff finds its own, the
+same way it would if you ran it in that directory yourself. Put a ``ruff.toml`` or a
+``pyproject.toml`` with a ``[tool.ruff]`` section in the repository to control how its packages
+are checked. A repository with no configuration of its own gets Ruff's defaults.
+
+Type checking is skipped for package repositories, since mypy checks an importable Spack rather
+than a tree of package recipes. ``--repo`` cannot be combined with ``--root``, because the
+repository is looked up in the running Spack's configuration.
+
 You do not need any of these Python packages installed on your system for the checks to work!
 Spack will bootstrap install them from packages for your use.
 
