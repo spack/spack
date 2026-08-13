@@ -36,8 +36,6 @@ contents have.  Lockfiles are JSON-formatted and their top-level sections are:
 5. ``include_concrete`` (dictionary): an optional dictionary that includes the roots
    and concrete specs from the included environments, keyed by the path to that
    environment
-8. The ``spec`` field in each element of the ``roots`` field changed from a string representation
-   to a dict representation of the abstract spec.
 
 Compatibility
 -------------
@@ -57,10 +55,8 @@ upgrade Spack to use them.
      - ``v5``
      - ``v6``
      - ``v7``
-     - ``v8``
    * - ``v0.12:0.14``
      - ✅
-     -
      -
      -
      -
@@ -75,12 +71,10 @@ upgrade Spack to use them.
      -
      -
      -
-     -
    * - ``v0.17``
      - ✅
      - ✅
      - ✅
-     -
      -
      -
      -
@@ -93,14 +87,12 @@ upgrade Spack to use them.
      -
      -
      -
-     -
    * - ``v0.22:v0.23``
      - ✅
      - ✅
      - ✅
      - ✅
      - ✅
-     -
      -
      -
    * - ``v1.0:1.1``
@@ -111,18 +103,7 @@ upgrade Spack to use them.
      - ✅
      - ✅
      -
-     -
    * - ``v1.2:``
-     - ✅
-     - ✅
-     - ✅
-     - ✅
-     - ✅
-     - ✅
-     - ✅
-     -
-   * - ``v1.3:``
-     - ✅
      - ✅
      - ✅
      - ✅
@@ -612,13 +593,6 @@ corresponding group.
       }
     }
 
-Version 8
----------
-
-Version 8 changes the representation of the abstract roots from a string to a dict.
-
-This change is needed to capture spec information that can be represented on the root
-but is not printed in the default string represenatation (like namespaces of dependencies).
 """
 
 from .environment import (
