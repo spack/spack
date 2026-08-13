@@ -325,9 +325,7 @@ def print_tests(pkg: PackageBase, args: Namespace) -> None:
 
 
 def _fmt_when(when: "spack.spec.Spec", indent: int) -> str:
-    return color.colorize(
-        f"{indent * ' '}@B{{when}} {color.cescape(when.clong_spec)}"
-    )
+    return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(when.clong_spec)}")
 
 
 def _fmt_variant_value(v: Any) -> str:
