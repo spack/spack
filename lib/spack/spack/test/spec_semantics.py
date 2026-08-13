@@ -2651,8 +2651,12 @@ def test_satisfies_tries_every_parallel_edge(mock_packages):
 
 def test_satisfies_tries_every_parallel_edge_of_a_concrete_spec(config, mock_packages):
     """Satisfies is exhaustive when there are duplicates on concrete specs."""
+    # dupe-tool-root --build--> dupe-tool@1.0
+    #                --link-->  dupe-tool-user --link--> dupe-tool@2.0 --build--> gmake
     spec = spack.concretize.concretize_one("dupe-tool-root")
-    assert spec.satisfies("^dupe-tool@2.0 %gmake ^[deptypes=link] dupe-tool@2")
+    assert spec.satisfies("^[deptypes=build] dupe-tool@1")
+    assert spec.satisfies("^[deptypes=link] dupe-tool@2")
+    assert spec.satisfies("^[deptypes=build] dupe-tool@1 ^[deptypes=link] dupe-tool@2 %gmake")
 
 
 @pytest.mark.parametrize(
