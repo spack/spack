@@ -55,7 +55,7 @@ import spack.util.tty.color as clr
 import spack.variant as vt
 from spack import traverse
 from spack.active_environment import active_environment
-from spack.concretize_ui import ConcretizerUI
+from spack.concretize_ui import ConcretizerUI, HeadlessUI
 from spack.config import substitute_path_variables
 from spack.enums import ConfigScopePriority
 from spack.schema.env import TOP_LEVEL_KEY
@@ -2710,7 +2710,7 @@ class ReusableSpecsFactory:
 class EnvironmentConcretizer:
     def __init__(self, env: Environment, *, ui: Optional[ConcretizerUI] = None):
         self.env = env
-        self.ui = ui or ConcretizerUI()
+        self.ui = ui or HeadlessUI()
 
     def concretize(
         self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False

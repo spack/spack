@@ -15,7 +15,7 @@ import spack.error
 import spack.hash_lookup
 import spack.repo
 import spack.util.parallel
-from spack.concretize_ui import ConcretizerUI
+from spack.concretize_ui import ConcretizerUI, HeadlessUI
 from spack.spec import Spec
 from spack.util import tty
 
@@ -95,7 +95,7 @@ def concretize_together_when_possible(
     """
     from spack.solver.asp import Solver
 
-    ui = ui or ConcretizerUI()
+    ui = ui or HeadlessUI()
 
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
     old_concrete_to_abstract = {
@@ -150,7 +150,7 @@ def concretize_separately(
         ensure_winsdk_external_or_raise,
     )
 
-    ui = ui or ConcretizerUI()
+    ui = ui or HeadlessUI()
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
     args = [
         (i, str(abstract), tests, factory)

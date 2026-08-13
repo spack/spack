@@ -36,6 +36,11 @@ class ConcretizerUI:
         """
 
 
+#: Frontend that reports nothing. Same class as the contract it implements, aliased so that call
+#: sites can say which of the two roles they mean.
+HeadlessUI = ConcretizerUI
+
+
 class TerminalUI(ConcretizerUI):
     """Terminal frontend: announces groups and batches, and reports per-spec progress."""
 
