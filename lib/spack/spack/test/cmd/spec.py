@@ -177,8 +177,10 @@ def test_env_without_spec_error(mutable_mock_env_path):
     """Verify that `spack spec` fails when the active environment has no root specs."""
     env = ev.create("test")
     with env:
-        with pytest.raises(SpackCommandError):
+        with pytest.raises(SpackCommandError, match="Spack command failed with exit code 2") as e:
             spec()
+        error_msg = "active environment has no root specs"
+        assert error_msg in e.value.output
 
 
 def test_spec_shows_specs_from_named_groups(mutable_mock_env_path):
