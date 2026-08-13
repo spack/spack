@@ -59,7 +59,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     find_parser.add_argument(
         "--all", action="store_true", help="search for all packages that Spack knows about"
     )
-    arguments.add_common_arguments(find_parser, ["tags", "jobs", "packages"])
+    arguments.add_common_arguments(find_parser, ["tags", "jobs"])
+    # NOTE: this argument is *optional*, unlike common.arguments.packages
+    find_parser.add_argument(
+        "packages",
+        nargs=argparse.REMAINDER,
+        metavar="package(s)",
+        help="search for only these packages",
+    )
     find_parser.epilog = (
         'The search is by default on packages tagged with the "build-tools" or '
         '"core-packages" tags. Use the --all option to search for every possible '
