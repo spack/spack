@@ -31,6 +31,7 @@ from typing import (
 
 import spack
 import spack.active_environment
+import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -1712,7 +1713,11 @@ class Environment:
             self.write()
 
     def concretize(
-        self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
+        self,
+        *,
+        force: Optional[bool] = None,
+        tests: Union[bool, Sequence[str]] = False,
+        reporter: spack.concretize.SolveReporter = spack.concretize.DEFAULT_SOLVE_REPORTER,
     ) -> Sequence[SpecPair]:
         """Concretize user_specs in this environment.
 
@@ -1726,6 +1731,7 @@ class Environment:
                 defaults to ``spack.config.CONFIG.get("concretizer:force")``
             tests: False to run no tests, True to test all packages, or a list of
                 package names to run tests for some
+            reporter: what each solve reports, besides returning concrete specs
 
         Returns:
             List of specs that have been concretized. Each entry is a tuple of
@@ -1746,7 +1752,9 @@ class Environment:
         }
 
         try:
-            return EnvironmentConcretizer(self).concretize(force=force, tests=tests)
+            return EnvironmentConcretizer(self).concretize(
+                force=force, tests=tests, reporter=reporter
+            )
         except BaseException:
             self.concretized_roots = old_concretized_roots
             self.specs_by_hash = old_specs_by_hash
@@ -2707,7 +2715,11 @@ class EnvironmentConcretizer:
         self.env = env
 
     def concretize(
-        self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
+        self,
+        *,
+        force: Optional[bool] = None,
+        tests: Union[bool, Sequence[str]] = False,
+        reporter: spack.concretize.SolveReporter = spack.concretize.DEFAULT_SOLVE_REPORTER,
     ) -> List[SpecPair]:
         if force is None:
             force = spack.config.CONFIG.get("concretizer:force")
@@ -2717,7 +2729,9 @@ class EnvironmentConcretizer:
         # Sort so that the ordering is deterministic, and "default" specs are first
         for current_group in self._order_groups():
             with self.env.config_override_for_group(group=current_group):
-                partial_result = self._concretize_single_group(group=current_group, tests=tests)
+                partial_result = self._concretize_single_group(
+                    group=current_group, tests=tests, reporter=reporter
+                )
                 result.extend(partial_result)
 
         # Unify the specs objects, so we get correct references to all parents
@@ -2726,7 +2740,11 @@ class EnvironmentConcretizer:
         return result
 
     def _concretize_single_group(
-        self, *, group: str, tests: Union[bool, Sequence[str]]
+        self,
+        *,
+        group: str,
+        tests: Union[bool, Sequence[str]],
+        reporter: spack.concretize.SolveReporter = spack.concretize.DEFAULT_SOLVE_REPORTER,
     ) -> List[SpecPair]:
         # Exit early if the set of concretized specs is the set of user specs
         new_user_specs, kept_user_specs = self._partition_user_specs(group=group)
@@ -2740,17 +2758,32 @@ class EnvironmentConcretizer:
         factory = ReusableSpecsFactory(env=self.env, group=group)
         if unify == "when_possible":
             partial_result = self._concretize_together_where_possible(
-                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+                new_user_specs,
+                kept_user_specs,
+                tests=tests,
+                group=group,
+                factory=factory,
+                reporter=reporter,
             )
 
         elif unify is True:
             partial_result = self._concretize_together(
-                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+                new_user_specs,
+                kept_user_specs,
+                tests=tests,
+                group=group,
+                factory=factory,
+                reporter=reporter,
             )
 
         elif unify is False:
             partial_result = self._concretize_separately(
-                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+                new_user_specs,
+                kept_user_specs,
+                tests=tests,
+                group=group,
+                factory=factory,
+                reporter=reporter,
             )
         else:
             raise SpackEnvironmentError(f"concretization strategy not implemented [{unify}]")
@@ -2833,12 +2866,11 @@ class EnvironmentConcretizer:
         group: Optional[str] = None,
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
+        reporter: spack.concretize.SolveReporter = spack.concretize.DEFAULT_SOLVE_REPORTER,
     ) -> List[SpecPair]:
-        import spack.concretize
-
         specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
         result = spack.concretize.concretize_together_when_possible(
-            specs_to_concretize, tests=tests, factory=factory
+            specs_to_concretize, tests=tests, factory=factory, reporter=reporter
         )
         result = [x for x in result if x[0] in to_compute]
         for abstract, concrete in result:
@@ -2854,13 +2886,12 @@ class EnvironmentConcretizer:
         group: Optional[str] = None,
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
+        reporter: spack.concretize.SolveReporter = spack.concretize.DEFAULT_SOLVE_REPORTER,
     ) -> List[SpecPair]:
-        import spack.concretize
-
         to_concretize = self._user_spec_pairs(to_compute, to_keep)
         try:
             concrete_pairs = spack.concretize.concretize_together(
-                to_concretize, tests=tests, factory=factory
+                to_concretize, tests=tests, factory=factory, reporter=reporter
             )
         except spack.error.UnsatisfiableSpecError as e:
             # "Enhance" the error message for multiple root specs, suggest a less strict
@@ -2892,13 +2923,12 @@ class EnvironmentConcretizer:
         group: Optional[str] = None,
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
+        reporter: spack.concretize.SolveReporter = spack.concretize.DEFAULT_SOLVE_REPORTER,
     ) -> List[SpecPair]:
         """Concretization strategy that concretizes separately one user spec after the other"""
-        import spack.concretize
-
         to_concretize = [(x, None) for x in to_compute]
         concrete_pairs = spack.concretize.concretize_separately(
-            to_concretize, tests=tests, factory=factory
+            to_concretize, tests=tests, factory=factory, reporter=reporter
         )
 
         for abstract, concrete in concrete_pairs:

@@ -6,7 +6,18 @@
 import importlib
 import sys
 import time
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import spack.compilers
 import spack.compilers.config
@@ -23,7 +34,19 @@ SpecPair = Tuple[Spec, Spec]
 TestsType = Union[bool, Iterable[str]]
 
 if TYPE_CHECKING:
+    import spack.solver.asp
     from spack.solver.reuse import SpecFiltersFactory
+
+
+class SolveReporter(NamedTuple):
+    #: What the solve prints out, or None. Using None allows the solver to solve in parallel
+    output: Optional["spack.solver.asp.OutputConfiguration"]
+    #: Called once for every result produced in this process, in the order they are produced
+    on_result: Optional[Callable[["spack.solver.asp.Result"], None]]
+
+
+#: A solve that reports nothing, and only returns concrete specs
+DEFAULT_SOLVE_REPORTER = SolveReporter(output=None, on_result=None)
 
 
 def _concretize_specs_together(
@@ -31,6 +54,7 @@ def _concretize_specs_together(
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    reporter: SolveReporter = DEFAULT_SOLVE_REPORTER,
 ) -> List[Spec]:
     """Given a number of specs as input, tries to concretize them together.
 
@@ -39,13 +63,16 @@ def _concretize_specs_together(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
+        reporter: what the solve reports, besides returning concrete specs
     """
     from spack.solver.asp import Solver
 
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     result = Solver(specs_factory=factory).solve(
-        abstract_specs, tests=tests, allow_deprecated=allow_deprecated
+        abstract_specs, tests=tests, allow_deprecated=allow_deprecated, output=reporter.output
     )
+    if reporter.on_result is not None:
+        reporter.on_result(result)
     return [s.copy() for s in result.specs]
 
 
@@ -54,6 +81,7 @@ def concretize_together(
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    reporter: SolveReporter = DEFAULT_SOLVE_REPORTER,
 ) -> List[SpecPair]:
     """Given a number of specs as input, tries to concretize them together.
 
@@ -63,10 +91,13 @@ def concretize_together(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
+        reporter: what the solve reports, besides returning concrete specs
     """
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
     abstract_specs = [abstract for abstract, _ in spec_list]
-    concrete_specs = _concretize_specs_together(to_concretize, tests=tests, factory=factory)
+    concrete_specs = _concretize_specs_together(
+        to_concretize, tests=tests, factory=factory, reporter=reporter
+    )
     return list(zip(abstract_specs, concrete_specs))
 
 
@@ -75,6 +106,7 @@ def concretize_together_when_possible(
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    reporter: SolveReporter = DEFAULT_SOLVE_REPORTER,
 ) -> List[SpecPair]:
     """Given a number of specs as input, tries to concretize them together to the extent possible.
 
@@ -87,6 +119,7 @@ def concretize_together_when_possible(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
+        reporter: what the solve reports, besides returning concrete specs
     """
     from spack.solver.asp import Solver
 
@@ -100,8 +133,10 @@ def concretize_together_when_possible(
     j = 0
     start = time.monotonic()
     for result in Solver(specs_factory=factory).solve_in_rounds(
-        to_concretize, tests=tests, allow_deprecated=allow_deprecated
+        to_concretize, tests=tests, allow_deprecated=allow_deprecated, output=reporter.output
     ):
+        if reporter.on_result is not None:
+            reporter.on_result(result)
         now = time.monotonic()
         duration = now - start
         percentage = int((j + 1) / len(to_concretize) * 100)
@@ -128,6 +163,7 @@ def concretize_separately(
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    reporter: SolveReporter = DEFAULT_SOLVE_REPORTER,
 ) -> List[SpecPair]:
     """Concretizes the input specs separately from each other.
 
@@ -137,6 +173,8 @@ def concretize_separately(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
+        reporter: what the solve reports, besides returning concrete specs. A reporter with
+            an output configuration forces an in-process solve.
     """
     from spack.bootstrap import (
         ensure_bootstrap_configuration,
@@ -181,17 +219,20 @@ def concretize_separately(
             (abstract, concrete) for abstract, concrete in spec_list if concrete
         ]
 
-    # Solve the environment in parallel on Linux
-    num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
+    if reporter.output is not None:
+        # A reporter doesn't cross the process pool boundary. Solve in-process instead.
+        solved: Iterable[Tuple[int, Spec, float]] = _concretize_serially(args, reporter=reporter)
+    else:
+        # Solve the environment in parallel on Linux
+        num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
 
-    msg = "Starting concretization"
-    # no parallel conc on Windows
-    if not sys.platform == "win32" and num_procs > 1:
-        msg += f" pool with {num_procs} processes"
-    tty.msg(msg)
+        msg = "Starting concretization"
+        # no parallel conc on Windows
+        if not sys.platform == "win32" and num_procs > 1:
+            msg += f" pool with {num_procs} processes"
+        tty.msg(msg)
 
-    for j, (i, concrete, duration) in enumerate(
-        spack.util.parallel.imap_unordered(
+        solved = spack.util.parallel.imap_unordered(
             _concretize_task,
             args,
             processes=num_procs,
@@ -199,7 +240,8 @@ def concretize_separately(
             maxtaskperchild=1,
             serialize_env=True,
         )
-    ):
+
+    for j, (i, concrete, duration) in enumerate(solved):
         ret.append((i, concrete))
         percentage = int((j + 1) / len(args) * 100)
         tty.verbose(
@@ -226,17 +268,31 @@ def _concretize_task(
         return index, spec, time.time() - start
 
 
+def _concretize_serially(
+    packed_arguments: Sequence[Tuple[int, str, TestsType, Optional["SpecFiltersFactory"]]],
+    *,
+    reporter: SolveReporter,
+) -> Iterable[Tuple[int, Spec, float]]:
+    for index, spec_str, tests, factory in packed_arguments:
+        start = time.time()
+        spec = concretize_one(Spec(spec_str), tests=tests, factory=factory, reporter=reporter)
+        yield index, spec, time.time() - start
+
+
 def concretize_one(
     spec: Union[str, Spec],
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    reporter: SolveReporter = DEFAULT_SOLVE_REPORTER,
 ) -> Spec:
     """Return a concretized copy of the given spec.
 
     Args:
         tests: if False disregard test dependencies, if a list of names activate them for
             the packages in the list, if True activate test dependencies for all packages.
+        factory: optional factory to produce a list of specs to be reused
+        reporter: what the solve reports, besides returning a concrete spec
     """
     from spack.solver.asp import Solver, SpecBuilder
 
@@ -255,8 +311,10 @@ def concretize_one(
 
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     result = Solver(specs_factory=factory).solve(
-        [spec], tests=tests, allow_deprecated=allow_deprecated
+        [spec], tests=tests, allow_deprecated=allow_deprecated, output=reporter.output
     )
+    if reporter.on_result is not None:
+        reporter.on_result(result)
 
     # take the best answer
     opt, i, answer = min(result.answers)
