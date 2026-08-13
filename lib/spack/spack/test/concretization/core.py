@@ -5520,9 +5520,9 @@ class RecordingUI(spack.concretize_ui.ConcretizerUI):
         self.started.append((kind, total, processes))
 
     def on_spec_concretized(
-        self, abstract: Spec, *, concrete: Spec, index: int, duration: float
+        self, abstract: Spec, *, concrete: Spec, count: int, duration: float
     ) -> None:
-        self.concretized.append((abstract, concrete, index, duration))
+        self.concretized.append((abstract, concrete, count, duration))
 
 
 def test_concretize_separately_reports_progress(mutable_config, mock_packages):

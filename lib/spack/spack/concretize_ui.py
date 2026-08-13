@@ -3,9 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Frontends for concretization.
 
-Defines the :class:`ConcretizerUI` contract (a headless no-op base) and the interactive
-:class:`TerminalUI` implementation. Concretization reports facts through this interface, and the
-frontend decides whether, where, and how to render them.
+Defines the :class:`ConcretizerUI` contract (a headless no-op base) and the terminal
+:class:`TerminalUI` implementation.
 """
 
 import enum
@@ -41,7 +40,7 @@ class ConcretizerUI:
         """
 
     def on_spec_concretized(
-        self, abstract: Spec, *, concrete: Spec, index: int, duration: float
+        self, abstract: Spec, *, concrete: Spec, count: int, duration: float
     ) -> None:
         """A user spec has been concretized. ``index`` is the 0-based completion order, and
         ``duration`` is the time spent in the solve that produced this spec. Specs that come out
@@ -77,11 +76,11 @@ class TerminalUI(ConcretizerUI):
         tty.msg(msg)
 
     def on_spec_concretized(
-        self, abstract: Spec, *, concrete: Spec, index: int, duration: float
+        self, abstract: Spec, *, concrete: Spec, count: int, duration: float
     ) -> None:
         if self.kind is SolveKind.TOGETHER:
             return
-        percentage = int((index + 1) / max(self.total, index + 1) * 100)
+        percentage = int((count + 1) / max(self.total, count + 1) * 100)
         tty.verbose(
             f"{duration:6.1f}s [{percentage:3d}%] {concrete.cformat('{hash:7}')} "
             f"{abstract.colored_str}",
