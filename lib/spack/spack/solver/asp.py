@@ -456,7 +456,7 @@ class Result:
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             elif candidate and candidate.build_spec.satisfies(input_spec):
-                tty.warn(
+                warnings.warn(
                     "explicit splice configuration has caused the concretized spec"
                     f" {candidate} not to satisfy the input spec {input_spec}"
                 )
@@ -3578,7 +3578,7 @@ class SpecBuilder:
         dependencies[0].update_virtuals(virtual)
 
     def deprecated(self, node: NodeId, version: str) -> None:
-        tty.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
+        warnings.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
 
     def splice_at_hash(
         self, parent_node: NodeId, splice_node: NodeId, child_name: str, child_hash: str
@@ -3894,7 +3894,7 @@ def _specs_with_commits(spec):
 
     if "commit" not in spec.variants:
         if not spec.is_develop:
-            tty.warn(
+            warnings.warn(
                 f"Unable to resolve the git commit for {spec.name}. "
                 "An installation of this binary won't have complete binary provenance."
             )

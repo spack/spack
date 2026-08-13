@@ -2589,7 +2589,6 @@ packages:
         database_mutable_config: Database,
         mock_packages,
         transitive,
-        capfd,
     ):
         mpich_spec = database_mutable_config.query("mpich")[0]
         splice_info = {
@@ -2599,7 +2598,10 @@ packages:
         }
         mutable_config.set("concretizer", {"splice": {"explicit": [splice_info]}})
 
-        spec = spack.concretize.concretize_one("hdf5 ^zmpi")
+        with pytest.warns(
+            UserWarning, match="explicit splice configuration has caused"
+        ) as recorded:
+            spec = spack.concretize.concretize_one("hdf5 ^zmpi")
 
         assert spec.satisfies(f"^mpich@{mpich_spec.version}")
         assert spec.build_spec.dependencies(name="zmpi", deptype="link")
@@ -2607,10 +2609,9 @@ packages:
         assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
         assert not spec.dependencies(name="zmpi", deptype="link")
 
-        captured = capfd.readouterr()
-        assert "Warning: explicit splice configuration has caused" in captured.err
-        assert "hdf5 ^zmpi" in captured.err
-        assert str(spec) in captured.err
+        warned = "\n".join(str(x.message) for x in recorded)
+        assert "hdf5 ^zmpi" in warned
+        assert str(spec) in warned
 
     def test_explicit_splice_fails_nonexistent(
         self, mutable_config: Configuration, mock_packages, mock_store
