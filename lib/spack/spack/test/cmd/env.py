@@ -2308,7 +2308,7 @@ def test_env_create_filter_from_concrete_env(tmp_path: pathlib.Path):
     with source:
         add("mpileaks")
         add("libelf")
-        spack.config.set(
+        spack.config.CONFIG.set(
             "packages",
             {
                 "all": {"compiler": ["gcc"]},
@@ -2395,7 +2395,7 @@ def test_env_create_filter_packages_externals_only(tmp_path: pathlib.Path):
     source = ev.read("source")
     with source:
         add("mpileaks")
-        spack.config.set(
+        spack.config.CONFIG.set(
             "packages",
             {
                 "all": {"compiler": ["gcc"]},
@@ -2431,7 +2431,7 @@ def test_env_create_filter_packages_include_all_by_default(tmp_path: pathlib.Pat
     source = ev.read("source")
     with source:
         add("mpileaks")
-        spack.config.set(
+        spack.config.CONFIG.set(
             "packages",
             {
                 "all": {"compiler": ["gcc"]},
@@ -2468,7 +2468,7 @@ def test_env_create_filter_packages_allow_block_entries(tmp_path: pathlib.Path):
     source = ev.read("source")
     with source:
         add("mpileaks")
-        spack.config.set(
+        spack.config.CONFIG.set(
             "packages",
             {
                 "all": {"compiler": ["gcc"]},
@@ -2513,7 +2513,7 @@ def test_env_create_filter_packages_externals_only_excludes_non_external_entries
     source = ev.read("source")
     with source:
         add("mpileaks")
-        spack.config.set(
+        spack.config.CONFIG.set(
             "packages",
             {
                 "all": {"compiler": ["gcc"]},
@@ -2555,7 +2555,7 @@ def test_env_create_filter_packages_externals_only_preserves_external_entries(
     source = ev.read("source")
     with source:
         add("mpileaks")
-        spack.config.set(
+        spack.config.CONFIG.set(
             "packages",
             {
                 "externaltool": {
@@ -2593,7 +2593,7 @@ def test_env_create_filter_packages_allow_block_external_package_entries(tmp_pat
     source = ev.read("source")
     with source:
         add("mpileaks")
-        spack.config.set(
+        spack.config.CONFIG.set(
             "packages",
             {
                 "externaltool": {
