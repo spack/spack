@@ -490,23 +490,23 @@ def _default_filter_configuration() -> Dict[str, Any]:
     }
 
 
-def _merged_scope_filter_configuration(configuration: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    merged_scoped = _default_filter_configuration()
+def _normalized_filter_configuration(configuration: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    normalized = _default_filter_configuration()
     if not configuration:
-        return merged_scoped
+        return normalized
 
-    merged_scoped["projections"].update(configuration.get("projections", {}))
-    merged_scoped["concrete"] = configuration.get("concrete", True)
+    normalized["projections"].update(configuration.get("projections", {}))
+    normalized["concrete"] = configuration.get("concrete", True)
 
     specs = configuration.get("specs", {})
-    merged_scoped["specs"]["allow"] = list(specs.get("allow", []))
-    merged_scoped["specs"]["block"] = list(specs.get("block", []))
+    normalized["specs"]["allow"] = list(specs.get("allow", []))
+    normalized["specs"]["block"] = list(specs.get("block", []))
 
     packages = configuration.get("packages", "all")
     if isinstance(packages, str):
-        merged_scoped["packages"] = packages
+        normalized["packages"] = packages
     else:
-        merged_scoped["packages"] = {
+        normalized["packages"] = {
             "allow": list(packages.get("allow", [])),
             "block": list(packages.get("block", [])),
         }
@@ -515,14 +515,14 @@ def _merged_scope_filter_configuration(configuration: Optional[Dict[str, Any]]) 
     config_allow = list(config.get("allow", []))
     config_block = list(config.get("block", []))
     default_config_block = _default_filter_configuration()["config"]["block"]
-    merged_scoped["config"]["allow"] = config_allow
-    merged_scoped["config"]["block"] = list(
+    normalized["config"]["allow"] = config_allow
+    normalized["config"]["block"] = list(
         dict.fromkeys(
             config_block
             + [section for section in default_config_block if section not in config_allow]
         )
     )
-    return merged_scoped
+    return normalized
 
 
 def _read_filter_configuration(filter_file: Union[str, pathlib.Path]) -> Dict[str, Any]:
@@ -538,7 +538,7 @@ def _read_filter_configuration(filter_file: Union[str, pathlib.Path]) -> Dict[st
             f"filter configuration file must contain a top-level filter section: {filter_path}"
         )
 
-    return _merged_scope_filter_configuration(data["filter"])
+    return _normalized_filter_configuration(data["filter"])
 
 
 def _matches_any_spec(spec: Spec, patterns: Sequence[str]) -> bool:
@@ -719,7 +719,7 @@ def _filtered_configuration(
     with source_env:
         if include_section("packages"):
             filtered_packages = _filter_packages_configuration(
-                spack.config.get("packages") or {}, filter_configuration
+                source_configuration.get("packages", {}), filter_configuration
             )
         else:
             filtered_packages = {}
