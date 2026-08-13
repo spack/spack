@@ -5514,7 +5514,7 @@ class RecordingUI(spack.concretize_ui.ConcretizerUI):
     def on_group_started(self, *, group: str, is_default: bool) -> None:
         self.groups.append((group, is_default))
 
-    def on_solve_started(
+    def on_concretization_started(
         self, *, kind: spack.concretize_ui.SolveKind, total: int, processes: int
     ) -> None:
         self.started.append((kind, total, processes))
@@ -5526,8 +5526,8 @@ class RecordingUI(spack.concretize_ui.ConcretizerUI):
 
 
 def test_concretize_separately_reports_progress(mutable_config, mock_packages):
-    """Tests that concretizing separately reports the start of the solves, and one event per spec,
-    to the injected frontend.
+    """Tests that concretizing separately reports the start of the concretization, and one event
+    per spec, to the injected frontend.
     """
     ui = RecordingUI()
     spack.concretize.concretize_separately([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
@@ -5542,9 +5542,9 @@ def test_concretize_separately_reports_progress(mutable_config, mock_packages):
 
 
 def test_concretize_together_when_possible_reports_progress(mutable_config, mock_packages):
-    """Tests that concretizing "when possible" reports the start of the solves, and one event per
-    spec. The two specs cannot be unified, so they are solved in different rounds, and the
-    index has to keep increasing across rounds.
+    """Tests that concretizing "when possible" reports the start of the concretization, and one
+    event per spec. The two specs cannot be unified, so they are solved in different rounds, and
+    the index has to keep increasing across rounds.
     """
     ui = RecordingUI()
     spack.concretize.concretize_together_when_possible(
@@ -5560,7 +5560,9 @@ def test_concretize_together_when_possible_reports_progress(mutable_config, mock
 
 
 def test_concretize_together_reports_progress(mutable_config, mock_packages):
-    """Tests that concretizing together reports the start of the solve, and one event per spec."""
+    """Tests that concretizing together reports the start of the concretization, and one event
+    per spec.
+    """
     ui = RecordingUI()
     spack.concretize.concretize_together([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
 
@@ -5583,8 +5585,8 @@ def test_concretize_together_reports_progress(mutable_config, mock_packages):
     ],
 )
 def test_reported_total_matches_number_of_specs(concretize_fn, mutable_config, mock_packages):
-    """Tests that, whatever the concretization strategy, the total announced when the solves start
-    is the number of specs that are reported as concretized afterwards.
+    """Tests that, whatever the concretization strategy, the total announced when concretization
+    starts is the number of specs that are reported as concretized afterwards.
     """
     ui = RecordingUI()
     concretize_fn([(Spec("pkg-a"), None), (Spec("pkg-b"), None), (Spec("libelf"), None)], ui=ui)

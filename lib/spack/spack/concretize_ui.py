@@ -28,23 +28,27 @@ class SolveKind(enum.Enum):
 class ConcretizerUI:
     """Interface between concretization and a frontend. The methods are no-ops, which makes this
     class usable as a headless frontend.
+
+    Every event is emitted in the process that owns the frontend, and from a single thread.
+    Frontends therefore need no locking, and no capture of child output.
     """
 
     def on_group_started(self, *, group: str, is_default: bool) -> None:
         """A group of user specs is about to be concretized."""
 
-    def on_solve_started(self, *, kind: SolveKind, total: int, processes: int) -> None:
-        """Solving is about to start, using ``processes`` processes. Called once per
-        concretization, before any spec is reported, with ``total`` equal to the number of
-        ``on_spec_concretized`` calls that will follow.
+    def on_concretization_started(self, *, kind: SolveKind, total: int, processes: int) -> None:
+        """``total`` user specs are about to be concretized as ``kind`` prescribes, over
+        ``processes`` processes. Called once per group of user specs, before any spec of that
+        group is reported, with ``total`` equal to the number of ``on_spec_concretized`` calls
+        that will follow for it.
         """
 
     def on_spec_concretized(
         self, abstract: Spec, *, concrete: Spec, count: int, duration: float
     ) -> None:
-        """A user spec has been concretized. ``index`` is the 0-based completion order, and
-        ``duration`` is the time spent in the solve that produced this spec. Specs that come out
-        of the same solve report the same duration.
+        """A user spec has been concretized. ``count`` is the 0-based position of this event among
+        the ones reported for the group, and ``duration`` is the time spent in the solve that
+        produced this spec. Specs that come out of the same solve report the same duration.
         """
 
 
@@ -65,7 +69,7 @@ class TerminalUI(ConcretizerUI):
             return
         tty.msg(f"Concretizing the '{group}' group of specs")
 
-    def on_solve_started(self, *, kind: SolveKind, total: int, processes: int) -> None:
+    def on_concretization_started(self, *, kind: SolveKind, total: int, processes: int) -> None:
         self.kind = kind
         self.total = total
         if kind is not SolveKind.SEPARATELY:

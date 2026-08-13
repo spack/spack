@@ -72,7 +72,7 @@ def concretize_together(
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
     abstract_specs = [abstract for abstract, _ in spec_list]
 
-    ui.on_solve_started(kind=SolveKind.TOGETHER, total=len(to_concretize), processes=1)
+    ui.on_concretization_started(kind=SolveKind.TOGETHER, total=len(to_concretize), processes=1)
     start = time.monotonic()
     concrete_specs = _concretize_specs_together(to_concretize, tests=tests, factory=factory)
     duration = time.monotonic() - start
@@ -117,7 +117,9 @@ def concretize_together_when_possible(
     result_by_user_spec: Dict[Spec, Spec] = {}
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     j = 0
-    ui.on_solve_started(kind=SolveKind.WHEN_POSSIBLE, total=len(to_concretize), processes=1)
+    ui.on_concretization_started(
+        kind=SolveKind.WHEN_POSSIBLE, total=len(to_concretize), processes=1
+    )
     start = time.monotonic()
     for result in Solver(specs_factory=factory).solve_in_rounds(
         to_concretize, tests=tests, allow_deprecated=allow_deprecated
@@ -205,7 +207,7 @@ def concretize_separately(
     # imap_unordered falls back to a serial map when parallelism is disabled (e.g. Windows)
     if not spack.util.parallel.ENABLE_PARALLELISM:
         num_procs = 1
-    ui.on_solve_started(kind=SolveKind.SEPARATELY, total=len(args), processes=num_procs)
+    ui.on_concretization_started(kind=SolveKind.SEPARATELY, total=len(args), processes=num_procs)
 
     for j, (i, concrete, duration) in enumerate(
         spack.util.parallel.imap_unordered(
