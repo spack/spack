@@ -99,8 +99,8 @@ def env_create_setup_parser(subparser):
     )
     subparser.add_argument(
         "--filter",
-        action="store_true",
-        help="create a filtered environment using the source environment's filter config",
+        metavar="FILTER_FILE",
+        help="create a filtered environment using the filter config in FILTER_FILE",
     )
 
 
@@ -130,7 +130,7 @@ def env_create(args):
         with_view=with_view,
         keep_relative=args.keep_relative,
         include_concrete=include_concrete,
-        filter_env=args.filter,
+        filter_file=args.filter,
     )
 
     # Generate views, only really useful for environments created from spack.lock files.
@@ -146,7 +146,7 @@ def _env_create(
     with_view: Optional[Union[bool, str]] = None,
     keep_relative: bool = False,
     include_concrete: Optional[List[str]] = None,
-    filter_env: bool = False,
+    filter_file: Optional[str] = None,
 ):
     """Create a new environment, with an optional yaml description.
 
@@ -160,7 +160,7 @@ def _env_create(
             environment file, otherwise they may be made absolute if the new
             environment is in a different location
         include_concrete: list of the included concrete environments
-        filter_env (bool): if True, create a filtered environment from init_file
+        filter_file: optional filter configuration file
     """
     if not dir:
         env = ev.create(
@@ -169,7 +169,7 @@ def _env_create(
             with_view=with_view,
             keep_relative=keep_relative,
             include_concrete=include_concrete,
-            filter_env=filter_env,
+            filter_file=filter_file,
         )
         tty.msg(
             colorize(
@@ -183,7 +183,7 @@ def _env_create(
             with_view=with_view,
             keep_relative=keep_relative,
             include_concrete=include_concrete,
-            filter_env=filter_env,
+            filter_file=filter_file,
         )
         tty.msg(colorize(f"Created independent environment in: @c{{{cescape(env.path)}}}"))
     tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")
