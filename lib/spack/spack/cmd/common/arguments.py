@@ -421,7 +421,6 @@ def namespaces():
         "--namespaces",
         action="store_true",
         default=False,
-        metavar="namespace",
         help="show fully qualified package names",
     )
 
