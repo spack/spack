@@ -51,9 +51,11 @@ concretizer:
       c: 2
       cxx: 2
       fortran: 1
+      nmake: 2
       # Regular packages
       cmake: 2
       gmake: 2
+      jom: 2
       python: 2
       python-venv: 2
       py-cython: 2

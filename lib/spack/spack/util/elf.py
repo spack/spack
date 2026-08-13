@@ -552,11 +552,6 @@ def delete_needed_from_elf(f: BinaryIO, elf: ElfFile, needed: bytes) -> None:
     )
 
 
-class CStringType:
-    PT_INTERP = 1
-    RPATH = 2
-
-
 class UpdateCStringAction:
     def __init__(self, old_value: bytes, new_value: bytes, offset: int):
         self.old_value = old_value

@@ -237,3 +237,25 @@ def test_builder_when_inheriting_just_package(working_env):
     # The derived class doesn't redefine a builder, so we should
     # get the builder of the base class.
     assert type(base_builder) is type(derived_builder)
+
+
+@pytest.mark.usefixtures("builder_test_repository", "config")
+def test_get_builder_class_accepts_objects_and_classes():
+    """Tests that get_builder_class works on both package objects and package classes."""
+    pkg_cls = spack.repo.PATH.get_pkg_class("callbacks")
+    builder_cls = spack.builder.get_builder_class(pkg_cls, "GenericBuilder")
+
+    # The builder is defined in the package module, so it is found from the class
+    assert builder_cls is not None
+    assert spack.repo.is_package_module(builder_cls.__module__)
+
+    # ... and an object of that class gives the same answer
+    pkg = spack.concretize.concretize_one("callbacks").package
+    assert spack.builder.get_builder_class(pkg, "GenericBuilder") is builder_cls
+
+    # Derived packages that don't redefine a builder get it from the base package module
+    derived_cls = spack.repo.PATH.get_pkg_class("inheritance-only-package")
+    assert spack.builder.get_builder_class(derived_cls, "GenericBuilder") is builder_cls
+
+    # Names that are not defined in any package module are not builders
+    assert spack.builder.get_builder_class(pkg_cls, "UnknownBuilder") is None

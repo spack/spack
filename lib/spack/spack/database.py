@@ -805,27 +805,28 @@ class Database:
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _, virtuals, direct in spec_reader.read_specfile_dep_specs(
-                yaml_deps
-            ):
+            for dep in spec_reader.read_specfile_dep_specs(yaml_deps):
                 # It is important that we always check upstream installations in the same order,
                 # and that we always check the local installation first: if a downstream Spack
                 # installs a package then dependents in that installation could be using it. If a
                 # hash is installed locally and upstream, there isn't enough information to
                 # determine which one a local package depends on, so the convention ensures that
                 # this isn't an issue.
-                _, record = self.query_by_spec_hash(dhash, data=data)
+                _, record = self.query_by_spec_hash(dep.hash, data=data)
                 child = record.spec if record else None
 
                 if not child:
                     tty.warn(
                         f"Missing dependency not in database: "
-                        f"{spec.cformat('{name}{/hash:7}')} needs {dname}-{dhash[:7]}"
+                        f"{spec.cformat('{name}{/hash:7}')} needs {dep.name}-{dep.hash[:7]}"
                     )
                     continue
 
                 spec._add_dependency(
-                    child, depflag=dt.canonicalize(dtypes), virtuals=virtuals, direct=direct
+                    child,
+                    depflag=dt.canonicalize(dep.deptypes),
+                    virtuals=dep.virtuals,
+                    direct=dep.direct,
                 )
 
     def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
@@ -1769,6 +1770,7 @@ class Database:
         hashes: Optional[List[str]] = None,
         origin: Optional[str] = None,
         install_tree: str = "all",
+        sort: bool = True,
     ) -> List["spack.spec.Spec"]:
         """Queries the Spack database including all upstream databases.
 
@@ -1802,6 +1804,9 @@ class Database:
             install_tree: query ``"all"`` (default), ``"local"``, ``"upstream"``, or upstream path
 
             origin: origin of the spec
+
+            sort: if ``True`` (default), sort the results. Sorting is relatively expensive, so
+                callers that do not care about order should pass ``False``.
         """
         valid_trees = ["all", "upstream", "local", self.root] + [u.root for u in self.upstream_dbs]
         if install_tree not in valid_trees:
@@ -1855,10 +1860,11 @@ class Database:
         if upstreams:
             results = list(spack.util.lang.dedupe(results, key=lambda s: s.dag_hash()))
 
-        # Sort by name first so the full sort runs on nearly sorted input and compares specs far
-        # fewer times.
-        results.sort(key=lambda s: s.name)
-        results.sort()  # type: ignore[call-arg,call-overload]
+        if sort:
+            # Sort by name first so the full sort runs on nearly sorted input and compares specs
+            # far fewer times.
+            results.sort(key=lambda s: s.name)
+            results.sort()
         return results
 
     def query_one(

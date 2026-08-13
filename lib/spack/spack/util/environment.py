@@ -1204,12 +1204,24 @@ def environment_after_sourcing_files(
     def _source_single_file(file_and_args, environment):
         shell_options_list = shell_options.split()
 
+        # The command below is a single string handed to a shell, so the file to be sourced,
+        # its arguments, and the interpreter are quoted to survive word splitting. The shell
+        # operators around them (source_command, suppress_output, concatenate_on_success) are
+        # shell syntax, and must be left alone.
+        if sys.platform == "win32":
+            # cmd.exe does not follow POSIX quoting rules, so pass arguments through unchanged
+            quoted_args = [str(x) for x in file_and_args]
+            python_exe = sys.executable
+        else:
+            quoted_args = [shlex.quote(str(x)) for x in file_and_args]
+            python_exe = shlex.quote(sys.executable)
+
         source_file = [source_command]
-        source_file.extend(x for x in file_and_args)
+        source_file.extend(quoted_args)
         source_file = " ".join(source_file)
 
         dump_cmd = "import os, json; print(json.dumps(dict(os.environ)))"
-        dump_environment_cmd = sys.executable + f' -E -c "{dump_cmd}"'
+        dump_environment_cmd = python_exe + f' -E -c "{dump_cmd}"'
 
         # Try to source the file
         source_file_arguments = (

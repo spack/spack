@@ -314,7 +314,7 @@ class BinaryIndexCache:
         """
         return list(self._mirrors_for_spec.get(dag_hash, []))
 
-    def __contains__(self, dag_hash: str) -> bool:
+    def __contains__(self, dag_hash: object) -> bool:
         """Returns True if *dag_hash* is known to be available in at least one buildcache."""
         return dag_hash in self._mirrors_for_spec
 
@@ -599,21 +599,6 @@ def buildcache_relative_specs_url(layout_version: int = CURRENT_BUILD_CACHE_LAYO
 def buildcache_relative_blobs_path(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
     cache_class = get_url_buildcache_class(layout_version=layout_version)
     return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.BLOB))
-
-
-def buildcache_relative_blobs_url(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
-    cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.BLOB))
-
-
-def buildcache_relative_index_path(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
-    cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.INDEX))
-
-
-def buildcache_relative_index_url(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
-    cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.INDEX))
 
 
 @spack.util.lang.memoized
@@ -1613,91 +1598,78 @@ def _oci_config_from_tag(image_ref_and_tag: Tuple[ImageReference, str]) -> Optio
 
 
 def _oci_update_index(
-    image_ref: ImageReference, tmpdir: str, pool: concurrent.futures.Executor
+    image_ref: ImageReference,
+    tmpdir: str,
+    pool: concurrent.futures.Executor,
+    *,
+    timer=timer.NULL_TIMER,
 ) -> None:
-    tags = list_tags(image_ref)
+    with timer.measure("list"):
+        tags = list_tags(image_ref)
 
-    # Fetch all image config files in parallel
-    spec_dicts = pool.map(
-        _oci_config_from_tag, ((image_ref, tag) for tag in tags if tag_is_spec(tag))
-    )
+    with timer.measure("read"):
+        # Fetch all image config files in parallel
+        spec_dicts = pool.map(
+            _oci_config_from_tag, ((image_ref, tag) for tag in tags if tag_is_spec(tag))
+        )
 
-    # Populate the database
-    db_root_dir = os.path.join(tmpdir, "db_root")
-    db = BuildCacheDatabase(db_root_dir)
+        # Populate the database
+        db_root_dir = os.path.join(tmpdir, "db_root")
+        db = BuildCacheDatabase(db_root_dir)
 
-    for spec_dict in spec_dicts:
-        spec = spack.spec.Spec.from_dict(spec_dict)
-        db.add(spec)
-        db.mark(spec, "in_buildcache", True)
+        for spec_dict in spec_dicts:
+            spec = spack.spec.Spec.from_dict(spec_dict)
+            db.add(spec)
+            db.mark(spec, "in_buildcache", True)
 
-    # Create the index.json file
-    index_json_path = os.path.join(tmpdir, spack.database.INDEX_JSON_FILE)
-    with open(index_json_path, "w", encoding="utf-8") as f:
-        db._write_to_file(f)
+    with timer.measure("push"):
+        # Create the index.json file
+        index_json_path = os.path.join(tmpdir, spack.database.INDEX_JSON_FILE)
+        with open(index_json_path, "w", encoding="utf-8") as f:
+            db._write_to_file(f)
 
-    # Create an empty config.json file
-    empty_config_json_path = os.path.join(tmpdir, "config.json")
-    with open(empty_config_json_path, "wb") as f:
-        f.write(b"{}")
+        # Create an empty config.json file
+        empty_config_json_path = os.path.join(tmpdir, "config.json")
+        with open(empty_config_json_path, "wb") as f:
+            f.write(b"{}")
 
-    # Upload the index.json file
-    index_shasum = Digest.from_sha256(spack.util.crypto.checksum(hashlib.sha256, index_json_path))
-    upload_blob_with_retry(image_ref, file=index_json_path, digest=index_shasum)
+        # Upload the index.json file
+        index_shasum = Digest.from_sha256(
+            spack.util.crypto.checksum(hashlib.sha256, index_json_path)
+        )
+        upload_blob_with_retry(image_ref, file=index_json_path, digest=index_shasum)
 
-    # Upload the config.json file
-    empty_config_digest = Digest.from_sha256(
-        spack.util.crypto.checksum(hashlib.sha256, empty_config_json_path)
-    )
-    upload_blob_with_retry(image_ref, file=empty_config_json_path, digest=empty_config_digest)
+        # Upload the config.json file
+        empty_config_digest = Digest.from_sha256(
+            spack.util.crypto.checksum(hashlib.sha256, empty_config_json_path)
+        )
+        upload_blob_with_retry(image_ref, file=empty_config_json_path, digest=empty_config_digest)
 
-    # Push a manifest file that references the index.json file as a layer
-    # Notice that we push this as if it is an image, which it of course is not.
-    # When the ORAS spec becomes official, we can use that instead of a fake image.
-    # For now we just use the OCI image spec, so that we don't run into issues with
-    # automatic garbage collection of blobs that are not referenced by any image manifest.
-    oci_manifest = {
-        "mediaType": "application/vnd.oci.image.manifest.v1+json",
-        "schemaVersion": 2,
-        # Config is just an empty {} file for now, and irrelevant
-        "config": {
-            "mediaType": "application/vnd.oci.image.config.v1+json",
-            "digest": str(empty_config_digest),
-            "size": os.path.getsize(empty_config_json_path),
-        },
-        # The buildcache index is the only layer, and is not a tarball, we lie here.
-        "layers": [
-            {
-                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
-                "digest": str(index_shasum),
-                "size": os.path.getsize(index_json_path),
-            }
-        ],
-    }
+        # Push a manifest file that references the index.json file as a layer
+        # Notice that we push this as if it is an image, which it of course is not.
+        # When the ORAS spec becomes official, we can use that instead of a fake image.
+        # For now we just use the OCI image spec, so that we don't run into issues with
+        # automatic garbage collection of blobs that are not referenced by any image manifest.
+        oci_manifest = {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "schemaVersion": 2,
+            # Config is just an empty {} file for now, and irrelevant
+            "config": {
+                "mediaType": "application/vnd.oci.image.config.v1+json",
+                "digest": str(empty_config_digest),
+                "size": os.path.getsize(empty_config_json_path),
+            },
+            # The buildcache index is the only layer, and is not a tarball, we lie here.
+            "layers": [
+                {
+                    "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                    "digest": str(index_shasum),
+                    "size": os.path.getsize(index_json_path),
+                }
+            ],
+        }
 
-    upload_manifest_with_retry(image_ref.with_tag(default_index_tag), oci_manifest)
-
-
-def try_fetch(url_to_fetch):
-    """Utility function to try and fetch a file from a url, stage it
-    locally, and return the path to the staged file.
-
-    Args:
-        url_to_fetch (str): Url pointing to remote resource to fetch
-
-    Returns:
-        Path to locally staged resource or ``None`` if it could not be fetched.
-    """
-    stage = Stage(url_to_fetch, keep=True)
-    stage.create()
-
-    try:
-        stage.fetch()
-    except spack.error.FetchError:
-        stage.destroy()
-        return None
-
-    return stage
+        upload_manifest_with_retry(image_ref.with_tag(default_index_tag), oci_manifest)
 
 
 def download_tarball(
@@ -2570,10 +2542,6 @@ class FetchIndexError(Exception):
             return "{}, due to: {}".format(self.args[0], self.args[1])
 
 
-class BuildcacheIndexError(spack.error.SpackError):
-    """Raised when a buildcache cannot be read for any reason"""
-
-
 class BuildcacheIndexNotExists(Exception):
     """Buildcache does not contain an index"""
 
@@ -2931,15 +2899,6 @@ class NoOverwriteException(spack.error.SpackError):
         super().__init__(f"Refusing to overwrite the following file: {file_path}")
 
 
-class NoGpgException(spack.error.SpackError):
-    """
-    Raised when gpg2 is not in PATH
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
 class NoKeyException(spack.error.SpackError):
     """
     Raised when gpg has no default key added.
@@ -2967,13 +2926,6 @@ class NewLayoutException(spack.error.SpackError):
 
     def __init__(self, msg):
         super().__init__(msg)
-
-
-class UnsignedPackageException(spack.error.SpackError):
-    """
-    Raised if installation of unsigned package is attempted without
-    the use of ``--no-check-signature``.
-    """
 
 
 class GenerateIndexError(spack.error.SpackError):

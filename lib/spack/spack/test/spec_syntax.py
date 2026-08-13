@@ -716,6 +716,63 @@ def specfile_for(config, mock_packages):
             ],
             "^[deptypes=build,link] zlib",
         ),
+        # A bare duplicate ^pkg-b is redundant, on either side of the % edge.
+        (
+            "pkg-a ^pkg-b %pkg-c ^pkg-b",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-a"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-c"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+            ],
+            "pkg-a ^pkg-b %pkg-c",
+        ),
+        # A ^ dependency is merged only once its trailing % edges are parsed: the % edge
+        # survives on the merged node.
+        (
+            "pkg-a ^pkg-b ^pkg-b %pkg-c",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-a"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-c"),
+            ],
+            "pkg-a ^pkg-b %pkg-c",
+        ),
+        (
+            "pkg-a ^pkg-b ^pkg-b@1 %pkg-c",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-a"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.VERSION, value="@1"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-c"),
+            ],
+            "pkg-a ^pkg-b@1 %pkg-c",
+        ),
+        (
+            "pkg-a ^pkg-b@1 ^pkg-b %pkg-c",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-a"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.VERSION, value="@1"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-b"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-c"),
+            ],
+            "pkg-a ^pkg-b@1 %pkg-c",
+        ),
         (
             "^[deptypes=link] zlib ^[deptypes=build] zlib",
             [
@@ -1819,6 +1876,13 @@ def test_parse_multiple_edge_attributes(input_args, expected):
     s, *_ = spack.cmd.parse_specs(input_args)
     for c in expected:
         assert s.satisfies(c)
+
+
+def test_when_edge_attribute_keeps_commas():
+    """A when value is one spec string, where a comma is part of the syntax, unlike the
+    comma-separated deptypes and virtuals lists."""
+    edge = spack.spec.Spec("foo ^[when='@1,2'] bar").edges_to_dependencies(name="bar")[0]
+    assert edge.when == spack.spec.Spec("@1,2")
 
 
 @pytest.mark.regression("52375")

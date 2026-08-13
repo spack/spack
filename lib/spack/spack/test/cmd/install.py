@@ -79,8 +79,8 @@ def _check_runtests_none(pkg):
     assert not pkg.run_tests
 
 
-def _check_runtests_dttop(pkg):
-    assert pkg.run_tests == (pkg.name == "dttop")
+def _check_runtests_root(pkg):
+    assert pkg.run_tests == (pkg.name == "dependent-install")
 
 
 def _check_runtests_all(pkg):
@@ -90,19 +90,19 @@ def _check_runtests_all(pkg):
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_notests(monkeypatch, mock_packages, mock_fetch, install_mockery):
     monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_none)
-    install("-v", "dttop")
+    install("-v", "dependent-install")
 
 
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_root(monkeypatch, mock_packages, mock_fetch, install_mockery):
-    monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_dttop)
-    install("--test=root", "dttop")
+    monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_root)
+    install("--test=root", "dependent-install")
 
 
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_all(monkeypatch, mock_packages, mock_fetch, install_mockery):
     monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_all)
-    install("--test=all", "pkg-a")
+    install("--test=all", "dependent-install")
 
 
 def test_install_package_already_installed(

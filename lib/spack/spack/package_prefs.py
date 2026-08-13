@@ -5,7 +5,6 @@ import stat
 import warnings
 
 import spack.config
-import spack.error
 import spack.repo
 import spack.spec
 from spack.error import ConfigError
@@ -159,27 +158,6 @@ class PackagePrefs:
         }
 
 
-def is_spec_buildable(spec):
-    """Return true if the spec is configured as buildable"""
-    allpkgs = spack.config.CONFIG.get("packages")
-    all_buildable = allpkgs.get("all", {}).get("buildable", True)
-    so_far = all_buildable  # the default "so far"
-
-    def _package(s):
-        pkg_cls = spack.repo.PATH.get_pkg_class(s.name)
-        return pkg_cls(s)
-
-    # check whether any providers for this package override the default
-    if any(
-        _package(spec).provides(name) and entry.get("buildable", so_far) != so_far
-        for name, entry in allpkgs.items()
-    ):
-        so_far = not so_far
-
-    spec_buildable = allpkgs.get(spec.name, {}).get("buildable", so_far)
-    return spec_buildable
-
-
 def get_package_dir_permissions(spec):
     """Return the permissions configured for the spec.
 
@@ -259,7 +237,3 @@ def get_package_group(spec):
         except AttributeError:
             group = ""
     return group
-
-
-class VirtualInPackagesYAMLError(spack.error.SpackError):
-    """Raised when a disallowed virtual is found in packages.yaml"""

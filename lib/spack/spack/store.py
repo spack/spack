@@ -392,17 +392,6 @@ def find(
     return matching_specs
 
 
-def specfile_matches(filename: str, **kwargs) -> List["spack.spec.Spec"]:
-    """Same as find but reads the query from a spec file.
-
-    Args:
-        filename: YAML or JSON file from which to read the query.
-        **kwargs: keyword arguments forwarded to :func:`find`
-    """
-    query = [spack.spec.Spec.from_specfile(filename)]
-    return find(query, **kwargs)
-
-
 def ensure_singleton_created() -> None:
     """Ensures the lazily evaluated singleton is created"""
     _ = STORE.db

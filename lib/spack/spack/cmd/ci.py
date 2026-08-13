@@ -737,18 +737,23 @@ def validate_standard_versions(
     """
     url_dict: Dict[StandardVersion, str] = {}
 
+    valid_checksums = True
+
     for version in versions:
         url = pkg.find_valid_url_for_version(version)
-        assert url is not None, (
-            f"Package {pkg.name} does not have a valid URL for version {version}"
-        )
-        url_dict[version] = url
+        if url is None:
+            tty.error(f"No valid URLs found for {pkg.name}@{version}")
+            all_urls = pkg.all_urls_for_version(version)
+            for url in all_urls:
+                tty.error(f"    [Failed] {url}")
+            valid_checksums = False
+        else:
+            url_dict[version] = url
 
     version_hashes = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, fetch_options=pkg.fetch_options
     )
 
-    valid_checksums = True
     for version, sha in version_hashes.items():
         if sha != pkg.versions[version]["sha256"]:
             tty.error(
@@ -757,9 +762,8 @@ def validate_standard_versions(
                 f"    [Downloaded] {sha}"
             )
             valid_checksums = False
-            continue
-
-        tty.info(f"Validated {pkg.name}@{version} --> {sha}")
+        else:
+            tty.info(f"Validated {pkg.name}@{version} --> {sha}")
 
     return valid_checksums
 
@@ -775,7 +779,7 @@ def validate_git_versions(
     """
     valid_commit = True
     for version in versions:
-        fetcher = spack.fetch_strategy.for_package_version(pkg, version)
+        fetcher = spack.package_base.for_package_version(pkg, version)
         assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
         with spack.stage.Stage(fetcher) as stage:
             known_commit = pkg.versions[version]["commit"]

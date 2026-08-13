@@ -206,3 +206,15 @@ def isolate(parser, args):
             )
         )
     )
+    if "SPACK_DISABLE_LOCAL_CONFIG" in os.environ:
+        tty.warn(
+            "\n".join(
+                textwrap.wrap(
+                    "SPACK_DISABLE_LOCAL_CONFIG is present in the current shell environment,"
+                    " which disables the user scope. spack isolate uses this scope for"
+                    " isolation. In order for future configuration changes to be added"
+                    " to the isolated scope, you will need to unset SPACK_DISABLE_LOCAL_CONFIG."
+                )
+            )
+        )
+        pass

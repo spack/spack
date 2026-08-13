@@ -1957,25 +1957,6 @@ class RemoteRepoDescriptor(RepoDescriptor):
         return repos
 
 
-class BrokenRepoDescriptor(RepoDescriptor):
-    """A descriptor for a broken repository, used to indicate errors in the configuration that
-    aren't fatal until the repository is used."""
-
-    def __init__(self, name: Optional[str], error: str) -> None:
-        super().__init__(name)
-        self.error = error
-
-    def initialize(
-        self, fetch: bool = True, git: Optional[spack.util.executable.Executable] = None
-    ) -> None:
-        pass
-
-    def construct(
-        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Union[Repo, Exception]]:
-        return {self.name or "<unknown>": Exception(self.error)}
-
-
 class RepoDescriptors(Mapping[str, RepoDescriptor]):
     """A collection of repository descriptors."""
 
@@ -2188,10 +2169,6 @@ def enable_repo(repo_path: RepoPath) -> None:
 
 class RepoError(spack.error.SpackError):
     """Superclass for repository-related errors."""
-
-
-class NoRepoConfiguredError(RepoError):
-    """Raised when there are no repositories configured."""
 
 
 class InvalidNamespaceError(RepoError):
