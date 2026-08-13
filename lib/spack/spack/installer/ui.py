@@ -40,6 +40,13 @@ class ChangeJobs(NamedTuple):
     delta: int
 
 
+class BuildProgress(NamedTuple):
+    """Structured progress displayed for an active build."""
+
+    percent: Optional[str] = None
+    message: Optional[str] = None
+
+
 #: A command produced by the UI and executed by the event loop.
 UiCommand = Union[SetEcho, ChangeJobs]
 
@@ -72,7 +79,7 @@ class BuildInfo:
         "finished_time",
         "start_time",
         "duration",
-        "progress_percent",
+        "progress",
         "log_path",
         "log_summary",
     )
@@ -99,7 +106,7 @@ class BuildInfo:
         self.finished_time: Optional[float] = None
         self.start_time: float = 0.0
         self.duration: Optional[float] = None
-        self.progress_percent: Optional[int] = None
+        self.progress: Optional[BuildProgress] = None
         self.log_path = log_path
         self.log_summary: Optional[str] = None
 
@@ -488,7 +495,7 @@ class TerminalUI(InstallerUI):
         now = self.get_time()
         build_info = self.builds[build_id]
         build_info.state = state
-        build_info.progress_percent = None
+        build_info.progress = None
 
         if state == "failed":
             # Store the log summary for interactive browsing and the final failure printout.
@@ -537,12 +544,20 @@ class TerminalUI(InstallerUI):
         self.total += count
 
     def on_progress(self, build_id: str, current: int, total: int) -> None:
-        """Update the progress of a package and mark the display as dirty."""
+        """Update the binary cache fetching progress of a package."""
         percent = int((current / total) * 100)
         build_info = self.builds[build_id]
-        if build_info.progress_percent != percent:
-            build_info.progress_percent = percent
+        self._set_progress(build_info, BuildProgress(f"{percent}%", "fetching"))
+
+    def _set_progress(self, build_info: BuildInfo, progress: Optional[BuildProgress]) -> None:
+        """Store changed structured progress and mark the overview dirty."""
+        if build_info.progress != progress:
+            build_info.progress = progress
             self.dirty = True
+
+    def _progress_prefix(self, build_info: BuildInfo) -> Optional[str]:
+        """Return the displayed percentage for a build, if progress is available."""
+        return build_info.progress.percent if build_info.progress else None
 
     def render(self, finalize: bool = False) -> None:
         """Redraw the interactive display."""
@@ -805,11 +820,8 @@ class TerminalUI(InstallerUI):
         yield f"{name_color}{build_info.name}{self.color.RESET}"
         yield f"{self.color.CYAN}@{build_info.version}{self.color.RESET}"
 
-        # progress or state
-        if build_info.progress_percent is not None:
-            yield " fetching"
-            yield f": {build_info.progress_percent}%"
-        elif build_info.state == "finished":
+        # State or completed/failed detail.
+        if build_info.state == "finished":
             prefix = build_info.prefix
             yield f" {padding_filter(prefix) if self.filter_padding else prefix}"
         elif build_info.state == "failed":
@@ -819,11 +831,22 @@ class TerminalUI(InstallerUI):
         else:
             yield f" {build_info.state}"
 
-        # Duration
+        progress = build_info.progress if build_info.state not in ("finished", "failed") else None
+
+        # Duration and progress percentage
         elapsed = (
             build_info.duration
             if build_info.duration is not None
             else (now - build_info.start_time)
         )
+        timing = []
         if elapsed > 0:
-            yield f"{self.color.BLACK_BRIGHT} ({pretty_duration(elapsed)}){self.color.RESET}"
+            timing.append(pretty_duration(elapsed))
+        if progress and progress.percent:
+            timing.append(progress.percent)
+        if timing:
+            timing_text = ", ".join(timing) if len(timing) > 1 else timing[0]
+            yield f"{self.color.BLACK_BRIGHT} ({timing_text}){self.color.RESET}"
+
+        if progress and progress.message:
+            yield f" {progress.message}"
