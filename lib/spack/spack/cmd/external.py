@@ -133,11 +133,18 @@ def external_find(args):
 
     # If the user specified both --all and --tag, then --all has precedence
     if args.all or args.packages:
+        if args.tags:
+            # We may want to elevate this to an error
+            tty.warn("Ignoring --tag argument: 'all' or package list provided")
         # Each detectable package has at least the detectable tag
         args.tags = ["detectable"]
     elif not args.tags:
         # If the user didn't specify anything, search for build tools by default
         args.tags = ["core-packages", "build-tools"]
+
+    if args.all and args.packages:
+        # We may want to elevate this to an error or change the behavior: it's counterintuitive
+        tty.warn("Ignoring --all argument: package list was provided")
 
     candidate_packages = packages_to_search_for(
         names=args.packages, tags=args.tags, exclude=args.exclude
