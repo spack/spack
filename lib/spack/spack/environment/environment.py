@@ -1047,9 +1047,17 @@ class ConcretizedRootInfo:
 
     @staticmethod
     def from_info_dict(info_dict: Dict[str, str]) -> "ConcretizedRootInfo":
+        # Lockfile versions < 8 have strings for root specs
+        # versions >= 8 have dicts
+        spec = info_dict["spec"]
+        if isinstance(spec, str):
+            root = Spec(spec)
+        else:
+            root = Spec.from_dict(spec)
+
         # Lockfile versions < 7 don't have the "group" attribute
         return ConcretizedRootInfo(
-            root_spec=Spec(info_dict["spec"]),
+            root_spec=root,
             root_hash=info_dict["hash"],
             new=False,
             group=info_dict.get("group", DEFAULT_USER_SPEC_GROUP),
@@ -2298,10 +2306,10 @@ class Environment:
 
     def _concrete_roots_dict(self):
         if not self.has_groups():
-            return [{"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots]
+            return [{"hash": x.hash, "spec": x.root.to_dict()} for x in self.concretized_roots]
 
         return [
-            {"hash": x.hash, "spec": str(x.root), "group": x.group} for x in self.concretized_roots
+            {"hash": x.hash, "spec": x.root.to_dict(), "group": x.group} for x in self.concretized_roots
         ]
 
     def has_groups(self) -> bool:
