@@ -112,7 +112,9 @@ def concretize_together_when_possible(
         now = time.monotonic()
         duration = now - start
         for abstract, concrete in result.specs_by_input.items():
-            ui.on_spec_concretized(abstract, concrete, j, len(to_concretize), duration)
+            ui.on_spec_concretized(
+                abstract, concrete=concrete, index=j, total=len(to_concretize), duration=duration
+            )
             j += 1
         result_by_user_spec.update(result.specs_by_input)
         start = now
@@ -192,7 +194,7 @@ def concretize_separately(
     # imap_unordered falls back to a serial map when parallelism is disabled (e.g. Windows)
     if not spack.util.parallel.ENABLE_PARALLELISM:
         num_procs = 1
-    ui.on_batch_started(len(args), num_procs)
+    ui.on_batch_started(total=len(args), processes=num_procs)
 
     for j, (i, concrete, duration) in enumerate(
         spack.util.parallel.imap_unordered(
@@ -205,7 +207,9 @@ def concretize_separately(
         )
     ):
         ret.append((i, concrete))
-        ui.on_spec_concretized(to_concretize[i], concrete, j, len(args), duration)
+        ui.on_spec_concretized(
+            to_concretize[i], concrete=concrete, index=j, total=len(args), duration=duration
+        )
 
     # Add specs in original order
     ret.sort(key=lambda x: x[0])

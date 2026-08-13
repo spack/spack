@@ -5511,43 +5511,50 @@ class RecordingUI(spack.concretize_ui.ConcretizerUI):
         self.batches: List[Tuple[int, int]] = []
         self.concretized: List[Tuple[Spec, Spec, int, int, float]] = []
 
-    def on_group_started(self, group: str, is_default: bool) -> None:
+    def on_group_started(self, *, group: str, is_default: bool) -> None:
         self.groups.append((group, is_default))
 
-    def on_batch_started(self, total: int, processes: int) -> None:
+    def on_batch_started(self, *, total: int, processes: int) -> None:
         self.batches.append((total, processes))
 
     def on_spec_concretized(
-        self, abstract: Spec, concrete: Spec, index: int, total: int, duration: float
+        self, abstract: Spec, *, concrete: Spec, index: int, total: int, duration: float
     ) -> None:
         self.concretized.append((abstract, concrete, index, total, duration))
 
 
 def test_concretize_separately_reports_progress(mutable_config, mock_packages):
     """Tests that concretizing separately reports one batch, and one event per spec, to the
-    injected frontend."""
+    injected frontend.
+    """
     ui = RecordingUI()
     spack.concretize.concretize_separately([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
 
-    # Parallelism is disabled in tests, so the batch runs in a single process
     assert ui.batches == [(2, 1)]
     assert [(index, total) for _, _, index, total, _ in ui.concretized] == [(0, 2), (1, 2)]
     assert {abstract.name for abstract, _, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
-    assert all(concrete.concrete for _, concrete, _, _, _ in ui.concretized)
     assert not ui.groups
+
+    for abstract, concrete, _, _, _ in ui.concretized:
+        assert concrete.concrete and concrete.satisfies(abstract)
 
 
 def test_concretize_together_when_possible_reports_progress(mutable_config, mock_packages):
-    """Tests that concretizing when possible reports one event per spec, and no batch, since it
-    is a single solve."""
+    """Tests that concretizing when possible reports one event per spec, and no batch. The two
+    specs cannot be unified, so they are solved in different rounds, and the completion order has
+    to keep increasing across rounds.
+    """
     ui = RecordingUI()
     spack.concretize.concretize_together_when_possible(
-        [(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui
+        [(Spec("pkg-a@1.0"), None), (Spec("pkg-a@2.0"), None)], ui=ui
     )
 
     assert not ui.batches
     assert [(index, total) for _, _, index, total, _ in ui.concretized] == [(0, 2), (1, 2)]
-    assert {abstract.name for abstract, _, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
+    assert {str(abstract) for abstract, _, _, _, _ in ui.concretized} == {"pkg-a@1.0", "pkg-a@2.0"}
+
+    for abstract, concrete, _, _, _ in ui.concretized:
+        assert concrete.concrete and concrete.satisfies(abstract)
 
 
 def test_concretize_together_reports_nothing(mutable_config, mock_packages):

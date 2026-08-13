@@ -2740,7 +2740,7 @@ class EnvironmentConcretizer:
             return []
 
         # Pick the right concretization strategy
-        self.ui.on_group_started(group, group == DEFAULT_USER_SPEC_GROUP)
+        self.ui.on_group_started(group=group, is_default=group == DEFAULT_USER_SPEC_GROUP)
         unify = spack.config.CONFIG.get_config("concretizer").get("unify", False)
         factory = ReusableSpecsFactory(env=self.env, group=group)
         if unify == "when_possible":

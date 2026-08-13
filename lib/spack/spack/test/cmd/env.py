@@ -5081,15 +5081,13 @@ class RecordingUI(spack.concretize_ui.ConcretizerUI):
     def __init__(self) -> None:
         self.groups: List[Tuple[str, bool]] = []
 
-    def on_group_started(self, group: str, is_default: bool) -> None:
+    def on_group_started(self, *, group: str, is_default: bool) -> None:
         self.groups.append((group, is_default))
 
 
 def test_concretization_reports_groups(environment_from_manifest):
-    """Tests that each group of user specs is reported to the frontend, which is what decides
-    whether the default group is worth announcing."""
-    e = environment_from_manifest(
-        """\
+    """Tests that each group of user specs is reported to the frontend."""
+    e = environment_from_manifest("""
 spack:
   specs:
   - libelf
@@ -5099,8 +5097,7 @@ spack:
   - group: apps2
     specs:
     - pkg-b
-"""
-    )
+""")
     ui = RecordingUI()
     with e:
         e.concretize(ui=ui)
