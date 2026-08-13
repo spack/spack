@@ -3466,12 +3466,7 @@ class Spec:
             if not compare_hash or not compare_hash.startswith(other.abstract_hash):
                 return False
 
-        # namespaces either match, or other doesn't require one.
-        if (
-            other.namespace is not None
-            and self.namespace is not None
-            and self.namespace != other.namespace
-        ):
+        if other.namespace is not None and self.namespace != other.namespace:
             return False
 
         if not self.versions.satisfies(other.versions):
