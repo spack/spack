@@ -115,6 +115,9 @@ def add_mock_builds(tui: TerminalUI, count: int) -> List[str]:
     build_ids = [f"pkg{i}" for i in range(count)]
     for i, build_id in enumerate(build_ids):
         on_build_added(tui, build_id, version=f"{i}.0")
+    # The real installer event loop drains UI commands after handling each callback. Tests do
+    # not run that event loop, so emulate the drain to keep setup commands out of assertions.
+    tui.commands.clear()
     return build_ids
 
 
@@ -969,11 +972,8 @@ class TestNavigationIntegration:
         tui.next(1)
         assert tui.tracked_build_id == build_ids[1]
         assert "pkg1" in fake_stdout.getvalue()
-        # Echoing stopped for the previous build and started for the new one
-        assert tui.commands[-2:] == [
-            inst.SetEcho(build_ids[0], False),
-            inst.SetEcho(build_ids[1], True),
-        ]
+        # TTY overview mode keeps build logs enabled so progress parsing still works later.
+        assert tui.commands[-1:] == [inst.SetEcho(build_ids[1], True)]
 
         fake_stdout.clear()
 
@@ -1088,8 +1088,19 @@ class TestToggle:
         assert tui.search_mode is False
         assert tui.active_area_rows == 0
         assert tui.dirty is True
-        # Echoing was stopped for the previously tracked build
-        assert tui.commands[-1] == inst.SetEcho(tracked_id, False)
+        # TTY overview mode keeps build logs enabled so progress parsing still works later.
+        assert inst.SetEcho(tracked_id, False) not in tui.commands
+
+    def test_tty_logs_remain_enabled_after_returning_to_overview(self):
+        """Returning from full-screen log view keeps TTY log delivery enabled."""
+        tui, _, _ = create_tui(total=1)
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.next()
+        tui.toggle()
+
+        assert tui.overview_mode is True
+        assert inst.SetEcho(build_id, False) not in tui.commands
 
     def test_on_state_changed_finished_triggers_toggle_when_tracking(self):
         """Test that finishing a tracked build triggers toggle back to overview"""
@@ -1452,13 +1463,14 @@ class TestTerminalUIVerbose:
         stdout.flush()
         assert stdout.buffer.getvalue() == b""
 
-    def test_verbose_tty_no_effect(self):
-        """In TTY mode, on_build_added() does not set tracked_build_id automatically."""
+    def test_tty_requests_log_without_selecting_build(self):
+        """TTY builds provide logs to the UI without changing the selected build."""
         tui, _, _ = create_tui(is_tty=True, verbose=True, total=4)
 
         on_build_added(tui, "trivial-install-test-package")
+        assert tui.overview_mode is True
         assert tui.tracked_build_id == ""
-        assert tui.commands == []
+        assert tui.commands == [inst.SetEcho("trivial-install-test-package", True)]
 
 
 class TestTerminalUIColor:
@@ -1592,10 +1604,13 @@ class TestHeadlessMode:
         assert "[/] pkg0 pkg0@0.0 starting" in stdout.getvalue()
 
     def test_refresh_interval_modes(self):
-        """Only an interactive, foreground terminal needs a periodic redraw tick."""
+        """Only a foreground TTY overview requests periodic redraws."""
         tui, _, _ = create_tui(is_tty=True)
         assert tui.refresh_interval() == inst.SPINNER_INTERVAL
         tui.headless = True
+        assert tui.refresh_interval() is None
+        tui.headless = False
+        tui.overview_mode = False
         assert tui.refresh_interval() is None
         non_tty, _, _ = create_tui(is_tty=False)
         assert non_tty.refresh_interval() is None
