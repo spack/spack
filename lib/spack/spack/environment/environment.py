@@ -22,6 +22,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    Iterator,
     List,
     Mapping,
     Optional,
@@ -694,12 +695,12 @@ def _filtered_configuration(
     source_env: "Environment",
     source_configuration: Dict[str, Any],
     filter_configuration: Dict[str, Any],
-    specs: List[Union[str, Dict[str, Any]]],
+    specs: Sequence[Union[str, Dict[str, Any]]],
     with_view: Optional[Union[str, pathlib.Path, bool]],
 ) -> Dict[str, Any]:
     allowed_sections = set(filter_configuration["config"]["allow"])
     blocked_sections = set(filter_configuration["config"]["block"])
-    filtered = {}
+    filtered: Dict[str, Any] = {}
 
     for key, value in source_configuration.items():
         if key in ("specs", "filter", lockfile_include_key) or key in blocked_sections:
@@ -752,7 +753,7 @@ def _filtered_configuration(
 @contextlib.contextmanager
 def _filtered_source_environment(
     init_file: Union[str, pathlib.Path],
-) -> Iterable[Tuple["Environment", pathlib.Path, bool]]:
+) -> Iterator[Tuple["Environment", pathlib.Path, bool]]:
     source_path = pathlib.Path(init_file)
     if _is_lockfile_path(source_path):
         raise SpackEnvironmentError(
@@ -811,6 +812,8 @@ def _create_filtered_environment_in_dir(
 
     with _filtered_source_environment(init_file) as (source_env, source_path, is_source_dir):
         filter_configuration = _read_filter_configuration(filter_file)
+        filtered_roots: Sequence[Tuple[str, Spec]] = []
+        filtered_specs: List[Union[str, Dict[str, Any]]]
 
         if filter_configuration["concrete"]:
             if not is_source_dir:
@@ -826,7 +829,6 @@ def _create_filtered_environment_in_dir(
             filtered_roots = _filtered_concrete_root_entries(source_env, filter_configuration)
             filtered_specs = [abstract for abstract, _ in filtered_roots]
         else:
-            filtered_roots = []
             filtered_specs = _filtered_abstract_root_entries(source_env, filter_configuration)
 
         initialize_environment_dir(root, envfile=init_file)
