@@ -15,7 +15,7 @@ import spack.error
 import spack.hash_lookup
 import spack.repo
 import spack.util.parallel
-from spack.concretize_ui import ConcretizerUI, HeadlessUI
+from spack.concretize_ui import ConcretizerUI, HeadlessUI, SolveKind
 from spack.spec import Spec
 from spack.util import tty
 
@@ -67,10 +67,22 @@ def concretize_together(
         factory: optional factory to produce a list of specs to be reused
         ui: frontend to report progress to. Defaults to a headless frontend.
     """
+    ui = ui or HeadlessUI()
+
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
     abstract_specs = [abstract for abstract, _ in spec_list]
+
+    ui.on_solve_started(kind=SolveKind.TOGETHER, total=len(to_concretize), processes=1)
+    start = time.monotonic()
     concrete_specs = _concretize_specs_together(to_concretize, tests=tests, factory=factory)
-    return list(zip(abstract_specs, concrete_specs))
+    duration = time.monotonic() - start
+
+    # A single solve produced all the specs, so they all report the duration of that solve
+    result = list(zip(abstract_specs, concrete_specs))
+    for index, (abstract, concrete) in enumerate(result):
+        ui.on_spec_concretized(abstract, concrete=concrete, index=index, duration=duration)
+
+    return result
 
 
 def concretize_together_when_possible(
@@ -105,6 +117,7 @@ def concretize_together_when_possible(
     result_by_user_spec: Dict[Spec, Spec] = {}
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     j = 0
+    ui.on_solve_started(kind=SolveKind.WHEN_POSSIBLE, total=len(to_concretize), processes=1)
     start = time.monotonic()
     for result in Solver(specs_factory=factory).solve_in_rounds(
         to_concretize, tests=tests, allow_deprecated=allow_deprecated
@@ -112,9 +125,7 @@ def concretize_together_when_possible(
         now = time.monotonic()
         duration = now - start
         for abstract, concrete in result.specs_by_input.items():
-            ui.on_spec_concretized(
-                abstract, concrete=concrete, index=j, total=len(to_concretize), duration=duration
-            )
+            ui.on_spec_concretized(abstract, concrete=concrete, index=j, duration=duration)
             j += 1
         result_by_user_spec.update(result.specs_by_input)
         start = now
@@ -194,7 +205,7 @@ def concretize_separately(
     # imap_unordered falls back to a serial map when parallelism is disabled (e.g. Windows)
     if not spack.util.parallel.ENABLE_PARALLELISM:
         num_procs = 1
-    ui.on_batch_started(total=len(args), processes=num_procs)
+    ui.on_solve_started(kind=SolveKind.SEPARATELY, total=len(args), processes=num_procs)
 
     for j, (i, concrete, duration) in enumerate(
         spack.util.parallel.imap_unordered(
@@ -207,9 +218,7 @@ def concretize_separately(
         )
     ):
         ret.append((i, concrete))
-        ui.on_spec_concretized(
-            to_concretize[i], concrete=concrete, index=j, total=len(args), duration=duration
-        )
+        ui.on_spec_concretized(to_concretize[i], concrete=concrete, index=j, duration=duration)
 
     # Add specs in original order
     ret.sort(key=lambda x: x[0])

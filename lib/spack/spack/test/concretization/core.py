@@ -5508,60 +5508,87 @@ class RecordingUI(spack.concretize_ui.ConcretizerUI):
 
     def __init__(self) -> None:
         self.groups: List[Tuple[str, bool]] = []
-        self.batches: List[Tuple[int, int]] = []
-        self.concretized: List[Tuple[Spec, Spec, int, int, float]] = []
+        self.started: List[Tuple[spack.concretize_ui.SolveKind, int, int]] = []
+        self.concretized: List[Tuple[Spec, Spec, int, float]] = []
 
     def on_group_started(self, *, group: str, is_default: bool) -> None:
         self.groups.append((group, is_default))
 
-    def on_batch_started(self, *, total: int, processes: int) -> None:
-        self.batches.append((total, processes))
+    def on_solve_started(
+        self, *, kind: spack.concretize_ui.SolveKind, total: int, processes: int
+    ) -> None:
+        self.started.append((kind, total, processes))
 
     def on_spec_concretized(
-        self, abstract: Spec, *, concrete: Spec, index: int, total: int, duration: float
+        self, abstract: Spec, *, concrete: Spec, index: int, duration: float
     ) -> None:
-        self.concretized.append((abstract, concrete, index, total, duration))
+        self.concretized.append((abstract, concrete, index, duration))
 
 
 def test_concretize_separately_reports_progress(mutable_config, mock_packages):
-    """Tests that concretizing separately reports one batch, and one event per spec, to the
-    injected frontend.
+    """Tests that concretizing separately reports the start of the solves, and one event per spec,
+    to the injected frontend.
     """
     ui = RecordingUI()
     spack.concretize.concretize_separately([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
 
-    assert ui.batches == [(2, 1)]
-    assert [(index, total) for _, _, index, total, _ in ui.concretized] == [(0, 2), (1, 2)]
-    assert {abstract.name for abstract, _, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
+    assert ui.started == [(spack.concretize_ui.SolveKind.SEPARATELY, 2, 1)]
+    assert [index for _, _, index, _ in ui.concretized] == [0, 1]
+    assert {abstract.name for abstract, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
     assert not ui.groups
 
-    for abstract, concrete, _, _, _ in ui.concretized:
+    for abstract, concrete, _, _ in ui.concretized:
         assert concrete.concrete and concrete.satisfies(abstract)
 
 
 def test_concretize_together_when_possible_reports_progress(mutable_config, mock_packages):
-    """Tests that concretizing when possible reports one event per spec, and no batch. The two
-    specs cannot be unified, so they are solved in different rounds, and the completion order has
-    to keep increasing across rounds.
+    """Tests that concretizing "when possible" reports the start of the solves, and one event per
+    spec. The two specs cannot be unified, so they are solved in different rounds, and the
+    index has to keep increasing across rounds.
     """
     ui = RecordingUI()
     spack.concretize.concretize_together_when_possible(
         [(Spec("pkg-a@1.0"), None), (Spec("pkg-a@2.0"), None)], ui=ui
     )
 
-    assert not ui.batches
-    assert [(index, total) for _, _, index, total, _ in ui.concretized] == [(0, 2), (1, 2)]
-    assert {str(abstract) for abstract, _, _, _, _ in ui.concretized} == {"pkg-a@1.0", "pkg-a@2.0"}
+    assert ui.started == [(spack.concretize_ui.SolveKind.WHEN_POSSIBLE, 2, 1)]
+    assert [index for _, _, index, _ in ui.concretized] == [0, 1]
+    assert {str(abstract) for abstract, _, _, _ in ui.concretized} == {"pkg-a@1.0", "pkg-a@2.0"}
 
-    for abstract, concrete, _, _, _ in ui.concretized:
+    for abstract, concrete, _, _ in ui.concretized:
         assert concrete.concrete and concrete.satisfies(abstract)
 
 
-def test_concretize_together_reports_nothing(mutable_config, mock_packages):
-    """Tests that concretizing together is a single solve, and reports no progress at all."""
+def test_concretize_together_reports_progress(mutable_config, mock_packages):
+    """Tests that concretizing together reports the start of the solve, and one event per spec."""
     ui = RecordingUI()
     spack.concretize.concretize_together([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
 
-    assert not ui.batches
-    assert not ui.concretized
+    assert ui.started == [(spack.concretize_ui.SolveKind.TOGETHER, 2, 1)]
+    assert [index for _, _, index, _ in ui.concretized] == [0, 1]
+    assert {abstract.name for abstract, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
+    assert len({duration for _, _, _, duration in ui.concretized}) == 1
     assert not ui.groups
+
+    for abstract, concrete, _, _ in ui.concretized:
+        assert concrete.concrete and concrete.satisfies(abstract)
+
+
+@pytest.mark.parametrize(
+    "concretize_fn",
+    [
+        spack.concretize.concretize_together,
+        spack.concretize.concretize_together_when_possible,
+        spack.concretize.concretize_separately,
+    ],
+)
+def test_reported_total_matches_number_of_specs(concretize_fn, mutable_config, mock_packages):
+    """Tests that, whatever the concretization strategy, the total announced when the solves start
+    is the number of specs that are reported as concretized afterwards.
+    """
+    ui = RecordingUI()
+    concretize_fn([(Spec("pkg-a"), None), (Spec("pkg-b"), None), (Spec("libelf"), None)], ui=ui)
+
+    assert len(ui.started) == 1
+    _, total, _ = ui.started[0]
+    assert total == len(ui.concretized) == 3

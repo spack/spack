@@ -8,10 +8,22 @@ Defines the :class:`ConcretizerUI` contract (a headless no-op base) and the inte
 frontend decides whether, where, and how to render them.
 """
 
+import enum
 import sys
 
 from spack.spec import Spec
 from spack.util import tty
+
+
+class SolveKind(enum.Enum):
+    """How the specs to be concretized are distributed over solves."""
+
+    #: A single solve produces every spec
+    TOGETHER = "together"
+    #: One solve per set of specs that can be unified
+    WHEN_POSSIBLE = "when_possible"
+    #: One solve per spec, possibly in parallel
+    SEPARATELY = "separately"
 
 
 class ConcretizerUI:
@@ -22,17 +34,18 @@ class ConcretizerUI:
     def on_group_started(self, *, group: str, is_default: bool) -> None:
         """A group of user specs is about to be concretized."""
 
-    def on_batch_started(self, *, total: int, processes: int) -> None:
-        """A batch of ``total`` independent solves is about to start, distributed over
-        ``processes`` processes.
+    def on_solve_started(self, *, kind: SolveKind, total: int, processes: int) -> None:
+        """Solving is about to start, using ``processes`` processes. Called once per
+        concretization, before any spec is reported, with ``total`` equal to the number of
+        ``on_spec_concretized`` calls that will follow.
         """
 
     def on_spec_concretized(
-        self, abstract: Spec, *, concrete: Spec, index: int, total: int, duration: float
+        self, abstract: Spec, *, concrete: Spec, index: int, duration: float
     ) -> None:
         """A user spec has been concretized. ``index`` is the 0-based completion order, and
-        ``duration`` is the time spent solving, or the time spent in the current round for
-        ``unify: when_possible``.
+        ``duration`` is the time spent in the solve that produced this spec. Specs that come out
+        of the same solve report the same duration.
         """
 
 
@@ -42,23 +55,33 @@ HeadlessUI = ConcretizerUI
 
 
 class TerminalUI(ConcretizerUI):
-    """Terminal frontend: announces groups and batches, and reports per-spec progress."""
+    """Terminal frontend: announces groups and solves, and reports per-spec progress."""
+
+    def __init__(self) -> None:
+        self.kind = SolveKind.TOGETHER
+        self.total = 0
 
     def on_group_started(self, *, group: str, is_default: bool) -> None:
         if is_default:
             return
         tty.msg(f"Concretizing the '{group}' group of specs")
 
-    def on_batch_started(self, *, total: int, processes: int) -> None:
+    def on_solve_started(self, *, kind: SolveKind, total: int, processes: int) -> None:
+        self.kind = kind
+        self.total = total
+        if kind is not SolveKind.SEPARATELY:
+            return
         msg = "Starting concretization"
         if processes > 1:
             msg += f" pool with {processes} processes"
         tty.msg(msg)
 
     def on_spec_concretized(
-        self, abstract: Spec, *, concrete: Spec, index: int, total: int, duration: float
+        self, abstract: Spec, *, concrete: Spec, index: int, duration: float
     ) -> None:
-        percentage = int((index + 1) / total * 100)
+        if self.kind is SolveKind.TOGETHER:
+            return
+        percentage = int((index + 1) / max(self.total, index + 1) * 100)
         tty.verbose(
             f"{duration:6.1f}s [{percentage:3d}%] {concrete.cformat('{hash:7}')} "
             f"{abstract.colored_str}",

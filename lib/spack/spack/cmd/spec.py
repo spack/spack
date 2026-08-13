@@ -84,7 +84,7 @@ def spec(parser, args):
 
     env = active_environment()
 
-    # Machine readable output goes to stdout, so concretization must not print anything there
+    # Machine-readable output goes to stdout, so concretization must not print anything there
     ui = HeadlessUI() if args.format else TerminalUI()
 
     if args.specs:

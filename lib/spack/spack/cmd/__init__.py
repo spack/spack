@@ -205,9 +205,6 @@ def _concretize_spec_pairs(
     Any spec with a concrete spec associated with it will concretize to that spec. Any spec
     with ``None`` for its concrete spec will be newly concretized. This method respects unification
     rules from config.
-
-    The command layer is the frontend, so progress is reported to a terminal frontend unless the
-    caller passes a different one.
     """
     ui = ui or TerminalUI()
     unify = spack.config.CONFIG.get("concretizer:unify", False)
