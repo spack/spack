@@ -17,7 +17,7 @@ import spack.solver.asp
 import spack.util.hash as hashutil
 import spack.version
 from spack.dependency import Dependency
-from spack.spec import Spec
+from spack.spec import DependencySpec, Spec, _add_edge_to_map
 from spack.test.conftest import RepoBuilder
 
 
@@ -1041,16 +1041,24 @@ def test_addition_of_different_deptypes_in_multiple_calls(mock_packages, config)
     "c1_depflag,c2_depflag",
     [(dt.LINK, dt.BUILD | dt.LINK), (dt.LINK | dt.RUN, dt.BUILD | dt.LINK)],
 )
-def test_adding_same_deptype_with_the_same_name_raises(
+def test_adding_overlapping_deptypes_to_different_versions_stays_parallel(
     mock_packages, config, c1_depflag, c2_depflag
 ):
+    """c1 and c2 are different concrete versions of one package, so neither edge satisfies the
+    other even though their depflags overlap, and both stay as parallel edges to pkg-b."""
     p = spack.concretize.concretize_one("pkg-b@=2.0")
     c1 = spack.concretize.concretize_one("pkg-b@=1.0")
     c2 = spack.concretize.concretize_one("pkg-b@=2.0")
 
     p.add_dependency_edge(c1, depflag=c1_depflag, virtuals=())
-    with pytest.raises(spack.error.SpackError):
-        p.add_dependency_edge(c2, depflag=c2_depflag, virtuals=())
+    p.add_dependency_edge(c2, depflag=c2_depflag, virtuals=())
+
+    edges = p.edges_to_dependencies(name="pkg-b")
+    assert len(edges) == 2
+    assert {e.spec.version for e in edges} == {
+        spack.version.Version("1.0"),
+        spack.version.Version("2.0"),
+    }
 
 
 @pytest.mark.regression("33499")
@@ -1113,3 +1121,32 @@ def test_getitem_finds_transitive_virtual():
     x.add_dependency_edge(y, depflag=dt.LINK, virtuals=())
     y.add_dependency_edge(z, depflag=dt.LINK, virtuals=("virtual",))
     assert x["virtual"].name == "z"
+
+
+def test_copy_preserves_parallel_edges_with_identical_attributes(mock_packages):
+    """Two parallel edges to one name that agree on every attribute _satisfies_edge()
+    compares, and differ only in what their children depend on, are a legitimate state. A copy
+    reproduces both."""
+    # _dup_deps copies edge by edge in traversal order, attaching each node to its parent before
+    # that node's own children are visited, so the second edge is still childless when it is
+    # attached and can look redundant against the first
+    root = Spec("pkg-a")
+    bare = Spec("pkg-b")
+    with_dep = Spec("pkg-b")
+    with_dep._add_dependency(Spec("pkg-e"), depflag=dt.LINK, virtuals=())
+
+    # built without add_dependency_edge, so this does not depend on what _satisfies_edge()
+    # compares today
+    for child in (bare, with_dep):
+        edge = DependencySpec(root, child, depflag=dt.NONE, virtuals=())
+        _add_edge_to_map(root._dependencies, child.name, edge)
+        _add_edge_to_map(child._dependents, root.name, edge)
+
+    assert len(root.edges_to_dependencies()) == 2
+
+    copy = root.copy()
+    assert len(copy.edges_to_dependencies()) == 2
+    subdep_counts = sorted(
+        len(e.spec.edges_to_dependencies()) for e in copy.edges_to_dependencies()
+    )
+    assert subdep_counts == [0, 1]

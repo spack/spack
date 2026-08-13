@@ -5672,3 +5672,15 @@ def test_compiler_dependencies_can_be_excluded_from_reuse(
 
     assert s["zlib"].dag_hash() != compiler["zlib"].dag_hash(), s.tree()
     assert s["zlib"].satisfies("@1.2.11"), s.tree()
+
+
+def test_parallel_edges_in_a_literal_reach_the_solver(mock_packages, config):
+    """A duplicate ^dep clause parses as parallel edges rather than one merged node. The solver
+    still builds one node per name from a literal: compatible constraints are merged onto that
+    node, conflicting ones are unsatisfiable there instead of a parse error."""
+    spec = spack.concretize.concretize_one("mpileaks ^mpich@3.0.4 ^mpich+debug")
+    assert len(spec.dependencies(name="mpich")) == 1
+    assert spec["mpich"].satisfies("@3.0.4+debug")
+
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        spack.concretize.concretize_one("mpileaks ^mpich@3.0.3 ^mpich@3.0.4")
