@@ -36,13 +36,19 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=False,
         help="packages with detected externals won't be built with Spack",
     )
-    find_parser.add_argument("--exclude", action="append", help="packages to exclude from search")
+    find_parser.add_argument(
+        "--exclude",
+        action="append",
+        metavar="package",
+        help="do not search for this package (multiple use allowed)",
+    )
     find_parser.add_argument(
         "-p",
         "--path",
         default=None,
+        metavar="directory",
         action="append",
-        help="one or more alternative search paths for finding externals",
+        help="search this prefix or bin path instead of PATH (multiple use allowed)",
     )
     find_parser.add_argument(
         "--scope",
@@ -53,8 +59,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     find_parser.add_argument(
         "--all", action="store_true", help="search for all packages that Spack knows about"
     )
-    arguments.add_common_arguments(find_parser, ["tags", "jobs"])
-    find_parser.add_argument("packages", nargs=argparse.REMAINDER)
+    arguments.add_common_arguments(find_parser, ["tags", "jobs", "packages"])
     find_parser.epilog = (
         'The search is by default on packages tagged with the "build-tools" or '
         '"core-packages" tags. Use the --all option to search for every possible '
