@@ -726,7 +726,7 @@ def _filtered_configuration(
             filtered_packages = {}
 
         if include_section("concretizer"):
-            filtered["concretizer"] = copy.deepcopy(spack.config.get("concretizer"))
+            filtered["concretizer"] = copy.deepcopy(spack.config.CONFIG.get("concretizer"))
 
     if include_section("packages"):
         if filtered_packages:
