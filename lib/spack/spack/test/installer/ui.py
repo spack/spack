@@ -169,7 +169,7 @@ class TestBasicStateManagement:
         # Update to 'building' state
         tui.on_state_changed(build_id, "building")
         assert tui.builds[build_id].state == "building"
-        assert tui.builds[build_id].progress_percent is None
+        assert tui.builds[build_id].progress is None
         assert tui.completed == 0
 
         # Update to 'finished' state
@@ -306,13 +306,13 @@ class TestBasicStateManagement:
         assert "  line 1\n" in err and "  line 100\n" in err
 
     def test_on_progress(self):
-        """Test that on_progress updates percentages"""
+        """on_progress stores fetching percentages and marks only changed values dirty."""
         tui, _, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
 
         # Update progress
         tui.on_progress(build_id, 50, 100)
-        assert tui.builds[build_id].progress_percent == 50
+        assert tui.builds[build_id].progress == inst.BuildProgress("50%", "fetching")
         assert tui.dirty is True
 
         # Same percentage shouldn't mark dirty again
@@ -322,7 +322,7 @@ class TestBasicStateManagement:
 
         # Different percentage should mark dirty
         tui.on_progress(build_id, 75, 100)
-        assert tui.builds[build_id].progress_percent == 75
+        assert tui.builds[build_id].progress == inst.BuildProgress("75%", "fetching")
         assert tui.dirty is True
 
     def test_completion_counter(self):
@@ -811,7 +811,7 @@ class TestBuildInfo:
         assert build_info.external is False
         assert build_info.state == "starting"
         assert build_info.finished_time is None
-        assert build_info.progress_percent is None
+        assert build_info.progress is None
 
     def test_build_info_external_package(self):
         """Test BuildInfo for external package"""
@@ -1533,15 +1533,16 @@ class TestEdgeCases:
         tui, _, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
 
+        # Test truncation
         # Test rounding
         tui.on_progress(build_id, 1, 3)
-        assert tui.builds[build_id].progress_percent == 33  # int(100/3)
+        assert tui.builds[build_id].progress == inst.BuildProgress("33%", "fetching")
 
         tui.on_progress(build_id, 2, 3)
-        assert tui.builds[build_id].progress_percent == 66  # int(200/3)
+        assert tui.builds[build_id].progress == inst.BuildProgress("66%", "fetching")
 
         tui.on_progress(build_id, 3, 3)
-        assert tui.builds[build_id].progress_percent == 100
+        assert tui.builds[build_id].progress == inst.BuildProgress("100%", "fetching")
 
 
 class TestTerminalUIVerbose:
@@ -1793,12 +1794,12 @@ class TestLineRendering:
     """Test individual build-line components in the rendered output."""
 
     def test_fetch_progress_rendered(self):
-        """A build with fetch progress shows a percentage instead of its state."""
-        tui, _, fake_stdout = create_tui(total=1)
+        """A build with fetch progress shows its percentage alongside the state."""
+        tui, _, fake_stdout = create_tui(total=1, color=False)
         [build_id] = add_mock_builds(tui, 1)
         tui.on_progress(build_id, 50, 100)
         tui.render()
-        assert "fetching: 50%" in fake_stdout.getvalue()
+        assert "(50%) fetching" in fake_stdout.getvalue()
 
     def test_failed_line_shows_log_path(self):
         """A failed build's line includes the path to its log file."""
