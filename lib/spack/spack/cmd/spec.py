@@ -15,6 +15,7 @@ import spack.store
 import spack.traverse
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.concretize_ui import HeadlessUI, TerminalUI
 from spack.util.lang import nullcontext
 
 description = "show what would be installed, given a spec"
@@ -83,15 +84,18 @@ def spec(parser, args):
 
     env = active_environment()
 
+    # Machine-readable output goes to stdout, so concretization must not print anything there
+    ui = HeadlessUI() if args.format else TerminalUI()
+
     if args.specs:
-        concrete_specs = spack.cmd.parse_specs(args.specs, concretize=True)
+        concrete_specs = spack.cmd.parse_specs(args.specs, concretize=True, ui=ui)
     elif env:
         if not env.all_user_specs:
             args.subparser.error(
                 "active environment has no root specs, please provide at least one spec"
             )
 
-        env.concretize()
+        env.concretize(ui=ui)
         concrete_specs = env.concrete_roots()
     else:
         args.subparser.error("requires at least one spec or an active environment")

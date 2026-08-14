@@ -43,6 +43,7 @@ from spack.spec import Spec
 from spack.stage import stage_prefix
 from spack.store import Store
 from spack.test.conftest import RepoBuilder
+from spack.test.utilities import RecordingUI
 from spack.traverse import traverse_nodes
 from spack.util import tty
 from spack.util.executable import Executable
@@ -5072,3 +5073,25 @@ def test_exists_consistent_with_all_environment_names(
 
     listed = "myenv" in ev.all_environment_names()
     assert ev.exists("myenv") == listed
+
+
+def test_concretization_reports_groups(environment_from_manifest):
+    """Tests that each group of user specs is reported to the frontend."""
+    e = environment_from_manifest("""
+spack:
+  specs:
+  - libelf
+  - group: apps1
+    specs:
+    - pkg-a
+  - group: apps2
+    specs:
+    - pkg-b
+""")
+    ui = RecordingUI()
+    with e:
+        e.concretize(ui=ui)
+
+    # "default" is concretized first, the groups that don't need each other follow in any order
+    assert ui.groups[0] == ("default", True)
+    assert set(ui.groups[1:]) == {("apps1", False), ("apps2", False)}
