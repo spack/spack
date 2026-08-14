@@ -1529,13 +1529,15 @@ def _satisfying_edges(
     compiler node, then a BFS over transitive link/run deps."""
     # First check direct deps of all types. There is a subtlety: only abstract specs distinguish
     # between direct and indirect edges, whereas concrete specs always have direct edges (without
-    # setting the direct flag).
+    # setting the direct flag). For performance, iterate the _dependencies edge map directly:
+    # edges_to_dependencies allocates an iterator chain and a result list per call.
     require_direct = rhs_edge.direct and not lhs_node.concrete
-    for lhs_edge in lhs_node.edges_to_dependencies():
-        if require_direct and not lhs_edge.direct:
-            continue
-        if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
-            yield lhs_edge
+    for edges in lhs_node._dependencies.values():
+        for lhs_edge in edges:
+            if require_direct and not lhs_edge.direct:
+                continue
+            if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
+                yield lhs_edge
 
     # Include the historical compiler node if available as an ad-hoc edge.
     compiler_spec = lhs_node.annotations.compiler_node_attribute
@@ -1554,9 +1556,17 @@ def _satisfying_edges(
         return
 
     # BFS through link/run transitive deps (skip depth 1, already checked). Nodes with multiple
-    # in-edges are expanded only once, but every in-edge is a candidate.
+    # in-edges are expanded only once, but every in-edge is a candidate. An edge with depflag 0
+    # is unconstrained and traversed too. For performance, iterate the _dependencies edge map
+    # directly instead of going through edges_to_dependencies.
     depflag = dt.LINK | dt.RUN
-    queue = collections.deque(lhs_node.edges_to_dependencies(depflag=depflag))
+    queue: "collections.deque[DependencySpec]" = collections.deque()
+    queue.extend(
+        e
+        for edges in lhs_node._dependencies.values()
+        for e in edges
+        if not e.depflag or e.depflag & depflag
+    )
     expanded = {id(lhs_node)}
     while queue:
         lhs_edge = queue.popleft()
@@ -1569,7 +1579,13 @@ def _satisfying_edges(
 
         if id(lhs_edge.spec) not in expanded:
             expanded.add(id(lhs_edge.spec))
-            queue.extend(lhs_edge.spec.edges_to_dependencies(depflag=depflag))
+            if lhs_edge.spec._dependencies:
+                queue.extend(
+                    e
+                    for edges in lhs_edge.spec._dependencies.values()
+                    for e in edges
+                    if not e.depflag or e.depflag & depflag
+                )
 
 
 def _edge_satisfies(lhs_node: "Spec", rhs_edge: DependencySpec, *, resolve_virtuals: bool) -> bool:
