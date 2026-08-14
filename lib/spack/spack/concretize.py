@@ -193,6 +193,13 @@ def concretize_separately(
     # processes try to write the config file in parallel
     _ = spack.compilers.config.all_compilers()
 
+    # Solve the environment in parallel on Linux. imap_unordered falls back to a serial map when
+    # parallelism is disabled (e.g. Windows)
+    num_procs = 1
+    if args and spack.util.parallel.ENABLE_PARALLELISM:
+        num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
+    ui.on_concretization_started(kind=SolveKind.SEPARATELY, total=len(args), processes=num_procs)
+
     # Early return if there is nothing to do
     if len(args) == 0:
         # Still have to combine the things that were passed in as abstract with the things
@@ -200,14 +207,6 @@ def concretize_separately(
         return [(abstract, concrete) for abstract, (_, concrete) in zip(to_concretize, ret)] + [
             (abstract, concrete) for abstract, concrete in spec_list if concrete
         ]
-
-    # Solve the environment in parallel on Linux
-    num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
-
-    # imap_unordered falls back to a serial map when parallelism is disabled (e.g. Windows)
-    if not spack.util.parallel.ENABLE_PARALLELISM:
-        num_procs = 1
-    ui.on_concretization_started(kind=SolveKind.SEPARATELY, total=len(args), processes=num_procs)
 
     for j, (i, concrete, duration) in enumerate(
         spack.util.parallel.imap_unordered(

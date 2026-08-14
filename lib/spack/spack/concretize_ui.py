@@ -72,7 +72,7 @@ class TerminalUI(ConcretizerUI):
     def on_concretization_started(self, *, kind: SolveKind, total: int, processes: int) -> None:
         self.kind = kind
         self.total = total
-        if kind is not SolveKind.SEPARATELY:
+        if kind is not SolveKind.SEPARATELY or total == 0:
             return
         msg = "Starting concretization"
         if processes > 1:

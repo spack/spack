@@ -5594,3 +5594,27 @@ def test_reported_total_matches_number_of_specs(concretize_fn, mutable_config, m
     assert len(ui.started) == 1
     _, total, _ = ui.started[0]
     assert total == len(ui.concretized) == 3
+
+
+def test_concretize_separately_reports_start_with_nothing_to_do(mutable_config, mock_packages):
+    """Tests that concretization is announced even when every input spec is already concrete, so
+    that frontends always see a start event.
+    """
+    concrete = spack.concretize.concretize_one(Spec("pkg-a"))
+    ui = RecordingUI()
+    result = spack.concretize.concretize_separately([(Spec("pkg-a"), concrete)], ui=ui)
+
+    assert ui.started == [(spack.concretize_ui.SolveKind.SEPARATELY, 0, 1)]
+    assert not ui.concretized
+    assert [concrete for _, concrete in result] == [concrete]
+
+
+@pytest.mark.parametrize("total,announced", [(2, True), (0, False)])
+def test_terminal_ui_announces_pool_only_when_solving(total, announced, capsys):
+    """Tests that the terminal frontend stays silent when there is nothing to concretize."""
+    ui = spack.concretize_ui.TerminalUI()
+    ui.on_concretization_started(
+        kind=spack.concretize_ui.SolveKind.SEPARATELY, total=total, processes=1
+    )
+
+    assert ("Starting concretization" in capsys.readouterr().out) is announced
