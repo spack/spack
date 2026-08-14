@@ -30,6 +30,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.string
 from spack import traverse
 from spack.active_environment import active_environment
+from spack.concretize_ui import ConcretizerUI, TerminalUI
 from spack.util import tty
 from spack.util.filesystem import join_path
 from spack.util.lang import attr_setdefault, index_by
@@ -177,6 +178,7 @@ def parse_specs(
     args: Union[str, List[str]],
     concretize: bool = False,
     tests: spack.concretize.TestsType = False,
+    ui: Optional[ConcretizerUI] = None,
 ) -> List[spack.spec.Spec]:
     """Convenience function for parsing arguments from specs.  Handles common
     exceptions and dies if there are errors.
@@ -190,17 +192,21 @@ def parse_specs(
         return specs
 
     to_concretize: List[spack.concretize.SpecPairInput] = [(s, None) for s in specs]
-    return _concretize_spec_pairs(to_concretize, tests=tests)
+    return _concretize_spec_pairs(to_concretize, tests=tests, ui=ui)
 
 
 def _concretize_spec_pairs(
-    to_concretize: List[spack.concretize.SpecPairInput], tests: spack.concretize.TestsType = False
+    to_concretize: List[spack.concretize.SpecPairInput],
+    tests: spack.concretize.TestsType = False,
+    ui: Optional[ConcretizerUI] = None,
 ) -> List[spack.spec.Spec]:
     """Helper method that concretizes abstract specs from a list of abstract,concrete pairs.
 
     Any spec with a concrete spec associated with it will concretize to that spec. Any spec
     with ``None`` for its concrete spec will be newly concretized. This method respects unification
-    rules from config."""
+    rules from config.
+    """
+    ui = ui or TerminalUI()
     unify = spack.config.CONFIG.get("concretizer:unify", False)
 
     # Special case for concretizing a single spec
@@ -247,7 +253,7 @@ def _concretize_spec_pairs(
     elif unify == "when_possible":
         concretize_method = spack.concretize.concretize_together_when_possible
 
-    concretized = concretize_method(to_concretize, tests=tests)
+    concretized = concretize_method(to_concretize, tests=tests, ui=ui)
     return [concrete for _, concrete in concretized]
 
 

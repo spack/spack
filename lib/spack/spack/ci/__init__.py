@@ -36,6 +36,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
+from spack.concretize_ui import TerminalUI
 from spack.error import SpackError
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.util import tty
@@ -473,7 +474,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
             line.
     """
     with env.write_transaction():
-        env.concretize()
+        env.concretize(ui=TerminalUI())
         env.write()
 
     options = collect_pipeline_options(env, args)

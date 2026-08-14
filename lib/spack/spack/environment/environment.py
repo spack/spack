@@ -55,6 +55,7 @@ import spack.util.tty.color as clr
 import spack.variant as vt
 from spack import traverse
 from spack.active_environment import active_environment
+from spack.concretize_ui import ConcretizerUI, HeadlessUI
 from spack.config import substitute_path_variables
 from spack.enums import ConfigScopePriority
 from spack.schema.env import TOP_LEVEL_KEY
@@ -1712,7 +1713,11 @@ class Environment:
             self.write()
 
     def concretize(
-        self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
+        self,
+        *,
+        force: Optional[bool] = None,
+        tests: Union[bool, Sequence[str]] = False,
+        ui: Optional[ConcretizerUI] = None,
     ) -> Sequence[SpecPair]:
         """Concretize user_specs in this environment.
 
@@ -1726,6 +1731,7 @@ class Environment:
                 defaults to ``spack.config.CONFIG.get("concretizer:force")``
             tests: False to run no tests, True to test all packages, or a list of
                 package names to run tests for some
+            ui: frontend to report progress to. Defaults to a headless frontend.
 
         Returns:
             List of specs that have been concretized. Each entry is a tuple of
@@ -1746,7 +1752,7 @@ class Environment:
         }
 
         try:
-            return EnvironmentConcretizer(self).concretize(force=force, tests=tests)
+            return EnvironmentConcretizer(self, ui=ui).concretize(force=force, tests=tests)
         except BaseException:
             self.concretized_roots = old_concretized_roots
             self.specs_by_hash = old_specs_by_hash
@@ -2298,10 +2304,11 @@ class Environment:
 
     def _concrete_roots_dict(self):
         if not self.has_groups():
-            return [{"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots]
+            return [{"hash": x.hash, "spec": x.root.long_spec} for x in self.concretized_roots]
 
         return [
-            {"hash": x.hash, "spec": str(x.root), "group": x.group} for x in self.concretized_roots
+            {"hash": x.hash, "spec": x.root.long_spec, "group": x.group}
+            for x in self.concretized_roots
         ]
 
     def has_groups(self) -> bool:
@@ -2702,8 +2709,9 @@ class ReusableSpecsFactory:
 
 
 class EnvironmentConcretizer:
-    def __init__(self, env: Environment):
+    def __init__(self, env: Environment, *, ui: Optional[ConcretizerUI] = None):
         self.env = env
+        self.ui = ui or HeadlessUI()
 
     def concretize(
         self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
@@ -2733,8 +2741,7 @@ class EnvironmentConcretizer:
             return []
 
         # Pick the right concretization strategy
-        if group != DEFAULT_USER_SPEC_GROUP:
-            tty.msg(f"Concretizing the '{group}' group of specs")
+        self.ui.on_group_started(group=group, is_default=group == DEFAULT_USER_SPEC_GROUP)
         unify = spack.config.CONFIG.get_config("concretizer").get("unify", False)
         factory = ReusableSpecsFactory(env=self.env, group=group)
         if unify == "when_possible":
@@ -2837,7 +2844,7 @@ class EnvironmentConcretizer:
 
         specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
         result = spack.concretize.concretize_together_when_possible(
-            specs_to_concretize, tests=tests, factory=factory
+            specs_to_concretize, tests=tests, factory=factory, ui=self.ui
         )
         result = [x for x in result if x[0] in to_compute]
         for abstract, concrete in result:
@@ -2859,7 +2866,7 @@ class EnvironmentConcretizer:
         to_concretize = self._user_spec_pairs(to_compute, to_keep)
         try:
             concrete_pairs = spack.concretize.concretize_together(
-                to_concretize, tests=tests, factory=factory
+                to_concretize, tests=tests, factory=factory, ui=self.ui
             )
         except spack.error.UnsatisfiableSpecError as e:
             # "Enhance" the error message for multiple root specs, suggest a less strict
@@ -2897,7 +2904,7 @@ class EnvironmentConcretizer:
 
         to_concretize = [(x, None) for x in to_compute]
         concrete_pairs = spack.concretize.concretize_separately(
-            to_concretize, tests=tests, factory=factory
+            to_concretize, tests=tests, factory=factory, ui=self.ui
         )
 
         for abstract, concrete in concrete_pairs:

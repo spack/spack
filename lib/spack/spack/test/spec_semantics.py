@@ -735,6 +735,12 @@ class TestSpecSemantics:
         assert spec.satisfies("namespace=builtin_mock")
         assert not spec.satisfies("namespace=builtin")
 
+    def test_unset_namespace_does_not_satisfy_a_specified_one(self):
+        assert Spec("builtin_mock.pkg-a").satisfies("pkg-a")
+        assert not Spec("pkg-a").satisfies("builtin_mock.pkg-a")
+        assert Spec("pkg-a").intersects("builtin_mock.pkg-a")
+        assert Spec("builtin_mock.pkg-a").intersects("pkg-a")
+
     @pytest.mark.parametrize(
         "spec_string",
         [
