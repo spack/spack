@@ -8,7 +8,7 @@ import pathlib
 import platform
 import re
 import sys
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict
 
 import pytest
 
@@ -56,6 +56,7 @@ from spack.solver.reuse import spec_filter_from_packages_yaml
 from spack.spec import Spec
 from spack.store import Store
 from spack.test.conftest import RepoBuilder
+from spack.test.utilities import RecordingUI
 from spack.version import Version, VersionList, ver
 
 
@@ -5501,28 +5502,6 @@ def test_solve_in_rounds_with_no_specs(mock_packages, config):
     """Tests that solving no specs at all yields no result, instead of being unsatisfiable."""
     solver = spack.solver.asp.Solver()
     assert list(solver.solve_in_rounds([])) == []
-
-
-class RecordingUI(spack.concretize_ui.ConcretizerUI):
-    """Frontend that records the events it receives, instead of rendering them."""
-
-    def __init__(self) -> None:
-        self.groups: List[Tuple[str, bool]] = []
-        self.started: List[Tuple[spack.concretize_ui.SolveKind, int, int]] = []
-        self.concretized: List[Tuple[Spec, Spec, int, float]] = []
-
-    def on_group_started(self, *, group: str, is_default: bool) -> None:
-        self.groups.append((group, is_default))
-
-    def on_concretization_started(
-        self, *, kind: spack.concretize_ui.SolveKind, total: int, processes: int
-    ) -> None:
-        self.started.append((kind, total, processes))
-
-    def on_spec_concretized(
-        self, abstract: Spec, *, concrete: Spec, count: int, duration: float
-    ) -> None:
-        self.concretized.append((abstract, concrete, count, duration))
 
 
 def test_concretize_separately_reports_progress(mutable_config, mock_packages):
