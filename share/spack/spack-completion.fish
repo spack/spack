@@ -1269,7 +1269,7 @@ complete -c spack -n '__fish_spack_using_command config' -l scope -r -d 'configu
 
 # spack config get
 set -g __fish_spack_optspecs_spack_config_get h/help json group=
-complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars filter include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config get' -l json -f -a json
@@ -1279,7 +1279,7 @@ complete -c spack -n '__fish_spack_using_command config get' -l group -r -d 'sho
 
 # spack config blame
 set -g __fish_spack_optspecs_spack_config_blame h/help group=
-complete -c spack -n '__fish_spack_using_command_pos 0 config blame' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config blame' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars filter include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config blame' -l group -r -f -a group
@@ -1287,7 +1287,7 @@ complete -c spack -n '__fish_spack_using_command config blame' -l group -r -d 's
 
 # spack config edit
 set -g __fish_spack_optspecs_spack_config_edit h/help print-file
-complete -c spack -n '__fish_spack_using_command_pos 0 config edit' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config edit' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars filter include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config edit' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config edit' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config edit' -l print-file -f -a print_file
@@ -1300,7 +1300,7 @@ complete -c spack -n '__fish_spack_using_command config list' -s h -l help -d 's
 
 # spack config scopes
 set -g __fish_spack_optspecs_spack_config_scopes h/help p/paths t/type= v/verbose
-complete -c spack -n '__fish_spack_using_command_pos 0 config scopes' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config scopes' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars filter include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config scopes' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config scopes' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config scopes' -s p -l paths -f -a paths
@@ -1638,7 +1638,7 @@ complete -c spack -n '__fish_spack_using_command env deactivate' -l pwsh -f -a s
 complete -c spack -n '__fish_spack_using_command env deactivate' -l pwsh -d 'print pwsh commands to activate the environment'
 
 # spack env create
-set -g __fish_spack_optspecs_spack_env_create h/help d/dir keep-relative without-view with-view= include-concrete=
+set -g __fish_spack_optspecs_spack_env_create h/help d/dir keep-relative without-view with-view= include-concrete= filter=
 complete -c spack -n '__fish_spack_using_command_pos 0 env create' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env create' -s h -l help -d 'show this help message and exit'
@@ -1652,6 +1652,8 @@ complete -c spack -n '__fish_spack_using_command env create' -l with-view -r -f 
 complete -c spack -n '__fish_spack_using_command env create' -l with-view -r -d 'maintain view at WITH_VIEW (vs. environment'"'"'s directory)'
 complete -c spack -n '__fish_spack_using_command env create' -l include-concrete -r -f -a include_concrete
 complete -c spack -n '__fish_spack_using_command env create' -l include-concrete -r -d 'copy concrete specs from INCLUDE_CONCRETE'"'"'s environment'
+complete -c spack -n '__fish_spack_using_command env create' -l filter -r -f -a filter
+complete -c spack -n '__fish_spack_using_command env create' -l filter -r -d 'create a filtered environment using the filter config in FILTER_FILE'
 
 # spack env remove
 set -g __fish_spack_optspecs_spack_env_remove h/help y/yes-to-all f/force
