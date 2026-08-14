@@ -1475,10 +1475,29 @@ class TestSpecSemantics:
 
     @pytest.mark.regression("18527")
     def test_satisfies_dependencies_ordered(self):
-        d = Spec("zmpi ^fake")
+        d = Spec("zmpi")
+        d._add_dependency(Spec("fake"), depflag=dt.LINK, virtuals=())
         s = Spec("mpileaks")
-        s._add_dependency(d, depflag=0, virtuals=())
+        s._add_dependency(d, depflag=dt.LINK, virtuals=())
         assert s.satisfies("mpileaks ^zmpi ^fake")
+
+    def test_satisfies_transitive_dependencies_require_link_run_path(self):
+        """A transitive ^dep constraint is satisfied by a path of link/run edges; an edge
+        without deptype constraints does not guarantee a link/run edge in every
+        concretization."""
+
+        def chain(depflag1, depflag2):
+            root, mid, leaf = Spec("root"), Spec("mid"), Spec("leaf")
+            root._add_dependency(mid, depflag=depflag1, virtuals=())
+            mid._add_dependency(leaf, depflag=depflag2, virtuals=())
+            return root
+
+        assert not chain(0, 0).satisfies("^leaf")
+        assert not chain(dt.LINK, 0).satisfies("^leaf")
+        assert not chain(dt.LINK, dt.BUILD).satisfies("^leaf")
+        assert chain(dt.BUILD | dt.LINK, dt.LINK).satisfies("^leaf")
+        # a direct dependency of any type is satisfied without a link/run path
+        assert Spec("root ^leaf").satisfies("^leaf")
 
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_swap_names(self, transitive):

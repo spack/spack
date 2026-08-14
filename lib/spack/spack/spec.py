@@ -1556,16 +1556,15 @@ def _satisfying_edges(
         return
 
     # BFS through link/run transitive deps (skip depth 1, already checked). Nodes with multiple
-    # in-edges are expanded only once, but every in-edge is a candidate. An edge with depflag 0
-    # is unconstrained and traversed too. For performance, iterate the _dependencies edge map
-    # directly instead of going through edges_to_dependencies.
+    # in-edges are expanded only once, but every in-edge is a candidate. Deptype sets are lower
+    # bounds, so only an edge that overlaps link/run guarantees a link/run edge in every
+    # concretization; an edge with depflag 0 guarantees nothing and is not traversed. For
+    # performance, iterate the _dependencies edge map directly instead of going through
+    # edges_to_dependencies.
     depflag = dt.LINK | dt.RUN
     queue: Deque[DependencySpec] = collections.deque()
     queue.extend(
-        e
-        for edges in lhs_node._dependencies.values()
-        for e in edges
-        if not e.depflag or e.depflag & depflag
+        e for edges in lhs_node._dependencies.values() for e in edges if e.depflag & depflag
     )
     expanded = {id(lhs_node)}
     while queue:
@@ -1584,7 +1583,7 @@ def _satisfying_edges(
                     e
                     for edges in lhs_edge.spec._dependencies.values()
                     for e in edges
-                    if not e.depflag or e.depflag & depflag
+                    if e.depflag & depflag
                 )
 
 
