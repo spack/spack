@@ -1478,6 +1478,16 @@ spack:
         spec = spack.concretize.concretize_one(spec)
         assert (uuidpatch, localpatch) == spec["libelf"].variants["patches"].value
 
+    def test_patch_condition_on_compiler_only(self):
+        """A patch's ``when=`` clause can constrain a direct dependency
+        (e.g. ``%gcc@10:``).
+        Regression test for a bug where such a patch was silently skipped.
+        """
+        fix_patch = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        spec = spack.concretize.concretize_one("patch-when-compiler %gcc@10.2.1")
+        assert spec.satisfies("%gcc@10.2.1")
+        assert (fix_patch,) == spec.variants["patches"].value
+
     def test_dont_select_version_that_brings_more_variants_in(self):
         s = spack.concretize.concretize_one("dep-with-variants-if-develop-root")
         assert s["dep-with-variants-if-develop"].satisfies("@1.0")

@@ -3568,7 +3568,9 @@ class SpecBuilder:
     def depends_on(self, parent_node, dependency_node, type):
         dependency_spec = self._specs[dependency_node]
         depflag = dt.flag_from_string(type)
-        self._specs[parent_node].add_dependency_edge(dependency_spec, depflag=depflag, virtuals=())
+        self._specs[parent_node].add_dependency_edge(
+            dependency_spec, depflag=depflag, virtuals=(), direct=True
+        )
 
     def virtual_on_edge(self, parent_node, provider_node, virtual):
         dependencies = self._specs[parent_node].edges_to_dependencies(name=(provider_node.pkg))
