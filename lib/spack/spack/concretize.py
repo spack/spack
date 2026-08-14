@@ -79,8 +79,8 @@ def concretize_together(
 
     # A single solve produced all the specs, so they all report the duration of that solve
     result = list(zip(abstract_specs, concrete_specs))
-    for index, (abstract, concrete) in enumerate(result):
-        ui.on_spec_concretized(abstract, concrete=concrete, count=index, duration=duration)
+    for count, (abstract, concrete) in enumerate(result, start=1):
+        ui.on_spec_concretized(abstract, concrete=concrete, count=count, duration=duration)
 
     return result
 
@@ -127,8 +127,8 @@ def concretize_together_when_possible(
         now = time.monotonic()
         duration = now - start
         for abstract, concrete in result.specs_by_input.items():
-            ui.on_spec_concretized(abstract, concrete=concrete, count=j, duration=duration)
             j += 1
+            ui.on_spec_concretized(abstract, concrete=concrete, count=j, duration=duration)
         result_by_user_spec.update(result.specs_by_input)
         start = now
 
@@ -216,7 +216,8 @@ def concretize_separately(
             debug=tty.is_debug(),
             maxtaskperchild=1,
             serialize_env=True,
-        )
+        ),
+        start=1,
     ):
         ret.append((i, concrete))
         ui.on_spec_concretized(to_concretize[i], concrete=concrete, count=j, duration=duration)

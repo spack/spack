@@ -46,9 +46,10 @@ class ConcretizerUI:
     def on_spec_concretized(
         self, abstract: Spec, *, concrete: Spec, count: int, duration: float
     ) -> None:
-        """A user spec has been concretized. ``count`` is the 0-based position of this event among
-        the ones reported for the group, and ``duration`` is the time spent in the solve that
-        produced this spec. Specs that come out of the same solve report the same duration.
+        """A user spec has been concretized. ``count`` is how many specs of the group have been
+        reported so far, including this one, and goes from 1 to the announced ``total``.
+        ``duration`` is the time spent in the solve that produced this spec, so specs that come
+        out of the same solve report the same duration.
         """
 
 
@@ -84,7 +85,7 @@ class TerminalUI(ConcretizerUI):
     ) -> None:
         if self.kind is SolveKind.TOGETHER:
             return
-        percentage = int((count + 1) / max(self.total, count + 1) * 100)
+        percentage = int(count / self.total * 100)
         tty.verbose(
             f"{duration:6.1f}s [{percentage:3d}%] {concrete.cformat('{hash:7}')} "
             f"{abstract.colored_str}",

@@ -5533,7 +5533,7 @@ def test_concretize_separately_reports_progress(mutable_config, mock_packages):
     spack.concretize.concretize_separately([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
 
     assert ui.started == [(spack.concretize_ui.SolveKind.SEPARATELY, 2, 1)]
-    assert [index for _, _, index, _ in ui.concretized] == [0, 1]
+    assert [count for _, _, count, _ in ui.concretized] == [1, 2]
     assert {abstract.name for abstract, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
     assert not ui.groups
 
@@ -5544,7 +5544,7 @@ def test_concretize_separately_reports_progress(mutable_config, mock_packages):
 def test_concretize_together_when_possible_reports_progress(mutable_config, mock_packages):
     """Tests that concretizing "when possible" reports the start of the concretization, and one
     event per spec. The two specs cannot be unified, so they are solved in different rounds, and
-    the index has to keep increasing across rounds.
+    the count has to keep increasing across rounds.
     """
     ui = RecordingUI()
     spack.concretize.concretize_together_when_possible(
@@ -5552,7 +5552,7 @@ def test_concretize_together_when_possible_reports_progress(mutable_config, mock
     )
 
     assert ui.started == [(spack.concretize_ui.SolveKind.WHEN_POSSIBLE, 2, 1)]
-    assert [index for _, _, index, _ in ui.concretized] == [0, 1]
+    assert [count for _, _, count, _ in ui.concretized] == [1, 2]
     assert {str(abstract) for abstract, _, _, _ in ui.concretized} == {"pkg-a@1.0", "pkg-a@2.0"}
 
     for abstract, concrete, _, _ in ui.concretized:
@@ -5567,7 +5567,7 @@ def test_concretize_together_reports_progress(mutable_config, mock_packages):
     spack.concretize.concretize_together([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
 
     assert ui.started == [(spack.concretize_ui.SolveKind.TOGETHER, 2, 1)]
-    assert [index for _, _, index, _ in ui.concretized] == [0, 1]
+    assert [count for _, _, count, _ in ui.concretized] == [1, 2]
     assert {abstract.name for abstract, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
     assert len({duration for _, _, _, duration in ui.concretized}) == 1
     assert not ui.groups
@@ -5586,7 +5586,8 @@ def test_concretize_together_reports_progress(mutable_config, mock_packages):
 )
 def test_reported_total_matches_number_of_specs(concretize_fn, mutable_config, mock_packages):
     """Tests that, whatever the concretization strategy, the total announced when concretization
-    starts is the number of specs that are reported as concretized afterwards.
+    starts is the number of specs that are reported as concretized afterwards, and that the counts
+    reported along the way run from 1 to that total. Frontends rely on this to show a percentage.
     """
     ui = RecordingUI()
     concretize_fn([(Spec("pkg-a"), None), (Spec("pkg-b"), None), (Spec("libelf"), None)], ui=ui)
@@ -5594,6 +5595,7 @@ def test_reported_total_matches_number_of_specs(concretize_fn, mutable_config, m
     assert len(ui.started) == 1
     _, total, _ = ui.started[0]
     assert total == len(ui.concretized) == 3
+    assert [count for _, _, count, _ in ui.concretized] == list(range(1, total + 1))
 
 
 def test_concretize_separately_reports_start_with_nothing_to_do(mutable_config, mock_packages):
