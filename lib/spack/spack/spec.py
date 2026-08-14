@@ -49,7 +49,6 @@ line is a spec for a particular installation of the mpileaks package.
 
 import abc
 import collections
-import collections.abc
 import enum
 import io
 import itertools
@@ -65,6 +64,7 @@ from typing import (
     Any,
     Callable,
     ClassVar,
+    Deque,
     Dict,
     Iterable,
     Iterator,
@@ -1560,7 +1560,7 @@ def _satisfying_edges(
     # is unconstrained and traversed too. For performance, iterate the _dependencies edge map
     # directly instead of going through edges_to_dependencies.
     depflag = dt.LINK | dt.RUN
-    queue: "collections.deque[DependencySpec]" = collections.deque()
+    queue: Deque[DependencySpec] = collections.deque()
     queue.extend(
         e
         for edges in lhs_node._dependencies.values()
