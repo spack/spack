@@ -3799,6 +3799,14 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     This method updates the SpecDict in place.
 
     """
+    # The DAG is structurally complete, but still abstract. For node-local mutations that are
+    # conditional on (direct) dependencies, such as ``patch("...", when="%gcc")`` as well as
+    # ``dev_path``, we need to mark edges direct so that satisfies considers them as direct.
+    for s in specs.values():
+        if not s.concrete:
+            for edge in s.edges_to_dependencies():
+                edge.direct = True
+
     # inject patches -- note that we can't use set() to unique the
     # roots here, because the specs aren't complete, and the hash
     # function will loop forever.

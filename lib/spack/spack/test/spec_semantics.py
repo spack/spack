@@ -2445,6 +2445,18 @@ def test_a_spec_that_stopped_being_concrete_matches_a_direct_constraint(config, 
     assert not mpileaks.satisfies("mpileaks %libelf")
 
 
+def test_direct_constraint_nested_below_a_concrete_dependency(config, mock_packages):
+    """A % constraint below ^ is checked on the node it applies to, so when that node is
+    concrete its edges match without the direct flag, even if the root spec is abstract."""
+    callpath = spack.concretize.concretize_one("callpath")
+    root = Spec("mpileaks")
+    root.add_dependency_edge(callpath, depflag=dt.BUILD | dt.LINK, virtuals=())
+
+    assert root.satisfies("mpileaks ^callpath %dyninst")
+    assert root.satisfies("mpileaks ^callpath ^libelf")
+    assert not root.satisfies("mpileaks ^callpath %libelf")
+
+
 def test_a_direct_dependency_is_inside_a_transitive_one(mock_packages):
     """'pkg-a ^pkg-b' means pkg-b is somewhere in the DAG and 'pkg-a %pkg-b' means it is a direct
     dependency, so the second is inside the first and not the other way around."""

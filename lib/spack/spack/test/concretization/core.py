@@ -4759,6 +4759,17 @@ def test_concretization_cache_reapplies_patches_on_hit(
     assert initial_sha256s <= new_sha256s
 
 
+def test_patch_condition_on_direct_dependency(use_concretization_cache):
+    """A patch with a condition on a direct dependency (e.g. ``%gcc@10:``) is applied both on
+    a fresh solve and on a cache hit, where specs are rebuilt from serialized solver output."""
+    fix_patch = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    for _ in range(2):
+        spec = spack.concretize.concretize_one("patch-when-compiler %gcc@10.2.1")
+        assert (fix_patch,) == spec.variants["patches"].value
+        # concrete specs record every edge without the direct flag
+        assert not any(e.direct for s in spec.traverse() for e in s.edges_to_dependencies())
+
+
 def test_concretization_cache_count_cleanup(
     use_concretization_cache, mutable_config: Configuration
 ):
