@@ -2670,6 +2670,8 @@ def test_satisfies_tries_every_parallel_edge_of_a_concrete_spec(config, mock_pac
     assert spec.satisfies("^[deptypes=build] dupe-tool@1")
     assert spec.satisfies("^[deptypes=link] dupe-tool@2")
     assert spec.satisfies("^[deptypes=build] dupe-tool@1 ^[deptypes=link] dupe-tool@2 %gmake")
+    # only dupe-tool@2.0 depends on gmake, so an early bailout on dupe-tool@1.0 is wrong
+    assert spec.satisfies("^dupe-tool %gmake")
 
 
 @pytest.mark.parametrize(
