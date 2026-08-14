@@ -13,8 +13,9 @@ import pytest
 import spack.operating_systems.windows_os as windows_os
 from spack.version import Version
 
-
-pytestmark = pytest.mark.skipif(sys.platform != "win32", reason="Windows OS tests only relevant on Windows")
+pytestmark = pytest.mark.skipif(
+    sys.platform != "win32", reason="Windows OS tests only relevant on Windows"
+)
 
 
 @pytest.fixture(autouse=True)
