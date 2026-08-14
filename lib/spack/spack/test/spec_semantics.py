@@ -2655,23 +2655,29 @@ def test_satisfies_checks_all_in_edges_of_shared_node():
     root, a, b, c = Spec("pkg-a"), Spec("pkg-b"), Spec("pkg-c"), Spec("pkg-d")
     root.add_dependency_edge(a, depflag=dt.LINK, virtuals=())
     root.add_dependency_edge(b, depflag=dt.LINK, virtuals=())
-    a.add_dependency_edge(c, depflag=dt.RUN, virtuals=())
+    a.add_dependency_edge(c, depflag=dt.TEST | dt.RUN, virtuals=())
     b.add_dependency_edge(c, depflag=dt.BUILD | dt.RUN, virtuals=())
+    # each in-edge is the only match for one assertion, so either fails if satisfies stops at
+    # the first in-edge of pkg-d regardless of iteration order
+    assert root.satisfies("^[deptypes=test] pkg-d")  # only through pkg-b -> pkg-d
     assert root.satisfies("^[deptypes=build] pkg-d")  # only through pkg-c -> pkg-d
     assert root.satisfies("^[deptypes=run] pkg-d")  # through either in-edge
-    assert not root.satisfies("^[deptypes=test] pkg-d")
+    assert not root.satisfies("^[deptypes=build,test] pkg-d")  # no single in-edge has both
 
 
 def test_satisfies_tries_every_parallel_edge_of_a_concrete_spec(config, mock_packages):
     """Satisfies is exhaustive when there are duplicates on concrete specs."""
-    # dupe-tool-root --build--> dupe-tool@1.0
+    # dupe-tool-root --build--> dupe-tool@1.0 --build--> cmake
     #                --link-->  dupe-tool-user --link--> dupe-tool@2.0 --build--> gmake
     spec = spack.concretize.concretize_one("dupe-tool-root")
     assert spec.satisfies("^[deptypes=build] dupe-tool@1")
     assert spec.satisfies("^[deptypes=link] dupe-tool@2")
     assert spec.satisfies("^[deptypes=build] dupe-tool@1 ^[deptypes=link] dupe-tool@2 %gmake")
-    # only dupe-tool@2.0 depends on gmake, so an early bailout on dupe-tool@1.0 is wrong
-    assert spec.satisfies("^dupe-tool %gmake")
+    # each dupe-tool node is the only match for one assertion, so either fails if satisfies bails
+    # out on the first dupe-tool it visits regardless of iteration order
+    assert spec.satisfies("^dupe-tool %cmake")  # only dupe-tool@1.0
+    assert spec.satisfies("^dupe-tool %gmake")  # only dupe-tool@2.0
+    assert not spec.satisfies("^dupe-tool %cmake %gmake")  # no single node has both
 
 
 @pytest.mark.parametrize(

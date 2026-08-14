@@ -18,4 +18,5 @@ class DupeTool(Package):
     version("2.0", md5="0123456789abcdef0123456789abcdef")
     version("1.0", md5="fedcba9876543210fedcba9876543210")
 
+    depends_on("cmake", type="build", when="@1.0")
     depends_on("gmake", type="build", when="@2.0")
