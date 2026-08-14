@@ -1553,10 +1553,11 @@ def _satisfying_edges(
     if rhs_edge.direct:
         return
 
-    # BFS through link/run transitive deps (skip depth 1, already checked).
+    # BFS through link/run transitive deps (skip depth 1, already checked). Nodes with multiple
+    # in-edges are expanded only once, but every in-edge is a candidate.
     depflag = dt.LINK | dt.RUN
     queue = collections.deque(lhs_node.edges_to_dependencies(depflag=depflag))
-    seen = {id(lhs_edge.spec) for lhs_edge in queue}
+    expanded = {id(lhs_node)}
     while queue:
         lhs_edge = queue.popleft()
 
@@ -1566,10 +1567,9 @@ def _satisfying_edges(
         ):
             yield lhs_edge
 
-        for lhs_edge in lhs_edge.spec.edges_to_dependencies(depflag=depflag):
-            if id(lhs_edge.spec) not in seen:
-                seen.add(id(lhs_edge.spec))
-                queue.append(lhs_edge)
+        if id(lhs_edge.spec) not in expanded:
+            expanded.add(id(lhs_edge.spec))
+            queue.extend(lhs_edge.spec.edges_to_dependencies(depflag=depflag))
 
 
 def _edge_satisfies(lhs_node: "Spec", rhs_edge: DependencySpec, *, resolve_virtuals: bool) -> bool:

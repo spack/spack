@@ -2649,6 +2649,19 @@ def test_satisfies_tries_every_parallel_edge(mock_packages):
     assert not spec.satisfies("pkg-a ^pkg-b %pkg-c %pkg-e")
 
 
+def test_satisfies_checks_all_in_edges_of_shared_node():
+    """A node with multiple in-edges must be reachable through any of them; an in-edge that fails
+    on edge attributes must not shadow a parallel in-edge that matches."""
+    root, a, b, c = Spec("pkg-a"), Spec("pkg-b"), Spec("pkg-c"), Spec("pkg-d")
+    root.add_dependency_edge(a, depflag=dt.LINK, virtuals=())
+    root.add_dependency_edge(b, depflag=dt.LINK, virtuals=())
+    a.add_dependency_edge(c, depflag=dt.RUN, virtuals=())
+    b.add_dependency_edge(c, depflag=dt.BUILD | dt.RUN, virtuals=())
+    assert root.satisfies("^[deptypes=build] pkg-d")  # only through pkg-c -> pkg-d
+    assert root.satisfies("^[deptypes=run] pkg-d")  # through either in-edge
+    assert not root.satisfies("^[deptypes=test] pkg-d")
+
+
 def test_satisfies_tries_every_parallel_edge_of_a_concrete_spec(config, mock_packages):
     """Satisfies is exhaustive when there are duplicates on concrete specs."""
     # dupe-tool-root --build--> dupe-tool@1.0
