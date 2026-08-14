@@ -593,6 +593,14 @@ def test_patch_reversed_patch_no_prompt(mock_packages, install_mockery, mock_fet
         # now ensure it failed under the right circumstances
         cap = capfd.readouterr()
         # ensure it was a reverse patch that failed
-        assert "Reversed (or previously applied) patch detected" in cap.out
+        # freebsd/macos patch reports this case differently than gnu patch
+        # which is what we use on posix and windows
+        darwin_or_freebsd = sys.platform == "darwin" or sys.platform.startswith("freebsd")
+        failure_str = (
+            "Ignoring previously applied (or reversed) patch"
+            if darwin_or_freebsd
+            else "Reversed (or previously applied) patch detected"
+        )
+        assert failure_str in cap.out
         # ensure the user was not prompted
         assert "Assume -R?" not in cap.out
