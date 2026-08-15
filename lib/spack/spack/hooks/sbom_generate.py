@@ -89,6 +89,14 @@ def get_download_location(spec):
         return str(pkg.url_for_version(spec.version))
     except spack.error.NoURLError:
         pass
+    except Exception:
+        # url_for_version() may raise arbitrary exceptions for versions resolved
+        # via a git ref (commit/tag/branch), where some packages' custom
+        # implementations assume purely numeric version components. Fall through
+        # to the git-URL fallback below.  See https://github.com/spack/spack/issues/52864.
+        tty.debug(
+            f"SBOM: url_for_version() failed for {spec}, falling back to git URL"
+        )
 
     git_url = pkg.version_or_package_attr("git", spec.version, default=None)
     if git_url and pkg.needs_commit(spec.version):
