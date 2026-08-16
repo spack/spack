@@ -1589,23 +1589,26 @@ def _satisfying_edges(
 
 def _satisfies_dependencies(lhs: "Spec", rhs: "Spec", *, resolve_virtuals: bool) -> bool:
     """Whether every dependency edge of ``rhs`` is satisfied by some edge of ``lhs``."""
-    for rhs_edge in rhs.edges_to_dependencies():
-        # Skip rhs edges whose when condition doesn't apply to the lhs node.
-        if rhs_edge.when is not EMPTY_SPEC and not lhs._intersects(
-            rhs_edge.when, resolve_virtuals=resolve_virtuals
-        ):
-            continue
-        edges = _satisfying_edges(lhs, rhs_edge, resolve_virtuals=resolve_virtuals)
-        # A concrete or leaf rhs child needs no recursion: _satisfies_edge compared the child
-        # node already.
-        if rhs_edge.spec.concrete or not rhs_edge.spec._dependencies:
-            if next(edges, None) is None:
+    # For performance, iterate the _dependencies edge map directly instead of going through
+    # edges_to_dependencies.
+    for rhs_edges in rhs._dependencies.values():
+        for rhs_edge in rhs_edges:
+            # Skip rhs edges whose when condition doesn't apply to the lhs node.
+            if rhs_edge.when is not EMPTY_SPEC and not lhs._intersects(
+                rhs_edge.when, resolve_virtuals=resolve_virtuals
+            ):
+                continue
+            edges = _satisfying_edges(lhs, rhs_edge, resolve_virtuals=resolve_virtuals)
+            # A concrete or leaf rhs child needs no recursion: _satisfies_edge compared the
+            # child node already.
+            if rhs_edge.spec.concrete or not rhs_edge.spec._dependencies:
+                if next(edges, None) is None:
+                    return False
+            elif not any(
+                _satisfies_dependencies(e.spec, rhs_edge.spec, resolve_virtuals=resolve_virtuals)
+                for e in edges
+            ):
                 return False
-        elif not any(
-            _satisfies_dependencies(e.spec, rhs_edge.spec, resolve_virtuals=resolve_virtuals)
-            for e in edges
-        ):
-            return False
     return True
 
 
