@@ -2061,6 +2061,18 @@ def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_pack
     assert rhs == factory(constrained_str)
 
 
+def test_constrain_promotes_edge_propagation(mock_packages):
+    """Constraining an edge with a propagated edge to the same package promotes the policy; the
+    reverse never demotes it."""
+    lhs = Spec("mpileaks %callpath")
+    assert lhs.constrain("mpileaks %%callpath")
+    assert lhs == Spec("mpileaks %%callpath")
+
+    lhs = Spec("mpileaks %%callpath")
+    assert not lhs.constrain("mpileaks %callpath")
+    assert lhs == Spec("mpileaks %%callpath")
+
+
 def test_constrain_dependencies_copies(mock_packages):
     """Tests that constraining a spec with new deps makes proper copies, and does not accidentally
     share dependency instances, leading to corruption of unrelated Spec instances."""

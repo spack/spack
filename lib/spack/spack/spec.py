@@ -832,6 +832,10 @@ class DependencySpec:
         if not self.direct and other.direct:
             changed = True
             self.direct = True
+        # The stronger propagation policy is kept: promote, never demote.
+        if self.propagation == PropagationPolicy.NONE and other.propagation != self.propagation:
+            changed = True
+            self.propagation = other.propagation
         return changed
 
     def _cmp_iter(self):
