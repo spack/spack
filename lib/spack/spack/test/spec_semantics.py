@@ -2073,6 +2073,15 @@ def test_constrain_promotes_edge_propagation(mock_packages):
     assert lhs == Spec("mpileaks %%callpath")
 
 
+def test_edge_propagation_is_part_of_spec_identity(mock_packages):
+    """%callpath and %%callpath are different states even though they permit the same solutions,
+    so they are distinct set elements, in line with to_dict, which serializes the policy."""
+    plain, propagated = Spec("mpileaks %callpath"), Spec("mpileaks %%callpath")
+    assert plain != propagated
+    assert hash(plain) != hash(propagated)
+    assert len({plain, propagated}) == 2
+
+
 def test_constrain_dependencies_copies(mock_packages):
     """Tests that constraining a spec with new deps makes proper copies, and does not accidentally
     share dependency instances, leading to corruption of unrelated Spec instances."""
@@ -2277,7 +2286,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, (), False, Spec()),),
+                ((0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),),
             ),
         ],
         # root with multiple deps
@@ -2291,9 +2300,9 @@ EMPTY_FLG = Spec().compiler_flags
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, (), False, Spec()),
-                    (0, 2, 0, (), False, Spec()),
-                    (0, 3, 0, (), False, Spec()),
+                    (0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),
+                    (0, 2, 0, (), False, PropagationPolicy.NONE, Spec()),
+                    (0, 3, 0, (), False, PropagationPolicy.NONE, Spec()),
                 ),
             ),
         ],
@@ -2308,9 +2317,9 @@ EMPTY_FLG = Spec().compiler_flags
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, (), True, Spec()),
-                    (0, 2, 0, (), True, Spec()),
-                    (0, 3, 0, (), True, Spec()),
+                    (0, 1, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (0, 2, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (0, 3, 0, (), True, PropagationPolicy.NONE, Spec()),
                 ),
             ),
         ],
@@ -2328,12 +2337,12 @@ EMPTY_FLG = Spec().compiler_flags
                     ("g", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, (), False, Spec()),
-                    (0, 2, 0, (), False, Spec()),
-                    (1, 3, 0, (), True, Spec()),
-                    (1, 4, 0, (), True, Spec()),
-                    (2, 5, 0, (), True, Spec()),
-                    (2, 6, 0, (), True, Spec()),
+                    (0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),
+                    (0, 2, 0, (), False, PropagationPolicy.NONE, Spec()),
+                    (1, 3, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (1, 4, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (2, 5, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (2, 6, 0, (), True, PropagationPolicy.NONE, Spec()),
                 ),
             ),
         ],
