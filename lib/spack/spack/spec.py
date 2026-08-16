@@ -1536,7 +1536,7 @@ def _satisfying_edges(
         for lhs_edge in edges:
             if require_direct and not lhs_edge.direct:
                 continue
-            if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
+            if _satisfies_edge_attributes(lhs_edge, rhs_edge, resolve_virtuals):
                 yield lhs_edge
 
     # Include the historical compiler node if available as an ad-hoc edge.
@@ -1549,7 +1549,7 @@ def _satisfying_edges(
             virtuals=("c", "cxx", "fortran"),
             direct=True,
         )
-        if _satisfies_edge(compiler_edge, rhs_edge, resolve_virtuals):
+        if _satisfies_edge_attributes(compiler_edge, rhs_edge, resolve_virtuals):
             yield compiler_edge
 
     if rhs_edge.direct:
@@ -1571,7 +1571,7 @@ def _satisfying_edges(
         lhs_edge = queue.popleft()
 
         # depth 1 was yielded by the loop over direct edges above
-        if lhs_edge.parent is not lhs_node and _satisfies_edge(
+        if lhs_edge.parent is not lhs_node and _satisfies_edge_attributes(
             lhs_edge, rhs_edge, resolve_virtuals
         ):
             yield lhs_edge
@@ -1599,7 +1599,7 @@ def _satisfies_dependencies(lhs: "Spec", rhs: "Spec", *, resolve_virtuals: bool)
             ):
                 continue
             edges = _satisfying_edges(lhs, rhs_edge, resolve_virtuals=resolve_virtuals)
-            # A concrete or leaf rhs child needs no recursion: _satisfies_edge compared the
+            # A concrete or leaf rhs child needs no recursion: _satisfies_edge_attributes compared the
             # child node already.
             if rhs_edge.spec.concrete or not rhs_edge.spec._dependencies:
                 if next(edges, None) is None:
@@ -1612,7 +1612,9 @@ def _satisfies_dependencies(lhs: "Spec", rhs: "Spec", *, resolve_virtuals: bool)
     return True
 
 
-def _satisfies_edge(lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtuals: bool) -> bool:
+def _satisfies_edge_attributes(
+    lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtuals: bool
+) -> bool:
     """Helper function for satisfaction tests, which checks edge attributes and the target node.
     It skips verification of the parent node."""
     name_mismatch = rhs.spec.name and lhs.spec.name != rhs.spec.name
