@@ -1599,8 +1599,6 @@ def _satisfies_dependencies(lhs: "Spec", rhs: "Spec", *, resolve_virtuals: bool)
             ):
                 continue
             edges = _satisfying_edges(lhs, rhs_edge, resolve_virtuals=resolve_virtuals)
-            # A concrete or leaf rhs child needs no recursion: _satisfies_edge_attributes compared the
-            # child node already.
             if rhs_edge.spec.concrete or not rhs_edge.spec._dependencies:
                 if next(edges, None) is None:
                     return False
