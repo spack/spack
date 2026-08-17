@@ -1118,8 +1118,8 @@ def _select_edges(
 
     Args:
         edge_map: map of edges to select from
-        parent: name of the parent package
-        child: name of the child package
+        parent: name of the parent package; ``""`` selects anonymous parents
+        child: name of the child package; ``""`` selects anonymous children
         depflag: allowed dependency types in flag form
         virtuals: list of virtuals or specific virtual on the edge
     """
@@ -1130,11 +1130,11 @@ def _select_edges(
     selected: Iterable[DependencySpec] = itertools.chain.from_iterable(edge_map.values())
 
     # Filter by parent name
-    if parent:
+    if parent is not None:
         selected = (d for d in selected if d.parent.name == parent)
 
     # Filter by child name
-    if child:
+    if child is not None:
         selected = (d for d in selected if d.spec.name == child)
 
     # Filter by allowed dependency types
@@ -1817,7 +1817,7 @@ class Spec:
         to parents.
 
         Args:
-            name: filter dependents by package name
+            name: filter dependents by package name; ``""`` selects anonymous dependents
             depflag: allowed dependency types
             virtuals: allowed virtuals
         """
@@ -1833,7 +1833,7 @@ class Spec:
         """Returns a list of edges connecting this node in the DAG to children.
 
         Args:
-            name: filter dependencies by package name
+            name: filter dependencies by package name; ``""`` selects anonymous dependencies
             depflag: allowed dependency types
             virtuals: allowed virtuals
         """
@@ -1879,7 +1879,7 @@ class Spec:
         """Returns a list of direct dependencies (nodes in the DAG)
 
         Args:
-            name: filter dependencies by package name
+            name: filter dependencies by package name; ``""`` selects anonymous dependencies
             deptype: allowed dependency types
             virtuals: allowed virtuals
         """
@@ -1895,7 +1895,7 @@ class Spec:
         """Return a list of direct dependents (nodes in the DAG).
 
         Args:
-            name: filter dependents by package name
+            name: filter dependents by package name; ``""`` selects anonymous dependents
             deptype: allowed dependency types
         """
         if not isinstance(deptype, dt.DepFlag):
@@ -3219,15 +3219,9 @@ class Spec:
 
         changed = False
         for other_edge in other.edges_to_dependencies():
-            # Find the first edge in self that matches other_edge by name and when clause. The
-            # name comparison is explicit: an empty name does not filter, so for an anonymous
-            # dependency the loop sees every edge, and an anonymous constraint merges only into
-            # an anonymous edge.
+            # Find the first edge in self that matches other_edge by name and when clause.
             for self_edge in self.edges_to_dependencies(other_edge.spec.name):
-                if (
-                    self_edge.spec.name == other_edge.spec.name
-                    and self_edge.when == other_edge.when
-                ):
+                if self_edge.when == other_edge.when:
                     changed |= self_edge._constrain(other_edge)
                     break
             else:
