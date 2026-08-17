@@ -832,6 +832,9 @@ class DependencySpec:
         if not self.direct and other.direct:
             changed = True
             self.direct = True
+        if self.propagation == PropagationPolicy.NONE and other.propagation != self.propagation:
+            changed = True
+            self.propagation = other.propagation
         return changed
 
     def _cmp_iter(self):
@@ -4034,6 +4037,7 @@ class Spec:
                         edge.depflag,
                         edge.virtuals,
                         edge.direct,
+                        edge.propagation,
                         edge.when,
                     )
                 )
@@ -4045,7 +4049,7 @@ class Spec:
 
             # level 1 edges all start with zero
             for i, edge in enumerate(sorted_l1_edges, start=1):
-                yield (0, i, edge.depflag, edge.virtuals, edge.direct, edge.when)
+                yield (0, i, edge.depflag, edge.virtuals, edge.direct, edge.propagation, edge.when)
 
             # yield remaining edges in the order they were encountered during traversal
             if edge_list:
