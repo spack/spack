@@ -4052,9 +4052,10 @@ class Spec:
 
     @property
     def fullname_if_abstract(self):
-        """The namespace-qualified name of an abstract spec. A concrete spec always has a
-        namespace, so its default format prints the plain name."""
-        return self.name if self.concrete else self.fullname
+        """The namespace-qualified name of a named abstract spec. A concrete spec always has
+        a namespace, so its default format prints the plain name. An anonymous spec renders
+        its namespace as a separate ``namespace=`` token."""
+        return self.fullname if self.name and not self.concrete else self.name
 
     def _format_default(self) -> str:
         """Fast path for formatting with DEFAULT_FORMAT and no color.

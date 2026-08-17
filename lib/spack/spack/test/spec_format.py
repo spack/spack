@@ -217,3 +217,14 @@ def test_abstract_spec_str_roundtrips_namespace(config, mock_packages):
     concrete = spack.concretize.concretize_one("mpileaks")
     assert concrete.namespace == "builtin_mock"
     assert str(concrete).startswith("mpileaks@")
+
+
+def test_namespace_of_anonymous_spec_on_slow_path():
+    """Colored output takes the slow format path instead of _format_default. The namespace
+    of an anonymous spec renders as a single namespace= token on both paths."""
+    anonymous = Spec("namespace=bar")
+    expected = colorize(f"{VARIANT_COLOR} namespace=bar@.", color=True)
+    assert anonymous.format(color=True) == expected
+
+    named = Spec("foo namespace=bar")
+    assert named.format(color=True) == "bar.foo"
