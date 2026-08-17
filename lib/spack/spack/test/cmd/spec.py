@@ -265,9 +265,9 @@ def test_buildcache_status_fn_installed_not_overridden(mutable_database):
 
 
 def _roots() -> List[spack.spec.Spec]:
-    """Returns the concrete roots that `spack spec` reports, sorted by name."""
+    """Returns the concrete roots that `spack spec` reports, in the order they are printed."""
     data = [json.loads(x) for x in spec("--json").splitlines() if x.strip()]
-    return sorted((spack.spec.Spec.from_dict(x) for x in data), key=lambda x: x.name)
+    return [spack.spec.Spec.from_dict(x) for x in data]
 
 
 def _root_names() -> List[str]:
@@ -306,7 +306,7 @@ spack:
 """,
         ),
         (
-            ["libelf", "mpich"],
+            ["mpich", "libelf"],
             """\
 spack:
   concretizer:
@@ -436,7 +436,7 @@ spack:
 """
     )
     with ev.Environment(root_dir):
-        assert _root_names() == ["libelf", "mpich"]
+        assert _root_names() == ["mpich", "libelf"]
 
 
 def test_spec_json_output_is_jsonl(mutable_config):
