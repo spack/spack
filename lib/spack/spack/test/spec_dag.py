@@ -935,6 +935,25 @@ class TestSpecDag:
         assert len(mpileaks["libelf"].edges_from_dependents(depflag=dt.LINK)) == 2
 
 
+def test_query_edges_empty_name_selects_anonymous():
+    """name=None selects all edges, name="" selects edges to anonymous specs."""
+    spec = Spec("foo@1 ^*@2 ^bar@3")
+    assert len(spec.edges_to_dependencies()) == 2
+
+    anonymous = spec.edges_to_dependencies("")
+    assert len(anonymous) == 1
+    assert anonymous[0].spec.satisfies("@2")
+    assert spec[""] is anonymous[0].spec
+
+    bar = spec.edges_to_dependencies("bar")[0].spec
+    assert len(bar.edges_from_dependents("")) == 0
+    assert len(bar.edges_from_dependents("foo")) == 1
+
+    # the root of "^bar@3" is anonymous
+    bar = Spec("^bar@3").edges_to_dependencies("bar")[0].spec
+    assert len(bar.edges_from_dependents("")) == 1
+
+
 def test_tree_cover_nodes_reduce_deptype():
     """Test that tree output with deptypes sticks to the sub-dag of interest, instead of looking
     at in-edges from nodes not reachable from the root."""
