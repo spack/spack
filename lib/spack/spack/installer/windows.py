@@ -39,6 +39,7 @@ from spack.installer.base import (
 ENABLE_LINE_INPUT = 0x0002
 ENABLE_ECHO_INPUT = 0x0004
 ENABLE_QUICK_EDIT_MODE = 0x0040
+ENABLE_MOUSE_INPUT = 0x0010
 ENABLE_EXTENDED_FLAGS = 0x0080
 ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # for stdout handle
 WIN_STD_INPUT_HANDLE = -10
@@ -129,7 +130,7 @@ class WindowsTerminalState(BaseTerminalState):
 
         self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
 
-        disable = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE
+        disable = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE | ENABLE_MOUSE_INPUT
         new_in_mode = (self.old_stdin_settings.value & ~disable) | ENABLE_EXTENDED_FLAGS
         self.kernel32.SetConsoleMode(self.hStdin, new_in_mode)
 
