@@ -177,7 +177,7 @@ FULL_FORMAT = (
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
 DISPLAY_FORMAT = (
-    "{fullname_if_abstract}{@version}{compiler_flags}"
+    "{name}{@version}{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}"
     "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
     "{ /abstract_hash}"
