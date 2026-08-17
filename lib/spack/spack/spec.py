@@ -167,14 +167,6 @@ DEFAULT_FORMAT = (
     "{ /abstract_hash}"
 )
 
-#: Full format for Spec.format(). This format can be round-tripped without losing
-#: namespace information
-FULL_FORMAT = (
-    "{fullname}{@versions}{compiler_flags}{variants}"
-    "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
-    "{ /abstract_hash}"
-)
-
 #: Display format, which eliminates extra `@=` in the output, for readability.
 DISPLAY_FORMAT = (
     "{name}{@version}{compiler_flags}"
@@ -4517,16 +4509,11 @@ class Spec:
 
         return " ".join(parts).strip()
 
-    def _long_spec(self, format=None, color: Optional[bool] = False) -> str:
+    def _long_spec(self, color: Optional[bool] = False) -> str:
         """Helper for :attr:`long_spec` and :attr:`clong_spec`."""
-        if format is None:
-            format = DISPLAY_FORMAT if self.concrete else DEFAULT_FORMAT
         if self.concrete:
-            return self.tree(format=format, color=color)
-
-        node_format = self.format(format_string=format, color=color)
-        dep_format = self._format_dependencies(format_string=format, color=color)
-        return f"{node_format} {dep_format}".strip()
+            return self.tree(format=DISPLAY_FORMAT, color=color)
+        return f"{self.format(color=color)} {self._format_dependencies(color=color)}".strip()
 
     def _short_spec(self, color: Optional[bool] = False) -> str:
         """Helper for :attr:`short_spec` and :attr:`cshort_spec`."""
@@ -4554,12 +4541,12 @@ class Spec:
     @property
     def long_spec(self):
         """Long string of the spec, including dependencies."""
-        return self._long_spec(format=FULL_FORMAT, color=False)
+        return self._long_spec(color=False)
 
     @property
     def clong_spec(self):
         """Returns an auto-colorized version of :attr:`long_spec`."""
-        return self._long_spec(format=FULL_FORMAT, color=None)
+        return self._long_spec(color=None)
 
     @property
     def short_spec(self):
