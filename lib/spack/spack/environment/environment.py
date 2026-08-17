@@ -1309,15 +1309,6 @@ class Environment:
         key = self._user_specs_key(group=group)
         return self.spec_lists[key]
 
-    @property
-    def all_user_specs(self) -> SpecList:
-        """Returns all user specs from all groups in the environment."""
-        spec_list = SpecList()
-        for group in self.manifest.groups():
-            for spec in self.user_specs_by(group=group):
-                spec_list.add(spec)
-        return spec_list
-
     def explicit_roots(self):
         for x in self.concretized_roots:
             if self.manifest.is_explicit(group=x.group):

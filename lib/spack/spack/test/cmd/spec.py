@@ -173,53 +173,6 @@ def test_env_aware_spec(mutable_mock_env_path):
         assert "mpich@3.0.4" in output
 
 
-def test_env_without_spec_error(mutable_mock_env_path):
-    """Verify that `spack spec` fails when the active environment has no root specs."""
-    env = ev.create("test")
-    with env:
-        with pytest.raises(SpackCommandError, match="Spack command failed with exit code 2") as e:
-            spec()
-        error_msg = "active environment has no root specs"
-        assert error_msg in e.value.output
-
-
-def test_spec_shows_specs_from_named_groups(mutable_mock_env_path):
-    """Test that spack spec shows specs from named groups, not just default group."""
-    env = ev.create("test")
-
-    # Add spec to a named group (not in default)
-    env.manifest.add_user_spec("mpileaks", group="software")
-    env.write()
-
-    # Reload environment to pick up the new group
-    env = ev.read("test")
-
-    with env:
-        output = spec()
-        assert "mpileaks" in output
-
-
-def test_spec_shows_specs_from_all_groups(mutable_mock_env_path):
-    """Test that spack spec shows specs from both default and named groups together."""
-    env = ev.create("test")
-
-    # Add spec to named group
-    env.manifest.add_user_spec("mpileaks", group="software")
-    env.write()
-
-    # Add spec to default group
-    env.add("cmake")
-    env.write()
-
-    # Reload environment
-    env = ev.read("test")
-
-    with env:
-        output = spec()
-        assert "cmake" in output
-        assert "mpileaks" in output
-
-
 @pytest.mark.parametrize(
     "name, version, error",
     [
