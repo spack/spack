@@ -43,6 +43,9 @@ if ($null -eq $Env:EDITOR)
 # Set spack shell so we can detect powershell context
 $Env:SPACK_SHELL="pwsh"
 
+# Load environment modification functions for spack load/unload
+. "$PSScriptRoot\environment-mods.ps1"
+
 doskey /exename=powershell.exe spack=$Env:SPACK_ROOT\bin\spack.ps1 $args
 
 Write-Output "*****************************************************************"
