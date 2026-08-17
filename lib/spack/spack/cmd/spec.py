@@ -90,11 +90,6 @@ def spec(parser, args):
     if args.specs:
         concrete_specs = spack.cmd.parse_specs(args.specs, concretize=True, ui=ui)
     elif env:
-        if not env.all_user_specs:
-            args.subparser.error(
-                "active environment has no root specs, please provide at least one spec"
-            )
-
         env.concretize(ui=ui)
         concrete_specs = env.concrete_roots()
     else:

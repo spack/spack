@@ -1053,7 +1053,7 @@ def env_depfile(args):
     # Warn in case we're generating a depfile for an empty environment. We don't automatically
     # concretize; the user should do that explicitly. Could be changed in the future if requested.
     if model.empty:
-        if not env.all_user_specs:
+        if not env.user_specs:
             tty.warn("no specs in the environment")
         elif filter_specs is not None:
             tty.warn("no concrete matching specs found in environment")
