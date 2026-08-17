@@ -107,7 +107,7 @@ class SpecList:
 
     def __bool__(self):
         """Return True if the SpecList contains any specs, False if empty."""
-        return len(self.specs) > 0
+        return bool(self.yaml_list)
 
     def __getitem__(self, key):
         return self.specs[key]
