@@ -263,7 +263,7 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.DEPENDENCY, value="%"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
             ],
-            "yaml-cpp %gcc",
+            "builtin.yaml-cpp %gcc",
         ),
         (
             r"testrepo.yaml-cpp%gcc",
@@ -272,7 +272,7 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.DEPENDENCY, value="%"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
             ],
-            "yaml-cpp %gcc",
+            "testrepo.yaml-cpp %gcc",
         ),
         (
             r"builtin.yaml-cpp@0.1.8%gcc@7.2.0 ^boost@3.1.4",
@@ -286,7 +286,7 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="boost"),
                 Token(SpecTokens.VERSION, value="@3.1.4"),
             ],
-            "yaml-cpp@0.1.8 %gcc@7.2.0 ^boost@3.1.4",
+            "builtin.yaml-cpp@0.1.8 %gcc@7.2.0 ^boost@3.1.4",
         ),
         (
             r"builtin.yaml-cpp ^testrepo.boost ^zlib",
@@ -297,7 +297,7 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
             ],
-            "yaml-cpp ^boost ^zlib",
+            "builtin.yaml-cpp ^testrepo.boost ^zlib",
         ),
         # Canonicalization of the string representation
         (

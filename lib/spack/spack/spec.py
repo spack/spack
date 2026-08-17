@@ -161,7 +161,7 @@ _STYLE_COLOR_MAP = {
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
 DEFAULT_FORMAT = (
-    "{name}{@versions}{compiler_flags}"
+    "{fullname_if_abstract}{@versions}{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}"
     "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
     "{ /abstract_hash}"
@@ -177,7 +177,7 @@ FULL_FORMAT = (
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
 DISPLAY_FORMAT = (
-    "{name}{@version}{compiler_flags}"
+    "{fullname_if_abstract}{@version}{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}"
     "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
     "{ /abstract_hash}"
@@ -4058,6 +4058,12 @@ class Spec:
     def namespace_if_anonymous(self):
         return self.namespace if not self.name else None
 
+    @property
+    def fullname_if_abstract(self):
+        """The namespace-qualified name of an abstract spec. A concrete spec always has a
+        namespace, so its default format prints the plain name."""
+        return self.name if self.concrete else self.fullname
+
     def _format_default(self) -> str:
         """Fast path for formatting with DEFAULT_FORMAT and no color.
 
@@ -4067,7 +4073,10 @@ class Spec:
         parts = []
 
         if self.name:
-            parts.append(self.name)
+            if self.namespace and not self.concrete:
+                parts.append(f"{self.namespace}.{self.name}")
+            else:
+                parts.append(self.name)
 
         if self.versions:
             version_str = str(self.versions)
