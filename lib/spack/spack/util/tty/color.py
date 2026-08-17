@@ -145,7 +145,6 @@ def try_enable_terminal_color_on_windows() -> None:
 
         try:
             ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
-            DISABLE_NEWLINE_AUTO_RETURN = 0x0008
             kernel32 = ctypes.WinDLL("kernel32")
 
             def _err_check(result, func, args):
@@ -173,9 +172,7 @@ def try_enable_terminal_color_on_windows() -> None:
                 con_handle = msvcrt.get_osfhandle(conout.fileno())
                 dw_orig_mode = wintypes.DWORD()
                 kernel32.GetConsoleMode(con_handle, ctypes.byref(dw_orig_mode))
-                dw_new_mode_request = (
-                    ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN
-                )
+                dw_new_mode_request = ENABLE_VIRTUAL_TERMINAL_PROCESSING
                 dw_new_mode = dw_new_mode_request | dw_orig_mode.value
                 kernel32.SetConsoleMode(con_handle, wintypes.DWORD(dw_new_mode))
         except OSError:
