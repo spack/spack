@@ -451,8 +451,25 @@ class TestSpecSemantics:
         """Test that Specs specified only by their hashes can constrain each other."""
         mpich_dag_hash = "/" + database.query_one("mpich").dag_hash()
         spec = Spec(mpich_dag_hash[:7])
-        assert spec.constrain(Spec(mpich_dag_hash)) is False
+        assert spec.constrain(mpich_dag_hash) is True
         assert spec.abstract_hash == mpich_dag_hash[1:]
+        # the full hash is already there, so constraining with it again changes nothing
+        assert spec.constrain(mpich_dag_hash) is False
+
+    def test_constrain_extends_the_hash_on_an_edge(self, mock_packages):
+        """The changed flag covers the abstract hash of a dependency too."""
+        spec = Spec("%gcc")
+        assert spec.constrain("%gcc/abc") is True
+        assert spec.constrain("%gcc/abc") is False
+
+    def test_failed_constrain_does_not_extend_the_hash(self, mock_packages):
+        """The abstract hash merges after the compatibility checks, so a constraint that is
+        rejected in another dimension leaves no hash behind."""
+        lhs = Spec("pkg-b")
+        with pytest.raises(UnsatisfiableSpecError):
+            lhs.constrain("pkg-a/abcdef")
+        assert lhs.abstract_hash is None
+        assert lhs == Spec("pkg-b")
 
     def test_mismatched_constrain_spec_by_hash(self, database):
         """Test that Specs specified only by their incompatible hashes fail appropriately."""

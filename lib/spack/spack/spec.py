@@ -3147,12 +3147,6 @@ class Spec:
             self._dup(other)
             return True
 
-        if other.abstract_hash:
-            if not self.abstract_hash or other.abstract_hash.startswith(self.abstract_hash):
-                self.abstract_hash = other.abstract_hash
-            elif not self.abstract_hash.startswith(other.abstract_hash):
-                raise InvalidHashError(self, other.abstract_hash)
-
         if not (self.name == other.name or (not self.name) or (not other.name)):
             raise UnsatisfiableSpecNameError(self.name, other.name)
 
@@ -3179,6 +3173,13 @@ class Spec:
             raise UnsatisfiableArchitectureSpecError(sarch, oarch)
 
         changed = False
+
+        if other.abstract_hash:
+            if not self.abstract_hash or other.abstract_hash.startswith(self.abstract_hash):
+                changed |= self.abstract_hash != other.abstract_hash
+                self.abstract_hash = other.abstract_hash
+            elif not self.abstract_hash.startswith(other.abstract_hash):
+                raise InvalidHashError(self, other.abstract_hash)
 
         if not self.name and other.name:
             self.name = other.name
