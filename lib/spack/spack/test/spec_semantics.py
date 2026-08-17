@@ -2076,6 +2076,23 @@ def test_constrain_dependencies_copies(mock_packages):
     assert y == Spec("^foo")
 
 
+def test_constrain_with_anonymous_dependency(mock_packages):
+    """Edges to anonymous specs can be constrained."""
+    spec = Spec("pkg-a ^*@2")
+    assert spec.satisfies(spec)
+    assert spec.intersects(spec)
+    assert spec.constrain("pkg-a ^*@2") is False
+
+    forward, backward = Spec("").constrained(spec), spec.constrained("")
+    assert forward.to_dict() == backward.to_dict() == spec.to_dict()
+
+    # an anonymous dependency merges only into an anonymous edge, never into a named one
+    named, anonymous = Spec("pkg-a ^pkg-b@2"), Spec("pkg-a ^*@2")
+    forward, backward = named.constrained(anonymous), anonymous.constrained(named)
+    assert forward.to_dict() == backward.to_dict()
+    assert len(forward.edges_to_dependencies()) == 2
+
+
 def test_abstract_hash_intersects_and_satisfies(config, mock_packages):
     concrete: Spec = spack.concretize.concretize_one("pkg-a")
     hash = concrete.dag_hash()

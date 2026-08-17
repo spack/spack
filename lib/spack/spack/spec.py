@@ -3217,14 +3217,17 @@ class Spec:
         if not other._intersects_dependencies(self, resolve_virtuals=resolve_virtuals):
             raise UnsatisfiableDependencySpecError(other, self)
 
-        for d in other.traverse(root=False):
-            if not d.name:
-                raise UnconstrainableDependencySpecError(other)
         changed = False
         for other_edge in other.edges_to_dependencies():
-            # Find the first edge in self that matches other_edge by name and when clause.
+            # Find the first edge in self that matches other_edge by name and when clause. The
+            # name comparison is explicit: an empty name does not filter, so for an anonymous
+            # dependency the loop sees every edge, and an anonymous constraint merges only into
+            # an anonymous edge.
             for self_edge in self.edges_to_dependencies(other_edge.spec.name):
-                if self_edge.when == other_edge.when:
+                if (
+                    self_edge.spec.name == other_edge.spec.name
+                    and self_edge.when == other_edge.when
+                ):
                     changed |= self_edge._constrain(other_edge)
                     break
             else:
@@ -6000,15 +6003,6 @@ class UnsatisfiableDependencySpecError(spack.error.UnsatisfiableSpecError):
 
     def __init__(self, provided, required):
         super().__init__(provided, required, "dependency")
-
-
-class UnconstrainableDependencySpecError(spack.error.SpecError):
-    """Raised when attempting to constrain by an anonymous dependency spec"""
-
-    def __init__(self, spec):
-        msg = "Cannot constrain by spec '%s'. Cannot constrain by a" % spec
-        msg += " spec containing anonymous dependencies"
-        super().__init__(msg)
 
 
 class AmbiguousHashError(spack.error.SpecError):
