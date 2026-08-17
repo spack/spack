@@ -1693,3 +1693,17 @@ def test_url_buildcache_hash_from_manifest_name(spec_manifest, result):
             result = URLBuildcacheEntry.hash_from_manifest_name(spec_manifest)
     else:
         assert result == URLBuildcacheEntry.hash_from_manifest_name(spec_manifest)
+
+
+def test_select_signing_key_shows_fingerprints(monkeypatch):
+    class Key:
+        def __init__(self, fpr):
+            self.fpr = fpr
+
+        def __str__(self):
+            return self.fpr
+
+    keys = [Key("AAAA"), Key("BBBB")]
+    monkeypatch.setattr(spack.util.gpg, "signing_keys", lambda *a: keys)
+    with pytest.raises(spack.binary_distribution.PickKeyException, match="AAAA\n  BBBB"):
+        spack.binary_distribution.select_signing_key()

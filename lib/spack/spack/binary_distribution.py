@@ -629,7 +629,7 @@ def select_signing_key() -> str:
     keys = spack.util.gpg.signing_keys()
     num = len(keys)
     if num > 1:
-        raise PickKeyException(str(keys))
+        raise PickKeyException(keys)
     elif num == 0:
         raise NoKeyException(
             "No default key available for signing.\n"
@@ -2922,8 +2922,10 @@ class PickKeyException(spack.error.SpackError):
     Raised when multiple keys can be used to sign.
     """
 
-    def __init__(self, keys):
-        err_msg = "Multiple keys available for signing\n%s\n" % keys
+    def __init__(self, keys: List[spack.util.gpg.GpgKey]):
+        err_msg = "Multiple keys available for signing\n%s\n" % "\n".join(
+            f"  {key}" for key in keys
+        )
         err_msg += "Use spack buildcache create -k <key hash> to pick a key."
         super().__init__(err_msg)
 
