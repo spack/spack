@@ -130,7 +130,9 @@ class WindowsTerminalState(BaseTerminalState):
 
         self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
 
-        disable = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE | ENABLE_MOUSE_INPUT
+        disable = (
+            ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE | ENABLE_MOUSE_INPUT
+        )
         new_in_mode = (self.old_stdin_settings.value & ~disable) | ENABLE_EXTENDED_FLAGS
         self.kernel32.SetConsoleMode(self.hStdin, new_in_mode)
 
