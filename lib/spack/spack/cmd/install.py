@@ -358,7 +358,7 @@ def _maybe_add_and_concretize(args, env, specs):
                 env.add(spec)
 
         # `spack concretize`
-        tests = compute_tests_install_kwargs(env.user_specs, args.test)
+        tests = compute_tests_install_kwargs(env.all_user_specs, args.test)
         concretized_specs = env.concretize(tests=tests, ui=TerminalUI())
         if concretized_specs:
             tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
