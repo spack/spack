@@ -2,6 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+# For zsh compatibility: enable sh emulation mode to ensure word splitting
+# and consistent behavior with bash/dash
+if [ -n "${ZSH_VERSION:-}" ]; then
+    emulate sh
+fi
 
 # _separator_exists sep
 #
@@ -96,12 +101,15 @@ _spack_env_remove_value() {
     original_ifs="$IFS"
     IFS="$sep"
 
+    # Disable globbing to prevent * in paths from expanding
+    set -f
     eval "varname_value=\"\${${varname}}\""
     for val in $varname_value; do
         if [ "$val" != "$value" ]; then
             accumulator="$accumulator$val$sep"
         fi
     done
+    set +f
 
     export IFS="$original_ifs"
 
@@ -127,6 +135,8 @@ _spack_env_remove_first() {
 
     done="no"
 
+    # Disable globbing to prevent * in paths from expanding
+    set -f
     eval "varname_value=\"\${${varname}}\""
     for val in $varname_value; do
          if [ "$val" != "$value" ] || [ "$done" = "yes" ]; then
@@ -135,6 +145,7 @@ _spack_env_remove_first() {
             done="yes"
         fi
     done
+    set +f
 
     export IFS="$original_ifs"
 
@@ -159,6 +170,8 @@ _spack_env_remove_last() {
 
     done="no"
 
+    # Disable globbing to prevent * in paths from expanding
+    set -f
     # Reverse the list order
     eval "varname_value=\"\${${varname}}\""
     reversed="$sep"
@@ -180,6 +193,7 @@ _spack_env_remove_last() {
     done
     accumulator="${accumulator#$sep}"
     accumulator="${accumulator%$sep}"
+    set +f
 
     export IFS="$original_ifs"
     export $varname="$accumulator"
@@ -202,6 +216,8 @@ _spack_env_prune_duplicates() {
     pre_prune_ifs="$IFS"
     IFS="$sep"
 
+    # Disable globbing to prevent * in paths from expanding
+    set -f
     eval "varname_value=\"\${${varname}}\""
     while [ "$varname_value" != "" ]; do
         # for-loop to get the first entry, then break
@@ -214,6 +230,7 @@ _spack_env_prune_duplicates() {
             break
         done
     done
+    set +f
 
     prune_accumulator="${prune_accumulator#$sep}"
     prune_accumulator="${prune_accumulator%$sep}"
