@@ -274,7 +274,7 @@ def _root_names() -> List[str]:
     return [x.name for x in _roots()]
 
 
-@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+@pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
 def test_spec_in_empty_environment(tmp_path: pathlib.Path, unify):
     """Tests that an empty environment doesn't fail with `spack spec`."""
     (tmp_path / ev.manifest_name).write_text(
@@ -289,7 +289,7 @@ spack:
         assert _root_names() == []
 
 
-@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+@pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
 @pytest.mark.parametrize(
     "expected,spack_yaml",
     [
