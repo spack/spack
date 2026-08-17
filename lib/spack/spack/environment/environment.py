@@ -2816,7 +2816,8 @@ class EnvironmentConcretizer:
                     self.env.manifest.manifest_file,
                 )
 
-            result.extend(ready)
+            # "remaining" is a set, so sort to get a reproducible order
+            result.extend(sorted(ready))
             done.update(ready)
             remaining.difference_update(ready)
         return result

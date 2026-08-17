@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import json
+import pathlib
 import re
+from typing import List
 
 import pytest
 
@@ -259,3 +262,187 @@ def test_buildcache_status_fn_installed_not_overridden(mutable_database):
 
     status_fn = spack.cmd.buildcache_status_fn({s.dag_hash()})
     assert status_fn(s) == spack.spec.InstallStatus.installed
+
+
+def _roots() -> List[spack.spec.Spec]:
+    """Returns the concrete roots that `spack spec` reports, in the order they are printed."""
+    data = [json.loads(x) for x in spec("--json").splitlines() if x.strip()]
+    return [spack.spec.Spec.from_dict(x) for x in data]
+
+
+def _root_names() -> List[str]:
+    return [x.name for x in _roots()]
+
+
+@pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
+def test_spec_in_empty_environment(tmp_path: pathlib.Path, unify):
+    """Tests that an empty environment doesn't fail with `spack spec`."""
+    (tmp_path / ev.manifest_name).write_text(
+        f"""\
+spack:
+  concretizer:
+    unify: {unify}
+  specs: []
+"""
+    )
+    with ev.Environment(tmp_path):
+        assert _root_names() == []
+
+
+@pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
+@pytest.mark.parametrize(
+    "expected,spack_yaml",
+    [
+        (
+            ["libelf"],
+            """\
+spack:
+  concretizer:
+    unify: {unify}
+  specs:
+  - group: tools
+    specs:
+    - libelf
+""",
+        ),
+        (
+            ["mpich", "libelf"],
+            """\
+spack:
+  concretizer:
+    unify: {unify}
+  specs:
+  - mpich
+  - group: tools
+    specs:
+    - libelf
+""",
+        ),
+    ],
+)
+def test_spec_env_with_groups_only(unify, tmp_path: pathlib.Path, spack_yaml, expected):
+    """Tests that `spack spec` uses the root specs of every group, not just the default one."""
+    (tmp_path / ev.manifest_name).write_text(spack_yaml.format(unify=unify))
+    with ev.Environment(tmp_path):
+        assert _root_names() == expected
+
+
+def test_spec_env_applies_group_config_override(tmp_path: pathlib.Path):
+    """Tests that the "override" scope of a group is active while solving that group."""
+    (tmp_path / ev.manifest_name).write_text(
+        """\
+spack:
+  specs:
+  - group: pinned
+    override:
+      packages:
+        libelf:
+          require: "@0.8.12"
+    specs:
+    - libelf
+"""
+    )
+    with ev.Environment(tmp_path):
+        roots = _roots()
+
+    assert len(roots) == 1
+    assert roots[0].satisfies("libelf@0.8.12")
+
+
+def test_spec_env_reuses_specs_from_needed_groups(tmp_path: pathlib.Path):
+    """Tests that specs from a group listed in "needs" are reused."""
+    (tmp_path / ev.manifest_name).write_text(
+        """\
+spack:
+  concretizer:
+    unify: true
+    reuse: false
+  specs:
+  - group: compiler
+    override:
+      packages:
+        gcc:
+          require: "@12.1.0"
+    specs:
+    - gcc
+  - group: apps
+    needs: [compiler]
+    specs:
+    - mpileaks
+"""
+    )
+    with ev.Environment(tmp_path) as env:
+        # Ground truth: this is what `spack install` would build
+        env.concretize()
+        _, gcc = next(iter(env.concretized_specs_by(group="compiler")))
+        _, mpileaks = next(iter(env.concretized_specs_by(group="apps")))
+        assert mpileaks["c"].dag_hash() == gcc.dag_hash()
+
+    # The environment on disk is still not concretized, so `spack spec` has to solve it
+    with ev.Environment(tmp_path):
+        reported = _roots()
+
+    # Concrete specs compare by DAG hash, so this checks the whole sub-DAG of each root
+    assert reported == [gcc, mpileaks]
+
+
+def test_spec_env_reports_the_concretized_state(tmp_path: pathlib.Path, mutable_config):
+    """Tests that in a concretized environment `spack spec` reports what is in the lockfile."""
+    (tmp_path / ev.manifest_name).write_text(
+        """\
+spack:
+  specs:
+  - libelf
+"""
+    )
+    mutable_config.set("packages:libelf:require", "@0.8.12")
+    with ev.Environment(tmp_path) as env:
+        env.concretize()
+        env.write()
+
+    # Configuration drifts after the environment has been concretized
+    mutable_config.set("packages:libelf:require", "@0.8.13")
+    with ev.Environment(tmp_path):
+        roots = _roots()
+
+    assert len(roots) == 1
+    assert roots[0].satisfies("libelf@0.8.12")
+
+
+def test_spec_env_reports_included_concrete_roots(tmp_path: pathlib.Path):
+    """Tests that roots coming from an included concrete environment are reported too."""
+    include_dir = tmp_path / "included"
+    include_dir.mkdir()
+    (include_dir / ev.manifest_name).write_text(
+        """\
+spack:
+  specs:
+  - libelf
+"""
+    )
+    included = ev.Environment(include_dir)
+    included.concretize()
+    included.write()
+
+    root_dir = tmp_path / "root"
+    root_dir.mkdir()
+    (root_dir / ev.manifest_name).write_text(
+        f"""\
+spack:
+  include:
+  - {included.lock_path}
+  specs:
+  - mpich
+"""
+    )
+    with ev.Environment(root_dir):
+        assert _root_names() == ["mpich", "libelf"]
+
+
+def test_spec_json_output_is_jsonl(mutable_config):
+    """Tests that `spack spec --json` emits JSON Lines."""
+    mutable_config.set("concretizer:unify", True)
+    lines = [x for x in spec("--json", "libelf", "mpich").splitlines() if x.strip()]
+
+    assert len(lines) == 2
+    assert {spack.spec.Spec.from_dict(json.loads(x)).name for x in lines} == {"libelf", "mpich"}
