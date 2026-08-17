@@ -122,6 +122,10 @@ def env_create(args):
     if hasattr(args, "include_concrete"):
         include_concrete = args.include_concrete
 
+    filter_file = None
+    if hasattr(args, "filter"):
+        filter_file = args.filter
+
     env = _env_create(
         args.env_name,
         init_file=args.envfile,
@@ -129,7 +133,7 @@ def env_create(args):
         with_view=with_view,
         keep_relative=args.keep_relative,
         include_concrete=include_concrete,
-        filter_file=args.filter,
+        filter_file=filter_file,
     )
 
     # Generate views, only really useful for environments created from spack.lock files.
