@@ -2110,6 +2110,8 @@ class Spec:
 
         All scans compare only edges to the same package name: a ``^virtual`` edge and a
         ``^[virtuals=virtual] provider`` edge are independent requirements and stay apart.
+        Anonymous edges share the ``""`` bucket, where only the redundancy scans apply:
+        without a name, two direct deps can be distinct dependencies.
 
         Returns True if ``self`` changed.
 
@@ -2119,7 +2121,7 @@ class Spec:
         """
         name = candidate.spec.name
 
-        bucket = self._dependencies.get(name, []) if name else []
+        bucket = self._dependencies.get(name) or []
 
         # A package has at most one direct dependency per name, so an unconditional direct dep
         # is merged into an existing one (_same_direct_dep) by constraining, the only merge
@@ -3268,9 +3270,6 @@ class Spec:
         if not other._intersects_dependencies(self, resolve_virtuals=resolve_virtuals):
             raise UnsatisfiableDependencySpecError(other, self)
 
-        for d in other.traverse(root=False):
-            if not d.name:
-                raise UnconstrainableDependencySpecError(other)
         changed = False
         for other_edge in other.edges_to_dependencies():
             candidate = DependencySpec(
@@ -6053,15 +6052,6 @@ class UnsatisfiableDependencySpecError(spack.error.UnsatisfiableSpecError):
 
     def __init__(self, provided, required):
         super().__init__(provided, required, "dependency")
-
-
-class UnconstrainableDependencySpecError(spack.error.SpecError):
-    """Raised when attempting to constrain by an anonymous dependency spec"""
-
-    def __init__(self, spec):
-        msg = "Cannot constrain by spec '%s'. Cannot constrain by a" % spec
-        msg += " spec containing anonymous dependencies"
-        super().__init__(msg)
 
 
 class AmbiguousHashError(spack.error.SpecError):

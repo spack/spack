@@ -3004,6 +3004,67 @@ def test_two_versions_of_one_provider_of_a_virtual_intersect(mock_packages):
     assert len(result.edges_to_dependencies()) == 2
 
 
+def test_an_anonymous_dependency_is_a_parallel_edge(mock_packages):
+    """An edge with an anonymous target requires some dependency to match it. Constrain appends
+    it as a parallel edge, and discards it only when an existing anonymous edge satisfies it."""
+    # idempotency: the meet of a spec with itself is itself
+    spec = Spec("pkg-a ^*@2")
+    assert spec.satisfies(spec)
+    assert spec.intersects(spec)
+    assert spec.constrain("pkg-a ^*@2") is False
+
+    # commutativity: the meet is the same from either side
+    forward, backward = Spec("").constrained(spec), spec.constrained("")
+    assert forward.to_dict() == backward.to_dict() == spec.to_dict()
+
+    # two anonymous constraints can each be matched by a different dependency, so they stay two
+    # edges, transitive or direct. The single edge "^+foo+bar" also satisfies both operands, but
+    # the meet is the greatest lower bound: the witness with two distinct deps satisfies both
+    # operands, so it must satisfy the result, and only the parallel pair admits it.
+    result = Spec("pkg-a ^+foo").constrained("pkg-a ^+bar")
+    assert result.to_dict() == Spec("pkg-a ^+foo ^+bar").to_dict()
+    assert result.satisfies("pkg-a ^+foo") and result.satisfies("pkg-a ^+bar")
+    witness = Spec("pkg-a ^pkg-b+foo ^pkg-c+bar")
+    assert witness.satisfies(result)
+    assert not witness.satisfies("pkg-a ^+foo+bar")
+
+    result = Spec("pkg-a %+foo").constrained("pkg-a %+bar")
+    assert len(result.edges_to_dependencies()) == 2
+    assert result.satisfies("pkg-a %+foo") and result.satisfies("pkg-a %+bar")
+    witness = Spec("pkg-a %pkg-b+foo %pkg-c+bar")
+    assert witness.satisfies(result)
+    assert not witness.satisfies("pkg-a %+foo+bar")
+
+    result = Spec("pkg-a ^+foo").constrained("pkg-a %+bar")
+    assert sorted(e.direct for e in result.edges_to_dependencies()) == [False, True]
+
+    lhs, rhs = Spec("pkg-a ^*@1"), Spec("pkg-a ^*@2")
+    assert lhs.intersects(rhs) and rhs.intersects(lhs)
+    assert len(lhs.constrained(rhs).edges_to_dependencies()) == 2
+
+    # idempotency again, with several anonymous edges
+    spec = Spec("pkg-a ^+foo ^+bar")
+    before = spec.to_dict()
+    assert spec.constrain("pkg-a ^+foo ^+bar") is False
+    assert spec.to_dict() == before
+
+    # associativity: parallel edges accumulate the same way in any grouping
+    a, b, c = Spec("pkg-a ^+foo"), Spec("pkg-a ^+bar"), Spec("pkg-a ^+baz")
+    left, right = a.constrained(b).constrained(c), a.constrained(b.constrained(c))
+    assert left.to_dict() == right.to_dict()
+
+    # an anonymous edge satisfied by another anonymous edge is redundant, from either side
+    lhs, rhs = Spec("pkg-a ^*+foo"), Spec("pkg-a ^*+foo+bar")
+    forward, backward = lhs.constrained(rhs), rhs.constrained(lhs)
+    assert forward.to_dict() == backward.to_dict() == rhs.to_dict()
+
+    # a named edge alone satisfies both requirements of a named/anonymous pair
+    named, anonymous = Spec("pkg-a ^pkg-b@2"), Spec("pkg-a ^*@2")
+    forward, backward = named.constrained(anonymous), anonymous.constrained(named)
+    assert forward.to_dict() == backward.to_dict()
+    assert forward.satisfies(named) and named.satisfies(forward)
+
+
 def test_an_edge_bridging_two_parallel_edges_relates_nothing(mock_packages):
     """One edge listing two virtuals does not weld the edges listing them separately into one
     node: all three are existential requirements, each matched by its own node."""
