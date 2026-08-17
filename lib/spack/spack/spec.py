@@ -49,7 +49,6 @@ line is a spec for a particular installation of the mpileaks package.
 
 import abc
 import collections
-import collections.abc
 import enum
 import io
 import itertools
@@ -65,8 +64,10 @@ from typing import (
     Any,
     Callable,
     ClassVar,
+    Deque,
     Dict,
     Iterable,
+    Iterator,
     List,
     Match,
     NamedTuple,
@@ -1520,19 +1521,23 @@ def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
     return "*" if dep.spec.architecture else ""
 
 
-def _get_satisfying_edge(
+def _satisfying_edges(
     lhs_node: "Spec", rhs_edge: DependencySpec, *, resolve_virtuals: bool
-) -> Optional[DependencySpec]:
-    """Search for an edge in ``lhs_node`` that satisfies ``rhs_edge``."""
+) -> Iterator[DependencySpec]:
+    """Yield every edge in ``lhs_node`` that satisfies ``rhs_edge`` structurally, ignoring the
+    target's own dependencies, in priority order: direct deps of all types, then the historical
+    compiler node, then a BFS over transitive link/run deps."""
     # First check direct deps of all types. There is a subtlety: only abstract specs distinguish
     # between direct and indirect edges, whereas concrete specs always have direct edges (without
-    # setting the direct flag).
+    # setting the direct flag). For performance, iterate the _dependencies edge map directly:
+    # edges_to_dependencies allocates an iterator chain and a result list per call.
     require_direct = rhs_edge.direct and not lhs_node.concrete
-    for lhs_edge in lhs_node.edges_to_dependencies():
-        if require_direct and not lhs_edge.direct:
-            continue
-        if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
-            return lhs_edge
+    for edges in lhs_node._dependencies.values():
+        for lhs_edge in edges:
+            if require_direct and not lhs_edge.direct:
+                continue
+            if _satisfies_edge_attributes(lhs_edge, rhs_edge, resolve_virtuals):
+                yield lhs_edge
 
     # Include the historical compiler node if available as an ad-hoc edge.
     compiler_spec = lhs_node.annotations.compiler_node_attribute
@@ -1544,31 +1549,70 @@ def _get_satisfying_edge(
             virtuals=("c", "cxx", "fortran"),
             direct=True,
         )
-        if _satisfies_edge(compiler_edge, rhs_edge, resolve_virtuals):
-            return compiler_edge
+        if _satisfies_edge_attributes(compiler_edge, rhs_edge, resolve_virtuals):
+            yield compiler_edge
 
     if rhs_edge.direct:
-        return None
+        return
 
-    # BFS through link/run transitive deps (skip depth 1, already checked).
+    # BFS through link/run transitive deps (skip depth 1, already checked). Nodes with multiple
+    # in-edges are expanded only once, but every in-edge is a candidate. Deptype sets are lower
+    # bounds, so only an edge that overlaps link/run guarantees a link/run edge in every
+    # concretization; an edge with depflag 0 guarantees nothing and is not traversed. For
+    # performance, iterate the _dependencies edge map directly instead of going through
+    # edges_to_dependencies.
     depflag = dt.LINK | dt.RUN
-    queue = collections.deque(lhs_node.edges_to_dependencies(depflag=depflag))
-    seen = {id(lhs_edge.spec) for lhs_edge in queue}
+    queue: Deque[DependencySpec] = collections.deque()
+    queue.extend(
+        e for edges in lhs_node._dependencies.values() for e in edges if e.depflag & depflag
+    )
+    expanded = {id(lhs_node)}
     while queue:
         lhs_edge = queue.popleft()
 
-        if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
-            return lhs_edge
+        # depth 1 was yielded by the loop over direct edges above
+        if lhs_edge.parent is not lhs_node and _satisfies_edge_attributes(
+            lhs_edge, rhs_edge, resolve_virtuals
+        ):
+            yield lhs_edge
 
-        for lhs_edge in lhs_edge.spec.edges_to_dependencies(depflag=depflag):
-            if id(lhs_edge.spec) not in seen:
-                seen.add(id(lhs_edge.spec))
-                queue.append(lhs_edge)
+        if id(lhs_edge.spec) not in expanded:
+            expanded.add(id(lhs_edge.spec))
+            if lhs_edge.spec._dependencies:
+                queue.extend(
+                    e
+                    for edges in lhs_edge.spec._dependencies.values()
+                    for e in edges
+                    if e.depflag & depflag
+                )
 
-    return None
+
+def _satisfies_dependencies(lhs: "Spec", rhs: "Spec", *, resolve_virtuals: bool) -> bool:
+    """Whether every dependency edge of ``rhs`` is satisfied by some edge of ``lhs``."""
+    # For performance, iterate the _dependencies edge map directly instead of going through
+    # edges_to_dependencies.
+    for rhs_edges in rhs._dependencies.values():
+        for rhs_edge in rhs_edges:
+            # Skip rhs edges whose when condition doesn't apply to the lhs node.
+            if rhs_edge.when is not EMPTY_SPEC and not lhs._intersects(
+                rhs_edge.when, resolve_virtuals=resolve_virtuals
+            ):
+                continue
+            edges = _satisfying_edges(lhs, rhs_edge, resolve_virtuals=resolve_virtuals)
+            if rhs_edge.spec.concrete or not rhs_edge.spec._dependencies:
+                if next(edges, None) is None:
+                    return False
+            elif not any(
+                _satisfies_dependencies(e.spec, rhs_edge.spec, resolve_virtuals=resolve_virtuals)
+                for e in edges
+            ):
+                return False
+    return True
 
 
-def _satisfies_edge(lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtuals: bool) -> bool:
+def _satisfies_edge_attributes(
+    lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtuals: bool
+) -> bool:
     """Helper function for satisfaction tests, which checks edge attributes and the target node.
     It skips verification of the parent node."""
     name_mismatch = rhs.spec.name and lhs.spec.name != rhs.spec.name
@@ -3427,28 +3471,7 @@ class Spec:
         if not deps or not other._dependencies:
             return True
 
-        stack = [(self, other)]
-
-        while stack:
-            lhs, rhs = stack.pop()
-
-            for rhs_edge in rhs.edges_to_dependencies():
-                # Skip rhs edges whose when condition doesn't apply to the lhs node.
-                if rhs_edge.when is not EMPTY_SPEC and not lhs._intersects(
-                    rhs_edge.when, resolve_virtuals=resolve_virtuals
-                ):
-                    continue
-
-                lhs_edge = _get_satisfying_edge(lhs, rhs_edge, resolve_virtuals=resolve_virtuals)
-
-                if not lhs_edge:
-                    return False
-
-                # Recursive case: `^zlib %gcc`
-                if not rhs_edge.spec.concrete and rhs_edge.spec._dependencies:
-                    stack.append((lhs_edge.spec, rhs_edge.spec))
-
-        return True
+        return _satisfies_dependencies(self, other, resolve_virtuals=resolve_virtuals)
 
     def _satisfies_node(self, other: "Spec", resolve_virtuals: bool) -> bool:
         """Compares self and other without looking at dependencies"""

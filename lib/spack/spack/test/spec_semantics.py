@@ -1475,10 +1475,19 @@ class TestSpecSemantics:
 
     @pytest.mark.regression("18527")
     def test_satisfies_dependencies_ordered(self):
-        d = Spec("zmpi ^fake")
+        d = Spec("zmpi")
+        d._add_dependency(Spec("fake"), depflag=dt.LINK, virtuals=())
         s = Spec("mpileaks")
-        s._add_dependency(d, depflag=0, virtuals=())
+        s._add_dependency(d, depflag=dt.LINK, virtuals=())
         assert s.satisfies("mpileaks ^zmpi ^fake")
+
+    def test_satisfies_transitive_dependencies_require_link_run_path(self):
+        """A ^dep constraint is satisfied by a direct dependency of any type, or one in the
+        link/run closure. zmpi's gcc may concretize to a pure build dependency, which is
+        neither, so deptype-less edges are not traversed."""
+        assert Spec("mpileaks ^zmpi %gcc").satisfies("^zmpi")
+        assert not Spec("mpileaks ^zmpi %gcc").satisfies("^gcc")
+        assert not Spec("mpileaks ^[deptypes=link] zmpi %gcc").satisfies("^gcc")
 
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_swap_names(self, transitive):
@@ -2651,6 +2660,45 @@ def test_parallel_edges_sort_with_differing_propagation(mock_packages):
         ),
     ]
     assert sorted(edges) == edges
+
+
+def test_satisfies_tries_every_parallel_edge(mock_packages):
+    """Satisfies is exhaustive when there are duplicates on abstract specs."""
+    spec = Spec("pkg-a ^[deptypes=link] pkg-b %pkg-c ^[deptypes=build] pkg-b %pkg-e")
+    assert spec.satisfies("pkg-a ^pkg-b %pkg-c")
+    assert spec.satisfies("pkg-a ^pkg-b %pkg-e")
+    assert not spec.satisfies("pkg-a ^pkg-b %pkg-c %pkg-e")
+
+
+def test_satisfies_checks_all_in_edges_of_shared_node():
+    """A node with multiple in-edges must be reachable through any of them; an in-edge that fails
+    on edge attributes must not shadow a parallel in-edge that matches."""
+    root, a, b, c = Spec("pkg-a"), Spec("pkg-b"), Spec("pkg-c"), Spec("pkg-d")
+    root.add_dependency_edge(a, depflag=dt.LINK, virtuals=())
+    root.add_dependency_edge(b, depflag=dt.LINK, virtuals=())
+    a.add_dependency_edge(c, depflag=dt.TEST | dt.RUN, virtuals=())
+    b.add_dependency_edge(c, depflag=dt.BUILD | dt.RUN, virtuals=())
+    # each in-edge is the only match for one assertion, so either fails if satisfies stops at
+    # the first in-edge of pkg-d regardless of iteration order
+    assert root.satisfies("^[deptypes=test] pkg-d")  # only through pkg-b -> pkg-d
+    assert root.satisfies("^[deptypes=build] pkg-d")  # only through pkg-c -> pkg-d
+    assert root.satisfies("^[deptypes=run] pkg-d")  # through either in-edge
+    assert not root.satisfies("^[deptypes=build,test] pkg-d")  # no single in-edge has both
+
+
+def test_satisfies_tries_every_parallel_edge_of_a_concrete_spec(config, mock_packages):
+    """Satisfies is exhaustive when there are duplicates on concrete specs."""
+    # dupe-tool-root --build--> dupe-tool@1.0 --build--> cmake
+    #                --link-->  dupe-tool-user --link--> dupe-tool@2.0 --build--> gmake
+    spec = spack.concretize.concretize_one("dupe-tool-root")
+    assert spec.satisfies("^[deptypes=build] dupe-tool@1")
+    assert spec.satisfies("^[deptypes=link] dupe-tool@2")
+    assert spec.satisfies("^[deptypes=build] dupe-tool@1 ^[deptypes=link] dupe-tool@2 %gmake")
+    # each dupe-tool node is the only match for one assertion, so either fails if satisfies bails
+    # out on the first dupe-tool it visits regardless of iteration order
+    assert spec.satisfies("^dupe-tool %cmake")  # only dupe-tool@1.0
+    assert spec.satisfies("^dupe-tool %gmake")  # only dupe-tool@2.0
+    assert not spec.satisfies("^dupe-tool %cmake %gmake")  # no single node has both
 
 
 @pytest.mark.parametrize(
