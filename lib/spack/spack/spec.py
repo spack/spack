@@ -3427,6 +3427,17 @@ class Spec:
         for edges in groups.values():
             if len(edges) < 2:
                 continue
+            # A concrete node admits no further constraining: the group merges iff the concrete
+            # spec satisfies every other edge, so no copy of its subdag is needed.
+            concrete = next((e.spec for e in edges if e.spec.concrete), None)
+            if concrete is not None:
+                if all(
+                    concrete._satisfies(e.spec, resolve_virtuals=resolve_virtuals)
+                    for e in edges
+                    if e.spec is not concrete
+                ):
+                    continue
+                return False
             merged = edges[0].spec.copy(deps=True)
             try:
                 for edge in edges[1:]:

@@ -1139,6 +1139,20 @@ def test_detached_dependency_node_keeps_no_empty_dependent_bucket(mock_packages)
     left behind."""
     s = Spec("pkg-a ^pkg-b")
     child = s["pkg-b"]
-    assert s.constrain(Spec("pkg-a ^pkg-b@1"))
+    assert s.constrain("pkg-a ^pkg-b@1")
     assert s == Spec("pkg-a ^pkg-b@1")
     assert not child._dependents
+
+
+def test_constraining_and_intersecting_concrete_dep_of_abstract_root(mock_packages, config):
+    """Constraining a concrete dep of an abstract spec is either a no-op or an error."""
+    abstract = Spec("pkg-a")
+    concrete = spack.concretize.concretize_one("pkg-b@=1.0")
+    abstract.add_dependency_edge(concrete, depflag=dt.BUILD, virtuals=(), direct=True)
+    compatible, conflicting = Spec("pkg-a %pkg-b@1"), Spec("pkg-a %pkg-b@2")
+    assert abstract.intersects(compatible) and compatible.intersects(abstract)
+    assert not abstract.intersects(conflicting) and not conflicting.intersects(abstract)
+
+    assert abstract.constrain(compatible) is False
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        abstract.constrain(conflicting)
