@@ -13,7 +13,7 @@ from datetime import datetime
 from types import TracebackType
 from typing import IO, Callable, Iterator, NoReturn, Optional, Type, Union
 
-from .color import cescape, clen, cprint, cwrite
+from .color import cescape, clen, colorize, cprint, cwrite
 
 # Globals
 _debug = 0
@@ -280,6 +280,19 @@ def get_yes_or_no(prompt: str, default: Optional[bool] = None) -> Optional[bool]
             elif ans == "n" or ans == "no":
                 result = False
     return result
+
+
+def band(label: str, width: int, *, indent: int = 2) -> str:
+    """Render a section-header rule: an indented ``--``, the label, then dashes filling the width.
+
+    In the style used by `spack spec --show=opt` for its criteria. The label is expected to be
+    colorized already, so its printable length is what sizes the dashes:
+    ``indent + 2 dashes + 1 space + label + 1 space + dashes == width``.
+    """
+    header = f"{' ' * indent}{colorize('@*{--}')} {label}"
+    dashes = "-" * max(0, width - indent - 4 - clen(label))
+    # An empty @K{} would emit a color code with no reset
+    return f"{header} {colorize(f'@K{{{dashes}}}')}" if dashes else header
 
 
 def hline(label: Optional[str] = None, *, char: str = "-", max_width: int = 64) -> None:
