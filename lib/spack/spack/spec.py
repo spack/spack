@@ -2167,17 +2167,12 @@ class Spec:
             self._dependencies[edge.spec.name] = remaining
         else:
             del self._dependencies[edge.spec.name]
-        # Not a keyed lookup: self may have been anonymous when the edge was added and named only
-        # later by a merge, leaving edge.spec._dependents keyed by the stale (possibly empty)
-        # name rather than self.name as it is now.
-        for name, dependents in edge.spec._dependents.items():
-            if any(e is edge for e in dependents):
-                remaining = [e for e in dependents if e is not edge]
-                if remaining:
-                    edge.spec._dependents[name] = remaining
-                else:
-                    del edge.spec._dependents[name]
-                break
+        dependents = edge.spec._dependents
+        remaining = [e for e in dependents[self.name] if e is not edge]
+        if remaining:
+            dependents[self.name] = remaining
+        else:
+            del dependents[self.name]
 
     #
     # Public interface
@@ -3244,6 +3239,16 @@ class Spec:
         if not self.name and other.name:
             self.name = other.name
             changed = True
+            # The children's dependent edges are filed under the name self had when they were
+            # added, the anonymous one: move them to the new name.
+            for edge in self.edges_to_dependencies():
+                dependents = edge.spec._dependents
+                remaining = [e for e in dependents[""] if e is not edge]
+                if remaining:
+                    dependents[""] = remaining
+                else:
+                    del dependents[""]
+                _add_edge_to_map(dependents, self.name, edge)
 
         if not self.namespace and other.namespace:
             self.namespace = other.namespace

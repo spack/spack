@@ -1144,6 +1144,24 @@ def test_detached_dependency_node_keeps_no_empty_dependent_bucket(mock_packages)
     assert not child._dependents
 
 
+def test_assigning_a_name_to_an_anonymous_spec_rekeys_dependents(mock_packages):
+    """Assigning a name to an anonymous spec moves its children's dependent edges from the
+    anonymous bucket to the new name, so keyed lookups on the edge maps return them."""
+    s = Spec("^pkg-b@1")
+    child = s.edges_to_dependencies(name="pkg-b")[0].spec
+    assert s.constrain(Spec("pkg-a"))
+    assert list(child._dependents.keys()) == ["pkg-a"]
+
+    # naming and edge replacement in one constrain: the detached child is unhooked cleanly
+    # and the surviving child is keyed by the new name
+    t = Spec("^pkg-b")
+    old_child = t.edges_to_dependencies(name="pkg-b")[0].spec
+    assert t.constrain(Spec("pkg-a ^pkg-b@1"))
+    assert t == Spec("pkg-a ^pkg-b@1")
+    assert not old_child._dependents
+    assert list(t["pkg-b"]._dependents.keys()) == ["pkg-a"]
+
+
 def test_constraining_and_intersecting_concrete_dep_of_abstract_root(mock_packages, config):
     """Constraining a concrete dep of an abstract spec is either a no-op or an error."""
     abstract = Spec("pkg-a")
