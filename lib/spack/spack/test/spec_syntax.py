@@ -455,7 +455,7 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="y"),
                 Token(SpecTokens.BOOL_VARIANT, value="+bar"),
             ],
-            r"x ^y@foo+bar",
+            r"x ^y+bar ^y@foo",
         ),
         (
             r"x ^y@foo +bar ^y@foo",
@@ -675,7 +675,8 @@ def specfile_for(config, mock_packages):
             ],
             "^mpi=openmpi",
         ),
-        # Allow merging attributes, if deptypes match
+        # Neither edge is direct, and the virtuals they declare are different, so the two share
+        # no role and stay parallel, like the plain ^y@foo ^y+bar case above.
         (
             "^[virtuals=mpi] openmpi+foo ^[virtuals=lapack] openmpi+bar",
             [
@@ -690,7 +691,7 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
                 Token(SpecTokens.BOOL_VARIANT, value="+bar"),
             ],
-            "^lapack,mpi=openmpi+bar+foo",
+            "^lapack=openmpi+bar ^mpi=openmpi+foo",
         ),
         (
             "^lapack,mpi=openmpi+foo+bar",
@@ -711,6 +712,38 @@ def specfile_for(config, mock_packages):
             [
                 Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="deptypes=link,build"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
+            ],
+            "^[deptypes=build,link] zlib",
+        ),
+        # Indirect edges to one name are never one node on deptypes alone; a shared virtual, or
+        # being direct, is what fuses them. When neither depflag is a superset of the other, the
+        # edges stay parallel.
+        (
+            "^[deptypes=link] zlib ^[deptypes=build] zlib",
+            [
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="deptypes=link"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="deptypes=build"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
+            ],
+            "^[deptypes=link] zlib ^[deptypes=build] zlib",
+        ),
+        # [build,link] already satisfies [link], so the second edge is redundant and is discarded.
+        (
+            "^[deptypes=build,link] zlib ^[deptypes=link] zlib",
+            [
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="deptypes=build,link"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="deptypes=link"),
                 Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
             ],
@@ -759,6 +792,8 @@ def specfile_for(config, mock_packages):
             ],
             "pkg-a ^pkg-b@1 %pkg-c",
         ),
+        # With the % sub-dag included, neither ^pkg-b edge satisfies the other, so they
+        # stay parallel.
         (
             "pkg-a ^pkg-b@1 ^pkg-b %pkg-c",
             [
@@ -771,21 +806,7 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.DEPENDENCY, value="%"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="pkg-c"),
             ],
-            "pkg-a ^pkg-b@1 %pkg-c",
-        ),
-        (
-            "^[deptypes=link] zlib ^[deptypes=build] zlib",
-            [
-                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
-                Token(SpecTokens.KEY_VALUE_PAIR, value="deptypes=link"),
-                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
-                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
-                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
-                Token(SpecTokens.KEY_VALUE_PAIR, value="deptypes=build"),
-                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
-                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
-            ],
-            "^[deptypes=link] zlib ^[deptypes=build] zlib",
+            "pkg-a ^pkg-b %pkg-c ^pkg-b@1",
         ),
         (
             "git-test@git.foo/bar",
@@ -1534,8 +1555,6 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x@1.2@2.3,2.4", "version"),
         ("x@1.2 +foo~bar @2.3", "version"),
         ("x@1.2%y@1.2@2.3:2.4", "version"),
-        # Duplicate dependency
-        ("x ^y@1 ^y@2", "Cannot depend on incompatible specs"),
         # Duplicate Architectures
         ("x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64", "two architectures"),
         ("x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le", "two architectures"),
@@ -1552,8 +1571,6 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x target=default_target platform=test os=redhat6 os=debian6", "'platform'"),
         # Dependencies
         ("^[@foo] zlib", "edge attributes"),
-        ("x ^[deptypes=link]foo ^[deptypes=run]foo", "conflicting dependency types"),
-        ("x ^[deptypes=build,link]foo ^[deptypes=link]foo", "conflicting dependency types"),
         # TODO: Remove this as soon as use variants are added and we can parse custom attributes
         ("^[foo=bar] zlib", "edge attributes"),
         # Propagating reserved names generates a parse error

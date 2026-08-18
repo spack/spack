@@ -1649,6 +1649,51 @@ def _satisfies_edge_attributes(
     return lhs.spec._provides_virtual(rhs.spec)
 
 
+def _same_direct_dep(lhs: DependencySpec, rhs: DependencySpec) -> bool:
+    """Two edges of one parent refer to the same dependency when they are direct deps, refer to the
+    same package name, and have the same when condition.
+
+    Note that concrete specs exist that can have two distinct providers for a single virtual, so
+    we do not combine ``^virtual=x ^virtual=y``; we only enforce uniqueness on direct deps."""
+    return (
+        lhs.direct
+        and rhs.direct
+        and bool(lhs.spec.name)
+        and lhs.spec.name == rhs.spec.name
+        and lhs.when == rhs.when
+    )
+
+
+def _satisfies_edge(lhs: DependencySpec, rhs: DependencySpec, resolve_virtuals: bool) -> bool:
+    """Whether every DAG satisfying ``lhs`` satisfies ``rhs``."""
+    # Only a direct dependency can satisfy a direct dependency. _satisfies_edge_attributes does
+    # not compare this itself: its other caller, _satisfying_edges, filters on it externally,
+    # on fully built specs, unlike _add_or_merge_edge, whose parent node can still be under
+    # construction.
+    if rhs.direct and not lhs.direct:
+        return False
+    if not _satisfies_edge_attributes(lhs, rhs, resolve_virtuals):
+        return False
+    # A concrete or leaf rhs child needs no recursion: _satisfies_edge_attributes compared the
+    # child node already. A dependency of rhs's child that lhs's child lacks has to be checked:
+    # the two are independent requirements that a concretization can satisfy with two distinct
+    # nodes, and a single edge requiring both would exclude those DAGs.
+    if rhs.spec.concrete or not rhs.spec._dependencies:
+        return True
+    return _satisfies_dependencies(lhs.spec, rhs.spec, resolve_virtuals=resolve_virtuals)
+
+
+def _edge_is_redundant(
+    edge: DependencySpec, given: DependencySpec, resolve_virtuals: bool
+) -> bool:
+    """Whether ``edge`` adds nothing to ``given``: ``given`` satisfies it, and it states no
+    propagation ``given`` does not. A propagated edge is an input to the solver's objective even
+    where it does not narrow the solution set, so satisfaction alone does not make it redundant."""
+    if edge.propagation != PropagationPolicy.NONE and given.propagation != edge.propagation:
+        return False
+    return _satisfies_edge(given, edge, resolve_virtuals)
+
+
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec:
     compiler = DeprecatedCompilerSpec()
@@ -1996,56 +2041,14 @@ class Spec:
             propagation: propagation policy for this edge
             when: optional condition under which dependency holds
         """
-        if when is None:
-            when = EMPTY_SPEC
-
-        if spec.name not in self._dependencies or not spec.name:
-            self.add_dependency_edge(
-                spec,
-                depflag=depflag,
-                virtuals=virtuals,
-                direct=direct,
-                when=when,
-                propagation=propagation,
-            )
-            return
-
-        # Keep the intersection of constraints when a dependency is added multiple times with
-        # the same deptype. Add a new dependency if it is added with a compatible deptype
-        # (for example, a build-only dependency is compatible with a link-only dependency).
-        # The only restrictions, currently, are that we cannot add edges with overlapping
-        # dependency types and we cannot add multiple edges that have link/run dependency types.
-        # See ``spack.deptypes.compatible``.
-        orig = self._dependencies[spec.name]
-        try:
-            dspec = next(
-                dspec for dspec in orig if depflag == dspec.depflag and when == dspec.when
-            )
-        except StopIteration:
-            # Error if we have overlapping or incompatible deptypes
-            if any(not dt.compatible(dspec.depflag, depflag) for dspec in orig) and all(
-                dspec.when == when for dspec in orig
-            ):
-                edge_attrs = f"deptypes={dt.flag_to_chars(depflag).strip()}"
-                required_dep_str = f"^[{edge_attrs}] {str(spec)}"
-
-                raise DuplicateDependencyError(
-                    f"{spec.name} is a duplicate dependency, with conflicting dependency types\n"
-                    f"\t'{str(self)}' cannot depend on '{required_dep_str}'"
-                )
-
-            self.add_dependency_edge(
-                spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
-            )
-            return
-
-        try:
-            dspec.spec.constrain(spec)
-            dspec.update_virtuals(virtuals=virtuals)
-        except spack.error.UnsatisfiableSpecError:
-            raise DuplicateDependencyError(
-                f"Cannot depend on incompatible specs '{dspec.spec}' and '{spec}'"
-            )
+        self.add_dependency_edge(
+            spec,
+            depflag=depflag,
+            virtuals=virtuals,
+            direct=direct,
+            when=when,
+            propagation=propagation,
+        )
 
     def add_dependency_edge(
         self,
@@ -2070,47 +2073,16 @@ class Spec:
         if when is None:
             when = EMPTY_SPEC
 
-        # Check if we need to update edges that are already present
-        selected = self._dependencies.get(dependency_spec.name, [])
-        for edge in selected:
-            has_errors, details = False, []
-            msg = f"cannot update the edge from {edge.parent.name} to {edge.spec.name}"
-
-            if edge.when != when:
-                continue
-
-            # If the dependency is to an existing spec, we can update dependency
-            # types. If it is to a new object, check deptype compatibility.
-            if id(edge.spec) != id(dependency_spec) and not dt.compatible(edge.depflag, depflag):
-                has_errors = True
-                details.append(
-                    (
-                        f"{edge.parent.name} has already an edge matching any"
-                        f" of these types {depflag}"
-                    )
-                )
-
-                if any(v in edge.virtuals for v in virtuals):
-                    details.append(
-                        (
-                            f"{edge.parent.name} has already an edge matching any"
-                            f" of these virtuals {virtuals}"
-                        )
-                    )
-
-            if has_errors:
-                raise spack.error.SpecError(msg, "\n".join(details))
-
-        for edge in selected:
+        # An edge object already registered on both the parent and the child is updated in place,
+        # rather than treated as a second, competing constraint: both sides have to see the same
+        # modification.
+        for edge in self._dependencies.get(dependency_spec.name, []):
             if id(dependency_spec) == id(edge.spec) and edge.when == when:
-                # If we are here, it means the edge object was previously added to
-                # both the parent and the child. When we update this object they'll
-                # both see the deptype modification.
                 edge.update_deptypes(depflag=depflag)
                 edge.update_virtuals(virtuals=virtuals)
                 return
 
-        edge = DependencySpec(
+        candidate = DependencySpec(
             self,
             dependency_spec,
             depflag=depflag,
@@ -2119,8 +2091,88 @@ class Spec:
             propagation=propagation,
             when=when,
         )
-        _add_edge_to_map(self._dependencies, edge.spec.name, edge)
-        _add_edge_to_map(dependency_spec._dependents, edge.parent.name, edge)
+        self._add_or_merge_edge(candidate)
+
+    def _add_or_merge_edge(
+        self, candidate: DependencySpec, owned: bool = True, resolve_virtuals: bool = False
+    ) -> bool:
+        """Add ``candidate`` as a dependency edge.
+
+        With ``owned`` False the candidate's child still belongs to another DAG: a merge only
+        reads it, and an append replaces it with a copy first.
+
+        The candidate is merged into an existing edge when no concretization can satisfy the
+        two with separate dependencies (``_same_direct_dep``). A candidate that adds nothing to
+        an existing edge (``_edge_is_redundant``) is discarded, and existing edges made
+        redundant by the candidate are detached in its favor. Anything else is a new constraint
+        and is appended as a parallel edge: whether it ends up sharing a node with another edge
+        to the same name is for concretization to decide.
+
+        All scans compare only edges to the same package name: a ``^virtual`` edge and a
+        ``^[virtuals=virtual] provider`` edge are independent requirements and stay apart.
+        Anonymous edges share the ``""`` bucket, where only the redundancy scans apply:
+        without a name, two direct deps can be distinct dependencies.
+
+        Returns True if ``self`` changed.
+
+        Raises:
+            spack.error.UnsatisfiableSpecError: if two direct dependencies that can only be a
+                single dependency have children that do not intersect.
+        """
+        name = candidate.spec.name
+
+        bucket = self._dependencies.get(name) or []
+
+        # A package has at most one direct dependency per name, so an unconditional direct dep
+        # is merged into an existing one (_same_direct_dep) by constraining, the only merge
+        # that can raise.
+        merged_edge: Optional[DependencySpec] = None
+        if name and candidate.when is EMPTY_SPEC:
+            for edge in bucket:
+                if _same_direct_dep(edge, candidate):
+                    merged_edge = edge
+                    break
+
+        if merged_edge is None and any(
+            _edge_is_redundant(candidate, edge, resolve_virtuals) for edge in bucket
+        ):
+            return False
+
+        # Constrain before detaching: a failed merge raises with self unchanged.
+        changed = merged_edge._constrain(candidate) if merged_edge is not None else False
+
+        for edge in [
+            edge
+            for edge in bucket
+            if edge is not merged_edge and _edge_is_redundant(edge, candidate, resolve_virtuals)
+        ]:
+            self._detach_edge(edge)
+            changed = True
+
+        if merged_edge is not None:
+            return changed
+
+        if not owned:
+            candidate.spec = candidate.spec.copy(deps=True)
+        _add_edge_to_map(self._dependencies, candidate.spec.name, candidate)
+        _add_edge_to_map(candidate.spec._dependents, self.name, candidate)
+        return True
+
+    def _detach_edge(self, edge: DependencySpec) -> None:
+        """Remove an edge from this spec and from the dependents of the node it points at.
+        A bucket that runs empty is deleted: consumers distinguish "no dependents" by the
+        absence of the key, not by an empty list."""
+        remaining = [e for e in self._dependencies[edge.spec.name] if e is not edge]
+        if remaining:
+            self._dependencies[edge.spec.name] = remaining
+        else:
+            del self._dependencies[edge.spec.name]
+        dependents = edge.spec._dependents
+        remaining = [e for e in dependents[self.name] if e is not edge]
+        if remaining:
+            dependents[self.name] = remaining
+        else:
+            del dependents[self.name]
 
     #
     # Public interface
@@ -3147,7 +3199,11 @@ class Spec:
 
         other = self._autospec(other)
         if other.concrete and other._satisfies(self, resolve_virtuals=resolve_virtuals):
+            # _dup makes self a detached copy without in-edges; self stays a node in its
+            # dependents' edge maps, so keep them
+            dependents = self._dependents
             self._dup(other)
+            self._dependents = dependents
             return True
 
         if not (self.name == other.name or (not self.name) or (not other.name)):
@@ -3187,6 +3243,16 @@ class Spec:
         if not self.name and other.name:
             self.name = other.name
             changed = True
+            # The children's dependent edges are filed under the name self had when they were
+            # added, the anonymous one: move them to the new name.
+            for edge in self.edges_to_dependencies():
+                dependents = edge.spec._dependents
+                remaining = [e for e in dependents[""] if e is not edge]
+                if remaining:
+                    dependents[""] = remaining
+                else:
+                    del dependents[""]
+                _add_edge_to_map(dependents, self.name, edge)
 
         if not self.namespace and other.namespace:
             self.namespace = other.namespace
@@ -3221,27 +3287,20 @@ class Spec:
         if not other._intersects_dependencies(self, resolve_virtuals=resolve_virtuals):
             raise UnsatisfiableDependencySpecError(other, self)
 
-        for d in other.traverse(root=False):
-            if not d.name:
-                raise UnconstrainableDependencySpecError(other)
         changed = False
         for other_edge in other.edges_to_dependencies():
-            # Find the first edge in self that matches other_edge by name and when clause.
-            for self_edge in self.edges_to_dependencies(other_edge.spec.name):
-                if self_edge.when == other_edge.when:
-                    changed |= self_edge._constrain(other_edge)
-                    break
-            else:
-                # Otherwise, a copy of the edge is added as a constraint to self.
-                changed = True
-                self.add_dependency_edge(
-                    other_edge.spec.copy(deps=True),
-                    depflag=other_edge.depflag,
-                    virtuals=other_edge.virtuals,
-                    direct=other_edge.direct,
-                    propagation=other_edge.propagation,
-                    when=other_edge.when,  # no need to copy; when conditions are immutable
-                )
+            candidate = DependencySpec(
+                self,
+                other_edge.spec,
+                depflag=other_edge.depflag,
+                virtuals=other_edge.virtuals,
+                direct=other_edge.direct,
+                propagation=other_edge.propagation,
+                when=other_edge.when,  # no need to copy; when conditions are immutable
+            )
+            changed |= self._add_or_merge_edge(
+                candidate, owned=False, resolve_virtuals=resolve_virtuals
+            )
         return changed
 
     def constrained(self, other, deps=True):
@@ -3366,13 +3425,33 @@ class Spec:
             # one spec *could* eventually satisfy the other
             return True
 
-        # Handle first-order constraints directly
-        common_dependencies = {x.name for x in self.dependencies()}
-        common_dependencies &= {x.name for x in other.dependencies()}
-        for name in common_dependencies:
-            if not self[name]._intersects(
-                other[name], deps=True, resolve_virtuals=resolve_virtuals
-            ):
+        # A package has at most one direct dependency per name, so a concretization satisfies
+        # all unconditional direct edges to one name with a single node. Transitive constraints
+        # to one name never conflict with each other: a DAG can hold two nodes of the same name.
+        groups: Dict[str, List[DependencySpec]] = {}
+        for edge in itertools.chain(self.edges_to_dependencies(), other.edges_to_dependencies()):
+            if edge.direct and edge.spec.name and edge.when is EMPTY_SPEC:
+                groups.setdefault(edge.spec.name, []).append(edge)
+
+        for edges in groups.values():
+            if len(edges) < 2:
+                continue
+            # A concrete node admits no further constraining: the group merges iff the concrete
+            # spec satisfies every other edge, so no copy of its subdag is needed.
+            concrete = next((e.spec for e in edges if e.spec.concrete), None)
+            if concrete is not None:
+                if all(
+                    concrete._satisfies(e.spec, resolve_virtuals=resolve_virtuals)
+                    for e in edges
+                    if e.spec is not concrete
+                ):
+                    continue
+                return False
+            merged = edges[0].spec.copy(deps=True)
+            try:
+                for edge in edges[1:]:
+                    merged._constrain(edge.spec, resolve_virtuals=resolve_virtuals)
+            except spack.error.SpecError:
                 return False
 
         if not resolve_virtuals:
@@ -5954,10 +6033,6 @@ class UnsupportedPropagationError(spack.error.SpecError):
     """Raised when propagation (==) is used with reserved variant names."""
 
 
-class DuplicateDependencyError(spack.error.SpecError):
-    """Raised when the same dependency occurs in a spec twice."""
-
-
 class UnsupportedCompilerError(spack.error.SpecError):
     """Raised when the user asks for a compiler spack doesn't know about."""
 
@@ -6005,15 +6080,6 @@ class UnsatisfiableDependencySpecError(spack.error.UnsatisfiableSpecError):
 
     def __init__(self, provided, required):
         super().__init__(provided, required, "dependency")
-
-
-class UnconstrainableDependencySpecError(spack.error.SpecError):
-    """Raised when attempting to constrain by an anonymous dependency spec"""
-
-    def __init__(self, spec):
-        msg = "Cannot constrain by spec '%s'. Cannot constrain by a" % spec
-        msg += " spec containing anonymous dependencies"
-        super().__init__(msg)
 
 
 class AmbiguousHashError(spack.error.SpecError):

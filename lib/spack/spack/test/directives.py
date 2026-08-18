@@ -57,7 +57,10 @@ def test_constraints_from_context_are_merged(mock_packages: RepoPath):
     pkg_cls = mock_packages.get_pkg_class("with-constraint-met")
 
     assert pkg_cls.dependencies
-    assert "pkg-c" in pkg_cls.dependencies[spack.spec.Spec("@0.14:15 ^pkg-b@3.8:4.0")]
+    # The two ^pkg-b edges (one from the outer `when` context, one from depends_on's own when)
+    # are both indirect, so nothing says they are one node, and they stay parallel instead of
+    # being forced into a single @3.8:4.0 edge.
+    assert "pkg-c" in pkg_cls.dependencies[spack.spec.Spec("@0.14:15 ^pkg-b@:4.0 ^pkg-b@3.8:")]
 
 
 @pytest.mark.regression("27754")
@@ -220,9 +223,11 @@ def test_direct_dependencies_from_when_context_are_retained(mock_packages: RepoP
 
 
 def test_directives_meta_combine_when():
+    # The ^dep edges are indirect, so nothing says they are one node: combining two
+    # when-conditions that each constrain it keeps them parallel instead of fusing them.
     x, y, z = "+x ^dep +a", "+y ^dep +b", "+z"
-    assert _make_when_spec((x, y, z)) == Spec("+x +y +z ^dep +a +b")
-    assert _make_when_spec((x, y)) == Spec("+x +y ^dep +a +b")
+    assert _make_when_spec((x, y, z)) == Spec("+x +y +z ^dep+a ^dep+b")
+    assert _make_when_spec((x, y)) == Spec("+x +y ^dep+a ^dep+b")
     assert _make_when_spec((x,)) == Spec("+x ^dep +a")
 
 
