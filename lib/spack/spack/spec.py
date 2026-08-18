@@ -2159,16 +2159,24 @@ class Spec:
         return True
 
     def _detach_edge(self, edge: DependencySpec) -> None:
-        """Remove an edge from this spec and from the dependents of the node it points at."""
-        self._dependencies[edge.spec.name] = [
-            e for e in self._dependencies[edge.spec.name] if e is not edge
-        ]
+        """Remove an edge from this spec and from the dependents of the node it points at.
+        A bucket that runs empty is deleted: consumers distinguish "no dependents" by the
+        absence of the key, not by an empty list."""
+        remaining = [e for e in self._dependencies[edge.spec.name] if e is not edge]
+        if remaining:
+            self._dependencies[edge.spec.name] = remaining
+        else:
+            del self._dependencies[edge.spec.name]
         # Not a keyed lookup: self may have been anonymous when the edge was added and named only
         # later by a merge, leaving edge.spec._dependents keyed by the stale (possibly empty)
         # name rather than self.name as it is now.
         for name, dependents in edge.spec._dependents.items():
             if any(e is edge for e in dependents):
-                edge.spec._dependents[name] = [e for e in dependents if e is not edge]
+                remaining = [e for e in dependents if e is not edge]
+                if remaining:
+                    edge.spec._dependents[name] = remaining
+                else:
+                    del edge.spec._dependents[name]
                 break
 
     #

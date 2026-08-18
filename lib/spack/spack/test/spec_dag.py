@@ -1132,3 +1132,13 @@ def test_copy_preserves_parallel_edges_with_identical_attributes(mock_packages):
     copy = original.copy()
     assert copy == original
     assert copy.to_dict() == original.to_dict()
+
+
+def test_detached_dependency_node_keeps_no_empty_dependent_bucket(mock_packages):
+    """Replacing an edge detaches the old child completely: no empty dependent bucket is
+    left behind."""
+    s = Spec("pkg-a ^pkg-b")
+    child = s["pkg-b"]
+    assert s.constrain(Spec("pkg-a ^pkg-b@1"))
+    assert s == Spec("pkg-a ^pkg-b@1")
+    assert not child._dependents
