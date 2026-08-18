@@ -3,16 +3,16 @@
 :: SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 if "%~1"=="" (
-    doskey _separator_exists=call "%~f0" _separator_exists $*
-    doskey _spack_env_varname_is_empty=call "%~f0" _spack_env_varname_is_empty $*
-    doskey _spack_env_set=call "%~f0" _spack_env_set $*
-    doskey _spack_env_unset=call "%~f0" _spack_env_unset $*
-    doskey _spack_env_append=call "%~f0" _spack_env_append $*
-    doskey _spack_env_prepend=call "%~f0" _spack_env_prepend $*
-    doskey _spack_env_remove_value=call "%~f0" _spack_env_remove_value $*
-    doskey _spack_env_remove_first=call "%~f0" _spack_env_remove_first $*
-    doskey _spack_env_remove_last=call "%~f0" _spack_env_remove_last $*
-    doskey _spack_env_prune_duplicates=call "%~f0" _spack_env_prune_duplicates $*
+    set "_separator_exists=call "%~f0" _separator_exists"
+    set "_spack_env_varname_is_empty=call "%~f0" _spack_env_varname_is_empty"
+    set "_spack_env_set=call "%~f0" _spack_env_set"
+    set "_spack_env_unset=call "%~f0" _spack_env_unset"
+    set "_spack_env_append=call "%~f0" _spack_env_append"
+    set "_spack_env_prepend=call "%~f0" _spack_env_prepend"
+    set "_spack_env_remove_value=call "%~f0" _spack_env_remove_value"
+    set "_spack_env_remove_first=call "%~f0" _spack_env_remove_first"
+    set "_spack_env_remove_last=call "%~f0" _spack_env_remove_last"
+    set "_spack_env_prune_duplicates=call "%~f0" _spack_env_prune_duplicates"
     echo Spack environment functions loaded into the current shell context.
     exit /b 0
 )
@@ -23,7 +23,7 @@ goto :%~1
 
 :: -----------------------------------------------------------------------------
 :: FUNCTIONS
-:: Note: Arguments start at %2 because %1 is the function name routed by DOSKEY
+:: Note: Arguments start at %2 because %1 is the function name
 :: -----------------------------------------------------------------------------
 
 :_separator_exists
@@ -194,7 +194,9 @@ for %%A in (!work!) do (
         set "search=%sep%!item!%sep%"
         set "found=0"
         
-        for /f "delims=" %%S in ("!search!") do (
+        rem eol= is required: the default eol char for FOR /F is ";", which is also
+        rem the Windows path separator, so !search! would be skipped as a comment.
+        for /f "eol= delims=" %%S in ("!search!") do (
             if not "!check!"=="!check:%%S=!" set "found=1"
         )
         
