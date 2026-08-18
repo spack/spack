@@ -76,6 +76,11 @@ def shell_quote(value: str, shell: str = "sh") -> str:
     Returns:
         A properly quoted string safe for the target shell
     """
+    # An empty value must still produce a token. Unquoted it disappears from the helper's
+    # argument list, shifting every later argument (notably the separator) down one slot.
+    if not value:
+        return '""' if shell == "bat" else "''"
+
     if shell == "sh":
         # POSIX shell - use shlex.quote
         return shlex.quote(value)
@@ -97,7 +102,7 @@ def shell_quote(value: str, shell: str = "sh") -> str:
         # In batch, quotes protect most things but internal quotes need escaping.
         # Note that cmd splits arguments on ";", "," and "=" as well as whitespace, so
         # those must be quoted too or they silently vanish from the callee's %1, %2, ...
-        if not value or any(c in value for c in " \t&|<>^%;,="):
+        if any(c in value for c in " \t&|<>^%;,="):
             return '"' + value.replace('"', '""') + '"'
         return value
     elif shell == "pwsh":
