@@ -107,9 +107,9 @@ def load(parser, args):
             load_script_path = generate_script.path_to_load_shell_script(spec, shell)
 
             if not os.path.isfile(load_script_path):
-                try:
-                    spack_dir = os.path.join(spec.prefix, ".spack")
+                spack_dir = os.path.join(spec.prefix, ".spack")
 
+                try:
                     # Try to get cached repo if it exists
                     cached_repo = None
                     if os.path.isdir(spack_dir):
@@ -119,9 +119,14 @@ def load(parser, args):
                     mods, _ = generate_script.get_environment_modifications(
                         spec, shell, cached_repo
                     )
+                except Exception as err:
+                    tty.die(f"Error generating environment modifications for {spec}:\n{err}")
+                try:
                     generate_script.write_script(load_script_path, mods, shell)
                 except Exception as err:
-                    tty.die(f"Error writing to {load_script_path}\n{err}")
+                    tty.debug(f"Error writing to {load_script_path}\n{err}")
+                    sys.stdout.write(mods)
+                    return 1
 
             commands = generate_script.source_script(load_script_path, shell)
 

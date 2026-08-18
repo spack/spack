@@ -101,17 +101,26 @@ def unload(parser, args):
             unload_script_path = generate_script.path_to_unload_shell_script(spec, shell)
 
             if not os.path.isfile(unload_script_path):
+                spack_dir = os.path.join(spec.prefix, ".spack")
+
                 try:
-                    repo_path = generate_script.make_repo_path(os.path.join(spec.prefix, ".spack"))
-                    cached_repo = repo_path if repo_path.repos else None
+                    # Try to get cached repo if it exists
+                    cached_repo = None
+                    if os.path.isdir(spack_dir):
+                        repo_path = generate_script.make_repo_path(spack_dir)
+                        cached_repo = repo_path if repo_path and repo_path.repos else None
+
                     _, mods = generate_script.get_environment_modifications(
                         spec, shell, cached_repo
                     )
-
+                except Exception as err:
+                    tty.die(f"Error generating environment modifications for {spec}:\n{err}")
+                try:
                     generate_script.write_script(unload_script_path, mods, shell)
                 except Exception as err:
-                    tty.die(f"Error writing to {unload_script_path}\n{err}")
-
+                    tty.debug(f"Error writing to {unload_script_path}\n{err}")
+                    sys.stdout.write(mods)
+                    return 1
             commands = generate_script.source_script(unload_script_path, shell)
 
         sys.stdout.write(commands)
