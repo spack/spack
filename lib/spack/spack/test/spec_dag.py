@@ -1053,12 +1053,9 @@ def test_adding_overlapping_deptypes_to_different_versions_stays_parallel(
     p.add_dependency_edge(c1, depflag=c1_depflag, virtuals=())
     p.add_dependency_edge(c2, depflag=c2_depflag, virtuals=())
 
-    edges = p.edges_to_dependencies(name="pkg-b")
-    assert len(edges) == 2
-    assert {e.spec.version for e in edges} == {
-        spack.version.Version("1.0"),
-        spack.version.Version("2.0"),
-    }
+    # no single node is both versions, so both parallel edges must be present
+    assert p.satisfies("^pkg-b@=1.0 ^pkg-b@=2.0")
+    assert len(p.dependencies(name="pkg-b")) == 2
 
 
 @pytest.mark.regression("33499")
@@ -1145,8 +1142,5 @@ def test_copy_preserves_parallel_edges_with_identical_attributes(mock_packages):
     assert len(root.edges_to_dependencies()) == 2
 
     copy = root.copy()
-    assert len(copy.edges_to_dependencies()) == 2
-    subdep_counts = sorted(
-        len(e.spec.edges_to_dependencies()) for e in copy.edges_to_dependencies()
-    )
-    assert subdep_counts == [0, 1]
+    assert copy == root
+    assert copy.to_dict() == root.to_dict()
