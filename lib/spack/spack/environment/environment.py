@@ -2304,11 +2304,10 @@ class Environment:
 
     def _concrete_roots_dict(self):
         if not self.has_groups():
-            return [{"hash": x.hash, "spec": x.root.long_spec} for x in self.concretized_roots]
+            return [{"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots]
 
         return [
-            {"hash": x.hash, "spec": x.root.long_spec, "group": x.group}
-            for x in self.concretized_roots
+            {"hash": x.hash, "spec": str(x.root), "group": x.group} for x in self.concretized_roots
         ]
 
     def has_groups(self) -> bool:
