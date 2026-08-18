@@ -1580,6 +1580,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a list -d 'list 
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a ls -d 'list all managed environments'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a status -d 'print active environment status'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a st -d 'print active environment status'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a diff -d 'compare two concrete environments'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a loads -d 'list modules for an installed environment '"'"'(see spack module loads)'"'"''
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a view -d 'manage the environment'"'"'s view'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a update -d 'update the environment manifest to the latest schema format'
@@ -1712,6 +1713,16 @@ complete -c spack -n '__fish_spack_using_command env status' -s h -l help -d 'sh
 set -g __fish_spack_optspecs_spack_env_st h/help
 complete -c spack -n '__fish_spack_using_command env st' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env st' -s h -l help -d 'show this help message and exit'
+
+# spack env diff
+set -g __fish_spack_optspecs_spack_env_diff h/help no-prune json
+
+complete -c spack -n '__fish_spack_using_command env diff' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command env diff' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command env diff' -l no-prune -f -a prune
+complete -c spack -n '__fish_spack_using_command env diff' -l no-prune -d 'report every differing node, instead of reporting the node where a difference first appears and skipping the subgraph below it'
+complete -c spack -n '__fish_spack_using_command env diff' -l json -f -a dump_json
+complete -c spack -n '__fish_spack_using_command env diff' -l json -d 'dump json output instead of pretty printing'
 
 # spack env loads
 set -g __fish_spack_optspecs_spack_env_loads h/help n/module-set-name= m/module-type= input-only p/prefix= x/exclude= r/dependencies
