@@ -22,12 +22,17 @@ from spack.test.conftest import RepoBuilder
 
 
 def check_links(spec_to_check):
-    for spec in spec_to_check.traverse():
-        for dependent in spec.dependents():
-            assert dependent.edges_to_dependencies(name=spec.name)
-
-        for dependency in spec.dependencies():
-            assert dependency.edges_from_dependents(name=spec.name)
+    """Check edge-map symmetry on every node reachable by forward traversal: an edge in one
+    node's map is filed in the map at its other end, under the right name."""
+    for node in spec_to_check.traverse():
+        for name, edges in node._dependencies.items():
+            for edge in edges:
+                assert edge.parent is node and name == edge.spec.name
+                assert any(e is edge for e in edge.spec._dependents.get(node.name) or [])
+        for name, edges in node._dependents.items():
+            for edge in edges:
+                assert edge.spec is node and name == edge.parent.name
+                assert any(e is edge for e in edge.parent._dependencies.get(node.name) or [])
 
 
 @pytest.fixture()
