@@ -717,6 +717,9 @@ def specfile_for(config, mock_packages):
             ],
             "^[deptypes=build,link] zlib",
         ),
+        # Indirect edges to one name are never one node on deptypes alone; a shared virtual, or
+        # being direct, is what fuses them. When neither depflag is a superset of the other, the
+        # edges stay parallel.
         (
             "^[deptypes=link] zlib ^[deptypes=build] zlib",
             [
@@ -730,23 +733,6 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
             ],
             "^[deptypes=link] zlib ^[deptypes=build] zlib",
-        ),
-        # Neither depflag is a superset of the other, so the edges stay parallel, as in the
-        # link/build case above. Indirect edges to one name are never one node on deptypes
-        # alone; a shared virtual, or being direct, is what fuses them.
-        (
-            "^[deptypes=link] zlib ^[deptypes=run] zlib",
-            [
-                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
-                Token(SpecTokens.KEY_VALUE_PAIR, value="deptypes=link"),
-                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
-                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
-                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
-                Token(SpecTokens.KEY_VALUE_PAIR, value="deptypes=run"),
-                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
-                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
-            ],
-            "^[deptypes=link] zlib ^[deptypes=run] zlib",
         ),
         # [build,link] already satisfies [link], so the second edge is redundant and is discarded.
         (

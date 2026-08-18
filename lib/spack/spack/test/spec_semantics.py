@@ -2855,9 +2855,9 @@ def test_edge_already_matched_is_not_copied_in(mock_packages):
 
 
 def test_edges_differing_in_namespace_stay_parallel(mock_packages):
-    """`^pkg-b@1` does not satisfy `^builtin_mock.pkg-b` and vice versa: a concretization can
-    hold a builtin_mock node next to a pkg-b@1 node from another repo, so the merge keeps both
-    edges. An edge that does carry the namespace absorbs the one it satisfies."""
+    """`^pkg-b@1` does not satisfy `^builtin_mock.pkg-b` and vice versa: a concrete spec can have
+    a builtin_mock node next to a pkg-b@1 node from another repo, so the merge keeps both edges.
+    An edge that does have the namespace absorbs the one it satisfies."""
     lhs, rhs = Spec("pkg-a ^pkg-b@1"), Spec("pkg-a ^builtin_mock.pkg-b")
     forward, backward = lhs.constrained(rhs), rhs.constrained(lhs)
     assert forward.to_dict() == backward.to_dict()
@@ -2891,16 +2891,15 @@ def test_edge_propagation_is_merged_at_parse_time(mock_packages):
 
 def test_satisfies_ignores_edge_propagation(mock_packages):
     """%% expresses a preference the solver may override, so it does not narrow the set of DAGs:
-    satisfaction ignores it in both directions. In particular concrete specs, whose edges record
-    no propagation, satisfy a %% input."""
+    satisfaction ignores it in both directions. This is one factor that makes the set of Spec
+    objects a preorder under satisfies instead of a partial order."""
     assert Spec("mpileaks %%callpath").satisfies("mpileaks %callpath")
     assert Spec("mpileaks %callpath").satisfies("mpileaks %%callpath")
 
 
 def test_conditional_propagated_edge_is_not_redundant(mock_packages):
-    """A conditionally propagated edge is satisfied by an unconditional plain one, but it states
-    a preference the plain edge does not, so the two stay parallel instead of the propagated edge
-    being discarded."""
+    """Satisfaction ignores edge propagation, but the edge redundancy check does not ignore it when
+    merging edges."""
     s = Spec("mpileaks %callpath %%[when='+foo'] callpath")
     assert s == Spec("mpileaks %%[when='+foo'] callpath %callpath")
     assert len(s.edges_to_dependencies(name="callpath")) == 2
@@ -2908,6 +2907,10 @@ def test_conditional_propagated_edge_is_not_redundant(mock_packages):
     t = Spec("mpileaks %%[when='+foo'] callpath")
     assert t.constrain("mpileaks %callpath")
     assert t == s
+
+    # with equal propagation on both edges, the conditional edge is redundant and discarded
+    assert Spec("mpileaks %%callpath %%[when='+foo'] callpath") == Spec("mpileaks %%callpath")
+    assert Spec("mpileaks %callpath %[when='+foo'] callpath") == Spec("mpileaks %callpath")
 
 
 def test_direct_and_indirect_provider_of_one_virtual_stay_apart(mock_packages):
@@ -2935,8 +2938,8 @@ def test_two_providers_of_one_virtual_merge_as_parallel_edges(mock_packages):
 def test_two_providers_under_conditions_that_exclude_each_other_are_fine(mock_packages):
     """Only one provider can be the one at a time, so two of them named under conditions that
     cannot hold together are not in each other's way."""
-    lhs = Spec("pkg-a ^[when='+foo' virtuals=mpi] mpich")
-    rhs = Spec("pkg-a ^[when='~foo' virtuals=mpi] zmpi")
+    lhs = Spec("pkg-a %[when='+foo' virtuals=mpi] mpich")
+    rhs = Spec("pkg-a %[when='~foo' virtuals=mpi] zmpi")
     assert lhs.intersects(rhs)
     assert rhs.intersects(lhs)
 
@@ -2987,13 +2990,16 @@ def test_direct_edges_to_one_name_merge_their_virtuals(mock_packages):
 
 
 def test_two_versions_of_one_provider_of_a_virtual_intersect(mock_packages):
-    """Two edges naming the same provider for one virtual at versions that do not intersect are
-    still two existential requirements, each matched by its own node."""
+    """Two edges referring to the same provider for one virtual at versions that do not intersect
+    can be matched by a concrete spec with duplicate nodes, cause ^ can refer to two distinct
+    unification sets in which virtuals are unified: link/run closure and pure build deps."""
     lhs, rhs = Spec("pkg-a ^mpi=mpich@3"), Spec("pkg-a ^mpi=mpich@4")
     assert lhs.intersects(rhs)
     assert rhs.intersects(lhs)
     result = lhs.constrained(rhs)
     assert result == Spec("pkg-a ^mpi=mpich@3 ^mpi=mpich@4")
+    example = Spec("pkg-a %[deptypes=build] mpi=mpich@3 ^[deptypes=link] mpi=mpich@4")
+    assert example.satisfies(result)
 
 
 def test_an_anonymous_dependency_is_a_parallel_edge(mock_packages):
@@ -3009,23 +3015,24 @@ def test_an_anonymous_dependency_is_a_parallel_edge(mock_packages):
     forward, backward = Spec("").constrained(spec), spec.constrained("")
     assert forward.to_dict() == backward.to_dict() == spec.to_dict()
 
-    # two anonymous constraints can each be matched by a different dependency, so they stay two
-    # edges, transitive or direct. The single edge "^+foo+bar" also satisfies both operands, but
-    # the meet is the greatest lower bound: the witness with two distinct deps satisfies both
-    # operands, so it must satisfy the result, and only the parallel pair admits it.
-    result = Spec("pkg-a ^+foo").constrained("pkg-a ^+bar")
-    assert result.to_dict() == Spec("pkg-a ^+foo ^+bar").to_dict()
-    assert result.satisfies("pkg-a ^+foo") and result.satisfies("pkg-a ^+bar")
-    witness = Spec("pkg-a ^pkg-b+foo ^pkg-c+bar")
-    assert witness.satisfies(result)
-    assert not witness.satisfies("pkg-a ^+foo+bar")
+    # Two anonymous constraints can each be matched by a different dependency, so they remain
+    # parallel edges under intersection. The test asserts that under the preorder of satisfies
+    # both `parallel <= {lhs, rhs}` and `merged <= {lhs, rhs}`, but also that `merged <= parallel`
+    # while `parallel <= merged` is not the case. Constrain should pick the greatest lower bound,
+    # meaning that `merged` is the incorrect choice.
+    lhs, rhs = Spec("pkg-a ^+foo"), Spec("pkg-a ^+bar")
+    parallel, merged = Spec("pkg-a ^+foo ^+bar"), Spec("pkg-a ^+foo+bar")
+    assert parallel.satisfies(lhs) and parallel.satisfies(rhs)
+    assert merged.satisfies(lhs) and merged.satisfies(rhs)
+    assert merged.satisfies(parallel) and not parallel.satisfies(merged)
+    assert lhs.constrained(rhs) == parallel
 
-    result = Spec("pkg-a %+foo").constrained("pkg-a %+bar")
-    assert result == Spec("pkg-a %+foo %+bar")
-    assert result.satisfies("pkg-a %+foo") and result.satisfies("pkg-a %+bar")
-    witness = Spec("pkg-a %pkg-b+foo %pkg-c+bar")
-    assert witness.satisfies(result)
-    assert not witness.satisfies("pkg-a %+foo+bar")
+    lhs, rhs = Spec("pkg-a %+foo"), Spec("pkg-a %+bar")
+    parallel, merged = Spec("pkg-a %+foo %+bar"), Spec("pkg-a %+foo+bar")
+    assert parallel.satisfies(lhs) and parallel.satisfies(rhs)
+    assert merged.satisfies(lhs) and merged.satisfies(rhs)
+    assert merged.satisfies(parallel) and not parallel.satisfies(merged)
+    assert lhs.constrained(rhs) == parallel
 
     # direct deps are written before the first ^ so %+bar binds to the root
     result = Spec("pkg-a ^+foo").constrained("pkg-a %+bar")
@@ -3059,9 +3066,8 @@ def test_an_anonymous_dependency_is_a_parallel_edge(mock_packages):
     assert forward.satisfies(named) and named.satisfies(forward)
 
 
-def test_an_edge_bridging_two_parallel_edges_relates_nothing(mock_packages):
-    """One edge listing two virtuals does not weld the edges listing them separately into one
-    node: all three are existential requirements, each matched by its own node."""
+def test_an_edge_bridging_two_parallel_edges(mock_packages):
+    """Edges to distinct virtuals of the same provider package stay parallel."""
     spec = Spec("mpileaks ^mpi=mpich ^lapack=mpich ^mpi,lapack=zmpi")
     assert spec == Spec("mpileaks ^mpi,lapack=zmpi ^mpi=mpich ^lapack=mpich")
     assert len(spec.edges_to_dependencies()) == 3
@@ -3080,30 +3086,29 @@ def test_an_edge_bridging_two_parallel_edges_relates_nothing(mock_packages):
 
 
 def test_edges_under_different_conditions_stay_parallel(mock_packages):
-    """Two direct edges to one name are one node only where both conditions hold, and an edge
-    records exactly one condition, so no single edge says that. A merge that fused them would
-    exclude concretizations that satisfy the pair."""
+    """Two direct edges to the same package name are one node only where both conditions hold, so
+    they stay parallel."""
     lhs = Spec("pkg-a %[when='+bvv' virtuals=c] gcc")
     rhs = Spec("pkg-a %[when='~bvv' virtuals=cxx] gcc")
     result = lhs.constrained(rhs)
     assert result == Spec("pkg-a %[when='+bvv' virtuals=c] gcc %[when='~bvv' virtuals=cxx] gcc")
 
-    # with bvv off neither conditional edge asks for anything, so a fused merge loses this spec
-    witness = Spec("pkg-a ~bvv %cxx=gcc")
-    assert witness.satisfies(lhs) and witness.satisfies(rhs)
-    assert witness.satisfies(result)
+    # this instance would fail if virtuals=c,cxx were merged
+    example = Spec("pkg-a ~bvv %cxx=gcc")
+    assert example.satisfies(lhs) and example.satisfies(rhs)
+    assert example.satisfies(result)
 
 
 def test_conflicting_deps_under_one_unforced_condition_intersect(mock_packages):
     """Both edges bind only where +foo holds, and pkg-a~foo satisfies both operands, so the
     conflicting conditional deps do not make the pair disjoint."""
     lhs, rhs = Spec("pkg-a %[when='+foo'] pkg-b@1"), Spec("pkg-a %[when='+foo'] pkg-b@2")
-    witness = Spec("pkg-a ~foo")
-    assert witness.satisfies(lhs) and witness.satisfies(rhs)
+    example = Spec("pkg-a ~foo")
+    assert example.satisfies(lhs) and example.satisfies(rhs)
     assert lhs.intersects(rhs) and rhs.intersects(lhs)
     result = lhs.constrained(rhs)
     assert result == Spec("pkg-a %[when='+foo'] pkg-b@1 %[when='+foo'] pkg-b@2")
-    assert witness.satisfies(result)
+    assert example.satisfies(result)
     assert result.to_dict() == rhs.constrained(lhs).to_dict()
 
 

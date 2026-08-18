@@ -17,7 +17,7 @@ import spack.solver.asp
 import spack.util.hash as hashutil
 import spack.version
 from spack.dependency import Dependency
-from spack.spec import DependencySpec, Spec, _add_edge_to_map
+from spack.spec import Spec
 from spack.test.conftest import RepoBuilder
 
 
@@ -1121,26 +1121,14 @@ def test_getitem_finds_transitive_virtual():
 
 
 def test_copy_preserves_parallel_edges_with_identical_attributes(mock_packages):
-    """Two parallel edges to one name that agree on every attribute _satisfies_edge()
-    compares, and differ only in what their children depend on, are a legitimate state. A copy
-    reproduces both."""
+    """Two parallel edges to one name that agree on every attribute an edge carries, and differ
+    only in what their children depend on, are a legitimate state. A copy reproduces both."""
     # _dup_deps copies edge by edge in traversal order, attaching each node to its parent before
-    # that node's own children are visited, so the second edge is still childless when it is
-    # attached and can look redundant against the first
-    root = Spec("pkg-a")
-    bare = Spec("pkg-b")
-    with_dep = Spec("pkg-b")
-    with_dep._add_dependency(Spec("pkg-e"), depflag=dt.LINK, virtuals=())
+    # that node's own children are visited, so the two ^pkg-b edges are indistinguishable when
+    # the second is attached, and it can look redundant against the first
+    original = Spec("pkg-a ^pkg-b %pkg-c ^pkg-b %pkg-e")
+    assert len(original.edges_to_dependencies(name="pkg-b")) == 2
 
-    # built without add_dependency_edge, so this does not depend on what _satisfies_edge()
-    # compares today
-    for child in (bare, with_dep):
-        edge = DependencySpec(root, child, depflag=dt.NONE, virtuals=())
-        _add_edge_to_map(root._dependencies, child.name, edge)
-        _add_edge_to_map(child._dependents, root.name, edge)
-
-    assert len(root.edges_to_dependencies()) == 2
-
-    copy = root.copy()
-    assert copy == root
-    assert copy.to_dict() == root.to_dict()
+    copy = original.copy()
+    assert copy == original
+    assert copy.to_dict() == original.to_dict()
