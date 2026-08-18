@@ -1055,7 +1055,7 @@ _spack_env() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="activate deactivate create remove rm rename mv list ls status st loads view update revert depfile track untrack"
+        SPACK_COMPREPLY="activate deactivate create remove rm rename mv list ls status st diff loads view update revert depfile track untrack"
     fi
 }
 
@@ -1131,6 +1131,15 @@ _spack_env_status() {
 
 _spack_env_st() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_env_diff() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --no-prune --json"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_env_loads() {

@@ -7,7 +7,8 @@ import sys
 
 import pytest
 
-from spack.util.tty.colify import colify, colify_table
+from spack.util.tty.colify import colify, colify_table, render_blocks
+from spack.util.tty.color import clen, colorize
 
 # table as 3 rows x 6 columns
 lorem_table = [
@@ -84,3 +85,42 @@ def test_variable_width_columns(console_cols, expected_rows, expected_cols, capf
                 if col_start < len(line)
             ]
         )
+
+
+def test_render_blocks_packs_several_per_row():
+    """Blocks are laid out side by side when they fit in the given width."""
+    blocks = [["aa", "bb"], ["cc", "dd"]]
+
+    assert render_blocks(blocks, 80) == ["  aa    cc", "  bb    dd"]
+
+
+def test_render_blocks_uses_a_single_column_when_width_is_zero():
+    """A width of zero, which is what a redirected output reports, stacks the blocks."""
+    blocks = [["aa", "bb"], ["cc", "dd"]]
+
+    assert render_blocks(blocks, 0) == ["  aa", "  bb", "", "  cc", "  dd"]
+
+
+def test_render_blocks_gives_a_block_too_wide_to_share_its_own_row():
+    blocks = [["aa", "11"], ["x" * 60, "22"], ["bb", "33"]]
+
+    lines = render_blocks(blocks, 40)
+
+    # The wide block cannot sit next to either of the narrow ones, so all three end up stacked
+    assert lines == ["  aa", "  11", "", "  " + "x" * 60, "  22", "", "  bb", "  33"]
+
+
+def test_render_blocks_does_not_space_out_single_line_blocks():
+    """A section of one-line entries reads as a list, not as blocks needing to be told apart."""
+    blocks = [["aa"], ["bb"], ["cc"]]
+
+    assert render_blocks(blocks, 0) == ["  aa", "  bb", "  cc"]
+
+
+def test_render_blocks_pads_by_display_width():
+    """Columns line up on what is printed, not on the escape codes carried along with it."""
+    blocks = [[colorize("@R{aa}", color=True)], ["cc"]]
+
+    lines = render_blocks(blocks, 80)
+
+    assert clen(lines[0]) == clen("  aa    cc")
