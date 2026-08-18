@@ -26,47 +26,77 @@ case _spack_env_unset:
     unsetenv $varname
     breaksw
 case _spack_env_append:
-    if ( ! $?varname || "$varname" == "" ) then
+    # set varname to value if varname is not set
+    if ( ! `eval echo '$?'$varname` ) then
         setenv $varname $value
     else
+        # set varname to value if varname is set but empty
         set var = `printenv $varname`
-        setenv $varname $var$sep$value
+        if ( "$var" == "" ) then
+            setenv $varname $value
+        else
+            setenv $varname $var$sep$value
+        endif
     endif
     breaksw
 case _spack_env_prepend:
-    if ( ! $?varname || "$varname" == "" ) then
+    # Check if varname is not set
+    if ( ! `eval echo '$?'$varname` ) then
         setenv $varname $value
     else
+        # Check if varname is set but empty
         set var = `printenv $varname`
-        setenv $varname $value$sep$var
+        if ( "$var" == "" ) then
+            setenv $varname $value
+        else
+            setenv $varname $value$sep$var
     endif
     breaksw
 case _spack_env_remove_value:
-    if ( ! $?varname || "$varname" == "") then
+    # Check if varname is not set
+    if ( ! `eval echo '$?'$varname` ) then
         set result = ""
     else
-        set var = $sep`printenv $varname`$sep
-        set result = `echo $var | sed "s/$sep$value$sep/$sep/g" | rev | cut -c 2- | rev | cut -c 2-`
+        # Check if varname is set but empty
+        set var = `printenv $varname`
+        if ( "$var" == "" ) then
+            set result = ""
+        else
+            set var = $sep`printenv $varname`$sep
+            set result = `echo $var | sed "s/$sep$value$sep/$sep/g" | rev | cut -c 2- | rev | cut -c 2-`
+        endif
     endif
 
     setenv $varname $result
     breaksw
 case _spack_env_remove_first:
-    if ( ! $?varname || "$varname" == "") then
+    if ( ! `eval echo '$?'$varname` ) then
         set result = ""
     else
-        set var = $sep`printenv $varname`$sep
-        set result = `echo $var | sed "s/$sep$value$sep/$sep/" | rev | cut -c 2- | rev | cut -c 2-`
+        # Check if varname is set but empty
+        set var = `printenv $varname`
+        if ( "$var" == "" ) then
+            set result = ""
+        else
+            set var = $sep`printenv $varname`$sep
+            set result = `echo $var | sed "s/$sep$value$sep/$sep/" | rev | cut -c 2- | rev | cut -c 2-`
+        endif
     endif
 
     setenv $varname $result
     breaksw
 case _spack_env_remove_last:
-    if ( ! $?varname || "$varname" == "") then
+    if ( ! `eval echo '$?'$varname` ) then
         set result = ""
     else
-        set var = $sep`printenv $varname`$sep
-        set result = `echo $var | sed "s/\(.*\)$sep$value$sep/\1$sep/" | rev | cut -c 2- | rev | cut -c 2-`
+        # Check if varname is set but empty
+        set var = `printenv $varname`
+        if ( "$var" == "" ) then
+            set result = ""
+        else
+            set var = $sep`printenv $varname`$sep
+            set result = `echo $var | sed "s/\(.*\)$sep$value$sep/\1$sep/" | rev | cut -c 2- | rev | cut -c 2-`
+        endif
     endif
 
     setenv $varname $result
