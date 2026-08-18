@@ -1167,6 +1167,23 @@ def test_assigning_a_name_to_an_anonymous_spec_rekeys_dependents(mock_packages):
     assert list(t["pkg-b"]._dependents.keys()) == ["pkg-a"]
 
 
+def test_merging_a_concrete_direct_dep_keeps_its_dependent_edges(mock_packages, config):
+    """A concrete node merged into an abstract direct dep replaces it in place; the node
+    keeps its dependent edges, so a later name assignment on the parent rekeys them."""
+    s = Spec("%pkg-b")
+    t = Spec("")
+    concrete = spack.concretize.concretize_one("pkg-b@=1.0")
+    t.add_dependency_edge(concrete, depflag=dt.BUILD, virtuals=(), direct=True)
+    assert s.constrain(t)
+    child = s.edges_to_dependencies(name="pkg-b")[0].spec
+    assert child.concrete
+    assert list(child._dependents.keys()) == [""]
+    check_links(s)
+    assert s.constrain("pkg-a")
+    assert list(child._dependents.keys()) == ["pkg-a"]
+    check_links(s)
+
+
 def test_constraining_and_intersecting_concrete_dep_of_abstract_root(mock_packages, config):
     """Constraining a concrete dep of an abstract spec is either a no-op or an error."""
     abstract = Spec("pkg-a")

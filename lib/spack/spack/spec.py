@@ -3199,7 +3199,11 @@ class Spec:
 
         other = self._autospec(other)
         if other.concrete and other._satisfies(self, resolve_virtuals=resolve_virtuals):
+            # _dup makes self a detached copy without in-edges; self stays a node in its
+            # dependents' edge maps, so keep them
+            dependents = self._dependents
             self._dup(other)
+            self._dependents = dependents
             return True
 
         if not (self.name == other.name or (not self.name) or (not other.name)):
