@@ -2052,8 +2052,17 @@ error(100, "Cannot set multiple {0} values for {1} from cli", FlagType, Package)
   attr("node", node(ID, PackageName)).
 % you can't choose an installed hash for a dev spec
 :- attr("hash", PackageNode, Hash), attr("variant_value", PackageNode, "dev_path", _).
-% You can't install a hash, if it is not installed
-:- attr("hash", node(ID, Package), Hash), not installed_hash(Package, Hash).
+% You can't install a hash, if it is not installed, or imposable by a spec being reused
+:- attr("hash", node(ID, Package), Hash),
+   not installed_hash(Package, Hash),
+   not imposable_hash(Package, Hash).
+
+% Hashes the solver knows about only because they belong to the DAG of a spec that can be
+% reused. Since they are not in the choice rule above, they cannot be selected by an arbitrary
+% node, but the spec owning them can still impose them. This is what keeps the dependencies of
+% a compiler available when "concretizer:reuse" excludes them: compilers installed by Spack are
+% always reusable, their dependencies are not reusable on their own.
+#defined imposable_hash/2.
 
 % hash_attrs are versions, but can_splice_attr are usually node_version_satisfies
 hash_attr(Hash, "node_version_satisfies", PackageName, Constraint) :-
