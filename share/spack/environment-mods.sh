@@ -2,12 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# For zsh compatibility: enable sh emulation mode to ensure word splitting
-# and consistent behavior with bash/dash
-if [ -n "${ZSH_VERSION:-}" ]; then
-    emulate sh
-fi
-
 # _separator_exists sep
 #
 # Fails if separator argument was not supplied
@@ -97,24 +91,27 @@ _spack_env_remove_value() {
 
     _separator_exists "$sep" || return
 
-    accumulator="$sep"
-    original_ifs="$IFS"
-    IFS="$sep"
+    eval "remaining=\"\${${varname}}\""
+    accumulator=""
 
-    # Disable globbing to prevent * in paths from expanding
-    set -f
-    eval "varname_value=\"\${${varname}}\""
-    for val in $varname_value; do
+    while [ -n "$remaining" ]; do
+        if [ "$remaining" = "${remaining#*$sep}" ]; then
+            val="$remaining"
+            remaining=""
+        else
+            val="${remaining%%$sep*}"
+            remaining="${remaining#*$sep}"
+        fi
+
         if [ "$val" != "$value" ]; then
-            accumulator="$accumulator$val$sep"
+            if [ -z "$accumulator" ]; then
+                accumulator="$val"
+            else
+                accumulator="$accumulator$sep$val"
+            fi
         fi
     done
-    set +f
 
-    export IFS="$original_ifs"
-
-    accumulator="${accumulator#$sep}"
-    accumulator="${accumulator%$sep}"
     export $varname="$accumulator"
 }
 
@@ -129,28 +126,33 @@ _spack_env_remove_first() {
 
     _separator_exists "$sep" || return
 
-    accumulator="$sep"
-    original_ifs="$IFS"
-    IFS="$sep"
+    eval "remaining=\"\${${varname}}\""
+    accumulator=""
+    found="no"
 
-    done="no"
-
-    # Disable globbing to prevent * in paths from expanding
-    set -f
-    eval "varname_value=\"\${${varname}}\""
-    for val in $varname_value; do
-         if [ "$val" != "$value" ] || [ "$done" = "yes" ]; then
-            accumulator="$accumulator$val$sep"
+    while [ -n "$remaining" ]; do
+        if [ "$remaining" = "${remaining#*$sep}" ]; then
+            val="$remaining"
+            remaining=""
         else
-            done="yes"
+            val="${remaining%%$sep*}"
+            remaining="${remaining#*$sep}"
+        fi
+
+        if [ "$val" = "$value" ] && [ "$found" = "no" ]; then
+            if [ ! -n "$remaining" ]; then
+                accumulator="$remaining"
+                break
+            fi
+        else
+            if [ -z "$accumulator" ]; then
+                accumulator="$val"
+            else
+                accumulator="$accumulator$sep$val"
+            fi
         fi
     done
-    set +f
 
-    export IFS="$original_ifs"
-
-    accumulator="${accumulator#$sep}"
-    accumulator="${accumulator%$sep}"
     export $varname="$accumulator"
 }
 
@@ -165,38 +167,44 @@ _spack_env_remove_last() {
 
     _separator_exists "$sep" || return
 
-    original_ifs="$IFS"
-    IFS="$sep"
+    eval "remaining=\"\${${varname}}\""
 
-    done="no"
+    omit_last_match=""
+    accumulator=""
 
-    # Disable globbing to prevent * in paths from expanding
-    set -f
-    # Reverse the list order
-    eval "varname_value=\"\${${varname}}\""
-    reversed="$sep"
-    for val in $varname_value; do
-        reversed="$sep$val$reversed"
-    done
-    reversed="${reversed#$sep}"
-    reversed="${reversed%$sep}"
-
-    # Remove the first appearance of $value in the reversed list
-    # Put the entries back in in reverse order to get back original order
-    accumulator="$sep"
-    for val in $reversed; do
-        if [ "$val" != "$value" ] || [ "$done" = "yes" ]; then
-            accumulator="$sep$val$accumulator"
+    while [ -n "$remaining" ]; do
+        # Extract first element
+        if [ "$remaining" = "${remaining#*$sep}" ]; then
+            val="$remaining"
+            remaining=""
         else
-            done="yes"
+            val="${remaining%%$sep*}"
+            remaining="${remaining#*$sep}"
+        fi
+
+        if [ "$val" = "$value" ]; then
+            if [ -z "$accumulator" ]; then
+                accumulator="$val"
+            else
+                omit_last_match="$accumulator"
+                accumulator="$accumulator$sep$val"
+            fi
+        else
+            if [ -z "$omit_last_match" ]; then
+                omit_last_match="$val"
+            else
+                omit_last_match="$omit_last_match$sep$val"
+            fi
+
+            if [ -z "$accumulator" ]; then
+                accumulator="$val"
+            else
+                accumulator="$accumulator$sep$val"
+            fi
         fi
     done
-    accumulator="${accumulator#$sep}"
-    accumulator="${accumulator%$sep}"
-    set +f
 
-    export IFS="$original_ifs"
-    export $varname="$accumulator"
+    export $varname="$omit_last_match"
 }
 
 # _spack_env_prune_duplicate varname sep
@@ -211,30 +219,36 @@ _spack_env_prune_duplicates() {
 
     _separator_exists "$sep" || return
 
-    # keep separate var names since we delegate to another method
-    prune_accumulator="$sep"
-    pre_prune_ifs="$IFS"
-    IFS="$sep"
+    eval "remaining=\"\${${varname}}\""
+    accumulator=""
+    seen="$sep"
 
-    # Disable globbing to prevent * in paths from expanding
-    set -f
-    eval "varname_value=\"\${${varname}}\""
-    while [ "$varname_value" != "" ]; do
-        # for-loop to get the first entry, then break
-        for val in $varname_value; do
-            prune_accumulator="$prune_accumulator$val$sep"
-            IFS="$pre_prune_ifs"  # setting IFS to $sep breaks _spack_env_remove_value
-            _spack_env_remove_value "$varname" "$val" "$sep"
-            IFS="$sep"
-            eval "varname_value=\"\${${varname}}\""
-            break
-        done
+    while [ -n "$remaining" ]; do
+        # Extract first element
+        if [ "$remaining" = "${remaining#*$sep}" ]; then
+            val="$remaining"
+            remaining=""
+        else
+            val="${remaining%%$sep*}"
+            remaining="${remaining#*$sep}"
+        fi
+
+        # Check if we've seen this value before
+        case "$seen" in
+            *"$sep$val$sep"*)
+                # Already seen, skip it
+                ;;
+            *)
+                # New value, add it
+                seen="$seen$val$sep"
+                if [ -z "$accumulator" ]; then
+                    accumulator="$val"
+                else
+                    accumulator="$accumulator$sep$val"
+                fi
+                ;;
+        esac
     done
-    set +f
 
-    prune_accumulator="${prune_accumulator#$sep}"
-    prune_accumulator="${prune_accumulator%$sep}"
-
-    export IFS="$pre_prune_ifs"
-    export $varname="$prune_accumulator"
+    export $varname="$accumulator"
 }
