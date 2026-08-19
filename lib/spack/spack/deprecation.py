@@ -6,8 +6,9 @@
 A version (or, more generally, a spec constraint) is marked deprecated via the ``deprecated()``
 directive with a severity.
 
-Whether a deprecation is tolerated is defined by ``packages:<name>:allowed_deprecation_severity``,
-falling back to ``packages:all`` and the legacy ``config:deprecated`` flag.
+Whether a deprecation is tolerated is defined by
+``packages:<name>:deprecation:allowed_severity``, falling back to ``packages:all`` and the legacy
+``config:deprecated`` flag.
 
 This module centralizes that policy so the concretization-time gate and the install-time gate
 cannot drift.
@@ -39,7 +40,7 @@ class Violation(NamedTuple):
 def _default_allowed_severity(
     packages_yaml: dict, warn_on_legacy: bool = False
 ) -> DeprecationSeverity:
-    """Return the default allowed deprecation severity from ``packages:all``.
+    """Return the default allowed deprecation severity from ``packages:all:deprecation``.
 
     Falls back to the legacy ``config:deprecated`` flag (mapped to ``critical``) and finally to
     ``none``, meaning every deprecation is disallowed.
@@ -49,7 +50,7 @@ def _default_allowed_severity(
         warn_on_legacy: emit a warning when the deprecated ``config:deprecated`` flag is
             what relaxes the policy.
     """
-    severity_str = packages_yaml.get("all", {}).get("allowed_deprecation_severity")
+    severity_str = packages_yaml.get("all", {}).get("deprecation", {}).get("allowed_severity")
     if severity_str is not None:
         return DeprecationSeverity(severity_str)
 
@@ -57,7 +58,7 @@ def _default_allowed_severity(
         if warn_on_legacy:
             warnings.warn(
                 "config:deprecated is deprecated. "
-                "Use 'packages:all:allowed_deprecation_severity:critical' instead",
+                "Use 'packages:all:deprecation:allowed_severity:critical' instead",
                 UserWarning,
                 stacklevel=2,
             )
@@ -71,7 +72,7 @@ class Policy(NamedTuple):
 
     packages_yaml: dict
     default_allowed: DeprecationSeverity
-    #: Global check scope from ``packages:all:deprecation_scope`` ("runtime" or "all")
+    #: Global check scope from ``packages:all:deprecation:scope`` ("runtime" or "all")
     scope: str = "runtime"
 
     @staticmethod
@@ -83,7 +84,7 @@ class Policy(NamedTuple):
                 what relaxes the policy. Set only where the warning should fire once.
         """
         packages_yaml = spack.config.CONFIG.get_config("packages")
-        scope = packages_yaml.get("all", {}).get("deprecation_scope", "runtime")
+        scope = packages_yaml.get("all", {}).get("deprecation", {}).get("scope", "runtime")
         return Policy(
             packages_yaml, _default_allowed_severity(packages_yaml, warn_on_legacy), scope
         )
@@ -95,7 +96,9 @@ class Policy(NamedTuple):
 
     def allowed_severity(self, pkg_name: str) -> DeprecationSeverity:
         """Return the allowed severity for a package, honoring per-package overrides."""
-        override = self.packages_yaml.get(pkg_name, {}).get("allowed_deprecation_severity")
+        override = (
+            self.packages_yaml.get(pkg_name, {}).get("deprecation", {}).get("allowed_severity")
+        )
         return DeprecationSeverity(override) if override is not None else self.default_allowed
 
     def disallowed(self, spec: "spack.spec.Spec") -> List[Violation]:
@@ -128,7 +131,7 @@ def check_deprecations(
         seeds: the specs to check, together with the DAG reachable from them.
         policy: maps a spec to its list of disallowed deprecations; defaults to the configured
             ``packages`` policy.
-        deptypes: dependency types to traverse; defaults to the configured ``deprecation_scope``.
+        deptypes: dependency types to traverse; defaults to the configured ``deprecation:scope``.
     """
     resolved = Policy.from_config()
     policy = policy or resolved.disallowed
@@ -144,7 +147,7 @@ def check_deprecations(
         raise spack.error.InstallError(
             "the following specs are deprecated and cannot be installed:\n\n"
             + "\n".join(violations)
-            + "\n\n    Relax 'packages:<name>:allowed_deprecation_severity' in your "
+            + "\n\n    Relax 'packages:<name>:deprecation:allowed_severity' in your "
             "configuration to install them anyway."
         )
 
@@ -155,7 +158,7 @@ def _format_violations(spec: "spack.spec.Spec", violations: List[Violation]) -> 
         spec_str = f"{spec.name}{constraint}" if str(constraint) else spec.name
         lines.append(
             f"        {spec_str} is deprecated (reason: {reason.value}, "
-            f"severity: {severity.name.lower()}); 'allowed_deprecation_severity' "
+            f"severity: {severity.name.lower()}); 'deprecation:allowed_severity' "
             f"is '{allowed.name.lower()}'"
         )
     return "\n".join(lines)

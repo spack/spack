@@ -56,7 +56,8 @@ def test_allowed_deprecation_concretizes_without_warning(
     packages_yaml_write("""
 packages:
   all:
-    allowed_deprecation_severity: critical
+    deprecation:
+      allowed_severity: critical
 """)
     spec = concretize_one("deprecated-with-reason@2.0")
     assert spec.satisfies("@2.0")
@@ -69,11 +70,12 @@ packages:
 def test_allowed_deprecation_severity_per_package_blocks(
     mock_packages, concretize_scope, packages_yaml_write
 ):
-    """Tests that when the allowed_deprecation_severity < severity, concretization fails."""
+    """Tests that when the allowed severity < severity, concretization fails."""
     packages_yaml_write("""
 packages:
   deprecated-with-reason:
-    allowed_deprecation_severity: medium
+    deprecation:
+      allowed_severity: medium
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-with-reason@2.0")
@@ -82,13 +84,14 @@ packages:
 def test_allowed_deprecation_severity_all_blocks(
     mock_packages, concretize_scope, packages_yaml_write
 ):
-    """Tests that the all:allowed_deprecation_severity applies when no per-package override
+    """Tests that the all:deprecation:allowed_severity applies when no per-package override
     exists.
     """
     packages_yaml_write("""
 packages:
   all:
-    allowed_deprecation_severity: low
+    deprecation:
+      allowed_severity: low
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-with-reason@2.0")
@@ -115,7 +118,8 @@ def test_deprecation_scope_runtime_ignores_build_only_dep(
     packages_yaml_write("""
 packages:
   all:
-    deprecation_scope: runtime
+    deprecation:
+      scope: runtime
 """)
     spec = concretize_one("deprecated-buildtool-client")
     assert spec.satisfies("@1.0")
@@ -132,7 +136,8 @@ def test_deprecation_scope_all_gates_build_only_dep(
     packages_yaml_write("""
 packages:
   all:
-    deprecation_scope: all
+    deprecation:
+      scope: all
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-buildtool-client")

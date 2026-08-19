@@ -825,7 +825,7 @@ def test_installer_scope_all_gates_build_transitive_deprecation(
     with pytest.raises(KeyError):
         spec["deprecated-versions"]
 
-    with mutable_config.override("packages:all:deprecation_scope", "all"):
+    with mutable_config.override("packages:all:deprecation:scope", "all"):
         with pytest.raises(spack.error.InstallError, match="deprecated"):
             spack.installer_dispatch.create_installer([spec.package]).install()
 
@@ -852,7 +852,7 @@ def test_new_installer_static_gate_sees_deferred_build_deps(
     install_mockery, tmp_path, mutable_config: Configuration
 ):
     """When a binary mirror is configured the new installer defers build deps out of the initial
-    build graph. Under 'deprecation_scope: all' the static, upfront gate must still reject a
+    build graph. Under 'deprecation:scope: all' the static, upfront gate must still reject a
     deprecated build-transitive node, without relying on lazy build-dependency expansion.
     """
     # A configured binary mirror makes has_mirrors True, which is what defers build deps.
@@ -860,7 +860,7 @@ def test_new_installer_static_gate_sees_deferred_build_deps(
         with mutable_config.override("config:deprecated", True):
             spec = spack.concretize.concretize_one("deprecated-buildtool-client")
 
-        with mutable_config.override("packages:all:deprecation_scope", "all"):
+        with mutable_config.override("packages:all:deprecation:scope", "all"):
             installer = spack.installer.PackageInstaller(
                 [spec.package], dependencies_policy="auto"
             )
