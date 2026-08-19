@@ -451,7 +451,7 @@ class DotGraphBuilder:
         self.nodes: Set[Tuple[str, str]] = set()
         self.edges: Set[Tuple[str, str, str]] = set()
 
-    def visit(self, edge: spack.spec.DependencySpec):
+    def visit(self, edge: spack.spec.Edge):
         """Visit an edge and builds up entries to render the graph"""
         if edge.parent is None:
             self.nodes.add(self.node_entry(edge.spec))
@@ -465,7 +465,7 @@ class DotGraphBuilder:
         """Return a tuple of (node_id, node_options)"""
         raise NotImplementedError("Need to be implemented by derived classes")
 
-    def edge_entry(self, edge: spack.spec.DependencySpec) -> Tuple[str, str, str]:
+    def edge_entry(self, edge: spack.spec.Edge) -> Tuple[str, str, str]:
         """Return a tuple of (parent_id, child_id, edge_options)"""
         raise NotImplementedError("Need to be implemented by derived classes")
 
@@ -545,7 +545,7 @@ def _static_edges(specs, depflag):
 
         for parent_name, dependencies in edges.items():
             for dependency_name in dependencies:
-                yield spack.spec.DependencySpec(
+                yield spack.spec.Edge(
                     spack.spec.Spec(parent_name),
                     spack.spec.Spec(dependency_name),
                     depflag=depflag,

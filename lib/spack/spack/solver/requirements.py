@@ -450,7 +450,7 @@ class RequirementParser:
                 )
 
 
-def _split_edge_on_virtuals(edge: spack.spec.DependencySpec) -> List[spack.spec.Spec]:
+def _split_edge_on_virtuals(edge: spack.spec.Edge) -> List[spack.spec.Spec]:
     """Split the edge on virtuals and removes the parent."""
     if not edge.virtuals:
         return [spack.spec.Spec(str(edge.copy(keep_parent=False)))]
