@@ -310,3 +310,45 @@ packages:
         default: critical
 """)
     assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
+
+
+def test_old_and_new_deprecation_are_checked_independently(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that version(..., deprecated=True) and deprecated() on the same version do not
+    override one another: each is checked against the threshold for its own reason, and either
+    one above its threshold refuses the version.
+    """
+    # deprecated-dual@1.0 carries maintenance/critical from the keyword and cve/high from the
+    # directive. Allowing maintenance is not enough, because cve is still forbidden.
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity:
+        maintenance: critical
+""")
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-dual@1.0")
+
+    # Symmetrically, allowing only cve leaves the maintenance deprecation in force.
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity:
+        cve: critical
+""")
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-dual@1.0")
+
+    # Both above their thresholds is what it takes.
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity:
+        maintenance: critical
+        cve: high
+""")
+    assert concretize_one("deprecated-dual@1.0").satisfies("@1.0")
