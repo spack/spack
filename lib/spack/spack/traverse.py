@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 #: and ``neighbors`` of visitors, so they can decide whether to
 #: follow the edge or not.
 class EdgeAndDepth(NamedTuple):
-    edge: "spack.spec.DependencySpec"
+    edge: "spack.spec.Edge"
     depth: int
 
 
@@ -228,10 +228,10 @@ def get_visitor_from_args(
 
 def with_artificial_edges(specs):
     """Initialize a deque of edges from an artificial root node to the root specs."""
-    from spack.spec import DependencySpec
+    from spack.spec import Edge
 
     return deque(
-        EdgeAndDepth(edge=DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0)
+        EdgeAndDepth(edge=Edge(parent=None, spec=s, depflag=0, virtuals=()), depth=0)
         for s in specs
     )
 
@@ -455,7 +455,7 @@ def traverse_edges(
     depth: Literal[False] = False,
     key: Callable[["spack.spec.Spec"], Any] = ...,
     visited: Optional[Set[Any]] = ...,
-) -> Iterable["spack.spec.DependencySpec"]: ...
+) -> Iterable["spack.spec.Edge"]: ...
 
 
 @overload
@@ -470,7 +470,7 @@ def traverse_edges(
     depth: Literal[True],
     key: Callable[["spack.spec.Spec"], Any] = ...,
     visited: Optional[Set[Any]] = ...,
-) -> Iterable[Tuple[int, "spack.spec.DependencySpec"]]: ...
+) -> Iterable[Tuple[int, "spack.spec.Edge"]]: ...
 
 
 @overload
@@ -485,7 +485,7 @@ def traverse_edges(
     depth: bool,
     key: Callable[["spack.spec.Spec"], Any] = ...,
     visited: Optional[Set[Any]] = ...,
-) -> Iterable[Union["spack.spec.DependencySpec", Tuple[int, "spack.spec.DependencySpec"]]]: ...
+) -> Iterable[Union["spack.spec.Edge", Tuple[int, "spack.spec.Edge"]]]: ...
 
 
 def traverse_edges(
@@ -498,7 +498,7 @@ def traverse_edges(
     depth: bool = False,
     key: Callable[["spack.spec.Spec"], Any] = id,
     visited: Optional[Set[Any]] = None,
-) -> Iterable[Union["spack.spec.DependencySpec", Tuple[int, "spack.spec.DependencySpec"]]]:
+) -> Iterable[Union["spack.spec.Edge", Tuple[int, "spack.spec.Edge"]]]:
     """
     Iterable of edges from the DAG, starting from a list of root specs.
 
@@ -525,8 +525,8 @@ def traverse_edges(
         visited: a set of nodes not to follow
 
     Returns:
-        An iterable of ``DependencySpec`` if depth is ``False`` or a tuple of
-        ``(depth, DependencySpec)`` if depth is ``True``.
+        An iterable of ``Edge`` if depth is ``False`` or a tuple of
+        ``(depth, Edge)`` if depth is ``True``.
     """
     # validate input
     if order == "topo":
@@ -660,9 +660,9 @@ def traverse_tree(
     deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
     key: Callable[["spack.spec.Spec"], Any] = id,
     depth_first: bool = True,
-) -> Iterable[Tuple[int, "spack.spec.DependencySpec"]]:
+) -> Iterable[Tuple[int, "spack.spec.Edge"]]:
     """
-    Generator that yields ``(depth, DependencySpec)`` tuples in the depth-first
+    Generator that yields ``(depth, Edge)`` tuples in the depth-first
     pre-order, so that a tree can be printed from it.
 
     Arguments:
@@ -683,7 +683,7 @@ def traverse_tree(
             level, which is useful when rendering the tree in a terminal.
 
     Returns:
-        A generator that yields ``(depth, DependencySpec)`` tuples in such an order that a tree can
+        A generator that yields ``(depth, Edge)`` tuples in such an order that a tree can
         be printed.
     """
     # BFS only makes sense when going over edges and nodes, for paths the tree is
