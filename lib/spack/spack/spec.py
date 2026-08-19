@@ -218,9 +218,52 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
     )
 
 
+def _closed_interval_targets(
+    lower: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    upper: spack.vendor.archspec.cpu.Microarchitecture,
+) -> Set[spack.vendor.archspec.cpu.Microarchitecture]:
+    """The targets in the closed interval between the bounds; a None lower bound means the
+    family root. The set is exact: a target below the upper bound is one of its ancestors, so
+    no target outside the table can enter the interval."""
+    candidates = set(upper.ancestors)
+    candidates.add(upper)
+    if lower is None:
+        return candidates
+    return {t for t in candidates if t >= lower}
+
+
+def _decompose_target_set(targets: Set[spack.vendor.archspec.cpu.Microarchitecture]) -> List[str]:
+    """A deterministic decomposition of a set of targets into interval elements: repeatedly
+    emit the largest interval that starts at a minimal remaining target and stays inside the
+    set. The result is a function of the set alone, so lists denoting the same targets
+    decompose identically; it is not always of minimal length."""
+    result = []
+    remaining = set(targets)
+    while remaining:
+        m = min((t for t in remaining if not any(s < t for s in remaining)), key=lambda t: t.name)
+        best, members = m, {m}
+        for u in sorted(remaining, key=lambda t: t.name):
+            if not u > m:
+                continue
+            candidates = _closed_interval_targets(m, u)
+            if len(candidates) > len(members) and candidates <= remaining:
+                best, members = u, candidates
+        if m == best:
+            result.append(m.name)
+        elif m == m.family:
+            result.append(f":{best.name}")
+        else:
+            result.append(f"{m.name}:{best.name}")
+        remaining -= members
+    return result
+
+
 def _canonical_target_range(name: str) -> str:
     """The canonical string representation of a target. For example, `x86_64:icelake` is
-    canonicalized to `:icelake`, and redundant elements are dropped in case of a list."""
+    canonicalized to `:icelake`. A list is rewritten as a decomposition of the set of targets
+    it denotes, so that lists denoting the same set, such as `nocona:haswell` and
+    `nocona:nehalem,nehalem:haswell`, have one canonical form: elements denoting no target
+    are dropped, and the rest are fused per family."""
     elements = set()
     for element in name.split(","):
         t_min, t_sep, t_max = element.partition(":")
@@ -233,20 +276,41 @@ def _canonical_target_range(name: str) -> str:
                 element = t_min
         elements.add(element)
 
-    ordered = sorted(elements)
-    kept = []
-    for i, element in enumerate(ordered):
-        subsumed = False
-        for j, container in enumerate(ordered):
-            if i == j or not _satisfies_target_range(container, element):
-                continue
-            # two elements that denote the same set contain each other, so keep the first of them
-            if j < i or not _satisfies_target_range(element, container):
-                subsumed = True
-                break
-        if not subsumed:
-            kept.append(element)
-    return ",".join(kept)
+    if len(elements) <= 1:
+        return ",".join(elements)
+
+    table = spack.vendor.archspec.cpu.TARGETS
+    opens: Set[str] = set()  # lower bounds of `x:` elements
+    union: Set[spack.vendor.archspec.cpu.Microarchitecture] = set()
+    verbatim = set()  # elements with bounds outside the table cannot be compared
+    for element in elements:
+        t_min, t_sep, t_max = element.partition(":")
+        if not t_min and not t_max:
+            if t_sep:
+                # ':' is unbounded on both sides, so it contains every other element
+                return ":"
+            verbatim.add(element)
+        elif (t_min and t_min not in table) or (t_max and t_max not in table):
+            verbatim.add(element)
+        elif t_sep and not t_max:
+            opens.add(t_min)
+        else:
+            union |= _closed_interval_targets(
+                table[t_min] if t_min else None, table[t_max or t_min]
+            )
+
+    if not opens and not union and not verbatim:
+        # every element denotes the empty set: keep them rather than returning an empty string
+        return ",".join(sorted(elements))
+
+    # keep the antichain of minimal lower bounds: `y:` contains `x:` whenever y is below x
+    opens = {x for x in opens if not any(table[y] < table[x] for y in opens)}
+    # an open element already denotes every target above its bound
+    union = {t for t in union if not any(t >= table[x] for x in opens)}
+
+    kept = {f"{x}:" for x in opens} | verbatim
+    kept.update(_decompose_target_set(union))
+    return ",".join(sorted(kept))
 
 
 def _satisfies_target_range(lhs: str, rhs: str) -> bool:

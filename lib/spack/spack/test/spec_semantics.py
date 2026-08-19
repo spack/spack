@@ -2176,6 +2176,67 @@ def test_incomparable_target_bounds_meet_as_a_union_of_ranges(mock_packages):
     assert forward.to_dict() == backward.to_dict()
 
 
+def test_adjacent_target_ranges_fuse_into_one_canonical_state(mock_packages):
+    """Two ranges tiling one interval denote the same set as the interval itself, so they are
+    fused into it: the tiling and the interval are one state that satisfies both ways."""
+    tiling = Spec("pkg-a target=nocona:nehalem,nehalem:haswell")
+    interval = Spec("pkg-a target=nocona:haswell")
+    assert str(tiling.architecture.target) == "nocona:haswell"
+    assert tiling.to_dict() == interval.to_dict()
+    assert tiling.dag_hash() == interval.dag_hash()
+    assert tiling.satisfies(interval) and interval.satisfies(tiling)
+
+
+def test_consecutive_targets_fuse_into_a_range(mock_packages):
+    """A list of targets whose union is an interval is canonicalized to that interval."""
+    listed = Spec("pkg-a target=alderlake,arrowlake")
+    ranged = Spec("pkg-a target=alderlake:arrowlake")
+    assert listed.to_dict() == ranged.to_dict()
+    assert listed.dag_hash() == ranged.dag_hash()
+
+
+def test_the_meet_of_a_range_and_its_tiling_is_the_range(mock_packages):
+    """Constraining a range by a tiling of a subrange fuses the intersection back into one
+    element, so the meet is a state that satisfies both operands."""
+    lhs, rhs = Spec("pkg-a target=:haswell"), Spec("pkg-a target=nocona:nehalem,nehalem:haswell")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    assert str(forward.architecture.target) == "nocona:haswell"
+    assert forward.to_dict() == backward.to_dict()
+    assert forward.satisfies(lhs) and forward.satisfies(rhs)
+
+
+@pytest.mark.parametrize(
+    "target_str,canonical",
+    [
+        ("nocona:nehalem,nehalem:haswell", "nocona:haswell"),
+        ("alderlake,arrowlake", "alderlake:arrowlake"),
+        # the open range covers every target above nocona, leaving only the family root
+        ("nocona:,x86_64:core2", "nocona:,x86_64"),
+        ("nocona:,x86_64:nocona", "nocona:,x86_64"),
+        # ranges with a gap between them are not fused
+        ("x86_64:nocona,haswell:broadwell", ":nocona,haswell:broadwell"),
+        ("nocona,haswell", "haswell,nocona"),
+        # a range with incomparable bounds denotes no target and is dropped from the list
+        ("zen:haswell,nocona", "nocona"),
+    ],
+)
+def test_target_lists_have_one_canonical_idempotent_form(mock_packages, target_str, canonical):
+    """A target list is stored as a canonical decomposition of the set it denotes: parsing the
+    canonical form gives the same state as the original list."""
+    spec = Spec(f"pkg-a target={target_str}")
+    assert str(spec.architecture.target) == canonical
+    assert spec.to_dict() == Spec(f"pkg-a target={canonical}").to_dict()
+
+
+def test_unknown_target_names_in_lists_are_kept_verbatim(mock_packages):
+    """Bounds outside the microarchitecture table cannot be compared, so their elements are kept
+    as they are instead of raising."""
+    spec = Spec("pkg-a target=nocona:,foo:")
+    assert str(spec.architecture.target) == "foo:,nocona:"
+
+
 def test_constrain_dependencies_copies(mock_packages):
     """Tests that constraining a spec with new deps makes proper copies, and does not accidentally
     share dependency instances, leading to corruption of unrelated Spec instances."""
