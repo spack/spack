@@ -122,7 +122,7 @@ package_attributes = {
     "patternProperties": {r"^[a-zA-Z_]\w*$": {}},
 }
 
-allowed_deprecation = {
+allowed_severity = {
     "type": "string",
     "description": "Maximum allowed deprecation severity. Specs with higher "
     "severity cause a concretization error.",
@@ -137,6 +137,23 @@ deprecation_scope = {
     "every node in the DAG, including build dependencies of build dependencies.",
     "enum": ["runtime", "all"],
     "default": "runtime",
+}
+
+# 'scope' selects the deptypes of a single traversal, so it is global and lives under 'all' only
+deprecation_all = {
+    "type": "object",
+    "description": "Deprecation policy applied to every package",
+    "default": {},
+    "additionalProperties": False,
+    "properties": {"allowed_severity": allowed_severity, "scope": deprecation_scope},
+}
+
+deprecation_pkg = {
+    "type": "object",
+    "description": "Deprecation policy for this package, overriding the one under 'all'",
+    "default": {},
+    "additionalProperties": False,
+    "properties": {"allowed_severity": allowed_severity},
 }
 
 REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"
@@ -206,8 +223,7 @@ properties: Dict[str, Any] = {
                         },
                     },
                     "variants": variants,
-                    "allowed_deprecation_severity": allowed_deprecation,
-                    "deprecation_scope": deprecation_scope,
+                    "deprecation": deprecation_all,
                 },
                 "deprecatedProperties": [
                     {
@@ -256,7 +272,7 @@ properties: Dict[str, Any] = {
                 # attribute, it could be useful to set it here
                 "package_attributes": package_attributes,
                 "variants": variants,
-                "allowed_deprecation_severity": allowed_deprecation,
+                "deprecation": deprecation_pkg,
                 "externals": {
                     "type": "array",
                     "description": "List of external, system-installed instances of this package",
