@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
+import re
 import sys
 
 import pytest
@@ -47,20 +48,22 @@ def test_manpath_trailing_colon(
 
     load(shell, "mpileaks")
     load_cmds = _get_load_cmds(mpileaks_spec, shell)
-
+    prepend_manpath_re = re.compile(r"%?_spack_env_prepend%? MANPATH")
     manpath_prepends = []
     for line in load_cmds.splitlines():
-        if "_spack_env_prepend MANPATH" in line:
+        if prepend_manpath_re.match(line):
             parts = line.split()
             if len(parts) >= 4:
-                # Format: _spack_env_prepend MANPATH /path/to/man :
+                # Format: _spack_env_prepend MANPATH /path/to/man :|;
                 manpath_prepends.append((parts[2], parts[3]))
 
     # Verify MANPATH additions exist and include trailing separator
     assert len(manpath_prepends) > 0, "Expected MANPATH additions from loaded packages"
 
+    trailing_sep = '"' + os.pathsep + '"' if sys.platform == "win32" else os.pathsep
+
     for _, separator in manpath_prepends:
-        assert separator == os.pathsep, (
+        assert separator == trailing_sep, (
             f"MANPATH prepend should include trailing '{os.pathsep}' to preserve system paths"
         )
 
