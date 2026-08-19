@@ -7,7 +7,8 @@ A version (or, more generally, a spec constraint) is marked deprecated via the `
 directive with a severity.
 
 Whether a deprecation is tolerated is defined by
-``packages:<name>:deprecation:allowed_severity``, falling back to ``packages:all`` and the legacy
+``packages:<name>:deprecation:allowed_severity``, which is either a single severity or a mapping
+from deprecation reason to severity, falling back to ``packages:all`` and the legacy
 ``config:deprecated`` flag.  A directive that declares ``labels`` is skipped outright when every
 one of them is listed in ``packages:<name>:deprecation:exempt_labels``.
 
@@ -16,7 +17,7 @@ cannot drift.
 """
 
 import warnings
-from typing import TYPE_CHECKING, Callable, Iterable, List, NamedTuple, Optional, Set
+from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Union
 
 import spack.config
 import spack.deptypes as dt
@@ -43,10 +44,30 @@ def is_exempt(entry: Deprecation, exempt_labels: Set[str]) -> bool:
     return bool(entry.labels) and exempt_labels.issuperset(entry.labels)
 
 
-def _default_allowed_severity(
-    packages_yaml: dict, warn_on_legacy: bool = False
-) -> DeprecationSeverity:
-    """Return the default allowed deprecation severity from ``packages:all:deprecation``.
+#: Allowed severity per deprecation reason. The ``None`` key covers the reasons not listed.
+Thresholds = Dict[Optional[DeprecationReason], DeprecationSeverity]
+
+
+def _parse_thresholds(value: Union[str, dict]) -> Thresholds:
+    if isinstance(value, str):
+        return {None: DeprecationSeverity(value)}  # type: ignore[arg-type]
+    return {
+        (None if key == "default" else DeprecationReason(key)): DeprecationSeverity(
+            severity  # type: ignore[arg-type]
+        )
+        for key, severity in value.items()
+    }
+
+
+def _allowed(thresholds: Thresholds, reason: DeprecationReason) -> DeprecationSeverity:
+    """Return the threshold for a reason, falling back to the default and finally to ``none``."""
+    if reason in thresholds:
+        return thresholds[reason]
+    return thresholds.get(None, DeprecationSeverity.NONE)
+
+
+def _default_thresholds(packages_yaml: dict, warn_on_legacy: bool = False) -> Thresholds:
+    """Return the default thresholds from ``packages:all:deprecation``.
 
     Falls back to the legacy ``config:deprecated`` flag (mapped to ``critical``) and finally to
     ``none``, meaning every deprecation is disallowed.
@@ -56,9 +77,9 @@ def _default_allowed_severity(
         warn_on_legacy: emit a warning when the deprecated ``config:deprecated`` flag is
             what relaxes the policy.
     """
-    severity_str = packages_yaml.get("all", {}).get("deprecation", {}).get("allowed_severity")
-    if severity_str is not None:
-        return DeprecationSeverity(severity_str)
+    value = packages_yaml.get("all", {}).get("deprecation", {}).get("allowed_severity")
+    if value is not None:
+        return _parse_thresholds(value)
 
     if spack.config.CONFIG.get("config:deprecated", False):
         if warn_on_legacy:
@@ -68,16 +89,17 @@ def _default_allowed_severity(
                 UserWarning,
                 stacklevel=2,
             )
-        return DeprecationSeverity.CRITICAL
+        return {None: DeprecationSeverity.CRITICAL}
 
-    return DeprecationSeverity.NONE
+    return {None: DeprecationSeverity.NONE}
 
 
 class Policy(NamedTuple):
     """Deprecation policy resolved from the ``packages`` configuration."""
 
     packages_yaml: dict
-    default_allowed: DeprecationSeverity
+    #: Thresholds from ``packages:all``, used when a package has no ``allowed_severity``
+    default_thresholds: Thresholds
     #: Global check scope from ``packages:all:deprecation:scope`` ("runtime" or "all")
     scope: str = "runtime"
 
@@ -91,21 +113,23 @@ class Policy(NamedTuple):
         """
         packages_yaml = spack.config.CONFIG.get_config("packages")
         scope = packages_yaml.get("all", {}).get("deprecation", {}).get("scope", "runtime")
-        return Policy(
-            packages_yaml, _default_allowed_severity(packages_yaml, warn_on_legacy), scope
-        )
+        return Policy(packages_yaml, _default_thresholds(packages_yaml, warn_on_legacy), scope)
 
     @property
     def deptypes(self) -> int:
         """Dependency types to traverse for the configured deprecation scope."""
         return dt.ALL if self.scope == "all" else dt.LINK | dt.RUN
 
-    def allowed_severity(self, pkg_name: str) -> DeprecationSeverity:
-        """Return the allowed severity for a package, honoring per-package overrides."""
+    def thresholds(self, pkg_name: str) -> Thresholds:
+        """Return the thresholds for a package."""
         override = (
             self.packages_yaml.get(pkg_name, {}).get("deprecation", {}).get("allowed_severity")
         )
-        return DeprecationSeverity(override) if override is not None else self.default_allowed
+        return _parse_thresholds(override) if override is not None else self.default_thresholds
+
+    def allowed_severity(self, pkg_name: str, reason: DeprecationReason) -> DeprecationSeverity:
+        """Return the allowed severity for a reason on a package."""
+        return _allowed(self.thresholds(pkg_name), reason)
 
     def exempt_labels(self, pkg_name: str) -> Set[str]:
         """Return the exempt labels for a package. A non-empty per-package list replaces the one
@@ -125,14 +149,14 @@ class Policy(NamedTuple):
             return []
 
         pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-        allowed = self.allowed_severity(spec.name)
+        thresholds = self.thresholds(spec.name)
         exempt = self.exempt_labels(spec.name)
         return [
-            Violation(constraint, entry.reason, entry.severity, allowed)
+            Violation(constraint, entry.reason, entry.severity, _allowed(thresholds, entry.reason))
             for constraint, entries in pkg_cls.deprecations.items()
             if spec.satisfies(constraint)
             for entry in entries
-            if entry.severity > allowed and not is_exempt(entry, exempt)
+            if entry.severity > _allowed(thresholds, entry.reason) and not is_exempt(entry, exempt)
         ]
 
 

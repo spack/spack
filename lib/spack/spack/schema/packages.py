@@ -10,6 +10,7 @@
 from typing import Any, Dict
 
 import spack.schema.environment
+from spack.enums import DeprecationReason
 
 from .compilers import extra_rpaths, flags, implicit_rpaths
 
@@ -122,12 +123,24 @@ package_attributes = {
     "patternProperties": {r"^[a-zA-Z_]\w*$": {}},
 }
 
+severity_value = {"type": "string", "enum": ["none", "low", "medium", "high", "critical"]}
+
+# A mapping is keyed by deprecation reason, with 'default' covering the reasons it omits
 allowed_severity = {
-    "type": "string",
-    "description": "Maximum allowed deprecation severity. Specs with higher "
-    "severity cause a concretization error.",
-    "enum": ["none", "low", "medium", "high", "critical"],
+    "description": "Maximum allowed deprecation severity, either a single value or a mapping "
+    "from deprecation reason to value. Specs with higher severity cause a concretization error.",
     "default": "none",
+    "oneOf": [
+        severity_value,
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "default": severity_value,
+                **{x.value: severity_value for x in DeprecationReason},
+            },
+        },
+    ],
 }
 
 deprecation_scope = {
