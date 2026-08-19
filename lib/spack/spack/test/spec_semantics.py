@@ -2935,6 +2935,94 @@ def test_two_providers_of_one_virtual_merge_as_parallel_edges(mock_packages):
     assert forward.to_dict() == backward.to_dict()
 
 
+def test_bare_virtual_edge_is_absorbed_by_a_provider_edge(mock_packages):
+    """A bare '^mpi' edge is satisfied by any '^[virtuals=mpi] provider' edge, so the merge
+    keeps only the provider edge, whichever side it comes from."""
+    provider = Spec("pkg-a ^[virtuals=mpi] mpich")
+    assert provider.satisfies("pkg-a ^mpi")
+
+    forward = provider.copy()
+    assert forward.constrain("pkg-a ^mpi") is False
+    assert forward.to_dict() == provider.to_dict()
+
+    backward = Spec("pkg-a ^mpi").constrained(provider)
+    assert backward.to_dict() == provider.to_dict()
+
+    assert Spec("pkg-a ^mpi ^mpi=mpich").to_dict() == provider.to_dict()
+    assert Spec("pkg-a ^mpi=mpich ^mpi").to_dict() == provider.to_dict()
+
+
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        "pkg-a ^mpi@3 ^mpi=mpich",
+        "pkg-a ^mpi@3 ^[virtuals=mpi] mpich@3",
+        "pkg-a ^mpi+debug ^mpi=mpich",
+    ],
+)
+def test_constrained_virtual_edge_stays_apart_from_a_provider_edge(mock_packages, spec_str):
+    """A virtual's version, variants and other attributes are unrelated to the provider's, so
+    only a bare virtual edge is absorbed; anything more constrained is its own requirement."""
+    assert len(Spec(spec_str).edges_to_dependencies()) == 2
+
+
+def test_bare_direct_virtual_edge_is_absorbed_by_a_provider_edge(mock_packages):
+    """The same rule for direct deps: '%c' adds nothing next to '%c=gcc'."""
+    provider = Spec("pkg-a %c=gcc")
+    assert Spec("pkg-a %c %c=gcc").to_dict() == provider.to_dict()
+    assert Spec("pkg-a %c=gcc %c").to_dict() == provider.to_dict()
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs",
+    [
+        ("pkg-a ^mpi=mpich", "pkg-a ^mpi+debug"),
+        ("pkg-a ^mpi=mpich~debug", "pkg-a ^mpi+debug"),
+        ("pkg-a %mpi=mpich", "pkg-a %mpi+debug"),
+    ],
+)
+def test_provider_edge_does_not_satisfy_a_constrained_virtual(mock_packages, lhs, rhs):
+    """A virtual's variants and other non-version attributes have no defined meaning, so a
+    provider edge does not satisfy them, whatever the provider's own attributes say."""
+    assert not Spec(lhs).satisfies(rhs)
+
+
+def test_constrained_virtual_and_provider_edge_are_parallel_edges(mock_packages):
+    """The pairs above still intersect, and constrain keeps the two requirements side by
+    side."""
+    lhs = Spec("pkg-a ^mpi=mpich")
+    assert lhs.intersects("pkg-a ^mpi+debug")
+    assert len(lhs.constrained("pkg-a ^mpi+debug").edges_to_dependencies()) == 2
+
+
+def test_anonymous_edge_is_absorbed_by_a_satisfying_named_edge(mock_packages):
+    """An anonymous edge requires some dependency to match it, so a named edge satisfying it
+    makes it redundant, from either side of the merge."""
+    named = Spec("%bar+foo")
+    assert named.satisfies("%+foo")
+
+    forward = named.copy()
+    assert forward.constrain("%+foo") is False
+    assert forward.to_dict() == named.to_dict()
+
+    backward = Spec("%+foo").constrained(named)
+    assert backward.to_dict() == named.to_dict()
+
+    transitive = Spec("pkg-a ^pkg-b@2")
+    assert transitive.constrain("pkg-a ^*@2") is False
+
+
+def test_anonymous_edge_not_satisfied_by_a_named_edge_stays(mock_packages):
+    """A named edge that does not satisfy the anonymous requirement leaves it in place."""
+    assert len(Spec("pkg-a ^pkg-b@1 ^*@2").edges_to_dependencies()) == 2
+
+
+def test_propagated_bare_virtual_edge_is_not_absorbed(mock_packages):
+    """A propagated edge is an input to the solver's objective, so a non-propagating provider
+    edge does not make it redundant."""
+    assert len(Spec("pkg-a %%c %c=gcc").edges_to_dependencies()) == 2
+
+
 def test_two_providers_under_conditions_that_exclude_each_other_are_fine(mock_packages):
     """Only one provider can be the one at a time, so two of them named under conditions that
     cannot hold together are not in each other's way."""
@@ -3004,7 +3092,7 @@ def test_two_versions_of_one_provider_of_a_virtual_intersect(mock_packages):
 
 def test_an_anonymous_dependency_is_a_parallel_edge(mock_packages):
     """An edge with an anonymous target requires some dependency to match it. Constrain appends
-    it as a parallel edge, and discards it only when an existing anonymous edge satisfies it."""
+    it as a parallel edge, and discards it when an existing edge satisfies it."""
     # idempotency: the meet of a spec with itself is itself
     spec = Spec("pkg-a ^*@2")
     assert spec.satisfies(spec)
