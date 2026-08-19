@@ -6,7 +6,6 @@ import sys
 
 import spack.environment.shell
 import spack.user_environment as uenv
-from spack.util.environment import EnvironmentModifications
 
 # Shell configuration
 UNIX_SHELLS = ["sh", "csh", "fish"]
@@ -73,8 +72,7 @@ def write_env_activate_script(env: "spack.environment.Environment", view: str = 
 
         # Update the script only if needed
         if _script_needs_update(lockfile_mtime, activate_script_path):
-            env_mods = EnvironmentModifications()
-            env_mods.extend(spack.environment.shell.activate(env=env, view=view))
+            env_mods = spack.environment.shell.activate(env=env, view=view)
 
             cmds = spack.environment.shell.activate_commands(env, view)
             cmds += env_mods.shell_modifications(shell)
@@ -110,13 +108,12 @@ def write_env_deactivate_script(env, view: str):
             uenv.write_shell_script(deactivate_script_path, cmds, shell)
 
 
-def get_shell_unique_env_cmds(shell, prompt: str, view: str) -> str:
+def get_shell_unique_env_cmds(shell, prompt: str) -> str:
     """Returns the prompt, view, and despacktivate commands which are unique to each shell.
 
     Args:
         shell: the shell that the user is running
         prompt: name of user's prompt
-        view: name of environment's view
     """
     despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
     prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)

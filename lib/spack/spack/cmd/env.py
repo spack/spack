@@ -397,9 +397,14 @@ def env_activate(args):
         generate_script.write_env_deactivate_script(active_env, view)
 
     ev.activate(active_env, use_env_repo=True)
-    spack.environment.shell.activate(active_env, view)
 
-    cmds = generate_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
+    # Validate that the environment view is accessible. This will print warnings if
+    # packages or repos are missing/broken. Note: write_env_activate_script may use
+    # cached scripts if the lockfile hasn't changed, so this check ensures we catch
+    # repo context changes (e.g., a repo being removed) even when using cached scripts.
+    spack.environment.shell.validate_view(active_env, view)
+
+    cmds = generate_script.get_shell_unique_env_cmds(args.shell, env_prompt)
     sys.stdout.write(cmds)
 
     print(generate_script.source_env_script(env_activate_script, args.shell))

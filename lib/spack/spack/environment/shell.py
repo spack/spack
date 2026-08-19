@@ -121,11 +121,7 @@ def deactivate_commands(shell):
 
 
 def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
-    """Activate an environment and append environment modifications
-
-    To activate an environment, we add its configuration scope to the
-    existing Spack configuration, and we set active to the current
-    environment.
+    """Compute environment modifications for activating an environment.
 
     Arguments:
         env: the environment to activate
@@ -163,6 +159,22 @@ def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
         )
 
     return env_mods
+
+
+def validate_view(env, view: Optional[str] = "default") -> None:
+    """Validate that an environment's view is accessible.
+
+    This checks if the view can be loaded and prints warnings if packages
+    or repos are missing/broken. This is useful when using cached activation
+    scripts to ensure the repo context hasn't changed.
+
+    Arguments:
+        env: the environment to validate
+        view: the view name to validate
+    """
+    # Simply call activate() and discard the result - it will trigger
+    # the same validation and error handling
+    _ = activate(env, view)
 
 
 def deactivate(active_env, view) -> EnvironmentModifications:
