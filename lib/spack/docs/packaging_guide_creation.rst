@@ -787,6 +787,17 @@ If omitted, the whole package is deprecated.
 The ``reason`` keyword is required and must be one of ``"cve"``, ``"rename"``, ``"unavailable"``, or ``"maintenance"``.
 The optional ``severity`` keyword ranks the urgency: ``"low"`` (default), ``"medium"``, ``"high"``, or ``"critical"`` in increasing order.
 
+The optional ``labels`` keyword lists the advisories a deprecation refers to.
+Any identifier works, so a GHSA or PYSEC id is as good as a CVE one:
+
+.. code-block:: python
+
+   deprecated("@1.1.1t", reason="cve", severity="high", labels=["CVE-2023-0286"])
+
+Write one ``deprecated()`` per advisory, or per group of advisories that users would skip together.
+A deprecation can only be skipped as a whole, so grouping two advisories in one directive means a user cannot accept one without accepting the other.
+See :ref:`package-deprecations-config` for how users exempt them.
+
 Whether a deprecated version can be selected depends on the user's configuration.
 If its severity exceeds the configured threshold, Spack refuses to use it.
 This is a hard error both at concretization time and before the spec is installed.

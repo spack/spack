@@ -8,21 +8,22 @@ directive with a severity.
 
 Whether a deprecation is tolerated is defined by
 ``packages:<name>:deprecation:allowed_severity``, falling back to ``packages:all`` and the legacy
-``config:deprecated`` flag.
+``config:deprecated`` flag.  A directive that declares ``labels`` is skipped outright when every
+one of them is listed in ``packages:<name>:deprecation:exempt_labels``.
 
 This module centralizes that policy so the concretization-time gate and the install-time gate
 cannot drift.
 """
 
 import warnings
-from typing import TYPE_CHECKING, Callable, Iterable, List, NamedTuple, Optional
+from typing import TYPE_CHECKING, Callable, Iterable, List, NamedTuple, Optional, Set
 
 import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.repo
 import spack.traverse
-from spack.enums import DeprecationReason, DeprecationSeverity
+from spack.enums import Deprecation, DeprecationReason, DeprecationSeverity
 
 if TYPE_CHECKING:
     import spack.spec
@@ -35,6 +36,11 @@ class Violation(NamedTuple):
     reason: DeprecationReason
     severity: DeprecationSeverity
     allowed: DeprecationSeverity
+
+
+def is_exempt(entry: Deprecation, exempt_labels: Set[str]) -> bool:
+    """A deprecation is skipped only when it declares labels and every one of them is exempt."""
+    return bool(entry.labels) and exempt_labels.issuperset(entry.labels)
 
 
 def _default_allowed_severity(
@@ -101,6 +107,16 @@ class Policy(NamedTuple):
         )
         return DeprecationSeverity(override) if override is not None else self.default_allowed
 
+    def exempt_labels(self, pkg_name: str) -> Set[str]:
+        """Return the exempt labels for a package. A non-empty per-package list replaces the one
+        under ``all``, like every other ``packages`` setting.
+        """
+        for name in (pkg_name, "all"):
+            labels = self.packages_yaml.get(name, {}).get("deprecation", {}).get("exempt_labels")
+            if labels:
+                return set(labels)
+        return set()
+
     def disallowed(self, spec: "spack.spec.Spec") -> List[Violation]:
         """Returns the list of deprecation-policy violations for a spec. External specs are
         exempted since they are not under Spack's control.
@@ -110,12 +126,13 @@ class Policy(NamedTuple):
 
         pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
         allowed = self.allowed_severity(spec.name)
+        exempt = self.exempt_labels(spec.name)
         return [
-            Violation(constraint, reason, severity, allowed)
+            Violation(constraint, entry.reason, entry.severity, allowed)
             for constraint, entries in pkg_cls.deprecations.items()
             if spec.satisfies(constraint)
-            for reason, severity in entries
-            if severity > allowed
+            for entry in entries
+            if entry.severity > allowed and not is_exempt(entry, exempt)
         ]
 
 

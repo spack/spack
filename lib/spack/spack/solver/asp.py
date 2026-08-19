@@ -1485,16 +1485,23 @@ class SpackSolverSetup:
                 self.gen.newline()
 
     def deprecation_rules(self, pkg):
-        """Emit facts for deprecated() directives on pkg."""
-        for constraint_spec, entries in pkg.deprecations.items():
+        """Emit facts for deprecated() directives on pkg, skipping the exempted ones."""
+        exempt = self.deprecation_policy.exempt_labels(pkg.name)
+        for constraint_spec, all_entries in pkg.deprecations.items():
+            entries = [x for x in all_entries if not spack.deprecation.is_exempt(x, exempt)]
+            if not entries:
+                continue
+
             constraint_str = str(constraint_spec) or pkg.name
             msg = f"deprecated constraint {constraint_str}"
             condition_id = self.condition(constraint_spec, required_name=pkg.name, msg=msg)
-            for reason, severity in entries:
+            for entry in entries:
                 self.gen.fact(
                     fn.pkg_fact(
                         pkg.name,
-                        fn.deprecation_directive(condition_id, reason.value, severity.value),
+                        fn.deprecation_directive(
+                            condition_id, entry.reason.value, entry.severity.value
+                        ),
                     )
                 )
             self.gen.newline()

@@ -63,7 +63,7 @@ import spack.util.tty.color
 import spack.variant
 from spack.dependency import Dependency, intern_dependency
 from spack.directives_meta import DirectiveError, directive, get_spec
-from spack.enums import DeprecationReason, DeprecationSeverity
+from spack.enums import Deprecation, DeprecationReason, DeprecationSeverity
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
 from spack.version import StandardVersion, VersionChecksumError, VersionError
@@ -324,7 +324,13 @@ class _Conflicts(NamedTuple):
 
 
 @directive("deprecations", supports_when=False)
-def deprecated(spec: Optional[SpecType] = None, *, reason: str, severity: str = "low"):
+def deprecated(
+    spec: Optional[SpecType] = None,
+    *,
+    reason: str,
+    severity: str = "low",
+    labels: Optional[Sequence[str]] = None,
+):
     """Mark a spec constraint as deprecated.
 
     Args:
@@ -334,21 +340,29 @@ def deprecated(spec: Optional[SpecType] = None, *, reason: str, severity: str = 
             ``"unavailable"``, ``"maintenance"``.
         severity: how severe the deprecation is.  One of ``"low"`` (default), ``"medium"``,
             ``"high"``, ``"critical"``.
+        labels: optional advisory identifiers (e.g. CVE, GHSA or PYSEC ids) this deprecation
+            refers to. Users can skip the deprecation by exempting all of them.
     """
-    return _Deprecated(spec, reason, severity)
+    return _Deprecated(spec, reason, severity, labels)
 
 
 class _Deprecated(NamedTuple):
     spec: Optional[SpecType]
     reason: str
     severity: str
+    labels: Optional[Sequence[str]] = None
 
     def __call__(self, pkg: PackageType) -> None:
-        spec, reason, severity = self
+        spec, reason, severity, labels = self
+        if isinstance(labels, str):
+            raise DirectiveError(f"{pkg.name}: 'labels' must be a list of strings, not a string")
+
         sev = DeprecationSeverity(severity)  # type: ignore[arg-type]
         rsn = DeprecationReason(reason)
         constraint = get_spec(spec) if spec is not None else EMPTY_SPEC
-        pkg.deprecations.setdefault(constraint, []).append((rsn, sev))
+        pkg.deprecations.setdefault(constraint, []).append(
+            Deprecation(rsn, sev, tuple(labels or ()))
+        )
 
 
 @directive("dependencies", can_patch_dependencies=True)

@@ -42,9 +42,12 @@ def test_version_deprecated_true_registers_in_deprecations(mock_packages):
     and severity=critical.
     """
     pkg_cls = spack.repo.PATH.get_pkg_class("deprecated-old-style")
-    all_entries = [(r, s) for entries in pkg_cls.deprecations.values() for r, s in entries]
+    all_entries = [x for entries in pkg_cls.deprecations.values() for x in entries]
     assert all(
-        x == (spack.enums.DeprecationReason.MAINTENANCE, spack.enums.DeprecationSeverity.CRITICAL)
+        x
+        == spack.enums.Deprecation(
+            spack.enums.DeprecationReason.MAINTENANCE, spack.enums.DeprecationSeverity.CRITICAL
+        )
         for x in all_entries
     )
 
@@ -151,3 +154,71 @@ def test_old_style_deprecation_uses_exact_version(mock_packages):
     (constraint,) = pkg_cls.deprecations  # only @1.0 is deprecated
     assert spack.spec.Spec("deprecated-old-style@=1.0").satisfies(constraint)
     assert not spack.spec.Spec("deprecated-old-style@=1.0.1").satisfies(constraint)
+
+
+def test_exempt_label_skips_deprecation(mock_packages, concretize_scope, packages_yaml_write):
+    """Tests that exempting the only label of a deprecation skips it, without relaxing the
+    severity threshold.
+    """
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity: none
+      exempt_labels:
+      - CVE-2026-0001
+""")
+    assert concretize_one("deprecated-with-labels@3.0").satisfies("@3.0")
+
+
+def test_partially_exempt_labels_do_not_skip_deprecation(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that a deprecation listing two labels stays an error until both are exempted."""
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity: none
+      exempt_labels:
+      - CVE-2026-0002
+""")
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-with-labels@2.0")
+
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity: none
+      exempt_labels:
+      - CVE-2026-0002
+      - GHSA-aaaa-bbbb-cccc
+""")
+    assert concretize_one("deprecated-with-labels@2.0").satisfies("@2.0")
+
+
+def test_per_package_exempt_labels_replace_the_ones_under_all(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that a non-empty per-package list replaces the one under 'all', like every other
+    'packages' setting.
+    """
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity: none
+      exempt_labels:
+      - CVE-2026-0001
+  deprecated-with-labels:
+    deprecation:
+      exempt_labels:
+      - CVE-2026-0002
+      - GHSA-aaaa-bbbb-cccc
+""")
+    # @2.0 deprecation is skipped by the per-package list
+    assert concretize_one("deprecated-with-labels@2.0").satisfies("@2.0")
+    # @3.0 is not, because 'all' is no longer consulted
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-with-labels@3.0")
