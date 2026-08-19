@@ -16,7 +16,6 @@ import subprocess
 import sys
 from typing import List
 
-import black
 from docutils import nodes
 from docutils.core import publish_doctree
 from docutils.parsers.rst import Directive, directives
@@ -147,6 +146,24 @@ class ParagraphInfo:
         self.end_lineno = line + len(self.lines) - 1
 
 
+def _ruff_format(code: str) -> str:
+    """Formats code block using ruff
+
+    ruff has no python interface so we use subprocess
+    and feed the code through stdin and read from stdout
+    """
+    cmd = ["ruff", "format", "--line-length", "99", "-"]
+    try:
+        result = subprocess.run(
+            cmd, input=code, capture_output=True, text=True, encoding="utf-8", check=True
+        )
+    except FileNotFoundError:
+        raise RuntimeError("Ruff formatting failed: The 'ruff' executable was not found.")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"ruff formatting failed: {e}") from e
+    return result.stdout
+
+
 def _is_node_in_table(node: nodes.Node) -> bool:
     """Check if a node is inside a table by walking up the parent chain."""
     while node.parent:
@@ -186,7 +203,7 @@ def _format_code_blocks(document: nodes.document, path: str) -> List[Warning]:
 
         try:
             if language == "python":
-                formatted = black.format_str(original, mode=black.FileMode(line_length=99))
+                formatted = _ruff_format(original)
             elif language == "yaml":
                 yaml = YAML(pure=True)
                 yaml.width = 10000  # do not wrap lines
