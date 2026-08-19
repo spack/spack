@@ -433,11 +433,11 @@ error(1, "deprecated_error", Package, Reason, Severity, Allowed)
      condition_holds(CondID, node(ID, Package)),
      not external(node(ID, Package)),
      node_in_deprecation_scope(node(ID, Package)),
-     pkg_fact(Package, allowed_deprecation_severity(Allowed)),
+     pkg_fact(Package, allowed_deprecation_severity(Reason, Allowed)),
      Severity > Allowed.
 
 #defined deprecation_directive/3.
-#defined allowed_deprecation_severity/1.
+#defined allowed_deprecation_severity/2.
 #defined deprecation_scope/1.
 
 %-----------------------------------------------------------------------------

@@ -751,7 +751,7 @@ def test_ensure_allowed_exempts_externals(install_mockery, mutable_config: Confi
         spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
 
     # The spec is blocked by the strict default policy...
-    policy = spack.deprecation.Policy({}, spack.deprecation.DeprecationSeverity.NONE)
+    policy = spack.deprecation.Policy({}, {})
     assert policy.disallowed(spec)
     # ...unless it is external, in which case the gate does not raise.
     spec.external_path = "/opt/example"
@@ -899,3 +899,22 @@ def test_install_gate_honors_exempt_labels(install_mockery, mutable_config: Conf
         "packages:all:deprecation:exempt_labels", ["CVE-2026-0002", "GHSA-aaaa-bbbb-cccc"]
     ):
         spack.deprecation.check_deprecations([spec])  # must not raise
+
+
+def test_install_gate_honors_per_reason_thresholds(install_mockery, mutable_config: Configuration):
+    """Tests that the install-time gate applies the same per-reason thresholds as the
+    concretizer, so a lockfile is judged by the reason of each deprecation.
+    """
+    with mutable_config.override("config:deprecated", True):
+        cve = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+        rename = spack.concretize.concretize_one("deprecated-with-reason@1.0")
+
+    with mutable_config.override(
+        "packages:all:deprecation:allowed_severity", {"default": "critical", "cve": "none"}
+    ):
+        # reason=rename falls back to the 'critical' default
+        spack.deprecation.check_deprecations([rename])  # must not raise
+
+        # reason=cve is forbidden at any severity
+        with pytest.raises(spack.error.InstallError, match="deprecated"):
+            spack.deprecation.check_deprecations([cve])

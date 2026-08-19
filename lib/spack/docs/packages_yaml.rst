@@ -734,6 +734,22 @@ The default is ``"none"``, meaning every deprecation is a hard error unless the 
 In this example, ``low``-severity deprecations on any package are allowed silently, while ``medium`` and above remain errors.
 The per-package override for ``openssl`` reinstates the strictest threshold, so every deprecation on that package is an error regardless of the global setting.
 
+A single threshold applies to every deprecation reason alike.
+To hold some reasons to a stricter standard than others, give a mapping from reason to threshold instead, with ``default`` covering the reasons it omits:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       deprecation:
+         allowed_severity:
+           default: low
+           cve: none
+
+Here a ``low``-severity rename or maintenance deprecation is allowed, while any deprecation with ``reason: cve`` is an error whatever its severity.
+The reason keys are the values accepted by the ``deprecated()`` directive: ``cve``, ``rename``, ``unavailable``, and ``maintenance``.
+A per-package ``allowed_severity`` replaces the one under ``all`` outright, exactly as it does for a single value.
+
 Which dependencies are checked is controlled by the ``scope`` setting, which is global and can only be given under ``all:``:
 
 .. code-block:: yaml

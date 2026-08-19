@@ -1419,7 +1419,7 @@ class SpackSolverSetup:
         self.pkgs: Set[str] = set()
 
         # deprecation policy resolved once in setup and reused for every package
-        self.deprecation_policy = spack.deprecation.Policy({}, DeprecationSeverity.NONE)
+        self.deprecation_policy = spack.deprecation.Policy({}, {})
 
         # list of unique libc specs targeted by compilers (or an educated guess if no compiler)
 
@@ -1487,6 +1487,7 @@ class SpackSolverSetup:
     def deprecation_rules(self, pkg):
         """Emit facts for deprecated() directives on pkg, skipping the exempted ones."""
         exempt = self.deprecation_policy.exempt_labels(pkg.name)
+        reasons = set()
         for constraint_spec, all_entries in pkg.deprecations.items():
             entries = [x for x in all_entries if not spack.deprecation.is_exempt(x, exempt)]
             if not entries:
@@ -1496,6 +1497,7 @@ class SpackSolverSetup:
             msg = f"deprecated constraint {constraint_str}"
             condition_id = self.condition(constraint_spec, required_name=pkg.name, msg=msg)
             for entry in entries:
+                reasons.add(entry.reason)
                 self.gen.fact(
                     fn.pkg_fact(
                         pkg.name,
@@ -1506,8 +1508,12 @@ class SpackSolverSetup:
                 )
             self.gen.newline()
 
-        allowed = self.deprecation_policy.allowed_severity(pkg.name)
-        self.gen.fact(fn.pkg_fact(pkg.name, fn.allowed_deprecation_severity(allowed.value)))
+        # A threshold is only ever read next to a directive, so packages without one emit nothing
+        for reason in sorted(reasons, key=lambda x: x.value):
+            allowed = self.deprecation_policy.allowed_severity(pkg.name, reason)
+            self.gen.fact(
+                fn.pkg_fact(pkg.name, fn.allowed_deprecation_severity(reason.value, allowed.value))
+            )
 
     def config_compatible_os(self):
         """Facts about compatible os's specified in configs"""
