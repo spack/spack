@@ -1,0 +1,1371 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=2.6cm]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{stmaryrd}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\emergencystretch=2em
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{counterexample}[theorem]{Counterexample}
+\newtheorem{convention}[theorem]{Convention}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{openq}[theorem]{Open question}
+
+\newcommand{\sat}{\sqsubseteq}
+\newcommand{\satrel}{\mathord{\sat}}
+\renewcommand{\ker}{\sim}
+\newcommand{\meet}{\sqcap}
+\newcommand{\den}[1]{\gamma(#1)}
+\newcommand{\denR}[1]{\gamma_{R}(#1)}
+\newcommand{\Spec}{\mathcal{S}}
+\newcommand{\Conc}{\mathcal{C}}
+\newcommand{\Names}{\mathit{Nm}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\src}[1]{\footnote{\code{#1}}}
+\newcommand{\Bool}{\mathbb{B}}
+\newcommand{\pset}{\mathcal{P}}
+
+\title{The Spack Spec as a Mathematical Object\\
+\large An order-theoretic semantics of \code{satisfies}, \code{intersects} and \code{constrain}}
+\author{}
+\date{2026-08-19 \\ \small branch \code{hs/test/property-based-tests}, tip \code{475f06ecef4}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+A Spack spec is a constraint on build configurations, and three operations give
+those constraints their algebra: \code{satisfies} compares two of them,
+\code{intersects} tests whether they admit a common solution, and
+\code{constrain} combines them.  This note defines the set of specs and the
+three operations as mathematical objects.  The central claims: \code{satisfies}
+is a \emph{preorder}, not a partial order, on a precisely delimited fragment of
+the spec language; its kernel $\ker$ (mutual satisfaction) is an equivalence
+whose quotient $\Spec/\!\ker$ is a partial order; \code{constrain} computes a
+partial greatest lower bound, so the quotient is a meet-semilattice with a top
+element and no bottom.  Each exclusion from the fragment is stated with its
+counterexample: propagated variants (\code{++foo}) follow non-contradiction
+instead of subset semantics and break transitivity; propagation policies on
+edges (\code{\%\%}) and flags (\code{==}) are annotations invisible to the
+order, which is what breaks antisymmetry; compiler flags are sequences whose
+merge does not commute; and constructible specs denoting the empty set break
+reflexivity of the denotational reading.  The order-theoretic core --- the
+quotient construction, the descent of the partial meet, the collapse of
+optimality annotations, product domains, and the simulation preorder on
+dependency trees --- is machine-checked in Lean~4
+(\code{SpecSemantics.lean}); the claims about the Python implementation are
+validated by the property-based law checkers in
+\code{lib/spack/spack/test/spec\_algebra*.py}.
+\end{abstract}
+
+\tableofcontents
+
+%======================================================================
+\section{Introduction}
+
+Spack's \code{Spec} is a single data structure with two readings.  Abstractly
+it is a \emph{constraint}: \code{mpileaks @2.3: +debug \%gcc target=zen2:}
+describes the set of builds the user would accept.  Concretely it is a
+\emph{solution}: a fully resolved build with every version, variant, flag and
+dependency pinned, identified by a DAG hash.  The bridge between the readings
+is the relation
+\[
+  a \sat b \quad\iff\quad \code{a.satisfies(b)},
+\]
+read ``every build admitted by $a$ is admitted by $b$'', together with
+\code{a.intersects(b)} (``some build is admitted by both'') and
+\code{a.constrain(b)} (``narrow $a$ by $b$'', in place, raising when the two
+are disjoint).  The in-tree law checkers state the intent
+concisely:\src{lib/spack/spack/test/spec\_algebra.py:5--24}
+\[
+\begin{aligned}
+  a.\code{satisfies}(b) \;&\approx\; \den{a} \subseteq \den{b},\\
+  a.\code{intersects}(b) \;&\approx\; \den{a} \cap \den{b} \neq \emptyset,\\
+  a.\code{constrain}(b) \;&\approx\; a \mathrel{:=} a \sqcap b,
+\end{aligned}
+\]
+where $\den{s}$ is the set of concrete specs $s$ can concretize to.
+
+The first formalization attempt was ``the specs are a meet-semilattice under
+$\sat$, with \code{constrain} as the meet''.  That claim is wrong twice over,
+and both failures are informative.  First, $\sat$ is not antisymmetric:
+\code{pkg-a \%gcc} and \code{pkg-a \%\%gcc} satisfy each other, yet they are
+distinct states with distinct serializations, because \code{\%\%} adds a solver
+preference that does not narrow the set of admissible solutions
+(\S\ref{sec:solver}).  So at best the specs are a \emph{preorder}, and the
+semilattice structure lives on the quotient by mutual satisfaction.  Second,
+even the preorder claim needs a fragment restriction: propagated variants
+(\code{++foo}) are deliberately compared by non-contradiction instead of by
+subset, and that breaks transitivity outright (\S\ref{sec:propagation}).
+
+This note makes the corrected claims precise.  It proceeds bottom-up: the
+order-theoretic scaffolding (\S\ref{sec:order}), the per-dimension value
+domains (\S\ref{sec:dimensions}), nodes and edges (\S\ref{sec:nodes},
+\S\ref{sec:edges}), the assembled relation and its laws
+(\S\ref{sec:algebra}), the distinction between the repo-free algebra and the
+repo-aware readings (\S\ref{sec:repo}), and the solver's two-sorted
+interpretation that explains the annotations (\S\ref{sec:solver}).
+\S\ref{sec:audit} then turns the framework on the implementation: an
+adversarial audit, with executed witnesses, of where the code contradicts
+the mathematics it approximates.
+\S\ref{sec:lean} maps every general theorem to its machine-checked Lean
+counterpart and every implementation claim to the property test that guards
+it, and discusses how far such a bridge between proof and implementation can
+be pushed.
+
+\begin{convention}
+$\Spec$ is the set of \code{Spec} states (Python objects up to
+\code{to\_dict()} equality); $\Conc \subseteq \Spec$ the concrete ones.
+$a \sat b$ abbreviates \code{a.satisfies(b)}.  $a \meet b$ denotes
+\code{spack.spec.meet(a,b)}: the value of \code{constrain} run on a copy of
+$a$, with $a \meet b = \bot$ (undefined) when \code{constrain} raises.  File
+and line references are to the branch tip above.
+\end{convention}
+
+%======================================================================
+\section{Order-theoretic scaffolding}\label{sec:order}
+
+Everything in this section is general order theory, independent of Spack, and
+is machine-checked in \code{SpecSemantics.lean}; theorem names below refer to
+that file.
+
+\begin{definition}[Preorder, kernel]
+A \emph{preorder} on a set $X$ is a reflexive, transitive relation
+$\sqsubseteq$.  Its \emph{kernel} is $x \ker y \iff x \sqsubseteq y \wedge y
+\sqsubseteq x$.
+\end{definition}
+
+\begin{theorem}[Antisymmetrization; \code{Pre.setoid}, \code{Pre.qle\_antisymm}]
+\label{thm:quotient}
+The kernel of a preorder is an equivalence relation, $\sqsubseteq$ descends to
+the quotient $X/\!\ker$, and the descended relation is a partial order.
+\end{theorem}
+
+\begin{definition}[Partial meet]\label{def:meet}
+A \emph{partial meet} for a preorder $(X, \sqsubseteq)$ is a partial binary
+operation $\meet$ with:
+\begin{enumerate}[label=(M\arabic*),itemsep=1pt]
+  \item \emph{sound}: if $x \meet y$ is defined then $x \meet y \sqsubseteq x$
+        and $x \meet y \sqsubseteq y$;
+  \item \emph{greatest}: if $x \meet y$ is defined and $c \sqsubseteq x$,
+        $c \sqsubseteq y$, then $c \sqsubseteq x \meet y$;
+  \item \emph{total on compatible pairs}: if some $c$ has $c \sqsubseteq x$ and
+        $c \sqsubseteq y$, then $x \meet y$ is defined.
+\end{enumerate}
+\end{definition}
+
+(M1)--(M3) are exactly the contract the law checkers impose on
+\code{constrain}:\src{lib/spack/spack/test/spec\_algebra\_corpus.py:225--256,
+337--352}
+\begin{itemize}[itemsep=1pt]
+\item (M1) is \code{constrained\_lhs\_satisfies\_rhs} together with\newline
+      \code{constrain\_never\_weakens\_the\_lhs};
+\item (M2) is \code{constrain\_is\_the\_greatest\_lower\_bound};
+\item (M3) is one direction of \code{intersects\_agrees\_with\_constrain}:
+      \code{constrain} raises exactly when \code{intersects} is false, and
+      \code{intersects} may only be false when no common refinement exists.
+\end{itemize}
+
+\begin{theorem}[Meet laws up to kernel; \code{Meet.idem/comm/assoc/congr}]
+\label{thm:meetlaws}
+A partial meet is idempotent, commutative and associative up to $\ker$
+(associativity including definedness: if $(x \meet y) \meet z$ is defined then
+so is $x \meet (y \meet z)$, with $\ker$-equivalent results), and it is a
+$\ker$-congruence: $x \ker x'$, $y \ker y'$ give equal definedness and
+$\ker$-equivalent results.
+\end{theorem}
+
+\begin{theorem}[Descent; \code{Meet.qmeet\_idem/comm/assoc}]
+\label{thm:descent}
+On $X/\!\ker$ the partial meet induces a well-defined partial operation
+satisfying idempotence, commutativity and associativity as \emph{equalities}.
+Thus $X/\!\ker$ is a meet-semilattice, partial only on genuinely incompatible
+pairs.
+\end{theorem}
+
+The next theorem is the abstract form of the \code{\%}/\code{\%\%} dispute.
+
+\begin{theorem}[Annotation collapse; \code{Pre.ann}, \code{Pre.annIso}]
+\label{thm:annotation}
+Let $(X, \sqsubseteq)$ be a preorder and $\Pi$ a nonempty set of annotations.
+Order $X \times \Pi$ by first components only: $(x,p) \sqsubseteq (y,q) \iff
+x \sqsubseteq y$.  Then $(x,p) \ker (y,q) \iff x \ker y$, and the quotient
+$(X \times \Pi)/\!\ker$ is order-isomorphic to $X/\!\ker$.
+\end{theorem}
+
+In words: a dimension that \code{satisfies} does not read is erased by the
+quotient, no matter how many states it distinguishes.  Antisymmetry of the
+\emph{state} order is unrecoverable while such a dimension exists; the partial
+order lives on the quotient and is indifferent to the annotation.
+
+\begin{theorem}[Products; \code{Pre.prod}, \code{Meet.prod}]\label{thm:prod}
+The product of preorders, ordered pointwise, is a preorder; pointwise partial
+meets satisfying (M1)--(M3) give a partial meet on the product, defined
+exactly when every component is defined.
+\end{theorem}
+
+%======================================================================
+\section{The value domains}\label{sec:dimensions}
+
+A spec node constrains several independent \emph{dimensions}.  Each dimension
+is a preorder with a top element $\top$ (``unconstrained'') and a partial meet;
+by Theorem~\ref{thm:prod} the node inherits both.  This section defines each
+dimension's carrier, order, meet and canonical form.
+
+\subsection{Names and namespaces}\label{sec:names}
+
+\begin{definition}[Flat domain]
+For a set $A$, the \emph{flat domain} $A_\top = A \cup \{\top\}$ is ordered by
+$x \sqsubseteq y \iff y = \top \vee x = y$.  The meet keeps the non-$\top$
+side and is undefined on two distinct elements of $A$.
+\end{definition}
+
+The name dimension is $\Names_\top$ where $\Names$ is the set of package
+names; the implementation writes $\top$ as the empty string.\src{spec.py:1931;
+the parser also maps \code{*} to it, spec\_parser.py:459--462}  The namespace
+dimension is the same construction with \code{None} as
+$\top$.\src{spec.py:1938, 3906--3907}  Two distinct names are disjoint
+\emph{by fiat}, even when one names a virtual the other provides: resolving
+providers would make the operations depend on the configured repositories
+(\S\ref{sec:repo}).\src{spec.py:3529--3533}  In the flat domain the kernel is
+trivial ($x \ker y \iff x = y$), so this dimension contributes no quotient
+collapse.  (Lean: \code{flat}, \code{flatMeet}.)
+
+\subsection{Versions}\label{sec:versions}
+
+The version dimension has the richest canonical form.
+
+\begin{definition}[Version points]
+A \emph{standard version} is a pair (component tuple, prerelease tuple), where
+components are integers or ordered string atoms (with the ``infinity''
+names \code{develop}, \code{main}, \code{master}, \dots\ above every numeric
+component) and prereleases range over
+$\mathit{alpha} < \mathit{beta} < \mathit{rc} < \mathit{final}$; the order is
+lexicographic and total.\src{version/version\_types.py:110--123, 221--515}
+A \emph{git version} is a distinct point identified by a commit or ref; a git
+version and a standard version never satisfy one
+another.\src{version\_types.py:375--376, 633--634}
+\end{definition}
+
+\begin{definition}[Version constraints]
+A \emph{range} $\code{lo:hi}$ denotes the half-open interval
+$[\mathit{lo}, \mathrm{next}(\mathit{hi}))$ over standard versions, where
+$\mathrm{next}$ is the successor in the lexicographic
+order.\src{version\_types.py:792--937}  A \code{VersionList} is a sorted list
+of points and ranges in which overlapping or adjacent elements are merged on
+insertion, so the representation of each denotable set is
+\emph{unique}.\src{version\_types.py:972--1009}  The order is set inclusion of
+denotations, the meet is set intersection, and
+$\top = \code{@:}$.\src{version\_types.py:1052--1132}
+\end{definition}
+
+Surface syntax: \code{@1.2} denotes the range $[1.2, \mathrm{next}(1.2))$ ---
+so \code{@1.2.1} satisfies it --- while \code{@=1.2} denotes the single point
+$1.2$, which \code{@1.2.1} does not satisfy (verified).  Because the
+representation is canonical, this dimension satisfies antisymmetry as
+\emph{state} equality: the kernel is trivial and the meet laws hold on the
+nose.  This is the model the target dimension was brought to by the
+canonicalization work in PR~52856 (\S\ref{sec:arch}).
+
+\subsection{Variants}\label{sec:variants}
+
+\begin{definition}[Variant value]\label{def:variant}
+Let $\Sigma$ be the set of value strings.  A variant value is a tuple
+$(\tau, \pi, c, W)$ with type $\tau \in \{\textsc{bool} < \textsc{single} <
+\textsc{multi}\}$, propagation bit $\pi \in \Bool$, concreteness bit
+$c \in \Bool$, and a finite value set $W \subseteq \Sigma \cup \Bool$,
+subject to: $\tau \in \{\textsc{bool}, \textsc{single}\}$ forces $c = 1$ and
+$|W| = 1$.\src{variant.py:274--317; values are deduplicated and sorted, so
+$W$ is genuinely a set, variant.py:387--404}  The wildcard \code{foo=*} is
+$(\textsc{multi}, \pi, 0, \emptyset)$.\src{variant.py:348--349}
+\end{definition}
+
+\begin{definition}[Variant order and meet, $\pi$ ignored]\label{def:variantorder}
+Write $x = (\tau_x, \pi_x, c_x, W_x)$, similarly $y$.  Then\src{variant.py:440--487}
+\[
+  x \sat y \iff
+  \begin{cases}
+    W_y \subseteq W_x & \text{if } c_y = 0 \quad\text{(``at least these values'')},\\
+    W_x = W_y         & \text{if } c_y = 1 \wedge c_x = 1,\\
+    \text{false}      & \text{if } c_y = 1 \wedge c_x = 0,
+  \end{cases}
+\]
+with one refinement: for the reserved \code{patches} variant, membership is
+tested by checksum-prefix instead of equality.  The meet is
+$(\min(\tau_x,\tau_y),\, \pi_x \wedge \pi_y,\, c_x \vee c_y,\, W_x \cup W_y)$,
+undefined iff the two sides are concrete with different value sets, or one is
+concrete and misses a value of the other.
+\end{definition}
+
+Denotationally: an abstract multi-value denotes the up-set
+$\{V : W \subseteq V\}$ of value assignments, a concrete value denotes exactly
+$\{W\}$, and \code{foo=*} denotes every assignment that defines \code{foo} at
+all --- it is the top element \emph{among specs that mention the variant};
+omitting the variant entirely is the true top for the dimension.
+A \code{VariantMap} is a finite partial map from variant names to variant
+values; a missing key is $\top$, and the map order and meet are pointwise
+(Theorem~\ref{thm:prod} again, indexed over names).
+
+Note what Definition~\ref{def:variantorder} does \emph{not} read: the
+propagation bit $\pi$.  Its semantics is deferred to \S\ref{sec:propagation};
+it is the variant-level instance of Theorem~\ref{thm:annotation} in the
+node-local order, but --- unlike the edge policy --- it is \emph{intended} to
+constrain the solution set, which is exactly why it is a gap and not an
+annotation (\S\ref{sec:propagation}).
+
+In the multi-valued abstract case the kernel is trivial because $W$ is stored
+as a set.  Had values been stored as a list, the quotient would identify
+reorderings and duplicates --- the Lean development includes this model
+(\code{multi}, \code{multiMeet}: lists ordered by reverse membership, meet =
+concatenation, with $[1,2] \ker [2,1,1]$ proved) both as the general shape of
+set-like dimensions and as a worked example of a nontrivial kernel.
+
+\subsection{Compiler flags}\label{sec:flags}
+
+The flag dimension is the one place where the meet is not commutative even up
+to the kernel's collapse of state.
+
+\begin{definition}[Flag map]
+A flag map assigns to each flag type (\code{cflags}, \code{cxxflags},
+\code{fflags}, \code{ldflags}, \code{ldlibs}, \code{cppflags}) a finite
+\emph{sequence} of flags, each a string with a propagation bit
+$\pi$.\src{spec.py:1088--1139}  The order compares \emph{sets}: $F \sat G$
+iff for every type $t$, the value set of $F(t)$ contains that of $G(t)$,
+ignoring order and $\pi$ in both directions.\src{spec.py:1142--1143}  The meet
+appends the missing flags of the right operand to the left operand's sequence
+and promotes $\pi$ on value matches; it never fails.\src{spec.py:1145--1175}
+\end{definition}
+
+Order matters to the build (\code{-O2 -g} and \code{-g -O2} are different
+command lines), so the sequence is the honest state; but the order is
+invisible to $\sat$, so the kernel identifies permutations:
+$\den{\code{cflags='-O2 -g'}} = \den{\code{cflags='-g -O2'}}$ under the
+declared reading of $\sat$, while the two are distinct states.  The meet
+$\code{cflags=-O2} \meet \code{cflags=-g}$ produces \code{cflags='-O2 -g'} one
+way and \code{cflags='-g -O2'} the other (verified): commutativity holds only
+up to $\ker$, and the state-level law is pinned as failing by
+design.\src{spec\_algebra.py:300--306}  The property harness additionally
+excuses quotient-level failures of associativity, monotonicity and congruence
+on operand pairs carrying distinct flags of one type\src{spec\_algebra\_%
+properties.py:725--736} --- the flag dimension is where the ``sequence with
+set semantics'' compromise leaks into the algebra, and a fully lawful
+treatment (e.g.\ a free-monoid quotient with an order-aware $\sat$) is an
+open design question (\S\ref{sec:open}).
+
+\subsection{Architecture}\label{sec:arch}
+
+The architecture dimension is a triple (platform, operating system, target).
+Platform and OS are flat domains enriched with a wildcard: the carrier is
+$\{\top\} \cup \{*\} \cup A$, where $*$ satisfies exactly ``set to
+something'': $x \sat * \iff x \neq \top$, and $*$ intersects
+everything.\src{spec.py:355--369}  The meet resolves $*$ against a name by
+taking the name.\src{spec.py:701--717}
+
+Targets are richer because microarchitectures form a DAG, not a chain.
+
+\begin{definition}[Target domain]
+Let $(U, \le)$ be the finite poset of microarchitectures, $u \le v$ iff $v$ is
+$u$ or an ancestor of $u$ (so \code{zen2} $\le$ \code{x86\_64}); each $u$ has
+a unique maximal ancestor, its \emph{family}.\src{vendor/archspec:
+microarchitecture.py:110--205}  A \emph{target expression} is a finite union
+of intervals, each written \code{lo:hi} and denoting
+$\{u : \mathit{lo} \le u \le \mathit{hi}\}$, with a missing bound resolving to
+the family root (below) or to no constraint (above).
+\end{definition}
+
+\begin{definition}[Canonical target form]\label{def:targetcanon}
+Every target expression is stored canonically\src{spec.py:219--247
+(\code{\_canonical\_target\_range})}: per interval, a lower bound equal to the
+family of the upper bound is dropped, \code{lo:hi} with $lo = hi$ collapses to
+the point, and an upper bound that is itself a family root collapses to the
+bare root (\code{:aarch64}, \code{aarch64:aarch64} and \code{aarch64} are one
+state); across intervals, duplicates and intervals contained in another are
+dropped and the rest sorted.  The canonical form is a sorted,
+subsumption-free antichain of intervals.
+\end{definition}
+
+The order is containment of denoted sets and the meet is intersection,
+computed per interval pair; because $(U, \le)$ is not a lattice, a pair of
+bounds has a \emph{set} of minimal upper bounds and maximal lower bounds, so
+one intersection can produce several intervals --- e.g.\
+$\code{cascadelake:} \meet \code{cannonlake:} = \code{icelake:}$ and
+$\code{armv8.6a:} \meet \code{neoverse\_n1:} =
+\code{ampere1:,ampere1a:}$ (verified).\src{spec.py:301--346, 407--439}
+Canonicalization makes the kernel trivial on this dimension:
+\code{:icelake} and \code{x86\_64:icelake} are one state with one DAG hash
+(verified).  One known incompleteness remains: the implemented containment
+test covers each left interval by a \emph{single} right interval, so a left
+interval covered only by the union of two right intervals is reported
+unsatisfied.\src{spec.py:386--390}  This makes $\sat$ on targets sound but not
+complete for the denotational reading.
+
+\subsection{Abstract hash}
+
+The hash dimension's carrier is $\{\top\} \cup B^{*}$, prefixes over the
+base-32 alphabet, written \code{/abc123}.  The order is
+``\emph{my} hash extends \emph{your} prefix'': $h \sat p$ iff $p$ is a prefix
+of $h$ (with a concrete spec contributing its full DAG hash); two prefixes are
+compatible iff one extends the other, and the meet keeps the
+longer.\src{spec.py:3549--3555, 3689--3693, 3899--3904}  Denotationally a
+prefix denotes the set of concrete specs whose DAG hash extends it.
+
+%======================================================================
+\section{Nodes}\label{sec:nodes}
+
+\begin{definition}[Abstract node]\label{def:node}
+An \emph{abstract node} is an element of the product
+\[
+  N \;=\;
+  \underbrace{\Names_\top}_{\text{name}} \times
+  \underbrace{\mathit{Ns}_\top}_{\text{namespace}} \times
+  \underbrace{\mathit{Ver}}_{\text{versions}} \times
+  \underbrace{\mathit{Var}}_{\text{variant map}} \times
+  \underbrace{\mathit{Flag}}_{\text{flag map}} \times
+  \underbrace{\mathit{Arch}_\top}_{\text{architecture}} \times
+  \underbrace{\mathit{Hash}_\top}_{\text{abstract hash}},
+\]
+ordered and met pointwise (Theorem~\ref{thm:prod}); the top element (every
+coordinate $\top$) is the \emph{anonymous} node.\src{node equality is
+\code{\_cmp\_node}, spec.py:4272--4283; the anonymous spec, spec.py:2445--2447}
+A \emph{concrete node} additionally carries a package hash (content hash of
+the build recipe) and a frozen map of \emph{provided virtuals}
+$\mathit{pv} : \Names \rightharpoonup \mathit{Ver}$
+(\S\ref{sec:repo}).\src{spec.py:1954--1956, 3339--3355}
+\end{definition}
+
+Concreteness is a mode, not a derived property: the concretizer asserts it,
+and with it the invariants that every variant value is concrete, the version
+is a single point, and the DAG hash is defined.\src{spec.py:3263--3315}  Node
+comparison short-circuits against a concrete right operand: $a \sat c$ iff
+$a$ is concrete and $\mathrm{hash}(a) = \mathrm{hash}(c)$ --- a concrete spec
+is a singleton, and the order restricted to $\Conc$ is
+discrete.\src{spec.py:3874--3880}
+
+\begin{definition}[Denotation]\label{def:denotation}
+$\den{s} = \{\, c \in \Conc : c \sat s \,\}$.
+\end{definition}
+
+With Definition~\ref{def:denotation} the slogan ``$\sat$ is $\subseteq$''
+becomes a theorem schema to be checked, not assumed: $a \sat b \Rightarrow
+\den{a} \subseteq \den{b}$ holds by transitivity wherever $\sat$ is
+transitive, while the converse (completeness) genuinely fails --- two specs
+can denote the same set without satisfying each other, e.g.\ through the
+target incompleteness above, and a spec can denote $\emptyset$ without $\sat$
+detecting it (\S\ref{sec:empty}).  The property harness states this
+restraint explicitly: over its finite universe of maximal specs it asserts
+only the forward direction.\src{spec\_algebra\_properties.py:1001--1011}
+
+One asymmetry deserves a note: state equality of abstract specs
+(\code{\_cmp\_node}) reads exactly the seven coordinates of
+Definition~\ref{def:node}, while the DAG hash of concrete specs also covers
+externals, extra attributes, splice provenance and the frozen provided
+virtuals.  The formal reading: abstract state is the seven-tuple; concrete
+state is the full serialization, compared via the hash.
+
+%======================================================================
+\section{Edges and the dependency structure}\label{sec:edges}
+
+\begin{definition}[Edge]\label{def:edge}
+An edge from a parent node to a child spec is a tuple
+\[
+  e = (\,d,\; V,\; \delta,\; w,\; \rho\,),
+\]
+where $d \subseteq \{\textsc{build}, \textsc{link}, \textsc{run},
+\textsc{test}\}$ is the set of dependency types, read as a lower bound;
+$V \subseteq_{\mathrm{fin}} \Names$ the virtuals the parent takes from the
+child; $\delta \in \Bool$ distinguishes direct (\code{\%}) from transitive
+(\code{\^{}}); $w \in \Spec$ is the condition (\code{when=}), with $\top$ for
+unconditional; and $\rho \in \{\textsc{none}, \textsc{preference}\}$ is the
+propagation policy (\code{\%\%}).
+$\rho = \textsc{preference}$ requires $\delta = 1$.\src{spec.py:864--911;
+enums.py:30--34}  A \emph{spec} is a rooted acyclic multigraph of nodes and
+edges; parallel edges to one name are permitted and meaningful (two
+\code{\^{}pkg-b} clauses may be witnessed by two distinct nodes).
+\end{definition}
+
+\begin{definition}[Edge order]\label{def:edgeorder}
+Edge $e_1$ (on the candidate side) satisfies edge $e_2$ (on the constraint
+side) iff the child names match or $e_2$'s child name is in $V_1$; $d_2
+\subseteq d_1$; $V_2 \subseteq V_1$; the conditions compare contravariantly
+($w_2 \sat w_1$: the constraint's condition must apply in no more cases than
+the candidate's, so an unconditional candidate edge satisfies a conditional
+constraint and not conversely); the
+child specs compare recursively; and if $e_2$ narrows a virtual's versions,
+the candidate child must provide that virtual at those versions (frozen
+virtuals, \S\ref{sec:repo}).  The policy $\rho$ is \emph{not
+read}.\src{spec.py:1829--1858}
+\end{definition}
+
+\begin{definition}[Simulation]\label{def:simulation}
+$a \sat b$ on the graph level: the root nodes compare per
+Definition~\ref{def:node}, and for every edge constraint of $b$ there is a
+witnessing edge of $a$ --- for a direct constraint ($\delta = 1$) an edge at
+depth one that is direct (unless $a$ is concrete, where the direct flag is
+erased), for a transitive constraint an edge whose child lies in the
+appropriate closure of $a$ (link/run closure plus direct edges) --- whose
+attributes and child satisfy the constraint per
+Definition~\ref{def:edgeorder}.  Distinct constraint edges may be witnessed by
+distinct parallel edges; the search backtracks across same-name
+candidates.\src{spec.py:1719--1791; exhaustiveness per PR~52876}
+\end{definition}
+
+This is a simulation preorder in the process-calculus sense.  Its two
+structural properties are exactly the ones the bug history shows are easy to
+lose, and both are proved for the tree model in Lean
+(\code{Tree.TLe.refl}, \code{Tree.TLe.trans}): reflexivity requires every edge
+to be able to witness itself, and transitivity requires witnesses to compose.
+The historical failures are instructive: an anonymous spec satisfying every
+named one made $\sat$ non-transitive (\code{pkg-a} $\sat$ \code{""} $\sat$
+\code{pkg-b}, fixed in PR~52861), and the depth-one shortcut let
+\code{\^{}pkg-b} witness \code{\%pkg-b} (fixed in PR~52860).
+
+\paragraph{Conditional edges.}
+An edge's condition $w$ is evaluated against the finished node by parser and
+merge alike, to a fixpoint: a condition the node falsifies removes the edge, a
+condition the node forces makes the edge unconditional, and a condition that
+constrains dependencies stays undecided (verified: \code{pkg-a\char`~foo
+\^{}[when='+foo'] pkg-b@1} parses to \code{pkg-a\char`~foo}, and
+\code{pkg-a+foo \^{}[when='+foo'] pkg-b@1} to \code{pkg-a+foo
+\^{}pkg-b@1}).\src{spec.py:3775--3806}  This canonicalization is what keeps
+edge-level absorption lawful; the residual non-minimality (several conditional
+edges jointly equivalent to one broader edge are not fused, because
+implication is checked pairwise) is a documented simplicity trade-off that
+affects only which representative of a $\ker$-class the merge
+returns.\src{spec\_algebra\_properties.py:639--657}
+
+\paragraph{The meet on graphs.}
+\code{constrain} merges roots per Definition~\ref{def:node} and then unions
+the edge lists, with three refinements: an edge implied by another is dropped
+(absorption, including a named edge absorbing an anonymous requirement); a
+direct edge meets its \code{\_same\_direct\_dep} partner (same name, same
+condition) by merging attributes pointwise; and a child named after a virtual
+in the partner's $V$ is renamed to the provider.  The meet on graphs has
+\emph{no} canonical minimal form --- a virtual edge and its provider edge stay
+side by side, parallel deptype edges stay parallel --- so on the graph level
+the kernel is genuinely nontrivial and the semilattice structure lives on the
+quotient.\src{spec.py:2299--2418; spec\_algebra.py:309--350}
+
+%======================================================================
+\section{The algebra of satisfies and constrain}\label{sec:algebra}
+
+We can now state the main claims at the level the law checkers verify them.
+
+\begin{definition}[The lawful fragment]\label{def:fragment}
+Let $\Spec_0 \subseteq \Spec$ be the specs containing no propagated variant
+(\code{++foo}, \S\ref{sec:propagation}), no bare git ref version (whose
+comparison consults a repository), and no node denoting $\emptyset$ through a
+jointly-forced group of direct provider edges (\S\ref{sec:empty}).
+\end{definition}
+
+\begin{theorem}[Preorder]\label{thm:preorder}
+On $\Spec_0$, $\sat$ is reflexive and transitive.
+\end{theorem}
+
+\emph{Status.}  Reflexivity and transitivity are checked exhaustively over a
+79-spec corpus (quadratic and cubic sweeps) and by randomized property
+sweeps across nineteen syntactic dimensions with shrinking; the branch tip is
+clean.\src{spec\_algebra\_corpus.py; spec\_algebra\_properties.py}  For the
+tree model of Definition~\ref{def:simulation} both properties are proved
+(Lean, \code{Tree.pre}).  The claim for the full implementation is empirical,
+not proved: the checked fragment is the generator's language, and the
+excluded features each break a law provably (below).
+
+\begin{theorem}[Kernel and quotient]\label{thm:kernel}
+On $\Spec_0$, $\ker$ (mutual satisfaction) is an equivalence;
+$\Spec_0/\!\ker$ is a partial order with top element the class of the
+anonymous spec.  The kernel is nontrivial: distinct states satisfy each other.
+\end{theorem}
+
+The interesting content is the catalog of nontrivial kernel classes:
+
+\begin{enumerate}[itemsep=2pt]
+\item \emph{Propagation policies on edges}: \code{pkg-a \%pkg-b} $\ker$
+      \code{pkg-a \%\%pkg-b}, distinct states, distinct serializations,
+      distinct \code{==}/hash (verified; the policy entered state equality in
+      PR~52905).  This is Theorem~\ref{thm:annotation} with $\Pi$ the policy
+      set; \S\ref{sec:solver} explains why the annotation must survive the
+      meet even though the order ignores it.
+\item \emph{Propagation bits on flags}: \code{cflags==-O2} $\ker$
+      \code{cflags=-O2} (verified), same construction.
+\item \emph{Flag sequence order}: \code{cflags='-O2 -g'} $\ker$
+      \code{cflags='-g -O2'} (\S\ref{sec:flags}).
+\item \emph{Unfused edge presentations}: a spec with edges
+      \code{\^{}mpi@3} and \code{\^{}[virtuals=mpi] mpich} beside each other
+      is $\ker$-equivalent to presentations a smarter merge would fuse; the
+      merge deliberately does not fuse them.\src{spec\_algebra.py:313--350}
+\item \emph{Jointly-split conditions}: \code{\%[when='+v'] x} beside
+      \code{\%[when='\char`~v'] x} versus the unconditional edge.
+\end{enumerate}
+
+Classes 1--2 are \emph{permanent}: they encode optimality data the order must
+not read (\S\ref{sec:solver}).  Classes 3--5 are representation slack: a
+stronger normal form could shrink them, at implementation cost, without
+changing the quotient.
+
+\begin{theorem}[Meet]\label{thm:constrainmeet}
+On $\Spec_0$ minus the flag-order slack (operand pairs carrying distinct
+flags of one type), $\meet$ satisfies (M1)--(M3) of
+Definition~\ref{def:meet}.  Hence, by Theorems~\ref{thm:meetlaws}
+and~\ref{thm:descent}, $\Spec_0/\!\ker$ is a meet-semilattice: idempotent,
+commutative, associative, monotone
+($a \sat b \Rightarrow a \meet c \sat b \meet c$ where defined), with
+absorption ($a \sat b \Rightarrow a \meet b \ker a$), partial exactly on
+pairs with no common refinement, and agreeing with \code{intersects}
+($a \meet b$ defined $\iff$ \code{a.intersects(b)}).
+\end{theorem}
+
+\emph{Status.}  Every named law is a checked law in the harness, including the
+exact greatest-lower-bound biconditional over a finite universe of 864
+maximal specs ($t \sat a \meet b \iff t \sat a \wedge t \sat b$, both
+directions --- the forward direction catches a meet that admits too much, the
+backward one a meet that lost a solution).\src{spec\_algebra\_properties.py:%
+1106--1130}  The descent from (M1)--(M3) to the semilattice is proved once and
+for all (Lean); what remains empirical is that \code{constrain} satisfies
+(M1)--(M3).
+
+\emph{No bottom.}  No spec state denotes $\emptyset$ lawfully, so the
+semilattice has no bottom element; \code{constrain} raises instead of
+producing one, and \code{meet} adjoins an artificial $\bot$ as
+\code{None}.\src{spec.py:5630--5636}
+
+Beyond the order laws, the harness pins \emph{representation} laws that a
+purely order-theoretic account would miss but that the algebra relies on:
+\code{constrain} is atomic (a failed merge leaves the left operand
+untouched), never mutates the right operand, reports its change flag
+honestly, leaves the narrowing dimensions of an already-satisfying left
+operand untouched (state-level absorption), is invariant under edge storage
+order, and keeps edge maps keyed by the child's current
+name.\src{spec\_algebra\_properties.py:860--1057; spec\_algebra\_corpus.py:%
+183--320}
+
+\subsection{Variant propagation: the deliberate breach}\label{sec:propagation}
+
+The syntax \code{++foo} (and \code{foo==bar}, \code{\char`~\char`~foo})
+asserts a variant value \emph{and} requests its propagation through the DAG.
+The intended semantics, and the one the concretizer implements, is a guarded
+implication: \emph{every node (root included) that defines the variant takes
+the value}; formally, for each node $n$ of the solution,
+$\code{foo} \in \mathrm{dom}(n) \Rightarrow n.\code{foo} = v$ --- equivalently
+``\code{foo=*} implies \code{+foo}'' per node.\src{solver/concretize.lp:%
+1715--1719: \code{variant\_value} is derived only under
+\code{node\_has\_variant} and \code{variant\_possible\_value}; asp.py:%
+2282--2286 emits even the root's own value conditionally}
+
+The \code{Spec} object stores something weaker: the same node-local value as
+\code{+foo} plus one bit, with no guard.\src{spec.py:2206--2208;
+variant.py:285}  Because the node-local reading (unconditional) and the
+solver's reading (guarded, DAG-wide) differ, \code{satisfies} implements
+neither as a subset test; it falls back to \emph{non-contradiction}: no node
+of the candidate may contradict the propagated value, and a spec with no
+opinion passes.\src{spec.py:3945--3982}
+
+\begin{counterexample}[Transitivity fails on \code{++}]\label{cex:prop}
+All verified:
+\[
+\code{pkg-a\char`~foo} \sat \code{pkg-a}, \qquad
+\code{pkg-a} \sat \code{pkg-a++foo}, \qquad
+\code{pkg-a\char`~foo} \not\sat \code{pkg-a++foo}.
+\]
+Moreover $\sat$ is not sound for the denotational reading here:
+$\den{\code{pkg-a}} \not\subseteq \den{\code{pkg-a++foo}}$, yet
+$\code{pkg-a} \sat \code{pkg-a++foo}$.  And the meet demotes the bit ---
+$\code{pkg-a++foo} \meet \code{pkg-a+foo} = \code{pkg-a+foo}$ (verified) ---
+so on this fragment $\meet$ is not even a lower bound.  A concretization-level
+witness that the stored state over-asserts: \code{callpath++debug}
+concretizes with \code{\^{}mpich+debug} but \emph{without} \code{+debug} on
+the root (the mock \code{callpath} defines no \code{debug} variant), while
+the abstract spec object reports \code{debug} locally
+true.\src{test/concretization/core.py:854--862}
+\end{counterexample}
+
+This is why $\Spec_0$ excludes \code{++}: the corpus filters propagated
+variants out of the ordered checks, and the sweep excuses their failures via
+an explicit gap predicate that names this
+subsection's reason.\src{spec\_algebra\_corpus.py:149--160;
+spec\_algebra\_properties.py:581--588}  The repair path is equally explicit:
+store the guarded constraint separately from the node-local value --- i.e.\
+represent \code{++foo} as the pair (propagation request, \emph{conditional}
+local assertion guarded by ``\code{foo} is defined here'') instead of
+(unconditional local assertion, bit).  With the guard in the state, $\sat$
+can evaluate it per node and the subset semantics returns; the three
+conventions in \S\ref{sec:solver} then reduce to two.
+
+\subsection{The empty denotation}\label{sec:empty}
+
+A node with two direct provider edges of one virtual whose conditions the
+node jointly forces denotes $\emptyset$: each solution takes the virtual from
+exactly one direct dependency.  The parser and the merge reject the states
+they can see (verified: \code{+foo \%[when='+foo' virtuals=c] gcc
+\%[virtuals=c] llvm} raises at parse; the meet of \code{+foo} with the
+undecided spec is $\bot$ and \code{intersects} reports false both ways), but
+the state remains constructible through paths that compare conditions only
+pairwise.  On such a spec, honest \code{intersects} reports
+$a \cap a = \emptyset$ --- and reflexivity of the \emph{denotational} reading
+($\emptyset \subseteq \emptyset$) collides with the implemented $\sat$, which
+is why $\Spec_0$ excludes these states.\src{spec\_algebra\_properties.py:%
+676--701; spec\_algebra.py:544--574}  The clean resolution would be a
+recognized bottom element: either make construction reject every empty state
+(closing the pairwise-comparison loophole) or admit $\bot$ into the algebra
+with $\bot \sat x$ for all $x$.  Bug no.~51 of the ledger (a forced
+condition with conflicting deps intersects everything) is this section's
+intersects-side twin.
+
+%======================================================================
+\section{Free constraints and the repository}\label{sec:repo}
+
+Everything above is \emph{repo-free}: on this branch, \code{satisfies},
+\code{intersects} and \code{constrain} are functions of their two operands.
+No call in their call graph consults the configured package repositories
+(the one residual exception: comparing a bare git ref version looks up the
+package's git history, which is why $\Spec_0$ excludes bare refs).  Names are
+opaque tokens --- \code{Spec("mpich")} does not satisfy \code{Spec("mpi")},
+and the two do not intersect (verified) --- and unknown names behave like any
+other token.  This was a deliberate semantic decision (``stateless
+comparison''), replacing an older regime where the verdicts of the three
+operations changed with the active repository set.
+
+\begin{definition}[Repository]\label{def:repo}
+A repository is a partial map $R : \Names \rightharpoonup \mathit{Pkg}$,
+where a package signature $\mathit{Pkg}$ consists of when-indexed families
+(each key a \emph{condition spec}, evaluated by the repo-free $\sat$):
+declared versions; variant definitions (name $\mapsto$ type, admissible
+values, default, multiplicity); conditional dependencies (constraint spec,
+dependency types, patches); provided virtuals (virtual specs with version
+ranges); conflicts and requirements.\src{package\_base.py:549--577}
+\end{definition}
+
+The repository induces a second, finer denotation: $\denR{s} \subseteq
+\den{s}$, the concrete specs that are also \emph{valid instances} of $R$ ---
+every node's name in $\mathrm{dom}(R)$, version among the declared ones,
+variant values admissible under the definitions whose conditions hold, edges
+generated by the dependency directives, virtuals wired to actual providers.
+For a fixed repository the admissible node states form a \emph{finite} set
+(finitely many names, declared versions, variant assignments, targets), so
+$R$-valid concrete specs are finite graphs over a finite node alphabet ---
+the ``sparse graph on a finite set of possible nodes'' reading of
+concretization, with the ASP solver selecting among them.
+
+The interplay between the free algebra and $R$ is a projection performed at
+well-defined moments, after which the algebra is free again:
+
+\begin{enumerate}[itemsep=2pt]
+\item \emph{Construction-time projection.}  \code{substitute\_abstract\_%
+variants} maps the free variant constraint (\textsc{multi}, abstract) onto
+the package's declared definition, assigning the type and concreteness of
+Definition~\ref{def:variant} and rejecting undeclared names or inadmissible
+values; \code{validate\_or\_raise} checks names, virtuals and
+dependencies.\src{spec.py:5639--5691, 3389--3413}  These are partial
+functions $\pi_R : \Spec \rightharpoonup \Spec$ raising outside their
+domain; they refine states and never relax them.
+\item \emph{Concretization-time freezing.}  Immediately before a spec is
+marked concrete, the versions of every virtual it provides are computed from
+$R$ (as the \emph{intersection} of the ranges of all \code{provides} clauses
+whose conditions hold) and stored on the node; the frozen map enters the DAG
+hash.\src{repo.py:2116--2142; spec.py:3350--3356}  After freezing, virtual
+queries against concrete specs --- ``does this \code{mpich} node satisfy
+\code{\^{}mpi@3}?'' --- are decided from node state alone.  The design
+pattern: instead of parameterizing the order by $R$, the $R$-facts the order
+needs are baked into the state, once, at a moment with a well-defined
+repository.
+\item \emph{Explicitly stateful refinement.}  The surviving repo-aware
+comparison is the method \code{PackageBase.intersects}.  It starts from the free
+\code{intersects} and may only strengthen \code{True} to \code{False}
+(e.g.\ via single-valuedness of a declared variant).  Its docstring states
+the division of labor: by design, \code{Spec.intersects()} knows nothing
+about package metadata.\src{package\_base.py:1472--1529}
+\end{enumerate}
+
+In order-theoretic terms: the free specs are the constraint language
+generated by the grammar, with $\sat$ and $\meet$ defined structurally ---
+``free'' in the informal sense that no relations beyond the structural ones
+hold, so it is the coarsest lawful algebra over the syntax.  A repository
+does not change the order; it selects the subset of concrete points
+($\denR{\cdot}$), refines abstract states through the partial projection
+$\pi_R$, and supplies the facts that freezing internalizes.  Whether
+$\pi_R$ enjoys an adjoint-like universal property (the least $R$-valid
+refinement of a free spec) is open; \code{substitute\_abstract\_variants}
+behaves like one on the variant dimension.
+
+%======================================================================
+\section{The solver's reading: constraints and preferences}\label{sec:solver}
+
+The disputes that forced the preorder correction dissolve once the denotation
+is two-sorted.  A spec contributes to the solver both \emph{hard} clauses,
+which cut the solution space, and \emph{soft} data, which steers the
+optimization among admissible solutions.  Write
+\[
+  \llbracket s \rrbracket \;=\; (\den{s},\; \mathit{pref}_s),
+\]
+where $\mathit{pref}_s$ collects the preference contributions.  The relation
+$\sat$ compares only the first component --- this is the design decision,
+made explicit in the code comment that a propagated edge ``is an input to the
+solver's objective even where it does not narrow the solution
+set''.\src{spec.py:1884--1886}  Theorem~\ref{thm:annotation} then gives the
+structure: the state is $(\text{constraint}, \text{annotation})$, the order
+reads the constraint, the kernel erases the annotation, and the quotient is
+the constraint order.  Two consequences follow.  Antisymmetry of states is
+gone for good --- restoring it would mean either reading preferences in
+$\sat$ (wrong: \code{\%\%gcc} admits every solution \code{\%gcc} does) or
+dropping them from the state (wrong: the merge would lose solver input,
+which was bug no.~36).  And the meet must preserve the annotation even
+though the order ignores it; the implementation promotes
+(\textsc{none} $\meet$ \textsc{preference} = \textsc{preference}) on edges
+and flags.
+
+The three propagation mechanisms occupy three different points of this
+two-sorted space:
+
+\begin{center}
+\begin{tabular}{@{}llll@{}}
+\toprule
+ & stored as & solver reading & $\sat$ reading \\
+\midrule
+\code{\%\%dep} & edge policy $\rho$ & soft: \code{any\_of} preference & ignored (kernel class) \\
+\code{cflags==-O2} & bit per flag & hard, overridden by local flag & ignored (kernel class) \\
+\code{++foo} & bit per variant & hard, guarded per node & non-contradiction (gap) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The first two rows are lawful annotations: hard-or-soft, their node-local
+truth adds nothing beyond what the plain form asserts, so ignoring them in
+$\sat$ is sound and Theorem~\ref{thm:annotation} applies.  The third row is
+the breach: \code{++foo} \emph{does} constrain the solution set (every node
+defining \code{foo}), so ignoring it is not an option, and the node-local
+approximation currently stored is neither sound nor complete for it ---
+hence Counterexample~\ref{cex:prop} and the exclusion from $\Spec_0$.  The
+meet conventions differ accordingly (promotion for the annotations,
+demotion for the variant bit), and the variant row is slated to move out of
+the annotation column altogether once the guard is stored
+(\S\ref{sec:propagation}).
+
+%======================================================================
+\section{Audit: the implementation against the framework}\label{sec:audit}
+
+The framework was extracted from the implementation after the fact, so the
+converse question is due: where does the implementation contradict it?  This
+section reports an adversarial pass over the Python side, conducted with the
+framework as the checklist --- every property named below (congruence of the
+equalities, soundness and completeness of $\sat$ against $\gamma$,
+statelessness, exactness of the meet) is one the preceding sections rely on.
+Findings are grouped by failure type; every witness was executed on the
+branch tip.  Some entries are new bugs, some are deliberate decisions whose
+cost the framework makes visible; each is labeled.
+
+\subsection{Equalities coarser than the order}\label{sec:audit-eq}
+
+The framework wants state equality to refine $\ker$, which in turn refines
+mutual satisfaction; three omissions in the comparison tuples break this.
+
+\begin{enumerate}[itemsep=3pt]
+\item \emph{Concreteness is not compared.}  \code{\_cmp\_node} omits
+\code{\_concrete}, while \code{\_\_hash\_\_} and \code{satisfies} both branch
+on it.\src{spec.py:4272--4284 vs 5421--5442}  Witness: mark one of two equal
+dep-less specs concrete; then $a = b$ under \code{==} while
+$\mathrm{hash}(a) \neq \mathrm{hash}(b)$ --- the \code{eq}/\code{hash}
+contract is broken, so \code{Spec} is unsound as a dictionary key across the
+abstract/concrete boundary --- and $a \not\sat b$ while $b \sat a$: equality
+does not imply mutual satisfaction.  The state is reachable:
+\code{from\_dict} marks deserialized roots concrete.  [new bug]
+\item \emph{The variant type is not compared.}  \code{VariantValue.\_cmp\_iter}
+omits \code{type}, which \code{\_\_str\_\_} and \code{yaml\_entry} both
+read.\src{variant.py:406--411 vs 369--378, 495--512}  Two \code{==}-equal
+variant values serialize as \code{foo:=bar} versus \code{foo=bar} and as
+\code{['bar']} versus \code{'bar'} in the node dictionary --- equal states
+with different documents, hence different hashes once concrete.  The state is
+produced by \code{substitute\_abstract\_variants} and by the merge's type
+narrowing.  [new bug]
+\item \emph{A stale abstract hash survives concretization.}
+\code{\_mark\_concrete} keeps \code{abstract\_hash}, which \code{\_cmp\_node}
+still yields while satisfaction reads \code{dag\_hash()}: a concrete spec
+built from \code{pkg-a/deadbeef} does not satisfy \code{pkg-a/deadbeef}.
+[new bug, minor]
+\end{enumerate}
+
+\subsection{States denoting the empty set}\label{sec:audit-empty}
+
+\S\ref{sec:empty} treated jointly-forced provider groups as the route to
+$\den{s} = \emptyset$; the audit found a second route.  Concrete
+\code{patches} values compare by string equality while the abstract side uses
+the checksum-prefix rule,\src{variant.py:417--451} so a concrete prefix state
+such as \code{patches:=aa} denotes $\emptyset$: a full checksum satisfies
+\code{patches=aa} but not \code{patches:=aa}, which only the literal
+two-character value equals.  That contradicts the documented invariant behind
+\code{meet} that no spec denotes the empty set,\src{spec.py:5630--5636} and
+the state is reachable only from input that writes it: variants print
+exactly, and a concrete \emph{spec} renders its checksums as seven-character
+\code{patches=} prefixes, a weaker constraint it satisfies.  Applying the
+prefix rule in the concrete/concrete branch would close the route.  [new
+bug]
+
+\subsection{Statefulness at construction and comparison}\label{sec:audit-state}
+
+The operations are repo-free (\S\ref{sec:repo}), but three construction-time
+behaviors reintroduce environment dependence, and one comparison is partial.
+
+\begin{enumerate}[itemsep=3pt]
+\item \emph{Reserved OS names resolve against the host.}  The \code{os}
+setter maps \code{default\_os}, \code{frontend}, \dots\ to the host
+platform's values and fills \code{platform} in as a side
+effect.\src{spec.py:539--562}  The same string denotes different sets on
+different machines, and parsing is order-dependent:
+\code{platform=test os=default\_os} and \code{os=default\_os platform=test}
+fail with two different errors, the second a spurious duplicate-platform
+report caused by the setter's fill-in.  [stateful; order-dependence new]
+\item \emph{The variant point/lower-bound distinction is repo-decided.}
+Whether \code{foobar=bar} is a point (\textsc{single}, concrete) or a lower
+bound (\textsc{multi}, abstract) is decided by
+\code{substitute\_abstract\_variants} from the package definition
+(\S\ref{sec:repo}).  Before substitution
+$\code{foobar=bar} \meet \code{foobar=baz}$ is defined; after it, undefined:
+the projection $\pi_R$ moves states \emph{down} the preorder and shrinks the
+domain of the meet.  So $\pi_R$ is a genuine strict refinement, not a
+relabelling --- and a pre-substitution meet can be a state that only fails
+later, as a different exception.  [framework-relevant; sharpens
+\S\ref{sec:repo}]
+\item \emph{Bare git refs make the operations partial, asymmetrically.}
+\code{@git.main} against a version constraint resolves the ref through the
+package's repository and network state; \code{satisfies} raises in one
+operand order and returns \code{False} in the other, and \code{intersects}
+raises in both.\src{version\_types.py:589--637, 878--896}  This is why
+$\Spec_0$ excludes bare refs; the asymmetry itself was not previously
+recorded.  [stateful, partial]
+\item \emph{Frozen virtuals on an abstract node desynchronize the
+operations.}  \code{\_satisfies\_node} reads \code{\_provided\_virtuals}
+while the disjointness scan refuses the lookup by design; an abstract node
+carrying a frozen map (preventable today only by convention) satisfies
+\code{mpi@2} while not intersecting it --- $a \sat b$ with
+$\den{a} \cap \den{b}$ reported empty.  [latent law violation]
+\end{enumerate}
+
+\subsection{The target dimension}\label{sec:audit-target}
+
+Two confirmed findings sharpen \S\ref{sec:arch}.
+
+\begin{enumerate}[itemsep=3pt]
+\item \emph{\code{target=*} is classified concrete.}
+\code{target\_concrete} tests only for \code{:} and \code{,}, so the wildcard
+passes.\src{spec.py:728--733}  Downstream, the solver setup looks the
+``concrete'' target up in the microarchitecture table and errors out:
+\code{spack solve zlib target=*} fails outright while \code{target=x86\_64:}
+and \code{os=*} solve.  The parser rejects \code{arch=*-*-*} plus a second
+arch fragment as a duplicate, while the meet combines the same two
+constraints happily --- and the meet \emph{manufactures} the state:
+$\code{pkg-a} \meet \code{pkg-a target=*} = \code{pkg-a target=*}$, a meet of
+two solvable specs that does not solve.  [new bug, end-to-end]
+\item \emph{The per-interval cover is confirmed incomplete, and the meet is
+not.}  Over the full x86\_64 microarchitecture table,
+\code{target=nocona:haswell} and
+\code{target=nocona:nehalem,}\allowbreak\code{nehalem:haswell}
+denote the same seven targets, yet neither satisfies the other; two
+different tilings of one interval are denotationally equal and mutually
+unsatisfying, so satisfaction cannot recognize the canonical form of its own
+meet: $m = L \meet R$ satisfies $L$ but $L \not\sat m$.  On the same data the
+intersection itself was exact in every probed case --- the incompleteness is
+confined to the containment test, and \code{\_canonical\_target\_range} never
+fuses adjacent intervals (\code{X:Y,Y:Z} $\neq$ \code{X:Z} as states).
+Completing the cover (containment in the union) and fusing adjacent
+intervals in the canonical form would restore antisymmetry-as-state for this
+dimension.  [new bug; resolves the former open question]
+\end{enumerate}
+
+Related completeness slack, same shape as the cover: $\gamma(\code{target=*})
+= \gamma(\text{unset})$ --- every concrete spec has a target --- yet
+\code{satisfies} places \code{*} strictly below unset; over an eight-atom
+model of full arch triples, twenty such pairs are $\gamma$-comparable but
+unsatisfied, while the meet was exact on all of them.  The wildcard is
+denotationally the top of its dimension for \emph{node} attributes (an
+architecture is always present), unlike on edges, where \code{\%c=*} differs
+from no constraint because an edge can be absent.  [completeness slack]
+
+\subsection{Annotations: three dimensions, three conventions}
+
+\S\ref{sec:solver} required an annotation to be invisible to the order and
+preserved by the meet.  Only compiler flags obey both halves.  Edges promote
+(\textsc{none} $\meet$ \textsc{preference} $=$ \textsc{preference}); flags
+promote; variants \emph{demote}: $\code{++foo} \meet \code{+foo} =
+\code{+foo}$, discarding solver input exactly as bug no.~36 did for
+edges.\src{variant.py:478--480 vs spec.py:1010--1013, 1165--1170}  Moreover
+the variant bit is visible to \code{satisfies} with the inverted orientation
+($\code{+foo} \sat \code{++foo}$ but not conversely), which is the
+transitivity engine of Counterexample~\ref{cex:prop}.  Until the guard is
+stored (\S\ref{sec:propagation}), no single annotation rule can be stated
+for the algebra; the flag convention is the one the other two should
+converge to.  [known gap, made line-precise]
+
+\subsection{The dependency graph}\label{sec:audit-graph}
+
+\begin{enumerate}[itemsep=3pt]
+\item \emph{Provider identity is decided by child name, and a virtual is its
+own rival.}  The one-provider-per-virtual scans compare edges by
+\code{edge.spec.name}, so a placeholder child named after the virtual counts
+as a second provider of itself.\src{spec.py:3619, 3660}  Three verified
+consequences share this root cause.  (a)~\code{pkg-a \%[virtuals=mpi] mpi}
+and \code{pkg-a \%[virtuals=mpi] mpich} do not intersect and their meet is
+undefined, although \code{pkg-a \%mpi=mpich} satisfies both --- the meet's
+totality axiom (M3) is violated.  (b)~The refusal runs before the absorption
+scan, so the two orders of one spec string diverge:
+\code{\%mpi=mpich \%mpi=mpi} parses to one absorbed edge, the reverse order
+raises.  (c)~Worst, the same rule reaches
+\code{\_condition\_can\_hold}, and canonicalization \emph{silently deletes}
+a conditional edge whose condition the node in fact satisfies: a
+\code{when} requiring the \code{mpi} provider is judged impossible on a node
+that has one, and the dependent edge is dropped --- the parsed spec denotes
+strictly more than its string, with no error raised.  [new bugs: totality,
+order-invariance, unsound canonicalization]
+\item \emph{Absorption re-checks the node with the wrong predicate.}  The
+redundancy test's recursive fallback calls the full \code{satisfies}, whose
+node comparison requires frozen provided virtuals; on abstract specs it
+always fails, so a provider edge absorbs the virtual edge it satisfies only
+when the virtual child has no dependencies.  State-level absorption fails on
+exactly the graphs \code{from\_dict} and the solver produce.\src{spec.py:%
+1893}  [new bug]
+\item \emph{A ghost edge only \code{satisfies} can see.}  For pre-1.0
+serializations, satisfaction synthesizes a direct \code{\%gcc} edge from
+\code{annotations.compiler\_node\_attribute}, with a hardcoded
+\code{virtuals=(c,cxx,fortran)} tuple.\src{spec.py:1734--1746}  The edge is
+invisible to the edge maps, queries, \code{constrain}, \code{str} and
+\code{to\_dict}; its virtuals are asserted, not read (any old spec satisfies
+\code{\%[virtuals=fortran] gcc}); the annotation survives de-concretization,
+where the meet then \emph{adds} a real node to a spec that already satisfied
+the constraint --- the meet is not a lower bound as state.  Because no
+equality reads annotations, two \code{==}-equal, \code{dag\_hash}-equal
+specs have different meets, and \code{copy()} aliases the annotations
+object, so mutating a copy flips the \emph{original's} \code{satisfies}
+verdict.  [new bugs: congruence of all three equalities, aliasing]
+\item \emph{\code{depflag = 0} has four readings, and one of them makes the
+transitive search dead code.}  An unspecified deptype passes every deptype
+filter in the edge queries, matches no deptype in the traversal seed,
+is a subset lower bound in edge satisfaction, and selects nothing as a query
+argument.\src{spec.py:1337, 1760, 1843, 1321}  Since the parser leaves every
+abstract edge at \code{depflag = 0}, the depth-$\geq 2$ BFS of
+Definition~\ref{def:simulation} never runs for parser-produced specs ---
+\code{pkg-a \^{}pkg-b \%pkg-c} does not satisfy \code{pkg-a \^{}pkg-c}, and
+reaches depth two only when every edge on the path carries explicit
+link/run deptypes.  This refutes the stated justification of the
+\code{nested\_direct\_edge} gap (``satisfies reaches it anyway: its BFS does
+not stop at the first level''): the excuse holds for no spec the parser can
+build, so the gap predicate is a mask, not a documented trade-off.
+[decision needed; gap justification false]
+\item \emph{Rename bookkeeping crashes on public paths.}  Two routes leave a
+node filed in a parent's edge map under a stale key, and
+\code{\_detach\_edge} then raises \code{KeyError}: constraining a node
+obtained \emph{from an edge} (the anonymous child of
+\code{pkg-a \^{}*+bvv} renamed in place by its own \code{constrain}), and
+the concrete-rhs \code{\_dup} replacement, which restores dependents without
+re-keying the parents' buckets.\src{spec.py:2424; 3455--3462}  The invariant
+has a law (\code{edge\_maps\_keyed\_by\_name}), but the harness only
+inspects top-level meet results of abstract operands, and neither route is
+reachable that way.  [new bugs, crashes]
+\item \emph{Construction can bypass canonicalization.}
+\code{add\_dependency\_edge} neither canonicalizes conditions nor runs the
+joint-emptiness scan, so it assembles a state that denotes $\emptyset$,
+satisfies itself, and intersects nothing --- including the anonymous top ---
+where the parser refuses the same spec.  Separately, the two-provider
+refusal gates on object identity (\code{when is EMPTY\_SPEC}), so a
+value-empty condition that is not the singleton bypasses
+it.\src{spec.py:2256, 2368--2384}  [new bugs; the constructibility route
+promised in \S\ref{sec:empty}]
+\item \emph{Dead code with a backwards rule.}  \code{\_rename\_node} and
+\code{\_merged\_when} are unreachable in any nontrivial form --- every
+caller pairs edges that already share a child name --- and
+\code{\_merged\_when}'s fallback computes the \emph{meet} of two conditions
+where the contravariant reading requires their join, contradicting its own
+docstring.  Harmless today; a landmine for whoever relaxes the
+same-dependency test.\src{spec.py:852--861, 1277--1293}  [latent]
+\item \emph{Joint emptiness is visible to \code{intersects} and invisible
+to \code{satisfies}.}  The disjointness scan runs a running merge over a
+whole same-name group of direct edges, while the satisfaction-side condition
+checks are pairwise; a group of conditional edges that jointly falsify their
+own condition is seen by one and not the other, so \code{satisfies} demands
+a witness for a condition that can never hold.  The affected specs denote
+nonempty sets and are inside $\Spec_0$: this is completeness slack of
+$\sat$, not a preorder failure.\src{spec.py:3622--3639 vs 1788,
+3642--3671}  [completeness]
+\end{enumerate}
+
+\subsection{Cross-operation coherence}\label{sec:audit-crossop}
+
+\begin{enumerate}[itemsep=3pt]
+\item \emph{A spec a user can type fails \code{self\_meet}.}  The parser
+appends flags without deduplication, so \code{pkg-a cflags=-O2 cflags==-O2}
+holds the same string twice with different propagation bits; constraining
+the spec \emph{with itself} returns \code{True} and rewrites the state
+(both copies promoted), and repeated merges duplicate values into states
+such as \code{cflags=='-O2 -O2'} that re-parse differently.  No gap
+predicate excuses this family.  [new bug]
+\item \emph{Serialization deduplicates by hashes that mutation does not
+invalidate.}  \code{to\_dict} identifies nodes by their cached DAG hash;
+\code{constrain} never clears caches, and the solver force-caches hashes on
+abstract specs.  After forcing and constraining, a spec serializes under its
+stale identity, and two distinct children collapse into one node on the way
+back --- a constraint applied to one edge leaks onto the other, and the
+round-trip is no longer a bijection.\src{spec.py:2941--2946; solver/asp.py:%
+328}  [new bug]
+\item \emph{The three equalities are pairwise incomparable.}
+\code{to\_dict} also identifies structurally equal sibling nodes, so
+\code{from\_dict} returns a graph with \emph{shared} children;
+\code{\_cmp\_iter}'s deep case observes sharing (ids by object identity)
+while its shallow case cannot, so the round-trip is \code{to\_dict}-equal
+and \code{==}-different for one spec shape and \code{==}-equal for another.
+Together with the annotations finding above: none of \code{==},
+\code{to\_dict}, \code{dag\_hash} refines another.  [new bug]
+\item \emph{External attributes exist only for serialization.}
+\code{external\_path} is written by \code{to\_dict}, read by no equality, no
+disjointness check, and no merge: the meet keeps the left operand's value
+and silently drops the right's, so the meet is not commutative as state and
+\code{constrain} discards external data.\src{spec.py:2801--2806,
+3673--3727}  [new bug]
+\item \emph{\code{deps=False} is incoherent against a concrete operand.}
+The disjointness scan ignores the \code{deps} argument whenever either side
+is concrete, while \code{satisfies} honors it: a concrete spec satisfies
+\code{libdwarf \^{}pkg-b} with \code{deps=False} while \code{intersects} is
+false and \code{constrain} raises.  All current \code{deps=False} callers
+pass abstract operands, so the violation is latent.\src{spec.py:3485--3491
+vs 3859--3861}  [latent law violation]
+\item \emph{Validation cannot represent anonymous nodes.}
+\code{validate\_or\_raise} on any spec with an anonymous node crashes with
+\code{IndexError} (the name guard checks virtualness but not emptiness), an
+exception outside the \code{SpecError} hierarchy every caller guards
+for.\src{spec.py:3411}  Similarly, comparing bare git refs raises
+\code{VersionLookupError}, which is also not a \code{SpecError}, so the
+partiality of \S\ref{sec:audit-state} escapes the algebra's own exception
+guards.  [new bug; hazard]
+\item \emph{Concrete providers break the atoms model.}  A concrete
+\code{gcc} with frozen virtuals satisfies the bare virtual \code{c}, yet
+\code{Spec("c")} and \code{Spec("gcc")} do not intersect and their meet is
+undefined --- an atom below both operands of an empty meet, the backward
+direction of the exact-GLB law.  The name-disjointness-by-fiat rule of
+\S\ref{sec:names} and the frozen-virtual satisfaction rule of
+\S\ref{sec:repo} are individually principled and jointly incomplete; the
+harness cannot see it because its atom universe contains no concrete specs.
+[completeness]
+\end{enumerate}
+
+\subsection{Smaller findings}
+
+The namespace dimension is lawful in isolation (flat, top, disjoint named
+namespaces), but an \emph{anonymous} node may carry a namespace, and the
+merge stamps it onto whatever named node it meets --- asserting a repo
+membership the operand never claimed, and rewriting \code{pkg-b} to
+\code{builtin\_mock.pkg-b} with no denotational narrowing (in a
+configuration, one repo provides each package).  This is the precise content
+of the harness's namespace gap.  [law strain]  \code{Spec.\_dup} computes its
+\code{changed} flag with conjunction instead of disjunction; every call site
+discards the value, so the defect is dead until a caller trusts
+it.\src{spec.py:4031--4044}  [latent]  \code{Spec.\_\_hash\_\_} omits
+compiler flags for dep-less abstract specs --- hash collisions only, the
+contract holds.  [fine]
+
+\subsection{What the audit says about the framework, and about the harness}
+
+Every confirmed finding lands in a category the framework names: a
+comparison tuple omitting a dimension some operation reads (congruence), a
+wildcard mistaken for a point (soundness), a cover test weaker than the
+denotation (completeness), a construction consulting ambient state
+(statelessness), a merge discarding solver input (annotation preservation).
+None of them required new theory to state --- which is the practical case
+for the framework: it converts ``various ad-hoc decisions'' from folklore
+into checkable propositions, each with a one-line classification and, where
+broken, a witness.
+
+The audit also maps the law harness's blind spots, since every finding above
+survives a clean harness run.  The generators draw no concrete operands, so
+every concrete-side fast path is unchecked; the laws compare states only
+with \code{to\_dict()}, so \code{==} and \code{dag\_hash} incoherences are
+invisible; \code{deps=False}, \code{\_\_contains\_\_},
+\code{validate\_or\_raise} and \code{add\_dependency\_edge} are outside the
+tested surface; each dimension contributes one fragment per operand, so
+duplicate-flag states are never drawn; and specs are only ever produced by
+parse and meet, so states reachable through \code{from\_dict}, forced hash
+caches, or in-place mutation of a node borrowed from an edge are missed.
+Finally, gap predicates deserve the same skepticism as laws: one of them
+(\code{nested\_direct\_edge}) excuses failures with a justification the
+audit refuted.  Each of these is a concrete, bounded extension of the
+harness.
+
+%======================================================================
+\section{The Lean development, and bridging proof to implementation}
+\label{sec:lean}
+
+\subsection{What is machine-checked}
+
+\code{formal/SpecSemantics.lean} is self-contained Lean~4 (no Mathlib) and
+compiles with zero errors and warnings under Lean~4.33.0.  Correspondence:
+
+\begin{center}
+\small
+\begin{tabular}{@{}llp{4.1cm}@{}}
+\toprule
+This note & Lean & Python law (test site) \\
+\midrule
+Thm~\ref{thm:quotient} quotient poset & \code{Pre.qle\_refl/trans/antisymm} & transitivity checks \\
+Def~\ref{def:meet} (M1)--(M3) & \code{structure Meet} & lower bound, GLB, intersects agrees with constrain \\
+Thm~\ref{thm:meetlaws} laws up to $\ker$ & \code{Meet.idem/comm/assoc/congr} & commutative, associative, congruence \\
+Thm~\ref{thm:descent} semilattice on $/\!\ker$ & \code{Meet.qmeet\_idem/comm/assoc} & (derived, not separately tested) \\
+Thm~\ref{thm:annotation} annotation collapse & \code{Pre.ann}, \code{Pre.annIso} & \code{\%}/\code{\%\%} mutual satisfies \\
+Thm~\ref{thm:prod} products & \code{Pre.prod}, \code{Meet.prod} & pointwise node merge \\
+\S\ref{sec:names} flat domains & \code{flat}, \code{flatMeet} & name, namespace, os cases \\
+\S\ref{sec:variants} set-like domains & \code{multi}, \code{multiMeet} & multi-valued variant cases \\
+Def~\ref{def:simulation} preorder & \code{Tree.TLe.refl/trans} & reflexive, transitive sweeps \\
+kernel class 1 (\code{\%\%}) & final \code{example} in \code{Tree} & the edge-propagation satisfies test \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The division of labor is deliberate.  The Lean side proves the
+\emph{metatheory}: \emph{any} operation satisfying (M1)--(M3) over
+\emph{any} preorder yields the quotient semilattice with equational laws,
+annotations invisible to any order collapse in its quotient, products and
+simulations preserve preordering.  These are the statements for which testing
+is the wrong tool (they quantify over all inputs and all implementations)
+and proof is cheap.  The Python side is checked against \emph{instances} of
+the axioms --- (M1)--(M3), reflexivity, transitivity, congruence --- by
+exhaustive corpus sweeps and randomized property search.  The two sides meet
+at the axioms: the laws in \code{spec\_algebra\_properties.py} are, nearly
+clause for clause, the hypotheses of the Lean theorems.
+
+\subsection{Can proof reach the implementation?}\label{sec:bridge}
+
+Abstractly: the Lean development and \code{spec.py} live in different worlds,
+and no amount of theory-side proving makes Python code correct by itself.
+The gap can be narrowed in well-understood stages, each buying a specific
+guarantee:
+
+\begin{enumerate}[itemsep=3pt]
+\item \emph{Shared axioms (the current state).}  The specification is proved
+coherent: the laws are mutually consistent, and they entail the intended
+structure (Theorems~\ref{thm:meetlaws}, \ref{thm:descent} show the tested
+laws are not an arbitrary checklist but exactly a partial-meet presentation
+of a semilattice --- and conversely, that testing (M1)--(M3) suffices; the
+equational laws come for free).  The implementation is tested against the
+axioms.  The residual risk is coverage: a law can hold on every generated
+input and fail on an ungenerated one.  The generator's known blind spots are
+themselves documented as gap predicates, which is unusual hygiene, but
+blind spots they remain.
+\item \emph{Executable reference model.}  The Lean definitions are already
+constructive; making the mini-model's order and meet decidable and compiling
+it (Lean~4 compiles to native code) yields an oracle that \emph{provably}
+satisfies the laws.  Differential testing --- serialize a spec pair, ask
+Python and the oracle the same question, compare verdicts --- upgrades
+law-checking to equivalence-checking against a verified object: any
+divergence is a bug in the Python (or in the encoding), even when the
+Python's answer happens to satisfy every law on that input.  The encoding of
+\code{Spec} into the model becomes the new trusted boundary, and the model
+must grow the dimensions it abstracts (versions, targets, conditions) to be
+a discriminating oracle.
+\item \emph{Verified implementation.}  Proving \code{spec.py} itself is not
+realistic (dynamic language, no practical semantics); the honest endpoint of
+this road is extraction: a verified core (in Lean or another prover) that
+\emph{is} the implementation of the order and meet, called from Python, with
+the property harness retained to check the binding.  That is a large
+engineering decision, not a formalization step.
+\end{enumerate}
+
+Stage 2 is the natural next increment for this codebase: the 864-atom
+universe of \code{exact\_glb} is already a hand-rolled reference model; the
+Lean file is its statement with proofs.  Merging the two --- one model,
+proved lawful, compiled, and wired into the corpus runner as an oracle ---
+would close the loop at modest cost.
+
+%======================================================================
+\section{Open questions}\label{sec:open}
+
+\begin{openq}
+\emph{Flags.}  What is the lawful algebra for order-significant flag
+sequences?  Candidates: subsequence order with shuffle-merge meets (the meet
+is then a set of minimal merges, not a single state), or an
+interleaving-indifferent quotient with a canonical order.  The current
+``sequence state, set order, append merge'' has no commutative meet even up
+to $\ker$-excused pairs.
+\end{openq}
+
+\begin{openq}
+\emph{Bottom.}  Should the algebra admit $\bot$ (\S\ref{sec:empty})?  With
+$\bot$, \code{intersects} could be complete for the denotational reading
+(``$\den{a} \cap \den{b} = \emptyset$ iff the meet is $\bot$''), and
+reflexivity would be unconditional; without it, emptiness must be
+unrepresentable, which neither the pairwise condition checks nor the
+construction bypasses of \S\ref{sec:audit-graph} currently guarantee.
+\end{openq}
+
+\begin{openq}
+\emph{$\pi_R$ as an adjoint.}  Does the construction-time projection have a
+universal property --- $\pi_R(s)$ the $\sat$-greatest $R$-valid spec below
+$s$ --- and do freezing and concretization commute with meets:
+$\pi_R(a \meet b) \ker \pi_R(a) \meet \pi_R(b)$ where defined?  The audit
+sharpened the stakes: $\pi_R$ strictly shrinks the domain of the meet
+(\S\ref{sec:audit-state}), so commutation is the best one can hope for, not
+a triviality.
+\end{openq}
+
+\begin{openq}
+\emph{The normative \code{depflag = 0}.}  The audit found four readings of
+an unspecified dependency type (\S\ref{sec:audit-graph}); which is
+normative?  The subset/lower-bound reading of edge satisfaction suggests
+$0$ should behave as the top of the deptype dimension (matched by
+everything, traversed everywhere); the conservative traversal reading
+suggests the opposite.  A decision here determines whether the transitive
+reach of Definition~\ref{def:simulation} is real or vestigial for parsed
+specs.
+\end{openq}
+
+\begin{openq}
+\emph{One state identity.}  \code{==}, \code{to\_dict()} and
+\code{dag\_hash} are pairwise incomparable on the current state space
+(\S\ref{sec:audit-crossop}).  Which is the canonical identity the others
+must refine?  The framework's answer would be: state equality is
+\code{to\_dict()} equality, \code{==} refines it modulo the annotation
+dimensions of \S\ref{sec:solver}, and both refine $\ker$ --- but that is a
+target, not the status quo.
+\end{openq}
+
+\begin{remark}
+Two earlier open questions were settled by the audit: target containment is
+confirmed incomplete, with the fix identified
+(\S\ref{sec:audit-target}); and the per-edge existential witness search was
+probed for a global-matching counterexample and none exists at the abstract
+level --- the same pairwise implication that lets one candidate edge witness
+two constraint edges also fuses those constraint edges when they are built
+into one spec, so search and meet are consistent by construction.
+\end{remark}
+
+\appendix
+\section{Notation}
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+symbol & reading & implementation \\
+\midrule
+$a \sat b$ & $a$ satisfies $b$ & \code{a.satisfies(b)} \\
+$a \ker b$ & mutual satisfaction & \code{a.satisfies(b) and b.satisfies(a)} \\
+$a \meet b$ & meet (partial) & \code{spack.spec.meet(a, b)} \\
+$\bot$ & undefined meet / empty set & \code{None} / \code{SpecError} \\
+$\den{s}$ & denotation & set of concrete specs satisfying $s$ \\
+$\denR{s}$ & repo-relative denotation & $R$-valid members of $\den{s}$ \\
+$\top$ & unconstrained & anonymous spec / absent attribute \\
+$\Spec_0$ & lawful fragment & Definition~\ref{def:fragment} \\
+$\delta, \rho$ & direct flag, policy & \code{\%} vs \code{\^{}}, \code{\%\%} \\
+$\pi$ (on values) & propagation bit & \code{++foo}, \code{==} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}
