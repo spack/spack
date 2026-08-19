@@ -5684,3 +5684,14 @@ def test_parallel_edges_in_a_literal_reach_the_solver(mock_packages, config):
 
     with pytest.raises(spack.error.UnsatisfiableSpecError):
         spack.concretize.concretize_one("mpileaks ^mpich@3.0.3 ^mpich@3.0.4")
+
+
+@pytest.mark.regression("51829")
+def test_asp_facts_with_config_values():
+    """Config values are syaml_str / syaml_int subclasses of str / int, and have to be emitted
+    as ASP strings and numbers. Booleans are strings."""
+    fn = spack.solver.core.fn
+    assert str(fn.max_dupes("cmake", syaml.syaml_int(2))) == 'max_dupes("cmake",2)'
+    assert str(fn.max_dupes("cmake", 2)) == 'max_dupes("cmake",2)'
+    assert str(fn.os_compatible(syaml.syaml_str('a"b\\c'), "d")) == r'os_compatible("a\"b\\c","d")'
+    assert str(fn.variant_value("x", True)) == 'variant_value("x","True")'
