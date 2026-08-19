@@ -9,7 +9,6 @@ import spack.oci.image
 import spack.repo
 import spack.util.url
 from spack.error import MirrorError
-from spack.util.filesystem import mkdirp, symlink
 
 if TYPE_CHECKING:
     import spack.spec
@@ -22,47 +21,18 @@ class MirrorLayout:
         self.path = path
 
     def __iter__(self):
-        """Yield all paths including aliases where the resource can be found."""
+        """Yield all paths where the resource can be found."""
         yield self.path
-
-    def make_alias(self, root: str) -> None:
-        """Make the entry ``root / self.path`` available under a human readable alias"""
-        pass
 
 
 class DefaultLayout(MirrorLayout):
     def __init__(self, alias_path: str, digest_path: Optional[str] = None) -> None:
-        # When we have a digest, it is used as the primary storage location. If not, then we use
-        # the human-readable alias. In case of mirrors of a VCS checkout, we currently do not have
-        # a digest, that's why an alias is required and a digest optional.
+        # When we have a digest, it is used as the storage location. In case of mirrors of a VCS
+        # checkout, we currently do not have a digest, so the per-package path is used instead;
+        # that's why it is required and a digest optional.
         super().__init__(path=digest_path or alias_path)
         self.alias = alias_path
         self.digest_path = digest_path
-
-    def make_alias(self, root: str) -> None:
-        """Symlink a human readable path in our mirror to the actual storage location."""
-        # We already use the human-readable path as the main storage location.
-        if not self.digest_path:
-            return
-
-        alias, digest = os.path.join(root, self.alias), os.path.join(root, self.digest_path)
-
-        alias_dir = os.path.dirname(alias)
-        relative_dst = os.path.relpath(digest, start=alias_dir)
-
-        mkdirp(alias_dir)
-        tmp = f"{alias}.tmp"
-        symlink(relative_dst, tmp)
-
-        try:
-            os.rename(tmp, alias)
-        except OSError:
-            # Clean up the temporary if possible
-            try:
-                os.unlink(tmp)
-            except OSError:
-                pass
-            raise
 
     def __iter__(self):
         if self.digest_path:

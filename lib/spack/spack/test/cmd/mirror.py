@@ -225,9 +225,10 @@ def test_mirror_skip_unstable(
     ]
     spack.cmd.mirror.create(mirror_dir, specs, skip_unstable_versions=True)
 
-    assert set(os.listdir(mirror_dir)) - set(["_source-cache"]) == set(
-        ["trivial-pkg-with-valid-hash"]
-    )
+    # The unstable spec (git branch) is skipped; only the stable archive is stored,
+    # content-addressed under _source-cache/archive
+    assert set(os.listdir(mirror_dir)) == set(["_source-cache"])
+    assert set(os.listdir(os.path.join(mirror_dir, "_source-cache"))) == set(["archive"])
 
 
 class MockMirrorArgs:
@@ -765,9 +766,16 @@ def test_git_provenance_url_fails_mirror_resolves_commit(
 
     spec = spack.concretize.concretize_one("git-test-commit@main")
 
-    assert spec.package.fetcher.source_id() == gold_commit
-    assert "commit" in spec.variants
-    assert spec.variants["commit"].value == gold_commit
+    if mirror_knows_commit:
+        # The mirror entry is stored content-addressed by its commit, so it cannot be
+        # found by branch name: the commit cannot be resolved from the mirror
+        assert "commit" not in spec.variants
+    else:
+        # Without a commit, the mirror entry is stored under the per-package path,
+        # which is found by branch name
+        assert spec.package.fetcher.source_id() == gold_commit
+        assert "commit" in spec.variants
+        assert spec.variants["commit"].value == gold_commit
 
 
 @pytest.mark.require_provenance
@@ -777,7 +785,8 @@ def test_git_provenance_relative_to_mirror(
 ):
     """Integration test to evaluate how commit resolution should behave with a mirror
 
-    We want to confirm that the mirror doesn't break users ability to get a more recent commit
+    Mirror entries are content-addressed (stored by commit), so a branch name cannot be
+    looked up in the mirror: commit resolution follows the upstream repository.
     Use `mock_git_version_info` repo because it has function scope and we can mess with the git
     history.
     """
@@ -790,7 +799,6 @@ def test_git_provenance_relative_to_mirror(
     mirror_path = str(tmp_path / "test-mirror")
     mirror("create", "-d", mirror_path, "git-test-commit@main")
     mirror("add", "--type", "source", "test-mirror", mirror_path)
-    mirror_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
 
     # push the commit past mirror
     git("-C", repo_path, "checkout", "main", output=str)
@@ -798,7 +806,7 @@ def test_git_provenance_relative_to_mirror(
     head_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
 
     spec_mirror = spack.concretize.concretize_one("git-test-commit@main")
-    assert spec_mirror.variants["commit"].value == mirror_commit
+    assert spec_mirror.variants["commit"].value == head_commit
 
     spec_head = spack.concretize.concretize_one(f"git-test-commit@main commit={head_commit}")
     assert spec_head.variants["commit"].value == head_commit
