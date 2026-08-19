@@ -63,6 +63,12 @@ case _spack_env_remove_value:
             set result = ""
         else
             set var = $sep`printenv $varname`$sep
+
+            if ( "$sep" == "/") then
+                # add delimiter escape for sed if sep is a forward slash
+                set sep = "\/"
+            endif
+
             set result = `echo $var | sed "s/$sep$value$sep/$sep/g" | rev | cut -c 2- | rev | cut -c 2-`
         endif
     endif
@@ -79,6 +85,12 @@ case _spack_env_remove_first:
             set result = ""
         else
             set var = $sep`printenv $varname`$sep
+
+            if ( "$sep" == "/") then
+                # add delimiter escape for sed if sep is a forward slash
+                set sep = "\/"
+            endif
+
             set result = `echo $var | sed "s/$sep$value$sep/$sep/" | rev | cut -c 2- | rev | cut -c 2-`
         endif
     endif
@@ -95,6 +107,12 @@ case _spack_env_remove_last:
             set result = ""
         else
             set var = $sep`printenv $varname`$sep
+
+            if ( "$sep" == "/") then
+                # add delimiter escape for sed if sep is a forward slash
+                set sep = "\/"
+            endif
+
             set result = `echo $var | sed "s/\(.*\)$sep$value$sep/\1$sep/" | rev | cut -c 2- | rev | cut -c 2-`
         endif
     endif
