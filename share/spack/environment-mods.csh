@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-if ( $#argv < 2 || $#argv > 4 ) then
-    echo "2-4 arguments are required"
+if ( $#argv < 3 || $#argv > 4 ) then
+    echo "3-4 arguments are required"
     exit 1
 endif
 
@@ -128,5 +128,3 @@ case _spack_env_prune_duplicates:
     setenv $varname $result
     breaksw
 endsw
-
-unset command varname value sep var result

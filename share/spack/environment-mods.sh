@@ -83,7 +83,6 @@ _spack_env_prepend() { # if not exporting then use lowercase
 #
 # Remove value from the flag list in variable varname.
 # The list in varname is separated by the sep character.
-
 _spack_env_remove_value() {
     varname="$1"
     value="$2"
