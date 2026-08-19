@@ -6,7 +6,6 @@ import collections.abc
 import enum
 import functools
 import gzip
-import io
 import itertools
 import json
 import os
@@ -19,6 +18,7 @@ import tempfile
 import time
 import warnings
 from typing import (
+    IO,
     Any,
     Callable,
     Dict,
@@ -93,7 +93,7 @@ class OutputConfiguration(NamedTuple):
     #: Whether to output Clingo's internal solver statistics
     stats: bool
     #: Optional output stream for the generated ASP program
-    out: Optional[io.IOBase]
+    out: Optional[IO[str]]
     #: If True, stop after setup and don't solve
     setup_only: bool
 
@@ -1167,6 +1167,7 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
     def __init__(self) -> None:
         self.data: Dict[str, spack.spec.Spec] = {}
         self.explicit: Set[str] = set()
+        self.selectable: Set[str] = set()
 
     def __getitem__(self, dag_hash: str) -> spack.spec.Spec:
         return self.data[dag_hash]
@@ -1180,7 +1181,14 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
             if h in self.explicit or s.name == "gcc-runtime":
                 yield h, s
 
-    def add(self, spec: spack.spec.Spec) -> bool:
+    def is_selectable(self, dag_hash: str) -> bool:
+        """Returns True if any node can be matched against this hash, False if the hash is
+        known only because it belongs to the DAG of another selectable spec.
+        """
+        # Same exception as in explicit_items, gcc-runtime is never imposed by its own parent
+        return dag_hash in self.selectable or self.data[dag_hash].name == "gcc-runtime"
+
+    def add(self, spec: spack.spec.Spec, *, selectable: bool = True) -> bool:
         """Adds a new concrete spec to the mapping. Returns True if the spec was just added,
         False if the spec was already in the mapping.
 
@@ -1188,6 +1196,9 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
 
         Args:
             spec: spec to be added
+            selectable: if True, any node in the solve can be matched against this spec. If
+                False, the spec can only be imposed by a parent that is being reused. Specs
+                added as selectable stay selectable, regardless of later additions.
 
         Raises:
             ValueError: if the spec is not concrete
@@ -1201,6 +1212,8 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
 
         dag_hash = spec.dag_hash()
         self.explicit.add(dag_hash)
+        if selectable:
+            self.selectable.add(dag_hash)
         if dag_hash in self.data:
             return False
 
@@ -1815,7 +1828,7 @@ class SpackSolverSetup:
             self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
 
         for when, provided in pkg.provided.items():
-            for vpkg in sorted(provided):  # type: ignore[type-var]
+            for vpkg in sorted(provided):
                 if vpkg.name not in self.possible_virtuals:
                     continue
 
@@ -2795,7 +2808,7 @@ class SpackSolverSetup:
         for pkg_name, vid, value in sorted(def_info):
             self.gen.fact(fn.pkg_fact(pkg_name, fn.variant_possible_value(vid, value)))
 
-    def register_concrete_spec(self, spec, possible: set):
+    def register_concrete_spec(self, spec, possible: set, *, selectable: bool = True):
         # tell the solver about any installed packages that could
         # be dependencies (don't tell it about the others)
         if spec.name not in possible:
@@ -2808,13 +2821,17 @@ class SpackSolverSetup:
             tty.debug(f"[REUSE] Issues when trying to reuse {spec.short_spec}: {str(e)}")
             return
 
-        self.reusable_and_possible.add(spec)
+        self.reusable_and_possible.add(spec, selectable=selectable)
 
     def concrete_specs(self):
         """Emit facts for reusable specs"""
         for h, spec in self.reusable_and_possible.explicit_items():
-            # this indicates that there is a spec like this installed
-            self.gen.fact(fn.installed_hash(spec.name, h))
+            if self.reusable_and_possible.is_selectable(h):
+                # this indicates that there is a spec like this installed
+                self.gen.fact(fn.installed_hash(spec.name, h))
+            else:
+                # the hash is known, but only a parent being reused can impose it
+                self.gen.fact(fn.imposable_hash(spec.name, h))
             # indirection layer between hash constraints and imposition to allow for splicing
             for pred in self.spec_clauses(spec, body=True, required_from=None):
                 self.gen.fact(fn.hash_attr(h, *pred.args))
@@ -2967,17 +2984,25 @@ class SpackSolverSetup:
         candidate_compilers, self.rejected_compilers = possible_compilers(
             configuration=spack.config.CONFIG
         )
-        reuse_from_compilers = traverse.traverse_nodes(
-            [x for x in candidate_compilers if not x.external], deptype=("link", "run")
-        )
+        # Compilers installed by Spack are candidates for the solve, no matter what
+        # "concretizer:reuse" says. Their link and run dependencies are needed to impose a
+        # reused compiler, but they must not become reusable specs on their own: that is up
+        # to "concretizer:reuse", like for any other installed spec.
+        installed_compilers = [x for x in candidate_compilers if not x.external]
         reused_set = set(reuse)
-        reuse += [x for x in reuse_from_compilers if x not in reused_set]
+        reuse += [x for x in installed_compilers if x not in reused_set]
+        compiler_dependencies = [
+            x
+            for x in traverse.traverse_nodes(
+                installed_compilers, deptype=("link", "run"), root=False
+            )
+            if x not in reused_set
+        ]
 
         candidate_compilers.update(compilers_from_reuse)
         self.possible_compilers = list(candidate_compilers)
 
-        # TODO: warning is because mypy doesn't know Spec supports rich comparison via decorator
-        self.possible_compilers.sort()  # type: ignore[call-arg,call-overload]
+        self.possible_compilers.sort()
 
         self.compiler_mixing()
 
@@ -2991,7 +3016,7 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
-        self.libcs = sorted(all_libcs())  # type: ignore[type-var]
+        self.libcs = sorted(all_libcs())
 
         for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:
@@ -3032,6 +3057,10 @@ class SpackSolverSetup:
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
                 self.register_concrete_spec(reusable_spec, self.pkgs)
+        # Registered after the reuse list, so that a dependency of an installed compiler that
+        # is also reusable on its own keeps being selectable.
+        for compiler_dependency in compiler_dependencies:
+            self.register_concrete_spec(compiler_dependency, self.pkgs, selectable=False)
         self.concrete_specs()
 
         self.gen.h1("Generic statements on possible packages")
@@ -3800,6 +3829,14 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     This method updates the SpecDict in place.
 
     """
+    # The DAG is structurally complete, but still abstract. For node-local mutations that are
+    # conditional on (direct) dependencies, such as ``patch("...", when="%gcc")`` as well as
+    # ``dev_path``, we need to mark edges direct so that satisfies considers them as direct.
+    for s in specs.values():
+        if not s.concrete:
+            for edge in s.edges_to_dependencies():
+                edge.direct = True
+
     # inject patches -- note that we can't use set() to unique the
     # roots here, because the specs aren't complete, and the hash
     # function will loop forever.
@@ -4001,7 +4038,7 @@ class Solver:
     def solve_with_stats(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[io.IOBase] = None,
+        out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
@@ -4050,7 +4087,7 @@ class Solver:
     def solve_in_rounds(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[io.IOBase] = None,
+        out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
@@ -4072,6 +4109,10 @@ class Solver:
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
         """
+        # "when_possible" requires at least one literal to be solved, so an empty input is unsat
+        if not specs:
+            return
+
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))

@@ -21,6 +21,7 @@ import spack.cmd
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.concretize
+import spack.concretize_ui
 import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
@@ -55,6 +56,7 @@ from spack.solver.reuse import spec_filter_from_packages_yaml
 from spack.spec import Spec
 from spack.store import Store
 from spack.test.conftest import RepoBuilder
+from spack.test.utilities import RecordingUI
 from spack.version import Version, VersionList, ver
 
 
@@ -4757,6 +4759,17 @@ def test_concretization_cache_reapplies_patches_on_hit(
     assert initial_sha256s <= new_sha256s
 
 
+def test_patch_condition_on_direct_dependency(use_concretization_cache):
+    """A patch with a condition on a direct dependency (e.g. ``%gcc@10:``) is applied both on
+    a fresh solve and on a cache hit, where specs are rebuilt from serialized solver output."""
+    fix_patch = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    for _ in range(2):
+        spec = spack.concretize.concretize_one("patch-when-compiler %gcc@10.2.1")
+        assert (fix_patch,) == spec.variants["patches"].value
+        # concrete specs record every edge without the direct flag
+        assert not any(e.direct for s in spec.traverse() for e in s.edges_to_dependencies())
+
+
 def test_concretization_cache_count_cleanup(
     use_concretization_cache, mutable_config: Configuration
 ):
@@ -5493,3 +5506,192 @@ def test_concretization_cache_skips_automatic_splice(
     spec2 = spack.concretize.concretize_one(goal)
     assert fetches and all(outcome == (None, None) for outcome in fetches)
     assert spec1 == spec2
+
+
+@pytest.mark.regression("52832")
+def test_solve_in_rounds_with_no_specs(mock_packages, config):
+    """Tests that solving no specs at all yields no result, instead of being unsatisfiable."""
+    solver = spack.solver.asp.Solver()
+    assert list(solver.solve_in_rounds([])) == []
+
+
+def test_concretize_separately_reports_progress(mutable_config, mock_packages):
+    """Tests that concretizing separately reports the start of the concretization, and one event
+    per spec, to the injected frontend.
+    """
+    ui = RecordingUI()
+    spack.concretize.concretize_separately([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+
+    assert ui.started == [(spack.concretize_ui.SolveKind.SEPARATELY, 2, 1)]
+    assert [count for _, _, count, _ in ui.concretized] == [1, 2]
+    assert {abstract.name for abstract, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
+    assert not ui.groups
+
+    for abstract, concrete, _, _ in ui.concretized:
+        assert concrete.concrete and concrete.satisfies(abstract)
+
+
+def test_concretize_together_when_possible_reports_progress(mutable_config, mock_packages):
+    """Tests that concretizing "when possible" reports the start of the concretization, and one
+    event per spec. The two specs cannot be unified, so they are solved in different rounds, and
+    the count has to keep increasing across rounds.
+    """
+    ui = RecordingUI()
+    spack.concretize.concretize_together_when_possible(
+        [(Spec("pkg-a@1.0"), None), (Spec("pkg-a@2.0"), None)], ui=ui
+    )
+
+    assert ui.started == [(spack.concretize_ui.SolveKind.WHEN_POSSIBLE, 2, 1)]
+    assert [count for _, _, count, _ in ui.concretized] == [1, 2]
+    assert {str(abstract) for abstract, _, _, _ in ui.concretized} == {"pkg-a@1.0", "pkg-a@2.0"}
+
+    for abstract, concrete, _, _ in ui.concretized:
+        assert concrete.concrete and concrete.satisfies(abstract)
+
+
+def test_concretize_together_reports_progress(mutable_config, mock_packages):
+    """Tests that concretizing together reports the start of the concretization, and one event
+    per spec.
+    """
+    ui = RecordingUI()
+    spack.concretize.concretize_together([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+
+    assert ui.started == [(spack.concretize_ui.SolveKind.TOGETHER, 2, 1)]
+    assert [count for _, _, count, _ in ui.concretized] == [1, 2]
+    assert {abstract.name for abstract, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
+    assert len({duration for _, _, _, duration in ui.concretized}) == 1
+    assert not ui.groups
+
+    for abstract, concrete, _, _ in ui.concretized:
+        assert concrete.concrete and concrete.satisfies(abstract)
+
+
+@pytest.mark.parametrize(
+    "concretize_fn",
+    [
+        spack.concretize.concretize_together,
+        spack.concretize.concretize_together_when_possible,
+        spack.concretize.concretize_separately,
+    ],
+)
+def test_reported_total_matches_number_of_specs(concretize_fn, mutable_config, mock_packages):
+    """Tests that, whatever the concretization strategy, the total announced when concretization
+    starts is the number of specs that are reported as concretized afterwards, and that the counts
+    reported along the way run from 1 to that total. Frontends rely on this to show a percentage.
+    """
+    ui = RecordingUI()
+    concretize_fn([(Spec("pkg-a"), None), (Spec("pkg-b"), None), (Spec("libelf"), None)], ui=ui)
+
+    assert len(ui.started) == 1
+    _, total, _ = ui.started[0]
+    assert total == len(ui.concretized) == 3
+    assert [count for _, _, count, _ in ui.concretized] == list(range(1, total + 1))
+
+
+def test_concretize_separately_reports_start_with_nothing_to_do(mutable_config, mock_packages):
+    """Tests that concretization is announced even when every input spec is already concrete, so
+    that frontends always see a start event.
+    """
+    concrete = spack.concretize.concretize_one(Spec("pkg-a"))
+    ui = RecordingUI()
+    result = spack.concretize.concretize_separately([(Spec("pkg-a"), concrete)], ui=ui)
+
+    assert ui.started == [(spack.concretize_ui.SolveKind.SEPARATELY, 0, 1)]
+    assert not ui.concretized
+    assert [concrete for _, concrete in result] == [concrete]
+
+
+@pytest.mark.parametrize("total,announced", [(2, True), (0, False)])
+def test_terminal_ui_announces_pool_only_when_solving(total, announced, capsys):
+    """Tests that the terminal frontend stays silent when there is nothing to concretize."""
+    ui = spack.concretize_ui.TerminalUI()
+    ui.on_concretization_started(
+        kind=spack.concretize_ui.SolveKind.SEPARATELY, total=total, processes=1
+    )
+
+    assert ("Starting concretization" in capsys.readouterr().out) is announced
+
+
+@pytest.mark.parametrize("reuse,expected_reused", [(True, True), (False, False)])
+def test_reuse_of_compiler_dependencies_follows_reuse_config(
+    reuse, expected_reused, temporary_store, mutable_config: Configuration, mock_packages
+):
+    """Tests that we don't accidentally reuse compiler dependencies, for compilers installed
+    by Spack.
+    """
+    # Scenario: compiler-with-deps is installed with an old zlib in its subtree. An unrelated
+    # package is then concretized with gcc as its compiler, so the compiler owning that zlib is
+    # not part of the DAG. With reuse:true the old zlib is reused, with reuse:false a fresh
+    # zlib@1.2.11 must be built instead.
+    compiler = spack.concretize.concretize_one("compiler-with-deps ^zlib@1.2.8")
+    assert compiler["zlib"].satisfies("@1.2.8")
+    PackageInstaller([compiler.package], fake=True, explicit=True).install()
+
+    with mutable_config.override("concretizer:reuse", reuse):
+        s = spack.concretize.concretize_one("pkg-with-zlib-dep %c=gcc")
+
+    # The compiler that owns the old zlib is not part of the DAG at all
+    assert "compiler-with-deps" not in s, s.tree()
+    assert (s["zlib"].dag_hash() == compiler["zlib"].dag_hash()) is expected_reused, s.tree()
+    if not expected_reused:
+        assert s["zlib"].satisfies("@1.2.11"), s.tree()
+
+
+def test_compiler_with_dependencies_is_reused_when_reuse_is_false(
+    temporary_store, mutable_config: Configuration, mock_packages
+):
+    """Tests that a compiler installed by Spack can still be reused with reuse:false, together
+    with the dependencies it was installed with.
+    """
+    # The dependencies of a compiler are not selectable with reuse:false, but they must still be
+    # imposable by the compiler being reused, otherwise a compiler with dependencies could never
+    # be used without rebuilding it.
+    compiler = spack.concretize.concretize_one("compiler-with-deps ^zlib@1.2.8")
+    PackageInstaller([compiler.package], fake=True, explicit=True).install()
+
+    with mutable_config.override("concretizer:reuse", False):
+        s = spack.concretize.concretize_one("pkg-with-zlib-dep %c=compiler-with-deps")
+
+    assert s["compiler-with-deps"].dag_hash() == compiler.dag_hash(), s.tree()
+    assert s["compiler-with-deps"]["zlib"].dag_hash() == compiler["zlib"].dag_hash(), s.tree()
+
+
+def test_compiler_dependencies_can_be_excluded_from_reuse(
+    temporary_store, mutable_config: Configuration, mock_packages
+):
+    """Tests that the dependencies of a compiler installed by Spack are subject to the
+    include/exclude filters of the reuse sources, like any other installed spec.
+    """
+    compiler = spack.concretize.concretize_one("compiler-with-deps ^zlib@1.2.8")
+    PackageInstaller([compiler.package], fake=True, explicit=True).install()
+
+    with mutable_config.override(
+        "concretizer:reuse", {"from": [{"type": "local", "exclude": ["zlib"]}]}
+    ):
+        s = spack.concretize.concretize_one("pkg-with-zlib-dep %c=gcc")
+
+    assert s["zlib"].dag_hash() != compiler["zlib"].dag_hash(), s.tree()
+    assert s["zlib"].satisfies("@1.2.11"), s.tree()
+
+
+def test_parallel_edges_in_a_literal_reach_the_solver(mock_packages, config):
+    """A duplicate ^dep clause parses as parallel edges rather than one merged node. The solver
+    still builds one node per name from a literal: compatible constraints are merged onto that
+    node, conflicting ones are unsatisfiable there instead of a parse error."""
+    spec = spack.concretize.concretize_one("mpileaks ^mpich@3.0.4 ^mpich+debug")
+    assert len(spec.dependencies(name="mpich")) == 1
+    assert spec["mpich"].satisfies("@3.0.4+debug")
+
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        spack.concretize.concretize_one("mpileaks ^mpich@3.0.3 ^mpich@3.0.4")
+
+
+@pytest.mark.regression("51829")
+def test_asp_facts_with_config_values():
+    """Config values are syaml_str / syaml_int subclasses of str / int, and have to be emitted
+    as ASP strings and numbers. Booleans are strings."""
+    fn = spack.solver.core.fn
+    assert str(fn.max_dupes("cmake", syaml.syaml_int(2))) == 'max_dupes("cmake",2)'
+    assert str(fn.max_dupes("cmake", 2)) == 'max_dupes("cmake",2)'
+    assert str(fn.os_compatible(syaml.syaml_str('a"b\\c'), "d")) == r'os_compatible("a\"b\\c","d")'
+    assert str(fn.variant_value("x", True)) == 'variant_value("x","True")'

@@ -49,7 +49,6 @@ line is a spec for a particular installation of the mpileaks package.
 
 import abc
 import collections
-import collections.abc
 import enum
 import io
 import itertools
@@ -61,13 +60,17 @@ import re
 import socket
 import warnings
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     ClassVar,
+    Deque,
     Dict,
     Iterable,
+    Iterator,
     List,
     Match,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -110,23 +113,6 @@ import spack.version.git_ref_lookup
 from spack.util import lang, tty
 
 from .enums import PropagationPolicy
-
-__all__ = [
-    "CompilerSpec",
-    "Spec",
-    "UnsupportedPropagationError",
-    "DuplicateDependencyError",
-    "UnsupportedCompilerError",
-    "DuplicateArchitectureError",
-    "InvalidDependencyError",
-    "UnsatisfiableSpecNameError",
-    "UnsatisfiableVersionSpecError",
-    "UnsatisfiableArchitectureSpecError",
-    "UnsatisfiableDependencySpecError",
-    "AmbiguousHashError",
-    "InvalidHashError",
-    "SpecDeprecatedError",
-]
 
 SPEC_FORMAT_RE = re.compile(
     r"(?:"  # this is one big or, with matches ordered by priority
@@ -175,10 +161,10 @@ _STYLE_COLOR_MAP = {
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
 DEFAULT_FORMAT = (
-    "{name}{@versions}{compiler_flags}"
+    "{fullname_if_abstract}{@versions}{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}"
     "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
-    "{/abstract_hash}"
+    "{ /abstract_hash}"
 )
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
@@ -186,7 +172,7 @@ DISPLAY_FORMAT = (
     "{name}{@version}{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}"
     "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
-    "{/abstract_hash}"
+    "{ /abstract_hash}"
     "{compilers}"
 )
 
@@ -235,6 +221,22 @@ class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
 
     ANY_TARGET = _make_microarchitecture("*")
+
+    @staticmethod
+    def _attr_satisfies(lhs: Optional[str], rhs: Optional[str]) -> bool:
+        """Whether a platform or operating system on the lhs satisfies the one on the rhs."""
+        if not rhs:
+            return True
+        if rhs == "*":
+            return lhs is not None
+        return lhs == rhs
+
+    @staticmethod
+    def _attr_intersects(lhs: Optional[str], rhs: Optional[str]) -> bool:
+        """Whether a platform or operating system on either side intersect."""
+        if not lhs or not rhs:
+            return True
+        return lhs == "*" or rhs == "*" or lhs == rhs
 
     @staticmethod
     def default_arch():
@@ -405,16 +407,8 @@ class ArchSpec:
         """
         other = self._autospec(other)
 
-        # Check platform and os
         for attribute in ("platform", "os"):
-            other_attribute = getattr(other, attribute)
-            self_attribute = getattr(self, attribute)
-
-            # platform=* or os=*
-            if self_attribute and other_attribute == "*":
-                return True
-
-            if other_attribute and self_attribute != other_attribute:
+            if not self._attr_satisfies(getattr(self, attribute), getattr(other, attribute)):
                 return False
 
         return self._target_satisfies(other, strict=True)
@@ -431,11 +425,8 @@ class ArchSpec:
         """
         other = self._autospec(other)
 
-        # Check platform and os
         for attribute in ("platform", "os"):
-            other_attribute = getattr(other, attribute)
-            self_attribute = getattr(self, attribute)
-            if other_attribute and self_attribute and self_attribute != other_attribute:
+            if not self._attr_intersects(getattr(self, attribute), getattr(other, attribute)):
                 return False
 
         return self._target_satisfies(other, strict=False)
@@ -455,6 +446,10 @@ class ArchSpec:
 
         # self.target is not None, and other is target=*
         if other.target == ArchSpec.ANY_TARGET:
+            return True
+
+        # target=* on the lhs overlaps any target, but is too broad to satisfy a specific one
+        if not strict and self.target == ArchSpec.ANY_TARGET:
             return True
 
         return bool(self._target_intersection(other))
@@ -584,7 +579,9 @@ class ArchSpec:
         constrained = False
         for attr in ("platform", "os"):
             svalue, ovalue = getattr(self, attr), getattr(other, attr)
-            if svalue is None and ovalue is not None:
+            # a star constrains the value to be set, so it is kept when there is none yet and
+            # is replaced by a named value from the other side
+            if ovalue is not None and (svalue is None or (svalue == "*" and ovalue != "*")):
                 setattr(self, attr, ovalue)
                 constrained = True
 
@@ -725,7 +722,7 @@ class DeprecatedCompilerSpec(lang.DeprecatedProperty):
         raise AttributeError(f"{instance} has no C, C++, or Fortran compiler")
 
 
-@lang.lazy_lexicographic_ordering
+@lang.lazy_lexicographic_ordering(set_hash=False)
 class DependencySpec:
     """DependencySpecs represent an edge in the DAG, and contain dependency types
     and information on the virtuals being provided.
@@ -744,6 +741,13 @@ class DependencySpec:
     """
 
     __slots__ = "parent", "spec", "depflag", "virtuals", "direct", "when", "propagation"
+
+    if TYPE_CHECKING:
+        # lazy_lexicographic_ordering installs these with setattr, unseen by type checkers
+        def __lt__(self, other: Any) -> bool: ...
+        def __le__(self, other: Any) -> bool: ...
+        def __gt__(self, other: Any) -> bool: ...
+        def __ge__(self, other: Any) -> bool: ...
 
     def __init__(
         self,
@@ -820,6 +824,9 @@ class DependencySpec:
         if not self.direct and other.direct:
             changed = True
             self.direct = True
+        if self.propagation == PropagationPolicy.NONE and other.propagation != self.propagation:
+            changed = True
+            self.propagation = other.propagation
         return changed
 
     def _cmp_iter(self):
@@ -830,6 +837,21 @@ class DependencySpec:
         yield self.direct
         yield self.propagation
         yield self.when
+        yield self.spec  # tie-breaker for parallel edges: `^foo@1 ^foo+bar`
+
+    def __hash__(self):
+        # Hash edge properties, do not include the node.
+        return hash(
+            (
+                self.parent.name if self.parent else None,
+                self.spec.name if self.spec else None,
+                self.depflag,
+                self.virtuals,
+                self.direct,
+                self.propagation,
+                self.when,
+            )
+        )
 
     def __str__(self) -> str:
         return self.format()
@@ -843,7 +865,7 @@ class DependencySpec:
             keywords.append(f"when={self.when}")
 
         if self.propagation != PropagationPolicy.NONE:
-            keywords.append(f"propagation={self.propagation}")
+            keywords.append(f"propagation=PropagationPolicy.{self.propagation.name}")
 
         keywords_str = ", ".join(keywords)
         return f"DependencySpec({self.parent.format()!r}, {self.spec.format()!r}, {keywords_str})"
@@ -907,31 +929,27 @@ class CompilerFlag(str):
         obj.source = kwargs.pop("source", None)
         return obj
 
+    def copy(self) -> "CompilerFlag":
+        return CompilerFlag(
+            self, propagate=self.propagate, flag_group=self.flag_group, source=self.source
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Value and propagation of this flag, unlike ``FlagMap.yaml_entry``, which is its value
+        only. ``flag_group`` and ``source`` are not included: they are bookkeeping for a single
+        solve, and nothing reads them back. Attributes that have their default value are
+        omitted."""
+        d: Dict[str, Any] = {"value": str(self)}
+        if self.propagate:
+            d["propagate"] = True
+        return d
+
+    @staticmethod
+    def from_dict(d: Dict[str, Any]) -> "CompilerFlag":
+        return CompilerFlag(d["value"], propagate=d.get("propagate", False))
+
 
 _valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags"]
-
-
-def _shared_subset_pair_iterate(container1, container2):
-    """
-    [0, a, c, d, f]
-    [a, d, e, f]
-
-    yields [(a, a), (d, d), (f, f)]
-
-    no repeated elements
-    """
-    a_idx, b_idx = 0, 0
-    max_a, max_b = len(container1), len(container2)
-    while a_idx < max_a and b_idx < max_b:
-        if container1[a_idx] == container2[b_idx]:
-            yield (container1[a_idx], container2[b_idx])
-            a_idx += 1
-            b_idx += 1
-        else:
-            while container1[a_idx] < container2[b_idx]:
-                a_idx += 1
-            while container1[a_idx] > container2[b_idx]:
-                b_idx += 1
 
 
 class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
@@ -951,27 +969,44 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         changed = False
         for flag_type in other:
             if flag_type not in self:
-                self[flag_type] = other[flag_type]
+                # copy the list and its flags, so that self and other share no mutable state
+                self[flag_type] = [f.copy() for f in other[flag_type]]
                 changed = True
-            else:
-                extra_other = set(other[flag_type]) - set(self[flag_type])
-                if extra_other:
-                    self[flag_type] = list(self[flag_type]) + [
-                        x for x in other[flag_type] if x in extra_other
-                    ]
-                    changed = True
+                continue
 
-                # Next, if any flags in other propagate, we force them to propagate in our case
-                shared = list(sorted(set(other[flag_type]) - extra_other))
-                for x, y in _shared_subset_pair_iterate(shared, sorted(self[flag_type])):
-                    if y.propagate is True and x.propagate is False:
-                        changed = True
-                        y.propagate = False
+            extra_other = set(other[flag_type]) - set(self[flag_type])
+            if extra_other:
+                self[flag_type] = list(self[flag_type]) + [
+                    x.copy() for x in other[flag_type] if x in extra_other
+                ]
+                changed = True
+
+            # Next, if any flags in other propagate, we force them to propagate in our case.
+            other_propagate = {f for f in other[flag_type] if f.propagate}
+            for f in self[flag_type]:
+                if not f.propagate and f in other_propagate:
+                    f.propagate = True
+                    changed = True
 
         # TODO: what happens if flag groups with a partial (but not complete)
         # intersection specify different behaviors for flag propagation?
 
         return changed
+
+    def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Values and propagation of the flags, unlike ``yaml_entry``, which drops everything but
+        their values."""
+        return {
+            flag_type: [flag.to_dict() for flag in flags]
+            for flag_type, flags in sorted(self.items())
+        }
+
+    @staticmethod
+    def from_dict(d: Dict[str, List[Dict[str, Any]]]) -> "FlagMap":
+        result = FlagMap()
+        for flag_type, flags in d.items():
+            result[flag_type] = [CompilerFlag.from_dict(flag) for flag in flags]
+        return result
 
     @staticmethod
     def valid_compiler_flags():
@@ -979,8 +1014,8 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
 
     def copy(self):
         clone = FlagMap()
-        for name, compiler_flag in self.items():
-            clone[name] = compiler_flag
+        for flag_type, flags in self.items():
+            clone[flag_type] = [f.copy() for f in flags]
         return clone
 
     def add_flag(self, flag_type, value, propagation, flag_group=None, source=None):
@@ -1033,25 +1068,17 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
 
         result = ""
         for flag_type, flags in sorted_items:
-            normal = [f for f in flags if not f.propagate]
-            if normal:
-                value = spack.spec_parser.quote_if_needed(" ".join(normal))
-                result += f" {flag_type}={value}"
-
-            propagated = [f for f in flags if f.propagate]
-            if propagated:
-                value = spack.spec_parser.quote_if_needed(" ".join(propagated))
-                result += f" {flag_type}=={value}"
+            # Do not sort by propagation yes/no, but group by it, which preserves the order.
+            for propagate, group in itertools.groupby(flags, key=lambda flag: flag.propagate):
+                sigil = "==" if propagate else "="
+                value = spack.spec_parser.quote_if_needed(" ".join(group))
+                result += f" {flag_type}{sigil}{value}"
 
         # TODO: somehow add this space only if something follows in Spec.format()
         if sorted_items:
             result += " "
 
         return result
-
-
-def _sort_by_dep_types(dspec: DependencySpec):
-    return dspec.depflag
 
 
 EdgeMap = Dict[str, List[DependencySpec]]
@@ -1061,7 +1088,7 @@ def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> None:
     if key in edge_map:
         lst = edge_map[key]
         lst.append(edge)
-        lst.sort(key=_sort_by_dep_types)
+        lst.sort()
     else:
         edge_map[key] = [edge]
 
@@ -1086,8 +1113,8 @@ def _select_edges(
 
     Args:
         edge_map: map of edges to select from
-        parent: name of the parent package
-        child: name of the child package
+        parent: name of the parent package; ``""`` selects anonymous parents
+        child: name of the child package; ``""`` selects anonymous children
         depflag: allowed dependency types in flag form
         virtuals: list of virtuals or specific virtual on the edge
     """
@@ -1098,11 +1125,11 @@ def _select_edges(
     selected: Iterable[DependencySpec] = itertools.chain.from_iterable(edge_map.values())
 
     # Filter by parent name
-    if parent:
+    if parent is not None:
         selected = (d for d in selected if d.parent.name == parent)
 
     # Filter by child name
-    if child:
+    if child is not None:
         selected = (d for d in selected if d.spec.name == child)
 
     # Filter by allowed dependency types
@@ -1378,8 +1405,7 @@ def tree(
         ):
             deptype_lookup[edge.spec.dag_hash()] |= edge.depflag
 
-    # SupportsRichComparisonT issue with List[Spec]
-    sorted_specs: List["Spec"] = sorted(specs)  # type: ignore[type-var]
+    sorted_specs: List["Spec"] = sorted(specs)
 
     for d, dep_spec in spack.traverse.traverse_tree(
         sorted_specs, cover=cover, deptype=deptypes, depth_first=depth_first, key=key
@@ -1490,14 +1516,23 @@ def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
     return "*" if dep.spec.architecture else ""
 
 
-def _get_satisfying_edge(
+def _satisfying_edges(
     lhs_node: "Spec", rhs_edge: DependencySpec, *, resolve_virtuals: bool
-) -> Optional[DependencySpec]:
-    """Search for an edge in ``lhs_node`` that satisfies ``rhs_edge``."""
-    # First check direct deps of all types.
-    for lhs_edge in lhs_node.edges_to_dependencies():
-        if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
-            return lhs_edge
+) -> Iterator[DependencySpec]:
+    """Yield every edge in ``lhs_node`` that satisfies ``rhs_edge`` structurally, ignoring the
+    target's own dependencies, in priority order: direct deps of all types, then the historical
+    compiler node, then a BFS over transitive link/run deps."""
+    # First check direct deps of all types. There is a subtlety: only abstract specs distinguish
+    # between direct and indirect edges, whereas concrete specs always have direct edges (without
+    # setting the direct flag). For performance, iterate the _dependencies edge map directly:
+    # edges_to_dependencies allocates an iterator chain and a result list per call.
+    require_direct = rhs_edge.direct and not lhs_node.concrete
+    for edges in lhs_node._dependencies.values():
+        for lhs_edge in edges:
+            if require_direct and not lhs_edge.direct:
+                continue
+            if _satisfies_edge_attributes(lhs_edge, rhs_edge, resolve_virtuals):
+                yield lhs_edge
 
     # Include the historical compiler node if available as an ad-hoc edge.
     compiler_spec = lhs_node.annotations.compiler_node_attribute
@@ -1509,31 +1544,70 @@ def _get_satisfying_edge(
             virtuals=("c", "cxx", "fortran"),
             direct=True,
         )
-        if _satisfies_edge(compiler_edge, rhs_edge, resolve_virtuals):
-            return compiler_edge
+        if _satisfies_edge_attributes(compiler_edge, rhs_edge, resolve_virtuals):
+            yield compiler_edge
 
     if rhs_edge.direct:
-        return None
+        return
 
-    # BFS through link/run transitive deps (skip depth 1, already checked).
+    # BFS through link/run transitive deps (skip depth 1, already checked). Nodes with multiple
+    # in-edges are expanded only once, but every in-edge is a candidate. Deptype sets are lower
+    # bounds, so only an edge that overlaps link/run guarantees a link/run edge in every
+    # concretization; an edge with depflag 0 guarantees nothing and is not traversed. For
+    # performance, iterate the _dependencies edge map directly instead of going through
+    # edges_to_dependencies.
     depflag = dt.LINK | dt.RUN
-    queue = collections.deque(lhs_node.edges_to_dependencies(depflag=depflag))
-    seen = {id(lhs_edge.spec) for lhs_edge in queue}
+    queue: Deque[DependencySpec] = collections.deque()
+    queue.extend(
+        e for edges in lhs_node._dependencies.values() for e in edges if e.depflag & depflag
+    )
+    expanded = {id(lhs_node)}
     while queue:
         lhs_edge = queue.popleft()
 
-        if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
-            return lhs_edge
+        # depth 1 was yielded by the loop over direct edges above
+        if lhs_edge.parent is not lhs_node and _satisfies_edge_attributes(
+            lhs_edge, rhs_edge, resolve_virtuals
+        ):
+            yield lhs_edge
 
-        for lhs_edge in lhs_edge.spec.edges_to_dependencies(depflag=depflag):
-            if id(lhs_edge.spec) not in seen:
-                seen.add(id(lhs_edge.spec))
-                queue.append(lhs_edge)
+        if id(lhs_edge.spec) not in expanded:
+            expanded.add(id(lhs_edge.spec))
+            if lhs_edge.spec._dependencies:
+                queue.extend(
+                    e
+                    for edges in lhs_edge.spec._dependencies.values()
+                    for e in edges
+                    if e.depflag & depflag
+                )
 
-    return None
+
+def _satisfies_dependencies(lhs: "Spec", rhs: "Spec", *, resolve_virtuals: bool) -> bool:
+    """Whether every dependency edge of ``rhs`` is satisfied by some edge of ``lhs``."""
+    # For performance, iterate the _dependencies edge map directly instead of going through
+    # edges_to_dependencies.
+    for rhs_edges in rhs._dependencies.values():
+        for rhs_edge in rhs_edges:
+            # Skip rhs edges whose when condition doesn't apply to the lhs node.
+            if rhs_edge.when is not EMPTY_SPEC and not lhs._intersects(
+                rhs_edge.when, resolve_virtuals=resolve_virtuals
+            ):
+                continue
+            edges = _satisfying_edges(lhs, rhs_edge, resolve_virtuals=resolve_virtuals)
+            if rhs_edge.spec.concrete or not rhs_edge.spec._dependencies:
+                if next(edges, None) is None:
+                    return False
+            elif not any(
+                _satisfies_dependencies(e.spec, rhs_edge.spec, resolve_virtuals=resolve_virtuals)
+                for e in edges
+            ):
+                return False
+    return True
 
 
-def _satisfies_edge(lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtuals: bool) -> bool:
+def _satisfies_edge_attributes(
+    lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtuals: bool
+) -> bool:
     """Helper function for satisfaction tests, which checks edge attributes and the target node.
     It skips verification of the parent node."""
     name_mismatch = rhs.spec.name and lhs.spec.name != rhs.spec.name
@@ -1567,9 +1641,61 @@ def _satisfies_edge(lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtua
     return lhs.spec._provides_virtual(rhs.spec)
 
 
+def _same_direct_dep(lhs: DependencySpec, rhs: DependencySpec) -> bool:
+    """Two edges of one parent refer to the same dependency when they are direct deps, refer to the
+    same package name, and have the same when condition.
+
+    Note that concrete specs exist that can have two distinct providers for a single virtual, so
+    we do not combine ``^virtual=x ^virtual=y``; we only enforce uniqueness on direct deps."""
+    return (
+        lhs.direct
+        and rhs.direct
+        and bool(lhs.spec.name)
+        and lhs.spec.name == rhs.spec.name
+        and lhs.when == rhs.when
+    )
+
+
+def _satisfies_edge(lhs: DependencySpec, rhs: DependencySpec, resolve_virtuals: bool) -> bool:
+    """Whether every DAG satisfying ``lhs`` satisfies ``rhs``."""
+    # Only a direct dependency can satisfy a direct dependency. _satisfies_edge_attributes does
+    # not compare this itself: its other caller, _satisfying_edges, filters on it externally,
+    # on fully built specs, unlike _add_or_merge_edge, whose parent node can still be under
+    # construction.
+    if rhs.direct and not lhs.direct:
+        return False
+    if not _satisfies_edge_attributes(lhs, rhs, resolve_virtuals):
+        return False
+    # A concrete or leaf rhs child needs no recursion: _satisfies_edge_attributes compared the
+    # child node already. A dependency of rhs's child that lhs's child lacks has to be checked:
+    # the two are independent requirements that a concretization can satisfy with two distinct
+    # nodes, and a single edge requiring both would exclude those DAGs.
+    if rhs.spec.concrete or not rhs.spec._dependencies:
+        return True
+    return _satisfies_dependencies(lhs.spec, rhs.spec, resolve_virtuals=resolve_virtuals)
+
+
+def _edge_is_redundant(
+    edge: DependencySpec, given: DependencySpec, resolve_virtuals: bool
+) -> bool:
+    """Whether ``edge`` adds nothing to ``given``: ``given`` satisfies it, and it states no
+    propagation ``given`` does not. A propagated edge is an input to the solver's objective even
+    where it does not narrow the solution set, so satisfaction alone does not make it redundant."""
+    if edge.propagation != PropagationPolicy.NONE and given.propagation != edge.propagation:
+        return False
+    return _satisfies_edge(given, edge, resolve_virtuals)
+
+
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec:
     compiler = DeprecatedCompilerSpec()
+
+    if TYPE_CHECKING:
+        # lazy_lexicographic_ordering installs these with setattr, unseen by type checkers
+        def __lt__(self, other: Any) -> bool: ...
+        def __le__(self, other: Any) -> bool: ...
+        def __gt__(self, other: Any) -> bool: ...
+        def __ge__(self, other: Any) -> bool: ...
 
     @staticmethod
     def default_arch():
@@ -1731,7 +1857,7 @@ class Spec:
         to parents.
 
         Args:
-            name: filter dependents by package name
+            name: filter dependents by package name; ``""`` selects anonymous dependents
             depflag: allowed dependency types
             virtuals: allowed virtuals
         """
@@ -1747,7 +1873,7 @@ class Spec:
         """Returns a list of edges connecting this node in the DAG to children.
 
         Args:
-            name: filter dependencies by package name
+            name: filter dependencies by package name; ``""`` selects anonymous dependencies
             depflag: allowed dependency types
             virtuals: allowed virtuals
         """
@@ -1793,7 +1919,7 @@ class Spec:
         """Returns a list of direct dependencies (nodes in the DAG)
 
         Args:
-            name: filter dependencies by package name
+            name: filter dependencies by package name; ``""`` selects anonymous dependencies
             deptype: allowed dependency types
             virtuals: allowed virtuals
         """
@@ -1809,14 +1935,14 @@ class Spec:
         """Return a list of direct dependents (nodes in the DAG).
 
         Args:
-            name: filter dependents by package name
+            name: filter dependents by package name; ``""`` selects anonymous dependents
             deptype: allowed dependency types
         """
         if not isinstance(deptype, dt.DepFlag):
             deptype = dt.canonicalize(deptype)
         return [d.parent for d in self.edges_from_dependents(name, depflag=deptype)]
 
-    def _dependencies_dict(self, depflag: dt.DepFlag = dt.ALL):
+    def _dependencies_dict(self, depflag: dt.DepFlag = dt.ALL) -> EdgeMap:
         """Return a dictionary, keyed by package name, of the direct
         dependencies.
 
@@ -1825,12 +1951,14 @@ class Spec:
         Args:
             deptype: allowed dependency types
         """
-        _sort_fn = lambda x: (x.spec.name, _sort_by_dep_types(x))
-        _group_fn = lambda x: x.spec.name
-        selected_edges = _select_edges(self._dependencies, depflag=depflag)
-        result = {}
-        for key, group in itertools.groupby(sorted(selected_edges, key=_sort_fn), key=_group_fn):
-            result[key] = list(group)
+        result: EdgeMap = {}
+        for edge in _select_edges(self._dependencies, depflag=depflag):
+            result.setdefault(edge.spec.name, []).append(edge)
+
+        for edges in result.values():
+            if len(edges) > 1:
+                edges.sort()
+
         return result
 
     def _add_flag(
@@ -1905,56 +2033,14 @@ class Spec:
             propagation: propagation policy for this edge
             when: optional condition under which dependency holds
         """
-        if when is None:
-            when = EMPTY_SPEC
-
-        if spec.name not in self._dependencies or not spec.name:
-            self.add_dependency_edge(
-                spec,
-                depflag=depflag,
-                virtuals=virtuals,
-                direct=direct,
-                when=when,
-                propagation=propagation,
-            )
-            return
-
-        # Keep the intersection of constraints when a dependency is added multiple times with
-        # the same deptype. Add a new dependency if it is added with a compatible deptype
-        # (for example, a build-only dependency is compatible with a link-only dependency).
-        # The only restrictions, currently, are that we cannot add edges with overlapping
-        # dependency types and we cannot add multiple edges that have link/run dependency types.
-        # See ``spack.deptypes.compatible``.
-        orig = self._dependencies[spec.name]
-        try:
-            dspec = next(
-                dspec for dspec in orig if depflag == dspec.depflag and when == dspec.when
-            )
-        except StopIteration:
-            # Error if we have overlapping or incompatible deptypes
-            if any(not dt.compatible(dspec.depflag, depflag) for dspec in orig) and all(
-                dspec.when == when for dspec in orig
-            ):
-                edge_attrs = f"deptypes={dt.flag_to_chars(depflag).strip()}"
-                required_dep_str = f"^[{edge_attrs}] {str(spec)}"
-
-                raise DuplicateDependencyError(
-                    f"{spec.name} is a duplicate dependency, with conflicting dependency types\n"
-                    f"\t'{str(self)}' cannot depend on '{required_dep_str}'"
-                )
-
-            self.add_dependency_edge(
-                spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
-            )
-            return
-
-        try:
-            dspec.spec.constrain(spec)
-            dspec.update_virtuals(virtuals=virtuals)
-        except spack.error.UnsatisfiableSpecError:
-            raise DuplicateDependencyError(
-                f"Cannot depend on incompatible specs '{dspec.spec}' and '{spec}'"
-            )
+        self.add_dependency_edge(
+            spec,
+            depflag=depflag,
+            virtuals=virtuals,
+            direct=direct,
+            when=when,
+            propagation=propagation,
+        )
 
     def add_dependency_edge(
         self,
@@ -1979,47 +2065,16 @@ class Spec:
         if when is None:
             when = EMPTY_SPEC
 
-        # Check if we need to update edges that are already present
-        selected = self._dependencies.get(dependency_spec.name, [])
-        for edge in selected:
-            has_errors, details = False, []
-            msg = f"cannot update the edge from {edge.parent.name} to {edge.spec.name}"
-
-            if edge.when != when:
-                continue
-
-            # If the dependency is to an existing spec, we can update dependency
-            # types. If it is to a new object, check deptype compatibility.
-            if id(edge.spec) != id(dependency_spec) and not dt.compatible(edge.depflag, depflag):
-                has_errors = True
-                details.append(
-                    (
-                        f"{edge.parent.name} has already an edge matching any"
-                        f" of these types {depflag}"
-                    )
-                )
-
-                if any(v in edge.virtuals for v in virtuals):
-                    details.append(
-                        (
-                            f"{edge.parent.name} has already an edge matching any"
-                            f" of these virtuals {virtuals}"
-                        )
-                    )
-
-            if has_errors:
-                raise spack.error.SpecError(msg, "\n".join(details))
-
-        for edge in selected:
+        # An edge object already registered on both the parent and the child is updated in place,
+        # rather than treated as a second, competing constraint: both sides have to see the same
+        # modification.
+        for edge in self._dependencies.get(dependency_spec.name, []):
             if id(dependency_spec) == id(edge.spec) and edge.when == when:
-                # If we are here, it means the edge object was previously added to
-                # both the parent and the child. When we update this object they'll
-                # both see the deptype modification.
                 edge.update_deptypes(depflag=depflag)
                 edge.update_virtuals(virtuals=virtuals)
                 return
 
-        edge = DependencySpec(
+        candidate = DependencySpec(
             self,
             dependency_spec,
             depflag=depflag,
@@ -2028,8 +2083,88 @@ class Spec:
             propagation=propagation,
             when=when,
         )
-        _add_edge_to_map(self._dependencies, edge.spec.name, edge)
-        _add_edge_to_map(dependency_spec._dependents, edge.parent.name, edge)
+        self._add_or_merge_edge(candidate)
+
+    def _add_or_merge_edge(
+        self, candidate: DependencySpec, owned: bool = True, resolve_virtuals: bool = False
+    ) -> bool:
+        """Add ``candidate`` as a dependency edge.
+
+        With ``owned`` False the candidate's child still belongs to another DAG: a merge only
+        reads it, and an append replaces it with a copy first.
+
+        The candidate is merged into an existing edge when no concretization can satisfy the
+        two with separate dependencies (``_same_direct_dep``). A candidate that adds nothing to
+        an existing edge (``_edge_is_redundant``) is discarded, and existing edges made
+        redundant by the candidate are detached in its favor. Anything else is a new constraint
+        and is appended as a parallel edge: whether it ends up sharing a node with another edge
+        to the same name is for concretization to decide.
+
+        All scans compare only edges to the same package name: a ``^virtual`` edge and a
+        ``^[virtuals=virtual] provider`` edge are independent requirements and stay apart.
+        Anonymous edges share the ``""`` bucket, where only the redundancy scans apply:
+        without a name, two direct deps can be distinct dependencies.
+
+        Returns True if ``self`` changed.
+
+        Raises:
+            spack.error.UnsatisfiableSpecError: if two direct dependencies that can only be a
+                single dependency have children that do not intersect.
+        """
+        name = candidate.spec.name
+
+        bucket = self._dependencies.get(name) or []
+
+        # A package has at most one direct dependency per name, so an unconditional direct dep
+        # is merged into an existing one (_same_direct_dep) by constraining, the only merge
+        # that can raise.
+        merged_edge: Optional[DependencySpec] = None
+        if name and candidate.when is EMPTY_SPEC:
+            for edge in bucket:
+                if _same_direct_dep(edge, candidate):
+                    merged_edge = edge
+                    break
+
+        if merged_edge is None and any(
+            _edge_is_redundant(candidate, edge, resolve_virtuals) for edge in bucket
+        ):
+            return False
+
+        # Constrain before detaching: a failed merge raises with self unchanged.
+        changed = merged_edge._constrain(candidate) if merged_edge is not None else False
+
+        for edge in [
+            edge
+            for edge in bucket
+            if edge is not merged_edge and _edge_is_redundant(edge, candidate, resolve_virtuals)
+        ]:
+            self._detach_edge(edge)
+            changed = True
+
+        if merged_edge is not None:
+            return changed
+
+        if not owned:
+            candidate.spec = candidate.spec.copy(deps=True)
+        _add_edge_to_map(self._dependencies, candidate.spec.name, candidate)
+        _add_edge_to_map(candidate.spec._dependents, self.name, candidate)
+        return True
+
+    def _detach_edge(self, edge: DependencySpec) -> None:
+        """Remove an edge from this spec and from the dependents of the node it points at.
+        A bucket that runs empty is deleted: consumers distinguish "no dependents" by the
+        absence of the key, not by an empty list."""
+        remaining = [e for e in self._dependencies[edge.spec.name] if e is not edge]
+        if remaining:
+            self._dependencies[edge.spec.name] = remaining
+        else:
+            del self._dependencies[edge.spec.name]
+        dependents = edge.spec._dependents
+        remaining = [e for e in dependents[self.name] if e is not edge]
+        if remaining:
+            dependents[self.name] = remaining
+        else:
+            del dependents[self.name]
 
     #
     # Public interface
@@ -2082,10 +2217,8 @@ class Spec:
 
     @property
     def spliced(self):
-        """Returns whether or not this Spec is being deployed as built i.e.
-        whether or not this Spec has ever been spliced.
-        """
-        return any(s.build_spec is not s for s in self.traverse(root=True))
+        """Returns whether this Spec is being deployed as built i.e. whether it has been spliced"""
+        return self.build_spec is not self
 
     @property
     def installed(self):
@@ -2388,6 +2521,16 @@ class Spec:
             )
             d["abstract"] = sorted(v.name for v in self.variants.values() if not v.concrete)
 
+        if not self._concrete:
+            # State that only abstract specs have, or that "parameters" and "propagate" above are
+            # too coarse to express. Concrete node dicts are left alone: they feed the DAG hash.
+            if self.abstract_hash:
+                d["abstract_hash"] = self.abstract_hash
+
+            compiler_flags = self.compiler_flags.to_dict()
+            if compiler_flags:
+                d["compiler_flags"] = compiler_flags
+
         if self.external:
             d["external"] = {
                 "path": self.external_path,
@@ -2425,7 +2568,7 @@ class Spec:
             dependencies = []
             for name, edges_for_name in sorted(deps.items()):
                 for dspec in edges_for_name:
-                    dep_attrs = {
+                    dep_attrs: Dict[str, Any] = {
                         "name": name,
                         hash.name: dspec.spec._cached_hash(hash),
                         "parameters": {
@@ -2435,6 +2578,11 @@ class Spec:
                     }
                     if dspec.direct:
                         dep_attrs["parameters"]["direct"] = True
+                    if not self._concrete:
+                        if dspec.when != EMPTY_SPEC:
+                            dep_attrs["parameters"]["when"] = str(dspec.when)
+                        if dspec.propagation != PropagationPolicy.NONE:
+                            dep_attrs["parameters"]["propagation"] = dspec.propagation.name
                     dependencies.append(dep_attrs)
 
             d["dependencies"] = dependencies
@@ -2840,10 +2988,17 @@ class Spec:
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
+        if self._concrete == value:
+            return
         self._concrete = value
-        self._validate_version()
-        for variant in self.variants.values():
-            variant.concrete = True
+        # A direct dependency is a constraint written with %, so the flag belongs on abstract
+        # specs only; every edge of a materialized DAG is one anyway.
+        for edge in self.edges_to_dependencies():
+            edge.direct = not value
+        if value:
+            self._validate_version()
+            for variant in self.variants.values():
+                variant.concrete = True
 
     def _validate_version(self):
         # Specs that were concretized with just a git sha as version, without associated
@@ -3036,14 +3191,12 @@ class Spec:
 
         other = self._autospec(other)
         if other.concrete and other._satisfies(self, resolve_virtuals=resolve_virtuals):
+            # _dup makes self a detached copy without in-edges; self stays a node in its
+            # dependents' edge maps, so keep them
+            dependents = self._dependents
             self._dup(other)
+            self._dependents = dependents
             return True
-
-        if other.abstract_hash:
-            if not self.abstract_hash or other.abstract_hash.startswith(self.abstract_hash):
-                self.abstract_hash = other.abstract_hash
-            elif not self.abstract_hash.startswith(other.abstract_hash):
-                raise InvalidHashError(self, other.abstract_hash)
 
         if not (self.name == other.name or (not self.name) or (not other.name)):
             raise UnsatisfiableSpecNameError(self.name, other.name)
@@ -3072,9 +3225,26 @@ class Spec:
 
         changed = False
 
+        if other.abstract_hash:
+            if not self.abstract_hash or other.abstract_hash.startswith(self.abstract_hash):
+                changed |= self.abstract_hash != other.abstract_hash
+                self.abstract_hash = other.abstract_hash
+            elif not self.abstract_hash.startswith(other.abstract_hash):
+                raise InvalidHashError(self, other.abstract_hash)
+
         if not self.name and other.name:
             self.name = other.name
             changed = True
+            # The children's dependent edges are filed under the name self had when they were
+            # added, the anonymous one: move them to the new name.
+            for edge in self.edges_to_dependencies():
+                dependents = edge.spec._dependents
+                remaining = [e for e in dependents[""] if e is not edge]
+                if remaining:
+                    dependents[""] = remaining
+                else:
+                    del dependents[""]
+                _add_edge_to_map(dependents, self.name, edge)
 
         if not self.namespace and other.namespace:
             self.namespace = other.namespace
@@ -3089,7 +3259,8 @@ class Spec:
         if sarch is not None and oarch is not None:
             changed |= self.architecture.constrain(other.architecture)
         elif oarch is not None:
-            self.architecture = oarch
+            # copy, so that a later constrain on self does not write through into other
+            self.architecture = oarch.copy()
             changed = True
 
         if deps:
@@ -3108,27 +3279,20 @@ class Spec:
         if not other._intersects_dependencies(self, resolve_virtuals=resolve_virtuals):
             raise UnsatisfiableDependencySpecError(other, self)
 
-        for d in other.traverse(root=False):
-            if not d.name:
-                raise UnconstrainableDependencySpecError(other)
         changed = False
         for other_edge in other.edges_to_dependencies():
-            # Find the first edge in self that matches other_edge by name and when clause.
-            for self_edge in self.edges_to_dependencies(other_edge.spec.name):
-                if self_edge.when == other_edge.when:
-                    changed |= self_edge._constrain(other_edge)
-                    break
-            else:
-                # Otherwise, a copy of the edge is added as a constraint to self.
-                changed = True
-                self.add_dependency_edge(
-                    other_edge.spec.copy(deps=True),
-                    depflag=other_edge.depflag,
-                    virtuals=other_edge.virtuals,
-                    direct=other_edge.direct,
-                    propagation=other_edge.propagation,
-                    when=other_edge.when,  # no need to copy; when conditions are immutable
-                )
+            candidate = DependencySpec(
+                self,
+                other_edge.spec,
+                depflag=other_edge.depflag,
+                virtuals=other_edge.virtuals,
+                direct=other_edge.direct,
+                propagation=other_edge.propagation,
+                when=other_edge.when,  # no need to copy; when conditions are immutable
+            )
+            changed |= self._add_or_merge_edge(
+                candidate, owned=False, resolve_virtuals=resolve_virtuals
+            )
         return changed
 
     def constrained(self, other, deps=True):
@@ -3253,13 +3417,33 @@ class Spec:
             # one spec *could* eventually satisfy the other
             return True
 
-        # Handle first-order constraints directly
-        common_dependencies = {x.name for x in self.dependencies()}
-        common_dependencies &= {x.name for x in other.dependencies()}
-        for name in common_dependencies:
-            if not self[name]._intersects(
-                other[name], deps=True, resolve_virtuals=resolve_virtuals
-            ):
+        # A package has at most one direct dependency per name, so a concretization satisfies
+        # all unconditional direct edges to one name with a single node. Transitive constraints
+        # to one name never conflict with each other: a DAG can hold two nodes of the same name.
+        groups: Dict[str, List[DependencySpec]] = {}
+        for edge in itertools.chain(self.edges_to_dependencies(), other.edges_to_dependencies()):
+            if edge.direct and edge.spec.name and edge.when is EMPTY_SPEC:
+                groups.setdefault(edge.spec.name, []).append(edge)
+
+        for edges in groups.values():
+            if len(edges) < 2:
+                continue
+            # A concrete node admits no further constraining: the group merges iff the concrete
+            # spec satisfies every other edge, so no copy of its subdag is needed.
+            concrete = next((e.spec for e in edges if e.spec.concrete), None)
+            if concrete is not None:
+                if all(
+                    concrete._satisfies(e.spec, resolve_virtuals=resolve_virtuals)
+                    for e in edges
+                    if e.spec is not concrete
+                ):
+                    continue
+                return False
+            merged = edges[0].spec.copy(deps=True)
+            try:
+                for edge in edges[1:]:
+                    merged._constrain(edge.spec, resolve_virtuals=resolve_virtuals)
+            except spack.error.SpecError:
                 return False
 
         if not resolve_virtuals:
@@ -3362,28 +3546,7 @@ class Spec:
         if not deps or not other._dependencies:
             return True
 
-        stack = [(self, other)]
-
-        while stack:
-            lhs, rhs = stack.pop()
-
-            for rhs_edge in rhs.edges_to_dependencies():
-                # Skip rhs edges whose when condition doesn't apply to the lhs node.
-                if rhs_edge.when is not EMPTY_SPEC and not lhs._intersects(
-                    rhs_edge.when, resolve_virtuals=resolve_virtuals
-                ):
-                    continue
-
-                lhs_edge = _get_satisfying_edge(lhs, rhs_edge, resolve_virtuals=resolve_virtuals)
-
-                if not lhs_edge:
-                    return False
-
-                # Recursive case: `^zlib %gcc`
-                if not rhs_edge.spec.concrete and rhs_edge.spec._dependencies:
-                    stack.append((lhs_edge.spec, rhs_edge.spec))
-
-        return True
+        return _satisfies_dependencies(self, other, resolve_virtuals=resolve_virtuals)
 
     def _satisfies_node(self, other: "Spec", resolve_virtuals: bool) -> bool:
         """Compares self and other without looking at dependencies"""
@@ -3392,6 +3555,9 @@ class Spec:
             # package hashes can be different for otherwise indistinguishable concrete Spec
             # objects.
             return self.concrete and self.dag_hash() == other.dag_hash()
+
+        if other.name and not self.name:
+            return False
 
         if self.name != other.name and self.name and other.name:
             # Name mismatch can still be satisfiable if lhs provides the virtual mentioned by rhs.
@@ -3406,12 +3572,7 @@ class Spec:
             if not compare_hash or not compare_hash.startswith(other.abstract_hash):
                 return False
 
-        # namespaces either match, or other doesn't require one.
-        if (
-            other.namespace is not None
-            and self.namespace is not None
-            and self.namespace != other.namespace
-        ):
+        if other.namespace is not None and self.namespace != other.namespace:
             return False
 
         if not self.versions.satisfies(other.versions):
@@ -3652,14 +3813,20 @@ class Spec:
                 new_specs[spid(edge.spec)] = edge.spec.copy(deps=False)
 
             edge_propagation = edge.propagation if propagation is None else propagation
-            new_specs[spid(edge.parent)].add_dependency_edge(
-                new_specs[spid(edge.spec)],
+            new_parent = new_specs[spid(edge.parent)]
+            new_child = new_specs[spid(edge.spec)]
+            new_edge = DependencySpec(
+                new_parent,
+                new_child,
                 depflag=edge.depflag,
                 virtuals=edge.virtuals,
                 propagation=edge_propagation,
                 direct=edge.direct,
                 when=edge.when,
             )
+            # Don't use add_dependency_edge here, copy edges verbatim
+            _add_edge_to_map(new_parent._dependencies, new_child.name, new_edge)
+            _add_edge_to_map(new_child._dependents, new_parent.name, new_edge)
 
     def copy(self, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, **kwargs):
         """Make a copy of this spec.
@@ -3901,9 +4068,7 @@ class Spec:
             # Level 1: direct dependencies
             # we can yield these in sorted order without tracking visited nodes
             deps_have_deps = False
-            sorted_l1_edges = self.edges_to_dependencies(depflag=dt.ALL)
-            if len(sorted_l1_edges) > 1:
-                sorted_l1_edges = spack.traverse.sort_edges(sorted_l1_edges)
+            sorted_l1_edges = spack.traverse.sort_edges(self.edges_to_dependencies(depflag=dt.ALL))
 
             for edge in sorted_l1_edges:
                 yield edge.spec._cmp_node
@@ -3944,6 +4109,7 @@ class Spec:
                         edge.depflag,
                         edge.virtuals,
                         edge.direct,
+                        edge.propagation,
                         edge.when,
                     )
                 )
@@ -3955,7 +4121,7 @@ class Spec:
 
             # level 1 edges all start with zero
             for i, edge in enumerate(sorted_l1_edges, start=1):
-                yield (0, i, edge.depflag, edge.virtuals, edge.direct, edge.when)
+                yield (0, i, edge.depflag, edge.virtuals, edge.direct, edge.propagation, edge.when)
 
             # yield remaining edges in the order they were encountered during traversal
             if edge_list:
@@ -3968,6 +4134,13 @@ class Spec:
     def namespace_if_anonymous(self):
         return self.namespace if not self.name else None
 
+    @property
+    def fullname_if_abstract(self):
+        """The namespace-qualified name of a named abstract spec. A concrete spec always has
+        a namespace, so its default format prints the plain name. An anonymous spec renders
+        its namespace as a separate ``namespace=`` token."""
+        return self.fullname if self.name and not self.concrete else self.name
+
     def _format_default(self) -> str:
         """Fast path for formatting with DEFAULT_FORMAT and no color.
 
@@ -3977,7 +4150,10 @@ class Spec:
         parts = []
 
         if self.name:
-            parts.append(self.name)
+            if self.namespace and not self.concrete:
+                parts.append(f"{self.namespace}.{self.name}")
+            else:
+                parts.append(self.name)
 
         if self.versions:
             version_str = str(self.versions)
@@ -4003,8 +4179,10 @@ class Spec:
             if self.architecture.target:
                 parts.append(f" target={self.architecture.target}")
 
+        # The blank is required for round-tripping: ``key=value /abc`` parses as variant and
+        # abstract hash, whereas ``key=value/abc`` is parsed as a variant with value ``value/abc``.
         if self.abstract_hash:
-            parts.append(f"/{self.abstract_hash}")
+            parts.append(f" /{self.abstract_hash}")
 
         return "".join(parts).strip()
 
@@ -5257,7 +5435,18 @@ def reconstruct_virtuals_on_edges(spec: Spec) -> None:
             edge.update_virtuals(virtuals_to_add)
 
 
-DepSpecComponents = Tuple[str, str, List[str], str, Tuple[str, ...], bool]
+class DepSpecComponents(NamedTuple):
+    """A dependency edge as it is stored in a spec file. The fields ``direct``, ``when``, and
+    ``propagation`` only occur on edges of abstract specs, and only from specfile v5 on."""
+
+    name: str
+    hash: str
+    deptypes: List[str]
+    hash_type: str
+    virtuals: Tuple[str, ...]
+    direct: bool
+    when: str = ""
+    propagation: str = PropagationPolicy.NONE.name
 
 
 _SPECFILE_READERS: Dict[int, Type["SpecfileReaderBase"]] = {}
@@ -5305,6 +5494,7 @@ class SpecfileReaderBase(abc.ABC):
         # old anonymous spec files had name=None, we use name="" now
         spec.name = name if isinstance(name, str) else ""
         spec.namespace = node.get("namespace", None)
+        spec.abstract_hash = node.get("abstract_hash", None)
 
         if "version" in node or "versions" in node:
             spec.versions = vn.VersionList.from_dict(node)
@@ -5313,11 +5503,17 @@ class SpecfileReaderBase(abc.ABC):
         if "arch" in node:
             spec.architecture = ArchSpec.from_dict(node)
 
+        # "compiler_flags" supersedes the flags under "parameters": it records propagation per
+        # flag, where "propagate" only records propagation per flag type.
+        spec.compiler_flags = FlagMap.from_dict(node.get("compiler_flags", {}))
+
         propagated_names = node.get("propagate", [])
         abstract_variants = set(node.get("abstract", ()))
         for name, values in node.get("parameters", {}).items():
             propagate = name in propagated_names
             if name in _valid_compiler_flags:
+                if name in spec.compiler_flags:
+                    continue
                 spec.compiler_flags[name] = []
                 for val in values:
                     spec.compiler_flags.add_flag(name, val, propagate)
@@ -5393,10 +5589,10 @@ class SpecfileReaderBase(abc.ABC):
         hash_type = None
         any_deps = False
         for node in nodes:
-            for _, _, _, dhash_type, _, _ in cls.dependencies_from_node_dict(node):
+            for dep in cls.dependencies_from_node_dict(node):
                 any_deps = True
-                if dhash_type:
-                    hash_type = dhash_type
+                if dep.hash_type:
+                    hash_type = dep.hash_type
                     break
 
         if not any_deps:  # If we never see a dependency...
@@ -5429,15 +5625,24 @@ def wire_spec_nodes(
     for node in nodes:
         node_spec = specs_by_hash[node[hash_type]]
 
-        for dname, dhash, dtype, _, virtuals, direct in reader.dependencies_from_node_dict(node):
-            dep_spec = specs_by_hash.get(dhash)
+        for dep in reader.dependencies_from_node_dict(node):
+            dep_spec = specs_by_hash.get(dep.hash)
             if dep_spec is None:
                 raise MissingSpecHashError(
-                    f"node '{node['name']}' references missing dep hash {dname}/{dhash}"
+                    f"node '{node['name']}' references missing dep hash {dep.name}/{dep.hash}"
                 )
-            node_spec._add_dependency(
-                dep_spec, depflag=dt.canonicalize(dtype), virtuals=virtuals, direct=direct
+            # Add edges exactly as they are stored
+            edge = DependencySpec(
+                node_spec,
+                dep_spec,
+                depflag=dt.canonicalize(dep.deptypes),
+                virtuals=dep.virtuals,
+                direct=dep.direct,
+                when=Spec(dep.when) if dep.when else EMPTY_SPEC,
+                propagation=PropagationPolicy[dep.propagation],
             )
+            _add_edge_to_map(node_spec._dependencies, edge.spec.name, edge)
+            _add_edge_to_map(edge.spec._dependents, edge.parent.name, edge)
 
         if "build_spec" in node.keys():
             bname, bhash, _ = reader.extract_build_spec_info_from_node_dict(
@@ -5482,9 +5687,12 @@ class SpecfileV1(SpecfileReaderBase):
         for node in nodes:
             # get dependency dict from the node.
             name, data = cls.name_and_data(node)
-            for dname, _, dtypes, _, virtuals, direct in cls.dependencies_from_node_dict(data):
+            for dep in cls.dependencies_from_node_dict(data):
                 deps[name]._add_dependency(
-                    deps[dname], depflag=dt.canonicalize(dtypes), virtuals=virtuals, direct=direct
+                    deps[dep.name],
+                    depflag=dt.canonicalize(dep.deptypes),
+                    virtuals=dep.virtuals,
+                    direct=dep.direct,
                 )
 
         reconstruct_virtuals_on_edges(result)
@@ -5516,7 +5724,6 @@ class SpecfileV1(SpecfileReaderBase):
                     if h.name in elt:
                         dep_hash, deptypes = elt[h.name], elt["type"]
                         hash_type = h.name
-                        virtuals: Tuple[str, ...] = ()
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
@@ -5524,7 +5731,14 @@ class SpecfileV1(SpecfileReaderBase):
                 raise spack.error.SpecError("Couldn't parse dependency types in spec.")
 
             dspec_list.append(
-                (dep_name, dep_hash, list(deptypes), hash_type, tuple(virtuals), True)
+                DepSpecComponents(
+                    name=dep_name,
+                    hash=dep_hash,
+                    deptypes=list(deptypes),
+                    hash_type=hash_type,
+                    virtuals=(),
+                    direct=True,
+                )
             )
 
         return dspec_list
@@ -5565,31 +5779,29 @@ class SpecfileV2(SpecfileReaderBase):
             raise spack.error.SpecError("Spec dictionary contains malformed dependencies")
 
         result = []
-        for dep in deps:
-            elt = dep
-            dep_name = dep["name"]
+        for elt in deps:
             if isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
                 for h in ht.HASHES:
                     if h.name in elt:
-                        dep_hash, deptypes, hash_type, virtuals, direct = (
-                            cls.extract_info_from_dep(elt, h)
-                        )
+                        result.append(cls.extract_info_from_dep(elt, h))
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError("Couldn't parse dependency types in spec.")
-            result.append((dep_name, dep_hash, list(deptypes), hash_type, tuple(virtuals), direct))
         return result
 
     @classmethod
-    def extract_info_from_dep(cls, elt, hash):
-        dep_hash, deptypes = elt[hash.name], elt["type"]
-        hash_type = hash.name
-        virtuals = []
-        direct = True
-        return dep_hash, deptypes, hash_type, virtuals, direct
+    def extract_info_from_dep(cls, elt, hash) -> DepSpecComponents:
+        return DepSpecComponents(
+            name=elt["name"],
+            hash=elt[hash.name],
+            deptypes=list(elt["type"]),
+            hash_type=hash.name,
+            virtuals=(),
+            direct=True,
+        )
 
     @classmethod
     def extract_build_spec_info_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
@@ -5607,13 +5819,15 @@ class SpecfileV4(SpecfileV2):
     SPEC_VERSION = 4
 
     @classmethod
-    def extract_info_from_dep(cls, elt, hash):
-        dep_hash = elt[hash.name]
-        deptypes = elt["parameters"]["deptypes"]
-        hash_type = hash.name
-        virtuals = elt["parameters"]["virtuals"]
-        direct = True
-        return dep_hash, deptypes, hash_type, virtuals, direct
+    def extract_info_from_dep(cls, elt, hash) -> DepSpecComponents:
+        return DepSpecComponents(
+            name=elt["name"],
+            hash=elt[hash.name],
+            deptypes=list(elt["parameters"]["deptypes"]),
+            hash_type=hash.name,
+            virtuals=tuple(elt["parameters"]["virtuals"]),
+            direct=True,
+        )
 
     @classmethod
     def load(cls, data) -> Spec:
@@ -5622,6 +5836,10 @@ class SpecfileV4(SpecfileV2):
 
 @register_reader
 class SpecfileV5(SpecfileV4):
+    """abstract_hash, compiler_flags, when and propagation are optional node/dependency keys,
+    used only for abstract specs. Not enforcing them is what avoids a version bump: an older
+    reader ignores an unknown key, and a spec file without one stays valid."""
+
     SPEC_VERSION = 5
 
     @classmethod
@@ -5629,13 +5847,18 @@ class SpecfileV5(SpecfileV4):
         raise RuntimeError("The 'compiler' option is unexpected in specfiles at v5 or greater")
 
     @classmethod
-    def extract_info_from_dep(cls, elt, hash):
-        dep_hash = elt[hash.name]
-        deptypes = elt["parameters"]["deptypes"]
-        hash_type = hash.name
-        virtuals = elt["parameters"]["virtuals"]
-        direct = elt["parameters"].get("direct", False)
-        return dep_hash, deptypes, hash_type, virtuals, direct
+    def extract_info_from_dep(cls, elt, hash) -> DepSpecComponents:
+        parameters = elt["parameters"]
+        return DepSpecComponents(
+            name=elt["name"],
+            hash=elt[hash.name],
+            deptypes=list(parameters["deptypes"]),
+            hash_type=hash.name,
+            virtuals=tuple(parameters["virtuals"]),
+            direct=parameters.get("direct", False),
+            when=parameters.get("when", ""),
+            propagation=parameters.get("propagation", PropagationPolicy.NONE.name),
+        )
 
 
 #: Alias to the latest version of specfiles
@@ -5822,10 +6045,6 @@ class UnsupportedPropagationError(spack.error.SpecError):
     """Raised when propagation (==) is used with reserved variant names."""
 
 
-class DuplicateDependencyError(spack.error.SpecError):
-    """Raised when the same dependency occurs in a spec twice."""
-
-
 class UnsupportedCompilerError(spack.error.SpecError):
     """Raised when the user asks for a compiler spack doesn't know about."""
 
@@ -5873,15 +6092,6 @@ class UnsatisfiableDependencySpecError(spack.error.UnsatisfiableSpecError):
 
     def __init__(self, provided, required):
         super().__init__(provided, required, "dependency")
-
-
-class UnconstrainableDependencySpecError(spack.error.SpecError):
-    """Raised when attempting to constrain by an anonymous dependency spec"""
-
-    def __init__(self, spec):
-        msg = "Cannot constrain by spec '%s'. Cannot constrain by a" % spec
-        msg += " spec containing anonymous dependencies"
-        super().__init__(msg)
 
 
 class AmbiguousHashError(spack.error.SpecError):

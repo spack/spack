@@ -820,6 +820,43 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, unif
     assert len(all_root_hashes) == 2
 
 
+def test_concretize_is_noop_for_concretized_namespaced_root(mutable_mock_env_path):
+    """Tests that a root spec with an explicit namespace is not reconcretized by a
+    repeated concretization.
+
+    The lockfile used to store roots in their default string format, which omits the
+    namespace. On re-read, the stored root no longer compared equal to the namespaced
+    user spec, so the spec was considered new and was reconcretized every time.
+    """
+    mutable_mock_env_path.mkdir()
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        """spack:
+      specs:
+      - builtin_mock.pkg-a
+    """
+    )
+    env = ev.Environment(mutable_mock_env_path)
+    with env:
+        env.concretize()
+        env.write()
+    original_hashes = {x.hash for x in env.concretized_roots}
+
+    # Re-read the environment from the lockfile and concretize again
+    reread = ev.Environment(mutable_mock_env_path)
+    with reread:
+        newly_concretized = reread.concretize()
+
+    # The root was already concretized, so repeated concretization is a no-op
+    assert newly_concretized == []
+    assert len(reread.concretized_roots) == 1
+    assert not any(x.new for x in reread.concretized_roots)
+    assert {x.hash for x in reread.concretized_roots} == original_hashes
+
+    # The abstract root read from the lockfile retains its namespace
+    assert reread.concretized_roots[0].root == spack.spec.Spec("builtin_mock.pkg-a")
+
+
 @pytest.mark.regression("44216")
 def test_root_version_weights_for_old_versions(mutable_mock_env_path):
     """Tests that, when we select two old versions of root specs that have the same version

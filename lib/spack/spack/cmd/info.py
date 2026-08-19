@@ -158,7 +158,7 @@ def format_deptype(depflag: int) -> str:
 
 class DependencyFormatter(Formatter):
     def format_name(self, dep: spack.dependency.Dependency) -> str:
-        return dep.spec._long_spec(color=color.get_color_when())
+        return dep.spec.clong_spec
 
     def format_values(self, dep: spack.dependency.Dependency) -> str:
         return str(format_deptype(dep.depflag))
@@ -325,9 +325,7 @@ def print_tests(pkg: PackageBase, args: Namespace) -> None:
 
 
 def _fmt_when(when: "spack.spec.Spec", indent: int) -> str:
-    return color.colorize(
-        f"{indent * ' '}@B{{when}} {color.cescape(when._long_spec(color=color.get_color_when()))}"
-    )
+    return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(when.clong_spec)}")
 
 
 def _fmt_variant_value(v: Any) -> str:

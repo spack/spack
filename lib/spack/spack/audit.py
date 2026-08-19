@@ -612,21 +612,38 @@ def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
     return errors
 
 
+def _declared_build_systems(pkg_cls) -> Set[str]:
+    """Return the names of the build systems declared by a package class."""
+    # values are either ConditionalValue objects or the values themselves
+    return set(
+        v.value if isinstance(v, spack.variant.ConditionalValue) else v
+        for _, variant in pkg_cls.variant_definitions("build_system")
+        for v in variant.values
+    )
+
+
 @package_properties
 def _ensure_package_builders(pkgs, error_cls):
-    """Ensure all packages can produce a builder"""
+    """Ensure all packages can produce a builder for each build system they declare"""
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        pkg = pkg_cls(spack.spec.Spec(pkg_name))
-        try:
-            b = spack.builder.buildsystem_name(pkg)
-            if not isinstance(b, str):
-                raise TypeError("invalid builder type {!s}".format(type(b)))
-        except Exception as e:
-            errors.append(
-                error_cls("The package '{pkg_name}' does not have a build system", [str(e)])
-            )
+
+        build_system_names = _declared_build_systems(pkg_cls)
+        if not build_system_names:
+            errors.append(error_cls(f"The package '{pkg_name}' does not have a build system", []))
+            continue
+
+        for build_system_name in sorted(build_system_names):
+            if build_system_name not in spack.builder.BUILDER_CLS:
+                errors.append(
+                    error_cls(
+                        f"The package '{pkg_name}' declares the build system "
+                        f"'{build_system_name}', which has no builder",
+                        [],
+                    )
+                )
+
     return errors
 
 
@@ -706,12 +723,7 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
-        # values are either ConditionalValue objects or the values themselves
-        build_system_names = {
-            v.value if isinstance(v, spack.variant.ConditionalValue) else v
-            for _, variant in pkg_cls.variant_definitions("build_system")
-            for v in variant.values
-        }
+        build_system_names = _declared_build_systems(pkg_cls)
         builder_cls_names = [spack.builder.BUILDER_CLS[x].__name__ for x in build_system_names]
 
         has_builders_in_package_py = any(

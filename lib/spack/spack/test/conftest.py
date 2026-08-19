@@ -479,17 +479,6 @@ def clean_test_environment():
     ev.deactivate()
 
 
-def _host():
-    """Mock archspec host so there is no inconsistency on the Windows platform
-    This function cannot be local as it needs to be pickleable"""
-    return spack.vendor.archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
-
-
-@pytest.fixture(scope="function")
-def archspec_host_is_spack_test_host(monkeypatch):
-    monkeypatch.setattr(spack.vendor.archspec.cpu, "host", _host)
-
-
 # Hooks to add command line options or set other custom behaviors.
 # They must be placed here to be found by pytest. See:
 #
@@ -1314,6 +1303,9 @@ def mock_store(
 
     yield store_path
 
+    # Restore write permissions, or pytest cannot remove the tmp dir.
+    _recursive_chmod(store_path, 0o755)
+
 
 @pytest.fixture(scope="session")
 def _mock_store_tarball(mock_store) -> bytes:
@@ -1543,6 +1535,9 @@ def upstream_and_downstream_db(tmp_path: Path, gen_mock_layout):
     downstream_db._write()
 
     yield upstream_db, downstream_db
+
+    # Restore write permissions, or pytest cannot remove the tmp dir.
+    mock_db_root.chmod(0o755)
 
 
 class ConfigUpdate:
@@ -2165,30 +2160,6 @@ repo:
     shutil.rmtree(str(repodir))
 
 
-@pytest.fixture(scope="function")
-def mock_clone_repo(tmp_path_factory: pytest.TempPathFactory):
-    """Create a cloned repository."""
-    repo_namespace = "mock_clone_repo"
-    repodir = tmp_path_factory.mktemp(repo_namespace)
-    yaml_path = repodir / "repo.yaml"
-    yaml_path.write_text(
-        """
-repo:
-    namespace: mock_clone_repo
-"""
-    )
-
-    shutil.copytree(
-        os.path.join(spack.paths.mock_packages_path, spack.repo.packages_dir_name),
-        os.path.join(str(repodir), spack.repo.packages_dir_name),
-    )
-
-    with spack.repo.use_repositories(str(repodir)) as repo:
-        yield repo, repodir
-
-    shutil.rmtree(str(repodir))
-
-
 ##########
 # Class and fixture to work around problems raising exceptions in directives,
 # which cause tests like test_from_list_url to hang for Python 2.x metaclass
@@ -2607,11 +2578,6 @@ class MockHTTPResponse(io.IOBase):
 
 
 @pytest.fixture()
-def mock_runtimes(config, mock_packages):
-    return mock_packages.packages_with_tags("runtime")
-
-
-@pytest.fixture()
 def write_config_file(tmp_path: Path):
     """Returns a function that writes a config file."""
 
@@ -2624,10 +2590,6 @@ def write_config_file(tmp_path: Path):
         return config_yaml
 
     return _write
-
-
-def _include_cache_root():
-    return join_path(str(tempfile.mkdtemp()), "user_cache", "includes")
 
 
 @pytest.fixture()
