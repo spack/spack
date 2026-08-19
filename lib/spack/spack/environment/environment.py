@@ -1542,8 +1542,14 @@ class Environment:
                 )
         self._sync_speclists()
 
-    def remove(self, query_spec, list_name=USER_SPECS_KEY, force=False):
-        """Remove specs from an environment that match a query_spec"""
+    def remove(self, query_spec, list_name=USER_SPECS_KEY, force=False) -> bool:
+        """Remove specs from an environment that match a query_spec.
+
+        Returns:
+            False if the spec wasn't removed due to not being present in the
+            environment, otherwise True.
+
+        """
         err_msg_header = (
             f"Cannot remove '{query_spec}' from '{list_name}' definition "
             f"in {self.manifest.manifest_file}"
@@ -1562,8 +1568,10 @@ class Environment:
             # concrete specs match against concrete specs in the env by dag hash.
             matches = [x.root for x in self.concretized_roots if query_spec.dag_hash() == x.hash]
 
-        if not matches:
+        if not matches and not force:
             raise SpackEnvironmentError(f"{err_msg_header}, no spec matches")
+        elif not matches:
+            return False
 
         old_specs = set(self.user_specs)
 
@@ -1596,6 +1604,8 @@ class Environment:
             )
             for x in removed:
                 del self.specs_by_hash[x.hash]
+
+        return True
 
     def is_develop(self, spec):
         """Returns true when the spec is built from local sources"""
