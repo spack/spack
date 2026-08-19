@@ -83,6 +83,7 @@ ModuleConfigurationCache = Dict[Tuple[str, str, bool], "BaseConfiguration"]
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
+    "hash",
     "name",
     "version",
     "compiler",
