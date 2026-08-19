@@ -18,14 +18,12 @@ from urllib.request import BaseHandler
 from spack.util import tty
 
 
-def gcs_client():
-    """Create a GCS client
-    Creates an authenticated GCS client to access GCS buckets and blobs
-    """
-
+def try_gcs_import():
     try:
         import google.auth
         from google.cloud import storage
+
+        return google.auth, storage
     except ImportError as ex:
         tty.error(
             "{0}, google-cloud-storage python module is missing.".format(ex)
@@ -33,7 +31,21 @@ def gcs_client():
         )
         sys.exit(1)
 
-    storage_credentials, storage_project = google.auth.default()
+
+def gcs_client():
+    """Create a GCS client
+    Creates an authenticated GCS client to access GCS buckets and blobs
+    """
+    # Disable GCE mTLS for the metadata server to avoid cert errors
+    # thrown by google-auth when accessing GCS buckets. The mTLS change was introduced in
+    # https://github.com/googleapis/google-auth-library-python/pull/1856.
+    # This change reverts back to using the http endpoint, which was the default behavior
+    # before this (erroneous) change.
+    os.environ.setdefault("GCE_METADATA_MTLS_MODE", "none")
+
+    google_auth, storage = try_gcs_import()
+
+    storage_credentials, storage_project = google_auth.default()
     storage_client = storage.Client(storage_project, storage_credentials)
     return storage_client
 
