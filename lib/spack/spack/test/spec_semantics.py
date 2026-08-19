@@ -2004,6 +2004,10 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "target=:cascadelake", "target=:cannonlake", (True, False, False)),
         # The same diamond seen from below: targets from icelake up are above both bounds.
         (Spec, "target=cascadelake:", "target=cannonlake:", (True, False, False)),
+        # Ranges that are singletons are canonicalized to their only element
+        (Spec, "target=:aarch64", "target=aarch64", (True, True, True)),
+        (Spec, "target=aarch64:aarch64", "target=aarch64", (True, True, True)),
+        (Spec, "target=icelake:icelake", "target=icelake", (True, True, True)),
         # Spec with compilers
         (Spec, "mpileaks %gcc@5", "mpileaks %gcc@6", (False, False, False)),
         # %gcc sits behind an unpinned ^callpath edge, so callpath need not be one node:
@@ -2071,6 +2075,9 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
         ),
         # a range already inside the other is the intersection, so there is nothing to narrow
         (Spec, "target=:icelake", "target=x86_64:", False, "target=:icelake"),
+        # ":aarch64" contains only aarch64 and canonicalizes to the singleton instead of a range
+        (Spec, "target=:aarch64", "target=aarch64:", False, "target=aarch64"),
+        (Spec, "target=aarch64:", "target=:aarch64", True, "target=aarch64"),
     ],
 )
 def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_packages):
@@ -2114,6 +2121,18 @@ def test_one_target_range_is_one_canonical_state(mock_packages):
     long, short = Spec("pkg-a target=x86_64:icelake"), Spec("pkg-a target=:icelake")
     assert long.to_dict() == short.to_dict()
     assert long.dag_hash() == short.dag_hash()
+
+
+@pytest.mark.parametrize(
+    "range_str,target_str",
+    [(":aarch64", "aarch64"), ("aarch64:aarch64", "aarch64"), ("icelake:icelake", "icelake")],
+)
+def test_a_singleton_target_range_is_the_concrete_target(mock_packages, range_str, target_str):
+    """A range denoting a singleton is canonicalized to that element."""
+    ranged, concrete = Spec(f"pkg-a target={range_str}"), Spec(f"pkg-a target={target_str}")
+    assert ranged.to_dict() == concrete.to_dict()
+    assert ranged.dag_hash() == concrete.dag_hash()
+    assert ranged.architecture.target_concrete
 
 
 def test_a_target_range_inside_another_one_is_dropped_from_the_list(mock_packages):

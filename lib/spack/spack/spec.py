@@ -224,13 +224,13 @@ def _canonical_target_range(name: str) -> str:
     elements = set()
     for element in name.split(","):
         t_min, t_sep, t_max = element.partition(":")
-        if (
-            t_sep
-            and t_min
-            and t_max
-            and _make_microarchitecture(t_max).family == _make_microarchitecture(t_min)
-        ):
-            element = f":{t_max}"
+        if t_sep and t_max:
+            upper = _make_microarchitecture(t_max)
+            if not t_min or _make_microarchitecture(t_min) == upper.family:
+                # if the upperbound is a root, canonicalize to the singleton
+                element = t_max if upper.family == upper else f":{t_max}"
+            elif t_min == t_max:
+                element = t_min
         elements.add(element)
 
     ordered = sorted(elements)
