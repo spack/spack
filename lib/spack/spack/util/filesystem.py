@@ -47,7 +47,7 @@ from typing import (
 from spack.vendor.typing_extensions import Literal
 
 from spack.util import lang, tty
-from spack.util.executable import Executable
+from spack.util.executable import Executable, which
 from spack.util.lang import dedupe, fnmatch_translate_multiple, memoized
 from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_filter
 
@@ -3323,6 +3323,39 @@ class SymlinkError(OSError):
 
 class AlreadyExistsError(SymlinkError):
     """Link path already exists."""
+
+
+if sys.platform == "win32":
+    import ctypes.wintypes
+
+
+def short_filenames_enabled() -> bool:
+    """Check whether Windows 8.3 (short) filename creation is enabled on this system.
+
+    8.3 name creation can be controlled two ways:
+
+    - A system-wide registry setting (``NtfsDisable8dot3NameCreation``) that either
+      forces short names on/off for every volume, or defers to a per-volume setting.
+    - A per-volume flag that only takes effect when the registry setting defers to it.
+
+    ``fsutil 8dot3name query <drive>`` reports both the registry state and the volume
+    state, then resolves them into a single effective answer for that drive
+    (e.g. "8dot3 name creation is disabled on <drive>"). This function queries the
+    system drive (``%SystemDrive%``) and parses that resolved line, so it reflects the
+    actual effective setting rather than just one of the two independent settings.
+
+    Always returns False on non-Windows platforms.
+    """
+    if sys.platform != "win32":
+        return False
+    try:
+        fsutil = which("fsutil", required=True)
+        drive = os.environ.get("SystemDrive", "C:")
+        output = fsutil("8dot3name", "query", drive, output=str, error=str)
+    except Exception:
+        return False
+    match = re.search(r"8dot3 name creation is (enabled|disabled)", output, re.IGNORECASE)
+    return bool(match) and match.group(1).lower() == "enabled"
 
 
 def fix_darwin_install_name(path: str) -> None:

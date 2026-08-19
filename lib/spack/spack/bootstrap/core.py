@@ -494,6 +494,23 @@ def ensure_gpg_in_path_or_raise() -> None:
     )
 
 
+def msvc_compiler_wrapper_root_spec() -> str:
+    """Return the root spec for the MSVC compiler wrapper package"""
+    return _root_spec("compiler-wrapper@1.0")
+
+
+def ensure_msvc_compiler_wrappers_or_raise() -> None:
+    return ensure_executables_in_path_or_raise(
+        executables=["cl"], abstract_spec=msvc_compiler_wrapper_root_spec()
+    )
+
+
+def ensure_msvc_relocate_or_raise() -> None:
+    return ensure_executables_in_path_or_raise(
+        executables=["relocate.exe"], abstract_spec=msvc_compiler_wrapper_root_spec()
+    )
+
+
 def patchelf_root_spec() -> str:
     """Return the root spec used to bootstrap patchelf"""
     # 0.13.1 is the last version not to require C++17.
@@ -580,6 +597,8 @@ def ensure_core_dependencies() -> None:
         ensure_patchelf_in_path_or_raise()
     ensure_gpg_in_path_or_raise()
     ensure_clingo_importable_or_raise()
+    if sys.platform == "win32":
+        ensure_msvc_compiler_wrappers_or_raise()
 
 
 def all_core_root_specs() -> List[str]:

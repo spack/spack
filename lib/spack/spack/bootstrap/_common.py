@@ -7,6 +7,7 @@ import fnmatch
 import glob
 import importlib
 import os
+import pathlib
 import re
 import sys
 import sysconfig
@@ -206,14 +207,20 @@ def _executables_in_store(
     installed_specs = spack.store.STORE.db.query(query_spec, installed=True)
     if installed_specs:
         for concrete_spec in installed_specs:
-            bin_dir = concrete_spec.prefix.bin
-            # IF we have a "bin" directory and it contains
-            # the executables we are looking for
-            if (
-                os.path.exists(bin_dir)
-                and os.path.isdir(bin_dir)
-                and spack.util.executable.which_string(*executables, path=bin_dir)
-            ):
+            if sys.platform == "win32":
+                # ideally specs would be able to tell us where to find their binaries
+                # but in lieu of that, we need to actually look for a binary
+                # assuming everything is in bin may miss some cases
+                # particularly relevant on Windows where prefix/bin is a less common idiom
+                # than other platforms
+                prefix = pathlib.Path(concrete_spec.prefix)
+                # get all directories under prefix
+                searchable_paths = [str(x) for x in prefix.glob("**") if x.is_dir()]
+                binary = spack.util.executable.which_string(*executables, path=searchable_paths)
+                bin_dir = os.path.dirname(binary) if binary else ""
+            else:
+                bin_dir = concrete_spec.prefix.bin
+            if bin_dir:
                 spack.util.environment.path_put_first("PATH", [bin_dir])
                 if query_info is not None:
                     query_info["command"] = spack.util.executable.which(

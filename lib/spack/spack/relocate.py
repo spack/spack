@@ -2,23 +2,32 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import ctypes
 import itertools
 import os
 import re
+import struct
 import sys
-from typing import Dict, Iterable, List, Optional
+from typing import IO, Dict, Iterable, List, Optional
 
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
 
+import spack.spec
 import spack.store
+import spack.util.elf as elf
+import spack.util.executable as executable
 import spack.util.filesystem as fs
 import spack.util.lang
 from spack.util import elf, executable, tty
+from spack.util.environment import EnvironmentModifications
 from spack.util.filesystem import readlink, symlink
 from spack.util.lang import memoized
 
 from .relocate_text import BinaryFilePrefixReplacer, PrefixToPrefix, TextFilePrefixReplacer
+
+if sys.platform == "win32":
+    import ctypes.wintypes
 
 
 @memoized
@@ -35,6 +44,308 @@ def _patchelf() -> Optional[executable.Executable]:
 
 def _decode_macho_data(bytestring):
     return bytestring.rstrip(b"\x00").decode("ascii")
+
+
+def setup_relocate_run(wrapper_spec) -> executable.Executable:
+    """Establishes environment neccesary to run the relocate utility, returns the
+    executable with the properly established environment."""
+    import spack.user_environment
+
+    relocate_exe = executable.Executable(str(wrapper_spec.package.bin_dir() / "relocate.exe"))  # type: ignore
+    # get msvc context from wrapper - needed for finding msvc utils during relocate run
+    relocate_exe.add_default_envmod(
+        spack.user_environment.environment_modifications_for_specs(
+            wrapper_spec, set_package_py_globals=False
+        )
+    )
+    return relocate_exe
+
+
+def bootstrap_relocate() -> executable.Executable:
+    """Bootstraps and returns an executable reference to the Windows compiler
+    wrappers relocate utility"""
+    import spack.bootstrap as bootstrapper
+
+    with bootstrapper.ensure_bootstrap_configuration():
+        # ensure_msvc_relocate_or_raise() may hand back a bare relocate.exe found
+        # via a PATH search, with no MSVC environment attached (see the early
+        # return in ensure_executables_in_path_or_raise). relocate.exe needs the
+        # vcvars-derived INCLUDE/LIB/PATH to find msvc utils (link.exe, lib.exe,
+        # dumpbin.exe, ...), so don't trust its return value: look up the
+        # concrete compiler-wrapper spec ourselves and always attach its
+        # environment, the same way setup_relocate_run does.
+        bootstrapper.ensure_msvc_relocate_or_raise()
+        wrapper_spec = next(
+            iter(spack.store.STORE.db.query_local("compiler-wrapper", installed=True)), None
+        )
+        if not wrapper_spec:
+            raise RuntimeError(
+                "Failed to bootstrap the MSVC compiler wrapper: no compiler-wrapper spec "
+                "found in the bootstrap store after bootstrapping relocate.exe"
+            )
+        return setup_relocate_run(wrapper_spec)
+
+
+def relocate(spec=None) -> executable.Executable:
+    """Relocate binaries for 'spec' on Windows."""
+    wrapper_spec = None
+    if spec:
+        try:
+            wrapper_spec = spec["compiler-wrapper"]
+        except KeyError:
+            pass
+    if not wrapper_spec:
+        # We need to bootstrap
+        return bootstrap_relocate()
+    return setup_relocate_run(wrapper_spec)
+
+
+def apply_pe_relocations(
+    pe_targets: Iterable[str],
+    coff_for_target: Dict[str, str],
+    reloc_exe: executable.Executable,
+    ev: EnvironmentModifications,
+    **reloc_kwargs,
+) -> None:
+    """Invoke the compiler wrapper's relocate executable on each PE target (dll or
+    exe). PE files may or may not export symbols (most exes and plugin dlls do not),
+    but references to other PE files inside them still need relocating either way.
+    If ``coff_for_target`` has an import library recorded for a given target, it's
+    passed along via ``--coff`` so the wrapper regenerates its exports to point at
+    the relocated import library.
+    """
+    for pe in pe_targets:
+        args = ["--pe", pe]
+        args.append("--full")
+        if pe in coff_for_target:
+            args.extend(["--coff", coff_for_target[pe]])
+        print(f"relocate args: {args}")
+        reloc_exe(*args, extra_env=ev, **reloc_kwargs)
+
+
+def _import_lib_targets(
+    targets: List[str], all_prefixes: Dict[str, str], stage: Optional[bool] = False
+) -> Dict[str, str]:
+    """Match each import library's referenced DLL against ``all_prefixes`` (old
+    prefix -> new prefix, including any SFN forms) for the buildcache
+    or a straightforward stage -> install prefix mapping for the stage.
+    Returns a mapping from the DLL's new absolute path to the import library's
+    new absolute path, for use as the ``--coff`` argument when relocating that DLL/exe.
+    """
+    libs = [t for t in targets if t.endswith(".lib")]
+    regex = re.compile("|".join(re.escape(p) for p in all_prefixes.keys()))
+    coff_for_target: Dict[str, str] = {}
+    for lib in libs:
+        # we relocate exes and dlls, import libraries are regenerated
+        # with a new dll pointer from the existing import library
+        # static .libs are ignored (.lib is any coff library on Windows,
+        # which covers both import and static libraries)
+        # Dlls have no references to their import libraries
+        # but import libraries reference dlls, so although
+        # the DLLs are our "relocation targets" we drive that
+        # via import libs to determine the proper association
+        if verify_import_lib(lib):
+            dll_path = get_importlib_target(lib)
+            if not dll_path:
+                tty.debug(
+                    f"Import lib {lib} does not reference a compatible DLL, skipping relocation..."
+                )
+                continue
+            norm_dll_path = os.path.normpath(dll_path)
+            # matches prefix component in dll_path inside import library
+            # which is the absolute path to the dll the import library corresponds to
+            # on the machine/stage where this import library was built
+            match = regex.match(norm_dll_path)
+            if match:
+                old_root = match.group()
+                new_root = all_prefixes[old_root]
+                if stage:
+                    new_dll_path = new_root
+                else:
+                    dll_name = os.path.relpath(dll_path, old_root)
+                    new_dll_path = os.path.join(new_root, dll_name)
+                coff_for_target[new_dll_path] = lib
+            else:
+                tty.warn(
+                    f"Import lib: {lib} does not reference a DLL "
+                    "in this prefix, skipping relocation...\n"
+                    f"Prefixes failed to map: {all_prefixes}"
+                )
+    return coff_for_target
+
+
+def relocate_win_rpath(spec):
+    """Relocates Windows binaries from the stage to the install prefix
+
+    When built with the Windows compiler wrappers, all dll references in
+    binaries are absolute paths to the dll location in the stage.
+    We need to re-map these to point at the dll's location in the install
+    tree so the references make sense at runtime.
+
+    import libraries and the dlls they define are only associated by
+    a "dll name" which is impossible to directly resolve after the
+    dll has been moved to the install tree. Instead we read a resource entry
+    the compiler wrapper injects into all dlls so we can obtain the association
+    between a dll's stage location and its install tree location, and remap the
+    correct dll for the correct import library.
+    """
+    dlls = fs.find(spec.prefix, "*.dll")
+    exes = fs.find(spec.prefix, "*.exe")
+    libs = fs.find(spec.prefix, "*.lib")
+    pes = dlls + exes
+    targets = pes + libs
+    pe_stage_to_prefix = {}
+    # map all PE (dll,exe) prefix locations to the stage
+    for pe in pes:
+        # we don't want to update the rpath to symlinked files
+        if fs.islink(pe):
+            continue
+        # location of PE file at link time (in stage)
+        # is baked into PE file as a resource
+        # extract it
+        stage_pe_loc = extract_spack_id_from_win_pe(pe)
+        if stage_pe_loc:
+            norm_stage_pe_loc = os.path.normpath(stage_pe_loc)
+            pe_stage_to_prefix[norm_stage_pe_loc] = pe
+    relocate_windows_binaries(targets, spec, pe_stage_to_prefix, stage=True)
+
+
+def relocate_windows_binaries(
+    targets,
+    spec: spack.spec.Spec,
+    prefixes: Dict[str, str],
+    sfn_prefixes: Optional[Dict[str, str]] = None,
+    stage: Optional[bool] = False,
+):
+    """Relocate Windows PE binaries based on the mappings of "prefixes" and "sfn_prefixes"
+    "prefixes" and "sfn_prefixes" provide mappings from one tree to another. This method
+    parses the Windows binaries via the relocate feature of the compiler wrapper and
+    remaps any dll references.
+    """
+    pe_targets = [t for t in targets if t.endswith(".dll") or t.endswith(".exe")]
+    # Import libraries may reference their DLL by an 8.3 short filename (SFN) if the
+    # build host truncated the path. We can't expand such a path back to its long
+    # form here, since the old prefix no longer exists on this host, so instead we
+    # also match directly against the SFN form of each old prefix.
+    all_prefixes = {**prefixes, **(sfn_prefixes or {})}
+    coff_for_target = _import_lib_targets(targets, all_prefixes, stage=stage)
+    relocate_pe(all_prefixes, pe_targets, coff_for_target, spec)
+
+
+def relocate_pe(prefix_mapping, pe_targets, coff_mapping, spec):
+    ev = EnvironmentModifications()
+    ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in prefix_mapping.items()])
+    ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
+    ev.set("SPACK_DEBUG_WRAPPER", "ON")
+    apply_pe_relocations(pe_targets, coff_mapping, relocate(spec.package), ev, fail_on_error=True)
+
+
+def extract_spack_id_from_win_pe(lib: str) -> Optional[str]:
+    """Extracts the string ID spack of type spackresource from the
+    string table in a given dll
+    Arguments:
+        lib: the dll to extract the string resource from
+    Returns the resource of type SPACKRESOURCE with id spack
+    """
+    if not sys.platform == "win32":
+        return None
+    kernel32 = ctypes.windll.kernel32
+
+    LOAD_LIBRARY_AS_DATAFILE = 0x00000002
+    kernel32.LoadLibraryExW.restype = ctypes.wintypes.HMODULE
+    kernel32.LoadLibraryExW.argtypes = [
+        ctypes.wintypes.LPCWSTR,
+        ctypes.wintypes.HANDLE,
+        ctypes.wintypes.DWORD,
+    ]
+
+    kernel32.FreeLibrary.restype = ctypes.wintypes.BOOL
+    kernel32.FreeLibrary.argtypes = [ctypes.wintypes.HMODULE]
+
+    kernel32.FindResourceW.restype = ctypes.wintypes.HRSRC
+    kernel32.FindResourceW.argtypes = [
+        ctypes.wintypes.HMODULE,
+        ctypes.wintypes.LPCWSTR,
+        ctypes.wintypes.LPCWSTR,
+    ]
+
+    kernel32.LoadResource.restype = ctypes.wintypes.HGLOBAL
+    kernel32.LoadResource.argtypes = [ctypes.wintypes.HMODULE, ctypes.wintypes.HRSRC]
+
+    kernel32.LockResource.restype = ctypes.wintypes.LPVOID
+    kernel32.LockResource.argtypes = [ctypes.wintypes.HGLOBAL]
+
+    kernel32.SizeofResource.restype = ctypes.wintypes.DWORD
+    kernel32.SizeofResource.argtypes = [ctypes.wintypes.HMODULE, ctypes.wintypes.HRSRC]
+
+    RESOURCE_ID = "spack"
+    RESOURCE_TYPE = "SPACKRESOURCE"
+    module_handle = kernel32.LoadLibraryExW(lib, None, LOAD_LIBRARY_AS_DATAFILE)
+    if not module_handle:
+        tty.debug(f"Unable to acquire handle for {lib}: {ctypes.get_last_error()}")
+        kernel32.FreeLibrary(module_handle)
+        return None
+
+    res_info_handle = kernel32.FindResourceW(module_handle, RESOURCE_ID, RESOURCE_TYPE)
+    if not res_info_handle:
+        tty.debug(
+            f"Unable to acquire resource info handle for \
+{lib}:{RESOURCE_ID}:{RESOURCE_TYPE}: {ctypes.get_last_error()}"
+        )
+        kernel32.FreeLibrary(module_handle)
+        return None
+
+    resource_data_handle = kernel32.LoadResource(module_handle, res_info_handle)
+    if not resource_data_handle:
+        tty.debug(
+            f"Unable to acquire resource {res_info_handle} \
+handle for {lib}: {ctypes.get_last_error()}"
+        )
+        kernel32.FreeLibrary(module_handle)
+        return None
+    data_pointer = kernel32.LockResource(resource_data_handle)
+    res_size = kernel32.SizeofResource(module_handle, res_info_handle)
+
+    raw_id_data = ctypes.string_at(data_pointer, res_size)
+    str_id_data = raw_id_data.decode(encoding="utf-8").strip("\x00")  # strip null terminator
+    kernel32.FreeLibrary(module_handle)
+    if not res_size:
+        tty.debug(
+            "Unexpected lack of resource file in Spack based dll, something may be corrupted"
+        )
+        return None
+    return str_id_data
+
+
+def get_importlib_target(lib, spec=None) -> Optional[str]:
+    """Extract and return the dll corresponding to the given import library.
+    Drives the windows compiler wrapper to obtain the DLL for which the given import
+    library provides the linker interface for"""
+    reloc = relocate(spec)
+    info = reloc("--coff", lib, "--report", output=str)
+    regex = re.compile("DLL: (.*)")
+    match = regex.search(info)
+    if match:
+        pe_name = match.group(1).strip("\r")
+        return pe_name
+    return None
+
+
+def verify_import_lib(lib: str, spec=None) -> bool:
+    """Verifies that a given binary is a windows import library
+    using the Windows compiler-wrappers 'relocate' feature
+    Behind the scenes, the binary does some basic inspection of the
+    structure of the library file provided and discriminates between
+    import library coff files and true archive coff files. Supports
+    long and short import library formats.
+    """
+    relocate_exe = relocate(spec)
+    out = ""
+    try:
+        out = relocate_exe("--coff", lib, "--verify", output=str, error=str, ignore_errors=[1])
+    except executable.ProcessError:
+        tty.debug(f"Cannot verify library {lib} as COFF. Failed with output {out}")
+    return relocate_exe.returncode == 0
 
 
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
@@ -295,6 +606,30 @@ def is_macho_magic(magic: bytes) -> bool:
 
 def is_elf_magic(magic: bytes) -> bool:
     return magic.startswith(b"\x7fELF")
+
+
+def is_msvc_magic(f: IO[bytes]) -> bool:
+    f.seek(0)
+    magic = f.read(8)
+    if magic.startswith(b"!<arch>\n"):
+        return True
+    # sanity check for minimal required size
+    # need at least 64 bytes for e_lfanew header
+    # which gives us the PE signature
+    f.seek(0, 2)
+    fsize = f.tell()
+    if fsize < 0x40:
+        return False
+    # wasn't a coff file, check PE
+    f.seek(0x3C)
+    pe_offset_bytes = f.read(4)
+    pe_offset = struct.unpack("<I", pe_offset_bytes)[0]
+    if pe_offset > fsize:
+        return False
+    f.seek(pe_offset)
+    is_pe = f.read(4) == b"PE\x00\x00"
+    f.seek(0)
+    return is_pe
 
 
 def is_binary(filename: str) -> bool:
