@@ -139,13 +139,25 @@ deprecation_scope = {
     "default": "runtime",
 }
 
+exempt_labels = {
+    "type": "array",
+    "description": "Deprecation labels to exempt. A deprecated() directive is skipped when it "
+    "declares labels and every one of them is listed here.",
+    "default": [],
+    "items": {"type": "string"},
+}
+
 # 'scope' selects the deptypes of a single traversal, so it is global and lives under 'all' only
 deprecation_all = {
     "type": "object",
     "description": "Deprecation policy applied to every package",
     "default": {},
     "additionalProperties": False,
-    "properties": {"allowed_severity": allowed_severity, "scope": deprecation_scope},
+    "properties": {
+        "allowed_severity": allowed_severity,
+        "scope": deprecation_scope,
+        "exempt_labels": exempt_labels,
+    },
 }
 
 deprecation_pkg = {
@@ -153,7 +165,7 @@ deprecation_pkg = {
     "description": "Deprecation policy for this package, overriding the one under 'all'",
     "default": {},
     "additionalProperties": False,
-    "properties": {"allowed_severity": allowed_severity},
+    "properties": {"allowed_severity": allowed_severity, "exempt_labels": exempt_labels},
 }
 
 REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"
