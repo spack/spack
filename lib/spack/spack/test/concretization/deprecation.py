@@ -222,3 +222,91 @@ packages:
     # @3.0 is not, because 'all' is no longer consulted
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-with-labels@3.0")
+
+
+def test_per_reason_threshold_blocks_only_the_named_reason(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that a mapping holds one reason to a stricter threshold than the others."""
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity:
+        default: critical
+        cve: none
+""")
+    # @2.0 is deprecated with reason=cve, which the mapping forbids at any severity
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-with-reason@2.0")
+
+    # @1.0 is deprecated with reason=rename, which falls back to the 'critical' default
+    assert concretize_one("deprecated-with-reason@1.0").satisfies("@1.0")
+
+
+def test_per_reason_threshold_without_a_default_is_strict(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that a mapping omitting 'default' leaves the unlisted reasons at 'none'."""
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity:
+        cve: critical
+""")
+    # reason=cve is allowed up to critical
+    assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
+
+    # reason=rename is not listed, so it falls back to 'none' rather than to 'critical'
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-with-reason@1.0")
+
+
+def test_per_package_mapping_replaces_the_one_under_all(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that a per-package mapping replaces the one under 'all' outright, so the 'cve: none'
+    set globally is not consulted for a package with its own threshold, while a package without
+    one is still judged by 'all'.
+    """
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity:
+        default: high
+        cve: none
+  deprecated-with-reason:
+    deprecation:
+      allowed_severity:
+        default: critical
+""")
+    # the package with its own threshold ignores the global 'cve: none'
+    assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
+
+    # a package without one is still blocked by it, so the override is scoped to the one package
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-with-labels@3.0")
+
+
+def test_string_threshold_is_shorthand_for_default(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that a bare string behaves like a mapping with only 'default'."""
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity: critical
+""")
+    assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
+
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allowed_severity:
+        default: critical
+""")
+    assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
