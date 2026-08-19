@@ -8,7 +8,7 @@ import sys
 
 import spack.cmd
 import spack.cmd.common
-import spack.hooks.generate_spec_scripts as generate_script
+import spack.hooks.generate_spec_scripts as spec_script
 import spack.util.tty as tty
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
@@ -102,9 +102,9 @@ def load(parser, args):
     for spec in specs:
         commands = ""
         if spec.external:
-            commands, _ = generate_script.get_environment_modifications(spec, shell)
+            commands, _ = spec_script.get_environment_modifications(spec, shell)
         else:
-            load_script_path = generate_script.path_to_load_shell_script(spec, shell)
+            load_script_path = spec_script.path_to_load_shell_script(spec, shell)
 
             if not os.path.isfile(load_script_path):
                 spack_dir = os.path.join(spec.prefix, ".spack")
@@ -113,21 +113,19 @@ def load(parser, args):
                     # Try to get cached repo if it exists
                     cached_repo = None
                     if os.path.isdir(spack_dir):
-                        repo_path = generate_script.make_repo_path(spack_dir)
+                        repo_path = spec_script.make_repo_path(spack_dir)
                         cached_repo = repo_path if repo_path and repo_path.repos else None
 
-                    mods, _ = generate_script.get_environment_modifications(
-                        spec, shell, cached_repo
-                    )
+                    mods, _ = spec_script.get_environment_modifications(spec, shell, cached_repo)
                 except Exception as err:
                     tty.die(f"Error generating environment modifications for {spec}:\n{err}")
                 try:
-                    generate_script.write_script(load_script_path, mods, shell)
+                    spec_script.write_script(load_script_path, mods, shell)
                 except Exception as err:
                     tty.debug(f"Error writing to {load_script_path}\n{err}")
                     sys.stdout.write(mods)
                     return 1
 
-            commands = generate_script.source_script(load_script_path, shell)
+            commands = spec_script.source_script(load_script_path, shell)
 
         sys.stdout.write(commands)
