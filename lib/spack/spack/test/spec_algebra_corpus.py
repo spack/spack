@@ -174,10 +174,9 @@ def _denote_the_same_set(lhs: Optional[Spec], rhs: Optional[Spec]) -> bool:
 # apply the whole intersection or nothing at all, and it must never write to the right-hand side,
 # now or through an object the two end up sharing.
 #
-# Specs are snapshotted with ``to_dict()``, which round-trips abstract specs and so compares their
-# state directly. ``Spec.__eq__`` is semantic equality instead: it leaves the propagation policy of
-# an edge out of the comparison, so ``pkg-a %pkg-b`` and ``pkg-a %%pkg-b`` are equal, as they are
-# also mutually satisfying.
+# Specs are snapshotted with ``to_dict()``, the storage format, which round-trips abstract specs
+# and so compares their state directly, including dimensions ``Spec.__eq__`` leaves out, such as
+# external paths and annotations.
 
 
 def check_lhs_is_unchanged_when_constrain_raises():
