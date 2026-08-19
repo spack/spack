@@ -716,29 +716,32 @@ Those at or below the threshold are allowed silently and the deprecated version 
 The install-time check is static and does not depend on local install status: a spec is refused if a disallowed deprecation is found in the checked closure of the requested packages, even when the deprecated dependency is already installed.
 The check runs once, upfront, so an install never fails halfway because a deprecated spec was discovered late.
 
-The threshold is set with ``allowed_deprecation_severity``, which accepts the values ``"none"``, ``"low"``, ``"medium"``, ``"high"``, and ``"critical"`` in increasing order of permissiveness.
-The default is ``"none"``, meaning every deprecation is a hard error unless the user explicitly relaxes it.
+All deprecation settings live under a ``deprecation:`` block, which can be given globally under ``all:`` or for a specific package.
 
-The setting can be applied globally under ``all:`` or overridden for a specific package:
+The threshold is set with ``allowed_severity``, which accepts the values ``"none"``, ``"low"``, ``"medium"``, ``"high"``, and ``"critical"`` in increasing order of permissiveness.
+The default is ``"none"``, meaning every deprecation is a hard error unless the user explicitly relaxes it.
 
 .. code-block:: yaml
 
    packages:
      all:
-       allowed_deprecation_severity: low
+       deprecation:
+         allowed_severity: low
      openssl:
-       allowed_deprecation_severity: none
+       deprecation:
+         allowed_severity: none
 
 In this example, ``low``-severity deprecations on any package are allowed silently, while ``medium`` and above remain errors.
 The per-package override for ``openssl`` reinstates the strictest threshold, so every deprecation on that package is an error regardless of the global setting.
 
-Which dependencies are checked is controlled by the global ``deprecation_scope`` setting, under ``all:`` only:
+Which dependencies are checked is controlled by the ``scope`` setting, which is global and can only be given under ``all:``:
 
 .. code-block:: yaml
 
    packages:
      all:
-       deprecation_scope: runtime
+       deprecation:
+         scope: runtime
 
 With the default ``"runtime"``, only the link and run closure of the requested packages is checked, which is the set of dependencies that end up in their runtime environment.
 With ``"all"``, every node in the DAG is checked, including build dependencies of build dependencies.
