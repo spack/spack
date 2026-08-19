@@ -473,6 +473,12 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
     except Exception as e:
         spack.util.tty.debug(e)
 
+    try:
+        for x in pkg.compiler_wrapper_log_locations:
+            shutil.copy(x, pkg.spec.package.metadata_dir)
+    except Exception as e:
+        spack.util.tty.debug(f"Failure to copy compiler wrapper logs: {str(e)}")
+
     # Archive package-specific files matched by archive_files glob patterns
     try:
         with fs.working_dir(pkg.stage.path):

@@ -1334,6 +1334,22 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return log_files
 
     @property
+    def compiler_wrapper_log_settings(self):
+        # Return log_dir and log_id
+        # compiler wrapper will create logs in log_dir
+        # specifically spack-cc-{log_id}.in.log and spack-cc-{log_id}.out.log
+        return self.stage.path, self.spec.format("{name}-{hash:7}")
+
+    @property
+    def compiler_wrapper_log_locations(self):
+        log_dir, log_id = self.compiler_wrapper_log_settings
+        return PackageBase._compiler_wrapper_log_locations(log_dir, log_id)
+
+    @staticmethod
+    def _compiler_wrapper_log_locations(log_dir, log_id):
+        return [os.path.join(log_dir, f"spack-cc-{log_id}.{x}.log") for x in ["in", "out"]]
+
+    @property
     def install_log_path(self):
         """Return the (compressed) build log file path on successful installation"""
         # Backward compatibility: Return the name of an existing install log.
