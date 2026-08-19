@@ -4,6 +4,7 @@
 """Enumerations used throughout Spack"""
 
 import enum
+from typing import NamedTuple, Tuple
 
 
 class InstallRecordStatus(enum.Flag):
@@ -87,3 +88,13 @@ class DeprecationReason(enum.Enum):
     RENAME = "rename"
     UNAVAILABLE = "unavailable"
     MAINTENANCE = "maintenance"
+
+
+class Deprecation(NamedTuple):
+    """A single deprecated() directive: why a constraint is deprecated, how severe that is, and
+    the advisory labels it refers to.
+    """
+
+    reason: DeprecationReason
+    severity: DeprecationSeverity
+    labels: Tuple[str, ...] = ()

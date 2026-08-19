@@ -1,5 +1,5 @@
 ## Package API v2.6
-- Added the `deprecated()` directive to mark specific configurations or entire packages as deprecated.
+- Added the `deprecated()` directive to mark specific configurations or entire packages as deprecated, with a `reason`, a `severity`, and optional advisory `labels`.
 
 ## Package API v2.5
 - Added `cuda-lang` and `hip-lang` as language virtuals (analogous to `c`, `cxx`, `fortran`).

@@ -875,3 +875,27 @@ def test_new_installer_static_gate_sees_deferred_build_deps(
             # still rejects the build-transitive deprecated node before any expansion happens.
             with pytest.raises(spack.error.InstallError, match="deprecated"):
                 spack.deprecation.check_deprecations(installer.roots)
+
+
+def test_install_gate_honors_exempt_labels(install_mockery, mutable_config: Configuration):
+    """Tests that the install-time gate skips the same labelled deprecations as the concretizer,
+    so a lockfile concretized under an exemption still installs.
+    """
+    with mutable_config.override("config:deprecated", True):
+        spec = spack.concretize.concretize_one("deprecated-with-labels@2.0")
+
+    # Under the default (strict) policy the pre-concretized spec is refused.
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.deprecation.check_deprecations([spec])
+
+    # Exempting only one of the two labels is not enough.
+    with mutable_config.override(
+        "packages:all:deprecation:exempt_labels", ["CVE-2026-0002"]
+    ), pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.deprecation.check_deprecations([spec])
+
+    # Exempting both skips the deprecation.
+    with mutable_config.override(
+        "packages:all:deprecation:exempt_labels", ["CVE-2026-0002", "GHSA-aaaa-bbbb-cccc"]
+    ):
+        spack.deprecation.check_deprecations([spec])  # must not raise

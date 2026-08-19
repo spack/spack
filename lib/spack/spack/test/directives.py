@@ -10,7 +10,7 @@ import spack.directives
 import spack.spec
 import spack.version
 from spack.directives import _make_when_spec, conflicts, depends_on, extends, patch
-from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
+from spack.directives_meta import DirectiveDictDescriptor, DirectiveError, DirectiveMeta
 from spack.enums import DeprecationReason, DeprecationSeverity
 from spack.repo import RepoPath
 from spack.spec import Spec
@@ -366,10 +366,10 @@ class TestDeprecatedDirective:
         spack.directives._Deprecated(spec="@1.0", reason="cve", severity="high")(mock_pkg)
         assert len(mock_pkg.deprecations) == 1
         constraint, entries = list(mock_pkg.deprecations.items())[0]
-        reason, severity = entries[0]
         assert constraint == spack.spec.Spec("@1.0")
-        assert reason == DeprecationReason.CVE
-        assert severity == DeprecationSeverity.HIGH
+        assert entries[0].reason == DeprecationReason.CVE
+        assert entries[0].severity == DeprecationSeverity.HIGH
+        assert entries[0].labels == ()
 
     def test_deprecated_directive_whole_package(self, mock_pkg):
         """Tests the deprecated directive on a package."""
@@ -392,3 +392,18 @@ class TestDeprecatedDirective:
         spack.directives._Deprecated(spec="@1.0", reason="rename", severity="low")(mock_pkg)
         assert len(mock_pkg.deprecations) == 1
         assert len(mock_pkg.deprecations[spack.spec.Spec("@1.0")]) == 2
+
+    def test_deprecated_directive_labels(self, mock_pkg):
+        """Tests that labels are stored as a tuple of strings."""
+        spack.directives._Deprecated(
+            spec="@1.0", reason="cve", severity="high", labels=["CVE-1", "GHSA-2"]
+        )(mock_pkg)
+        entries = mock_pkg.deprecations[spack.spec.Spec("@1.0")]
+        assert entries[0].labels == ("CVE-1", "GHSA-2")
+
+    def test_deprecated_directive_labels_must_not_be_a_string(self, mock_pkg):
+        """Tests that a bare string is refused, since iterating it would yield characters."""
+        with pytest.raises(DirectiveError, match="must be a list of strings"):
+            spack.directives._Deprecated(
+                spec="@1.0", reason="cve", severity="high", labels="CVE-1"
+            )(mock_pkg)

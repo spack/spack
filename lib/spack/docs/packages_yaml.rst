@@ -747,6 +747,25 @@ With the default ``"runtime"``, only the link and run closure of the requested p
 With ``"all"``, every node in the DAG is checked, including build dependencies of build dependencies.
 The stricter ``"all"`` scope is technically more correct, since a compromised build tool can in principle affect its dependents, but it is also more likely to reject an install over a deprecation that has no effect on the produced binaries.
 
+Individual advisories can be skipped without relaxing the threshold, using ``exempt_labels``:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       deprecation:
+         allowed_severity: none
+         exempt_labels:
+         - CVE-2023-0286
+     openssl:
+       deprecation:
+         exempt_labels:
+         - GHSA-xxxx-yyyy-zzzz
+
+A deprecation is skipped only if it declares ``labels`` (see :ref:`deprecate`) and *every* one of them is exempt.
+A directive that lists two advisories therefore stays an error until both are exempted, and a directive with no labels can never be skipped this way.
+As with the other settings, a non-empty per-package list replaces the one under ``all`` rather than adding to it.
+
 .. _package_permissions:
 
 Package Permissions
