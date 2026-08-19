@@ -25,33 +25,26 @@ Here's an example of a mirror's directory structure:
 .. code-block:: none
 
    mirror/
-       cmake/
-           cmake-2.8.10.2.tar.gz
-       dyninst/
-           dyninst-8.1.1.tgz
-           dyninst-8.1.2.tgz
-       libdwarf/
-           libdwarf-20130126.tar.gz
-           libdwarf-20130207.tar.gz
-           libdwarf-20130729.tar.gz
-       libelf/
-           libelf-0.8.12.tar.gz
-           libelf-0.8.13.tar.gz
-       libunwind/
-           libunwind-1.1.tar.gz
-       mpich/
-           mpich-3.0.4.tar.gz
-       mvapich2/
-           mvapich2-1.9.tgz
+       _source-cache/
+           archive/
+               2e/
+                   2e197bcb6fd44dbf82652e04968b307c73545e01d5c5df04a1f28eef1a081fe4.tar.gz
+               63/
+                   63074c85be23615383579176d891e9464244d4dcb44ca9a4bdadd7bd9d84a0d8.tar.gz
+               a6/
+                   a667318a44e3f749721cc630f2cb5541b0f542e934c188280b7075fd6f8e2ee1.tar.gz
+           git/
+               my-git-hosting.example.com/
+                   my-project.git/
+                       8d24b17801d9d78a45892e42a7169eb6f1d4c26d.tar.gz
 
-The structure is very simple.
-There is a top-level directory.
-The second level directories are named after packages, and the third level contains tarballs for each package, named after each package.
+Mirror entries are stored *content-addressed*: archives live under ``_source-cache/archive/`` in directories named after the first two characters of their checksum, and each archive is named after its full checksum.
+Archives of version control checkouts (e.g. git repositories at a specific commit) are stored under a directory named after the fetch method, repository URL, and revision.
 
 .. note::
 
-   Archives are **not** named exactly the way they were in the package's fetch URL.
-   They have the form ``<name>-<version>.<extension>``, where ``<name>`` is Spack's name for the package, ``<version>`` is the version of the tarball, and ``<extension>`` is whatever format the package's fetch URL contains.
+   Archives are **not** named the way they were in the package's fetch URL.
+   They have the form ``<checksum>.<extension>``, where ``<checksum>`` is the digest specified in the package recipe for that version (e.g. its ``sha256``), and ``<extension>`` is whatever format the package's fetch URL contains.
 
    In order to make mirror creation reasonably fast, we copy the tarball in its original format to the mirror directory, but we do not standardize on a particular compression algorithm, because this would potentially require expanding and recompressing each archive.
 
@@ -103,7 +96,7 @@ Here is what it looks like:
    ==> Trying to fetch from http://www.prevanders.net/libdwarf-20130729.tar.gz
    #############################################################             84.7%
    ==> Added libdwarf@20130729
-   ==> Added spack-mirror-2014-06-24/libdwarf/libdwarf-20130729.tar.gz to mirror
+   ==> Added spack-mirror-2014-06-24/_source-cache/archive/4c/4cc5e2f7b7bd6abf71d7c9c8eee6656b13c81ff8f507b3f1732fd8a00752b971.tar.gz to mirror
    ==> Added python@2.7.8.
    ==> Successfully updated mirror in spack-mirror-2015-02-24.
      Archive stats:
