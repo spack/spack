@@ -336,6 +336,18 @@ def source_is_enabled(conf: ConfigDictionary) -> bool:
     return spack.config.CONFIG.get("bootstrap:trusted").get(conf["name"], False)
 
 
+def _module_import_failure_hint(module: str) -> str:
+    """Return additional guidance for known bootstrap module failures."""
+    if module != "clingo":
+        return ""
+
+    return (
+        "\n\nSpack could not import or bootstrap the clingo Python module. "
+        "Run `spack bootstrap now` before running tests directly with "
+        "pytest, so Spack can install its required bootstrap dependencies."
+    )
+
+
 def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] = None):
     """Make the requested module available for import, or raise.
 
@@ -380,6 +392,8 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
         msg += exception_handler.grouped_message(with_tracebacks=True)
     else:
         msg += exception_handler.grouped_message(with_tracebacks=False)
+    msg += _module_import_failure_hint(module)
+    if exception_handler and not (spack.error.debug or spack.error.SHOW_BACKTRACE):
         msg += "\nRun `spack --backtrace ...` for more detailed errors"
     raise ImportError(msg)
 
