@@ -569,7 +569,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: Class level dictionary populated by :func:`~spack.directives.variant` directives
     variants: Dict[spack.spec.Spec, Dict[str, spack.variant.Variant]]
     #: Class level dictionary populated by :func:`~spack.directives.license` directives
-    licenses: Dict[spack.spec.Spec, str]
+    licenses: Dict[spack.spec.Spec, Dict[str, Union[str, List[str], None]]]
     #: Class level dictionary populated by :func:`~spack.directives.can_splice` directives
     splice_specs: Dict[spack.spec.Spec, Tuple[spack.spec.Spec, Union[None, str, List[str]]]]
     #: Class level dictionary populated by :func:`~spack.directives.redistribute` directives

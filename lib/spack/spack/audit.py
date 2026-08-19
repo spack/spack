@@ -1236,6 +1236,34 @@ def _ensure_maintainers_are_not_placeholders(pkgs, error_cls):
     return errors
 
 
+@package_directives
+def _ensure_license_is_not_placeholder(pkgs, error_cls):
+    """Ensure a license placeholder is not defined in the package."""
+    errors = []
+    invalid_license = "UNKNOWN"
+    invalid_checked_by = "github_user1"
+
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+
+        licenses, checked_bys = set(), set()
+        for license in pkg_cls.licenses.values():
+            licenses.add(license["id"])
+            checked_bys.add(license["checked_by"])
+
+        if invalid_license in licenses:
+            summary = f"Package '{pkg_name}' has placeholder licenses(s)"
+            details = [f"Remove placeholder license(s): {invalid_license}"]
+            errors.append(error_cls(summary, details))
+
+        if invalid_checked_by in checked_bys:
+            summary = f"Package '{pkg_name}' has placeholder license checker(s)"
+            details = [f"Remove placeholder checker(s): {invalid_checked_by}"]
+            errors.append(error_cls(summary, details))
+
+    return errors
+
+
 def _issues_in_directive_constraint(pkg, constraint, *, directive, error_cls, filename, requestor):
     errors = []
     errors.extend(
