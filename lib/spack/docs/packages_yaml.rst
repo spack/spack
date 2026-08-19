@@ -750,6 +750,9 @@ Here a ``low``-severity rename or maintenance deprecation is allowed, while any 
 The reason keys are the values accepted by the ``deprecated()`` directive: ``cve``, ``rename``, ``unavailable``, and ``maintenance``.
 A per-package ``allowed_severity`` replaces the one under ``all`` outright, exactly as it does for a single value.
 
+For a single command, the ``--deprecated`` flag sets ``allowed_severity`` to ``critical`` under ``all``.
+It is applied on the command line, so it takes precedence over every configuration scope and lifts a per-reason threshold such as ``cve: none`` along with the rest.
+
 Which dependencies are checked is controlled by the ``scope`` setting, which is global and can only be given under ``all:``:
 
 .. code-block:: yaml
