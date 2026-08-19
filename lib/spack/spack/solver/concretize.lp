@@ -1129,6 +1129,10 @@ attr("virtual_on_incoming_edges", ProviderNode, Virtual)
 % If a virtual is needed on an edge, at least one virtual node must exist
 :- virtual_is_needed(Virtual), not 1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }.
 
+1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) } :-
+  virtual_condition_holds(node(ProviderID, Provider), Virtual),
+  attr("node", node(ProviderID, Provider)).
+
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
 
