@@ -27,7 +27,7 @@ import json
 import os
 import sys
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Type
 
 import spack.binary_distribution
 import spack.concretize
@@ -62,26 +62,7 @@ METADATA_YAML_FILENAME = "metadata.yaml"
 #: Whether the current platform is Windows
 IS_WINDOWS = sys.platform == "win32"
 
-#: Map a bootstrapper type to the corresponding class
-_bootstrap_methods = {}
-
-
 ConfigDictionary = Dict[str, Any]
-
-
-def bootstrapper(bootstrapper_type: str):
-    """Decorator to register classes implementing bootstrapping
-    methods.
-
-    Args:
-        bootstrapper_type: string identifying the class
-    """
-
-    def _register(cls):
-        _bootstrap_methods[bootstrapper_type] = cls
-        return cls
-
-    return _register
 
 
 class Bootstrapper:
@@ -92,6 +73,7 @@ class Bootstrapper:
     def __init__(self, conf: ConfigDictionary) -> None:
         self.conf = conf
         self.name = conf["name"]
+        self.last_search: Optional[QueryInfo] = None
         self.metadata_dir = spack.config.canonicalize_path(conf["metadata"])
 
         # Check for relative paths, and turn them into absolute paths
@@ -123,7 +105,7 @@ class Bootstrapper:
         """
         return False
 
-    def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
+    def try_search_path(self, executables: Sequence[str], abstract_spec_str: str) -> bool:
         """Try to search some executables in the prefix of specs satisfying the abstract
         spec passed as argument.
 
@@ -137,13 +119,11 @@ class Bootstrapper:
         return False
 
 
-@bootstrapper(bootstrapper_type="buildcache")
 class BuildcacheBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from a buildcache."""
 
     def __init__(self, conf) -> None:
         super().__init__(conf)
-        self.last_search: Optional[QueryInfo] = None
         self.config_scope_name = f"bootstrap_buildcache-{uuid.uuid4()}"
 
     def _read_metadata(self, package_name: str) -> Any:
@@ -207,7 +187,7 @@ class BuildcacheBootstrapper(Bootstrapper):
         data = self._read_metadata(module)
         return self._install_and_test(abstract_spec, data, test_fn)
 
-    def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
+    def try_search_path(self, executables: Sequence[str], abstract_spec_str: str) -> bool:
         info: QueryInfo
         test_fn, info = functools.partial(_executables_in_store, executables), {}
         if test_fn(query_spec=abstract_spec_str, query_info=info):
@@ -220,13 +200,11 @@ class BuildcacheBootstrapper(Bootstrapper):
         return self._install_and_test(abstract_spec, data, test_fn)
 
 
-@bootstrapper(bootstrapper_type="install")
 class SourceBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from sources."""
 
     def __init__(self, conf) -> None:
         super().__init__(conf)
-        self.last_search: Optional[QueryInfo] = None
         self.config_scope_name = f"bootstrap_source-{uuid.uuid4()}"
 
     def try_import(self, module: str, abstract_spec_str: str) -> bool:
@@ -266,7 +244,7 @@ class SourceBootstrapper(Bootstrapper):
             return True
         return False
 
-    def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
+    def try_search_path(self, executables: Sequence[str], abstract_spec_str: str) -> bool:
         info: QueryInfo = {}
         if _executables_in_store(executables, abstract_spec_str, query_info=info):
             self.last_search = info
@@ -289,10 +267,16 @@ class SourceBootstrapper(Bootstrapper):
         return False
 
 
-def create_bootstrapper(conf: ConfigDictionary):
+#: Map a bootstrapper type to the corresponding class
+_bootstrap_methods: Dict[str, Type[Bootstrapper]] = {
+    "buildcache": BuildcacheBootstrapper,
+    "install": SourceBootstrapper,
+}
+
+
+def create_bootstrapper(conf: ConfigDictionary) -> Bootstrapper:
     """Return a bootstrap object built according to the configuration argument"""
-    btype = conf["type"]
-    return _bootstrap_methods[btype](conf)
+    return _bootstrap_methods[conf["type"]](conf)
 
 
 def source_is_enabled(conf: ConfigDictionary) -> bool:
@@ -401,12 +385,13 @@ def ensure_executables_in_path_or_raise(
         with exception_handler.forward(current_config["name"], Exception):
             current_bootstrapper = create_bootstrapper(current_config)
             if current_bootstrapper.try_search_path(executables, abstract_spec):
+                query_info = current_bootstrapper.last_search
+                if query_info is None:
+                    raise RuntimeError(
+                        f'"{current_bootstrapper.name}" reported success without a query result'
+                    )
                 # Additional environment variables needed
-                concrete_spec, cmd = (
-                    current_bootstrapper.last_search["spec"],
-                    current_bootstrapper.last_search["command"],
-                )
-                assert cmd is not None, "expected an Executable"
+                concrete_spec, cmd = query_info["spec"], query_info["command"]
                 cmd.add_default_envmod(
                     spack.user_environment.environment_modifications_for_specs(
                         concrete_spec, set_package_py_globals=False
