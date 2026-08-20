@@ -15,16 +15,31 @@ import spack.bootstrap.status
 import spack.compilers.config
 import spack.config
 import spack.environment
+import spack.paths
 import spack.spec
 import spack.store
 import spack.util.executable
 from spack.active_environment import active_environment
 
-from .conftest import _true
-
 PROTOTYPE_DIR = pathlib.Path(spack.bootstrap.clingo.__file__).parent / "prototypes"
 PROTOTYPES = sorted(x.name for x in PROTOTYPE_DIR.glob("*.json"))
 assert PROTOTYPES, f"no bootstrap prototypes in {PROTOTYPE_DIR}"
+
+
+@pytest.fixture(autouse=True)
+def isolated_bootstrap_root(monkeypatch, tmp_path: pathlib.Path):
+    """Point the bootstrap root at a temporary directory, so that tests entering
+    ``ensure_bootstrap_configuration`` do not mount the user's real bootstrap config.
+
+    Two settings resolve the root: the default scope has ``root: $user_cache_path/bootstrap``,
+    and ``root_path()`` falls back to ``default_user_bootstrap_path`` when no config defines
+    it. Both are pinned here so that they agree.
+    """
+    user_cache_path = tmp_path / "user_cache"
+    monkeypatch.setattr(spack.paths, "user_cache_path", str(user_cache_path))
+    monkeypatch.setattr(
+        spack.paths, "default_user_bootstrap_path", str(user_cache_path / "bootstrap")
+    )
 
 
 @pytest.fixture
@@ -106,14 +121,14 @@ def test_raising_exception_if_bootstrap_disabled(mutable_config):
         spack.bootstrap.config.store_path()
 
 
-def test_raising_exception_module_importable(config, monkeypatch):
-    monkeypatch.setattr(spack.bootstrap.core, "source_is_enabled", _true)
+def test_raising_exception_module_importable(mutable_config):
+    mutable_config.set("bootstrap:trusted", {"github-actions": True})
     with pytest.raises(ImportError, match='cannot bootstrap the "asdf" Python module'):
         spack.bootstrap.core.ensure_module_importable_or_raise("asdf")
 
 
-def test_raising_exception_executables_in_path(config, monkeypatch):
-    monkeypatch.setattr(spack.bootstrap.core, "source_is_enabled", _true)
+def test_raising_exception_executables_in_path(mutable_config):
+    mutable_config.set("bootstrap:trusted", {"github-actions": True})
     with pytest.raises(RuntimeError, match="cannot bootstrap any of the asdf, fdsa executables"):
         spack.bootstrap.core.ensure_executables_in_path_or_raise(["asdf", "fdsa"], "python")
 
