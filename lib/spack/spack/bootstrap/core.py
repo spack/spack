@@ -266,7 +266,7 @@ def source_is_enabled(conf: ConfigDictionary) -> bool:
 
 
 def _cannot_bootstrap_message(
-    what: str, abstract_spec: str, exception_handler: GroupedExceptionHandler
+    what: str, abstract_spec: str, exception_handler: GroupedExceptionHandler, sources_tried: int
 ) -> str:
     """Return the error message to report when no bootstrapping source succeeded.
 
@@ -274,31 +274,43 @@ def _cannot_bootstrap_message(
         what: description of what could not be bootstrapped
         abstract_spec: abstract spec that was supposed to provide it
         exception_handler: handler that collected the failure of each source
+        sources_tried: number of sources that were tried
     """
-    msg = f'cannot bootstrap {what} from spec "{abstract_spec}" '
-    if not exception_handler:
+    msg = f'cannot bootstrap {what} from spec "{abstract_spec}"'
+    if not sources_tried:
         msg += ": no bootstrapping sources are enabled"
+    elif not exception_handler:
+        msg += ": no bootstrapping source could provide it"
     elif spack.error.debug or spack.error.SHOW_BACKTRACE:
-        msg += exception_handler.grouped_message(with_tracebacks=True)
+        msg += " " + exception_handler.grouped_message(with_tracebacks=True)
     else:
-        msg += exception_handler.grouped_message(with_tracebacks=False)
+        msg += " " + exception_handler.grouped_message(with_tracebacks=False)
         msg += "\nRun `spack --backtrace ...` for more detailed errors"
     return msg
 
 
+def enabled_bootstrapping_sources() -> List[ConfigDictionary]:
+    """Return the configured bootstrapping sources that are enabled, in order."""
+    return [x for x in bootstrapping_sources() if source_is_enabled(x)]
+
+
 def _bootstrap_or_raise(
-    request: BootstrapRequest[ResultT], what: str, abstract_spec: str, error_type: Type[Exception]
+    request: BootstrapRequest[ResultT],
+    what: str,
+    abstract_spec: str,
+    error_type: Type[Exception],
+    sources: Optional[Sequence[ConfigDictionary]] = None,
 ) -> ResultT:
     """Make the requested software available in the bootstrap store, or raise.
 
-    The enabled bootstrapping sources are tried in order, and the function exits on the
-    first success.
+    The sources are tried in order, and the function exits on the first success.
 
     Args:
         request: software to be bootstrapped, and the probe that tests for it
         what: description of the software, to be used in the error message
         abstract_spec: abstract spec that was supposed to provide it
         error_type: exception to be raised if no source succeeds
+        sources: sources to be tried. Defaults to the enabled ones from configuration.
 
     Raises:
         error_type: if the software could not be bootstrapped
@@ -308,18 +320,22 @@ def _bootstrap_or_raise(
     if result:
         return result
 
+    if sources is None:
+        sources = enabled_bootstrapping_sources()
+
     exception_handler = GroupedExceptionHandler()
 
-    for current_config in bootstrapping_sources():
-        if not source_is_enabled(current_config):
-            continue
-
+    for current_config in sources:
+        # The bootstrapper is constructed here, so that a source with broken metadata is
+        # reported like any other failure, instead of stopping the ones after it
         with exception_handler.forward(current_config["name"], Exception):
             result = create_bootstrapper(current_config).try_to_bootstrap(request)
             if result:
                 return result
 
-    raise error_type(_cannot_bootstrap_message(what, abstract_spec, exception_handler))
+    raise error_type(
+        _cannot_bootstrap_message(what, abstract_spec, exception_handler, len(sources))
+    )
 
 
 def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] = None):

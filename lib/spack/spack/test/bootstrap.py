@@ -4,6 +4,7 @@
 
 import json
 import pathlib
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -417,3 +418,130 @@ def test_at_most_one_clingo_binary_matches_an_interpreter(metadata_file: pathlib
         abstract_spec = _clingo_spec_for(platform, target, python_version)
         matching = spack.bootstrap.core._matching_entries(data, abstract_spec)
         assert len(matching) <= 1, [str(x["spec"]) for x in matching]
+
+
+class _FakeBootstrapper(spack.bootstrap.core.Bootstrapper):
+    """Bootstrapper returning a canned result, or raising it when it is an exception."""
+
+    def __init__(self, conf: Dict[str, Any]) -> None:
+        self.name = conf["name"]
+        self.result = conf["result"]
+        self.tried = conf["tried"]
+
+    def try_to_bootstrap(self, request):
+        self.tried.append(self.name)
+        if isinstance(self.result, Exception):
+            raise self.result
+        return self.result
+
+
+@pytest.fixture
+def fake_bootstrap_type(monkeypatch):
+    """Register a bootstrapper type used by the sources built with ``_fake_sources``."""
+    monkeypatch.setitem(spack.bootstrap.core._bootstrap_methods, "fake", _FakeBootstrapper)
+
+
+def _fake_sources(tried: List[str], *results: Any) -> List[Dict[str, Any]]:
+    """Return one source per result, appending its name to ``tried`` when it is used."""
+    return [
+        {"name": f"src{i}", "type": "fake", "result": x, "tried": tried}
+        for i, x in enumerate(results)
+    ]
+
+
+def _fake_request(probes: List[Any], result: Optional[str] = None):
+    """Return a request whose probe records its calls and returns ``result``."""
+
+    def probe(query_spec):
+        probes.append(query_spec)
+        return result
+
+    return spack.bootstrap.core.BootstrapRequest(
+        abstract_spec=spack.spec.Spec("zlib"), metadata_name="zlib", probe=probe, installer_args={}
+    )
+
+
+def test_the_store_is_probed_once_for_all_the_sources(fake_bootstrap_type):
+    """The store does not depend on the source, so it is queried once, before the loop."""
+    probes: List[Any] = []
+    tried: List[str] = []
+    sources = _fake_sources(tried, RuntimeError("no"), RuntimeError("no"), RuntimeError("no"))
+
+    with pytest.raises(RuntimeError, match="cannot bootstrap zlib"):
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request(probes), "zlib", "zlib", RuntimeError, sources=sources
+        )
+
+    assert len(probes) == 1
+    assert tried == ["src0", "src1", "src2"]
+
+
+def test_software_in_the_store_skips_every_source(fake_bootstrap_type):
+    """When the probe finds the software, no source is tried."""
+    probes: List[Any] = []
+    tried: List[str] = []
+    sources = _fake_sources(tried, "from the source")
+
+    result = spack.bootstrap.core._bootstrap_or_raise(
+        _fake_request(probes, result="from the store"),
+        "zlib",
+        "zlib",
+        RuntimeError,
+        sources=sources,
+    )
+
+    assert result == "from the store"
+    assert tried == []
+
+
+def test_the_first_successful_source_wins(fake_bootstrap_type):
+    probes: List[Any] = []
+    tried: List[str] = []
+    sources = _fake_sources(tried, RuntimeError("no"), "from src1", "from src2")
+
+    result = spack.bootstrap.core._bootstrap_or_raise(
+        _fake_request(probes), "zlib", "zlib", RuntimeError, sources=sources
+    )
+
+    assert result == "from src1"
+    assert tried == ["src0", "src1"]
+
+
+def test_every_source_failure_is_reported(fake_bootstrap_type):
+    """The last failure is rarely the interesting one, so all of them are reported."""
+    probes: List[Any] = []
+    tried: List[str] = []
+    sources = _fake_sources(tried, RuntimeError("first boom"), ValueError("second boom"))
+
+    with pytest.raises(RuntimeError) as exc_info:
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request(probes), "zlib", "zlib", RuntimeError, sources=sources
+        )
+
+    message = str(exc_info.value)
+    for expected in ("src0", "first boom", "src1", "second boom"):
+        assert expected in message
+
+
+def test_sources_that_provide_nothing_are_reported_as_such(fake_bootstrap_type):
+    """A source can decline without failing, e.g. when no binary matches the interpreter."""
+    probes: List[Any] = []
+    tried: List[str] = []
+    sources = _fake_sources(tried, None, None)
+
+    with pytest.raises(RuntimeError, match="no bootstrapping source could provide it"):
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request(probes), "zlib", "zlib", RuntimeError, sources=sources
+        )
+
+    assert tried == ["src0", "src1"]
+
+
+def test_no_sources_to_try_is_reported_as_such(fake_bootstrap_type):
+    """Without sources there is no failure to report, so the message says why."""
+    probes: List[Any] = []
+
+    with pytest.raises(RuntimeError, match='from spec "zlib": no bootstrapping sources'):
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request(probes), "zlib", "zlib", RuntimeError, sources=[]
+        )
