@@ -230,6 +230,24 @@ def pull_checkout_branch(
         raise
 
 
+def force_checkout_branch(
+    branch: str,
+    remote: str = "origin",
+    depth: Optional[int] = None,
+    git_exe: Optional[exe.Executable] = None,
+):
+    """Fetch and checkout --force branch."""
+    git_exe = git_exe or git(required=True)
+    fetch_args = ["--progress"]
+    if depth:
+        if depth <= 0:
+            raise ValueError("depth must be a positive integer")
+        fetch_args.append(f"--depth={depth}")
+
+    git_exe("fetch", *fetch_args, remote, f"+refs/heads/{branch}:refs/remotes/{remote}/{branch}")
+    git_exe("checkout", "--force", "-B", branch, f"{remote}/{branch}")
+
+
 def get_modified_files(
     from_ref: str = "HEAD~1", to_ref: str = "HEAD", git_exe: Optional[exe.Executable] = None
 ) -> List[str]:
