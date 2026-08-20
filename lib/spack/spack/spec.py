@@ -212,7 +212,7 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
     if isinstance(name, spack.vendor.archspec.cpu.Microarchitecture):
         return name
     if name == "*":
-        # the universe of targets, canonically the doubly unbounded range, like @: for versions
+        # canonicalize target=* to target=: like @: in version lists
         name = ":"
     elif ":" in name or "," in name:
         name = _canonical_target_range(name)
@@ -472,7 +472,7 @@ class ArchSpec:
         if lhs is None:
             return False
 
-        # Subset test: every target the lhs ranges denote must be covered by the rhs ranges.
+        # Subset test: every target of the lhs must be covered by the rhs
         rhs_elements = str(rhs).split(",")
         return all(
             _covered_by_target_list(l_range, rhs_elements) for l_range in str(lhs).split(",")
@@ -521,7 +521,6 @@ class ArchSpec:
                 for n_min in _minimal_upper_bounds(l_min, r_min):
                     for n_max in _maximal_lower_bounds(l_max, r_max):
                         if n_min is None and n_max is None:
-                            # both elements are unbounded on both sides: the overlap is too
                             results.append(":")
                         elif n_min is None:
                             results.append(f":{n_max}")

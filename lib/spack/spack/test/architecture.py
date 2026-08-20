@@ -171,8 +171,7 @@ def test_star_does_not_short_circuit_the_other_attributes():
 
 
 def test_star_target_is_replaced_by_a_named_target_when_constrained():
-    """target=* is stored as the unbounded range target=:, so the named side of the
-    intersection wins."""
+    """target=* is stored as target=: like @: in version lists"""
     architecture = ArchSpec((None, None, "*"))
     assert str(architecture.target) == ":"
     assert architecture.constrain(ArchSpec((None, None, "x86_64"))) is True

@@ -5698,7 +5698,6 @@ def test_asp_facts_with_config_values():
 
 
 def test_target_star_concretizes(mock_packages, config):
-    """target=* is the unbounded target range: it constrains nothing instead of failing the
-    lookup of a single target named *."""
+    """target=* is not a literal unknown target '*' but rather an unconstrained target"""
     concrete = spack.concretize.concretize_one("pkg-a target=*")
     assert concrete.architecture.target_concrete

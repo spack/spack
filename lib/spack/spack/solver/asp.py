@@ -1462,7 +1462,7 @@ class SpackSolverSetup:
         assert name, "Internal Error: spec with no name occurred. Please file an issue."
         target = spec.architecture.target
 
-        # the unbounded range constrains nothing: every node gets a target anyway
+        # target is unconstrained
         if str(target) == ":":
             return []
 

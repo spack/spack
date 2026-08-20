@@ -2016,7 +2016,7 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
             "target=x86_64_v3:x86_64_v4,:sandybridge",
             (True, True, False),
         ),
-        # The unbounded range is the universe of targets and target=* is an alias for it
+        # target=* is an alias for target=: and means the unbounded range
         (Spec, "target=:", "target=:", (True, True, True)),
         (Spec, "target=*", "target=:", (True, True, True)),
         # Bounds outside the microarchitecture table compare by name only, without raising
@@ -2094,7 +2094,7 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
         # ":aarch64" contains only aarch64 and canonicalizes to the singleton instead of a range
         (Spec, "target=:aarch64", "target=aarch64:", False, "target=aarch64"),
         (Spec, "target=aarch64:", "target=:aarch64", True, "target=aarch64"),
-        # The unbounded range intersects itself and constrains nothing
+        # Constrain is idemptotent on the unbounded range
         (Spec, "target=:", "target=:", False, "target=:"),
         # A range covered by the union of the rhs ranges is already the intersection
         (
@@ -2104,7 +2104,7 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
             False,
             "target=:x86_64_v3",
         ),
-        # target=* is an alias for the unbounded range, so a named target narrows it
+        # target=* can be constrained by a specific target
         (Spec, "target=*", "target=haswell", True, "target=haswell"),
     ],
 )
