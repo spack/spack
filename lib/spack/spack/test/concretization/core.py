@@ -5755,3 +5755,31 @@ def test_target_star_concretizes(mock_packages, config):
 def test_solve_kind_from_unify_configuration(unify, expected):
     """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
     assert spack.concretize.solve_kind(unify) is expected
+
+
+@pytest.mark.regression("51964")
+def test_concrete_input_specs_skip_the_dependency_precheck(mock_packages, config, monkeypatch):
+    """Concrete input specs represent the rest of an environment under unify:true, and may have
+    been concretized against an older recipe, so they are not checked against the possible
+    dependencies of the roots.
+    """
+    spec = spack.concretize.concretize_one("pkg-a@1.0 foobar=bar")
+    assert "pkg-b" in spec
+
+    # the recipe stops declaring the dependency after the spec was concretized
+    pkg_cls = spack.repo.PATH.get_pkg_class("pkg-a")
+    monkeypatch.setattr(
+        pkg_cls,
+        "dependencies",
+        {
+            when: {name: dep for name, dep in deps.items() if name != "pkg-b"}
+            for when, deps in pkg_cls.dependencies.items()
+        },
+    )
+
+    # an abstract spec is still checked against the possible dependencies
+    with pytest.raises(spack.solver.asp.InvalidDependencyError):
+        spack.solver.asp.SpackSolverSetup().setup([spack.spec.Spec("pkg-a ^pkg-b")])
+
+    # the concrete one is not
+    spack.solver.asp.SpackSolverSetup().setup([spec])
