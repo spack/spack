@@ -1601,8 +1601,8 @@ def _from_merged_attrs(
 def for_spec(spec: "spack.spec.Spec"):
     # TODO: remove this method when we understand why _for_spec modifies packages.
     # See 52ac1b09c9ed3eee6489b33665beb1255c893068.
-    saved_versions = spec.spec.versions
-    saved_when_versions = spec.spec.when_versions
+    saved_versions = spec.versions
+    saved_when_versions = spec.when_versions
 
     try:
         return _for_spec(spec)
