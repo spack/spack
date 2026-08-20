@@ -9,4 +9,4 @@ macholib==1.16.2
   altgraph==0.17.3
 ruamel.yaml==0.17.21
 typing_extensions==4.1.1
-archspec @ git+https://github.com/archspec/archspec.git@4a8cb2a1c7d8e264c0a391f4d2d6b4235b3201b5 # Add arrowlake-s and ancestors
+archspec @ git+https://github.com/archspec/archspec.git@ebd3eb502d9205f1033ffc028d661f2fbece7dfc # cannonlake, ampere1a: fix parents
