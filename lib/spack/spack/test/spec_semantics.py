@@ -2167,16 +2167,16 @@ def test_incomparable_target_bounds_meet_as_a_union_of_ranges(mock_packages):
     forward, backward = lhs.copy(), rhs.copy()
     forward.constrain(rhs)
     backward.constrain(lhs)
-    assert str(forward.architecture.target) == "ampere1:,ampere1a:"
+    assert str(forward.architecture.target) == "ampere1:,neoverse_v3ae:"
     assert forward.to_dict() == backward.to_dict()
 
-    # the most extreme case in the target graph: armv8.3a and cortex_a72 have five minimal
+    # the most extreme case in the target graph: armv8.3a and cortex_a72 have four minimal
     # common upper bounds, none of which contains another
     lhs, rhs = Spec("pkg-a target=armv8.3a:"), Spec("pkg-a target=cortex_a72:")
     forward, backward = lhs.copy(), rhs.copy()
     forward.constrain(rhs)
     backward.constrain(lhs)
-    expected = "ampere1:,ampere1a:,neoverse_n2:,neoverse_v1:,neoverse_v2:"
+    expected = "ampere1:,neoverse_n2:,neoverse_v1:,neoverse_v2:"
     assert str(forward.architecture.target) == expected
     assert forward.to_dict() == backward.to_dict()
 
