@@ -60,7 +60,7 @@ from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tu
 import spack.paths
 import spack.repo
 from spack.error import SpecError, SpecSyntaxError
-from spack.spec import Spec, meet
+from spack.spec import Spec, meet, substitute_abstract_variants
 
 #: Set by a Ctrl-C during a run. The sweep and sample loops check it between cases and shrinking
 #: cuts itself short, so everything found up to the interrupt is still shrunk as far as it got
@@ -385,6 +385,30 @@ MODELLED_DIMENSIONS: Tuple[Dimension, ...] = (
 )
 
 
+#: The fragment the substitution laws run on: two mock packages whose variants exist under
+#: conditions. ``conditional-variant-pkg`` chains declarations a one-level intersects check
+#: cannot decide (``variant_based`` needs ``+version_based``, which needs ``@2.0:``);
+#: ``conditional-values-in-variant`` adds the other half of the guard, a single-valued string
+#: variant the substitution retypes and values admissible only under conditions (``17`` needs
+#: ``@1.63.0:``, ``foo=bar`` is never admissible). Fragments cross packages freely: a variant on
+#: the wrong package raises as an unknown, which the contract covers. The first name entry is a
+#: package instead of the empty string: the conditional declarations are the subject here, and a
+#: sweep of any other dimension needs a name in place to reach them. No points: the substitution
+#: laws are not stated over the atoms.
+PIR_DIMENSIONS: Tuple[Dimension, ...] = (
+    Dimension(
+        "pir_name", ("conditional-variant-pkg", "", "conditional-values-in-variant", "pkg-a")
+    ),
+    Dimension("pir_version", ("", "@2.0:", "@1.0", "@1.63.0:", "@1.62.0", "@1.73.0")),
+    Dimension("pir_version_based", ("", "+version_based", "~version_based")),
+    Dimension("pir_variant_based", ("", "+variant_based", "~variant_based")),
+    Dimension("pir_two_whens", ("", "+two_whens", "two_whens=true")),
+    Dimension("pir_cxxstd", ("", "cxxstd=98", "cxxstd=17", "cxxstd=2a")),
+    Dimension("pir_staging", ("", "staging=flexpath", "staging=flexpath,dataspaces")),
+    Dimension("pir_foo", ("", "foo=foo", "foo=bar")),
+)
+
+
 #: How many dimensions a drawn spec constrains, as a probability per dimension. One is picked per
 #: iteration, so both nearly bare specs and heavily constrained ones come up.
 DENSITIES = (0.08, 0.15, 0.3, 0.5)
@@ -621,9 +645,11 @@ def gap_edge_propagation(specs: Sequence[Spec]) -> bool:
 
 def gap_nested_direct_edge(specs: Sequence[Spec]) -> bool:
     """A %-edge chains onto whichever ^ dependency last set the anchor, so it can land on a node
-    other than the root. satisfies reaches it anyway: its BFS does not stop at the first level.
-    constrain only ever compares edges position by position and never descends into a
-    dependency's own edges, so the two disagree on a spec built this way."""
+    other than the root. satisfies reaches such an edge only through a rhs that spells out the
+    nesting: the transitive BFS traverses link/run edges alone, and parsed edges have depflag 0,
+    which guarantees no deptype. constrain only ever compares edges position by position and
+    never descends into a dependency's own edges, so the two disagree on a spec built this
+    way."""
     for spec in specs:
         for node in spec.traverse(root=False):
             if any(edge.direct for edge in node.edges_to_dependencies()):
@@ -1123,6 +1149,97 @@ def law_intersection_is_witnessed(specs: List[Spec], atoms: Sequence[Spec]) -> O
     return "they claim to intersect, but no atom is inside both"
 
 
+def substituted(spec: Spec) -> Optional[Spec]:
+    """The node-level repo refinement of a copy, None where it raises.
+
+    An anonymous spec is returned unchanged: no package definition applies to it, and the
+    substitution assumes a name. The contract under test is the one decided in
+    spec-semantics.tex: raising is reserved for specs with no R-valid state below them, so an
+    undecided conditional declaration leaves the variant free instead of raising.
+    """
+    result = spec.copy()
+    if not result.name:
+        return result
+    try:
+        substitute_abstract_variants(result)
+    except SpecError:
+        return None
+    return result
+
+
+def law_pir_refines(specs: List[Spec]) -> Optional[str]:
+    """Where the substitution is defined its result satisfies the original: the projection
+    refines, never relaxes."""
+    original = specs[0]
+    result = substituted(original)
+    if result is not None and not result.satisfies(original):
+        return f"substitutes to '{result}', which does not satisfy it"
+    return None
+
+
+def law_pir_idempotent(specs: List[Spec]) -> Optional[str]:
+    """Substituting a substituted spec is the identity, compared as state through to_dict, which
+    is what sees the variant type the substitution assigns."""
+    once = substituted(specs[0])
+    if once is None:
+        return None
+    twice = substituted(once)
+    if twice is None:
+        return f"substitutes to '{once}', on which the substitution raises"
+    if twice.to_dict() != once.to_dict():
+        return f"substitutes to '{once}' and again to '{twice}', a different state"
+    return None
+
+
+def law_pir_defined_upward(specs: List[Spec]) -> Optional[str]:
+    """Definedness climbs the order: a spec above one the substitution accepts has an R-valid
+    state below it, namely the substituted lower spec, so raising on it would break the decided
+    contract that raising is reserved for empty repo-relative denotations."""
+    below, above = specs
+    if not below.satisfies(above):
+        return None
+    if substituted(below) is not None and substituted(above) is None:
+        return "the substitution is defined on the lower spec and raises on the upper one"
+    return None
+
+
+def law_pir_monotone(specs: List[Spec]) -> Optional[str]:
+    """The substitution preserves the order where defined on both sides. The risk is the type
+    dimension: one side assigned a variant type, the other left free because two conditional
+    definitions still intersect its state."""
+    below, above = specs
+    if not below.satisfies(above):
+        return None
+    sub_below, sub_above = substituted(below), substituted(above)
+    if sub_below is None or sub_above is None:
+        return None
+    if not sub_below.satisfies(sub_above):
+        return f"substitutes to '{sub_below}' and '{sub_above}', which are not ordered"
+    return None
+
+
+def law_pir_meet_commutes(specs: List[Spec]) -> Optional[str]:
+    """The substitution commutes with the meet, with the R-valid meet being the substitution of
+    the ambient one: pi(a ∧ b) and pi(pi(a) ∧ pi(b)) are defined together and denote the same
+    set. The inner pi on the right is not redundant: the ambient meet of two substituted specs
+    can activate a condition neither operand decided. This law is entailed by the other four
+    pir laws plus the meet axioms (formal/SpecSemantics.lean, PartialKernel.meet_commutes_*),
+    so it stands as an integration check: a failure here localizes in one of the four."""
+    lhs_meet = meet(specs[0], specs[1])
+    lhs = substituted(lhs_meet) if lhs_meet is not None else None
+    sub_a, sub_b = substituted(specs[0]), substituted(specs[1])
+    rhs = None
+    if sub_a is not None and sub_b is not None:
+        rhs_meet = meet(sub_a, sub_b)
+        rhs = substituted(rhs_meet) if rhs_meet is not None else None
+    if (lhs is None) != (rhs is None):
+        defined = "pi(a ∧ b)" if rhs is None else "pi(pi(a) ∧ pi(b))"
+        return f"only {defined} is defined"
+    if lhs is not None and not denote_the_same_set(lhs, rhs):
+        return f"'{lhs}' and '{rhs}' denote different sets"
+    return None
+
+
 class Law(NamedTuple):
     name: str
     arity: int
@@ -1134,6 +1251,18 @@ class Law(NamedTuple):
     #: How many of the leading operands to draw as a descending chain, for a law whose hypothesis
     #: is that they are ordered. Zero draws every operand independently.
     chain: int = 0
+    #: Whether the law is about the repo substitution and draws from the conditional-variant
+    #: fragment instead of the repo-free dimensions.
+    pir: bool = False
+
+
+def law_dimensions(law: Law) -> Tuple[Dimension, ...]:
+    """The dimension family the law draws its operands from."""
+    if law.pir:
+        return PIR_DIMENSIONS
+    if law.modelled:
+        return MODELLED_DIMENSIONS
+    return DIMENSIONS
 
 
 LAWS: Tuple[Law, ...] = (
@@ -1236,6 +1365,11 @@ LAWS: Tuple[Law, ...] = (
         modelled=True,
     ),
     Law("satisfies_matches_the_atoms", 2, law_satisfies_matches_the_atoms, modelled=True, chain=2),
+    Law("pir_refines", 1, law_pir_refines, pir=True),
+    Law("pir_idempotent", 1, law_pir_idempotent, pir=True),
+    Law("pir_defined_upward", 2, law_pir_defined_upward, pir=True, chain=2),
+    Law("pir_monotone", 2, law_pir_monotone, pir=True, chain=2),
+    Law("pir_meet_commutes", 2, law_pir_meet_commutes, pir=True),
 )
 
 
@@ -1262,7 +1396,7 @@ def unparseable_fragments() -> List[str]:
     entry has to stand on its own, since that is how the sweep uses it.
     """
     broken = []
-    for dimensions in (DIMENSIONS, MODELLED_DIMENSIONS):
+    for dimensions in (DIMENSIONS, MODELLED_DIMENSIONS, PIR_DIMENSIONS):
         for dimension in dimensions:
             for fragment in dimension.constraints + dimension.points:
                 if not fragment:
@@ -1427,7 +1561,7 @@ def sweep(
         universe = atoms()
     failures: List[Failure] = []
     for law in laws:
-        dimensions = MODELLED_DIMENSIONS if law.modelled else DIMENSIONS
+        dimensions = law_dimensions(law)
         for position, dimension in enumerate(dimensions):
             if _INTERRUPTED:
                 return failures
@@ -1483,7 +1617,7 @@ def sample(
             for law in laws:
                 if law.name in broken:
                     continue
-                dimensions = MODELLED_DIMENSIONS if law.modelled else DIMENSIONS
+                dimensions = law_dimensions(law)
                 chosen = density or rng.choice(DENSITIES)
                 focus = draw_focus(rng, dimensions)
                 terms = draw_operands(rng, law, dimensions, chosen, depth, focus)
@@ -1536,7 +1670,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         laws = tuple(by_name[name] for name in args.law)
 
     if args.dimension:
-        known = {d.name for d in DIMENSIONS} | {d.name for d in MODELLED_DIMENSIONS}
+        known = (
+            {d.name for d in DIMENSIONS}
+            | {d.name for d in MODELLED_DIMENSIONS}
+            | {d.name for d in PIR_DIMENSIONS}
+        )
         unknown = [name for name in args.dimension if name not in known]
         if unknown:
             parser.error(f"unknown dimension(s): {', '.join(unknown)}")
