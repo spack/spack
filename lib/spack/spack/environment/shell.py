@@ -17,6 +17,7 @@ from spack.util.tty.color import colorize
 def activate_commands(env, view: Optional[str] = None):
     # Construct the commands to run
     cmds = f"_spack_env_set SPACK_ENV {env.path}\n"
+
     if view:
         cmds += f"_spack_env_set SPACK_ENV_VIEW {view}\n"
     return cmds
@@ -120,7 +121,7 @@ def deactivate_commands(shell):
             "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
             ' | Split-Path -leaf; $spack_prompt = "[spack] $pth >"; '
             'if("$Env:SPACK_OLD_PROMPT") {$spack_prompt=$Env:SPACK_OLD_PROMPT};'
-            " $spack_prompt}"
+            " $spack_prompt}\n"
         )
     else:
         cmds += textwrap.dedent(
@@ -134,7 +135,7 @@ def deactivate_commands(shell):
                     fi;
                     unset SPACK_OLD_PS1;
                 fi
-                """
+            """
         ).strip("\n")
 
     return cmds

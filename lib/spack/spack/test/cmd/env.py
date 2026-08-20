@@ -96,16 +96,20 @@ def setup_combined_multiple_env():
     return test1, test2, combined
 
 
-def get_activation_script_content(env, shell: str) -> str:
+def get_activation_script_content(env, shell: str, view: Optional[str] = None) -> str:
     """Returns the content of the activation script for the specified env and shell."""
-    path_to_activate_script = env_script.path_to_env_script(env, shell, script_type="activate")
+    path_to_activate_script = env_script.path_to_env_script(
+        env, shell, script_type="activate", view=view
+    )
     with open(path_to_activate_script, "r", encoding="utf-8") as f:
         return f.read()
 
 
-def get_deactivation_script_content(env, shell: str) -> str:
+def get_deactivation_script_content(env, shell: str, view: Optional[str] = None) -> str:
     """Returns the content of the deactivation script for the specified env and shell."""
-    path_to_deactivate_script = env_script.path_to_env_script(env, shell, script_type="deactivate")
+    path_to_deactivate_script = env_script.path_to_env_script(
+        env, shell, script_type="deactivate", view=view
+    )
     with open(path_to_deactivate_script, "r", encoding="utf-8") as f:
         return f.read()
 
@@ -151,9 +155,11 @@ def test_env_write_env_scripts(shell):
     env("create", "script_test")
     environ = ev.read("script_test")
 
-    path_to_activate_script = env_script.path_to_env_script(environ, shell, script_type="activate")
+    path_to_activate_script = env_script.path_to_env_script(
+        environ, shell, script_type="activate", view="default"
+    )
     path_to_deactivate_script = env_script.path_to_env_script(
-        environ, shell, script_type="deactivate"
+        environ, shell, script_type="deactivate", view="default"
     )
 
     assert os.path.isfile(path_to_activate_script)
@@ -168,7 +174,7 @@ def test_env_env_script_content(shell):
     env("create", "script_test")
     environ = ev.read("script_test")
 
-    activate_content = get_activation_script_content(environ, shell)
+    activate_content = get_activation_script_content(environ, shell, view="default")
 
     assert f"_spack_env_set SPACK_ENV {environ.path}" in activate_content
 
@@ -183,14 +189,18 @@ def test_env_update_activate_script(shell):
 
     env("activate", f"--{shell}", "test")
 
-    path_to_activate_script = env_script.path_to_env_script(environ, shell, script_type="activate")
+    path_to_activate_script = env_script.path_to_env_script(
+        environ, shell, script_type="activate", view="default"
+    )
     script_creation = os.stat(path_to_activate_script).st_mtime
 
     environ.add("mpi")
     environ.concretize()
     environ.write()
 
-    path_to_activate_script = env_script.path_to_env_script(environ, shell, script_type="activate")
+    path_to_activate_script = env_script.path_to_env_script(
+        environ, shell, script_type="activate", view="default"
+    )
     script_update = os.stat(path_to_activate_script).st_mtime
 
     assert script_update > script_creation
@@ -213,9 +223,11 @@ def test_env_scripts_regenerate_after_lockfile_change(shell):
 
     env("activate", f"--{shell}", "test")
 
-    path_to_activate_script = env_script.path_to_env_script(environ, shell, script_type="activate")
+    path_to_activate_script = env_script.path_to_env_script(
+        environ, shell, script_type="activate", view="default"
+    )
     path_to_deactivate_script = env_script.path_to_env_script(
-        environ, shell, script_type="deactivate"
+        environ, shell, script_type="deactivate", view="default"
     )
 
     initial_activate_mtime = os.stat(path_to_activate_script).st_mtime
@@ -249,7 +261,7 @@ def test_env_missing_deactivate_script(shell):
     env("activate", f"--{shell}", "test")
 
     path_to_deactivate_script = env_script.path_to_env_script(
-        environ, shell, script_type="deactivate"
+        environ, shell, script_type="deactivate", view="default"
     )
     os.remove(path_to_deactivate_script)
 
@@ -269,14 +281,14 @@ def test_env_scripts_path_after_relocation(shell):
     env("activate", f"--{shell}", "orig")
 
     orig_activate_script_path = env_script.path_to_env_script(
-        orig_env, shell, script_type="activate"
+        orig_env, shell, script_type="activate", view="default"
     )
     orig_deactivate_script_path = env_script.path_to_env_script(
-        orig_env, shell, script_type="deactivate"
+        orig_env, shell, script_type="deactivate", view="default"
     )
 
-    activate_content = get_activation_script_content(orig_env, shell)
-    deactivate_content = get_deactivation_script_content(orig_env, shell)
+    activate_content = get_activation_script_content(orig_env, shell, view="default")
+    deactivate_content = get_deactivation_script_content(orig_env, shell, view="default")
 
     assert os.path.isfile(orig_activate_script_path)
     assert os.path.isfile(orig_deactivate_script_path)
@@ -289,10 +301,10 @@ def test_env_scripts_path_after_relocation(shell):
     new_env = ev.read("new")
 
     new_activate_script_path = env_script.path_to_env_script(
-        new_env, shell, script_type="activate"
+        new_env, shell, script_type="activate", view="default"
     )
     new_deactivate_script_path = env_script.path_to_env_script(
-        new_env, shell, script_type="deactivate"
+        new_env, shell, script_type="deactivate", view="default"
     )
 
     assert os.path.isfile(new_activate_script_path)
@@ -300,8 +312,8 @@ def test_env_scripts_path_after_relocation(shell):
     assert not os.path.isfile(orig_activate_script_path)
     assert not os.path.isfile(orig_deactivate_script_path)
 
-    new_activate_content = get_activation_script_content(new_env, shell)
-    new_deactivate_content = get_deactivation_script_content(new_env, shell)
+    new_activate_content = get_activation_script_content(new_env, shell, view="default")
+    new_deactivate_content = get_deactivation_script_content(new_env, shell, view="default")
 
     assert new_env.path in new_activate_content
     assert new_env.path in new_deactivate_content
@@ -320,14 +332,16 @@ def test_env_activate_script_content_consistency(shell):
     # Generate script first time
     env("activate", f"--{shell}", "consistent_test")
 
-    activate_script_path = env_script.path_to_env_script(test_env, shell, script_type="activate")
+    activate_script_path = env_script.path_to_env_script(
+        test_env, shell, script_type="activate", view="default"
+    )
 
-    first_content = get_activation_script_content(test_env, shell)
+    first_content = get_activation_script_content(test_env, shell, view="default")
 
     os.remove(activate_script_path)
     env("activate", f"--{shell}", "consistent_test")
 
-    second_content = get_activation_script_content(test_env, shell)
+    second_content = get_activation_script_content(test_env, shell, view="default")
 
     first_lines = [line for line in first_content.splitlines() if "Generated on:" not in line]
     second_lines = [line for line in second_content.splitlines() if "Generated on:" not in line]
@@ -372,16 +386,18 @@ def test_env_activate_deactivate_directory_env(shell, tmp_path: pathlib.Path):
 
         env("activate", f"--{shell}", ".")
 
-        activate_script = env_script.path_to_env_script(test_env, shell, script_type="activate")
+        activate_script = env_script.path_to_env_script(
+            test_env, shell, script_type="activate", view="default"
+        )
         deactivate_script = env_script.path_to_env_script(
-            test_env, shell, script_type="deactivate"
+            test_env, shell, script_type="deactivate", view="default"
         )
 
         assert os.path.exists(activate_script)
         assert os.path.exists(deactivate_script)
 
         # Verify scripts contain correct paths
-        activate_content = get_activation_script_content(test_env, shell)
+        activate_content = get_activation_script_content(test_env, shell, view="default")
         assert str(tmp_path) in activate_content or test_env.path in activate_content
 
 
@@ -403,7 +419,7 @@ def test_env_scripts_with_view(shell, tmp_path: pathlib.Path, install_mockery, m
 
     env("activate", f"--{shell}", "view_test")
 
-    activate_content = get_activation_script_content(test_env, shell)
+    activate_content = get_activation_script_content(test_env, shell, view="default")
 
     assert str(view_dir) in activate_content
 
@@ -438,9 +454,50 @@ def test_env_activate_with_view_name(shell, tmp_path: pathlib.Path):
     assert test_env.views["view2"].root == view2_path
 
     env("activate", f"--{shell}", "--with-view", "view2", "multi_view_test")
-    activate_content = get_activation_script_content(test_env, shell)
+    activate_content = get_activation_script_content(test_env, shell, view="view2")
 
     assert "_spack_env_set SPACK_ENV_VIEW view2" in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_create_without_view(
+    shell, tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
+):
+    # Test creating an environment without a view, then enabling a view later
+    env("create", "--without-view", "test")
+
+    test_env = ev.read("test")
+
+    path_to_default_view_script = env_script.path_to_env_script(
+        test_env, shell, script_type="activate", view="default"
+    )
+    path_to_no_view_script = env_script.path_to_env_script(
+        test_env, shell, script_type="activate", view=None
+    )
+
+    assert not os.path.isfile(path_to_default_view_script)
+    assert os.path.isfile(path_to_no_view_script)
+
+    activate_content = get_activation_script_content(test_env, shell, view=None)
+    assert "SPACK_ENV_VIEW" not in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_activate_without_view(
+    shell, tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
+):
+    # Test creating an environment without a view, then enabling a view later
+    env("create", "test")
+    env("activate", "--without-view", f"--{shell}", "test")
+
+    test_env = ev.read("test")
+
+    activate_content = get_activation_script_content(test_env, shell, view=None)
+    assert "SPACK_ENV_VIEW" not in activate_content
 
 
 def test_env_track_existing_env_fails():
@@ -3493,7 +3550,7 @@ def test_stack_view_activate_from_default(
         environ = ev.read("test")
         env("activate", "--sh", "test")
 
-        activate_content = get_activation_script_content(environ, "sh")
+        activate_content = get_activation_script_content(environ, "sh", view="default")
 
         assert "PATH" in activate_content
         assert str(view_dir / "bin") in activate_content
@@ -3532,7 +3589,7 @@ spack:
     test_env = ev.read("test")
     env("activate", "--sh", "test")
 
-    activate_content = get_activation_script_content(test_env, "sh")
+    activate_content = get_activation_script_content(test_env, "sh", view="default")
 
     assert "_spack_env_set SPACK_ENVAR_SET_IN_ENV_LOAD True" in activate_content
     assert "_spack_env_set CONFIG_ENVAR_SET_IN_ENV_LOAD True" in activate_content
@@ -3638,7 +3695,7 @@ def test_env_activate_sh_script_output():
     activate_output = env("activate", "--sh", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    activate_content = get_activation_script_content(environ, "sh")
+    activate_content = get_activation_script_content(environ, "sh", view="default")
 
     assert "_spack_env_set SPACK_ENV " not in activate_output
     assert "_spack_env_set SPACK_ENV " in activate_content
@@ -3655,7 +3712,7 @@ def test_env_activate_csh_script_output():
     activate_output = env("activate", "--csh", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    activate_content = get_activation_script_content(environ, "csh")
+    activate_content = get_activation_script_content(environ, "csh", view="default")
 
     assert "_spack_env_set SPACK_ENV " not in activate_output
     assert "_spack_env_set SPACK_ENV " in activate_content
@@ -3672,7 +3729,7 @@ def test_env_activate_fish_script_output():
     activate_output = env("activate", "--fish", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    activate_content = get_activation_script_content(environ, "fish")
+    activate_content = get_activation_script_content(environ, "fish", view="default")
 
     assert "_spack_env_set SPACK_ENV " not in activate_output
     assert "_spack_env_set SPACK_ENV " in activate_content
@@ -3692,7 +3749,7 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     env("activate", "--sh", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    activate_content = get_activation_script_content(environ, "sh")
+    activate_content = get_activation_script_content(environ, "sh", view="default")
 
     viewdir_bin = os.path.join(viewdir, "bin")
 
@@ -3723,7 +3780,7 @@ spack:
     env("activate", "--sh", "--with-view", "nondefault", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    activate_content = get_activation_script_content(environ, "sh")
+    activate_content = get_activation_script_content(environ, "sh", view="nondefault")
 
     assert os.path.join(nondefaultdir, "bin") in activate_content
 
@@ -4210,7 +4267,7 @@ def test_activate_temp(monkeypatch, tmp_path: pathlib.Path):
 
     environ = ev.environment_from_name_or_dir(str(tmp_path))
 
-    activate_content = get_activation_script_content(environ, "sh")
+    activate_content = get_activation_script_content(environ, "sh", view="default")
 
     active_env_var = next(
         line for line in activate_content.splitlines() if ev.spack_env_var in line
@@ -4233,7 +4290,7 @@ def test_create_and_activate_managed(tmp_path: pathlib.Path):
 
         environ = ev.read("foo")
 
-        activate_content = get_activation_script_content(environ, "sh")
+        activate_content = get_activation_script_content(environ, "sh", view=None)
         active_env_var = next(
             line for line in activate_content.splitlines() if ev.spack_env_var in line
         )
@@ -4250,7 +4307,7 @@ def test_create_and_activate_independent(tmp_path: pathlib.Path):
         env("activate", "--without-view", "--create", "--sh", env_dir)
 
         environ = ev.environment_from_name_or_dir(env_dir)
-        activate_content = get_activation_script_content(environ, "sh")
+        activate_content = get_activation_script_content(environ, "sh", view=None)
 
         active_env_var = next(
             line for line in activate_content.splitlines() if ev.spack_env_var in line

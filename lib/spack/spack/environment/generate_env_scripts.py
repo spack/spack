@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import sys
+from typing import Optional
 
 import spack.environment.shell
 import spack.user_environment as uenv
@@ -12,21 +13,23 @@ UNIX_SHELLS = ["sh", "csh", "fish"]
 WINDOWS_SHELLS = ["bat", "pwsh"]
 
 
-def path_to_env_script(env, shell: str, script_type: str) -> str:
+def path_to_env_script(env, shell: str, script_type: str, view: Optional[str] = None) -> str:
     """Returns path to the shell script for activating or deactivating an environment.
 
     Args:
         env: the environment whose shell script we are returning the path of
         shell: the shell that the user is running
         script_type: Either 'activate' or 'deactivate'
+        view: the name of the environment's view
     """
     if script_type == "activate":
         activate_extensions = {"sh": "", "csh": "", "fish": "", "bat": ".bat", "pwsh": ".ps1"}
         extension = activate_extensions.get(shell, "")
-        return os.path.join(env.path, ".spack-env", f"activate{extension}")
     else:
         extension = ".ps1" if shell == "pwsh" else f".{shell}"
-        return os.path.join(env.path, ".spack-env", f"deactivate{extension}")
+
+    script_name = f"{view}_{script_type}{extension}" if view else f"{script_type}{extension}"
+    return os.path.join(env.path, ".spack-env", script_name)
 
 
 def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
@@ -49,7 +52,7 @@ def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
     return lockfile_mtime > script_mtime
 
 
-def write_env_activate_script(env: "spack.environment.Environment", view: str = "default"):
+def write_env_activate_script(env: "spack.environment.Environment", view: Optional[str] = None):
     """Generate and write activation scripts for an environment.
 
     Args:
@@ -68,7 +71,9 @@ def write_env_activate_script(env: "spack.environment.Environment", view: str = 
         shells = ["sh"]
 
     for shell in shells:
-        activate_script_path = path_to_env_script(env, shell, "activate")
+        print(f"view: {view}")
+        activate_script_path = path_to_env_script(env, shell, "activate", view)
+        print(f"Writing activation script for {shell} at {activate_script_path}")
 
         # Update the script only if needed
         if _script_needs_update(lockfile_mtime, activate_script_path):
@@ -80,7 +85,7 @@ def write_env_activate_script(env: "spack.environment.Environment", view: str = 
             uenv.write_shell_script(activate_script_path, cmds, shell)
 
 
-def write_env_deactivate_script(env, view: str):
+def write_env_deactivate_script(env, view: Optional[str] = None):
     """Generate and write deactivation scripts for an environment.
 
     Args:
@@ -96,7 +101,7 @@ def write_env_deactivate_script(env, view: str):
     shells = WINDOWS_SHELLS if sys.platform == "win32" else UNIX_SHELLS
 
     for shell in shells:
-        deactivate_script_path = path_to_env_script(env, shell, "deactivate")
+        deactivate_script_path = path_to_env_script(env, shell, "deactivate", view)
 
         # Update the script only if needed
         if _script_needs_update(lockfile_mtime, deactivate_script_path):

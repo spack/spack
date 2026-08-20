@@ -177,8 +177,9 @@ def _env_create(
         tty.msg(colorize(f"Created independent environment in: @c{{{cescape(env.path)}}}"))
     tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")
 
-    env_script.write_env_activate_script(env, view=ev.default_view_name)
-    env_script.write_env_deactivate_script(env, view=ev.default_view_name)
+    view = ev.default_view_name if with_view is not False else None
+    env_script.write_env_activate_script(env, view=view)
+    env_script.write_env_deactivate_script(env, view=view)
     return env
 
 
@@ -368,7 +369,10 @@ def env_activate(args):
         # run deactivate script
         active_env = active_environment()
         env_deactivate_script = env_script.path_to_env_script(
-            active_env, shell=args.shell, script_type="deactivate"
+            active_env,
+            shell=args.shell,
+            script_type="deactivate",
+            view=os.environ.get("SPACK_ENV_VIEW", "default"),
         )
 
         print(env_script.source_env_script(env_deactivate_script, args.shell))
@@ -388,11 +392,10 @@ def env_activate(args):
     active_env.manifest.prepare_config_scope()
 
     env_activate_script = env_script.path_to_env_script(
-        active_env, shell=args.shell, script_type="activate"
+        active_env, shell=args.shell, script_type="activate", view=view
     )
 
-    new_view = True if view is not os.environ.get("SPACK_ENV_VIEW", None) else False
-    if not os.path.isfile(env_activate_script) or new_view:
+    if not os.path.isfile(env_activate_script):
         env_script.write_env_activate_script(active_env, view)
         env_script.write_env_deactivate_script(active_env, view)
 
@@ -410,7 +413,7 @@ def env_activate(args):
     print(env_script.source_env_script(env_activate_script, args.shell))
 
     env_deactivate_script = env_script.path_to_env_script(
-        active_env, shell=args.shell, script_type="deactivate"
+        active_env, shell=args.shell, script_type="deactivate", view=view
     )
     if not os.path.isfile(env_deactivate_script):
         env_script.write_env_deactivate_script(active_env, view)
@@ -473,14 +476,13 @@ def env_deactivate(args):
     if active_environment() is None:
         tty.die("No environment is currently active.")
 
+    view = os.environ.get("SPACK_ENV_VIEW", None)
     env_deactivate_script_path = env_script.path_to_env_script(
-        active_environment(), shell=args.shell, script_type="deactivate"
+        active_environment(), shell=args.shell, script_type="deactivate", view=view
     )
 
     if not os.path.isfile(env_deactivate_script_path):
-        env_script.write_env_deactivate_script(
-            active_environment(), os.environ.get("SPACK_ENV_VIEW", "")
-        )
+        env_script.write_env_deactivate_script(active_environment(), view)
 
     ev.deactivate()
 
