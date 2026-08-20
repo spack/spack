@@ -2008,6 +2008,17 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "target=:aarch64", "target=aarch64", (True, True, True)),
         (Spec, "target=aarch64:aarch64", "target=aarch64", (True, True, True)),
         (Spec, "target=icelake:icelake", "target=icelake", (True, True, True)),
+        # A range covered only by the union of the rhs ranges, not by a single one of them
+        (Spec, "target=:alderlake", "target=:icelake,:arrowlake", (True, True, False)),
+        (
+            Spec,
+            "target=:x86_64_v3",
+            "target=x86_64_v3:x86_64_v4,:sandybridge",
+            (True, True, False),
+        ),
+        # The unbounded range is the universe of targets and target=* is an alias for it
+        (Spec, "target=:", "target=:", (True, True, True)),
+        (Spec, "target=*", "target=:", (True, True, True)),
         # Bounds outside the microarchitecture table compare by name only, without raising
         (Spec, "target=foo:", "target=foo:", (True, True, True)),
         (Spec, "target=foo", "target=foo:", (True, True, False)),
@@ -2083,6 +2094,18 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
         # ":aarch64" contains only aarch64 and canonicalizes to the singleton instead of a range
         (Spec, "target=:aarch64", "target=aarch64:", False, "target=aarch64"),
         (Spec, "target=aarch64:", "target=:aarch64", True, "target=aarch64"),
+        # The unbounded range intersects itself and constrains nothing
+        (Spec, "target=:", "target=:", False, "target=:"),
+        # A range covered by the union of the rhs ranges is already the intersection
+        (
+            Spec,
+            "target=:x86_64_v3",
+            "target=x86_64_v3:x86_64_v4,:sandybridge",
+            False,
+            "target=:x86_64_v3",
+        ),
+        # target=* is an alias for the unbounded range, so a named target narrows it
+        (Spec, "target=*", "target=haswell", True, "target=haswell"),
     ],
 )
 def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_packages):

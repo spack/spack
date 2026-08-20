@@ -5695,3 +5695,10 @@ def test_asp_facts_with_config_values():
     assert str(fn.max_dupes("cmake", 2)) == 'max_dupes("cmake",2)'
     assert str(fn.os_compatible(syaml.syaml_str('a"b\\c'), "d")) == r'os_compatible("a\"b\\c","d")'
     assert str(fn.variant_value("x", True)) == 'variant_value("x","True")'
+
+
+def test_target_star_concretizes(mock_packages, config):
+    """target=* is the unbounded target range: it constrains nothing instead of failing the
+    lookup of a single target named *."""
+    concrete = spack.concretize.concretize_one("pkg-a target=*")
+    assert concrete.architecture.target_concrete
