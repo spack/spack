@@ -297,6 +297,10 @@ class PackageInstaller:
         self.next_database_write = 0.0
 
     def install(self) -> None:
+        # Refuse disallowed deprecations before updating any index, so an install that cannot
+        # succeed does no work first
+        spack.deprecation.check_deprecations(self.roots)
+
         # check what specs we could fetch from binaries (checks against cache, not remotely)
         try:
             spack.binary_distribution.BINARY_INDEX.update()
@@ -313,7 +317,6 @@ class PackageInstaller:
         self._run_event_loop()
 
     def _run_event_loop(self) -> None:
-        spack.deprecation.check_deprecations(self.roots)
         self.store.install_sbang()
         jobserver = JobServer(self.jobs, os.environ.get("MAKEFLAGS", ""))
         selector = selectors.DefaultSelector()
