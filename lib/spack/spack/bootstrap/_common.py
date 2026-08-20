@@ -225,12 +225,11 @@ def _executables_in_store(
 
 
 def _root_spec(spec_str: str) -> str:
-    """Add a proper compiler and target to a spec used during bootstrapping.
+    """Add the host platform and target to a spec used during bootstrapping.
 
     Args:
-        spec_str: spec to be bootstrapped. Must be without compiler and target.
+        spec_str: spec to be bootstrapped. Must be without platform and target.
     """
-    # Add a compiler and platform requirement to the root spec.
     platform = str(spack.platforms.host())
 
     spec_str += f" platform={platform}"

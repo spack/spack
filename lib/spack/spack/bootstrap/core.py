@@ -111,7 +111,7 @@ class Bootstrapper:
 
         Args:
             executables: executables to be found
-            abstract_spec_str: abstract spec that can provide the Python module
+            abstract_spec_str: abstract spec that can provide the executables
 
         Return:
             True if the executables are found, False otherwise
@@ -280,7 +280,7 @@ def create_bootstrapper(conf: ConfigDictionary) -> Bootstrapper:
 
 
 def source_is_enabled(conf: ConfigDictionary) -> bool:
-    """Returns true if the source is not enabled for bootstrapping"""
+    """Returns True if the source is enabled for bootstrapping, False otherwise"""
     return spack.config.CONFIG.get("bootstrap:trusted").get(conf["name"], False)
 
 
@@ -347,28 +347,26 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
 
 
 def ensure_executables_in_path_or_raise(
-    executables: list,
+    executables: Sequence[str],
     abstract_spec: str,
     cmd_check: Optional[Callable[[spack.util.executable.Executable], bool]] = None,
-):
+) -> spack.util.executable.Executable:
     """Ensure that some executables are in path or raise.
 
     Args:
-        executables (list): list of executables to be searched in the PATH,
-            in order. The function exits on the first one found.
-        abstract_spec (str): abstract spec that provides the executables
-        cmd_check (object): callable predicate that takes a
-            ``spack.util.executable.Executable`` command and validate it. Should return
-            ``True`` if the executable is acceptable, ``False`` otherwise.
-            Can be used to, e.g., ensure a suitable version of the command before
-            accepting for bootstrapping.
+        executables: executables to be searched in the PATH, in order. The function
+            exits on the first one found.
+        abstract_spec: abstract spec that provides the executables
+        cmd_check: callable predicate that takes a ``spack.util.executable.Executable``
+            command and validates it. Should return ``True`` if the executable is
+            acceptable, ``False`` otherwise. Can be used to, e.g., ensure a suitable
+            version of the command before accepting for bootstrapping.
 
     Raises:
         RuntimeError: if the executables cannot be ensured to be in PATH
 
     Return:
         Executable object
-
     """
     cmd = spack.util.executable.which(*executables)
     if cmd:
@@ -443,7 +441,7 @@ def gnupg_root_spec() -> str:
     return _root_spec(f"{root_spec_name}@2.3:")
 
 
-def ensure_gpg_in_path_or_raise() -> None:
+def ensure_gpg_in_path_or_raise() -> spack.util.executable.Executable:
     """Ensure gpg or gpg2 are in the PATH or raise."""
     return ensure_executables_in_path_or_raise(
         executables=["gpg2", "gpg"], abstract_spec=gnupg_root_spec()
@@ -479,9 +477,8 @@ def verify_patchelf(patchelf: "spack.util.executable.Executable") -> bool:
 
 def ensure_patchelf_in_path_or_raise() -> spack.util.executable.Executable:
     """Ensure patchelf is in the PATH or raise."""
-    # The old concretizer is not smart and we're doing its job: if the latest patchelf
-    # does not concretize because the compiler doesn't support C++17, we try to
-    # concretize again with an upperbound @:13.
+    # If the latest patchelf cannot be provided, e.g. because the compiler doesn't
+    # support C++17, retry with the newest version that does not require it.
     try:
         return ensure_executables_in_path_or_raise(
             executables=["patchelf"], abstract_spec=patchelf_root_spec(), cmd_check=verify_patchelf
