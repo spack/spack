@@ -88,6 +88,7 @@ class DeprecationReason(enum.Enum):
     RENAME = "rename"
     UNAVAILABLE = "unavailable"
     MAINTENANCE = "maintenance"
+    UNSPECIFIED = "unspecified"
 
 
 class Deprecation(NamedTuple):
