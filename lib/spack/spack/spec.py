@@ -268,10 +268,10 @@ def _canonical_target_range(name: str) -> str:
     for element in name.split(","):
         t_min, t_sep, t_max = element.partition(":")
         if t_sep and t_max:
-            upper = _make_microarchitecture(t_max)
-            if not t_min or _make_microarchitecture(t_min) == upper.family:
+            family = _make_microarchitecture(t_max).family.name
+            if not t_min or t_min == family:
                 # if the upperbound is a root, canonicalize to the singleton
-                element = t_max if upper.family == upper else f":{t_max}"
+                element = t_max if t_max == family else f":{t_max}"
             elif t_min == t_max:
                 element = t_min
         elements.add(element)
@@ -344,9 +344,7 @@ def _satisfies_target_range(lhs: str, rhs: str) -> bool:
         if not floor >= _make_microarchitecture(lhs_min):
             return False
     if lhs_max:
-        if not rhs_max or not _make_microarchitecture(rhs_max) <= _make_microarchitecture(
-            lhs_max
-        ):
+        if not rhs_max or not _make_microarchitecture(rhs_max) <= _make_microarchitecture(lhs_max):
             return False
     return True
 
@@ -733,28 +731,17 @@ class ArchSpec:
             self.target = other.target
             return True
 
-        if not self._target_intersects(self.target, other.target):
-            raise UnsatisfiableArchitectureSpecError(self, other)
-
         if self.target is None:
             self.target = other.target
             return True
 
-        if self.target_concrete:
-            return False
+        results = self._target_intersection(self.target, other.target)
+        if not results:
+            raise UnsatisfiableArchitectureSpecError(self, other)
 
-        elif other.target_concrete:
-            self.target = other.target
-            return True
-
-        # self already inside other: the intersection is self, so skip computing it.
-        if self._target_satisfies(self.target, other.target):
-            return False
-
-        # Compute the intersection of every combination of ranges in the lists
-        attribute_str = ",".join(self._target_intersection(self.target, other.target))
-
-        intersection_target = _make_microarchitecture(attribute_str)
+        # Targets are stored canonically, so the intersection equals self.target exactly when
+        # self is already inside other.
+        intersection_target = _make_microarchitecture(",".join(results))
         if self.target == intersection_target:
             return False
 
