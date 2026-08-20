@@ -369,13 +369,14 @@ def _parse_target_range(
     )
 
 
+@lang.memoized
 def _minimal_upper_bounds(
     a: Optional[spack.vendor.archspec.cpu.Microarchitecture],
     b: Optional[spack.vendor.archspec.cpu.Microarchitecture],
 ) -> List[Optional[spack.vendor.archspec.cpu.Microarchitecture]]:
     """The minimal targets above both a and b. The target graph is not a lattice, so there is
     not always a unique least upper bound: incomparable bounds can have several minimal common
-    upper bounds."""
+    upper bounds. Memoized: the search below scans the whole target table."""
     if a is None:
         return [b]
     if b is None:
@@ -396,6 +397,7 @@ def _minimal_upper_bounds(
     return [t for t in above if not any(other < t for other in above)]
 
 
+@lang.memoized
 def _maximal_lower_bounds(
     a: Optional[spack.vendor.archspec.cpu.Microarchitecture],
     b: Optional[spack.vendor.archspec.cpu.Microarchitecture],
@@ -491,8 +493,18 @@ class ArchSpec:
             return results
 
         for l_element in str(lhs).split(","):
-            l_min, l_max = _parse_target_range(l_element)
             for r_element in str(rhs).split(","):
+                # a concrete element intersects another element iff contained in it, and the
+                # overlap is the concrete element itself
+                if ":" not in r_element:
+                    if _satisfies_target_range(l_element, r_element):
+                        results.append(r_element)
+                    continue
+                if ":" not in l_element:
+                    if _satisfies_target_range(r_element, l_element):
+                        results.append(l_element)
+                    continue
+                l_min, l_max = _parse_target_range(l_element)
                 r_min, r_max = _parse_target_range(r_element)
                 for n_min in _minimal_upper_bounds(l_min, r_min):
                     for n_max in _maximal_lower_bounds(l_max, r_max):
