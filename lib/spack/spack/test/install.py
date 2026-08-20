@@ -918,3 +918,30 @@ def test_install_gate_honors_per_reason_thresholds(install_mockery, mutable_conf
         # reason=cve is forbidden at any severity
         with pytest.raises(spack.error.InstallError, match="deprecated"):
             spack.deprecation.check_deprecations([cve])
+
+
+def test_deprecation_gate_runs_before_any_setup_work(
+    install_mockery, installer_variant, mutable_config: Configuration, monkeypatch
+):
+    """Tests that the gate refuses before the installer updates binary indices or builds its
+    queue, so an install that cannot succeed does no work first.
+    """
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
+        spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+
+    work_done = []
+    monkeypatch.setattr(
+        binary_distribution.BinaryIndexCache,
+        "update",
+        lambda *args, **kwargs: work_done.append("binary index"),
+    )
+    monkeypatch.setattr(
+        spack.old_installer.PackageInstaller,
+        "_init_queue",
+        lambda *args, **kwargs: work_done.append("install queue"),
+    )
+
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.installer_dispatch.create_installer([spec.package]).install()
+
+    assert not work_done
