@@ -211,7 +211,10 @@ def ensure_modern_format_string(fmt: str) -> None:
 def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchitecture:
     if isinstance(name, spack.vendor.archspec.cpu.Microarchitecture):
         return name
-    if ":" in name or "," in name:
+    if name == "*":
+        # the universe of targets, canonically the doubly unbounded range, like @: for versions
+        name = ":"
+    elif ":" in name or "," in name:
         name = _canonical_target_range(name)
     return spack.vendor.archspec.cpu.TARGETS.get(
         name, spack.vendor.archspec.cpu.generic_microarchitecture(name)
@@ -266,6 +269,8 @@ def _canonical_target_range(name: str) -> str:
     are dropped, and the rest are fused per family."""
     elements = set()
     for element in name.split(","):
+        if element == "*":
+            element = ":"
         t_min, t_sep, t_max = element.partition(":")
         if t_sep and t_max:
             family = _make_microarchitecture(t_max).family.name
@@ -439,8 +444,6 @@ def _maximal_lower_bounds(
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
 
-    ANY_TARGET = _make_microarchitecture("*")
-
     @staticmethod
     def _attr_satisfies(lhs: Optional[str], rhs: Optional[str]) -> bool:
         """Whether a platform or operating system on the lhs satisfies the one on the rhs."""
@@ -469,9 +472,6 @@ class ArchSpec:
         if lhs is None:
             return False
 
-        if rhs == ArchSpec.ANY_TARGET:
-            return True
-
         # Subset test: every target the lhs ranges denote must be covered by the rhs ranges.
         rhs_elements = str(rhs).split(",")
         return all(
@@ -485,10 +485,6 @@ class ArchSpec:
     ) -> bool:
         """Whether there is a microarchitecture in both targets."""
         if not lhs or not rhs:
-            return True
-
-        # a star overlaps any target, but is too broad to satisfy a specific one
-        if ArchSpec.ANY_TARGET in (lhs, rhs):
             return True
 
         return bool(ArchSpec._target_intersection(lhs, rhs))
@@ -737,18 +733,6 @@ class ArchSpec:
         # the two has no target, which would turn into an empty target below.
         if other.target is None:
             return False
-
-        # target=* constrains a target to be set without naming one, so any target already
-        # satisfies it and a side without one becomes the star. It is concrete by the definition
-        # below, so it is handled here rather than overriding a named target further down.
-        if other.target == ArchSpec.ANY_TARGET:
-            if self.target is not None:
-                return False
-            self.target = other.target
-            return True
-        if self.target == ArchSpec.ANY_TARGET:
-            self.target = other.target
-            return True
 
         if self.target is None:
             self.target = other.target

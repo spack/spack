@@ -171,10 +171,10 @@ def test_star_does_not_short_circuit_the_other_attributes():
 
 
 def test_star_target_is_replaced_by_a_named_target_when_constrained():
-    """target=* names no target, so the other side is the intersection. It is concrete by the
-    definition in ArchSpec, so _target_constrain handles it before a named target could be
-    overridden."""
+    """target=* is stored as the unbounded range target=:, so the named side of the
+    intersection wins."""
     architecture = ArchSpec((None, None, "*"))
+    assert str(architecture.target) == ":"
     assert architecture.constrain(ArchSpec((None, None, "x86_64"))) is True
     assert str(architecture.target) == "x86_64"
 
