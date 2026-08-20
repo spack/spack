@@ -2363,8 +2363,8 @@ class PackageInstaller:
 
         """
 
-        self._init_queue()
         self._check_deprecations()
+        self._init_queue()
         spack.store.STORE.install_sbang()
         failed_build_requests = []
         install_status = InstallStatus(len(self.build_pq))
