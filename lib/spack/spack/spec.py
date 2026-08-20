@@ -507,7 +507,8 @@ class ArchSpec:
                 for n_min in _minimal_upper_bounds(l_min, r_min):
                     for n_max in _maximal_lower_bounds(l_max, r_max):
                         if n_min is None and n_max is None:
-                            continue
+                            # both elements are unbounded on both sides: the overlap is too
+                            results.append(":")
                         elif n_min is None:
                             results.append(f":{n_max}")
                         elif n_max is None:
