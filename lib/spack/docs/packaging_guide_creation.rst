@@ -784,7 +784,8 @@ For example, to flag a version that has a known CVE:
 
 The first positional argument is an optional spec constraint, in this case the version ``"@1.1.1t"``.
 If omitted, the whole package is deprecated.
-The ``reason`` keyword is required and must be one of ``"cve"``, ``"rename"``, ``"unavailable"``, or ``"maintenance"``.
+The ``reason`` keyword is required and must be one of ``"cve"``, ``"rename"``, ``"unavailable"``, ``"maintenance"``, or ``"unspecified"``.
+Prefer a specific reason: ``"unspecified"`` exists for deprecations carried over from the legacy ``deprecated=True`` keyword, which records no reason at all.
 The optional ``severity`` keyword ranks the urgency: ``"low"`` (default), ``"medium"``, ``"high"``, or ``"critical"`` in increasing order.
 
 The optional ``labels`` keyword lists the advisories a deprecation refers to.
@@ -809,7 +810,7 @@ The older ``version("X.Y", deprecated=True)`` syntax is still supported and is e
 
 .. code-block:: python
 
-   deprecated("@=X.Y", reason="maintenance", severity="critical")
+   deprecated("@=X.Y", reason="unspecified", severity="critical")
 
 This also applies to package recipes that are renamed or removed.
 You should first deprecate all versions before removing a package.

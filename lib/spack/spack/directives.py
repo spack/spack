@@ -281,7 +281,7 @@ class _Version(NamedTuple):
         pkg.versions[version] = kwargs
 
         if kwargs.get("deprecated", False):
-            _Deprecated(f"@={version}", "maintenance", "critical")(pkg)
+            _Deprecated(f"@={version}", "unspecified", "critical")(pkg)
 
 
 @directive("conflicts")
@@ -337,7 +337,9 @@ def deprecated(
         spec: optional spec constraint (e.g. ``"@1.0"``); if omitted, the whole package
             is deprecated.
         reason: why this spec is deprecated.  One of ``"cve"``, ``"rename"``,
-            ``"unavailable"``, ``"maintenance"``.
+            ``"unavailable"``, ``"maintenance"``, ``"unspecified"``.  Prefer a specific
+            reason: ``"unspecified"`` exists for the legacy ``deprecated=True`` keyword,
+            which records no reason at all.
         severity: how severe the deprecation is.  One of ``"low"`` (default), ``"medium"``,
             ``"high"``, ``"critical"``.
         labels: optional advisory identifiers (e.g. CVE, GHSA or PYSEC ids) this deprecation
