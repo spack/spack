@@ -27,7 +27,7 @@ def test_config_deprecated_with_old_style_version_deprecation(mock_packages, mut
     with mutable_config.override("config:deprecated", True):
         assert concretize_one("deprecated-old-style@1.0").satisfies("@1.0")
 
-    with pytest.raises(UnsatisfiableSpecError, match="maintenance"):
+    with pytest.raises(UnsatisfiableSpecError, match="unspecified"):
         concretize_one("deprecated-old-style@1.0")
 
 
@@ -38,15 +38,15 @@ def test_version_deprecated_true_prefers_non_deprecated(config, mock_packages):
 
 
 def test_version_deprecated_true_registers_in_deprecations(mock_packages):
-    """Tests that version(..., deprecated=True) populates pkg.deprecations with reason=maintenance
-    and severity=critical.
+    """Tests that version(..., deprecated=True) populates pkg.deprecations with
+    reason=unspecified and severity=critical.
     """
     pkg_cls = spack.repo.PATH.get_pkg_class("deprecated-old-style")
     all_entries = [x for entries in pkg_cls.deprecations.values() for x in entries]
     assert all(
         x
         == spack.enums.Deprecation(
-            spack.enums.DeprecationReason.MAINTENANCE, spack.enums.DeprecationSeverity.CRITICAL
+            spack.enums.DeprecationReason.UNSPECIFIED, spack.enums.DeprecationSeverity.CRITICAL
         )
         for x in all_entries
     )
@@ -319,19 +319,19 @@ def test_old_and_new_deprecation_are_checked_independently(
     override one another: each is checked against the threshold for its own reason, and either
     one above its threshold refuses the version.
     """
-    # deprecated-dual@1.0 carries maintenance/critical from the keyword and cve/high from the
-    # directive. Allowing maintenance is not enough, because cve is still forbidden.
+    # deprecated-dual@1.0 carries unspecified/critical from the keyword and cve/high from the
+    # directive. Allowing unspecified is not enough, because cve is still forbidden.
     packages_yaml_write("""
 packages:
   all:
     deprecation:
       allowed_severity:
-        maintenance: critical
+        unspecified: critical
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-dual@1.0")
 
-    # Symmetrically, allowing only cve leaves the maintenance deprecation in force.
+    # Symmetrically, allowing only cve leaves the keyword deprecation in force.
     packages_yaml_write("""
 packages:
   all:
@@ -348,7 +348,7 @@ packages:
   all:
     deprecation:
       allowed_severity:
-        maintenance: critical
+        unspecified: critical
         cve: high
 """)
     assert concretize_one("deprecated-dual@1.0").satisfies("@1.0")

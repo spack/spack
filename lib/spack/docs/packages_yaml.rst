@@ -747,7 +747,8 @@ To hold some reasons to a stricter standard than others, give a mapping from rea
            cve: none
 
 Here a ``low``-severity rename or maintenance deprecation is allowed, while any deprecation with ``reason: cve`` is an error whatever its severity.
-The reason keys are the values accepted by the ``deprecated()`` directive: ``cve``, ``rename``, ``unavailable``, and ``maintenance``.
+The reason keys are the values accepted by the ``deprecated()`` directive: ``cve``, ``rename``, ``unavailable``, ``maintenance``, and ``unspecified``.
+``unspecified`` covers the deprecations declared with the legacy ``version(..., deprecated=True)`` keyword, which records no reason.
 A per-package ``allowed_severity`` replaces the one under ``all`` outright, exactly as it does for a single value.
 
 For a single command, the ``--deprecated`` flag sets ``allowed_severity`` to ``critical`` under ``all``.
