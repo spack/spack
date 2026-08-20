@@ -28,7 +28,9 @@ def path_to_env_script(env, shell: str, script_type: str, view: Optional[str] = 
     else:
         extension = ".ps1" if shell == "pwsh" else f".{shell}"
 
-    script_name = f"{view}_{script_type}{extension}" if view else f"{script_type}{extension}"
+    script_name = (
+        f"{view}_{script_type}{extension}" if view else f"noview_{script_type}{extension}"
+    )
     return os.path.join(env.path, ".spack-env", script_name)
 
 
@@ -71,9 +73,7 @@ def write_env_activate_script(env: "spack.environment.Environment", view: Option
         shells = ["sh"]
 
     for shell in shells:
-        print(f"view: {view}")
         activate_script_path = path_to_env_script(env, shell, "activate", view)
-        print(f"Writing activation script for {shell} at {activate_script_path}")
 
         # Update the script only if needed
         if _script_needs_update(lockfile_mtime, activate_script_path):

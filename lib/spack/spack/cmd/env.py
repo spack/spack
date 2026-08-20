@@ -370,10 +370,7 @@ def env_activate(args):
         current_view = os.environ.get("SPACK_ENV_VIEW", None)
         active_env = active_environment()
         env_deactivate_script = env_script.path_to_env_script(
-            active_env,
-            shell=args.shell,
-            script_type="deactivate",
-            view=current_view,
+            active_env, shell=args.shell, script_type="deactivate", view=current_view
         )
 
         env_deactivate_script = env_script.path_to_env_script(
@@ -795,10 +792,10 @@ def env_rename(args):
         )
     )
     env_script.write_env_activate_script(
-        ev.Environment(to_path), os.environ.get("SPACK_VIEW", "default")
+        ev.Environment(to_path), os.environ.get("SPACK_ENV_VIEW", "default")
     )
     env_script.write_env_deactivate_script(
-        ev.Environment(to_path), os.environ.get("SPACK_VIEW", "default")
+        ev.Environment(to_path), os.environ.get("SPACK_ENV_VIEW", "default")
     )
 
 
@@ -862,6 +859,12 @@ def env_view(args):
 
     if args.action == ViewAction.regenerate:
         env.regenerate_views()
+        env_script.write_env_activate_script(
+            env, view=os.environ.get("SPACK_ENV_VIEW", env.view_path_default)
+        )
+        env_script.write_env_deactivate_script(
+            env, view=os.environ.get("SPACK_ENV_VIEW", env.view_path_default)
+        )
     elif args.action == ViewAction.enable:
         if args.view_path:
             view_path = args.view_path

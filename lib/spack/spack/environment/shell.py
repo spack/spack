@@ -98,7 +98,6 @@ def activate_prompt_cmds(shell, prompt):
     return cmds
 
 
-
 def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
     """Compute environment modifications for activating an environment.
 
