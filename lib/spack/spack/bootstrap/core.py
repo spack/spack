@@ -276,6 +276,42 @@ def _cannot_bootstrap_message(
     return msg
 
 
+def _bootstrap_or_raise(
+    request: BootstrapRequest[ResultT], what: str, abstract_spec: str, error_type: Type[Exception]
+) -> ResultT:
+    """Make the requested software available in the bootstrap store, or raise.
+
+    The enabled bootstrapping sources are tried in order, and the function exits on the
+    first success.
+
+    Args:
+        request: software to be bootstrapped, and the probe that tests for it
+        what: description of the software, to be used in the error message
+        abstract_spec: abstract spec that was supposed to provide it
+        error_type: exception to be raised if no source succeeds
+
+    Raises:
+        error_type: if the software could not be bootstrapped
+    """
+    # Every source installs into the same store, so check it once for all of them
+    result = request.probe(request.abstract_spec)
+    if result:
+        return result
+
+    exception_handler = GroupedExceptionHandler()
+
+    for current_config in bootstrapping_sources():
+        if not source_is_enabled(current_config):
+            continue
+
+        with exception_handler.forward(current_config["name"], Exception):
+            result = create_bootstrapper(current_config).try_to_bootstrap(request)
+            if result:
+                return result
+
+    raise error_type(_cannot_bootstrap_message(what, abstract_spec, exception_handler))
+
+
 def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] = None):
     """Make the requested module available for import, or raise.
 
@@ -299,39 +335,12 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
         return
 
     abstract_spec = abstract_spec or module
-    request = BootstrapRequest.for_module(module, abstract_spec)
-
-    # Every source installs into the same store, so check it once for all of them
-    if request.probe(request.abstract_spec):
-        return
-
-    exception_handler = GroupedExceptionHandler()
-
-    for current_config in bootstrapping_sources():
-        if not source_is_enabled(current_config):
-            continue
-
-        with exception_handler.forward(current_config["name"], Exception):
-            if create_bootstrapper(current_config).try_to_bootstrap(request):
-                return
-
-    raise ImportError(
-        _cannot_bootstrap_message(
-            f'the "{module}" Python module', abstract_spec, exception_handler
-        )
+    _bootstrap_or_raise(
+        BootstrapRequest.for_module(module, abstract_spec),
+        what=f'the "{module}" Python module',
+        abstract_spec=abstract_spec,
+        error_type=ImportError,
     )
-
-
-def _command_with_default_envmod(found: ExecutableInfo) -> spack.util.executable.Executable:
-    """Return the command from a lookup result, with the environment modifications
-    needed to run it.
-    """
-    found.command.add_default_envmod(
-        spack.user_environment.environment_modifications_for_specs(
-            found.spec, set_package_py_globals=False
-        )
-    )
-    return found.command
 
 
 def ensure_executables_in_path_or_raise(
@@ -361,30 +370,19 @@ def ensure_executables_in_path_or_raise(
         if not cmd_check or cmd_check(cmd):
             return cmd
 
-    request = BootstrapRequest.for_executables(executables, abstract_spec)
-
-    # Every source installs into the same store, so check it once for all of them
-    found = request.probe(request.abstract_spec)
-    if found is not None:
-        return _command_with_default_envmod(found)
-
-    executables_str = ", ".join(executables)
-
-    exception_handler = GroupedExceptionHandler()
-
-    for current_config in bootstrapping_sources():
-        if not source_is_enabled(current_config):
-            continue
-        with exception_handler.forward(current_config["name"], Exception):
-            found = create_bootstrapper(current_config).try_to_bootstrap(request)
-            if found is not None:
-                return _command_with_default_envmod(found)
-
-    raise RuntimeError(
-        _cannot_bootstrap_message(
-            f"any of the {executables_str} executables", abstract_spec, exception_handler
+    found = _bootstrap_or_raise(
+        BootstrapRequest.for_executables(executables, abstract_spec),
+        what=f"any of the {', '.join(executables)} executables",
+        abstract_spec=abstract_spec,
+        error_type=RuntimeError,
+    )
+    # Additional environment variables needed to run the command
+    found.command.add_default_envmod(
+        spack.user_environment.environment_modifications_for_specs(
+            found.spec, set_package_py_globals=False
         )
     )
+    return found.command
 
 
 def _add_externals_if_missing() -> None:
