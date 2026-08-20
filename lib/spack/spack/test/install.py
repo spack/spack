@@ -728,7 +728,7 @@ def test_ensure_allowed_blocks_disallowed_deprecation(
 ):
     """Tests that the deprecation gate flags a deprecated spec not allowed by configuration."""
     # Concretize while deprecations are allowed, so the deprecated @2.0 is selected.
-    with mutable_config.override("config:deprecated", True):
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
         spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
 
     # Under the default (strict) policy the pre-concretized spec is refused.
@@ -740,14 +740,14 @@ def test_ensure_allowed_permits_configured_deprecation(
     install_mockery, mutable_config: Configuration
 ):
     """Tests that the deprecation gate lets go a deprecated spec allowed by configuration."""
-    with mutable_config.override("config:deprecated", True):
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
         spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
         spack.deprecation.check_deprecations([spec])  # must not raise
 
 
 def test_ensure_allowed_exempts_externals(install_mockery, mutable_config: Configuration):
     """External specs are exempt from the deprecation gate, mirroring the concretizer."""
-    with mutable_config.override("config:deprecated", True):
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
         spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
 
     # The spec is blocked by the strict default policy...
@@ -764,7 +764,7 @@ def test_installer_blocks_disallowed_deprecation(
     """Tests that both the old and new installer refuse a pre-concretized deprecated spec
     before building.
     """
-    with mutable_config.override("config:deprecated", True):
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
         spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
 
     with pytest.raises(spack.error.InstallError, match="deprecated"):
@@ -777,7 +777,7 @@ def test_installer_blocks_already_installed_deprecated_dependency(
     """Tests that we refuse to install a new DAG with a deprecated dependency in its runtime
     graph, even when that dependency is already installed (and thus pruned from the build set).
     """
-    with mutable_config.override("config:deprecated", True):
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
         dep = spack.concretize.concretize_one("deprecated-versions@1.1.0")
         spack.installer_dispatch.create_installer([dep.package]).install()
         spec = spack.concretize.concretize_one("deprecated-client ^deprecated-versions@1.1.0")
@@ -796,7 +796,7 @@ def test_deprecated_build_only_dependency_is_not_blocked(
     outside the checked closure of the root, so the install must not be rejected, regardless of
     local install status.
     """
-    with mutable_config.override("config:deprecated", True):
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
         spec = spack.concretize.concretize_one("deprecated-buildtool-client")
 
     # The deprecated spec is in the DAG, but only reachable through a build edge (so spec[...],
@@ -818,7 +818,7 @@ def test_installer_scope_all_gates_build_transitive_deprecation(
     """Tests that the install gate refuses a deprecated node reachable only through a build edge,
     when the 'all' deprecation scope is used.
     """
-    with mutable_config.override("config:deprecated", True):
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
         spec = spack.concretize.concretize_one("deprecated-buildtool-client")
 
     # The deprecated node is build-transitive: outside the runtime closure of the root.
@@ -857,7 +857,7 @@ def test_new_installer_static_gate_sees_deferred_build_deps(
     """
     # A configured binary mirror makes has_mirrors True, which is what defers build deps.
     with mutable_config.override("mirrors", {"test-mirror": f"file://{tmp_path}"}):
-        with mutable_config.override("config:deprecated", True):
+        with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
             spec = spack.concretize.concretize_one("deprecated-buildtool-client")
 
         with mutable_config.override("packages:all:deprecation:scope", "all"):
@@ -881,7 +881,7 @@ def test_install_gate_honors_exempt_labels(install_mockery, mutable_config: Conf
     """Tests that the install-time gate skips the same labelled deprecations as the concretizer,
     so a lockfile concretized under an exemption still installs.
     """
-    with mutable_config.override("config:deprecated", True):
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
         spec = spack.concretize.concretize_one("deprecated-with-labels@2.0")
 
     # Under the default (strict) policy the pre-concretized spec is refused.
@@ -905,7 +905,7 @@ def test_install_gate_honors_per_reason_thresholds(install_mockery, mutable_conf
     """Tests that the install-time gate applies the same per-reason thresholds as the
     concretizer, so a lockfile is judged by the reason of each deprecation.
     """
-    with mutable_config.override("config:deprecated", True):
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
         cve = spack.concretize.concretize_one("deprecated-with-reason@2.0")
         rename = spack.concretize.concretize_one("deprecated-with-reason@1.0")
 
