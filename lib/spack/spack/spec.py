@@ -349,6 +349,24 @@ def _satisfies_target_range(lhs: str, rhs: str) -> bool:
     return True
 
 
+def _covered_by_target_list(element: str, rhs_elements: List[str]) -> bool:
+    """Whether every target the element denotes is in one of ``rhs_elements``. An element
+    inside a single rhs element is covered; a range with an upper bound in the table can also
+    be covered by several rhs elements jointly, so its targets are checked one by one. An open
+    element is only inside an open element, since it admits targets outside the table."""
+    if any(_satisfies_target_range(r, element) for r in rhs_elements):
+        return True
+    if len(rhs_elements) == 1:
+        return False
+    t_min, t_sep, t_max = element.partition(":")
+    table = spack.vendor.archspec.cpu.TARGETS
+    if not t_max or t_max not in table or (t_min and t_min not in table):
+        # a point is covered element-wise or not at all; so are unknown names
+        return False
+    members = _closed_interval_targets(table[t_min] if t_min else None, table[t_max])
+    return all(any(_satisfies_target_range(r, m.name) for r in rhs_elements) for m in members)
+
+
 def _parse_target_range(
     element: str,
 ) -> Tuple[
@@ -454,10 +472,10 @@ class ArchSpec:
         if rhs == ArchSpec.ANY_TARGET:
             return True
 
-        # Subset test: every target the lhs ranges denote must be covered by one of the rhs ranges.
+        # Subset test: every target the lhs ranges denote must be covered by the rhs ranges.
+        rhs_elements = str(rhs).split(",")
         return all(
-            any(_satisfies_target_range(r_range, l_range) for r_range in str(rhs).split(","))
-            for l_range in str(lhs).split(",")
+            _covered_by_target_list(l_range, rhs_elements) for l_range in str(lhs).split(",")
         )
 
     @staticmethod
