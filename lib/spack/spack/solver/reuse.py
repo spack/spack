@@ -9,6 +9,7 @@ from typing import Any, Callable, List, Mapping, Optional
 
 import spack.binary_distribution
 import spack.config
+import spack.deprecation
 import spack.repo
 import spack.spec
 import spack.store
@@ -288,4 +289,5 @@ class ReusableSpecsSelector:
         if self.reuse_strategy == ReuseStrategy.DEPENDENCIES:
             result = [spec for spec in result if not any(root in spec for root in specs)]
 
-        return result
+        # Never hand the solver an artifact the deprecation policy would refuse to install
+        return spack.deprecation.reusable(result)

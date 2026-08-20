@@ -359,3 +359,53 @@ def test_legacy_config_deprecated_flag_warns(mock_packages, mutable_config):
     with mutable_config.override("config:deprecated", True):
         with pytest.warns(UserWarning, match="config:deprecated is deprecated"):
             assert concretize_one("deprecated-old-style@1.0").satisfies("@1.0")
+
+
+@pytest.fixture
+def lib_built_with_deprecated_tool(mutable_config, temporary_store):
+    """Install deprecated-tool-lib built against the deprecated deprecated-tool@1.0.
+
+    Models a library installed back when the tool it was built with was still allowed.
+    """
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
+        spec = concretize_one("deprecated-tool-lib ^deprecated-tool@1.0")
+    assert spec["deprecated-tool"].satisfies("@1.0")
+    for node in spec.traverse():
+        temporary_store.layout.create_install_directory(node)
+        temporary_store.db.add(node, explicit=node.name == spec.name)
+    return spec
+
+
+def test_runtime_scope_does_not_build_with_a_deprecated_tool(
+    mock_packages, mutable_config, lib_built_with_deprecated_tool
+):
+    """Under 'runtime', the deprecation of a build tool is out of scope for an already built
+    library, so deprecated-tool-lib stays reusable. It is not out of scope for a build we are
+    about to run, so the client must be built with deprecated-tool@2.0.
+    """
+    mutable_config.set("packages:all:deprecation:scope", "runtime")
+    mutable_config.set("concretizer:reuse", True)
+
+    client = concretize_one("deprecated-tool-client")
+
+    # the installed library is reused, its build provenance is not inspected
+    assert client["deprecated-tool-lib"].dag_hash() == lib_built_with_deprecated_tool.dag_hash()
+    # but the tool we are about to run is not the deprecated one
+    assert client["deprecated-tool"].satisfies("@2.0")
+
+
+def test_all_scope_rebuilds_a_library_built_with_a_deprecated_tool(
+    mock_packages, mutable_config, lib_built_with_deprecated_tool
+):
+    """Under 'all', the build provenance of a reused artifact is in scope, so the installed
+    deprecated-tool-lib cannot be used and is rebuilt against deprecated-tool@2.0.
+    """
+    mutable_config.set("packages:all:deprecation:scope", "all")
+    mutable_config.set("concretizer:reuse", True)
+
+    client = concretize_one("deprecated-tool-client")
+
+    # the installed library was built with the deprecated tool, so it is not reused
+    assert client["deprecated-tool-lib"].dag_hash() != lib_built_with_deprecated_tool.dag_hash()
+    # and nothing in the DAG refers to the deprecated tool any more
+    assert all(x.satisfies("@2.0") for x in client.traverse() if x.name == "deprecated-tool")

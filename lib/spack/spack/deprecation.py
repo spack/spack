@@ -160,6 +160,43 @@ class Policy(NamedTuple):
         ]
 
 
+def reusable(
+    specs: Iterable["spack.spec.Spec"], *, policy: Optional[Policy] = None
+) -> List["spack.spec.Spec"]:
+    """Return the subset of ``specs`` that can be reused under the deprecation policy.
+
+    A candidate is rejected when it, or any node in its checked closure, carries a disallowed
+    deprecation. The closure is the link/run one under the ``runtime`` scope, and the whole DAG
+    under ``all``, so ``all`` additionally rejects artifacts built with a deprecated tool.
+
+    Args:
+        specs: the reuse candidates.
+        policy: the policy to apply; defaults to the configured one.
+    """
+    resolved = policy or Policy.from_config()
+    deptypes = resolved.deptypes
+    candidates = list(specs)
+
+    # One post-order pass over the union of the candidate DAGs, keyed by hash so a node shared
+    # by many candidates is evaluated once.
+    rejected: Set[str] = set()
+    for node in spack.traverse.traverse_nodes(
+        candidates, deptype=deptypes, order="post", key=spack.traverse.by_dag_hash
+    ):
+        try:
+            violates = bool(resolved.disallowed(node))
+        except spack.repo.UnknownPackageError:
+            # The package is gone from the repository; it is dropped later in the solve anyway
+            violates = False
+        if violates or any(
+            edge.spec.dag_hash() in rejected
+            for edge in node.edges_to_dependencies(depflag=deptypes)
+        ):
+            rejected.add(node.dag_hash())
+
+    return [s for s in candidates if s.dag_hash() not in rejected]
+
+
 def check_deprecations(
     seeds: Iterable["spack.spec.Spec"],
     *,
