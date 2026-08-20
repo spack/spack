@@ -319,11 +319,14 @@ def _satisfies_target_range(lhs: str, rhs: str) -> bool:
     rhs_min, rhs_sep, rhs_max = rhs.partition(":")
 
     if not rhs_sep:
-        # rhs is concrete: contained iff it falls within lhs's bounds.
+        # rhs is concrete: contained iff it falls within lhs's bounds. Comparing with
+        # microarchitectures rather than names keeps bounds outside the table from raising.
         t = _make_microarchitecture(rhs_min)
         if not lhs_sep:
             return rhs_min == lhs_min
-        return (not lhs_min or t >= lhs_min) and (not lhs_max or t <= lhs_max)
+        return (not lhs_min or t >= _make_microarchitecture(lhs_min)) and (
+            not lhs_max or t <= _make_microarchitecture(lhs_max)
+        )
 
     if not lhs_sep:
         # lhs is concrete: a range is inside it only by denoting that point too.
@@ -338,10 +341,12 @@ def _satisfies_target_range(lhs: str, rhs: str) -> bool:
             if rhs_min
             else _make_microarchitecture(rhs_max).family
         )
-        if not floor >= lhs_min:
+        if not floor >= _make_microarchitecture(lhs_min):
             return False
     if lhs_max:
-        if not rhs_max or not _make_microarchitecture(rhs_max) <= lhs_max:
+        if not rhs_max or not _make_microarchitecture(rhs_max) <= _make_microarchitecture(
+            lhs_max
+        ):
             return False
     return True
 

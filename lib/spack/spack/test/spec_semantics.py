@@ -2008,6 +2008,11 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "target=:aarch64", "target=aarch64", (True, True, True)),
         (Spec, "target=aarch64:aarch64", "target=aarch64", (True, True, True)),
         (Spec, "target=icelake:icelake", "target=icelake", (True, True, True)),
+        # Bounds outside the microarchitecture table compare by name only, without raising
+        (Spec, "target=foo:", "target=foo:", (True, True, True)),
+        (Spec, "target=foo", "target=foo:", (True, True, False)),
+        (Spec, "target=x86_64:", "target=foo:", (False, False, False)),
+        (Spec, "target=haswell", "target=foo:", (False, False, False)),
         # Spec with compilers
         (Spec, "mpileaks %gcc@5", "mpileaks %gcc@6", (False, False, False)),
         # %gcc sits behind an unpinned ^callpath edge, so callpath need not be one node:
