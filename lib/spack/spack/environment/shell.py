@@ -22,47 +22,35 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
     cmds: List[str] = [shell_cmd.set("SPACK_ENV", env.path)]
     if view:
         cmds.append(shell_cmd.set("SPACK_ENV_VIEW", view))
+    cmds.extend(shell_cmd.alias("despacktivate", "spack env deactivate"))
 
-    if shell == "csh":
-        # TODO: figure out how to make color work for csh
-        cmds.append('alias despacktivate "spack env deactivate"')
-        if prompt:
+    if prompt:
+        if shell == "csh":
+            # TODO: figure out how to make color work for csh
             cmds.append('if (! $?SPACK_OLD_PROMPT ) setenv SPACK_OLD_PROMPT "${prompt}"')
             cmds.append('set prompt="%s ${prompt}"' % prompt)
-    elif shell == "fish":
-        if "color" in os.getenv("TERM", "") and prompt:
-            prompt = colorize("@G{%s} " % prompt, color=True)
-
-        cmds.append("function despacktivate")
-        cmds.append("   spack env deactivate")
-        cmds.append("end")
-        #
-        # NOTE: We're not changing the fish_prompt function (which is fish's
-        # solution to the PS1 variable) here. This is a bit fiddly, and easy to
-        # screw up => spend time reasearching a solution. Feedback welcome.
-        #
-    elif shell == "bat":
-        # TODO: Color
-        if prompt:
+        elif shell == "fish":
+            # NOTE: We're not changing the fish_prompt function (which is fish's
+            # solution to the PS1 variable) here. This is a bit fiddly, and easy to
+            # screw up => spend time reasearching a solution. Feedback welcome.
+            pass
+        elif shell == "bat":
+            # TODO: Color
             old_prompt = os.environ.get("SPACK_OLD_PROMPT")
             if not old_prompt:
                 old_prompt = os.environ.get("PROMPT")
             cmds.append(shell_cmd.set("SPACK_OLD_PROMPT", str(old_prompt)))
             cmds.append(shell_cmd.set("PROMPT", f"{prompt} $P$G"))
-    elif shell == "pwsh":
-        if prompt:
+        elif shell == "pwsh":
             cmds.append(
                 "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
                 ' | Split-Path -leaf; if(!"$Env:SPACK_OLD_PROMPT") '
                 '{$Env:SPACK_OLD_PROMPT="[spack] PS $pth>"}; '
                 '"%s PS $pth>"}' % prompt
             )
-    else:
-        bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
-        zsh_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=False, zsh=True)
-
-        cmds.append("alias despacktivate='spack env deactivate'")
-        if prompt:
+        else:
+            bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
+            zsh_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=False, zsh=True)
             cmds.append(
                 textwrap.dedent(
                     rf"""
