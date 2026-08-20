@@ -78,7 +78,7 @@ def test_deprecated_version_error(spec, mock_packages, mutable_config: Configura
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="deprecated"):
         _ = spack.concretize.concretize_one(spec)
 
-    mutable_config.set("config:deprecated", True)
+    mutable_config.set("packages:all:deprecation:allowed_severity", "critical")
     spack.concretize.concretize_one(spec)
 
 

@@ -107,7 +107,7 @@ def test_coexistence_old_and_new_deprecation(mock_packages, mutable_config):
     assert spec.satisfies("@2.0")
 
     # With deprecations allowed, @1.0 concretizes without error.
-    with mutable_config.override("config:deprecated", True):
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
         assert concretize_one("deprecated-dual@1.0").satisfies("@1.0")
 
 
@@ -352,3 +352,10 @@ packages:
         cve: high
 """)
     assert concretize_one("deprecated-dual@1.0").satisfies("@1.0")
+
+
+def test_legacy_config_deprecated_flag_warns(mock_packages, mutable_config):
+    """Tests that the legacy config:deprecated fallback still relaxes the policy, and warns."""
+    with mutable_config.override("config:deprecated", True):
+        with pytest.warns(UserWarning, match="config:deprecated is deprecated"):
+            assert concretize_one("deprecated-old-style@1.0").satisfies("@1.0")
