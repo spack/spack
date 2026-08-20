@@ -23,7 +23,8 @@ from spack.active_environment import active_environment
 
 PROTOTYPE_DIR = pathlib.Path(spack.bootstrap.clingo.__file__).parent / "prototypes"
 PROTOTYPES = sorted(x.name for x in PROTOTYPE_DIR.glob("*.json"))
-assert PROTOTYPES, f"no bootstrap prototypes in {PROTOTYPE_DIR}"
+if not PROTOTYPES:
+    raise RuntimeError(f"no bootstrap prototypes in {PROTOTYPE_DIR}")
 
 
 @pytest.fixture(autouse=True)
@@ -344,3 +345,40 @@ def test_prototype_matches_a_constraint_on_its_compiler(prototype):
 
     assert s.satisfies(f"%{compiler.name}")
     assert s.satisfies(f"%{compiler.name}@{compiler.version}")
+
+
+def test_no_bootstrapping_sources_enabled(mutable_config):
+    """When no source is trusted, the error says so instead of listing failures."""
+    mutable_config.set("bootstrap:trusted", {})
+    with pytest.raises(ImportError, match="no bootstrapping sources are enabled"):
+        spack.bootstrap.core.ensure_module_importable_or_raise("asdf")
+
+
+@pytest.mark.not_on_windows("The mock executable quotes its output on Windows")
+@pytest.mark.parametrize(
+    "version_output,expected",
+    [
+        ("patchelf 0.17.2", True),
+        # 0.13.1 is the oldest version we accept
+        ("patchelf 0.13.1", True),
+        ("patchelf 0.12", False),
+        # no version at all in the output
+        ("patchelf", False),
+        # a second token that is not a version
+        ("patchelf /usr/bin/patchelf", False),
+    ],
+)
+def test_verify_patchelf(version_output, expected, mock_executable):
+    patchelf = spack.util.executable.Executable(
+        str(mock_executable("patchelf", f'echo "{version_output}"'))
+    )
+    assert spack.bootstrap.core.verify_patchelf(patchelf) is expected
+
+
+@pytest.mark.not_on_windows("The mock executable quotes its output on Windows")
+def test_verify_patchelf_when_the_command_fails(mock_executable):
+    """A good version string is not enough, the command must also succeed."""
+    patchelf = spack.util.executable.Executable(
+        str(mock_executable("patchelf", 'echo "patchelf 0.17.2"\nexit 1'))
+    )
+    assert spack.bootstrap.core.verify_patchelf(patchelf) is False
