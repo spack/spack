@@ -191,6 +191,20 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         help="maximum time (in seconds) that tests are allowed to run",
     )
+    rebuild.add_argument(
+        "--push",
+        action="store_true",
+        dest="push_to_cache",
+        default=True,
+        help="Skip the push to cache step.",
+    )
+    rebuild.add_argument(
+        "--no-push",
+        action="store_false",
+        dest="push_to_cache",
+        default=True,
+        help="Skip the push to cache step.",
+    )
     rebuild.set_defaults(func=ci_rebuild, subparser=rebuild)
     spack.cmd.common.arguments.add_common_arguments(rebuild, ["jobs"])
 
@@ -592,20 +606,21 @@ def ci_rebuild(args):
                 cdash_handler.copy_test_results(reports_dir, job_test_dir)
 
     if install_exit_code == 0:
-        # If the install succeeded, push it to the buildcache destination. Failure to push
-        # will result in a non-zero exit code. Pushing is best-effort.
-        for result in spack_ci.create_buildcache(
-            input_spec=job_spec,
-            destination_mirror_urls=[buildcache_destination.push_url],
-            sign_binaries=spack_ci.can_sign_binaries(),
-        ):
-            if not result.success:
-                install_exit_code = FAILED_CREATE_BUILDCACHE_CODE
-            (tty.msg if result.success else tty.error)(
-                f"{'Pushed' if result.success else 'Failed to push'} "
-                f"{job_spec.format('{name}{@version}{/hash:7}', color=clr.get_color_when())} "
-                f"to {result.url}"
-            )
+        if args.push_to_cache:
+            # If the install succeeded, push it to the buildcache destination. Failure to push
+            # will result in a non-zero exit code. Pushing is best-effort.
+            for result in spack_ci.create_buildcache(
+                input_spec=job_spec,
+                destination_mirror_urls=[buildcache_destination.push_url],
+                sign_binaries=spack_ci.can_sign_binaries(),
+            ):
+                if not result.success:
+                    install_exit_code = FAILED_CREATE_BUILDCACHE_CODE
+                (tty.msg if result.success else tty.error)(
+                    f"{'Pushed' if result.success else 'Failed to push'} "
+                    f"{job_spec.format('{name}{@version}{/hash:7}', color=clr.get_color_when())} "
+                    f"to {result.url}"
+                )
 
         # If this is a develop pipeline, check if the spec that we just built is
         # on the broken-specs list. If so, remove it.
