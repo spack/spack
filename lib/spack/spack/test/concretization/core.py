@@ -6086,3 +6086,31 @@ def test_package_hash_is_assigned_through_the_injected_repository(break_globals,
     with break_globals():
         result = spack.solver.asp.Solver(context=injected_context).solve([Spec("patch")])
         assert result.specs[0].dag_hash()
+
+
+@pytest.mark.regression("51964")
+def test_concrete_input_specs_skip_the_dependency_precheck(mock_packages, config, monkeypatch):
+    """Concrete input specs represent the rest of an environment under unify:true, and may have
+    been concretized against an older recipe, so they are not checked against the possible
+    dependencies of the roots.
+    """
+    spec = spack.concretize.concretize_one("pkg-a@1.0 foobar=bar")
+    assert "pkg-b" in spec
+
+    # the recipe stops declaring the dependency after the spec was concretized
+    pkg_cls = spack.repo.PATH.get_pkg_class("pkg-a")
+    monkeypatch.setattr(
+        pkg_cls,
+        "dependencies",
+        {
+            when: {name: dep for name, dep in deps.items() if name != "pkg-b"}
+            for when, deps in pkg_cls.dependencies.items()
+        },
+    )
+
+    # an abstract spec is still checked against the possible dependencies
+    with pytest.raises(spack.solver.asp.InvalidDependencyError):
+        spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup([spack.spec.Spec("pkg-a ^pkg-b")])
+
+    # the concrete one is not
+    spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup([spec])
