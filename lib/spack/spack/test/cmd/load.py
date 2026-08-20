@@ -19,6 +19,12 @@ install = SpackCommand("install")
 location = SpackCommand("location")
 
 
+def _get_shell_cmd_invocation(cmd, shell):
+    if "bat" in shell:
+        return f"%{cmd}%"
+    return cmd
+
+
 def _get_load_cmds(spec, shell):
     load_script_file = spec_script.path_to_load_shell_script(spec, shell[2:])
 
@@ -48,10 +54,10 @@ def test_manpath_trailing_colon(
 
     load(shell, "mpileaks")
     load_cmds = _get_load_cmds(mpileaks_spec, shell)
-    prepend_manpath_re = re.compile(r"%?_spack_env_prepend%? MANPATH")
+    cmd_str = f"{_get_shell_cmd_invocation("_spack_env_prepend", shell)} MANPATH"
     manpath_prepends = []
     for line in load_cmds.splitlines():
-        if prepend_manpath_re.match(line):
+        if cmd_str in line:
             parts = line.split()
             if len(parts) >= 4:
                 # Format: _spack_env_prepend MANPATH /path/to/man :|;
@@ -60,7 +66,9 @@ def test_manpath_trailing_colon(
     # Verify MANPATH additions exist and include trailing separator
     assert len(manpath_prepends) > 0, "Expected MANPATH additions from loaded packages"
 
-    trailing_sep = '"' + os.pathsep + '"' if sys.platform == "win32" else os.pathsep
+    trailing_sep = os.pathsep
+    if "bat" in shell:
+        trailing_sep = f"\"{trailing_sep}\""
 
     for _, separator in manpath_prepends:
         assert separator == trailing_sep, (
@@ -141,8 +149,8 @@ def test_load_includes_run_env(shell, install_mockery, mock_fetch, mock_archive,
 
     load(shell, "mpileaks")
     load_cmds = _get_load_cmds(mpileaks_spec, shell)
-
-    assert "_spack_env_set FOOBAR mpileaks" in load_cmds
+    set_cmd = f"{_get_shell_cmd_invocation("_spack_env_set", shell)} FOOBAR mpileaks"
+    assert set_cmd in load_cmds
 
 
 @pytest.mark.parametrize(
@@ -220,8 +228,8 @@ def test_unload(shell, install_mockery, mock_fetch, mock_archive, mock_packages,
     unload(shell, "mpileaks")
     unload_cmds = _get_unload_cmds(mpileaks_spec, shell)
 
-    print(unload_cmds)
-    assert "_spack_env_unset FOOBAR" in unload_cmds
+    unset_cmd = f"{_get_shell_cmd_invocation("_spack_env_unset", shell)} FOOBAR"
+    assert unset_cmd in unload_cmds
 
 
 def test_unload_fails_no_shell(
