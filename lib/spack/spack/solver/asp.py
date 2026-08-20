@@ -1462,6 +1462,10 @@ class SpackSolverSetup:
         assert name, "Internal Error: spec with no name occurred. Please file an issue."
         target = spec.architecture.target
 
+        # target is unconstrained
+        if str(target) == ":":
+            return []
+
         # Check if the target is a concrete target
         if str(target) in spack.vendor.archspec.cpu.TARGETS:
             return [single_target_fn(name, target)]
