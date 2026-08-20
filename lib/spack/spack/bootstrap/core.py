@@ -208,14 +208,8 @@ class BuildcacheBootstrapper(Bootstrapper):
                 raise RuntimeError("The binary index is empty")
 
             for item in bincache_data["verified"]:
-                candidate_spec = item["spec"]
-                # This will be None for things that don't depend on python
-                python_spec = item.get("python", None)
                 # Skip specs which are not compatible
-                if not abstract_spec.intersects(candidate_spec):
-                    continue
-
-                if python_spec is not None and not abstract_spec.intersects(f"^{python_spec}"):
+                if not spack.spec.Spec(item["spec"]).satisfies(abstract_spec):
                     continue
 
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
