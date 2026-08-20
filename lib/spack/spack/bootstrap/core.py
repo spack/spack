@@ -27,7 +27,7 @@ import json
 import os
 import sys
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Sequence, Type
+from typing import Any, Callable, Dict, List, Optional, Sequence, Type, TypeVar
 
 import spack.binary_distribution
 import spack.concretize
@@ -47,7 +47,7 @@ from spack.util import tty
 from spack.util.lang import GroupedExceptionHandler
 
 from ._common import (
-    QueryInfo,
+    ExecutableInfo,
     _executables_in_store,
     _python_import,
     _root_spec,
@@ -64,6 +64,9 @@ IS_WINDOWS = sys.platform == "win32"
 
 ConfigDictionary = Dict[str, Any]
 
+#: Whatever a bootstrapper's store probe returns on success
+ResultT = TypeVar("ResultT")
+
 
 class Bootstrapper:
     """Interface for "core" software bootstrappers"""
@@ -73,7 +76,6 @@ class Bootstrapper:
     def __init__(self, conf: ConfigDictionary) -> None:
         self.conf = conf
         self.name = conf["name"]
-        self.last_search: Optional[QueryInfo] = None
         self.metadata_dir = spack.config.canonicalize_path(conf["metadata"])
 
         # Check for relative paths, and turn them into absolute paths
@@ -105,7 +107,9 @@ class Bootstrapper:
         """
         return False
 
-    def try_search_path(self, executables: Sequence[str], abstract_spec_str: str) -> bool:
+    def try_search_path(
+        self, executables: Sequence[str], abstract_spec_str: str
+    ) -> Optional[ExecutableInfo]:
         """Try to search some executables in the prefix of specs satisfying the abstract
         spec passed as argument.
 
@@ -114,9 +118,9 @@ class Bootstrapper:
             abstract_spec_str: abstract spec that can provide the executables
 
         Return:
-            True if the executables are found, False otherwise
+            The executable and the spec providing it, or None if not found
         """
-        return False
+        return None
 
 
 class BuildcacheBootstrapper(Bootstrapper):
@@ -151,7 +155,12 @@ class BuildcacheBootstrapper(Bootstrapper):
                 allow_missing=True,
             )
 
-    def _install_and_test(self, abstract_spec: spack.spec.Spec, bincache_data, test_fn) -> bool:
+    def _install_and_test(
+        self,
+        abstract_spec: spack.spec.Spec,
+        bincache_data,
+        test_fn: Callable[[spack.spec.Spec], ResultT],
+    ) -> Optional[ResultT]:
         # Ensure we see only the buildcache being used to bootstrap
         with spack.config.CONFIG.override(self.mirror_scope):
             # This index is currently needed to get the compiler used to build some
@@ -170,29 +179,28 @@ class BuildcacheBootstrapper(Bootstrapper):
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
                     self._install_by_hash(pkg_hash, pkg_sha256)
 
-                info: QueryInfo = {}
-                if test_fn(query_spec=abstract_spec, query_info=info):
-                    self.last_search = info
-                    return True
-        return False
+                result = test_fn(abstract_spec)
+                if result:
+                    return result
+        return None
 
     def try_import(self, module: str, abstract_spec_str: str) -> bool:
-        info: QueryInfo
-        test_fn, info = functools.partial(_try_import_from_store, module), {}
-        if test_fn(query_spec=abstract_spec_str, query_info=info):
+        test_fn = functools.partial(_try_import_from_store, module)
+        if test_fn(abstract_spec_str):
             return True
 
         tty.debug(f"Bootstrapping {module} from pre-built binaries")
         abstract_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
         data = self._read_metadata(module)
-        return self._install_and_test(abstract_spec, data, test_fn)
+        return bool(self._install_and_test(abstract_spec, data, test_fn))
 
-    def try_search_path(self, executables: Sequence[str], abstract_spec_str: str) -> bool:
-        info: QueryInfo
-        test_fn, info = functools.partial(_executables_in_store, executables), {}
-        if test_fn(query_spec=abstract_spec_str, query_info=info):
-            self.last_search = info
-            return True
+    def try_search_path(
+        self, executables: Sequence[str], abstract_spec_str: str
+    ) -> Optional[ExecutableInfo]:
+        test_fn = functools.partial(_executables_in_store, executables)
+        result = test_fn(abstract_spec_str)
+        if result is not None:
+            return result
 
         abstract_spec = spack.spec.Spec(abstract_spec_str)
         tty.debug(f"Bootstrapping {abstract_spec.name} from pre-built binaries")
@@ -208,9 +216,7 @@ class SourceBootstrapper(Bootstrapper):
         self.config_scope_name = f"bootstrap_source-{uuid.uuid4()}"
 
     def try_import(self, module: str, abstract_spec_str: str) -> bool:
-        info: QueryInfo = {}
-        if _try_import_from_store(module, abstract_spec_str, query_info=info):
-            self.last_search = info
+        if _try_import_from_store(module, abstract_spec_str):
             return True
 
         tty.debug(f"Bootstrapping {module} from sources")
@@ -239,16 +245,14 @@ class SourceBootstrapper(Bootstrapper):
                 dependencies_policy="source_only",
             ).install()
 
-        if _try_import_from_store(module, query_spec=concrete_spec, query_info=info):
-            self.last_search = info
-            return True
-        return False
+        return _try_import_from_store(module, query_spec=concrete_spec)
 
-    def try_search_path(self, executables: Sequence[str], abstract_spec_str: str) -> bool:
-        info: QueryInfo = {}
-        if _executables_in_store(executables, abstract_spec_str, query_info=info):
-            self.last_search = info
-            return True
+    def try_search_path(
+        self, executables: Sequence[str], abstract_spec_str: str
+    ) -> Optional[ExecutableInfo]:
+        result = _executables_in_store(executables, abstract_spec_str)
+        if result is not None:
+            return result
 
         tty.debug(f"Bootstrapping {abstract_spec_str} from sources")
 
@@ -261,10 +265,7 @@ class SourceBootstrapper(Bootstrapper):
         tty.debug(msg.format(abstract_spec_str))
         with spack.config.CONFIG.override(self.mirror_scope):
             spack.installer_dispatch.create_installer([concrete_spec.package]).install()
-        if _executables_in_store(executables, concrete_spec, query_info=info):
-            self.last_search = info
-            return True
-        return False
+        return _executables_in_store(executables, concrete_spec)
 
 
 #: Map a bootstrapper type to the corresponding class
@@ -382,20 +383,15 @@ def ensure_executables_in_path_or_raise(
             continue
         with exception_handler.forward(current_config["name"], Exception):
             current_bootstrapper = create_bootstrapper(current_config)
-            if current_bootstrapper.try_search_path(executables, abstract_spec):
-                query_info = current_bootstrapper.last_search
-                if query_info is None:
-                    raise RuntimeError(
-                        f'"{current_bootstrapper.name}" reported success without a query result'
-                    )
+            found = current_bootstrapper.try_search_path(executables, abstract_spec)
+            if found is not None:
                 # Additional environment variables needed
-                concrete_spec, cmd = query_info["spec"], query_info["command"]
-                cmd.add_default_envmod(
+                found.command.add_default_envmod(
                     spack.user_environment.environment_modifications_for_specs(
-                        concrete_spec, set_package_py_globals=False
+                        found.spec, set_package_py_globals=False
                     )
                 )
-                return cmd
+                return found.command
 
     raise RuntimeError(
         _cannot_bootstrap_message(
