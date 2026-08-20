@@ -71,7 +71,8 @@ ResultT = TypeVar("ResultT")
 class Bootstrapper:
     """Interface for "core" software bootstrappers"""
 
-    config_scope_name = ""
+    #: Prefix of the name of the configuration scope pushed by this bootstrapper
+    config_scope_prefix = "bootstrap"
 
     def __init__(self, conf: ConfigDictionary) -> None:
         self.conf = conf
@@ -85,13 +86,10 @@ class Bootstrapper:
             maybe_url = os.path.join(self.metadata_dir, maybe_url)
         self.url = spack.mirrors.mirror.Mirror(maybe_url).fetch_url
 
-    @property
-    def mirror_scope(self) -> spack.config.InternalConfigScope:
-        """Mirror scope to be pushed onto the bootstrapping configuration when using
-        this bootstrapper.
-        """
-        return spack.config.InternalConfigScope(
-            self.config_scope_name, {"mirrors:": {self.name: self.url}}
+        #: Mirror scope to be pushed onto the bootstrapping configuration when using
+        #: this bootstrapper
+        self.mirror_scope = spack.config.InternalConfigScope(
+            f"{self.config_scope_prefix}-{uuid.uuid4()}", {"mirrors:": {self.name: self.url}}
         )
 
     def try_import(self, module: str, abstract_spec_str: str) -> bool:
@@ -105,7 +103,7 @@ class Bootstrapper:
         Return:
             True if the Python module could be imported, False otherwise
         """
-        return False
+        raise NotImplementedError("subclasses must implement try_import")
 
     def try_search_path(
         self, executables: Sequence[str], abstract_spec_str: str
@@ -120,15 +118,13 @@ class Bootstrapper:
         Return:
             The executable and the spec providing it, or None if not found
         """
-        return None
+        raise NotImplementedError("subclasses must implement try_search_path")
 
 
 class BuildcacheBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from a buildcache."""
 
-    def __init__(self, conf) -> None:
-        super().__init__(conf)
-        self.config_scope_name = f"bootstrap_buildcache-{uuid.uuid4()}"
+    config_scope_prefix = "bootstrap_buildcache"
 
     def _read_metadata(self, package_name: str) -> Any:
         """Return metadata about the given package."""
@@ -211,9 +207,7 @@ class BuildcacheBootstrapper(Bootstrapper):
 class SourceBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from sources."""
 
-    def __init__(self, conf) -> None:
-        super().__init__(conf)
-        self.config_scope_name = f"bootstrap_source-{uuid.uuid4()}"
+    config_scope_prefix = "bootstrap_source"
 
     def try_import(self, module: str, abstract_spec_str: str) -> bool:
         if _try_import_from_store(module, abstract_spec_str):
