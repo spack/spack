@@ -300,6 +300,27 @@ def source_is_enabled(conf: ConfigDictionary) -> bool:
     return spack.config.CONFIG.get("bootstrap:trusted").get(conf["name"], False)
 
 
+def _cannot_bootstrap_message(
+    what: str, abstract_spec: str, exception_handler: GroupedExceptionHandler
+) -> str:
+    """Return the error message to report when no bootstrapping source succeeded.
+
+    Args:
+        what: description of what could not be bootstrapped
+        abstract_spec: abstract spec that was supposed to provide it
+        exception_handler: handler that collected the failure of each source
+    """
+    msg = f'cannot bootstrap {what} from spec "{abstract_spec}" '
+    if not exception_handler:
+        msg += ": no bootstrapping sources are enabled"
+    elif spack.error.debug or spack.error.SHOW_BACKTRACE:
+        msg += exception_handler.grouped_message(with_tracebacks=True)
+    else:
+        msg += exception_handler.grouped_message(with_tracebacks=False)
+        msg += "\nRun `spack --backtrace ...` for more detailed errors"
+    return msg
+
+
 def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] = None):
     """Make the requested module available for import, or raise.
 
@@ -334,18 +355,11 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
             if create_bootstrapper(current_config).try_import(module, abstract_spec):
                 return
 
-    msg = f'cannot bootstrap the "{module}" Python module '
-    if abstract_spec:
-        msg += f'from spec "{abstract_spec}" '
-
-    if not exception_handler:
-        msg += ": no bootstrapping sources are enabled"
-    elif spack.error.debug or spack.error.SHOW_BACKTRACE:
-        msg += exception_handler.grouped_message(with_tracebacks=True)
-    else:
-        msg += exception_handler.grouped_message(with_tracebacks=False)
-        msg += "\nRun `spack --backtrace ...` for more detailed errors"
-    raise ImportError(msg)
+    raise ImportError(
+        _cannot_bootstrap_message(
+            f'the "{module}" Python module', abstract_spec, exception_handler
+        )
+    )
 
 
 def ensure_executables_in_path_or_raise(
@@ -400,18 +414,11 @@ def ensure_executables_in_path_or_raise(
                 )
                 return cmd
 
-    msg = f"cannot bootstrap any of the {executables_str} executables "
-    if abstract_spec:
-        msg += f'from spec "{abstract_spec}" '
-
-    if not exception_handler:
-        msg += ": no bootstrapping sources are enabled"
-    elif spack.error.debug or spack.error.SHOW_BACKTRACE:
-        msg += exception_handler.grouped_message(with_tracebacks=True)
-    else:
-        msg += exception_handler.grouped_message(with_tracebacks=False)
-        msg += "\nRun `spack --backtrace ...` for more detailed errors"
-    raise RuntimeError(msg)
+    raise RuntimeError(
+        _cannot_bootstrap_message(
+            f"any of the {executables_str} executables", abstract_spec, exception_handler
+        )
+    )
 
 
 def _add_externals_if_missing() -> None:
