@@ -113,7 +113,7 @@ def write_env_deactivate_script(env, view: Optional[str] = None):
             uenv.write_shell_script(deactivate_script_path, cmds, shell)
 
 
-def get_shell_unique_env_cmds(shell, prompt: str) -> str:
+def get_shell_unique_env_cmds(shell, prompt: Optional[str] = None) -> str:
     """Returns the prompt, view, and despacktivate commands which are unique to each shell.
 
     Args:

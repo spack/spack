@@ -43,6 +43,9 @@ def activate_prompt_cmds(shell, prompt):
 
     cmds = ""
 
+    if not prompt:
+        return cmds
+
     if shell == "csh":
         cmds += "if (! $?SPACK_OLD_PROMPT ) "
         cmds += f"_spack_env_set SPACK_OLD_PROMPT {prompt}\n"
@@ -94,51 +97,6 @@ def activate_prompt_cmds(shell, prompt):
         ).lstrip("\n")
     return cmds
 
-
-def deactivate_commands(shell):
-    # TODO: Color for bat
-    cmds = "_spack_env_unset SPACK_ENV\n"
-    cmds += "_spack_env_unset SPACK_ENV_VIEW\n"
-
-    if shell == "csh":
-        cmds += "if ( $?SPACK_OLD_PROMPT ) "
-        cmds += "    eval '_spack_env_set prompt SPACK_OLD_PROMPT &&"
-        cmds += "          _spack_env_unset SPACK_OLD_PROMPT';\n"
-        cmds += "unalias despacktivate;\n"
-    elif shell == "fish":
-        cmds += "functions -e despacktivate;\n"
-        #
-        # NOTE: Not changing fish_prompt (above) => no need to restore it here.
-        #
-    elif shell == "bat":
-        # TODO: despacktivate
-        old_prompt = os.environ.get("SPACK_OLD_PROMPT")
-        if old_prompt:
-            cmds += f"_spack_env_set PROMPT {old_prompt}\n"
-            cmds += "_spack_env_unset SPACK_OLD_PROMPT\n"
-    elif shell == "pwsh":
-        cmds += (
-            "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
-            ' | Split-Path -leaf; $spack_prompt = "[spack] $pth >"; '
-            'if("$Env:SPACK_OLD_PROMPT") {$spack_prompt=$Env:SPACK_OLD_PROMPT};'
-            " $spack_prompt}\n"
-        )
-    else:
-        cmds += textwrap.dedent(
-            """
-                alias despacktivate > /dev/null 2>&1 && unalias despacktivate;
-                if [ ! -z ${SPACK_OLD_PS1+x} ]; then
-                    if [ "$SPACK_OLD_PS1" = '$$$$' ]; then
-                        unset PS1;
-                    else
-                        export PS1="$SPACK_OLD_PS1";
-                    fi;
-                    unset SPACK_OLD_PS1;
-                fi
-            """
-        ).strip("\n")
-
-    return cmds
 
 
 def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
@@ -196,6 +154,52 @@ def validate_view(env, view: Optional[str] = "default") -> None:
     # Simply call activate() and discard the result - it will trigger
     # the same validation and error handling
     _ = activate(env, view)
+
+
+def deactivate_commands(shell):
+    # TODO: Color for bat
+    cmds = "_spack_env_unset SPACK_ENV\n"
+    cmds += "_spack_env_unset SPACK_ENV_VIEW\n"
+
+    if shell == "csh":
+        cmds += "if ( $?SPACK_OLD_PROMPT ) "
+        cmds += "    eval '_spack_env_set prompt SPACK_OLD_PROMPT &&"
+        cmds += "          _spack_env_unset SPACK_OLD_PROMPT';\n"
+        cmds += "unalias despacktivate;\n"
+    elif shell == "fish":
+        cmds += "functions -e despacktivate;\n"
+        #
+        # NOTE: Not changing fish_prompt (above) => no need to restore it here.
+        #
+    elif shell == "bat":
+        # TODO: despacktivate
+        old_prompt = os.environ.get("SPACK_OLD_PROMPT")
+        if old_prompt:
+            cmds += f"_spack_env_set PROMPT {old_prompt}\n"
+            cmds += "_spack_env_unset SPACK_OLD_PROMPT\n"
+    elif shell == "pwsh":
+        cmds += (
+            "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
+            ' | Split-Path -leaf; $spack_prompt = "[spack] $pth >"; '
+            'if("$Env:SPACK_OLD_PROMPT") {$spack_prompt=$Env:SPACK_OLD_PROMPT};'
+            " $spack_prompt}\n"
+        )
+    else:
+        cmds += textwrap.dedent(
+            """
+                alias despacktivate > /dev/null 2>&1 && unalias despacktivate;
+                if [ ! -z ${SPACK_OLD_PS1+x} ]; then
+                    if [ "$SPACK_OLD_PS1" = '$$$$' ]; then
+                        unset PS1;
+                    else
+                        export PS1="$SPACK_OLD_PS1";
+                    fi;
+                    unset SPACK_OLD_PS1;
+                fi
+            """
+        ).strip("\n")
+
+    return cmds
 
 
 def deactivate(active_env, view) -> EnvironmentModifications:

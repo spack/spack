@@ -362,18 +362,25 @@ def env_activate(args):
     else:
         tty.die("No such environment: '%s'" % args.env_name)
 
-    env_prompt = "[%s]" % short_name
+    env_prompt = f"[{short_name}]" if args.prompt else None
 
     # We only support one active environment at a time, so deactivate the current one.
     if active_environment():
         # run deactivate script
+        current_view = os.environ.get("SPACK_ENV_VIEW", None)
         active_env = active_environment()
         env_deactivate_script = env_script.path_to_env_script(
             active_env,
             shell=args.shell,
             script_type="deactivate",
-            view=os.environ.get("SPACK_ENV_VIEW", "default"),
+            view=current_view,
         )
+
+        env_deactivate_script = env_script.path_to_env_script(
+            active_env, shell=args.shell, script_type="deactivate", view=current_view
+        )
+        if not os.path.isfile(env_deactivate_script):
+            env_script.write_env_deactivate_script(active_env, current_view)
 
         print(env_script.source_env_script(env_deactivate_script, args.shell))
 
@@ -407,7 +414,7 @@ def env_activate(args):
     # repo context changes (e.g., a repo being removed) even when using cached scripts.
     spack.environment.shell.validate_view(active_env, view)
 
-    cmds = env_script.get_shell_unique_env_cmds(args.shell, env_prompt)
+    cmds = env_script.get_shell_unique_env_cmds(args.shell, prompt=env_prompt)
     sys.stdout.write(cmds)
 
     print(env_script.source_env_script(env_activate_script, args.shell))
