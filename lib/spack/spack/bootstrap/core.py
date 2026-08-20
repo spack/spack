@@ -71,11 +71,7 @@ ResultT = TypeVar("ResultT")
 class Bootstrapper:
     """Interface for "core" software bootstrappers"""
 
-    #: Prefix of the name of the configuration scope pushed by this bootstrapper
-    config_scope_prefix = "bootstrap"
-
     def __init__(self, conf: ConfigDictionary) -> None:
-        self.conf = conf
         self.name = conf["name"]
         self.metadata_dir = spack.config.canonicalize_path(conf["metadata"])
 
@@ -89,7 +85,7 @@ class Bootstrapper:
         #: Mirror scope to be pushed onto the bootstrapping configuration when using
         #: this bootstrapper
         self.mirror_scope = spack.config.InternalConfigScope(
-            f"{self.config_scope_prefix}-{uuid.uuid4()}", {"mirrors:": {self.name: self.url}}
+            f"bootstrap-{self.name}-{uuid.uuid4()}", {"mirrors:": {self.name: self.url}}
         )
 
     def try_import(self, module: str, abstract_spec_str: str) -> bool:
@@ -123,8 +119,6 @@ class Bootstrapper:
 
 class BuildcacheBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from a buildcache."""
-
-    config_scope_prefix = "bootstrap_buildcache"
 
     def _read_metadata(self, package_name: str) -> Any:
         """Return metadata about the given package."""
@@ -206,8 +200,6 @@ class BuildcacheBootstrapper(Bootstrapper):
 
 class SourceBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from sources."""
-
-    config_scope_prefix = "bootstrap_source"
 
     def try_import(self, module: str, abstract_spec_str: str) -> bool:
         if _try_import_from_store(module, abstract_spec_str):

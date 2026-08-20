@@ -193,22 +193,13 @@ def _executables_in_store(
     executables_str = ", ".join(executables)
     msg = "[BOOTSTRAP EXECUTABLES {0}] Try installed specs with query '{1}'"
     tty.debug(msg.format(executables_str, query_spec))
-    installed_specs = spack.store.STORE.db.query(query_spec, installed=True)
-    if installed_specs:
-        for concrete_spec in installed_specs:
-            bin_dir = concrete_spec.prefix.bin
-            # IF we have a "bin" directory and it contains
-            # the executables we are looking for
-            if (
-                os.path.exists(bin_dir)
-                and os.path.isdir(bin_dir)
-                and spack.util.executable.which_string(*executables, path=bin_dir)
-            ):
-                spack.util.environment.path_put_first("PATH", [bin_dir])
-                return ExecutableInfo(
-                    spec=concrete_spec,
-                    command=spack.util.executable.which(*executables, path=bin_dir, required=True),
-                )
+    for concrete_spec in spack.store.STORE.db.query(query_spec, installed=True):
+        bin_dir = concrete_spec.prefix.bin
+        command = spack.util.executable.which(*executables, path=bin_dir)
+        if command is None:
+            continue
+        spack.util.environment.path_put_first("PATH", [bin_dir])
+        return ExecutableInfo(spec=concrete_spec, command=command)
     return None
 
 
