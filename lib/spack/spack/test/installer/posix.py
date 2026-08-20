@@ -15,7 +15,10 @@ import pathlib
 import selectors
 import stat
 
+from spack.installer.base import NoMakeflags
 from spack.installer.posix import (
+    FifoMakeflags,
+    PipeMakeflags,
     PosixJobServer,
     create_jobserver_fifo,
     get_jobserver_config,
@@ -39,18 +42,20 @@ class TestGetJobserverConfig:
         """Parse new FIFO format"""
         assert get_jobserver_config(" -j4 --jobserver-auth=fifo:/tmp/my_fifo") == "/tmp/my_fifo"
 
-    def test_pipe_format_new(self):
-        """Parse new pipe format"""
-        assert get_jobserver_config(" -j4 --jobserver-auth=3,4") == (3, 4)
+    def test_pipe_format_new_not_recognized(self):
+        """Pipe-based jobservers aren't recognized: there's no path to hand a build process."""
+        assert get_jobserver_config(" -j4 --jobserver-auth=3,4") is None
 
-    def test_pipe_format_old(self):
-        """Parse old pipe format (on old versions of gmake this was not publicized)"""
-        assert get_jobserver_config(" -j4 --jobserver-fds=5,6") == (5, 6)
+    def test_pipe_format_old_not_recognized(self):
+        """Old-style --jobserver-fds is likewise not recognized."""
+        assert get_jobserver_config(" -j4 --jobserver-fds=5,6") is None
 
     def test_multiple_flags_last_wins(self):
         """When multiple jobserver flags exist, last one wins."""
         makeflags = " --jobserver-fds=3,4 --jobserver-auth=fifo:/tmp/fifo --jobserver-auth=7,8"
-        assert get_jobserver_config(makeflags) == (7, 8)
+        assert get_jobserver_config(makeflags) is None
+        makeflags = " --jobserver-auth=7,8 --jobserver-auth=fifo:/tmp/fifo"
+        assert get_jobserver_config(makeflags) == "/tmp/fifo"
 
     def test_invalid_format(self):
         assert get_jobserver_config(" --jobserver-auth=3") is None
@@ -183,28 +188,20 @@ class TestJobServer:
             js2.close()
             js1.close()
 
-    def test_setup_attaches_to_pipe_from_makeflags(self):
-        """An old-style pipe jobserver advertised in MAKEFLAGS is validated and adopted."""
+    def test_setup_ignores_pipe_from_makeflags(self):
+        """Spack does not attach to an old pipe jobserver advertised in MAKEFLAGS."""
         r, w = os.pipe()
-        js = PosixJobServer(4, makeflags=f" -j4 --jobserver-auth={r},{w}")
         try:
-            assert js.created is False
-            assert js.fifo_path is None
-            assert (js.r, js.w) == (r, w)
+            js = PosixJobServer(4, makeflags=f" -j4 --jobserver-auth={r},{w}")
+            try:
+                assert js.created is True
+                assert js.fifo_path is not None
+                assert (js.r, js.w) != (r, w)
+            finally:
+                js.close()
         finally:
-            js.close()  # closes r and w through the Connection objects
-
-    def test_setup_invalid_pipe_fds_creates_fifo(self):
-        """Invalid jobserver file descriptors in MAKEFLAGS fall back to a new FIFO."""
-        r, w = os.pipe()
-        os.close(r)
-        os.close(w)
-        js = PosixJobServer(2, makeflags=f" -j2 --jobserver-auth={r},{w}")
-        try:
-            assert js.created is True
-            assert js.fifo_path is not None
-        finally:
-            js.close()
+            os.close(r)
+            os.close(w)
 
     def test_update_selector_registers_and_unregisters(self):
         """update_selector idempotently (un)registers the token fd based on the wake flag."""
@@ -268,46 +265,46 @@ class TestJobServer:
             js.close()
 
     def test_makeflags_fifo_gmake_44(self):
-        """Should return FIFO format for gmake >= 4.4."""
+        """Should use fifo style for gmake >= 4.4."""
         js = PosixJobServer(8, makeflags="")
 
         try:
-            flags, data = js.makeflags_and_data(Spec("gmake@=4.4"))
-            assert flags == f" -j8 --jobserver-auth=fifo:{js.fifo_path}"
-            assert data is None
+            makeflags = js.makeflags(Spec("gmake@=4.4"))
+            assert isinstance(makeflags, FifoMakeflags)
+            assert (makeflags.fifo_path, makeflags.num_jobs) == (js.fifo_path, 8)
         finally:
             js.close()
 
     def test_makeflags_pipe_gmake_40(self):
-        """Should return pipe format for gmake 4.0-4.3."""
+        """Should use pipe style for gmake 4.0-4.3."""
         js = PosixJobServer(8, makeflags="")
 
         try:
-            flags, data = js.makeflags_and_data(Spec("gmake@=4.0"))
-            assert flags == f" -j8 --jobserver-auth={js.r},{js.w}"
-            assert data == (js.r_conn, js.w_conn)
+            makeflags = js.makeflags(Spec("gmake@=4.0"))
+            assert isinstance(makeflags, PipeMakeflags)
+            assert (makeflags.fifo_path, makeflags.flag) == (js.fifo_path, "--jobserver-auth")
         finally:
             js.close()
 
-    def test_makeflags_old_format_gmake_3(self):
-        """Should return old --jobserver-fds format for gmake < 4.0."""
+    def test_makeflags_pipe_old_flag_gmake_3(self):
+        """Should use pipe style with the old --jobserver-fds flag name for gmake < 4.0."""
         js = PosixJobServer(8, makeflags="")
 
         try:
-            flags, data = js.makeflags_and_data(Spec("gmake@=3.9"))
-            assert flags == f" -j8 --jobserver-fds={js.r},{js.w}"
-            assert data == (js.r_conn, js.w_conn)
+            makeflags = js.makeflags(Spec("gmake@=3.9"))
+            assert isinstance(makeflags, PipeMakeflags)
+            assert (makeflags.fifo_path, makeflags.flag) == (js.fifo_path, "--jobserver-fds")
         finally:
             js.close()
 
     def test_makeflags_no_gmake(self):
-        """Should return FIFO format when no gmake (modern default)."""
+        """Should use fifo style when there is no gmake (modern default)."""
         js = PosixJobServer(6, makeflags="")
 
         try:
-            flags, data = js.makeflags_and_data(None)
-            assert flags == f" -j6 --jobserver-auth=fifo:{js.fifo_path}"
-            assert data is None
+            makeflags = js.makeflags(None)
+            assert isinstance(makeflags, FifoMakeflags)
+            assert (makeflags.fifo_path, makeflags.num_jobs) == (js.fifo_path, 6)
         finally:
             js.close()
 
@@ -318,26 +315,6 @@ class TestJobServer:
         assert fifo_path and os.path.exists(fifo_path)
         js.close()
         assert not os.path.exists(os.path.dirname(fifo_path))
-
-    def test_file_descriptors_are_inheritable(self):
-        """Should set file descriptors as inheritable for child processes."""
-        js = PosixJobServer(4, makeflags="")
-
-        try:
-            assert os.get_inheritable(js.r)
-            assert os.get_inheritable(js.w)
-        finally:
-            js.close()
-
-    def test_connection_objects_exist(self):
-        """Should create Connection objects for fd inheritance."""
-        js = PosixJobServer(4, makeflags="")
-
-        try:
-            assert js.r_conn is not None and js.r_conn.fileno() == js.r
-            assert js.w_conn is not None and js.w_conn.fileno() == js.w
-        finally:
-            js.close()
 
     def test_close_warns_when_spack_holds_tokens(self):
         """Should warn when Spack closes the jobserver while still holding acquired tokens."""
@@ -501,4 +478,47 @@ class TestJobServer:
         finally:
             # Restore drained tokens so close() can clean up cleanly.
             os.write(js.w, drained)
+            js.close()
+
+
+def parse_pipe_fds(makeflags: str):
+    """Return the (r, w) pair advertised in a pipe style MAKEFLAGS value."""
+    r, w = makeflags.rsplit("=", 1)[1].split(",")
+    return int(r), int(w)
+
+
+class TestApplyMakeflags:
+    """Test applying MAKEFLAGS to an environment, which happens in the build child process."""
+
+    def test_fifo_style(self):
+        """Fifo style points gmake at the FIFO by path."""
+        env = {}
+        FifoMakeflags("/tmp/x", 4).apply(env)
+        assert env["MAKEFLAGS"] == " -j4 --jobserver-auth=fifo:/tmp/x"
+
+    def test_no_makeflags(self):
+        """No jobserver: nothing to set."""
+        env = {}
+        NoMakeflags().apply(env)
+        assert env == {}
+
+    def test_pipe_style_uses_fresh_blocking_fds(self):
+        """Pipe style should make the build process open its own fds, distinct from Spack's, and
+        end up blocking rather than inheriting Spack's non-blocking read fd."""
+        js = PosixJobServer(4, makeflags="")
+        try:
+            env = {}
+            PipeMakeflags(js.fifo_path, "--jobserver-auth").apply(env)
+            # The -j flag has no number: a number makes old gmake ignore the jobserver.
+            assert env["MAKEFLAGS"].startswith(" -j --jobserver-auth=")
+            r, w = parse_pipe_fds(env["MAKEFLAGS"])
+            try:
+                assert (r, w) != (js.r, js.w)
+                assert not (fcntl.fcntl(r, fcntl.F_GETFL) & os.O_NONBLOCK)
+                os.write(js.w, b"+")
+                assert os.read(r, 1) == b"+"
+            finally:
+                os.close(r)
+                os.close(w)
+        finally:
             js.close()

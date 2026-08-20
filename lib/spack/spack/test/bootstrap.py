@@ -14,11 +14,16 @@ import spack.bootstrap.status
 import spack.compilers.config
 import spack.config
 import spack.environment
+import spack.spec
 import spack.store
 import spack.util.executable
 from spack.active_environment import active_environment
 
 from .conftest import _true
+
+PROTOTYPE_DIR = pathlib.Path(spack.bootstrap.clingo.__file__).parent / "prototypes"
+PROTOTYPES = sorted(x.name for x in PROTOTYPE_DIR.glob("*.json"))
+assert PROTOTYPES, f"no bootstrap prototypes in {PROTOTYPE_DIR}"
 
 
 @pytest.fixture
@@ -308,3 +313,19 @@ def test_use_store_does_not_try_writing_outside_root(
     with spack.store.use_store(user_store):
         assert spack.config.CONFIG.get("config:install_tree:root") == str(user_store)
     assert spack.config.CONFIG.get("config:install_tree:root") == initial_store
+
+
+@pytest.mark.parametrize("prototype", PROTOTYPES)
+def test_prototype_matches_a_constraint_on_its_compiler(prototype):
+    """The bootstrap concretizer edits a prototype with the concreteness flag cleared, picking
+    patches from conditions such as '%msvc@19.38:'. The compiler the prototype records has to
+    match such a condition."""
+    s = spack.spec.Spec.from_specfile(str(PROTOTYPE_DIR / prototype))
+    compilers = [x.spec for x in s.edges_to_dependencies() if "cxx" in x.virtuals]
+    assert compilers, f"{prototype} has no cxx provider"
+    compiler = compilers[0]
+
+    s._mark_concrete(False)
+
+    assert s.satisfies(f"%{compiler.name}")
+    assert s.satisfies(f"%{compiler.name}@{compiler.version}")

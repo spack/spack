@@ -169,18 +169,23 @@ def test_shell_modifications_are_properly_escaped():
     assert "_spack_env_set RM_RF '$(rm -rf /)'" in script
 
 
-def test_shell_modifications_explicit_true():
-    """Test that explicit=True generates resolved export statements for build provenance."""
-    changes = envutil.EnvironmentModifications()
-    changes.set("NEW_VAR", "value1")
-    changes.prepend_path("PATH", "/new/path")
-    changes.set("DANGEROUS", "$PATH; rm -rf /")
-
-    test_env = {"PATH": "/usr/bin:/bin"}
-
-    script = changes.shell_modifications(shell="sh", explicit=True, env=test_env)
-
-    assert "export NEW_VAR=value1" in script
-    assert "export PATH=/new/path:/usr/bin:/bin" in script
-
-    assert "export DANGEROUS='$PATH; rm -rf /'" in script
+@pytest.mark.parametrize(
+    "shell,set_expected,unset_expected,join_sep",
+    [
+        ("sh", "export FOO=bar", "unset FOO", ";\n"),
+        ("csh", "setenv FOO bar", "unsetenv FOO", ";\n"),
+        ("fish", "set -gx FOO bar", "set -e FOO", ";\n"),
+        ("bat", 'set "FOO=bar"', 'set "FOO="', "\n"),
+        ("pwsh", "$Env:FOO='bar'", "Set-Item -Path Env:FOO", "\n"),
+    ],
+)
+def test_shell_cmd_string(shell, set_expected, unset_expected, join_sep):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.set("FOO", "bar") == set_expected
+    assert shell_cmd.unset("FOO") == unset_expected
+    assert shell_cmd.join([]) == ""
+    assert shell_cmd.join([set_expected]) == set_expected + join_sep
+    assert (
+        shell_cmd.join([set_expected, unset_expected])
+        == set_expected + join_sep + unset_expected + join_sep
+    )

@@ -22,12 +22,17 @@ from spack.test.conftest import RepoBuilder
 
 
 def check_links(spec_to_check):
-    for spec in spec_to_check.traverse():
-        for dependent in spec.dependents():
-            assert dependent.edges_to_dependencies(name=spec.name)
-
-        for dependency in spec.dependencies():
-            assert dependency.edges_from_dependents(name=spec.name)
+    """Check edge-map symmetry on every node reachable by forward traversal: an edge in one
+    node's map is filed in the map at its other end, under the right name."""
+    for node in spec_to_check.traverse():
+        for name, edges in node._dependencies.items():
+            for edge in edges:
+                assert edge.parent is node and name == edge.spec.name
+                assert any(e is edge for e in edge.spec._dependents.get(node.name) or [])
+        for name, edges in node._dependents.items():
+            for edge in edges:
+                assert edge.spec is node and name == edge.parent.name
+                assert any(e is edge for e in edge.parent._dependencies.get(node.name) or [])
 
 
 @pytest.fixture()
@@ -772,6 +777,18 @@ class TestSpecDag:
         s2 = s1.copy()
         self.check_diamond_deptypes(s2)
 
+    def test_copy_preserves_parallel_deptype_edges(self):
+        """Parallel edges to one shared child, as from_dict builds them, must not merge into one
+        edge on copy."""
+        original = Spec.from_dict(
+            Spec("pkg-a ^[deptypes=build] pkg-b ^[deptypes=link] pkg-b").to_dict()
+        )
+        copied = original.copy()
+        edges = copied.edges_to_dependencies("pkg-b")
+        assert len(edges) == 2
+        assert {e.depflag for e in edges} == {dt.BUILD, dt.LINK}
+        assert copied.to_dict() == original.to_dict()
+
     def test_getitem_query(self):
         s = spack.concretize.concretize_one("mpileaks")
 
@@ -923,6 +940,25 @@ class TestSpecDag:
         assert len(mpileaks["libelf"].edges_from_dependents(depflag=dt.LINK)) == 2
 
 
+def test_query_edges_empty_name_selects_anonymous():
+    """name=None selects all edges, name="" selects edges to anonymous specs."""
+    spec = Spec("foo@1 ^*@2 ^bar@3")
+    assert len(spec.edges_to_dependencies()) == 2
+
+    anonymous = spec.edges_to_dependencies("")
+    assert len(anonymous) == 1
+    assert anonymous[0].spec.satisfies("@2")
+    assert spec[""] is anonymous[0].spec
+
+    bar = spec.edges_to_dependencies("bar")[0].spec
+    assert len(bar.edges_from_dependents("")) == 0
+    assert len(bar.edges_from_dependents("foo")) == 1
+
+    # the root of "^bar@3" is anonymous
+    bar = Spec("^bar@3").edges_to_dependencies("bar")[0].spec
+    assert len(bar.edges_from_dependents("")) == 1
+
+
 def test_tree_cover_nodes_reduce_deptype():
     """Test that tree output with deptypes sticks to the sub-dag of interest, instead of looking
     at in-edges from nodes not reachable from the root."""
@@ -1029,16 +1065,21 @@ def test_addition_of_different_deptypes_in_multiple_calls(mock_packages, config)
     "c1_depflag,c2_depflag",
     [(dt.LINK, dt.BUILD | dt.LINK), (dt.LINK | dt.RUN, dt.BUILD | dt.LINK)],
 )
-def test_adding_same_deptype_with_the_same_name_raises(
+def test_adding_overlapping_deptypes_to_different_versions_stays_parallel(
     mock_packages, config, c1_depflag, c2_depflag
 ):
+    """c1 and c2 are different concrete versions of one package, so neither edge satisfies the
+    other even though their depflags overlap, and both stay as parallel edges to pkg-b."""
     p = spack.concretize.concretize_one("pkg-b@=2.0")
     c1 = spack.concretize.concretize_one("pkg-b@=1.0")
     c2 = spack.concretize.concretize_one("pkg-b@=2.0")
 
     p.add_dependency_edge(c1, depflag=c1_depflag, virtuals=())
-    with pytest.raises(spack.error.SpackError):
-        p.add_dependency_edge(c2, depflag=c2_depflag, virtuals=())
+    p.add_dependency_edge(c2, depflag=c2_depflag, virtuals=())
+
+    # no single node is both versions, so both parallel edges must be present
+    assert p.satisfies("^pkg-b@=1.0 ^pkg-b@=2.0")
+    assert len(p.dependencies(name="pkg-b")) == 2
 
 
 @pytest.mark.regression("33499")
@@ -1101,3 +1142,76 @@ def test_getitem_finds_transitive_virtual():
     x.add_dependency_edge(y, depflag=dt.LINK, virtuals=())
     y.add_dependency_edge(z, depflag=dt.LINK, virtuals=("virtual",))
     assert x["virtual"].name == "z"
+
+
+def test_copy_preserves_parallel_edges_with_identical_attributes(mock_packages):
+    """Two parallel edges to one name that agree on every attribute an edge carries, and differ
+    only in what their children depend on, are a legitimate state. A copy reproduces both."""
+    # _dup_deps copies edge by edge in traversal order, attaching each node to its parent before
+    # that node's own children are visited, so the two ^pkg-b edges are indistinguishable when
+    # the second is attached, and it can look redundant against the first
+    original = Spec("pkg-a ^pkg-b %pkg-c ^pkg-b %pkg-e")
+    assert len(original.edges_to_dependencies(name="pkg-b")) == 2
+
+    copy = original.copy()
+    assert copy == original
+    assert copy.to_dict() == original.to_dict()
+
+
+def test_detached_dependency_node_keeps_no_empty_dependent_bucket(mock_packages):
+    """Replacing an edge detaches the old child completely: no empty dependent bucket is
+    left behind."""
+    s = Spec("pkg-a ^pkg-b")
+    child = s["pkg-b"]
+    assert s.constrain("pkg-a ^pkg-b@1")
+    assert s == Spec("pkg-a ^pkg-b@1")
+    assert not child._dependents
+
+
+def test_assigning_a_name_to_an_anonymous_spec_rekeys_dependents(mock_packages):
+    """Assigning a name to an anonymous spec moves its children's dependent edges from the
+    anonymous bucket to the new name, so keyed lookups on the edge maps return them."""
+    s = Spec("^pkg-b@1")
+    child = s.edges_to_dependencies(name="pkg-b")[0].spec
+    assert s.constrain(Spec("pkg-a"))
+    assert list(child._dependents.keys()) == ["pkg-a"]
+
+    # naming and edge replacement in one constrain: the detached child is unhooked cleanly
+    # and the surviving child is keyed by the new name
+    t = Spec("^pkg-b")
+    old_child = t.edges_to_dependencies(name="pkg-b")[0].spec
+    assert t.constrain(Spec("pkg-a ^pkg-b@1"))
+    assert t == Spec("pkg-a ^pkg-b@1")
+    assert not old_child._dependents
+    assert list(t["pkg-b"]._dependents.keys()) == ["pkg-a"]
+
+
+def test_merging_a_concrete_direct_dep_keeps_its_dependent_edges(mock_packages, config):
+    """A concrete node merged into an abstract direct dep replaces it in place; the node
+    keeps its dependent edges, so a later name assignment on the parent rekeys them."""
+    s = Spec("%pkg-b")
+    t = Spec("")
+    concrete = spack.concretize.concretize_one("pkg-b@=1.0")
+    t.add_dependency_edge(concrete, depflag=dt.BUILD, virtuals=(), direct=True)
+    assert s.constrain(t)
+    child = s.edges_to_dependencies(name="pkg-b")[0].spec
+    assert child.concrete
+    assert list(child._dependents.keys()) == [""]
+    check_links(s)
+    assert s.constrain("pkg-a")
+    assert list(child._dependents.keys()) == ["pkg-a"]
+    check_links(s)
+
+
+def test_constraining_and_intersecting_concrete_dep_of_abstract_root(mock_packages, config):
+    """Constraining a concrete dep of an abstract spec is either a no-op or an error."""
+    abstract = Spec("pkg-a")
+    concrete = spack.concretize.concretize_one("pkg-b@=1.0")
+    abstract.add_dependency_edge(concrete, depflag=dt.BUILD, virtuals=(), direct=True)
+    compatible, conflicting = Spec("pkg-a %pkg-b@1"), Spec("pkg-a %pkg-b@2")
+    assert abstract.intersects(compatible) and compatible.intersects(abstract)
+    assert not abstract.intersects(conflicting) and not conflicting.intersects(abstract)
+
+    assert abstract.constrain(compatible) is False
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        abstract.constrain(conflicting)

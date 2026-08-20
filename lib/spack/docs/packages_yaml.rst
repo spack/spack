@@ -516,7 +516,7 @@ In the example above, that means you could build ``mpich+cuda`` or ``mpich+rocm`
 .. note::
 
    When using a conditional requirement, Spack is allowed to actively avoid the triggering condition (the ``when=...`` spec) if that leads to a concrete spec with better scores in the optimization criteria.
-   To check the current optimization criteria and their priorities you can run ``spack spec --show opt,solutions zlib``.
+   To check the current optimization criteria and their priorities you can run ``spack solve zlib``.
 
 Setting default requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

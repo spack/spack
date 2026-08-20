@@ -7,7 +7,6 @@ import sys
 from typing import Any, Dict, List, Optional, Tuple
 
 import spack.directives_meta
-import spack.error
 import spack.fetch_strategy
 import spack.repo
 import spack.spec
@@ -392,7 +391,3 @@ def package_ast(
         root = ResolveMultiMethods(tagger.methods).visit(root)
 
     return root
-
-
-class PackageHashError(spack.error.SpackError):
-    """Raised for all errors encountered during package hashing."""

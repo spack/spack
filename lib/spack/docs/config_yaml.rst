@@ -295,7 +295,7 @@ When set to ``true``, Spack will utilize a cache of solver outputs from successf
 When enabled, Spack will check the concretization cache prior to running the solver.
 If a previous request to solve a given problem is present in the cache, Spack will load the concrete specs and other solver data from the cache rather than running the solver.
 Specs not previously concretized will be added to the cache on a successful solve.
-The cache additionally holds solver statistics, so commands like ``spack spec --show opt <spec>`` will still return information about the run that produced a given solver result.
+The cache additionally holds solver statistics, so commands like ``spack solve`` will still return information about the run that produced a given solver result.
 
 This cache is a subcache of the :ref:`Misc Cache` and as such will be cleaned when the Misc Cache is cleaned.
 

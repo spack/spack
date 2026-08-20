@@ -27,7 +27,7 @@ class ConfigScopePriority(enum.IntEnum):
     ENVIRONMENT_SPEC_GROUPS = 5
 
 
-class PropagationPolicy(enum.Enum):
+class PropagationPolicy(enum.IntEnum):
     """Enum to specify the behavior of a propagated dependency"""
 
     NONE = enum.auto()

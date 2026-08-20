@@ -62,11 +62,19 @@ class AspFunction:
     def __str__(self) -> str:
         parts = []
         for arg in self.args:
+            # exact type checks first, ordered by frequency
             if type(arg) is str:
                 arg = arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"")
                 parts.append(f'"{arg}"')
             elif type(arg) is AspFunction or type(arg) is int or type(arg) is AspVar:
                 parts.append(str(arg))
+            # subclasses miss the checks above: config values are syaml_str / syaml_int. bool is
+            # an int subclass, but is not a number in ASP, so it is quoted below.
+            elif isinstance(arg, int) and not isinstance(arg, bool):
+                parts.append(str(arg))
+            elif isinstance(arg, str):
+                arg = arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"")
+                parts.append(f'"{arg}"')
             else:
                 parts.append(f'"{arg}"')
         return f"{self.name}({','.join(parts)})"

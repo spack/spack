@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import textwrap
-from typing import Optional
+from typing import List, Optional
 
 import spack.config
 import spack.repo
 import spack.schema.environment
 import spack.store
 from spack.util import tty
-from spack.util.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications, ShellCmdString
 from spack.util.tty.color import colorize
 
 
@@ -18,7 +18,8 @@ def activate_commands(env, view: Optional[str] = None):
     # Construct the commands to run
     # TODO: figure out how to make color work for csh & bat
     cmds = f"_spack_env_set SPACK_ENV {env.path}\n"
-    cmds += f"_spack_env_set SPACK_ENV_VIEW {view}\n"
+    if view:
+        cmds += f"_spack_env_set SPACK_ENV_VIEW {view}\n"
     return cmds
 
 
@@ -53,7 +54,22 @@ def activate_prompt_cmds(shell, prompt):
         # solution to the PS1 variable) here. This is a bit fiddly, and easy to
         # screw up => spend time reasearching a solution. Feedback welcome.
         #
-    elif shell == "sh":
+    elif shell == "bat":
+        # TODO: Color
+        if prompt:
+            old_prompt = os.environ.get("SPACK_OLD_PROMPT")
+            if not old_prompt:
+                old_prompt = os.environ.get("PROMPT")
+            cmds.append(shell_cmd.set("SPACK_OLD_PROMPT", str(old_prompt)))
+            cmds.append(shell_cmd.set("PROMPT", f"{prompt} $P$G"))
+    elif shell == "pwsh":
+        cmds.append(
+            "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
+            ' | Split-Path -leaf; if(!"$Env:SPACK_OLD_PROMPT") '
+            '{$Env:SPACK_OLD_PROMPT="[spack] PS $pth>"}; '
+            '"%s PS $pth>"}' % prompt
+        )
+    else:
         cmds = textwrap.dedent(
             rf"""
             if [ -z ${{SPACK_OLD_PS1+x}} ]; then
@@ -104,20 +120,26 @@ def deactivate_commands(shell):
             "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
             ' | Split-Path -leaf; $spack_prompt = "[spack] $pth >"; '
             'if("$Env:SPACK_OLD_PROMPT") {$spack_prompt=$Env:SPACK_OLD_PROMPT};'
-            " $spack_prompt}\n"
+            " $spack_prompt}"
         )
     else:
-        cmds += "alias despacktivate > /dev/null 2>&1 && unalias despacktivate;\n"
-        cmds += "if [ ! -z ${SPACK_OLD_PS1+x} ]; then\n"
-        cmds += "    if [ \"$SPACK_OLD_PS1\" = '$$$$' ]; then\n"
-        cmds += "        _spack_env_unset PS1; export PS1;\n"
-        cmds += "    else\n"
-        cmds += '        export PS1="$SPACK_OLD_PS1";\n'
-        cmds += "    fi;\n"
-        cmds += "    _spack_env_unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n"
-        cmds += "fi;\n"
+        cmds.append(
+            textwrap.dedent(
+                """
+                alias despacktivate > /dev/null 2>&1 && unalias despacktivate;
+                if [ ! -z ${SPACK_OLD_PS1+x} ]; then
+                    if [ "$SPACK_OLD_PS1" = '$$$$' ]; then
+                        unset PS1;
+                    else
+                        export PS1="$SPACK_OLD_PS1";
+                    fi;
+                    unset SPACK_OLD_PS1;
+                fi
+                """
+            ).strip("\n")
+        )
 
-    return cmds
+    return shell_cmd.join(cmds)
 
 
 def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:

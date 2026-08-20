@@ -142,12 +142,16 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         dest="signed",
     )
-    add_parser.add_argument(
-        "--name",
-        "-n",
+    add_parser_view = add_parser.add_mutually_exclusive_group(required=False)
+    add_parser_view.add_argument(
+        "--view",
         action="store",
         dest="view_name",
         help="Name of the index view for a binary mirror",
+    )
+    # This option name is deprecated, use --view
+    add_parser_view.add_argument(
+        "--name", "-n", action="store", dest="view_name", help=argparse.SUPPRESS
     )
     arguments.add_connection_args(add_parser, False)
     # Remove
@@ -238,6 +242,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action=arguments.ConfigScope,
         default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
+    )
+    set_parser.add_argument(
+        "--view",
+        action="store",
+        dest="view_name",
+        help="Name of the index view for a binary mirror",
     )
     arguments.add_connection_args(set_parser, False)
 
@@ -421,9 +431,9 @@ def _configure_mirror(args):
         changes["signed"] = args.signed
     if getattr(args, "autopush", None) is not None:
         changes["autopush"] = args.autopush
+    if getattr(args, "view_name", None):
+        changes["view"] = args.view_name
 
-    # argparse cannot distinguish between --binary and --no-binary when same dest :(
-    # notice that set-url does not have these args, so getattr
     if getattr(args, "type", None):
         changes["binary"] = "binary" in args.type
         changes["source"] = "source" in args.type

@@ -6,7 +6,6 @@ import collections.abc
 import enum
 import functools
 import gzip
-import io
 import itertools
 import json
 import os
@@ -19,6 +18,7 @@ import tempfile
 import time
 import warnings
 from typing import (
+    IO,
     Any,
     Callable,
     Dict,
@@ -93,7 +93,7 @@ class OutputConfiguration(NamedTuple):
     #: Whether to output Clingo's internal solver statistics
     stats: bool
     #: Optional output stream for the generated ASP program
-    out: Optional[io.IOBase]
+    out: Optional[IO[str]]
     #: If True, stop after setup and don't solve
     setup_only: bool
 
@@ -102,62 +102,6 @@ class OutputConfiguration(NamedTuple):
 DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
     timers=False, stats=False, out=None, setup_only=False
 )
-
-
-# Below numbers are used to map names of criteria to the order they appear in the solution
-#
-# The space of possible priorities for optimization targets is partitioned in the following ranges:
-#
-# [0-100)     Low-priority criteria (target-related criteria plus symmetry tie-breakers)
-# [100-200)   Optimization criteria for software being reused (concrete slot)
-# [200-300)   Fixed criteria higher priority than reuse, lower than build
-# [300-400)   Optimization criteria for software being built (build slot)
-# [400-1000)  High-priority fixed criteria
-# [1000-inf)  Error conditions
-#
-# The "low" band sits strictly below the reused/concrete band, so the solver decides compilers,
-# versions, etc. before targets and tie-breakers.
-#
-# The priority of an opt_criterion() fact is the level of its slot. Priorities in the "concrete"
-# band have an implicit "build" priority shifted by build_priority_offset.
-# Each optimization target is a minimization with optimal value 0.
-
-#: Exclusive upper bound of each priority band, in ascending order
-low_band_max = 100
-concrete_band_max = 200
-fixed_band_max = 300
-build_band_max = 400
-
-#: Displacement from a concrete-band criterion's level to its implicit build-band twin
-build_priority_offset = 200
-
-
-class OptimizationBand(enum.Enum):
-    """Grouping for optimization criteria by their priority range."""
-
-    LOW = "Lowest priority"
-    REUSED = "Reused nodes"
-    FIXED = "Fixed (reuse vs build)"
-    BUILD = "Built nodes"
-    HIGHEST = "Highest priority"
-
-
-#: Exclusive upper bound of each band's priority range, in ascending order.
-_BAND_UPPER_BOUNDS = (
-    (low_band_max, OptimizationBand.LOW),  # [0, 100)
-    (concrete_band_max, OptimizationBand.REUSED),  # [100, 200)
-    (fixed_band_max, OptimizationBand.FIXED),  # [200, 300)
-    (build_band_max, OptimizationBand.BUILD),  # [300, 400)
-    # [400, inf) -> OptimizationBand.HIGHEST (requirement weight, unsolved input specs)
-)
-
-
-def optimization_band(priority: int) -> OptimizationBand:
-    """Return the display band a criterion belongs to, given its clingo priority."""
-    for upper_bound, band in _BAND_UPPER_BOUNDS:
-        if priority < upper_bound:
-            return band
-    return OptimizationBand.HIGHEST
 
 
 # type aliases for the data structures we get back from the solver
@@ -176,12 +120,23 @@ class OptimizationKind:
     OTHER = 2
 
 
+class OptimizationBand(enum.Enum):
+    """Grouping for optimization criteria by their priority range."""
+
+    LOW = "Lowest priority"
+    REUSED = "Reused nodes"
+    FIXED = "Fixed (reuse vs build)"
+    BUILD = "Built nodes"
+    HIGHEST = "Highest priority"
+
+
 class OptimizationCriteria(NamedTuple):
     """A named tuple describing an optimization criteria."""
 
     priority: int
     value: int
     name: str
+    band: str
     kind: OptimizationKind
 
 
@@ -190,20 +145,27 @@ def build_criteria_names(costs, arg_tuples):
     # pull optimization criteria names out of the solution
     priorities_names = []
 
+    # translate ASP band names into display names
+    band_names = {
+        "low": OptimizationBand.LOW,
+        "concr": OptimizationBand.REUSED,
+        "hinge": OptimizationBand.FIXED,
+        "built": OptimizationBand.BUILD,
+        "high": OptimizationBand.HIGHEST,
+    }
+
     for args in arg_tuples:
-        priority, name = args[:2]
+        priority, band, name = args[0], band_names[args[2]].value, args[4]
         priority = int(priority)
 
-        if priority < low_band_max:
-            priorities_names.append((priority, name, OptimizationKind.OTHER))
-        elif priority < concrete_band_max:
-            # Reused/concrete criterion in the [100, 200) band.
-            priorities_names.append((priority, name, OptimizationKind.CONCRETE))
-            # Same build criterion in the [300, 400) band.
-            build_priority = priority + build_priority_offset
-            priorities_names.append((build_priority, name, OptimizationKind.BUILD))
+        if band == OptimizationBand.REUSED.value:
+            # Reused/concrete criterion
+            priorities_names.append((priority, name, band, OptimizationKind.CONCRETE))
+        elif band == OptimizationBand.BUILD.value:
+            # Build criterion
+            priorities_names.append((priority, name, band, OptimizationKind.BUILD))
         else:
-            priorities_names.append((priority, name, OptimizationKind.OTHER))
+            priorities_names.append((priority, name, band, OptimizationKind.OTHER))
 
     # sort the criteria by priority
     priorities_names = sorted(priorities_names, reverse=True)
@@ -214,8 +176,8 @@ def build_criteria_names(costs, arg_tuples):
     costs = costs[error_criteria:]
 
     return [
-        OptimizationCriteria(priority, value, name, status)
-        for (priority, name, status), value in zip(priorities_names, costs)
+        OptimizationCriteria(priority, value, name, band, status)
+        for (priority, name, band, status), value in zip(priorities_names, costs)
     ]
 
 
@@ -1060,7 +1022,7 @@ class PyclingoDriver:
         result.answers.append((list(min_cost), 0, spec_dict))
 
         # get optimization criteria
-        criteria_args = extract_args(best_model, "opt_criterion")
+        criteria_args = extract_args(best_model, "opt_priority")
         result.criteria = build_criteria_names(min_cost, criteria_args)
 
         # record the number of models the solver considered
@@ -1205,6 +1167,7 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
     def __init__(self) -> None:
         self.data: Dict[str, spack.spec.Spec] = {}
         self.explicit: Set[str] = set()
+        self.selectable: Set[str] = set()
 
     def __getitem__(self, dag_hash: str) -> spack.spec.Spec:
         return self.data[dag_hash]
@@ -1218,7 +1181,14 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
             if h in self.explicit or s.name == "gcc-runtime":
                 yield h, s
 
-    def add(self, spec: spack.spec.Spec) -> bool:
+    def is_selectable(self, dag_hash: str) -> bool:
+        """Returns True if any node can be matched against this hash, False if the hash is
+        known only because it belongs to the DAG of another selectable spec.
+        """
+        # Same exception as in explicit_items, gcc-runtime is never imposed by its own parent
+        return dag_hash in self.selectable or self.data[dag_hash].name == "gcc-runtime"
+
+    def add(self, spec: spack.spec.Spec, *, selectable: bool = True) -> bool:
         """Adds a new concrete spec to the mapping. Returns True if the spec was just added,
         False if the spec was already in the mapping.
 
@@ -1226,6 +1196,9 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
 
         Args:
             spec: spec to be added
+            selectable: if True, any node in the solve can be matched against this spec. If
+                False, the spec can only be imposed by a parent that is being reused. Specs
+                added as selectable stay selectable, regardless of later additions.
 
         Raises:
             ValueError: if the spec is not concrete
@@ -1239,6 +1212,8 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
 
         dag_hash = spec.dag_hash()
         self.explicit.add(dag_hash)
+        if selectable:
+            self.selectable.add(dag_hash)
         if dag_hash in self.data:
             return False
 
@@ -1853,7 +1828,7 @@ class SpackSolverSetup:
             self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
 
         for when, provided in pkg.provided.items():
-            for vpkg in sorted(provided):  # type: ignore[type-var]
+            for vpkg in sorted(provided):
                 if vpkg.name not in self.possible_virtuals:
                     continue
 
@@ -2833,7 +2808,7 @@ class SpackSolverSetup:
         for pkg_name, vid, value in sorted(def_info):
             self.gen.fact(fn.pkg_fact(pkg_name, fn.variant_possible_value(vid, value)))
 
-    def register_concrete_spec(self, spec, possible: set):
+    def register_concrete_spec(self, spec, possible: set, *, selectable: bool = True):
         # tell the solver about any installed packages that could
         # be dependencies (don't tell it about the others)
         if spec.name not in possible:
@@ -2846,13 +2821,17 @@ class SpackSolverSetup:
             tty.debug(f"[REUSE] Issues when trying to reuse {spec.short_spec}: {str(e)}")
             return
 
-        self.reusable_and_possible.add(spec)
+        self.reusable_and_possible.add(spec, selectable=selectable)
 
     def concrete_specs(self):
         """Emit facts for reusable specs"""
         for h, spec in self.reusable_and_possible.explicit_items():
-            # this indicates that there is a spec like this installed
-            self.gen.fact(fn.installed_hash(spec.name, h))
+            if self.reusable_and_possible.is_selectable(h):
+                # this indicates that there is a spec like this installed
+                self.gen.fact(fn.installed_hash(spec.name, h))
+            else:
+                # the hash is known, but only a parent being reused can impose it
+                self.gen.fact(fn.imposable_hash(spec.name, h))
             # indirection layer between hash constraints and imposition to allow for splicing
             for pred in self.spec_clauses(spec, body=True, required_from=None):
                 self.gen.fact(fn.hash_attr(h, *pred.args))
@@ -3005,17 +2984,25 @@ class SpackSolverSetup:
         candidate_compilers, self.rejected_compilers = possible_compilers(
             configuration=spack.config.CONFIG
         )
-        reuse_from_compilers = traverse.traverse_nodes(
-            [x for x in candidate_compilers if not x.external], deptype=("link", "run")
-        )
+        # Compilers installed by Spack are candidates for the solve, no matter what
+        # "concretizer:reuse" says. Their link and run dependencies are needed to impose a
+        # reused compiler, but they must not become reusable specs on their own: that is up
+        # to "concretizer:reuse", like for any other installed spec.
+        installed_compilers = [x for x in candidate_compilers if not x.external]
         reused_set = set(reuse)
-        reuse += [x for x in reuse_from_compilers if x not in reused_set]
+        reuse += [x for x in installed_compilers if x not in reused_set]
+        compiler_dependencies = [
+            x
+            for x in traverse.traverse_nodes(
+                installed_compilers, deptype=("link", "run"), root=False
+            )
+            if x not in reused_set
+        ]
 
         candidate_compilers.update(compilers_from_reuse)
         self.possible_compilers = list(candidate_compilers)
 
-        # TODO: warning is because mypy doesn't know Spec supports rich comparison via decorator
-        self.possible_compilers.sort()  # type: ignore[call-arg,call-overload]
+        self.possible_compilers.sort()
 
         self.compiler_mixing()
 
@@ -3029,7 +3016,7 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
-        self.libcs = sorted(all_libcs())  # type: ignore[type-var]
+        self.libcs = sorted(all_libcs())
 
         for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:
@@ -3070,6 +3057,10 @@ class SpackSolverSetup:
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
                 self.register_concrete_spec(reusable_spec, self.pkgs)
+        # Registered after the reuse list, so that a dependency of an installed compiler that
+        # is also reusable on its own keeps being selectable.
+        for compiler_dependency in compiler_dependencies:
+            self.register_concrete_spec(compiler_dependency, self.pkgs, selectable=False)
         self.concrete_specs()
 
         self.gen.h1("Generic statements on possible packages")
@@ -3838,6 +3829,14 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     This method updates the SpecDict in place.
 
     """
+    # The DAG is structurally complete, but still abstract. For node-local mutations that are
+    # conditional on (direct) dependencies, such as ``patch("...", when="%gcc")`` as well as
+    # ``dev_path``, we need to mark edges direct so that satisfies considers them as direct.
+    for s in specs.values():
+        if not s.concrete:
+            for edge in s.edges_to_dependencies():
+                edge.direct = True
+
     # inject patches -- note that we can't use set() to unique the
     # roots here, because the specs aren't complete, and the hash
     # function will loop forever.
@@ -4039,7 +4038,7 @@ class Solver:
     def solve_with_stats(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[io.IOBase] = None,
+        out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
@@ -4088,7 +4087,7 @@ class Solver:
     def solve_in_rounds(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[io.IOBase] = None,
+        out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
@@ -4110,6 +4109,10 @@ class Solver:
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
         """
+        # "when_possible" requires at least one literal to be solved, so an empty input is unsat
+        if not specs:
+            return
+
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
@@ -4236,14 +4239,6 @@ class InvalidSpliceError(spack.error.SpackError):
 
 class SpliceSerializationError(spack.error.SpackError):
     """Attempt to serialize a SpecDict that contains spliced specs (currently unsupported)."""
-
-
-class NoCompilerFoundError(spack.error.SpackError):
-    """Raised when there is no possible compiler"""
-
-
-class InvalidExternalError(spack.error.SpackError):
-    """Raised when there is no possible compiler"""
 
 
 class DeprecatedVersionError(spack.error.SpackError):

@@ -90,13 +90,6 @@ class SpackError(Exception):
         return type(self), (self.message, self.long_message)
 
 
-class UnsupportedPlatformError(SpackError):
-    """Raised by packages when a platform is not supported"""
-
-    def __init__(self, message):
-        super().__init__(message)
-
-
 class NoLibrariesError(SpackError):
     """Raised when package libraries are requested but cannot be found"""
 
