@@ -49,46 +49,6 @@ SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYS
 SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for suff in ("", "/")))
 
 
-class ShellCmdString:
-    """Formats commands to set or unset an environment variable for a given shell."""
-
-    _SET_STRINGS = {
-        "sh": "export {0}={1}",
-        "csh": "setenv {0} {1}",
-        "fish": "set -gx {0} {1}",
-        "bat": 'set "{0}={1}"',
-        "pwsh": "$Env:{0}='{1}'",
-    }
-
-    _UNSET_STRINGS = {
-        "sh": "unset {0}",
-        "csh": "unsetenv {0}",
-        "fish": "set -e {0}",
-        "bat": 'set "{0}="',
-        "pwsh": "Set-Item -Path Env:{0}",
-    }
-
-    #: separator used to terminate a statement and join it with the next one
-    _JOIN_STRINGS = {"sh": ";\n", "csh": ";\n", "fish": ";\n", "bat": "\n", "pwsh": "\n"}
-
-    def __init__(self, shell: str):
-        self.shell = shell
-
-    def set(self, name: str, value: str) -> str:
-        """Returns the command to set an environment variable to a value."""
-        return self._SET_STRINGS[self.shell].format(name, value)
-
-    def unset(self, name: str) -> str:
-        """Returns the command to unset an environment variable."""
-        return self._UNSET_STRINGS[self.shell].format(name)
-
-    def join(self, cmds: List[str]) -> str:
-        """Joins a list of commands into a single, terminated script."""
-        cmds = cmds + [""]
-        sep = self._JOIN_STRINGS[self.shell]
-        return sep.join(cmds)
-
-
 def shell_quote(value: str, shell: str = "sh") -> str:
     """Quote a string for safe use in a shell script.
 
@@ -99,42 +59,26 @@ def shell_quote(value: str, shell: str = "sh") -> str:
     Returns:
         A properly quoted string safe for the target shell
     """
-    # An empty value must still produce a token. Unquoted it disappears from the helper's
-    # argument list, shifting every later argument (notably the separator) down one slot.
     if not value:
         return '""' if shell == "bat" else "''"
 
-    if shell == "sh":
-        # POSIX shell - use shlex.quote
-        return shlex.quote(value)
-    elif shell == "csh":
-        # csh - escape special chars and wrap in single quotes if needed
-        # In csh, single quotes protect everything except other single quotes
+    if shell == "csh":
         if "'" in value or any(c in value for c in ' \t\n$`\\";&|<>(){}[]!*?'):
-            # Replace ' with '\'' (end quote, escaped quote, start quote)
             return "'" + value.replace("'", "'\\''") + "'"
         return value
     elif shell == "fish":
-        # fish - similar to POSIX but with different escaping rules
-        # Single quotes in fish protect everything except other single quotes
         if "'" in value or any(c in value for c in ' \t\n$`\\";&|<>(){}[]!*?'):
             return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
         return value
     elif shell == "bat":
-        # Windows batch - escape special chars and wrap in quotes
-        # In batch, quotes protect most things but internal quotes need escaping.
-        # Note that cmd splits arguments on ";", "," and "=" as well as whitespace, so
-        # those must be quoted too or they silently vanish from the callee's %1, %2, ...
         if any(c in value for c in " \t&|<>^%;,="):
             return '"' + value.replace('"', '""') + '"'
         return value
     elif shell == "pwsh":
-        # PowerShell - use single quotes, escape internal single quotes
         if "'" in value or any(c in value for c in " \t\n$`;&|<>(){}[]"):
             return "'" + value.replace("'", "''") + "'"
         return value
     else:
-        # Unknown shell - default to sh quoting
         return shlex.quote(value)
 
 
@@ -937,12 +881,11 @@ class EnvironmentModifications:
                 old = env.get(name, None)
                 if new != old:
                     if new is None:
-                        cmds += _SHELL_UNSET_STRINGS[shell].format(name)
+                        cmds += f"_spack_env_unset {name}\n"
                     else:
                         value = new_env[name]
                         value = shell_quote(value, shell)
-                        cmd = _SHELL_SET_STRINGS[shell].format(name, value)
-                        cmds += cmd
+                        cmds += f"_spack_env_set {name} {value}\n"
             return cmds
         else:
             cache_commands = ""

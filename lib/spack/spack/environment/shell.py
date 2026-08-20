@@ -3,20 +3,19 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import textwrap
-from typing import List, Optional
+from typing import Optional
 
 import spack.config
 import spack.repo
 import spack.schema.environment
 import spack.store
 from spack.util import tty
-from spack.util.environment import EnvironmentModifications, ShellCmdString
+from spack.util.environment import EnvironmentModifications
 from spack.util.tty.color import colorize
 
 
 def activate_commands(env, view: Optional[str] = None):
     # Construct the commands to run
-    # TODO: figure out how to make color work for csh & bat
     cmds = f"_spack_env_set SPACK_ENV {env.path}\n"
     if view:
         cmds += f"_spack_env_set SPACK_ENV_VIEW {view}\n"
@@ -26,6 +25,7 @@ def activate_commands(env, view: Optional[str] = None):
 def despacktivate_cmds(shell):
     cmd = ""
     if shell == "csh":
+        # TODO: figure out how to make color work for csh
         cmd += 'alias despacktivate "spack env deactivate";\n'
     elif shell == "fish":
         cmd += "function despacktivate;\n"
@@ -60,10 +60,10 @@ def activate_prompt_cmds(shell, prompt):
             old_prompt = os.environ.get("SPACK_OLD_PROMPT")
             if not old_prompt:
                 old_prompt = os.environ.get("PROMPT")
-            cmds.append(shell_cmd.set("SPACK_OLD_PROMPT", str(old_prompt)))
-            cmds.append(shell_cmd.set("PROMPT", f"{prompt} $P$G"))
+            cmds += f"_spack_env_set SPACK_OLD_PROMPT {old_prompt}"
+            cmds += f"_spack_env_set PROMPT {prompt} $P$G"
     elif shell == "pwsh":
-        cmds.append(
+        cmds += (
             "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
             ' | Split-Path -leaf; if(!"$Env:SPACK_OLD_PROMPT") '
             '{$Env:SPACK_OLD_PROMPT="[spack] PS $pth>"}; '
@@ -123,9 +123,8 @@ def deactivate_commands(shell):
             " $spack_prompt}"
         )
     else:
-        cmds.append(
-            textwrap.dedent(
-                """
+        cmds += textwrap.dedent(
+            """
                 alias despacktivate > /dev/null 2>&1 && unalias despacktivate;
                 if [ ! -z ${SPACK_OLD_PS1+x} ]; then
                     if [ "$SPACK_OLD_PS1" = '$$$$' ]; then
@@ -136,10 +135,9 @@ def deactivate_commands(shell):
                     unset SPACK_OLD_PS1;
                 fi
                 """
-            ).strip("\n")
-        )
+        ).strip("\n")
 
-    return shell_cmd.join(cmds)
+    return cmds
 
 
 def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:

@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
-import re
 import sys
 
 import pytest
@@ -54,7 +53,7 @@ def test_manpath_trailing_colon(
 
     load(shell, "mpileaks")
     load_cmds = _get_load_cmds(mpileaks_spec, shell)
-    cmd_str = f"{_get_shell_cmd_invocation("_spack_env_prepend", shell)} MANPATH"
+    cmd_str = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} MANPATH"
     manpath_prepends = []
     for line in load_cmds.splitlines():
         if cmd_str in line:
@@ -68,7 +67,7 @@ def test_manpath_trailing_colon(
 
     trailing_sep = os.pathsep
     if "bat" in shell:
-        trailing_sep = f"\"{trailing_sep}\""
+        trailing_sep = f'"{trailing_sep}"'
 
     for _, separator in manpath_prepends:
         assert separator == trailing_sep, (
@@ -149,7 +148,7 @@ def test_load_includes_run_env(shell, install_mockery, mock_fetch, mock_archive,
 
     load(shell, "mpileaks")
     load_cmds = _get_load_cmds(mpileaks_spec, shell)
-    set_cmd = f"{_get_shell_cmd_invocation("_spack_env_set", shell)} FOOBAR mpileaks"
+    set_cmd = f"{_get_shell_cmd_invocation('_spack_env_set', shell)} FOOBAR mpileaks"
     assert set_cmd in load_cmds
 
 
@@ -228,7 +227,7 @@ def test_unload(shell, install_mockery, mock_fetch, mock_archive, mock_packages,
     unload(shell, "mpileaks")
     unload_cmds = _get_unload_cmds(mpileaks_spec, shell)
 
-    unset_cmd = f"{_get_shell_cmd_invocation("_spack_env_unset", shell)} FOOBAR"
+    unset_cmd = f"{_get_shell_cmd_invocation('_spack_env_unset', shell)} FOOBAR"
     assert unset_cmd in unload_cmds
 
 
