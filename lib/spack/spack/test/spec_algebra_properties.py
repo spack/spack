@@ -192,6 +192,15 @@ DIMENSIONS: Tuple[Dimension, ...] = (
             "target=x86_64_v2",
             "target=broadwell:skylake",
             "target=aarch64",
+            # the universe as a range, the canonical form of target=*
+            "target=:",
+            # bounded ranges with incomparable upper bounds: one covered only by the union
+            "target=:icelake,:arrowlake",
+            # a generic-level range next to a named-chain range, the other union-cover shape
+            "target=x86_64_v3:x86_64_v4,:sandybridge",
+            # names outside the table, alone and next to a known name
+            "target=zen9:",
+            "target=:zen9,icelake",
         ),
     ),
     Dimension(
