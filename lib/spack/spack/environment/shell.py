@@ -73,7 +73,7 @@ def _make_spack_prompt(shell: str, prompt: str) -> List[str]:
         ]
 
 
-def activate_header(env, shell, prompt=None, view: Optional[str] = None):
+def activate_header(env: ev.Environment, shell: str, prompt: bool = False, view: Optional[str] = None):
     # Construct the commands to run
     shell_cmd = ShellCmdString(shell)
     cmds: List[str] = [shell_cmd.set("SPACK_ENV", env.path)]
@@ -81,8 +81,12 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
         cmds.append(shell_cmd.set("SPACK_ENV_VIEW", view))
     cmds.extend(shell_cmd.alias("despacktivate", "spack env deactivate"))
 
+    short_name = env.name
+    if short_name == env.path:
+        short_name = os.path.basename(short_name)
+
     if prompt:
-        cmds.extend(_make_spack_prompt(shell, prompt))
+        cmds.extend(_make_spack_prompt(shell, f"[{short_name}]"))
     return shell_cmd.join(cmds)
 
 
