@@ -189,10 +189,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "--branch", "-b", nargs="?", default=None, help="name of a branch to change to"
     )
     update_parser.add_argument(
-        "--force",
-        "-f",
-        action="store_true",
-        help="force an update of a divergent branch"
+        "--force", "-f", action="store_true", help="force an update of a divergent branch"
     )
     refspec = update_parser.add_mutually_exclusive_group(required=False)
     refspec.add_argument("--tag", "-t", nargs="?", default=None, help="name of a tag to change to")

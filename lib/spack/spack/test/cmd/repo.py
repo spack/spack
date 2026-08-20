@@ -303,7 +303,12 @@ class MockDescriptor(spack.repo.RepoDescriptor):
     def get_commit(self, git: Optional[Executable] = None):
         pass
 
-    def update(self, git: Optional[Executable] = None, remote: Optional[str] = "origin", force: bool = False) -> None:
+    def update(
+        self,
+        git: Optional[Executable] = None,
+        remote: Optional[str] = "origin",
+        force: bool = False,
+    ) -> None:
         pass
 
     def construct(self, cache, overrides=None):
