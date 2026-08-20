@@ -27,7 +27,7 @@ import json
 import os
 import sys
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Sequence, Type, TypeVar
+from typing import Any, Callable, Dict, Generic, List, Optional, Sequence, Type, TypeVar
 
 import spack.binary_distribution
 import spack.concretize
@@ -68,6 +68,59 @@ ConfigDictionary = Dict[str, Any]
 ResultT = TypeVar("ResultT")
 
 
+class BootstrapRequest(Generic[ResultT]):
+    """Software to be made available in the bootstrap store, and how to check for it.
+
+    The two kinds of request, a Python module and a set of executables, differ only in the
+    spec to be installed, in the probe that tests whether the software can be used, and in
+    the arguments to be passed to the installer when building from sources.
+    """
+
+    def __init__(
+        self,
+        abstract_spec: spack.spec.Spec,
+        metadata_name: str,
+        probe: Callable[[spack.spec.Spec], Optional[ResultT]],
+        installer_args: Dict[str, Any],
+    ) -> None:
+        #: Spec to be installed to satisfy this request
+        self.abstract_spec = abstract_spec
+        #: Name of the buildcache metadata file for this software
+        self.metadata_name = metadata_name
+        #: Returns the software from the store, or None if it is not usable from there
+        self.probe = probe
+        #: Extra arguments for the installer, when building from sources
+        self.installer_args = installer_args
+
+    @classmethod
+    def for_module(cls, module: str, abstract_spec_str: str) -> "BootstrapRequest[bool]":
+        """Return a request for a module importable in the interpreter running Spack."""
+        return BootstrapRequest(
+            abstract_spec=spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python()),
+            metadata_name=module,
+            probe=functools.partial(_try_import_from_store, module),
+            # unlike the executables below, modules have always forced a source build here
+            installer_args={
+                "fail_fast": True,
+                "root_policy": "source_only",
+                "dependencies_policy": "source_only",
+            },
+        )
+
+    @classmethod
+    def for_executables(
+        cls, executables: Sequence[str], abstract_spec_str: str
+    ) -> "BootstrapRequest[ExecutableInfo]":
+        """Return a request for executables to be found in the PATH."""
+        abstract_spec = spack.spec.Spec(abstract_spec_str)
+        return BootstrapRequest(
+            abstract_spec=abstract_spec,
+            metadata_name=abstract_spec.name,
+            probe=functools.partial(_executables_in_store, executables),
+            installer_args={},
+        )
+
+
 class Bootstrapper:
     """Interface for "core" software bootstrappers"""
 
@@ -88,33 +141,16 @@ class Bootstrapper:
             f"bootstrap-{self.name}-{uuid.uuid4()}", {"mirrors:": {self.name: self.url}}
         )
 
-    def try_import(self, module: str, abstract_spec_str: str) -> bool:
-        """Try to import a Python module from a spec satisfying the abstract spec
-        passed as argument.
+    def try_to_bootstrap(self, request: BootstrapRequest[ResultT]) -> Optional[ResultT]:
+        """Try to make the requested software available, from this source.
 
         Args:
-            module: Python module name to try importing
-            abstract_spec_str: abstract spec that can provide the Python module
+            request: software to be bootstrapped, and the probe that tests for it
 
         Return:
-            True if the Python module could be imported, False otherwise
+            What the probe of the request returned, or None if bootstrapping failed
         """
-        raise NotImplementedError("subclasses must implement try_import")
-
-    def try_search_path(
-        self, executables: Sequence[str], abstract_spec_str: str
-    ) -> Optional[ExecutableInfo]:
-        """Try to search some executables in the prefix of specs satisfying the abstract
-        spec passed as argument.
-
-        Args:
-            executables: executables to be found
-            abstract_spec_str: abstract spec that can provide the executables
-
-        Return:
-            The executable and the spec providing it, or None if not found
-        """
-        raise NotImplementedError("subclasses must implement try_search_path")
+        raise NotImplementedError("subclasses must implement try_to_bootstrap")
 
 
 class BuildcacheBootstrapper(Bootstrapper):
@@ -146,10 +182,7 @@ class BuildcacheBootstrapper(Bootstrapper):
             )
 
     def _install_and_test(
-        self,
-        abstract_spec: spack.spec.Spec,
-        bincache_data,
-        test_fn: Callable[[spack.spec.Spec], ResultT],
+        self, request: BootstrapRequest[ResultT], bincache_data
     ) -> Optional[ResultT]:
         # Ensure we see only the buildcache being used to bootstrap
         with spack.config.CONFIG.override(self.mirror_scope):
@@ -163,81 +196,46 @@ class BuildcacheBootstrapper(Bootstrapper):
 
             for item in bincache_data["verified"]:
                 # Skip specs which are not compatible
-                if not spack.spec.Spec(item["spec"]).satisfies(abstract_spec):
+                if not spack.spec.Spec(item["spec"]).satisfies(request.abstract_spec):
                     continue
 
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
                     self._install_by_hash(pkg_hash, pkg_sha256)
 
-                result = test_fn(abstract_spec)
+                result = request.probe(request.abstract_spec)
                 if result:
                     return result
         return None
 
-    def try_import(self, module: str, abstract_spec_str: str) -> bool:
-        tty.debug(f"Bootstrapping {module} from pre-built binaries")
-        abstract_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
-        data = self._read_metadata(module)
-        test_fn = functools.partial(_try_import_from_store, module)
-        return bool(self._install_and_test(abstract_spec, data, test_fn))
-
-    def try_search_path(
-        self, executables: Sequence[str], abstract_spec_str: str
-    ) -> Optional[ExecutableInfo]:
-        abstract_spec = spack.spec.Spec(abstract_spec_str)
-        tty.debug(f"Bootstrapping {abstract_spec.name} from pre-built binaries")
-        data = self._read_metadata(abstract_spec.name)
-        test_fn = functools.partial(_executables_in_store, executables)
-        return self._install_and_test(abstract_spec, data, test_fn)
+    def try_to_bootstrap(self, request: BootstrapRequest[ResultT]) -> Optional[ResultT]:
+        tty.debug(f"Bootstrapping {request.metadata_name} from pre-built binaries")
+        return self._install_and_test(request, self._read_metadata(request.metadata_name))
 
 
 class SourceBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from sources."""
 
-    def try_import(self, module: str, abstract_spec_str: str) -> bool:
-        tty.debug(f"Bootstrapping {module} from sources")
+    def try_to_bootstrap(self, request: BootstrapRequest[ResultT]) -> Optional[ResultT]:
+        tty.debug(f"Bootstrapping {request.metadata_name} from sources")
 
         # If we compile code from sources detecting a few build tools
         # might reduce compilation time by a fair amount
         _add_externals_if_missing()
 
         # Try to build and install from sources
-        if module == "clingo":
+        if request.metadata_name == "clingo":
             bootstrapper = ClingoBootstrapConcretizer(configuration=spack.config.CONFIG)
             concrete_spec = bootstrapper.concretize()
         else:
-            abstract_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
-            concrete_spec = spack.concretize.concretize_one(abstract_spec)
+            concrete_spec = spack.concretize.concretize_one(request.abstract_spec)
 
-        msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from sources"
-        tty.debug(msg.format(module, abstract_spec_str))
-
-        # Install the spec that should make the module importable
+        tty.debug(f"[BOOTSTRAP] Try installing '{request.abstract_spec}' from sources")
         with spack.config.CONFIG.override(self.mirror_scope):
             spack.installer_dispatch.create_installer(
-                [concrete_spec.package],
-                fail_fast=True,
-                root_policy="source_only",
-                dependencies_policy="source_only",
+                [concrete_spec.package], **request.installer_args
             ).install()
 
-        return _try_import_from_store(module, query_spec=concrete_spec)
-
-    def try_search_path(
-        self, executables: Sequence[str], abstract_spec_str: str
-    ) -> Optional[ExecutableInfo]:
-        tty.debug(f"Bootstrapping {abstract_spec_str} from sources")
-
-        # If we compile code from sources detecting a few build tools
-        # might reduce compilation time by a fair amount
-        _add_externals_if_missing()
-
-        concrete_spec = spack.concretize.concretize_one(abstract_spec_str)
-        msg = "[BOOTSTRAP] Try installing '{0}' from sources"
-        tty.debug(msg.format(abstract_spec_str))
-        with spack.config.CONFIG.override(self.mirror_scope):
-            spack.installer_dispatch.create_installer([concrete_spec.package]).install()
-        return _executables_in_store(executables, concrete_spec)
+        return request.probe(concrete_spec)
 
 
 #: Map a bootstrapper type to the corresponding class
@@ -301,9 +299,10 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
         return
 
     abstract_spec = abstract_spec or module
+    request = BootstrapRequest.for_module(module, abstract_spec)
 
     # Every source installs into the same store, so check it once for all of them
-    if _try_import_from_store(module, abstract_spec):
+    if request.probe(request.abstract_spec):
         return
 
     exception_handler = GroupedExceptionHandler()
@@ -313,7 +312,7 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
             continue
 
         with exception_handler.forward(current_config["name"], Exception):
-            if create_bootstrapper(current_config).try_import(module, abstract_spec):
+            if create_bootstrapper(current_config).try_to_bootstrap(request):
                 return
 
     raise ImportError(
@@ -362,8 +361,10 @@ def ensure_executables_in_path_or_raise(
         if not cmd_check or cmd_check(cmd):
             return cmd
 
+    request = BootstrapRequest.for_executables(executables, abstract_spec)
+
     # Every source installs into the same store, so check it once for all of them
-    found = _executables_in_store(executables, abstract_spec)
+    found = request.probe(request.abstract_spec)
     if found is not None:
         return _command_with_default_envmod(found)
 
@@ -375,8 +376,7 @@ def ensure_executables_in_path_or_raise(
         if not source_is_enabled(current_config):
             continue
         with exception_handler.forward(current_config["name"], Exception):
-            current_bootstrapper = create_bootstrapper(current_config)
-            found = current_bootstrapper.try_search_path(executables, abstract_spec)
+            found = create_bootstrapper(current_config).try_to_bootstrap(request)
             if found is not None:
                 return _command_with_default_envmod(found)
 
