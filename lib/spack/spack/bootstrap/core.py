@@ -36,7 +36,6 @@ import spack.detection
 import spack.error
 import spack.installer_dispatch
 import spack.mirrors.mirror
-import spack.platforms
 import spack.spec
 import spack.store
 import spack.user_environment
@@ -55,7 +54,7 @@ from ._common import (
     _try_import_from_store,
 )
 from .clingo import ClingoBootstrapConcretizer
-from .config import spack_python_interpreter, spec_for_current_python
+from .config import spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
@@ -147,22 +146,6 @@ class BuildcacheBootstrapper(Bootstrapper):
         self.last_search: Optional[QueryInfo] = None
         self.config_scope_name = f"bootstrap_buildcache-{uuid.uuid4()}"
 
-    @staticmethod
-    def _spec_and_platform(
-        abstract_spec_str: str,
-    ) -> Tuple[spack.spec.Spec, spack.platforms.Platform]:
-        """Return the spec object and platform we need to use when
-        querying the buildcache.
-
-        Args:
-            abstract_spec_str: abstract spec string we are looking for
-        """
-        # Try to install from an unsigned binary cache
-        abstract_spec = spack.spec.Spec(abstract_spec_str)
-        # On Cray we want to use Linux binaries if available from mirrors
-        bincache_platform = spack.platforms.real_host()
-        return abstract_spec, bincache_platform
-
     def _read_metadata(self, package_name: str) -> Any:
         """Return metadata about the given package."""
         json_filename = f"{package_name}.json"
@@ -172,31 +155,23 @@ class BuildcacheBootstrapper(Bootstrapper):
             data = json.load(stream)
         return data
 
-    def _install_by_hash(
-        self, pkg_hash: str, pkg_sha256: str, bincache_platform: spack.platforms.Platform
-    ) -> None:
-        with spack.platforms.use_platform(bincache_platform):
-            query = spack.binary_distribution.BinaryCacheQuery(all_architectures=True)
-            for match in spack.store.find([f"/{pkg_hash}"], multiple=False, query_fn=query):
-                spack.binary_distribution.install_root_node(
-                    # allow_missing is true since when bootstrapping clingo we truncate runtime
-                    # deps such as gcc-runtime, since we link libstdc++ statically, and the other
-                    # further runtime deps are loaded by the Python interpreter. This just silences
-                    # warnings about missing dependencies.
-                    match,
-                    unsigned=True,
-                    force=True,
-                    sha256=pkg_sha256,
-                    allow_missing=True,
-                )
+    def _install_by_hash(self, pkg_hash: str, pkg_sha256: str) -> None:
+        # The caller is inside ensure_bootstrap_configuration, which already selects the platform
+        query = spack.binary_distribution.BinaryCacheQuery(all_architectures=True)
+        for match in spack.store.find([f"/{pkg_hash}"], multiple=False, query_fn=query):
+            spack.binary_distribution.install_root_node(
+                # allow_missing is true since when bootstrapping clingo we truncate runtime
+                # deps such as gcc-runtime, since we link libstdc++ statically, and the other
+                # further runtime deps are loaded by the Python interpreter. This just silences
+                # warnings about missing dependencies.
+                match,
+                unsigned=True,
+                force=True,
+                sha256=pkg_sha256,
+                allow_missing=True,
+            )
 
-    def _install_and_test(
-        self,
-        abstract_spec: spack.spec.Spec,
-        bincache_platform: spack.platforms.Platform,
-        bincache_data,
-        test_fn,
-    ) -> bool:
+    def _install_and_test(self, abstract_spec: spack.spec.Spec, bincache_data, test_fn) -> bool:
         # Ensure we see only the buildcache being used to bootstrap
         with spack.config.CONFIG.override(self.mirror_scope):
             # This index is currently needed to get the compiler used to build some
@@ -213,7 +188,7 @@ class BuildcacheBootstrapper(Bootstrapper):
                     continue
 
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
-                    self._install_by_hash(pkg_hash, pkg_sha256, bincache_platform)
+                    self._install_by_hash(pkg_hash, pkg_sha256)
 
                 info: QueryInfo = {}
                 if test_fn(query_spec=abstract_spec, query_info=info):
@@ -228,11 +203,9 @@ class BuildcacheBootstrapper(Bootstrapper):
             return True
 
         tty.debug(f"Bootstrapping {module} from pre-built binaries")
-        abstract_spec, bincache_platform = self._spec_and_platform(
-            abstract_spec_str + " ^" + spec_for_current_python()
-        )
+        abstract_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
         data = self._read_metadata(module)
-        return self._install_and_test(abstract_spec, bincache_platform, data, test_fn)
+        return self._install_and_test(abstract_spec, data, test_fn)
 
     def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
         info: QueryInfo
@@ -241,10 +214,10 @@ class BuildcacheBootstrapper(Bootstrapper):
             self.last_search = info
             return True
 
-        abstract_spec, bincache_platform = self._spec_and_platform(abstract_spec_str)
+        abstract_spec = spack.spec.Spec(abstract_spec_str)
         tty.debug(f"Bootstrapping {abstract_spec.name} from pre-built binaries")
         data = self._read_metadata(abstract_spec.name)
-        return self._install_and_test(abstract_spec, bincache_platform, data, test_fn)
+        return self._install_and_test(abstract_spec, data, test_fn)
 
 
 @bootstrapper(bootstrapper_type="install")
@@ -269,15 +242,12 @@ class SourceBootstrapper(Bootstrapper):
         _add_externals_if_missing()
 
         # Try to build and install from sources
-        with spack_python_interpreter():
-            if module == "clingo":
-                bootstrapper = ClingoBootstrapConcretizer(configuration=spack.config.CONFIG)
-                concrete_spec = bootstrapper.concretize()
-            else:
-                abstract_spec = spack.spec.Spec(
-                    abstract_spec_str + " ^" + spec_for_current_python()
-                )
-                concrete_spec = spack.concretize.concretize_one(abstract_spec)
+        if module == "clingo":
+            bootstrapper = ClingoBootstrapConcretizer(configuration=spack.config.CONFIG)
+            concrete_spec = bootstrapper.concretize()
+        else:
+            abstract_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
+            concrete_spec = spack.concretize.concretize_one(abstract_spec)
 
         msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from sources"
         tty.debug(msg.format(module, abstract_spec_str))
