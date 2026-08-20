@@ -153,6 +153,20 @@ class Bootstrapper:
         raise NotImplementedError("subclasses must implement try_to_bootstrap")
 
 
+def _matching_entries(bincache_data, abstract_spec: spack.spec.Spec) -> List[Any]:
+    """Return the metadata entries whose spec provides the abstract spec, in metadata order.
+
+    Args:
+        bincache_data: content of a buildcache metadata file
+        abstract_spec: spec to be bootstrapped
+    """
+    return [
+        entry
+        for entry in bincache_data["verified"]
+        if spack.spec.Spec(entry["spec"]).satisfies(abstract_spec)
+    ]
+
+
 class BuildcacheBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from a buildcache."""
 
@@ -194,11 +208,7 @@ class BuildcacheBootstrapper(Bootstrapper):
             if not index:
                 raise RuntimeError("The binary index is empty")
 
-            for item in bincache_data["verified"]:
-                # Skip specs which are not compatible
-                if not spack.spec.Spec(item["spec"]).satisfies(request.abstract_spec):
-                    continue
-
+            for item in _matching_entries(bincache_data, request.abstract_spec):
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
                     self._install_by_hash(pkg_hash, pkg_sha256)
 

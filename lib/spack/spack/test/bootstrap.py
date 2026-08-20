@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import json
 import pathlib
 
 import pytest
@@ -20,6 +21,10 @@ import spack.spec
 import spack.store
 import spack.util.executable
 from spack.active_environment import active_environment
+
+CLINGO_METADATA = sorted(pathlib.Path(spack.paths.share_path).glob("bootstrap/*/clingo.json"))
+if not CLINGO_METADATA:
+    raise RuntimeError(f"no clingo metadata in {spack.paths.share_path}")
 
 PROTOTYPE_DIR = pathlib.Path(spack.bootstrap.clingo.__file__).parent / "prototypes"
 PROTOTYPES = sorted(x.name for x in PROTOTYPE_DIR.glob("*.json"))
@@ -382,3 +387,33 @@ def test_verify_patchelf_when_the_command_fails(mock_executable):
         str(mock_executable("patchelf", 'echo "patchelf 0.17.2"\nexit 1'))
     )
     assert spack.bootstrap.core.verify_patchelf(patchelf) is False
+
+
+def _clingo_spec_for(platform: str, target: str, python_version: str) -> spack.spec.Spec:
+    """Return the spec a host with the given platform, target and interpreter looks for."""
+    parts = [
+        x
+        for x in spack.bootstrap.core.clingo_root_spec().split()
+        if not x.startswith(("platform=", "target="))
+    ]
+    parts.extend([f"platform={platform}", f"target={target}", f"^python@{python_version}"])
+    return spack.spec.Spec(" ".join(parts))
+
+
+@pytest.mark.regression("52922")
+@pytest.mark.parametrize("metadata_file", CLINGO_METADATA, ids=lambda x: x.parent.name)
+def test_at_most_one_clingo_binary_matches_an_interpreter(metadata_file: pathlib.Path):
+    """A host must select a single clingo binary. When more than one matched, a cold
+    bootstrap installed a prefix per interpreter until one of them imported.
+    """
+    data = json.loads(metadata_file.read_text(encoding="utf-8"))
+    entries = [spack.spec.Spec(x["spec"]) for x in data["verified"]]
+    combinations = {
+        (str(x.architecture.platform), str(x.architecture.target), str(x["python"].versions))
+        for x in entries
+    }
+
+    for platform, target, python_version in sorted(combinations):
+        abstract_spec = _clingo_spec_for(platform, target, python_version)
+        matching = spack.bootstrap.core._matching_entries(data, abstract_spec)
+        assert len(matching) <= 1, [str(x["spec"]) for x in matching]
