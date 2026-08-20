@@ -175,26 +175,19 @@ class BuildcacheBootstrapper(Bootstrapper):
         return None
 
     def try_import(self, module: str, abstract_spec_str: str) -> bool:
-        test_fn = functools.partial(_try_import_from_store, module)
-        if test_fn(abstract_spec_str):
-            return True
-
         tty.debug(f"Bootstrapping {module} from pre-built binaries")
         abstract_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
         data = self._read_metadata(module)
+        test_fn = functools.partial(_try_import_from_store, module)
         return bool(self._install_and_test(abstract_spec, data, test_fn))
 
     def try_search_path(
         self, executables: Sequence[str], abstract_spec_str: str
     ) -> Optional[ExecutableInfo]:
-        test_fn = functools.partial(_executables_in_store, executables)
-        result = test_fn(abstract_spec_str)
-        if result is not None:
-            return result
-
         abstract_spec = spack.spec.Spec(abstract_spec_str)
         tty.debug(f"Bootstrapping {abstract_spec.name} from pre-built binaries")
         data = self._read_metadata(abstract_spec.name)
+        test_fn = functools.partial(_executables_in_store, executables)
         return self._install_and_test(abstract_spec, data, test_fn)
 
 
@@ -202,9 +195,6 @@ class SourceBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from sources."""
 
     def try_import(self, module: str, abstract_spec_str: str) -> bool:
-        if _try_import_from_store(module, abstract_spec_str):
-            return True
-
         tty.debug(f"Bootstrapping {module} from sources")
 
         # If we compile code from sources detecting a few build tools
@@ -236,10 +226,6 @@ class SourceBootstrapper(Bootstrapper):
     def try_search_path(
         self, executables: Sequence[str], abstract_spec_str: str
     ) -> Optional[ExecutableInfo]:
-        result = _executables_in_store(executables, abstract_spec_str)
-        if result is not None:
-            return result
-
         tty.debug(f"Bootstrapping {abstract_spec_str} from sources")
 
         # If we compile code from sources detecting a few build tools
@@ -316,6 +302,10 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
 
     abstract_spec = abstract_spec or module
 
+    # Every source installs into the same store, so check it once for all of them
+    if _try_import_from_store(module, abstract_spec):
+        return
+
     exception_handler = GroupedExceptionHandler()
 
     for current_config in bootstrapping_sources():
@@ -331,6 +321,18 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
             f'the "{module}" Python module', abstract_spec, exception_handler
         )
     )
+
+
+def _command_with_default_envmod(found: ExecutableInfo) -> spack.util.executable.Executable:
+    """Return the command from a lookup result, with the environment modifications
+    needed to run it.
+    """
+    found.command.add_default_envmod(
+        spack.user_environment.environment_modifications_for_specs(
+            found.spec, set_package_py_globals=False
+        )
+    )
+    return found.command
 
 
 def ensure_executables_in_path_or_raise(
@@ -360,6 +362,11 @@ def ensure_executables_in_path_or_raise(
         if not cmd_check or cmd_check(cmd):
             return cmd
 
+    # Every source installs into the same store, so check it once for all of them
+    found = _executables_in_store(executables, abstract_spec)
+    if found is not None:
+        return _command_with_default_envmod(found)
+
     executables_str = ", ".join(executables)
 
     exception_handler = GroupedExceptionHandler()
@@ -371,13 +378,7 @@ def ensure_executables_in_path_or_raise(
             current_bootstrapper = create_bootstrapper(current_config)
             found = current_bootstrapper.try_search_path(executables, abstract_spec)
             if found is not None:
-                # Additional environment variables needed
-                found.command.add_default_envmod(
-                    spack.user_environment.environment_modifications_for_specs(
-                        found.spec, set_package_py_globals=False
-                    )
-                )
-                return found.command
+                return _command_with_default_envmod(found)
 
     raise RuntimeError(
         _cannot_bootstrap_message(
