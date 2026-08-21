@@ -23,14 +23,18 @@ spack:
 
     expat:
       deprecation:
-        allowed_severity: critical
+        allowed_severity:
+          unspecified: critical
+          default: none
 
     python:
       buildable: false
       # Python deprecation cycles are very fast, each new patch version deprecates
       # the previous ones
       deprecation:
-        allowed_severity: critical
+        allowed_severity:
+          unspecified: critical
+          default: none
       externals:
         - spec: "{{ python_spec }}"
           prefix: "{{ python_prefix }}"
@@ -40,7 +44,9 @@ spack:
 
     py-pytest:
       deprecation:
-        allowed_severity: critical
+        allowed_severity:
+          unspecified: critical
+          default: none
 
     py-typed-ast:
       require: "+wheel"
