@@ -5109,8 +5109,7 @@ def concretized_env(tmp_path):
     def _concretized_env(name: str, content: str) -> ev.Environment:
         manifest = tmp_path / f"{name}.yaml"
         manifest.write_text(content)
-        env("create", name, str(manifest))
-        environment = ev.read(name)
+        environment = _env_create(name, init_file=str(manifest))
         with environment:
             environment.concretize()
             environment.write()
@@ -5589,26 +5588,27 @@ def test_format_divergent_node_highlights_a_version_regression(mutable_mock_repo
     assert clr.colorize(f"{spack.spec.HIGHLIGHT_COLOR}@@3.0.3@.", color=True) in rendered_b
 
 
-def test_attribute_style_of_a_variant_landing_on_its_default(mutable_mock_repo):
-    """A variant that ends up at the value the package declares is an expected change."""
-    with_debug = spack.concretize.concretize_one("mpich@3.0.4+debug")
-    without_debug = spack.concretize.concretize_one("mpich@3.0.4~debug")
-    divergence = _variant_divergence(with_debug, without_debug, "debug")
+@pytest.mark.parametrize(
+    "lands_on,expected",
+    [
+        # A variant that ends up at the value the package declares is an expected change
+        ("~debug", spack.enums.PartStyle.NORMAL),
+        # A variant that ends up on a non-default value is worth pointing at
+        ("+debug", spack.enums.PartStyle.HIGHLIGHT),
+    ],
+)
+def test_attribute_style_of_a_variant_by_the_value_it_lands_on(
+    lands_on, expected, mutable_mock_repo
+):
+    """The style of a variant change is judged on the value the second side lands on."""
+    starts_from = "+debug" if lands_on == "~debug" else "~debug"
+    node_a = spack.concretize.concretize_one(f"mpich@3.0.4{starts_from}")
+    node_b = spack.concretize.concretize_one(f"mpich@3.0.4{lands_on}")
+    divergence = _variant_divergence(node_a, node_b, "debug")
 
     style = spack.cmd.env._attribute_style(divergence, divergence.attributes[0])
 
-    assert style is spack.enums.PartStyle.NORMAL
-
-
-def test_attribute_style_of_a_variant_landing_off_its_default(mutable_mock_repo):
-    """A variant that ends up on a non-default value is worth pointing at."""
-    without_debug = spack.concretize.concretize_one("mpich@3.0.4~debug")
-    with_debug = spack.concretize.concretize_one("mpich@3.0.4+debug")
-    divergence = _variant_divergence(without_debug, with_debug, "debug")
-
-    style = spack.cmd.env._attribute_style(divergence, divergence.attributes[0])
-
-    assert style is spack.enums.PartStyle.HIGHLIGHT
+    assert style is expected
 
 
 @pytest.mark.parametrize(

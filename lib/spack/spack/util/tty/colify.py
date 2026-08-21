@@ -10,7 +10,7 @@ import io
 import os
 import shutil
 import sys
-from typing import IO, Any, List, Optional
+from typing import IO, Any, List, Optional, Tuple
 
 from spack.util.tty.color import cextra, clen
 
@@ -152,14 +152,9 @@ def colify(
     if not elts:
         return (0, ())
 
-    # environment size is of the form "<rows>x<cols>"
-    env_size = os.environ.get("COLIFY_SIZE")
-    if env_size:
-        try:
-            console_cols = int(env_size.partition("x")[2])
-            tty = True
-        except ValueError:
-            pass
+    forced_cols = _env_columns()
+    if forced_cols is not None:
+        console_cols, tty = forced_cols, True
 
     # Use only one column if not a tty, unless cols specified explicitly
     if not cols and not tty:
@@ -277,18 +272,26 @@ def colified(
     return sio.getvalue()
 
 
-def terminal_columns() -> int:
-    """Width available for output, or 0 when it is not going to a terminal.
-
-    Honors the ``COLIFY_SIZE`` environment variable (of the form ``<rows>x<cols>``), so callers
-    can force a deterministic width; a zero return asks the caller to fall back to a single column.
-    """
+def _env_columns() -> Optional[int]:
+    """Columns forced through ``COLIFY_SIZE`` (of the form ``<rows>x<cols>``), if it is set."""
     env_size = os.environ.get("COLIFY_SIZE")
     if env_size:
         try:
             return int(env_size.partition("x")[2])
         except ValueError:
             pass
+    return None
+
+
+def terminal_columns() -> int:
+    """Width available for output, or 0 when it is not going to a terminal.
+
+    Honors the ``COLIFY_SIZE`` environment variable, so callers can force a deterministic width;
+    a zero return asks the caller to fall back to a single column.
+    """
+    forced_cols = _env_columns()
+    if forced_cols is not None:
+        return forced_cols
     if not sys.stdout.isatty():
         return 0
     return shutil.get_terminal_size().columns
@@ -303,18 +306,20 @@ def render_blocks(
     strings, this keeps a multi-line block intact and aligns the blocks that share a row. A width
     of zero puts every block on its own row, as happens when the output is not going to a terminal.
     """
-    rows: List[List[List[str]]] = []
-    row: List[List[str]] = []
+    # Each block is measured once here, and the width is carried through the layout below
+    sized = [(block, max(clen(line) for line in block)) for block in blocks]
+
+    rows: List[List[Tuple[List[str], int]]] = []
+    row: List[Tuple[List[str], int]] = []
     used = 0
-    for block in blocks:
-        size = max(clen(line) for line in block)
+    for block, size in sized:
         needed = size if not row else size + gap
         # A block too wide to share a row takes one for itself, and simply overflows
         if row and used + needed > width - indent:
             rows.append(row)
-            row, used = [block], size
+            row, used = [(block, size)], size
         else:
-            row.append(block)
+            row.append((block, size))
             used += needed
 
     if row:
@@ -327,10 +332,9 @@ def render_blocks(
     for index, row in enumerate(rows):
         if index and separate:
             lines.append("")
-        sizes = [max(clen(line) for line in block) for block in row]
-        for line_index in range(max(len(block) for block in row)):
+        for line_index in range(max(len(block) for block, _ in row)):
             cells = []
-            for block, size in zip(row, sizes):
+            for block, size in row:
                 line = block[line_index] if line_index < len(block) else ""
                 cells.append(line + " " * (size - clen(line)))
             lines.append((" " * indent + (" " * gap).join(cells)).rstrip())
