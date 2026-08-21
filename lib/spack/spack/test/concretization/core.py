@@ -5798,3 +5798,73 @@ def test_result_warnings_survive_serialization(mock_packages, mutable_config: Co
 
     assert result.warnings == ['using "deprecated-versions@1.1.0" which is a deprecated version']
     assert spack.solver.result.Result.from_dict(result.to_dict(), specs) == result
+
+
+def test_solver_reports_debug_output(mutable_config, mock_packages):
+    """Tests that the ASP program, the result, the timings and the statistics of a solve are
+    reported to the injected frontend, instead of being written to stdout by the solver.
+    """
+    # This asserts on a solve that runs, so it must not be served by a warm cache
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    ui = RecordingUI()
+    result = spack.solver.asp.Solver(ui=ui).solve([Spec("pkg-a")])
+
+    assert [[str(x) for x in specs] for specs in ui.solves] == [["pkg-a"]]
+
+    assert len(ui.programs) == 1
+    program = ui.programs[0]
+    assert any("attr(" in line for line in program)
+    # The program is reported before it is stripped and ordered, so it still has its blank lines
+    assert any(not line for line in program) and program != sorted(program)
+
+    assert len(ui.finished) == 1
+    reported, timer, statistics, cached = ui.finished[0]
+    assert reported is result
+    assert reported.criteria and reported.nmodels
+    assert statistics is not None
+    # The concretization cache is off, so this solve actually ran clingo
+    assert cached is False
+    assert "setup" in timer.phases and "solve" in timer.phases
+
+
+def test_solve_started_is_reported_once_per_round(mutable_config, mock_packages):
+    """Tests that a concretization that takes more than one solve reports the start of each of
+    them, with the specs that round is solving for.
+    """
+    ui = RecordingUI()
+    specs = [Spec("pkg-a@1.0"), Spec("pkg-a@2.0")]
+    results = list(spack.solver.asp.Solver(ui=ui).solve_in_rounds(specs))
+
+    assert len(results) == len(ui.solves) == 2
+    # The first round solves for everything, the second one for what the first left unsolved
+    assert ui.solves[0] == specs
+    assert ui.solves[1] == [abstract for abstract, _ in results[0].unsolved_specs]
+    assert len(ui.programs) == len(ui.finished) == 2
+
+
+def test_solve_started_is_reported_for_setup_only_solves(mutable_config, mock_packages):
+    """Tests that a solve that is only set up reports its start and its ASP program, and that no
+    end of solve is reported since it is never run.
+    """
+    ui = RecordingUI()
+    spack.solver.asp.Solver(ui=ui).solve([Spec("pkg-a")], setup_only=True)
+
+    assert [[str(x) for x in specs] for specs in ui.solves] == [["pkg-a"]]
+    assert len(ui.programs) == 1
+    assert not ui.finished
+
+
+def test_cache_hit_is_reported_to_the_frontend(use_concretization_cache, mutable_config):
+    """Tests that a solve served from the concretization cache says so, and reports no phase for
+    a solver run that never happened.
+    """
+    specs = [Spec("pkg-a")]
+    ui = RecordingUI()
+
+    spack.solver.asp.Solver(ui=ui).solve(specs)
+    spack.solver.asp.Solver(ui=ui).solve(specs)
+
+    assert [cached for _, _, _, cached in ui.finished] == [False, True]
+    fresh_timer, cached_timer = ui.finished[0][1], ui.finished[1][1]
+    assert "solve" in fresh_timer.phases and "ground" in fresh_timer.phases
+    assert "solve" not in cached_timer.phases and "cache-check" in cached_timer.phases

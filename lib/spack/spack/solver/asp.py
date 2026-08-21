@@ -10,7 +10,6 @@ import itertools
 import json
 import os
 import pathlib
-import pprint
 import random
 import re
 import sys
@@ -18,7 +17,6 @@ import tempfile
 import time
 import warnings
 from typing import (
-    IO,
     Any,
     Callable,
     Dict,
@@ -27,7 +25,6 @@ from typing import (
     Iterator,
     List,
     MutableSequence,
-    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -67,6 +64,7 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector
+from spack.concretize_ui import ConcretizerUI, HeadlessUI
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
 from spack.util.lang import elide_list
@@ -93,25 +91,6 @@ from .versions import Provenance
 GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
 
 TransformFunction = Callable[[str, spack.spec.Spec, List[AspFunction]], List[AspFunction]]
-
-
-class OutputConfiguration(NamedTuple):
-    """Data class that contains configuration on what a clingo solve should output."""
-
-    #: Print out coarse timers for different solve phases
-    timers: bool
-    #: Whether to output Clingo's internal solver statistics
-    stats: bool
-    #: Optional output stream for the generated ASP program
-    out: Optional[IO[str]]
-    #: If True, stop after setup and don't solve
-    setup_only: bool
-
-
-#: Default output configuration for a solve
-DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
-    timers=False, stats=False, out=None, setup_only=False
-)
 
 
 SpliceDict = Dict[spack.spec.Spec, List[spack.solver.splicing.Splice]]
@@ -750,7 +729,8 @@ class PyclingoDriver:
         specs: List[spack.spec.Spec],
         reuse: Optional[List[spack.spec.Spec]] = None,
         packages_with_externals=None,
-        output: Optional[OutputConfiguration] = None,
+        ui: Optional[ConcretizerUI] = None,
+        setup_only: bool = False,
         control: Optional[Any] = None,  # TODO: figure out how to annotate clingo.Control
         allow_deprecated: bool = False,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
@@ -760,7 +740,9 @@ class PyclingoDriver:
             setup: An object to set up the ASP problem.
             specs: List of ``Spec`` objects to solve for.
             reuse: list of concrete specs that can be reused
-            output: configuration object to set the output of this solve.
+            ui: frontend to report the start of this solve, its ASP program, and its result,
+                timings and statistics to. Defaults to a headless frontend.
+            setup_only: if True, stop after setup and don't solve
             control: configuration for the solver. If None, default values will be used
             allow_deprecated: if True, allow deprecated versions in the solve
 
@@ -770,7 +752,8 @@ class PyclingoDriver:
         """
         from spack.bootstrap import ensure_winsdk_external_or_raise
 
-        output = output or DEFAULT_OUTPUT_CONFIGURATION
+        ui = ui or HeadlessUI()
+        ui.on_solve_started(specs)
         timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
@@ -804,12 +787,11 @@ class PyclingoDriver:
         timer.stop("setup")
 
         timer.start("ordering")
-        # print the original ASP program if requested
+        # report the original ASP program, before it is stripped and ordered
         problem = problem_builder.asp_problem
-        if output.out is not None:
-            output.out.write("\n".join(problem))
+        ui.on_asp_program_generated(problem)
 
-        if output.setup_only:
+        if setup_only:
             return Result(specs), None, None
 
         # strip and order the ASP problem for caching and deterministic solves
@@ -838,6 +820,7 @@ class PyclingoDriver:
         timer.stop("cache-check")
 
         # run the solver
+        cached = result is not None
         if result is None:
             tty.debug("Starting concretizer")
             result = self._run_clingo(specs, setup, problem_str, control_file_paths, timer)
@@ -859,13 +842,7 @@ class PyclingoDriver:
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
 
-        if output.timers:
-            timer.write_tty()
-            print()
-
-        if output.stats:
-            print("Statistics:")
-            pprint.pprint(concretization_stats)
+        ui.on_solve_finished(result, timer=timer, statistics=concretization_stats, cached=cached)
 
         return result, timer, concretization_stats
 
@@ -3728,10 +3705,16 @@ class Solver:
     and passes the setup method to the driver, as well.
     """
 
-    def __init__(self, *, specs_factory: Optional[SpecFiltersFactory] = None):
+    def __init__(
+        self,
+        *,
+        specs_factory: Optional[SpecFiltersFactory] = None,
+        ui: Optional[ConcretizerUI] = None,
+    ):
         # Compute possible compilers first, so we see them as externals
         _ = spack.compilers.config.all_compilers(init_config=True)
 
+        self.ui = ui or HeadlessUI()
         self._conc_cache = ConcretizationCache()
         self.driver = PyclingoDriver(conc_cache=self._conc_cache)
 
@@ -3756,9 +3739,6 @@ class Solver:
     def solve_with_stats(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[IO[str]] = None,
-        timers: bool = False,
-        stats: bool = False,
         tests: spack.concretize.TestsType = False,
         setup_only: bool = False,
         allow_deprecated: bool = False,
@@ -3768,9 +3748,6 @@ class Solver:
 
         Arguments:
           specs: List of ``Spec`` objects to solve for.
-          out: Optionally write the generate ASP program to a file-like object.
-          timers: Print out coarse timers for different solve phases.
-          stats: Print out detailed stats from clingo.
           tests: If True, concretize test dependencies for all packages.
             If a tuple of package names, concretize test dependencies for named
             packages (defaults to False: do not concretize test dependencies).
@@ -3781,14 +3758,14 @@ class Solver:
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
 
         result = self.driver.solve(
             setup,
             specs,
             reuse=reusable_specs,
             packages_with_externals=self.packages_with_externals,
-            output=output,
+            ui=self.ui,
+            setup_only=setup_only,
             allow_deprecated=allow_deprecated,
         )
         return result
@@ -3805,9 +3782,6 @@ class Solver:
     def solve_in_rounds(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[IO[str]] = None,
-        timers: bool = False,
-        stats: bool = False,
         tests: spack.concretize.TestsType = False,
         allow_deprecated: bool = False,
     ) -> Generator[Result, None, None]:
@@ -3821,9 +3795,6 @@ class Solver:
 
         Arguments:
             specs (list): list of Specs to solve.
-            out: Optionally write the generate ASP program to a file-like object.
-            timers (bool): print timing if set to True
-            stats (bool): print internal statistics if set to True
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
         """
@@ -3840,14 +3811,13 @@ class Solver:
         setup.concretize_everything = False
 
         input_specs = specs
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
         while True:
             result, _, _ = self.driver.solve(
                 setup,
                 input_specs,
                 reuse=reusable_specs,
                 packages_with_externals=self.packages_with_externals,
-                output=output,
+                ui=self.ui,
                 allow_deprecated=allow_deprecated,
             )
             yield result

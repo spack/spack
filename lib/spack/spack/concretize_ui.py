@@ -9,10 +9,12 @@ Defines the :class:`ConcretizerUI` contract (a headless no-op base) and the term
 
 import enum
 import sys
-from typing import Optional
+from typing import Dict, List, Optional, Sequence
 
+from spack.solver.result import Result
 from spack.spec import Spec
 from spack.util import tty
+from spack.util.timer import BaseTimer
 
 
 class SolveKind(enum.Enum):
@@ -51,6 +53,28 @@ class ConcretizerUI:
         reported so far, including this one, and goes from 1 to the announced ``total``.
         ``duration`` is the time spent in the solve that produced this spec, so specs that come
         out of the same solve report the same duration.
+        """
+
+    def on_solve_started(self, specs: Sequence[Spec]) -> None:
+        """A solve for ``specs`` is about to start. A concretization takes one solve when the
+        specs are unified, and more than one otherwise, so this may be called several times
+        between ``on_concretization_started`` and the last ``on_spec_concretized``.
+        """
+
+    def on_asp_program_generated(self, program: List[str]) -> None:
+        """The ASP program of the solve that started has been generated, before stripping and
+        ordering. This is the last event of a solve that is set up but not run.
+        """
+
+    def on_solve_finished(
+        self, result: Result, *, timer: BaseTimer, statistics: Optional[Dict], cached: bool
+    ) -> None:
+        """A solve is over, and produced ``result``. The timer holds the duration of each of its
+        phases, and the statistics are the ones clingo reports, or the ones stored in the
+        concretization cache. ``cached`` says which of the two it is: a cached result never ran
+        the solver, so its timer has no solve phases.
+
+        Not emitted for a solve that was only set up, or one that raised.
         """
 
     def on_finished(self, *, error: Optional[BaseException]) -> None:
