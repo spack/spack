@@ -17,6 +17,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 import spack.environment.environment as ev
 import spack.spec_diff
 from spack.spec import Spec
+from spack.util.lang import stable_partition
 
 #: Version of the serialization produced by EnvironmentDiff.as_dict
 DIFF_FORMAT_VERSION = 1
@@ -57,10 +58,10 @@ class EnvironmentDiff(NamedTuple):
         """
         return {
             "_meta": {"file-type": "spack-environment-diff", "diff-version": DIFF_FORMAT_VERSION},
-            "only_in_a": [_root_to_dict(root) for root in sorted_roots(self.inputs.only_in_a)],
-            "only_in_b": [_root_to_dict(root) for root in sorted_roots(self.inputs.only_in_b)],
-            "common": [_root_to_dict(root) for root in sorted_roots(self.inputs.common)],
-            "unresolved": [_root_to_dict(root) for root in sorted_roots(self.unresolved)],
+            "only_in_a": _roots_to_dict(self.inputs.only_in_a),
+            "only_in_b": _roots_to_dict(self.inputs.only_in_b),
+            "common": _roots_to_dict(self.inputs.common),
+            "unresolved": _roots_to_dict(self.unresolved),
             "divergences": [
                 {
                     "root": _root_to_dict(divergence.root),
@@ -77,10 +78,11 @@ class EnvironmentDiff(NamedTuple):
 def input_spec_diff(roots_a: List[ev.UserSpecId], roots_b: List[ev.UserSpecId]) -> InputDiff:
     """Compare two lists of input specs by identity, preserving input order."""
     set_a, set_b = set(roots_a), set(roots_b)
+    common, only_in_a = stable_partition(roots_a, lambda root: root in set_b)
     return InputDiff(
-        only_in_a=[root for root in roots_a if root not in set_b],
+        only_in_a=only_in_a,
         only_in_b=[root for root in roots_b if root not in set_a],
-        common=[root for root in roots_a if root in set_b],
+        common=common,
     )
 
 
@@ -118,7 +120,7 @@ def _assert_comparable(env: ev.Environment, label: Optional[str] = None) -> None
     # Nodes without a package hash cannot be told apart when nothing in their configuration
     # differs, which is most of what this module reports. Rather than answer with a shrug on
     # every node, refuse the comparison.
-    if any(not spack.spec_diff.recorded_package_hash(node) for node in env.all_specs()):
+    if any(not spack.spec_diff.recorded_package_hash(node) for node in env.all_specs_generator()):
         raise ev.SpackEnvironmentError(
             f"environment '{label}' was concretized by a version of Spack that did not record "
             f"package hashes (its lockfile predates them), so it cannot be compared",
@@ -192,3 +194,8 @@ def sorted_roots(roots: List[ev.UserSpecId]) -> List[ev.UserSpecId]:
 def _root_to_dict(root: ev.UserSpecId) -> Dict[str, str]:
     """Serialize a user spec with its group as separate fields, for machine consumers."""
     return {"spec": str(root.spec), "group": root.group}
+
+
+def _roots_to_dict(roots: List[ev.UserSpecId]) -> List[Dict[str, str]]:
+    """Serialize a list of user specs, deduplicated and in canonical order."""
+    return [_root_to_dict(root) for root in sorted_roots(roots)]

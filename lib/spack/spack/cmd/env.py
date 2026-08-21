@@ -1091,14 +1091,14 @@ _MAX_LISTED_INPUTS = 3
 #: Indentation of every section header and of the entries under it
 _BAND_INDENT = 2
 
-#: Blank columns between two node blocks printed side by side
-_BLOCK_GAP = 4
-
 #: Width assumed for section headers when the output is not going to a terminal
 _DEFAULT_WIDTH = 80
 
 #: Shortest rule drawn after a section header, when its content is narrower than its label
 _MIN_RULE = 6
+
+#: Columns `tty.band` spends on its own decoration, i.e. the leading "-- " and the trailing space
+_BAND_DECORATION = 4
 
 #: Categories with no spec syntax to be rendered in, reported on a line of their own instead
 _ANNOTATED_CATEGORIES = (spack.spec_diff.DiffCategory.EXTERNAL, spack.spec_diff.DiffCategory.OTHER)
@@ -1170,11 +1170,14 @@ def _open_environment_to_diff(
     path = spack.config.substitute_path_variables(argument)
     if os.path.isfile(path):
         root = stack.enter_context(tempfile.TemporaryDirectory(prefix="spack-env-diff-"))
-        # Staged under its canonical name, since a lockfile is told from a manifest by suffix
-        staged = os.path.join(root, ev.lockfile_name)
-        shutil.copy(path, staged)
+        # A lockfile is told from a manifest by suffix, so only one that is not named like a
+        # lockfile has to be staged under a canonical name; create_in_dir copies it either way
+        init_file = path
+        if not path.endswith((".lock", ".json")):
+            init_file = os.path.join(root, ev.lockfile_name)
+            shutil.copy(path, init_file)
         try:
-            env = ev.create_in_dir(os.path.join(root, "env"), init_file=staged)
+            env = ev.create_in_dir(os.path.join(root, "env"), init_file=init_file)
         except ev.SpackEnvironmentError as e:
             # Checking what the file is only once materializing it failed keeps the success
             # path from parsing a lockfile that is about to be parsed again anyway
@@ -1271,7 +1274,21 @@ def _attribute_style(
     return spack.enums.PartStyle.HIGHLIGHT
 
 
-def _format_divergent_node(divergence: spack.spec_diff.NodeDivergence, *, first: bool) -> str:
+#: How prominently each differing (category, key) of a node should be rendered
+_StyleMap = Dict[Tuple[spack.spec_diff.DiffCategory, str], spack.enums.PartStyle]
+
+
+def _node_styles(divergence: spack.spec_diff.NodeDivergence) -> _StyleMap:
+    """Judge every difference of a node once, so both sides can be rendered from one pass."""
+    return {
+        (attribute.category, attribute.key): _attribute_style(divergence, attribute)
+        for attribute in divergence.attributes
+    }
+
+
+def _format_divergent_node(
+    divergence: spack.spec_diff.NodeDivergence, *, first: bool, styles: Optional[_StyleMap] = None
+) -> str:
     """Render one side of a divergent node as an abstract spec holding only the differences.
 
     Every part that is equal on both sides is hidden, so the result is a valid abstract spec
@@ -1282,12 +1299,11 @@ def _format_divergent_node(divergence: spack.spec_diff.NodeDivergence, *, first:
     Args:
         divergence: the node where the two DAGs diverge
         first: render the node from the first environment, otherwise the one from the second
+        styles: styles from :func:`_node_styles`, computed here when the caller has none to share
     """
+    if styles is None:
+        styles = _node_styles(divergence)
     categories = {attribute.category for attribute in divergence.attributes}
-    styles = {
-        (attribute.category, attribute.key): _attribute_style(divergence, attribute)
-        for attribute in divergence.attributes
-    }
     node = divergence.node_a if first else divergence.node_b
 
     def style(category: spack.spec_diff.DiffCategory, key: str = "") -> spack.enums.PartStyle:
@@ -1396,7 +1412,7 @@ def _group_divergences(
     configured instance of it.
 
     """
-    config: Dict[Tuple[str, str, str], _Entry] = {}  # (group, hash of a, hash of b)
+    config: Dict[str, Dict[Tuple[str, str], _Entry]] = {}  # group -> (hash of a, hash of b)
     recipes: Dict[Tuple[str, str], _Entry] = {}  # (namespace, name)
 
     for input_divergence in divergences:
@@ -1406,22 +1422,24 @@ def _group_divergences(
                 key = (node.node_a.namespace, node.node_a.name)
                 recipes.setdefault(key, (node, []))[1].append(root)
             else:
-                group_key = (root.group, node.node_a.dag_hash(), node.node_b.dag_hash())
-                config.setdefault(group_key, (node, []))[1].append(root)
+                node_key = (node.node_a.dag_hash(), node.node_b.dag_hash())
+                config.setdefault(root.group, {}).setdefault(node_key, (node, []))[1].append(root)
 
     # The default group comes first, as it does when the environment is concretized, and the
-    # entries of a group follow their nodes. Insertion order then carries both.
+    # entries of a group follow their nodes.
     default = spack.environment.environment.DEFAULT_USER_SPEC_GROUP
-    by_group: Dict[str, List[_Entry]] = {}
-    for entry in sorted(
-        config, key=lambda k: (k[0] != default, k[0], spack.spec_diff.node_sort_key(config[k][0]))
-    ):
-        node, roots = config[entry]
-        by_group.setdefault(entry[0], []).append((node, env_diff_core.sorted_roots(roots)))
+    by_group = {
+        group: [
+            (node, env_diff_core.sorted_roots(roots))
+            for node, roots in sorted(
+                config[group].values(), key=lambda x: spack.spec_diff.node_sort_key(x[0])
+            )
+        ]
+        for group in sorted(config, key=lambda x: (x != default, x))
+    }
 
     return by_group, [
-        (node, env_diff_core.sorted_roots(roots))
-        for _, (node, roots) in sorted(recipes.items(), key=lambda item: item[0])
+        (recipes[key][0], env_diff_core.sorted_roots(recipes[key][1])) for key in sorted(recipes)
     ]
 
 
@@ -1457,6 +1475,8 @@ class EnvironmentDiffRenderer:
         self.tag_after = f"{self.label_after}:{' ' * (width - len(_ENV_AFTER) + 1)}"
         # Zero when the output is not a terminal, which keeps the blocks in a single column
         self.columns = terminal_columns()
+        #: Set by _section, so that render can tell whether it found anything to report
+        self.printed = False
 
     def _section(self, label: str, blocks: List[List[str]]) -> None:
         """Print a section header followed by its blocks.
@@ -1464,10 +1484,11 @@ class EnvironmentDiffRenderer:
         Like the criteria of `spack spec --show=opt`, the header spans its own content rather than
         the console, so that a short section does not get a rule running off to the right.
         """
+        self.printed = True
         text = colorize(label)
-        lines = render_blocks(blocks, self.columns, indent=_BAND_INDENT, gap=_BLOCK_GAP)
-        content = max([clen(line) for line in lines] or [0])
-        rule = clen(text) + _BAND_INDENT + 4 + _MIN_RULE
+        lines = render_blocks(blocks, self.columns, indent=_BAND_INDENT)
+        content = max((clen(line) for line in lines), default=0)
+        rule = clen(text) + _BAND_INDENT + _BAND_DECORATION + _MIN_RULE
         # rule wins over a narrow terminal, so the header is never shorter than its own label
         width = max(rule, min(content, self.columns or _DEFAULT_WIDTH))
         print(tty.band(text, width, indent=_BAND_INDENT))
@@ -1479,10 +1500,11 @@ class EnvironmentDiffRenderer:
         self, node: spack.spec_diff.NodeDivergence, roots: List[ev.UserSpecId]
     ) -> List[str]:
         """Render one divergent node as a block: a header, the two sides, then its annotations."""
+        styles = _node_styles(node)
         return [
             f"{node.node_a.name}  ({_reached_from(roots, with_group=False)})",
-            f"    {self.tag_before}{_format_divergent_node(node, first=True)}",
-            f"    {self.tag_after}{_format_divergent_node(node, first=False)}",
+            f"    {self.tag_before}{_format_divergent_node(node, first=True, styles=styles)}",
+            f"    {self.tag_after}{_format_divergent_node(node, first=False, styles=styles)}",
         ] + _annotations(node)
 
     def render(self) -> None:
@@ -1491,15 +1513,12 @@ class EnvironmentDiffRenderer:
         print(f"{' ' * _BAND_INDENT}{self.tag_after}{self.name_after}")
         print()
 
-        printed = False
-
         sides = (
             (self.label_before, self.result.inputs.only_in_a),
             (self.label_after, self.result.inputs.only_in_b),
         )
         for label, only in sides:
             if only:
-                printed = True
                 self._section(
                     f"@*{{Input specs only in}} {label}",
                     [[_format_root(root)] for root in env_diff_core.sorted_roots(only)],
@@ -1513,7 +1532,6 @@ class EnvironmentDiffRenderer:
         show_groups = list(config_by_group) != [default]
 
         for group, entries in config_by_group.items():
-            printed = True
             self._section(
                 f"@*{{Group: {cescape(group)}}}" if show_groups else "@*{Node differences}",
                 [self._node_block(node, roots) for node, roots in entries],
@@ -1523,20 +1541,18 @@ class EnvironmentDiffRenderer:
         # configuration difference there is no pair of specs to show, since the two configurations
         # are identical.
         if recipes:
-            printed = True
             self._section(
                 "@*{Packages whose recipe differs}",
                 [[f"{node.node_a.name}  ({_reached_from(roots)})"] for node, roots in recipes],
             )
 
         if self.result.unresolved:
-            printed = True
             self._section(
                 "@*{Common input specs with no difference to point at}",
                 [[_format_root(r)] for r in env_diff_core.sorted_roots(self.result.unresolved)],
             )
 
-        if not printed:
+        if not self.printed:
             print(f"{' ' * _BAND_INDENT}the two environments are equivalent")
             print()
 
