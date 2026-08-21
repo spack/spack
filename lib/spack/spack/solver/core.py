@@ -104,6 +104,15 @@ class NodeId(NamedTuple):
     pkg: str
 
 
+def min_dupe_node(*, pkg: str) -> NodeId:
+    """Given a package name, returns the "min_dupe_id" node in the ASP encoding.
+
+    Args:
+        pkg: name of a package
+    """
+    return NodeId(id="0", pkg=pkg)
+
+
 class NodeFlag(NamedTuple):
     flag_type: str
     flag: str

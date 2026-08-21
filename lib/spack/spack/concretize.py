@@ -15,6 +15,7 @@ import spack.config
 import spack.error
 import spack.hash_lookup
 import spack.repo
+import spack.solver.core
 import spack.traverse
 import spack.util.parallel
 from spack.concretize_ui import ConcretizerUI, HeadlessUI, SolveKind
@@ -254,7 +255,7 @@ def concretize_one(
         tests: if False disregard test dependencies, if a list of names activate them for
             the packages in the list, if True activate test dependencies for all packages.
     """
-    from spack.solver.asp import Solver, SpecBuilder
+    from spack.solver.asp import Solver
 
     if isinstance(spec, str):
         spec = Spec(spec)
@@ -282,7 +283,7 @@ def concretize_one(
         providers = [s.name for s in answer.values() if s.package.provides(name)]
         name = providers[0]
 
-    node = SpecBuilder.make_node(pkg=name)
+    node = spack.solver.core.min_dupe_node(pkg=name)
     assert node in answer, (
         f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
     )
