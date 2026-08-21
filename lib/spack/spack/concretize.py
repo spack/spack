@@ -318,6 +318,20 @@ def concretize_spec_pairs(
         ui: frontend to report progress to. Defaults to a headless frontend.
     """
     ui = ui or HeadlessUI()
+    error: Optional[BaseException] = None
+    try:
+        return _dispatch_concretization(to_concretize, tests=tests, ui=ui)
+    except BaseException as e:
+        error = e
+        raise
+    finally:
+        ui.on_finished(error=error)
+
+
+def _dispatch_concretization(
+    to_concretize: List[SpecPairInput], *, tests: TestsType, ui: ConcretizerUI
+) -> List[Spec]:
+    """Run the concretization strategy that ``concretizer:unify`` prescribes."""
     kind = solve_kind(spack.config.CONFIG.get("concretizer:unify", False))
 
     # Special case for concretizing a single spec

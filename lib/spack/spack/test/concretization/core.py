@@ -5714,3 +5714,52 @@ def test_target_star_concretizes(mock_packages, config):
 def test_solve_kind_from_unify_configuration(unify, expected):
     """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
     assert spack.concretize.solve_kind(unify) is expected
+
+
+def test_concretization_reports_when_it_is_over(mutable_config, mock_packages):
+    """Tests that a concretization reports its end exactly once, with no error."""
+    ui = RecordingUI()
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+
+    assert ui.errors == [None]
+    assert len(ui.concretized) == 2
+
+
+def test_concretization_reports_the_error_it_ended_with(mutable_config, mock_packages):
+    """Tests that a concretization that raises still reports its end, carrying the exception, so
+    that a frontend can tear down what it painted before the error is printed.
+    """
+    ui = RecordingUI()
+
+    unsatisfiable = Spec("mpileaks ^mpich@3.0.3 ^mpich@3.0.4")
+    with pytest.raises(spack.error.UnsatisfiableSpecError) as exc_info:
+        spack.concretize.concretize_spec_pairs(
+            [(unsatisfiable, None), (Spec("pkg-b"), None)], ui=ui
+        )
+
+    assert ui.errors == [exc_info.value]
+
+
+@pytest.mark.parametrize("total,announced", [(2, True), (0, False)])
+def test_terminal_ui_announces_a_group_only_when_it_has_work(total, announced, capsys):
+    """Tests that the terminal frontend holds the group header back until it knows the group has
+    specs to concretize, so re-concretizing an environment doesn't announce empty groups.
+    """
+    ui = spack.concretize_ui.TerminalUI()
+    ui.on_group_started(group="apps", is_default=False)
+    ui.on_concretization_started(
+        kind=spack.concretize_ui.SolveKind.SEPARATELY, total=total, processes=1
+    )
+
+    assert ("Concretizing the 'apps' group" in capsys.readouterr().out) is announced
+
+
+def test_terminal_ui_never_announces_the_default_group(capsys):
+    """Tests that the group every environment has stays implicit."""
+    ui = spack.concretize_ui.TerminalUI()
+    ui.on_group_started(group="default", is_default=True)
+    ui.on_concretization_started(
+        kind=spack.concretize_ui.SolveKind.SEPARATELY, total=2, processes=1
+    )
+
+    assert "group of specs" not in capsys.readouterr().out
