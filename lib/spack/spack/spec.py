@@ -1797,6 +1797,18 @@ def _satisfies_dependencies(lhs: "Spec", rhs: "Spec", *, resolve_virtuals: bool)
     return True
 
 
+def constrains_only_name_and_versions(spec: "Spec") -> bool:
+    """Whether the spec constrains nothing beyond its package name and versions."""
+    return (
+        not spec.variants
+        and not spec.compiler_flags
+        and spec.architecture is None
+        and spec.namespace is None
+        and not spec.abstract_hash
+        and not spec._dependencies
+    )
+
+
 def _satisfies_edge_attributes(
     lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtuals: bool
 ) -> bool:
@@ -1821,9 +1833,12 @@ def _satisfies_edge_attributes(
     if not name_mismatch:
         return lhs.spec._satisfies_node(rhs.spec, resolve_virtuals=resolve_virtuals)
 
-    # Right-hand side is virtual provided by left-hand side. The only node attribute supported is
-    # the version of the virtual. Avoid expensive lookups for provider metadata if there's no
-    # version constraint to check.
+    # Right-hand side is a virtual provided by the left-hand side. Virtuals currently support only
+    # names and versions, so if anything else is set on the rhs we return false, which allows
+    # future implementation to relax it once variants on virtuals become meaningful.
+    if not constrains_only_name_and_versions(rhs.spec):
+        return False
+
     if rhs.spec.versions == spack.version.any_version:
         return True
 
@@ -1870,11 +1885,14 @@ def _satisfies_edge(lhs: DependencySpec, rhs: DependencySpec, resolve_virtuals: 
 def _edge_is_redundant(
     edge: DependencySpec, given: DependencySpec, resolve_virtuals: bool
 ) -> bool:
-    """Whether ``edge`` adds nothing to ``given``: ``given`` satisfies it, and it states no
-    propagation ``given`` does not. A propagated edge is an input to the solver's objective even
-    where it does not narrow the solution set, so satisfaction alone does not make it redundant."""
+    # %foo and %%foo satisfy each other in both directions; they do not restrict the solution space
+    # but only influence optimality. That means that edge redundancy cannot be based on satisfies
+    # only, hence the exception.
     if edge.propagation != PropagationPolicy.NONE and given.propagation != edge.propagation:
         return False
+    if edge.spec.name != given.spec.name:
+        # keep ^mpi@3 next to ^mpi=mpich@3: whether mpich@3 provides mpi@3 is package metadata
+        resolve_virtuals = False
     return _satisfies_edge(given, edge, resolve_virtuals)
 
 
@@ -2292,10 +2310,12 @@ class Spec:
         and is appended as a parallel edge: whether it ends up sharing a node with another edge
         to the same name is for concretization to decide.
 
-        All scans compare only edges to the same package name: a ``^virtual`` edge and a
-        ``^[virtuals=virtual] provider`` edge are independent requirements and stay apart.
-        Anonymous edges share the ``""`` bucket, where only the redundancy scans apply:
-        without a name, two direct deps can be distinct dependencies.
+        The ``_same_direct_dep`` scan compares pairs with identical package names only, because
+        anonymous specs can refer to different nodes. The redundancy scans compare every pair of
+        edges. Across different names the comparison does not resolve virtuals, so a ``^virtual``
+        edge is redundant only against an edge listing it in its ``virtuals`` attribute, and
+        only when it constrains nothing but the name. An anonymous edge is redundant when any edge
+        satisfies it; a named edge is never redundant against an anonymous one.
 
         Returns True if ``self`` changed.
 
@@ -2318,7 +2338,9 @@ class Spec:
                     break
 
         if merged_edge is None and any(
-            _edge_is_redundant(candidate, edge, resolve_virtuals) for edge in bucket
+            _edge_is_redundant(candidate, edge, resolve_virtuals)
+            for edges in self._dependencies.values()
+            for edge in edges
         ):
             return False
 
@@ -2327,7 +2349,8 @@ class Spec:
 
         for edge in [
             edge
-            for edge in bucket
+            for edges in self._dependencies.values()
+            for edge in edges
             if edge is not merged_edge and _edge_is_redundant(edge, candidate, resolve_virtuals)
         ]:
             self._detach_edge(edge)
