@@ -252,7 +252,7 @@ def test_status_function_find_files(
     "gpg_in_path,gpg_in_store,expected_missing",
     [
         (True, False, False),  # gpg exists in PATH
-        (False, True, False),  # gpg exists in bootstrap store
+        (False, True, False),  # gpg exists in the bootstrap store
         (False, False, True),  # gpg is missing
     ],
 )
@@ -266,38 +266,21 @@ def test_gpg_status_check(
     expected_missing,
 ):
     """Test that gpg/gpg2 status is detected whether it's in PATH or in the bootstrap store."""
-    # Set up mock PATH with or without gpg
-    path_dir = tmp_path / "bin"
-    path_dir.mkdir(exist_ok=True)
-    monkeypatch.setenv("PATH", str(path_dir))
-
     if gpg_in_path:
         mock_executable("gpg2", "echo GPG 2.3.4")
+    monkeypatch.setenv("PATH", str(tmp_path / "bin"))
 
-    # Mock the bootstrap store function
-    def mock_executables_in_store(exes, query_spec):
-        if not gpg_in_store:
+    def _only_gnupg_in_store(exes, query_spec):
+        if not gpg_in_store or "gpg2" not in exes:
             return None
-
-        # Simulate found gpg in bootstrap store
         return spack.bootstrap._common.ExecutableInfo(
             spec=spack.spec.Spec("gnupg@2.5.12"), command=spack.util.executable.Executable("gpg")
         )
 
-    monkeypatch.setattr(spack.bootstrap.status, "_executables_in_store", mock_executables_in_store)
+    monkeypatch.setattr(spack.bootstrap.status, "_executables_in_store", _only_gnupg_in_store)
 
-    # Call only the buildcache requirements function directly to isolate the test
-    requirements = spack.bootstrap.status._buildcache_requirements()
-
-    # Find the gpg entry by examining the calls made to set up requirements
-    # We know the first entry in requirements is the gpg entry because of how
-    # _buildcache_requirements is structured:
-    # Make sure we're not out of bounds
-    assert len(requirements) >= 1, "No gpg requirement found"
-
-    # Check that the gpg requirement matches our expectations
-    gpg_req = requirements[0]
-    assert gpg_req[0] is not expected_missing
+    msg, _ = spack.bootstrap.status_message("buildcache")
+    assert ('MISSING "gpg2"' in msg) is expected_missing
 
 
 @pytest.mark.regression("31042")
