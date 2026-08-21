@@ -18,6 +18,7 @@ import spack.compilers.config
 import spack.concretize
 import spack.config
 import spack.environment
+import spack.error
 import spack.installer_dispatch
 import spack.paths
 import spack.spec
@@ -653,3 +654,53 @@ def test_clingo_is_not_concretized_by_the_regular_concretizer(
     request.probe = lambda concrete_spec: concrete_spec.package
 
     assert bootstrapper.try_to_bootstrap(request) == "package of the clingo prototype"
+
+
+@pytest.fixture
+def backtrace_flags(monkeypatch):
+    """Return a function setting the two flags that turn tracebacks on. Sets them both
+    off to start.
+    """
+
+    def _set(**flags: bool) -> None:
+        monkeypatch.setattr(spack.error, "debug", flags.get("debug", False))
+        monkeypatch.setattr(spack.error, "SHOW_BACKTRACE", flags.get("SHOW_BACKTRACE", False))
+
+    _set()
+    return _set
+
+
+def test_source_failures_point_at_the_backtrace_flag(fake_bootstrap_type, backtrace_flags):
+    """Tests that by default the failures are reported without the noise of their tracebacks."""
+    tried: List[str] = []
+    sources = _fake_sources(tried, RuntimeError("boom"))
+
+    with pytest.raises(RuntimeError) as exc_info:
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request([]), "zlib", "zlib", RuntimeError, sources=sources
+        )
+
+    message = str(exc_info.value)
+    assert "boom" in message
+    assert 'File "' not in message
+    assert "spack --backtrace" in message
+
+
+@pytest.mark.parametrize("flag", ["debug", "SHOW_BACKTRACE"])
+def test_source_failures_carry_their_traceback_when_asked(
+    fake_bootstrap_type, backtrace_flags, flag
+):
+    """Tests that either flag turns the tracebacks on, and the hint to enable them off."""
+    backtrace_flags(**{flag: True})
+    tried: List[str] = []
+    sources = _fake_sources(tried, RuntimeError("boom"))
+
+    with pytest.raises(RuntimeError) as exc_info:
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request([]), "zlib", "zlib", RuntimeError, sources=sources
+        )
+
+    message = str(exc_info.value)
+    assert "boom" in message
+    assert 'File "' in message and "try_to_bootstrap" in message
+    assert "spack --backtrace" not in message
