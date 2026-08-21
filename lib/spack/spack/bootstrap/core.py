@@ -72,8 +72,9 @@ class BootstrapRequest(Generic[ResultT]):
     """Software to be made available in the bootstrap store, and how to check for it.
 
     The two kinds of request, a Python module and a set of executables, differ only in the
-    spec to be installed, in the probe that tests whether the software can be used, and in
-    the arguments to be passed to the installer when building from sources.
+    spec to be installed, in the probe that tests whether the software can be used, in the
+    arguments to be passed to the installer when building from sources, and in how the spec
+    is concretized.
     """
 
     def __init__(
@@ -82,6 +83,7 @@ class BootstrapRequest(Generic[ResultT]):
         metadata_name: str,
         probe: Callable[[spack.spec.Spec], Optional[ResultT]],
         installer_args: Dict[str, Any],
+        concretize: Callable[[spack.spec.Spec], spack.spec.Spec],
     ) -> None:
         #: Spec to be installed to satisfy this request
         self.abstract_spec = abstract_spec
@@ -91,20 +93,34 @@ class BootstrapRequest(Generic[ResultT]):
         self.probe = probe
         #: Extra arguments for the installer, when building from sources
         self.installer_args = installer_args
+        #: Turns the abstract spec into the concrete one to be built from sources
+        self.concretize = concretize
 
     @classmethod
-    def for_module(cls, module: str, abstract_spec_str: str) -> "BootstrapRequest[bool]":
-        """Return a request for a module importable in the interpreter running Spack."""
+    def for_module(
+        cls,
+        module: str,
+        abstract_spec_str: str,
+        concretize: Optional[Callable[[spack.spec.Spec], spack.spec.Spec]] = None,
+    ) -> "BootstrapRequest[bool]":
+        """Return a request for a module importable in the interpreter running Spack.
+
+        Args:
+            module: module to be imported in the interpreter running Spack
+            abstract_spec_str: abstract spec that provides the module
+            concretize: how to concretize the spec, when building from sources. Defaults to
+                the regular concretizer.
+        """
         return BootstrapRequest(
             abstract_spec=spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python()),
             metadata_name=module,
             probe=functools.partial(_try_import_from_store, module),
-            # unlike the executables below, modules have always forced a source build here
             installer_args={
                 "fail_fast": True,
                 "root_policy": "source_only",
                 "dependencies_policy": "source_only",
             },
+            concretize=concretize or spack.concretize.concretize_one,
         )
 
     @classmethod
@@ -118,6 +134,7 @@ class BootstrapRequest(Generic[ResultT]):
             metadata_name=abstract_spec.name,
             probe=functools.partial(_executables_in_store, executables),
             installer_args={},
+            concretize=spack.concretize.concretize_one,
         )
 
 
@@ -233,11 +250,7 @@ class SourceBootstrapper(Bootstrapper):
         _add_externals_if_missing()
 
         # Try to build and install from sources
-        if request.metadata_name == "clingo":
-            bootstrapper = ClingoBootstrapConcretizer(configuration=spack.config.CONFIG)
-            concrete_spec = bootstrapper.concretize()
-        else:
-            concrete_spec = spack.concretize.concretize_one(request.abstract_spec)
+        concrete_spec = request.concretize(request.abstract_spec)
 
         tty.debug(f"[BOOTSTRAP] Try installing '{request.abstract_spec}' from sources")
         with spack.config.CONFIG.override(self.mirror_scope):
@@ -338,7 +351,11 @@ def _bootstrap_or_raise(
     )
 
 
-def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] = None):
+def ensure_module_importable_or_raise(
+    module: str,
+    abstract_spec: Optional[str] = None,
+    concretize: Optional[Callable[[spack.spec.Spec], spack.spec.Spec]] = None,
+):
     """Make the requested module available for import, or raise.
 
     This function tries to import a Python module in the current interpreter
@@ -351,6 +368,8 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
         module: module to be imported in the current interpreter
         abstract_spec: abstract spec that might provide the module. If not
             given it defaults to "module"
+        concretize: how to concretize the spec, when building from sources. Defaults to
+            the regular concretizer.
 
     Raises:
         ImportError: if the module couldn't be imported
@@ -362,7 +381,7 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
 
     abstract_spec = abstract_spec or module
     _bootstrap_or_raise(
-        BootstrapRequest.for_module(module, abstract_spec),
+        BootstrapRequest.for_module(module, abstract_spec, concretize=concretize),
         what=f'the "{module}" Python module',
         abstract_spec=abstract_spec,
         error_type=ImportError,
@@ -437,9 +456,16 @@ def clingo_root_spec() -> str:
     return _root_spec("clingo-bootstrap@spack+python")
 
 
+def _concretize_clingo(abstract_spec: spack.spec.Spec) -> spack.spec.Spec:
+    """Return the clingo spec to be built, edited from a prototype instead of concretized."""
+    return ClingoBootstrapConcretizer(configuration=spack.config.CONFIG).concretize()
+
+
 def ensure_clingo_importable_or_raise() -> None:
     """Ensure that the clingo module is available for import."""
-    ensure_module_importable_or_raise(module="clingo", abstract_spec=clingo_root_spec())
+    ensure_module_importable_or_raise(
+        module="clingo", abstract_spec=clingo_root_spec(), concretize=_concretize_clingo
+    )
 
 
 def gnupg_root_spec() -> str:

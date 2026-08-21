@@ -423,7 +423,11 @@ def _fake_request(probes: List[Any], result: Optional[str] = None):
         return result
 
     return spack.bootstrap.core.BootstrapRequest(
-        abstract_spec=spack.spec.Spec("zlib"), metadata_name="zlib", probe=probe, installer_args={}
+        abstract_spec=spack.spec.Spec("zlib"),
+        metadata_name="zlib",
+        probe=probe,
+        installer_args={},
+        concretize=spack.concretize.concretize_one,
     )
 
 
@@ -608,32 +612,43 @@ def test_the_source_bootstrapper_installs_from_its_own_mirror(
     assert result == f"probed package of {request.abstract_spec}"
 
 
-def test_clingo_is_not_concretized_by_the_regular_concretizer(
+def test_the_source_bootstrapper_concretizes_with_the_request(
     recording_installer, mutable_config, monkeypatch
 ):
-    """Among the binaries we have clingo, so we can't concretize that with clingo."""
-
-    class _FakeClingoConcretizer:
-        def __init__(self, configuration) -> None:
-            self.configuration = configuration
-
-        def concretize(self) -> "_FakeConcreteSpec":
-            return _FakeConcreteSpec("the clingo prototype")
+    """Tests that the request decides how its spec is concretized, so that software which
+    cannot go through the regular concretizer can say so.
+    """
 
     def _regular_concretizer(abstract_spec):
-        raise AssertionError("clingo must not go through the regular concretizer")
+        raise AssertionError("the request asked for its own concretizer")
 
     monkeypatch.setattr(spack.concretize, "concretize_one", _regular_concretizer)
-    monkeypatch.setattr(spack.bootstrap.core, "ClingoBootstrapConcretizer", _FakeClingoConcretizer)
-
     mutable_config.set("bootstrap:sources", [SPACK_INSTALL_SOURCE])
-    conf = spack.bootstrap.core.bootstrapping_sources()[0]
-    bootstrapper = spack.bootstrap.core.create_bootstrapper(conf)
+    bootstrapper = spack.bootstrap.core.create_bootstrapper(
+        spack.bootstrap.core.bootstrapping_sources()[0]
+    )
 
-    request = spack.bootstrap.core.BootstrapRequest.for_module("clingo", "clingo-bootstrap")
+    request = spack.bootstrap.core.BootstrapRequest.for_module(
+        "clingo", "clingo-bootstrap", concretize=lambda _: _FakeConcreteSpec("a prototype")
+    )
     request.probe = lambda concrete_spec: concrete_spec.package
 
-    assert bootstrapper.try_to_bootstrap(request) == "package of the clingo prototype"
+    assert bootstrapper.try_to_bootstrap(request) == "package of a prototype"
+
+
+def test_clingo_is_not_concretized_by_the_regular_concretizer(mutable_config, monkeypatch):
+    """Among the binaries we have clingo, so we can't concretize that with clingo."""
+    requests: List[Any] = []
+    monkeypatch.setattr(spack.bootstrap.core, "_python_import", lambda module: False)
+    monkeypatch.setattr(
+        spack.bootstrap.core,
+        "_bootstrap_or_raise",
+        lambda request, **kwargs: requests.append(request),
+    )
+
+    spack.bootstrap.core.ensure_clingo_importable_or_raise()
+
+    assert requests[0].concretize is spack.bootstrap.core._concretize_clingo
 
 
 @pytest.fixture
