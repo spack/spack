@@ -66,13 +66,25 @@ class ConcretizerUI:
         ordering. This is the last event of a solve that is set up but not run.
         """
 
+    def on_solve_progress(
+        self, *, elapsed: float, models: int, best_cost: Optional[List[int]]
+    ) -> None:
+        """A solve that started ``elapsed`` seconds ago is still running, having found ``models``
+        models so far, the most recent of which costs ``best_cost``.
+
+        Emitted at most once a second, and only for solves that run in this process. Clingo
+        preprocesses the program before its search becomes interruptible, so the first event
+        lands well after the first second, and a solve of a few seconds reports none at all.
+        """
+
     def on_solve_finished(
         self, result: Result, *, timer: BaseTimer, statistics: Optional[Dict], cached: bool
     ) -> None:
         """A solve is over, and produced ``result``. The timer holds the duration of each of its
         phases, and the statistics are the ones clingo reports, or the ones stored in the
         concretization cache. ``cached`` says which of the two it is: a cached result never ran
-        the solver, so its timer has no solve phases.
+        the solver, so it reports no ``on_solve_progress``, and its timer has no solve
+        phases.
 
         Not emitted for a solve that was only set up, or one that raised.
         """
