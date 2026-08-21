@@ -687,6 +687,14 @@ def add_concretizer_args(subparser):
         default=None,
         help="allow concretizer to select deprecated versions",
     )
+    subgroup.add_argument(
+        "--prefer-oldest",
+        action=ConfigSetAction,
+        dest="concretizer:prefer_oldest",
+        const=True,
+        default=None,
+        help="prefer the oldest version of each package during concretization",
+    )
 
 
 def add_connection_args(subparser, add_help):
