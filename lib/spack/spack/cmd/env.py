@@ -373,9 +373,6 @@ def env_activate(args):
             active_env, shell=args.shell, script_type="deactivate", view=current_view
         )
 
-        env_deactivate_script = env_script.path_to_env_script(
-            active_env, shell=args.shell, script_type="deactivate", view=current_view
-        )
         if not os.path.isfile(env_deactivate_script):
             env_script.write_env_deactivate_script(active_env, current_view)
 
@@ -790,12 +787,6 @@ def env_rename(args):
             "To regenerate activation & deactivation scripts,"
             " regenerate view with @c{spack env view regenerate}"
         )
-    )
-    env_script.write_env_activate_script(
-        ev.Environment(to_path), os.environ.get("SPACK_ENV_VIEW", "default")
-    )
-    env_script.write_env_deactivate_script(
-        ev.Environment(to_path), os.environ.get("SPACK_ENV_VIEW", "default")
     )
 
 

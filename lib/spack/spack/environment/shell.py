@@ -38,13 +38,14 @@ def despacktivate_cmds(shell):
 
 
 def activate_prompt_cmds(shell, prompt):
+
+    if not prompt:
+        return ""
+
     bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
     zsh_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=False, zsh=True)
 
     cmds = ""
-
-    if not prompt:
-        return cmds
 
     if shell == "csh":
         cmds += "if (! $?SPACK_OLD_PROMPT ) "

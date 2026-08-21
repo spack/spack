@@ -111,11 +111,11 @@ def source_script(script_path: str, shell: str) -> str:
         shell: The shell that the user is running
     """
     if shell in ("csh", "fish"):
-        return f"source {script_path}\n"
+        return f'source "{script_path}"\n'
     elif shell == "bat":
-        return f"call {script_path}\n"
+        return f'call "{script_path}"\n'
     else:  # sh, pwsh
-        return f". {script_path}\n"
+        return f'. "{script_path}"\n'
 
 
 def post_install(spec, explicit=None):

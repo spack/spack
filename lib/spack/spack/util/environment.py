@@ -421,9 +421,8 @@ class SetPath(NameValueModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         quoted_value = shell_quote(str(self.value), shell)
-        quoted_sep = shell_quote(self.separator, shell)
         fn = shell_fn("_spack_env_set", shell)
-        return f"{fn} {self.name} {quoted_value} {quoted_sep}"
+        return f"{fn} {self.name} {quoted_value}"
 
 
 class AppendPath(NamePathModifier):

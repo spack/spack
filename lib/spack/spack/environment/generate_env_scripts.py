@@ -51,7 +51,7 @@ def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
         return True
 
     script_mtime = os.stat(script_path).st_mtime
-    return lockfile_mtime > script_mtime
+    return lockfile_mtime >= script_mtime
 
 
 def write_env_activate_script(env: "spack.environment.Environment", view: Optional[str] = None):
@@ -134,8 +134,8 @@ def source_env_script(env_script_path, shell: str) -> str:
         shell: The shell that the user is running
     """
     if shell in ("csh", "fish"):
-        return f"source {env_script_path}\n"
+        return f'source "{env_script_path}"\n'
     elif shell == "bat":
-        return f"call {env_script_path}\n"
+        return f'call "{env_script_path}"\n'
     else:  # sh, pwsh
-        return f". {env_script_path}\n"
+        return f'. "{env_script_path}"\n'
