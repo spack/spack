@@ -5701,3 +5701,16 @@ def test_target_star_concretizes(mock_packages, config):
     """target=* is not a literal unknown target '*' but rather an unconstrained target"""
     concrete = spack.concretize.concretize_one("pkg-a target=*")
     assert concrete.architecture.target_concrete
+
+
+@pytest.mark.parametrize(
+    "unify,expected",
+    [
+        (True, spack.concretize_ui.SolveKind.TOGETHER),
+        (False, spack.concretize_ui.SolveKind.SEPARATELY),
+        ("when_possible", spack.concretize_ui.SolveKind.WHEN_POSSIBLE),
+    ],
+)
+def test_solve_kind_from_unify_configuration(unify, expected):
+    """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
+    assert spack.concretize.solve_kind(unify) is expected
