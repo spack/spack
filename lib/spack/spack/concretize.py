@@ -6,7 +6,8 @@
 import importlib
 import sys
 import time
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from collections import Counter
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import spack.compilers
 import spack.compilers.config
@@ -14,6 +15,7 @@ import spack.config
 import spack.error
 import spack.hash_lookup
 import spack.repo
+import spack.traverse
 import spack.util.parallel
 from spack.concretize_ui import ConcretizerUI, HeadlessUI, SolveKind
 from spack.spec import Spec
@@ -287,3 +289,80 @@ def concretize_one(
 
     concretized = answer[node]
     return concretized
+
+
+def solve_kind(unify: Any) -> SolveKind:
+    """Return the kind of solve that a ``concretizer:unify`` value prescribes."""
+    if unify == "when_possible":
+        return SolveKind.WHEN_POSSIBLE
+    return SolveKind.TOGETHER if unify else SolveKind.SEPARATELY
+
+
+def concretize_spec_pairs(
+    to_concretize: List[SpecPairInput],
+    *,
+    tests: TestsType = False,
+    ui: Optional[ConcretizerUI] = None,
+) -> List[Spec]:
+    """Concretize the abstract specs of a list of (abstract, concrete) pairs.
+
+    Any abstract spec with a concrete spec associated with it concretizes to that spec. Any
+    abstract spec with ``None`` for its concrete spec is newly concretized. Respects the
+    unification rules from configuration.
+
+    Args:
+        to_concretize: list of tuples to concretize. First entry is abstract spec, second entry
+            is an already concrete spec, or None if not yet concretized
+        tests: list of package names for which to consider tests dependencies. If True, all nodes
+            will have test dependencies. If False, test dependencies will be disregarded.
+        ui: frontend to report progress to. Defaults to a headless frontend.
+    """
+    ui = ui or HeadlessUI()
+    kind = solve_kind(spack.config.CONFIG.get("concretizer:unify", False))
+
+    # Special case for concretizing a single spec
+    if len(to_concretize) == 1:
+        abstract, concrete = to_concretize[0]
+        return [concrete or concretize_one(abstract, tests=tests)]
+
+    # Special case if every spec is either concrete or has an abstract hash
+    if all(
+        concrete or abstract.concrete or abstract.abstract_hash
+        for abstract, concrete in to_concretize
+    ):
+        # Get all the concrete specs
+        ret = [
+            concrete
+            or (abstract if abstract.concrete else spack.hash_lookup.lookup_hash(abstract))
+            for abstract, concrete in to_concretize
+        ]
+
+        # If unify: true, check that specs don't conflict
+        # Since all concrete, "when_possible" is not relevant
+        if kind is SolveKind.TOGETHER:
+            runtimes = spack.repo.PATH.packages_with_tags("runtime")
+            specs_per_name = Counter(
+                spec.name
+                for spec in spack.traverse.traverse_nodes(
+                    ret, deptype=("link", "run"), key=spack.traverse.by_dag_hash
+                )
+                if spec.name not in runtimes  # runtimes are allowed multiple times
+            )
+
+            conflicts = sorted(name for name, count in specs_per_name.items() if count > 1)
+            if conflicts:
+                raise spack.error.SpecError(
+                    "Specs conflict and `concretizer:unify` is configured true.",
+                    f"    specs depend on multiple versions of {', '.join(conflicts)}",
+                )
+        return ret
+
+    # Standard case
+    concretize_method = concretize_separately  # unify: false
+    if kind is SolveKind.TOGETHER:
+        concretize_method = concretize_together
+    elif kind is SolveKind.WHEN_POSSIBLE:
+        concretize_method = concretize_together_when_possible
+
+    concretized = concretize_method(to_concretize, tests=tests, ui=ui)
+    return [concrete for _, concrete in concretized]

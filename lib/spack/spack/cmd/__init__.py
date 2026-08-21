@@ -10,7 +10,6 @@ import re
 import subprocess
 import sys
 import textwrap
-from collections import Counter
 from typing import Callable, Container, Generator, List, Optional, Sequence, Union
 
 import spack.concretize
@@ -18,9 +17,7 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
-import spack.hash_lookup
 import spack.paths
-import spack.repo
 import spack.spec
 import spack.spec_parser
 import spack.store
@@ -192,69 +189,9 @@ def parse_specs(
         return specs
 
     to_concretize: List[spack.concretize.SpecPairInput] = [(s, None) for s in specs]
-    return _concretize_spec_pairs(to_concretize, tests=tests, ui=ui)
-
-
-def _concretize_spec_pairs(
-    to_concretize: List[spack.concretize.SpecPairInput],
-    tests: spack.concretize.TestsType = False,
-    ui: Optional[ConcretizerUI] = None,
-) -> List[spack.spec.Spec]:
-    """Helper method that concretizes abstract specs from a list of abstract,concrete pairs.
-
-    Any spec with a concrete spec associated with it will concretize to that spec. Any spec
-    with ``None`` for its concrete spec will be newly concretized. This method respects unification
-    rules from config.
-    """
-    ui = ui or TerminalUI()
-    unify = spack.config.CONFIG.get("concretizer:unify", False)
-
-    # Special case for concretizing a single spec
-    if len(to_concretize) == 1:
-        abstract, concrete = to_concretize[0]
-        return [concrete or spack.concretize.concretize_one(abstract, tests=tests)]
-
-    # Special case if every spec is either concrete or has an abstract hash
-    if all(
-        concrete or abstract.concrete or abstract.abstract_hash
-        for abstract, concrete in to_concretize
-    ):
-        # Get all the concrete specs
-        ret = [
-            concrete
-            or (abstract if abstract.concrete else spack.hash_lookup.lookup_hash(abstract))
-            for abstract, concrete in to_concretize
-        ]
-
-        # If unify: true, check that specs don't conflict
-        # Since all concrete, "when_possible" is not relevant
-        if unify is True:  # True, "when_possible", False are possible values
-            runtimes = spack.repo.PATH.packages_with_tags("runtime")
-            specs_per_name = Counter(
-                spec.name
-                for spec in traverse.traverse_nodes(
-                    ret, deptype=("link", "run"), key=traverse.by_dag_hash
-                )
-                if spec.name not in runtimes  # runtimes are allowed multiple times
-            )
-
-            conflicts = sorted(name for name, count in specs_per_name.items() if count > 1)
-            if conflicts:
-                raise spack.error.SpecError(
-                    "Specs conflict and `concretizer:unify` is configured true.",
-                    f"    specs depend on multiple versions of {', '.join(conflicts)}",
-                )
-        return ret
-
-    # Standard case
-    concretize_method = spack.concretize.concretize_separately  # unify: false
-    if unify is True:
-        concretize_method = spack.concretize.concretize_together
-    elif unify == "when_possible":
-        concretize_method = spack.concretize.concretize_together_when_possible
-
-    concretized = concretize_method(to_concretize, tests=tests, ui=ui)
-    return [concrete for _, concrete in concretized]
+    return spack.concretize.concretize_spec_pairs(
+        to_concretize, tests=tests, ui=ui or TerminalUI()
+    )
 
 
 def matching_spec_from_env(spec):
@@ -283,7 +220,9 @@ def matching_specs_from_env(specs):
     additional_concrete_specs = (
         [(concrete, concrete) for _, concrete in env.concretized_specs()] if env else []
     )
-    return _concretize_spec_pairs(spec_pairs + additional_concrete_specs)[: len(spec_pairs)]
+    return spack.concretize.concretize_spec_pairs(
+        spec_pairs + additional_concrete_specs, ui=TerminalUI()
+    )[: len(spec_pairs)]
 
 
 def disambiguate_spec(
