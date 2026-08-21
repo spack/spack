@@ -111,12 +111,12 @@ def test_coexistence_old_and_new_deprecation(mock_packages, mutable_config):
         assert concretize_one("deprecated-dual@1.0").satisfies("@1.0")
 
 
-def test_deprecation_scope_runtime_ignores_build_only_dep(
+def test_deprecation_scope_runtime_gates_deps_that_would_be_built(
     mock_packages, concretize_scope, packages_yaml_write
 ):
     """Tests that with the default 'runtime' scope, a deprecated node reachable only through a
-    build edge is outside the checked closure, so concretization succeeds even though the node
-    is in the DAG.
+    build edge is still gated when it would be built, since building it means compiling
+    deprecated code. Only nodes that come from reuse are exempt.
     """
     packages_yaml_write("""
 packages:
@@ -124,10 +124,10 @@ packages:
     deprecation:
       scope: runtime
 """)
-    spec = concretize_one("deprecated-buildtool-client")
-    assert spec.satisfies("@1.0")
-    # The deprecated node is present in the DAG, reachable only through the build edge.
-    assert any(s.satisfies("deprecated-versions@1.1.0") for s in spec.traverse())
+    # the deprecated node is only reachable through a build edge, and it is pinned, so there is
+    # no alternative version the solver could pick instead
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated spec"):
+        concretize_one("deprecated-buildtool-client")
 
 
 def test_deprecation_scope_all_gates_build_only_dep(
@@ -409,3 +409,61 @@ def test_all_scope_rebuilds_a_library_built_with_a_deprecated_tool(
     assert client["deprecated-tool-lib"].dag_hash() != lib_built_with_deprecated_tool.dag_hash()
     # and nothing in the DAG refers to the deprecated tool any more
     assert all(x.satisfies("@2.0") for x in client.traverse() if x.name == "deprecated-tool")
+
+
+def test_deprecation_gate_outranks_build_dep_preferences(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that under the 'runtime' scope a deprecated and fresh build dependency is refused,
+    even if a preference for it exists.
+    """
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      scope: runtime
+      allowed_severity: critical
+  deprecated-tool:
+    prefer: ["@1.0"]
+""")
+    # with the deprecation allowed, the preference decides
+    assert concretize_one("deprecated-tool-client")["deprecated-tool"].satisfies("@1.0")
+
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      scope: runtime
+      allowed_severity: none
+  deprecated-tool:
+    prefer: ["@1.0"]
+""")
+    # with it disallowed, the gate outranks the preference, which is soft, and @2.0 is selected
+    assert concretize_one("deprecated-tool-client")["deprecated-tool"].satisfies("@2.0")
+
+
+def test_runtime_scope_errors_on_forced_deprecated_build_dep(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that under the 'runtime' scope a deprecated and fresh build dependency is an error,
+    whether the version is forced on the command line or by configuration.
+    """
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      scope: runtime
+""")
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated spec"):
+        concretize_one("deprecated-tool-client %deprecated-tool@1.0")
+
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      scope: runtime
+  deprecated-tool:
+    require: "@1.0"
+""")
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated spec"):
+        concretize_one("deprecated-tool-client")

@@ -763,8 +763,10 @@ Which dependencies are checked is controlled by the ``scope`` setting, which is 
        deprecation:
          scope: runtime
 
-With the default ``"runtime"``, only the link and run closure of the requested packages is checked, which is the set of dependencies that end up in their runtime environment.
-With ``"all"``, every node in the DAG is checked, including build dependencies of build dependencies.
+With the default ``"runtime"``, two sets of nodes are checked: the link and run closure of the requested packages, which is the set of dependencies that end up in their runtime environment, and any node Spack would build from sources.
+The second set means a deprecated build tool is not silently compiled and run: when a version that is not deprecated exists the concretizer selects it instead, and when the request leaves no alternative it is an error.
+Nodes that come from reuse are exempt, so an artifact that was built with a tool since deprecated is still reused as is.
+With ``"all"``, every node in the DAG is checked instead, including the build dependencies recorded in reused artifacts.
 The stricter ``"all"`` scope is technically more correct, since a compromised build tool can in principle affect its dependents, but it is also more likely to reject an install over a deprecation that has no effect on the produced binaries.
 
 Individual advisories can be skipped without relaxing the threshold, using ``exempt_labels``:
