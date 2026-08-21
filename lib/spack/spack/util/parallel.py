@@ -6,7 +6,8 @@ import multiprocessing
 import os
 import sys
 import traceback
-from typing import Optional
+import warnings
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Type
 
 from spack.util.cpus import cpus_available
 
@@ -40,9 +41,19 @@ class ErrorFromWorker:
         return self.error_message
 
 
+class WarningRecord(NamedTuple):
+    """A warning raised in a worker process, in a form that can be sent over a pipe."""
+
+    message: str
+    category: Type[Warning]
+    filename: str
+    lineno: int
+
+
 class Task:
     """Wrapped task that trap every Exception and return it as an
-    ErrorFromWorker object.
+    ErrorFromWorker object, and capture warnings so that the parent process can
+    re-emit them.
 
     We are using a wrapper class instead of a decorator since the class
     is pickleable, while a decorator with an inner closure is not.
@@ -51,12 +62,17 @@ class Task:
     def __init__(self, func):
         self.func = func
 
-    def __call__(self, *args, **kwargs):
-        try:
-            value = self.func(*args, **kwargs)
-        except Exception:
-            value = ErrorFromWorker(*sys.exc_info())
-        return value
+    def __call__(self, *args, **kwargs) -> Tuple[Any, List[WarningRecord]]:
+        with warnings.catch_warnings(record=True) as recorded:
+            # Report every warning, and let the parent process decide what to deduplicate
+            warnings.simplefilter("always")
+            try:
+                value = self.func(*args, **kwargs)
+            except Exception:
+                value = ErrorFromWorker(*sys.exc_info())
+        return value, [
+            WarningRecord(str(w.message), w.category, w.filename, w.lineno) for w in recorded
+        ]
 
 
 def imap_unordered(
@@ -79,6 +95,9 @@ def imap_unordered(
         maxtaskperchild: number of tasks to be executed by a child before being
             killed and substituted
 
+    Warnings raised in the worker processes are re-emitted here, so that they are formatted by
+    this process' ``showwarning`` hook and deduplicated across workers.
+
     Raises:
         RuntimeError: if any error occurred in the worker processes
     """
@@ -90,10 +109,20 @@ def imap_unordered(
     from spack.subprocess_context import GlobalStateMarshaler
 
     marshaler = GlobalStateMarshaler(serialize_env=serialize_env)
+    # A single registry, so a warning raised by every worker is shown once
+    registry: Dict[Any, Any] = {}
     with multiprocessing.Pool(
         processes, initializer=marshaler.restore, maxtasksperchild=maxtaskperchild
     ) as p:
-        for result in p.imap_unordered(Task(f), list_of_args):
+        for result, recorded in p.imap_unordered(Task(f), list_of_args):
+            for record in recorded:
+                warnings.warn_explicit(
+                    record.message,
+                    record.category,
+                    record.filename,
+                    record.lineno,
+                    registry=registry,
+                )
             if isinstance(result, ErrorFromWorker):
                 raise RuntimeError(result.stacktrace if debug else str(result))
             yield result
