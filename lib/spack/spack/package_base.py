@@ -1435,7 +1435,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             raise ValueError("Cannot retrieve fetcher for package without concrete version.")
         if not self._fetcher:
             # assign private member with the public setter api for error checking
-            self.fetcher = fs.for_package_version(self)
+            self.fetcher = fs.for_spec(self.spec)
         return self._fetcher
 
     @fetcher.setter
