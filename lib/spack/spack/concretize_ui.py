@@ -9,6 +9,7 @@ Defines the :class:`ConcretizerUI` contract (a headless no-op base) and the term
 
 import enum
 import sys
+from typing import Optional
 
 from spack.spec import Spec
 from spack.util import tty
@@ -52,6 +53,12 @@ class ConcretizerUI:
         out of the same solve report the same duration.
         """
 
+    def on_finished(self, *, error: Optional[BaseException]) -> None:
+        """Concretization is over, successfully if ``error`` is None. Emitted exactly once per
+        concretization, from a ``finally``, so it reaches the frontend on both the success and
+        the failure path.
+        """
+
 
 #: Frontend that reports nothing. Same class as the contract it implements, aliased so that call
 #: sites can say which of the two roles they mean.
@@ -64,16 +71,21 @@ class TerminalUI(ConcretizerUI):
     def __init__(self) -> None:
         self.kind = SolveKind.TOGETHER
         self.total = 0
+        self.pending_group: Optional[str] = None
 
     def on_group_started(self, *, group: str, is_default: bool) -> None:
-        if is_default:
-            return
-        tty.msg(f"Concretizing the '{group}' group of specs")
+        # Held back until we know the group has specs to concretize
+        self.pending_group = None if is_default else group
 
     def on_concretization_started(self, *, kind: SolveKind, total: int, processes: int) -> None:
         self.kind = kind
         self.total = total
-        if kind is not SolveKind.SEPARATELY or total == 0:
+        if total == 0:
+            return
+        if self.pending_group is not None:
+            tty.msg(f"Concretizing the '{self.pending_group}' group of specs")
+            self.pending_group = None
+        if kind is not SolveKind.SEPARATELY:
             return
         msg = "Starting concretization"
         if processes > 1:

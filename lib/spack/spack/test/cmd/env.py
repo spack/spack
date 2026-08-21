@@ -5095,3 +5095,29 @@ spack:
     # "default" is concretized first, the groups that don't need each other follow in any order
     assert ui.groups[0] == ("default", True)
     assert set(ui.groups[1:]) == {("apps1", False), ("apps2", False)}
+
+
+def test_concretization_reports_a_group_with_nothing_to_do(environment_from_manifest):
+    """Tests that re-concretizing an environment reports each group and an empty batch for it,
+    so a frontend sees a start and an end for every group.
+    """
+    e = environment_from_manifest("""
+spack:
+  specs:
+  - libelf
+  - group: apps1
+    specs:
+    - pkg-a
+""")
+    with e:
+        e.concretize()
+        e.write()
+
+        ui = RecordingUI()
+        e.concretize(ui=ui)
+
+    # Both groups and their empty batches are reported, with no spec concretized
+    assert set(ui.groups) == {("default", True), ("apps1", False)}
+    assert [total for _, total, _ in ui.started] == [0, 0]
+    assert not ui.concretized
+    assert ui.errors == [None]
