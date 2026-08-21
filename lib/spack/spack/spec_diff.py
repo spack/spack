@@ -96,7 +96,8 @@ def _direct_children(node: Spec) -> Dict[str, Spec]:
     children: Dict[str, Spec] = {}
     for edge in node.edges_to_dependencies():
         current = children.setdefault(edge.spec.name, edge.spec)
-        if current.dag_hash() != edge.spec.dag_hash():
+        # The identity check short-circuits the common case of a single edge to a name
+        if current is not edge.spec and current.dag_hash() != edge.spec.dag_hash():
             raise SpecDiffError(
                 f"cannot compare '{node.name}': comparing split dependencies is not supported yet",
                 f"it has edges to two different '{edge.spec.name}' specs "
