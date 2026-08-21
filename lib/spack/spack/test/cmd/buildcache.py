@@ -18,6 +18,7 @@ import spack.buildcache_migrate as migrate
 import spack.buildcache_prune
 import spack.cmd.buildcache
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.error
 import spack.main
@@ -196,6 +197,32 @@ def test_buildcache_autopush(tmp_path: pathlib.Path, install_mockery, mock_fetch
 
     assert not (mirror_dir / specs_dirs / manifest_file).exists()
     assert (mirror_autopush_dir / specs_dirs / manifest_file).exists()
+
+
+def test_buildcache_autopush_skips_non_redistributable(
+    tmp_path: pathlib.Path, install_mockery, mock_fetch
+):
+    """Specs with redistribute(binary=False) are only pushed to private autopush mirrors"""
+    mirror_autopush_dir = tmp_path / "mirror_autopush"
+    mirror_private_dir = tmp_path / "mirror_autopush_private"
+
+    mirror("add", "--autopush", "--unsigned", "mirror-autopush", mirror_autopush_dir.as_uri())
+    spack.config.set(
+        "mirrors:mirror-autopush-private",
+        {"url": mirror_private_dir.as_uri(), "autopush": True, "signed": False, "private": True},
+    )
+
+    s = spack.concretize.concretize_one("no-redistribute")
+
+    PackageInstaller([s.package], fake=True, explicit=True).install()
+
+    manifest_file = URLBuildcacheEntry.get_manifest_filename(s)
+    specs_dirs = os.path.join(
+        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.SPEC), s.name
+    )
+
+    assert not (mirror_autopush_dir / specs_dirs / manifest_file).exists()
+    assert (mirror_private_dir / specs_dirs / manifest_file).exists()
 
 
 def test_buildcache_sync(
