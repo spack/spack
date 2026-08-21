@@ -98,6 +98,56 @@ colors = {
     "W": 97,
 }  # white
 
+
+class Style(str):
+    def __new__(cls, style_code: int):
+        return super().__new__(cls, f"\033[{style_code}m")
+
+
+class Color(str):
+    bright: str
+
+    def __new__(cls, normal_code: int):
+        instance = super().__new__(cls, f"\033[0;{normal_code}m")
+        instance.bright = f"\033[0;{normal_code + 60}m"
+        return instance
+
+
+class NullColor(str):
+    bright: str
+
+    def __new__(cls):
+        instance = super().__new__(cls, "")
+        instance.bright = ""
+        return instance
+
+
+def get_colors(color: Optional[bool] = None):
+    active = get_color_when() if color is None else color
+    return ColorsActive if active else ColorsInactive
+
+
+class ColorsActive:
+    BLACK = Color(30)
+    RED = Color(31)
+    GREEN = Color(32)
+    YELLOW = Color(33)
+    BLUE = Color(34)
+    MAGENTA = Color(35)
+    CYAN = Color(36)
+    WHITE = Color(37)
+
+    BOLD = Style(1)
+    UNDERLINE = Style(4)
+
+    RESET = "\033[0m"
+
+
+class ColorsInactive:
+    BLACK = RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = NullColor()
+    BOLD = UNDERLINE = RESET = ""
+
+
 # Regex to be used for color formatting
 COLOR_RE = re.compile(r"@(?:(@)|(\.)|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)")
 
