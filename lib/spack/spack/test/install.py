@@ -830,7 +830,7 @@ def test_installer_scope_all_gates_build_transitive_deprecation(
             spack.installer_dispatch.create_installer([spec.package]).install()
 
 
-def test_deprecation_gate_checks_each_node_once(install_mockery):
+def test_deprecation_gate_checks_each_node_once(install_mockery, monkeypatch):
     """Tests that a single check walks the DAG with node-level dedup, so a dependency shared
     through a diamond is inspected exactly once.
     """
@@ -838,11 +838,12 @@ def test_deprecation_gate_checks_each_node_once(install_mockery):
 
     seen: Dict[str, int] = {}
 
-    def counting_policy(node):
+    def counting_disallowed(self, node):
         seen[node.dag_hash()] = seen.get(node.dag_hash(), 0) + 1
         return []
 
-    spack.deprecation.check_deprecations([spec], policy=counting_policy)
+    monkeypatch.setattr(spack.deprecation.Policy, "disallowed", counting_disallowed)
+    spack.deprecation.check_deprecations([spec])
 
     assert seen, "expected the DAG to be walked"
     assert all(count == 1 for count in seen.values())
