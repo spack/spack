@@ -16,6 +16,7 @@ import warnings
 from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
 
 import spack.error
+import spack.operating_systems.windows_os as winOs
 import spack.spec
 import spack.util.elf as elf_utils
 import spack.util.environment
@@ -26,17 +27,7 @@ import spack.util.parallel
 import spack.util.tty
 from spack.util import environment
 
-from .common import (
-    WindowsCompilerExternalPaths,
-    WindowsKitExternalPaths,
-    _convert_to_iterable,
-    compute_windows_program_path_for_package,
-    compute_windows_user_path_for_package,
-    executable_prefix,
-    find_win32_additional_install_paths,
-    library_prefix,
-    path_to_dict,
-)
+from .common import _convert_to_iterable, executable_prefix, library_prefix, path_to_dict
 
 #: Timeout used for package detection (seconds)
 DETECTION_TIMEOUT = 60
@@ -51,14 +42,17 @@ def common_windows_package_paths(pkg_cls=None) -> List[str]:
     """
     if sys.platform != "win32":
         return []
-    paths = WindowsCompilerExternalPaths.find_windows_compiler_bundled_packages()
-    paths.extend(find_win32_additional_install_paths())
-    paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
-    paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
-    paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
+    paths = winOs.VisualStudioLayout.find_cmake_paths()
+    paths.extend(winOs.VisualStudioLayout.find_ninja_paths())
+    paths.extend(winOs.find_win32_additional_install_paths())
+    paths.extend(winOs.WindowsKitExternalPaths.find_windows_kit_bin_paths())
+    paths.extend(winOs.WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
+    paths.extend(winOs.WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
+    paths.extend(winOs.VisualStudioLayout.find_llvm_paths())
+    paths.extend(winOs.VisualStudioLayout.find_sdk_bin_paths())
     if pkg_cls:
-        paths.extend(compute_windows_user_path_for_package(pkg_cls))
-        paths.extend(compute_windows_program_path_for_package(pkg_cls))
+        paths.extend(winOs.compute_windows_user_path_for_package(pkg_cls))
+        paths.extend(winOs.compute_windows_program_path_for_package(pkg_cls))
     return paths
 
 
@@ -206,10 +200,16 @@ def libraries_in_windows_paths(path_hints: Optional[List[str]] = None) -> Dict[s
     search_paths.extend(spack.util.filesystem.search_paths_for_executables(*search_hints))
     if path_hints is None:
         # if no user provided path was given, add defaults to the search
-        search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
+        search_paths.extend(winOs.WindowsKitExternalPaths.find_windows_kit_lib_paths())
         # SDK and WGL should be handled by above, however on occasion the WDK is in an atypical
         # location, so we handle that case specifically.
-        search_paths.extend(WindowsKitExternalPaths.find_windows_driver_development_kit_paths())
+        search_paths.extend(
+            winOs.WindowsKitExternalPaths.find_windows_driver_development_kit_paths()
+        )
+        # SDK and WDK installed via the VS Installer may not appear in the system-wide
+        # registry keys queried above; probe VS instance metadata to cover that case.
+        search_paths.extend(winOs.VisualStudioLayout.find_sdk_lib_paths())
+        search_paths.extend(winOs.VisualStudioLayout.find_wdk_paths())
     return path_to_dict(search_paths)
 
 
