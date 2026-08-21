@@ -281,7 +281,9 @@ class ReusableSpecsSelector:
                     )
                 )
 
-    def reusable_specs(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
+    def reusable_specs(
+        self, specs: List[spack.spec.Spec], *, policy: Optional[spack.deprecation.Policy] = None
+    ) -> List[spack.spec.Spec]:
         result = []
         for reuse_source in self.reuse_sources:
             result.extend(reuse_source.selected_specs())
@@ -290,4 +292,4 @@ class ReusableSpecsSelector:
             result = [spec for spec in result if not any(root in spec for root in specs)]
 
         # Never hand the solver an artifact the deprecation policy would refuse to install
-        return spack.deprecation.reusable(result)
+        return spack.deprecation.reusable(result, policy=policy)

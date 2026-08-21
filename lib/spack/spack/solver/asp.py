@@ -1110,7 +1110,12 @@ class SpackSolverSetup:
     clauses: "SpecClauseGenerator"
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
-    def __init__(self, tests: spack.concretize.TestsType = False):
+    def __init__(
+        self,
+        tests: spack.concretize.TestsType = False,
+        *,
+        deprecation_policy: Optional[spack.deprecation.Policy] = None,
+    ):
         self.possible_graph = create_graph_analyzer()
 
         # these are all initialized in setup()
@@ -1147,8 +1152,10 @@ class SpackSolverSetup:
         # Set during the call to setup
         self.pkgs: Set[str] = set()
 
-        # deprecation policy resolved once in setup and reused for every package
-        self.deprecation_policy = spack.deprecation.Policy({}, {})
+        # deprecation policy resolved once per solve and reused for every package
+        self.deprecation_policy = deprecation_policy or spack.deprecation.Policy.from_config(
+            warn_on_legacy=True
+        )
 
         # list of unique libc specs targeted by compilers (or an educated guess if no compiler)
 
@@ -2477,9 +2484,6 @@ class SpackSolverSetup:
         )
         self.validate_and_define_versions_from_requirements(require_checksum=checksummed)
 
-        # Resolve the deprecation policy once (and emit the one-time legacy warning here).
-        self.deprecation_policy = spack.deprecation.Policy.from_config(warn_on_legacy=True)
-
         # Global deprecation-check scope (runtime vs. the whole DAG)
         self.gen.fact(fn.deprecation_scope(self.deprecation_policy.scope))
 
@@ -3463,9 +3467,12 @@ class Solver:
           setup_only: if True, stop after setup and don't solve (default False).
         """
         specs = _resolve_input_specs(specs)
+        # One policy per solve, shared by the reuse filter and the setup, so both read the
+        # 'packages' configuration exactly once and cannot disagree
+        policy = spack.deprecation.Policy.from_config(warn_on_legacy=True)
         reusable_specs = self._extract_concrete_specs(specs)
-        reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        reusable_specs.extend(self.selector.reusable_specs(specs, policy=policy))
+        setup = SpackSolverSetup(tests=tests, deprecation_policy=policy)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
 
         result = self.driver.solve(
@@ -3514,9 +3521,10 @@ class Solver:
             return
 
         specs = _resolve_input_specs(specs)
+        policy = spack.deprecation.Policy.from_config(warn_on_legacy=True)
         reusable_specs = self._extract_concrete_specs(specs)
-        reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        reusable_specs.extend(self.selector.reusable_specs(specs, policy=policy))
+        setup = SpackSolverSetup(tests=tests, deprecation_policy=policy)
 
         # Tell clingo that we don't have to solve all the inputs at once
         setup.concretize_everything = False

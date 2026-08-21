@@ -17,7 +17,7 @@ cannot drift.
 """
 
 import warnings
-from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Union
+from typing import TYPE_CHECKING, Dict, Iterable, List, NamedTuple, Optional, Set, Union
 
 import spack.config
 import spack.deptypes as dt
@@ -198,26 +198,20 @@ def reusable(
 
 
 def check_deprecations(
-    seeds: Iterable["spack.spec.Spec"],
-    *,
-    policy: Optional[Callable[["spack.spec.Spec"], List[Violation]]] = None,
-    deptypes: Optional[int] = None,
+    seeds: Iterable["spack.spec.Spec"], *, policy: Optional[Policy] = None
 ) -> None:
     """Raise if the DAG reachable from any seed contains a disallowed deprecation.
 
     Args:
         seeds: the specs to check, together with the DAG reachable from them.
-        policy: maps a spec to its list of disallowed deprecations; defaults to the configured
-            ``packages`` policy.
-        deptypes: dependency types to traverse; defaults to the configured ``deprecation:scope``.
+        policy: the policy to apply, together with the closure it checks; defaults to the
+            configured one.
     """
-    resolved = Policy.from_config()
-    policy = policy or resolved.disallowed
-    deptypes = deptypes if deptypes is not None else resolved.deptypes
+    resolved = policy or Policy.from_config()
 
     violations: List[str] = []
-    for node in spack.traverse.traverse_nodes(list(seeds), deptype=deptypes):
-        found = policy(node)
+    for node in spack.traverse.traverse_nodes(list(seeds), deptype=resolved.deptypes):
+        found = resolved.disallowed(node)
         if found:
             violations.append(_format_violations(node, found))
 
