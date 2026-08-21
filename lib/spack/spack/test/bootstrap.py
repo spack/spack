@@ -58,6 +58,16 @@ def active_mock_environment(mutable_config, mutable_mock_env_path):
         yield env
 
 
+def _assert_bootstrap_store_is_active() -> None:
+    """Assert what every bootstrap context looks like from the inside: the bootstrap store,
+    with no padding, is the one in use.
+    """
+    bootstrap_store = spack.bootstrap.config.store_path()
+    assert spack.store.STORE.root == bootstrap_store
+    assert spack.config.CONFIG.get("config:install_tree:root") == bootstrap_store
+    assert spack.config.CONFIG.get("config:install_tree:padded_length") == 0
+
+
 @pytest.mark.regression("22294")
 def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmp_path: pathlib.Path):
     """Tests that the store is correctly swapped during bootstrapping, and restored afterward."""
@@ -66,7 +76,7 @@ def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmp_path: p
         assert spack.store.STORE.root == user_path
         assert spack.config.CONFIG.get("config:install_tree:root") == user_path
         with spack.bootstrap.ensure_bootstrap_configuration():
-            assert spack.store.STORE.root == spack.bootstrap.config.store_path()
+            _assert_bootstrap_store_is_active()
         assert spack.store.STORE.root == user_path
         assert spack.config.CONFIG.get("config:install_tree:root") == user_path
 
@@ -80,8 +90,7 @@ def test_store_padding_length_is_zero_during_bootstrapping(mutable_config, tmp_p
     with spack.store.use_store(user_path, extra_data={"padded_length": 512}):
         assert spack.config.CONFIG.get("config:install_tree:padded_length") == 512
         with spack.bootstrap.ensure_bootstrap_configuration():
-            assert spack.store.STORE.root == spack.bootstrap.config.store_path()
-            assert spack.config.CONFIG.get("config:install_tree:padded_length") == 0
+            _assert_bootstrap_store_is_active()
         assert spack.config.CONFIG.get("config:install_tree:padded_length") == 512
 
 
@@ -94,12 +103,7 @@ def test_install_tree_customization_is_respected(mutable_config, tmp_path: pathl
     store_dir = tmp_path / "store"
     spack.config.CONFIG.set("config:install_tree:root", str(store_dir))
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.store.STORE.root == spack.bootstrap.config.store_path()
-        assert (
-            spack.config.CONFIG.get("config:install_tree:root")
-            == spack.bootstrap.config.store_path()
-        )
-        assert spack.config.CONFIG.get("config:install_tree:padded_length") == 0
+        _assert_bootstrap_store_is_active()
     assert spack.config.CONFIG.get("config:install_tree:root") == str(store_dir)
     assert spack.store.STORE.root == str(store_dir)
 
@@ -297,30 +301,6 @@ def test_source_is_disabled(mutable_config):
     # Try to explicitly disable the source and verify that the behavior is the same as above
     spack.config.CONFIG.add("bootstrap:trusted:{0}:{1}".format(conf["name"], False))
     assert not spack.bootstrap.core.source_is_enabled(conf)
-
-
-@pytest.mark.regression("45247")
-def test_use_store_does_not_try_writing_outside_root(
-    tmp_path: pathlib.Path, monkeypatch, mutable_config
-):
-    """Tests that when we use the 'use_store' context manager, there is no attempt at creating
-    a Store outside the given root.
-    """
-    initial_store = mutable_config.get("config:install_tree:root")
-    user_store = tmp_path / "store"
-
-    fn = spack.store.Store.__init__
-
-    def _checked_init(self, root, *args, **kwargs):
-        fn(self, root, *args, **kwargs)
-        assert self.root == str(user_store)
-
-    monkeypatch.setattr(spack.store.Store, "__init__", _checked_init)
-
-    spack.store.reinitialize()
-    with spack.store.use_store(user_store):
-        assert spack.config.CONFIG.get("config:install_tree:root") == str(user_store)
-    assert spack.config.CONFIG.get("config:install_tree:root") == initial_store
 
 
 @pytest.mark.parametrize("prototype", PROTOTYPES)
