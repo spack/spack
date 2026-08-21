@@ -607,7 +607,9 @@ def _ensure_all_versions_can_produce_a_fetcher(
             spack.fetch_strategy.check_pkg_attributes(pkg_cls)
             # TODO: needs to be modified for fetch_strategy.for_spec()
             for version in versions:
-                assert spack.fetch_strategy.for_package_version(pkg, version)
+                spec_cp = spec.copy()
+                spec_cp.versions = spack.version.VersionList([version])
+                assert spack.fetch_strategy.for_spec(spec_cp)
         except Exception as e:
             error_msg = "The package '{}' cannot produce a fetcher for some of its versions"
             details = ["{}".format(str(e))]
@@ -668,7 +670,9 @@ def _ensure_all_packages_use_sha256_checksums(pkgs, error_cls):
         error_msg = f"Package '{pkg_name}' does not use sha256 checksum"
         details = []
         for v, args in pkg.versions.items():
-            fetcher = spack.fetch_strategy.for_package_version(pkg, v)
+            spec_cp = pkg.spec.copy()
+            spec_cp.versions = spack.version.VersionList([v])
+            fetcher = spack.fetch_strategy.for_spec(spec_cp)
             digest, is_bad = invalid_sha256_digest(fetcher)
             if is_bad:
                 details.append(f"{pkg_name}@{v} uses {digest}")

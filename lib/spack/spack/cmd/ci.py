@@ -776,7 +776,9 @@ def validate_git_versions(
     """
     valid_commit = True
     for version in versions:
-        fetcher = spack.fetch_strategy.for_package_version(pkg, version)
+        spec_cp = pkg.spec.copy()
+        spec_cp.versions = spack.version.VersionList([version])
+        fetcher = spack.fetch_strategy.for_spec(spec_cp)
         assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
         with spack.stage.Stage(fetcher) as stage:
             known_commit = pkg.versions[version]["commit"]
