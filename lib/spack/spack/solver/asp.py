@@ -374,7 +374,9 @@ class Result:
     def __init__(self, specs):
         self.satisfiable = None
         self.optimal = None
-        self.warnings = None
+        # Diagnostics about the answer set. Stored, rather than warned about while building
+        # specs, so that a result served from the concretization cache reports them too.
+        self.warnings: List[str] = []
         self.nmodels = 0
 
         # specs ordered by optimization level
@@ -456,7 +458,7 @@ class Result:
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             elif candidate and candidate.build_spec.satisfies(input_spec):
-                tty.warn(
+                warnings.warn(
                     "explicit splice configuration has caused the concretized spec"
                     f" {candidate} not to satisfy the input spec {input_spec}"
                 )
@@ -514,7 +516,8 @@ class Result:
         result = Result(specs)
         result.criteria = [OptimizationCriteria(*t) for t in obj["criteria"]]
         result.optimal = obj["optimal"]
-        result.warnings = obj["warnings"]
+        # Entries written before warnings were recorded store None here
+        result.warnings = obj["warnings"] or []
         result.nmodels = obj["nmodels"]
         result.satisfiable = obj["satisfiable"]
         result.answers = [
@@ -1046,6 +1049,9 @@ class PyclingoDriver:
         # add best spec to the results
         result.answers.append((list(min_cost), 0, spec_dict))
 
+        # diagnostics collected while building the specs, cached along with the answer
+        result.warnings = builder.warnings
+
         # get optimization criteria
         criteria_args = extract_args(best_model, "opt_priority")
         result.criteria = build_criteria_names(min_cost, criteria_args)
@@ -1163,6 +1169,10 @@ class PyclingoDriver:
             # write result back to the cache *before* post-processing
             if cache and cache_key is not None:
                 cache.store(cache_key, result, self.control.statistics)
+
+        # emitted here, so that a cached result reports the same diagnostics as a fresh solve
+        for message in result.warnings:
+            warnings.warn(message)
 
         # apply post-concretization transformations
         for _, _, spec_dict in result.answers:
@@ -3576,6 +3586,9 @@ class SpecBuilder:
     def __init__(self, specs, hash_lookup=None):
         self._specs: Dict[NodeId, spack.spec.Spec] = {}
 
+        #: Diagnostics about the answer set, collected for the Result to carry
+        self.warnings: List[str] = []
+
         # Matches parent nodes to splice node
         self._splices: SpliceDict = {}
 
@@ -3645,7 +3658,7 @@ class SpecBuilder:
         dependencies[0].update_virtuals(virtual)
 
     def deprecated(self, node: NodeId, version: str) -> None:
-        tty.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
+        self.warnings.append(f'using "{node.pkg}@{version}" which is a deprecated version')
 
     def splice_at_hash(
         self, parent_node: NodeId, splice_node: NodeId, child_name: str, child_hash: str
@@ -3969,7 +3982,7 @@ def _specs_with_commits(spec):
 
     if "commit" not in spec.variants:
         if not spec.is_develop:
-            tty.warn(
+            warnings.warn(
                 f"Unable to resolve the git commit for {spec.name}. "
                 "An installation of this binary won't have complete binary provenance."
             )
