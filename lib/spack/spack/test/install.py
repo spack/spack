@@ -945,3 +945,24 @@ def test_deprecation_gate_runs_before_any_setup_work(
         spack.installer_dispatch.create_installer([spec.package]).install()
 
     assert not work_done
+
+
+def test_reused_artifact_with_deprecated_build_dep_stays_reusable(
+    install_mockery, mock_fetch, mutable_config: Configuration
+):
+    """Under the 'runtime' scope the gate applies to what would be built, not to what is reused,
+    so an artifact that was built with a tool since deprecated is still reused as is.
+    """
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
+        lib = spack.concretize.concretize_one("deprecated-tool-lib ^deprecated-tool@1.0")
+        spack.installer_dispatch.create_installer([lib.package]).install()
+
+    assert any(s.satisfies("deprecated-tool@1.0") for s in lib.traverse())
+
+    with mutable_config.override(
+        "packages:all:deprecation:scope", "runtime"
+    ), mutable_config.override("concretizer:reuse", True):
+        reused = spack.concretize.concretize_one("deprecated-tool-lib")
+
+    assert reused.dag_hash() == lib.dag_hash()
+    assert any(s.satisfies("deprecated-tool@1.0") for s in reused.traverse())
