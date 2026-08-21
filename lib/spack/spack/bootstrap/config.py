@@ -57,7 +57,7 @@ def store_path() -> str:
 
 
 @contextlib.contextmanager
-def spack_python_interpreter() -> Generator:
+def _spack_python_interpreter() -> Generator:
     """Override the current configuration to set the interpreter under
     which Spack is currently running as the only Python external spec
     available.
@@ -150,5 +150,5 @@ def _ensure_bootstrap_configuration() -> Generator:
         spack.config.CONFIG.set("bootstrap", user_configuration["bootstrap"])
         spack.config.CONFIG.set("config", user_configuration["config"])
         spack.config.CONFIG.set("repos", user_configuration["repos"])
-        with spack.modules.disable_modules(), spack_python_interpreter():
+        with spack.modules.disable_modules(), _spack_python_interpreter():
             yield
