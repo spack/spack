@@ -2979,6 +2979,8 @@ def test_bare_direct_virtual_edge_is_absorbed_by_a_provider_edge(mock_packages):
         ("pkg-a ^mpi=mpich", "pkg-a ^mpi+debug"),
         ("pkg-a ^mpi=mpich~debug", "pkg-a ^mpi+debug"),
         ("pkg-a %mpi=mpich", "pkg-a %mpi+debug"),
+        ("pkg-a ^mpi=mpich", "pkg-a ^mpi %gcc"),
+        ("pkg-a ^mpi=mpich", "pkg-a ^mpi target=x86_64"),
     ],
 )
 def test_provider_edge_does_not_satisfy_a_constrained_virtual(mock_packages, lhs, rhs):
@@ -2990,9 +2992,11 @@ def test_provider_edge_does_not_satisfy_a_constrained_virtual(mock_packages, lhs
 def test_constrained_virtual_and_provider_edge_are_parallel_edges(mock_packages):
     """The pairs above still intersect, and constrain keeps the two requirements side by
     side."""
-    lhs = Spec("pkg-a ^mpi=mpich")
-    assert lhs.intersects("pkg-a ^mpi+debug")
-    assert len(lhs.constrained("pkg-a ^mpi+debug").edges_to_dependencies()) == 2
+    lhs, rhs = Spec("pkg-a ^mpi=mpich"), Spec("pkg-a ^mpi+debug")
+    assert lhs.intersects(rhs)
+    assert lhs.constrain(rhs)
+    assert len(lhs.edges_to_dependencies()) == 2
+    assert lhs.to_dict() == Spec("pkg-a ^mpi=mpich ^mpi+debug").to_dict()
 
 
 def test_anonymous_edge_is_absorbed_by_a_satisfying_named_edge(mock_packages):
