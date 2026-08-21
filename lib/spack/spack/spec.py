@@ -1605,7 +1605,7 @@ def _satisfies_dependencies(lhs: "Spec", rhs: "Spec", *, resolve_virtuals: bool)
     return True
 
 
-def _constrains_only_name_and_versions(spec: "Spec") -> bool:
+def constrains_only_name_and_versions(spec: "Spec") -> bool:
     """Whether the spec constrains nothing beyond its package name and versions."""
     return (
         not spec.variants
@@ -1644,7 +1644,7 @@ def _satisfies_edge_attributes(
     # Right-hand side is a virtual provided by the left-hand side. Virtuals currently support only
     # names and versions, so if anything else is set on the rhs we return false, which allows
     # future implementation to relax it once variants on virtuals become meaningful.
-    if not _constrains_only_name_and_versions(rhs.spec):
+    if not constrains_only_name_and_versions(rhs.spec):
         return False
 
     if rhs.spec.versions == spack.version.any_version:

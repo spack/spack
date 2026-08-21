@@ -90,6 +90,27 @@ def test_nonexistent_version_error(spec, mock_packages, mutable_config):
         _ = spack.concretize.concretize_one(spec)
 
 
+@pytest.mark.parametrize(
+    "spec",
+    [
+        "mpileaks ^mpi target=x86_64",
+        "mpileaks %mpi target=x86_64",
+        "mpileaks ^mpi+debug",
+        "mpi cflags=-O2",
+    ],
+)
+def test_virtual_constrained_beyond_versions_error(spec, mock_packages, mutable_config):
+    # Virtual specs support only version constraints: anything else is reserved, since it could
+    # denote a property of the virtual or of its provider.
+    with pytest.raises(
+        spack.solver.asp.UnsatisfiableSpecError,
+        match="the virtual package 'mpi' supports only version constraints",
+    ) as e:
+        _ = spack.concretize.concretize_one(spec)
+
+    assert "cannot concretize" in str(e.value)
+
+
 def test_internal_error_handling_formatting(tmp_path: pathlib.Path):
     log = StringIO()
     input_to_output = [

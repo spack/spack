@@ -2912,6 +2912,14 @@ class SpackSolverSetup:
         for root in specs:
             for s in root.traverse():
                 if repo.is_virtual(s.name):
+                    # Constraints beyond versions could refer to the virtual or its provider;
+                    # the solver supports neither interpretation.
+                    if not spack.spec.constrains_only_name_and_versions(s):
+                        start_str = f"'{root}'" if s == root else f"'{s}' in '{root}'"
+                        raise UnsatisfiableSpecError(
+                            f"cannot concretize {start_str}: the virtual package '{s.name}' "
+                            f"supports only version constraints"
+                        )
                     continue
 
                 try:
