@@ -500,8 +500,6 @@ class VariantValue:
         delim = "==" if self.propagate else "="
         if not self.values:
             value_str = "*"
-        elif self.name == "patches" and self.concrete:
-            value_str = ",".join(str(x)[:7] for x in self.values)
         else:
             value_str = ",".join(str(x) for x in self.values)
         return f"{self.name}{concrete}{delim}{spack.spec_parser.quote_if_needed(value_str)}"

@@ -4359,7 +4359,8 @@ class Spec:
         if compiler_flags_str:
             parts.append(compiler_flags_str)
 
-        variants_str = str(self.variants)
+        variants = self.variants.abbreviate_patches() if self._concrete else self.variants
+        variants_str = str(variants)
         if variants_str:
             parts.append(variants_str)
 
@@ -4580,6 +4581,9 @@ class Spec:
                             f"Attempted to format attribute {attribute}. "
                             f"Spec {'.'.join(parts[:idx])} has no attribute {part}"
                         )
+                    if isinstance(current, VariantMap) and current_node._concrete:
+                        current = current.abbreviate_patches()
+
                     if isinstance(current, vn.VersionList) and current == vn.any_version:
                         # don't print empty version lists
                         return ""
@@ -5449,6 +5453,20 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
         for name, variant in self.items():
             clone[name] = variant.copy()
         return clone
+
+    def abbreviate_patches(self) -> "VariantMap":
+        """The same map with patch checksums shortened to 7-character prefixes: a weaker
+        ``patches=`` constraint that the original satisfies. Rendered for concrete specs,
+        whose full checksums are in their hash. Entries are shared, so read-only."""
+        patches = self.get("patches")
+        if patches is None or not patches.values:
+            return self
+        shortened = vt.VariantValue(
+            vt.VariantType.MULTI, "patches", tuple(str(v)[:7] for v in patches.values)
+        )
+        variants = VariantMap()
+        variants.dict = {**self.dict, "patches": shortened}
+        return variants
 
     def __str__(self):
         if not self:
