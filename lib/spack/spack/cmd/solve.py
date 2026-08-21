@@ -49,6 +49,8 @@ class SolveUI(ConcretizerUI):
         stats: bool,
     ) -> None:
         self.kind = kind
+        self.reports_solves = True
+        self.reports_asp_program = show_asp
         self.show_asp = show_asp
         self.show_opt = show_opt
         self.show_solutions = show_solutions

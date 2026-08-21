@@ -48,6 +48,9 @@ class RecordingUI(ConcretizerUI):
         assert ui.started == [(SolveKind.SEPARATELY, 1, 1)]
     """
 
+    reports_solves = True
+    reports_asp_program = True
+
     def __init__(self) -> None:
         #: (group, is_default) for each group that started
         self.groups: List[Tuple[str, bool]] = []

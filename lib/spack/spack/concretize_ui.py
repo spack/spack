@@ -8,8 +8,10 @@ Defines the :class:`ConcretizerUI` contract (a headless no-op base) and the term
 """
 
 import enum
+import pickle
 import sys
-from typing import Dict, List, Optional, Sequence
+import zlib
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from spack.solver.result import Result
 from spack.spec import Spec
@@ -33,8 +35,19 @@ class ConcretizerUI:
     class usable as a headless frontend.
 
     Every event is emitted in the process that owns the frontend, and from a single thread.
-    Frontends therefore need no locking, and no capture of child output.
+    Frontends therefore need no locking, and no capture of child output. Work that happens
+    elsewhere, in a worker process or in a solver thread, does not call these methods: it hands
+    data back to the owning process, which emits the event. Every payload must therefore be
+    picklable, since it may cross a process boundary on its way here.
     """
+
+    #: Whether this frontend renders the events of each solve. A solve that runs in a worker
+    #: buffers its events and ships them back only when this is set, since that sends a whole
+    #: Result over a pipe.
+    reports_solves = False
+
+    #: Whether this frontend renders the generated ASP program.
+    reports_asp_program = False
 
     def on_group_started(self, *, group: str, is_default: bool) -> None:
         """A group of user specs is about to be concretized."""
@@ -99,6 +112,65 @@ class ConcretizerUI:
 #: Frontend that reports nothing. Same class as the contract it implements, aliased so that call
 #: sites can say which of the two roles they mean.
 HeadlessUI = ConcretizerUI
+
+
+#: Name of the one event whose payload is buffered compressed, see BufferedUI
+ASP_PROGRAM_EVENT = "on_asp_program_generated"
+
+
+class BufferedUI(ConcretizerUI):
+    """Frontend that records what it is told, so that another process can replay it into the
+    frontend that owns the terminal.
+
+    A solve that runs in a worker process cannot call a frontend, so it reports to one of these
+    instead and the owning process replays what comes back. Only the events a solve emits are
+    recorded; the ones that describe the concretization around it are emitted by the owning
+    process already.
+
+    A recorded ASP program is held compressed, since it is tens of MiB and has to travel back
+    over a pipe.
+    """
+
+    def __init__(self, *, asp_program: bool = False) -> None:
+        self.reports_solves = True
+        self.reports_asp_program = asp_program
+        self.events: List[Tuple[str, Sequence, Dict]] = []
+
+    def replay(self, ui: ConcretizerUI) -> None:
+        """Emit everything recorded, into ``ui``, in the order it was recorded."""
+        for name, args, kwargs in self.events:
+            if name == ASP_PROGRAM_EVENT:
+                args = (pickle.loads(zlib.decompress(args[0])),)
+            getattr(ui, name)(*args, **kwargs)
+
+    def on_solve_started(self, specs: Sequence[Spec]) -> None:
+        self.events.append(("on_solve_started", (list(specs),), {}))
+
+    def on_asp_program_generated(self, program: List[str]) -> None:
+        if not self.reports_asp_program:
+            return
+        # Pickle rather than join the lines: some of them embed a newline, so joining and
+        # splitting back is not a round trip.
+        blob = zlib.compress(pickle.dumps(program))
+        self.events.append((ASP_PROGRAM_EVENT, (blob,), {}))
+
+    def on_solve_progress(
+        self, *, elapsed: float, models: int, best_cost: Optional[List[int]]
+    ) -> None:
+        """Dropped on purpose: a progress tick replayed after the solve is over is worse than
+        no tick at all.
+        """
+
+    def on_solve_finished(
+        self, result: Result, *, timer: BaseTimer, statistics: Optional[Dict], cached: bool
+    ) -> None:
+        self.events.append(
+            (
+                "on_solve_finished",
+                (result,),
+                {"timer": timer, "statistics": statistics, "cached": cached},
+            )
+        )
 
 
 class TerminalUI(ConcretizerUI):

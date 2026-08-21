@@ -5,6 +5,7 @@ import gzip
 import json
 import os
 import pathlib
+import pickle
 import platform
 import re
 import sys
@@ -44,8 +45,10 @@ import spack.traverse
 import spack.util.file_cache
 import spack.util.hash
 import spack.util.lang
+import spack.util.parallel
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
+from spack.concretize_ui import BufferedUI, HeadlessUI
 from spack.config import Configuration
 from spack.database import Database
 from spack.externals import ExternalDependencyError
@@ -5928,3 +5931,91 @@ def test_a_running_solve_reports_progress(mutable_config, mock_packages, monkeyp
     assert best_cost is not None
     # The solve finished on the next turn, so it also reported its end
     assert len(ui.finished) == 1
+
+
+@pytest.mark.not_on_windows("process pools are disabled on Windows")
+@pytest.mark.enable_parallelism
+def test_solves_in_workers_are_replayed_to_the_frontend(mutable_config, mock_packages):
+    """Tests that solves running in a worker process report to the frontend of the owning
+    process. The events of one spec arrive together, before that spec is reported as done.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    ui = RecordingUI()
+    specs = [(Spec("pkg-a"), None), (Spec("pkg-b"), None)]
+
+    spack.concretize.concretize_separately(specs, ui=ui)
+
+    assert len(ui.solves) == len(ui.finished) == 2
+    assert {str(x[0]) for x in ui.solves} == {"pkg-a", "pkg-b"}
+    assert [cached for _, _, _, cached in ui.finished] == [False, False]
+    # Solves are replayed, so the ASP program crossed the process boundary too
+    assert len(ui.programs) == 2
+    # A progress tick is live-only, so it is never replayed
+    assert ui.progress == []
+
+
+def test_worker_solves_are_not_buffered_for_a_headless_frontend(mutable_config, mock_packages):
+    """Tests that a frontend that renders no solve keeps the workers from shipping one back,
+    since a buffered ASP program is tens of MiB per spec.
+    """
+    ui = HeadlessUI()
+    assert ui.reports_solves is False and ui.reports_asp_program is False
+
+    reporting = spack.concretize.SolveReporting(ui.reports_solves, ui.reports_asp_program)
+    _, spec, _, buffered = spack.concretize._concretize_task((0, "pkg-a", False, None, reporting))
+
+    assert spec.concrete
+    assert buffered is None
+
+
+def test_buffered_ui_records_only_what_is_asked_for(mutable_config, mock_packages):
+    """Tests that a buffer set up without the ASP program drops it, and replays the rest."""
+    buffered = BufferedUI(asp_program=False)
+    spack.solver.asp.Solver(ui=buffered).solve([Spec("pkg-a")])
+
+    assert [name for name, _, _ in buffered.events] == ["on_solve_started", "on_solve_finished"]
+
+    ui = RecordingUI()
+    buffered.replay(ui)
+    assert [str(x) for x in ui.solves[0]] == ["pkg-a"]
+    assert len(ui.finished) == 1 and ui.programs == []
+
+
+def test_buffered_asp_program_round_trips_exactly(mutable_config, mock_packages):
+    """Tests that a buffered ASP program is replayed byte for byte, and is held compressed.
+
+    Some entries of a program embed a newline, so joining the lines and splitting them back is
+    not a round trip, which is why the buffer pickles instead.
+    """
+    ui = RecordingUI()
+    spack.solver.asp.Solver(ui=ui).solve([Spec("pkg-a")])
+    program = ui.programs[0]
+    assert any("\n" in line for line in program), "expected entries that embed a newline"
+
+    buffered = BufferedUI(asp_program=True)
+    buffered.on_asp_program_generated(program)
+    replayed = RecordingUI()
+    buffered.replay(replayed)
+
+    assert replayed.programs == [program]
+    # It is held compressed, so it travels as a fraction of its size
+    (_, (blob,), _) = buffered.events[0]
+    assert isinstance(blob, bytes)
+    assert len(blob) < len(pickle.dumps(program)) / 4
+
+
+def test_worker_solves_are_replayed_the_same_way_without_parallelism(
+    mutable_config, mock_packages
+):
+    """Tests that disabling parallelism doesn't change what the frontend sees. The serial path
+    builds a buffer per task too, so events don't accumulate across specs.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    assert not spack.util.parallel.ENABLE_PARALLELISM, "this test wants the serial fallback"
+
+    ui = RecordingUI()
+    spack.concretize.concretize_separately([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+
+    assert len(ui.solves) == len(ui.finished) == len(ui.programs) == 2
+    # Each solve reports its own specs, rather than accumulating the ones before it
+    assert [[str(x) for x in specs] for specs in ui.solves] == [["pkg-a"], ["pkg-b"]]
