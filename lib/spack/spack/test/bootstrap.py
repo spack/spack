@@ -15,8 +15,10 @@ import spack.bootstrap.config
 import spack.bootstrap.core
 import spack.bootstrap.status
 import spack.compilers.config
+import spack.concretize
 import spack.config
 import spack.environment
+import spack.installer_dispatch
 import spack.paths
 import spack.spec
 import spack.store
@@ -528,3 +530,126 @@ def test_no_sources_to_try_is_reported_as_such(fake_bootstrap_type):
         spack.bootstrap.core._bootstrap_or_raise(
             _fake_request(probes), "zlib", "zlib", RuntimeError, sources=[]
         )
+
+
+#: The source, shipped with Spack, that builds the software it needs from sources
+SPACK_INSTALL_SOURCE = {
+    "name": "spack-install",
+    "metadata": "$spack/share/spack/bootstrap/spack-install",
+}
+
+
+class _RecordingInstaller:
+    """Stand-in for ``create_installer``, recording what it is asked to install."""
+
+    def __init__(self) -> None:
+        self.packages: Any = None
+        self.installer_args: Optional[Dict[str, Any]] = None
+        self.mirrors_when_installing: Optional[Dict[str, Any]] = None
+
+    def __call__(self, packages: Any, **installer_args: Any) -> "_RecordingInstaller":
+        self.packages = packages
+        self.installer_args = installer_args
+        return self
+
+    def install(self) -> None:
+        self.mirrors_when_installing = spack.config.CONFIG.get("mirrors")
+
+
+class _FakeConcreteSpec:
+    """Stand-in for the result of concretization, carrying a recognizable package."""
+
+    def __init__(self, abstract_spec: Any) -> None:
+        self.abstract_spec = abstract_spec
+        self.package = f"package of {abstract_spec}"
+
+
+@pytest.fixture
+def recording_installer(monkeypatch):
+    """Let the source bootstrapper run without detecting, concretizing or installing."""
+    installer = _RecordingInstaller()
+    monkeypatch.setattr(spack.bootstrap.core, "_add_externals_if_missing", lambda: None)
+    monkeypatch.setattr(spack.concretize, "concretize_one", _FakeConcreteSpec)
+    monkeypatch.setattr(spack.installer_dispatch, "create_installer", installer)
+    return installer
+
+
+def test_the_install_type_maps_to_the_source_bootstrapper(mutable_config):
+    """Tests that the source shipped with Spack to build from sources is dispatched to the
+    right class.
+    """
+    mutable_config.set("bootstrap:sources", [SPACK_INSTALL_SOURCE])
+    conf = spack.bootstrap.core.bootstrapping_sources()[0]
+    assert conf["type"] == "install"
+    assert isinstance(
+        spack.bootstrap.core.create_bootstrapper(conf), spack.bootstrap.core.SourceBootstrapper
+    )
+
+
+@pytest.mark.parametrize(
+    "make_request,expected_installer_args",
+    [
+        # A module is always built from sources, while an executable may come from a build cache
+        (
+            lambda: spack.bootstrap.core.BootstrapRequest.for_module("pytest", "py-pytest"),
+            {
+                "fail_fast": True,
+                "root_policy": "source_only",
+                "dependencies_policy": "source_only",
+            },
+        ),
+        (
+            lambda: spack.bootstrap.core.BootstrapRequest.for_executables(
+                ["patchelf"], "patchelf@0.13.1:"
+            ),
+            {},
+        ),
+    ],
+    ids=["module", "executable"],
+)
+def test_the_source_bootstrapper_installs_from_its_own_mirror(
+    make_request, expected_installer_args, recording_installer, mutable_config
+):
+    """Tests that the request decides what is installed and how, the source decides where it
+    comes from.
+    """
+    mutable_config.set("bootstrap:sources", [SPACK_INSTALL_SOURCE])
+    conf = spack.bootstrap.core.bootstrapping_sources()[0]
+    bootstrapper = spack.bootstrap.core.create_bootstrapper(conf)
+
+    request = make_request()
+    request.probe = lambda concrete_spec: f"probed {concrete_spec.package}"
+    result = bootstrapper.try_to_bootstrap(request)
+
+    assert recording_installer.packages == [f"package of {request.abstract_spec}"]
+    assert recording_installer.installer_args == expected_installer_args
+    assert recording_installer.mirrors_when_installing == {"spack-install": bootstrapper.url}
+    assert result == f"probed package of {request.abstract_spec}"
+
+
+def test_clingo_is_not_concretized_by_the_regular_concretizer(
+    recording_installer, mutable_config, monkeypatch
+):
+    """Among the binaries we have clingo, so we can't concretize that with clingo."""
+
+    class _FakeClingoConcretizer:
+        def __init__(self, configuration) -> None:
+            self.configuration = configuration
+
+        def concretize(self) -> "_FakeConcreteSpec":
+            return _FakeConcreteSpec("the clingo prototype")
+
+    def _regular_concretizer(abstract_spec):
+        raise AssertionError("clingo must not go through the regular concretizer")
+
+    monkeypatch.setattr(spack.concretize, "concretize_one", _regular_concretizer)
+    monkeypatch.setattr(spack.bootstrap.core, "ClingoBootstrapConcretizer", _FakeClingoConcretizer)
+
+    mutable_config.set("bootstrap:sources", [SPACK_INSTALL_SOURCE])
+    conf = spack.bootstrap.core.bootstrapping_sources()[0]
+    bootstrapper = spack.bootstrap.core.create_bootstrapper(conf)
+
+    request = spack.bootstrap.core.BootstrapRequest.for_module("clingo", "clingo-bootstrap")
+    request.probe = lambda concrete_spec: concrete_spec.package
+
+    assert bootstrapper.try_to_bootstrap(request) == "package of the clingo prototype"
