@@ -2589,7 +2589,6 @@ packages:
         database_mutable_config: Database,
         mock_packages,
         transitive,
-        capfd,
     ):
         mpich_spec = database_mutable_config.query("mpich")[0]
         splice_info = {
@@ -2599,7 +2598,10 @@ packages:
         }
         mutable_config.set("concretizer", {"splice": {"explicit": [splice_info]}})
 
-        spec = spack.concretize.concretize_one("hdf5 ^zmpi")
+        with pytest.warns(
+            UserWarning, match="explicit splice configuration has caused"
+        ) as recorded:
+            spec = spack.concretize.concretize_one("hdf5 ^zmpi")
 
         assert spec.satisfies(f"^mpich@{mpich_spec.version}")
         assert spec.build_spec.dependencies(name="zmpi", deptype="link")
@@ -2607,10 +2609,9 @@ packages:
         assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
         assert not spec.dependencies(name="zmpi", deptype="link")
 
-        captured = capfd.readouterr()
-        assert "Warning: explicit splice configuration has caused" in captured.err
-        assert "hdf5 ^zmpi" in captured.err
-        assert str(spec) in captured.err
+        warned = "\n".join(str(x.message) for x in recorded)
+        assert "hdf5 ^zmpi" in warned
+        assert str(spec) in warned
 
     def test_explicit_splice_fails_nonexistent(
         self, mutable_config: Configuration, mock_packages, mock_store
@@ -5763,3 +5764,34 @@ def test_terminal_ui_never_announces_the_default_group(capsys):
     )
 
     assert "group of specs" not in capsys.readouterr().out
+
+
+def test_deprecated_version_warns_on_a_concretization_cache_hit(
+    use_concretization_cache, mutable_config: Configuration, monkeypatch
+):
+    """Tests that a result served from the concretization cache reports the same diagnostics as a
+    fresh solve. SpecBuilder does not run on a cache hit, so the warnings ride on the Result.
+    """
+    mutable_config.set("config:deprecated", True)
+    spec_str = "deprecated-versions@1.1.0"
+
+    with pytest.warns(UserWarning, match='using "deprecated-versions@1.1.0"'):
+        spack.concretize.concretize_one(spec_str)
+
+    def fail(*args, **kwargs):
+        raise AssertionError("the second solve should have been served from the cache")
+
+    monkeypatch.setattr(spack.solver.asp.PyclingoDriver, "_run_clingo", fail)
+
+    with pytest.warns(UserWarning, match='using "deprecated-versions@1.1.0"'):
+        spack.concretize.concretize_one(spec_str)
+
+
+def test_result_warnings_survive_serialization(mock_packages, mutable_config: Configuration):
+    """Tests that the diagnostics of a solve are part of what the concretization cache stores."""
+    specs = [Spec("deprecated-versions@1.1.0")]
+
+    result = spack.solver.asp.Solver().solve(specs, allow_deprecated=True)
+
+    assert result.warnings == ['using "deprecated-versions@1.1.0" which is a deprecated version']
+    assert spack.solver.asp.Result.from_dict(result.to_dict(), specs) == result
