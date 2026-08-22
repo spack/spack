@@ -61,7 +61,7 @@ packages:
       scalapack: [netlib-scalapack, amdscalapack]
       sycl: [hipsycl]
       szip: [libaec, libszip]
-      tbb: [intel-tbb]
+      tbb: [intel-tbb, intel-oneapi-tbb]
       unwind: [libunwind]
       uuid: [util-linux-uuid, libuuid]
       wasi-sdk: [wasi-sdk-prebuilt]
