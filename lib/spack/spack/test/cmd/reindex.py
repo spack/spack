@@ -4,6 +4,9 @@
 import pathlib
 import shutil
 
+import spack.database
+import spack.store
+import spack.util.path
 from spack.database import Database
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand
@@ -85,3 +88,82 @@ def test_reindex_with_deprecated_packages(
     assert old_libelf.deprecated_for == new_libelf.spec.dag_hash()
     assert new_libelf.deprecated_for is None
     assert new_libelf.ref_count == 1
+
+
+def test_reindex_migrates_db_from_padded_to_unpadded_root(
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    install_mockery,
+    tmp_path: pathlib.Path,
+    monkeypatch,
+):
+    """Test that reindex migrates database from padded root to unpadded root."""
+    unpadded = str(tmp_path / "opt" / "spack")
+    padded = spack.util.path.add_padding(unpadded, 128)
+
+    store = Store(
+        root=padded,
+        unpadded_root=unpadded,
+        projections={"all": "{name}/{version}"},
+    )
+
+    old_db_path = pathlib.Path(store.root) / spack.database._DB_DIRNAME
+    old_db_path.mkdir(parents=True, exist_ok=True)
+    store.metadata_root = store.root
+    store.db = spack.database.Database(store.root, layout=store.layout)
+
+    monkeypatch.setattr(spack.store, "STORE", store)
+
+    install("--fake", "libelf@0.8.13")
+    install("--fake", "libelf@0.8.12")
+    all_installed = store.db.query()
+
+    new_db_path = pathlib.Path(store.unpadded_root) / spack.database._DB_DIRNAME
+    assert old_db_path.exists()
+    assert not new_db_path.exists()
+
+    reindex()
+
+    assert not old_db_path.exists()
+    assert new_db_path.exists()
+    assert spack.store.STORE.db.query() == all_installed
+    assert spack.store.STORE.metadata_root == spack.store.STORE.unpadded_root
+
+
+def test_reindex_no_migration_when_already_migrated(
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    install_mockery,
+    tmp_path: pathlib.Path,
+    monkeypatch,
+):
+    """Test that reindex doesn't migrate when DB already in new location."""
+    unpadded = str(tmp_path / "opt" / "spack")
+    padded = spack.util.path.add_padding(unpadded, 128)
+
+    store = Store(
+        root=padded,
+        unpadded_root=unpadded,
+        projections={"all": "{name}/{version}"},
+    )
+
+    monkeypatch.setattr(spack.store, "STORE", store)
+
+    install("--fake", "libelf@0.8.13")
+    install("--fake", "libelf@0.8.12")
+    all_installed = store.db.query()
+
+    new_db_path = pathlib.Path(store.unpadded_root) / spack.database._DB_DIRNAME
+    old_db_path = pathlib.Path(store.root) / spack.database._DB_DIRNAME
+    assert new_db_path.exists()
+    assert not old_db_path.exists()
+    assert store.metadata_root == store.unpadded_root
+
+    reindex()
+
+    assert new_db_path.exists()
+    assert not old_db_path.exists()
+    assert store.db.query() == all_installed
+    assert store.metadata_root == store.unpadded_root
