@@ -197,7 +197,7 @@ def deactivate_commands(shell):
                     unset SPACK_OLD_PS1;
                 fi
             """
-        ).strip("\n")
+        ).lstrip("\n")
 
     return cmds
 
