@@ -30,11 +30,49 @@ def test_paths_to_env_scripts_exist(
 
     env("activate", f"--{shell}", env_name)
 
-    activate_script = env_script.path_to_env_script(test_env, shell, script_type="activate")
-    deactivate_script = env_script.path_to_env_script(test_env, shell, script_type="deactivate")
+    activate_script = env_script.path_to_env_script(
+        test_env, shell, script_type="activate", view="default"
+    )
+    deactivate_script = env_script.path_to_env_script(
+        test_env, shell, script_type="deactivate", view="default"
+    )
 
     assert os.path.isfile(activate_script)
     assert os.path.isfile(deactivate_script)
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_paths_to_env_scripts_exist_without_view(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+):
+    """Test that activate & deactivate shell scripts exist after env creation."""
+    env_name = f"test_env_scripts_exist_{shell}"
+    env("create", env_name)
+    test_env = ev.read(env_name)
+
+    default_activate_script = env_script.path_to_env_script(
+        test_env, shell, script_type="activate", view="default"
+    )
+    default_deactivate_script = env_script.path_to_env_script(
+        test_env, shell, script_type="deactivate", view="default"
+    )
+
+    assert os.path.isfile(default_activate_script)
+    assert os.path.isfile(default_deactivate_script)
+
+    env("activate", "--without-view", f"--{shell}", env_name)
+
+    noview_activate_script = env_script.path_to_env_script(
+        test_env, shell, script_type="activate", view=None
+    )
+    noview_deactivate_script = env_script.path_to_env_script(
+        test_env, shell, script_type="deactivate", view=None
+    )
+
+    assert os.path.isfile(noview_activate_script)
+    assert os.path.isfile(noview_deactivate_script)
 
 
 def test_paths_to_env_scripts(install_mockery, mock_fetch, mock_archive, mock_packages):
@@ -57,18 +95,18 @@ def test_paths_to_env_scripts(install_mockery, mock_fetch, mock_archive, mock_pa
         deactivate_extension = ".ps1" if shell == "pwsh" else f".{shell}"
 
         expected_activate_path = os.path.join(
-            test_env.path, ".spack-env", f"activate{activate_extension}"
+            test_env.path, ".spack-env", f"default_activate{activate_extension}"
         )
         actual_activate_path = env_script.path_to_env_script(
-            test_env, shell, script_type="activate"
+            test_env, shell, script_type="activate", view="default"
         )
         assert actual_activate_path == expected_activate_path
 
         expected_deactivate_path = os.path.join(
-            test_env.path, ".spack-env", f"deactivate{deactivate_extension}"
+            test_env.path, ".spack-env", f"default_deactivate{deactivate_extension}"
         )
         actual_deactivate_path = env_script.path_to_env_script(
-            test_env, shell, script_type="deactivate"
+            test_env, shell, script_type="deactivate", view="default"
         )
         assert actual_deactivate_path == expected_deactivate_path
 
@@ -86,7 +124,9 @@ def test_write_env_activate_script(
 
     env_script.write_env_activate_script(test_env)
 
-    script_path = env_script.path_to_env_script(test_env, shell, script_type="activate")
+    script_path = env_script.path_to_env_script(
+        test_env, shell, script_type="activate", view="default"
+    )
     assert os.path.exists(script_path)
 
     # Verify content
@@ -110,7 +150,9 @@ def test_write_env_deactivate_script(
 
     env_script.write_env_deactivate_script(test_env, view="default")
 
-    script_path = env_script.path_to_env_script(test_env, shell, script_type="deactivate")
+    script_path = env_script.path_to_env_script(
+        test_env, shell, script_type="deactivate", view="default"
+    )
     assert os.path.exists(script_path)
 
     # Verify content
@@ -147,8 +189,12 @@ def test_create_individual_env_scripts(
     env_script.write_env_deactivate_script(env_2, view="default")
 
     # Check that each activation script only references its own environment
-    activate_path_1 = env_script.path_to_env_script(env_1, shell, script_type="activate")
-    activate_path_2 = env_script.path_to_env_script(env_2, shell, script_type="activate")
+    activate_path_1 = env_script.path_to_env_script(
+        env_1, shell, script_type="activate", view="default"
+    )
+    activate_path_2 = env_script.path_to_env_script(
+        env_2, shell, script_type="activate", view="default"
+    )
 
     with open(activate_path_1, "r", encoding="utf-8") as f:
         activate_content_1 = f.read()
@@ -164,8 +210,12 @@ def test_create_individual_env_scripts(
     assert env_1.path not in activate_content_2
 
     # Check that each deactivation script only references its own environment
-    deactivate_path_1 = env_script.path_to_env_script(env_1, shell, script_type="deactivate")
-    deactivate_path_2 = env_script.path_to_env_script(env_2, shell, script_type="deactivate")
+    deactivate_path_1 = env_script.path_to_env_script(
+        env_1, shell, script_type="deactivate", view="default"
+    )
+    deactivate_path_2 = env_script.path_to_env_script(
+        env_2, shell, script_type="deactivate", view="default"
+    )
 
     with open(deactivate_path_1, "r", encoding="utf-8") as f:
         deactivate_content_1 = f.read()

@@ -1903,8 +1903,10 @@ class Environment:
             tty.debug("Skip view update, this environment does not maintain a view")
             return
 
-        for view in self.views.values():
+        for view_name, view in self.views.items():
             view.regenerate(self)
+            write_env_activate_script(self, view_name)
+            write_env_deactivate_script(self, view_name)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
@@ -2531,13 +2533,13 @@ class Environment:
         for x in self.concretized_roots:
             x.new = False
 
-        current_env = os.environ.get(spack_env_var, None)
-        if not current_env or current_env == self.path:
+        current_env = active_environment().path if active_environment() is not None else None
+        if not current_env or current_env != self.path:
             write_env_activate_script(self, None)
             write_env_deactivate_script(self, None)
         else:
-            write_env_activate_script(self, os.environ.get(spack_env_view_var, None))
-            write_env_deactivate_script(self, os.environ.get(spack_env_view_var, None))
+            write_env_activate_script(self, os.environ.get(spack_env_view_var, "default"))
+            write_env_deactivate_script(self, os.environ.get(spack_env_view_var, "default"))
 
     def update_lockfile(self) -> None:
         with fs.write_tmp_and_move(self.lock_path, encoding="utf-8") as f:

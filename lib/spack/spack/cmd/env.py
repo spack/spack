@@ -396,9 +396,8 @@ def env_activate(args):
         active_env, shell=args.shell, script_type="activate", view=view
     )
 
-    if not os.path.isfile(env_activate_script):
-        env_script.write_env_activate_script(active_env, view)
-        env_script.write_env_deactivate_script(active_env, view)
+    env_script.write_env_activate_script(active_env, view)
+    env_script.write_env_deactivate_script(active_env, view)
 
     ev.activate(active_env, use_env_repo=True)
 
@@ -412,12 +411,6 @@ def env_activate(args):
     sys.stdout.write(cmds)
 
     print(env_script.source_env_script(env_activate_script, args.shell))
-
-    env_deactivate_script = env_script.path_to_env_script(
-        active_env, shell=args.shell, script_type="deactivate", view=view
-    )
-    if not os.path.isfile(env_deactivate_script):
-        env_script.write_env_deactivate_script(active_env, view)
 
 
 #
@@ -850,12 +843,6 @@ def env_view(args):
 
     if args.action == ViewAction.regenerate:
         env.regenerate_views()
-        env_script.write_env_activate_script(
-            env, view=os.environ.get("SPACK_ENV_VIEW", env.view_path_default)
-        )
-        env_script.write_env_deactivate_script(
-            env, view=os.environ.get("SPACK_ENV_VIEW", env.view_path_default)
-        )
     elif args.action == ViewAction.enable:
         if args.view_path:
             view_path = args.view_path

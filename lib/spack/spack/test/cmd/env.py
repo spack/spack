@@ -183,27 +183,21 @@ def test_env_env_script_content(shell):
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_env_update_activate_script(shell):
-    """Test activatrion script is updated after installation of new specs"""
+    """Test activatrion script is not updated when environment is activated"""
     env("create", "test")
     environ = ev.read("test")
 
+    path_to_activate_script = env_script.path_to_env_script(
+        environ, shell, script_type="activate", view="default"
+    )
+
+    script_creation_mtime = os.stat(path_to_activate_script).st_mtime
+
     env("activate", f"--{shell}", "test")
 
-    path_to_activate_script = env_script.path_to_env_script(
-        environ, shell, script_type="activate", view="default"
-    )
-    script_creation = os.stat(path_to_activate_script).st_mtime
+    activated_script_mtime = os.stat(path_to_activate_script).st_mtime
 
-    environ.add("mpi")
-    environ.concretize()
-    environ.write()
-
-    path_to_activate_script = env_script.path_to_env_script(
-        environ, shell, script_type="activate", view="default"
-    )
-    script_update = os.stat(path_to_activate_script).st_mtime
-
-    assert script_update > script_creation
+    assert activated_script_mtime == script_creation_mtime
 
 
 @pytest.mark.parametrize(
@@ -299,6 +293,9 @@ def test_env_scripts_path_after_relocation(shell):
 
     env("rename", "orig", "new")
     new_env = ev.read("new")
+
+    env("activate", f"--{shell}", "new")
+    env("view", "regenerate")
 
     new_activate_script_path = env_script.path_to_env_script(
         new_env, shell, script_type="activate", view="default"
@@ -3692,7 +3689,7 @@ def test_env_activate_sh_script_output():
     """
     env("create", "test")
 
-    activate_output = env("activate", "--sh", "test")
+    activate_output = env("activate", "--prompt", "--sh", "test")
 
     environ = ev.environment_from_name_or_dir("test")
     activate_content = get_activation_script_content(environ, "sh", view="default")
@@ -3709,7 +3706,7 @@ def test_env_activate_csh_script_output():
     """Check the shell commands output by ``spack env activate --csh``."""
     env("create", "test")
 
-    activate_output = env("activate", "--csh", "test")
+    activate_output = env("activate", "--prompt", "--csh", "test")
 
     environ = ev.environment_from_name_or_dir("test")
     activate_content = get_activation_script_content(environ, "csh", view="default")

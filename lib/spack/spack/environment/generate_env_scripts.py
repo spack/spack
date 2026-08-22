@@ -48,7 +48,7 @@ def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
         return True
 
     if lockfile_mtime == 0.0:
-        return True
+        return False
 
     script_mtime = os.stat(script_path).st_mtime
     return lockfile_mtime >= script_mtime
@@ -74,9 +74,9 @@ def write_env_activate_script(env: "spack.environment.Environment", view: Option
 
     for shell in shells:
         activate_script_path = path_to_env_script(env, shell, "activate", view)
+        script_exists = os.path.isfile(activate_script_path)
 
-        # Update the script only if needed
-        if _script_needs_update(lockfile_mtime, activate_script_path):
+        if not script_exists or _script_needs_update(lockfile_mtime, activate_script_path):
             env_mods = spack.environment.shell.activate(env=env, view=view)
 
             cmds = spack.environment.shell.activate_commands(env, view)
@@ -102,9 +102,9 @@ def write_env_deactivate_script(env, view: Optional[str] = None):
 
     for shell in shells:
         deactivate_script_path = path_to_env_script(env, shell, "deactivate", view)
+        script_exists = os.path.isfile(deactivate_script_path)
 
-        # Update the script only if needed
-        if _script_needs_update(lockfile_mtime, deactivate_script_path):
+        if not script_exists or _script_needs_update(lockfile_mtime, deactivate_script_path):
             env_mods = spack.environment.shell.deactivate(env, view)
 
             cmds = spack.environment.shell.deactivate_commands(shell)
