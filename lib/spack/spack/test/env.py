@@ -21,7 +21,7 @@ import spack.util.filesystem as fs
 from spack.config import Configuration
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
-from spack.environment.environment import EnvironmentManifestFile
+from spack.environment.environment import EnvironmentManifestFile, environment_name
 from spack.environment.list import UndefinedReferenceError
 from spack.traverse import traverse_nodes
 
@@ -1068,6 +1068,25 @@ def test_cannot_create_env_above_another_env(mutable_mock_env_path):
     ev.create("group/inner")
     with pytest.raises(ev.SpackEnvironmentError, match="would contain existing environment"):
         ev.create("group")
+
+
+def test_environment_name_with_symlinked_path(mutable_mock_env_path, tmp_path):
+    """Test that environment_name correctly handles symlinked paths."""
+    env = ev.create("test_env")
+    symlink_dir = tmp_path / "symlinked"
+    symlink_dir.mkdir()
+    symlink_to_env = symlink_dir / "env_link"
+    symlink_to_env.symlink_to(env.path)
+
+    result = environment_name(symlink_to_env)
+    assert result == "test_env", f"Expected 'test_env', got '{result}'"
+
+    nested_env = ev.create("group/nested_env")
+    symlink_to_nested = symlink_dir / "nested_link"
+    symlink_to_nested.symlink_to(nested_env.path)
+
+    result = environment_name(symlink_to_nested)
+    assert result == "group/nested_env", f"Expected 'group/nested_env', got '{result}'"
 
 
 def test_env_include_configs(mutable_mock_env_path, mutable_config: Configuration):
