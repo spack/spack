@@ -879,9 +879,10 @@ class PyclingoDriver:
             if cache and cache_key is not None:
                 cache.store(cache_key, result, self.control.statistics)
 
-        # emitted here, so that a cached result reports the same diagnostics as a fresh solve
+        # emitted here, so that a cached result reports the same diagnostics as a fresh solve.
+        # Keyed by the message, so specs sharing a diagnostic report it once between them.
         for message in result.warnings:
-            warnings.warn(message)
+            ui.on_warning(message, key=message)
 
         # apply post-concretization transformations
         for _, _, spec_dict in result.answers:

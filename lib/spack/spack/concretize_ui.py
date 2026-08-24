@@ -10,8 +10,9 @@ Defines the :class:`ConcretizerUI` contract (a headless no-op base) and the term
 import enum
 import pickle
 import sys
+import warnings
 import zlib
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, Hashable, List, Optional, Sequence, Set, Tuple
 
 from spack.solver.result import Result
 from spack.spec import Spec
@@ -42,8 +43,7 @@ class ConcretizerUI:
     """
 
     #: Whether this frontend renders the events of each solve. A solve that runs in a worker
-    #: buffers its events and ships them back only when this is set, since that sends a whole
-    #: Result over a pipe.
+    #: ships them back only when this is set, since that sends a whole Result over a pipe.
     reports_solves = False
 
     #: Whether this frontend renders the generated ASP program.
@@ -108,6 +108,13 @@ class ConcretizerUI:
         down whatever it painted.
         """
 
+    def on_warning(self, message: str, *, key: Optional[Hashable] = None) -> None:
+        """A diagnostic that does not stop concretization. ``key`` identifies the fact behind
+        the message, so a frontend can report it once even when several solves rediscover it.
+        A warning with no key is reported every time. Can be delivered at any point of the
+        concretization lifecycle.
+        """
+
 
 #: Frontend that reports nothing. Same class as the contract it implements, aliased so that call
 #: sites can say which of the two roles they mean.
@@ -127,12 +134,13 @@ class BufferedUI(ConcretizerUI):
     recorded; the ones that describe the concretization around it are emitted by the owning
     process already.
 
-    A recorded ASP program is held compressed, since it is tens of MiB and has to travel back
-    over a pipe.
+    Warnings are always recorded, since they are short strings. The events that carry a whole
+    Result or an ASP program are recorded only for a frontend that renders them, since those
+    are megabytes to send over a pipe.
     """
 
-    def __init__(self, *, asp_program: bool = False) -> None:
-        self.reports_solves = True
+    def __init__(self, *, solves: bool = True, asp_program: bool = False) -> None:
+        self.reports_solves = solves
         self.reports_asp_program = asp_program
         self.events: List[Tuple[str, Sequence, Dict]] = []
 
@@ -143,7 +151,12 @@ class BufferedUI(ConcretizerUI):
                 args = (pickle.loads(zlib.decompress(args[0])),)
             getattr(ui, name)(*args, **kwargs)
 
+    def on_warning(self, message: str, *, key: Optional[Hashable] = None) -> None:
+        self.events.append(("on_warning", (message,), {"key": key}))
+
     def on_solve_started(self, specs: Sequence[Spec]) -> None:
+        if not self.reports_solves:
+            return
         self.events.append(("on_solve_started", (list(specs),), {}))
 
     def on_asp_program_generated(self, program: List[str]) -> None:
@@ -164,6 +177,8 @@ class BufferedUI(ConcretizerUI):
     def on_solve_finished(
         self, result: Result, *, timer: BaseTimer, statistics: Optional[Dict], cached: bool
     ) -> None:
+        if not self.reports_solves:
+            return
         self.events.append(
             (
                 "on_solve_finished",
@@ -180,6 +195,14 @@ class TerminalUI(ConcretizerUI):
         self.kind = SolveKind.TOGETHER
         self.total = 0
         self.pending_group: Optional[str] = None
+        self.reported_warnings: Set[Hashable] = set()
+
+    def on_warning(self, message: str, *, key: Optional[Hashable] = None) -> None:
+        if key in self.reported_warnings:
+            return
+        if key is not None:
+            self.reported_warnings.add(key)
+        warnings.warn(message)
 
     def on_group_started(self, *, group: str, is_default: bool) -> None:
         # Held back until we know the group has specs to concretize

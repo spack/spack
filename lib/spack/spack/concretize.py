@@ -55,8 +55,8 @@ class SolveOutcome(NamedTuple):
     concrete: Optional[Spec]
     #: Seconds spent in the solve
     duration: float
-    #: The events of the solve, to replay into the frontend, or None if they were not recorded
-    buffered: Optional[BufferedUI]
+    #: The events of the solve, to replay into the frontend
+    buffered: BufferedUI
     #: What the solve raised, or None if it succeeded
     error: Optional[Exception]
 
@@ -259,8 +259,7 @@ def concretize_separately(
         start=1,
     ):
         # Replay before raising, so a solve that failed still reports what it had to say
-        if outcome.buffered is not None:
-            outcome.buffered.replay(ui)
+        outcome.buffered.replay(ui)
         if outcome.error is not None:
             raise outcome.error
         if outcome.concrete is None:
@@ -289,7 +288,7 @@ def _concretize_task(
 ) -> SolveOutcome:
     index, spec_str, tests, factory, reporting = packed_arguments
     # A fresh buffer per task, so the serial fallback doesn't accumulate events across specs
-    buffered = BufferedUI(asp_program=reporting.asp_program) if reporting.solves else None
+    buffered = BufferedUI(solves=reporting.solves, asp_program=reporting.asp_program)
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
         try:

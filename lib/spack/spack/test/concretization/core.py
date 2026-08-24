@@ -5783,7 +5783,7 @@ def test_deprecated_version_warns_on_a_concretization_cache_hit(
     spec_str = "deprecated-versions@1.1.0"
 
     with pytest.warns(UserWarning, match='using "deprecated-versions@1.1.0"'):
-        spack.concretize.concretize_one(spec_str)
+        spack.concretize.concretize_one(spec_str, ui=spack.concretize_ui.TerminalUI())
 
     def fail(*args, **kwargs):
         raise AssertionError("the second solve should have been served from the cache")
@@ -5791,7 +5791,7 @@ def test_deprecated_version_warns_on_a_concretization_cache_hit(
     monkeypatch.setattr(spack.solver.asp.PyclingoDriver, "_run_clingo", fail)
 
     with pytest.warns(UserWarning, match='using "deprecated-versions@1.1.0"'):
-        spack.concretize.concretize_one(spec_str)
+        spack.concretize.concretize_one(spec_str, ui=spack.concretize_ui.TerminalUI())
 
 
 def test_result_warnings_survive_serialization(mock_packages, mutable_config: Configuration):
@@ -5957,7 +5957,7 @@ def test_solves_in_workers_are_replayed_to_the_frontend(mutable_config, mock_pac
 
 def test_worker_solves_are_not_buffered_for_a_headless_frontend(mutable_config, mock_packages):
     """Tests that a frontend that renders no solve keeps the workers from shipping one back,
-    since a buffered ASP program is tens of MiB per spec.
+    since a whole Result, and an ASP program of tens of MiB, would cross a pipe per spec.
     """
     ui = HeadlessUI()
     assert ui.reports_solves is False and ui.reports_asp_program is False
@@ -5967,7 +5967,8 @@ def test_worker_solves_are_not_buffered_for_a_headless_frontend(mutable_config, 
 
     assert outcome.error is None
     assert outcome.concrete is not None and outcome.concrete.concrete
-    assert outcome.buffered is None
+    # The buffer exists, since warnings are cheap to record, but holds no solve
+    assert [name for name, _, _ in outcome.buffered.events] == []
 
 
 def test_buffered_ui_records_only_what_is_asked_for(mutable_config, mock_packages):
@@ -6107,3 +6108,35 @@ def test_failed_solve_reports_the_same_way_without_parallelism(mutable_config, m
         )
 
     assert ["pkg-a@99.99.99"] in [[str(x) for x in solve] for solve in ui.solves]
+
+
+def test_terminal_ui_reports_a_keyed_warning_once():
+    """Tests that the frontend deduplicates on the key, so several solves rediscovering the same
+    fact report it once, and that a warning without a key is reported every time.
+    """
+    ui = spack.concretize_ui.TerminalUI()
+
+    with pytest.warns(UserWarning, match="no index") as recorded:
+        ui.on_warning("mirror foo has no index", key=("no-index", "foo"))
+        ui.on_warning("mirror foo has no index", key=("no-index", "foo"))
+    assert len(recorded) == 1
+
+    with pytest.warns(UserWarning, match="unkeyed") as recorded:
+        ui.on_warning("unkeyed diagnostic")
+        ui.on_warning("unkeyed diagnostic")
+    assert len(recorded) == 2
+
+
+def test_buffered_ui_records_warnings_for_a_frontend_that_renders_no_solve():
+    """Tests that a worker buffers its warnings even when the frontend wants no solve shipped."""
+    buffered = BufferedUI(solves=False)
+    buffered.on_warning("something happened", key="a-key")
+
+    assert [name for name, _, _ in buffered.events] == ["on_warning"]
+
+    ui = RecordingUI()
+    replayed = []
+    ui.on_warning = lambda message, *, key=None: replayed.append((message, key))  # type: ignore
+    buffered.replay(ui)
+
+    assert replayed == [("something happened", "a-key")]
