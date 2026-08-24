@@ -127,7 +127,6 @@ _spack_env_remove_first() {
 
     eval "remaining=\"\${${varname}}\""
     accumulator=""
-    found="no"
 
     while [ -n "$remaining" ]; do
         if [ "$remaining" = "${remaining#*$sep}" ]; then
@@ -138,11 +137,15 @@ _spack_env_remove_first() {
             remaining="${remaining#*$sep}"
         fi
 
-        if [ "$val" = "$value" ] && [ "$found" = "no" ]; then
-            if [ ! -n "$remaining" ]; then
-                accumulator="$remaining"
-                break
+        if [ "$val" = "$value" ]; then
+            if [ -n "$remaining" ]; then
+                if [ -z "$accumulator" ]; then
+                    accumulator="$remaining"
+                else
+                    accumulator="$accumulator$sep$remaining"
+                fi
             fi
+            break
         else
             if [ -z "$accumulator" ]; then
                 accumulator="$val"
