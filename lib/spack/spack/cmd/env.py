@@ -774,13 +774,11 @@ def env_rename(args):
 
     shutil.rmtree(to_path, ignore_errors=True)
     fs.rename(from_path, to_path)
+
+    # Regenerate activation/deactivation scripts with new paths
+    env_script.regenerate_env_scripts(ev.Environment(to_path))
+
     tty.msg(f"Successfully renamed environment {args.mv_from} to {args.mv_to}")
-    tty.msg(
-        colorize(
-            "To regenerate activation & deactivation scripts,"
-            " regenerate view with @c{spack env view regenerate}"
-        )
-    )
 
 
 #
@@ -843,6 +841,7 @@ def env_view(args):
 
     if args.action == ViewAction.regenerate:
         env.regenerate_views()
+        env_script.regenerate_env_scripts(env)
     elif args.action == ViewAction.enable:
         if args.view_path:
             view_path = args.view_path

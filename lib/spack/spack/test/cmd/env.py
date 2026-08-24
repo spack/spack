@@ -414,9 +414,15 @@ def test_env_scripts_with_view(shell, tmp_path: pathlib.Path, install_mockery, m
     test_env.write()
     test_env.install_specs(fake=True)
 
+    view_name = "default"
+    for view_key, view in test_env.views.items():
+        if view.root == str(view_dir):
+            view_name = view_key
+            break
+
     env("activate", f"--{shell}", "view_test")
 
-    activate_content = get_activation_script_content(test_env, shell, view="default")
+    activate_content = get_activation_script_content(test_env, shell, view=view_name)
 
     assert str(view_dir) in activate_content
 

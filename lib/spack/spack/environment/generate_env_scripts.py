@@ -54,6 +54,33 @@ def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
     return lockfile_mtime >= script_mtime
 
 
+def regenerate_env_scripts(env):
+    """Regenerate the activation and deactivation scripts for an environment.
+
+    Args:
+        env: the environment whose scripts we are regenerating
+    """
+    spack_env_dir = os.path.join(env.path, ".spack-env")
+    if os.path.isdir(spack_env_dir):
+        # Remove all activation/deactivation scripts to force regeneration
+        for filename in os.listdir(spack_env_dir):
+            if "_activate" in filename or "_deactivate" in filename:
+                script_path = os.path.join(spack_env_dir, filename)
+                try:
+                    os.remove(script_path)
+                except OSError:
+                    pass
+
+    if env.views:
+        for view_name in env.views.keys():
+            write_env_activate_script(env, view_name)
+            write_env_deactivate_script(env, view_name)
+
+    write_env_activate_script(env, None)
+    write_env_deactivate_script(env, None)
+
+
+
 def write_env_activate_script(env: "spack.environment.Environment", view: Optional[str] = None):
     """Generate and write activation scripts for an environment.
 

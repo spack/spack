@@ -2533,13 +2533,13 @@ class Environment:
         for x in self.concretized_roots:
             x.new = False
 
-        current_env = active_environment().path if active_environment() is not None else None
-        if not current_env or current_env != self.path:
+        current_env_path = os.environ.get(spack_env_var, None)
+        if not current_env_path or current_env_path != self.path:
             write_env_activate_script(self, None)
             write_env_deactivate_script(self, None)
         else:
-            write_env_activate_script(self, os.environ.get(spack_env_view_var, "default"))
-            write_env_deactivate_script(self, os.environ.get(spack_env_view_var, "default"))
+            write_env_activate_script(self, os.environ.get(spack_env_view_var, None))
+            write_env_deactivate_script(self, os.environ.get(spack_env_view_var, None))
 
     def update_lockfile(self) -> None:
         with fs.write_tmp_and_move(self.lock_path, encoding="utf-8") as f:
