@@ -22,6 +22,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
 )
 
@@ -176,7 +177,7 @@ class Option:
                 result.append(value.value)
         return tuple(result)
 
-    def validate_or_raise(self, ospec: "VariantValue", pkg_name: str):
+    def validate_or_raise(self, ospec: "OptionValue", pkg_name: str):
         """Validate an option spec against this package option. Raises an
         exception if any error is found.
 
@@ -288,15 +289,15 @@ class Usage(Option):
     superclasses.
     """
 
-    def make_default(self) -> "VariantValue":  # TODO: refine these types
-        """Factory that creates a variant holding the default value(s)."""
-        variant = VariantValue.from_string_or_bool(self.name, self.default)
-        variant.type = self.variant_type
-        return variant
+    def make_default(self) -> "UsageValue":
+        """Factory that creates a usage holding the default value(s)."""
+        usage = UsageValue.from_string_or_bool(self.name, self.default)
+        usage.type = self.variant_type
+        return usage
 
-    def make_variant(self, *value: Union[str, bool]) -> "VariantValue":
-        """Factory that creates a variant holding the value(s) passed."""
-        return VariantValue(self.variant_type, self.name, value)
+    def make_variant(self, *value: Union[str, bool]) -> "UsageValue":
+        """Factory that creates a usage holding the value(s) passed."""
+        return UsageValue(self.variant_type, self.name, value)
 
 
 def _flatten(values) -> Collection:
@@ -322,74 +323,78 @@ ValueType = Tuple[Union[bool, str], ...]
 SerializedValueType = Union[str, bool, List[Union[str, bool]]]
 
 
+OptionValueT = TypeVar("OptionValueT", bound="OptionValue")
+
+
 @lang.lazy_lexicographic_ordering
-class VariantValue:
-    """A VariantValue is a key-value pair that represents a variant. It can have zero or more
-    values. Values have set semantics, so they are unordered and unique. The variant type can
-    be narrowed from multi to single to boolean, this limits the number of values that can be
-    stored in the variant. Multi-valued variants can either be concrete or abstract: abstract
-    means that the variant takes at least the values specified, but may take more when concretized.
-    Concrete means that the variant takes exactly the values specified. Whether the variant is
-    propagated to dependencies is not part of the value: it is determined by the map that holds
-    it, ``Spec.variants`` or ``Spec.propagated_variants``."""
+class OptionValue:
+    """Base class for :class:`VariantValue` and :class:`UsageValue`.
+
+    An OptionValue is a key-value pair. It can have zero or more values. Values have set
+    semantics, so they are unordered and unique. The option type can be narrowed from multi to
+    single to boolean, this limits the number of values that can be stored in the option.
+    Multi-valued options can either be concrete or abstract: abstract means that the option takes
+    at least the values specified, but may take more when concretized. Concrete means that the
+    option takes exactly the values specified."""
 
     name: str
     concrete: bool
     type: VariantType
     _values: ValueType
 
-    # _patches_in_order_of_appearance is attached to the "patches" variant after concretization
-    __slots__ = ("name", "concrete", "type", "_values", "_patches_in_order_of_appearance")
+    __slots__ = ("name", "concrete", "type", "_values")
 
     def __init__(
         self, type: VariantType, name: str, value: ValueType, *, concrete: bool = False
     ) -> None:
         self.name = name
         self.type = type
-        # only multi-valued variants can be abstract
+        # only multi-valued options can be abstract
         self.concrete = concrete or type in (VariantType.BOOL, VariantType.SINGLE)
 
         # Invokes property setter
         self.set(*value)
 
-    @staticmethod
+    @classmethod
     def from_node_dict(
-        name: str, value: Union[str, List[str]], *, abstract: bool = False
-    ) -> "VariantValue":
-        """Reconstruct a variant from a node dict."""
+        cls: Type[OptionValueT], name: str, value: Union[str, List[str]], *, abstract: bool = False
+    ) -> OptionValueT:
+        """Reconstruct an option from a node dict."""
         if isinstance(value, list):
-            return VariantValue(VariantType.MULTI, name, tuple(value), concrete=not abstract)
+            return cls(VariantType.MULTI, name, tuple(value), concrete=not abstract)
 
         # todo: is this necessary? not literal true / false in json/yaml?
         elif str(value).upper() == "TRUE" or str(value).upper() == "FALSE":
-            return VariantValue(VariantType.BOOL, name, (str(value).upper() == "TRUE",))
+            return cls(VariantType.BOOL, name, (str(value).upper() == "TRUE",))
 
-        return VariantValue(VariantType.SINGLE, name, (value,))
+        return cls(VariantType.SINGLE, name, (value,))
 
-    @staticmethod
+    @classmethod
     def from_string_or_bool(
-        name: str, value: Union[str, bool], *, concrete: bool = False
-    ) -> "VariantValue":
+        cls: Type[OptionValueT], name: str, value: Union[str, bool], *, concrete: bool = False
+    ) -> OptionValueT:
         if value is True or value is False:
-            return VariantValue(VariantType.BOOL, name, (value,))
+            return cls(VariantType.BOOL, name, (value,))
 
         elif value.upper() in ("TRUE", "FALSE"):
-            return VariantValue(VariantType.BOOL, name, (value.upper() == "TRUE",))
+            return cls(VariantType.BOOL, name, (value.upper() == "TRUE",))
 
         elif value == "*":
-            return VariantValue(VariantType.MULTI, name, ())
+            return cls(VariantType.MULTI, name, ())
 
-        return VariantValue(VariantType.MULTI, name, tuple(value.split(",")), concrete=concrete)
+        return cls(VariantType.MULTI, name, tuple(value.split(",")), concrete=concrete)
 
-    @staticmethod
-    def from_concretizer(name: str, value: str, type: str) -> "VariantValue":
-        """Reconstruct a variant from concretizer output."""
+    @classmethod
+    def from_concretizer(
+        cls: Type[OptionValueT], name: str, value: str, type: str
+    ) -> OptionValueT:
+        """Reconstruct an option from concretizer output."""
         if type == "bool":
-            return VariantValue(VariantType.BOOL, name, (value == "True",))
+            return cls(VariantType.BOOL, name, (value == "True",))
         elif type == "multi":
-            return VariantValue(VariantType.MULTI, name, (value,), concrete=True)
+            return cls(VariantType.MULTI, name, (value,), concrete=True)
         else:
-            return VariantValue(VariantType.SINGLE, name, (value,))
+            return cls(VariantType.SINGLE, name, (value,))
 
     def yaml_entry(self) -> Tuple[str, SerializedValueType]:
         """Returns a (key, value) tuple suitable to be an entry in a yaml dict.
@@ -410,7 +415,7 @@ class VariantValue:
         return self._values[0] if self.type != VariantType.MULTI else self._values
 
     def set(self, *value: Union[bool, str]) -> None:
-        """Set the value(s) of the variant."""
+        """Set the value(s) of the option."""
         if len(value) > 1:
             value = tuple(sorted(set(value)))
 
@@ -419,8 +424,9 @@ class VariantValue:
                 raise MultipleValuesInExclusiveVariantError(self)
             unwrapped = value[0]
             if self.type == VariantType.BOOL and unwrapped not in (True, False):
+                t_str = type(self).__name__.lower()
                 raise ValueError(
-                    f"cannot set a boolean variant to a value that is not a boolean: {unwrapped}"
+                    f"cannot set a boolean {t_str} to a value that is not a boolean: {unwrapped}"
                 )
 
         if "*" in value:
@@ -433,33 +439,18 @@ class VariantValue:
         yield self.concrete
         yield from (str(v) for v in self.values)
 
-    def copy(self) -> "VariantValue":
-        return VariantValue(self.type, self.name, self.values, concrete=self.concrete)
+    def copy(self: OptionValueT) -> OptionValueT:
+        return type(self)(self.type, self.name, self.values, concrete=self.concrete)
 
-    def _merged_values(self, other: "VariantValue") -> Tuple[Union[str, bool], ...]:
-        """The values of both sides. For patches a value identified by a checksum prefix and the
-        full checksum name the same patch, so only the longer one is kept."""
-        values = (*self.values, *other.values)
-        if self.name != "patches":
-            return values
-        return tuple(
-            v
-            for v in values
-            if not any(
-                w != v and isinstance(w, str) and isinstance(v, str) and w.startswith(v)
-                for w in values
-            )
-        )
+    def _merged_values(self: OptionValueT, other: OptionValueT) -> Tuple[Union[str, bool], ...]:
+        """The values of both sides."""
+        return (*self.values, *other.values)
 
     def _contains(self, value: Union[str, bool]) -> bool:
-        """Whether this variant covers a single value of another one. A patch is identified by a
-        prefix of its checksum, so a shorter value is covered by any value starting with it.
-        """
-        if self.name == "patches" and isinstance(value, str):
-            return any(isinstance(w, str) and w.startswith(value) for w in self.values)
+        """Whether this option covers a single value of another one."""
         return value in self.values
 
-    def satisfies(self, other: "VariantValue") -> bool:
+    def satisfies(self: OptionValueT, other: OptionValueT) -> bool:
         """The lhs satisfies the rhs if all possible concretizations of lhs are also
         possible concretizations of rhs."""
         if self.name != other.name:
@@ -472,7 +463,7 @@ class VariantValue:
             return self.values == other.values
         return False
 
-    def intersects(self, other: "VariantValue") -> bool:
+    def intersects(self: OptionValueT, other: OptionValueT) -> bool:
         """True iff there exists a concretization that satisfies both lhs and rhs."""
         if self.name != other.name:
             return False
@@ -485,7 +476,7 @@ class VariantValue:
         # both abstract: the union is a valid concretization of both
         return True
 
-    def constrain(self, other: "VariantValue") -> bool:
+    def constrain(self: OptionValueT, other: OptionValueT) -> bool:
         """Constrain self with other if they intersect. Returns true iff self was changed."""
         if not self.intersects(other):
             raise UnsatisfiableVariantSpecError(self, other)
@@ -506,11 +497,10 @@ class VariantValue:
     def __contains__(self, item: Union[str, bool]) -> bool:
         return item in self.values
 
-    def string(self, abbreviate_patches: bool = False, propagated: bool = False) -> str:
-        """The string representation of this variant. With ``abbreviate_patches``, a ``patches``
-        variant is printed as 7-character checksum prefixes without the concreteness marker.
-        With ``propagated``, the sigil is doubled: ``++foo``, ``foo==bar``."""
-        # boolean variants are printed +foo or ~foo
+    def string(self, *, propagated: bool = False) -> str:
+        """The string representation of this option. With ``propagated``, the sigil is doubled:
+        ``++foo``, ``foo==bar``."""
+        # boolean options are printed +foo or ~foo
         if self.type == VariantType.BOOL:
             sigil = "+" if self.value else "~"
             if propagated:
@@ -518,10 +508,6 @@ class VariantValue:
             return f"{sigil}{self.name}"
 
         delim = "==" if propagated else "="
-
-        if abbreviate_patches and self.name == "patches" and self.values:
-            value_str = ",".join(str(x)[:7] for x in self.values)
-            return f"{self.name}{delim}{spack.spec_parser.quote_if_needed(value_str)}"
 
         # concrete multi-valued foo:=bar,baz
         concrete = ":" if self.type == VariantType.MULTI and self.concrete else ""
@@ -536,9 +522,62 @@ class VariantValue:
 
     def __repr__(self):
         return (
-            f"VariantValue({self.type!r}, {self.name!r}, {self.values!r}, "
+            f"{type(self).__name__}({self.type!r}, {self.name!r}, {self.values!r}, "
             f"concrete={self.concrete!r})"
         )
+
+
+class VariantValue(OptionValue):
+    """A VariantValue is a key-value pair that represents a variant. See :class:`OptionValue`
+    for the value semantics. Whether the variant is propagated to dependencies is not part of
+    the value: it is determined by the map that holds it, ``Spec.variants`` or
+    ``Spec.propagated_variants``.
+
+    The ``patches`` variant is special: a patch is identified by a prefix of its checksum, so a
+    shorter value is covered by any value starting with it."""
+
+    # _patches_in_order_of_appearance is attached to the "patches" variant after concretization
+    __slots__ = ("_patches_in_order_of_appearance",)
+
+    def _merged_values(self, other: "VariantValue") -> Tuple[Union[str, bool], ...]:
+        """The values of both sides. For patches a value identified by a checksum prefix and the
+        full checksum name the same patch, so only the longer one is kept."""
+        values = super()._merged_values(other)
+        if self.name != "patches":
+            return values
+        return tuple(
+            v
+            for v in values
+            if not any(
+                w != v and isinstance(w, str) and isinstance(v, str) and w.startswith(v)
+                for w in values
+            )
+        )
+
+    def _contains(self, value: Union[str, bool]) -> bool:
+        """Whether this variant covers a single value of another one. A patch is identified by a
+        prefix of its checksum, so a shorter value is covered by any value starting with it.
+        """
+        if self.name == "patches" and isinstance(value, str):
+            return any(isinstance(w, str) and w.startswith(value) for w in self.values)
+        return super()._contains(value)
+
+    def string(self, abbreviate_patches: bool = False, *, propagated: bool = False) -> str:
+        """The string representation of this variant. With ``abbreviate_patches``, a ``patches``
+        variant is printed as 7-character checksum prefixes without the concreteness marker.
+        With ``propagated``, the sigil is doubled: ``++foo``, ``foo==bar``."""
+        if abbreviate_patches and self.name == "patches" and self.values:
+            delim = "==" if propagated else "="
+            value_str = ",".join(str(x)[:7] for x in self.values)
+            return f"{self.name}{delim}{spack.spec_parser.quote_if_needed(value_str)}"
+        return super().string(propagated=propagated)
+
+
+class UsageValue(OptionValue):
+    """A UsageValue is a key-value pair that represents a usage. See :class:`OptionValue` for
+    the value semantics."""
+
+    __slots__ = ()
 
 
 def MultiValuedVariant(name: str, value: ValueType) -> VariantValue:
@@ -890,7 +929,7 @@ class MultipleValuesInExclusiveVariantError(spack.error.SpecError, ValueError):
     only one.
     """
 
-    def __init__(self, variant: VariantValue, pkg_name: Optional[str] = None):
+    def __init__(self, variant: OptionValue, pkg_name: Optional[str] = None):
         pkg_info = "" if pkg_name is None else f" in package '{pkg_name}'"
         msg = f"multiple values are not allowed for variant '{variant.name}'{pkg_info}"
 
