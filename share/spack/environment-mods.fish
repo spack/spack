@@ -31,9 +31,9 @@ function _spack_env_prepend -a name value sep
 end
 
 function _spack_env_remove_value -a name value sep
-    set as_list (string split $sep -- $$name)
+    set -l as_list (string split $sep -- $$name)
     while true
-        if set index (contains --index $value $as_list)
+        if set index (contains --index -- $value $as_list)
             set -e as_list[$index]
         else
             break
@@ -44,8 +44,8 @@ function _spack_env_remove_value -a name value sep
 end
 
 function _spack_env_remove_first -a name value sep
-    set as_list (string split $sep -- $$name)
-    if set index (contains --index $value $as_list)
+    set -l as_list (string split $sep -- $$name)
+    if set index (contains --index -- $value $as_list)
         set -e as_list[$index]
     end
     set -gx $name (string join -- $sep $as_list)
@@ -53,21 +53,21 @@ function _spack_env_remove_first -a name value sep
 end
 
 function _spack_env_remove_last -a name value sep
-    set as_list (string split $sep -- $$name)
+    set -l as_list (string split $sep -- $$name)
 
     # reverse list order
-    set reversed_list
+    set -l reversed_list
     for element in $as_list
         set -p reversed_list $element
     end
 
     # remove first matching element
-    if set index (contains --index $value $reversed_list)
+    if set index (contains --index -- $value $reversed_list)
         set -e reversed_list[$index]
     end
 
     # reverse list order
-    set as_list
+    set -l as_list
     for element in $reversed_list
         set -p as_list $element
     end
@@ -77,8 +77,8 @@ function _spack_env_remove_last -a name value sep
 end
 
 function _spack_env_prune_duplicates -a name sep
-    set as_list (string split $sep -- $$name)
-    set new_list
+    set -l as_list (string split $sep -- $$name)
+    set -l new_list
 
     for element in $as_list
         if not contains -- $element $new_list
