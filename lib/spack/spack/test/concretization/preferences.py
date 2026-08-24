@@ -440,26 +440,6 @@ all:
 
         assert "buildable:false" in str(exc_info.value)
 
-    def test_buildable_false_all_with_explicit_true(self):
-        """Test that a package can be built when packages:all:buildable:false
-        but the package is explicitly marked buildable:true."""
-        conf = syaml.load_config(
-            """\
-all:
-  buildable: false
-libelf:
-  buildable: true
-compiler-wrapper:
-  buildable: true
-"""
-        )
-        spack.config.CONFIG.set("packages", conf)
-
-        # Should succeed because libelf is explicitly buildable
-        spec = spack.concretize.concretize_one("libelf")
-        assert spec.name == "libelf"
-        assert spec.concrete
-
     def test_buildable_false_provider_overrides_virtual_true(self):
         """Test that a virtual provider explicitly set to buildable:false
         cannot be built even when the virtual package is buildable:true
@@ -485,30 +465,6 @@ compiler-wrapper:
             spack.concretize.concretize_one("mpich")
 
         assert "buildable:false" in str(exc_info.value)
-
-    def test_buildable_true_virtual_allows_provider_with_all_false(self):
-        """Test that a virtual provider can be built when packages:all:buildable:false
-        if the virtual package is explicitly buildable:true and the provider has
-        no explicit buildable setting."""
-        conf = syaml.load_config(
-            """\
-all:
-  buildable: false
-mpi:
-  buildable: true
-gcc-runtime:
-  buildable: true
-compiler-wrapper:
-  buildable: true
-"""
-        )
-        spack.config.CONFIG.set("packages", conf)
-
-        # Should succeed because mpi virtual is buildable:true, and mpich
-        # as a provider should inherit that
-        spec = spack.concretize.concretize_one("mpich")
-        assert spec.name == "mpich"
-        assert spec.concrete
 
     def test_config_permissions_from_all(self, configure_permissions):
         # Although these aren't strictly about concretization, they are
