@@ -621,7 +621,7 @@ def test_ci_skipped_report(tmp_path: pathlib.Path, config, monkeypatch):
 def test_ci_get_stack_changed_no_env(mock_git_repo, monkeypatch):
     """Test that we can detect the change to .gitlab-ci.yml in a
     mock spack git repo."""
-    os.environ["CI_CONFIG_PATH"] = os.path.join(mock_git_repo, ".gitlab-ci.yml")
+    monkeypatch.setenv("CI_CONFIG_PATH", os.path.join(mock_git_repo, ".gitlab-ci.yml"))
     monkeypatch.setattr(spack.paths, "prefix", mock_git_repo)
     fake_env_path = os.path.join(
         spack.paths.prefix, os.path.sep.join(("no", "such", "env", "path"))
@@ -629,7 +629,7 @@ def test_ci_get_stack_changed_no_env(mock_git_repo, monkeypatch):
     assert ci.stack_changed(fake_env_path) is True
 
 
-def test_ci_stack_changed(git, mock_git_package_changes):
+def test_ci_stack_changed(git, mock_git_package_changes, monkeypatch):
     repo, filename, commits = mock_git_package_changes
 
     stack_env = os.path.join(repo.root, "env", "spack.yaml")
@@ -639,7 +639,7 @@ def test_ci_stack_changed(git, mock_git_package_changes):
     assert not ci.stack_changed(stack_env)
 
     # Setting the path to the CI config with non-default name should
-    os.environ["CI_CONFIG_PATH"] = os.path.join(repo.root, ".ci", "pipeline.yml")
+    monkeypatch.setenv("CI_CONFIG_PATH", os.path.join(repo.root, ".ci", "pipeline.yml"))
     assert not ci.stack_changed(stack_env)
 
     def commit(message, commit_counter=len(commits)):
