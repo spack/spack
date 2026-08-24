@@ -6019,3 +6019,14 @@ def test_worker_solves_are_replayed_the_same_way_without_parallelism(
     assert len(ui.solves) == len(ui.finished) == len(ui.programs) == 2
     # Each solve reports its own specs, rather than accumulating the ones before it
     assert [[str(x) for x in specs] for specs in ui.solves] == [["pkg-a"], ["pkg-b"]]
+
+
+def test_single_spec_concretization_reports_to_the_frontend(mutable_config, mock_packages):
+    """Tests that the single spec shortcut in concretize_spec_pairs reports to the frontend it
+    was given.
+    """
+    ui = RecordingUI()
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None)], ui=ui)
+
+    assert [[str(x) for x in specs] for specs in ui.solves] == [["pkg-a"]]
+    assert len(ui.finished) == 1

@@ -370,7 +370,7 @@ def _dispatch_concretization(
     # Special case for concretizing a single spec
     if len(to_concretize) == 1:
         abstract, concrete = to_concretize[0]
-        return [concrete or concretize_one(abstract, tests=tests)]
+        return [concrete or concretize_one(abstract, tests=tests, ui=ui)]
 
     # Special case if every spec is either concrete or has an abstract hash
     if all(
