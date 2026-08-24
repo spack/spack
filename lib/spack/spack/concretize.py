@@ -6,6 +6,7 @@
 import importlib
 import sys
 import time
+import traceback
 from collections import Counter
 from typing import (
     TYPE_CHECKING,
@@ -43,6 +44,21 @@ class SolveReporting(NamedTuple):
     solves: bool
     #: Also record the generated ASP program, which is tens of MiB per solve
     asp_program: bool
+
+
+class SolveOutcome(NamedTuple):
+    """What a worker process hands back for one spec, whether the solve worked or not."""
+
+    #: Where the spec was in the input, which the pool does not preserve
+    position: int
+    #: The concretized spec, or None if the solve raised
+    concrete: Optional[Spec]
+    #: Seconds spent in the solve
+    duration: float
+    #: The events of the solve, to replay into the frontend, or None if they were not recorded
+    buffered: Optional[BufferedUI]
+    #: What the solve raised, or None if it succeeded
+    error: Optional[Exception]
 
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
@@ -236,21 +252,29 @@ def concretize_separately(
             (abstract, concrete) for abstract, concrete in spec_list if concrete
         ]
 
-    for j, (i, concrete, duration, buffered) in enumerate(
+    for j, outcome in enumerate(
         spack.util.parallel.imap_unordered(
-            _concretize_task,
-            args,
-            processes=num_procs,
-            debug=tty.is_debug(),
-            maxtaskperchild=1,
-            serialize_env=True,
+            _concretize_task, args, processes=num_procs, maxtaskperchild=1, serialize_env=True
         ),
         start=1,
     ):
-        ret.append((i, concrete))
-        if buffered is not None:
-            buffered.replay(ui)
-        ui.on_spec_concretized(to_concretize[i], concrete=concrete, count=j, duration=duration)
+        # Replay before raising, so a solve that failed still reports what it had to say
+        if outcome.buffered is not None:
+            outcome.buffered.replay(ui)
+        if outcome.error is not None:
+            raise outcome.error
+        if outcome.concrete is None:
+            raise spack.error.SpackError(
+                f"concretization of {to_concretize[outcome.position]} produced neither a spec nor "
+                f"an error"
+            )
+        ret.append((outcome.position, outcome.concrete))
+        ui.on_spec_concretized(
+            to_concretize[outcome.position],
+            concrete=outcome.concrete,
+            count=j,
+            duration=outcome.duration,
+        )
 
     # Add specs in original order
     ret.sort(key=lambda x: x[0])
@@ -262,14 +286,20 @@ def concretize_separately(
 
 def _concretize_task(
     packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"], "SolveReporting"],
-) -> Tuple[int, Spec, float, Optional[BufferedUI]]:
+) -> SolveOutcome:
     index, spec_str, tests, factory, reporting = packed_arguments
     # A fresh buffer per task, so the serial fallback doesn't accumulate events across specs
     buffered = BufferedUI(asp_program=reporting.asp_program) if reporting.solves else None
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
-        spec = concretize_one(Spec(spec_str), tests=tests, factory=factory, ui=buffered)
-        return index, spec, time.time() - start, buffered
+        try:
+            spec = concretize_one(Spec(spec_str), tests=tests, factory=factory, ui=buffered)
+        except Exception as e:
+            # Tracebacks don't pickle, so record this one where the parent can print it
+            if isinstance(e, spack.error.SpackError):
+                e.traceback = traceback.format_exc()
+            return SolveOutcome(index, None, time.time() - start, buffered, e)
+        return SolveOutcome(index, spec, time.time() - start, buffered, None)
 
 
 def concretize_one(

@@ -5963,10 +5963,11 @@ def test_worker_solves_are_not_buffered_for_a_headless_frontend(mutable_config, 
     assert ui.reports_solves is False and ui.reports_asp_program is False
 
     reporting = spack.concretize.SolveReporting(ui.reports_solves, ui.reports_asp_program)
-    _, spec, _, buffered = spack.concretize._concretize_task((0, "pkg-a", False, None, reporting))
+    outcome = spack.concretize._concretize_task((0, "pkg-a", False, None, reporting))
 
-    assert spec.concrete
-    assert buffered is None
+    assert outcome.error is None
+    assert outcome.concrete is not None and outcome.concrete.concrete
+    assert outcome.buffered is None
 
 
 def test_buffered_ui_records_only_what_is_asked_for(mutable_config, mock_packages):
@@ -6069,3 +6070,40 @@ def test_output_does_not_satisfy_input_keeps_its_specs():
         ("pkg-a", "pkg-b"),
         ("pkg-c", None),
     ]
+
+
+@pytest.mark.not_on_windows("process pools are disabled on Windows")
+@pytest.mark.enable_parallelism
+def test_worker_error_keeps_its_type_and_replays_its_events(mutable_config, mock_packages):
+    """Tests that a solve failing in a worker process reaches the owning process as the error it
+    raised, carrying the traceback of the worker, and that the events it had already reported are
+    replayed before it is raised.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    ui = RecordingUI()
+    # More than one spec, otherwise imap_unordered falls back to a serial map
+    specs = [(Spec("pkg-b"), None), (Spec("pkg-a@99.99.99"), None)]
+
+    with pytest.raises(spack.solver.error.InvalidVersionError) as exc_info:
+        spack.concretize.concretize_separately(specs, ui=ui)
+
+    # Tracebacks don't pickle, so the worker records its own for the parent to print
+    assert "concretize.py" in exc_info.value.traceback
+    # The solve reported its start before it failed, and that survived the failure
+    assert ["pkg-a@99.99.99"] in [[str(x) for x in solve] for solve in ui.solves]
+
+
+def test_failed_solve_reports_the_same_way_without_parallelism(mutable_config, mock_packages):
+    """Tests that disabling parallelism doesn't change how a failed solve is reported: the task
+    returns its outcome either way, so the serial path raises the same error.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    assert not spack.util.parallel.ENABLE_PARALLELISM, "this test wants the serial fallback"
+    ui = RecordingUI()
+
+    with pytest.raises(spack.solver.error.InvalidVersionError):
+        spack.concretize.concretize_separately(
+            [(Spec("pkg-b"), None), (Spec("pkg-a@99.99.99"), None)], ui=ui
+        )
+
+    assert ["pkg-a@99.99.99"] in [[str(x) for x in solve] for solve in ui.solves]
