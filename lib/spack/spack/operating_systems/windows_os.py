@@ -84,7 +84,9 @@ class WindowsOs(OperatingSystem):
             return []
         # vswhere prints nothing at all when no instance matches, so drop empty lines
         # rather than reporting a single empty (i.e. relative) install root.
-        return [line.strip() for line in paths.splitlines() if line.strip()]
+        valid_entries = filter(str.strip, paths.splitlines())
+        # return nicely cleaned list of valid vs entries
+        return [line.strip() for line in valid_entries]
 
     def _registry_install_paths(self) -> List[str]:
         """Visual Studio install roots recorded in the Windows registry.
