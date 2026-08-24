@@ -109,7 +109,8 @@ def spec_dict_to_json(spec_dict: SpecDict) -> Dict:
     Note: this does not yet handle spliced specs and will raise an error if they're passed in.
 
     Raises:
-        SpliceSerializationError: if any node in ``spec_dict`` has a ``build_spec``.
+        spack.solver.error.SpliceSerializationError: if any node in ``spec_dict`` has a
+            ``build_spec``.
     """
     # Specs are keyed in spec_dict by their solver-assigned NodeId, but reused concrete
     # specs may have transitive dependencies that do not have a NodeId.
