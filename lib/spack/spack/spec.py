@@ -76,6 +76,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
     overload,
 )
@@ -1148,9 +1149,11 @@ _valid_compiler_flags = ("cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "c
 # typing.Dict bases are slow at runtime on Python 3.6
 if TYPE_CHECKING:
     _FlagMapBase = Dict[str, List[CompilerFlag]]
-    _VariantMapBase = Dict[str, vt.VariantValue]
+    _OptionMapBase = Dict[str, vt.VariantValue]
 else:
-    _FlagMapBase = _VariantMapBase = dict
+    _FlagMapBase = _OptionMapBase = dict
+
+OptionMapT = TypeVar("OptionMapT", bound="OptionMap")
 
 
 @lang.lazy_lexicographic_ordering
@@ -5215,8 +5218,9 @@ class Spec:
 
 
 @lang.lazy_lexicographic_ordering
-class VariantMap(_VariantMapBase):
-    """Map of variant instances, keyed by variant name."""
+class OptionMap(_OptionMapBase):
+    """Base class for :class:`VariantMap` and :class:`UsageMap`: a map of option values, keyed
+    by option name."""
 
     __slots__ = ()
 
@@ -5224,51 +5228,65 @@ class VariantMap(_VariantMapBase):
         for _, v in sorted(self.items()):
             yield v
 
+    def set(self, ospec: vt.VariantValue) -> None:
+        """Stores ``ospec`` under its own name, replacing any entry already there."""
+        self[ospec.name] = ospec
+
+    def satisfies(self: OptionMapT, other: OptionMapT) -> bool:
+        for name, option in other.items():
+            mine = self.get(name)
+            if mine is None or not mine.satisfies(option):
+                return False
+        return True
+
+    def conflict(
+        self: OptionMapT, other: OptionMapT
+    ) -> Optional[Tuple[vt.VariantValue, vt.VariantValue]]:
+        """The first pair of values of the same name that do not intersect, if any."""
+        for name, option in other.items():
+            mine = self.get(name)
+            if mine is not None and not mine.intersects(option):
+                return mine, option
+        return None
+
+    def constrain(self: OptionMapT, other: OptionMapT) -> bool:
+        """Add the options of other that self lacks, and constrain those it has. Returns whether
+        self changed; raises if a pair of values does not intersect."""
+        changed = False
+        for name, option in other.items():
+            mine = self.get(name)
+            if mine is None:
+                self[name] = option.copy()
+                changed = True
+            else:
+                changed |= mine.constrain(option)
+        return changed
+
+    def copy(self: OptionMapT) -> OptionMapT:
+        clone = type(self)()
+        for option in self.values():
+            clone.set(option.copy())
+        return clone
+
+    def __str__(self):
+        return _variants_string(self, {})
+
+
+class VariantMap(OptionMap):
+    """Map of variant instances, keyed by variant name."""
+
+    __slots__ = ()
+
     @property
     def dict(self) -> "VariantMap":
         # compat with boost's package.py, which uses this former private attribute; to be removed
         return self
 
-    def set(self, vspec: vt.VariantValue) -> None:
-        """Stores ``vspec`` under its own name, replacing any entry already there."""
-        self[vspec.name] = vspec
 
-    def satisfies(self, other: "VariantMap") -> bool:
-        for name, variant in other.items():
-            mine = self.get(name)
-            if mine is None or not mine.satisfies(variant):
-                return False
-        return True
+class UsageMap(OptionMap):
+    """Map of usage instances, keyed by usage name."""
 
-    def conflict(self, other: "VariantMap") -> Optional[Tuple[vt.VariantValue, vt.VariantValue]]:
-        """The first pair of values of the same name that do not intersect, if any."""
-        for name, variant in other.items():
-            mine = self.get(name)
-            if mine is not None and not mine.intersects(variant):
-                return mine, variant
-        return None
-
-    def constrain(self, other: "VariantMap") -> bool:
-        """Add the variants of other that self lacks, and constrain those it has. Returns whether
-        self changed; raises if a pair of values does not intersect."""
-        changed = False
-        for name, variant in other.items():
-            mine = self.get(name)
-            if mine is None:
-                self[name] = variant.copy()
-                changed = True
-            else:
-                changed |= mine.constrain(variant)
-        return changed
-
-    def copy(self) -> "VariantMap":
-        clone = VariantMap()
-        for variant in self.values():
-            clone.set(variant.copy())
-        return clone
-
-    def __str__(self):
-        return _variants_string(self, {})
+    __slots__ = ()
 
 
 def _propagated_bool_conflict(
