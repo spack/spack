@@ -328,12 +328,13 @@ libelf:
   buildable: false
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
-        spec = Spec("libelf")
-        assert not spack.package_prefs.is_spec_buildable(spec)
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
 
-        spec = Spec("mpich")
-        assert spack.package_prefs.is_spec_buildable(spec)
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("libelf")
+
+        spec = concretize("mpich")
+        assert spec["mpich"].name == "mpich"
 
     def test_buildable_false_virtual(self):
         conf = syaml.load_config(
@@ -342,12 +343,13 @@ mpi:
   buildable: false
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
-        spec = Spec("libelf")
-        assert spack.package_prefs.is_spec_buildable(spec)
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
 
-        spec = Spec("mpich")
-        assert not spack.package_prefs.is_spec_buildable(spec)
+        spec = concretize("libelf")
+        assert spec["libelf"].name == "libelf"
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("mpich")
 
     def test_buildable_false_all(self):
         conf = syaml.load_config(
@@ -356,12 +358,13 @@ all:
   buildable: false
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
-        spec = Spec("libelf")
-        assert not spack.package_prefs.is_spec_buildable(spec)
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
 
-        spec = Spec("mpich")
-        assert not spack.package_prefs.is_spec_buildable(spec)
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("libelf")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("mpich")
 
     def test_buildable_false_all_true_package(self):
         conf = syaml.load_config(
@@ -370,14 +373,17 @@ all:
   buildable: false
 libelf:
   buildable: true
+compiler-wrapper:
+  buildable: true
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
-        spec = Spec("libelf")
-        assert spack.package_prefs.is_spec_buildable(spec)
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
 
-        spec = Spec("mpich")
-        assert not spack.package_prefs.is_spec_buildable(spec)
+        spec = concretize("libelf")
+        assert spec["libelf"].name == "libelf"
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("mpich")
 
     def test_buildable_false_all_true_virtual(self):
         conf = syaml.load_config(
@@ -386,16 +392,21 @@ all:
   buildable: false
 mpi:
   buildable: true
+gcc-runtime:
+  buildable: true
+compiler-wrapper:
+  buildable: true
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
-        spec = Spec("libelf")
-        assert not spack.package_prefs.is_spec_buildable(spec)
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
 
-        spec = Spec("mpich")
-        assert spack.package_prefs.is_spec_buildable(spec)
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("libelf")
 
-    def test_buildable_false_virtual_true_pacakge(self):
+        spec = concretize("mpich")
+        assert spec["mpich"].name == "mpich"
+
+    def test_buildable_false_virtual_true_package(self):
         conf = syaml.load_config(
             """\
 mpi:
@@ -404,13 +415,13 @@ mpich:
   buildable: true
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
 
-        spec = Spec("zmpi")
-        assert not spack.package_prefs.is_spec_buildable(spec)
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("zmpi")
 
-        spec = Spec("mpich")
-        assert spack.package_prefs.is_spec_buildable(spec)
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("mpich")
 
     def test_buildable_false_all_concrete_failure(self):
         """Test that concretization fails when packages:all:buildable:false
@@ -421,7 +432,7 @@ all:
   buildable: false
 """
         )
-        spack.config.set("packages", conf)
+        spack.config.CONFIG.set("packages", conf)
 
         # Should fail because libelf cannot be built and has no externals
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
@@ -442,7 +453,7 @@ compiler-wrapper:
   buildable: true
 """
         )
-        spack.config.set("packages", conf)
+        spack.config.CONFIG.set("packages", conf)
 
         # Should succeed because libelf is explicitly buildable
         spec = spack.concretize.concretize_one("libelf")
@@ -467,7 +478,7 @@ compiler-wrapper:
   buildable: true
 """
         )
-        spack.config.set("packages", conf)
+        spack.config.CONFIG.set("packages", conf)
 
         # Should fail because mpich provider is explicitly not buildable
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
@@ -491,7 +502,7 @@ compiler-wrapper:
   buildable: true
 """
         )
-        spack.config.set("packages", conf)
+        spack.config.CONFIG.set("packages", conf)
 
         # Should succeed because mpi virtual is buildable:true, and mpich
         # as a provider should inherit that
