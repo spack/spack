@@ -4306,7 +4306,7 @@ class Spec:
 
             edge_list = []
             for edge in spack.traverse.traverse_edges(
-                l1_specs, order="breadth", cover="edges", root=False, visited=set([0])
+                l1_specs, order="breadth", cover="edges", root=False
             ):
                 # yield each node only once, and generate a consistent id for it the
                 # first time it's encountered.
