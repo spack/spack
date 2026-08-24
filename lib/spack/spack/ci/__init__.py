@@ -145,10 +145,16 @@ def stack_changed(env_path: str) -> bool:
     rel_env_path = os.path.relpath(env_path, git_dir)
     stack_paths = [rel_env_path]
 
-    # Get the gitlab pipeline config from the CI variable
+    # Get the gitlab pipeline config from the CI variable. GitLab documents
+    # CI_CONFIG_PATH as already being relative to the project root, so only
+    # convert it with relpath (which is resolved against the current working
+    # directory, not git_dir) when it was given as an absolute path.
     ci_config_path = os.environ.get("CI_CONFIG_PATH")
     if ci_config_path:
-        ci_config_path = os.path.relpath(ci_config_path, git_dir)
+        if os.path.isabs(ci_config_path):
+            ci_config_path = os.path.relpath(ci_config_path, git_dir)
+        else:
+            ci_config_path = os.path.normpath(ci_config_path)
         stack_paths.append(ci_config_path)
 
     with fs.working_dir(git_dir):
