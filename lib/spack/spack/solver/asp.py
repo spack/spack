@@ -2131,67 +2131,43 @@ class SpackSolverSetup:
                 self.gen.newline()
                 requirement_weight += 1
 
-    def external_packages(self, packages_with_externals):
-        """Facts on external packages, from packages.yaml and implicit externals."""
-        self.gen.h1("External packages")
-        for pkg_name, data in packages_with_externals.items():
-            if pkg_name == "all":
-                continue
-
-            # This package is not among possible dependencies
-            if pkg_name not in self.pkgs:
-                continue
-
-            if not data.get("buildable", True):
-                self.gen.h2(f"External package: {pkg_name}")
-                self.gen.fact(fn.buildable_false(pkg_name))
-
     def buildable_constraints(self, packages_with_externals):
-        """Apply buildable constraints based on packages:all:buildable setting."""
-        # Check if packages:all:buildable is explicitly set to false
+        """Facts on 'buildable' constraints from packages.yaml, including per-package and all:buildable."""
         all_buildable = packages_with_externals.get("all", {}).get("buildable", True)
 
         if all_buildable:
-            # Default behavior: all packages are buildable unless explicitly marked otherwise
+            # Emit buildable_false only for packages explicitly marked non-buildable
+            self.gen.h1("External packages")
+            for pkg_name, data in packages_with_externals.items():
+                if pkg_name == "all":
+                    continue
+                if pkg_name not in self.pkgs:
+                    continue
+                if not data.get("buildable", True):
+                    self.gen.h2(f"External package: {pkg_name}")
+                    self.gen.fact(fn.buildable_false(pkg_name))
             return
 
-        # packages:all:buildable is False, so all packages are non-buildable by default
-        # except those explicitly marked as buildable, either directly or as virtual providers
+        # packages:all:buildable is False - mark every package non-buildable unless
+        # it is explicitly buildable or provides a virtual that is explicitly buildable
         self.gen.h1("Buildable constraints from packages:all:buildable")
+        packages_config = spack.config.CONFIG.get("packages", {})
+        buildable_virtuals = {
+            v
+            for v, vdata in packages_config.items()
+            if spack.repo.PATH.is_virtual(v) and vdata.get("buildable", False)
+        }
 
         for pkg_name in sorted(self.pkgs):
-            # Check if this package is explicitly marked as buildable
             pkg_data = packages_with_externals.get(pkg_name, {})
             if pkg_data.get("buildable", False):
                 continue
 
-            # If not, it may provide a buildable virtual.
-            # Check all virtuals explicitly configured in packages.yaml
-            provides_buildable_virtual = False
-
-            # Get the full packages configuration, not just packages_with_externals
-            packages_config = spack.config.CONFIG.get("packages", {})
-
-            for virtual_name in packages_config.keys():
-                # Only check actual virtual packages
-                if not spack.repo.PATH.is_virtual(virtual_name):
-                    continue
-
-                virtual_data = packages_config.get(virtual_name, {})
-                # Only if the virtual is explicitly marked buildable:true
-                if not virtual_data.get("buildable", False):
-                    continue
-
-                # Check if pkg_name is a provider for this buildable virtual
-                for provider in spack.repo.PATH.providers_for(virtual_name):
-                    if provider.name == pkg_name:
-                        provides_buildable_virtual = True
-                        break
-
-                if provides_buildable_virtual:
-                    break
-
-            if provides_buildable_virtual:
+            if any(
+                provider.name == pkg_name
+                for virtual_name in buildable_virtuals
+                for provider in spack.repo.PATH.providers_for(virtual_name)
+            ):
                 continue
 
             self.gen.fact(fn.buildable_false(pkg_name))
@@ -3167,7 +3143,6 @@ class SpackSolverSetup:
         self.target_defaults(specs + dev_specs)
 
         self.virtual_requirements_and_weights()
-        self.external_packages(packages_with_externals)
         self.buildable_constraints(packages_with_externals)
 
         # TODO: make a config option for this undocumented feature
