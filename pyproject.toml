@@ -181,7 +181,7 @@ extraPaths = ["lib/spack"]
 
 [tool.coverage.run]
 parallel = true
-concurrency = ["multiprocessing"]
+concurrency = ["thread", "multiprocessing"]
 branch = true
 source = ["bin", "lib"]
 data_file = "./tests-coverage/.coverage"
