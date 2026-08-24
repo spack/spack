@@ -15,6 +15,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    ClassVar,
     Collection,
     Iterable,
     List,
@@ -75,7 +76,10 @@ class VariantType(enum.IntEnum):
 
 
 class Option:
-    """Base class for Variant and Usage"""
+    """Base class for :class:`Variant` and :class:`Usage`."""
+
+    #: Name of this kind of option, for messages: "variant" or "usage"
+    kind: ClassVar[str] = "option"
 
     name: str
     default: Union[bool, str]
@@ -188,10 +192,10 @@ class Option:
         Raises:
             InconsistentValidationError: if ``ospec.name != self.name``
 
-            MultipleValuesInExclusiveVariantError: if ``ospec`` has
+            MultipleValuesInExclusiveOptionError: if ``ospec`` has
                 multiple values but ``self.multi == False``
 
-            InvalidVariantValueError: if ``ospec.value`` contains
+            InvalidOptionValueError: if ``ospec.value`` contains
                 invalid values
         """
         # Check the name of the variant
@@ -201,16 +205,16 @@ class Option:
         # If the value is exclusive there must be at most one
         value = ospec.values
         if not self.multi and len(value) != 1:
-            raise MultipleValuesInExclusiveVariantError(ospec, pkg_name)
+            raise MultipleValuesInExclusiveOptionError(ospec, pkg_name)
 
         # Check and record the values that are not allowed
         invalid_vals = ", ".join(
             f"'{v}'" for v in value if v != "*" and self.single_value_validator(v) is False
         )
         if invalid_vals:
-            t_str = type(self).__name__.lower()
-            raise InvalidVariantValueError(
-                f"invalid values for {t_str} '{self.name}' in package {pkg_name}: {invalid_vals}\n"
+            raise InvalidOptionValueError(
+                f"invalid values for {self.kind} '{self.name}' in package {pkg_name}: "
+                f"{invalid_vals}\n"
             )
 
         # Validate the group of values if needed
@@ -269,6 +273,8 @@ class Variant(Option):
 
     """
 
+    kind = "variant"
+
     def make_default(self) -> "VariantValue":
         """Factory that creates a variant holding the default value(s)."""
         variant = VariantValue.from_string_or_bool(self.name, self.default)
@@ -288,6 +294,8 @@ class Usage(Option):
     Similarly, definitions in derived classes have higher precedence than those in their
     superclasses.
     """
+
+    kind = "usage"
 
     def make_default(self) -> "UsageValue":
         """Factory that creates a usage holding the default value(s)."""
@@ -336,6 +344,9 @@ class OptionValue:
     Multi-valued options can either be concrete or abstract: abstract means that the option takes
     at least the values specified, but may take more when concretized. Concrete means that the
     option takes exactly the values specified."""
+
+    #: Name of this kind of option, for messages: "variant" or "usage"
+    kind: ClassVar[str] = "option"
 
     name: str
     concrete: bool
@@ -421,16 +432,16 @@ class OptionValue:
 
         if self.type != VariantType.MULTI:
             if len(value) != 1:
-                raise MultipleValuesInExclusiveVariantError(self)
+                raise MultipleValuesInExclusiveOptionError(self)
             unwrapped = value[0]
             if self.type == VariantType.BOOL and unwrapped not in (True, False):
-                t_str = type(self).__name__.lower()
                 raise ValueError(
-                    f"cannot set a boolean {t_str} to a value that is not a boolean: {unwrapped}"
+                    f"cannot set a boolean {self.kind} to a value that is not a boolean: "
+                    f"{unwrapped}"
                 )
 
         if "*" in value:
-            raise InvalidVariantValueError("cannot use reserved value '*'")
+            raise InvalidOptionValueError("cannot use reserved value '*'")
 
         self._values = value
 
@@ -479,7 +490,7 @@ class OptionValue:
     def constrain(self: OptionValueT, other: OptionValueT) -> bool:
         """Constrain self with other if they intersect. Returns true iff self was changed."""
         if not self.intersects(other):
-            raise UnsatisfiableVariantSpecError(self, other)
+            raise UnsatisfiableOptionSpecError(self, other)
         old_values = self.values
         self.set(*self._merged_values(other))
         changed = old_values != self.values
@@ -536,6 +547,8 @@ class VariantValue(OptionValue):
     The ``patches`` variant is special: a patch is identified by a prefix of its checksum, so a
     shorter value is covered by any value starting with it."""
 
+    kind = "variant"
+
     # _patches_in_order_of_appearance is attached to the "patches" variant after concretization
     __slots__ = ("_patches_in_order_of_appearance",)
 
@@ -576,6 +589,8 @@ class VariantValue(OptionValue):
 class UsageValue(OptionValue):
     """A UsageValue is a key-value pair that represents a usage. See :class:`OptionValue` for
     the value semantics."""
+
+    kind = "usage"
 
     __slots__ = ()
 
@@ -879,7 +894,7 @@ def prevalidate_variant_value(
     # no when spec intersected, so no possible definition for the variant in this configuration
     if strict and not possible_definitions:
         when_clause = f" when {spec}" if spec else ""
-        raise InvalidVariantValueError(
+        raise InvalidOptionValueError(
             f"variant '{variant.name}' does not exist for '{pkg_cls.name}'{when_clause}"
         )
 
@@ -895,7 +910,7 @@ def prevalidate_variant_value(
         raise errors[0]
 
     # otherwise combine all the errors and raise them together
-    raise InvalidVariantValueError(
+    raise InvalidOptionValueError(
         "multiple variant issues:", "\n".join(e.message for e in errors)
     )
 
@@ -904,8 +919,8 @@ class ConditionalVariantValues(lang.TypedMutableSequence):
     """A list, just with a different type"""
 
 
-class DuplicateVariantError(spack.error.SpecError):
-    """Raised when the same variant occurs in a spec twice."""
+class DuplicateOptionError(spack.error.SpecError):
+    """Raised when the same variant or usage occurs in a spec twice."""
 
 
 class UnknownVariantError(spack.error.SpecError):
@@ -924,24 +939,24 @@ class InconsistentValidationError(spack.error.SpecError):
         super().__init__(msg.format(vspec, variant))
 
 
-class MultipleValuesInExclusiveVariantError(spack.error.SpecError, ValueError):
-    """Raised when multiple values are present in a variant that wants
+class MultipleValuesInExclusiveOptionError(spack.error.SpecError, ValueError):
+    """Raised when multiple values are present in a variant or usage that wants
     only one.
     """
 
-    def __init__(self, variant: OptionValue, pkg_name: Optional[str] = None):
+    def __init__(self, option: OptionValue, pkg_name: Optional[str] = None):
         pkg_info = "" if pkg_name is None else f" in package '{pkg_name}'"
-        msg = f"multiple values are not allowed for variant '{variant.name}'{pkg_info}"
-
-        super().__init__(msg.format(variant, pkg_info))
-
-
-class InvalidVariantValueError(spack.error.SpecError):
-    """Raised when variants have invalid values."""
+        msg = f"multiple values are not allowed for {option.kind} '{option.name}'{pkg_info}"
+        super().__init__(msg)
 
 
-class UnsatisfiableVariantSpecError(spack.error.UnsatisfiableSpecError):
-    """Raised when a spec variant conflicts with package constraints."""
+class InvalidOptionValueError(spack.error.SpecError):
+    """Raised when variants or usages have invalid values."""
+
+
+class UnsatisfiableOptionSpecError(spack.error.UnsatisfiableSpecError):
+    """Raised when a spec variant or usage conflicts with package constraints."""
 
     def __init__(self, provided, required):
-        super().__init__(provided, required, "variant")
+        kind = provided.kind if isinstance(provided, OptionValue) else "variant"
+        super().__init__(provided, required, kind)
