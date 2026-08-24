@@ -376,7 +376,7 @@ def env_activate(args):
         if not os.path.isfile(env_deactivate_script):
             env_script.write_env_deactivate_script(active_env, current_view)
 
-        print(env_script.source_env_script(env_deactivate_script, args.shell))
+        sys.stdout.write(env_script.source_env_script(env_deactivate_script, args.shell))
 
     # Activate new environment
     active_env = ev.Environment(env_path)
@@ -410,7 +410,7 @@ def env_activate(args):
     cmds = env_script.get_shell_unique_env_cmds(args.shell, prompt=env_prompt)
     sys.stdout.write(cmds)
 
-    print(env_script.source_env_script(env_activate_script, args.shell))
+    sys.stdout.write(env_script.source_env_script(env_activate_script, args.shell))
 
 
 #

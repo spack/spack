@@ -47,6 +47,7 @@ def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
     if not os.path.isfile(script_path):
         return True
 
+    # Script does NOT need update if no lockfile exists
     if lockfile_mtime == 0.0:
         return False
 
@@ -78,7 +79,6 @@ def regenerate_env_scripts(env):
 
     write_env_activate_script(env, None)
     write_env_deactivate_script(env, None)
-
 
 
 def write_env_activate_script(env: "spack.environment.Environment", view: Optional[str] = None):
