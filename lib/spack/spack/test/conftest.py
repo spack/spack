@@ -66,6 +66,7 @@ import spack.util.lang
 import spack.util.lock
 import spack.util.naming
 import spack.util.parallel
+import spack.util.path
 import spack.util.spack_yaml as syaml
 import spack.util.tty.color
 import spack.util.url as url_util
@@ -352,6 +353,12 @@ def _mock_git_package_changes_template(git, tmp_path_factory: pytest.TempPathFac
 
         # The commits are ordered with the last commit first in the list
         commits = list(reversed(commits))
+
+    # Make filename relative to the git repo root (repo.root) and use POSIX path
+    # separators since that's what git reports.
+    filename = spack.util.path.convert_to_posix_path(
+        os.path.relpath(os.path.join(repo.packages_path, filename), repo.root)
+    )
 
     return root, repo_path, filename, commits
 

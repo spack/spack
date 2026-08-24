@@ -93,7 +93,7 @@ def test_filter_added_checksums_new_checksum(mock_git_package_changes):
         "86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8": Version("2.0.0"),
     }
 
-    with fs.working_dir(repo.packages_path):
+    with fs.working_dir(repo.root):
         assert ci.filter_added_checksums(
             checksum_versions.keys(), filename, from_ref=commits[-2], to_ref=commits[-3]
         ) == ["3f6576971397b379d4205ae5451ff5a68edf6c103b2f03c4188ed7075fbb5f04"]
@@ -110,7 +110,7 @@ def test_filter_added_checksums_new_commit(mock_git_package_changes):
         "86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8": Version("2.0.0"),
     }
 
-    with fs.working_dir(repo.packages_path):
+    with fs.working_dir(repo.root):
         assert ci.filter_added_checksums(
             checksum_versions, filename, from_ref=commits[-3], to_ref=commits[-4]
         ) == ["74253725f884e2424a0dd8ae3f69896d5377f325"]
