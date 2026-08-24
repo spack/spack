@@ -69,8 +69,8 @@ from spack.spec import EMPTY_SPEC
 from spack.util import tty
 from spack.util.lang import elide_list
 
-from .compat import default_clingo_control, make_error_control
-from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
+from .compat import default_clingo_control, make_error_control, symbol_name, symbol_string
+from .core import AspFunction, AspVar, NodeFlag, NodeId, SourceContext, fn
 from .error import (
     DeprecatedVersionError,
     InternalConcretizerError,
@@ -94,6 +94,44 @@ TransformFunction = Callable[[str, spack.spec.Spec, List[AspFunction]], List[Asp
 
 
 SpliceDict = Dict[spack.spec.Spec, List[spack.solver.splicing.Splice]]
+
+
+def intermediate_repr(sym):
+    """Returns an intermediate representation of clingo models for Spack's spec builder.
+
+    Currently, transforms symbols from clingo models either to strings or to NodeId objects.
+
+    Returns:
+        This will turn a ``clingo.Symbol`` into a string or NodeId, or a sequence of
+        ``clingo.Symbol`` objects into a tuple of those objects.
+    """
+    if isinstance(sym, (list, tuple)):
+        return tuple(intermediate_repr(a) for a in sym)
+
+    name = symbol_name(sym)
+    if name == "node":
+        return NodeId(
+            id=intermediate_repr(sym.arguments[0]), pkg=intermediate_repr(sym.arguments[1])
+        )
+    if name == "node_flag":
+        return NodeFlag(
+            flag_type=intermediate_repr(sym.arguments[0]),
+            flag=intermediate_repr(sym.arguments[1]),
+            flag_group=intermediate_repr(sym.arguments[2]),
+            source=intermediate_repr(sym.arguments[3]),
+        )
+    return symbol_string(sym)
+
+
+def extract_args(model, predicate_name):
+    """Extract the arguments to predicates with the provided name from a model.
+
+    Pull out all the predicates with name ``predicate_name`` from the model, and
+    return their intermediate representation.
+    """
+    return [
+        intermediate_repr(sym.arguments) for sym in model if symbol_name(sym) == predicate_name
+    ]
 
 
 def specify(spec):
