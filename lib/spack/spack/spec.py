@@ -1242,7 +1242,7 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         return flag_type, [str(flag) for flag in self[flag_type]]
 
     def _cmp_iter(self):
-        for k, v in sorted(self.dict.items()):
+        for k, v in sorted(self.items()):
             yield k
 
             def flags():
@@ -2189,8 +2189,12 @@ class Spec:
             for flag, propagation in flags_and_propagation:
                 self.compiler_flags.add_flag(name, flag, propagation, flag_group)
         else:
-            self.variants[name] = vt.VariantValue.from_string_or_bool(
-                name, value, propagate=propagate, concrete=concrete
+            if name in self.variants:
+                raise vt.DuplicateVariantError(f'Cannot specify variant "{name}" twice')
+            self.variants.set(
+                vt.VariantValue.from_string_or_bool(
+                    name, value, propagate=propagate, concrete=concrete
+                )
             )
 
     def _set_architecture(self, **kwargs):
@@ -2931,10 +2935,7 @@ class Spec:
 
         for vname, value in change_spec.variants.items():
             if vname in package_cls.variant_names():
-                if vname in new_spec.variants:
-                    new_spec.variants.substitute(value)
-                else:
-                    new_spec.variants[vname] = value
+                new_spec.variants.set(value)
             else:
                 raise ValueError("{0} is not a variant of {1}".format(vname, new_spec.name))
 
@@ -3855,8 +3856,8 @@ class Spec:
         return result
 
     def _intersects_variants(self, other: "Spec") -> bool:
-        self_dict = self.variants.dict
-        other_dict = other.variants.dict
+        self_dict = self.variants
+        other_dict = other.variants
         return all(self_dict[k].intersects(other_dict[k]) for k in other_dict if k in self_dict)
 
     def _constrain_variants(self, other: "Spec") -> bool:
@@ -3876,7 +3877,7 @@ class Spec:
                 changed |= self.variants[k].constrain(other.variants[k])
             else:
                 # If it is not present copy it straight away
-                self.variants[k] = other.variants[k].copy()
+                self.variants.set(other.variants[k].copy())
                 changed = True
 
         return changed
@@ -5256,7 +5257,7 @@ class Spec:
             if not isinstance(variant, vt.VariantValueRemoval):  # sigil type for removing variant
                 if old_variant:
                     variant.type = old_variant.type  # coerce variant type to match
-                self.variants[name] = variant
+                self.variants.set(variant)
             changed = True
 
         for name, flags in mutator.compiler_flags.items():
@@ -5318,7 +5319,7 @@ class Spec:
                     self.name,
                     self.namespace,
                     self.versions,
-                    (self.variants if self.variants.dict else None),
+                    (self.variants or None),
                     self.architecture,
                     self.abstract_hash,
                 )
@@ -5339,29 +5340,11 @@ class Spec:
         state.pop("last_query", None)
         state.pop("indirect_spec", None)
 
-        # Optimize variants and compiler_flags serialization
-        variants = state.pop("variants", None)
-        if variants:
-            state["_variants_data"] = variants.dict
-        flags = state.pop("compiler_flags", None)
-        if flags:
-            state["_compiler_flags_data"] = flags.dict
-
         return state
 
     def __setstate__(self, state):
-        variants_data = state.pop("_variants_data", None)
-        compiler_flags_data = state.pop("_compiler_flags_data", None)
         self.__dict__.update(state)
         self._package = None
-
-        # Reconstruct variants and compiler_flags
-        self.variants = VariantMap()
-        self.compiler_flags = FlagMap()
-        if variants_data is not None:
-            self.variants.dict = variants_data
-        if compiler_flags_data is not None:
-            self.compiler_flags.dict = compiler_flags_data
 
         # Reconstruct dependents map
         if not hasattr(self, "_dependents"):
@@ -5390,44 +5373,13 @@ class Spec:
 
 
 class VariantMap(lang.HashableMap[str, vt.VariantValue]):
-    """Map containing variant instances. New values can be added only
-    if the key is not already present."""
+    """Map of variant instances, keyed by variant name."""
 
     __slots__ = ()
 
-    def __setitem__(self, name, vspec):
-        # Raise a TypeError if vspec is not of the right type
-        if not isinstance(vspec, vt.VariantValue):
-            raise TypeError(
-                "VariantMap accepts only values of variant types "
-                f"[got {type(vspec).__name__} instead]"
-            )
-
-        # Raise an error if the variant was already in this map
-        if name in self.dict:
-            msg = 'Cannot specify variant "{0}" twice'.format(name)
-            raise vt.DuplicateVariantError(msg)
-
-        # Raise an error if name and vspec.name don't match
-        if name != vspec.name:
-            raise KeyError(
-                f'Inconsistent key "{name}", must be "{vspec.name}" to match VariantSpec'
-            )
-
-        # Set the item
-        super().__setitem__(name, vspec)
-
-    def substitute(self, vspec):
-        """Substitutes the entry under ``vspec.name`` with ``vspec``.
-
-        Args:
-            vspec: variant spec to be substituted
-        """
-        if vspec.name not in self:
-            raise KeyError(f"cannot substitute a key that does not exist [{vspec.name}]")
-
-        # Set the item
-        super().__setitem__(vspec.name, vspec)
+    def set(self, vspec: vt.VariantValue) -> None:
+        """Stores ``vspec`` under its own name, replacing any entry already there."""
+        self[vspec.name] = vspec
 
     def partition_variants(self):
         non_prop, prop = lang.stable_partition(self.values(), lambda x: not x.propagate)
@@ -5438,8 +5390,8 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
 
     def copy(self) -> "VariantMap":
         clone = VariantMap()
-        for name, variant in self.items():
-            clone[name] = variant.copy()
+        for variant in self.values():
+            clone.set(variant.copy())
         return clone
 
     def string(self, abbreviate_patches: bool = False) -> str:
@@ -5561,7 +5513,7 @@ def substitute_abstract_variants(spec: Spec):
 
         new_variant = pkg_variant.make_variant(*v.values)
         pkg_variant.validate_or_raise(new_variant, spec.name)
-        spec.variants.substitute(new_variant)
+        spec.variants.set(new_variant)
 
     if unknown:
         variants = spack.util.string.plural(len(unknown), "variant")
@@ -5711,8 +5663,10 @@ class SpecfileReaderBase(abc.ABC):
                 for val in values:
                     spec.compiler_flags.add_flag(name, val, propagate)
             else:
-                spec.variants[name] = vt.VariantValue.from_node_dict(
-                    name, values, propagate=propagate, abstract=name in abstract_variants
+                spec.variants.set(
+                    vt.VariantValue.from_node_dict(
+                        name, values, propagate=propagate, abstract=name in abstract_variants
+                    )
                 )
 
         spec.external_path = None
