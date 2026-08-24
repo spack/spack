@@ -8,7 +8,6 @@ typed against a result without depending on how it is produced.
 """
 
 import enum
-import warnings
 from typing import Dict, List, NamedTuple
 
 import spack.hash_types as ht
@@ -239,6 +238,15 @@ class Result:
             self._compute_specs_from_answer_set()
         return self._concrete_specs_by_input  # type: ignore
 
+    def ensure_specs(self) -> None:
+        """Turn the answer set into specs, if that has not happened already.
+
+        A caller that wants ``warnings`` complete has to do this first: building the specs is
+        what discovers the diagnostics that are not about the model itself.
+        """
+        if self._unsolved_specs is None:
+            self._compute_specs_from_answer_set()
+
     def _compute_specs_from_answer_set(self):
         if not self.satisfiable:
             self._concrete_specs = []
@@ -265,7 +273,7 @@ class Result:
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             elif candidate and candidate.build_spec.satisfies(input_spec):
-                warnings.warn(
+                self.warnings.append(
                     "explicit splice configuration has caused the concretized spec"
                     f" {candidate} not to satisfy the input spec {input_spec}"
                 )

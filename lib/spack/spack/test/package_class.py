@@ -16,6 +16,7 @@ import pytest
 
 import spack.binary_distribution
 import spack.concretize
+import spack.concretize_ui
 import spack.deptypes as dt
 import spack.error
 import spack.install_test
@@ -398,7 +399,9 @@ def test_git_provenance_cant_resolve_commit(
     monkeypatch.setattr(mock_packages.get_pkg_class("git-ref-package"), "git", repo_path)
     monkeypatch.setattr(spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None)
     with pytest.warns(UserWarning, match="Unable to resolve the git commit"):
-        spec = spack.concretize.concretize_one("git-ref-package@develop")
+        spec = spack.concretize.concretize_one(
+            "git-ref-package@develop", ui=spack.concretize_ui.TerminalUI()
+        )
     assert "commit" not in spec.variants
 
 

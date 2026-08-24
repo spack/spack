@@ -2606,7 +2606,9 @@ packages:
         with pytest.warns(
             UserWarning, match="explicit splice configuration has caused"
         ) as recorded:
-            spec = spack.concretize.concretize_one("hdf5 ^zmpi")
+            spec = spack.concretize.concretize_one(
+                "hdf5 ^zmpi", ui=spack.concretize_ui.TerminalUI()
+            )
 
         assert spec.satisfies(f"^mpich@{mpich_spec.version}")
         assert spec.build_spec.dependencies(name="zmpi", deptype="link")

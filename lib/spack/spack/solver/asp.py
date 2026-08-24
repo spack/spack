@@ -726,7 +726,8 @@ class PyclingoDriver:
                 header = f"Spack is taking more than {time_limit} seconds to solve for {specs_str}"
                 if error_on_timeout:
                     raise UnsatisfiableSpecError(f"{header}, stopping concretization")
-                warnings.warn(f"{header}, using the best configuration found so far")
+                # No key: each solve that runs out of time is its own fact
+                ui.on_warning(f"{header}, using the best configuration found so far")
                 handle.cancel()
 
             solve_result = handle.get()
@@ -879,14 +880,19 @@ class PyclingoDriver:
             if cache and cache_key is not None:
                 cache.store(cache_key, result, self.control.statistics)
 
+        # apply post-concretization transformations
+        for _, _, spec_dict in result.answers:
+            post_process_concretization_result(spec_dict, ui=ui)
+
+        # Building the specs is what finds the diagnostics that are not about the model itself.
+        # It has to run after post-processing and after the cache store, since a cache hit
+        # rebuilds them from the answers anyway.
+        result.ensure_specs()
+
         # emitted here, so that a cached result reports the same diagnostics as a fresh solve.
         # Keyed by the message, so specs sharing a diagnostic report it once between them.
         for message in result.warnings:
             ui.on_warning(message, key=message)
-
-        # apply post-concretization transformations
-        for _, _, spec_dict in result.answers:
-            post_process_concretization_result(spec_dict)
 
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
@@ -1090,11 +1096,14 @@ class SpackSolverSetup:
     gen: "ProblemInstanceBuilder"
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
-    def __init__(self, tests: spack.concretize.TestsType = False):
+    def __init__(
+        self, tests: spack.concretize.TestsType = False, *, ui: Optional[ConcretizerUI] = None
+    ):
         self.possible_graph = create_graph_analyzer()
+        self.ui = ui or HeadlessUI()
 
         # these are all initialized in setup()
-        self.requirement_parser = RequirementParser(spack.config.CONFIG)
+        self.requirement_parser = RequirementParser(spack.config.CONFIG, ui=self.ui)
         self.possible_virtuals: Set[str] = set()
 
         # pkg_name -> version -> list of possible origins (package.py, installed, etc.)
@@ -2733,7 +2742,7 @@ class SpackSolverSetup:
             x for x in reuse if x.name in supported_compilers and not x.external
         }
         candidate_compilers, self.rejected_compilers = possible_compilers(
-            configuration=spack.config.CONFIG
+            configuration=spack.config.CONFIG, ui=self.ui
         )
         # Compilers installed by Spack are candidates for the solve, no matter what
         # "concretizer:reuse" says. Their link and run dependencies are needed to impose a
@@ -3208,7 +3217,10 @@ class ProblemInstanceBuilder:
         self.asp_problem.append("")
 
 
-def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
+SetOfSpecs = Set["spack.spec.Spec"]
+
+
+def possible_compilers(*, configuration, ui: ConcretizerUI) -> Tuple[SetOfSpecs, SetOfSpecs]:
     result, rejected = set(), set()
 
     # Compilers defined in configuration
@@ -3231,9 +3243,10 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
             and not CompilerPropertyDetector(c).default_libc()
         ):
             rejected.add(c)
-            warnings.warn(
+            ui.on_warning(
                 f"cannot detect libc from {c}. The compiler will not be used "
-                f"during concretization."
+                f"during concretization.",
+                key=("no-libc", str(c)),
             )
             continue
 
@@ -3563,7 +3576,7 @@ def post_process_fresh_solve(specs: SpecDict, splices: Optional[SpliceDict]) -> 
         specs.update(new_specs)
 
 
-def post_process_concretization_result(specs: SpecDict) -> None:
+def post_process_concretization_result(specs: SpecDict, *, ui: ConcretizerUI) -> None:
     """Update concretization results after *every* concretization, even cached ones.
 
     These post-steps depend on package information like patches, package hash, etc. They
@@ -3595,7 +3608,7 @@ def post_process_concretization_result(specs: SpecDict) -> None:
         _develop_specs_from_env(s, active_environment())
 
         # check for commits must happen after all version adaptations are complete
-        _specs_with_commits(s)
+        _specs_with_commits(s, ui=ui)
 
     # mark concrete and assign hashes to all specs in the solve
     for root in roots.values():
@@ -3663,7 +3676,7 @@ def execute_explicit_splices(specs: SpecDict) -> SpecDict:
     return new_specs
 
 
-def _specs_with_commits(spec):
+def _specs_with_commits(spec, *, ui: ConcretizerUI):
     pkg_class = spack.repo.PATH.get_pkg_class(spec.fullname)
     if not pkg_class.needs_commit(spec.version):
         return
@@ -3676,9 +3689,10 @@ def _specs_with_commits(spec):
 
     if "commit" not in spec.variants:
         if not spec.is_develop:
-            warnings.warn(
+            ui.on_warning(
                 f"Unable to resolve the git commit for {spec.name}. "
-                "An installation of this binary won't have complete binary provenance."
+                "An installation of this binary won't have complete binary provenance.",
+                key=("git-commit", spec.name),
             )
         return
 
@@ -3806,7 +3820,7 @@ class Solver:
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        setup = SpackSolverSetup(tests=tests, ui=self.ui)
 
         result = self.driver.solve(
             setup,
@@ -3854,7 +3868,7 @@ class Solver:
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        setup = SpackSolverSetup(tests=tests, ui=self.ui)
 
         # Tell clingo that we don't have to solve all the inputs at once
         setup.concretize_everything = False
