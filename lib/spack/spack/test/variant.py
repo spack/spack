@@ -13,13 +13,13 @@ from spack.repo import RepoPath
 from spack.spec import Spec, VariantMap
 from spack.variant import (
     BoolValuedVariant,
-    DuplicateVariantError,
+    DuplicateOptionError,
     InconsistentValidationError,
-    InvalidVariantValueError,
-    MultipleValuesInExclusiveVariantError,
+    InvalidOptionValueError,
+    MultipleValuesInExclusiveOptionError,
     MultiValuedVariant,
     SingleValuedVariant,
-    UnsatisfiableVariantSpecError,
+    UnsatisfiableOptionSpecError,
     Variant,
     VariantValue,
     disjoint_sets,
@@ -105,9 +105,9 @@ class TestMultiValuedVariant:
         # Concrete values cannot be constrained
         a = MultiValuedVariant("foo", ("bar", "baz"))
         b = MultiValuedVariant("foo", ("bar",))
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        with pytest.raises(UnsatisfiableOptionSpecError):
             a.constrain(b)
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        with pytest.raises(UnsatisfiableOptionSpecError):
             b.constrain(a)
 
         # Try to constrain on the same value
@@ -121,7 +121,7 @@ class TestMultiValuedVariant:
         a = MultiValuedVariant("foo", ("bar", "baz"))
         b = MultiValuedVariant("fee", ("bar",))
 
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        with pytest.raises(UnsatisfiableOptionSpecError):
             a.constrain(b)
 
     def test_yaml_entry(self):
@@ -201,7 +201,7 @@ class TestSingleValuedVariant:
         a = SingleValuedVariant("foo", "bar")
         b = SingleValuedVariant("fee", "bar")
 
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        with pytest.raises(UnsatisfiableOptionSpecError):
             b.constrain(a)
 
         # Try to constrain on the same value
@@ -314,14 +314,14 @@ class TestBoolValuedVariant:
         a = BoolValuedVariant("foo", True)
         b = BoolValuedVariant("foo", False)
 
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        with pytest.raises(UnsatisfiableOptionSpecError):
             b.constrain(a)
 
         # Try to constrain on a value with a different value
         a = BoolValuedVariant("foo", True)
         b = BoolValuedVariant("fee", True)
 
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        with pytest.raises(UnsatisfiableOptionSpecError):
             b.constrain(a)
 
         # Try to constrain on the same value
@@ -362,7 +362,7 @@ class TestVariant:
         a.validate_or_raise(vspec, "test-package")
 
         # Multiple values are not allowed
-        with pytest.raises(MultipleValuesInExclusiveVariantError):
+        with pytest.raises(MultipleValuesInExclusiveOptionError):
             vspec.set("bar", "baz")
 
         # Inconsistent vspec
@@ -376,7 +376,7 @@ class TestVariant:
         a.validate_or_raise(vspec, "test-package")
         # Add an invalid value
         vspec.set("bar", "baz", "barbaz")
-        with pytest.raises(InvalidVariantValueError):
+        with pytest.raises(InvalidOptionValueError):
             a.validate_or_raise(vspec, "test-package")
 
     def test_callable_validator(self):
@@ -392,7 +392,7 @@ class TestVariant:
         vspec.set("2056")
         a.validate_or_raise(vspec, "test-package")
         vspec.set("foo")
-        with pytest.raises(InvalidVariantValueError):
+        with pytest.raises(InvalidOptionValueError):
             a.validate_or_raise(vspec, "test-package")
 
     def test_representation(self):
@@ -422,13 +422,13 @@ class TestVariantMapTest:
 
         # Duplicate variant
         a["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        with pytest.raises(DuplicateVariantError):
+        with pytest.raises(DuplicateOptionError):
             a["foo"] = MultiValuedVariant("foo", ("bar",))
 
-        with pytest.raises(DuplicateVariantError):
+        with pytest.raises(DuplicateOptionError):
             a["foo"] = SingleValuedVariant("foo", "bar")
 
-        with pytest.raises(DuplicateVariantError):
+        with pytest.raises(DuplicateOptionError):
             a["foo"] = BoolValuedVariant("foo", True)
 
         # Non matching names between key and vspec.name
@@ -479,7 +479,7 @@ class TestVariantMapTest:
         c.variants["shared"] = BoolValuedVariant("shared", True)
 
         # concrete values cannot be constrained
-        with pytest.raises(spack.variant.UnsatisfiableVariantSpecError):
+        with pytest.raises(spack.variant.UnsatisfiableOptionSpecError):
             a._constrain_variants(b)
 
     def test_copy(self) -> None:
@@ -685,7 +685,7 @@ def test_prevalidate_variant_value(mock_packages: RepoPath, pkg_name, value, spe
 def test_strict_invalid_variant_values(mock_packages: RepoPath, pkg_name, value, spec):
     pkg = mock_packages.get_pkg_class(pkg_name)
 
-    with pytest.raises(spack.variant.InvalidVariantValueError):
+    with pytest.raises(spack.variant.InvalidOptionValueError):
         spack.variant.prevalidate_variant_value(
             pkg, SingleValuedVariant("v", value), spack.spec.Spec(spec), strict=True
         )
@@ -828,7 +828,7 @@ def test_abstract_variant_constrain_abstract_abstract():
 
 
 def test_abstract_variant_constrain_abstract_concrete_fail():
-    with pytest.raises(UnsatisfiableVariantSpecError):
+    with pytest.raises(UnsatisfiableOptionSpecError):
         Spec("foo=bar").constrain("foo:=baz")
 
 
@@ -842,7 +842,7 @@ def test_abstract_variant_constrain_abstract_concrete_ok():
 
 
 def test_abstract_variant_constrain_concrete_concrete_fail():
-    with pytest.raises(UnsatisfiableVariantSpecError):
+    with pytest.raises(UnsatisfiableOptionSpecError):
         Spec("foo:=bar").constrain("foo:=bar,baz")
 
 
@@ -853,7 +853,7 @@ def test_abstract_variant_constrain_concrete_concrete_ok():
 
 def test_abstract_variant_constrain_concrete_abstract_fail():
     s = Spec("foo:=bar")
-    with pytest.raises(UnsatisfiableVariantSpecError):
+    with pytest.raises(UnsatisfiableOptionSpecError):
         s.constrain("foo=baz")
 
 

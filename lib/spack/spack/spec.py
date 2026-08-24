@@ -3428,7 +3428,7 @@ class Spec:
 
         for v in [x for x in other.variants if x in self.variants]:
             if not self.variants[v].intersects(other.variants[v]):
-                raise vt.UnsatisfiableVariantSpecError(self.variants[v], other.variants[v])
+                raise vt.UnsatisfiableOptionSpecError(self.variants[v], other.variants[v])
 
         sarch, oarch = self.architecture, other.architecture
         if (
@@ -3879,13 +3879,13 @@ class Spec:
         if other is not None and other._concrete:
             for k in self.variants:
                 if k not in other.variants:
-                    raise vt.UnsatisfiableVariantSpecError(self.variants[k], "<absent>")
+                    raise vt.UnsatisfiableOptionSpecError(self.variants[k], "<absent>")
 
         changed = False
         for k in other.variants:
             if k in self.variants:
                 if not self.variants[k].intersects(other.variants[k]):
-                    raise vt.UnsatisfiableVariantSpecError(self.variants[k], other.variants[k])
+                    raise vt.UnsatisfiableOptionSpecError(self.variants[k], other.variants[k])
                 # If they are compatible merge them
                 changed |= self.variants[k].constrain(other.variants[k])
             else:
@@ -5435,7 +5435,7 @@ class OptionMap(lang.HashableMap[str, vt.VariantValue]):
 
         # Raise an error if the option was already in this map
         if name in self.dict:
-            raise vt.DuplicateVariantError(f"Cannot specify {self.type} '{name}' twice")  # TODO: refine errors
+            raise vt.DuplicateOptionError(f"Cannot specify {self.type} '{name}' twice")
 
         # Raise an error if name and ospec.name don't match
         if name != ospec.name:
@@ -5524,7 +5524,7 @@ class UsageMap(OptionMap):
             if k in self:
                 # Don't merge them if they are incompatible
                 if not self[k].intersects(other[k]):
-                    raise vt.UnsatisfiableVariantSpecError(self[k], other[k])
+                    raise vt.UnsatisfiableOptionSpecError(self[k], other[k])
                 changed |= self[k].constrain(other[k])
             else:
                 changed = True

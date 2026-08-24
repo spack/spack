@@ -162,10 +162,10 @@ class Option:
         Raises:
             InconsistentValidationError: if ``ospec.name != self.name``
 
-            MultipleValuesInExclusiveVariantError: if ``ospec`` has
+            MultipleValuesInExclusiveOptionError: if ``ospec`` has
                 multiple values but ``self.multi == False``
 
-            InvalidVariantValueError: if ``ospec.value`` contains
+            InvalidOptionValueError: if ``ospec.value`` contains
                 invalid values
         """
         # Check the name of the variant
@@ -175,7 +175,7 @@ class Option:
         # If the value is exclusive there must be at most one
         value = ospec.values
         if not self.multi and len(value) != 1:
-            raise MultipleValuesInExclusiveVariantError(ospec, pkg_name)  # TODO: refine errors
+            raise MultipleValuesInExclusiveOptionError(ospec, pkg_name)
 
         # Check and record the values that are not allowed
         invalid_vals = ", ".join(
@@ -183,7 +183,7 @@ class Option:
         )
         if invalid_vals:
             t_str = type(self).__name__.lower()
-            raise InvalidVariantValueError(
+            raise InvalidOptionValueError(
                 f"invalid values for {t_str} '{self.name}' in package {pkg_name}: {invalid_vals}\n"
             )
 
@@ -377,13 +377,13 @@ class OptionValue:
         return self._values[0] if self.type != VariantType.MULTI else self._values
 
     def set(self, *value: Union[bool, str]) -> None:
-        """Set the value(s) of the variant."""
+        """Set the value(s) of the option."""
         if len(value) > 1:
             value = tuple(sorted(set(value)))
 
         if self.type != VariantType.MULTI:
             if len(value) != 1:
-                raise MultipleValuesInExclusiveVariantError(self)  # TODO: refine error types
+                raise MultipleValuesInExclusiveOptionError(self)
             unwrapped = value[0]
             if self.type == VariantType.BOOL and unwrapped not in (True, False):
                 t_str = type(self).__name__.lower()
@@ -392,7 +392,7 @@ class OptionValue:
                 )
 
         if "*" in value:
-            raise InvalidVariantValueError("cannot use reserved value '*'")
+            raise InvalidOptionValueError("cannot use reserved value '*'")
 
         self._values = value
 
@@ -441,7 +441,7 @@ class OptionValue:
     def constrain(self: OptionType, other: OptionType) -> bool:
         """Constrain self with other if they intersect. Returns true iff self was changed."""
         if not self.intersects(other):
-            raise UnsatisfiableVariantSpecError(self, other)  # TODO: refine
+            raise UnsatisfiableOptionSpecError(self, other)
         old_values = self.values
         self.set(*self._merged_values(other))
         changed = old_values != self.values
@@ -919,7 +919,7 @@ def prevalidate_variant_value(
     # no when spec intersected, so no possible definition for the variant in this configuration
     if strict and not possible_definitions:
         when_clause = f" when {spec}" if spec else ""
-        raise InvalidVariantValueError(
+        raise InvalidOptionValueError(
             f"variant '{variant.name}' does not exist for '{pkg_cls.name}'{when_clause}"
         )
 
@@ -935,17 +935,15 @@ def prevalidate_variant_value(
         raise errors[0]
 
     # otherwise combine all the errors and raise them together
-    raise InvalidVariantValueError(
-        "multiple variant issues:", "\n".join(e.message for e in errors)
-    )
+    raise InvalidOptionValueError("multiple variant issues:", "\n".join(e.message for e in errors))
 
 
 class ConditionalVariantValues(lang.TypedMutableSequence):
     """A list, just with a different type"""
 
 
-class DuplicateVariantError(spack.error.SpecError):
-    """Raised when the same variant occurs in a spec twice."""
+class DuplicateOptionError(spack.error.SpecError):
+    """Raised when the same variant or usage occurs in a spec twice."""
 
 
 class UnknownVariantError(spack.error.SpecError):
@@ -964,24 +962,24 @@ class InconsistentValidationError(spack.error.SpecError):
         super().__init__(msg.format(vspec, variant))
 
 
-class MultipleValuesInExclusiveVariantError(spack.error.SpecError, ValueError):
+class MultipleValuesInExclusiveOptionError(spack.error.SpecError, ValueError):
     """Raised when multiple values are present in a variant that wants
     only one.
     """
 
-    def __init__(self, variant: VariantValue, pkg_name: Optional[str] = None):
+    def __init__(self, option: OptionValue, pkg_name: Optional[str] = None):
         pkg_info = "" if pkg_name is None else f" in package '{pkg_name}'"
-        msg = f"multiple values are not allowed for variant '{variant.name}'{pkg_info}"
+        type_str = type(option).__name__
+        msg = f"multiple values are not allowed for {type_str} '{option.name}'{pkg_info}"
+        super().__init__(msg)
 
-        super().__init__(msg.format(variant, pkg_info))
 
-
-class InvalidVariantValueError(spack.error.SpecError):
+class InvalidOptionValueError(spack.error.SpecError):
     """Raised when variants have invalid values."""
 
 
-class UnsatisfiableVariantSpecError(spack.error.UnsatisfiableSpecError):
+class UnsatisfiableOptionSpecError(spack.error.UnsatisfiableSpecError):
     """Raised when a spec variant conflicts with package constraints."""
 
     def __init__(self, provided, required):
-        super().__init__(provided, required, "variant")
+        super().__init__(provided, required, type(self).__name__.lower())
