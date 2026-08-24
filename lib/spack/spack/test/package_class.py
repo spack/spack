@@ -171,7 +171,7 @@ all:
   buildable: false
 """
     )
-    spack.config.set("packages", conf)
+    spack.config.CONFIG.set("packages", conf)
 
     inspector = StaticAnalysis(
         configuration=spack.config.CONFIG,
@@ -198,7 +198,7 @@ libelf:
   buildable: true
 """
     )
-    spack.config.set("packages", conf)
+    spack.config.CONFIG.set("packages", conf)
 
     inspector = StaticAnalysis(
         configuration=spack.config.CONFIG,
