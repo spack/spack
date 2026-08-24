@@ -2132,7 +2132,9 @@ class SpackSolverSetup:
                 requirement_weight += 1
 
     def buildable_constraints(self, packages_with_externals):
-        """Facts on 'buildable' constraints from packages.yaml, including per-package and all:buildable."""
+        """Facts on 'buildable' constraints from packages.yaml,
+        including per-package and all:buildable.
+        """
         all_buildable = packages_with_externals.get("all", {}).get("buildable", True)
 
         if all_buildable:
