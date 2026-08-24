@@ -58,7 +58,7 @@ import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.util import tty
 from spack.util.filesystem import working_dir
-from spack.util.lang import Singleton, ensure_unwrapped, memoized
+from spack.util.lang import Singleton, ensure_unwrapped
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -724,6 +724,10 @@ class RepoPath:
         self._index_is_fresh: bool = False
         self._tag_index: Optional[spack.tag.TagIndex] = None
 
+        # Package names by include_virtuals, dropped when the search path changes
+        self._package_names: Dict[bool, List[str]] = {}
+        self._package_names_set: Dict[bool, Set[str]] = {}
+
         for repo in repos:
             self.put_last(repo)
 
@@ -775,6 +779,7 @@ class RepoPath:
 
         self.repos.insert(0, repo)
         self.by_namespace[repo.namespace] = repo
+        self._forget_package_names()
 
     def put_last(self, repo):
         """Add repo last in the search path."""
@@ -784,6 +789,7 @@ class RepoPath:
             return
 
         self.repos.append(repo)
+        self._forget_package_names()
 
         # don't mask any higher-precedence repos with same namespace
         if repo.namespace not in self.by_namespace:
@@ -793,6 +799,7 @@ class RepoPath:
         """Remove a repo from the search path."""
         if repo in self.repos:
             self.repos.remove(repo)
+            self._forget_package_names()
 
     def get_repo(self, namespace: str) -> "Repo":
         """Get a repository by namespace."""
@@ -804,17 +811,24 @@ class RepoPath:
         """Get the first repo in precedence order."""
         return self.repos[0] if self.repos else None
 
-    @memoized
-    def _all_package_names_set(self, include_virtuals) -> Set[str]:
-        return {name for repo in self.repos for name in repo.all_package_names(include_virtuals)}
+    def _forget_package_names(self) -> None:
+        self._package_names.clear()
+        self._package_names_set.clear()
 
-    @memoized
-    def _all_package_names(self, include_virtuals: bool) -> List[str]:
-        """Return all unique package names in all repositories."""
-        return sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
+    def _all_package_names_set(self, include_virtuals: bool) -> Set[str]:
+        result = self._package_names_set.get(include_virtuals)
+        if result is None:
+            result = {n for repo in self.repos for n in repo.all_package_names(include_virtuals)}
+            self._package_names_set[include_virtuals] = result
+        return result
 
     def all_package_names(self, include_virtuals: bool = False) -> List[str]:
-        return self._all_package_names(include_virtuals)
+        """Return all unique package names in all repositories."""
+        result = self._package_names.get(include_virtuals)
+        if result is None:
+            result = sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
+            self._package_names[include_virtuals] = result
+        return result
 
     def package_path(self, name: str) -> str:
         """Get path to package.py file for this repo."""
