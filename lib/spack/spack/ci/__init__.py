@@ -129,6 +129,16 @@ def filter_added_checksums(
     return list(added_checksums - removed_checksums)
 
 
+def _stack_path_matches(candidate: str, changed_path: str) -> bool:
+    """Return True if ``changed_path`` (posix-separated, as reported by git) is exactly
+    ``candidate`` or lives underneath it. ``candidate == "."`` (the git root itself)
+    matches any path."""
+    candidate = candidate.rstrip("/")
+    if candidate in ("", "."):
+        return True
+    return changed_path == candidate or changed_path.startswith(candidate + "/")
+
+
 def stack_changed(env_path: str) -> bool:
     """Given an environment manifest path, return whether or not the stack was changed.
     Returns True iff the environment manifest changed between the provided revisions (or
@@ -172,7 +182,7 @@ def stack_changed(env_path: str) -> bool:
             return False
 
         for path in diff.split():
-            if any(p in path for p in stack_paths):
+            if any(_stack_path_matches(p, path) for p in stack_paths):
                 tty.debug(f"env represented by {rel_env_path} changed")
                 tty.debug(f"touched file: {path}")
                 return True
