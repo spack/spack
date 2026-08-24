@@ -23,8 +23,8 @@ from spack.error import SpecError, UnsatisfiableSpecError
 from spack.spec import ArchSpec, DependencySpec, Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.util.tty.color import colorize
 from spack.variant import (
-    InvalidVariantValueError,
-    MultipleValuesInExclusiveVariantError,
+    InvalidOptionValueError,
+    MultipleValuesInExclusiveOptionError,
     UnknownVariantError,
 )
 from spack.version.git_ref_lookup import GitRefLookup
@@ -716,7 +716,7 @@ class TestSpecSemantics:
     )
     def test_propagation_conflict_rejected_when_constrained(self, lhs, rhs):
         spec = Spec(lhs)
-        with pytest.raises(spack.variant.UnsatisfiableVariantSpecError):
+        with pytest.raises(spack.variant.UnsatisfiableOptionSpecError):
             spec.constrain(rhs)
         assert spec == Spec(lhs)
 
@@ -945,7 +945,7 @@ class TestSpecSemantics:
         assert a.constrain(b)
         # ...but will fail during concretization if there are
         # values in the variant that are not allowed
-        with pytest.raises(InvalidVariantValueError):
+        with pytest.raises(InvalidOptionValueError):
             spack.concretize.concretize_one(a)
 
     def test_multivalued_variant_5(self):
@@ -961,7 +961,7 @@ class TestSpecSemantics:
         assert a.constrain(b)
         # ...but will fail during concretization if there are
         # multiple values set
-        with pytest.raises(MultipleValuesInExclusiveVariantError):
+        with pytest.raises(MultipleValuesInExclusiveOptionError):
             spack.concretize.concretize_one(a)
 
     def test_copy_satisfies_transitive(self):

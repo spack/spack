@@ -2183,7 +2183,7 @@ class Spec:
         else:
             variants = self.propagated_variants if propagate else self.variants
             if name in variants:
-                raise vt.DuplicateVariantError(f'Cannot specify variant "{name}" twice')
+                raise vt.DuplicateOptionError(f'Cannot specify variant "{name}" twice')
             variants[name] = vt.VariantValue.from_string_or_bool(name, value, concrete=concrete)
             # the value just added can only conflict with the same name in the other map
             if name in (self.variants if propagate else self.propagated_variants):
@@ -3728,12 +3728,12 @@ class Spec:
         ``^~foo`` are tolerated) to avoid quadratic time complexity; the solver will check it."""
         pair = self.variants.conflict(other.variants)
         if pair is not None:
-            return vt.UnsatisfiableVariantSpecError(*pair)
+            return vt.UnsatisfiableOptionSpecError(*pair)
         if not self.propagated_variants and not other.propagated_variants:
             return None
         pair = self.propagated_variants.conflict(other.propagated_variants)
         if pair is not None:
-            return vt.UnsatisfiableVariantSpecError(
+            return vt.UnsatisfiableOptionSpecError(
                 pair[0].string(propagated=True), pair[1].string(propagated=True)
             )
         return _propagated_bool_conflict(
@@ -5301,7 +5301,7 @@ def _propagated_bool_conflict(
             continue
         mine = variants.get(name)
         if mine is not None and mine.type == vt.VariantType.BOOL and not mine.intersects(value):
-            return vt.UnsatisfiableVariantSpecError(mine.string(), value.string(propagated=True))
+            return vt.UnsatisfiableOptionSpecError(mine.string(), value.string(propagated=True))
     return None
 
 
