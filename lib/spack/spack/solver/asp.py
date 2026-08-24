@@ -1119,6 +1119,10 @@ class PyclingoDriver:
         )
         timer.stop("setup")
 
+        # uses_propagation is set during setup
+        if setup.uses_propagation:
+            control_files.append("propagate.lp")
+
         timer.start("ordering")
         # print the original ASP program if requested
         problem = problem_builder.asp_problem
@@ -1426,6 +1430,9 @@ class SpackSolverSetup:
 
         # If true, we have to load the code for synthesizing splices
         self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice:automatic")
+
+        # If true, we have to load the code for variant/flag propagation
+        self.uses_propagation: bool = False
 
     def pkg_version_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
         """Declares known versions, their origins, and their weights."""
@@ -2310,6 +2317,7 @@ class SpackSolverSetup:
                         self.variant_values_from_specs.add((name, id(variant_def), value))
 
                 if variant.propagate:
+                    self.uses_propagation = True
                     clauses.append(f.propagate(name, fn.variant_value(vname, value)))
                     if self.pkg_class(name).has_variant(vname):
                         clauses.append(f.variant_value(name, vname, value))
@@ -2338,6 +2346,7 @@ class SpackSolverSetup:
                     f.node_flag(name, fn.node_flag(flag_type, flag, flag_group, source))
                 )
                 if not spec.concrete and flag.propagate is True:
+                    self.uses_propagation = True
                     clauses.append(
                         f.propagate(
                             name,
