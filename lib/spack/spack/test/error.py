@@ -13,9 +13,7 @@ from spack.spec import Spec
 
 
 def test_error_keeps_its_state_through_a_pipe():
-    """Tests that an error carries everything it holds to another process, and not just what
-    its constructor takes.
-    """
+    """Tests that unpickling an error restores every attribute set on it."""
     error = spack.error.SpackError("boom", "details")
     # Saved by a child build process, so that the parent can print it
     error.traceback = "Traceback from the child\n"
@@ -40,8 +38,8 @@ def test_error_keeps_its_state_through_a_pipe():
     ids=["unsatisfiable", "internal", "solver", "output-does-not-satisfy-input"],
 )
 def test_errors_with_their_own_constructor_survive_a_pipe(factory):
-    """Tests that an error whose __init__ takes something other than (message, long_message)
-    round trips: rebuilding it by calling its class cannot work.
+    """Tests that unpickling works for an error whose __init__ signature is different from
+    SpackError.__init__.
     """
     error = factory()
 
@@ -52,15 +50,13 @@ def test_errors_with_their_own_constructor_survive_a_pipe(factory):
 
 
 def test_output_does_not_satisfy_input_keeps_its_specs():
-    """Tests that the specs survive, and not just the message built from them: they are what
-    spack.main._handle_solver_bug reports, and dumps to JSON for bug reports.
-    """
+    """Tests that OutputDoesNotSatisfyInputError keeps its specs over a pickle round-trip."""
     unsolved = [(Spec("pkg-a"), Spec("pkg-b")), (Spec("pkg-c"), None)]
     error = spack.solver.asp.OutputDoesNotSatisfyInputError(unsolved)
 
     replayed = pickle.loads(pickle.dumps(error))
 
-    assert [(str(i), str(o) if o else None) for i, o in replayed.input_to_output] == [
-        ("pkg-a", "pkg-b"),
-        ("pkg-c", None),
+    assert [(i, o if o else None) for i, o in replayed.input_to_output] == [
+        (Spec("pkg-a"), Spec("pkg-b")),
+        (Spec("pkg-c"), None),
     ]
