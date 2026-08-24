@@ -5695,3 +5695,22 @@ def test_asp_facts_with_config_values():
     assert str(fn.max_dupes("cmake", 2)) == 'max_dupes("cmake",2)'
     assert str(fn.os_compatible(syaml.syaml_str('a"b\\c'), "d")) == r'os_compatible("a\"b\\c","d")'
     assert str(fn.variant_value("x", True)) == 'variant_value("x","True")'
+
+
+def test_target_star_concretizes(mock_packages, config):
+    """target=* is not a literal unknown target '*' but rather an unconstrained target"""
+    concrete = spack.concretize.concretize_one("pkg-a target=*")
+    assert concrete.architecture.target_concrete
+
+
+@pytest.mark.parametrize(
+    "unify,expected",
+    [
+        (True, spack.concretize_ui.SolveKind.TOGETHER),
+        (False, spack.concretize_ui.SolveKind.SEPARATELY),
+        ("when_possible", spack.concretize_ui.SolveKind.WHEN_POSSIBLE),
+    ],
+)
+def test_solve_kind_from_unify_configuration(unify, expected):
+    """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
+    assert spack.concretize.solve_kind(unify) is expected

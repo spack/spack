@@ -527,18 +527,46 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=F
 def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
     """Returns the directory associated with a named environment.
 
+    TODO: this function is probably doing too much. With ``exists_ok=False``, it's
+    really "ensure a new environment can be created". It checks for existence and fails
+    with creation-related errors. Consider splitting this into separate validation and
+    naming functions later.
+
     Args:
         name: name of the environment
-        exists_ok: if False, raise an error if the environment exists already
+        exists_ok: if False, raise an error if the environment exists already, or if
+            creating one at ``name`` would nest environments
 
     Raises:
-        SpackEnvironmentError: if exists_ok is False and the environment exists already
+        SpackEnvironmentError: if exists_ok is False and an environment at ``name``
+            would conflict with an existing environment
+
     """
     if not exists_ok and exists(name):
         raise SpackEnvironmentError(f"'{name}': environment already exists at {root(name)}")
 
     ensure_env_root_path_exists()
     validate_env_name(name)
+
+    if not exists_ok:
+        # environments are leaves in the managed environment directory: refuse to
+        # create one inside an existing environment
+        ancestor = os.path.dirname(name)
+        while ancestor:
+            if exists(ancestor):
+                raise SpackEnvironmentError(
+                    f"cannot create environment '{name}' inside existing environment '{ancestor}'"
+                )
+            ancestor = os.path.dirname(ancestor)
+
+        # also disallow creating an env above an existing one
+        nested = next((n for n in all_environment_names() if n.startswith(name + os.sep)), None)
+        if nested is not None:
+            raise SpackEnvironmentError(
+                f"cannot create environment '{name}': "
+                f"it would contain existing environment '{nested}'"
+            )
+
     return root(name)
 
 
@@ -618,21 +646,39 @@ def all_environment_names():
     env_root = pathlib.Path(env_root_path()).resolve()
 
     def yaml_paths():
+        # track visited inodes so that arbitrary symlink cycles terminate
+        root_stat = env_root.stat()
+        visited = {(root_stat.st_dev, root_stat.st_ino)}
+
         for root, dirs, files in os.walk(env_root, topdown=True, followlinks=True):
-            dirs[:] = [
-                d
-                for d in dirs
-                if not d.startswith(".") and not env_root.samefile(os.path.join(root, d))
-            ]
-            if manifest_name in files:
+            if manifest_name in files and root != str(env_root):
+                # environments are leaves: don't descend into their contents
+                dirs.clear()
                 yield os.path.join(root, manifest_name)
+                continue
+
+            subdirs = []
+            for d in dirs:
+                if d.startswith("."):
+                    continue
+
+                try:
+                    st = os.stat(os.path.join(root, d))
+                except OSError:
+                    continue
+                if (st.st_dev, st.st_ino) in visited:
+                    continue
+
+                visited.add((st.st_dev, st.st_ino))
+                subdirs.append(d)
+            dirs[:] = subdirs
 
     names = []
     for yaml_path in yaml_paths():
         candidate = str(pathlib.Path(yaml_path).relative_to(env_root).parent)
         if valid_env_name(candidate):
             names.append(candidate)
-    return names
+    return sorted(names)
 
 
 def all_environments():

@@ -848,19 +848,40 @@ class ErrorHandler:
 
         return msg
 
-    def message(self, errors) -> str:
-        input_specs = ", ".join(elide_list([f"`{s}`" for s in self.input_specs], 5))
-        header = f"failed to concretize {input_specs} for the following reasons:"
-        messages = (
-            f"    {idx + 1:2}. {self.handle_error(msg, *args)}"
-            for idx, (_, msg, args) in enumerate(errors)
+    def error_messages(self, error_args) -> List[str]:
+        """Convert ``error()`` args from a solver model into error message strings."""
+        errors = sorted(
+            [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
         )
-        return "\n".join((header, *messages))
+        try:
+            return [self.handle_error(msg, *args) for (_, msg, args) in errors]
+        except Exception as e:
+            msg = (
+                f"unexpected error during concretization [{e}]. "
+                f"Please report a bug at https://github.com/spack/spack/issues"
+            )
+            raise spack.error.SpackError(msg) from e
+
+    @staticmethod
+    def _numbered(messages: List[str], start: int = 1) -> str:
+        return "\n".join(
+            f"    {number:2}. {msg}" for number, msg in enumerate(messages, start=start)
+        )
 
     def raise_if_errors(self):
         initial_error_args = extract_args(self.model, "error")
         if not initial_error_args:
             return
+
+        # Print initial error message before starting secondary solve for causal trees
+        input_specs = ", ".join(elide_list([f"`{s}`" for s in self.input_specs], 5))
+        header = f"failed to concretize {input_specs} for the following reasons:"
+        initial_messages = self.error_messages(initial_error_args)
+        tty.error(
+            header,
+            self._numbered(initial_messages),
+            "Analyzing the cause of the failure, this may take a moment...",
+        )
 
         error_causation = make_error_control()
 
@@ -881,18 +902,22 @@ class ErrorHandler:
 
         # No choices so there will be only one model
         error_args = extract_args(self.full_model, "error")
-        errors = sorted(
-            [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
-        )
-        try:
-            msg = self.message(errors)
-        except Exception as e:
-            msg = (
-                f"unexpected error during concretization [{str(e)}]. "
-                f"Please report a bug at https://github.com/spack/spack/issues"
-            )
-            raise spack.error.SpackError(msg) from e
-        raise UnsatisfiableSpecError(msg)
+        final_messages = self.error_messages(error_args)
+
+        # Print only the messages that were not part of the initial report, continuing
+        # its numbering
+        already_printed = set(initial_messages)
+        new_messages = [m for m in final_messages if m not in already_printed]
+        if new_messages:
+            tty.error(self._numbered(new_messages, start=len(initial_messages) + 1))
+        else:
+            tty.msg("No additional error causes discovered")
+
+        # The exception carries the full report so that it is self-contained for callers,
+        # but is marked as printed so the top-level handler does not print it again.
+        error = UnsatisfiableSpecError(f"{header}\n{self._numbered(final_messages)}")
+        error.printed = True
+        raise error
 
 
 def _strip_asp_problem(asp_problem: Iterable[str]) -> List[str]:
@@ -1461,6 +1486,10 @@ class SpackSolverSetup:
         name = spec.name or name
         assert name, "Internal Error: spec with no name occurred. Please file an issue."
         target = spec.architecture.target
+
+        # target is unconstrained
+        if str(target) == ":":
+            return []
 
         # Check if the target is a concrete target
         if str(target) in spack.vendor.archspec.cpu.TARGETS:
@@ -2912,6 +2941,14 @@ class SpackSolverSetup:
         for root in specs:
             for s in root.traverse():
                 if repo.is_virtual(s.name):
+                    # Constraints beyond versions could refer to the virtual or its provider;
+                    # the solver supports neither interpretation.
+                    if not spack.spec.constrains_only_name_and_versions(s):
+                        start_str = f"'{root}'" if s == root else f"'{s}' in '{root}'"
+                        raise UnsatisfiableSpecError(
+                            f"cannot concretize {start_str}: the virtual package '{s.name}' "
+                            f"supports only version constraints"
+                        )
                     continue
 
                 try:

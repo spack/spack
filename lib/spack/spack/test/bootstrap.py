@@ -7,6 +7,7 @@ import pathlib
 import pytest
 
 import spack.bootstrap
+import spack.bootstrap._common
 import spack.bootstrap.clingo
 import spack.bootstrap.config
 import spack.bootstrap.core
@@ -252,15 +253,14 @@ def test_gpg_status_check(
         mock_executable("gpg2", "echo GPG 2.3.4")
 
     # Mock the bootstrap store function
-    def mock_executables_in_store(exes, query_spec, query_info=None):
+    def mock_executables_in_store(exes, query_spec):
         if not gpg_in_store:
-            return False
+            return None
 
         # Simulate found gpg in bootstrap store
-        if query_info is not None:
-            query_info["spec"] = "gnupg@2.5.12"
-            query_info["command"] = spack.util.executable.Executable("gpg")
-        return True
+        return spack.bootstrap._common.ExecutableInfo(
+            spec=spack.spec.Spec("gnupg@2.5.12"), command=spack.util.executable.Executable("gpg")
+        )
 
     monkeypatch.setattr(spack.bootstrap.status, "_executables_in_store", mock_executables_in_store)
 

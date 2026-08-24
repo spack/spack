@@ -48,22 +48,45 @@ SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYS
 #: used in the compiler wrapper's ``/usr/lib|/usr/lib64|...)`` case entry
 SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for suff in ("", "/")))
 
-_SHELL_SET_STRINGS = {
-    "sh": "export {0}={1};\n",
-    "csh": "setenv {0} {1};\n",
-    "fish": "set -gx {0} {1};\n",
-    "bat": 'set "{0}={1}"\n',
-    "pwsh": "$Env:{0}='{1}'\n",
-}
 
+class ShellCmdString:
+    """Formats commands to set or unset an environment variable for a given shell."""
 
-_SHELL_UNSET_STRINGS = {
-    "sh": "unset {0};\n",
-    "csh": "unsetenv {0};\n",
-    "fish": "set -e {0};\n",
-    "bat": 'set "{0}="\n',
-    "pwsh": "Set-Item -Path Env:{0}\n",
-}
+    _SET_STRINGS = {
+        "sh": "export {0}={1}",
+        "csh": "setenv {0} {1}",
+        "fish": "set -gx {0} {1}",
+        "bat": 'set "{0}={1}"',
+        "pwsh": "$Env:{0}='{1}'",
+    }
+
+    _UNSET_STRINGS = {
+        "sh": "unset {0}",
+        "csh": "unsetenv {0}",
+        "fish": "set -e {0}",
+        "bat": 'set "{0}="',
+        "pwsh": "Set-Item -Path Env:{0}",
+    }
+
+    #: separator used to terminate a statement and join it with the next one
+    _JOIN_STRINGS = {"sh": ";\n", "csh": ";\n", "fish": ";\n", "bat": "\n", "pwsh": "\n"}
+
+    def __init__(self, shell: str):
+        self.shell = shell
+
+    def set(self, name: str, value: str) -> str:
+        """Returns the command to set an environment variable to a value."""
+        return self._SET_STRINGS[self.shell].format(name, value)
+
+    def unset(self, name: str) -> str:
+        """Returns the command to unset an environment variable."""
+        return self._UNSET_STRINGS[self.shell].format(name)
+
+    def join(self, cmds: List[str]) -> str:
+        """Joins a list of commands into a single, terminated script."""
+        cmds = cmds + [""]
+        sep = self._JOIN_STRINGS[self.shell]
+        return sep.join(cmds)
 
 
 TRACING_ENABLED = False
@@ -796,21 +819,21 @@ class EnvironmentModifications:
         if "MANPATH" in new_env and not new_env["MANPATH"].endswith(os.pathsep):
             new_env["MANPATH"] += os.pathsep
 
-        cmds = ""
+        shell_cmd = ShellCmdString(shell)
+        cmds = []
 
         for name in sorted(set(modifications)):
             new = new_env.get(name, None)
             old = env.get(name, None)
             if explicit or new != old:
                 if new is None:
-                    cmds += _SHELL_UNSET_STRINGS[shell].format(name)
+                    cmds.append(shell_cmd.unset(name))
                 else:
                     value = new_env[name]
                     if shell not in ("bat", "pwsh"):
                         value = shlex.quote(value)
-                    cmd = _SHELL_SET_STRINGS[shell].format(name, value)
-                    cmds += cmd
-        return cmds
+                    cmds.append(shell_cmd.set(name, value))
+        return shell_cmd.join(cmds)
 
     @staticmethod
     def from_sourcing_file(

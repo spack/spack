@@ -1995,11 +1995,35 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "target=x86_64:", "target=:power9", (False, False, False)),
         (Spec, "target=:haswell", "target=:power9", (False, False, False)),
         (Spec, "target=:haswell", "target=ppc64le:", (False, False, False)),
-        # Intersection among target ranges for the same architecture
-        (Spec, "target=:haswell", "target=x86_64:", (True, True, True)),
+        # Target ranges in one family: ":haswell" is a strict subset of "x86_64:", since x86_64
+        # is the family root and broadwell and later are above haswell.
+        (Spec, "target=:haswell", "target=x86_64:", (True, True, False)),
         (Spec, "target=:haswell", "target=x86_64_v4:", (False, False, False)),
-        # Edge case of uarch that split in a diamond structure, from a common ancestor
-        (Spec, "target=:cascadelake", "target=:cannonlake", (False, False, False)),
+        # Microarchitectures splitting in a diamond: targets up to the common ancestor (skylake)
+        # are below both bounds, so the ranges intersect without either containing the other.
+        (Spec, "target=:cascadelake", "target=:cannonlake", (True, False, False)),
+        # The same diamond seen from below: targets from icelake up are above both bounds.
+        (Spec, "target=cascadelake:", "target=cannonlake:", (True, False, False)),
+        # Ranges that are singletons are canonicalized to their only element
+        (Spec, "target=:aarch64", "target=aarch64", (True, True, True)),
+        (Spec, "target=aarch64:aarch64", "target=aarch64", (True, True, True)),
+        (Spec, "target=icelake:icelake", "target=icelake", (True, True, True)),
+        # A range covered only by the union of the rhs ranges, not by a single one of them
+        (Spec, "target=:alderlake", "target=:icelake,:arrowlake", (True, True, False)),
+        (
+            Spec,
+            "target=:x86_64_v3",
+            "target=x86_64_v3:x86_64_v4,:sandybridge",
+            (True, True, False),
+        ),
+        # target=* is an alias for target=: and means the unbounded range
+        (Spec, "target=:", "target=:", (True, True, True)),
+        (Spec, "target=*", "target=:", (True, True, True)),
+        # Bounds outside the microarchitecture table compare by name only, without raising
+        (Spec, "target=foo:", "target=foo:", (True, True, True)),
+        (Spec, "target=foo", "target=foo:", (True, True, False)),
+        (Spec, "target=x86_64:", "target=foo:", (False, False, False)),
+        (Spec, "target=haswell", "target=foo:", (False, False, False)),
         # Spec with compilers
         (Spec, "mpileaks %gcc@5", "mpileaks %gcc@6", (False, False, False)),
         # %gcc sits behind an unpinned ^callpath edge, so callpath need not be one node:
@@ -2065,6 +2089,23 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
             True,
             "target=x86_64_v2:haswell",
         ),
+        # a range already inside the other is the intersection, so there is nothing to narrow
+        (Spec, "target=:icelake", "target=x86_64:", False, "target=:icelake"),
+        # ":aarch64" contains only aarch64 and canonicalizes to the singleton instead of a range
+        (Spec, "target=:aarch64", "target=aarch64:", False, "target=aarch64"),
+        (Spec, "target=aarch64:", "target=:aarch64", True, "target=aarch64"),
+        # Constrain is idemptotent on the unbounded range
+        (Spec, "target=:", "target=:", False, "target=:"),
+        # A range covered by the union of the rhs ranges is already the intersection
+        (
+            Spec,
+            "target=:x86_64_v3",
+            "target=x86_64_v3:x86_64_v4,:sandybridge",
+            False,
+            "target=:x86_64_v3",
+        ),
+        # target=* can be constrained by a specific target
+        (Spec, "target=*", "target=haswell", True, "target=haswell"),
     ],
 )
 def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_packages):
@@ -2100,6 +2141,128 @@ def test_edge_propagation_is_part_of_spec_identity(mock_packages):
     assert plain != propagated
     assert hash(plain) != hash(propagated)
     assert len({plain, propagated}) == 2
+
+
+def test_one_target_range_is_one_canonical_state(mock_packages):
+    """':icelake' and 'x86_64:icelake' denote the same range, since x86_64 is the family root.
+    Ranges are stored canonicalized, so the two are one state with one hash."""
+    long, short = Spec("pkg-a target=x86_64:icelake"), Spec("pkg-a target=:icelake")
+    assert long.to_dict() == short.to_dict()
+    assert long.dag_hash() == short.dag_hash()
+
+
+@pytest.mark.parametrize(
+    "range_str,target_str",
+    [(":aarch64", "aarch64"), ("aarch64:aarch64", "aarch64"), ("icelake:icelake", "icelake")],
+)
+def test_a_singleton_target_range_is_the_concrete_target(mock_packages, range_str, target_str):
+    """A range denoting a singleton is canonicalized to that element."""
+    ranged, concrete = Spec(f"pkg-a target={range_str}"), Spec(f"pkg-a target={target_str}")
+    assert ranged.to_dict() == concrete.to_dict()
+    assert ranged.dag_hash() == concrete.dag_hash()
+    assert ranged.architecture.target_concrete
+
+
+def test_a_target_range_inside_another_one_is_dropped_from_the_list(mock_packages):
+    """A list of ranges denotes their union, so a range inside another adds nothing to it and is
+    dropped, leaving one canonical state for that union."""
+    assert (
+        Spec("pkg-a target=cannonlake:,icelake:").to_dict()
+        == Spec("pkg-a target=cannonlake:").to_dict()
+    )
+
+
+def test_incomparable_target_bounds_meet_as_a_union_of_ranges(mock_packages):
+    """Microarchitectures are ordered by a DAG, not a lattice, so two ranges can have more than one
+    minimal common bound. The intersection is then a list of ranges."""
+    lhs, rhs = Spec("pkg-a target=cascadelake:"), Spec("pkg-a target=cannonlake:")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    assert str(forward.architecture.target) == "icelake:"
+    assert forward.to_dict() == backward.to_dict()
+
+    # the intersection is the greatest lower bound, not merely some spec inside both
+    assert Spec("pkg-a target=icelake").satisfies(forward)
+
+    # armv8.6a and neoverse_n1 have two minimal common upper bounds, so the result is a list
+    lhs, rhs = Spec("pkg-a target=armv8.6a:"), Spec("pkg-a target=neoverse_n1:")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    assert str(forward.architecture.target) == "ampere1:,neoverse_v3ae:"
+    assert forward.to_dict() == backward.to_dict()
+
+    # the most extreme case in the target graph: armv8.3a and cortex_a72 have four minimal
+    # common upper bounds, none of which contains another
+    lhs, rhs = Spec("pkg-a target=armv8.3a:"), Spec("pkg-a target=cortex_a72:")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    expected = "ampere1:,neoverse_n2:,neoverse_v1:,neoverse_v2:"
+    assert str(forward.architecture.target) == expected
+    assert forward.to_dict() == backward.to_dict()
+
+
+def test_adjacent_target_ranges_fuse_into_one_canonical_state(mock_packages):
+    """Two ranges tiling one interval denote the same set as the interval itself, so they are
+    fused into it: the tiling and the interval are one state that satisfies both ways."""
+    tiling = Spec("pkg-a target=nocona:nehalem,nehalem:haswell")
+    interval = Spec("pkg-a target=nocona:haswell")
+    assert str(tiling.architecture.target) == "nocona:haswell"
+    assert tiling.to_dict() == interval.to_dict()
+    assert tiling.dag_hash() == interval.dag_hash()
+    assert tiling.satisfies(interval) and interval.satisfies(tiling)
+
+
+def test_consecutive_targets_fuse_into_a_range(mock_packages):
+    """A list of targets whose union is an interval is canonicalized to that interval."""
+    listed = Spec("pkg-a target=alderlake,arrowlake")
+    ranged = Spec("pkg-a target=alderlake:arrowlake")
+    assert listed.to_dict() == ranged.to_dict()
+    assert listed.dag_hash() == ranged.dag_hash()
+
+
+def test_the_meet_of_a_range_and_its_tiling_is_the_range(mock_packages):
+    """Constraining a range by a tiling of a subrange fuses the intersection back into one
+    element, so the meet is a state that satisfies both operands."""
+    lhs, rhs = Spec("pkg-a target=:haswell"), Spec("pkg-a target=nocona:nehalem,nehalem:haswell")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    assert str(forward.architecture.target) == "nocona:haswell"
+    assert forward.to_dict() == backward.to_dict()
+    assert forward.satisfies(lhs) and forward.satisfies(rhs)
+
+
+@pytest.mark.parametrize(
+    "target_str,canonical",
+    [
+        ("nocona:nehalem,nehalem:haswell", "nocona:haswell"),
+        ("alderlake,arrowlake", "alderlake:arrowlake"),
+        # the open range covers every target above nocona, leaving only the family root
+        ("nocona:,x86_64:core2", "nocona:,x86_64"),
+        ("nocona:,x86_64:nocona", "nocona:,x86_64"),
+        # ranges with a gap between them are not fused
+        ("x86_64:nocona,haswell:broadwell", ":nocona,haswell:broadwell"),
+        ("nocona,haswell", "haswell,nocona"),
+        # a range with incomparable bounds denotes no target and is dropped from the list
+        ("zen:haswell,nocona", "nocona"),
+    ],
+)
+def test_target_lists_have_one_canonical_idempotent_form(mock_packages, target_str, canonical):
+    """A target list is stored as a canonical decomposition of the set it denotes: parsing the
+    canonical form gives the same state as the original list."""
+    spec = Spec(f"pkg-a target={target_str}")
+    assert str(spec.architecture.target) == canonical
+    assert spec.to_dict() == Spec(f"pkg-a target={canonical}").to_dict()
+
+
+def test_unknown_target_names_in_lists_are_kept_verbatim(mock_packages):
+    """Bounds outside the microarchitecture table cannot be compared, so their elements are kept
+    as they are instead of raising."""
+    spec = Spec("pkg-a target=nocona:,foo:")
+    assert str(spec.architecture.target) == "foo:,nocona:"
 
 
 def test_constrain_dependencies_copies(mock_packages):
@@ -2935,6 +3098,98 @@ def test_two_providers_of_one_virtual_merge_as_parallel_edges(mock_packages):
     assert forward.to_dict() == backward.to_dict()
 
 
+def test_bare_virtual_edge_is_absorbed_by_a_provider_edge(mock_packages):
+    """A bare '^mpi' edge is satisfied by any '^[virtuals=mpi] provider' edge, so the merge
+    keeps only the provider edge, whichever side it comes from."""
+    provider = Spec("pkg-a ^[virtuals=mpi] mpich")
+    assert provider.satisfies("pkg-a ^mpi")
+
+    forward = provider.copy()
+    assert forward.constrain("pkg-a ^mpi") is False
+    assert forward.to_dict() == provider.to_dict()
+
+    backward = Spec("pkg-a ^mpi").constrained(provider)
+    assert backward.to_dict() == provider.to_dict()
+
+    assert Spec("pkg-a ^mpi ^mpi=mpich").to_dict() == provider.to_dict()
+    assert Spec("pkg-a ^mpi=mpich ^mpi").to_dict() == provider.to_dict()
+
+
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        "pkg-a ^mpi@3 ^mpi=mpich",
+        "pkg-a ^mpi@3 ^[virtuals=mpi] mpich@3",
+        "pkg-a ^mpi+debug ^mpi=mpich",
+    ],
+)
+def test_constrained_virtual_edge_stays_apart_from_a_provider_edge(mock_packages, spec_str):
+    """A virtual's version, variants and other attributes are unrelated to the provider's, so
+    only a bare virtual edge is absorbed; anything more constrained is its own requirement."""
+    assert len(Spec(spec_str).edges_to_dependencies()) == 2
+
+
+def test_bare_direct_virtual_edge_is_absorbed_by_a_provider_edge(mock_packages):
+    """The same rule for direct deps: '%c' adds nothing next to '%c=gcc'."""
+    provider = Spec("pkg-a %c=gcc")
+    assert Spec("pkg-a %c %c=gcc").to_dict() == provider.to_dict()
+    assert Spec("pkg-a %c=gcc %c").to_dict() == provider.to_dict()
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs",
+    [
+        ("pkg-a ^mpi=mpich", "pkg-a ^mpi+debug"),
+        ("pkg-a ^mpi=mpich~debug", "pkg-a ^mpi+debug"),
+        ("pkg-a %mpi=mpich", "pkg-a %mpi+debug"),
+        ("pkg-a ^mpi=mpich", "pkg-a ^mpi %gcc"),
+        ("pkg-a ^mpi=mpich", "pkg-a ^mpi target=x86_64"),
+    ],
+)
+def test_provider_edge_does_not_satisfy_a_constrained_virtual(mock_packages, lhs, rhs):
+    """A virtual's variants and other non-version attributes have no defined meaning, so a
+    provider edge does not satisfy them, whatever the provider's own attributes say."""
+    assert not Spec(lhs).satisfies(rhs)
+
+
+def test_constrained_virtual_and_provider_edge_are_parallel_edges(mock_packages):
+    """The pairs above still intersect, and constrain keeps the two requirements side by
+    side."""
+    lhs, rhs = Spec("pkg-a ^mpi=mpich"), Spec("pkg-a ^mpi+debug")
+    assert lhs.intersects(rhs)
+    assert lhs.constrain(rhs)
+    assert len(lhs.edges_to_dependencies()) == 2
+    assert lhs.to_dict() == Spec("pkg-a ^mpi=mpich ^mpi+debug").to_dict()
+
+
+def test_anonymous_edge_is_absorbed_by_a_satisfying_named_edge(mock_packages):
+    """An anonymous edge requires some dependency to match it, so a named edge satisfying it
+    makes it redundant, from either side of the merge."""
+    named = Spec("%bar+foo")
+    assert named.satisfies("%+foo")
+
+    forward = named.copy()
+    assert forward.constrain("%+foo") is False
+    assert forward.to_dict() == named.to_dict()
+
+    backward = Spec("%+foo").constrained(named)
+    assert backward.to_dict() == named.to_dict()
+
+    transitive = Spec("pkg-a ^pkg-b@2")
+    assert transitive.constrain("pkg-a ^*@2") is False
+
+
+def test_anonymous_edge_not_satisfied_by_a_named_edge_stays(mock_packages):
+    """A named edge that does not satisfy the anonymous requirement leaves it in place."""
+    assert len(Spec("pkg-a ^pkg-b@1 ^*@2").edges_to_dependencies()) == 2
+
+
+def test_propagated_bare_virtual_edge_is_not_absorbed(mock_packages):
+    """A propagated edge is an input to the solver's objective, so a non-propagating provider
+    edge does not make it redundant."""
+    assert len(Spec("pkg-a %%c %c=gcc").edges_to_dependencies()) == 2
+
+
 def test_two_providers_under_conditions_that_exclude_each_other_are_fine(mock_packages):
     """Only one provider can be the one at a time, so two of them named under conditions that
     cannot hold together are not in each other's way."""
@@ -3004,7 +3259,7 @@ def test_two_versions_of_one_provider_of_a_virtual_intersect(mock_packages):
 
 def test_an_anonymous_dependency_is_a_parallel_edge(mock_packages):
     """An edge with an anonymous target requires some dependency to match it. Constrain appends
-    it as a parallel edge, and discards it only when an existing anonymous edge satisfies it."""
+    it as a parallel edge, and discards it when an existing edge satisfies it."""
     # idempotency: the meet of a spec with itself is itself
     spec = Spec("pkg-a ^*@2")
     assert spec.satisfies(spec)
