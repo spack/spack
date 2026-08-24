@@ -73,15 +73,8 @@ class VariantType(enum.IntEnum):
             return "indicator"
 
 
-class Variant:
-    """Represents a variant definition, created by the ``variant()`` directive.
-
-    There can be multiple definitions of the same variant, and they are given precedence
-    by order of appearance in the package. Later definitions have higher precedence.
-    Similarly, definitions in derived classes have higher precedence than those in their
-    superclasses.
-
-    """
+class Option:
+    """Base class for Variant and Usage"""
 
     name: str
     default: Union[bool, str]
@@ -105,18 +98,18 @@ class Variant:
         sticky: bool = False,
         precedence: int = 0,
     ):
-        """Initialize a package variant.
+        """Initialize a package option.
 
         Args:
-            name: name of the variant
-            default: default value for the variant, used when nothing is explicitly specified
-            description: purpose of the variant
+            name: name of the option
+            default: default value for the option, used when nothing is explicitly specified
+            description: purpose of the option
             values: sequence of allowed values or a callable accepting a single value as argument
                 and returning True if the value is good, False otherwise
             multi: whether multiple values are allowed
             validator: optional callable that can be used to perform additional validation
-            sticky: if true the variant is set to the default value at concretization time
-            precedence: int indicating precedence of this variant definition in the solve
+            sticky: if true the option is set to the default value at concretization time
+            precedence: int indicating precedence of this option definition in the solve
                 (definition with highest precedence is used when multiple definitions are possible)
         """
         self.name = name
@@ -157,39 +150,40 @@ class Variant:
     def values_defined_by_validator(self) -> bool:
         return self.values is None
 
-    def validate_or_raise(self, vspec: "VariantValue", pkg_name: str):
-        """Validate a variant spec against this package variant. Raises an
+    def validate_or_raise(self, ospec: "VariantValue", pkg_name: str):  # TODO: refine type
+        """Validate an option spec against this package option. Raises an
         exception if any error is found.
 
         Args:
-            vspec: variant spec to be validated
+            ospec: option spec to be validated
             pkg_name: the name of the package class that required this validation (for errors)
 
         Raises:
-            InconsistentValidationError: if ``vspec.name != self.name``
+            InconsistentValidationError: if ``ospec.name != self.name``
 
-            MultipleValuesInExclusiveVariantError: if ``vspec`` has
+            MultipleValuesInExclusiveVariantError: if ``ospec`` has
                 multiple values but ``self.multi == False``
 
-            InvalidVariantValueError: if ``vspec.value`` contains
+            InvalidVariantValueError: if ``ospec.value`` contains
                 invalid values
         """
         # Check the name of the variant
-        if self.name != vspec.name:
-            raise InconsistentValidationError(vspec, self)
+        if self.name != ospec.name:
+            raise InconsistentValidationError(ospec, self)
 
         # If the value is exclusive there must be at most one
-        value = vspec.values
+        value = ospec.values
         if not self.multi and len(value) != 1:
-            raise MultipleValuesInExclusiveVariantError(vspec, pkg_name)
+            raise MultipleValuesInExclusiveVariantError(ospec, pkg_name)
 
         # Check and record the values that are not allowed
         invalid_vals = ", ".join(
             f"'{v}'" for v in value if v != "*" and self.single_value_validator(v) is False
         )
         if invalid_vals:
+            t_str = type(self).__name__.lower()
             raise InvalidVariantValueError(
-                f"invalid values for variant '{self.name}' in package {pkg_name}: {invalid_vals}\n"
+                f"invalid values for {t_str} '{self.name}' in package {pkg_name}: {invalid_vals}\n"
             )
 
         # Validate the group of values if needed
@@ -214,16 +208,6 @@ class Variant:
         v = docstring if docstring else ""
         return v
 
-    def make_default(self) -> "VariantValue":
-        """Factory that creates a variant holding the default value(s)."""
-        variant = VariantValue.from_string_or_bool(self.name, self.default)
-        variant.type = self.variant_type
-        return variant
-
-    def make_variant(self, *value: Union[str, bool]) -> "VariantValue":
-        """Factory that creates a variant holding the value(s) passed."""
-        return VariantValue(self.variant_type, self.name, value)
-
     @property
     def variant_type(self) -> VariantType:
         """String representation of the type of this variant (single/multi/bool)"""
@@ -236,7 +220,7 @@ class Variant:
 
     def __str__(self) -> str:
         return (
-            f"Variant('{self.name}', "
+            f"{type(self)}('{self.name}', "
             f"default='{self.default}', "
             f"description='{self.description}', "
             f"values={self.values}, "
@@ -246,6 +230,47 @@ class Variant:
             f"sticky={self.sticky}, "
             f"precedence={self.precedence})"
         )
+
+
+class Variant(Option):
+    """Represents a variant definition, created by the ``variant()`` directive.
+
+    There can be multiple definitions of the same variant, and they are given precedence
+    by order of appearance in the package. Later definitions have higher precedence.
+    Similarly, definitions in derived classes have higher precedence than those in their
+    superclasses.
+
+    """
+
+    def make_default(self) -> "VariantValue":
+        """Factory that creates a variant holding the default value(s)."""
+        variant = VariantValue.from_string_or_bool(self.name, self.default)
+        variant.type = self.variant_type
+        return variant
+
+    def make_variant(self, *value: Union[str, bool]) -> "VariantValue":
+        """Factory that creates a variant holding the value(s) passed."""
+        return VariantValue(self.variant_type, self.name, value)
+
+
+class Usage(Option):
+    """Represents a usage definition, created by the ``usage()`` directive.
+
+    There can be multiple definitions of the same usage, and they are given precedence
+    by order of appearance in the package. Later definitions have higher precedence.
+    Similarly, definitions in derived classes have higher precedence than those in their
+    superclasses.
+    """
+
+    def make_default(self) -> "VariantValue":  # TODO: refine these types
+        """Factory that creates a variant holding the default value(s)."""
+        variant = VariantValue.from_string_or_bool(self.name, self.default)
+        variant.type = self.variant_type
+        return variant
+
+    def make_variant(self, *value: Union[str, bool]) -> "VariantValue":
+        """Factory that creates a variant holding the value(s) passed."""
+        return VariantValue(self.variant_type, self.name, value)
 
 
 def _flatten(values) -> Collection:
