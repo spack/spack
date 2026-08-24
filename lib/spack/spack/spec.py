@@ -5425,16 +5425,17 @@ class OptionMap(lang.HashableMap[str, vt.VariantValue]):
     __slots__ = ("type",)
 
     def __setitem__(self, name, ospec):
+        expected_type = vt.VariantValue if self.type == "variant" else vt.UsageValue
         # Raise a TypeError if ospec is not of the right type
-        if not isinstance(ospec, vt.VariantValue):  # TODO: refine value type
+        if not isinstance(ospec, expected_type):
             raise TypeError(
-                f"{type(self).__name__} accepts only values of variant types "
+                f"{type(self).__name__} accepts only values of {self.type} types "
                 f"[got {type(ospec).__name__} instead]"
             )
 
         # Raise an error if the option was already in this map
         if name in self.dict:
-            raise vt.DuplicateVariantError(f"Cannot specify {self.type} '{name}' twice")
+            raise vt.DuplicateVariantError(f"Cannot specify {self.type} '{name}' twice")  # TODO: refine errors
 
         # Raise an error if name and ospec.name don't match
         if name != ospec.name:
@@ -5488,7 +5489,7 @@ class OptionMap(lang.HashableMap[str, vt.VariantValue]):
     def partition_keys(self) -> Tuple[List[str], List[str]]:
         """Partition the keys of the map into two lists: booleans and key-value pairs."""
         bool_keys, kv_keys = lang.stable_partition(
-            sorted(self.keys()), lambda x: self[x].type == vt.VariantType.BOOL  # TODO: Refine this type
+            sorted(self.keys()), lambda x: self[x].type == vt.VariantType.BOOL
         )
         return bool_keys, kv_keys
 
