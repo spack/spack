@@ -1149,7 +1149,7 @@ _valid_compiler_flags = ("cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "c
 # typing.Dict bases are slow at runtime on Python 3.6
 if TYPE_CHECKING:
     _FlagMapBase = Dict[str, List[CompilerFlag]]
-    _OptionMapBase = Dict[str, vt.VariantValue]
+    _OptionMapBase = Dict[str, vt.OptionValue]
 else:
     _FlagMapBase = _OptionMapBase = dict
 
@@ -5228,7 +5228,7 @@ class OptionMap(_OptionMapBase):
         for _, v in sorted(self.items()):
             yield v
 
-    def set(self, ospec: vt.VariantValue) -> None:
+    def set(self, ospec: vt.OptionValue) -> None:
         """Stores ``ospec`` under its own name, replacing any entry already there."""
         self[ospec.name] = ospec
 
@@ -5241,7 +5241,7 @@ class OptionMap(_OptionMapBase):
 
     def conflict(
         self: OptionMapT, other: OptionMapT
-    ) -> Optional[Tuple[vt.VariantValue, vt.VariantValue]]:
+    ) -> Optional[Tuple[vt.OptionValue, vt.OptionValue]]:
         """The first pair of values of the same name that do not intersect, if any."""
         for name, option in other.items():
             mine = self.get(name)
@@ -5322,18 +5322,20 @@ def _variant_parts(
 
 
 def _variants_string(
-    variants: Mapping[str, vt.VariantValue],
-    propagated_variants: Mapping[str, vt.VariantValue],
+    variants: Mapping[str, vt.OptionValue],
+    propagated_variants: Mapping[str, vt.OptionValue],
     abbreviate_patches: bool = False,
 ) -> str:
-    """The variants of a node as a string, in the order of :func:`_variant_parts`."""
+    """The variants of a node as a string, in the order of :func:`_variant_parts`.
+    ``abbreviate_patches`` only applies to :class:`~spack.variant.VariantValue`."""
+    kwargs: Dict[str, bool] = {"abbreviate_patches": True} if abbreviate_patches else {}
     bools = key_values = ""
     for propagated, mapping in ((False, variants), (True, propagated_variants)):
         for _, value in sorted(mapping.items()):
             if value.type == vt.VariantType.BOOL:
-                bools += value.string(abbreviate_patches, propagated)
+                bools += value.string(propagated=propagated, **kwargs)
             else:
-                key_values += " " + value.string(abbreviate_patches, propagated)
+                key_values += " " + value.string(propagated=propagated, **kwargs)
     return bools + key_values
 
 
