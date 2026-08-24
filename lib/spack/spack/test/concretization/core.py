@@ -36,6 +36,7 @@ import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.solver.core
+import spack.solver.error
 import spack.solver.input_analysis
 import spack.solver.result
 import spack.solver.reuse
@@ -6030,3 +6031,41 @@ def test_single_spec_concretization_reports_to_the_frontend(mutable_config, mock
 
     assert [[str(x) for x in specs] for specs in ui.solves] == [["pkg-a"]]
     assert len(ui.finished) == 1
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        lambda: spack.solver.error.UnsatisfiableSpecError("boom"),
+        lambda: spack.solver.error.InternalConcretizerError("boom"),
+        lambda: spack.solver.error.SolverError(Spec("pkg-a")),
+        lambda: spack.solver.error.OutputDoesNotSatisfyInputError(
+            [(Spec("pkg-a"), Spec("pkg-b")), (Spec("pkg-c"), None)]
+        ),
+    ],
+    ids=["unsatisfiable", "internal", "solver", "output-does-not-satisfy-input"],
+)
+def test_concretizer_errors_survive_a_pipe(factory):
+    """Tests that the errors a solve can raise round trip through pickle, so a worker process
+    can hand them back to the process that owns the pool without losing their type.
+    """
+    error = factory()
+    replayed = pickle.loads(pickle.dumps(error))
+
+    assert type(replayed) is type(error)
+    assert str(replayed) == str(error)
+
+
+def test_output_does_not_satisfy_input_keeps_its_specs():
+    """Tests that the specs of the error survive a pipe, and not just the message built from
+    them: spack.main._handle_solver_bug reports them, and dumps them to JSON for bug reports.
+    """
+    unsolved = [(Spec("pkg-a"), Spec("pkg-b")), (Spec("pkg-c"), None)]
+    error = spack.solver.error.OutputDoesNotSatisfyInputError(unsolved)
+
+    replayed = pickle.loads(pickle.dumps(error))
+
+    assert [(str(i), str(o) if o else None) for i, o in replayed.input_to_output] == [
+        ("pkg-a", "pkg-b"),
+        ("pkg-c", None),
+    ]
