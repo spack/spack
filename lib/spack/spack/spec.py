@@ -6351,28 +6351,10 @@ class MissingSpecHashError(spack.error.SpecError):
 
 
 class _ImmutableSpec(Spec):
-    """An immutable Spec that prevents a class of accidental mutations."""
+    """A Spec that is immutable by convention: it is interned in caches and shared across
+    package classes, so callers copy before mutating. Immutability is not enforced."""
 
-    _mutable: bool
     _str_cache: str
-
-    def __init__(self, spec_like: Optional[str] = None) -> None:
-        object.__setattr__(self, "_mutable", True)
-        super().__init__(spec_like)
-        object.__delattr__(self, "_mutable")
-
-    def __setstate__(self, state) -> None:
-        object.__setattr__(self, "_mutable", True)
-        super().__setstate__(state)
-        object.__delattr__(self, "_mutable")
-
-    def constrain(self, *args, **kwargs) -> bool:
-        assert self._mutable
-        return super().constrain(*args, **kwargs)
-
-    def add_dependency_edge(self, *args, **kwargs):
-        assert self._mutable
-        return super().add_dependency_edge(*args, **kwargs)
 
     def __str__(self) -> str:
         # Cache the str value of immutable specs as an optimization
@@ -6380,16 +6362,8 @@ class _ImmutableSpec(Spec):
             return self._str_cache
         except AttributeError:
             s = self._str(color=False)
-            object.__setattr__(self, "_str_cache", s)
+            self._str_cache = s
             return s
-
-    def __setattr__(self, name, value) -> None:
-        assert self._mutable
-        super().__setattr__(name, value)
-
-    def __delattr__(self, name) -> None:
-        assert self._mutable
-        object.__delattr__(self, name)
 
 
 #: Immutable empty spec, for fast comparisons and reduced memory usage.
