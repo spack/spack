@@ -53,7 +53,7 @@ from urllib.request import urlopen
 import spack.builder
 import spack.config
 import spack.enums
-import spack.fetch_strategy
+import spack.package_base
 import spack.patch
 import spack.repo
 import spack.spec
@@ -196,7 +196,9 @@ def _search_duplicate_compilers(error_cls):
     """Report compilers with the same spec and two different definitions"""
     errors = []
 
-    compilers = list(sorted(spack.config.get("compilers"), key=lambda x: x["compiler"]["spec"]))
+    compilers = list(
+        sorted(spack.config.CONFIG.get("compilers"), key=lambda x: x["compiler"]["spec"])
+    )
     for spec, group in itertools.groupby(compilers, key=lambda x: x["compiler"]["spec"]):
         group = list(group)
         if len(group) == 1:
@@ -227,7 +229,7 @@ config_repos = AuditClass(
 def _search_duplicate_specs_in_externals(error_cls):
     """Search for duplicate specs declared as externals"""
     errors, externals = [], collections.defaultdict(list)
-    packages_yaml = spack.config.get("packages")
+    packages_yaml = spack.config.CONFIG.get("packages")
 
     for name, pkg_config in packages_yaml.items():
         # No externals can be declared under all
@@ -600,9 +602,9 @@ def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         pkg = pkg_cls(spack.spec.Spec(pkg_name))
         try:
-            spack.fetch_strategy.check_pkg_attributes(pkg)
+            spack.package_base.check_pkg_attributes(pkg)
             for version in pkg.versions:
-                assert spack.fetch_strategy.for_package_version(pkg, version)
+                assert spack.package_base.for_package_version(pkg, version)
         except Exception as e:
             error_msg = "The package '{}' cannot produce a fetcher for some of its versions"
             details = ["{}".format(str(e))]
@@ -610,21 +612,38 @@ def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
     return errors
 
 
+def _declared_build_systems(pkg_cls) -> Set[str]:
+    """Return the names of the build systems declared by a package class."""
+    # values are either ConditionalValue objects or the values themselves
+    return set(
+        v.value if isinstance(v, spack.variant.ConditionalValue) else v
+        for _, variant in pkg_cls.variant_definitions("build_system")
+        for v in variant.values
+    )
+
+
 @package_properties
 def _ensure_package_builders(pkgs, error_cls):
-    """Ensure all packages can produce a builder"""
+    """Ensure all packages can produce a builder for each build system they declare"""
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        pkg = pkg_cls(spack.spec.Spec(pkg_name))
-        try:
-            b = spack.builder.buildsystem_name(pkg)
-            if not isinstance(b, str):
-                raise TypeError("invalid builder type {!s}".format(type(b)))
-        except Exception as e:
-            errors.append(
-                error_cls("The package '{pkg_name}' does not have a build system", [str(e)])
-            )
+
+        build_system_names = _declared_build_systems(pkg_cls)
+        if not build_system_names:
+            errors.append(error_cls(f"The package '{pkg_name}' does not have a build system", []))
+            continue
+
+        for build_system_name in sorted(build_system_names):
+            if build_system_name not in spack.builder.BUILDER_CLS:
+                errors.append(
+                    error_cls(
+                        f"The package '{pkg_name}' declares the build system "
+                        f"'{build_system_name}', which has no builder",
+                        [],
+                    )
+                )
+
     return errors
 
 
@@ -681,7 +700,7 @@ def _ensure_all_packages_use_sha256_checksums(pkgs, error_cls):
         error_msg = f"Package '{pkg_name}' does not use sha256 checksum"
         details = []
         for v, args in pkg.versions.items():
-            fetcher = spack.fetch_strategy.for_package_version(pkg, v)
+            fetcher = spack.package_base.for_package_version(pkg, v)
             digest, is_bad = invalid_sha256_digest(fetcher)
             if is_bad:
                 details.append(f"{pkg_name}@{v} uses {digest}")
@@ -704,12 +723,7 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
-        # values are either ConditionalValue objects or the values themselves
-        build_system_names = set(
-            v.value if isinstance(v, spack.variant.ConditionalValue) else v
-            for _, variant in pkg_cls.variant_definitions("build_system")
-            for v in variant.values
-        )
+        build_system_names = _declared_build_systems(pkg_cls)
         builder_cls_names = [spack.builder.BUILDER_CLS[x].__name__ for x in build_system_names]
 
         has_builders_in_package_py = any(

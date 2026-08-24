@@ -10,10 +10,12 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.package_prefs
+import spack.paths
 import spack.repo
 import spack.solver.asp
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
+from spack.config import Configuration
 from spack.error import ConfigError
 from spack.spec import Spec
 from spack.version import Version
@@ -41,7 +43,7 @@ callpath:
     write: world
 """
     )
-    spack.config.set("packages", conf, scope="concretize")
+    spack.config.CONFIG.set("packages", conf, scope="concretize")
 
     yield
 
@@ -53,7 +55,7 @@ def concretize(abstract_spec):
 def update_packages(pkgname, section, value):
     """Update config and reread package list"""
     conf = {pkgname: {section: value}}
-    spack.config.set("packages", conf, scope="concretize")
+    spack.config.CONFIG.set("packages", conf, scope="concretize")
 
 
 def assert_variant_values(spec, **variants):
@@ -175,15 +177,15 @@ class TestConcretizePreferences:
             ({}, "http://www.spack.llnl.gov/mpileaks-2.3.tar.gz"),
         ],
     )
-    def test_config_set_pkg_property_url(self, update, expected, mock_packages_repo, monkeypatch):
+    def test_config_set_pkg_property_url(self, update, expected, monkeypatch):
         """Test setting an existing attribute in the package class"""
         monkeypatch.setenv("SOMEPATH", "file:///some/where/else")
         update_packages("mpileaks", "package_attributes", update)
-        with spack.repo.use_repositories(mock_packages_repo):
+        with spack.repo.use_repositories(spack.paths.mock_packages_path):
             spec = concretize("mpileaks")
             assert spec.package.fetcher.url == expected
 
-    def test_config_set_pkg_property_new(self, mock_packages_repo):
+    def test_config_set_pkg_property_new(self, mutable_config: Configuration):
         """Test that you can set arbitrary attributes on the Package class"""
         conf = syaml.load_config(
             """\
@@ -201,8 +203,8 @@ mpileaks:
     - 2
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
-        with spack.repo.use_repositories(mock_packages_repo):
+        mutable_config.set("packages", conf, scope="concretize")
+        with spack.repo.use_repositories(spack.paths.mock_packages_path):
             spec = concretize("mpileaks")
             assert spec.package.v1 == 1
             assert spec.package.v2 is True
@@ -212,7 +214,7 @@ mpileaks:
             assert list(spec.package.v6) == [1, 2]
 
         update_packages("mpileaks", "package_attributes", {})
-        with spack.repo.use_repositories(mock_packages_repo):
+        with spack.repo.use_repositories(spack.paths.mock_packages_path):
             spec = concretize("mpileaks")
             with pytest.raises(AttributeError):
                 spec.package.v1
@@ -261,7 +263,7 @@ mpileaks:
         spec = spack.concretize.concretize_one("develop-test2")
         assert spec.version == Version("0.2.15.develop")
 
-    def test_external_mpi(self):
+    def test_external_mpi(self, mutable_config: Configuration):
         # make sure this doesn't give us an external first.
         spec = spack.concretize.concretize_one("mpi")
         assert not spec.external and spec.package.provides("mpi")
@@ -279,13 +281,13 @@ mpich:
       prefix: /dummy/path
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
+        mutable_config.set("packages", conf, scope="concretize")
 
         # ensure that once config is in place, external is used
         spec = spack.concretize.concretize_one("mpi")
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
-    def test_external_module(self, monkeypatch):
+    def test_external_module(self, monkeypatch, mutable_config: Configuration):
         """Test that packages can find externals specified by module
 
         The specific code for parsing the module is tested elsewhere.
@@ -313,7 +315,7 @@ mpi:
       modules: [dummy]
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
+        mutable_config.set("packages", conf, scope="concretize")
 
         # ensure that once config is in place, external is used
         spec = spack.concretize.concretize_one("mpi")
@@ -567,7 +569,9 @@ compiler-wrapper:
         assert "version-test-dependency-preferred" not in s
 
     @pytest.mark.regression("26598")
-    def test_multivalued_variants_are_lower_priority_than_providers(self):
+    def test_multivalued_variants_are_lower_priority_than_providers(
+        self, mutable_config: Configuration
+    ):
         """Test that the rule to maximize the number of values for multivalued
         variants is considered at lower priority than selecting the default
         provider for virtual dependencies.
@@ -576,28 +580,32 @@ compiler-wrapper:
         specified mpich as the default mpi provider, just because openmpi supports
         more fabrics by default.
         """
-        with spack.config.override(
+        with mutable_config.override(
             "packages:all", {"providers": {"somevirtual": ["some-virtual-preferred"]}}
         ):
             s = spack.concretize.concretize_one("somevirtual")
             assert s.name == "some-virtual-preferred"
 
     @pytest.mark.regression("26721,19736")
-    def test_sticky_variant_accounts_for_packages_yaml(self):
-        with spack.config.override("packages:sticky-variant", {"variants": "+allow-gcc"}):
+    def test_sticky_variant_accounts_for_packages_yaml(self, mutable_config: Configuration):
+        with mutable_config.override("packages:sticky-variant", {"variants": "+allow-gcc"}):
             s = spack.concretize.concretize_one("sticky-variant %gcc")
             assert s.satisfies("%gcc") and s.satisfies("+allow-gcc")
 
     @pytest.mark.regression("41134")
-    def test_default_preference_variant_different_type_does_not_error(self):
+    def test_default_preference_variant_different_type_does_not_error(
+        self, mutable_config: Configuration
+    ):
         """Tests that a different type for an existing variant in the 'all:' section of
         packages.yaml doesn't fail with an error.
         """
-        with spack.config.override("packages:all", {"variants": "+foo"}):
+        with mutable_config.override("packages:all", {"variants": "+foo"}):
             s = spack.concretize.concretize_one("pkg-a")
             assert s.satisfies("foo=bar")
 
-    def test_version_preference_cannot_generate_buildable_versions(self):
+    def test_version_preference_cannot_generate_buildable_versions(
+        self, mutable_config: Configuration
+    ):
         """Tests that a version preference not mentioned in package.py cannot be used in
         a built spec.
         """
@@ -613,7 +621,7 @@ compiler-wrapper:
     """
         )
 
-        with spack.config.override("packages", mpileaks_external):
+        with mutable_config.override("packages", mpileaks_external):
             # Asking for mpileaks+debug results in the external being chosen
             mpileaks = spack.concretize.concretize_one("mpileaks+debug")
             assert mpileaks.external and mpileaks.satisfies("@0.9 +debug")

@@ -922,10 +922,6 @@ def nullcontext(*args, **kwargs):
     yield
 
 
-class UnhashableArguments(TypeError):
-    """Raise when an @memoized function receives unhashable arg or kwarg values."""
-
-
 T = TypeVar("T")
 
 
@@ -951,14 +947,6 @@ def stable_partition(
         else:
             false_items.append(item)
     return true_items, false_items
-
-
-def ensure_last(lst, *elements):
-    """Performs a stable partition of lst, ensuring that ``elements``
-    occur at the end of ``lst`` in specified order. Mutates ``lst``.
-    Raises ``ValueError`` if any ``elements`` are not already in ``lst``."""
-    for elt in elements:
-        lst.append(lst.pop(lst.index(elt)))
 
 
 class Const:

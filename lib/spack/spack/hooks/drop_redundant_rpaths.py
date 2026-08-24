@@ -5,7 +5,7 @@
 import os
 from typing import BinaryIO, Optional, Tuple
 
-import spack.llnl.util.tty as tty
+from spack.util import tty
 from spack.util.elf import ElfParsingError, parse_elf
 from spack.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
 

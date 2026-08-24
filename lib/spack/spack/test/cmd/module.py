@@ -14,7 +14,8 @@ import spack.modules
 import spack.modules.lmod
 import spack.repo
 import spack.store
-from spack.installer import PackageInstaller
+from spack.config import Configuration
+from spack.old_installer import PackageInstaller
 
 module = spack.main.SpackCommand("module")
 
@@ -173,14 +174,14 @@ writer_cls = spack.modules.lmod.LmodModulefileWriter
 
 
 @pytest.mark.db
-def test_setdefault_command(mutable_database, mutable_config):
+def test_setdefault_command(mutable_database, mutable_config: Configuration):
     data = {
         "default": {
             "enable": ["lmod"],
             "lmod": {"core_compilers": ["clang@3.3"], "hierarchy": ["mpi"]},
         }
     }
-    spack.config.set("modules", data)
+    mutable_config.set("modules", data)
     # Install two different versions of pkg-a
     other_spec, preferred = "pkg-a@1.0", "pkg-a@2.0"
 

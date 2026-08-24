@@ -29,12 +29,12 @@ import spack.spec
 import spack.util.environment
 import spack.util.spack_yaml
 import spack.util.windows_registry
-from spack.llnl.util import tty
+from spack.util import tty
 
 
 def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
     """Returns all the specs mentioned as externals in packages.yaml"""
-    packages_yaml = spack.config.get("packages")
+    packages_yaml = spack.config.CONFIG.get("packages")
     already_defined_specs = set()
     for pkg_name, package_configuration in packages_yaml.items():
         for item in package_configuration.get("externals", []):
@@ -130,11 +130,6 @@ def path_to_dict(search_paths: List[str]) -> Dict[str, str]:
     return path_to_lib
 
 
-def is_executable(file_path: str) -> bool:
-    """Return True if the path passed as argument is that of an executable"""
-    return os.path.isfile(file_path) and os.access(file_path, os.X_OK)
-
-
 def _convert_to_iterable(single_val_or_multiple):
     x = single_val_or_multiple
     if x is None:
@@ -227,10 +222,10 @@ def update_configuration(
             pkg_config["buildable"] = False
         pkg_to_cfg[package_name] = pkg_config
 
-    scope = scope or spack.config.default_modify_scope()
-    pkgs_cfg = spack.config.get("packages", scope=scope)
+    scope = scope or spack.config.CONFIG.default_modify_scope()
+    pkgs_cfg = spack.config.CONFIG.get("packages", scope=scope)
     pkgs_cfg = spack.schema.merge_yaml(pkgs_cfg, pkg_to_cfg)
-    spack.config.set("packages", pkgs_cfg, scope=scope)
+    spack.config.CONFIG.set("packages", pkgs_cfg, scope=scope)
 
     return all_new_specs
 
@@ -238,7 +233,7 @@ def update_configuration(
 def set_virtuals_nonbuildable(virtuals: Set[str], scope: Optional[str] = None) -> List[str]:
     """Update packages:virtual:buildable:False for the provided virtual packages, if the property
     is not set by the user. Returns the list of virtual packages that have been updated."""
-    packages = spack.config.get("packages")
+    packages = spack.config.CONFIG.get("packages")
     new_config = {}
     for virtual in virtuals:
         # If the user has set the buildable prop do not override it
@@ -247,9 +242,9 @@ def set_virtuals_nonbuildable(virtuals: Set[str], scope: Optional[str] = None) -
         new_config[virtual] = {"buildable": False}
 
     # Update the provided scope
-    spack.config.set(
+    spack.config.CONFIG.set(
         "packages",
-        spack.schema.merge_yaml(spack.config.get("packages", scope=scope), new_config),
+        spack.schema.merge_yaml(spack.config.CONFIG.get("packages", scope=scope), new_config),
         scope=scope,
     )
 
@@ -406,7 +401,7 @@ def find_win32_additional_install_paths() -> List[str]:
     # Add search path for NuGet package manager default install location
     windows_search_ext.append(os.path.join(user, ".nuget", "packages"))
     windows_search_ext.extend(
-        spack.config.get("config:additional_external_search_paths", default=[])
+        spack.config.CONFIG.get("config:additional_external_search_paths", default=[])
     )
     windows_search_ext.extend(spack.util.environment.get_path("PATH"))
     return windows_search_ext

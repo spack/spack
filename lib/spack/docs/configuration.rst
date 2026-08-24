@@ -50,7 +50,12 @@ So, ``config.yaml`` starts with ``config:``, ``mirrors.yaml`` starts with ``mirr
 
    Validation and autocompletion of Spack config files can be enabled in your editor using `JSON Schema Store <https://www.schemastore.org/>`_.
 
-.. _configuration-scopes:
+.. index::
+   single: scope; defaults
+   single: scope; system
+   single: scope; site
+   single: scope; user
+   :name: configuration-scopes
 
 Configuration Scopes
 --------------------
@@ -118,7 +123,9 @@ If you forget, you can always see the available configuration scopes in order of
 Commands that modify scopes (e.g., ``spack compilers``, ``spack repo``, ``spack external find``, etc.) take a ``--scope=<name>`` parameter that you can use to control which scope is modified.
 By default, they modify the highest-precedence available scope that is not read-only (like `defaults`).
 
-.. _custom-scopes:
+.. index::
+   single: scope; custom
+   :name: custom-scopes
 
 Custom scopes
 ^^^^^^^^^^^^^
@@ -201,7 +208,9 @@ You can create different configuration scopes for use with ``pkg-a`` and ``pkg-b
        require: [mpich]
 
 
-.. _plugin-scopes:
+.. index::
+   single: scope; plugin
+   :name: plugin-scopes
 
 Plugin scopes
 ^^^^^^^^^^^^^
@@ -242,7 +251,9 @@ The function ``my_package.get_config_path`` (matching the entry point definition
        if dirname.exists():
            return str(dirname)
 
-.. _platform-scopes:
+.. index::
+   single: scope; platform-specific
+   :name: platform-scopes
 
 Platform-specific Configuration
 -------------------------------
@@ -276,7 +287,9 @@ Because ``${platform}`` is above the ``base`` include in the list, ``${platform}
 
 Platform-specific configuration files can similarly be set up for any other scope by creating an ``include.yaml`` similar to the one above for ``defaults`` -- under the appropriate configuration paths (see :ref:`config-overrides`) and creating a subdirectory with the platform name that contains the configurations.
 
-.. _config-scope-precedence:
+.. index::
+   single: scope; precedence
+   :name: config-scope-precedence
 
 Scope Precedence
 ----------------
@@ -384,7 +397,10 @@ Similarly, ``+:`` can be used to *prepend* to a path or name:
        root+: /my/custom/suffix/
 
 
-.. _config-overrides:
+.. index::
+   single: config override
+   single: :: (config override)
+   :name: config-overrides
 
 Overriding configuration values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -674,14 +690,24 @@ Spack also, by default, keeps various caches and user data in ``~/.spack``, but 
 
 Spack provides three environment variables that allow you to override or opt out of configuration locations:
 
-* ``SPACK_USER_CONFIG_PATH``: Override the path to use for the ``user`` scope (``~/.spack`` by default).
-* ``SPACK_SYSTEM_CONFIG_PATH``: Override the path to use for the ``system`` scope (``/etc/spack`` by default).
-* ``SPACK_DISABLE_LOCAL_CONFIG``: Set this environment variable to completely disable **both** the system and user configuration directories.
-  Spack will then only consider its own defaults and ``site`` configuration locations.
+.. envvar:: SPACK_USER_CONFIG_PATH
+
+   Override the path to use for the ``user`` scope (``~/.spack`` by default).
+
+.. envvar:: SPACK_SYSTEM_CONFIG_PATH
+
+   Override the path to use for the ``system`` scope (``/etc/spack`` by default).
+
+.. envvar:: SPACK_DISABLE_LOCAL_CONFIG
+
+   Set this environment variable to completely disable **both** the system and user configuration directories.
+   Spack will then only consider its own defaults and ``site`` configuration locations.
 
 And one that allows you to move the default cache location:
 
-* ``SPACK_USER_CACHE_PATH``: Override the default path to use for user data (misc_cache, tests, reports, etc.)
+.. envvar:: SPACK_USER_CACHE_PATH
+
+   Override the default path to use for user data (misc_cache, tests, reports, etc.)
 
 With these settings, if you want to isolate Spack in a CI environment, you can do this:
 
@@ -705,7 +731,59 @@ Currently, ``spack isolate`` is a best-effort approach to isolation of a Spack i
 The default location Spack uses for cloning Git based package repositories can only be configured by the ``SPACK_USER_CACHE_PATH`` environment variable (see :ref:`automatic-repo-cloning`).
 ``spack isolate --path ISO_PATH`` will explicitly set the destination of repositories that it knows about when invoked to a subdirectory of ``ISO_PATH``; however, newly added repositories without an explicit destination will be cloned to ``~/.spack``.
 To avoid this, either explicitly set ``SPACK_USER_CACHE_PATH`` or explicitly set the destination of newly added repositories to a different location (see :ref:`customizing-clone-location`).
+Furthermore, since ``spack isolate`` uses the user scope for isolation, setting ``SPACK_DISABLE_LOCAL_CONFIG`` will prevent future configuration changes from taking place in the isolated scope.
+You should unset this variable when using ``spack isolate``
 
   .. warning::
 
     This is an experimental feature that will be overhauled in v1.3, which will have big changes to how Spack is configured to store data and permit a more robust implementation.
+
+.. _other-environment-variables:
+
+Other environment variables
+---------------------------
+
+A handful of additional environment variables influence Spack's runtime behavior:
+
+.. envvar:: SPACK_ROOT
+
+   Set by ``setup-env.sh`` (and friends) to the root of the Spack checkout.
+   Used in shell integrations and may be referenced by users in paths such as
+   ``$SPACK_ROOT/var/spack/environments``.
+
+.. envvar:: SPACK_PYTHON
+
+   The Python interpreter ``bin/spack`` should use.
+   If unset, ``bin/spack`` searches ``python3``, ``python``, then ``python2``.
+
+.. envvar:: SPACK_ENV
+
+   Set by ``spack env activate`` to the path of the active environment.
+   Unset by ``spack env deactivate``.
+   Read by Spack itself and useful for shell prompts and scripts.
+
+.. envvar:: SPACK_COLOR
+
+   Controls ANSI color output: ``auto`` (default), ``always``, or ``never``.
+
+.. envvar:: SPACK_BACKTRACE
+
+   When set, Spack prints a Python traceback for every exception
+   (equivalent to passing ``--backtrace`` / ``-t`` on the command line).
+
+.. envvar:: SPACK_STACKTRACE
+
+   When set, Spack adds a stack trace to every printed ``tty`` statement
+   (equivalent to passing ``--stacktrace`` on the command line).
+
+.. envvar:: SPACK_GNUPGHOME
+
+   Override the GnuPG home directory used by ``spack gpg`` and buildcache
+   signing.
+   Defaults to ``$spack/opt/spack/gpg``.
+
+.. envvar:: SPACK_GREP
+
+   Override the ``grep`` binary used by ``spack pkg grep``.
+   Useful for substituting a faster alternative such as ``ripgrep`` or
+   ``ugrep``.

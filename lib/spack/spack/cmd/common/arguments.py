@@ -10,13 +10,13 @@ from typing import Any, Optional
 import spack.cmd
 import spack.config
 import spack.deptypes as dt
-import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.reporters
 import spack.spec
 import spack.store
+from spack.active_environment import active_environment
+from spack.util import tty
 from spack.util.lang import stable_partition
 from spack.util.pattern import Args
 
@@ -76,7 +76,7 @@ class ConstraintAction(argparse.Action):
 
         # If an environment is provided, we'll restrict the search to
         # only its installed packages.
-        env = ev.active_environment()
+        env = active_environment()
         if env:
             kwargs["hashes"] = set(env.all_hashes())
 
@@ -108,7 +108,7 @@ class SetParallelJobs(argparse.Action):
             msg = 'invalid value for argument "{0}" [expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, jobs))
 
-        spack.config.set("config:build_jobs", jobs, scope="command_line")
+        spack.config.CONFIG.set("config:build_jobs", jobs, scope="command_line")
 
         setattr(namespace, "jobs", jobs)
 
@@ -125,7 +125,9 @@ class SetConcurrentPackages(argparse.Action):
             msg = 'invalid value for argument "{0}" [expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, concurrent_packages))
 
-        spack.config.set("config:concurrent_packages", concurrent_packages, scope="command_line")
+        spack.config.CONFIG.set(
+            "config:concurrent_packages", concurrent_packages, scope="command_line"
+        )
 
         setattr(namespace, "concurrent_packages", concurrent_packages)
 
@@ -192,7 +194,7 @@ class ConfigScope(argparse.Action):
 
     @property
     def choices(self):
-        return spack.config.scopes().keys()
+        return spack.config.CONFIG.scopes.keys()
 
     @choices.setter
     def choices(self, value):
@@ -203,7 +205,7 @@ class ConfigScope(argparse.Action):
 
 
 def config_scope_readable_validator(value):
-    if value not in spack.config.existing_scope_names():
+    if value not in spack.config.CONFIG.existing_scope_names():
         raise ValueError(
             f"Invalid scope argument {value} "
             "for config read operation, scope context does not exist"
@@ -356,7 +358,7 @@ def clean():
     return Args(
         "--clean",
         action="store_false",
-        default=spack.config.get("config:dirty"),
+        default=spack.config.CONFIG.get("config:dirty"),
         dest="dirty",
         help="unset harmful variables in the build environment (default)",
     )
@@ -377,7 +379,7 @@ def dirty():
     return Args(
         "--dirty",
         action="store_true",
-        default=spack.config.get("config:dirty"),
+        default=spack.config.CONFIG.get("config:dirty"),
         dest="dirty",
         help="preserve user environment in spack's build environment (danger!)",
     )
@@ -581,7 +583,7 @@ class ConfigSetAction(argparse.Action):
 
     This works like a ``store_const`` action but you can set the
     ``dest`` to some Spack configuration path (like ``concretizer:reuse``)
-    and the ``const`` will be stored there using ``spack.config.set()``
+    and the ``const`` will be stored there using ``spack.config.CONFIG.set()``
     """
 
     def __init__(
@@ -616,7 +618,7 @@ class ConfigSetAction(argparse.Action):
         )
 
     def __call__(self, parser, namespace, values, option_string):
-        if self.require_environment and not ev.active_environment():
+        if self.require_environment and not active_environment():
             raise argparse.ArgumentTypeError(
                 f"argument '{self.option_strings[-1]}' requires an environment"
             )
@@ -625,7 +627,7 @@ class ConfigSetAction(argparse.Action):
         # the const from the constructor or a value from the CLI.
         # Note that this is only called if the argument is actually
         # specified on the command line.
-        spack.config.set(self.config_path, self.const, scope="command_line")
+        spack.config.CONFIG.set(self.config_path, self.const, scope="command_line")
 
 
 def add_concretizer_args(subparser):

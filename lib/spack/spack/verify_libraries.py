@@ -7,7 +7,7 @@ import os
 import re
 from typing import IO, Dict, List
 
-import spack.util.elf as elf
+from spack.util import elf
 from spack.util.filesystem import BaseDirectoryVisitor
 from spack.util.lang import stable_partition
 

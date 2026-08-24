@@ -26,9 +26,9 @@ from typing import (
 )
 
 import spack.error
-import spack.llnl.util.tty.color
 import spack.spec_parser
-import spack.util.lang as lang
+import spack.util.tty.color
+from spack.util import lang
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -287,7 +287,15 @@ class VariantValue:
     type: VariantType
     _values: ValueType
 
-    slots = ("name", "propagate", "concrete", "type", "_values")
+    # _patches_in_order_of_appearance is attached to the "patches" variant after concretization
+    __slots__ = (
+        "name",
+        "propagate",
+        "concrete",
+        "type",
+        "_values",
+        "_patches_in_order_of_appearance",
+    )
 
     def __init__(
         self,
@@ -406,6 +414,29 @@ class VariantValue:
             self.type, self.name, self.values, propagate=self.propagate, concrete=self.concrete
         )
 
+    def _merged_values(self, other: "VariantValue") -> Tuple[Union[str, bool], ...]:
+        """The values of both sides. For patches a value identified by a checksum prefix and the
+        full checksum name the same patch, so only the longer one is kept."""
+        values = (*self.values, *other.values)
+        if self.name != "patches":
+            return values
+        return tuple(
+            v
+            for v in values
+            if not any(
+                w != v and isinstance(w, str) and isinstance(v, str) and w.startswith(v)
+                for w in values
+            )
+        )
+
+    def _contains(self, value: Union[str, bool]) -> bool:
+        """Whether this variant covers a single value of another one. A patch is identified by a
+        prefix of its checksum, so a shorter value is covered by any value starting with it.
+        """
+        if self.name == "patches" and isinstance(value, str):
+            return any(isinstance(w, str) and w.startswith(value) for w in self.values)
+        return value in self.values
+
     def satisfies(self, other: "VariantValue") -> bool:
         """The lhs satisfies the rhs if all possible concretizations of lhs are also
         possible concretizations of rhs."""
@@ -413,16 +444,7 @@ class VariantValue:
             return False
 
         if not other.concrete:
-            # rhs abstract means the lhs must at least contain its values.
-            # special-case patches with rhs abstract: their values may be prefixes of the lhs
-            # values.
-            if self.name == "patches":
-                return all(
-                    isinstance(v, str)
-                    and any(isinstance(w, str) and w.startswith(v) for w in self.values)
-                    for v in other.values
-                )
-            return all(v in self for v in other.values)
+            return all(self._contains(v) for v in other.values)
         if self.concrete:
             # both concrete: they must be equal
             return self.values == other.values
@@ -435,9 +457,9 @@ class VariantValue:
         if self.concrete:
             if other.concrete:
                 return self.values == other.values
-            return all(v in self for v in other.values)
+            return all(self._contains(v) for v in other.values)
         if other.concrete:
-            return all(v in other for v in self.values)
+            return all(other._contains(v) for v in self.values)
         # both abstract: the union is a valid concretization of both
         return True
 
@@ -446,7 +468,7 @@ class VariantValue:
         if not self.intersects(other):
             raise UnsatisfiableVariantSpecError(self, other)
         old_values = self.values
-        self.set(*self.values, *other.values)
+        self.set(*self._merged_values(other))
         changed = old_values != self.values
         if self.propagate and not other.propagate:
             self.propagate = False
@@ -507,6 +529,8 @@ def BoolValuedVariant(name: str, value: bool, propagate: bool = False) -> Varian
 
 class VariantValueRemoval(VariantValue):
     """Indicator class for Spec.mutate to remove a variant"""
+
+    __slots__ = ()
 
     def __init__(self, name):
         super().__init__(VariantType.INDICATOR, name, (None,))
@@ -616,7 +640,7 @@ class DisjointSetsOfValues(collections.abc.Sequence):
 
             format_args = {"variant": variant_name, "package": pkg_name, "values": values}
             msg = self.error_fmt + " @*r{{[{package}, variant '{variant}']}}"
-            msg = spack.llnl.util.tty.color.colorize(msg.format(**format_args))
+            msg = spack.util.tty.color.colorize(msg.format(**format_args))
             raise spack.error.SpecError(msg)
 
         return _disjoint_set_validator

@@ -17,10 +17,12 @@ import spack.paths
 import spack.spec
 import spack.store
 import spack.util.filesystem as fs
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.concretize_ui import TerminalUI
 from spack.error import InstallError, SpackError
-from spack.installer import InstallPolicy
-from spack.llnl.util import tty
+from spack.old_installer import InstallPolicy
+from spack.util import tty
 from spack.util.string import plural
 
 description = "build and install packages"
@@ -314,7 +316,7 @@ def install(parser, args):
         return
 
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     if args.log_file and not args.log_format:
         msg = "the '--log-format' must be specified when using '--log-file'"
@@ -324,7 +326,7 @@ def install(parser, args):
 
     reporter = args.reporter() if args.log_format else None
     install_kwargs = install_kwargs_from_args(args)
-    env = ev.active_environment()
+    env = active_environment()
 
     if not env and not args.spec:
         _die_require_env(args.subparser)
@@ -357,7 +359,7 @@ def _maybe_add_and_concretize(args, env, specs):
 
         # `spack concretize`
         tests = compute_tests_install_kwargs(env.user_specs, args.test)
-        concretized_specs = env.concretize(tests=tests)
+        concretized_specs = env.concretize(tests=tests, ui=TerminalUI())
         if concretized_specs:
             tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
             spack.binary_distribution.load_buildcache_index()

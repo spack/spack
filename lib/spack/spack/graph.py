@@ -43,10 +43,10 @@ import sys
 from typing import List, Optional, Set, TextIO, Tuple
 
 import spack.deptypes as dt
-import spack.llnl.util.tty.color
 import spack.spec
 import spack.tengine
 import spack.traverse
+import spack.util.tty.color
 from spack.solver.input_analysis import create_graph_analyzer
 
 
@@ -84,7 +84,7 @@ class AsciiGraph:
         self.depflag = dt.ALL
 
         # These are colors in the order they'll be used for edges.
-        # See spack.llnl.util.tty.color for details on color characters.
+        # See spack.util.tty.color for details on color characters.
         self.colors = "rgbmcyRGBMCY"
 
         # Internal vars are used in the graph() function and are initialized there
@@ -309,17 +309,17 @@ class AsciiGraph:
         Arguments:
             spec: spec to graph.  This only handles one spec at a time.
             out: file object to write out to (default is sys.stdout)
-            color: whether to write in color.  Default is to autodetect
-               based on output file.
+            color: whether to write in color.  Default is to autodetect based on the ``--color``
+               setting and the output file.
 
         """
         if out is None:
             out = sys.stdout
 
         if color is None:
-            color = out.isatty()
+            color = spack.util.tty.color.get_color_when(out)
 
-        self._out = spack.llnl.util.tty.color.ColorStream(out, color=color)
+        self._out = spack.util.tty.color.ColorStream(out, color=color)
 
         # We'll traverse the spec in topological order as we graph it.
         nodes_in_topological_order = list(spec.traverse(order="topo", deptype=self.depflag))

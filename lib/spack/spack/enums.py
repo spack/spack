@@ -27,7 +27,7 @@ class ConfigScopePriority(enum.IntEnum):
     ENVIRONMENT_SPEC_GROUPS = 5
 
 
-class PropagationPolicy(enum.Enum):
+class PropagationPolicy(enum.IntEnum):
     """Enum to specify the behavior of a propagated dependency"""
 
     NONE = enum.auto()
@@ -54,3 +54,12 @@ class Context(enum.Enum):
         elif s == "test":
             return Context.TEST
         raise ValueError(f"context should be one of 'build', 'run', 'test', got {s}")
+
+
+class PartStyle(enum.Enum):
+    """Style to apply when formatting a part of a Spec string"""
+
+    NORMAL = "normal"
+    HIGHLIGHT = "highlight"
+    DIM = "dim"
+    HIDDEN = "hidden"

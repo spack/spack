@@ -12,7 +12,6 @@ import pytest
 import spack.vendor.jsonschema
 
 import spack.binary_distribution
-import spack.ci as ci
 import spack.cmd
 import spack.cmd.ci
 import spack.concretize
@@ -21,11 +20,13 @@ import spack.hash_types as ht
 import spack.main
 import spack.paths
 import spack.repo
+import spack.reporters.cdash
 import spack.spec
 import spack.stage
 import spack.util.spack_yaml as syaml
 import spack.util.web
 import spack.version
+from spack import ci
 from spack.ci import gitlab as gitlab_generator
 from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
 from spack.ci.generator_registry import generator
@@ -640,6 +641,8 @@ def test_ci_rebuild_mock_success(
     rebuild_env = create_rebuild_env(tmp_path, pkg_name, broken_tests)
 
     monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "echo")
+    # the cdash url in the environment is fake; never upload reports to it
+    monkeypatch.setattr(spack.reporters.cdash.CDash, "upload", lambda self, filename: None)
 
     with working_dir(rebuild_env.env_dir):
         activate_rebuild_env(tmp_path, pkg_name, rebuild_env)
@@ -1723,12 +1726,12 @@ def dynamic_mapping_setup(tmp_path: pathlib.Path):
     filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
-            """\
+            f"""\
 spack:
   specs:
     - pkg-a
   mirrors:
-    buildcache-destination: https://my.fake.mirror
+    buildcache-destination: {(tmp_path / "buildcache").as_uri()}
   ci:
     pipeline-gen:
     - dynamic-mapping:
@@ -2036,6 +2039,22 @@ spack:
 
 
 @pytest.fixture
+def fetch_url_exists(monkeypatch):
+    """Force URLs to always be valid without attempting to fetch."""
+    monkeypatch.setattr(spack.util.web, "url_exists", lambda url: True)
+
+
+@pytest.fixture
+def fetch_url_maybe_exists(monkeypatch):
+    """Force URLs to be valid *unless* they're version 2.1.4"""
+
+    def url_exists(url, **kwargs):
+        return "2.1.4" not in url
+
+    monkeypatch.setattr(spack.util.web, "url_exists", url_exists)
+
+
+@pytest.fixture
 def fetch_versions_match(monkeypatch):
     """Fake successful checksums returned from downloaded tarballs."""
 
@@ -2044,12 +2063,11 @@ def fetch_versions_match(monkeypatch):
         return {v: pkg_cls.versions[v]["sha256"] for v in url_by_version}
 
     monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
-    monkeypatch.setattr(spack.util.web, "url_exists", lambda url: True)
 
 
 @pytest.fixture
 def fetch_versions_invalid(monkeypatch):
-    """Fake successful checksums returned from downloaded tarballs."""
+    """Fake *invalid* checksums returned from downloaded tarballs."""
 
     def get_checksums_for_versions(url_by_version, package_name, **kwargs):
         return {
@@ -2058,13 +2076,14 @@ def fetch_versions_invalid(monkeypatch):
         }
 
     monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
-    monkeypatch.setattr(spack.util.web, "url_exists", lambda url: True)
 
 
 @pytest.mark.parametrize("versions", [["2.1.4"], ["2.1.4", "2.1.5"]])
-def test_ci_validate_standard_versions_valid(capfd, mock_packages, fetch_versions_match, versions):
+def test_ci_validate_standard_versions_valid(
+    capfd, mock_packages, fetch_url_exists, fetch_versions_match, versions
+):
     spec = spack.spec.Spec("diff-test")
-    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    pkg = mock_packages.get_pkg_class(spec.name)(spec)
     version_list = [spack.version.Version(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list)
@@ -2076,10 +2095,10 @@ def test_ci_validate_standard_versions_valid(capfd, mock_packages, fetch_version
 
 @pytest.mark.parametrize("versions", [["2.1.4"], ["2.1.4", "2.1.5"]])
 def test_ci_validate_standard_versions_invalid(
-    capfd, mock_packages, fetch_versions_invalid, versions
+    capfd, mock_packages, fetch_url_exists, fetch_versions_invalid, versions
 ):
     spec = spack.spec.Spec("diff-test")
-    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    pkg = mock_packages.get_pkg_class(spec.name)(spec)
     version_list = [spack.version.Version(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
@@ -2089,12 +2108,44 @@ def test_ci_validate_standard_versions_invalid(
         assert f"Invalid checksum found diff-test@{version}" in err
 
 
+@pytest.mark.parametrize("versions", [["2.1.4"], ["2.1.4", "2.1.5"]])
+def test_ci_validate_standard_versions_invalid_url(
+    capfd, mock_packages, fetch_url_maybe_exists, fetch_versions_match, versions
+):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    version_list = [spack.version.Version(v) for v in versions]
+
+    assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
+
+    out, err = capfd.readouterr()
+    assert "No valid URLs found for diff-test@2.1.4" in err
+    assert "No valid URLs found for diff-test@2.1.5" not in err
+    if "2.1.5" in versions:
+        assert "Validated diff-test@2.1.5" in out
+
+
+def test_ci_validate_standard_versions_invalid_both(
+    capfd, mock_packages, fetch_url_maybe_exists, fetch_versions_invalid
+):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    versions = ["2.1.4", "2.1.5"]
+    version_list = [spack.version.Version(v) for v in versions]
+
+    assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
+
+    out, err = capfd.readouterr()
+    assert "No valid URLs found for diff-test@2.1.4" in err
+    assert "Invalid checksum found diff-test@2.1.5" in err
+
+
 @pytest.mark.parametrize("versions", [[("1.0", -2)], [("1.1", -4), ("2.0", -6)]])
 def test_ci_validate_git_versions_valid(
     capfd, monkeypatch, mock_packages, mock_git_version_info, versions
 ):
     spec = spack.spec.Spec("diff-test")
-    pkg_class = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
     version_list = [spack.version.Version(v) for v, _ in versions]
 
@@ -2118,7 +2169,7 @@ def test_ci_validate_git_versions_bad_tag(
     capfd, monkeypatch, mock_packages, mock_git_version_info, versions
 ):
     spec = spack.spec.Spec("diff-test")
-    pkg_class = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
     version_list = [spack.version.Version(v) for v, _ in versions]
 
@@ -2142,7 +2193,7 @@ def test_ci_validate_git_versions_invalid(
     capfd, monkeypatch, mock_packages, mock_git_version_info, versions
 ):
     spec = spack.spec.Spec("diff-test")
-    pkg_class = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
     version_list = [spack.version.Version(v) for v, _ in versions]
 
@@ -2275,10 +2326,10 @@ def test_ci_verify_versions_standard_duplicates(
 
 def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_package_changes):
     repo, _, commits = mock_git_package_changes
-    with spack.repo.use_repositories(repo):
+    with spack.repo.use_repositories(repo) as repos:
         monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
 
-        pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
+        pkg_class = repos.get_pkg_class("diff-test")
         monkeypatch.setattr(pkg_class, "manual_download", True)
 
         out = ci_cmd("verify-versions", commits[-1], commits[-2])

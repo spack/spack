@@ -9,6 +9,10 @@
 
 .. _sippackage:
 
+.. index::
+   single: build system; SIP
+   single: SIPPackage
+
 SIP
 ------
 

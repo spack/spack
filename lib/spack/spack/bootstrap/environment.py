@@ -20,7 +20,7 @@ import spack.spec
 import spack.stage
 import spack.tengine
 import spack.util.gpg
-from spack.llnl.util import tty
+from spack.util import tty
 
 from .config import root_path, spec_for_current_python, store_path
 from .core import _add_externals_if_missing
@@ -99,7 +99,7 @@ class BootstrapEnvironment(spack.environment.Environment):
                     download_and_trust_key()
                     fetch_policy = (
                         "cache_only"
-                        if not spack.config.get("bootstrap:dev:enable_source", False)
+                        if not spack.config.CONFIG.get("bootstrap:dev:enable_source", False)
                         else "auto"
                     )
                     try:

@@ -35,8 +35,8 @@ import spack.paths
 import spack.spec
 import spack.util.lang
 import spack.util.path
-from spack.llnl.util import tty
 from spack.util import filesystem as fs
+from spack.util import tty
 
 #: default installation root, relative to the Spack install path
 DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
@@ -46,7 +46,8 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     """Parse config settings and return values relevant to the store object.
 
     Arguments:
-        config_dict: dictionary of config values, as returned from ``spack.config.get("config")``
+        config_dict: dictionary of config values, as returned from
+            ``spack.config.CONFIG.get("config")``
 
     Returns:
         triple of the install tree root, the unpadded install tree
@@ -131,6 +132,22 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     return root, unpadded_root, projections
 
 
+@contextlib.contextmanager
+def filter_padding():
+    """Context manager to safely disable path padding in all Spack output.
+
+    This is needed because Spack's debug output gets extremely long when we use a
+    long padded installation path.
+    """
+    padding = spack.config.CONFIG.get("config:install_tree:padded_length", None)
+    if padding:
+        # filter out all padding from the install command output
+        with tty.output_filter(spack.util.path.padding_filter):
+            yield
+    else:
+        yield  # no-op: don't filter unless padding is actually enabled
+
+
 class Store:
     """A store is a path full of installed Spack packages.
 
@@ -185,11 +202,9 @@ class Store:
         tty.debug("PACKAGE LOCK TIMEOUT: {0}".format(str(timeout_format_str)))
 
         self.prefix_locker = spack.database.SpecLocker(
-            spack.database.prefix_lock_path(root), default_timeout=lock_cfg.package_timeout
+            spack.database.prefix_lock_path(root), lock_cfg=lock_cfg
         )
-        self.failure_tracker = spack.database.FailureTracker(
-            self.root, default_timeout=lock_cfg.package_timeout
-        )
+        self.failure_tracker = spack.database.FailureTracker(self.root, lock_cfg=lock_cfg)
 
     def has_padding(self) -> bool:
         """Returns True if the store layout includes path padding."""
@@ -375,17 +390,6 @@ def find(
         )
 
     return matching_specs
-
-
-def specfile_matches(filename: str, **kwargs) -> List["spack.spec.Spec"]:
-    """Same as find but reads the query from a spec file.
-
-    Args:
-        filename: YAML or JSON file from which to read the query.
-        **kwargs: keyword arguments forwarded to :func:`find`
-    """
-    query = [spack.spec.Spec.from_specfile(filename)]
-    return find(query, **kwargs)
 
 
 def ensure_singleton_created() -> None:

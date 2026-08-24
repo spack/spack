@@ -21,6 +21,7 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.url as url_util
+from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import Executable
@@ -174,13 +175,13 @@ def test_patch_in_spec(mock_packages, config):
     )
 
 
-def test_stale_patch_cache_falls_back_to_fresh(mock_packages, config):
+def test_stale_patch_cache_falls_back_to_fresh(mock_packages: RepoPath, config):
     """spec.patches returns correct patches even when the stale in-memory cache is wrong."""
     spec = spack.concretize.concretize_one("patch@=1.0")
-    pkg_cls = spack.repo.PATH.get_pkg_class("patch")
+    pkg_cls = mock_packages.get_pkg_class("patch")
 
     # Inject a stale PatchCache: foo_sha256 points to a non-existent patch file
-    stale_cache = spack.patch.PatchCache(repository=spack.repo.PATH)
+    stale_cache = spack.patch.PatchCache(repository=mock_packages)
     stale_cache.index = {
         foo_sha256: {
             pkg_cls.fullname: {
@@ -192,8 +193,8 @@ def test_stale_patch_cache_falls_back_to_fresh(mock_packages, config):
             }
         }
     }
-    spack.repo.PATH._patch_index = stale_cache
-    spack.repo.PATH._index_is_fresh = False
+    mock_packages._patch_index = stale_cache
+    mock_packages._index_is_fresh = False
 
     patches = spec.patches
 
@@ -244,11 +245,11 @@ def test_patch_order(mock_packages, config):
     assert expected_order == tuple(patch_order)
 
 
-def test_nested_directives(mock_packages):
+def test_nested_directives(mock_packages: RepoPath):
     """Ensure pkg data structures are set up properly by nested directives."""
     # this ensures that the patch() directive results were removed
     # properly from the DirectiveMeta._directives_to_be_executed list
-    package = spack.repo.PATH.get_pkg_class("patch-several-dependencies")
+    package = mock_packages.get_pkg_class("patch-several-dependencies")
     assert len(package.patches) == 0
 
     # this ensures that results of dependency patches were properly added
@@ -555,3 +556,22 @@ def test_invalid_from_dict(mock_packages, config):
     }
     with pytest.raises(spack.fetch_strategy.ChecksumError, match="sha256 checksum failed for"):
         spack.patch.from_dict(dictionary, mock_packages)
+
+
+@pytest.mark.regression("52675")
+def test_patch_lookup_for_shadowed_package(mock_packages, config, repo_builder):
+    """Patches must be looked up via the spec's fullname, so that a same-named
+    package in a higher-precedence repo doesn't shadow the patch owner."""
+    repo_builder.add_package("patch")
+
+    with spack.repo.use_repositories(repo_builder.root, override=False) as repos:
+        assert repos.repo_for_pkg("patch").namespace == repo_builder.namespace
+
+        spec = spack.concretize.concretize_one("builtin_mock.patch@=1.0")
+        default = spack.concretize.concretize_one("patch")
+        assert spec.patches != default.patches
+        assert spec.namespace == "builtin_mock"
+
+        # raises SpecError if the lookup uses the bare name: the shadowing
+        # class's patch index has no such sha256
+        assert {p.sha256 for p in spec.patches} == {foo_sha256, baz_sha256}

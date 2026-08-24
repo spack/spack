@@ -6,11 +6,11 @@ import pathlib
 
 import pytest
 
-import spack.llnl.util.tty as tty
 import spack.reporters.extract
 import spack.util.filesystem as fs
 from spack.install_test import TestStatus
 from spack.reporters import CDash, CDashConfiguration
+from spack.util import tty
 
 # Use a path variable to appease Spack style line length checks
 fake_install_prefix = fs.join_path(

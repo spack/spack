@@ -16,7 +16,7 @@ import spack.spec_parser
 import spack.traverse
 import spack.util.spack_yaml
 from spack.enums import PropagationPolicy
-from spack.llnl.util import tty
+from spack.util import tty
 from spack.util.spack_yaml import get_mark_from_yaml_data
 
 

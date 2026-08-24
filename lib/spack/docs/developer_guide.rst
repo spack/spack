@@ -197,13 +197,13 @@ Other Modules
 :mod:`spack.error`
   :class:`~spack.error.SpackError`, the base class for Spack's exception hierarchy.
 
-:mod:`spack.llnl.util.tty`
+:mod:`spack.util.tty`
   Basic output functions for all of the messages Spack writes to the terminal.
 
-:mod:`spack.llnl.util.tty.color`
+:mod:`spack.util.tty.color`
   Implements a color formatting syntax used by ``spack.tty``.
 
-:mod:`spack.llnl.util`
+:mod:`spack.util`
   In this package are a number of utility modules for the rest of Spack.
 
 .. _package-repositories:
@@ -318,16 +318,17 @@ Whenever you add/remove/rename a command or flags for an existing command, make 
 Writing Hooks
 -------------
 
-A hook is a callback that makes it easy to design functions that run for different events.
-We do this by defining hook types and then inserting them at different places in the Spack codebase.
-Whenever a hook type triggers by way of a function call, we find all the hooks of that type and run them.
+Hooks in Spack provide an extension mechanism that allows code to be executed at specific points in the package lifecycle.
+This section explains how the Spack hook system works and how to use it effectively.
+When a hook point is reached in the code, the corresponding hook runner finds all hook functions with matching names in registered modules and executes them.
+This allows multiple modules to respond to the same event.
 
 Spack defines hooks by way of a module in the ``lib/spack/spack/hooks`` directory.
 This module has to be registered in ``lib/spack/spack/hooks/__init__.py`` so that Spack is aware of it.
 This section will cover the basic kind of hooks and how to write them.
 
-Types of Hooks
-^^^^^^^^^^^^^^
+Available Hook Types
+^^^^^^^^^^^^^^^^^^^^
 
 The following hooks are currently implemented to make it easy for you, the developer, to add hooks at different stages of a Spack install or similar.
 If there is a hook that you would like and it is missing, you can propose to add a new one.
@@ -335,20 +336,91 @@ If there is a hook that you would like and it is missing, you can propose to add
 ``pre_install(spec)``
 """""""""""""""""""""
 
-A ``pre_install`` hook is run within the install subprocess, directly before the installation starts.
-It expects a single argument of a spec.
-
+A ``pre_install`` hook runs within the install subprocess, directly before installation starts.
+It receives the spec as its only argument.
 
 ``post_install(spec, explicit=None)``
 """""""""""""""""""""""""""""""""""""
 
-A ``post_install`` hook is run within the install subprocess, directly after the installation finishes, but before the build stage is removed and the spec is registered in the database.
-It expects two arguments: the spec and an optional boolean indicating whether this spec is being installed explicitly.
+A ``post_install`` hook runs within the install subprocess after installation finishes, but before the build stage is removed and the spec is registered in the database.
+It receives the spec and an optional boolean indicating whether this spec is an explicit user request, or a dependency.
 
-``pre_uninstall(spec)`` and ``post_uninstall(spec)``
-""""""""""""""""""""""""""""""""""""""""""""""""""""
+``pre_uninstall(spec)``
+"""""""""""""""""""""""
 
-These hooks are currently used for cleaning up module files after uninstall.
+A ``pre_uninstall`` hook runs directly before removing an installed spec.
+It receives the spec as its only argument.
+
+``post_uninstall(spec)``
+""""""""""""""""""""""""
+
+A ``post_uninstall`` hook runs after package uninstallation finishes.
+It receives the spec as its only argument and is primarily used for cleaning up module files during uninstall operations.
+
+
+Adding a New Hook Module
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+To implement a hook, create a Python module in ``lib/spack/spack/hooks/`` with functions named after the hooks you want to implement:
+
+1. Create a module file (e.g., ``lib/spack/spack/hooks/my_hooks.py``)
+2. Add functions matching the hook names:
+
+   .. code-block:: python
+
+      # lib/spack/spack/hooks/my_hooks.py
+
+
+      def pre_install(spec):
+          """This runs before each package is installed."""
+          print(f"About to install {spec.name}@{spec.version}")
+
+
+      def post_install(spec, explicit=None):
+          """This runs after each package is installed."""
+          print(f"Finished installing {spec.name}@{spec.version}")
+
+3. Add your module to the ``HOOK_ORDER`` list in ``lib/spack/spack/hooks/__init__.py``:
+
+   .. code-block:: python
+
+      class _HookRunner:
+          HOOK_ORDER = [
+              "spack.hooks.module_file_generation",
+              "spack.hooks.licensing",
+              # ...
+              "spack.hooks.my_hooks",  # <- Add your module here
+          ]
+
+
+Example: Implementing a Build Notification Hook
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here's a complete example that sends notifications when builds start and finish:
+
+.. code-block:: python
+
+    # lib/spack/spack/hooks/build_notifications.py
+
+    from spack.util import tty
+    import time
+
+    # Track build start times
+    _build_starts = {}
+
+
+    def pre_install(spec):
+        """Record when builds start and notify."""
+        _build_starts[spec.name] = time.time()
+        tty.info(f"Starting build for {spec.name}@{spec.version}")
+
+
+    def post_install(spec, explicit):
+        """Notify about build completion with timing info."""
+        if spec.name in _build_starts:
+            duration = time.time() - _build_starts[spec.name]
+            tty.info(f"Build completed for {spec.name}@{spec.version} in {duration:.1f} seconds")
+            del _build_starts[spec.name]
 
 
 Adding a New Hook Type
@@ -362,11 +434,11 @@ You would add it as follows:
 .. code-block:: python
 
     # pre/post install and run by the install subprocess
-    pre_install = HookRunner("pre_install")
-    post_install = HookRunner("post_install")
+    pre_install = _HookRunner("pre_install")
+    post_install = _HookRunner("post_install")
 
     # hooks related to logging
-    post_log_write = HookRunner("post_log_write")  # <- here is my new hook!
+    post_log_write = _HookRunner("post_log_write")  # <- here is my new hook!
 
 
 You then need to decide what arguments your hook would expect.
@@ -394,6 +466,7 @@ In this example, we use it outside of a logger that is already defined:
 
 
 This is not to say that this would be the best way to implement an integration with the logger (you would probably want to write a custom logger, or you could have the hook defined within the logger), but it serves as an example of writing a hook.
+
 
 Unit tests
 ----------
@@ -423,26 +496,17 @@ For example, if you were to add this step to the Linux unit test CI, it would lo
 
 .. code-block:: yaml
 
-   - name: Bootstrap clingo
-     if: ${{ matrix.concretizer == 'clingo' }}
-     env:
-       SPACK_PYTHON: python
-     run: |
-       . share/spack/setup-env.sh
-       spack bootstrap disable spack-install
-       spack bootstrap now
-       spack -v spec --show opt,solutions zlib
+   - uses: ./.github/actions/setup-spack
+     with:
+       python-version: ${{ matrix.python-version }}
    - name: Setup tmate session
      uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
    - name: Run unit tests
      env:
-       SPACK_PYTHON: python
-       SPACK_TEST_PARALLEL: 4
-       COVERAGE: true
        COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
-       UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.14' }}
+       PYTEST_ADDOPTS: ${{ matrix.python-version == '3.14' && '--cov --cov-config=pyproject.toml' || '' }}
      run: |-
-       share/spack/qa/run-unit-tests
+       python3 -m pytest -x --verbose --dist worksteal -n4
 
 
 Note that the ssh session comes after Spack does its setup but before it runs the unit tests.
@@ -519,14 +583,14 @@ Developer commands
 ``spack style``
 ^^^^^^^^^^^^^^^
 
-``spack style`` exists to help the developer check imports and style with mypy, Flake8, isort, and (soon) Black.
+``spack style`` exists to help the developer check imports and style with mypy and Ruff (for formatting and linting).
 To run all style checks, simply do:
 
 .. code-block:: console
 
     $ spack style
 
-To run automatic fixes for isort, you can do:
+To automatically fix formatting and linting issues, you can do:
 
 .. code-block:: console
 
@@ -707,11 +771,11 @@ When working on the ASP-based solver in ``lib/spack/spack/solver/``, it is often
 Generating ASP facts
 ^^^^^^^^^^^^^^^^^^^^
 
-The ``spack spec --show=asp`` flag dumps all ASP facts generated for a given spec to stdout:
+The ``spack solve --show=asp`` flag dumps all ASP facts generated for a given spec to stdout:
 
 .. code-block:: console
 
-   $ spack spec --show=asp zlib-ng > zlib.lp
+   $ spack solve --show=asp zlib-ng > zlib.lp
 
 The resulting file contains both the package facts (versions, variants, dependencies) and the problem-specific facts derived from the user's configuration.
 It can be fed directly to clingo alongside the solver rules.

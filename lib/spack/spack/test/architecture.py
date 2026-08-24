@@ -8,6 +8,7 @@ import pytest
 import spack.vendor.archspec.cpu
 
 import spack.concretize
+import spack.error
 import spack.operating_systems
 import spack.platforms
 from spack.spec import ArchSpec, Spec
@@ -65,11 +66,11 @@ def test_user_input_combination(config, target_str, os_str):
     assert spec.architecture.target == TEST_PLATFORM.target(target_str)
 
 
-def test_default_os_and_target(default_mock_concretization):
+def test_default_os_and_target(config, mock_packages):
     """Test that is we don't specify `os=` or `target=` we get the default values
     after concretization.
     """
-    spec = default_mock_concretization("libelf")
+    spec = spack.concretize.concretize_one("libelf")
     assert spec.architecture.os == str(TEST_PLATFORM.default_operating_system())
     assert spec.architecture.target == TEST_PLATFORM.default_target()
 
@@ -107,6 +108,74 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
     architecture = ArchSpec(architecture_tuple)
     constraint = ArchSpec(constraint_tuple)
     assert not architecture.satisfies(constraint)
+
+
+@pytest.mark.parametrize(
+    "lhs_tuple,rhs_tuple,expected_target",
+    [
+        ((None, "debian6", None), (None, None, "x86_64:"), "x86_64:"),
+        ((None, None, "x86_64:"), (None, "debian6", None), "x86_64:"),
+        ((None, "debian6", None), (None, None, "haswell"), "haswell"),
+    ],
+)
+def test_constrain_target_when_only_one_side_has_one(lhs_tuple, rhs_tuple, expected_target):
+    """The side that has a target wins, ranges included."""
+    architecture = ArchSpec(lhs_tuple)
+    architecture.constrain(ArchSpec(rhs_tuple))
+    assert architecture.target == ArchSpec((None, None, expected_target)).target
+
+
+def test_constrain_is_atomic_when_targets_are_disjoint():
+    """platform and os are applied before the target, so the up-front intersection check is what
+    keeps a failed constrain from leaving them behind."""
+    architecture = ArchSpec(("linux", None, "haswell"))
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        architecture.constrain(ArchSpec((None, "ubuntu18.04", "ppc64le")))
+    assert architecture == ArchSpec(("linux", None, "haswell"))
+
+
+@pytest.mark.parametrize(
+    "architecture_tuple,constraint_tuple",
+    [
+        (("linux", "ubuntu18.04", "x86_64"), ("*", None, None)),
+        (("linux", "ubuntu18.04", "x86_64"), (None, "*", None)),
+        (("linux", "ubuntu18.04", "x86_64"), (None, None, "*")),
+        (("linux", "ubuntu18.04", "x86_64"), ("*", "*", "*")),
+        (("linux", None, None), ("*", None, None)),
+    ],
+)
+def test_star_is_satisfied_and_intersected_and_does_not_constrain(
+    architecture_tuple, constraint_tuple
+):
+    """A star requires the attribute to be set, so a spec that sets it satisfies the star, the
+    two overlap in both directions, and merging changes nothing."""
+    architecture = ArchSpec(architecture_tuple)
+    constraint = ArchSpec(constraint_tuple)
+
+    assert architecture.satisfies(constraint)
+    assert architecture.intersects(constraint)
+    assert constraint.intersects(architecture)
+
+    merged = architecture.copy()
+    assert merged.constrain(constraint) is False
+    assert merged == architecture
+
+
+def test_star_does_not_short_circuit_the_other_attributes():
+    """A star on one attribute does not short-circuit satisfies or intersects: the remaining
+    attributes are still checked."""
+    architecture = ArchSpec(("linux", "ubuntu18.04", "x86_64"))
+    assert not architecture.satisfies(ArchSpec(("*", "rhel6", None)))
+    assert not architecture.satisfies(ArchSpec(("*", None, "aarch64")))
+    assert not architecture.intersects(ArchSpec(("*", "rhel6", None)))
+
+
+def test_star_target_is_replaced_by_a_named_target_when_constrained():
+    """target=* is stored as target=: like @: in version lists"""
+    architecture = ArchSpec((None, None, "*"))
+    assert str(architecture.target) == ":"
+    assert architecture.constrain(ArchSpec((None, None, "x86_64"))) is True
+    assert str(architecture.target) == "x86_64"
 
 
 @pytest.mark.parametrize(

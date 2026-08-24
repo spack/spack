@@ -19,11 +19,11 @@ from typing import (
 )
 
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.error import MirrorError
 from spack.oci.image import is_oci_url
+from spack.util import tty
 
 if TYPE_CHECKING:
     import spack.spec
@@ -122,6 +122,9 @@ class Mirror:
 
     def display(self, max_len: int = 0) -> None:
         fetch, push = self.fetch_url, self.push_url
+        fetch_view, push_view = self.fetch_view, self.push_view
+        fetch = f"{fetch}:{fetch_view}" if fetch_view else fetch
+        push = f"{push}:{push_view}" if push_view else push
         # don't print the same URL twice
         url = fetch if fetch == push else f"fetch: {fetch} push: {push}"
         source = "s" if self.source else " "
@@ -260,14 +263,15 @@ class Mirror:
             )
 
         keys = [
-            "url",
             "access_pair",
             "access_token",
             "access_token_variable",
-            "profile",
             "endpoint_url",
-            "select",
             "exclude",
+            "profile",
+            "select",
+            "url",
+            "view",
         ]
         if top_level:
             keys += ["binary", "source", "signed", "autopush"]

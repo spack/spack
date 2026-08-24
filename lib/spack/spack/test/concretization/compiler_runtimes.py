@@ -10,11 +10,12 @@ import pytest
 import spack.vendor.archspec.cpu
 
 import spack.concretize
-import spack.config
+import spack.database
 import spack.paths
 import spack.repo
 import spack.solver.asp
 import spack.spec
+from spack.config import Configuration
 from spack.environment.environment import ViewDescriptor
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.solver.reuse import spec_filter_from_packages_yaml
@@ -59,11 +60,13 @@ def test_correct_gcc_runtime_is_injected_as_dependency(runtime_repo):
 
 
 @pytest.mark.regression("41972")
-def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_path: pathlib.Path):
+def test_external_nodes_do_not_have_runtimes(
+    runtime_repo, mutable_config: Configuration, tmp_path: pathlib.Path
+):
     """Tests that external nodes don't have runtime dependencies."""
 
     packages_yaml = {"pkg-b": {"externals": [{"spec": "pkg-b@1.0", "prefix": f"{str(tmp_path)}"}]}}
-    spack.config.set("packages", packages_yaml)
+    mutable_config.set("packages", packages_yaml)
 
     s = spack.concretize.concretize_one("pkg-a%gcc@10.2.1")
 
@@ -166,7 +169,7 @@ def test_views_can_handle_duplicate_runtime_nodes(
     )
 
     # Mock the installation status to allow selecting nodes for the view
-    monkeypatch.setattr(spack.spec.Spec, "installed", True)
+    monkeypatch.setattr(spack.database.Database, "installed", lambda self, spec: True)
     nodes = list(root.traverse())
 
     view = ViewDescriptor(str(tmp_path), str(tmp_path))

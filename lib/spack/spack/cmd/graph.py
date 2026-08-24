@@ -5,11 +5,12 @@ import argparse
 
 import spack.cmd
 import spack.config
-import spack.environment as ev
 import spack.store
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.concretize_ui import HeadlessUI, TerminalUI
 from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_dot, static_graph_dot
-from spack.llnl.util import tty
+from spack.util import tty
 
 description = "generate graphs of package dependency relationships"
 section = "query"
@@ -55,7 +56,7 @@ in the lockfile.
 
 
 def graph(parser, args):
-    env = ev.active_environment()
+    env = active_environment()
     if args.installed and env:
         args.subparser.error("cannot use --installed with an active environment")
 
@@ -76,7 +77,9 @@ def graph(parser, args):
             specs = env.all_matching_specs(*args.specs)
 
     else:
-        specs = spack.cmd.parse_specs(args.specs, concretize=not args.static)
+        # Machine-readable output goes to stdout, so concretization must not print anything there
+        ui = HeadlessUI() if args.dot else TerminalUI()
+        specs = spack.cmd.parse_specs(args.specs, concretize=not args.static, ui=ui)
 
     if not specs:
         tty.die("no spec matching the query")
@@ -100,7 +103,7 @@ def graph(parser, args):
         return
 
     # ascii is default: user doesn't need to provide it explicitly
-    debug = spack.config.get("config:debug")
+    debug = spack.config.CONFIG.get("config:debug")
     graph_ascii(specs[0], debug=debug, depflag=args.deptype)
     for spec in specs[1:]:
         print()  # extra line bt/w independent graphs

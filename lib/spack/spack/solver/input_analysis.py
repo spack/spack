@@ -17,9 +17,8 @@ import spack.repo
 import spack.spec
 import spack.store
 from spack.error import SpackError
-from spack.llnl.util import tty
 from spack.spec import EMPTY_SPEC
-from spack.util import lang
+from spack.util import lang, tty
 
 
 class PossibleGraph(NamedTuple):

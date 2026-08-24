@@ -7,6 +7,10 @@
    :description lang=en:
       Discover how to extend Spack's core functionality by creating custom commands and plugins.
 
+.. index::
+   single: extension; custom command
+   single: spack extension
+
 Custom Extensions
 =================
 

@@ -68,8 +68,8 @@ import spack.error
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.enums import PropagationPolicy
-from spack.llnl.util.tty import color
 from spack.tokenize import Token, TokenBase, Tokenizer
+from spack.util.tty import color
 
 if TYPE_CHECKING:
     import spack.spec
@@ -317,12 +317,9 @@ class SpecParser:
         if not self.ctx.next_token:
             return initial_spec
 
-        def add_dependency(dep, **edge_properties):
-            """wrapper around root_spec._add_dependency"""
-            try:
-                target_spec._add_dependency(dep, **edge_properties)
-            except spack.error.SpecError as e:
-                raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
+        # A ^ dependency is attached to the root only once its trailing % edges are parsed:
+        # merging it earlier would compare an incomplete sub-dag against the existing edges.
+        pending: Optional[Tuple["spack.spec.Spec", dict, Token]] = None
 
         if not initial_spec:
             from spack.spec import Spec
@@ -357,16 +354,41 @@ class SpecParser:
             dependency = self._parse_node(root_spec)
 
             if is_direct:
-                target_spec = current_spec
                 if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
                     dependency.name = LEGACY_COMPILER_TO_BUILTIN[dependency.name]
+                self._attach_dependency(
+                    current_spec, dependency, self.ctx.current_token, **edge_properties
+                )
             else:
+                self._attach_pending(root_spec, pending)
                 current_spec = dependency
-                target_spec = root_spec
+                pending = (dependency, edge_properties, self.ctx.current_token)
 
-            add_dependency(dependency, **edge_properties)
+        self._attach_pending(root_spec, pending)
 
         return root_spec
+
+    def _attach_pending(
+        self,
+        root_spec: "spack.spec.Spec",
+        pending: Optional[Tuple["spack.spec.Spec", dict, Token]],
+    ) -> None:
+        """Attach the pending ^ dependency, whose sub-dag is complete now."""
+        if pending is not None:
+            dependency, edge_properties, token = pending
+            self._attach_dependency(root_spec, dependency, token, **edge_properties)
+
+    def _attach_dependency(
+        self,
+        target_spec: "spack.spec.Spec",
+        dependency: "spack.spec.Spec",
+        token: Token,
+        **edge_properties,
+    ) -> None:
+        try:
+            target_spec._add_dependency(dependency, **edge_properties)
+        except spack.error.SpecError as e:
+            raise SpecParsingError(str(e), token, self.literal_str) from e
 
     def _parse_node(self, root_spec: "spack.spec.Spec", root: bool = True):
         dependency = SpecNodeParser(self.ctx, self.literal_str).parse(root=root)
@@ -544,8 +566,10 @@ class EdgeAttributeParser:
                 name, value = self.ctx.current_token.value.split("=", maxsplit=1)
                 if name.endswith(":"):
                     name = name[:-1]
-                value = value.strip("'\" ").split(",")
-                attributes[name] = value
+                value = value.strip("'\" ")
+                # A when value is one spec string, where a comma is part of the syntax, e.g.
+                # when='@1,2'; deptypes and virtuals values are comma-separated lists.
+                attributes[name] = value if name == "when" else value.split(",")
                 if name not in ("deptypes", "virtuals", "when"):
                     msg = (
                         "the only edge attributes that are currently accepted "
@@ -569,7 +593,7 @@ class EdgeAttributeParser:
 
         # Turn "when" into a spec
         if "when" in attributes:
-            attributes["when"] = parse_one_or_raise(attributes["when"][0])
+            attributes["when"] = parse_one_or_raise(attributes["when"])
 
         return attributes
 

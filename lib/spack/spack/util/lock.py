@@ -13,8 +13,7 @@ from types import TracebackType
 from typing import IO, Callable, Dict, Generator, Optional, Tuple, Type, Union
 
 import spack.error
-from spack.llnl.util import tty
-from spack.util import lang
+from spack.util import lang, tty
 from spack.util.string import plural
 
 if sys.platform != "win32":
@@ -25,6 +24,8 @@ __all__ = [
     "check_lock_safety",
     "CantCreateLockError",
     "DummyBackend",
+    "ForbiddenBackend",
+    "ForbiddenLockError",
     "Lock",
     "LockDowngradeError",
     "LockError",
@@ -359,6 +360,26 @@ class DummyBackend:
         pass
 
 
+class ForbiddenBackend:
+    """Lock backend that refuses every operation, for resources that must never be locked
+    (e.g. a read-only upstream database)."""
+
+    def __init__(self, message: str) -> None:
+        self._message = message
+
+    def prepare(self, op: int) -> None:
+        raise ForbiddenLockError(self._message)
+
+    def poll(self, op: int) -> bool:
+        raise ForbiddenLockError(self._message)
+
+    def release(self) -> None:
+        raise ForbiddenLockError(self._message)
+
+    def cleanup(self, path: str) -> None:
+        raise ForbiddenLockError(self._message)
+
+
 class Lock:
     """This is an implementation of a filesystem lock using Python's lockf.
 
@@ -425,11 +446,23 @@ class Lock:
         self.default_timeout = default_timeout or None
 
         if sys.platform != "win32" and enable:
-            self.backend: Union[PosixBackend, DummyBackend] = PosixBackend(
+            self.backend: Union[PosixBackend, DummyBackend, ForbiddenBackend] = PosixBackend(
                 path, start, length, debug=debug
             )
         else:
             self.backend = DummyBackend()
+
+    @property
+    def enabled(self) -> bool:
+        """True if this lock actually takes OS locks (False for the no-op backend)."""
+        return not isinstance(self.backend, DummyBackend)
+
+    @classmethod
+    def forbidden(cls, path: str, message: str, *, desc: str = "") -> "Lock":
+        """A lock that refuses every acquisition by raising a ForbiddenLockError."""
+        lock = cls(path, desc=desc, enable=False)
+        lock.backend = ForbiddenBackend(message)
+        return lock
 
     @staticmethod
     def _poll_interval_generator(
@@ -980,6 +1013,11 @@ class TryWriteTransaction(WriteTransaction):
 
 class LockError(Exception):
     """Raised for any errors related to locks."""
+
+
+class ForbiddenLockError(LockError):
+    """Raised when acquiring a lock that is explicitly forbidden, e.g. on a read-only upstream
+    database."""
 
 
 class LockDowngradeError(LockError):

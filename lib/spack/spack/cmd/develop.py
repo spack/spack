@@ -10,13 +10,13 @@ import spack.cmd
 import spack.config
 import spack.environment
 import spack.fetch_strategy
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.stage
 import spack.version
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.util import tty
 
 description = "add a spec to an environment's develop: section"
 section = "environments"
@@ -151,7 +151,7 @@ def _update_config(spec, path):
     def change_fn(section):
         section[spec.name] = entry
 
-    spack.config.change_or_add("develop", find_fn, change_fn)
+    spack.config.CONFIG.change_or_add("develop", find_fn, change_fn)
 
 
 def update_env(
@@ -173,7 +173,7 @@ def update_env(
 
     with env.write_transaction():
         if build_dir is not None:
-            spack.config.add(
+            spack.config.CONFIG.add(
                 f"packages:{spec.name}:package_attributes:build_directory:{build_dir}",
                 env.scope_name,
             )

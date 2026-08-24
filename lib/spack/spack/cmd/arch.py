@@ -8,10 +8,9 @@ import warnings
 
 import spack.vendor.archspec.cpu
 
-import spack.llnl.util.tty.colify as colify
-import spack.llnl.util.tty.color as color
 import spack.platforms
 import spack.spec
+from spack.util.tty import colify, color
 
 description = "print architecture information about this machine"
 section = "config"

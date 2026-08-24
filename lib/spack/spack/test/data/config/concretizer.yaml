@@ -14,6 +14,7 @@ concretizer:
       fortran: 1
       # Regular packages
       cmake: 2
+      dupe-tool: 2
       gmake: 2
       python: 2
       python-venv: 2
@@ -29,4 +30,6 @@ concretizer:
       llvm: 2
 
   concretization_cache:
-    enable: false
+    enable: {cache_enable}
+    url: {cache_url}
+    entry_limit: 20000

@@ -17,16 +17,16 @@ import spack.dependency
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
 import spack.install_test
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.package_base
 import spack.repo
 import spack.spec
 import spack.variant
 import spack.version
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify
 from spack.package_base import PackageBase
+from spack.util import tty
+from spack.util.tty import color
+from spack.util.tty.colify import colify
 from spack.util.typing import SupportsRichComparison
 
 description = "get detailed information on a particular package"
@@ -158,7 +158,7 @@ def format_deptype(depflag: int) -> str:
 
 class DependencyFormatter(Formatter):
     def format_name(self, dep: spack.dependency.Dependency) -> str:
-        return dep.spec._long_spec(color=color.get_color_when())
+        return dep.spec.clong_spec
 
     def format_values(self, dep: spack.dependency.Dependency) -> str:
         return str(format_deptype(dep.depflag))
@@ -325,9 +325,7 @@ def print_tests(pkg: PackageBase, args: Namespace) -> None:
 
 
 def _fmt_when(when: "spack.spec.Spec", indent: int) -> str:
-    return color.colorize(
-        f"{indent * ' '}@B{{when}} {color.cescape(when._long_spec(color=color.get_color_when()))}"
-    )
+    return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(when.clong_spec)}")
 
 
 def _fmt_variant_value(v: Any) -> str:
@@ -590,7 +588,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
 
         def get_url(version: spack.version.VersionType) -> str:
             try:
-                return str(fs.for_package_version(pkg, version))
+                return str(spack.package_base.for_package_version(pkg, version))
             except fs.InvalidArgsError:
                 return "No URL"
 

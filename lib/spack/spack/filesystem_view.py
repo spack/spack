@@ -23,8 +23,7 @@ import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
-from spack.llnl.util import tty
-from spack.llnl.util.tty.color import colorize
+from spack.util import tty
 from spack.util.filesystem import (
     mkdirp,
     remove_dead_links,
@@ -42,9 +41,7 @@ from spack.util.link_tree import (
     SingleMergeConflictError,
 )
 from spack.util.string import comma_or
-
-__all__ = ["FilesystemView", "YamlFilesystemView"]
-
+from spack.util.tty.color import colorize
 
 _projections_path = ".spack/projections.yaml"
 
@@ -93,12 +90,15 @@ def view_copy(
         prefix_to_projection[spack.store.STORE.layout.root] = view._root
         spack.relocate.relocate_text(files=[dst], prefix_to_prefix=prefix_to_projection)
 
-    # The os module on Windows does not have a chown function.
-    if sys.platform != "win32":
-        try:
+    try:
+        if sys.platform != "win32":
             os.chown(dst, src_stat.st_uid, src_stat.st_gid)
-        except OSError:
-            tty.debug(f"Can't change the permissions for {dst}")
+        else:
+            from spack.util.win_acl import copy_file_permissions
+
+            copy_file_permissions(src, dst)
+    except OSError:
+        tty.debug(f"Can't change the permissions for {dst}")
 
 
 #: Type alias for link types
@@ -500,7 +500,7 @@ class YamlFilesystemView(FilesystemView):
         to_deactivate_sorted = list()
         depmap = dict()
         for spec in to_deactivate:
-            depmap[spec] = set(d for d in spec.traverse(root=False) if d in to_deactivate)
+            depmap[spec] = {d for d in spec.traverse(root=False) if d in to_deactivate}
 
         while depmap:
             for spec in [s for s, d in depmap.items() if not d]:
@@ -601,7 +601,7 @@ class YamlFilesystemView(FilesystemView):
     def print_conflict(self, spec_active, spec_specified, level="error"):
         "Singular print function for spec conflicts."
         cprint = getattr(tty, level)
-        color = sys.stdout.isatty()
+        color = tty.color.get_color_when()
         linked = tty.color.colorize("   (@gLinked@.)", color=color)
         specified = tty.color.colorize("(@rSpecified@.)", color=color)
         cprint(
@@ -841,14 +841,14 @@ def get_spec_from_file(filename) -> Optional[spack.spec.Spec]:
 
 
 def colorize_root(root):
-    colorize = ft.partial(tty.color.colorize, color=sys.stdout.isatty())
+    colorize = ft.partial(tty.color.colorize, color=tty.color.get_color_when())
     pre, post = map(colorize, "@M[@. @M]@.".split())
     return f"{pre}{root}{post}"
 
 
 def colorize_spec(spec):
-    "Colorize spec output if in TTY."
-    if sys.stdout.isatty():
+    "Colorize spec output unless colors are turned off."
+    if tty.color.get_color_when():
         return spec.cshort_spec
     else:
         return spec.short_spec

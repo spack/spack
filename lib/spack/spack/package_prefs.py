@@ -5,7 +5,6 @@ import stat
 import warnings
 
 import spack.config
-import spack.error
 import spack.repo
 import spack.spec
 from spack.error import ConfigError
@@ -159,27 +158,6 @@ class PackagePrefs:
         }
 
 
-def is_spec_buildable(spec):
-    """Return true if the spec is configured as buildable"""
-    allpkgs = spack.config.get("packages")
-    all_buildable = allpkgs.get("all", {}).get("buildable", True)
-    so_far = all_buildable  # the default "so far"
-
-    def _package(s):
-        pkg_cls = spack.repo.PATH.get_pkg_class(s.name)
-        return pkg_cls(s)
-
-    # check whether any providers for this package override the default
-    if any(
-        _package(spec).provides(name) and entry.get("buildable", so_far) != so_far
-        for name, entry in allpkgs.items()
-    ):
-        so_far = not so_far
-
-    spec_buildable = allpkgs.get(spec.name, {}).get("buildable", so_far)
-    return spec_buildable
-
-
 def get_package_dir_permissions(spec):
     """Return the permissions configured for the spec.
 
@@ -187,7 +165,7 @@ def get_package_dir_permissions(spec):
     attribute sticky for the directory. Package-specific settings take
     precedent over settings for ``all``"""
     perms = get_package_permissions(spec)
-    if perms & stat.S_IRWXG and spack.config.get("config:allow_sgid", True):
+    if perms & stat.S_IRWXG and spack.config.CONFIG.get("config:allow_sgid", True):
         perms |= stat.S_ISGID
         if spec.concrete and "/afs/" in spec.prefix:
             warnings.warn(
@@ -206,7 +184,7 @@ def get_package_permissions(spec):
     # Get read permissions level
     for name in (spec.name, "all"):
         try:
-            readable = spack.config.get("packages:%s:permissions:read" % name, "")
+            readable = spack.config.CONFIG.get("packages:%s:permissions:read" % name, "")
             if readable:
                 break
         except AttributeError:
@@ -215,7 +193,7 @@ def get_package_permissions(spec):
     # Get write permissions level
     for name in (spec.name, "all"):
         try:
-            writable = spack.config.get("packages:%s:permissions:write" % name, "")
+            writable = spack.config.CONFIG.get("packages:%s:permissions:write" % name, "")
             if writable:
                 break
         except AttributeError:
@@ -253,13 +231,9 @@ def get_package_group(spec):
     Package-specific settings take precedence over settings for ``all``"""
     for name in (spec.name, "all"):
         try:
-            group = spack.config.get("packages:%s:permissions:group" % name, "")
+            group = spack.config.CONFIG.get("packages:%s:permissions:group" % name, "")
             if group:
                 break
         except AttributeError:
             group = ""
     return group
-
-
-class VirtualInPackagesYAMLError(spack.error.SpackError):
-    """Raised when a disallowed virtual is found in packages.yaml"""

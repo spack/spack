@@ -18,6 +18,7 @@ import sys
 import time
 import traceback
 import urllib.parse
+import warnings
 from html.parser import HTMLParser
 from http.client import IncompleteRead
 from pathlib import Path, PurePosixPath
@@ -34,8 +35,7 @@ import spack.util.executable
 import spack.util.parallel
 import spack.util.url
 import spack.util.url as url_util
-from spack.llnl.util import tty
-from spack.util import lang
+from spack.util import lang, tty
 from spack.util.filesystem import mkdirp, working_dir
 
 from .executable import CommandNotFoundError, Executable
@@ -115,6 +115,23 @@ def is_transient_error(e: Exception) -> bool:
     return False
 
 
+def is_precondition_error(e: Exception) -> bool:
+    """Return True if HTTP/Boto3 error is related to a precondition error.
+
+    Examples of precontition errors:
+        HTTP status code 412
+        Boto error 'PreconditionFailed'
+    """
+    if isinstance(e, HTTPError) and 412 == e.code:
+        return True
+
+    # Handle boto errors types by string name to avoid import
+    if "PreconditionFailed" in str(e):
+        return True
+
+    return False
+
+
 _P = ParamSpec("_P")
 _R = TypeVar("_R")
 
@@ -190,7 +207,7 @@ class SpackHTTPSHandler(HTTPSHandler):
 
 def custom_ssl_certs() -> Optional[Tuple[bool, str]]:
     """Returns a tuple (is_file, path) if custom SSL certifates are configured and valid."""
-    ssl_certs = spack.config.get("config:ssl_certs")
+    ssl_certs = spack.config.CONFIG.get("config:ssl_certs")
     if not ssl_certs:
         return None
     path = spack.config.substitute_path_variables(ssl_certs)
@@ -257,8 +274,8 @@ def _urlopen():
 
     # And dynamically dispatch based on the config:verify_ssl.
     def dispatch_open(fullurl, data=None, timeout=None):
-        opener = with_ssl if spack.config.get("config:verify_ssl", True) else without_ssl
-        timeout = timeout or spack.config.get("config:connect_timeout", 10)
+        opener = with_ssl if spack.config.CONFIG.get("config:verify_ssl", True) else without_ssl
+        timeout = timeout or spack.config.CONFIG.get("config:connect_timeout", 10)
         return opener.open(fullurl, data, timeout)
 
     return dispatch_open
@@ -387,8 +404,20 @@ def read_json(url: str):
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
 
-def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
+def push_to_url(
+    local_file_path,
+    remote_path,
+    keep_original=True,
+    content_type: Optional[str] = None,
+    if_match: Optional[str] = None,
+):
     remote_url = urllib.parse.urlparse(remote_path)
+    if if_match and remote_url.scheme != "s3":
+        warnings.warn(
+            "Pushing to URL with `if_match` is only supported for s3:// URLS\n"
+            "Files may be overwritten unexpectedly."
+        )
+
     if remote_url.scheme == "file":
         remote_file_path = url_util.local_file_path(remote_url)
         mkdirp(os.path.dirname(remote_file_path))
@@ -409,15 +438,27 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
                     raise
 
     elif remote_url.scheme == "s3":
-        if extra_args is None:
-            extra_args = {}
+        extra_args = {}
+        if if_match is not None:
+            # API ref https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+            extra_args.update({"IfMatch": if_match})
+        if content_type is not None:
+            extra_args.update({"ContentType": content_type})
 
         remote_path = remote_url.path
         while remote_path.startswith("/"):
             remote_path = remote_path[1:]
 
         s3 = get_s3_session(remote_url, method="push")
-        s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
+        if if_match is not None:
+            # IfMatch is only supported by put_object which has additional limitations
+            if os.stat(local_file_path).st_size >= 5e9:
+                raise spack.error.SpackError(f"File too large (max. 5GB): {local_file_path}")
+
+            with open(local_file_path, "rb") as fd:
+                s3.put_object(Bucket=remote_url.netloc, Key=remote_path, Body=fd, **extra_args)
+        else:
+            s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
             os.remove(local_file_path)
@@ -459,7 +500,7 @@ def base_curl_fetch_args(url, timeout=0):
         "-L",  # resolve 3xx redirects
         url,
     ]
-    if not spack.config.get("config:verify_ssl"):
+    if not spack.config.CONFIG.get("config:verify_ssl"):
         curl_args.append("-k")
 
     if sys.stdout.isatty() and tty.msg_enabled():
@@ -467,7 +508,7 @@ def base_curl_fetch_args(url, timeout=0):
     else:
         curl_args.append("-sS")  # show errors if fail
 
-    connect_timeout = spack.config.get("config:connect_timeout", 10)
+    connect_timeout = spack.config.CONFIG.get("config:connect_timeout", 10)
     if timeout:
         connect_timeout = max(int(connect_timeout), int(timeout))
     if connect_timeout > 0:
@@ -544,7 +585,7 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
     filename = os.path.basename(url)
     path = os.path.join(dest_dir, filename)
 
-    fetch_method = spack.config.get("config:url_fetch_method")
+    fetch_method = spack.config.CONFIG.get("config:url_fetch_method")
     tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
     if fetch_method and fetch_method.startswith("curl"):
         curl_exe = curl or require_curl()
@@ -577,7 +618,7 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 def _url_exists_urllib_impl(url):
     with urlopen(
         Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
-        timeout=spack.config.get("config:connect_timeout", 10),
+        timeout=spack.config.CONFIG.get("config:connect_timeout", 10),
     ) as _:
         pass
 
@@ -603,7 +644,7 @@ def url_exists(url, curl=None):
     url_result = urllib.parse.urlparse(url)
 
     # Use curl if configured to do so
-    fetch_method = spack.config.get("config:url_fetch_method", "urllib")
+    fetch_method = spack.config.CONFIG.get("config:url_fetch_method", "urllib")
     use_curl = fetch_method.startswith("curl") and url_result.scheme not in ("gs", "s3")
     if use_curl:
         curl_exe = curl or require_curl()
@@ -611,7 +652,7 @@ def url_exists(url, curl=None):
         # Telling curl to fetch the first byte (-r 0-0) is supposed to be
         # portable.
         curl_args = fetch_method.split()[1:] + ["--stderr", "-", "-s", "-f", "-r", "0-0", url]
-        if not spack.config.get("config:verify_ssl"):
+        if not spack.config.CONFIG.get("config:verify_ssl"):
             curl_args.append("-k")
         _ = curl_exe(*curl_args, fail_on_error=False, output=os.devnull)
         return curl_exe.returncode == 0
@@ -762,7 +803,7 @@ def list_url(url, recursive=False):
         if recursive:
             return list(_iter_s3_prefix(s3, url))
 
-        return list(set(key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)))
+        return list({key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)})
 
     elif url.scheme == "gs":
         gcs = GCSBucket(url)

@@ -9,20 +9,20 @@ import pytest
 import spack.concretize
 import spack.deptypes as dt
 import spack.directives
+import spack.hash_types as ht
 import spack.package_base
 import spack.paths
 import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.spec_parser
-import spack.store
 import spack.util.lang
 import spack.variant
 import spack.version as vn
 from spack.enums import PropagationPolicy
 from spack.error import SpecError, UnsatisfiableSpecError
-from spack.llnl.util.tty.color import colorize
 from spack.spec import ArchSpec, DependencySpec, Spec, SpecFormatSigilError, SpecFormatStringError
+from spack.util.tty.color import colorize
 from spack.variant import (
     InvalidVariantValueError,
     MultipleValuesInExclusiveVariantError,
@@ -324,12 +324,7 @@ class TestSpecSemantics:
             (
                 "libelf patches=ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2",
                 "libelf patches=ba5e3",  # constrain by a patch sha256 prefix
-                # TODO: the result below is not ideal. Prefix satisfies() works for patches, but
-                # constrain() isn't similarly special-cased to do the same thing
-                (
-                    "libelf patches=ba5e3,"
-                    "ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2"
-                ),
+                "libelf patches=ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2",
             ),
             # deptypes on direct deps
             (
@@ -363,6 +358,13 @@ class TestSpecSemantics:
                 "%[when='%c' virtuals=c]gcc@10.3.1",
                 "libelf %[when='+c' virtuals=c]gcc %[when='%c' virtuals=c]gcc@10.3.1",
             ),
+            # Edges under different when conditions are never in effect at the same time, so
+            # they are two separate constraints even when they cannot both be met at once.
+            (
+                "libelf ^[when='+foo'] mpich@3.0",
+                "^[when='+bar'] mpich@4.0",
+                "libelf ^[when='+foo'] mpich@3.0 ^[when='+bar'] mpich@4.0",
+            ),
         ],
     )
     def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
@@ -394,10 +396,10 @@ class TestSpecSemantics:
             (
                 'mpich cflags="-O3 -g"',
                 'mpich cflags=="-O3"',
-                'mpich cflags="-O3 -g"',
-                'mpich cflags="-O3 -g"',
-                [],
-                [],
+                'mpich cflags=="-O3" cflags="-g"',
+                'mpich cflags=="-O3" cflags="-g"',
+                [("cflags", "-O3")],
+                [("cflags", "-O3")],
             ),
             (
                 'mpich cflags=="-O3 -g"',
@@ -406,6 +408,14 @@ class TestSpecSemantics:
                 'mpich cflags=="-O3 -g"',
                 [("cflags", "-O3"), ("cflags", "-g")],
                 [("cflags", "-O3"), ("cflags", "-g")],
+            ),
+            (
+                "mpich cflags=-O2 cflags=-g cflags=-fPIC cflags==-pipe",
+                "mpich cflags==-O2 cflags=-g cflags==-fPIC cflags=-pipe",
+                "mpich cflags==-O2 cflags=-g cflags==-fPIC cflags==-pipe",
+                "mpich cflags==-O2 cflags=-g cflags==-fPIC cflags==-pipe",
+                [("cflags", "-O2"), ("cflags", "-fPIC"), ("cflags", "-pipe")],
+                [("cflags", "-O2"), ("cflags", "-fPIC"), ("cflags", "-pipe")],
             ),
         ],
     )
@@ -444,14 +454,31 @@ class TestSpecSemantics:
         assert set(propagated_lhs) <= _propagated_flags(c1)
         assert set(propagated_rhs) <= _propagated_flags(c2)
 
-    def test_constrain_specs_by_hash(self, default_mock_concretization, database):
+    def test_constrain_specs_by_hash(self, database):
         """Test that Specs specified only by their hashes can constrain each other."""
         mpich_dag_hash = "/" + database.query_one("mpich").dag_hash()
         spec = Spec(mpich_dag_hash[:7])
-        assert spec.constrain(Spec(mpich_dag_hash)) is False
+        assert spec.constrain(mpich_dag_hash) is True
         assert spec.abstract_hash == mpich_dag_hash[1:]
+        # the full hash is already there, so constraining with it again changes nothing
+        assert spec.constrain(mpich_dag_hash) is False
 
-    def test_mismatched_constrain_spec_by_hash(self, default_mock_concretization, database):
+    def test_constrain_extends_the_hash_on_an_edge(self, mock_packages):
+        """The changed flag covers the abstract hash of a dependency too."""
+        spec = Spec("%gcc")
+        assert spec.constrain("%gcc/abc") is True
+        assert spec.constrain("%gcc/abc") is False
+
+    def test_failed_constrain_does_not_extend_the_hash(self, mock_packages):
+        """The abstract hash merges after the compatibility checks, so a constraint that is
+        rejected in another dimension leaves no hash behind."""
+        lhs = Spec("pkg-b")
+        with pytest.raises(UnsatisfiableSpecError):
+            lhs.constrain("pkg-a/abcdef")
+        assert lhs.abstract_hash is None
+        assert lhs == Spec("pkg-b")
+
+    def test_mismatched_constrain_spec_by_hash(self, database):
         """Test that Specs specified only by their incompatible hashes fail appropriately."""
         lhs = "/" + database.query_one("callpath ^mpich").dag_hash()
         rhs = "/" + database.query_one("callpath ^mpich2").dag_hash()
@@ -463,11 +490,11 @@ class TestSpecSemantics:
     @pytest.mark.parametrize(
         "lhs,rhs", [("libelf", Spec()), ("libelf", "@0:1"), ("libelf", "@0:1 %gcc")]
     )
-    def test_concrete_specs_which_satisfies_abstract(self, lhs, rhs, default_mock_concretization):
+    def test_concrete_specs_which_satisfies_abstract(self, lhs, rhs):
         """Test that constraining an abstract spec by a compatible concrete one makes the
         abstract spec concrete, and equal to the one it was constrained with.
         """
-        lhs, rhs = default_mock_concretization(lhs), Spec(rhs)
+        lhs, rhs = spack.concretize.concretize_one(lhs), Spec(rhs)
 
         assert lhs.intersects(rhs)
         assert rhs.intersects(lhs)
@@ -492,12 +519,6 @@ class TestSpecSemantics:
             ("foo@4.0%gcc", "@1:3%gcc"),
             ("foo@4.0%gcc@4.5", "@1:3%gcc@4.4:4.6"),
             ("builtin.mock.mpich", "builtin.mpich"),
-            ("mpileaks ^builtin.mock.mpich", "^builtin.mpich"),
-            ("mpileaks^mpich@1.2", "^mpich@2.0"),
-            ("mpileaks^mpich@4.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6"),
-            ("mpileaks^mpich@2.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6"),
-            ("mpileaks^mpich@4.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6"),
-            ("mpileaks^mpi@3", "^mpi@1.2:1.6"),
             ("mpileaks^mpi@3:", "^mpich2@1.4"),
             ("mpileaks^mpi@3:", "^mpich2"),
             ("mpileaks^mpi@3:", "^mpich@1.0"),
@@ -541,10 +562,8 @@ class TestSpecSemantics:
             ("multivalue-variant fee=bar", "multivalue-variant fee=baz"),
         ],
     )
-    def test_concrete_specs_which_do_not_satisfy_abstract(
-        self, lhs, rhs, default_mock_concretization
-    ):
-        lhs, rhs = default_mock_concretization(lhs), Spec(rhs)
+    def test_concrete_specs_which_do_not_satisfy_abstract(self, lhs, rhs):
+        lhs, rhs = spack.concretize.concretize_one(lhs), Spec(rhs)
 
         assert lhs.intersects(rhs) is False
         assert rhs.intersects(lhs) is False
@@ -560,8 +579,8 @@ class TestSpecSemantics:
     @pytest.mark.parametrize(
         "lhs,rhs", [("mpich", "mpich++foo"), ("mpich", "mpich~~foo"), ("mpich", "mpich foo==1")]
     )
-    def test_concrete_specs_which_satisfy_abstract(self, lhs, rhs, default_mock_concretization):
-        lhs, rhs = default_mock_concretization(lhs), Spec(rhs)
+    def test_concrete_specs_which_satisfy_abstract(self, lhs, rhs):
+        lhs, rhs = spack.concretize.concretize_one(lhs), Spec(rhs)
 
         assert lhs.intersects(rhs)
         assert rhs.intersects(lhs)
@@ -609,9 +628,9 @@ class TestSpecSemantics:
         c.constrain(lhs)
         assert c == constrained
 
-    def test_basic_satisfies_conditional_dep(self, default_mock_concretization):
+    def test_basic_satisfies_conditional_dep(self):
         """Tests basic semantic of satisfies with conditional dependencies, on a concrete spec"""
-        concrete = default_mock_concretization("mpileaks ^mpich")
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
 
         # This branch exists, so the condition is met, and is satisfied
         assert concrete.satisfies("^[virtuals=mpi] mpich")
@@ -623,13 +642,11 @@ class TestSpecSemantics:
         assert concrete.satisfies("^[when='^notapackage'] zmpi")
         assert not concrete.satisfies("^[when='^mpi'] zmpi")
 
-    def test_concrete_satisfies_does_not_consult_repo(
-        self, default_mock_concretization, monkeypatch
-    ):
+    def test_concrete_satisfies_does_not_consult_repo(self, monkeypatch):
         """Tests that `satisfies()` on a concrete lhs doesn't need the provider index, when the rhs
         contains a virtual name.
         """
-        concrete = default_mock_concretization("mpileaks ^mpich")
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
 
         # Reset the index, will raise if the `_provider_index` is ever removed as an attribute
         monkeypatch.setattr(spack.repo.PATH, "_provider_index", None)
@@ -658,13 +675,11 @@ class TestSpecSemantics:
         # We should not create again the index
         assert spack.repo.PATH._provider_index is None
 
-    def test_concrete_contains_does_not_consult_repo(
-        self, default_mock_concretization, monkeypatch
-    ):
+    def test_concrete_contains_does_not_consult_repo(self, monkeypatch):
         """Tests that `foo in spec` on a concrete spec doesn't need the provider index, when the
         item contains a virtual name.
         """
-        concrete = default_mock_concretization("mpileaks ^mpich")
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
 
         # Reset the index, will raise if the `_provider_index` is ever removed as an attribute
         monkeypatch.setattr(spack.repo.PATH, "_provider_index", None)
@@ -685,11 +700,9 @@ class TestSpecSemantics:
         assert Spec("mpileaks %[virtuals=mpi] mpich").satisfies("mpileaks ^mpi")
         assert Spec("mpileaks %[virtuals=mpi] mpich").satisfies("mpileaks %mpi")
 
-    def test_concrete_checks_on_virtual_names_dont_need_repo(
-        self, default_mock_concretization, monkeypatch
-    ):
+    def test_concrete_checks_on_virtual_names_dont_need_repo(self, monkeypatch):
         """Tests that ``%mpi`` or similar on a concrete spec doesn't need the repo"""
-        concrete = default_mock_concretization("mpileaks ^mpich")
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
 
         # We don't need the repo
         monkeypatch.setattr(spack.repo, "PATH", None)
@@ -740,6 +753,12 @@ class TestSpecSemantics:
         assert spec.satisfies("namespace=builtin_mock")
         assert not spec.satisfies("namespace=builtin")
 
+    def test_unset_namespace_does_not_satisfy_a_specified_one(self):
+        assert Spec("builtin_mock.pkg-a").satisfies("pkg-a")
+        assert not Spec("pkg-a").satisfies("builtin_mock.pkg-a")
+        assert Spec("pkg-a").intersects("builtin_mock.pkg-a")
+        assert Spec("builtin_mock.pkg-a").intersects("pkg-a")
+
     @pytest.mark.parametrize(
         "spec_string",
         [
@@ -754,11 +773,11 @@ class TestSpecSemantics:
         with pytest.raises(spack.spec_parser.SpecParsingError, match="Propagation"):
             Spec(spec_string)
 
-    def test_multivalued_variant_1(self, default_mock_concretization):
+    def test_multivalued_variant_1(self):
         # Semantics for a multi-valued variant is different
         # Depending on whether the spec is concrete or not
 
-        a = default_mock_concretization("multivalue-variant foo=bar")
+        a = spack.concretize.concretize_one("multivalue-variant foo=bar")
         b = Spec("multivalue-variant foo=bar,baz")
         assert not a.satisfies(b)
 
@@ -770,8 +789,8 @@ class TestSpecSemantics:
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
-    def test_multivalued_variant_3(self, default_mock_concretization):
-        a = default_mock_concretization("multivalue-variant foo=bar,baz")
+    def test_multivalued_variant_3(self):
+        a = spack.concretize.concretize_one("multivalue-variant foo=bar,baz")
         b = Spec("multivalue-variant foo=bar,baz,quux")
         assert not a.satisfies(b)
 
@@ -849,9 +868,9 @@ class TestSpecSemantics:
         s = Spec("callpath")
         assert s["callpath"] == s
 
-    def test_dep_index(self, default_mock_concretization):
+    def test_dep_index(self):
         """Tests __getitem__ and __contains__ for specs."""
-        s = default_mock_concretization("callpath")
+        s = spack.concretize.concretize_one("callpath")
 
         assert s["callpath"] == s
 
@@ -954,8 +973,8 @@ class TestSpecSemantics:
         with pytest.raises(ValueError):
             Spec("libelf foo")
 
-    def test_spec_formatting(self, default_mock_concretization):
-        spec = default_mock_concretization("multivalue-variant cflags=-O2")
+    def test_spec_formatting(self):
+        spec = spack.concretize.concretize_one("multivalue-variant cflags=-O2")
 
         # Testing named strings ie {string} and whether we get
         # the correct component
@@ -1005,10 +1024,7 @@ class TestSpecSemantics:
             ("{^pkg-a.variants.foo}", spec["pkg-a"], "foo"),
         ]
 
-        other_segments = [
-            ("{spack_root}", spack.paths.spack_root),
-            ("{spack_install}", spack.store.STORE.layout.root),
-        ]
+        other_segments = [("{spack_root}", spack.paths.spack_root)]
 
         def depify(depname, fmt_str, sigil):
             sig = len(sigil)
@@ -1064,8 +1080,8 @@ class TestSpecSemantics:
         spec = spack.spec.Spec()
         assert spec.format(fmt_str) == ""
 
-    def test_spec_formatting_spaces_in_key(self, default_mock_concretization):
-        spec = default_mock_concretization("multivalue-variant cflags=-O2")
+    def test_spec_formatting_spaces_in_key(self):
+        spec = spack.concretize.concretize_one("multivalue-variant cflags=-O2")
 
         # test that spaces are preserved, if they come after some other text, otherwise
         # they are trimmed.
@@ -1078,8 +1094,8 @@ class TestSpecSemantics:
     @pytest.mark.parametrize(
         "fmt_str", ["{@name}", "{@version.concrete}", "{%compiler.version}", "{/hashd}"]
     )
-    def test_spec_formatting_sigil_mismatches(self, default_mock_concretization, fmt_str):
-        spec = default_mock_concretization("multivalue-variant cflags=-O2")
+    def test_spec_formatting_sigil_mismatches(self, fmt_str):
+        spec = spack.concretize.concretize_one("multivalue-variant cflags=-O2")
 
         with pytest.raises(SpecFormatSigilError):
             spec.format(fmt_str)
@@ -1095,12 +1111,13 @@ class TestSpecSemantics:
             r"{_concrete}",
             r"{dag_hash}",
             r"{foo}",
+            r"{spack_install}",
             r"{+variants.debug}",
             r"{variants.this_variant_does_not_exist}",
         ],
     )
-    def test_spec_formatting_bad_formats(self, default_mock_concretization, fmt_str):
-        spec = default_mock_concretization("multivalue-variant cflags=-O2")
+    def test_spec_formatting_bad_formats(self, fmt_str):
+        spec = spack.concretize.concretize_one("multivalue-variant cflags=-O2")
         with pytest.raises(SpecFormatStringError):
             spec.format(fmt_str)
 
@@ -1167,11 +1184,11 @@ class TestSpecSemantics:
         assert spec.target < "broadwell"
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice(self, transitive, default_mock_concretization):
+    def test_splice(self, transitive):
         # Tests the new splice function in Spec using a somewhat simple case
         # with a variant with a conditional dependency.
-        spec = default_mock_concretization("splice-t")
-        dep = default_mock_concretization("splice-h+foo")
+        spec = spack.concretize.concretize_one("splice-t")
+        dep = spack.concretize.concretize_one("splice-h+foo")
 
         # Sanity checking that these are not the same thing.
         assert dep.dag_hash() != spec["splice-h"].dag_hash()
@@ -1352,9 +1369,9 @@ class TestSpecSemantics:
                 assert edge.depflag == depflag
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_with_cached_hashes(self, default_mock_concretization, transitive):
-        spec = default_mock_concretization("splice-t")
-        dep = default_mock_concretization("splice-h+foo")
+    def test_splice_with_cached_hashes(self, transitive):
+        spec = spack.concretize.concretize_one("splice-t")
+        dep = spack.concretize.concretize_one("splice-h+foo")
 
         # monkeypatch hashes so we can test that they are cached
         spec._hash = "aaaaaa"
@@ -1371,9 +1388,9 @@ class TestSpecSemantics:
         assert out["splice-z"].dag_hash() == out_z_expected.dag_hash()
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_input_unchanged(self, default_mock_concretization, transitive):
-        spec = default_mock_concretization("splice-t")
-        dep = default_mock_concretization("splice-h+foo")
+    def test_splice_input_unchanged(self, transitive):
+        spec = spack.concretize.concretize_one("splice-t")
+        dep = spack.concretize.concretize_one("splice-h+foo")
         orig_spec_hash = spec.dag_hash()
         orig_dep_hash = dep.dag_hash()
         spec.splice(dep, transitive)
@@ -1383,13 +1400,13 @@ class TestSpecSemantics:
         assert dep.dag_hash() == orig_dep_hash
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_subsequent(self, default_mock_concretization, transitive):
-        spec = default_mock_concretization("splice-t")
-        dep = default_mock_concretization("splice-h+foo")
+    def test_splice_subsequent(self, transitive):
+        spec = spack.concretize.concretize_one("splice-t")
+        dep = spack.concretize.concretize_one("splice-h+foo")
         out = spec.splice(dep, transitive)
 
         # Now we attempt a second splice.
-        dep = default_mock_concretization("splice-z+bar")
+        dep = spack.concretize.concretize_one("splice-z+bar")
 
         # Transitivity shouldn't matter since Splice Z has no dependencies.
         out2 = out.splice(dep, transitive)
@@ -1400,9 +1417,9 @@ class TestSpecSemantics:
         assert out2.spliced
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_dict(self, default_mock_concretization, transitive):
-        spec = default_mock_concretization("splice-t")
-        dep = default_mock_concretization("splice-h+foo")
+    def test_splice_dict(self, transitive):
+        spec = spack.concretize.concretize_one("splice-t")
+        dep = spack.concretize.concretize_one("splice-h+foo")
         out = spec.splice(dep, transitive)
 
         # Sanity check all hashes are unique...
@@ -1417,9 +1434,9 @@ class TestSpecSemantics:
         assert len(build_spec_nodes) == 1
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_dict_roundtrip(self, default_mock_concretization, transitive):
-        spec = default_mock_concretization("splice-t")
-        dep = default_mock_concretization("splice-h+foo")
+    def test_splice_dict_roundtrip(self, transitive):
+        spec = spack.concretize.concretize_one("splice-t")
+        dep = spack.concretize.concretize_one("splice-h+foo")
         out = spec.splice(dep, transitive)
 
         # Sanity check all hashes are unique...
@@ -1476,23 +1493,32 @@ class TestSpecSemantics:
 
     @pytest.mark.regression("18527")
     def test_satisfies_dependencies_ordered(self):
-        d = Spec("zmpi ^fake")
+        d = Spec("zmpi")
+        d._add_dependency(Spec("fake"), depflag=dt.LINK, virtuals=())
         s = Spec("mpileaks")
-        s._add_dependency(d, depflag=0, virtuals=())
+        s._add_dependency(d, depflag=dt.LINK, virtuals=())
         assert s.satisfies("mpileaks ^zmpi ^fake")
 
+    def test_satisfies_transitive_dependencies_require_link_run_path(self):
+        """A ^dep constraint is satisfied by a direct dependency of any type, or one in the
+        link/run closure. zmpi's gcc may concretize to a pure build dependency, which is
+        neither, so deptype-less edges are not traversed."""
+        assert Spec("mpileaks ^zmpi %gcc").satisfies("^zmpi")
+        assert not Spec("mpileaks ^zmpi %gcc").satisfies("^gcc")
+        assert not Spec("mpileaks ^[deptypes=link] zmpi %gcc").satisfies("^gcc")
+
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_swap_names(self, default_mock_concretization, transitive):
-        spec = default_mock_concretization("splice-vt")
-        dep = default_mock_concretization("splice-a+foo")
+    def test_splice_swap_names(self, transitive):
+        spec = spack.concretize.concretize_one("splice-vt")
+        dep = spack.concretize.concretize_one("splice-a+foo")
         out = spec.splice(dep, transitive)
         assert dep.name in out
         assert transitive == ("+foo" in out["splice-z"])
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_swap_names_mismatch_virtuals(self, default_mock_concretization, transitive):
-        vt = default_mock_concretization("splice-vt")
-        vh = default_mock_concretization("splice-vh+foo")
+    def test_splice_swap_names_mismatch_virtuals(self, transitive):
+        vt = spack.concretize.concretize_one("splice-vt")
+        vh = spack.concretize.concretize_one("splice-vh+foo")
         with pytest.raises(spack.spec.SpliceError, match="virtual"):
             vt.splice(vh, transitive)
 
@@ -1606,8 +1632,8 @@ class TestSpecSemantics:
             ),
         ],
     )
-    def test_virtual_deps_bindings(self, default_mock_concretization, spec_str, specs_in_dag):
-        s = default_mock_concretization(spec_str)
+    def test_virtual_deps_bindings(self, spec_str, specs_in_dag):
+        s = spack.concretize.concretize_one(spec_str)
         for label, expected in specs_in_dag:
             assert label in s
             assert s[label].satisfies(expected), label
@@ -1648,15 +1674,13 @@ class TestSpecSemantics:
             ),
         ],
     )
-    def test_conditional_dependencies_satisfies(
-        self, spec_str, abstract_tests, concrete_tests, default_mock_concretization
-    ):
+    def test_conditional_dependencies_satisfies(self, spec_str, abstract_tests, concrete_tests):
         """Tests satisfaction semantics for conditional specs, in different scenarios."""
         s = Spec(spec_str)
         for c, result in abstract_tests:
             assert s.satisfies(c) is result
 
-        concrete = default_mock_concretization(spec_str)
+        concrete = spack.concretize.concretize_one(spec_str)
         for c, result in concrete_tests:
             assert concrete.satisfies(c) is result
 
@@ -1803,27 +1827,27 @@ def test_merge_anonymous_spec_with_named_spec(anonymous, named, expected):
     assert s == Spec(expected)
 
 
-def test_spec_installed(default_mock_concretization, database):
-    """Test whether Spec.installed works."""
+def test_spec_installed(database):
+    """Test whether Database.installed works."""
     # a known installed spec should say that it's installed
     specs = database.query()
     spec = specs[0]
-    assert spec.installed
-    assert spec.copy().installed
+    assert database.installed(spec)
+    assert database.installed(spec.copy())
 
     # an abstract spec should say it's not installed
     spec = Spec("not-a-real-package")
-    assert not spec.installed
+    assert not database.installed(spec)
 
     # pkg-a is not in the mock DB and is not installed
-    spec = default_mock_concretization("pkg-a")
-    assert not spec.installed
+    spec = spack.concretize.concretize_one("pkg-a")
+    assert not database.installed(spec)
 
 
 @pytest.mark.regression("30678")
-def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, default_mock_concretization):
+def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, config):
     # create a concrete spec
-    a = default_mock_concretization("pkg-a")
+    a = spack.concretize.concretize_one("pkg-a")
     dag_hashes = {spec.name: spec.dag_hash() for spec in a.traverse()}
 
     # make it look like an old DAG hash spec with no package hash on the spec.
@@ -1833,9 +1857,7 @@ def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, default_mock_concreti
 
     for spec in a.traverse():
         assert dag_hashes[spec.name] == spec.dag_hash()
-
-        with pytest.raises(ValueError, match="Cannot call package_hash()"):
-            spec.package_hash()
+        assert "package_hash" not in spec.to_node_dict()
 
 
 def test_spec_trim(mock_packages, config):
@@ -1883,9 +1905,9 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
     assert not getattr(spec["dt-diamond-bottom"], "_package_hash", None)
 
 
-def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_concretization):
-    a1 = default_mock_concretization("pkg-a")
-    a2 = default_mock_concretization("pkg-a")
+def test_package_hash_affects_dunder_and_dag_hash(mock_packages, config):
+    a1 = spack.concretize.concretize_one("pkg-a")
+    a2 = spack.concretize.concretize_one("pkg-a")
 
     assert hash(a1) == hash(a2)
     assert a1.dag_hash() == a2.dag_hash()
@@ -1903,11 +1925,11 @@ def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_co
     assert a1.dag_hash() != a2.dag_hash()
 
 
-def test_intersects_and_satisfies_on_concretized_spec(default_mock_concretization):
+def test_intersects_and_satisfies_on_concretized_spec(config, mock_packages):
     """Test that a spec obtained by concretizing an abstract spec, satisfies the abstract spec
     but not vice-versa.
     """
-    a1 = default_mock_concretization("pkg-a@1.0")
+    a1 = spack.concretize.concretize_one("pkg-a@1.0")
     a2 = Spec("pkg-a@1.0")
 
     assert a1.intersects(a2)
@@ -1926,8 +1948,8 @@ def test_intersects_and_satisfies_on_concretized_spec(default_mock_concretizatio
     ],
 )
 @pytest.mark.regression("35597")
-def test_abstract_provider_in_spec(abstract_spec, spec_str, default_mock_concretization):
-    s = default_mock_concretization(spec_str)
+def test_abstract_provider_in_spec(abstract_spec, spec_str, config, mock_packages):
+    s = spack.concretize.concretize_one(spec_str)
     assert abstract_spec in s
 
 
@@ -1973,14 +1995,40 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "target=x86_64:", "target=:power9", (False, False, False)),
         (Spec, "target=:haswell", "target=:power9", (False, False, False)),
         (Spec, "target=:haswell", "target=ppc64le:", (False, False, False)),
-        # Intersection among target ranges for the same architecture
-        (Spec, "target=:haswell", "target=x86_64:", (True, True, True)),
+        # Target ranges in one family: ":haswell" is a strict subset of "x86_64:", since x86_64
+        # is the family root and broadwell and later are above haswell.
+        (Spec, "target=:haswell", "target=x86_64:", (True, True, False)),
         (Spec, "target=:haswell", "target=x86_64_v4:", (False, False, False)),
-        # Edge case of uarch that split in a diamond structure, from a common ancestor
-        (Spec, "target=:cascadelake", "target=:cannonlake", (False, False, False)),
+        # Microarchitectures splitting in a diamond: targets up to the common ancestor (skylake)
+        # are below both bounds, so the ranges intersect without either containing the other.
+        (Spec, "target=:cascadelake", "target=:cannonlake", (True, False, False)),
+        # The same diamond seen from below: targets from icelake up are above both bounds.
+        (Spec, "target=cascadelake:", "target=cannonlake:", (True, False, False)),
+        # Ranges that are singletons are canonicalized to their only element
+        (Spec, "target=:aarch64", "target=aarch64", (True, True, True)),
+        (Spec, "target=aarch64:aarch64", "target=aarch64", (True, True, True)),
+        (Spec, "target=icelake:icelake", "target=icelake", (True, True, True)),
+        # A range covered only by the union of the rhs ranges, not by a single one of them
+        (Spec, "target=:alderlake", "target=:icelake,:arrowlake", (True, True, False)),
+        (
+            Spec,
+            "target=:x86_64_v3",
+            "target=x86_64_v3:x86_64_v4,:sandybridge",
+            (True, True, False),
+        ),
+        # target=* is an alias for target=: and means the unbounded range
+        (Spec, "target=:", "target=:", (True, True, True)),
+        (Spec, "target=*", "target=:", (True, True, True)),
+        # Bounds outside the microarchitecture table compare by name only, without raising
+        (Spec, "target=foo:", "target=foo:", (True, True, True)),
+        (Spec, "target=foo", "target=foo:", (True, True, False)),
+        (Spec, "target=x86_64:", "target=foo:", (False, False, False)),
+        (Spec, "target=haswell", "target=foo:", (False, False, False)),
         # Spec with compilers
         (Spec, "mpileaks %gcc@5", "mpileaks %gcc@6", (False, False, False)),
-        (Spec, "mpileaks ^callpath %gcc@5", "mpileaks ^callpath %gcc@6", (False, False, False)),
+        # %gcc sits behind an unpinned ^callpath edge, so callpath need not be one node:
+        # an mpileaks with two callpath nodes, one per compiler, satisfies both sides.
+        (Spec, "mpileaks ^callpath %gcc@5", "mpileaks ^callpath %gcc@6", (True, False, False)),
         (Spec, "mpileaks ^callpath %gcc@5", "mpileaks ^callpath %gcc@5.4", (True, False, True)),
     ],
 )
@@ -2041,9 +2089,26 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
             True,
             "target=x86_64_v2:haswell",
         ),
+        # a range already inside the other is the intersection, so there is nothing to narrow
+        (Spec, "target=:icelake", "target=x86_64:", False, "target=:icelake"),
+        # ":aarch64" contains only aarch64 and canonicalizes to the singleton instead of a range
+        (Spec, "target=:aarch64", "target=aarch64:", False, "target=aarch64"),
+        (Spec, "target=aarch64:", "target=:aarch64", True, "target=aarch64"),
+        # Constrain is idemptotent on the unbounded range
+        (Spec, "target=:", "target=:", False, "target=:"),
+        # A range covered by the union of the rhs ranges is already the intersection
+        (
+            Spec,
+            "target=:x86_64_v3",
+            "target=x86_64_v3:x86_64_v4,:sandybridge",
+            False,
+            "target=:x86_64_v3",
+        ),
+        # target=* can be constrained by a specific target
+        (Spec, "target=*", "target=haswell", True, "target=haswell"),
     ],
 )
-def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
+def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_packages):
     lhs = factory(lhs_str)
     rhs = factory(rhs_str)
 
@@ -2055,6 +2120,149 @@ def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
     rhs = factory(rhs_str)
     rhs.constrain(lhs)
     assert rhs == factory(constrained_str)
+
+
+def test_constrain_promotes_edge_propagation(mock_packages):
+    """Constraining an edge with a propagated edge to the same package promotes the policy; the
+    reverse never demotes it."""
+    lhs = Spec("mpileaks %callpath")
+    assert lhs.constrain("mpileaks %%callpath")
+    assert lhs == Spec("mpileaks %%callpath")
+
+    lhs = Spec("mpileaks %%callpath")
+    assert not lhs.constrain("mpileaks %callpath")
+    assert lhs == Spec("mpileaks %%callpath")
+
+
+def test_edge_propagation_is_part_of_spec_identity(mock_packages):
+    """%callpath and %%callpath are different states even though they permit the same solutions,
+    so they are distinct set elements, in line with to_dict, which serializes the policy."""
+    plain, propagated = Spec("mpileaks %callpath"), Spec("mpileaks %%callpath")
+    assert plain != propagated
+    assert hash(plain) != hash(propagated)
+    assert len({plain, propagated}) == 2
+
+
+def test_one_target_range_is_one_canonical_state(mock_packages):
+    """':icelake' and 'x86_64:icelake' denote the same range, since x86_64 is the family root.
+    Ranges are stored canonicalized, so the two are one state with one hash."""
+    long, short = Spec("pkg-a target=x86_64:icelake"), Spec("pkg-a target=:icelake")
+    assert long.to_dict() == short.to_dict()
+    assert long.dag_hash() == short.dag_hash()
+
+
+@pytest.mark.parametrize(
+    "range_str,target_str",
+    [(":aarch64", "aarch64"), ("aarch64:aarch64", "aarch64"), ("icelake:icelake", "icelake")],
+)
+def test_a_singleton_target_range_is_the_concrete_target(mock_packages, range_str, target_str):
+    """A range denoting a singleton is canonicalized to that element."""
+    ranged, concrete = Spec(f"pkg-a target={range_str}"), Spec(f"pkg-a target={target_str}")
+    assert ranged.to_dict() == concrete.to_dict()
+    assert ranged.dag_hash() == concrete.dag_hash()
+    assert ranged.architecture.target_concrete
+
+
+def test_a_target_range_inside_another_one_is_dropped_from_the_list(mock_packages):
+    """A list of ranges denotes their union, so a range inside another adds nothing to it and is
+    dropped, leaving one canonical state for that union."""
+    assert (
+        Spec("pkg-a target=cannonlake:,icelake:").to_dict()
+        == Spec("pkg-a target=cannonlake:").to_dict()
+    )
+
+
+def test_incomparable_target_bounds_meet_as_a_union_of_ranges(mock_packages):
+    """Microarchitectures are ordered by a DAG, not a lattice, so two ranges can have more than one
+    minimal common bound. The intersection is then a list of ranges."""
+    lhs, rhs = Spec("pkg-a target=cascadelake:"), Spec("pkg-a target=cannonlake:")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    assert str(forward.architecture.target) == "icelake:"
+    assert forward.to_dict() == backward.to_dict()
+
+    # the intersection is the greatest lower bound, not merely some spec inside both
+    assert Spec("pkg-a target=icelake").satisfies(forward)
+
+    # armv8.6a and neoverse_n1 have two minimal common upper bounds, so the result is a list
+    lhs, rhs = Spec("pkg-a target=armv8.6a:"), Spec("pkg-a target=neoverse_n1:")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    assert str(forward.architecture.target) == "ampere1:,neoverse_v3ae:"
+    assert forward.to_dict() == backward.to_dict()
+
+    # the most extreme case in the target graph: armv8.3a and cortex_a72 have four minimal
+    # common upper bounds, none of which contains another
+    lhs, rhs = Spec("pkg-a target=armv8.3a:"), Spec("pkg-a target=cortex_a72:")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    expected = "ampere1:,neoverse_n2:,neoverse_v1:,neoverse_v2:"
+    assert str(forward.architecture.target) == expected
+    assert forward.to_dict() == backward.to_dict()
+
+
+def test_adjacent_target_ranges_fuse_into_one_canonical_state(mock_packages):
+    """Two ranges tiling one interval denote the same set as the interval itself, so they are
+    fused into it: the tiling and the interval are one state that satisfies both ways."""
+    tiling = Spec("pkg-a target=nocona:nehalem,nehalem:haswell")
+    interval = Spec("pkg-a target=nocona:haswell")
+    assert str(tiling.architecture.target) == "nocona:haswell"
+    assert tiling.to_dict() == interval.to_dict()
+    assert tiling.dag_hash() == interval.dag_hash()
+    assert tiling.satisfies(interval) and interval.satisfies(tiling)
+
+
+def test_consecutive_targets_fuse_into_a_range(mock_packages):
+    """A list of targets whose union is an interval is canonicalized to that interval."""
+    listed = Spec("pkg-a target=alderlake,arrowlake")
+    ranged = Spec("pkg-a target=alderlake:arrowlake")
+    assert listed.to_dict() == ranged.to_dict()
+    assert listed.dag_hash() == ranged.dag_hash()
+
+
+def test_the_meet_of_a_range_and_its_tiling_is_the_range(mock_packages):
+    """Constraining a range by a tiling of a subrange fuses the intersection back into one
+    element, so the meet is a state that satisfies both operands."""
+    lhs, rhs = Spec("pkg-a target=:haswell"), Spec("pkg-a target=nocona:nehalem,nehalem:haswell")
+    forward, backward = lhs.copy(), rhs.copy()
+    forward.constrain(rhs)
+    backward.constrain(lhs)
+    assert str(forward.architecture.target) == "nocona:haswell"
+    assert forward.to_dict() == backward.to_dict()
+    assert forward.satisfies(lhs) and forward.satisfies(rhs)
+
+
+@pytest.mark.parametrize(
+    "target_str,canonical",
+    [
+        ("nocona:nehalem,nehalem:haswell", "nocona:haswell"),
+        ("alderlake,arrowlake", "alderlake:arrowlake"),
+        # the open range covers every target above nocona, leaving only the family root
+        ("nocona:,x86_64:core2", "nocona:,x86_64"),
+        ("nocona:,x86_64:nocona", "nocona:,x86_64"),
+        # ranges with a gap between them are not fused
+        ("x86_64:nocona,haswell:broadwell", ":nocona,haswell:broadwell"),
+        ("nocona,haswell", "haswell,nocona"),
+        # a range with incomparable bounds denotes no target and is dropped from the list
+        ("zen:haswell,nocona", "nocona"),
+    ],
+)
+def test_target_lists_have_one_canonical_idempotent_form(mock_packages, target_str, canonical):
+    """A target list is stored as a canonical decomposition of the set it denotes: parsing the
+    canonical form gives the same state as the original list."""
+    spec = Spec(f"pkg-a target={target_str}")
+    assert str(spec.architecture.target) == canonical
+    assert spec.to_dict() == Spec(f"pkg-a target={canonical}").to_dict()
+
+
+def test_unknown_target_names_in_lists_are_kept_verbatim(mock_packages):
+    """Bounds outside the microarchitecture table cannot be compared, so their elements are kept
+    as they are instead of raising."""
+    spec = Spec("pkg-a target=nocona:,foo:")
+    assert str(spec.architecture.target) == "foo:,nocona:"
 
 
 def test_constrain_dependencies_copies(mock_packages):
@@ -2072,8 +2280,8 @@ def test_constrain_dependencies_copies(mock_packages):
     assert y == Spec("^foo")
 
 
-def test_abstract_hash_intersects_and_satisfies(default_mock_concretization):
-    concrete: Spec = default_mock_concretization("pkg-a")
+def test_abstract_hash_intersects_and_satisfies(config, mock_packages):
+    concrete: Spec = spack.concretize.concretize_one("pkg-a")
     hash = concrete.dag_hash()
     hash_5 = hash[:5]
     hash_6 = hash[:6]
@@ -2105,6 +2313,20 @@ def test_abstract_hash_intersects_and_satisfies(default_mock_concretization):
     # disjoint concretization space
     assert_disjoint(abstract_none, concrete)
     assert_disjoint(abstract_none, abstract_5)
+
+
+def test_a_blank_sets_the_abstract_hash_off_from_any_value(mock_packages):
+    """str() prints a blank before the abstract hash, so a value that can absorb a slash, a
+    namespace, variant, flag or target, does not swallow it and the hash survives reparsing."""
+    for spec_str in (
+        "namespace=builtin_mock /abcdef",
+        "foo=bar /abcdef",
+        "pkg-a cflags=-O2 /abcdef",
+        "pkg-a target=haswell /abcdef",
+    ):
+        spec = Spec(spec_str)
+        round_tripped = Spec(str(spec))
+        assert round_tripped.abstract_hash == spec.abstract_hash, spec_str
 
 
 def test_edge_equality_does_not_depend_on_virtual_order():
@@ -2150,7 +2372,7 @@ def test_virtual_queries_work_for_strings_and_lists():
         assert parent.edges_to_dependencies(virtuals=[lang])  # string arg
 
 
-def test_old_format_strings_trigger_error(default_mock_concretization):
+def test_old_format_strings_trigger_error(config, mock_packages):
     s = spack.concretize.concretize_one("pkg-a")
     with pytest.raises(SpecFormatStringError):
         s.format("${PACKAGE}-${VERSION}-${HASH}")
@@ -2247,7 +2469,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, (), False, Spec()),),
+                ((0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),),
             ),
         ],
         # root with multiple deps
@@ -2261,9 +2483,9 @@ EMPTY_FLG = Spec().compiler_flags
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, (), False, Spec()),
-                    (0, 2, 0, (), False, Spec()),
-                    (0, 3, 0, (), False, Spec()),
+                    (0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),
+                    (0, 2, 0, (), False, PropagationPolicy.NONE, Spec()),
+                    (0, 3, 0, (), False, PropagationPolicy.NONE, Spec()),
                 ),
             ),
         ],
@@ -2278,9 +2500,9 @@ EMPTY_FLG = Spec().compiler_flags
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, (), True, Spec()),
-                    (0, 2, 0, (), True, Spec()),
-                    (0, 3, 0, (), True, Spec()),
+                    (0, 1, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (0, 2, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (0, 3, 0, (), True, PropagationPolicy.NONE, Spec()),
                 ),
             ),
         ],
@@ -2298,12 +2520,12 @@ EMPTY_FLG = Spec().compiler_flags
                     ("g", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, (), False, Spec()),
-                    (0, 2, 0, (), False, Spec()),
-                    (1, 3, 0, (), True, Spec()),
-                    (1, 4, 0, (), True, Spec()),
-                    (2, 5, 0, (), True, Spec()),
-                    (2, 6, 0, (), True, Spec()),
+                    (0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),
+                    (0, 2, 0, (), False, PropagationPolicy.NONE, Spec()),
+                    (1, 3, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (1, 4, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (2, 5, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (2, 6, 0, (), True, PropagationPolicy.NONE, Spec()),
                 ),
             ),
         ],
@@ -2337,7 +2559,7 @@ def test_comparison_after_breaking_hash_change():
     assert len({x, y}) == 2
 
 
-def test_satisfies_and_subscript_with_compilers(default_mock_concretization):
+def test_satisfies_and_subscript_with_compilers(config, mock_packages):
     """Tests the semantic of "satisfies" and __getitem__ for the following spec:
 
     [    ]  multivalue-variant@2.3
@@ -2352,7 +2574,7 @@ def test_satisfies_and_subscript_with_compilers(default_mock_concretization):
     [b   ]          ^gmake@4.4
     [bl  ]          ^pkg-b@1.0
     """
-    s = default_mock_concretization("multivalue-variant")
+    s = spack.concretize.concretize_one("multivalue-variant")
 
     # Check a direct build/link dependency
     assert s.satisfies("^pkg-a")
@@ -2379,6 +2601,95 @@ def test_satisfies_and_subscript_with_compilers(default_mock_concretization):
     assert s["pkg-a"].dependencies(name="gmake")[0] == s["pkg-a"]["gmake"]
 
 
+def test_flag_order_survives_formatting(mock_packages):
+    """Compiler flags are printed in the order they are stored, grouped into runs that agree on
+    whether they propagate. Flag order is significant to the build, so losing it changes the
+    hash."""
+    spec = Spec("pkg-a cflags==-O2").copy()
+    spec.constrain(Spec("pkg-a cflags=-g"))
+    assert [str(flag) for flag in spec.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert str(spec) == "pkg-a cflags==-O2 cflags=-g"
+
+    round_tripped = Spec(str(spec))
+    assert [str(flag) for flag in round_tripped.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert round_tripped.dag_hash() == spec.dag_hash()
+
+
+def test_an_anonymous_spec_is_the_top_of_the_order_only(mock_packages):
+    """A spec that leaves the name unset denotes every package, so everything is inside it and it
+    is inside nothing that names one. Being the bottom too would break transitivity."""
+    assert Spec("pkg-a").satisfies("")
+    assert Spec("").satisfies("")
+    assert not Spec("").satisfies("pkg-b")
+
+
+def test_the_direct_flag_follows_concreteness(config, mock_packages):
+    """A direct dependency is a constraint written with %, so the flag is set when a spec stops
+    being concrete and cleared when it becomes concrete again."""
+    mpileaks = spack.concretize.concretize_one("mpileaks")
+    assert not any(edge.direct for edge in mpileaks.traverse_edges(root=False))
+
+    mpileaks._mark_concrete(False)
+    assert all(edge.direct for edge in mpileaks.traverse_edges(root=False))
+
+    mpileaks._mark_concrete(True)
+    assert not any(edge.direct for edge in mpileaks.traverse_edges(root=False))
+
+
+def test_marking_an_abstract_spec_abstract_again_changes_nothing(mock_packages):
+    """The direct flag only flips when the concreteness actually changes, so marking an abstract
+    spec abstract leaves its transitive edges alone."""
+    spec = Spec("mpileaks ^callpath")
+    spec._mark_concrete(False)
+
+    assert not spec.edges_to_dependencies(name="callpath")[0].direct
+    assert not spec.satisfies("mpileaks %callpath")
+    assert spec.satisfies("mpileaks ^callpath")
+
+
+def test_a_spec_that_stopped_being_concrete_matches_a_direct_constraint(config, mock_packages):
+    """A spec that stops being concrete keeps every edge it had, so a direct dependency
+    constraint is matched by the package it depends on, and not by one further down."""
+    mpileaks = spack.concretize.concretize_one("mpileaks")
+    mpileaks._mark_concrete(False)
+
+    assert mpileaks.satisfies("mpileaks %callpath")
+    assert mpileaks.satisfies("mpileaks ^libelf")
+    assert not mpileaks.satisfies("mpileaks %libelf")
+
+
+def test_direct_constraint_nested_below_a_concrete_dependency(config, mock_packages):
+    """A % constraint below ^ is checked on the node it applies to, so when that node is
+    concrete its edges match without the direct flag, even if the root spec is abstract."""
+    callpath = spack.concretize.concretize_one("callpath")
+    root = Spec("mpileaks")
+    root.add_dependency_edge(callpath, depflag=dt.BUILD | dt.LINK, virtuals=())
+
+    assert root.satisfies("mpileaks ^callpath %dyninst")
+    assert root.satisfies("mpileaks ^callpath ^libelf")
+    assert not root.satisfies("mpileaks ^callpath %libelf")
+
+
+def test_a_direct_dependency_is_inside_a_transitive_one(mock_packages):
+    """'pkg-a ^pkg-b' means pkg-b is somewhere in the DAG and 'pkg-a %pkg-b' means it is a direct
+    dependency, so the second is inside the first and not the other way around."""
+    anywhere_in_dag = Spec("pkg-a ^pkg-b")
+    direct_dependency = Spec("pkg-a %pkg-b")
+    assert direct_dependency.satisfies(anywhere_in_dag)
+    assert not anywhere_in_dag.satisfies(direct_dependency)
+
+
+def test_every_edge_of_a_concrete_node_is_a_direct_dependency(mock_packages, config):
+    """A concrete spec records its edges without the direct flag, but each of them is a direct
+    dependency in fact, so it matches a direct constraint. A package further down does not."""
+    mpileaks = spack.concretize.concretize_one("mpileaks")
+    assert not mpileaks.edges_to_dependencies(name="callpath")[0].direct
+
+    assert mpileaks.satisfies("mpileaks %callpath")
+    assert mpileaks.satisfies("mpileaks ^libelf")
+    assert not mpileaks.satisfies("mpileaks %libelf")
+
+
 @pytest.mark.parametrize(
     "spec_str,spec_fmt,expected",
     [
@@ -2390,11 +2701,9 @@ def test_satisfies_and_subscript_with_compilers(default_mock_concretization):
         ("pkg-c", "{name}-{compiler.name}-{compiler.version}", "pkg-c-none-none"),
     ],
 )
-def test_spec_format_with_compiler_adaptors(
-    spec_str, spec_fmt, expected, default_mock_concretization
-):
+def test_spec_format_with_compiler_adaptors(spec_str, spec_fmt, expected, config, mock_packages):
     """Tests the output of spec format, when involving `Spec.compiler` adaptors"""
-    s = default_mock_concretization(spec_str)
+    s = spack.concretize.concretize_one(spec_str)
     assert s.format(spec_fmt) == expected
 
 
@@ -2432,7 +2741,7 @@ def test_long_spec():
         (["+baz", "+bar"], "+baz+bar"),
         (["@2.0:", "@:5.1", "+bar"], "@2.0:5.1 +bar"),
         # Anonymous specs with dependencies
-        (["^mpich@3.2", "^mpich@:4.0+foo"], "^mpich@3.2 +foo"),
+        (["^mpich@3.2", "^mpich@:4.0+foo"], "^mpich@3.2 ^mpich@:4.0+foo"),
         # Mix a real package with a virtual one. This test
         # should fail if we start using the repository
         (["^mpich@3.2", "^mpi+foo"], "^mpich@3.2 ^mpi+foo"),
@@ -2453,6 +2762,28 @@ def test_constrain_symbolically(constraints, expected):
     for c in reversed(constraints):
         reverse_order._constrain_symbolically(c)
     assert reverse_order == Spec(expected)
+
+
+def test_constrain_does_not_share_flags_or_architecture_with_the_rhs(mock_packages):
+    """A successful constrain copies what it takes from the right-hand side instead of aliasing
+    it, so narrowing the left-hand side further cannot reach a spec that was only ever read."""
+    lhs, rhs = Spec("pkg-a"), Spec("pkg-a cflags=-O2 target=x86_64:")
+    lhs.constrain(rhs)
+    before = rhs.to_dict()
+
+    # -g extends the flag list, ==-O2 constrains the propagation of -O2, haswell the range
+    lhs.constrain(Spec("pkg-a cflags==-O2 cflags=-g target=haswell"))
+    assert rhs.to_dict() == before
+
+
+def test_copy_does_not_share_flag_instances(mock_packages):
+    """CompilerFlag is a mutable string in FlagMap; it should not be shared on copy."""
+    old = Spec("pkg-a cflags=-O2 cflags==-g")
+    new = old.copy()
+    assert len(new.compiler_flags["cflags"]) == len(old.compiler_flags["cflags"]) == 2
+    for x, y in zip(old.compiler_flags["cflags"], new.compiler_flags["cflags"]):
+        assert x is not y
+        assert x == y and x.propagate == y.propagate and x.flag_group == y.flag_group
 
 
 @pytest.mark.parametrize(
@@ -2518,6 +2849,62 @@ def test_edge_representation(parent_str, child_str, kwargs, expected_str, expect
     assert repr(edge) == expected_repr
 
 
+def test_parallel_edges_sort_with_differing_propagation(mock_packages):
+    """Two edges to one package that differ only in propagation are compared on that field, so
+    ``PropagationPolicy`` needs ``<`` and not just ``==``."""
+    edges = [
+        DependencySpec(Spec("pkg-a"), Spec("pkg-e"), depflag=0, virtuals=(), direct=True),
+        DependencySpec(
+            Spec("pkg-a"),
+            Spec("pkg-e"),
+            depflag=0,
+            virtuals=(),
+            direct=True,
+            propagation=PropagationPolicy.PREFERENCE,
+        ),
+    ]
+    assert sorted(edges) == edges
+
+
+def test_satisfies_tries_every_parallel_edge(mock_packages):
+    """Satisfies is exhaustive when there are duplicates on abstract specs."""
+    spec = Spec("pkg-a ^[deptypes=link] pkg-b %pkg-c ^[deptypes=build] pkg-b %pkg-e")
+    assert spec.satisfies("pkg-a ^pkg-b %pkg-c")
+    assert spec.satisfies("pkg-a ^pkg-b %pkg-e")
+    assert not spec.satisfies("pkg-a ^pkg-b %pkg-c %pkg-e")
+
+
+def test_satisfies_checks_all_in_edges_of_shared_node():
+    """A node with multiple in-edges must be reachable through any of them; an in-edge that fails
+    on edge attributes must not shadow a parallel in-edge that matches."""
+    root, a, b, c = Spec("pkg-a"), Spec("pkg-b"), Spec("pkg-c"), Spec("pkg-d")
+    root.add_dependency_edge(a, depflag=dt.LINK, virtuals=())
+    root.add_dependency_edge(b, depflag=dt.LINK, virtuals=())
+    a.add_dependency_edge(c, depflag=dt.TEST | dt.RUN, virtuals=())
+    b.add_dependency_edge(c, depflag=dt.BUILD | dt.RUN, virtuals=())
+    # each in-edge is the only match for one assertion, so either fails if satisfies stops at
+    # the first in-edge of pkg-d regardless of iteration order
+    assert root.satisfies("^[deptypes=test] pkg-d")  # only through pkg-b -> pkg-d
+    assert root.satisfies("^[deptypes=build] pkg-d")  # only through pkg-c -> pkg-d
+    assert root.satisfies("^[deptypes=run] pkg-d")  # through either in-edge
+    assert not root.satisfies("^[deptypes=build,test] pkg-d")  # no single in-edge has both
+
+
+def test_satisfies_tries_every_parallel_edge_of_a_concrete_spec(config, mock_packages):
+    """Satisfies is exhaustive when there are duplicates on concrete specs."""
+    # dupe-tool-root --build--> dupe-tool@1.0 --build--> cmake
+    #                --link-->  dupe-tool-user --link--> dupe-tool@2.0 --build--> gmake
+    spec = spack.concretize.concretize_one("dupe-tool-root")
+    assert spec.satisfies("^[deptypes=build] dupe-tool@1")
+    assert spec.satisfies("^[deptypes=link] dupe-tool@2")
+    assert spec.satisfies("^[deptypes=build] dupe-tool@1 ^[deptypes=link] dupe-tool@2 %gmake")
+    # each dupe-tool node is the only match for one assertion, so either fails if satisfies bails
+    # out on the first dupe-tool it visits regardless of iteration order
+    assert spec.satisfies("^dupe-tool %cmake")  # only dupe-tool@1.0
+    assert spec.satisfies("^dupe-tool %gmake")  # only dupe-tool@2.0
+    assert not spec.satisfies("^dupe-tool %cmake %gmake")  # no single node has both
+
+
 @pytest.mark.parametrize(
     "spec_str,assertions",
     [
@@ -2580,13 +2967,426 @@ def test_specs_semantics_on_self(spec_str, mock_packages, config):
         ("mpileaks+debug", "@_R{+debug}"),
     ],
 )
-def test_highlighting_spec_parts(spec_str, expected_fmt, default_mock_concretization):
+def test_highlighting_spec_parts(spec_str, expected_fmt, config, mock_packages):
     """Tests correct highlighting of non-default versions and variants"""
-    s = default_mock_concretization(spec_str)
+    s = spack.concretize.concretize_one(spec_str)
     expected = colorize(expected_fmt, color=True)
+
     colorized_str = s.format(
         color=True,
-        highlight_version_fn=spack.package_base.non_preferred_version,
-        highlight_variant_fn=spack.package_base.non_default_variant,
+        version_style_fn=spack.package_base.non_preferred_version,
+        variant_style_fn=spack.package_base.non_default_variant,
     )
     assert expected in colorized_str
+
+
+@pytest.mark.parametrize("spec_str", ["mpileaks", "mpileaks ^zmpi"])
+def test_mark_concrete_roundtrip_preserves_hashes(spec_str, config, mock_packages):
+    """Tests that clearing concreteness and re-finalizing a spec must preserve the DAG hash of the
+    root and of every transitive dependency.
+    """
+    s = spack.concretize.concretize_one(spec_str)
+
+    # Record the DAG hash of every node in the DAG (root and transitive dependencies).
+    original = {node.name: node.dag_hash() for node in s.traverse()}
+    # Sanity check: we are exercising more than the root node.
+    assert len(original) > 1
+
+    # Un-mark concrete: this clears the cached hashes on every node in the DAG.
+    s._mark_concrete(False)
+    assert all(getattr(node, ht.dag_hash.attr) is None for node in s.traverse())
+
+    # Re-finalize the DAG: the cleared hashes must recompute to the original values.
+    s._finalize_concretization()
+    roundtrip = {node.name: node.dag_hash() for node in s.traverse()}
+    assert roundtrip == original
+
+
+def test_edge_already_matched_is_not_copied_in(mock_packages):
+    """An unconditional edge already covers a conditional edge to the same child, so constraining
+    with it adds nothing: the conditional edge is paired with the one matching it, whichever spec
+    it comes from."""
+    unconditional, conditional = Spec("%pkg-e"), Spec("%[when='+bvv'] pkg-e")
+    assert unconditional.intersects(conditional)
+    assert conditional.intersects(unconditional)
+
+    forward = unconditional.constrained(conditional)
+    backward = conditional.constrained(unconditional)
+    assert forward == unconditional
+    assert backward == unconditional
+    assert forward.to_dict() == backward.to_dict()
+
+
+def test_edges_differing_in_namespace_stay_parallel(mock_packages):
+    """`^pkg-b@1` does not satisfy `^builtin_mock.pkg-b` and vice versa: a concrete spec can have
+    a builtin_mock node next to a pkg-b@1 node from another repo, so the merge keeps both edges.
+    An edge that does have the namespace absorbs the one it satisfies."""
+    lhs, rhs = Spec("pkg-a ^pkg-b@1"), Spec("pkg-a ^builtin_mock.pkg-b")
+    forward, backward = lhs.constrained(rhs), rhs.constrained(lhs)
+    assert forward.to_dict() == backward.to_dict()
+    assert forward == Spec("pkg-a ^pkg-b@1 ^builtin_mock.pkg-b")
+    assert len(forward.edges_to_dependencies(name="pkg-b")) == 2
+
+    lhs, rhs = Spec("pkg-a ^pkg-b@1"), Spec("pkg-a ^builtin_mock.pkg-b@1")
+    forward, backward = lhs.constrained(rhs), rhs.constrained(lhs)
+    assert forward.to_dict() == backward.to_dict()
+    assert forward == Spec("pkg-a ^builtin_mock.pkg-b@1")
+
+
+def test_edge_propagation_is_merged(mock_packages):
+    """A propagated edge constrains the whole DAG, so it satisfies its unpropagated counterpart,
+    and constrain keeps the propagated policy from whichever spec has it."""
+    lhs, rhs = Spec("pkg-a ^pkg-b"), Spec("pkg-a %%pkg-b")
+    forward = lhs.copy()
+    forward.constrain(rhs)
+    backward = rhs.copy()
+    backward.constrain(lhs)
+    assert forward.to_dict() == backward.to_dict()
+    assert forward == Spec("pkg-a %%pkg-b")
+
+
+def test_edge_propagation_is_merged_at_parse_time(mock_packages):
+    """Duplicate % clauses to one name merge into a single direct edge that keeps the propagated
+    policy, whichever clause states it."""
+    assert Spec("mpileaks %callpath %%callpath") == Spec("mpileaks %%callpath")
+    assert Spec("mpileaks %%callpath %callpath") == Spec("mpileaks %%callpath")
+
+
+def test_satisfies_ignores_edge_propagation(mock_packages):
+    """%% expresses a preference the solver may override, so it does not narrow the set of DAGs:
+    satisfaction ignores it in both directions. This is one factor that makes the set of Spec
+    objects a preorder under satisfies instead of a partial order."""
+    assert Spec("mpileaks %%callpath").satisfies("mpileaks %callpath")
+    assert Spec("mpileaks %callpath").satisfies("mpileaks %%callpath")
+
+
+def test_conditional_propagated_edge_is_not_redundant(mock_packages):
+    """Satisfaction ignores edge propagation, but the edge redundancy check does not ignore it when
+    merging edges."""
+    s = Spec("mpileaks %callpath %%[when='+foo'] callpath")
+    assert s == Spec("mpileaks %%[when='+foo'] callpath %callpath")
+    assert len(s.edges_to_dependencies(name="callpath")) == 2
+
+    t = Spec("mpileaks %%[when='+foo'] callpath")
+    assert t.constrain("mpileaks %callpath")
+    assert t == s
+
+    # with equal propagation on both edges, the conditional edge is redundant and discarded
+    assert Spec("mpileaks %%callpath %%[when='+foo'] callpath") == Spec("mpileaks %%callpath")
+    assert Spec("mpileaks %callpath %[when='+foo'] callpath") == Spec("mpileaks %callpath")
+
+
+def test_direct_and_indirect_provider_of_one_virtual_stay_apart(mock_packages):
+    """A direct provider and an indirect one need not be the same node: '%c=llvm ^c=gcc' is
+    built with llvm but uses gcc somewhere at runtime."""
+    spec = Spec("mpileaks %c=llvm ^c=gcc")
+    assert spec.satisfies("%c=llvm")
+    assert spec.satisfies("^c=gcc")
+    assert len(spec.edges_to_dependencies()) == 2
+
+
+def test_two_providers_of_one_virtual_merge_as_parallel_edges(mock_packages):
+    """Two edges naming different providers of one virtual are two requirements, each matched
+    anywhere in the DAG. The parser and constrain keep them side by side."""
+    spec = Spec("mpileaks ^mpi=mpich ^mpi=zmpi")
+    assert spec == Spec("mpileaks ^mpi=zmpi ^mpi=mpich")
+
+    lhs, rhs = Spec("pkg-a ^mpi=mpich"), Spec("pkg-a ^mpi=zmpi")
+    assert lhs.intersects(rhs) and rhs.intersects(lhs)
+    forward, backward = lhs.constrained(rhs), rhs.constrained(lhs)
+    assert forward == Spec("pkg-a ^mpi=mpich ^mpi=zmpi")
+    assert forward.to_dict() == backward.to_dict()
+
+
+def test_bare_virtual_edge_is_absorbed_by_a_provider_edge(mock_packages):
+    """A bare '^mpi' edge is satisfied by any '^[virtuals=mpi] provider' edge, so the merge
+    keeps only the provider edge, whichever side it comes from."""
+    provider = Spec("pkg-a ^[virtuals=mpi] mpich")
+    assert provider.satisfies("pkg-a ^mpi")
+
+    forward = provider.copy()
+    assert forward.constrain("pkg-a ^mpi") is False
+    assert forward.to_dict() == provider.to_dict()
+
+    backward = Spec("pkg-a ^mpi").constrained(provider)
+    assert backward.to_dict() == provider.to_dict()
+
+    assert Spec("pkg-a ^mpi ^mpi=mpich").to_dict() == provider.to_dict()
+    assert Spec("pkg-a ^mpi=mpich ^mpi").to_dict() == provider.to_dict()
+
+
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        "pkg-a ^mpi@3 ^mpi=mpich",
+        "pkg-a ^mpi@3 ^[virtuals=mpi] mpich@3",
+        "pkg-a ^mpi+debug ^mpi=mpich",
+    ],
+)
+def test_constrained_virtual_edge_stays_apart_from_a_provider_edge(mock_packages, spec_str):
+    """A virtual's version, variants and other attributes are unrelated to the provider's, so
+    only a bare virtual edge is absorbed; anything more constrained is its own requirement."""
+    assert len(Spec(spec_str).edges_to_dependencies()) == 2
+
+
+def test_bare_direct_virtual_edge_is_absorbed_by_a_provider_edge(mock_packages):
+    """The same rule for direct deps: '%c' adds nothing next to '%c=gcc'."""
+    provider = Spec("pkg-a %c=gcc")
+    assert Spec("pkg-a %c %c=gcc").to_dict() == provider.to_dict()
+    assert Spec("pkg-a %c=gcc %c").to_dict() == provider.to_dict()
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs",
+    [
+        ("pkg-a ^mpi=mpich", "pkg-a ^mpi+debug"),
+        ("pkg-a ^mpi=mpich~debug", "pkg-a ^mpi+debug"),
+        ("pkg-a %mpi=mpich", "pkg-a %mpi+debug"),
+        ("pkg-a ^mpi=mpich", "pkg-a ^mpi %gcc"),
+        ("pkg-a ^mpi=mpich", "pkg-a ^mpi target=x86_64"),
+    ],
+)
+def test_provider_edge_does_not_satisfy_a_constrained_virtual(mock_packages, lhs, rhs):
+    """A virtual's variants and other non-version attributes have no defined meaning, so a
+    provider edge does not satisfy them, whatever the provider's own attributes say."""
+    assert not Spec(lhs).satisfies(rhs)
+
+
+def test_constrained_virtual_and_provider_edge_are_parallel_edges(mock_packages):
+    """The pairs above still intersect, and constrain keeps the two requirements side by
+    side."""
+    lhs, rhs = Spec("pkg-a ^mpi=mpich"), Spec("pkg-a ^mpi+debug")
+    assert lhs.intersects(rhs)
+    assert lhs.constrain(rhs)
+    assert len(lhs.edges_to_dependencies()) == 2
+    assert lhs.to_dict() == Spec("pkg-a ^mpi=mpich ^mpi+debug").to_dict()
+
+
+def test_anonymous_edge_is_absorbed_by_a_satisfying_named_edge(mock_packages):
+    """An anonymous edge requires some dependency to match it, so a named edge satisfying it
+    makes it redundant, from either side of the merge."""
+    named = Spec("%bar+foo")
+    assert named.satisfies("%+foo")
+
+    forward = named.copy()
+    assert forward.constrain("%+foo") is False
+    assert forward.to_dict() == named.to_dict()
+
+    backward = Spec("%+foo").constrained(named)
+    assert backward.to_dict() == named.to_dict()
+
+    transitive = Spec("pkg-a ^pkg-b@2")
+    assert transitive.constrain("pkg-a ^*@2") is False
+
+
+def test_anonymous_edge_not_satisfied_by_a_named_edge_stays(mock_packages):
+    """A named edge that does not satisfy the anonymous requirement leaves it in place."""
+    assert len(Spec("pkg-a ^pkg-b@1 ^*@2").edges_to_dependencies()) == 2
+
+
+def test_propagated_bare_virtual_edge_is_not_absorbed(mock_packages):
+    """A propagated edge is an input to the solver's objective, so a non-propagating provider
+    edge does not make it redundant."""
+    assert len(Spec("pkg-a %%c %c=gcc").edges_to_dependencies()) == 2
+
+
+def test_two_providers_under_conditions_that_exclude_each_other_are_fine(mock_packages):
+    """Only one provider can be the one at a time, so two of them named under conditions that
+    cannot hold together are not in each other's way."""
+    lhs = Spec("pkg-a %[when='+foo' virtuals=mpi] mpich")
+    rhs = Spec("pkg-a %[when='~foo' virtuals=mpi] zmpi")
+    assert lhs.intersects(rhs)
+    assert rhs.intersects(lhs)
+
+
+def test_parallel_build_and_link_edges_merge_cleanly(mock_packages):
+    """A build-only and a link-only edge to one package are two nodes that stay apart. The merge
+    unions the two edge lists and drops the edges satisfied by another."""
+    result = Spec("pkg-a ^[deptypes=build] pkg-b").constrained(
+        Spec("pkg-a ^[deptypes=build] pkg-b ^[deptypes=link] pkg-b")
+    )
+    assert result == Spec("pkg-a ^[deptypes=build] pkg-b ^[deptypes=link] pkg-b")
+    assert len(result.edges_to_dependencies(name="pkg-b")) == 2
+
+    # round-trips cleanly: copy, str()/reparse and to_dict/from_dict all agree
+    assert result.copy().to_dict() == result.to_dict()
+    assert Spec(str(result)).to_dict() == result.to_dict()
+    assert Spec.from_dict(result.to_dict()).to_dict() == result.to_dict()
+
+    # the same union from the other side: the pair absorbs the lone build edge
+    backward = Spec("pkg-a ^[deptypes=build] pkg-b ^[deptypes=link] pkg-b").constrained(
+        Spec("pkg-a ^[deptypes=build] pkg-b")
+    )
+    assert backward.to_dict() == result.to_dict()
+
+
+def test_parallel_direct_edges_are_always_the_same_edge(mock_packages):
+    """A package has at most one direct dependency on a given name, so two direct edges to one
+    name are always merged into one, whatever their deptypes."""
+    lhs, rhs = Spec("pkg-a %[deptypes=run] pkg-e"), Spec("pkg-a %[deptypes=link] pkg-e")
+    result = lhs.constrained(rhs)
+    assert result == Spec("pkg-a %[deptypes=link,run] pkg-e")
+
+    # idempotent: re-applying the same constraint does not change anything further
+    assert result.constrain(rhs) is False
+    assert result == Spec("pkg-a %[deptypes=link,run] pkg-e")
+
+
+def test_direct_edges_to_one_name_merge_their_virtuals(mock_packages):
+    """A package has at most one direct dependency on a name. Two direct edges to it are one
+    dependency, merging their virtuals as they merge their deptypes."""
+    spec = Spec("mpileaks %c=gcc %cxx=gcc")
+    assert spec == Spec("mpileaks %c,cxx=gcc")
+
+    lhs, rhs = Spec("pkg-a %c=gcc@5"), Spec("pkg-a %cxx=gcc")
+    forward, backward = lhs.constrained(rhs), rhs.constrained(lhs)
+    assert forward.to_dict() == backward.to_dict()
+    assert forward == Spec("pkg-a %c,cxx=gcc@5")
+
+
+def test_two_versions_of_one_provider_of_a_virtual_intersect(mock_packages):
+    """Two edges referring to the same provider for one virtual at versions that do not intersect
+    can be matched by a concrete spec with duplicate nodes, cause ^ can refer to two distinct
+    unification sets in which virtuals are unified: link/run closure and pure build deps."""
+    lhs, rhs = Spec("pkg-a ^mpi=mpich@3"), Spec("pkg-a ^mpi=mpich@4")
+    assert lhs.intersects(rhs)
+    assert rhs.intersects(lhs)
+    result = lhs.constrained(rhs)
+    assert result == Spec("pkg-a ^mpi=mpich@3 ^mpi=mpich@4")
+    example = Spec("pkg-a %[deptypes=build] mpi=mpich@3 ^[deptypes=link] mpi=mpich@4")
+    assert example.satisfies(result)
+
+
+def test_an_anonymous_dependency_is_a_parallel_edge(mock_packages):
+    """An edge with an anonymous target requires some dependency to match it. Constrain appends
+    it as a parallel edge, and discards it when an existing edge satisfies it."""
+    # idempotency: the meet of a spec with itself is itself
+    spec = Spec("pkg-a ^*@2")
+    assert spec.satisfies(spec)
+    assert spec.intersects(spec)
+    assert spec.constrain("pkg-a ^*@2") is False
+
+    # commutativity: the meet is the same from either side
+    forward, backward = Spec("").constrained(spec), spec.constrained("")
+    assert forward.to_dict() == backward.to_dict() == spec.to_dict()
+
+    # Two anonymous constraints can each be matched by a different dependency, so they remain
+    # parallel edges under intersection. The test asserts that under the preorder of satisfies
+    # both `parallel <= {lhs, rhs}` and `merged <= {lhs, rhs}`, but also that `merged <= parallel`
+    # while `parallel <= merged` is not the case. Constrain should pick the greatest lower bound,
+    # meaning that `merged` is the incorrect choice.
+    lhs, rhs = Spec("pkg-a ^+foo"), Spec("pkg-a ^+bar")
+    parallel, merged = Spec("pkg-a ^+foo ^+bar"), Spec("pkg-a ^+foo+bar")
+    assert parallel.satisfies(lhs) and parallel.satisfies(rhs)
+    assert merged.satisfies(lhs) and merged.satisfies(rhs)
+    assert merged.satisfies(parallel) and not parallel.satisfies(merged)
+    assert lhs.constrained(rhs) == parallel
+
+    lhs, rhs = Spec("pkg-a %+foo"), Spec("pkg-a %+bar")
+    parallel, merged = Spec("pkg-a %+foo %+bar"), Spec("pkg-a %+foo+bar")
+    assert parallel.satisfies(lhs) and parallel.satisfies(rhs)
+    assert merged.satisfies(lhs) and merged.satisfies(rhs)
+    assert merged.satisfies(parallel) and not parallel.satisfies(merged)
+    assert lhs.constrained(rhs) == parallel
+
+    # direct deps are written before the first ^ so %+bar binds to the root
+    result = Spec("pkg-a ^+foo").constrained("pkg-a %+bar")
+    assert result == Spec("pkg-a %+bar ^+foo")
+    assert len(result.edges_to_dependencies()) == 2
+
+    lhs, rhs = Spec("pkg-a ^*@1"), Spec("pkg-a ^*@2")
+    assert lhs.intersects(rhs) and rhs.intersects(lhs)
+    assert lhs.constrained(rhs) == Spec("pkg-a ^*@1 ^*@2")
+
+    # idempotency again, with several anonymous edges
+    spec = Spec("pkg-a ^+foo ^+bar")
+    before = spec.to_dict()
+    assert spec.constrain("pkg-a ^+foo ^+bar") is False
+    assert spec.to_dict() == before
+
+    # associativity: parallel edges accumulate the same way in any grouping
+    a, b, c = Spec("pkg-a ^+foo"), Spec("pkg-a ^+bar"), Spec("pkg-a ^+baz")
+    left, right = a.constrained(b).constrained(c), a.constrained(b.constrained(c))
+    assert left.to_dict() == right.to_dict()
+
+    # an anonymous edge satisfied by another anonymous edge is redundant, from either side
+    lhs, rhs = Spec("pkg-a ^*+foo"), Spec("pkg-a ^*+foo+bar")
+    forward, backward = lhs.constrained(rhs), rhs.constrained(lhs)
+    assert forward.to_dict() == backward.to_dict() == rhs.to_dict()
+
+    # a named edge alone satisfies both requirements of a named/anonymous pair
+    named, anonymous = Spec("pkg-a ^pkg-b@2"), Spec("pkg-a ^*@2")
+    forward, backward = named.constrained(anonymous), anonymous.constrained(named)
+    assert forward.to_dict() == backward.to_dict()
+    assert forward.satisfies(named) and named.satisfies(forward)
+
+
+def test_an_edge_bridging_two_parallel_edges(mock_packages):
+    """Edges to distinct virtuals of the same provider package stay parallel."""
+    spec = Spec("mpileaks ^mpi=mpich ^lapack=mpich ^mpi,lapack=zmpi")
+    assert spec == Spec("mpileaks ^mpi,lapack=zmpi ^mpi=mpich ^lapack=mpich")
+    assert len(spec.edges_to_dependencies()) == 3
+
+    lhs = Spec("pkg-a ^blas=openblas-with-lapack@1 ^lapack=openblas-with-lapack@2")
+    rhs = Spec("pkg-a ^blas,lapack=openblas-with-lapack")
+    assert lhs.intersects(rhs)
+    assert rhs.intersects(lhs)
+    forward, backward = lhs.constrained(rhs), rhs.constrained(lhs)
+    assert forward.to_dict() == backward.to_dict()
+    assert forward == Spec(
+        "pkg-a ^blas=openblas-with-lapack@1 ^lapack=openblas-with-lapack@2"
+        " ^blas,lapack=openblas-with-lapack"
+    )
+    assert len(forward.edges_to_dependencies()) == 3
+
+
+def test_edges_under_different_conditions_stay_parallel(mock_packages):
+    """Two direct edges to the same package name are one node only where both conditions hold, so
+    they stay parallel."""
+    lhs = Spec("pkg-a %[when='+bvv' virtuals=c] gcc")
+    rhs = Spec("pkg-a %[when='~bvv' virtuals=cxx] gcc")
+    result = lhs.constrained(rhs)
+    assert result == Spec("pkg-a %[when='+bvv' virtuals=c] gcc %[when='~bvv' virtuals=cxx] gcc")
+
+    # this instance would fail if virtuals=c,cxx were merged
+    example = Spec("pkg-a ~bvv %cxx=gcc")
+    assert example.satisfies(lhs) and example.satisfies(rhs)
+    assert example.satisfies(result)
+
+
+def test_conflicting_deps_under_one_unforced_condition_intersect(mock_packages):
+    """Both edges bind only where +foo holds, and pkg-a~foo satisfies both operands, so the
+    conflicting conditional deps do not make the pair disjoint."""
+    lhs, rhs = Spec("pkg-a %[when='+foo'] pkg-b@1"), Spec("pkg-a %[when='+foo'] pkg-b@2")
+    example = Spec("pkg-a ~foo")
+    assert example.satisfies(lhs) and example.satisfies(rhs)
+    assert lhs.intersects(rhs) and rhs.intersects(lhs)
+    result = lhs.constrained(rhs)
+    assert result == Spec("pkg-a %[when='+foo'] pkg-b@1 %[when='+foo'] pkg-b@2")
+    assert example.satisfies(result)
+    assert result.to_dict() == rhs.constrained(lhs).to_dict()
+
+
+def test_self_constrain_of_parallel_deptype_edges_is_idempotent(mock_packages):
+    """Two parallel edges constrained with an equal pair stay themselves. Pairing them by name
+    alone would merge build into the link edge and produce an edge neither spec required."""
+    s = Spec("pkg-a ^[deptypes=build] pkg-e ^[deptypes=link] pkg-e")
+    assert len(s.edges_to_dependencies(name="pkg-e")) == 2
+    changed = s.constrain(Spec("pkg-a ^[deptypes=build] pkg-e ^[deptypes=link] pkg-e"))
+    assert not changed
+    assert s.to_dict() == Spec("pkg-a ^[deptypes=build] pkg-e ^[deptypes=link] pkg-e").to_dict()
+
+
+def test_copy_keeps_a_redundant_parallel_edge_and_its_subtree(mock_packages):
+    """A structural copy reproduces every edge as it is. ``_dup_deps`` builds each edge directly,
+    since replaying them through ``add_dependency_edge`` would discard the pkg-b@1: edge before its
+    child pkg-e is attached."""
+    original = Spec("pkg-a ^[deptypes=link] pkg-b@1")
+    dep = Spec("pkg-b@1:")
+    dep._add_dependency(Spec("pkg-e"), depflag=dt.LINK, virtuals=())
+    original._add_dependency(dep, depflag=dt.LINK, virtuals=())
+
+    copy = original.copy()
+
+    assert copy == original
+    assert copy.to_dict() == original.to_dict()

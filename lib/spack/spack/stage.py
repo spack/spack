@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING, Callable, Dict, Generator, Iterable, List, Opt
 import spack.caches
 import spack.config
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.oci.image
 import spack.resource
 import spack.spec
@@ -25,12 +24,10 @@ import spack.util.crypto
 import spack.util.lang
 import spack.util.lock
 import spack.util.parallel
-import spack.util.path as sup
 import spack.util.string
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import colorize
+from spack.util import tty
 from spack.util.crypto import bit_length, prefix_bits
 from spack.util.editor import editor, executable
 from spack.util.filesystem import (
@@ -45,6 +42,8 @@ from spack.util.filesystem import (
     remove_linked_tree,
     symlink,
 )
+from spack.util.tty.colify import colify
+from spack.util.tty.color import colorize
 from spack.version import StandardVersion, VersionList
 
 if TYPE_CHECKING:
@@ -68,7 +67,9 @@ def compute_stage_name(spec):
     # commit values for git versions when using source mirrors
     if spec.concrete:
         spec_stage_structure += "{name}-{version}-{hash}"
-        stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
+        stage_name_structure = spack.config.CONFIG.get(
+            "config:stage_name", default=spec_stage_structure
+        )
     else:
         stage_name_structure = spec_stage_structure + "{name}-{version}"
     return spec.format_path(format_string=stage_name_structure)
@@ -194,7 +195,7 @@ def get_stage_root():
     global _stage_root
 
     if _stage_root is None:
-        candidates = spack.config.get("config:build_stage")
+        candidates = spack.config.CONFIG.get("config:build_stage")
         if isinstance(candidates, str):
             candidates = [candidates]
 
@@ -206,18 +207,6 @@ def get_stage_root():
         _stage_root = path
 
     return _stage_root
-
-
-def _mirror_roots():
-    mirrors = spack.config.get("mirrors")
-    return [
-        (
-            sup.substitute_path_variables(root)
-            if root.endswith(os.sep)
-            else sup.substitute_path_variables(root) + os.sep
-        )
-        for root in mirrors.values()
-    ]
 
 
 class AbstractStage(abc.ABC):
@@ -267,7 +256,11 @@ class AbstractStage(abc.ABC):
             lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
             stage_lock_path = os.path.join(get_stage_root(), ".lock")
             self._lock = spack.util.lock.Lock(
-                stage_lock_path, start=lock_id, length=1, desc=self.name
+                stage_lock_path,
+                start=lock_id,
+                length=1,
+                desc=self.name,
+                enable=spack.config.CONFIG.get("config:locks", True),
             )
         return self._lock
 
@@ -677,7 +670,7 @@ class Stage(AbstractStage):
                 f"{self.fetcher}. Spack lacks a tree hash to verify the integrity of this "
                 f"archive. Make sure {secure_msg}.",
             )
-        elif spack.config.get("config:checksum"):
+        elif spack.config.CONFIG.get("config:checksum"):
             self.fetcher.check()
 
     def cache_local(self):
@@ -1362,15 +1355,3 @@ def _fetch_and_checksum(
 
 class StageError(spack.error.SpackError):
     """Superclass for all errors encountered during staging."""
-
-
-class StagePathError(StageError):
-    """Error encountered with stage path."""
-
-
-class RestageError(StageError):
-    """Error encountered during restaging."""
-
-
-class VersionFetchError(StageError):
-    """Raised when we can't determine a URL to fetch a package."""

@@ -8,7 +8,6 @@ import spack.cmd.common.arguments
 import spack.cmd.modules
 import spack.config
 import spack.modules
-import spack.modules.lmod
 
 
 def add_command(parser, command_dict):
@@ -38,9 +37,7 @@ def setdefault(module_type, specs, args):
     spack.cmd.modules.one_spec_or_raise(specs)
     spec = specs[0]
     data = {"modules": {args.module_set_name: {"lmod": {"defaults": [str(spec)]}}}}
-    # Need to clear the cache if a SpackCommand is called during scripting
-    spack.modules.lmod.LmodConfiguration._registry = {}
     scope = spack.config.InternalConfigScope("lmod-setdefault", data)
-    with spack.config.override(scope):
+    with spack.config.CONFIG.override(scope):
         writer = spack.modules.module_types["lmod"].from_spec(spec, args.module_set_name)
         writer.update_module_defaults()

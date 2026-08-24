@@ -10,7 +10,7 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.solver.asp import SolverError, UnsatisfiableSpecError
 
 
@@ -35,7 +35,7 @@ def install_specs(mutable_database, mock_packages, mutable_config, install_mocke
 
 
 def _enable_splicing():
-    spack.config.set("concretizer:splice", {"automatic": True})
+    spack.config.CONFIG.set("concretizer:splice", {"automatic": True})
 
 
 @pytest.mark.parametrize("spec_str", ["splice-z", "splice-h@1"])
@@ -275,3 +275,39 @@ def test_spliced_transitive_dependency(install_specs, mutable_config):
     # Spliced build dependencies are removed
     assert len(spliced.dependencies(None, dt.BUILD)) == 0
     assert len(spliced["splice-t"].dependencies(None, dt.BUILD)) == 0
+
+
+def test_fresh_ancestor_of_spliced_dep_is_not_spliced(install_specs, mutable_config):
+    """Tests that a "fresh" node above a spliced reused dependency keeps self as build_spec."""
+    # splice-h is installed (reusable) and built against splice-z@1.0.0. Force its reuse so the
+    # solver must splice its splice-z child up to 1.0.2 rather than rebuild splice-h.
+    install_specs("splice-h@1.0.0+compat ^splice-z@1.0.0+compat")
+    mutable_config.set("packages", _make_specs_non_buildable(["splice-h"]))
+    _enable_splicing()
+
+    # splice-t is a fresh root: it depends on the reused, spliced splice-h.
+    concrete = spack.concretize.concretize_one(
+        "splice-t@1.0 ^splice-h@1.0.0+compat ^splice-z@1.0.2+compat"
+    )
+
+    assert all(node.concrete for node in concrete.traverse())
+
+    # The fresh root is not spliced
+    assert concrete.build_spec is concrete
+    assert not concrete.spliced
+
+    # All build specs are concrete
+    for node in concrete.traverse():
+        assert node.build_spec.concrete
+
+    # Being built from source, the fresh root keeps its build dependencies
+    assert concrete.dependencies(None, dt.BUILD)
+
+    # The genuinely reused dependency is still spliced, with a concrete build_spec
+    splice_h = concrete["splice-h"]
+    assert splice_h.build_spec is not splice_h
+    assert splice_h.spliced
+
+    # The leaf node is not spliced
+    splice_z = concrete["splice-z"]
+    assert splice_z.satisfies("@1.0.2") and not splice_z.spliced

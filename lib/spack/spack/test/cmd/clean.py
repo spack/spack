@@ -59,8 +59,12 @@ all_effects = ["stages", "downloads", "caches", "failures", "python_cache", "boo
         ("", []),
     ],
 )
-def test_function_calls(command_line, effects, mock_calls_for_clean, mutable_config):
-    mutable_config.set("bootstrap", {"root": "fake"})
+def test_function_calls(
+    command_line, effects, mock_calls_for_clean, mutable_config, tmp_path: pathlib.Path
+):
+    # Redirect only where it is read, so the other cases keep the store clingo is bootstrapped in
+    if "bootstrap" in effects:
+        mutable_config.set("bootstrap:root", str(tmp_path / "bootstrap"))
 
     # Call the command with the supplied command line
     clean(command_line)

@@ -50,32 +50,27 @@ import spack.error
 import spack.hash_types as ht
 import spack.hooks
 import spack.hooks.sbang
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
 import spack.paths
 import spack.platforms
-import spack.relocate as relocate
 import spack.spec
 import spack.stage
 import spack.store
 import spack.user_environment
 import spack.util.archive
 import spack.util.crypto
-import spack.util.file_cache as file_cache
 import spack.util.filesystem as fsys
 import spack.util.gpg
 import spack.util.lang
 import spack.util.parallel
-import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack import traverse
+from spack import relocate, traverse
 from spack.oci.image import (
     Digest,
     ImageReference,
@@ -93,6 +88,7 @@ from spack.oci.oci import (
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.stage import Stage
+from spack.util import file_cache, timer, tty
 from spack.util.executable import which
 from spack.util.filesystem import mkdirp
 
@@ -106,6 +102,7 @@ from .url_buildcache import (
     InvalidMetadataFile,
     ListMirrorSpecsError,
     MirrorMetadata,
+    NoVerifyException,
     URLBuildcacheEntry,
     get_entries_from_cache,
     get_url_buildcache_class,
@@ -200,7 +197,9 @@ class BinaryIndexCache:
         self._index_contents_key = "contents.json"
 
         # a FileCache instance storing copies of remote binary cache indices
-        self._index_file_cache: file_cache.FileCache = file_cache.FileCache(self._index_cache_root)
+        self._index_file_cache: file_cache.FileCache = file_cache.FileCache(
+            self._index_cache_root, enable_lock=spack.config.CONFIG.get("config:locks", True)
+        )
         self._index_file_cache_initialized = False
 
         # stores a map of mirror URL and version layout to index hash and cache key (index path)
@@ -316,7 +315,7 @@ class BinaryIndexCache:
         """
         return list(self._mirrors_for_spec.get(dag_hash, []))
 
-    def __contains__(self, dag_hash: str) -> bool:
+    def __contains__(self, dag_hash: object) -> bool:
         """Returns True if *dag_hash* is known to be available in at least one buildcache."""
         return dag_hash in self._mirrors_for_spec
 
@@ -603,21 +602,6 @@ def buildcache_relative_blobs_path(layout_version: int = CURRENT_BUILD_CACHE_LAY
     return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.BLOB))
 
 
-def buildcache_relative_blobs_url(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
-    cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.BLOB))
-
-
-def buildcache_relative_index_path(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
-    cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.INDEX))
-
-
-def buildcache_relative_index_url(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
-    cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.INDEX))
-
-
 @spack.util.lang.memoized
 def warn_v2_layout(mirror_url: str, action: str) -> bool:
     lines = textwrap.wrap(
@@ -645,7 +629,7 @@ def select_signing_key() -> str:
     keys = spack.util.gpg.signing_keys()
     num = len(keys)
     if num > 1:
-        raise PickKeyException(str(keys))
+        raise PickKeyException(keys)
     elif num == 0:
         raise NoKeyException(
             "No default key available for signing.\n"
@@ -797,7 +781,7 @@ def generate_key_index(mirror_url: str, tmpdir: str) -> None:
 
     target = os.path.join(tmpdir, "index.json")
 
-    index = {"keys": dict((fingerprint, {}) for fingerprint in sorted(set(fingerprints)))}
+    index: dict = {"keys": {fingerprint: {} for fingerprint in sorted(set(fingerprints))}}
     with open(target, "w", encoding="utf-8") as f:
         sjson.dump(index, f)
 
@@ -1615,91 +1599,78 @@ def _oci_config_from_tag(image_ref_and_tag: Tuple[ImageReference, str]) -> Optio
 
 
 def _oci_update_index(
-    image_ref: ImageReference, tmpdir: str, pool: concurrent.futures.Executor
+    image_ref: ImageReference,
+    tmpdir: str,
+    pool: concurrent.futures.Executor,
+    *,
+    timer=timer.NULL_TIMER,
 ) -> None:
-    tags = list_tags(image_ref)
+    with timer.measure("list"):
+        tags = list_tags(image_ref)
 
-    # Fetch all image config files in parallel
-    spec_dicts = pool.map(
-        _oci_config_from_tag, ((image_ref, tag) for tag in tags if tag_is_spec(tag))
-    )
+    with timer.measure("read"):
+        # Fetch all image config files in parallel
+        spec_dicts = pool.map(
+            _oci_config_from_tag, ((image_ref, tag) for tag in tags if tag_is_spec(tag))
+        )
 
-    # Populate the database
-    db_root_dir = os.path.join(tmpdir, "db_root")
-    db = BuildCacheDatabase(db_root_dir)
+        # Populate the database
+        db_root_dir = os.path.join(tmpdir, "db_root")
+        db = BuildCacheDatabase(db_root_dir)
 
-    for spec_dict in spec_dicts:
-        spec = spack.spec.Spec.from_dict(spec_dict)
-        db.add(spec)
-        db.mark(spec, "in_buildcache", True)
+        for spec_dict in spec_dicts:
+            spec = spack.spec.Spec.from_dict(spec_dict)
+            db.add(spec)
+            db.mark(spec, "in_buildcache", True)
 
-    # Create the index.json file
-    index_json_path = os.path.join(tmpdir, spack.database.INDEX_JSON_FILE)
-    with open(index_json_path, "w", encoding="utf-8") as f:
-        db._write_to_file(f)
+    with timer.measure("push"):
+        # Create the index.json file
+        index_json_path = os.path.join(tmpdir, spack.database.INDEX_JSON_FILE)
+        with open(index_json_path, "w", encoding="utf-8") as f:
+            db._write_to_file(f)
 
-    # Create an empty config.json file
-    empty_config_json_path = os.path.join(tmpdir, "config.json")
-    with open(empty_config_json_path, "wb") as f:
-        f.write(b"{}")
+        # Create an empty config.json file
+        empty_config_json_path = os.path.join(tmpdir, "config.json")
+        with open(empty_config_json_path, "wb") as f:
+            f.write(b"{}")
 
-    # Upload the index.json file
-    index_shasum = Digest.from_sha256(spack.util.crypto.checksum(hashlib.sha256, index_json_path))
-    upload_blob_with_retry(image_ref, file=index_json_path, digest=index_shasum)
+        # Upload the index.json file
+        index_shasum = Digest.from_sha256(
+            spack.util.crypto.checksum(hashlib.sha256, index_json_path)
+        )
+        upload_blob_with_retry(image_ref, file=index_json_path, digest=index_shasum)
 
-    # Upload the config.json file
-    empty_config_digest = Digest.from_sha256(
-        spack.util.crypto.checksum(hashlib.sha256, empty_config_json_path)
-    )
-    upload_blob_with_retry(image_ref, file=empty_config_json_path, digest=empty_config_digest)
+        # Upload the config.json file
+        empty_config_digest = Digest.from_sha256(
+            spack.util.crypto.checksum(hashlib.sha256, empty_config_json_path)
+        )
+        upload_blob_with_retry(image_ref, file=empty_config_json_path, digest=empty_config_digest)
 
-    # Push a manifest file that references the index.json file as a layer
-    # Notice that we push this as if it is an image, which it of course is not.
-    # When the ORAS spec becomes official, we can use that instead of a fake image.
-    # For now we just use the OCI image spec, so that we don't run into issues with
-    # automatic garbage collection of blobs that are not referenced by any image manifest.
-    oci_manifest = {
-        "mediaType": "application/vnd.oci.image.manifest.v1+json",
-        "schemaVersion": 2,
-        # Config is just an empty {} file for now, and irrelevant
-        "config": {
-            "mediaType": "application/vnd.oci.image.config.v1+json",
-            "digest": str(empty_config_digest),
-            "size": os.path.getsize(empty_config_json_path),
-        },
-        # The buildcache index is the only layer, and is not a tarball, we lie here.
-        "layers": [
-            {
-                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
-                "digest": str(index_shasum),
-                "size": os.path.getsize(index_json_path),
-            }
-        ],
-    }
+        # Push a manifest file that references the index.json file as a layer
+        # Notice that we push this as if it is an image, which it of course is not.
+        # When the ORAS spec becomes official, we can use that instead of a fake image.
+        # For now we just use the OCI image spec, so that we don't run into issues with
+        # automatic garbage collection of blobs that are not referenced by any image manifest.
+        oci_manifest = {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "schemaVersion": 2,
+            # Config is just an empty {} file for now, and irrelevant
+            "config": {
+                "mediaType": "application/vnd.oci.image.config.v1+json",
+                "digest": str(empty_config_digest),
+                "size": os.path.getsize(empty_config_json_path),
+            },
+            # The buildcache index is the only layer, and is not a tarball, we lie here.
+            "layers": [
+                {
+                    "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                    "digest": str(index_shasum),
+                    "size": os.path.getsize(index_json_path),
+                }
+            ],
+        }
 
-    upload_manifest_with_retry(image_ref.with_tag(default_index_tag), oci_manifest)
-
-
-def try_fetch(url_to_fetch):
-    """Utility function to try and fetch a file from a url, stage it
-    locally, and return the path to the staged file.
-
-    Args:
-        url_to_fetch (str): Url pointing to remote resource to fetch
-
-    Returns:
-        Path to locally staged resource or ``None`` if it could not be fetched.
-    """
-    stage = Stage(url_to_fetch, keep=True)
-    stage.create()
-
-    try:
-        stage.fetch()
-    except spack.error.FetchError:
-        stage.destroy()
-        return None
-
-    return stage
+        upload_manifest_with_retry(image_ref.with_tag(default_index_tag), oci_manifest)
 
 
 def download_tarball(
@@ -1833,6 +1804,14 @@ def download_tarball(
 
             try:
                 cache_entry.fetch_archive()
+            except NoVerifyException as e:
+                tty.error(
+                    f"Failed to verify signature for binary package "
+                    f"{spec.name}/{spec.dag_hash()[:7]} from {fetch_url} "
+                    f"(v{layout_version}): {e}"
+                )
+                cache_entry.destroy()
+                continue
             except Exception as e:
                 tty.debug(
                     f"Encountered error attempting to fetch archive for "
@@ -1929,7 +1908,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # the context of the relevant root spec. This ensures that the analog for a spec s is the spec
     # that s replaced when we spliced.
     relocation_specs = specs_to_relocate(spec)
-    build_spec_ids = set(id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD))
+    build_spec_ids = {id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)}
     for s in relocation_specs:
         analog = s
         if id(s) not in build_spec_ids:
@@ -2154,7 +2133,7 @@ def install_root_node(
     if spec.external or not spec.concrete:
         warnings.warn("Skipping external or abstract spec {0}".format(spec.format()))
         return
-    elif spec.installed and not force:
+    elif spack.store.STORE.db.installed(spec) and not force:
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 
@@ -2164,7 +2143,7 @@ def install_root_node(
         raise RuntimeError(msg.format(spec.build_spec.format()))
 
     # don't print long padded paths while extracting/relocating binaries
-    with spack.util.path.filter_padding():
+    with spack.store.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, tarball_stage, force)
         spec.package.windows_establish_runtime_linkage()
@@ -2268,20 +2247,19 @@ def load_buildcache_index() -> None:
         pass
 
 
-def get_keys(
+def trust_keys(
     yes_to_all: bool = False,
     install: bool = False,
     trust: bool = False,
     force: bool = False,
     mirrors: Optional[Mapping[str, spack.mirrors.mirror.Mirror]] = None,
-):
+) -> None:
     """Get pgp public keys available on mirror with suffix .pub"""
     mirror_collection = mirrors or spack.mirrors.mirror.MirrorCollection(binary=True)
 
     if not mirror_collection:
         tty.die("Please add a spack mirror to allow " + "download of build caches.")
 
-    fingerprints = []
     for mirror in mirror_collection.values():
         if not mirror.signed:
             # Don't bother fetching keys for unsigned mirrors
@@ -2289,26 +2267,19 @@ def get_keys(
         for layout_version in mirror.supported_layout_versions:
             fetch_url = mirror.fetch_url
             if layout_version == 2:
-                mirror_layout_fingerprints = _get_keys_v2(
-                    fetch_url, yes_to_all, install, trust, force
-                )
+                _trust_keys_v2(fetch_url, yes_to_all, install, trust, force)
             else:
-                mirror_layout_fingerprints = _get_keys(
-                    fetch_url, layout_version, yes_to_all, install, trust, force
-                )
-            if mirror_layout_fingerprints:
-                fingerprints.extend(mirror_layout_fingerprints)
-    return fingerprints
+                _trust_keys(fetch_url, layout_version, yes_to_all, install, trust, force)
 
 
-def _get_keys(
+def _trust_keys(
     mirror_url: str,
     layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION,
     yes_to_all: bool = False,
     install: bool = False,
     trust: bool = False,
     force: bool = False,
-) -> Optional[List[str]]:
+) -> None:
     cache_class = get_url_buildcache_class(layout_version=layout_version)
 
     tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
@@ -2331,7 +2302,6 @@ def _get_keys(
         json_index = json.load(fd)
     index_entry.destroy()
 
-    saved_fingerprints = []
     for fingerprint, _ in json_index["keys"].items():
         key_manifest_url = url_util.join(keys_prefix, f"{fingerprint}.key.manifest.json")
         key_entry = cache_class(mirror_url, allow_unsigned=True)
@@ -2348,19 +2318,15 @@ def _get_keys(
             if trust:
                 spack.util.gpg.trust(key_blob_path, yes_to_all=yes_to_all)
                 tty.debug(f"Added {fingerprint} to trusted keys.")
-                saved_fingerprints.append(fingerprint)
             else:
                 tty.debug(
                     "Will not add this key to trusted keys.Use -t to install all downloaded keys"
                 )
 
         key_entry.destroy()
-    return saved_fingerprints
 
 
-def _get_keys_v2(
-    mirror_url, yes_to_all=False, install=False, trust=False, force=False
-) -> Optional[List[str]]:
+def _trust_keys_v2(mirror_url, yes_to_all=False, install=False, trust=False, force=False) -> None:
     cache_class = get_url_buildcache_class(layout_version=2)
 
     keys_url = url_util.join(
@@ -2382,7 +2348,6 @@ def _get_keys_v2(
             tty.error(url_err)
         return None
 
-    saved_fingerprints = []
     for fingerprint, key_attributes in json_index["keys"].items():
         link = os.path.join(keys_url, fingerprint + ".pub")
 
@@ -2400,12 +2365,10 @@ def _get_keys_v2(
             if trust:
                 spack.util.gpg.trust(stage.save_filename, yes_to_all=yes_to_all)
                 tty.debug("Added this key to trusted keys.")
-                saved_fingerprints.append(fingerprint)
             else:
                 tty.debug(
                     "Will not add this key to trusted keys.Use -t to install all downloaded keys"
                 )
-    return saved_fingerprints
 
 
 def _url_push_keys(
@@ -2586,10 +2549,6 @@ class FetchIndexError(Exception):
             return str(self.args[0])
         else:
             return "{}, due to: {}".format(self.args[0], self.args[1])
-
-
-class BuildcacheIndexError(spack.error.SpackError):
-    """Raised when a buildcache cannot be read for any reason"""
 
 
 class BuildcacheIndexNotExists(Exception):
@@ -2949,15 +2908,6 @@ class NoOverwriteException(spack.error.SpackError):
         super().__init__(f"Refusing to overwrite the following file: {file_path}")
 
 
-class NoGpgException(spack.error.SpackError):
-    """
-    Raised when gpg2 is not in PATH
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
 class NoKeyException(spack.error.SpackError):
     """
     Raised when gpg has no default key added.
@@ -2972,8 +2922,10 @@ class PickKeyException(spack.error.SpackError):
     Raised when multiple keys can be used to sign.
     """
 
-    def __init__(self, keys):
-        err_msg = "Multiple keys available for signing\n%s\n" % keys
+    def __init__(self, keys: List[spack.util.gpg.GpgKey]):
+        err_msg = "Multiple keys available for signing\n%s\n" % "\n".join(
+            f"  {key}" for key in keys
+        )
         err_msg += "Use spack buildcache create -k <key hash> to pick a key."
         super().__init__(err_msg)
 
@@ -2985,13 +2937,6 @@ class NewLayoutException(spack.error.SpackError):
 
     def __init__(self, msg):
         super().__init__(msg)
-
-
-class UnsignedPackageException(spack.error.SpackError):
-    """
-    Raised if installation of unsigned package is attempted without
-    the use of ``--no-check-signature``.
-    """
 
 
 class GenerateIndexError(spack.error.SpackError):

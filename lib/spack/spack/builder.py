@@ -6,7 +6,7 @@ import collections.abc
 import copy
 import functools
 import os
-from typing import Callable, Dict, List, Optional, Tuple, Type
+from typing import Callable, Dict, List, Optional, Tuple, Type, Union
 
 import spack.directives
 import spack.error
@@ -68,9 +68,12 @@ class _PhaseAdapter:
         return self.phase_fn(self.builder.pkg, spec, prefix)
 
 
-def get_builder_class(pkg, name: str) -> Optional[Type["Builder"]]:
+def get_builder_class(
+    pkg: Union["spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]], name: str
+) -> Optional[Type["Builder"]]:
     """Return the builder class if a package module defines it."""
-    for current_cls in type(pkg).__mro__:
+    pkg_cls = pkg if isinstance(pkg, type) else type(pkg)
+    for current_cls in pkg_cls.__mro__:
         if not hasattr(current_cls, "module"):
             continue
         maybe_builder = getattr(current_cls.module, name, None)

@@ -8,11 +8,12 @@ import os
 import spack.builder
 import spack.cmd
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.stage
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "print out locations of packages and spack directories"
 section = "query"
@@ -115,7 +116,7 @@ def location(parser, args):
         if args.location_env is None:
             # Get current environment path
             spack.cmd.require_active_env(args.subparser)
-            path = ev.active_environment().path
+            path = active_environment().path
         else:
             # Get path of requested environment
             if not ev.exists(args.location_env):
@@ -164,7 +165,7 @@ def location(parser, args):
 
     # install_dir command matches against installed specs.
     if args.install_dir:
-        env = ev.active_environment()
+        env = active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env, first=args.find_first)
         print(spec.prefix)
         return

@@ -16,6 +16,7 @@ import spack.main
 import spack.paths
 import spack.repo
 from spack.cmd.style import _run_import_check, changed_files
+from spack.repo import RepoPath
 from spack.util.executable import which
 from spack.util.filesystem import FileFilter, working_dir
 
@@ -119,7 +120,7 @@ def test_changed_no_base(git, tmp_path: pathlib.Path, capfd):
         assert "This repository does not have a 'foobar'" in err
 
 
-def test_changed_files_all_files(mock_packages):
+def test_changed_files_all_files(mock_packages: RepoPath):
     # it's hard to guarantee "all files", so do some sanity checks.
     files = {
         os.path.join(spack.paths.prefix, os.path.normpath(path))
@@ -130,7 +131,7 @@ def test_changed_files_all_files(mock_packages):
     assert len(files) > 500
 
     # a builtin package
-    zlib = spack.repo.PATH.get_pkg_class("zlib")
+    zlib = mock_packages.get_pkg_class("zlib")
     zlib_file = zlib.module.__file__
     if zlib_file.endswith("pyc"):
         zlib_file = zlib_file[:-1]

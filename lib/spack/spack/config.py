@@ -47,6 +47,7 @@ from spack.vendor import jsonschema
 import spack
 import spack.error
 import spack.paths
+import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.cdash
@@ -73,8 +74,7 @@ import spack.util.hash
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.llnl.util import tty
-from spack.util import filesystem, lang
+from spack.util import filesystem, lang, tty
 from spack.util.cpus import cpus_available
 from spack.util.spack_yaml import get_mark_from_yaml_data
 
@@ -196,7 +196,7 @@ class ConfigScope:
     def transitive_includes(self, _names: Optional[Set[str]] = None) -> Set[str]:
         """Get name of this scope and names of its transitively included scopes."""
         if _names is None:
-            _names = _set()
+            _names = set()
         _names.add(self.name)
         for scope in self.included_scopes:
             _names |= scope.transitive_includes(_names=_names)
@@ -788,16 +788,16 @@ class Configuration:
         if i < 0:
             return scopes  # no overrides
 
-        keep = _set(s.name for s in scopes[i:])
-        keep |= _set(s.name for s in self.scopes.priority_values(ConfigScopePriority.DEFAULTS))
+        keep = set(s.name for s in scopes[i:])
+        keep |= set(s.name for s in self.scopes.priority_values(ConfigScopePriority.DEFAULTS))
 
         if not includes:
             # For all sections except for the include section:
             # non-included scopes are still active, as are scopes included
             # from the overriding scope
             # Transitive scopes from the overriding scope are not included
-            keep |= _set([s.name for s in scopes[i].included_scopes])
-            keep |= _set([s.name for s in scopes if not s.included])
+            keep |= set([s.name for s in scopes[i].included_scopes])
+            keep |= set([s.name for s in scopes if not s.included])
 
         # return scopes to keep, with order preserved
         return [s for s in scopes if s.name in keep]
@@ -882,11 +882,11 @@ class Configuration:
         Accepts a path syntax that allows us to grab nested config map
         entries.  Getting the ``config`` section would look like::
 
-            spack.config.get("config")
+            spack.config.CONFIG.get("config")
 
         and the ``dirty`` section in the ``config`` scope would be::
 
-            spack.config.get("config:dirty")
+            spack.config.CONFIG.get("config:dirty")
 
         We use ``:`` as the separator, like YAML objects.
         """
@@ -986,46 +986,190 @@ class Configuration:
         except (syaml.SpackYAMLError, OSError) as e:
             raise spack.error.ConfigError(f"cannot read '{section}' configuration") from e
 
+    @contextlib.contextmanager
+    def override(
+        self, path_or_scope: Union[ConfigScope, str], value: Optional[Any] = None
+    ) -> Generator["Configuration", None, None]:
+        """Temporarily override a single option or push a scope, then restore.
 
-@contextlib.contextmanager
-def override(
-    path_or_scope: Union[ConfigScope, str], value: Optional[Any] = None
-) -> Generator[Configuration, None, None]:
-    """Simple way to override config settings within a context.
-
-    Arguments:
-        path_or_scope (ConfigScope or str): scope or single option to override
-        value (object or None): value for the single option
-
-    Temporarily push a scope on the current configuration, then remove it
-    after the context completes. If a single option is provided, create
-    an internal config scope for it and push/pop that scope.
-
-    """
-    if isinstance(path_or_scope, ConfigScope):
-        overrides = path_or_scope
-        CONFIG.push_scope(path_or_scope, priority=None)
-    else:
-        base_name = _OVERRIDES_BASE_NAME
-        # Ensure the new override gets a unique scope name
-        current_overrides = [s.name for s in CONFIG.matching_scopes(rf"^{base_name}")]
-        num_overrides = len(current_overrides)
-        while True:
-            scope_name = f"{base_name}{num_overrides}"
-            if scope_name in current_overrides:
+        See the module-level ``override`` for the argument semantics.
+        """
+        path: Optional[str]
+        if isinstance(path_or_scope, ConfigScope):
+            overrides, path = path_or_scope, None
+        else:
+            # Ensure the new override gets a unique scope name
+            existing = {s.name for s in self.matching_scopes(rf"^{_OVERRIDES_BASE_NAME}")}
+            num_overrides = len(existing)
+            while f"{_OVERRIDES_BASE_NAME}{num_overrides}" in existing:
                 num_overrides += 1
+            overrides = InternalConfigScope(f"{_OVERRIDES_BASE_NAME}{num_overrides}")
+            path = path_or_scope
+
+        self.push_scope(overrides, priority=None)
+        try:
+            if path is not None:
+                self.set(path, value, scope=overrides.name)
+            yield self
+        finally:
+            scope = self.remove_scope(overrides.name)
+            assert scope is overrides
+
+    def add_from_file(self, filename: str, scope: Optional[str] = None) -> None:
+        """Add updates to a config from a filename"""
+        # Extract internal attributes, if we are dealing with an environment
+        data = read_config_file(filename)
+        if data is None:
+            return
+
+        if spack.schema.env.TOP_LEVEL_KEY in data:
+            data = data[spack.schema.env.TOP_LEVEL_KEY]
+
+        msg = (
+            "unexpected 'None' value when retrieving configuration. "
+            "Please submit a bug-report at https://github.com/spack/spack/issues"
+        )
+        assert data is not None, msg
+
+        # update all sections from config dict
+        # We have to iterate on keys to keep overrides from the file
+        for section in data.keys():
+            if section in SECTION_SCHEMAS.keys():
+                # Special handling for compiler scope difference
+                # Has to be handled after we choose a section
+                if scope is None:
+                    scope = self.default_modify_scope(section)
+
+                value = data[section]
+                existing = self.get(section, scope=scope)
+                new = spack.schema.merge_yaml(existing, value)
+
+                self.set(section, new, scope)
+
+    def add(self, fullpath: str, scope: Optional[str] = None) -> None:
+        """Add the given configuration to the specified config scope.
+        Add accepts a path. If you want to add from a filename, use add_from_file"""
+        components = process_config_path(fullpath)
+
+        has_existing_value = True
+        path = ""
+        override = False
+        value = components[-1]
+        if not isinstance(value, syaml.syaml_str):
+            value = syaml.load_config(value)
+        for idx, name in enumerate(components[:-1]):
+            # First handle double colons in constructing path
+            colon = "::" if override else ":" if path else ""
+            path += colon + name
+            if getattr(name, "override", False):
+                override = True
             else:
+                override = False
+
+            # Test whether there is an existing value at this level
+            existing = self.get(path, scope=scope)
+
+            if existing is None:
+                has_existing_value = False
+                # We've nested further than existing config, so we need the
+                # type information for validation to know how to handle bare
+                # values appended to lists.
+                existing = get_default_from_schema(path)
+
+                # construct value from this point down
+                for component in reversed(components[idx + 1 : -1]):
+                    value: Dict[str, str] = {component: value}  # type: ignore[no-redef]
                 break
 
-        overrides = InternalConfigScope(scope_name)
-        CONFIG.push_scope(overrides, priority=None)
-        CONFIG.set(path_or_scope, value, scope=scope_name)
+        if override:
+            path += "::"
 
-    try:
-        yield CONFIG
-    finally:
-        scope = CONFIG.remove_scope(overrides.name)
-        assert scope is overrides
+        if has_existing_value:
+            existing = self.get(path, scope=scope)
+
+        # append values to lists
+        if isinstance(existing, list) and not isinstance(value, list):
+            value: List[str] = [value]  # type: ignore[no-redef]
+
+        # merge value into existing
+        new = spack.schema.merge_yaml(existing, value)
+        self.set(path, new, scope)
+
+    def writable_scope_names(self) -> List[str]:
+        """Names of writable scopes, highest priority first."""
+        return [s.name for s in self.scopes.values() if s.writable][::-1]
+
+    def existing_scope_names(self) -> List[str]:
+        """Names of existing scopes, highest priority first."""
+        return [s.name for s in self.scopes.values() if s.exists][::-1]
+
+    def default_modify_scope(self, section: str = "config") -> str:
+        """Return the config scope that commands should modify by default.
+
+        Commands that modify configuration by default modify the *highest*
+        priority scope.
+
+        Arguments:
+            section (bool): Section for which to get the default scope.
+        """
+        return self.highest_precedence_scope().name
+
+    def matched_config(self, cfg_path: str) -> List[Tuple[str, Any]]:
+        return [(scope, self.get(cfg_path, scope=scope)) for scope in self.writable_scope_names()]
+
+    def change_or_add(
+        self, section_name: str, find_fn: Callable[[str], bool], update_fn: Callable[[str], None]
+    ) -> None:
+        """Change or add a subsection of config, with additional logic to
+        select a reasonable scope where the change is applied.
+
+        Search through config scopes starting with the highest priority:
+        the first matching a criteria (determined by ``find_fn``) is updated;
+        if no such config exists, find the first config scope that defines
+        any config for the named section; if no scopes define any related
+        config, then update the highest-priority config scope.
+        """
+        configs_by_section = self.matched_config(section_name)
+        found = False
+        for scope, section in configs_by_section:
+            found = find_fn(section)
+            if found:
+                break
+
+        if found:
+            update_fn(section)
+            self.set(section_name, section, scope=scope)
+            return
+
+        # If no scope meets the criteria specified by ``find_fn``,
+        # then look for a scope that has any content (for the specified
+        # section name)
+        for scope, section in configs_by_section:
+            if section:
+                update_fn(section)
+                found = True
+                break
+
+        if found:
+            self.set(section_name, section, scope=scope)
+            return
+
+        # If no scopes define any config for the named section, then
+        # modify the highest-priority scope.
+        scope, section = configs_by_section[0]
+        update_fn(section)
+        self.set(section_name, section, scope=scope)
+
+    def update_all(self, section_name: str, change_fn: Callable[[str], bool]) -> None:
+        """Change a config section, which may have details duplicated
+        across multiple scopes.
+        """
+        configs_by_section = self.matched_config("develop")
+
+        for scope, section in configs_by_section:
+            modified = change_fn(section)
+            if modified:
+                self.set(section_name, section, scope=scope)
 
 
 #: Class for the relevance of an optional path conditioned on a limited
@@ -1579,110 +1723,8 @@ def create() -> Configuration:
 #: This is the singleton configuration instance for Spack.
 CONFIG = cast(Configuration, lang.Singleton(create_incremental))
 
-
-def add_from_file(filename: str, scope: Optional[str] = None) -> None:
-    """Add updates to a config from a filename"""
-    # Extract internal attributes, if we are dealing with an environment
-    data = read_config_file(filename)
-    if data is None:
-        return
-
-    if spack.schema.env.TOP_LEVEL_KEY in data:
-        data = data[spack.schema.env.TOP_LEVEL_KEY]
-
-    msg = (
-        "unexpected 'None' value when retrieving configuration. "
-        "Please submit a bug-report at https://github.com/spack/spack/issues"
-    )
-    assert data is not None, msg
-
-    # update all sections from config dict
-    # We have to iterate on keys to keep overrides from the file
-    for section in data.keys():
-        if section in SECTION_SCHEMAS.keys():
-            # Special handling for compiler scope difference
-            # Has to be handled after we choose a section
-            if scope is None:
-                scope = default_modify_scope(section)
-
-            value = data[section]
-            existing = get(section, scope=scope)
-            new = spack.schema.merge_yaml(existing, value)
-
-            # We cannot call config.set directly (set is a type)
-            CONFIG.set(section, new, scope)
-
-
-def add(fullpath: str, scope: Optional[str] = None) -> None:
-    """Add the given configuration to the specified config scope.
-    Add accepts a path. If you want to add from a filename, use add_from_file"""
-    components = process_config_path(fullpath)
-
-    has_existing_value = True
-    path = ""
-    override = False
-    value = components[-1]
-    if not isinstance(value, syaml.syaml_str):
-        value = syaml.load_config(value)
-    for idx, name in enumerate(components[:-1]):
-        # First handle double colons in constructing path
-        colon = "::" if override else ":" if path else ""
-        path += colon + name
-        if getattr(name, "override", False):
-            override = True
-        else:
-            override = False
-
-        # Test whether there is an existing value at this level
-        existing = get(path, scope=scope)
-
-        if existing is None:
-            has_existing_value = False
-            # We've nested further than existing config, so we need the
-            # type information for validation to know how to handle bare
-            # values appended to lists.
-            existing = get_default_from_schema(path)
-
-            # construct value from this point down
-            for component in reversed(components[idx + 1 : -1]):
-                value: Dict[str, str] = {component: value}  # type: ignore[no-redef]
-            break
-
-    if override:
-        path += "::"
-
-    if has_existing_value:
-        existing = get(path, scope=scope)
-
-    # append values to lists
-    if isinstance(existing, list) and not isinstance(value, list):
-        value: List[str] = [value]  # type: ignore[no-redef]
-
-    # merge value into existing
-    new = spack.schema.merge_yaml(existing, value)
-    CONFIG.set(path, new, scope)
-
-
-def get(path: str, default: Any = default_sigil, scope: Optional[str] = None) -> Any:
-    """Module-level wrapper for ``Configuration.get()``."""
-    return CONFIG.get(path, default, scope)
-
-
-_set = set  #: save this before defining set -- maybe config.set was ill-advised :)
-
-
-def set(path: str, value: Any, scope: Optional[str] = None) -> None:
-    """Convenience function for setting single values in config files.
-
-    Accepts the path syntax described in ``get()``.
-    """
-    result = CONFIG.set(path, value, scope)
-    return result
-
-
-def scopes() -> lang.PriorityOrderedMapping[str, ConfigScope]:
-    """Convenience function to get list of configuration scopes."""
-    return CONFIG.scopes
+#: Many cached config values depend on the current platform, so drop them when it changes.
+spack.platforms.on_host_changed.append(lambda: CONFIG.clear_caches())
 
 
 def writable_scopes() -> List[ConfigScope]:
@@ -1690,84 +1732,6 @@ def writable_scopes() -> List[ConfigScope]:
     scopes = [x for x in CONFIG.scopes.values() if x.writable]
     scopes.reverse()
     return scopes
-
-
-def existing_scopes() -> List[ConfigScope]:
-    """Return list of existing scopes. Scopes where Spack is
-    aware of said scope, and the scope has a representation
-    on the filesystem or are internal scopes.
-    Higher-priority scopes come first in the list."""
-    scopes = [x for x in CONFIG.scopes.values() if x.exists]
-    scopes.reverse()
-    return scopes
-
-
-def writable_scope_names() -> List[str]:
-    return list(x.name for x in writable_scopes())
-
-
-def existing_scope_names() -> List[str]:
-    return list(x.name for x in existing_scopes())
-
-
-def matched_config(cfg_path: str) -> List[Tuple[str, Any]]:
-    return [(scope, get(cfg_path, scope=scope)) for scope in writable_scope_names()]
-
-
-def change_or_add(
-    section_name: str, find_fn: Callable[[str], bool], update_fn: Callable[[str], None]
-) -> None:
-    """Change or add a subsection of config, with additional logic to
-    select a reasonable scope where the change is applied.
-
-    Search through config scopes starting with the highest priority:
-    the first matching a criteria (determined by ``find_fn``) is updated;
-    if no such config exists, find the first config scope that defines
-    any config for the named section; if no scopes define any related
-    config, then update the highest-priority config scope.
-    """
-    configs_by_section = matched_config(section_name)
-    found = False
-    for scope, section in configs_by_section:
-        found = find_fn(section)
-        if found:
-            break
-
-    if found:
-        update_fn(section)
-        CONFIG.set(section_name, section, scope=scope)
-        return
-
-    # If no scope meets the criteria specified by ``find_fn``,
-    # then look for a scope that has any content (for the specified
-    # section name)
-    for scope, section in configs_by_section:
-        if section:
-            update_fn(section)
-            found = True
-            break
-
-    if found:
-        CONFIG.set(section_name, section, scope=scope)
-        return
-
-    # If no scopes define any config for the named section, then
-    # modify the highest-priority scope.
-    scope, section = configs_by_section[0]
-    update_fn(section)
-    CONFIG.set(section_name, section, scope=scope)
-
-
-def update_all(section_name: str, change_fn: Callable[[str], bool]) -> None:
-    """Change a config section, which may have details duplicated
-    across multiple scopes.
-    """
-    configs_by_section = matched_config("develop")
-
-    for scope, section in configs_by_section:
-        modified = change_fn(section)
-        if modified:
-            CONFIG.set(section_name, section, scope=scope)
 
 
 def _validate_section_name(section: str) -> None:
@@ -2109,21 +2073,6 @@ def process_config_path(path: str) -> List[str]:
     return ConfigPath.process(path)
 
 
-#
-# Settings for commands that modify configuration
-#
-def default_modify_scope(section: str = "config") -> str:
-    """Return the config scope that commands should modify by default.
-
-    Commands that modify configuration by default modify the *highest*
-    priority scope.
-
-    Arguments:
-        section (bool): Section for which to get the default scope.
-    """
-    return CONFIG.highest_precedence_scope().name
-
-
 def _update_in_memory(data: YamlConfigDict, section: str) -> bool:
     """Update the format of the configuration data in memory.
 
@@ -2255,7 +2204,6 @@ def determine_number_of_jobs(
 
 def architecture():
     # break circular import
-    import spack.platforms
     import spack.spec
 
     host_platform = spack.platforms.host()
@@ -2408,7 +2356,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
 
     # Prepend the default, if provided, or current working directory.
     base = default_wd or os.getcwd()
-    import spack.llnl.util.tty as tty
+    from spack.util import tty
 
     tty.debug(f"Using working directory {base} as base for abspath")
     return os.path.normpath(os.path.join(base, path))

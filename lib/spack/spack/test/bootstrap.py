@@ -7,6 +7,7 @@ import pathlib
 import pytest
 
 import spack.bootstrap
+import spack.bootstrap._common
 import spack.bootstrap.clingo
 import spack.bootstrap.config
 import spack.bootstrap.core
@@ -14,10 +15,16 @@ import spack.bootstrap.status
 import spack.compilers.config
 import spack.config
 import spack.environment
+import spack.spec
 import spack.store
 import spack.util.executable
+from spack.active_environment import active_environment
 
 from .conftest import _true
+
+PROTOTYPE_DIR = pathlib.Path(spack.bootstrap.clingo.__file__).parent / "prototypes"
+PROTOTYPES = sorted(x.name for x in PROTOTYPE_DIR.glob("*.json"))
+assert PROTOTYPES, f"no bootstrap prototypes in {PROTOTYPE_DIR}"
 
 
 @pytest.fixture
@@ -83,7 +90,7 @@ def test_install_tree_customization_is_respected(mutable_config, tmp_path: pathl
 )
 def test_store_path_customization(config_value, expected, mutable_config):
     # Set the current configuration to a specific value
-    spack.config.set("bootstrap:root", config_value)
+    spack.config.CONFIG.set("bootstrap:root", config_value)
 
     # Check the store path
     current = spack.bootstrap.config.store_path()
@@ -92,7 +99,7 @@ def test_store_path_customization(config_value, expected, mutable_config):
 
 def test_raising_exception_if_bootstrap_disabled(mutable_config):
     # Disable bootstrapping in config.yaml
-    spack.config.set("bootstrap:enable", False)
+    spack.config.CONFIG.set("bootstrap:enable", False)
 
     # Check the correct exception is raised
     with pytest.raises(RuntimeError, match="bootstrapping is currently disabled"):
@@ -113,24 +120,24 @@ def test_raising_exception_executables_in_path(config, monkeypatch):
 
 @pytest.mark.regression("25603")
 def test_bootstrap_deactivates_environments(active_mock_environment):
-    assert spack.environment.active_environment() == active_mock_environment
+    assert active_environment() == active_mock_environment
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.environment.active_environment() is None
-    assert spack.environment.active_environment() == active_mock_environment
+        assert active_environment() is None
+    assert active_environment() == active_mock_environment
 
 
 @pytest.mark.regression("25805")
 def test_bootstrap_disables_modulefile_generation(mutable_config):
     # Be sure to enable both lmod and tcl in modules.yaml
-    spack.config.set("modules:default:enable", ["tcl", "lmod"])
+    spack.config.CONFIG.set("modules:default:enable", ["tcl", "lmod"])
 
-    assert "tcl" in spack.config.get("modules:default:enable")
-    assert "lmod" in spack.config.get("modules:default:enable")
+    assert "tcl" in spack.config.CONFIG.get("modules:default:enable")
+    assert "lmod" in spack.config.CONFIG.get("modules:default:enable")
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert "tcl" not in spack.config.get("modules:default:enable")
-        assert "lmod" not in spack.config.get("modules:default:enable")
-    assert "tcl" in spack.config.get("modules:default:enable")
-    assert "lmod" in spack.config.get("modules:default:enable")
+        assert "tcl" not in spack.config.CONFIG.get("modules:default:enable")
+        assert "lmod" not in spack.config.CONFIG.get("modules:default:enable")
+    assert "tcl" in spack.config.CONFIG.get("modules:default:enable")
+    assert "lmod" in spack.config.CONFIG.get("modules:default:enable")
 
 
 @pytest.mark.regression("25992")
@@ -158,12 +165,12 @@ def test_bootstrap_search_for_compilers_with_environment_active(
 @pytest.mark.regression("26189")
 def test_config_yaml_is_preserved_during_bootstrap(mutable_config):
     expected_dir = "/tmp/test"
-    spack.config.set("config:test_stage", expected_dir, scope="command_line")
+    spack.config.CONFIG.set("config:test_stage", expected_dir, scope="command_line")
 
-    assert spack.config.get("config:test_stage") == expected_dir
+    assert spack.config.CONFIG.get("config:test_stage") == expected_dir
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.config.get("config:test_stage") == expected_dir
-    assert spack.config.get("config:test_stage") == expected_dir
+        assert spack.config.CONFIG.get("config:test_stage") == expected_dir
+    assert spack.config.CONFIG.get("config:test_stage") == expected_dir
 
 
 @pytest.mark.regression("26548")
@@ -183,8 +190,8 @@ spack:
 """.format(install_root)
     )
     with spack.environment.Environment(str(tmp_path)):
-        assert spack.environment.active_environment()
-        assert spack.config.get("config:install_tree:root") == str(install_root)
+        assert active_environment()
+        assert spack.config.CONFIG.get("config:install_tree:root") == str(install_root)
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
@@ -246,15 +253,14 @@ def test_gpg_status_check(
         mock_executable("gpg2", "echo GPG 2.3.4")
 
     # Mock the bootstrap store function
-    def mock_executables_in_store(exes, query_spec, query_info=None):
+    def mock_executables_in_store(exes, query_spec):
         if not gpg_in_store:
-            return False
+            return None
 
         # Simulate found gpg in bootstrap store
-        if query_info is not None:
-            query_info["spec"] = "gnupg@2.5.12"
-            query_info["command"] = spack.util.executable.Executable("gpg")
-        return True
+        return spack.bootstrap._common.ExecutableInfo(
+            spec=spack.spec.Spec("gnupg@2.5.12"), command=spack.util.executable.Executable("gpg")
+        )
 
     monkeypatch.setattr(spack.bootstrap.status, "_executables_in_store", mock_executables_in_store)
 
@@ -281,7 +287,7 @@ def test_source_is_disabled(mutable_config):
     assert not spack.bootstrap.core.source_is_enabled(conf)
 
     # Try to explicitly disable the source and verify that the behavior is the same as above
-    spack.config.add("bootstrap:trusted:{0}:{1}".format(conf["name"], False))
+    spack.config.CONFIG.add("bootstrap:trusted:{0}:{1}".format(conf["name"], False))
     assert not spack.bootstrap.core.source_is_enabled(conf)
 
 
@@ -307,3 +313,19 @@ def test_use_store_does_not_try_writing_outside_root(
     with spack.store.use_store(user_store):
         assert spack.config.CONFIG.get("config:install_tree:root") == str(user_store)
     assert spack.config.CONFIG.get("config:install_tree:root") == initial_store
+
+
+@pytest.mark.parametrize("prototype", PROTOTYPES)
+def test_prototype_matches_a_constraint_on_its_compiler(prototype):
+    """The bootstrap concretizer edits a prototype with the concreteness flag cleared, picking
+    patches from conditions such as '%msvc@19.38:'. The compiler the prototype records has to
+    match such a condition."""
+    s = spack.spec.Spec.from_specfile(str(PROTOTYPE_DIR / prototype))
+    compilers = [x.spec for x in s.edges_to_dependencies() if "cxx" in x.virtuals]
+    assert compilers, f"{prototype} has no cxx provider"
+    compiler = compilers[0]
+
+    s._mark_concrete(False)
+
+    assert s.satisfies(f"%{compiler.name}")
+    assert s.satisfies(f"%{compiler.name}@{compiler.version}")

@@ -6,13 +6,13 @@ import io
 from typing import List, Optional
 
 import spack.cmd
-import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
 import spack.verify
 import spack.verify_libraries
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.util import tty
 from spack.util.filesystem import visit_directory_tree
 from spack.util.string import plural
 
@@ -214,7 +214,7 @@ def verify_manifest(args):
 
     elif args.specs_or_files:
         # construct disambiguated spec list
-        env = ev.active_environment()
+        env = active_environment()
         specs = list(map(lambda x: spack.cmd.disambiguate_spec(x, env, local=local), spec_args))
     else:
         args.subparser.error("use --all or specify specs to verify")

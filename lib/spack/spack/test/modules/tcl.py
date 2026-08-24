@@ -15,6 +15,7 @@ import spack.modules.error
 import spack.modules.tcl
 import spack.spec
 import spack.util.environment
+from spack.config import Configuration
 
 mpich_spec_string = "mpich@3.0.4"
 mpileaks_spec_string = "mpileaks"
@@ -678,9 +679,9 @@ class TestTcl:
             assert repetitions == 1
 
     def test_compilers_provided_different_name(
-        self, factory, module_configuration, compiler_factory
+        self, factory, module_configuration, compiler_factory, mutable_config: Configuration
     ):
-        with spack.config.override(
+        with mutable_config.override(
             "packages", {"llvm": {"externals": [compiler_factory(spec="llvm@3.3 +clang")]}}
         ):
             module_configuration("complex_hierarchy")
@@ -756,7 +757,7 @@ class TestTcl:
         def no_op_set(*args, **kwargs):
             pass
 
-        monkeypatch.setattr(spack.config, "set", no_op_set)
+        monkeypatch.setattr(spack.config.Configuration, "set", no_op_set)
 
         # Assert we have core compilers now
         writer, _ = factory(mpileaks_spec_string)
@@ -824,3 +825,20 @@ class TestTcl:
                 assert "${lapack_name} ${lapack_version}" in line, (
                     f"Expected Tcl syntax '${{lapack_name}} ${{lapack_version}}' but got: {line!r}"
                 )
+
+    @pytest.mark.regression("7487")
+    def test_suffix_does_not_propagate_to_dependents(self, factory, module_configuration):
+        """A bare package-name suffix key matches only the root spec, while a '^name'
+        key matches specs that depend on that package. The two must not overlap.
+        """
+        module_configuration("suffix_propagation")
+
+        # mpileaks depends on mpich but is not mpich, so only the '^mpich' key applies
+        writer, _ = factory("mpileaks ^mpich@3.0.4")
+        assert "depmatch" in writer.layout.use_name
+        assert "namematch" not in writer.layout.use_name
+
+        # mpich itself is matched only by the bare 'mpich' key
+        writer, _ = factory("mpich@3.0.4")
+        assert "namematch" in writer.layout.use_name
+        assert "depmatch" not in writer.layout.use_name

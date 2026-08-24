@@ -16,21 +16,22 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional,
 
 import spack.config
 import spack.error
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.log
 import spack.paths
 import spack.repo
 import spack.report
 import spack.spec
+import spack.store
 import spack.util.executable
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
+import spack.util.tty.log
 from spack.error import InstallError
-from spack.llnl.util.tty.color import colorize
 from spack.spec import Spec
+from spack.util import tty
 from spack.util.lang import nullcontext
 from spack.util.prefix import Prefix
 from spack.util.string import plural
+from spack.util.tty.color import colorize
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -49,7 +50,7 @@ spack_install_test_log = "install-time-test-log.txt"
 
 
 ListOrStringType = Union[str, List[str]]
-LogType = spack.llnl.util.tty.log.threadlog
+LogType = spack.util.tty.log.threadlog
 
 PackageObjectOrClass = Union[
     "spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]
@@ -98,7 +99,7 @@ def get_test_stage_dir() -> str:
         absolute path to the configured test stage root or, if none, the default test stage path
     """
     return spack.config.canonicalize_path(
-        spack.config.get("config:test_stage", spack.paths.default_test_path)
+        spack.config.CONFIG.get("config:test_stage", spack.paths.default_test_path)
     )
 
 
@@ -302,7 +303,7 @@ class PackageTest:
         fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
-        with spack.llnl.util.tty.log.threadlog(
+        with spack.util.tty.log.threadlog(
             self.test_log_file, echo=verbose, append=True
         ) as self._logger:
             with self.logger.force_echo():  # type: ignore[union-attr]
@@ -360,7 +361,7 @@ class PackageTest:
             method_names: phase-specific callback method names
         """
         verbose = tty.is_verbose()
-        fail_fast = spack.config.get("config:fail_fast", False)
+        fail_fast = spack.config.CONFIG.get("config:fail_fast", False)
 
         with self.test_logger(verbose=verbose, externals=False) as logger:
             # Report running each of the methods in the build log
@@ -524,7 +525,7 @@ def test_part(
             exc = e  # e is deleted after this block
 
             # If we fail fast, raise another error
-            if spack.config.get("config:fail_fast", False):
+            if spack.config.CONFIG.get("config:fail_fast", False):
                 raise TestFailure([(exc, m)])
             else:
                 tester.add_failure(exc, m)
@@ -714,7 +715,7 @@ def test_process(pkg: "spack.package_base.PackageBase", kwargs):
             pkg.tester.status(pkg.spec.name, TestStatus.SKIPPED)
             return
 
-        if not pkg.spec.installed:
+        if not spack.store.STORE.db.installed(pkg.spec):
             print_message(logger, "Skipped not installed package", verbose)
             pkg.tester.status(pkg.spec.name, TestStatus.SKIPPED)
             return
@@ -970,7 +971,7 @@ class TestSuite:
             self.ensure_stage()
             if spec.external and not externals:
                 status = TestStatus.SKIPPED
-            elif not spec.installed:
+            elif not spack.store.STORE.db.installed(spec):
                 status = TestStatus.SKIPPED
             else:
                 status = TestStatus.NO_TESTS

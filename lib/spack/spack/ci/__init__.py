@@ -21,7 +21,6 @@ import spack.binary_distribution
 import spack.builder
 import spack.config as cfg
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.mirrors.mirror
 import spack.paths
@@ -37,9 +36,11 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
+from spack.concretize_ui import TerminalUI
 from spack.error import SpackError
-from spack.llnl.util.tty.color import cescape, colorize
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
+from spack.util import tty
+from spack.util.tty.color import cescape, colorize
 
 from .common import (
     IS_WINDOWS,
@@ -369,9 +370,9 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.check_index_only = args.index_only
     options.forward_variables = args.forward_variable or []
 
-    ci_config = cfg.get("ci")
+    ci_config = cfg.CONFIG.get("ci")
 
-    cdash_config = cfg.get("cdash")
+    cdash_config = cfg.CONFIG.get("cdash")
     if "build-group" in cdash_config:
         options.cdash_handler = CDashHandler(cdash_config)
 
@@ -473,13 +474,13 @@ def generate_pipeline(env: ev.Environment, args) -> None:
             line.
     """
     with env.write_transaction():
-        env.concretize()
+        env.concretize(ui=TerminalUI())
         env.write()
 
     options = collect_pipeline_options(env, args)
 
     # Get the joined "ci" config with all of the current scopes resolved
-    ci_config = cfg.get("ci")
+    ci_config = cfg.CONFIG.get("ci")
     if not ci_config:
         raise SpackCIError("Environment does not have a `ci` configuration")
 
@@ -544,7 +545,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     generate_method(pipeline, spack_ci_config, options)
 
     # Use all unpruned specs to populate the build group for this set
-    cdash_config = cfg.get("cdash")
+    cdash_config = cfg.CONFIG.get("cdash")
     if options.cdash_handler and options.cdash_handler.auth_token:
         options.cdash_handler.create_buildgroup()
     elif cdash_config:
@@ -1286,9 +1287,7 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
         try:
             with open(file_path, "w", encoding="utf-8") as fd:
                 syaml.dump(broken_spec_details, fd)
-            web_util.push_to_url(
-                file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
-            )
+            web_util.push_to_url(file_path, url, keep_original=False, content_type="text/plain")
         except Exception as err:
             # If there is an S3 error (e.g., access denied or connection
             # error), the first non boto-specific class in the exception

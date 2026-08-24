@@ -10,7 +10,6 @@ import re
 import subprocess
 import sys
 import textwrap
-from collections import Counter
 from typing import Callable, Container, Generator, List, Optional, Sequence, Union
 
 import spack.concretize
@@ -18,22 +17,22 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
-import spack.hash_lookup
-import spack.llnl.util.tty as tty
 import spack.paths
-import spack.repo
 import spack.spec
 import spack.spec_parser
 import spack.store
-import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.string
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import colorize
+from spack import traverse
+from spack.active_environment import active_environment
+from spack.concretize_ui import ConcretizerUI, TerminalUI
+from spack.util import tty
 from spack.util.filesystem import join_path
 from spack.util.lang import attr_setdefault, index_by
+from spack.util.tty.colify import colify
+from spack.util.tty.color import colorize
 
 from ..enums import InstallRecordStatus
 
@@ -176,6 +175,7 @@ def parse_specs(
     args: Union[str, List[str]],
     concretize: bool = False,
     tests: spack.concretize.TestsType = False,
+    ui: Optional[ConcretizerUI] = None,
 ) -> List[spack.spec.Spec]:
     """Convenience function for parsing arguments from specs.  Handles common
     exceptions and dies if there are errors.
@@ -189,65 +189,9 @@ def parse_specs(
         return specs
 
     to_concretize: List[spack.concretize.SpecPairInput] = [(s, None) for s in specs]
-    return _concretize_spec_pairs(to_concretize, tests=tests)
-
-
-def _concretize_spec_pairs(
-    to_concretize: List[spack.concretize.SpecPairInput], tests: spack.concretize.TestsType = False
-) -> List[spack.spec.Spec]:
-    """Helper method that concretizes abstract specs from a list of abstract,concrete pairs.
-
-    Any spec with a concrete spec associated with it will concretize to that spec. Any spec
-    with ``None`` for its concrete spec will be newly concretized. This method respects unification
-    rules from config."""
-    unify = spack.config.get("concretizer:unify", False)
-
-    # Special case for concretizing a single spec
-    if len(to_concretize) == 1:
-        abstract, concrete = to_concretize[0]
-        return [concrete or spack.concretize.concretize_one(abstract, tests=tests)]
-
-    # Special case if every spec is either concrete or has an abstract hash
-    if all(
-        concrete or abstract.concrete or abstract.abstract_hash
-        for abstract, concrete in to_concretize
-    ):
-        # Get all the concrete specs
-        ret = [
-            concrete
-            or (abstract if abstract.concrete else spack.hash_lookup.lookup_hash(abstract))
-            for abstract, concrete in to_concretize
-        ]
-
-        # If unify: true, check that specs don't conflict
-        # Since all concrete, "when_possible" is not relevant
-        if unify is True:  # True, "when_possible", False are possible values
-            runtimes = spack.repo.PATH.packages_with_tags("runtime")
-            specs_per_name = Counter(
-                spec.name
-                for spec in traverse.traverse_nodes(
-                    ret, deptype=("link", "run"), key=traverse.by_dag_hash
-                )
-                if spec.name not in runtimes  # runtimes are allowed multiple times
-            )
-
-            conflicts = sorted(name for name, count in specs_per_name.items() if count > 1)
-            if conflicts:
-                raise spack.error.SpecError(
-                    "Specs conflict and `concretizer:unify` is configured true.",
-                    f"    specs depend on multiple versions of {', '.join(conflicts)}",
-                )
-        return ret
-
-    # Standard case
-    concretize_method = spack.concretize.concretize_separately  # unify: false
-    if unify is True:
-        concretize_method = spack.concretize.concretize_together
-    elif unify == "when_possible":
-        concretize_method = spack.concretize.concretize_together_when_possible
-
-    concretized = concretize_method(to_concretize, tests=tests)
-    return [concrete for _, concrete in concretized]
+    return spack.concretize.concretize_spec_pairs(
+        to_concretize, tests=tests, ui=ui or TerminalUI()
+    )
 
 
 def matching_spec_from_env(spec):
@@ -256,7 +200,7 @@ def matching_spec_from_env(spec):
     If no matching spec is found in the environment (or if no environment is
     active), this will return the given spec but concretized.
     """
-    env = ev.active_environment()
+    env = active_environment()
     if env:
         return env.matching_spec(spec) or spack.concretize.concretize_one(spec)
     else:
@@ -271,12 +215,14 @@ def matching_specs_from_env(specs):
     matching spec is found, this will return the given spec but concretized in the
     context of the active environment and other given specs, with unification rules applied.
     """
-    env = ev.active_environment()
+    env = active_environment()
     spec_pairs = [(spec, env.matching_spec(spec) if env else None) for spec in specs]
     additional_concrete_specs = (
         [(concrete, concrete) for _, concrete in env.concretized_specs()] if env else []
     )
-    return _concretize_spec_pairs(spec_pairs + additional_concrete_specs)[: len(spec_pairs)]
+    return spack.concretize.concretize_spec_pairs(
+        spec_pairs + additional_concrete_specs, ui=TerminalUI()
+    )[: len(spec_pairs)]
 
 
 def disambiguate_spec(
@@ -366,7 +312,7 @@ def buildcache_status_fn(
     """
 
     def _status_fn(spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":
-        status = spec.install_status()
+        status = spack.store.STORE.db.install_status(spec)
         if (
             status in (spack.spec.InstallStatus.absent, spack.spec.InstallStatus.missing)
             and spec.dag_hash() in available_hashes
@@ -510,7 +456,7 @@ def display_specs(specs, args=None, **kwargs):
         if flags:
             ffmt += " {compiler_flags}"
         vfmt = "{variants}" if variants else ""
-        hfmt = "{/abstract_hash}"
+        hfmt = "{ /abstract_hash}"
         format_string = nfmt + "{@version}" + vfmt + ffmt + hfmt
 
     if specfile_format:
@@ -674,7 +620,7 @@ def require_active_env(parser):
     Returns:
         (spack.environment.Environment): the active environment
     """
-    env = ev.active_environment()
+    env = active_environment()
     if env:
         return env
     parser.error(

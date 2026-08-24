@@ -10,9 +10,9 @@ configured externals (via spack.externals_config).
 
 from typing import List
 
+import spack.active_environment
 import spack.binary_distribution
 import spack.config
-import spack.environment
 import spack.error
 import spack.externals_config
 import spack.spec
@@ -42,7 +42,7 @@ def _lookup_one(spec: "spack.spec.Spec") -> "spack.spec.Spec":
     Searches in order: active environment, configured externals, installed store, binary cache.
     Raises InvalidHashError if nothing matches, AmbiguousHashError if more than one matches.
     """
-    active_env = spack.environment.active_environment()
+    active_env = spack.active_environment.active_environment()
 
     matches = (
         (active_env.all_matching_specs(spec) if active_env else [])
