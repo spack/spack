@@ -365,7 +365,7 @@ nitpick_ignore = [
     # Spack classes that intersphinx is unable to resolve
     ("py:class", "BuildStatus"),
     ("py:class", "GitOrStandardVersion"),
-    ("py:class", "spack.bootstrap._common.QueryInfo"),
+    ("py:class", "spack.bootstrap._common.ExecutableInfo"),
     ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.vendor.jinja2.Environment"),
     ("py:class", "SpecFiltersFactory"),

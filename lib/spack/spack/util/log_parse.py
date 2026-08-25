@@ -2,33 +2,35 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import io
-from typing import List, Optional, TextIO, Tuple, Union
+from typing import Container, Iterator, List, Optional, TextIO, Union
 
-from spack.util.ctest_log_parser import BuildError, BuildWarning, CTestLogParser, LogEvent
+from spack.util.ctest_log_parser import ALL_SEVERITIES, Block, CTestLogParser, Severity
 from spack.util.tty.color import cescape, colorize
 
-__all__ = ["parse_log_events", "make_log_context"]
+__all__ = ["scan_log", "write_block", "write_log_context"]
 
 
 _PARSER: Optional[CTestLogParser] = None
 
 
-def parse_log_events(
-    stream: Union[str, TextIO], context: int = 6, profile: bool = False, tail: int = 0
-) -> Tuple[List[BuildError], List[BuildWarning], Union[LogEvent, None]]:
-    """Extract interesting events from a log file.
+def scan_log(
+    stream: Union[str, TextIO, List[str]],
+    context: int = 6,
+    tail: int = 0,
+    severities: Container[Severity] = ALL_SEVERITIES,
+    profile: bool = False,
+) -> Iterator[Block]:
+    """Scan a build log for errors and warnings and yield the blocks worth showing.
 
     Args:
         stream: build log name or file object
-        context: lines of context to extract around each log event
+        context: lines of context to show around each matched line
+        tail: also show the last this many lines, whether or not anything matched
+        severities: only match lines of these severities
         profile: print out profile information for parsing
-        tail: if > 0, also return the last ``tail`` lines
 
-    Returns:
-        two lists containing :class:`~spack.util.ctest_log_parser.BuildError` and
-        :class:`~spack.util.ctest_log_parser.BuildWarning` objects, plus an optional
-        :class:`~spack.util.ctest_log_parser.LogEvent` for the tail (None when ``tail=0``).
+    Yields:
+        :class:`~spack.util.ctest_log_parser.Block` objects in increasing line order.
     """
     global _PARSER
     if profile:
@@ -37,59 +39,31 @@ def parse_log_events(
         _PARSER = parser = CTestLogParser()
     else:
         parser = _PARSER
-    result = parser.parse(stream, context, tail)
+
+    yield from parser.scan(stream, context, tail, severities)
+
     if profile:
         parser.print_timings()
-    return result
 
 
-def make_log_context(log_events: List[LogEvent]) -> str:
-    """Get error context from a log file.
+def write_block(out: TextIO, block: Block) -> None:
+    """Write a block of log lines to a stream, under a header giving its line range.
 
-    Args:
-        log_events: list of events created by ``ctest_log_parser.parse()``
-
-    Returns:
-        str: context from the build log with errors highlighted
-
-    Parses the log file for lines containing errors, and prints them out with context.
-    Errors are highlighted in red and warnings in yellow. Events are sorted by line number.
+    Matched lines are prefixed with a ``>``, red for errors and yellow for warnings; the lines of
+    context around them are indented instead.
     """
-    event_colors = {e.line_no: e.color for e in log_events if e.color}
-    log_events = sorted(log_events, key=lambda e: e.line_no)
+    out.write(colorize("@c{-- lines %d to %d --}\n" % (block.start, block.end)))
+    for line_no, text in enumerate(block.lines, block.start):
+        match = block.matches.get(line_no)
+        if match is None:
+            out.write("  %s\n" % text)
+        else:
+            out.write(colorize("@%s{> %s}\n" % (match.severity.value, cescape(text))))
 
-    out = io.StringIO()
-    next_line = 1
-    block_start = -1
-    block_lines: List[str] = []
 
-    def flush_block():
-        block_end = block_start + len(block_lines) - 1
-        out.write(colorize("@c{-- lines %d to %d --}\n" % (block_start, block_end)))
-        out.writelines(block_lines)
-        block_lines.clear()
-
-    for event in log_events:
-        start = event.start
-
-        if start < next_line:
-            start = next_line
-        elif block_lines:
-            flush_block()
-
-        if not block_lines:
-            block_start = start
-
-        for i in range(start, event.end):
-            if i in event_colors:
-                color = event_colors[i]
-                block_lines.append(colorize("@%s{> %s}\n" % (color, cescape(event[i]))))
-            else:
-                block_lines.append("  %s\n" % event[i])
-
-        next_line = event.end
-
-    if block_lines:
-        flush_block()
-
-    return out.getvalue()
+def write_log_context(
+    out: TextIO, stream: Union[str, TextIO, List[str]], context: int = 6, tail: int = 0
+) -> None:
+    """Write the interesting parts of a build log to a stream."""
+    for block in scan_log(stream, context, tail):
+        write_block(out, block)
