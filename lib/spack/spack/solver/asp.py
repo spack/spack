@@ -1084,18 +1084,15 @@ class PyclingoDriver:
             A tuple of the solve result, the timer for the different phases of the
             solve, and the internal statistics from clingo.
         """
-        from spack.bootstrap import ensure_winsdk_external_or_raise
-
         output = output or DEFAULT_OUTPUT_CONFIGURATION
         timer = spack.util.timer.Timer()
-
-        # Initialize the control object for the solver
-        self.control = control or default_clingo_control()
 
         # ensure core deps are present on Windows
         # needs to modify active config scope, so cannot be run within
         # bootstrap config scope
         if sys.platform == "win32":
+            from spack.bootstrap import ensure_winsdk_external_or_raise
+
             ensure_winsdk_external_or_raise()
 
         # assemble a list of the control files needed for this problem. Some are conditionally
@@ -1153,8 +1150,9 @@ class PyclingoDriver:
             result, concretization_stats = cache.fetch(cache_key, specs)
         timer.stop("cache-check")
 
-        # run the solver
+        # run the solver, delay import of clingo until after cache miss
         if result is None:
+            self.control = control or default_clingo_control()
             tty.debug("Starting concretizer")
             result = self._run_clingo(specs, setup, problem_str, control_file_paths, timer)
             result.raise_if_unsat()
