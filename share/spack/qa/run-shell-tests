@@ -37,14 +37,17 @@ echo "Setting env variables"
 # Start in the spack root directory
 cd "$SPACK_ROOT"
 
-echo "Start running bash test woth coverage enabled if true"
 # Run bash tests with coverage enabled, but pipe output to /dev/null
 # because it seems that kcov undoes the script's redirection
 if [ "$COVERAGE" = true ]; then
+    echo "Start running bash test with coverage enabled"
     kcov "$SPACK_ROOT/coverage" "$QA_DIR/setup-env-test.sh" &> /dev/null
+    echo "Start running completion-test with coverage"
     kcov "$SPACK_ROOT/coverage" "$QA_DIR/completion-test.sh" &> /dev/null
 else
+    echo "Start running bash test without coverage"
     bash "$QA_DIR/setup-env-test.sh"
+    echo "Start running completion-test"
     bash "$QA_DIR/completion-test.sh"
 fi
 
