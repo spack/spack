@@ -936,6 +936,23 @@ class ClosedOpenRange(VersionType):
 
         raise TypeError(f"'intersection()' not supported for instances of {type(other)}")
 
+    def complement(self):
+        def above():
+            return ClosedOpenRange(self.hi, StandardVersion.typemax())
+
+        def below():
+            return ClosedOpenRange(StandardVersion.typemin(), self.lo)
+
+        if self.lo <= StandardVersion.typemin():
+            if self.hi >= StandardVersion.typemax():
+                return VersionList()
+            else:
+                return above()
+        elif self.hi >= StandardVersion.typemax():
+            return below()
+        else:
+            return below().union(above())
+
 
 class VersionList(VersionType):
     """Sorted, non-redundant list of Version and ClosedOpenRange elements."""
@@ -1130,6 +1147,16 @@ class VersionList(VersionType):
         changed = isection.versions != self.versions
         self.versions = isection.versions
         return changed
+
+    def complement(self) -> "VersionList":
+        """Find the complement of this VersionList.
+
+        Return a new VersionList that contains all versions not in this list.
+        """
+        result = VersionList(ver(":"))
+        for val in self:
+            result.intersect(val.complement())  # Using De Morgan's Laws
+        return result
 
     # typing this and getitem are a pain in Python 3.6
     def __contains__(self, other):

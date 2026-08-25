@@ -1,11 +1,13 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from abc import ABC, abstractmethod
 from collections import namedtuple
 
 import pytest
 
 import spack.concretize
+import spack.dependency
 import spack.directives
 import spack.spec
 import spack.version
@@ -222,6 +224,186 @@ def test_direct_dependencies_from_when_context_are_retained(mock_packages: RepoP
     assert spack.spec.Spec("^pkg-c %gcc") in pkg_cls.dependencies
 
 
+class FakePkg:
+    def __init__(self, name, directive_dict):
+        self.name = name
+        setattr(self, name, directive_dict)
+
+
+class FakeDependency(spack.dependency.Dependency):
+    def __init__(self, pkg, spec):
+        self.pkg = pkg
+        self.spec = spec.copy()
+        self.patches = {}
+        self.depflag = 0
+
+    def __eq__(self, other):
+        return self.__repr__() == other.__repr__()
+
+
+class MockDirectiveBase(ABC):
+    directive_name = ""
+
+    def __init__(self, data):
+        directive_dict = {
+            spack.spec.Spec(when): self.create_directives(spec_names)
+            for when, spec_names in data.items()
+        }
+        self.pkg = FakePkg(self.directive_name, directive_dict)
+
+    def compare(self, data):
+        expected = {
+            spack.spec.Spec(when): self.create_directives(spec_names)
+            for when, spec_names in data.items()
+        }
+        assert getattr(self.pkg, self.directive_name) == expected
+
+    @abstractmethod
+    def create_directives(self, spec_names):
+        pass
+
+    @property
+    def removal_class(self):
+        return spack.directives.DropDirectiveBase
+
+    def remove(self, spec, when):
+        self.removal_class(spec, when).remove()(self.pkg)
+
+
+class MockConflicts(MockDirectiveBase):
+    directive_name = "conflicts"
+
+    def create_directives(self, spec_names):
+        return [(spack.spec.Spec(spec_name), None) for spec_name in spec_names]
+
+    @property
+    def removal_class(self):
+        return spack.directives.DropConflicts
+
+
+class MockDependencies(MockDirectiveBase):
+    directive_name = "dependencies"
+
+    def create_directives(self, spec_names):
+        pkg = FakePkg(self.directive_name, {})
+        return {
+            spec_name: FakeDependency(pkg, spack.spec.Spec(spec_name)) for spec_name in spec_names
+        }
+
+    @property
+    def removal_class(self):
+        return spack.directives.DropDependsOn
+
+
+class MockRequirements(MockDirectiveBase):
+    directive_name = "requirements"
+
+    def create_directives(self, spec_names):
+        return [((spack.spec.Spec(spec_name),), "one_of", None) for spec_name in spec_names]
+
+    @property
+    def removal_class(self):
+        return spack.directives.DropRequire
+
+
+@pytest.fixture(params=[MockConflicts, MockDependencies, MockRequirements])
+def mock_directive_class(request):
+    """Fixture to provide parameterized mock directive classes."""
+    return request.param
+
+
+def test_remove_no_directives(mock_directive_class):
+    mock = mock_directive_class({"@1.0": ["pkg1"]})
+    mock.remove("pkg2", "@1.0")
+    mock.compare({"@1.0": ["pkg1"]})
+
+
+def test_remove_one_directive(mock_directive_class):
+    mock = mock_directive_class({"@1.0": ["pkg1"]})
+    mock.remove("pkg1", "@1.0")
+    mock.compare({})
+
+
+def test_remove_intersecting_directive(mock_directive_class):
+    mock = mock_directive_class({"@3:": ["pkg1"]})
+    mock.remove("pkg1", "@5:")
+    mock.compare({"@3:4": ["pkg1"]})
+
+
+def test_remove_entire_intersecting_directive(mock_directive_class):
+    mock = mock_directive_class({"@3:": ["pkg1"]})
+    mock.remove("pkg1", "@2:")
+    mock.compare({})
+
+
+def test_remove_modify_skip_directives(mock_directive_class):
+    mock = mock_directive_class({"@1:": ["pkg1", "pkg2", "pkg3"], "@3": ["pkg4"]})
+    mock.remove("pkg1", "@1:")  # Remove
+    mock.remove("pkg2", "@3:")  # Modify
+    # pkg3 is skipped in the nested else statement
+    mock.remove("pkg4", "@2")  # Skipped in the outer else statement
+    mock.compare({"@1:2": ["pkg2"], "@1:": ["pkg3"], "@3": ["pkg4"]})
+
+
+def test_drop_all_versions(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_all_versions")
+    assert len(cls.versions) == 0
+
+
+def test_drop_all_conflicts(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_all_conflicts")
+    assert len(cls.conflicts) == 0
+
+
+def test_drop_all_depends_on(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_all_depends_on")
+    assert len(cls.dependencies) == 0
+
+
+def test_drop_all_requires(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_all_requires")
+    assert len(cls.dependencies) == 0
+
+
+def test_drop_version(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_version")
+    assert cls.versions == {spack.version.Version("1.2"): {}}
+
+
+def test_drop_conflict(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_conflict")
+    print(cls.conflicts)
+    assert cls.conflicts == {spack.spec.Spec("@1.0"): [(spack.spec.Spec("%gcc"), None)]}
+
+
+def test_drop_conflict_range(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_conflict_range")
+    assert cls.conflicts == {spack.spec.Spec("@3:4"): [(spack.spec.Spec("mpi"), None)]}
+
+
+def test_drop_depends_on(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_depends_on")
+    assert cls.dependencies == {
+        spack.spec.Spec("@1.0"): {"mpi": spack.dependency.Dependency(cls, spack.spec.Spec("mpi"))}
+    }
+
+
+def test_drop_require(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_require")
+    print(f"cls.conflicts={cls.conflicts}")
+    print(f"cls.requirements={cls.requirements}")
+    assert cls.requirements == {
+        spack.spec.Spec("@1.0"): [((spack.spec.Spec("mpi"),), "one_of", None)]
+    }
+
+
+def test_drop_patch(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_patch")
+    leftover_patch = next(iter(cls.patches.values()))[0]
+    assert leftover_patch.sha256 == "abc"
+    assert cls.patches == {spack.spec.Spec("@1.0"): [leftover_patch]}
+
+
 def test_directives_meta_combine_when():
     # The ^dep edges are indirect, so nothing says they are one node: combining two
     # when-conditions that each constrain it keeps them parallel instead of fusing them.
@@ -240,7 +422,7 @@ def test_directive_descriptor_init():
     # when `pkg.dependencies` is initialized, `depends_on` and `extends` should run, and also
     # `pkg.extendees` should be initialized
     dependencies = DirectiveDictDescriptor("dependencies")
-    assert dependencies.directives_to_run == ["depends_on", "extends"]
+    assert dependencies.directives_to_run == ["depends_on", "drop_all_depends_on", "drop_depends_on", "extends"]
     assert dependencies.dicts_to_init == ["dependencies", "extendees"]
 
     # when `pkg.provided` is initialized, so should `pkg.provided_together`, and only the
@@ -257,7 +439,7 @@ def test_directive_descriptor_init():
     # when specifying patches on dependencies with `depends_on` and `extends`, the `pkg.patches`
     # dict is not affects -- they are stored on a Dependency object.
     patches = DirectiveDictDescriptor("patches")
-    assert patches.directives_to_run == ["patch"]
+    assert patches.directives_to_run == ["patch", "drop_patch"]
     assert patches.dicts_to_init == ["patches"]
 
 
