@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-from typing import Optional
+from typing import Optional, Type
 
 from spack.util import tty
 
@@ -87,7 +87,14 @@ class SpackError(Exception):
         return f"{qualified_name}({repr(self.message)}, {repr(self.long_message)})"
 
     def __reduce__(self):
-        return type(self), (self.message, self.long_message)
+        # Pickle reconstructs an exception by calling its class, which fails for the many
+        # subclasses whose __init__ takes something other than (message, long_message)
+        return _rebuild_error, (type(self),), self.__dict__
+
+
+def _rebuild_error(cls: Type["SpackError"]) -> "SpackError":
+    """Build an error without calling __init__, so pickle can restore its state onto it."""
+    return cls.__new__(cls)
 
 
 class NoLibrariesError(SpackError):
