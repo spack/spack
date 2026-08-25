@@ -14,6 +14,7 @@
 #-----------------------------------------------------------
 # Run a few initial commands and set up test environment
 #-----------------------------------------------------------
+echo "Starting run-shell-test"
 ORIGINAL_PATH="$PATH"
 
 . "$(dirname $0)/setup.sh"
@@ -22,6 +23,7 @@ if [ "$COVERAGE" = true ]; then
 else
   echo "COVERAGE not set to 'true' [skipping coverage]"
 fi
+echo "Checked dependencies"
 
 # Clean the environment by removing Spack from the path and getting rid of
 # the spack shell function
@@ -31,9 +33,11 @@ unset spack
 # Convert QA_DIR to absolute path before changing directory
 export QA_DIR=$(realpath $QA_DIR)
 
+echo "Setting env variables"
 # Start in the spack root directory
 cd "$SPACK_ROOT"
 
+echo "Start running bash test woth coverage enabled if true"
 # Run bash tests with coverage enabled, but pipe output to /dev/null
 # because it seems that kcov undoes the script's redirection
 if [ "$COVERAGE" = true ]; then
@@ -44,18 +48,22 @@ else
     bash "$QA_DIR/completion-test.sh"
 fi
 
+echo "Run zsh & dash tests"
 # Run the test scripts for their output (these will print nicely)
 zsh  "$QA_DIR/setup-env-test.sh"
 zsh "$QA_DIR/completion-test.sh"
 dash "$QA_DIR/setup-env-test.sh"
 
+echo "Run fish test"
 # Run fish tests
 fish "$QA_DIR/setup-env-test.fish"
 
-# run csh and tcsh tests
+echo "Run csh & tsch tests"
+# Run csh and tcsh tests
 csh  "$QA_DIR/setup-env-test.csh"
 tcsh "$QA_DIR/setup-env-test.csh"
 
+echo "Run test-env-cfg.sh"
 # check that spack can help users edit an environment's manifest file
 # even when it has invalid configuration
 sh "$QA_DIR/test-env-cfg.sh"
