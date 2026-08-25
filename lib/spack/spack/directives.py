@@ -45,7 +45,7 @@ import collections.abc
 import os
 import re
 import warnings
-from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import spack.deptypes as dt
 import spack.error
@@ -128,10 +128,13 @@ def _make_when_spec(value: Union[WhenType, Tuple[str, ...]]) -> Optional[spack.s
         # avoid a copy when there's only one condition
         if len(value) == 1:
             return get_spec(value[0])
-        # reduce the when-stack to a single spec by combining all constraints.
-        combined_spec = spack.spec.Spec(value[0])
-        for cond in value[1:]:
-            combined_spec._constrain_symbolically(get_spec(cond))
+        combined_spec = _WHEN_STACK_CACHE.get(value)
+        if combined_spec is None:
+            # reduce the when-stack to a single spec by combining all constraints.
+            combined_spec = spack.spec.Spec(value[0])
+            for cond in value[1:]:
+                combined_spec._constrain_symbolically(get_spec(cond))
+            _WHEN_STACK_CACHE[value] = combined_spec
         return combined_spec
 
     # Unsatisfiable conditions are discarded by the caller, and never
@@ -147,6 +150,12 @@ def _make_when_spec(value: Union[WhenType, Tuple[str, ...]]) -> Optional[spack.s
 
     # This is conditional on the spec
     return get_spec(value)
+
+
+#: Nested `with when(...)` blocks reduce to the same spec over and over: a trilinos solve combines
+#: 6057 condition stacks drawn from 991 distinct ones. Combined when-specs are only ever used as
+#: keys of the package class dictionaries, like the single-condition ones `get_spec` shares.
+_WHEN_STACK_CACHE: Dict[Tuple[str, ...], spack.spec.Spec] = {}
 
 
 SubmoduleCallback = Callable[[spack.package_base.PackageBase], Union[str, List[str], bool]]
