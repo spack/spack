@@ -1828,6 +1828,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         pkg_deps = cls.dependencies
         for dep_name in pkg_deps:
             for _, dependency in pkg_deps[dep_name].items():
+                if not dependency.patches:
+                    continue
                 for _, patch_list in dependency.patches.items():
                     for patch in patch_list:
                         patches.append(patch)

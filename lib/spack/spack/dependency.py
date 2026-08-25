@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Data structures that represent Spack's dependency relationships."""
 
-from typing import TYPE_CHECKING, Dict, List, Type
+from typing import TYPE_CHECKING, Dict, List, Optional, Type
 
 import spack.deptypes as dt
 import spack.spec
@@ -58,9 +58,10 @@ class Dependency:
         self.pkg = pkg
         self.spec = spec
 
-        # This dict maps condition specs to lists of Patch objects, just
-        # as the patches dict on packages does.
-        self.patches: Dict[spack.spec.Spec, List["spack.patch.Patch"]] = {}
+        # Maps condition specs to lists of Patch objects, as the patches dict on packages
+        # does. None until a patch is actually attached: only a handful of packages patch
+        # their dependencies, and an empty dict per Dependency is a large share of the heap.
+        self.patches: Optional[Dict[spack.spec.Spec, List["spack.patch.Patch"]]] = None
         self.depflag = depflag
 
     @property

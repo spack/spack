@@ -6204,6 +6204,9 @@ def _inject_patches_variant(root: Spec) -> None:
             if not dspec.parent.satisfies(cond):
                 continue
 
+            if not dependency.patches:
+                continue
+
             for pcond, patch_list in dependency.patches.items():
                 if dspec.spec.satisfies(pcond):
                     edge_patches.extend(patch_list)

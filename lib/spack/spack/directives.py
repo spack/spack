@@ -612,6 +612,8 @@ def _execute_patch(
 
     # If this spec is identical to some other, then append this
     # patch to the existing list.
+    if pkg_or_dep.patches is None:
+        pkg_or_dep.patches = {}
     cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
 
     global _patch_order_index
