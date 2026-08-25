@@ -22,6 +22,8 @@ import functools
 import os
 from typing import Optional, Tuple
 
+import pytest
+
 import spack.solver.asp
 
 _stats = {"hits": 0, "misses": 0}
@@ -109,6 +111,7 @@ def pytest_sessionfinish(session):
         workeroutput["spack_concretization_cache_stats"] = _stats
 
 
+@pytest.hookimpl(optionalhook=True)
 def pytest_testnodedown(node, error):
     # xdist controller: add the counters of a finished worker
     stats = getattr(node, "workeroutput", {}).get("spack_concretization_cache_stats")
