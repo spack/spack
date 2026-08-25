@@ -51,11 +51,11 @@ def apply_patch(
             git_utils_path = os.pathsep.join([str(git_root), git_utils_path])
 
     # -t is required here to prevent patch from attempting to prompt the user
-    # -N is required here to prevent patch from assuming patches detected as "reversed"
-    # are not default applied as such by the implications of '-t'
-    # Both are required, -t with no -N will apply patches as reverse when instead
-    # the patch will fail
-    # -N with no -t will still encounter scenarios where patch will prompt
+    # -N is required to avoid assumption of reverse patch (when it looks
+    # like a patch has already been applied)
+    # Both are required: if -N is missing, there will be no prompt, but the patch
+    # utility will decide to automatically apply the patch in reverse;
+    # If -t is missing, the patch utility will still prompt in some other cases
     args = ["-s", "-t", "-N", "-p", str(level), "-i", patch_path, "-d", working_dir]
     if reverse:
         args.append("-R")
