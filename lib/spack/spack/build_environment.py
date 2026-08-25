@@ -55,6 +55,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    TextIO,
     Tuple,
     Type,
     Union,
@@ -84,6 +85,7 @@ from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.util import tty
+from spack.util.ctest_log_parser import Severity
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
@@ -98,7 +100,7 @@ from spack.util.environment import (
 from spack.util.executable import Executable
 from spack.util.filesystem import join_path, symlink
 from spack.util.lang import dedupe, stable_partition
-from spack.util.log_parse import make_log_context, parse_log_events
+from spack.util.log_parse import scan_log, write_block
 from spack.util.string import plural
 from spack.util.tty.color import cescape, colorize
 
@@ -382,7 +384,7 @@ def clean_environment():
     build_lang = spack.config.CONFIG.get("config:build_language")
     if build_lang:
         # Override language-related variables. This can be used to force
-        # English compiler messages etc., which allows parse_log_events to
+        # English compiler messages etc., which allows the log parser to
         # show useful matches.
         env.set("LC_ALL", build_lang)
 
@@ -1659,27 +1661,27 @@ def _make_child_error(msg, module, name, traceback, log, log_type, context):
     return ChildError(msg, module, name, traceback, log, log_type, context)
 
 
-def write_log_summary(out, log_type, log, last=None):
-    errors, warnings, _ = parse_log_events(log)
-    nerr = len(errors)
-    nwar = len(warnings)
-
-    if nerr > 0:
-        if last and nerr > last:
-            errors = errors[-last:]
-            nerr = last
-
-        # If errors are found, only display errors
-        out.write("\n%s found in %s log:\n" % (plural(nerr, "error"), log_type))
-        out.write(make_log_context(errors))
-    elif nwar > 0:
-        if last and nwar > last:
-            warnings = warnings[-last:]
-            nwar = last
-
-        # If no errors are found but warnings are, display warnings
-        out.write("\n%s found in %s log:\n" % (plural(nwar, "warning"), log_type))
-        out.write(make_log_context(warnings))
+def write_log_summary(
+    out: TextIO, log_type: str, log: Union[str, TextIO, List[str]], last: Optional[int] = None
+) -> None:
+    """Print highlighted errors from a log file with surrounding context. If the log does not
+    contain errors, print warnings instead. If ``last`` is given, only show the last so many
+    excerpts from the log (which may contain more errors/warnings than ``last``)."""
+    blocks = list(scan_log(log))
+    if not blocks:
+        return
+    # If errors are found, only display blocks containing errors.
+    error_blocks = [
+        b for b in blocks if any(m.severity is Severity.ERROR for m in b.matches.values())
+    ]
+    severity = Severity.ERROR if error_blocks else Severity.WARNING
+    blocks = error_blocks or blocks
+    if last:
+        blocks = blocks[-last:]
+    num = sum(m.severity is severity for b in blocks for m in b.matches.values())
+    out.write(f"\n{plural(num, severity.name.lower())} found in {log_type} log:\n")
+    for block in blocks:
+        write_block(out, block)
 
 
 class ModuleChangePropagator:
