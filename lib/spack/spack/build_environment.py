@@ -55,6 +55,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    TextIO,
     Tuple,
     Type,
     Union,
@@ -1660,7 +1661,12 @@ def _make_child_error(msg, module, name, traceback, log, log_type, context):
     return ChildError(msg, module, name, traceback, log, log_type, context)
 
 
-def write_log_summary(out, log_type, log, last=None):
+def write_log_summary(
+    out: TextIO, log_type: str, log: Union[str, TextIO, List[str]], last: Optional[int] = None
+) -> None:
+    """Print highlighted errors from a log file with surrounding context. If the log does not
+    contain errors, print warnings instead. If ``last`` is given, only show the last so many
+    excerpts from the log (which may contain more errors/warnings than ``last``)."""
     blocks = list(scan_log(log))
     if not blocks:
         return
