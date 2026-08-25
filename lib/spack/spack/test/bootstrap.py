@@ -59,9 +59,7 @@ def active_mock_environment(mutable_config, mutable_mock_env_path):
 
 
 def _assert_bootstrap_store_is_active() -> None:
-    """Assert what every bootstrap context looks like from the inside: the bootstrap store,
-    with no padding, is the one in use.
-    """
+    """Assert that the store in use is the bootstrap store, configured without padding."""
     bootstrap_store = spack.bootstrap.config.store_path()
     assert spack.store.STORE.root == bootstrap_store
     assert spack.config.CONFIG.get("config:install_tree:root") == bootstrap_store
@@ -320,7 +318,7 @@ def test_prototype_matches_a_constraint_on_its_compiler(prototype):
 
 
 def test_no_bootstrapping_sources_enabled(mutable_config):
-    """When no source is trusted, the error says so instead of listing failures."""
+    """Tests the message raised when no source is trusted."""
     mutable_config.set("bootstrap:trusted", {})
     with pytest.raises(ImportError, match="no bootstrapping sources are enabled"):
         spack.bootstrap.core.ensure_module_importable_or_raise("asdf")
@@ -349,7 +347,7 @@ def test_verify_patchelf(version_output, expected, mock_executable):
 
 @pytest.mark.not_on_windows("The mock executable quotes its output on Windows")
 def test_verify_patchelf_when_the_command_fails(mock_executable):
-    """A good version string is not enough, the command must also succeed."""
+    """Tests that a non-zero exit status is rejected, whatever the version string is."""
     patchelf = spack.util.executable.Executable(
         str(mock_executable("patchelf", 'echo "patchelf 0.17.2"\nexit 1'))
     )
@@ -439,7 +437,7 @@ def test_the_store_is_probed_once_for_all_the_sources(fake_bootstrap_type):
 
     with pytest.raises(RuntimeError, match="cannot bootstrap zlib"):
         spack.bootstrap.core._bootstrap_or_raise(
-            _fake_request(probes), "zlib", "zlib", RuntimeError, sources=sources
+            _fake_request(probes), "zlib", RuntimeError, sources=sources
         )
 
     assert len(probes) == 1
@@ -453,11 +451,7 @@ def test_software_in_the_store_skips_every_source(fake_bootstrap_type):
     sources = _fake_sources(tried, "from the source")
 
     result = spack.bootstrap.core._bootstrap_or_raise(
-        _fake_request(probes, result="from the store"),
-        "zlib",
-        "zlib",
-        RuntimeError,
-        sources=sources,
+        _fake_request(probes, result="from the store"), "zlib", RuntimeError, sources=sources
     )
 
     assert result == "from the store"
@@ -470,7 +464,7 @@ def test_the_first_successful_source_wins(fake_bootstrap_type):
     sources = _fake_sources(tried, RuntimeError("no"), "from src1", "from src2")
 
     result = spack.bootstrap.core._bootstrap_or_raise(
-        _fake_request(probes), "zlib", "zlib", RuntimeError, sources=sources
+        _fake_request(probes), "zlib", RuntimeError, sources=sources
     )
 
     assert result == "from src1"
@@ -478,14 +472,14 @@ def test_the_first_successful_source_wins(fake_bootstrap_type):
 
 
 def test_every_source_failure_is_reported(fake_bootstrap_type):
-    """The last failure is rarely the interesting one, so all of them are reported."""
+    """Tests that the message includes the name and the failure of every source."""
     probes: List[Any] = []
     tried: List[str] = []
     sources = _fake_sources(tried, RuntimeError("first boom"), ValueError("second boom"))
 
     with pytest.raises(RuntimeError) as exc_info:
         spack.bootstrap.core._bootstrap_or_raise(
-            _fake_request(probes), "zlib", "zlib", RuntimeError, sources=sources
+            _fake_request(probes), "zlib", RuntimeError, sources=sources
         )
 
     message = str(exc_info.value)
@@ -494,26 +488,26 @@ def test_every_source_failure_is_reported(fake_bootstrap_type):
 
 
 def test_sources_that_provide_nothing_are_reported_as_such(fake_bootstrap_type):
-    """A source can decline without failing, e.g. when no binary matches the interpreter."""
+    """Tests the message when every source returns None, without raising."""
     probes: List[Any] = []
     tried: List[str] = []
     sources = _fake_sources(tried, None, None)
 
     with pytest.raises(RuntimeError, match="no bootstrapping source could provide it"):
         spack.bootstrap.core._bootstrap_or_raise(
-            _fake_request(probes), "zlib", "zlib", RuntimeError, sources=sources
+            _fake_request(probes), "zlib", RuntimeError, sources=sources
         )
 
     assert tried == ["src0", "src1"]
 
 
 def test_no_sources_to_try_is_reported_as_such(fake_bootstrap_type):
-    """Without sources there is no failure to report, so the message says why."""
+    """Tests the message when the list of sources is empty."""
     probes: List[Any] = []
 
     with pytest.raises(RuntimeError, match='from spec "zlib": no bootstrapping sources'):
         spack.bootstrap.core._bootstrap_or_raise(
-            _fake_request(probes), "zlib", "zlib", RuntimeError, sources=[]
+            _fake_request(probes), "zlib", RuntimeError, sources=[]
         )
 
 
@@ -542,7 +536,7 @@ class _RecordingInstaller:
 
 
 class _FakeConcreteSpec:
-    """Stand-in for the result of concretization, carrying a recognizable package."""
+    """Stand-in for the result of concretization. Holds a recognizable ``package``."""
 
     def __init__(self, abstract_spec: Any) -> None:
         self.abstract_spec = abstract_spec
@@ -595,8 +589,8 @@ def test_the_install_type_maps_to_the_source_bootstrapper(mutable_config):
 def test_the_source_bootstrapper_installs_from_its_own_mirror(
     make_request, expected_installer_args, recording_installer, mutable_config
 ):
-    """Tests that the request decides what is installed and how, the source decides where it
-    comes from.
+    """Tests that the installer arguments come from the request, and the mirror from the
+    source.
     """
     mutable_config.set("bootstrap:sources", [SPACK_INSTALL_SOURCE])
     conf = spack.bootstrap.core.bootstrapping_sources()[0]
@@ -615,12 +609,12 @@ def test_the_source_bootstrapper_installs_from_its_own_mirror(
 def test_the_source_bootstrapper_concretizes_with_the_request(
     recording_installer, mutable_config, monkeypatch
 ):
-    """Tests that the request decides how its spec is concretized, so that software which
-    cannot go through the regular concretizer can say so.
+    """Tests that the source bootstrapper concretizes with ``request.concretize``, and never
+    calls ``spack.concretize.concretize_one``.
     """
 
     def _regular_concretizer(abstract_spec):
-        raise AssertionError("the request asked for its own concretizer")
+        raise AssertionError("concretize_one was called instead of request.concretize")
 
     monkeypatch.setattr(spack.concretize, "concretize_one", _regular_concretizer)
     mutable_config.set("bootstrap:sources", [SPACK_INSTALL_SOURCE])
@@ -666,13 +660,13 @@ def backtrace_flags(monkeypatch):
 
 
 def test_source_failures_point_at_the_backtrace_flag(fake_bootstrap_type, backtrace_flags):
-    """Tests that by default the failures are reported without the noise of their tracebacks."""
+    """Tests that by default the failures are reported without their tracebacks."""
     tried: List[str] = []
     sources = _fake_sources(tried, RuntimeError("boom"))
 
     with pytest.raises(RuntimeError) as exc_info:
         spack.bootstrap.core._bootstrap_or_raise(
-            _fake_request([]), "zlib", "zlib", RuntimeError, sources=sources
+            _fake_request([]), "zlib", RuntimeError, sources=sources
         )
 
     message = str(exc_info.value)
@@ -682,7 +676,7 @@ def test_source_failures_point_at_the_backtrace_flag(fake_bootstrap_type, backtr
 
 
 @pytest.mark.parametrize("flag", ["debug", "SHOW_BACKTRACE"])
-def test_source_failures_carry_their_traceback_when_asked(
+def test_source_failures_include_their_traceback_when_the_flag_is_set(
     fake_bootstrap_type, backtrace_flags, flag
 ):
     """Tests that either flag turns the tracebacks on, and the hint to enable them off."""
@@ -692,7 +686,7 @@ def test_source_failures_carry_their_traceback_when_asked(
 
     with pytest.raises(RuntimeError) as exc_info:
         spack.bootstrap.core._bootstrap_or_raise(
-            _fake_request([]), "zlib", "zlib", RuntimeError, sources=sources
+            _fake_request([]), "zlib", RuntimeError, sources=sources
         )
 
     message = str(exc_info.value)

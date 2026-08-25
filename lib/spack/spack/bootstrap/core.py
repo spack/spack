@@ -279,13 +279,16 @@ def source_is_enabled(conf: ConfigDictionary) -> bool:
 
 
 def _cannot_bootstrap_message(
-    what: str, abstract_spec: str, exception_handler: GroupedExceptionHandler, sources_tried: int
+    what: str,
+    abstract_spec: spack.spec.Spec,
+    exception_handler: GroupedExceptionHandler,
+    sources_tried: int,
 ) -> str:
     """Return the error message to report when no bootstrapping source succeeded.
 
     Args:
         what: description of what could not be bootstrapped
-        abstract_spec: abstract spec that was supposed to provide it
+        abstract_spec: spec that was searched for
         exception_handler: handler that collected the failure of each source
         sources_tried: number of sources that were tried
     """
@@ -310,7 +313,6 @@ def enabled_bootstrapping_sources() -> List[ConfigDictionary]:
 def _bootstrap_or_raise(
     request: BootstrapRequest[ResultT],
     what: str,
-    abstract_spec: str,
     error_type: Type[Exception],
     sources: Optional[Sequence[ConfigDictionary]] = None,
 ) -> ResultT:
@@ -321,7 +323,6 @@ def _bootstrap_or_raise(
     Args:
         request: software to be bootstrapped, and the probe that tests for it
         what: description of the software, to be used in the error message
-        abstract_spec: abstract spec that was supposed to provide it
         error_type: exception to be raised if no source succeeds
         sources: sources to be tried. Defaults to the enabled ones from configuration.
 
@@ -339,15 +340,13 @@ def _bootstrap_or_raise(
     exception_handler = GroupedExceptionHandler()
 
     for current_config in sources:
-        # The bootstrapper is constructed here, so that a source with broken metadata is
-        # reported like any other failure, instead of stopping the ones after it
         with exception_handler.forward(current_config["name"], Exception):
             result = create_bootstrapper(current_config).try_to_bootstrap(request)
             if result:
                 return result
 
     raise error_type(
-        _cannot_bootstrap_message(what, abstract_spec, exception_handler, len(sources))
+        _cannot_bootstrap_message(what, request.abstract_spec, exception_handler, len(sources))
     )
 
 
@@ -383,7 +382,6 @@ def ensure_module_importable_or_raise(
     _bootstrap_or_raise(
         BootstrapRequest.for_module(module, abstract_spec, concretize=concretize),
         what=f'the "{module}" Python module',
-        abstract_spec=abstract_spec,
         error_type=ImportError,
     )
 
@@ -418,7 +416,6 @@ def ensure_executables_in_path_or_raise(
     found = _bootstrap_or_raise(
         BootstrapRequest.for_executables(executables, abstract_spec),
         what=f"any of the {', '.join(executables)} executables",
-        abstract_spec=abstract_spec,
         error_type=RuntimeError,
     )
     # Additional environment variables needed to run the command
@@ -457,7 +454,11 @@ def clingo_root_spec() -> str:
 
 
 def _concretize_clingo(abstract_spec: spack.spec.Spec) -> spack.spec.Spec:
-    """Return the clingo spec to be built, edited from a prototype instead of concretized."""
+    """Return the clingo spec to be built, edited from a prototype.
+
+    The ``abstract_spec`` argument is discarded, so a change to ``clingo_root_spec()`` has
+    no effect on what is built from sources.
+    """
     return ClingoBootstrapConcretizer(configuration=spack.config.CONFIG).concretize()
 
 
