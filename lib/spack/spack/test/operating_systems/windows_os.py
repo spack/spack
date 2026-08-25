@@ -92,7 +92,7 @@ def test_install_paths_are_deduped_across_sources(monkeypatch, tmp_path):
 
     monkeypatch.setattr(windows_os.WindowsOs, "_vswhere_install_paths", lambda self: [root])
     # the registry resolves paths, so casing and separators need not match exactly
-    duplicate = root.upper() if os.name == "nt" else root
+    duplicate = root.upper()
     monkeypatch.setattr(windows_os.WindowsOs, "_registry_install_paths", lambda self: [duplicate])
 
     assert windows_os.WindowsOs().vs_install_paths == [root]
@@ -105,7 +105,7 @@ def test_empty_vswhere_output_yields_no_paths(monkeypatch, no_registry):
     relative ``VC\\Tools\\MSVC`` glob rooted at the current working directory.
     """
     monkeypatch.setenv("ProgramFiles(x86)", "C:\\Program Files (x86)")
-    monkeypatch.setattr(subprocess, "check_output", lambda *args, **kwargs: "")
+    monkeypatch.setattr(windows_os.subprocess, "check_output", lambda *args, **kwargs: "")
 
     os_ = windows_os.WindowsOs()
     assert os_.vs_install_paths == []
