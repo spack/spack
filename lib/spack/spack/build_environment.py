@@ -1662,21 +1662,20 @@ def _make_child_error(msg, module, name, traceback, log, log_type, context):
 
 def write_log_summary(out, log_type, log, last=None):
     blocks = list(scan_log(log))
-    matches = [m for b in blocks for m in b.matches.values()]
-    # If errors are found, only display blocks containing errors.
-    has_errors = any(m.severity is Severity.ERROR for m in matches)
-    if has_errors:
-        matches = [m for m in matches if m.severity is Severity.ERROR]
-    if not matches:
+    if not blocks:
         return
+    # If errors are found, only display blocks containing errors.
+    error_blocks = [
+        b for b in blocks if any(m.severity is Severity.ERROR for m in b.matches.values())
+    ]
+    severity = Severity.ERROR if error_blocks else Severity.WARNING
+    blocks = error_blocks or blocks
     if last:
-        matches = matches[-last:]
-    severity, min_line = matches[0].severity, matches[0].line_no
-    noun = "error" if has_errors else "warning"
-    out.write("\n%s found in %s log:\n" % (plural(len(matches), noun), log_type))
+        blocks = blocks[-last:]
+    num = sum(m.severity is severity for b in blocks for m in b.matches.values())
+    out.write(f"\n{plural(num, severity.name.lower())} found in {log_type} log:\n")
     for block in blocks:
-        if any(m.severity is severity and m.line_no >= min_line for m in block.matches.values()):
-            write_block(out, block)
+        write_block(out, block)
 
 
 class ModuleChangePropagator:
