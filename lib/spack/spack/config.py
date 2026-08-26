@@ -71,6 +71,7 @@ import spack.schema.view
 import spack.util.executable
 import spack.util.git
 import spack.util.hash
+import spack.util.lock
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -1765,6 +1766,174 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
     return config_paths
 
 
+def _layout_scope_path() -> str:
+    """Path to the layout scope directory."""
+    return os.path.join(spack.paths.etc_path, "layout")
+
+
+def _isolate_scope_path() -> str:
+    """Path to the isolate scope directory."""
+    return os.path.join(spack.paths.etc_path, "isolate")
+
+
+def _is_spack_writable() -> bool:
+    """Check if $spack/etc/spack is writable."""
+    etc_spack = spack.paths.etc_path
+    return os.access(etc_spack, os.W_OK)
+
+
+def _has_layout_scope() -> bool:
+    """Check if layout scope exists."""
+    return os.path.exists(_layout_scope_path())
+
+
+def _has_isolate_scope() -> bool:
+    """Check if isolate scope exists."""
+    return os.path.exists(_isolate_scope_path())
+
+
+def _detect_old_resources() -> Dict[str, bool]:
+    """Detect presence of old Spack-internal resources.
+
+    Returns:
+        Dictionary with keys: 'installs', 'gpg_keys', 'modules', 'licenses'
+    """
+    opt_spack = os.path.join(spack.paths.opt_path, "spack")
+    share_modules = os.path.join(spack.paths.share_path, "spack", "modules")
+
+    result = {
+        'installs': False,
+        'gpg_keys': False,
+        'modules': False,
+        'licenses': False,
+    }
+
+    # Check for installs
+    if os.path.exists(opt_spack):
+        # Check if there are any actual package installs (not just empty directories)
+        try:
+            # Quick check: any directories in opt/spack besides gpg and licenses?
+            for entry in os.listdir(opt_spack):
+                entry_path = os.path.join(opt_spack, entry)
+                if os.path.isdir(entry_path) and entry not in ['gpg', 'licenses']:
+                    result['installs'] = True
+                    break
+        except OSError:
+            pass
+
+    # Check for GPG keys
+    gpg_dir = os.path.join(opt_spack, "gpg")
+    if os.path.exists(gpg_dir):
+        try:
+            if os.listdir(gpg_dir):  # Non-empty
+                result['gpg_keys'] = True
+        except OSError:
+            pass
+
+    # Check for modules
+    if os.path.exists(share_modules):
+        try:
+            if os.listdir(share_modules):  # Non-empty
+                result['modules'] = True
+        except OSError:
+            pass
+
+    # Check for licenses
+    licenses_dir = os.path.join(opt_spack, "licenses")
+    if os.path.exists(licenses_dir):
+        try:
+            if os.listdir(licenses_dir):  # Non-empty
+                result['licenses'] = True
+        except OSError:
+            pass
+
+    return result
+
+
+def _create_empty_layout_scope() -> None:
+    """Create an empty layout scope directory.
+
+    This is used for P4 (no old resources, no isolate) to indicate that
+    migration has been checked and new XDG defaults should be used.
+    """
+    layout_path = _layout_scope_path()
+    filesystem.mkdirp(layout_path)
+
+    # Create a marker file to indicate this is intentionally empty
+    marker_path = os.path.join(layout_path, ".spack-layout-scope")
+    with open(marker_path, "w", encoding="utf-8") as f:
+        f.write("# This directory was created by Spack's auto-migration logic.\n")
+        f.write("# An empty layout scope means all new XDG-compliant defaults are in use.\n")
+
+
+def _perform_migration_check() -> None:
+    """Perform migration detection and setup layout scope if needed.
+
+    This implements the decision tree from feature-summaries/shared-spack-auto-migrate.md
+
+    Called during config initialization with migration lock held.
+    """
+    print("DEBUG: _perform_migration_check() called")
+
+    # P1: Not writable - cannot do anything
+    if not _is_spack_writable():
+        print("DEBUG: P1: Spack instance is read-only")
+        tty.debug("Spack instance is read-only, skipping auto-migration check")
+        return
+
+    # P2: Layout scope already exists - migration already complete
+    if _has_layout_scope():
+        tty.debug("Layout scope already exists, skipping auto-migration check")
+        return
+
+    # Detect old resources
+    old_resources = _detect_old_resources()
+    has_old_resources = any(old_resources.values())
+
+    # P3: Isolate scope exists
+    if _has_isolate_scope():
+        tty.debug("Isolate scope detected during auto-migration check")
+        if not has_old_resources:
+            # P3a: No old resources - create layout scope pointing to isolate location
+            tty.debug("P3a: No old resources, isolate scope will be primary storage")
+            # TODO: Create layout scope pointing to isolate directory
+            # TODO: Read isolate config to determine target path
+            _create_empty_layout_scope()  # Temporary: just create empty scope
+        else:
+            # P3b: Old resources present - need selective migration
+            tty.debug("P3b: Old resources detected with isolate scope")
+            # TODO: Implement P3b migration logic
+            # - Installs: stay in place
+            # - Modules: stay in place if installs exist
+            # - Licenses: attempt copy to isolate location
+            # - GPG: attempt move to isolate location
+            _create_empty_layout_scope()  # Temporary: just create empty scope
+        return
+
+    # P4: No old resources, no isolate - clean slate
+    if not has_old_resources:
+        tty.debug("P4: Clean Spack instance, using XDG-compliant defaults")
+        # Empty layout scope means "use all new defaults"
+        _create_empty_layout_scope()
+        return
+
+    # P5: Old resources present, no isolate - migrate what we can
+    print("DEBUG: P5: Old resources detected, performing selective migration")
+    print(f"DEBUG:   Installs: {old_resources['installs']}")
+    print(f"DEBUG:   GPG keys: {old_resources['gpg_keys']}")
+    print(f"DEBUG:   Modules: {old_resources['modules']}")
+    print(f"DEBUG:   Licenses: {old_resources['licenses']}")
+
+    # TODO: Implement P5 migration logic
+    # - Installs: stay in place (create layout scope entry)
+    # - Modules: stay in place if installs exist (create layout scope entry)
+    # - Licenses: attempt move to ~/.local/share/spack/licenses
+    # - GPG: attempt move to ~/.local/share/spack/gpg
+
+    # For now, just create empty scope so we mark migration as checked
+    _create_empty_layout_scope()
+
+
 def create_incremental() -> Generator[Configuration, None, None]:
     """Singleton Configuration instance.
 
@@ -1779,6 +1948,24 @@ def create_incremental() -> Generator[Configuration, None, None]:
         (ConfigScopePriority.DEFAULTS, DirectoryConfigScope(*CONFIGURATION_DEFAULTS_PATH)),
     )
     yield cfg
+
+    # Check if migration/layout scope setup is needed
+    # This must happen before loading the spack scope so that layout scope can be
+    # included via include.yaml if needed
+    if not _has_layout_scope():
+        # Use Spack's file locking to prevent concurrent migration
+        lock_dir = os.path.join(spack.paths.var_path, "locks")
+        filesystem.mkdirp(lock_dir)
+        lock_path = os.path.join(lock_dir, "migration.lock")
+
+        migration_lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+        migration_lock.acquire_write()
+        try:
+            # Check again - another instance may have completed while we waited
+            if not _has_layout_scope():
+                _perform_migration_check()
+        finally:
+            migration_lock.release_write()
 
     # Initial topmost scope is spack (the config scope in the spack instance).
     # It includes the user, site, and system scopes. Environments and command
@@ -1801,6 +1988,17 @@ def create_incremental() -> Generator[Configuration, None, None]:
         #     init to reference lower scopes is more flexible.
         yield from cfg.push_scope_incremental(
             DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
+        )
+
+    # Add layout scope after all other config scopes (including spack and its includes)
+    # This scope is auto-generated and contains path overrides for shared Spack.
+    # It has lower priority than all scopes in include.yaml so user config always wins.
+    layout_scope_path = _layout_scope_path()
+    if os.path.exists(layout_scope_path):
+        tty.debug(f"Loading layout scope from {layout_scope_path}")
+        yield from cfg.push_scope_incremental(
+            DirectoryConfigScope("layout", layout_scope_path),
+            priority=ConfigScopePriority.CONFIG_FILES
         )
 
 
