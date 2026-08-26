@@ -10,26 +10,62 @@ import spack.error
 import spack.spec
 import spack.variant
 from spack.repo import RepoPath
-from spack.spec import Spec, VariantMap
+from spack.spec import Spec, UsageMap, VariantMap
 from spack.variant import (
     BoolValuedVariant,
-    DuplicateVariantError,
+    DuplicateOptionError,
     InconsistentValidationError,
-    InvalidVariantValueError,
-    MultipleValuesInExclusiveVariantError,
+    InvalidOptionValueError,
+    MultipleValuesInExclusiveOptionError,
     MultiValuedVariant,
     SingleValuedVariant,
-    UnsatisfiableVariantSpecError,
+    UnsatisfiableOptionSpecError,
+    Usage,
+    UsageValue,
     Variant,
+    VariantType,
     VariantValue,
     disjoint_sets,
 )
 
 
+@pytest.fixture(params=[Variant, Usage], ids=["variant", "usage"])
+def option_class(request):
+    """Run a test against both kinds of option definitions."""
+    return request.param
+
+
+@pytest.fixture
+def value_class(option_class):
+    """The value class corresponding to ``option_class``."""
+    return VariantValue if option_class is Variant else UsageValue
+
+
+@pytest.fixture
+def map_class(option_class):
+    """The map class corresponding to ``option_class``."""
+    return VariantMap if option_class is Variant else UsageMap
+
+
+def make_multi(value_class, name, value):
+    """Like MultiValuedVariant, but for either option value class."""
+    return value_class(VariantType.MULTI, name, value, concrete=True)
+
+
+def make_single(value_class, name, value):
+    """Like SingleValuedVariant, but for either option value class."""
+    return value_class(VariantType.SINGLE, name, (value,))
+
+
+def make_bool(value_class, name, value):
+    """Like BoolValuedVariant, but for either option value class."""
+    return value_class(VariantType.BOOL, name, (value,))
+
+
 class TestMultiValuedVariant:
-    def test_initialization(self):
+    def test_initialization(self, value_class):
         # Basic properties
-        a = MultiValuedVariant("foo", ("bar", "baz"))
+        a = make_multi(value_class, "foo", ("bar", "baz"))
         assert str(a) == "foo:=bar,baz"
         assert a.values == ("bar", "baz")
         assert a.value == ("bar", "baz")
@@ -37,7 +73,7 @@ class TestMultiValuedVariant:
         assert "baz" in a
 
         # Order is not important
-        c = MultiValuedVariant("foo", ("baz", "bar"))
+        c = make_multi(value_class, "foo", ("baz", "bar"))
         assert str(c) == "foo:=bar,baz"
         assert c.values == ("bar", "baz")
         assert "bar" in c
@@ -55,33 +91,33 @@ class TestMultiValuedVariant:
         assert a is not d
         assert hash(a) == hash(d)
 
-    def test_satisfies(self):
-        a = MultiValuedVariant("foo", ("bar", "baz"))
-        b = MultiValuedVariant("foo", ("bar",))
-        c = MultiValuedVariant("fee", ("bar", "baz"))
-        d = MultiValuedVariant("foo", (True,))
+    def test_satisfies(self, value_class):
+        a = make_multi(value_class, "foo", ("bar", "baz"))
+        b = make_multi(value_class, "foo", ("bar",))
+        c = make_multi(value_class, "fee", ("bar", "baz"))
+        d = make_multi(value_class, "foo", (True,))
 
         # concrete, different values do not satisfy each other
         assert not a.satisfies(b) and not b.satisfies(a)
         assert not a.satisfies(c) and not c.satisfies(a)
 
-        # SingleValuedVariant and MultiValuedVariant with the same single concrete value do satisfy
+        # single-valued and multi-valued options with the same single concrete value do satisfy
         # each other
-        b_sv = SingleValuedVariant("foo", "bar")
+        b_sv = make_single(value_class, "foo", "bar")
         assert b.satisfies(b_sv) and b_sv.satisfies(b)
-        d_sv = SingleValuedVariant("foo", True)
+        d_sv = make_single(value_class, "foo", True)
         assert d.satisfies(d_sv) and d_sv.satisfies(d)
-        almost_d_bv = SingleValuedVariant("foo", True)
+        almost_d_bv = make_single(value_class, "foo", True)
         assert d.satisfies(almost_d_bv)
 
-        d_bv = BoolValuedVariant("foo", True)
+        d_bv = make_bool(value_class, "foo", True)
         assert d.satisfies(d_bv) and d_bv.satisfies(d)
 
-    def test_intersects(self):
-        a = MultiValuedVariant("foo", ("bar", "baz"))
-        b = MultiValuedVariant("foo", (True,))
-        c = MultiValuedVariant("fee", ("bar", "baz"))
-        d = MultiValuedVariant("foo", ("bar", "barbaz"))
+    def test_intersects(self, value_class):
+        a = make_multi(value_class, "foo", ("bar", "baz"))
+        b = make_multi(value_class, "foo", (True,))
+        c = make_multi(value_class, "fee", ("bar", "baz"))
+        d = make_multi(value_class, "foo", ("bar", "barbaz"))
 
         # concrete, different values do not intersect.
         assert not a.intersects(b) and not b.intersects(a)
@@ -92,54 +128,54 @@ class TestMultiValuedVariant:
         assert not c.intersects(d) and not d.intersects(c)
 
         # SV and MV intersect if they have the same concrete value.
-        b_sv = SingleValuedVariant("foo", True)
+        b_sv = make_single(value_class, "foo", True)
         assert b.intersects(b_sv)
         assert not c.intersects(b_sv)
 
-        # BoolValuedVariant intersects if the value is the same
-        b_bv = BoolValuedVariant("foo", True)
+        # bool-valued options intersect if the value is the same
+        b_bv = make_bool(value_class, "foo", True)
         assert b.intersects(b_bv)
         assert not c.intersects(b_bv)
 
-    def test_constrain(self):
+    def test_constrain(self, value_class):
         # Concrete values cannot be constrained
-        a = MultiValuedVariant("foo", ("bar", "baz"))
-        b = MultiValuedVariant("foo", ("bar",))
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        a = make_multi(value_class, "foo", ("bar", "baz"))
+        b = make_multi(value_class, "foo", ("bar",))
+        with pytest.raises(UnsatisfiableOptionSpecError):
             a.constrain(b)
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        with pytest.raises(UnsatisfiableOptionSpecError):
             b.constrain(a)
 
         # Try to constrain on the same value
-        a = MultiValuedVariant("foo", ("bar", "baz"))
+        a = make_multi(value_class, "foo", ("bar", "baz"))
         b = a.copy()
 
         assert not a.constrain(b)
-        assert a == b == MultiValuedVariant("foo", ("bar", "baz"))
+        assert a == b == make_multi(value_class, "foo", ("bar", "baz"))
 
         # Try to constrain on a different name
-        a = MultiValuedVariant("foo", ("bar", "baz"))
-        b = MultiValuedVariant("fee", ("bar",))
+        a = make_multi(value_class, "foo", ("bar", "baz"))
+        b = make_multi(value_class, "fee", ("bar",))
 
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        with pytest.raises(UnsatisfiableOptionSpecError):
             a.constrain(b)
 
-    def test_yaml_entry(self):
-        a = MultiValuedVariant("foo", ("bar", "baz", "barbaz"))
+    def test_yaml_entry(self, value_class):
+        a = make_multi(value_class, "foo", ("bar", "baz", "barbaz"))
         expected = ("foo", sorted(("bar", "baz", "barbaz")))
 
         assert a.yaml_entry() == expected
 
-        a = MultiValuedVariant("foo", ("bar",))
+        a = make_multi(value_class, "foo", ("bar",))
         expected = ("foo", sorted(["bar"]))
 
         assert a.yaml_entry() == expected
 
 
 class TestSingleValuedVariant:
-    def test_initialization(self):
+    def test_initialization(self, value_class):
         # Basic properties
-        a = SingleValuedVariant("foo", "bar")
+        a = make_single(value_class, "foo", "bar")
         assert str(a) == "foo=bar"
         assert a.values == ("bar",)
         assert a.value == "bar"
@@ -155,11 +191,11 @@ class TestSingleValuedVariant:
         assert a is not b
         assert hash(a) == hash(b)
 
-    def test_satisfies(self):
-        a = SingleValuedVariant("foo", "bar")
-        b = SingleValuedVariant("foo", "bar")
-        c = SingleValuedVariant("foo", "baz")
-        d = SingleValuedVariant("fee", "bar")
+    def test_satisfies(self, value_class):
+        a = make_single(value_class, "foo", "bar")
+        b = make_single(value_class, "foo", "bar")
+        c = make_single(value_class, "foo", "baz")
+        d = make_single(value_class, "fee", "bar")
 
         # concrete, different values do not satisfy each other
         assert not a.satisfies(c) and not c.satisfies(a)
@@ -170,11 +206,11 @@ class TestSingleValuedVariant:
 
         assert a.satisfies(b) and b.satisfies(a)
 
-    def test_intersects(self):
-        a = SingleValuedVariant("foo", "bar")
-        b = SingleValuedVariant("fee", "bar")
-        c = SingleValuedVariant("foo", "baz")
-        d = SingleValuedVariant("foo", "bar")
+    def test_intersects(self, value_class):
+        a = make_single(value_class, "foo", "bar")
+        b = make_single(value_class, "fee", "bar")
+        c = make_single(value_class, "foo", "baz")
+        d = make_single(value_class, "foo", "bar")
 
         # concrete, different values do not intersect
         assert not a.intersects(b) and not b.intersects(a)
@@ -185,43 +221,43 @@ class TestSingleValuedVariant:
 
         assert a.intersects(d) and d.intersects(a)
 
-    def test_constrain(self):
+    def test_constrain(self, value_class):
         # Try to constrain on a value equal to self
-        a = SingleValuedVariant("foo", "bar")
-        b = SingleValuedVariant("foo", "bar")
+        a = make_single(value_class, "foo", "bar")
+        b = make_single(value_class, "foo", "bar")
 
         assert not a.constrain(b)
-        assert a == SingleValuedVariant("foo", "bar")
+        assert a == make_single(value_class, "foo", "bar")
 
         # Try to constrain on a value with a different value
-        a = SingleValuedVariant("foo", "bar")
-        b = SingleValuedVariant("foo", "baz")
+        a = make_single(value_class, "foo", "bar")
+        b = make_single(value_class, "foo", "baz")
 
         # Try to constrain on a value with a different value
-        a = SingleValuedVariant("foo", "bar")
-        b = SingleValuedVariant("fee", "bar")
+        a = make_single(value_class, "foo", "bar")
+        b = make_single(value_class, "fee", "bar")
 
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        with pytest.raises(UnsatisfiableOptionSpecError):
             b.constrain(a)
 
         # Try to constrain on the same value
-        a = SingleValuedVariant("foo", "bar")
+        a = make_single(value_class, "foo", "bar")
         b = a.copy()
 
         assert not a.constrain(b)
-        assert a == SingleValuedVariant("foo", "bar")
+        assert a == make_single(value_class, "foo", "bar")
 
-    def test_yaml_entry(self):
-        a = SingleValuedVariant("foo", "bar")
+    def test_yaml_entry(self, value_class):
+        a = make_single(value_class, "foo", "bar")
         expected = ("foo", "bar")
 
         assert a.yaml_entry() == expected
 
 
 class TestBoolValuedVariant:
-    def test_initialization(self):
+    def test_initialization(self, value_class):
         # Basic properties - True value
-        a = BoolValuedVariant("foo", True)
+        a = make_bool(value_class, "foo", True)
         assert str(a) == "+foo"
         assert a.value is True
         assert a.values == (True,)
@@ -238,7 +274,7 @@ class TestBoolValuedVariant:
         assert hash(a) == hash(b)
 
         # Copy - False value
-        a = BoolValuedVariant("foo", False)
+        a = make_bool(value_class, "foo", False)
         b = a.copy()
         assert str(a) == str(b)
         assert b.value is False
@@ -247,11 +283,11 @@ class TestBoolValuedVariant:
         assert a == b
         assert a is not b
 
-    def test_satisfies(self):
-        a = BoolValuedVariant("foo", True)
-        b = BoolValuedVariant("foo", False)
-        c = BoolValuedVariant("fee", False)
-        d = BoolValuedVariant("foo", True)
+    def test_satisfies(self, value_class):
+        a = make_bool(value_class, "foo", True)
+        b = make_bool(value_class, "foo", False)
+        c = make_bool(value_class, "fee", False)
+        d = make_bool(value_class, "foo", True)
 
         # concrete, different values do not satisfy each other
         assert not a.satisfies(b) and not b.satisfies(a)
@@ -278,11 +314,11 @@ class TestBoolValuedVariant:
         # d_sv = SingleValuedVariant("foo", "True")
         # assert d.satisfies(d_sv)
 
-    def test_intersects(self):
-        a = BoolValuedVariant("foo", True)
-        b = BoolValuedVariant("fee", True)
-        c = BoolValuedVariant("foo", False)
-        d = BoolValuedVariant("foo", True)
+    def test_intersects(self, value_class):
+        a = make_bool(value_class, "foo", True)
+        b = make_bool(value_class, "fee", True)
+        c = make_bool(value_class, "foo", False)
+        d = make_bool(value_class, "foo", True)
 
         # concrete, different values do not intersect each other
         assert not a.intersects(b) and not b.intersects(a)
@@ -302,59 +338,59 @@ class TestBoolValuedVariant:
         #     assert d.intersects(d_sv)
         #     assert not c.intersects(d_sv)
 
-    def test_constrain(self):
+    def test_constrain(self, value_class):
         # Try to constrain on a value equal to self
-        a = BoolValuedVariant("foo", True)
-        b = BoolValuedVariant("foo", True)
+        a = make_bool(value_class, "foo", True)
+        b = make_bool(value_class, "foo", True)
 
         assert not a.constrain(b)
-        assert a == BoolValuedVariant("foo", True)
+        assert a == make_bool(value_class, "foo", True)
 
         # Try to constrain on a value with a different value
-        a = BoolValuedVariant("foo", True)
-        b = BoolValuedVariant("foo", False)
+        a = make_bool(value_class, "foo", True)
+        b = make_bool(value_class, "foo", False)
 
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        with pytest.raises(UnsatisfiableOptionSpecError):
             b.constrain(a)
 
         # Try to constrain on a value with a different value
-        a = BoolValuedVariant("foo", True)
-        b = BoolValuedVariant("fee", True)
+        a = make_bool(value_class, "foo", True)
+        b = make_bool(value_class, "fee", True)
 
-        with pytest.raises(UnsatisfiableVariantSpecError):
+        with pytest.raises(UnsatisfiableOptionSpecError):
             b.constrain(a)
 
         # Try to constrain on the same value
-        a = BoolValuedVariant("foo", True)
+        a = make_bool(value_class, "foo", True)
         b = a.copy()
 
         assert not a.constrain(b)
-        assert a == BoolValuedVariant("foo", True)
+        assert a == make_bool(value_class, "foo", True)
 
-    def test_yaml_entry(self):
-        a = BoolValuedVariant("foo", True)
+    def test_yaml_entry(self, value_class):
+        a = make_bool(value_class, "foo", True)
         expected = ("foo", True)
         assert a.yaml_entry() == expected
 
-        a = BoolValuedVariant("foo", False)
+        a = make_bool(value_class, "foo", False)
         expected = ("foo", False)
         assert a.yaml_entry() == expected
 
 
-def test_from_node_dict():
-    a = VariantValue.from_node_dict("foo", ["bar"])
+def test_from_node_dict(value_class):
+    a = value_class.from_node_dict("foo", ["bar"])
     assert a.type == spack.variant.VariantType.MULTI
 
-    a = VariantValue.from_node_dict("foo", "bar")
+    a = value_class.from_node_dict("foo", "bar")
     assert a.type == spack.variant.VariantType.SINGLE
 
-    a = VariantValue.from_node_dict("foo", "true")
+    a = value_class.from_node_dict("foo", "true")
     assert a.type == spack.variant.VariantType.BOOL
 
 
 class TestVariant:
-    def test_validation(self):
-        a = Variant(
+    def test_validation(self, option_class):
+        a = option_class(
             "foo", default="", description="", values=("bar", "baz", "foobar"), multi=False
         )
         # Valid vspec, shouldn't raise
@@ -362,7 +398,7 @@ class TestVariant:
         a.validate_or_raise(vspec, "test-package")
 
         # Multiple values are not allowed
-        with pytest.raises(MultipleValuesInExclusiveVariantError):
+        with pytest.raises(MultipleValuesInExclusiveOptionError):
             vspec.set("bar", "baz")
 
         # Inconsistent vspec
@@ -376,34 +412,34 @@ class TestVariant:
         a.validate_or_raise(vspec, "test-package")
         # Add an invalid value
         vspec.set("bar", "baz", "barbaz")
-        with pytest.raises(InvalidVariantValueError):
+        with pytest.raises(InvalidOptionValueError):
             a.validate_or_raise(vspec, "test-package")
 
-    def test_callable_validator(self):
+    def test_callable_validator(self, option_class):
         def validator(x):
             try:
                 return isinstance(int(x), numbers.Integral)
             except ValueError:
                 return False
 
-        a = Variant("foo", default="1024", description="", values=validator, multi=False)
+        a = option_class("foo", default="1024", description="", values=validator, multi=False)
         vspec = a.make_default()
         a.validate_or_raise(vspec, "test-package")
         vspec.set("2056")
         a.validate_or_raise(vspec, "test-package")
         vspec.set("foo")
-        with pytest.raises(InvalidVariantValueError):
+        with pytest.raises(InvalidOptionValueError):
             a.validate_or_raise(vspec, "test-package")
 
-    def test_representation(self):
-        a = Variant(
+    def test_representation(self, option_class):
+        a = option_class(
             "foo", default="", description="", values=("bar", "baz", "foobar"), multi=False
         )
         assert a.allowed_values == "bar, baz, foobar"
 
-    def test_str(self):
+    def test_str(self, option_class):
         string = str(
-            Variant(
+            option_class(
                 "foo", default="", description="", values=("bar", "baz", "foobar"), multi=False
             )
         )
@@ -414,45 +450,52 @@ class TestVariant:
 
 
 class TestVariantMapTest:
-    def test_invalid_values(self) -> None:
+    def test_invalid_values(self, map_class, value_class) -> None:
         # Value with invalid type
-        a = VariantMap()
+        a = map_class()
         with pytest.raises(TypeError):
             a["foo"] = 2
 
-        # Duplicate variant
-        a["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        with pytest.raises(DuplicateVariantError):
-            a["foo"] = MultiValuedVariant("foo", ("bar",))
+        # Duplicate option
+        a["foo"] = make_multi(value_class, "foo", ("bar", "baz"))
+        with pytest.raises(DuplicateOptionError):
+            a["foo"] = make_multi(value_class, "foo", ("bar",))
 
-        with pytest.raises(DuplicateVariantError):
-            a["foo"] = SingleValuedVariant("foo", "bar")
+        with pytest.raises(DuplicateOptionError):
+            a["foo"] = make_single(value_class, "foo", "bar")
 
-        with pytest.raises(DuplicateVariantError):
-            a["foo"] = BoolValuedVariant("foo", True)
+        with pytest.raises(DuplicateOptionError):
+            a["foo"] = make_bool(value_class, "foo", True)
 
         # Non matching names between key and vspec.name
         with pytest.raises(KeyError):
-            a["bar"] = MultiValuedVariant("foo", ("bar",))
+            a["bar"] = make_multi(value_class, "foo", ("bar",))
 
-    def test_set_item(self) -> None:
-        # Check that all the three types of variants are accepted
-        a = VariantMap()
+    def test_wrong_value_class(self, map_class, value_class) -> None:
+        # A map only accepts values of its own kind
+        other_class = UsageValue if value_class is VariantValue else VariantValue
+        a = map_class()
+        with pytest.raises(TypeError):
+            a["foo"] = make_bool(other_class, "foo", True)
 
-        a["foo"] = BoolValuedVariant("foo", True)
-        a["bar"] = SingleValuedVariant("bar", "baz")
-        a["foobar"] = MultiValuedVariant("foobar", ("a", "b", "c", "d", "e"))
+    def test_set_item(self, map_class, value_class) -> None:
+        # Check that all the three types of options are accepted
+        a = map_class()
 
-    def test_substitute(self) -> None:
+        a["foo"] = make_bool(value_class, "foo", True)
+        a["bar"] = make_single(value_class, "bar", "baz")
+        a["foobar"] = make_multi(value_class, "foobar", ("a", "b", "c", "d", "e"))
+
+    def test_substitute(self, map_class, value_class) -> None:
         # Check substitution of a key that exists
-        a = VariantMap()
-        a["foo"] = BoolValuedVariant("foo", True)
-        a.substitute(SingleValuedVariant("foo", "bar"))
+        a = map_class()
+        a["foo"] = make_bool(value_class, "foo", True)
+        a.substitute(make_single(value_class, "foo", "bar"))
 
         # Trying to substitute something that is not
         # in the map will raise a KeyError
         with pytest.raises(KeyError):
-            a.substitute(BoolValuedVariant("bar", True))
+            a.substitute(make_bool(value_class, "bar", True))
 
     def test_satisfies_and_constrain(self) -> None:
         # foo=bar foobar=fee feebar=foo
@@ -479,24 +522,24 @@ class TestVariantMapTest:
         c.variants["shared"] = BoolValuedVariant("shared", True)
 
         # concrete values cannot be constrained
-        with pytest.raises(spack.variant.UnsatisfiableVariantSpecError):
+        with pytest.raises(spack.variant.UnsatisfiableOptionSpecError):
             a._constrain_variants(b)
 
-    def test_copy(self) -> None:
-        a = VariantMap()
-        a["foo"] = BoolValuedVariant("foo", True)
-        a["bar"] = SingleValuedVariant("bar", "baz")
-        a["foobar"] = MultiValuedVariant("foobar", ("a", "b", "c", "d", "e"))
+    def test_copy(self, map_class, value_class) -> None:
+        a = map_class()
+        a["foo"] = make_bool(value_class, "foo", True)
+        a["bar"] = make_single(value_class, "bar", "baz")
+        a["foobar"] = make_multi(value_class, "foobar", ("a", "b", "c", "d", "e"))
 
         c = a.copy()
         assert a == c
 
-    def test_str(self) -> None:
-        c = VariantMap()
-        c["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        c["foobar"] = SingleValuedVariant("foobar", "fee")
-        c["feebar"] = SingleValuedVariant("feebar", "foo")
-        c["shared"] = BoolValuedVariant("shared", True)
+    def test_str(self, map_class, value_class) -> None:
+        c = map_class()
+        c["foo"] = make_multi(value_class, "foo", ("bar", "baz"))
+        c["foobar"] = make_single(value_class, "foobar", "fee")
+        c["feebar"] = make_single(value_class, "feebar", "foo")
+        c["shared"] = make_bool(value_class, "shared", True)
         assert str(c) == "+shared feebar=foo foo:=bar,baz foobar=fee"
 
 
@@ -565,14 +608,14 @@ def test_conditional_value_comparable_to_bool(other):
 
 
 @pytest.mark.regression("40405")
-def test_wild_card_valued_variants_equivalent_to_str():
+def test_wild_card_valued_variants_equivalent_to_str(option_class):
     """
     There was a bug prioro to PR 40406 in that variants with wildcard values "*"
     were being overwritten in the variant constructor.
     The expected/appropriate behavior is for it to behave like value=str and this
     test demonstrates that the two are now equivalent
     """
-    str_var = spack.variant.Variant(
+    str_var = option_class(
         name="str_var",
         default="none",
         values=str,
@@ -581,7 +624,7 @@ def test_wild_card_valued_variants_equivalent_to_str():
         validator=None,
     )
 
-    wild_var = spack.variant.Variant(
+    wild_var = option_class(
         name="wild_var",
         default="none",
         values="*",
@@ -685,7 +728,7 @@ def test_prevalidate_variant_value(mock_packages: RepoPath, pkg_name, value, spe
 def test_strict_invalid_variant_values(mock_packages: RepoPath, pkg_name, value, spec):
     pkg = mock_packages.get_pkg_class(pkg_name)
 
-    with pytest.raises(spack.variant.InvalidVariantValueError):
+    with pytest.raises(spack.variant.InvalidOptionValueError):
         spack.variant.prevalidate_variant_value(
             pkg, SingleValuedVariant("v", value), spack.spec.Spec(spec), strict=True
         )
@@ -828,7 +871,7 @@ def test_abstract_variant_constrain_abstract_abstract():
 
 
 def test_abstract_variant_constrain_abstract_concrete_fail():
-    with pytest.raises(UnsatisfiableVariantSpecError):
+    with pytest.raises(UnsatisfiableOptionSpecError):
         Spec("foo=bar").constrain("foo:=baz")
 
 
@@ -842,7 +885,7 @@ def test_abstract_variant_constrain_abstract_concrete_ok():
 
 
 def test_abstract_variant_constrain_concrete_concrete_fail():
-    with pytest.raises(UnsatisfiableVariantSpecError):
+    with pytest.raises(UnsatisfiableOptionSpecError):
         Spec("foo:=bar").constrain("foo:=bar,baz")
 
 
@@ -853,7 +896,7 @@ def test_abstract_variant_constrain_concrete_concrete_ok():
 
 def test_abstract_variant_constrain_concrete_abstract_fail():
     s = Spec("foo:=bar")
-    with pytest.raises(UnsatisfiableVariantSpecError):
+    with pytest.raises(UnsatisfiableOptionSpecError):
         s.constrain("foo=baz")
 
 

@@ -2161,7 +2161,7 @@ class SpackSolverSetup:
             # perform validation of the variant and values
             try:
                 variant_defs = vt.prevalidate_variant_value(self.pkg_class(pkg_name), variant)
-            except (vt.InvalidVariantValueError, KeyError, ValueError) as e:
+            except (vt.InvalidOptionValueError, KeyError, ValueError) as e:
                 tty.debug(
                     f"[SETUP]: rejected {str(variant)} as a preference for {pkg_name}: {str(e)}"
                 )

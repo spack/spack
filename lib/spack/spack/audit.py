@@ -1132,13 +1132,13 @@ def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
 
         try:
             vspec = variant.make_default()
-        except spack.variant.MultipleValuesInExclusiveVariantError:
+        except spack.variant.MultipleValuesInExclusiveOptionError:
             msg = f"Can't create default value for variant '{vname}' in package '{pkg_cls.name}'"
             return [error_cls(msg, [])]
 
         try:
             variant.validate_or_raise(vspec, pkg_cls.name)
-        except spack.variant.InvalidVariantValueError:
+        except spack.variant.InvalidOptionValueError:
             msg = "Default value of variant '{vname}' in package '{pkg.name}' is invalid"
             question = "Is it among the allowed values?"
             return [error_cls(msg, [question])]
@@ -1284,8 +1284,8 @@ def _analyze_variants_in_directive(pkg, constraint, *, directive, error_cls, fil
             spack.variant.prevalidate_variant_value(pkg, v, constraint, strict=True)
         except (
             spack.variant.InconsistentValidationError,
-            spack.variant.MultipleValuesInExclusiveVariantError,
-            spack.variant.InvalidVariantValueError,
+            spack.variant.MultipleValuesInExclusiveOptionError,
+            spack.variant.InvalidOptionValueError,
         ) as e:
             msg = str(e).strip()
             errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))
