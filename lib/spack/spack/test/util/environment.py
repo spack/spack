@@ -173,11 +173,11 @@ def test_shell_modifications_are_properly_escaped(shell):
 
     if shell == "bat":
         set_cmd = f"%{set_cmd}%"
-        append_cmd = f"%{append_cmd}"
+        append_cmd = f"%{append_cmd}%"
         separator = f'"{os.pathsep}"'
     elif shell == "pwsh":
         separator = f"'{os.pathsep}'"
 
     assert f"{set_cmd} VAR '$PATH'" in script
     assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in script
-    assert f"{set_cmd} RM_RF% '$(rm -rf /)'" in script
+    assert f"{set_cmd} RM_RF '$(rm -rf /)'" in script
