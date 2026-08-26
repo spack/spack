@@ -57,6 +57,7 @@ from spack.spec import Spec
 from spack.store import Store
 from spack.test.conftest import RepoBuilder
 from spack.test.utilities import RecordingUI
+from spack.util.filesystem import getuid
 from spack.version import Version, VersionList, ver
 
 
@@ -5449,6 +5450,52 @@ def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cach
     # No leftover temp files
     temps = list(cache.root.glob(".tmp_*"))
     assert temps == []
+
+
+def test_concretization_cache_fetch_updates_lru_time(use_concretization_cache):
+    """A cache hit refreshes the entry's mtime, so cleanup() sees it as recently used.
+
+    cleanup() prunes in ascending mtime order; if fetch() stopped touching entries,
+    the most-used entries would be evicted first instead of last.
+    """
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    problem = "lru update test"
+    cache.store(problem, Result(specs=[]), statistics=["stats"])
+    cache_path = cache._cache_path_from_problem(problem)
+
+    # backdate the entry, then check that a hit brings its mtime back to the present
+    old_time = cache_path.stat().st_mtime - 3600
+    os.utime(cache_path, (old_time, old_time))
+
+    result, _ = cache.fetch(problem, specs=[])
+    assert result is not None
+    assert cache_path.stat().st_mtime > old_time + 1800
+
+
+@pytest.mark.not_on_windows("test manipulates POSIX permissions")
+@pytest.mark.skipif(getuid() == 0, reason="user is root")
+def test_concretization_cache_store_readonly_cache(use_concretization_cache):
+    """store() silently skips caching when the cache directory isn't writable.
+
+    The cache is an optimization: not being able to write to it (e.g. a shared
+    cache owned by a CI user) must not fail the concretization that produced
+    the result.
+    """
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    cache.root.mkdir(parents=True, exist_ok=True)
+    old_mode = cache.root.stat().st_mode
+    os.chmod(cache.root, 0o555)
+    try:
+        # existing but read-only cache root
+        cache.store("read-only store test", Result(specs=[]), statistics=[])
+        assert not cache._cache_path_from_problem("read-only store test").exists()
+
+        # missing cache root that can't be created because its parent is read-only
+        nested = spack.solver.asp.ConcretizationCache(str(cache.root / "sub"))
+        nested.store("read-only mkdir test", Result(specs=[]), statistics=[])
+        assert not nested.root.exists()
+    finally:
+        os.chmod(cache.root, old_mode)
 
 
 def test_concretization_cache_skips_automatic_splice(
