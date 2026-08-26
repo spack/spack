@@ -649,20 +649,25 @@ class ConcretizationCache:
         # Write to a temp file in the same directory, then atomically rename.
         # mkstemp appends random characters after the prefix, so names are unique.
         # A missing root dir is the only expected failure; create it and retry once.
+        # The whole store is best-effort: failures (e.g. a shared cache another user
+        # owns and we can only read) must not block a successful concretization.
+        tmp_path: Optional[str] = None
         try:
-            fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
-        except FileNotFoundError:
-            self.root.mkdir(parents=True, exist_ok=True)
-            fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
-        try:
+            try:
+                fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
+            except FileNotFoundError:
+                self.root.mkdir(parents=True, exist_ok=True)
+                fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
             with os.fdopen(fd, "wb") as raw_f:
                 with gzip.open(raw_f, "wb", compresslevel=6) as f:
                     f.write(json.dumps(cache_dict).encode())
+            # entries keep mkstemp's 0o600 mode: caches are per-user by default, and
+            # sites that want to share one manage permissions themselves.
             os.replace(tmp_path, cache_path)
         except OSError as e:
-            # Cache store is best-effort; failures shouldn't block a successful concretization.
             tty.debug(f"Failed to store concretization cache entry {cache_path}: {e}")
-            self._remove_entry(pathlib.Path(tmp_path))
+            if tmp_path is not None:
+                self._remove_entry(pathlib.Path(tmp_path))
             return
 
         # Only a newly stored entry can push the cache over its entry limit, so this is the
@@ -732,8 +737,12 @@ class ConcretizationCache:
             self._remove_entry(cache_path)
             return None, None
 
-        # update mod/access time for use w/ LRU cleanup
-        os.utime(cache_path)
+        # Update mod/access time for use w/ LRU cleanup. Best-effort: in a shared
+        # cache, readers may not be able to touch entries written by another user.
+        try:
+            os.utime(cache_path)
+        except OSError as e:
+            tty.debug(f"Failed to update LRU time for {cache_path}: {e}")
         return result, cache_content["statistics"]
 
 
