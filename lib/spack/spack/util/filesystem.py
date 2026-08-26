@@ -1267,7 +1267,7 @@ def force_symlink(src: str, dest: str) -> None:
     """Create a symlink at ``dest`` pointing to ``src``. Similar to ``ln -sf``."""
     try:
         symlink(src, dest)
-    except OSError:
+    except (FileExistsError, AlreadyExistsError):
         os.remove(dest)
         symlink(src, dest)
 
