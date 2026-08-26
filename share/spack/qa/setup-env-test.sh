@@ -111,8 +111,8 @@ contains "shell-b@" echo $LIST_CONTENT
 does_not_contain "shell-a@" echo $LIST_CONTENT
 fails spack -m load -l
 # test a variable MacOS clears and one it doesn't for recursive loads
-contains ". \"$(spack -m location -i shell-a)/.spack/load"\"" spack -m load --sh shell-a
-contains ". \"$(spack -m location -i shell-b)/.spack/load"\" spack -m load --sh shell-b
+contains ". \"$(spack -m location -i shell-a)/.spack/load\"" spack -m load --sh shell-a
+contains ". \"$(spack -m location -i shell-b)/.spack/load\"" spack -m load --sh shell-b
 succeeds spack -m load shell-a
 fails spack -m load d
 contains "usage: spack load " spack -m load -h
