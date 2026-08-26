@@ -1058,6 +1058,9 @@ class SetupContext:
         from leaf to root. That way externals cannot contribute search paths that would shadow
         Spack's prefixes, and dependents override variables set by dependencies."""
         env = EnvironmentModifications()
+        packages_config = spack.config.get("packages")
+        processed_packages = set()
+
         for dspec, flag in chain(self.external, self.nonexternal):
             tty.debug(f"Adding env modifications for {dspec.name}")
             pkg = dspec.package
@@ -1081,9 +1084,20 @@ class SetupContext:
                         pkg.setup_dependent_run_environment(run_env_mods, spec)
                 pkg.setup_run_environment(run_env_mods)
 
-                external_env = (dspec.extra_attributes or {}).get("environment", {})
-                if external_env:
-                    run_env_mods.extend(spack.schema.environment.parse(external_env))
+                # Custom environment variables from packages.yaml
+                if dspec.name not in processed_packages:
+                    processed_packages.add(dspec.name)
+                    package_entry = packages_config.get(dspec.name, {})
+                    package_externals = package_entry.get("externals", [])
+                    for external in package_externals:
+                        package_environment = external.get("environment", {})
+                        if package_environment:
+                            env_config = spack.schema.environment.parse(package_environment)
+                            run_env_mods.extend(env_config)
+
+                    external_env = (dspec.extra_attributes or {}).get("environment", {})
+                    if external_env:
+                        run_env_mods.extend(spack.schema.environment.parse(external_env))
 
                 if self.context == Context.BUILD:
                     # Don't let the runtime environment of compiler like dependencies leak into the
