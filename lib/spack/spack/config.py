@@ -1787,9 +1787,32 @@ def _has_layout_scope() -> bool:
     return os.path.exists(_layout_scope_path())
 
 
-def _has_isolate_scope() -> bool:
-    """Check if isolate scope exists."""
-    return os.path.exists(_isolate_scope_path())
+def _has_isolate_scope(cfg: Configuration) -> bool:
+    """Check if any scope points to the isolate directory.
+
+    This could be a scope named "isolate" (--path case) or "user" (--self case)
+    or any other name - we just check if any scope's path matches.
+
+    Args:
+        cfg: Configuration object to check
+
+    Returns:
+        True if any scope points to the isolate directory
+    """
+    isolate_path = _isolate_scope_path()
+    if not os.path.exists(isolate_path):
+        return False
+
+    for scope in cfg.scopes.values():
+        if hasattr(scope, "path"):
+            try:
+                if os.path.exists(scope.path) and os.path.samefile(scope.path, isolate_path):
+                    return True
+            except (OSError, ValueError):
+                # If comparison fails, continue checking other scopes
+                pass
+
+    return False
 
 
 def _detect_old_resources() -> Dict[str, bool]:
@@ -1866,12 +1889,16 @@ def _create_empty_layout_scope() -> None:
         f.write("# An empty layout scope means all new XDG-compliant defaults are in use.\n")
 
 
-def _perform_migration_check() -> None:
+def _perform_migration_check(cfg: Configuration) -> None:
     """Perform migration detection and setup layout scope if needed.
 
     This implements the decision tree from feature-summaries/shared-spack-auto-migrate.md
 
-    Called during config initialization with migration lock held.
+    Called during config initialization with migration lock held, after spack scope
+    is loaded so we can check if isolate scope is active.
+
+    Args:
+        cfg: Configuration object with spack scope loaded
     """
     print("DEBUG: _perform_migration_check() called")
 
@@ -1890,8 +1917,8 @@ def _perform_migration_check() -> None:
     old_resources = _detect_old_resources()
     has_old_resources = any(old_resources.values())
 
-    # P3: Isolate scope exists
-    if _has_isolate_scope():
+    # P3: Isolate scope exists (check if actually active in config)
+    if _has_isolate_scope(cfg):
         tty.debug("Isolate scope detected during auto-migration check")
         if not has_old_resources:
             # P3a: No old resources - create layout scope pointing to isolate location
@@ -1949,24 +1976,6 @@ def create_incremental() -> Generator[Configuration, None, None]:
     )
     yield cfg
 
-    # Check if migration/layout scope setup is needed
-    # This must happen before loading the spack scope so that layout scope can be
-    # included via include.yaml if needed
-    if not _has_layout_scope():
-        # Use Spack's file locking to prevent concurrent migration
-        lock_dir = os.path.join(spack.paths.var_path, "locks")
-        filesystem.mkdirp(lock_dir)
-        lock_path = os.path.join(lock_dir, "migration.lock")
-
-        migration_lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-        migration_lock.acquire_write()
-        try:
-            # Check again - another instance may have completed while we waited
-            if not _has_layout_scope():
-                _perform_migration_check()
-        finally:
-            migration_lock.release_write()
-
     # Initial topmost scope is spack (the config scope in the spack instance).
     # It includes the user, site, and system scopes. Environments and command
     # line scopes go above this.
@@ -1989,6 +1998,24 @@ def create_incremental() -> Generator[Configuration, None, None]:
         yield from cfg.push_scope_incremental(
             DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
         )
+
+    # Check if migration/layout scope setup is needed
+    # This happens AFTER the spack scope is loaded (so we can check if isolate scope
+    # is active) but BEFORE we load the layout scope (so we can create it if needed)
+    if not _has_layout_scope():
+        # Use Spack's file locking to prevent concurrent migration
+        lock_dir = os.path.join(spack.paths.var_path, "locks")
+        filesystem.mkdirp(lock_dir)
+        lock_path = os.path.join(lock_dir, "migration.lock")
+
+        migration_lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+        migration_lock.acquire_write()
+        try:
+            # Check again - another instance may have completed while we waited
+            if not _has_layout_scope():
+                _perform_migration_check(cfg)
+        finally:
+            migration_lock.release_write()
 
     # Add layout scope after all other config scopes (including spack and its includes)
     # This scope is auto-generated and contains path overrides for shared Spack.
