@@ -2204,3 +2204,31 @@ def test_env_substitution_follows_activation(mutable_mock_env_path, mutable_conf
     # After deactivation "$env" is a no-op again
     assert mutable_config.env_path is None
     assert spack.config.substitute_path_variables("$env/foo/bar") == "$env/foo/bar"
+
+
+def test_flattened_configuration_has_every_section(mutable_config: Configuration):
+    """Tests that flattening the configuration gives the merged content of every section."""
+    flattened = spack.config.flattened_configuration()
+
+    assert list(flattened) == [spack.schema.env.TOP_LEVEL_KEY]
+    sections = flattened[spack.schema.env.TOP_LEVEL_KEY]
+    assert set(sections) == set(spack.config.SECTION_SCHEMAS)
+    for name in spack.config.SECTION_SCHEMAS:
+        assert sections[name] == mutable_config.get(name)
+
+
+def test_flattened_configuration_leaves_the_manifest_alone(mutable_config: Configuration):
+    """Tests that a manifest keeps the keys that are not config sections."""
+    manifest = syaml.load(
+        """\
+spack:
+  specs:
+  - mpileaks
+  view: true
+"""
+    )
+    flattened = spack.config.flattened_configuration(manifest)[spack.schema.env.TOP_LEVEL_KEY]
+
+    assert flattened["specs"] == ["mpileaks"]
+    assert flattened["view"] is True
+    assert flattened["config"] == mutable_config.get("config")
