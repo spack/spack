@@ -4808,56 +4808,46 @@ def test_concretization_cache_count_cleanup(
     assert len(after - before) == 1  # one additional hash added by 1001st concretization
 
 
-@pytest.fixture()
-def corrupt_cache_entry(use_concretization_cache):
-    """Yields a cache and path for a fake entry. After the test body writes a corrupt file
-    to the path, the fixture asserts that fetch returns a miss and removes the file."""
+def _gzip_json(obj) -> bytes:
+    return gzip.compress(json.dumps(obj).encode())
+
+
+@pytest.mark.parametrize(
+    "corrupt",
+    [
+        lambda data: data[: len(data) // 2],  # EOFError: truncated deflate stream
+        lambda data: data[:10] + b"\xde\xad\xbe\xef" * 4,  # zlib.error: invalid deflate data
+        lambda data: gzip.compress(b"\xff\xfe\x80\x81"),  # UnicodeDecodeError: not utf-8
+        lambda data: b"not gzip at all",  # BadGzipFile: bad magic number
+        lambda data: gzip.compress(b"not json{{{"),  # JSONDecodeError: invalid json
+        lambda data: _gzip_json({"_meta": {"version": -1}}),  # unsupported entry version
+        lambda data: _gzip_json(  # valid version but malformed spec data
+            {
+                "_meta": {"version": spack.solver.asp.ConcretizationCache.VERSION},
+                "results": {"not": "valid"},
+            }
+        ),
+    ],
+    ids=[
+        "truncated",
+        "bad-deflate",
+        "not-utf8",
+        "bad-magic",
+        "bad-json",
+        "bad-version",
+        "bad-spec-data",
+    ],
+)
+def test_concretization_cache_removes_corrupt_entries(use_concretization_cache, corrupt):
+    """A corrupt concretization cache entry is a cache miss and the entry is deleted."""
     cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
-    problem = "some asp problem"
+    problem = "corrupt entry test"
+    cache.store(problem, Result(specs=[]), statistics=[])
     cache_path = cache._cache_path_from_problem(problem)
-    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_path.write_bytes(corrupt(cache_path.read_bytes()))
 
-    def write_gzip_json(obj):
-        with gzip.open(cache_path, "wb") as f:
-            f.write(json.dumps(obj).encode())
-
-    yield cache, cache_path, write_gzip_json
-
-    assert cache_path.exists(), "test should have written a corrupt file"
-    result, stats = cache.fetch(problem, [])
-    assert result is None
-    assert stats is None
-    assert not cache_path.exists(), "corrupt cache entry should have been removed"
-
-
-def test_concretization_cache_removes_corrupt_gzip(corrupt_cache_entry):
-    """A file that isn't valid gzip is removed on fetch."""
-    _, cache_path, _ = corrupt_cache_entry
-    cache_path.write_bytes(b"this is not gzip")
-
-
-def test_concretization_cache_removes_corrupt_json(corrupt_cache_entry):
-    """A file that is valid gzip but not valid JSON is removed on fetch."""
-    _, cache_path, _ = corrupt_cache_entry
-    with gzip.open(cache_path, "wb") as f:
-        f.write(b"not json{{{")
-
-
-def test_concretization_cache_removes_wrong_version(corrupt_cache_entry):
-    """A cache entry with an unsupported version is removed on fetch."""
-    _, _, write_gzip_json = corrupt_cache_entry
-    write_gzip_json({"_meta": {"version": -1}})
-
-
-def test_concretization_cache_removes_bad_spec_data(corrupt_cache_entry):
-    """A cache entry with valid JSON/version but malformed spec data is removed on fetch."""
-    _, _, write_gzip_json = corrupt_cache_entry
-    write_gzip_json(
-        {
-            "_meta": {"version": spack.solver.asp.ConcretizationCache.VERSION},
-            "results": {"not": "valid"},
-        }
-    )
+    assert cache.fetch(problem, specs=[]) == (None, None)
+    assert not cache_path.exists()
 
 
 def test_concretization_cache_asp_canonicalization():
