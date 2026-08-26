@@ -814,6 +814,15 @@ class FileLayout:
         # Return the absolute path
         return os.path.join(self.arch_dirname, filename)
 
+    @property
+    def modulepath(self) -> str:
+        """Directory to add to ``MODULEPATH`` for the module system to find this
+        module file, i.e. the module file path stripped of the module name parts."""
+        dirname = self.filename
+        for _ in self.use_name.split(os.sep):
+            dirname = os.path.dirname(dirname)
+        return dirname
+
     def token_to_path(self, name: str, value: spack.spec.Spec) -> str:
         """Transforms a hierarchy token into the corresponding path part.
 
@@ -1358,6 +1367,9 @@ class BaseModuleFileWriter:
         # record module hiddenness if implicit
         self.update_module_hiddenness()
 
+        # Register written module file for a module cache update
+        self.register_cache_update()
+
     def update_module_defaults(self) -> None:
         if any(self.spec.satisfies(default) for default in self.conf.defaults):
             # This spec matches a default, it needs to be symlinked to default
@@ -1417,6 +1429,14 @@ class BaseModuleFileWriter:
                 with open(modulerc_path, "w", encoding="utf-8") as f:
                     f.write("\n".join(content))
 
+    def register_cache_update(self) -> None:
+        """Registers this module file for a module cache update.
+
+        This default implementation does nothing: subclasses whose module system
+        supports a module cache should override it to record the modulepath directory
+        of this module file, when cache update is enabled in configuration.
+        """
+
     def remove(self) -> None:
         """Deletes the module file."""
         mod_file = self.layout.filename
@@ -1425,6 +1445,7 @@ class BaseModuleFileWriter:
                 os.remove(mod_file)  # Remove the module file
                 self.remove_module_defaults()  # Remove default targeting module file
                 self.update_module_hiddenness(remove=True)  # Remove hide cmd in modulerc
+                self.register_cache_update()  # Register removal for a module cache update
                 os.removedirs(
                     os.path.dirname(mod_file)
                 )  # Remove all the empty directories from the leaf up

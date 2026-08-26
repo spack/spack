@@ -1609,7 +1609,7 @@ _spack_module_tcl() {
     then
         SPACK_COMPREPLY="-h --help -n --name"
     else
-        SPACK_COMPREPLY="refresh find rm loads setdefault"
+        SPACK_COMPREPLY="refresh find rm loads setdefault cachebuild cacheclear"
     fi
 }
 
@@ -1656,6 +1656,14 @@ _spack_module_tcl_setdefault() {
     else
         _installed_packages
     fi
+}
+
+_spack_module_tcl_cachebuild() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_module_tcl_cacheclear() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_patch() {
