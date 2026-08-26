@@ -1085,6 +1085,33 @@ def test_rename_dest_exists(tmp_path: pathlib.Path):
         shutil.rmtree(str(f_dir))
 
 
+def test_force_symlink_replaces_existing(tmp_path: pathlib.Path):
+    target, other = tmp_path / "target", tmp_path / "other"
+    target.write_text("target", encoding="utf-8")
+    other.write_text("other", encoding="utf-8")
+
+    # over a regular file
+    link = tmp_path / "link"
+    link.write_text("stale", encoding="utf-8")
+    fs.force_symlink(str(target), str(link))
+    assert link.read_text(encoding="utf-8") == "target"
+
+    # over an existing link
+    fs.force_symlink(str(other), str(link))
+    assert link.read_text(encoding="utf-8") == "other"
+
+
+@pytest.mark.not_on_windows("the Windows symlink shim raises its own error type here")
+def test_force_symlink_propagates_other_errors(tmp_path: pathlib.Path):
+    """Only "the link exists" is retried; other errors propagate."""
+    target = tmp_path / "target"
+    target.write_text("target", encoding="utf-8")
+    with pytest.raises(FileNotFoundError) as exc_info:
+        fs.force_symlink(str(target), str(tmp_path / "missing" / "link"))
+    # the symlink call reports its src argument as filename
+    assert exc_info.value.filename == str(target)
+
+
 @pytest.mark.only_windows("Test is for Windows specific behavior")
 def test_windows_sfn(tmp_path: pathlib.Path):
     # first check some standard Windows locations
