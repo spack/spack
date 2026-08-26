@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     import spack.spec
 
 #: These are variant names used by Spack internally; packages can't use them
-RESERVED_NAMES = {
+RESERVED_VARIANT_NAMES = {
     "arch",
     "architecture",
     "branch",
@@ -51,6 +51,9 @@ RESERVED_NAMES = {
     "tag",
     "target",
 }
+
+#: These are usage names that are also the name of other edge attributes; packages can't use them
+RESERVED_USAGE_NAMES = {"virtuals", "when", "deptypes"}
 
 
 class VariantType(enum.IntEnum):
@@ -886,7 +889,7 @@ def prevalidate_variant_value(
         only if the variant is a reserved variant.
     """
     # do not validate non-user variants or optional variants
-    if variant.name in RESERVED_NAMES or variant.propagate:
+    if variant.name in RESERVED_VARIANT_NAMES or variant.propagate:
         return []
 
     # raise if there is no definition at all

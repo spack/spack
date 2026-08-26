@@ -2176,7 +2176,7 @@ class Spec:
     ) -> None:
         """Called by the parser to add a known flag"""
 
-        if propagate and name in vt.RESERVED_NAMES:
+        if propagate and name in vt.RESERVED_VARIANT_NAMES:
             raise UnsupportedPropagationError(
                 f"Propagation with '==' is not supported for '{name}'."
             )
@@ -3346,7 +3346,7 @@ class Spec:
         propagate_variants = [name for name, variant in spec.variants.items() if variant.propagate]
 
         not_existing = set(spec.variants)
-        not_existing.difference_update(pkg_variants, vt.RESERVED_NAMES, propagate_variants)
+        not_existing.difference_update(pkg_variants, vt.RESERVED_VARIANT_NAMES, propagate_variants)
 
         if not_existing:
             raise vt.UnknownVariantError(
@@ -5594,7 +5594,7 @@ def substitute_abstract_variants(spec: Spec):
             v.type = vt.VariantType.SINGLE
             v.concrete = True
             continue
-        elif name in vt.RESERVED_NAMES:
+        elif name in vt.RESERVED_VARIANT_NAMES:
             continue
 
         variant_defs = spack.repo.PATH.get_pkg_class(spec.fullname).variant_definitions(name)

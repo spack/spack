@@ -745,8 +745,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classmethod
     def num_variant_definitions(cls) -> int:
-        """Total number of variant definitions in this class so far."""
-        return _num_definitions(cls.variants)
+        """Total number of variant definitions in this class so far.
+
+        Deprecated in favor of ``num_definitions``."""
+        return cls.num_definitions("variants")
+
+    @classmethod
+    def num_definitions(cls, dict_name) -> int:
+        """Total number of definitions of the given name in this class so far."""
+        return _num_definitions(getattr(cls, dict_name))
 
     @classmethod
     def variant_definitions(cls, name: str) -> List[Tuple[spack.spec.Spec, spack.variant.Variant]]:
