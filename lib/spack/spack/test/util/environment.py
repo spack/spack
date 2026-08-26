@@ -165,15 +165,19 @@ def test_shell_modifications_are_properly_escaped(shell):
     changes.append_path("VAR", "$ANOTHER_PATH")
     changes.set("RM_RF", "$(rm -rf /)")
 
-    script = changes.shell_modifications(shell="sh")
+    script = changes.shell_modifications(shell)
 
+    append_cmd = "_spack_env_append"
+    set_cmd = "_spack_env_set"
     separator = os.pathsep
 
     if shell == "bat":
+        append_cmd = f"%{append_cmd}%"
+        set_cmd = f"%{set_cmd}%"
         separator = f'"{os.pathsep}"'
     elif shell == "pwsh":
         separator = f"'{os.pathsep}'"
 
-    assert f"_spack_env_set VAR '$PATH'" in script
-    assert f"_spack_env_append VAR '$ANOTHER_PATH' {separator}" in script
-    assert f"_spack_env_set RM_RF '$(rm -rf /)'" in script
+    assert f"{set_cmd} VAR '$PATH'" in script
+    assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in script
+    assert f"{set_cmd} RM_RF '$(rm -rf /)'" in script
