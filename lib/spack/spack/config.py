@@ -1671,8 +1671,24 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
         hook = entry_point.load()
         if callable(hook):
             config_path = hook()
-            if config_path and os.path.exists(config_path):
-                config_paths.append(("plugin-%s" % entry_point.name, str(config_path)))
+            if not config_path:
+                continue
+
+            if isinstance(config_path, str):
+                # Split string paths by os path sep
+                config_path = config_path.split(os.pathsep)
+
+            # Convert config path to iterable object
+            try:
+                iterator = iter(config_path)
+            except TypeError:
+                config_path = [config_path]
+                iterator = iter(config_path)
+
+            # Append the entry point scopes
+            for i, config in enumerate(iterator):
+                if os.path.exists(config):
+                    config_paths.append((f"plugin-{entry_point.name}-{i}", str(config)))
     return config_paths
 
 
