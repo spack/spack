@@ -399,7 +399,7 @@ def filter_file(
 
         except BaseException:
             # restore the original file
-            os.rename(temp_path, path)
+            rename(temp_path, path)
             errored = True
             raise
 
