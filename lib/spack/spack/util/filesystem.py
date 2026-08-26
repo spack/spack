@@ -399,7 +399,7 @@ def filter_file(
 
         except BaseException:
             # restore the original file
-            os.rename(temp_path, path)
+            rename(temp_path, path)
             errored = True
             raise
 
@@ -3250,7 +3250,7 @@ def _windows_read_hard_link(link: str) -> str:
         raise SymlinkError("Can't read hard link on non-Windows OS.")
     link = os.path.abspath(link)
     fsutil_cmd = ["fsutil", "hardlink", "list", link]
-    proc = subprocess.Popen(fsutil_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    proc = subprocess.Popen(fsutil_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
     if proc.returncode != 0:
         raise SymlinkError(f"An error occurred while reading hard link: {err.decode()}")
@@ -3276,8 +3276,9 @@ def _windows_read_junction(link: str):
     link = os.path.abspath(link)
     link_basename = os.path.basename(link)
     link_parent = os.path.dirname(link)
-    fsutil_cmd = ["dir", "/a:l", link_parent]
-    proc = subprocess.Popen(fsutil_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    # dir is a cmd builtin
+    cmd = ["cmd", "/C", "dir", "/a:l", link_parent]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
     if proc.returncode != 0:
         raise SymlinkError(f"An error occurred while reading junction: {err.decode()}")

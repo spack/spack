@@ -590,6 +590,22 @@ def test_filter_files_start_stop(tmp_path: pathlib.Path):
         assert all("X" == line.strip() for line in f.readlines())
 
 
+def _raise_on_replacement(match):
+    raise ZeroDivisionError("boom")
+
+
+def test_filter_file_restores_original_on_error(tmp_path: pathlib.Path):
+    path = tmp_path / "file.txt"
+    path.write_text("hello world\n", encoding="utf-8")
+
+    with pytest.raises(ZeroDivisionError):
+        fs.filter_file("world", _raise_on_replacement, str(path))
+
+    assert path.read_text(encoding="utf-8") == "hello world\n"
+    # the copy taken before filtering is the file that was put back
+    assert [p.name for p in tmp_path.iterdir()] == ["file.txt"]
+
+
 # Each test input is a tuple of entries which prescribe
 # - the 'subdirs' to be created from tmp_path
 # - the 'files' in that directory
