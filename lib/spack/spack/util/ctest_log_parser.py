@@ -385,7 +385,7 @@ class CTestLogParser:
                 yield from self.scan(f, context, tail, severities)
             return
 
-        keep_all = tail is None  # tail=None means keep every line, matched or not
+        keep_all = tail is None
 
         # lines after the current block, the lookbehind for the next match
         recent: Deque[str] = deque(maxlen=max(context, tail or 0))

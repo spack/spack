@@ -252,7 +252,7 @@ class TestBasicStateManagement:
         assert get_stderr(tui).getvalue() == "-- lines 1 to 1 --\n> error: nope\n"
 
     def test_show_log_on_error_writes_whole_log(self, tmp_path):
-        """With show_log_on_error the whole log is written, not just a window around the error."""
+        """With show_log_on_error every line of the log is written."""
         lines = [f"line {i}" for i in range(1, 101)]
         lines[49] = "error: something went wrong"
         log_file = tmp_path / "build.log"

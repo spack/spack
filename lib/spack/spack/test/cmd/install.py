@@ -234,7 +234,7 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mock
 def test_show_log_on_error_new_installer(
     mock_packages, mock_archive, mock_fetch, install_mockery, mutable_config
 ):
-    """The new installer dumps the build log itself, and its error carries no package."""
+    """The new installer dumps the build log."""
     mutable_config.set("config:installer", "new")
     out = install("--show-log-on-error", "build-error", fail_on_error=False)
 
