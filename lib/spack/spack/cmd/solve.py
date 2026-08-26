@@ -72,9 +72,8 @@ def _process_result(result, show, required_format, kwargs):
             # Criteria are grouped into priority bands; print a header when the band changes.
             band = criterion.band
             if band != prev_band:
-                label = f"-- {band}"
-                dashes = "-" * max(0, divider_width - len(label) - 1)
-                color.cprint(f"  @*{{{label}}} @K{{{dashes}}}")
+                # divider_width is measured past the 2-space indent, which tty.band includes
+                print(tty.band(color.colorize(f"@*{{{band}}}"), 2 + divider_width))
                 prev_band = band
 
             value = f"@K{{{criterion.value:>5}}}"
