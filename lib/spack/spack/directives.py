@@ -152,9 +152,9 @@ def _make_when_spec(value: Union[WhenType, Tuple[str, ...]]) -> Optional[spack.s
     return get_spec(value)
 
 
-#: Nested `with when(...)` blocks reduce to the same spec over and over: a trilinos solve combines
-#: 6057 condition stacks drawn from 991 distinct ones. Combined when-specs are only ever used as
-#: keys of the package class dictionaries, like the single-condition ones `get_spec` shares.
+#: Nested `with when(...)` blocks reduce to the same spec over and over. Combined when-specs are
+#: only ever used as keys of the package class dictionaries, like the single-condition ones
+#: `get_spec` shares.
 _WHEN_STACK_CACHE: Dict[Tuple[str, ...], spack.spec.Spec] = {}
 
 

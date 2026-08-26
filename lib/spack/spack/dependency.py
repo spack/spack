@@ -12,8 +12,8 @@ if TYPE_CHECKING:
     import spack.patch
 
 
-#: Recipes declare the same requirement over and over: a trilinos solve holds 24.7k Dependency
-#: objects with 11.4k distinct (spec, depflag) pairs.
+#: Recipes declare the same requirement over and over, so equal unpatched dependencies are one
+#: object; see :func:`intern_dependency`.
 _DEPENDENCY_CACHE: Dict[Tuple[str, dt.DepFlag], "Dependency"] = {}
 
 
@@ -67,8 +67,7 @@ class Dependency:
         self.spec = spec
 
         # Maps condition specs to lists of Patch objects, as the patches dict on packages
-        # does. None until a patch is actually attached: only a handful of packages patch
-        # their dependencies, and an empty dict per Dependency is a large share of the heap.
+        # does. None until a patch directive attaches one, which few packages do.
         self.patches: Optional[Dict[spack.spec.Spec, List["spack.patch.Patch"]]] = None
         self.depflag = depflag
 

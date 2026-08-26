@@ -33,9 +33,8 @@ def get_spec(spec_str: str) -> spack.spec.Spec:
 class Directive(tuple):
     """A directive queued for deferred execution: its function, followed by its arguments.
 
-    A tuple subclass so that a queued directive is one object; ``functools.partial`` is two, and
-    a solve holds tens of thousands of them. Code that sorts a directive result from a list of
-    them has to match this class before ``list``/``tuple``.
+    A tuple subclass, so that a queued directive is one object. Code that sorts a directive
+    result from a list of them has to match this class before ``list``/``tuple``.
     """
 
     __slots__ = ()
