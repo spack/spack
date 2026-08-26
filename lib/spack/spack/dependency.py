@@ -3,13 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Data structures that represent Spack's dependency relationships."""
 
-from typing import TYPE_CHECKING, Dict, List, Optional, Type
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import spack.deptypes as dt
 import spack.spec
 
 if TYPE_CHECKING:
-    import spack.package_base
     import spack.patch
 
 
@@ -40,22 +39,15 @@ class Dependency:
 
     """
 
-    __slots__ = "pkg", "spec", "patches", "depflag"
+    __slots__ = "spec", "patches", "depflag"
 
-    def __init__(
-        self,
-        pkg: Type["spack.package_base.PackageBase"],
-        spec: spack.spec.Spec,
-        depflag: dt.DepFlag = dt.DEFAULT,
-    ):
+    def __init__(self, spec: spack.spec.Spec, depflag: dt.DepFlag = dt.DEFAULT):
         """Create a new Dependency.
 
         Args:
-            pkg: Package that has this dependency
             spec: Spec indicating dependency requirements
-            type: strings describing dependency relationship
+            depflag: flags describing the dependency relationship
         """
-        self.pkg = pkg
         self.spec = spec
 
         # Maps condition specs to lists of Patch objects, as the patches dict on packages
@@ -72,6 +64,6 @@ class Dependency:
     def __repr__(self) -> str:
         types = dt.flag_to_chars(self.depflag)
         if self.patches:
-            return f"<Dependency: {self.pkg.name} -> {self.spec} [{types}, {self.patches}]>"
+            return f"<Dependency: {self.spec} [{types}, {self.patches}]>"
         else:
-            return f"<Dependency: {self.pkg.name} -> {self.spec} [{types}]>"
+            return f"<Dependency: {self.spec} [{types}]>"

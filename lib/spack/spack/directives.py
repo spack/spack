@@ -377,7 +377,7 @@ def _execute_depends_on(
         )
 
     if not dependency:
-        dependency = Dependency(pkg, spec, depflag=depflag)
+        dependency = Dependency(spec, depflag=depflag)
         deps_by_name[spec.name] = dependency
     else:
         copy = dependency.spec.copy()
@@ -388,10 +388,12 @@ def _execute_depends_on(
     # apply patches to the dependency
     for patch in patch_list:
         if isinstance(patch, str):
-            _execute_patch(dependency, url_or_filename=patch)
+            _execute_patch(pkg, patch, dependency=dependency)
         else:
-            assert callable(patch), f"Invalid patch argument: {patch!r}"
-            patch(dependency)
+            assert isinstance(patch, Directive) and patch[0] is _execute_patch, (
+                f"Invalid patch argument: {patch!r}"
+            )
+            _execute_patch(pkg, *patch[1:], dependency=dependency)
 
 
 @directive("disable_redistribute")
@@ -593,7 +595,7 @@ def patch(
 
 
 def _execute_patch(
-    pkg_or_dep: Union[PackageType, Dependency],
+    pkg: PackageType,
     url_or_filename: str,
     level: int = 1,
     when: WhenType = None,
@@ -601,8 +603,11 @@ def _execute_patch(
     reverse: bool = False,
     sha256: Optional[str] = None,
     archive_sha256: Optional[str] = None,
+    dependency: Optional[Dependency] = None,
 ) -> None:
-    pkg = pkg_or_dep.pkg if isinstance(pkg_or_dep, Dependency) else pkg_or_dep
+    """``pkg`` is the package that declares the patch; the patch file is looked up in its
+    directory. The patch is added to ``dependency`` when set, otherwise to ``pkg`` itself."""
+    target: Union[PackageType, Dependency] = pkg if dependency is None else dependency
 
     if hasattr(pkg, "has_code") and not pkg.has_code:
         raise UnsupportedPackageDirective(
@@ -615,9 +620,9 @@ def _execute_patch(
 
     # If this spec is identical to some other, then append this
     # patch to the existing list.
-    if pkg_or_dep.patches is None:
-        pkg_or_dep.patches = {}
-    cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
+    if target.patches is None:
+        target.patches = {}
+    cur_patches = target.patches.setdefault(when_spec, [])
 
     global _patch_order_index
     ordering_key = (pkg.name, _patch_order_index)
