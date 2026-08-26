@@ -155,7 +155,10 @@ def test_reverse_environment_modifications(working_env):
     assert os.environ == start_env
 
 
-def test_shell_modifications_are_properly_escaped():
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_shell_modifications_are_properly_escaped(shell):
     """Test that variable values are properly escaped so that they can safely be eval'd."""
     changes = envutil.EnvironmentModifications()
     changes.set("VAR", "$PATH")
@@ -164,6 +167,17 @@ def test_shell_modifications_are_properly_escaped():
 
     script = changes.shell_modifications(shell="sh")
 
-    assert "_spack_env_set VAR '$PATH'" in script
-    assert "_spack_env_append VAR '$ANOTHER_PATH' :" in script
-    assert "_spack_env_set RM_RF '$(rm -rf /)'" in script
+    append_cmd = "_spack_env_append"
+    set_cmd = "_spack_env_set"
+    separator = os.pathsep
+
+    if shell == "bat":
+        set_cmd = f"%{set_cmd}%"
+        append_cmd = f"%{append_cmd}"
+        separator = f'"{os.pathsep}"'
+    elif shell == "pwsh":
+        separator = f"'{os.pathsep}'"
+
+    assert f"{set_cmd} VAR '$PATH'" in script
+    assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in script
+    assert f"{set_cmd} RM_RF% '$(rm -rf /)'" in script
