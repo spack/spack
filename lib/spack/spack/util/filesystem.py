@@ -1246,7 +1246,7 @@ def touch(path):
     fd = None
     try:
         fd = os.open(path, perms)
-        os.utime(path, None)
+        os.utime(fd if os.utime in os.supports_fd else path, None)
     finally:
         if fd is not None:
             os.close(fd)
