@@ -11,6 +11,7 @@ import spack.spec
 import spack.version
 from spack.directives import _make_when_spec, depends_on, extends, patch
 from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
+from spack.patch import PatchCache
 from spack.repo import RepoPath
 from spack.spec import Spec
 
@@ -301,3 +302,50 @@ def test_patched_dependencies_sets_class_attribute():
 
     assert DoesNotPatchDependencies._patches_dependencies is False
     assert DoesNotPatchDependencies.patches  # type: ignore
+
+
+def test_patched_dependencies_is_inherited():
+    """A subclass runs the patched ``depends_on`` of its base, so it has to report the flag too:
+    ``PatchCache._index_patches`` skips a package's dependencies when the flag is False."""
+    sha256 = "b" * 64
+
+    class PatchesDependencies(metaclass=DirectiveMeta):
+        name = "patches-dependencies"
+        fullname = "patches-dependencies"
+        depends_on("dependency", patches=patch("https://example.com/diff.patch", sha256=sha256))
+
+    class InheritsPatchedDependency(PatchesDependencies):
+        name = "inherits-patched-dependency"
+        fullname = "inherits-patched-dependency"
+
+    dependency = InheritsPatchedDependency.dependencies[Spec()]["dependency"]  # type: ignore
+    assert [p.sha256 for p in dependency.patches[Spec()]] == [sha256]
+    assert InheritsPatchedDependency._patches_dependencies is True
+
+    class DoesNotPatchDependencies(metaclass=DirectiveMeta):
+        name = "does-not-patch-dependencies"
+        fullname = "does-not-patch-dependencies"
+        patch("https://example.com/diff.patch", sha256=sha256)
+
+    class InheritsPatch(DoesNotPatchDependencies):
+        name = "inherits-patch"
+        fullname = "inherits-patch"
+
+    assert InheritsPatch._patches_dependencies is False
+
+
+def test_index_patches_covers_inherited_patched_dependency(mock_packages: RepoPath):
+    """The patch cache indexes the dependency patches a package inherits from its base."""
+    sha256 = "c" * 64
+
+    class PatchesDependencies(metaclass=DirectiveMeta):
+        name = "patches-dependencies"
+        fullname = "patches-dependencies"
+        depends_on("libelf", patches=patch("https://example.com/diff.patch", sha256=sha256))
+
+    class InheritsPatchedDependency(PatchesDependencies):
+        name = "inherits-patched-dependency"
+        fullname = "inherits-patched-dependency"
+
+    index = PatchCache._index_patches(InheritsPatchedDependency, mock_packages)  # type: ignore
+    assert index[sha256].keys() == {"builtin_mock.libelf"}

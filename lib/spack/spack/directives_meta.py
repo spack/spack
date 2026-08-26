@@ -51,16 +51,23 @@ class DirectiveMeta(type):
     #: Stack of default args from `with default_args(...)` context managers
     _default_args_stack: List[dict] = []
     #: This property is set *automatically* during class definition as directives are invoked,
-    #: if any ``depends_on`` or ``extends`` calls include patches for dependencies. This flag can
-    #: be used as an optimization to detect whether a package provides patches for dependencies,
-    #: without triggering the expensive deferred execution of those directives (without populating
-    #: the ``dependencies`` dictionary).
+    #: if any ``depends_on`` or ``extends`` calls include patches for dependencies, on the class
+    #: itself or on one of its bases. This flag can be used as an optimization to detect whether a
+    #: package provides patches for dependencies, without triggering the expensive deferred
+    #: execution of those directives (without populating the ``dependencies`` dictionary).
     _patches_dependencies: bool = False
 
     def __new__(
         cls: Type["DirectiveMeta"], name: str, bases: tuple, attr_dict: dict
     ) -> "DirectiveMeta":
-        attr_dict["_patches_dependencies"] = DirectiveMeta._patches_dependencies
+        # the bases contribute their directives to the queue below, so also their flag
+        patches_dependencies = DirectiveMeta._patches_dependencies
+        if not patches_dependencies:
+            for base in bases:
+                if getattr(base, "_patches_dependencies", False):
+                    patches_dependencies = True
+                    break
+        attr_dict["_patches_dependencies"] = patches_dependencies
         # Initialize the attribute containing the list of directives to be executed. Here we go
         # reversed because we want to execute commands in the order they were defined, following
         # the MRO.
