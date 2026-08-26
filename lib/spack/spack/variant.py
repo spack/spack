@@ -53,6 +53,9 @@ RESERVED_VARIANT_NAMES = {
     "target",
 }
 
+#: These are usage names that are also the name of other edge attributes; packages can't use them
+RESERVED_USAGE_NAMES = {"virtuals", "when", "deptypes"}
+
 
 class VariantType(enum.IntEnum):
     """Enum representing the three concrete variant types."""
