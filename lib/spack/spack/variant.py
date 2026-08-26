@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     import spack.spec
 
 #: These are variant names used by Spack internally; packages can't use them
-RESERVED_NAMES = {
+RESERVED_VARIANT_NAMES = {
     "arch",
     "architecture",
     "branch",
@@ -861,7 +861,7 @@ def prevalidate_variant_value(
         only if the variant is a reserved variant.
     """
     # do not validate non-user variants
-    if variant.name in RESERVED_NAMES:
+    if variant.name in RESERVED_VARIANT_NAMES:
         return []
 
     # raise if there is no definition at all

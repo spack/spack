@@ -2149,7 +2149,7 @@ class Spec:
     ) -> None:
         """Called by the parser to add a known flag"""
 
-        if propagate and name in vt.RESERVED_NAMES:
+        if propagate and name in vt.RESERVED_VARIANT_NAMES:
             raise UnsupportedPropagationError(
                 f"Propagation with '==' is not supported for '{name}'."
             )
@@ -3234,7 +3234,7 @@ class Spec:
         # reserved names are variants that may be set on any package
         # but are not necessarily recorded by the package's class
         not_existing = set(spec.variants)
-        not_existing.difference_update(pkg_variants, vt.RESERVED_NAMES)
+        not_existing.difference_update(pkg_variants, vt.RESERVED_VARIANT_NAMES)
 
         if not_existing:
             raise vt.UnknownVariantError(
@@ -5405,7 +5405,7 @@ def substitute_abstract_variants(spec: Spec, *, repo=None):
             v.type = vt.VariantType.SINGLE
             v.concrete = True
             continue
-        elif name in vt.RESERVED_NAMES:
+        elif name in vt.RESERVED_VARIANT_NAMES:
             continue
 
         variant_defs = repo.get_pkg_class(spec.fullname).variant_definitions(name)
