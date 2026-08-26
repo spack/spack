@@ -348,12 +348,55 @@ def test_remove_complex_package_logic_filtered():
     assert unparsed == complex_package_logic_filtered
 
 
+detection_logic_tests = {
+    "only_detection_logic": """\
+class OnlyDetectionLogic:
+    def determine_version():
+        foo=bar
+    def determine_variants():
+        pass
+    def determine_spec_details():
+        print("detection")
+""",
+    "only_detection_canonical": """\
+class OnlyDetectionLogic:
+    pass
+""",
+    "with_detection_logic": """\
+class WithDetectionLogic:
+    def determine_spec_details():
+        print()
+    def install(self, spec, prefix):
+        assert True
+""",
+    "with_detection_canonical": """\
+class WithDetectionLogic:
+
+    def install(self, spec, prefix):
+        assert True
+""",
+}
+
+
+@pytest.mark.parametrize("name", ["only_detection", "with_detection"])
+def test_remove_detection_logic(name):
+    full_name = name + "_logic"
+    filtered_name = name + "_canonical"
+
+    tree = ast.parse(detection_logic_tests[full_name])
+    filtered_tree = ph.RemoveDetectionMethods().visit(tree)
+    unparsed = unparse(filtered_tree, py_ver_consistent=True)
+
+    assert unparsed == detection_logic_tests[filtered_name]
+
+
 @pytest.mark.parametrize(
     "package_spec,expected_hash",
     [
         ("amdfftw", "tivb752zddjgvfkogfs7cnnvp5olj6co"),
         ("grads", "lomrsppasfxegyamz4r33zgwiqkveftv"),
-        ("llvm", "paicamlvy5jkgxw4xnacaxahrixe3f3i"),
+        # has external detection methods
+        ("llvm", "6myp3rc2ylhus46ubphmwlpkogf2w3m6"),
         # has @when("@4.1.0") and raw unicode literals
         ("mfem", "slf5qyyyhuj66mo5lpuhkrs35akh2zck"),
         ("mfem@4.0.0", "slf5qyyyhuj66mo5lpuhkrs35akh2zck"),
