@@ -191,6 +191,7 @@ class PackageInstaller:
         tests: Union[bool, List[str], Set[str]] = False,
         unsigned: Optional[bool] = None,
         verbose: bool = False,
+        show_log_on_error: bool = False,
         concurrent_packages: Optional[int] = None,
         root_policy: InstallPolicy = "auto",
         dependencies_policy: InstallPolicy = "auto",
@@ -265,7 +266,10 @@ class PackageInstaller:
         self.running_builds: Dict[str, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
         self.ui = ui or TerminalUI(
-            total=0, verbose=verbose, filter_padding=self.store.has_padding()
+            total=0,
+            verbose=verbose,
+            filter_padding=self.store.has_padding(),
+            show_log_on_error=show_log_on_error,
         )
         self.ui.on_total_increased(len(self.build_graph.nodes))
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)

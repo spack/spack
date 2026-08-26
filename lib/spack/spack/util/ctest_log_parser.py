@@ -361,7 +361,7 @@ class CTestLogParser:
         self,
         stream: Union[str, TextIO, List[str]],
         context: int = 6,
-        tail: int = 0,
+        tail: Optional[int] = 0,
         severities: Container[Severity] = ALL_SEVERITIES,
     ) -> Iterator[Block]:
         """Scan a log for errors and warnings and yield the blocks worth showing.
@@ -369,14 +369,15 @@ class CTestLogParser:
         Args:
             stream: filename or stream to read from
             context: lines of context to show around each matched line
-            tail: also show the last this many lines, whether or not anything matched
+            tail: also show the last this many lines, whether or not anything matched; None
+                shows the whole log
             severities: only match lines of these severities
 
         Yields:
             :class:`Block` objects in increasing line order. Blocks never overlap: matches whose
             context windows touch end up in a single block.
         """
-        if context < 0 or tail < 0:
+        if context < 0 or (tail is not None and tail < 0):
             raise ValueError("context and tail must be non-negative")
 
         if isinstance(stream, str):
@@ -384,8 +385,10 @@ class CTestLogParser:
                 yield from self.scan(f, context, tail, severities)
             return
 
+        keep_all = tail is None
+
         # lines after the current block, the lookbehind for the next match
-        recent: Deque[str] = deque(maxlen=max(context, tail))
+        recent: Deque[str] = deque(maxlen=max(context, tail or 0))
         start = 1  # 1-based line number of lines[0]
         lines: List[str] = []
         matches: Dict[int, Match] = {}
@@ -395,6 +398,12 @@ class CTestLogParser:
         for line_no, line in enumerate(stream, 1):
             text = line.rstrip()
             match = self._match(line, line_no, severities)
+
+            if keep_all:
+                lines.append(text)
+                if match is not None:
+                    matches[line_no] = match
+                continue
 
             if match is None:
                 if owed:
