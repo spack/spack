@@ -309,6 +309,29 @@ Currently this only supports paths on the local filesystem.
 
 Default location is under the :ref:`Misc Cache` at: ``$misc_cache/concretization``
 
+The cache can be shared among users on the same machine.
+Spack creates cache directories and entries with permissions that follow your umask, so sharing is controlled entirely by how the cache directory is set up.
+There are two ways to share:
+
+* **Read-only sharing**: one user (e.g. a CI account) populates the cache with a typical umask (e.g. ``022``), and other users point ``concretization_cache:url`` at it.
+  Spack degrades gracefully in a cache it cannot write to.
+  Hits are returned, and misses simply re-run the solver.
+
+* **Read/write sharing**: point ``concretization_cache:url`` at a directory owned by a common group, group-writable, and with the setgid bit set:
+
+  .. code-block:: console
+
+     $ chgrp spackusers $cache_dir
+     $ chmod 2770 $cache_dir
+
+  If sharers may have restrictive umasks, you can also set a default ACL so that entries are always group read/write:
+
+  .. code-block:: console
+
+     $ setfacl -d -m u::rwx,g::rwx,o::--- $cache_dir
+
+  Avoid sticky, world-writable locations like ``/tmp``: the sticky bit prevents users from replacing or pruning each other's entries.
+
 ``concretization_cache:entry_limit``
 ------------------------------------
 

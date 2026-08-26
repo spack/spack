@@ -41,6 +41,7 @@ import spack.spec
 import spack.spec_filter
 import spack.traverse
 import spack.util.file_cache
+import spack.util.filesystem
 import spack.util.hash
 import spack.util.lang
 import spack.util.spack_yaml as syaml
@@ -5435,20 +5436,20 @@ def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cach
     cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
     problem = "write failure test"
 
-    def failing_replace(src, dst):
-        raise OSError("replace failed")
+    def failing_rename(src, dst):
+        raise OSError("rename failed")
 
-    monkeypatch.setattr(os, "replace", failing_replace)
+    monkeypatch.setattr(spack.util.filesystem, "rename", failing_rename)
 
-    # store() must not raise even though os.replace did
+    # store() must not raise even though the final rename did
     cache.store(problem, Result(specs=[]), statistics=[])
 
     # The final cache path should not exist
     cache_path = cache._cache_path_from_problem(problem)
     assert not cache_path.exists()
 
-    # No leftover temp files
-    temps = list(cache.root.glob(".tmp_*"))
+    # No leftover temp files (in-flight temp files are dot-prefixed)
+    temps = [p for p in cache.root.iterdir() if p.name.startswith(".")]
     assert temps == []
 
 
@@ -5496,6 +5497,24 @@ def test_concretization_cache_store_readonly_cache(use_concretization_cache):
         assert not nested.root.exists()
     finally:
         os.chmod(cache.root, old_mode)
+
+
+@pytest.mark.not_on_windows("test checks POSIX permissions")
+def test_concretization_cache_entries_follow_umask(use_concretization_cache):
+    """Cache directories and entries follow the umask, so a shared read/write
+    cache gets group-usable entries without external fixups."""
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+
+    # typical umask for a setgid, group-writable shared cache
+    old_umask = os.umask(0o007)
+    try:
+        cache.store("umask problem", Result(specs=[]), statistics=[])
+    finally:
+        os.umask(old_umask)
+
+    assert cache.root.stat().st_mode & 0o777 == 0o770
+    entry = cache._cache_path_from_problem("umask problem")
+    assert entry.stat().st_mode & 0o777 == 0o660
 
 
 def test_concretization_cache_skips_automatic_splice(

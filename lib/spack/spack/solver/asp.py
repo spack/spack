@@ -14,7 +14,6 @@ import pprint
 import random
 import re
 import sys
-import tempfile
 import time
 import warnings
 from typing import (
@@ -58,6 +57,7 @@ import spack.spec
 import spack.store
 import spack.traverse
 import spack.util.crypto
+import spack.util.filesystem as fs
 import spack.util.hash
 import spack.util.lang
 import spack.util.module_cmd as md
@@ -623,6 +623,13 @@ class ConcretizationCache:
         prefix = self._prefix_digest(problem)
         return self.root / prefix
 
+    @staticmethod
+    def _write_entry(cache_path: pathlib.Path, cache_dict: dict) -> None:
+        """Write ``cache_dict`` to ``cache_path`` as gzipped JSON, atomically."""
+        with fs.write_tmp_and_move(str(cache_path), mode="wb") as f:
+            with gzip.open(f, "wb", compresslevel=6) as gz:
+                gz.write(json.dumps(cache_dict).encode())
+
     def store(self, problem: str, result: Result, statistics: List) -> None:
         """Creates entry in concretization cache for problem if none exists,
         storing the concretization Result object and statistics in the cache
@@ -646,28 +653,18 @@ class ConcretizationCache:
             "statistics": statistics,
         }
 
-        # Write to a temp file in the same directory, then atomically rename.
-        # mkstemp appends random characters after the prefix, so names are unique.
-        # A missing root dir is the only expected failure; create it and retry once.
+        # Entry and directory permissions follow the user's umask, so directory setup
+        # (and things like setgid and default ACLs) determines who can share the cache.
         # The whole store is best-effort: failures (e.g. a shared cache another user
         # owns and we can only read) must not block a successful concretization.
-        tmp_path: Optional[str] = None
         try:
             try:
-                fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
-            except FileNotFoundError:
+                self._write_entry(cache_path, cache_dict)
+            except FileNotFoundError:  # missing cache root; create it and retry once
                 self.root.mkdir(parents=True, exist_ok=True)
-                fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
-            with os.fdopen(fd, "wb") as raw_f:
-                with gzip.open(raw_f, "wb", compresslevel=6) as f:
-                    f.write(json.dumps(cache_dict).encode())
-            # entries keep mkstemp's 0o600 mode: caches are per-user by default, and
-            # sites that want to share one manage permissions themselves.
-            os.replace(tmp_path, cache_path)
+                self._write_entry(cache_path, cache_dict)
         except OSError as e:
             tty.debug(f"Failed to store concretization cache entry {cache_path}: {e}")
-            if tmp_path is not None:
-                self._remove_entry(pathlib.Path(tmp_path))
             return
 
         # Only a newly stored entry can push the cache over its entry limit, so this is the
