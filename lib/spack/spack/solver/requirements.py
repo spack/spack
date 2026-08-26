@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
-import warnings
 from typing import List, NamedTuple, Optional, Sequence, Tuple, Union
 
 import spack.vendor.archspec.cpu
@@ -15,6 +14,7 @@ import spack.spec
 import spack.spec_parser
 import spack.traverse
 import spack.util.spack_yaml
+from spack.concretize_ui import ConcretizerUI
 from spack.enums import PropagationPolicy
 from spack.util import tty
 from spack.util.spack_yaml import get_mark_from_yaml_data
@@ -51,7 +51,11 @@ def _check_unknown_virtuals_on_edges(raw_strs: List[str], specs: List["spack.spe
 
 
 def _check_unknown_targets(
-    raw_strs: List[str], specs: List["spack.spec.Spec"], *, always_warn: bool = False
+    raw_strs: List[str],
+    specs: List["spack.spec.Spec"],
+    *,
+    ui: ConcretizerUI,
+    always_warn: bool = False,
 ) -> None:
     """Either warns or raises for unknown concrete target names in a set of specs.
 
@@ -82,7 +86,7 @@ def _check_unknown_targets(
         )
     if not always_warn and len(specs_with_unknown_targets) == len(specs):
         raise spack.error.SpecError(msg)
-    warnings.warn(msg)
+    ui.on_warning(msg, key=("unknown-target", msg))
 
 
 class RequirementKind(enum.Enum):
@@ -169,8 +173,9 @@ def conflict(
 class RequirementParser:
     """Parses requirements from package.py files and configuration, and returns rules."""
 
-    def __init__(self, configuration: spack.config.Configuration):
+    def __init__(self, configuration: spack.config.Configuration, *, ui: ConcretizerUI):
         self.config = configuration
+        self.ui = ui
         self.runtime_pkgs = spack.repo.PATH.packages_with_tags("runtime")
         self.compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
         self.preferences_from_input: List[Tuple[spack.spec.Spec, str]] = []
@@ -289,7 +294,7 @@ class RequirementParser:
             condition = self._parse_and_expand(when_str) if when_str else spack.spec.EMPTY_SPEC
             message = item.get("message")
         raw_key = item if isinstance(item, str) else item.get("spec", item)
-        _check_unknown_targets([raw_key], [spec], always_warn=True)
+        _check_unknown_targets([raw_key], [spec], ui=self.ui, always_warn=True)
         return spec, condition, message
 
     def _raw_yaml_data(self, pkg_name: str, *, section: str, virtual: bool = False):
@@ -340,7 +345,7 @@ class RequirementParser:
                     self._parse_and_expand(constraint, named=kind == RequirementKind.VIRTUAL)
                     for constraint in raw_strs
                 ]
-                _check_unknown_targets(raw_strs, constraints)
+                _check_unknown_targets(raw_strs, constraints, ui=self.ui)
                 _check_unknown_virtuals_on_edges(raw_strs, constraints)
                 when_str = requirement.get("when")
                 when = self._parse_and_expand(when_str) if when_str else spack.spec.EMPTY_SPEC
@@ -439,15 +444,16 @@ class RequirementParser:
             )
             suffix = "Consider instead:\n" + "\n".join(suggestions)
             if section == "prefer":
-                warnings.warn(
+                message = (
                     f"{prefix}. This can lead to unexpected concretizations. This was likely "
                     f"intended as a preference for a provider of a (language) virtual. {suffix}"
                 )
             else:
-                warnings.warn(
+                message = (
                     f"{prefix}. This often leads to concretization errors. This was likely "
                     f"intended as a requirement for a provider of a (language) virtual. {suffix}"
                 )
+            self.ui.on_warning(message, key=("packages-all", spec_str, section))
 
 
 def _split_edge_on_virtuals(edge: spack.spec.DependencySpec) -> List[spack.spec.Spec]:

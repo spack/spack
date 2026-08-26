@@ -10,7 +10,6 @@ import itertools
 import json
 import os
 import pathlib
-import pprint
 import random
 import re
 import sys
@@ -18,7 +17,6 @@ import tempfile
 import time
 import warnings
 from typing import (
-    IO,
     Any,
     Callable,
     Dict,
@@ -27,7 +25,6 @@ from typing import (
     Iterator,
     List,
     MutableSequence,
-    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -48,7 +45,6 @@ import spack.deptypes as dt
 import spack.error
 import spack.externals_config
 import spack.hash_lookup
-import spack.hash_types as ht
 import spack.package_base
 import spack.package_prefs
 import spack.platforms
@@ -68,14 +64,26 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector
+from spack.concretize_ui import ConcretizerUI, HeadlessUI
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
 from spack.util.lang import elide_list
 
-from .compat import default_clingo_control, make_error_control
-from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
+from .compat import default_clingo_control, make_error_control, symbol_name, symbol_string
+from .core import AspFunction, AspVar, NodeFlag, NodeId, SourceContext, fn
+from .error import (
+    DeprecatedVersionError,
+    InternalConcretizerError,
+    InvalidDependencyError,
+    InvalidSpliceError,
+    InvalidVersionError,
+    OutputDoesNotSatisfyInputError,
+    SpliceSerializationError,
+    UnsatisfiableSpecError,
+)
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
+from .result import Result, SpecDict, build_criteria_names
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory
 from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder, all_libcs
 from .versions import Provenance
@@ -85,99 +93,44 @@ GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
 TransformFunction = Callable[[str, spack.spec.Spec, List[AspFunction]], List[AspFunction]]
 
 
-class OutputConfiguration(NamedTuple):
-    """Data class that contains configuration on what a clingo solve should output."""
-
-    #: Print out coarse timers for different solve phases
-    timers: bool
-    #: Whether to output Clingo's internal solver statistics
-    stats: bool
-    #: Optional output stream for the generated ASP program
-    out: Optional[IO[str]]
-    #: If True, stop after setup and don't solve
-    setup_only: bool
-
-
-#: Default output configuration for a solve
-DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
-    timers=False, stats=False, out=None, setup_only=False
-)
-
-
-# type aliases for the data structures we get back from the solver
-SpecDict = Dict[NodeId, spack.spec.Spec]
 SpliceDict = Dict[spack.spec.Spec, List[spack.solver.splicing.Splice]]
 
 
-class OptimizationKind:
-    """Enum for the optimization KIND of a criteria.
+def intermediate_repr(sym):
+    """Returns an intermediate representation of clingo models for Spack's spec builder.
 
-    It's not using enum.Enum since it must be serializable.
+    Currently, transforms symbols from clingo models either to strings or to NodeId objects.
+
+    Returns:
+        This will turn a ``clingo.Symbol`` into a string or NodeId, or a sequence of
+        ``clingo.Symbol`` objects into a tuple of those objects.
     """
+    if isinstance(sym, (list, tuple)):
+        return tuple(intermediate_repr(a) for a in sym)
 
-    BUILD = 0
-    CONCRETE = 1
-    OTHER = 2
-
-
-class OptimizationBand(enum.Enum):
-    """Grouping for optimization criteria by their priority range."""
-
-    LOW = "Lowest priority"
-    REUSED = "Reused nodes"
-    FIXED = "Fixed (reuse vs build)"
-    BUILD = "Built nodes"
-    HIGHEST = "Highest priority"
-
-
-class OptimizationCriteria(NamedTuple):
-    """A named tuple describing an optimization criteria."""
-
-    priority: int
-    value: int
-    name: str
-    band: str
-    kind: OptimizationKind
+    name = symbol_name(sym)
+    if name == "node":
+        return NodeId(
+            id=intermediate_repr(sym.arguments[0]), pkg=intermediate_repr(sym.arguments[1])
+        )
+    if name == "node_flag":
+        return NodeFlag(
+            flag_type=intermediate_repr(sym.arguments[0]),
+            flag=intermediate_repr(sym.arguments[1]),
+            flag_group=intermediate_repr(sym.arguments[2]),
+            source=intermediate_repr(sym.arguments[3]),
+        )
+    return symbol_string(sym)
 
 
-def build_criteria_names(costs, arg_tuples):
-    """Construct an ordered mapping from criteria names to costs."""
-    # pull optimization criteria names out of the solution
-    priorities_names = []
+def extract_args(model, predicate_name):
+    """Extract the arguments to predicates with the provided name from a model.
 
-    # translate ASP band names into display names
-    band_names = {
-        "low": OptimizationBand.LOW,
-        "concr": OptimizationBand.REUSED,
-        "hinge": OptimizationBand.FIXED,
-        "built": OptimizationBand.BUILD,
-        "high": OptimizationBand.HIGHEST,
-    }
-
-    for args in arg_tuples:
-        priority, band, name = args[0], band_names[args[2]].value, args[4]
-        priority = int(priority)
-
-        if band == OptimizationBand.REUSED.value:
-            # Reused/concrete criterion
-            priorities_names.append((priority, name, band, OptimizationKind.CONCRETE))
-        elif band == OptimizationBand.BUILD.value:
-            # Build criterion
-            priorities_names.append((priority, name, band, OptimizationKind.BUILD))
-        else:
-            priorities_names.append((priority, name, band, OptimizationKind.OTHER))
-
-    # sort the criteria by priority
-    priorities_names = sorted(priorities_names, reverse=True)
-
-    # We only have opt-criterion values for non-error types
-    # error type criteria are excluded (they come first)
-    error_criteria = len(costs) - len(priorities_names)
-    costs = costs[error_criteria:]
-
+    Pull out all the predicates with name ``predicate_name`` from the model, and
+    return their intermediate representation.
+    """
     return [
-        OptimizationCriteria(priority, value, name, band, status)
-        for (priority, name, band, status), value in zip(priorities_names, costs)
+        intermediate_repr(sym.arguments) for sym in model if symbol_name(sym) == predicate_name
     ]
 
 
@@ -287,261 +240,6 @@ def _reorder_flags(flag_list: List[spack.spec.CompilerFlag]) -> List[spack.spec.
             flag_group, propagate=flag_propagate
         )
     ]
-
-
-# We have to take some care with how we serialize a `SpecDict` fresh from a solve,
-# because it contains specs that are in between concrete and abstract. The hash is not
-# yet final, because there are spec changes yet to be made in post-processing that will
-# change the hashes. We still need an identifier for the nodes in the spec DAG, though.
-# So, we use hashes as ids during serialization, but we must clear them afterwards so
-# that they are not cached, and they can be set again when the final changes are made.
-
-
-def spec_dict_to_json(spec_dict: SpecDict) -> Dict:
-    """Serialize a SpecDict to JSON, taking care to preserve node structure in serialized specs.
-
-    Note: this does not yet handle spliced specs and will raise an error if they're passed in.
-
-    Raises:
-        SpliceSerializationError: if any node in ``spec_dict`` has a ``build_spec``.
-    """
-    # Specs are keyed in spec_dict by their solver-assigned NodeId, but reused concrete
-    # specs may have transitive dependencies that do not have a NodeId.
-    # Make a dictionary preserving the NodeIds from input.
-    node_id_for: Dict[int, NodeId] = {id(spec): nid for nid, spec in spec_dict.items()}
-
-    specs = list(spec_dict.values())
-
-    try:
-        # A SpecDict has one entry for each spec in a solution, but some are abstract and some
-        # are concrete. We need DAG hashes for the abstract specs to serialize them, so
-        # force-cache them, taking care to do so bottom-up, to avoid exponential recomputation.
-        # TODO: spec serialization was really designed for concrete and small abstract specs.
-        # This should really be handled by Spec, but it will take some work to adjust the format.
-        for spec in spack.traverse.traverse_nodes(specs, key=id, order="post"):
-            if spec.build_spec is not spec:
-                raise SpliceSerializationError(
-                    f"cannot serialize spliced spec {spec.name}; SpecDicts with spliced "
-                    "specs are not serializable."
-                )
-            if not spec.concrete:
-                spec._cached_hash(ht.dag_hash, force=True)
-
-        # Traverse every spec reachable from spec_dict's values, deduped by hash, and add them
-        # to the serialized entries either a) with their original NodeId, or b) with None if they
-        # don't have a NodeId. This ensures that all nodes are added and NodeIds are preserved.
-        entries = []
-        for dep in spack.traverse.traverse_nodes(specs, key=lambda s: s.dag_hash()):
-            node = dep.to_node_dict()
-            node["hash"] = dep.dag_hash()
-            entries.append((node_id_for.get(id(dep)), node))
-
-    finally:
-        # Clear hashes cached above, which must be recomputed in post-concretization
-        # They're only used here as keys for reading and writing spec DAGs.
-        for spec in spack.traverse.traverse_nodes(specs, key=id):
-            if not spec.concrete:
-                spec.clear_caches()
-
-    return {"_meta": {"spec_version": spack.spec.SpecfileLatest.SPEC_VERSION}, "specs": entries}
-
-
-def spec_dict_from_json(data: Dict) -> SpecDict:
-    """Deserialize a SpecDict from JSON, taking care not to duplicate nodes."""
-    try:
-        spec_version = int(data["_meta"]["spec_version"])
-        entries = data["specs"]
-    except (KeyError, ValueError):
-        raise ValueError(f"Invalid spec dict data: {data}")
-
-    reader = spack.spec.specfile_reader_for_version(spec_version)
-    nodes = [node for _, node in entries]
-    specs_by_hash = spack.spec.wire_spec_nodes(nodes, "hash", reader)
-
-    # clear the hashes we cached on any abstract specs, so that they can be recomputed later
-    for spec in spack.traverse.traverse_nodes(list(specs_by_hash.values()), key=id):
-        if not spec.concrete:
-            spec.clear_caches()
-
-    # Anonymous nodes (nid=None) are reachable transitively through named roots' edges, and
-    # are handled by wire_spec_nodes() above. Skip them here to preserve SpecDict on round-trip.
-    return {NodeId(*nid): specs_by_hash[node["hash"]] for nid, node in entries if nid is not None}
-
-
-class Result:
-    """Result of an ASP solve."""
-
-    def __init__(self, specs):
-        self.satisfiable = None
-        self.optimal = None
-        self.warnings = None
-        self.nmodels = 0
-
-        # specs ordered by optimization level
-        self.answers = []
-
-        # names of optimization criteria
-        self.criteria = []
-
-        # Abstract user requests
-        self.abstract_specs = specs
-
-        # possible dependencies
-        self.possible_dependencies = None
-
-        # Concrete specs
-        self._concrete_specs_by_input = None
-        self._concrete_specs = None
-        self._unsolved_specs = None
-
-    def raise_if_unsat(self):
-        """Raise a generic internal error if the result is unsatisfiable."""
-        if self.satisfiable:
-            return
-
-        constraints = self.abstract_specs
-        if len(constraints) == 1:
-            constraints = constraints[0]
-
-        raise SolverError(constraints)
-
-    @property
-    def specs(self):
-        """List of concretized specs satisfying the initial
-        abstract request.
-        """
-        if self._concrete_specs is None:
-            self._compute_specs_from_answer_set()
-        return self._concrete_specs
-
-    @property
-    def unsolved_specs(self):
-        """List of tuples pairing abstract input specs that were not
-        solved with their associated candidate spec from the solver
-        (if the solve completed).
-        """
-        if self._unsolved_specs is None:
-            self._compute_specs_from_answer_set()
-        return self._unsolved_specs
-
-    @property
-    def specs_by_input(self) -> Dict[spack.spec.Spec, spack.spec.Spec]:
-        if self._concrete_specs_by_input is None:
-            self._compute_specs_from_answer_set()
-        return self._concrete_specs_by_input  # type: ignore
-
-    def _compute_specs_from_answer_set(self):
-        if not self.satisfiable:
-            self._concrete_specs = []
-            self._unsolved_specs = [(x, None) for x in self.abstract_specs]
-            self._concrete_specs_by_input = {}
-            return
-
-        self._concrete_specs, self._unsolved_specs = [], []
-        self._concrete_specs_by_input = {}
-        best = min(self.answers)
-        opt, _, answer = best
-        for input_spec in self.abstract_specs:
-            # The specs must be unified to get here, so it is safe to associate any satisfying spec
-            # with the input. Multiple inputs may be matched to the same concrete spec
-            node = SpecBuilder.make_node(pkg=input_spec.name)
-            if spack.repo.PATH.is_virtual(input_spec.name):
-                providers = [
-                    spec.name for spec in answer.values() if spec.package.provides(input_spec.name)
-                ]
-                node = SpecBuilder.make_node(pkg=providers[0])
-            candidate = answer.get(node)
-
-            if candidate and candidate.satisfies(input_spec):
-                self._concrete_specs.append(answer[node])
-                self._concrete_specs_by_input[input_spec] = answer[node]
-            elif candidate and candidate.build_spec.satisfies(input_spec):
-                tty.warn(
-                    "explicit splice configuration has caused the concretized spec"
-                    f" {candidate} not to satisfy the input spec {input_spec}"
-                )
-                self._concrete_specs.append(answer[node])
-                self._concrete_specs_by_input[input_spec] = answer[node]
-            else:
-                self._unsolved_specs.append((input_spec, candidate))
-
-    @staticmethod
-    def format_unsolved(unsolved_specs):
-        """Create a message providing info on unsolved user specs and for
-        each one show the associated candidate spec from the solver (if
-        there is one).
-        """
-        msg = "Unsatisfied input specs:"
-        for input_spec, candidate in unsolved_specs:
-            msg += f"\n\tInput spec: {str(input_spec)}"
-            if candidate:
-                msg += f"\n\tCandidate spec: {candidate.long_spec}"
-            else:
-                msg += "\n\t(No candidate specs from solver)"
-        return msg
-
-    def to_dict(self) -> dict:
-        """Produces dict representation of Result object
-
-        Does not include anything related to unsatisfiability as we
-        are only interested in storing satisfiable results
-        """
-
-        # NOTE: _unsolved_specs, _concrete_specs_by_input, and _concrete_specs are all
-        # computed dynamically from self.answers, so they're not serialized.
-        return {
-            "criteria": self.criteria,
-            "optimal": self.optimal,
-            "warnings": self.warnings,
-            "nmodels": self.nmodels,
-            # abstract specs are not used for deserialization, but dropping them is
-            # forward-incompatible with Spack 1.2 and earlier.
-            "abstract_specs": [s.to_dict() for s in self.abstract_specs],
-            "satisfiable": self.satisfiable,
-            "answers": [
-                (opt, i, spec_dict_to_json(spec_dict)) for opt, i, spec_dict in self.answers
-            ],
-        }
-
-    @staticmethod
-    def from_dict(obj: dict, specs: List[spack.spec.Spec]):
-        """Returns Result object from compatible dictionary, for the given input specs.
-
-        The stored abstract specs are troubleshooting metadata and are deliberately not
-        deserialized: the caller's input specs are authoritative. This also keeps cache
-        entries with unreadable abstract spec data usable.
-        """
-        result = Result(specs)
-        result.criteria = [OptimizationCriteria(*t) for t in obj["criteria"]]
-        result.optimal = obj["optimal"]
-        result.warnings = obj["warnings"]
-        result.nmodels = obj["nmodels"]
-        result.satisfiable = obj["satisfiable"]
-        result.answers = [
-            (opt, i, spec_dict_from_json(spec_dict)) for opt, i, spec_dict in obj["answers"]
-        ]
-        # NOTE: _unsolved_specs, _concrete_specs_by_input, and _concrete_specs are all
-        # computed dynamically from self.answers, so they're not serialized.
-
-        return result
-
-    def __eq__(self, other):
-        eq = (
-            self.satisfiable == other.satisfiable,
-            self.optimal == other.optimal,
-            self.warnings == other.warnings,
-            self.nmodels == other.nmodels,
-            self.criteria == other.criteria,
-            self.answers == other.answers,
-            self.abstract_specs == other.abstract_specs,
-            # Not considered for equality
-            # self._concrete_specs_by_input   # These three are computed
-            # self._concrete_specs
-            # self._unsolved_specs
-            # self.control                    # Currently we just don't serialize these
-            # self.possible_dependencies
-        )
-        return all(eq)
 
 
 class ConcretizationCache:
@@ -970,6 +668,7 @@ class PyclingoDriver:
         problem_str: str,
         control_file_paths: List[str],
         timer: spack.util.timer.Timer,
+        ui: ConcretizerUI,
     ) -> Result:
         """Actually run clingo and generate a result.
 
@@ -1000,7 +699,8 @@ class PyclingoDriver:
         timer.start("solve")
         # A timeout of 0 means no timeout
         time_limit = spack.config.CONFIG.get("concretizer:timeout", 0)
-        timeout_end = time.monotonic() + time_limit if time_limit > 0 else float("inf")
+        solve_start = time.monotonic()
+        timeout_end = solve_start + time_limit if time_limit > 0 else float("inf")
         error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
         with self.control.solve(on_model=on_model, async_=True) as handle:
             # Allow handling of interrupts every second.
@@ -1012,13 +712,22 @@ class PyclingoDriver:
             finished = False
             while not finished and time.monotonic() < timeout_end:
                 finished = handle.wait(1.0)
+                if not finished:
+                    # on_model runs in clingo's thread, so report progress from this one
+                    current = models[-1][0] if models else None
+                    ui.on_solve_progress(
+                        elapsed=time.monotonic() - solve_start,
+                        models=len(models),
+                        best_cost=current,
+                    )
 
             if not finished:
                 specs_str = ", ".join(spack.util.lang.elide_list([str(s) for s in specs], 4))
                 header = f"Spack is taking more than {time_limit} seconds to solve for {specs_str}"
                 if error_on_timeout:
                     raise UnsatisfiableSpecError(f"{header}, stopping concretization")
-                warnings.warn(f"{header}, using the best configuration found so far")
+                # No key: each solve that runs out of time is its own fact
+                ui.on_warning(f"{header}, using the best configuration found so far")
                 handle.cancel()
 
             solve_result = handle.get()
@@ -1046,6 +755,9 @@ class PyclingoDriver:
         # add best spec to the results
         result.answers.append((list(min_cost), 0, spec_dict))
 
+        # diagnostics collected while building the specs, cached along with the answer
+        result.warnings = builder.warnings
+
         # get optimization criteria
         criteria_args = extract_args(best_model, "opt_priority")
         result.criteria = build_criteria_names(min_cost, criteria_args)
@@ -1066,7 +778,8 @@ class PyclingoDriver:
         specs: List[spack.spec.Spec],
         reuse: Optional[List[spack.spec.Spec]] = None,
         packages_with_externals=None,
-        output: Optional[OutputConfiguration] = None,
+        ui: Optional[ConcretizerUI] = None,
+        setup_only: bool = False,
         control: Optional[Any] = None,  # TODO: figure out how to annotate clingo.Control
         allow_deprecated: bool = False,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
@@ -1076,7 +789,9 @@ class PyclingoDriver:
             setup: An object to set up the ASP problem.
             specs: List of ``Spec`` objects to solve for.
             reuse: list of concrete specs that can be reused
-            output: configuration object to set the output of this solve.
+            ui: frontend to report the start of this solve, its ASP program, and its result,
+                timings and statistics to. Defaults to a headless frontend.
+            setup_only: if True, stop after setup and don't solve
             control: configuration for the solver. If None, default values will be used
             allow_deprecated: if True, allow deprecated versions in the solve
 
@@ -1086,7 +801,8 @@ class PyclingoDriver:
         """
         from spack.bootstrap import ensure_winsdk_external_or_raise
 
-        output = output or DEFAULT_OUTPUT_CONFIGURATION
+        ui = ui or HeadlessUI()
+        ui.on_solve_started(specs)
         timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
@@ -1120,12 +836,11 @@ class PyclingoDriver:
         timer.stop("setup")
 
         timer.start("ordering")
-        # print the original ASP program if requested
+        # report the original ASP program, before it is stripped and ordered
         problem = problem_builder.asp_problem
-        if output.out is not None:
-            output.out.write("\n".join(problem))
+        ui.on_asp_program_generated(problem)
 
-        if output.setup_only:
+        if setup_only:
             return Result(specs), None, None
 
         # strip and order the ASP problem for caching and deterministic solves
@@ -1154,9 +869,10 @@ class PyclingoDriver:
         timer.stop("cache-check")
 
         # run the solver
+        cached = result is not None
         if result is None:
             tty.debug("Starting concretizer")
-            result = self._run_clingo(specs, setup, problem_str, control_file_paths, timer)
+            result = self._run_clingo(specs, setup, problem_str, control_file_paths, timer, ui)
             result.raise_if_unsat()
             concretization_stats = self.control.statistics
 
@@ -1166,18 +882,22 @@ class PyclingoDriver:
 
         # apply post-concretization transformations
         for _, _, spec_dict in result.answers:
-            post_process_concretization_result(spec_dict)
+            post_process_concretization_result(spec_dict, ui=ui)
+
+        # Building the specs is what finds the diagnostics that are not about the model itself.
+        # It has to run after post-processing and after the cache store, since a cache hit
+        # rebuilds them from the answers anyway.
+        result.ensure_specs()
+
+        # emitted here, so that a cached result reports the same diagnostics as a fresh solve.
+        # Keyed by the message, so specs sharing a diagnostic report it once between them.
+        for message in result.warnings:
+            ui.on_warning(message, key=message)
 
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
 
-        if output.timers:
-            timer.write_tty()
-            print()
-
-        if output.stats:
-            print("Statistics:")
-            pprint.pprint(concretization_stats)
+        ui.on_solve_finished(result, timer=timer, statistics=concretization_stats, cached=cached)
 
         return result, timer, concretization_stats
 
@@ -1376,11 +1096,14 @@ class SpackSolverSetup:
     gen: "ProblemInstanceBuilder"
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
-    def __init__(self, tests: spack.concretize.TestsType = False):
+    def __init__(
+        self, tests: spack.concretize.TestsType = False, *, ui: Optional[ConcretizerUI] = None
+    ):
         self.possible_graph = create_graph_analyzer()
+        self.ui = ui or HeadlessUI()
 
         # these are all initialized in setup()
-        self.requirement_parser = RequirementParser(spack.config.CONFIG)
+        self.requirement_parser = RequirementParser(spack.config.CONFIG, ui=self.ui)
         self.possible_virtuals: Set[str] = set()
 
         # pkg_name -> version -> list of possible origins (package.py, installed, etc.)
@@ -3019,7 +2742,7 @@ class SpackSolverSetup:
             x for x in reuse if x.name in supported_compilers and not x.external
         }
         candidate_compilers, self.rejected_compilers = possible_compilers(
-            configuration=spack.config.CONFIG
+            configuration=spack.config.CONFIG, ui=self.ui
         )
         # Compilers installed by Spack are candidates for the solve, no matter what
         # "concretizer:reuse" says. Their link and run dependencies are needed to impose a
@@ -3494,7 +3217,10 @@ class ProblemInstanceBuilder:
         self.asp_problem.append("")
 
 
-def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
+SetOfSpecs = Set["spack.spec.Spec"]
+
+
+def possible_compilers(*, configuration, ui: ConcretizerUI) -> Tuple[SetOfSpecs, SetOfSpecs]:
     result, rejected = set(), set()
 
     # Compilers defined in configuration
@@ -3517,9 +3243,10 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
             and not CompilerPropertyDetector(c).default_libc()
         ):
             rejected.add(c)
-            warnings.warn(
+            ui.on_warning(
                 f"cannot detect libc from {c}. The compiler will not be used "
-                f"during concretization."
+                f"during concretization.",
+                key=("no-libc", str(c)),
             )
             continue
 
@@ -3563,18 +3290,11 @@ class SpecBuilder:
         )
     )
 
-    @staticmethod
-    def make_node(*, pkg: str) -> NodeId:
-        """Given a package name, returns the string representation of the "min_dupe_id" node in
-        the ASP encoding.
-
-        Args:
-            pkg: name of a package
-        """
-        return NodeId(id="0", pkg=pkg)
-
     def __init__(self, specs, hash_lookup=None):
         self._specs: Dict[NodeId, spack.spec.Spec] = {}
+
+        #: Diagnostics about the answer set, collected for the Result to carry
+        self.warnings: List[str] = []
 
         # Matches parent nodes to splice node
         self._splices: SpliceDict = {}
@@ -3645,7 +3365,7 @@ class SpecBuilder:
         dependencies[0].update_virtuals(virtual)
 
     def deprecated(self, node: NodeId, version: str) -> None:
-        tty.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
+        self.warnings.append(f'using "{node.pkg}@{version}" which is a deprecated version')
 
     def splice_at_hash(
         self, parent_node: NodeId, splice_node: NodeId, child_name: str, child_hash: str
@@ -3856,7 +3576,7 @@ def post_process_fresh_solve(specs: SpecDict, splices: Optional[SpliceDict]) -> 
         specs.update(new_specs)
 
 
-def post_process_concretization_result(specs: SpecDict) -> None:
+def post_process_concretization_result(specs: SpecDict, *, ui: ConcretizerUI) -> None:
     """Update concretization results after *every* concretization, even cached ones.
 
     These post-steps depend on package information like patches, package hash, etc. They
@@ -3888,7 +3608,7 @@ def post_process_concretization_result(specs: SpecDict) -> None:
         _develop_specs_from_env(s, active_environment())
 
         # check for commits must happen after all version adaptations are complete
-        _specs_with_commits(s)
+        _specs_with_commits(s, ui=ui)
 
     # mark concrete and assign hashes to all specs in the solve
     for root in roots.values():
@@ -3956,7 +3676,7 @@ def execute_explicit_splices(specs: SpecDict) -> SpecDict:
     return new_specs
 
 
-def _specs_with_commits(spec):
+def _specs_with_commits(spec, *, ui: ConcretizerUI):
     pkg_class = spack.repo.PATH.get_pkg_class(spec.fullname)
     if not pkg_class.needs_commit(spec.version):
         return
@@ -3969,9 +3689,10 @@ def _specs_with_commits(spec):
 
     if "commit" not in spec.variants:
         if not spec.is_develop:
-            tty.warn(
+            ui.on_warning(
                 f"Unable to resolve the git commit for {spec.name}. "
-                "An installation of this binary won't have complete binary provenance."
+                "An installation of this binary won't have complete binary provenance.",
+                key=("git-commit", spec.name),
             )
         return
 
@@ -4047,10 +3768,16 @@ class Solver:
     and passes the setup method to the driver, as well.
     """
 
-    def __init__(self, *, specs_factory: Optional[SpecFiltersFactory] = None):
+    def __init__(
+        self,
+        *,
+        specs_factory: Optional[SpecFiltersFactory] = None,
+        ui: Optional[ConcretizerUI] = None,
+    ):
         # Compute possible compilers first, so we see them as externals
         _ = spack.compilers.config.all_compilers(init_config=True)
 
+        self.ui = ui or HeadlessUI()
         self._conc_cache = ConcretizationCache()
         self.driver = PyclingoDriver(conc_cache=self._conc_cache)
 
@@ -4075,9 +3802,6 @@ class Solver:
     def solve_with_stats(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[IO[str]] = None,
-        timers: bool = False,
-        stats: bool = False,
         tests: spack.concretize.TestsType = False,
         setup_only: bool = False,
         allow_deprecated: bool = False,
@@ -4087,9 +3811,6 @@ class Solver:
 
         Arguments:
           specs: List of ``Spec`` objects to solve for.
-          out: Optionally write the generate ASP program to a file-like object.
-          timers: Print out coarse timers for different solve phases.
-          stats: Print out detailed stats from clingo.
           tests: If True, concretize test dependencies for all packages.
             If a tuple of package names, concretize test dependencies for named
             packages (defaults to False: do not concretize test dependencies).
@@ -4099,15 +3820,15 @@ class Solver:
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
+        setup = SpackSolverSetup(tests=tests, ui=self.ui)
 
         result = self.driver.solve(
             setup,
             specs,
             reuse=reusable_specs,
             packages_with_externals=self.packages_with_externals,
-            output=output,
+            ui=self.ui,
+            setup_only=setup_only,
             allow_deprecated=allow_deprecated,
         )
         return result
@@ -4124,9 +3845,6 @@ class Solver:
     def solve_in_rounds(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[IO[str]] = None,
-        timers: bool = False,
-        stats: bool = False,
         tests: spack.concretize.TestsType = False,
         allow_deprecated: bool = False,
     ) -> Generator[Result, None, None]:
@@ -4140,9 +3858,6 @@ class Solver:
 
         Arguments:
             specs (list): list of Specs to solve.
-            out: Optionally write the generate ASP program to a file-like object.
-            timers (bool): print timing if set to True
-            stats (bool): print internal statistics if set to True
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
         """
@@ -4153,20 +3868,19 @@ class Solver:
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        setup = SpackSolverSetup(tests=tests, ui=self.ui)
 
         # Tell clingo that we don't have to solve all the inputs at once
         setup.concretize_everything = False
 
         input_specs = specs
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
         while True:
             result, _, _ = self.driver.solve(
                 setup,
                 input_specs,
                 reuse=reusable_specs,
                 packages_with_externals=self.packages_with_externals,
-                output=output,
+                ui=self.ui,
                 allow_deprecated=allow_deprecated,
             )
             yield result
@@ -4212,79 +3926,3 @@ def _check_unknown_virtuals_in_input_specs(specs: Sequence[spack.spec.Spec]) -> 
     raise spack.error.InvalidVirtualOnEdgeError(
         f"unknown virtuals have been found in input specs:\n{details}"
     )
-
-
-class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
-    """There was an issue with the spec that was requested (i.e. a user error)."""
-
-    def __init__(self, msg):
-        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
-        self.provided = None
-        self.required = None
-        self.constraint_type = None
-
-
-class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
-    """Errors that indicate a bug in Spack."""
-
-    def __init__(self, msg):
-        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
-        self.provided = None
-        self.required = None
-        self.constraint_type = None
-
-
-class OutputDoesNotSatisfyInputError(InternalConcretizerError):
-    def __init__(
-        self, input_to_output: List[Tuple[spack.spec.Spec, Optional[spack.spec.Spec]]]
-    ) -> None:
-        self.input_to_output = input_to_output
-        super().__init__(
-            "internal solver error: the solver completed but produced specs"
-            " that do not satisfy the request. Please report a bug at "
-            f"https://github.com/spack/spack/issues\n\t{Result.format_unsolved(input_to_output)}"
-        )
-
-
-class SolverError(InternalConcretizerError):
-    """For cases where the solver is unable to produce a solution.
-
-    Such cases are unexpected because we allow for solutions with errors,
-    so for example user specs that are over-constrained should still
-    get a solution.
-    """
-
-    def __init__(self, provided):
-        msg = (
-            "Spack concretizer internal error. Please submit a bug report at "
-            "https://github.com/spack/spack and include the command and environment "
-            "if applicable."
-            f"\n    {provided} is unsatisfiable"
-        )
-
-        super().__init__(msg)
-
-        # Add attribute expected of the superclass interface
-        self.required = None
-        self.constraint_type = None
-        self.provided = provided
-
-
-class InvalidSpliceError(spack.error.SpackError):
-    """For cases in which the splice configuration is invalid."""
-
-
-class SpliceSerializationError(spack.error.SpackError):
-    """Attempt to serialize a SpecDict that contains spliced specs (currently unsupported)."""
-
-
-class DeprecatedVersionError(spack.error.SpackError):
-    """Raised when user directly requests a deprecated version."""
-
-
-class InvalidVersionError(spack.error.SpackError):
-    """Raised when a version can't be satisfied by any possible versions."""
-
-
-class InvalidDependencyError(spack.error.SpackError):
-    """Raised when an explicit dependency is not a possible dependency."""

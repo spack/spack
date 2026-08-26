@@ -1,13 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Low-level wrappers around clingo API and other basic functionality related to ASP"""
+"""Basic data structures used to build Spack's ASP program"""
 
 from typing import Any, NamedTuple, Optional, Tuple
 
 from spack.util import lang
-
-from .compat import symbol_name, symbol_string
 
 
 class AspVar:
@@ -104,49 +102,20 @@ class NodeId(NamedTuple):
     pkg: str
 
 
+def min_dupe_node(*, pkg: str) -> NodeId:
+    """Given a package name, returns the "min_dupe_id" node in the ASP encoding.
+
+    Args:
+        pkg: name of a package
+    """
+    return NodeId(id="0", pkg=pkg)
+
+
 class NodeFlag(NamedTuple):
     flag_type: str
     flag: str
     flag_group: str
     source: str
-
-
-def intermediate_repr(sym):
-    """Returns an intermediate representation of clingo models for Spack's spec builder.
-
-    Currently, transforms symbols from clingo models either to strings or to NodeId objects.
-
-    Returns:
-        This will turn a ``clingo.Symbol`` into a string or NodeId, or a sequence of
-        ``clingo.Symbol`` objects into a tuple of those objects.
-    """
-    if isinstance(sym, (list, tuple)):
-        return tuple(intermediate_repr(a) for a in sym)
-
-    name = symbol_name(sym)
-    if name == "node":
-        return NodeId(
-            id=intermediate_repr(sym.arguments[0]), pkg=intermediate_repr(sym.arguments[1])
-        )
-    if name == "node_flag":
-        return NodeFlag(
-            flag_type=intermediate_repr(sym.arguments[0]),
-            flag=intermediate_repr(sym.arguments[1]),
-            flag_group=intermediate_repr(sym.arguments[2]),
-            source=intermediate_repr(sym.arguments[3]),
-        )
-    return symbol_string(sym)
-
-
-def extract_args(model, predicate_name):
-    """Extract the arguments to predicates with the provided name from a model.
-
-    Pull out all the predicates with name ``predicate_name`` from the model, and
-    return their intermediate representation.
-    """
-    return [
-        intermediate_repr(sym.arguments) for sym in model if symbol_name(sym) == predicate_name
-    ]
 
 
 class SourceContext:

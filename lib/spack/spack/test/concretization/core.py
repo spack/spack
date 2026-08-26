@@ -5,6 +5,7 @@ import gzip
 import json
 import os
 import pathlib
+import pickle
 import platform
 import re
 import sys
@@ -35,7 +36,9 @@ import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.solver.core
+import spack.solver.error
 import spack.solver.input_analysis
+import spack.solver.result
 import spack.solver.reuse
 import spack.spec
 import spack.spec_filter
@@ -43,8 +46,10 @@ import spack.traverse
 import spack.util.file_cache
 import spack.util.hash
 import spack.util.lang
+import spack.util.parallel
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
+from spack.concretize_ui import BufferedUI, HeadlessUI
 from spack.config import Configuration
 from spack.database import Database
 from spack.externals import ExternalDependencyError
@@ -324,9 +329,9 @@ def gcc11_with_flags(compiler_factory):
 def weights_from_result(result: Result, *, name: str) -> Dict[str, int]:
     weights = {}
     for x in result.criteria:
-        if x.name == name and x.kind == spack.solver.asp.OptimizationKind.CONCRETE:
+        if x.name == name and x.kind == spack.solver.result.OptimizationKind.CONCRETE:
             weights["reused"] = x.value
-        elif x.name == name and x.kind == spack.solver.asp.OptimizationKind.BUILD:
+        elif x.name == name and x.kind == spack.solver.result.OptimizationKind.BUILD:
             weights["built"] = x.value
     return weights
 
@@ -2589,7 +2594,6 @@ packages:
         database_mutable_config: Database,
         mock_packages,
         transitive,
-        capfd,
     ):
         mpich_spec = database_mutable_config.query("mpich")[0]
         splice_info = {
@@ -2599,7 +2603,12 @@ packages:
         }
         mutable_config.set("concretizer", {"splice": {"explicit": [splice_info]}})
 
-        spec = spack.concretize.concretize_one("hdf5 ^zmpi")
+        with pytest.warns(
+            UserWarning, match="explicit splice configuration has caused"
+        ) as recorded:
+            spec = spack.concretize.concretize_one(
+                "hdf5 ^zmpi", ui=spack.concretize_ui.TerminalUI()
+            )
 
         assert spec.satisfies(f"^mpich@{mpich_spec.version}")
         assert spec.build_spec.dependencies(name="zmpi", deptype="link")
@@ -2607,10 +2616,9 @@ packages:
         assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
         assert not spec.dependencies(name="zmpi", deptype="link")
 
-        captured = capfd.readouterr()
-        assert "Warning: explicit splice configuration has caused" in captured.err
-        assert "hdf5 ^zmpi" in captured.err
-        assert str(spec) in captured.err
+        warned = "\n".join(str(x.message) for x in recorded)
+        assert "hdf5 ^zmpi" in warned
+        assert str(spec) in warned
 
     def test_explicit_splice_fails_nonexistent(
         self, mutable_config: Configuration, mock_packages, mock_store
@@ -4542,7 +4550,7 @@ def test_result_roundtrip(mock_packages, config, specs):
     """Test that a solve result can be serialized and brought back."""
     solver = spack.solver.asp.Solver()
     result = solver.solve(specs)
-    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict(), specs)
+    roundtrip = spack.solver.result.Result.from_dict(result.to_dict(), specs)
 
     # ensure that we didn't duplicate spec objects during the round trip -- specs need
     # to come back as exactly the same graph they were before.
@@ -4568,10 +4576,12 @@ def test_spec_dict_roundtrip(mock_packages, config, spec_str):
     dangling-hash bug in wire_spec_nodes.
     """
     spec = spack.concretize.concretize_one(spec_str)
-    nid = spack.solver.asp.SpecBuilder.make_node(pkg=spec.name)
+    nid = spack.solver.core.min_dupe_node(pkg=spec.name)
     spec_dict = {nid: spec}
 
-    roundtrip = spack.solver.asp.spec_dict_from_json(spack.solver.asp.spec_dict_to_json(spec_dict))
+    roundtrip = spack.solver.result.spec_dict_from_json(
+        spack.solver.result.spec_dict_to_json(spec_dict)
+    )
 
     # SpecDict shape is preserved exactly (no synthetic NodeIds leak into the dict)
     assert list(roundtrip.keys()) == [nid]
@@ -4608,11 +4618,11 @@ def test_concretization_cache_store_skips_spliced_results(mock_packages, use_con
     abstract_dep = Spec("pkg-b")
     root._add_dependency(abstract_dep, depflag=dt.LINK, virtuals=())
     root._add_dependency(spliced, depflag=dt.LINK, virtuals=())
-    nid = spack.solver.asp.SpecBuilder.make_node(pkg=root.name)
+    nid = spack.solver.core.min_dupe_node(pkg=root.name)
 
     # serialization refuses spliced specs, and must clean up any force-cached hashes
     with pytest.raises(spack.solver.asp.SpliceSerializationError):
-        spack.solver.asp.spec_dict_to_json({nid: root})
+        spack.solver.result.spec_dict_to_json({nid: root})
     assert abstract_dep._hash is None
     assert root._hash is None
 
@@ -5415,7 +5425,7 @@ def test_specs_from_mirror_warns_when_index_missing(monkeypatch):
 def test_spec_dict_from_json_invalid_data(data):
     """spec_dict_from_json raises ValueError on missing or malformed input."""
     with pytest.raises(ValueError, match="Invalid spec dict data"):
-        spack.solver.asp.spec_dict_from_json(data)
+        spack.solver.result.spec_dict_from_json(data)
 
 
 def test_concretization_cache_remove_entry_oserror(tmp_path):
@@ -5714,3 +5724,421 @@ def test_target_star_concretizes(mock_packages, config):
 def test_solve_kind_from_unify_configuration(unify, expected):
     """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
     assert spack.concretize.solve_kind(unify) is expected
+
+
+def test_concretization_reports_when_it_is_over(mutable_config, mock_packages):
+    """Tests that a concretization reports its end exactly once, with no error."""
+    ui = RecordingUI()
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+
+    assert ui.errors == [None]
+    assert len(ui.concretized) == 2
+
+
+def test_concretization_reports_the_error_it_ended_with(mutable_config, mock_packages):
+    """Tests that a concretization that raises still reports its end, carrying the exception, so
+    that a frontend can tear down what it painted before the error is printed.
+    """
+    ui = RecordingUI()
+
+    unsatisfiable = Spec("mpileaks ^mpich@3.0.3 ^mpich@3.0.4")
+    with pytest.raises(spack.error.UnsatisfiableSpecError) as exc_info:
+        spack.concretize.concretize_spec_pairs(
+            [(unsatisfiable, None), (Spec("pkg-b"), None)], ui=ui
+        )
+
+    assert ui.errors == [exc_info.value]
+
+
+@pytest.mark.parametrize("total,announced", [(2, True), (0, False)])
+def test_terminal_ui_announces_a_group_only_when_it_has_work(total, announced, capsys):
+    """Tests that the terminal frontend holds the group header back until it knows the group has
+    specs to concretize, so re-concretizing an environment doesn't announce empty groups.
+    """
+    ui = spack.concretize_ui.TerminalUI()
+    ui.on_group_started(group="apps", is_default=False)
+    ui.on_concretization_started(
+        kind=spack.concretize_ui.SolveKind.SEPARATELY, total=total, processes=1
+    )
+
+    assert ("Concretizing the 'apps' group" in capsys.readouterr().out) is announced
+
+
+def test_terminal_ui_never_announces_the_default_group(capsys):
+    """Tests that the group every environment has stays implicit."""
+    ui = spack.concretize_ui.TerminalUI()
+    ui.on_group_started(group="default", is_default=True)
+    ui.on_concretization_started(
+        kind=spack.concretize_ui.SolveKind.SEPARATELY, total=2, processes=1
+    )
+
+    assert "group of specs" not in capsys.readouterr().out
+
+
+def test_deprecated_version_warns_on_a_concretization_cache_hit(
+    use_concretization_cache, mutable_config: Configuration, monkeypatch
+):
+    """Tests that a result served from the concretization cache reports the same diagnostics as a
+    fresh solve. SpecBuilder does not run on a cache hit, so the warnings ride on the Result.
+    """
+    mutable_config.set("config:deprecated", True)
+    spec_str = "deprecated-versions@1.1.0"
+
+    with pytest.warns(UserWarning, match='using "deprecated-versions@1.1.0"'):
+        spack.concretize.concretize_one(spec_str, ui=spack.concretize_ui.TerminalUI())
+
+    def fail(*args, **kwargs):
+        raise AssertionError("the second solve should have been served from the cache")
+
+    monkeypatch.setattr(spack.solver.asp.PyclingoDriver, "_run_clingo", fail)
+
+    with pytest.warns(UserWarning, match='using "deprecated-versions@1.1.0"'):
+        spack.concretize.concretize_one(spec_str, ui=spack.concretize_ui.TerminalUI())
+
+
+def test_result_warnings_survive_serialization(mock_packages, mutable_config: Configuration):
+    """Tests that the diagnostics of a solve are part of what the concretization cache stores."""
+    specs = [Spec("deprecated-versions@1.1.0")]
+
+    result = spack.solver.asp.Solver().solve(specs, allow_deprecated=True)
+
+    assert result.warnings == ['using "deprecated-versions@1.1.0" which is a deprecated version']
+    assert spack.solver.result.Result.from_dict(result.to_dict(), specs) == result
+
+
+def test_solver_reports_debug_output(mutable_config, mock_packages):
+    """Tests that the ASP program, the result, the timings and the statistics of a solve are
+    reported to the injected frontend, instead of being written to stdout by the solver.
+    """
+    # This asserts on a solve that runs, so it must not be served by a warm cache
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    ui = RecordingUI()
+    result = spack.solver.asp.Solver(ui=ui).solve([Spec("pkg-a")])
+
+    assert [[str(x) for x in specs] for specs in ui.solves] == [["pkg-a"]]
+
+    assert len(ui.programs) == 1
+    program = ui.programs[0]
+    assert any("attr(" in line for line in program)
+    # The program is reported before it is stripped and ordered, so it still has its blank lines
+    assert any(not line for line in program) and program != sorted(program)
+
+    assert len(ui.finished) == 1
+    reported, timer, statistics, cached = ui.finished[0]
+    assert reported is result
+    assert reported.criteria and reported.nmodels
+    assert statistics is not None
+    # The concretization cache is off, so this solve actually ran clingo
+    assert cached is False
+    assert "setup" in timer.phases and "solve" in timer.phases
+
+
+def test_solve_started_is_reported_once_per_round(mutable_config, mock_packages):
+    """Tests that a concretization that takes more than one solve reports the start of each of
+    them, with the specs that round is solving for.
+    """
+    ui = RecordingUI()
+    specs = [Spec("pkg-a@1.0"), Spec("pkg-a@2.0")]
+    results = list(spack.solver.asp.Solver(ui=ui).solve_in_rounds(specs))
+
+    assert len(results) == len(ui.solves) == 2
+    # The first round solves for everything, the second one for what the first left unsolved
+    assert ui.solves[0] == specs
+    assert ui.solves[1] == [abstract for abstract, _ in results[0].unsolved_specs]
+    assert len(ui.programs) == len(ui.finished) == 2
+
+
+def test_solve_started_is_reported_for_setup_only_solves(mutable_config, mock_packages):
+    """Tests that a solve that is only set up reports its start and its ASP program, and that no
+    end of solve is reported since it is never run.
+    """
+    ui = RecordingUI()
+    spack.solver.asp.Solver(ui=ui).solve([Spec("pkg-a")], setup_only=True)
+
+    assert [[str(x) for x in specs] for specs in ui.solves] == [["pkg-a"]]
+    assert len(ui.programs) == 1
+    assert not ui.finished
+
+
+def test_cache_hit_is_reported_to_the_frontend(use_concretization_cache, mutable_config):
+    """Tests that a solve served from the concretization cache says so, and reports no phase for
+    a solver run that never happened.
+    """
+    specs = [Spec("pkg-a")]
+    ui = RecordingUI()
+
+    spack.solver.asp.Solver(ui=ui).solve(specs)
+    spack.solver.asp.Solver(ui=ui).solve(specs)
+
+    assert [cached for _, _, _, cached in ui.finished] == [False, True]
+    fresh_timer, cached_timer = ui.finished[0][1], ui.finished[1][1]
+    assert "solve" in fresh_timer.phases and "ground" in fresh_timer.phases
+    assert "solve" not in cached_timer.phases and "cache-check" in cached_timer.phases
+
+
+class SlowSolveHandle:
+    """Wraps a clingo solve handle, so that the first wait() reports the solve as unfinished."""
+
+    def __init__(self, handle) -> None:
+        self.handle = handle
+        self.waits = 0
+
+    def __enter__(self):
+        self.handle.__enter__()
+        return self
+
+    def __exit__(self, *args):
+        return self.handle.__exit__(*args)
+
+    def __getattr__(self, name):
+        return getattr(self.handle, name)
+
+    def wait(self, timeout):
+        self.waits += 1
+        finished = self.handle.wait(timeout)
+        return finished if self.waits > 1 else False
+
+
+class SlowControl:
+    """Wraps a clingo control, so that its solves take one extra turn of the wait loop."""
+
+    def __init__(self, control) -> None:
+        self.control = control
+
+    def __getattr__(self, name):
+        return getattr(self.control, name)
+
+    def solve(self, *args, **kwargs):
+        return SlowSolveHandle(self.control.solve(*args, **kwargs))
+
+
+def test_a_running_solve_reports_progress(mutable_config, mock_packages, monkeypatch):
+    """Tests that a solve that doesn't finish within a turn of the wait loop reports how long it
+    has been running and what it has found so far. The models are collected in clingo's thread,
+    but the event is emitted from this one.
+    """
+    # This asserts on a solve that runs, so it must not be served by a warm cache
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    real_control = spack.solver.asp.default_clingo_control
+    monkeypatch.setattr(
+        spack.solver.asp, "default_clingo_control", lambda: SlowControl(real_control())
+    )
+
+    ui = RecordingUI()
+    spack.solver.asp.Solver(ui=ui).solve([Spec("pkg-a")])
+
+    assert len(ui.progress) == 1
+    elapsed, models, best_cost = ui.progress[0]
+    assert elapsed >= 0.0
+    assert models >= 1
+    assert best_cost is not None
+    # The solve finished on the next turn, so it also reported its end
+    assert len(ui.finished) == 1
+
+
+@pytest.mark.not_on_windows("process pools are disabled on Windows")
+@pytest.mark.enable_parallelism
+def test_solves_in_workers_are_replayed_to_the_frontend(mutable_config, mock_packages):
+    """Tests that solves running in a worker process report to the frontend of the owning
+    process. The events of one spec arrive together, before that spec is reported as done.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    ui = RecordingUI()
+    specs = [(Spec("pkg-a"), None), (Spec("pkg-b"), None)]
+
+    spack.concretize.concretize_separately(specs, ui=ui)
+
+    assert len(ui.solves) == len(ui.finished) == 2
+    assert {str(x[0]) for x in ui.solves} == {"pkg-a", "pkg-b"}
+    assert [cached for _, _, _, cached in ui.finished] == [False, False]
+    # Solves are replayed, so the ASP program crossed the process boundary too
+    assert len(ui.programs) == 2
+    # A progress tick is live-only, so it is never replayed
+    assert ui.progress == []
+
+
+def test_worker_solves_are_not_buffered_for_a_headless_frontend(mutable_config, mock_packages):
+    """Tests that a frontend that renders no solve keeps the workers from shipping one back,
+    since a whole Result, and an ASP program of tens of MiB, would cross a pipe per spec.
+    """
+    ui = HeadlessUI()
+    assert ui.reports_solves is False and ui.reports_asp_program is False
+
+    reporting = spack.concretize.SolveReporting(ui.reports_solves, ui.reports_asp_program)
+    outcome = spack.concretize._concretize_task((0, "pkg-a", False, None, reporting))
+
+    assert outcome.error is None
+    assert outcome.concrete is not None and outcome.concrete.concrete
+    # The buffer exists, since warnings are cheap to record, but holds no solve
+    assert [name for name, _, _ in outcome.buffered.events] == []
+
+
+def test_buffered_ui_records_only_what_is_asked_for(mutable_config, mock_packages):
+    """Tests that a buffer set up without the ASP program drops it, and replays the rest."""
+    buffered = BufferedUI(asp_program=False)
+    spack.solver.asp.Solver(ui=buffered).solve([Spec("pkg-a")])
+
+    assert [name for name, _, _ in buffered.events] == ["on_solve_started", "on_solve_finished"]
+
+    ui = RecordingUI()
+    buffered.replay(ui)
+    assert [str(x) for x in ui.solves[0]] == ["pkg-a"]
+    assert len(ui.finished) == 1 and ui.programs == []
+
+
+def test_buffered_asp_program_round_trips_exactly(mutable_config, mock_packages):
+    """Tests that a buffered ASP program is replayed byte for byte, and is held compressed.
+
+    Some entries of a program embed a newline, so joining the lines and splitting them back is
+    not a round trip, which is why the buffer pickles instead.
+    """
+    ui = RecordingUI()
+    spack.solver.asp.Solver(ui=ui).solve([Spec("pkg-a")])
+    program = ui.programs[0]
+    assert any("\n" in line for line in program), "expected entries that embed a newline"
+
+    buffered = BufferedUI(asp_program=True)
+    buffered.on_asp_program_generated(program)
+    replayed = RecordingUI()
+    buffered.replay(replayed)
+
+    assert replayed.programs == [program]
+    # It is held compressed, so it travels as a fraction of its size
+    (_, (blob,), _) = buffered.events[0]
+    assert isinstance(blob, bytes)
+    assert len(blob) < len(pickle.dumps(program)) / 4
+
+
+def test_worker_solves_are_replayed_the_same_way_without_parallelism(
+    mutable_config, mock_packages
+):
+    """Tests that disabling parallelism doesn't change what the frontend sees. The serial path
+    builds a buffer per task too, so events don't accumulate across specs.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    assert not spack.util.parallel.ENABLE_PARALLELISM, "this test wants the serial fallback"
+
+    ui = RecordingUI()
+    spack.concretize.concretize_separately([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+
+    assert len(ui.solves) == len(ui.finished) == len(ui.programs) == 2
+    # Each solve reports its own specs, rather than accumulating the ones before it
+    assert [[str(x) for x in specs] for specs in ui.solves] == [["pkg-a"], ["pkg-b"]]
+
+
+def test_single_spec_concretization_reports_to_the_frontend(mutable_config, mock_packages):
+    """Tests that the single spec shortcut in concretize_spec_pairs reports to the frontend it
+    was given.
+    """
+    ui = RecordingUI()
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None)], ui=ui)
+
+    assert [[str(x) for x in specs] for specs in ui.solves] == [["pkg-a"]]
+    assert len(ui.finished) == 1
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        lambda: spack.solver.error.UnsatisfiableSpecError("boom"),
+        lambda: spack.solver.error.InternalConcretizerError("boom"),
+        lambda: spack.solver.error.SolverError(Spec("pkg-a")),
+        lambda: spack.solver.error.OutputDoesNotSatisfyInputError(
+            [(Spec("pkg-a"), Spec("pkg-b")), (Spec("pkg-c"), None)]
+        ),
+    ],
+    ids=["unsatisfiable", "internal", "solver", "output-does-not-satisfy-input"],
+)
+def test_concretizer_errors_survive_a_pipe(factory):
+    """Tests that the errors a solve can raise round trip through pickle, so a worker process
+    can hand them back to the process that owns the pool without losing their type.
+    """
+    error = factory()
+    replayed = pickle.loads(pickle.dumps(error))
+
+    assert type(replayed) is type(error)
+    assert str(replayed) == str(error)
+
+
+def test_output_does_not_satisfy_input_keeps_its_specs():
+    """Tests that the specs of the error survive a pipe, and not just the message built from
+    them: spack.main._handle_solver_bug reports them, and dumps them to JSON for bug reports.
+    """
+    unsolved = [(Spec("pkg-a"), Spec("pkg-b")), (Spec("pkg-c"), None)]
+    error = spack.solver.error.OutputDoesNotSatisfyInputError(unsolved)
+
+    replayed = pickle.loads(pickle.dumps(error))
+
+    assert [(str(i), str(o) if o else None) for i, o in replayed.input_to_output] == [
+        ("pkg-a", "pkg-b"),
+        ("pkg-c", None),
+    ]
+
+
+@pytest.mark.not_on_windows("process pools are disabled on Windows")
+@pytest.mark.enable_parallelism
+def test_worker_error_keeps_its_type_and_replays_its_events(mutable_config, mock_packages):
+    """Tests that a solve failing in a worker process reaches the owning process as the error it
+    raised, carrying the traceback of the worker, and that the events it had already reported are
+    replayed before it is raised.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    ui = RecordingUI()
+    # More than one spec, otherwise imap_unordered falls back to a serial map
+    specs = [(Spec("pkg-b"), None), (Spec("pkg-a@99.99.99"), None)]
+
+    with pytest.raises(spack.solver.error.InvalidVersionError) as exc_info:
+        spack.concretize.concretize_separately(specs, ui=ui)
+
+    # Tracebacks don't pickle, so the worker records its own for the parent to print
+    assert "concretize.py" in exc_info.value.traceback
+    # The solve reported its start before it failed, and that survived the failure
+    assert ["pkg-a@99.99.99"] in [[str(x) for x in solve] for solve in ui.solves]
+
+
+def test_failed_solve_reports_the_same_way_without_parallelism(mutable_config, mock_packages):
+    """Tests that disabling parallelism doesn't change how a failed solve is reported: the task
+    returns its outcome either way, so the serial path raises the same error.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    assert not spack.util.parallel.ENABLE_PARALLELISM, "this test wants the serial fallback"
+    ui = RecordingUI()
+
+    with pytest.raises(spack.solver.error.InvalidVersionError):
+        spack.concretize.concretize_separately(
+            [(Spec("pkg-b"), None), (Spec("pkg-a@99.99.99"), None)], ui=ui
+        )
+
+    assert ["pkg-a@99.99.99"] in [[str(x) for x in solve] for solve in ui.solves]
+
+
+def test_terminal_ui_reports_a_keyed_warning_once():
+    """Tests that the frontend deduplicates on the key, so several solves rediscovering the same
+    fact report it once, and that a warning without a key is reported every time.
+    """
+    ui = spack.concretize_ui.TerminalUI()
+
+    with pytest.warns(UserWarning, match="no index") as recorded:
+        ui.on_warning("mirror foo has no index", key=("no-index", "foo"))
+        ui.on_warning("mirror foo has no index", key=("no-index", "foo"))
+    assert len(recorded) == 1
+
+    with pytest.warns(UserWarning, match="unkeyed") as recorded:
+        ui.on_warning("unkeyed diagnostic")
+        ui.on_warning("unkeyed diagnostic")
+    assert len(recorded) == 2
+
+
+def test_buffered_ui_records_warnings_for_a_frontend_that_renders_no_solve():
+    """Tests that a worker buffers its warnings even when the frontend wants no solve shipped."""
+    buffered = BufferedUI(solves=False)
+    buffered.on_warning("something happened", key="a-key")
+
+    assert [name for name, _, _ in buffered.events] == ["on_warning"]
+
+    ui = RecordingUI()
+    replayed = []
+    ui.on_warning = lambda message, *, key=None: replayed.append((message, key))  # type: ignore
+    buffered.replay(ui)
+
+    assert replayed == [("something happened", "a-key")]

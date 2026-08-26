@@ -6,8 +6,20 @@
 import importlib
 import sys
 import time
+import traceback
 from collections import Counter
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import spack.compilers
 import spack.compilers.config
@@ -15,11 +27,39 @@ import spack.config
 import spack.error
 import spack.hash_lookup
 import spack.repo
+import spack.solver.core
 import spack.traverse
 import spack.util.parallel
-from spack.concretize_ui import ConcretizerUI, HeadlessUI, SolveKind
+from spack.concretize_ui import BufferedUI, ConcretizerUI, HeadlessUI, SolveKind
 from spack.spec import Spec
 from spack.util import tty
+
+
+class SolveReporting(NamedTuple):
+    """What a worker process should buffer of the solves it runs, so the owning process can
+    replay them into its frontend.
+    """
+
+    #: Record the start and the result of each solve
+    solves: bool
+    #: Also record the generated ASP program, which is tens of MiB per solve
+    asp_program: bool
+
+
+class SolveOutcome(NamedTuple):
+    """What a worker process hands back for one spec, whether the solve worked or not."""
+
+    #: Where the spec was in the input, which the pool does not preserve
+    position: int
+    #: The concretized spec, or None if the solve raised
+    concrete: Optional[Spec]
+    #: Seconds spent in the solve
+    duration: float
+    #: The events of the solve, to replay into the frontend
+    buffered: BufferedUI
+    #: What the solve raised, or None if it succeeded
+    error: Optional[Exception]
+
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
 SpecPair = Tuple[Spec, Spec]
@@ -167,8 +207,10 @@ def concretize_separately(
 
     ui = ui or HeadlessUI()
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
+    # Workers can't call the frontend, so they buffer their events and we replay them here.
+    reporting = SolveReporting(ui.reports_solves, ui.reports_asp_program)
     args = [
-        (i, str(abstract), tests, factory)
+        (i, str(abstract), tests, factory, reporting)
         for i, abstract in enumerate(to_concretize)
         if not abstract.concrete
     ]
@@ -210,19 +252,28 @@ def concretize_separately(
             (abstract, concrete) for abstract, concrete in spec_list if concrete
         ]
 
-    for j, (i, concrete, duration) in enumerate(
+    for j, outcome in enumerate(
         spack.util.parallel.imap_unordered(
-            _concretize_task,
-            args,
-            processes=num_procs,
-            debug=tty.is_debug(),
-            maxtaskperchild=1,
-            serialize_env=True,
+            _concretize_task, args, processes=num_procs, maxtaskperchild=1, serialize_env=True
         ),
         start=1,
     ):
-        ret.append((i, concrete))
-        ui.on_spec_concretized(to_concretize[i], concrete=concrete, count=j, duration=duration)
+        # Replay before raising, so a solve that failed still reports what it had to say
+        outcome.buffered.replay(ui)
+        if outcome.error is not None:
+            raise outcome.error
+        if outcome.concrete is None:
+            raise spack.error.SpackError(
+                f"concretization of {to_concretize[outcome.position]} produced neither a spec nor "
+                f"an error"
+            )
+        ret.append((outcome.position, outcome.concrete))
+        ui.on_spec_concretized(
+            to_concretize[outcome.position],
+            concrete=outcome.concrete,
+            count=j,
+            duration=outcome.duration,
+        )
 
     # Add specs in original order
     ret.sort(key=lambda x: x[0])
@@ -233,13 +284,21 @@ def concretize_separately(
 
 
 def _concretize_task(
-    packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"]],
-) -> Tuple[int, Spec, float]:
-    index, spec_str, tests, factory = packed_arguments
+    packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"], "SolveReporting"],
+) -> SolveOutcome:
+    index, spec_str, tests, factory, reporting = packed_arguments
+    # A fresh buffer per task, so the serial fallback doesn't accumulate events across specs
+    buffered = BufferedUI(solves=reporting.solves, asp_program=reporting.asp_program)
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
-        spec = concretize_one(Spec(spec_str), tests=tests, factory=factory)
-        return index, spec, time.time() - start
+        try:
+            spec = concretize_one(Spec(spec_str), tests=tests, factory=factory, ui=buffered)
+        except Exception as e:
+            # Tracebacks don't pickle, so record this one where the parent can print it
+            if isinstance(e, spack.error.SpackError):
+                e.traceback = traceback.format_exc()
+            return SolveOutcome(index, None, time.time() - start, buffered, e)
+        return SolveOutcome(index, spec, time.time() - start, buffered, None)
 
 
 def concretize_one(
@@ -247,14 +306,17 @@ def concretize_one(
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    ui: Optional[ConcretizerUI] = None,
 ) -> Spec:
     """Return a concretized copy of the given spec.
 
     Args:
         tests: if False disregard test dependencies, if a list of names activate them for
             the packages in the list, if True activate test dependencies for all packages.
+        factory: optional factory to produce a list of specs to be reused
+        ui: frontend to report the solve to. Defaults to a headless frontend.
     """
-    from spack.solver.asp import Solver, SpecBuilder
+    from spack.solver.asp import Solver
 
     if isinstance(spec, str):
         spec = Spec(spec)
@@ -270,7 +332,7 @@ def concretize_one(
             )
 
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = Solver(specs_factory=factory).solve(
+    result = Solver(specs_factory=factory, ui=ui).solve(
         [spec], tests=tests, allow_deprecated=allow_deprecated
     )
 
@@ -282,7 +344,7 @@ def concretize_one(
         providers = [s.name for s in answer.values() if s.package.provides(name)]
         name = providers[0]
 
-    node = SpecBuilder.make_node(pkg=name)
+    node = spack.solver.core.min_dupe_node(pkg=name)
     assert node in answer, (
         f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
     )
@@ -318,12 +380,26 @@ def concretize_spec_pairs(
         ui: frontend to report progress to. Defaults to a headless frontend.
     """
     ui = ui or HeadlessUI()
+    error: Optional[BaseException] = None
+    try:
+        return _dispatch_concretization(to_concretize, tests=tests, ui=ui)
+    except BaseException as e:
+        error = e
+        raise
+    finally:
+        ui.on_finished(error=error)
+
+
+def _dispatch_concretization(
+    to_concretize: List[SpecPairInput], *, tests: TestsType, ui: ConcretizerUI
+) -> List[Spec]:
+    """Run the concretization strategy that ``concretizer:unify`` prescribes."""
     kind = solve_kind(spack.config.CONFIG.get("concretizer:unify", False))
 
     # Special case for concretizing a single spec
     if len(to_concretize) == 1:
         abstract, concrete = to_concretize[0]
-        return [concrete or concretize_one(abstract, tests=tests)]
+        return [concrete or concretize_one(abstract, tests=tests, ui=ui)]
 
     # Special case if every spec is either concrete or has an abstract hash
     if all(
