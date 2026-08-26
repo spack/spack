@@ -16,6 +16,7 @@ import re
 import sys
 import time
 import warnings
+import zlib
 from typing import (
     IO,
     Any,
@@ -627,8 +628,8 @@ class ConcretizationCache:
     def _write_entry(cache_path: pathlib.Path, cache_dict: dict) -> None:
         """Write ``cache_dict`` to ``cache_path`` as gzipped JSON, atomically."""
         with fs.write_tmp_and_move(str(cache_path), mode="wb") as f:
-            with gzip.open(f, "wb", compresslevel=6) as gz:
-                gz.write(json.dumps(cache_dict).encode())
+            with gzip.open(f, "wt", encoding="utf-8", compresslevel=6) as gz:
+                json.dump(cache_dict, gz)
 
     def store(self, problem: str, result: Result, statistics: List) -> None:
         """Creates entry in concretization cache for problem if none exists,
@@ -692,7 +693,7 @@ class ConcretizationCache:
                 cache_content = json.loads(f.read().decode("utf-8"))
         except FileNotFoundError:  # cache miss
             return None, None
-        except (OSError, json.JSONDecodeError) as e:  # corrupt cache entry
+        except (OSError, EOFError, zlib.error, ValueError) as e:  # corrupt cache entry
             tty.debug(
                 f"ConcretizationCache.fetch(): force-removing {cache_path} because it is "
                 f"corrupt or truncated: {e}"
