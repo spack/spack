@@ -121,3 +121,15 @@ def test_config_audits(
     with mutable_config.override(config_section, data):
         reports = spack.audit.run_group("configs")
         assert any((check == failing_check) and errors for check, errors in reports)
+
+
+def test_when_combined_with_phase_callbacks(mock_packages):
+    """Ensure @when on a method decorated with @run_before or @run_after is reported"""
+    errors = spack.audit.run_check("PKG-PROPERTIES", pkgs=["fail-test-audit-when-callback"])
+    details = [d for e in errors for d in e.details]
+    assert any(
+        "'callback_outside' is decorated with both @when and @run_before" in d for d in details
+    )
+    assert any(
+        "'callback_inside' is decorated with both @when and @run_after" in d for d in details
+    )

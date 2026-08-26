@@ -47,7 +47,7 @@ import pathlib
 import pickle
 import re
 import warnings
-from typing import Iterable, List, Set, Tuple
+from typing import Iterable, List, Optional, Set, Tuple
 from urllib.request import urlopen
 
 import spack.builder
@@ -820,6 +820,50 @@ def _uses_deprecated_globals(pkgs, error_cls):
                         for name, line in visitor.references_to_globals
                     ],
                 )
+            )
+
+    return errors
+
+
+#: Decorators registering a phase callback, which accept a ``when=`` argument
+PHASE_CALLBACK_DECORATORS = ("run_before", "run_after")
+
+
+def _decorator_name(node: ast.expr) -> Optional[str]:
+    """Return the name of the callable used as a decorator, or None if it cannot be determined."""
+    if isinstance(node, ast.Call):
+        node = node.func
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    if isinstance(node, ast.Name):
+        return node.id
+    return None
+
+
+@package_properties
+def _ensure_when_is_not_combined_with_phase_callbacks(pkgs, error_cls):
+    """Ensure @when is not used on the same method as @run_before or @run_after."""
+    errors = []
+    for pkg_name in pkgs:
+        file = spack.repo.PATH.filename_for_package_name(pkg_name)
+        tree = ast.parse(open(file, "rb").read())
+        details = []
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef):
+                continue
+            decorators = [_decorator_name(d) for d in node.decorator_list]
+            if "when" not in decorators:
+                continue
+            for name in decorators:
+                if name in PHASE_CALLBACK_DECORATORS:
+                    details.append(
+                        f"{file}:{node.lineno} '{node.name}' is decorated with both @when and "
+                        f"@{name}, pass the condition to @{name}(..., when=...) instead"
+                    )
+
+        if details:
+            errors.append(
+                error_cls(f"Package '{pkg_name}' combines @when with a phase callback", details)
             )
 
     return errors
