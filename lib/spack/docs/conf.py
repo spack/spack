@@ -373,6 +373,8 @@ nitpick_ignore = [
     ("py:exc", "CoreCompilersNotFoundError"),
     # TypeVar that is not handled correctly
     ("py:class", "spack.util.lang.ClassPropertyType"),
+    ("py:class", "spack.variant.OptionValueT"),
+    ("py:class", "spack.spec.OptionMapT"),
     ("py:class", "spack.util.lang.K"),
     ("py:class", "spack.util.lang.KT"),
     ("py:class", "spack.util.lang.T"),
