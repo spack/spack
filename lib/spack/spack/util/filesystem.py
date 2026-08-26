@@ -1222,7 +1222,8 @@ def write_tmp_and_move(
     try:
         with f:
             try:
-                os.chmod(tmp, stat.S_IMODE(os.stat(filename).st_mode))
+                existing_mode = stat.S_IMODE(os.stat(filename).st_mode)
+                os.chmod(f.fileno() if os.chmod in os.supports_fd else tmp, existing_mode)
             except FileNotFoundError:
                 pass
             yield f
