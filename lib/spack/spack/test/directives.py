@@ -7,7 +7,9 @@ import pytest
 
 import spack.concretize
 import spack.directives
+import spack.package_base
 import spack.spec
+import spack.variant
 import spack.version
 from spack.directives import _make_when_spec, depends_on, extends, patch
 from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
@@ -231,34 +233,30 @@ def test_directives_meta_combine_when():
     assert _make_when_spec((x,)) == Spec("+x ^dep +a")
 
 
-def test_directive_descriptor_init():
-    # when `pkg.variants` is initialized, only the `variant` directive should run
-    variants = DirectiveDictDescriptor("variants")
-    assert variants.directives_to_run == ["variant"]
-    assert variants.dicts_to_init == ["variants"]
-
-    # when `pkg.dependencies` is initialized, `depends_on` and `extends` should run, and also
-    # `pkg.extendees` should be initialized
-    dependencies = DirectiveDictDescriptor("dependencies")
-    assert dependencies.directives_to_run == ["depends_on", "extends"]
-    assert dependencies.dicts_to_init == ["dependencies", "extendees"]
-
-    # when `pkg.provided` is initialized, so should `pkg.provided_together`, and only the
-    # provides directive should run
-    provided = DirectiveDictDescriptor("provided")
-    assert provided.directives_to_run == ["provides"]
-    assert provided.dicts_to_init == ["provided", "provided_together"]
-
-    # idem for `pkg.provided_together`
-    provided_together = DirectiveDictDescriptor("provided_together")
-    assert provided_together.directives_to_run == ["provides"]
-    assert provided_together.dicts_to_init == ["provided", "provided_together"]
-
-    # when specifying patches on dependencies with `depends_on` and `extends`, the `pkg.patches`
-    # dict is not affects -- they are stored on a Dependency object.
-    patches = DirectiveDictDescriptor("patches")
-    assert patches.directives_to_run == ["patch"]
-    assert patches.dicts_to_init == ["patches"]
+@pytest.mark.parametrize(
+    "dict_name,directives_to_run,dicts_to_init",
+    [
+        # when `pkg.variants` is initialized, only the `variant` directive should run
+        ("variants", ["variant"], ["variants"]),
+        # idem for `pkg.usages` and the `usage` directive
+        ("usages", ["usage"], ["usages"]),
+        # when `pkg.dependencies` is initialized, `depends_on` and `extends` should run, and
+        # also `pkg.extendees` should be initialized
+        ("dependencies", ["depends_on", "extends"], ["dependencies", "extendees"]),
+        # when `pkg.provided` is initialized, so should `pkg.provided_together`, and only the
+        # provides directive should run
+        ("provided", ["provides"], ["provided", "provided_together"]),
+        # idem for `pkg.provided_together`
+        ("provided_together", ["provides"], ["provided", "provided_together"]),
+        # when specifying patches on dependencies with `depends_on` and `extends`, the
+        # `pkg.patches` dict is not affected -- they are stored on a Dependency object.
+        ("patches", ["patch"], ["patches"]),
+    ],
+)
+def test_directive_descriptor_init(dict_name, directives_to_run, dicts_to_init):
+    descriptor = DirectiveDictDescriptor(dict_name)
+    assert descriptor.directives_to_run == directives_to_run
+    assert descriptor.dicts_to_init == dicts_to_init
 
 
 def test_directive_laziness():
@@ -301,3 +299,213 @@ def test_patched_dependencies_sets_class_attribute():
 
     assert DoesNotPatchDependencies._patches_dependencies is False
     assert DoesNotPatchDependencies.patches  # type: ignore
+
+
+_OPTION_DIRECTIVE_DEFAULTS = {
+    "default": None,
+    "description": "",
+    "values": None,
+    "multi": None,
+    "validator": None,
+    "when": None,
+    "sticky": False,
+}
+
+
+def _execute_variant_directive(pkg, name, **kwargs):
+    kwargs = {**_OPTION_DIRECTIVE_DEFAULTS, **kwargs}
+    spack.directives._execute_variant(pkg, name=name, **kwargs)
+
+
+def _execute_usage_directive(pkg, name, **kwargs):
+    kwargs = {**_OPTION_DIRECTIVE_DEFAULTS, **kwargs}
+    spack.directives._execute_usage(pkg, name=name, unified=False, **kwargs)
+
+
+class MockOptionPackage:
+    """Stand-in package class with just what ``_execute_option`` needs."""
+
+    name = "test-package"
+
+    def __init__(self):
+        self.variants = {}
+        self.usages = {}
+
+    # This cannot be a classmethod (as it is on PackageBase) because we don't have the rest
+    # of the infrastructure stood up here that attaches directives to classes
+    def num_definitions(self, dict_name):
+        return spack.package_base._num_definitions(getattr(self, dict_name))
+
+
+@pytest.fixture(
+    params=[
+        (_execute_variant_directive, spack.variant.Variant, "variants"),
+        (_execute_usage_directive, spack.variant.Usage, "usages"),
+    ],
+    ids=["variant", "usage"],
+)
+def option_directive(request):
+    """(execute function, option class, package dict name) for the variant/usage directives."""
+    return request.param
+
+
+def test_option_directive_stores_definition(option_directive):
+    """Executing the directive stores an option of the right type under its when spec, and
+    does not touch the dict of the other option type.
+    """
+    execute, option_cls, dict_name = option_directive
+    pkg = MockOptionPackage()
+
+    validator = lambda pkg_name, name, values: None
+    execute(
+        pkg,
+        "foo",
+        default="bar",
+        description="  a foo option  ",
+        values=("bar", "baz"),
+        multi=True,
+        validator=validator,
+        sticky=True,
+    )
+
+    definition = getattr(pkg, dict_name)[spack.spec.Spec()]["foo"]
+    assert type(definition) is option_cls
+    assert definition.name == "foo"
+    assert definition.default == "bar"
+    assert definition.description == "a foo option"
+    assert definition.values == ("bar", "baz")
+    assert definition.multi is True
+    assert definition.group_validator is validator
+    assert definition.sticky is True
+
+    other_dict_name = "usages" if dict_name == "variants" else "variants"
+    assert not getattr(pkg, other_dict_name)
+
+    # a conditional definition is stored under its when spec
+    execute(pkg, "foo", default="bar", values=("bar", "baz"), when="@1.0")
+    assert "foo" in getattr(pkg, dict_name)[spack.spec.Spec("@1.0")]
+
+
+def test_option_directive_values_inference(option_directive):
+    """When ``values`` is not given, it is inferred from the default."""
+    execute, _, dict_name = option_directive
+    pkg = MockOptionPackage()
+
+    # boolean default (or boolean-looking string) implies boolean values
+    execute(pkg, "bool_opt", default=True)
+    execute(pkg, "bool_str_opt", default="False")
+    definitions = getattr(pkg, dict_name)[spack.spec.Spec()]
+    assert definitions["bool_opt"].values == (True, False)
+    assert definitions["bool_str_opt"].values == (True, False)
+
+    # any other default implies any value is allowed
+    execute(pkg, "str_opt", default="bar")
+    assert definitions["str_opt"].values is None
+    assert definitions["str_opt"].single_value_validator("anything")
+
+    # a tuple default is stored as a comma-separated string
+    execute(pkg, "multi_opt", default=("a", "b"), values=("a", "b", "c"), multi=True)
+    assert definitions["multi_opt"].default == "a,b"
+
+
+def test_option_directive_errors_on_unset_or_empty_default(option_directive):
+    execute, _, _ = option_directive
+    pkg = MockOptionPackage()
+
+    with pytest.raises(
+        spack.directives.DirectiveError, match="either a default was not explicitly set"
+    ):
+        execute(pkg, "foo", default=None)
+
+    with pytest.raises(
+        spack.directives.DirectiveError, match="the default cannot be an empty string"
+    ):
+        execute(pkg, "foo", default="")
+
+
+def test_option_directive_errors_on_invalid_name(option_directive):
+    execute, _, dict_name = option_directive
+    pkg = MockOptionPackage()
+
+    with pytest.raises(
+        spack.directives.DirectiveError, match=f"Invalid {dict_name[:-1]} name"
+    ):
+        execute(pkg, "!foo", default="bar")
+
+
+def test_option_directive_errors_on_arguments_duplicated_by_values(option_directive):
+    """Arguments that the values object supplies itself cannot also be passed explicitly."""
+    execute, _, _ = option_directive
+    pkg = MockOptionPackage()
+    values = spack.variant.disjoint_sets(("a", "b"), ("c", "d"))
+
+    for argument, value in (
+        ("default", "a"),
+        ("multi", False),
+        ("validator", lambda pkg_name, name, values: None),
+    ):
+        with pytest.raises(
+            spack.directives.DirectiveError, match=f"Remove specification of {argument} argument"
+        ):
+            execute(pkg, "foo", values=values, **{argument: value})
+
+
+def test_option_directive_adopts_values_object_attributes(option_directive):
+    """Default, multi and validator are taken from the values object when not passed."""
+    execute, _, dict_name = option_directive
+    pkg = MockOptionPackage()
+
+    execute(pkg, "foo", values=spack.variant.disjoint_sets(("a", "b"), ("c", "d")))
+
+    definition = getattr(pkg, dict_name)[spack.spec.Spec()]["foo"]
+    assert definition.default == "none"
+    assert definition.multi is True
+    assert callable(definition.group_validator)
+
+
+def test_option_directive_definition_precedence(option_directive):
+    """Precedence increases with each definition, across names and conditions."""
+    execute, _, dict_name = option_directive
+    pkg = MockOptionPackage()
+
+    execute(pkg, "foo", default="a", values=("a", "b"))
+    execute(pkg, "bar", default="a", values=("a", "b"), when="@1.0")
+    execute(pkg, "foo", default="b", values=("a", "b"), when="@2.0")
+
+    definitions = getattr(pkg, dict_name)
+    assert definitions[spack.spec.Spec()]["foo"].precedence == 0
+    assert definitions[spack.spec.Spec("@1.0")]["bar"].precedence == 1
+    assert definitions[spack.spec.Spec("@2.0")]["foo"].precedence == 2
+
+
+def test_option_directive_last_definition_wins_per_condition(option_directive):
+    """Two definitions of the same name with the same when spec: the last one wins."""
+    execute, _, dict_name = option_directive
+    pkg = MockOptionPackage()
+
+    execute(pkg, "foo", default="a", values=("a", "b"), when="@1.0")
+    execute(pkg, "foo", default="b", values=("a", "b"), when="@1.0")
+
+    definitions = getattr(pkg, dict_name)
+    assert len(definitions) == 1
+    assert len(definitions[spack.spec.Spec("@1.0")]) == 1
+    assert definitions[spack.spec.Spec("@1.0")]["foo"].default == "b"
+
+
+def test_variant_and_usage_directives_are_independent():
+    """A variant and a usage with the same name coexist, with independent precedence."""
+    pkg = MockOptionPackage()
+
+    _execute_variant_directive(pkg, "foo", default="a", values=("a", "b"))
+    _execute_usage_directive(pkg, "foo", default="b", values=("a", "b"))
+
+    variant_def = pkg.variants[spack.spec.Spec()]["foo"]
+    usage_def = pkg.usages[spack.spec.Spec()]["foo"]
+    assert type(variant_def) is spack.variant.Variant
+    assert type(usage_def) is spack.variant.Usage
+    assert variant_def.default == "a"
+    assert usage_def.default == "b"
+
+    # the precedence counters of the two dicts do not interact
+    assert variant_def.precedence == 0
+    assert usage_def.precedence == 0

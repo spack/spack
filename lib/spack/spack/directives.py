@@ -695,9 +695,9 @@ def variant(
     )
 
 
-def _format_error(msg, pkg, name):
-    msg += " @*r{{[{0}, variant '{1}']}}"
-    return spack.util.tty.color.colorize(msg.format(pkg.name, name))
+def _format_error(msg, pkg, type, name):
+    msg += " @*r{{[{0}, {1} '{2}']}}"
+    return spack.util.tty.color.colorize(msg.format(pkg.name, type, name))
 
 
 def _execute_variant(
@@ -730,8 +730,39 @@ def _execute_variant(
             category=spack.error.SpackAPIWarning,
         )
 
-    if name in spack.variant.RESERVED_NAMES:
-        raise DirectiveError(_format_error(f"The name '{name}' is reserved by Spack", pkg, name))
+    if name in spack.variant.RESERVED_VARIANT_NAMES:
+        raise DirectiveError(
+            _format_error(f"The name '{name}' is reserved by Spack", pkg, "variant", name)
+        )
+
+    return _execute_option(
+        spack.variant.Variant,
+        "variant",
+        pkg,
+        name,
+        default,
+        description,
+        values,
+        multi,
+        validator,
+        when,
+        sticky,
+    )
+
+
+def _execute_option(
+    option_cls: Type[spack.variant.Option],
+    option_name: str,
+    pkg: PackageType,
+    name: str,
+    default: Optional[Union[bool, str, Tuple[str, ...]]],
+    description: str,
+    values: Optional[Union[collections.abc.Sequence, Callable[[Any], bool]]],
+    multi: Optional[bool],
+    validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]],
+    when: Optional[Union[str, bool]],
+    sticky: bool,
+):
 
     # Ensure we have a sequence of allowed variant values, or a
     # predicate for it.
@@ -758,6 +789,7 @@ def _execute_variant(
                     f"Remove specification of {argument} argument: it is handled "
                     "by an attribute of the 'values' argument",
                     pkg,
+                    option_name,
                     name,
                 )
             )
@@ -780,19 +812,20 @@ def _execute_variant(
             msg = "either a default was not explicitly set, or 'None' was used"
         else:
             msg = "the default cannot be an empty string"
-        raise DirectiveError(_format_error(msg, pkg, name))
+        raise DirectiveError(_format_error(msg, pkg, option_name, name))
 
     description = str(description).strip()
     when_spec = _make_when_spec(when)
 
     if not re.match(spack.spec.IDENTIFIER_RE, name):
-        raise DirectiveError("variant", f"Invalid variant name in {pkg.name}: '{name}'")
+        raise DirectiveError(option_name, f"Invalid {option_name} name in {pkg.name}: '{name}'")
 
-    # variants are stored by condition then by name (so only the last variant of a
+    # variants and usages are stored by condition then by name (so only the last variant of a
     # given name takes precedence *per condition*).
-    # NOTE: variant defaults and values can conflict if when conditions overlap.
-    variants_by_name = pkg.variants.setdefault(when_spec, {})  # type: ignore[arg-type]
-    variants_by_name[name] = spack.variant.Variant(
+    # NOTE: variant/usage defaults and values can conflict if when conditions overlap.
+    dict_name = option_name + "s"  # variant(s) and usage(s)
+    variants_by_name = getattr(pkg, dict_name).setdefault(when_spec, {})  # type: ignore[arg-type]
+    variants_by_name[name] = option_cls(
         name=name,
         default=default,
         description=description,
@@ -800,8 +833,90 @@ def _execute_variant(
         multi=multi,
         validator=validator,
         sticky=sticky,
-        precedence=pkg.num_variant_definitions(),
+        precedence=pkg.num_definitions(dict_name),
     )
+
+
+@directive("usages")
+def usage(
+    name: str,
+    default: Optional[Union[bool, str, Tuple[str, ...]]] = None,
+    description: str = "",
+    values: Optional[Union[collections.abc.Sequence, Callable[[Any], bool]]] = None,
+    multi: Optional[bool] = None,
+    validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]] = None,
+    when: Optional[Union[str, bool]] = None,
+    sticky: bool = False,
+    unified: bool = False,
+):
+    """Declare a usage for a package.
+
+    Packager can specify a default value as well as a text description.
+
+    Args:
+        name: Name of the usage
+        default: Default value for the usage, if not specified otherwise the default will be
+            False for a boolean usage and 'nothing' for a multi-valued usage
+        description: Description of the purpose of the usage
+        values: Either a tuple of strings containing the allowed values, or a callable accepting
+            one value and returning True if it is valid
+        multi: If False only one value per spec is allowed for this usage
+        validator: Optional group validator to enforce additional logic. It receives the package
+            name, the usage name and a tuple of values and should raise an instance of SpackError
+            if the group doesn't meet the additional constraints
+        when: Optional condition of the child node on which the usage applies
+        sticky: The usage should not be changed by the concretizer to find a valid concrete spec
+        unified: The usage should match on all incoming edges from a unification set
+
+    Raises:
+        spack.directives_meta.DirectiveError: If arguments passed to the directive are invalid
+    """
+    return partial(
+        _execute_usage,
+        name=name,
+        default=default,
+        description=description,
+        values=values,
+        multi=multi,
+        validator=validator,
+        when=when,
+        sticky=sticky,
+        unified=unified,
+    )
+
+
+def _execute_usage(
+    pkg: PackageType,
+    name: str,
+    default: Optional[Union[bool, str, Tuple[str, ...]]],
+    description: str,
+    values: Optional[Union[collections.abc.Sequence, Callable[[Any], bool]]],
+    multi: Optional[bool],
+    validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]],
+    when: Optional[Union[str, bool]],
+    sticky: bool,
+    unified: bool,
+):
+    if name in spack.variant.RESERVED_USAGE_NAMES:
+        raise DirectiveError(
+            _format_error(f"The name '{name}' is reserved by Spack", pkg, "usage", name)
+        )
+
+    _execute_option(
+        spack.variant.Usage,
+        "usage",
+        pkg,
+        name,
+        default,
+        description,
+        values,
+        multi,
+        validator,
+        when,
+        sticky,
+    )
+    # TODO: When usages have a `unified` field
+    # pkg.usages[when_spec][name].unified = unified
 
 
 @directive("resources")

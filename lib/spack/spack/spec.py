@@ -2176,7 +2176,7 @@ class Spec:
     ) -> None:
         """Called by the parser to add a known flag"""
 
-        if propagate and name in vt.RESERVED_NAMES:
+        if propagate and name in vt.RESERVED_VARIANT_NAMES:
             raise UnsupportedPropagationError(
                 f"Propagation with '==' is not supported for '{name}'."
             )
@@ -3346,7 +3346,7 @@ class Spec:
         propagate_variants = [name for name, variant in spec.variants.items() if variant.propagate]
 
         not_existing = set(spec.variants)
-        not_existing.difference_update(pkg_variants, vt.RESERVED_NAMES, propagate_variants)
+        not_existing.difference_update(pkg_variants, vt.RESERVED_VARIANT_NAMES, propagate_variants)
 
         if not_existing:
             raise vt.UnknownVariantError(
@@ -3428,7 +3428,7 @@ class Spec:
 
         for v in [x for x in other.variants if x in self.variants]:
             if not self.variants[v].intersects(other.variants[v]):
-                raise vt.UnsatisfiableVariantSpecError(self.variants[v], other.variants[v])
+                raise vt.UnsatisfiableOptionSpecError(self.variants[v], other.variants[v])
 
         sarch, oarch = self.architecture, other.architecture
         if (
@@ -3879,13 +3879,13 @@ class Spec:
         if other is not None and other._concrete:
             for k in self.variants:
                 if k not in other.variants:
-                    raise vt.UnsatisfiableVariantSpecError(self.variants[k], "<absent>")
+                    raise vt.UnsatisfiableOptionSpecError(self.variants[k], "<absent>")
 
         changed = False
         for k in other.variants:
             if k in self.variants:
                 if not self.variants[k].intersects(other.variants[k]):
-                    raise vt.UnsatisfiableVariantSpecError(self.variants[k], other.variants[k])
+                    raise vt.UnsatisfiableOptionSpecError(self.variants[k], other.variants[k])
                 # If they are compatible merge them
                 changed |= self.variants[k].constrain(other.variants[k])
             else:
@@ -5416,69 +5416,65 @@ class Spec:
         return bool(self.dependencies(virtuals=(virtual,)))
 
 
-class VariantMap(lang.HashableMap[str, vt.VariantValue]):
-    """Map containing variant instances. New values can be added only
+class OptionMap(lang.HashableMap[str, vt.VariantValue]):
+    """Base class for VariantMap and UsageMap.
+
+    Map containing instances of each type. New values can be added only
     if the key is not already present."""
 
-    __slots__ = ()
+    __slots__ = ("type",)
 
-    def __setitem__(self, name, vspec):
-        # Raise a TypeError if vspec is not of the right type
-        if not isinstance(vspec, vt.VariantValue):
+    def __setitem__(self, name, ospec):
+        expected_type = vt.VariantValue if self.type == "variant" else vt.UsageValue
+        # Raise a TypeError if ospec is not of the right type
+        if not isinstance(ospec, expected_type):
             raise TypeError(
-                "VariantMap accepts only values of variant types "
-                f"[got {type(vspec).__name__} instead]"
+                f"{type(self).__name__} accepts only values of {self.type} types "
+                f"[got {type(ospec).__name__} instead]"
             )
 
-        # Raise an error if the variant was already in this map
+        # Raise an error if the option was already in this map
         if name in self.dict:
-            msg = 'Cannot specify variant "{0}" twice'.format(name)
-            raise vt.DuplicateVariantError(msg)
+            raise vt.DuplicateOptionError(f"Cannot specify {self.type} '{name}' twice")
 
-        # Raise an error if name and vspec.name don't match
-        if name != vspec.name:
+        # Raise an error if name and ospec.name don't match
+        if name != ospec.name:
             raise KeyError(
-                f'Inconsistent key "{name}", must be "{vspec.name}" to match VariantSpec'
+                f"Inconsistent key '{name}', "
+                f"must be '{ospec.name}' to match {type(ospec).__name__}"
             )
 
         # Set the item
-        super().__setitem__(name, vspec)
+        super().__setitem__(name, ospec)
 
-    def substitute(self, vspec):
-        """Substitutes the entry under ``vspec.name`` with ``vspec``.
+    def substitute(self, ospec):
+        """Substitutes the entry under ``ospec.name`` with ``ospec``.
 
         Args:
-            vspec: variant spec to be substituted
+            ospec: option spec to be substituted
         """
-        if vspec.name not in self:
-            raise KeyError(f"cannot substitute a key that does not exist [{vspec.name}]")
+        if ospec.name not in self:
+            raise KeyError(f"cannot substitute a key that does not exist [{ospec.name}]")
 
         # Set the item
-        super().__setitem__(vspec.name, vspec)
+        super().__setitem__(ospec.name, ospec)
 
-    def partition_variants(self):
-        non_prop, prop = lang.stable_partition(self.values(), lambda x: not x.propagate)
-        # Just return the names
-        non_prop = [x.name for x in non_prop]
-        prop = [x.name for x in prop]
-        return non_prop, prop
-
-    def copy(self) -> "VariantMap":
-        clone = VariantMap()
-        for name, variant in self.items():
-            clone[name] = variant.copy()
+    def copy(self) -> "OptionMap":
+        clone = type(self)()
+        for name, option in self.items():
+            clone[name] = option.copy()
         return clone
 
     def __str__(self):
         if not self:
             return ""
 
-        # Separate boolean variants from key-value pairs as they print
+        # Separate boolean options from key-value pairs as they print
         # differently. All booleans go first to avoid ' ~foo' strings that
         # break spec reuse in zsh.
         bool_keys, kv_keys = self.partition_keys()
 
-        # add spaces before and after key/value variants.
+        # add spaces before and after key/value options.
         string = io.StringIO()
 
         for key in bool_keys:
@@ -5496,6 +5492,44 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
             sorted(self.keys()), lambda x: self[x].type == vt.VariantType.BOOL
         )
         return bool_keys, kv_keys
+
+
+class VariantMap(OptionMap):
+    """Map containing variant instances"""
+
+    type = "variant"
+
+    def partition_variants(self):
+        non_prop, prop = lang.stable_partition(self.values(), lambda x: not x.propagate)
+        # Just return the names
+        non_prop = [x.name for x in non_prop]
+        prop = [x.name for x in prop]
+        return non_prop, prop
+
+
+class UsageMap(OptionMap):
+    """Map containing usage instances"""
+
+    type = "usage"
+
+    def intersects(self, other):
+        return all(self[k].intersects(other[k]) for k in other if k in self)
+
+    def satisfies(self, other):
+        return all(k in self and self[k].satisfies(other[k]) for k in other)
+
+    def constrain(self, other):
+        changed = False
+        for k in other:
+            if k in self:
+                # Don't merge them if they are incompatible
+                if not self[k].intersects(other[k]):
+                    raise vt.UnsatisfiableOptionSpecError(self[k], other[k])
+                changed |= self[k].constrain(other[k])
+            else:
+                changed = True
+                self[k] = other[k].copy()
+        return changed
 
 
 class SpecBuildInterface(lang.ObjectWrapper, Spec):
@@ -5560,7 +5594,7 @@ def substitute_abstract_variants(spec: Spec):
             v.type = vt.VariantType.SINGLE
             v.concrete = True
             continue
-        elif name in vt.RESERVED_NAMES:
+        elif name in vt.RESERVED_VARIANT_NAMES:
             continue
 
         variant_defs = spack.repo.PATH.get_pkg_class(spec.fullname).variant_definitions(name)
