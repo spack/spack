@@ -1192,6 +1192,7 @@ def _setup_pkg_and_run(
         if stderr_pipe is not None:
             os.dup2(stderr_pipe.fileno(), sys.stderr.fileno())
             stderr_pipe.close()
+        tty.clear_isatty_cache()
 
         pkg = serialized_pkg.restore()
 
