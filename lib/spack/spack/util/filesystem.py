@@ -329,8 +329,11 @@ def filter_file(
     Args:
         regex: The regular expression to search for
         repl: The string to replace matches with
-        *filenames: One or more files to search and replace string: Treat regex as a plain string.
-            Default it False backup: Make backup file(s) suffixed with ``~``. Default is False
+        *filenames: One or more files to search and replace
+        string: Treat regex as a plain string. Default is False
+        backup: Keep the copy of the original that is made before filtering instead of deleting
+            it. The copy is a temporary file next to the original, with a generated name. Default
+            is False
         ignore_absent: Ignore any files that don't exist. Default is False
         start_at: Marker used to start applying the replacements. If a text line matches this
             marker filtering is started at the next line. All contents before the marker and the
