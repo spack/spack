@@ -642,6 +642,18 @@ class Configuration:
             self.push_scope(included_scope, priority=priority, _depth=_depth + 1)
             yield self
 
+        # Check if scope already exists - if so, keep the first one (don't replace)
+        # This allows higher-priority scopes to override which included scopes get loaded
+        if scope.name in self.scopes:
+            existing = self.scopes[scope.name]
+            tty.debug(
+                f"[CONFIGURATION: SKIP DUPLICATE SCOPE]: {scope.name} already loaded, "
+                f"keeping first instance",
+                level=2,
+            )
+            yield self
+            return
+
         tty.debug(f"[CONFIGURATION: PUSH SCOPE]: {str(scope)}, priority={priority}", level=2)
         self.scopes.add(scope.name, value=scope, priority=priority)
         yield self
@@ -1776,6 +1788,11 @@ def _isolate_scope_path() -> str:
     return os.path.join(spack.paths.etc_path, "isolate")
 
 
+def _user_redirect_scope_path() -> str:
+    """Path to the user-redirect scope directory."""
+    return os.path.join(spack.paths.etc_path, "user-redirect")
+
+
 def _is_spack_writable() -> bool:
     """Check if $spack/etc/spack is writable."""
     etc_spack = spack.paths.etc_path
@@ -1889,6 +1906,67 @@ def _create_empty_layout_scope() -> None:
         f.write("# An empty layout scope means all new XDG-compliant defaults are in use.\n")
 
 
+def _spack_include_has_legacy_user_scope() -> bool:
+    """Check if $spack/etc/spack/include.yaml has a user scope pointing to ~/.spack.
+
+    Returns:
+        True if include.yaml contains a user scope with path ~/.spack
+    """
+    include_path = os.path.join(spack.paths.etc_path, "include.yaml")
+    if not os.path.exists(include_path):
+        return False
+
+    try:
+        include_data = read_config_file(include_path, spack.schema.include.schema)
+        if not include_data or "include" not in include_data:
+            return False
+
+        for entry in include_data["include"]:
+            if isinstance(entry, dict):
+                if entry.get("name") == "user":
+                    path = entry.get("path", "")
+                    # Check for ~/.spack in various forms
+                    if path in ["~/.spack", "$HOME/.spack", os.path.expanduser("~/.spack")]:
+                        return True
+    except Exception:
+        # If we can't read or parse, assume no legacy scope
+        return False
+
+    return False
+
+
+def _create_user_redirect_scope() -> None:
+    """Create user-redirect scope to redirect ~/.spack to ~/.config/spack.
+
+    This scope has higher include-processing priority than the spack scope,
+    so its user scope include takes precedence over the one in spack's include.yaml.
+
+    This allows us to redirect the user scope from ~/.spack to ~/.config/spack
+    without modifying the spack scope's include.yaml (which could cause conflicts).
+    """
+    user_redirect_path = _user_redirect_scope_path()
+    filesystem.mkdirp(user_redirect_path)
+
+    # Create include.yaml that includes user -> ~/.config/spack
+    include_yaml_path = os.path.join(user_redirect_path, "include.yaml")
+    include_data = {
+        "include": [
+            {
+                "name": "user",
+                "path": "~/.config/spack",
+                "optional": True,
+                "prefer_modify": True,
+                "when": '"SPACK_DISABLE_LOCAL_CONFIG" not in env',
+            }
+        ]
+    }
+
+    with open(include_yaml_path, "w", encoding="utf-8") as f:
+        syaml.dump(include_data, f)
+
+    tty.debug(f"Created user-redirect scope at {user_redirect_path}")
+
+
 def _perform_migration_check(cfg: Configuration) -> None:
     """Perform migration detection and setup layout scope if needed.
 
@@ -1900,11 +1978,8 @@ def _perform_migration_check(cfg: Configuration) -> None:
     Args:
         cfg: Configuration object with spack scope loaded
     """
-    print("DEBUG: _perform_migration_check() called")
-
     # P1: Not writable - cannot do anything
     if not _is_spack_writable():
-        print("DEBUG: P1: Spack instance is read-only")
         tty.debug("Spack instance is read-only, skipping auto-migration check")
         return
 
@@ -1945,11 +2020,11 @@ def _perform_migration_check(cfg: Configuration) -> None:
         return
 
     # P5: Old resources present, no isolate - migrate what we can
-    print("DEBUG: P5: Old resources detected, performing selective migration")
-    print(f"DEBUG:   Installs: {old_resources['installs']}")
-    print(f"DEBUG:   GPG keys: {old_resources['gpg_keys']}")
-    print(f"DEBUG:   Modules: {old_resources['modules']}")
-    print(f"DEBUG:   Licenses: {old_resources['licenses']}")
+    tty.debug("P5: Old resources detected, performing selective migration")
+    tty.debug(f"  Installs: {old_resources['installs']}")
+    tty.debug(f"  GPG keys: {old_resources['gpg_keys']}")
+    tty.debug(f"  Modules: {old_resources['modules']}")
+    tty.debug(f"  Licenses: {old_resources['licenses']}")
 
     # TODO: Implement P5 migration logic
     # - Installs: stay in place (create layout scope entry)
@@ -1975,6 +2050,29 @@ def create_incremental() -> Generator[Configuration, None, None]:
         (ConfigScopePriority.DEFAULTS, DirectoryConfigScope(*CONFIGURATION_DEFAULTS_PATH)),
     )
     yield cfg
+
+    # Check if we need to create user-redirect scope
+    # This redirects ~/.spack to ~/.config/spack by including a user scope
+    # with higher priority than the one in spack's include.yaml
+    user_redirect_path = _user_redirect_scope_path()
+    if not os.path.exists(user_redirect_path):
+        if _is_spack_writable() and _spack_include_has_legacy_user_scope():
+            tty.debug("Creating user-redirect scope to redirect ~/.spack to ~/.config/spack")
+            _create_user_redirect_scope()
+
+    # If user-redirect scope exists, push it before spack scope
+    # Use priority 0.5 (between DEFAULTS=0 and CONFIG_FILES=1) so its
+    # includes take precedence over spack scope's includes
+    # Note: Lower priority number = higher precedence in Spack
+    if os.path.exists(user_redirect_path):
+        tty.debug(f"Loading user-redirect scope from {user_redirect_path}")
+        # Priority 0.5 is between DEFAULTS (0) and CONFIG_FILES (1)
+        # This ensures user-redirect's includes WIN over spack's includes
+        # (lower priority number = higher precedence)
+        yield from cfg.push_scope_incremental(
+            DirectoryConfigScope("user-redirect", user_redirect_path),
+            priority=0.5,  # Between DEFAULTS and CONFIG_FILES for highest precedence
+        )
 
     # Initial topmost scope is spack (the config scope in the spack instance).
     # It includes the user, site, and system scopes. Environments and command
