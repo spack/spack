@@ -40,6 +40,7 @@ def prefix_inspections(platform: str) -> dict:
         "lib64/pkgconfig": ["PKG_CONFIG_PATH"],
         "share/pkgconfig": ["PKG_CONFIG_PATH"],
         "": ["CMAKE_PREFIX_PATH"],
+        "lib/perl5": ["PERL5LIB"],
     }
 
     if platform == "darwin":

@@ -33,6 +33,8 @@ modules:
       - PKG_CONFIG_PATH
     ./:
       - CMAKE_PREFIX_PATH
+    ./lib/perl5:
+      - PERL5LIB
 
   # These are configurations for the module set named "default"
   default:
