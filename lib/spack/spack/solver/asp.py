@@ -2616,12 +2616,9 @@ class SpackSolverSetup:
                         )
                     continue
 
-                try:
-                    repo.get_pkg_class(s.fullname)
-                except spack.repo.UnknownPackageError:
-                    raise UnsatisfiableSpecError(
-                        f"cannot concretize '{root}', since '{s.name}' does not exist"
-                    )
+                # raises UnknownPackageError or UnknownNamespaceError for a name that is not in
+                # the repository
+                repo.get_pkg_class(s.fullname)
 
                 if s.concrete:
                     continue
