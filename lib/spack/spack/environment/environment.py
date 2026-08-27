@@ -2900,8 +2900,6 @@ class EnvironmentConcretizer:
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
-        import spack.concretize
-
         specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
         result = spack.concretize.concretize_together_when_possible(
             specs_to_concretize, tests=tests, factory=factory, ui=self.ui
@@ -2921,8 +2919,6 @@ class EnvironmentConcretizer:
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
-        import spack.concretize
-
         to_concretize = self._user_spec_pairs(to_compute, to_keep)
         try:
             concrete_pairs = spack.concretize.concretize_together(
@@ -2960,8 +2956,6 @@ class EnvironmentConcretizer:
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
         """Concretization strategy that concretizes separately one user spec after the other"""
-        import spack.concretize
-
         to_concretize = [(x, None) for x in to_compute]
         concrete_pairs = spack.concretize.concretize_separately(
             to_concretize, tests=tests, factory=factory, ui=self.ui
