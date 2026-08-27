@@ -13,6 +13,7 @@ from typing import IO, Dict, Iterable, List, Optional
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
 
+import spack.error
 import spack.spec
 import spack.store
 import spack.util.elf as elf
@@ -28,6 +29,9 @@ from .relocate_text import BinaryFilePrefixReplacer, PrefixToPrefix, TextFilePre
 
 if sys.platform == "win32":
     import ctypes.wintypes
+
+
+WRAPPER_NAME_LEN = 143
 
 
 @memoized
@@ -119,12 +123,33 @@ def apply_pe_relocations(
         args.append("--full")
         if pe in coff_for_target:
             args.extend(["--coff", coff_for_target[pe]])
-        print(f"relocate args: {args}")
         reloc_exe(*args, extra_env=ev, **reloc_kwargs)
 
 
+def _prefix_matcher(prefixes: Dict[str, str]):
+    """Build a (regex, lookup) pair for matching Windows path prefixes.
+
+    Windows paths are case insensitive, and the compiler wrapper hands back paths in
+    whatever casing the linker recorded - 8.3 short names in particular always come
+    back from ``GetShortPathNameW`` in upper case. So the match has to be case
+    insensitive, and because ``match.group()`` returns text in the *subject's* casing
+    rather than the dict key's, the resulting prefix has to be looked up through a
+    case folded map.
+
+    Prefixes are sorted longest first so that ``C:\\opt\\pkg`` wins over ``C:\\opt``,
+    matching the behavior of :func:`_macho_find_paths`.
+    """
+    ordered = sorted(prefixes, key=len, reverse=True)
+    regex = re.compile("|".join(re.escape(p) for p in ordered), re.IGNORECASE)
+    lookup = {p.lower(): prefixes[p] for p in ordered}
+    return regex, lookup
+
+
 def _import_lib_targets(
-    targets: List[str], all_prefixes: Dict[str, str], stage: Optional[bool] = False
+    targets: List[str],
+    all_prefixes: Dict[str, str],
+    reloc_exe: Optional[executable.Executable] = None,
+    stage: Optional[bool] = False,
 ) -> Dict[str, str]:
     """Match each import library's referenced DLL against ``all_prefixes`` (old
     prefix -> new prefix, including any SFN forms) for the buildcache
@@ -132,8 +157,13 @@ def _import_lib_targets(
     Returns a mapping from the DLL's new absolute path to the import library's
     new absolute path, for use as the ``--coff`` argument when relocating that DLL/exe.
     """
-    libs = [t for t in targets if t.endswith(".lib")]
-    regex = re.compile("|".join(re.escape(p) for p in all_prefixes.keys()))
+    if not all_prefixes:
+        # An empty alternation compiles to a regex that matches everything with an
+        # empty match, which would map every DLL onto the "" prefix.
+        tty.debug("No prefixes to relocate, skipping import library association...")
+        return {}
+    libs = [t for t in targets if t.lower().endswith(".lib")]
+    regex, prefix_lookup = _prefix_matcher(all_prefixes)
     coff_for_target: Dict[str, str] = {}
     for lib in libs:
         # we relocate exes and dlls, import libraries are regenerated
@@ -144,13 +174,16 @@ def _import_lib_targets(
         # but import libraries reference dlls, so although
         # the DLLs are our "relocation targets" we drive that
         # via import libs to determine the proper association
-        if verify_import_lib(lib):
-            dll_path = get_importlib_target(lib)
+        if verify_import_lib(lib, reloc_exe=reloc_exe):
+            dll_path = get_importlib_target(lib, reloc_exe=reloc_exe)
             if not dll_path:
                 tty.debug(
                     f"Import lib {lib} does not reference a compatible DLL, skipping relocation..."
                 )
                 continue
+            # The wrapper pads the DLL path it stores in the import library out to a
+            # fixed width with path separators; normpath collapses that padding back
+            # into the real path.
             norm_dll_path = os.path.normpath(dll_path)
             # matches prefix component in dll_path inside import library
             # which is the absolute path to the dll the import library corresponds to
@@ -158,11 +191,11 @@ def _import_lib_targets(
             match = regex.match(norm_dll_path)
             if match:
                 old_root = match.group()
-                new_root = all_prefixes[old_root]
+                new_root = prefix_lookup[old_root.lower()]
                 if stage:
                     new_dll_path = new_root
                 else:
-                    dll_name = os.path.relpath(dll_path, old_root)
+                    dll_name = os.path.relpath(norm_dll_path, old_root)
                     new_dll_path = os.path.join(new_root, dll_name)
                 coff_for_target[new_dll_path] = lib
             else:
@@ -172,6 +205,38 @@ def _import_lib_targets(
                     f"Prefixes failed to map: {all_prefixes}"
                 )
     return coff_for_target
+
+
+def _check_wrapper_can_record(pe_targets: List[str], spec: spack.spec.Spec) -> None:
+    """Fail loudly when the wrapper has no way to store a PE's path.
+
+    Relocation works by rewriting the absolute paths the wrapper baked into each PE, so
+    a path it could not record in the first place leaves that binary pointing somewhere
+    wrong. That surfaces as a load failure long after the install, so catch it here
+    instead of shipping binaries with unresolvable DLL references.
+    """
+    too_long = [pe for pe in pe_targets if len(pe) > WRAPPER_NAME_LEN]
+    if not too_long:
+        return
+    # Only probe the filesystem once we know something actually needs the fallback.
+    if fs.short_filenames_enabled(str(spec.prefix)):
+        return
+    listed = "\n  ".join(too_long[:5])
+    remaining = len(too_long) - 5
+    if remaining > 0:
+        listed += f"\n  ... and {remaining} more"
+    raise WindowsPathTooLongError(
+        f"Cannot relocate {spec.name}: {len(too_long)} binaries have paths longer than "
+        f"the {WRAPPER_NAME_LEN} characters the compiler wrapper can record, and 8.3 "
+        f"short filenames are not enabled on this volume.",
+        f"Affected binaries:\n  {listed}\n\n"
+        f"The install prefix is {len(str(spec.prefix))} characters:\n"
+        f"  {spec.prefix}\n\n"
+        "Either shorten the install tree by setting a shorter 'config:install_tree:root',"
+        " or enable 8.3 short filename creation on this volume by running"
+        " 'fsutil 8dot3name set 0' from an elevated prompt (this only affects files"
+        " created afterward, so the package must be reinstalled either way).",
+    )
 
 
 def relocate_win_rpath(spec):
@@ -222,34 +287,57 @@ def relocate_windows_binaries(
     parses the Windows binaries via the relocate feature of the compiler wrapper and
     remaps any dll references.
     """
-    pe_targets = [t for t in targets if t.endswith(".dll") or t.endswith(".exe")]
+    pe_targets = [t for t in targets if t.lower().endswith((".dll", ".exe"))]
     # Import libraries may reference their DLL by an 8.3 short filename (SFN) if the
     # build host truncated the path. We can't expand such a path back to its long
     # form here, since the old prefix no longer exists on this host, so instead we
     # also match directly against the SFN form of each old prefix.
     all_prefixes = {**prefixes, **(sfn_prefixes or {})}
-    coff_for_target = _import_lib_targets(targets, all_prefixes, stage=stage)
-    relocate_pe(all_prefixes, pe_targets, coff_for_target, spec)
+    if not pe_targets or not all_prefixes:
+        tty.debug(f"Nothing to relocate for {spec.name}, skipping PE relocation...")
+        return
+    _check_wrapper_can_record(pe_targets, spec)
+    # Resolving relocate.exe means either querying the spec or bootstrapping the
+    # wrapper, so do it once here rather than once per import library.
+    reloc_exe = relocate(spec)
+    coff_for_target = _import_lib_targets(targets, all_prefixes, reloc_exe=reloc_exe, stage=stage)
+    relocate_pe(all_prefixes, pe_targets, coff_for_target, spec, reloc_exe=reloc_exe)
 
 
-def relocate_pe(prefix_mapping, pe_targets, coff_mapping, spec):
+def relocate_pe(
+    prefix_mapping,
+    pe_targets,
+    coff_mapping,
+    spec,
+    reloc_exe: Optional[executable.Executable] = None,
+):
+    if reloc_exe is None:
+        reloc_exe = relocate(spec)
     ev = EnvironmentModifications()
+    # The wrapper splits this on os.pathsep and then on "|", and strips any padding
+    # from both halves of each pair, so the paths we hand it must be unpadded.
     ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in prefix_mapping.items()])
     ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
     ev.set("SPACK_DEBUG_WRAPPER", "ON")
-    apply_pe_relocations(pe_targets, coff_mapping, relocate(spec.package), ev, fail_on_error=True)
+    apply_pe_relocations(pe_targets, coff_mapping, reloc_exe, ev, fail_on_error=True)
 
 
 def extract_spack_id_from_win_pe(lib: str) -> Optional[str]:
     """Extracts the string ID spack of type spackresource from the
     string table in a given dll
+
+    The value the compiler wrapper stores here is the absolute path of the PE file at
+    link time, padded out to the wrapper's fixed name width with path separators.
+    It is returned as-is; ``os.path.normpath`` collapses the padding.
+
     Arguments:
         lib: the dll to extract the string resource from
-    Returns the resource of type SPACKRESOURCE with id spack
+    Returns the resource of type SPACKRESOURCE with id spack, or None if the file
+    cannot be loaded or carries no such resource.
     """
     if not sys.platform == "win32":
         return None
-    kernel32 = ctypes.windll.kernel32
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
 
     LOAD_LIBRARY_AS_DATAFILE = 0x00000002
     kernel32.LoadLibraryExW.restype = ctypes.wintypes.HMODULE
@@ -282,47 +370,68 @@ def extract_spack_id_from_win_pe(lib: str) -> Optional[str]:
     RESOURCE_TYPE = "SPACKRESOURCE"
     module_handle = kernel32.LoadLibraryExW(lib, None, LOAD_LIBRARY_AS_DATAFILE)
     if not module_handle:
+        # nothing to free, LoadLibraryExW handed back a null handle
         tty.debug(f"Unable to acquire handle for {lib}: {ctypes.get_last_error()}")
-        kernel32.FreeLibrary(module_handle)
         return None
 
-    res_info_handle = kernel32.FindResourceW(module_handle, RESOURCE_ID, RESOURCE_TYPE)
-    if not res_info_handle:
-        tty.debug(
-            f"Unable to acquire resource info handle for \
+    try:
+        res_info_handle = kernel32.FindResourceW(module_handle, RESOURCE_ID, RESOURCE_TYPE)
+        if not res_info_handle:
+            tty.debug(
+                f"Unable to acquire resource info handle for \
 {lib}:{RESOURCE_ID}:{RESOURCE_TYPE}: {ctypes.get_last_error()}"
-        )
-        kernel32.FreeLibrary(module_handle)
-        return None
+            )
+            return None
 
-    resource_data_handle = kernel32.LoadResource(module_handle, res_info_handle)
-    if not resource_data_handle:
-        tty.debug(
-            f"Unable to acquire resource {res_info_handle} \
+        resource_data_handle = kernel32.LoadResource(module_handle, res_info_handle)
+        if not resource_data_handle:
+            tty.debug(
+                f"Unable to acquire resource {res_info_handle} \
 handle for {lib}: {ctypes.get_last_error()}"
-        )
+            )
+            return None
+
+        data_pointer = kernel32.LockResource(resource_data_handle)
+        if not data_pointer:
+            tty.debug(f"Unable to lock resource data for {lib}: {ctypes.get_last_error()}")
+            return None
+
+        res_size = kernel32.SizeofResource(module_handle, res_info_handle)
+        if not res_size:
+            tty.debug(
+                "Unexpected lack of resource file in Spack based dll, something may be corrupted"
+            )
+            return None
+
+        raw_id_data = ctypes.string_at(data_pointer, res_size)
+    finally:
         kernel32.FreeLibrary(module_handle)
+
+    try:
+        # strip null terminator
+        return raw_id_data.decode(encoding="utf-8").strip("\x00")
+    except UnicodeDecodeError:
+        tty.debug(f"Spack resource in {lib} is not valid utf-8, ignoring it")
         return None
-    data_pointer = kernel32.LockResource(resource_data_handle)
-    res_size = kernel32.SizeofResource(module_handle, res_info_handle)
-
-    raw_id_data = ctypes.string_at(data_pointer, res_size)
-    str_id_data = raw_id_data.decode(encoding="utf-8").strip("\x00")  # strip null terminator
-    kernel32.FreeLibrary(module_handle)
-    if not res_size:
-        tty.debug(
-            "Unexpected lack of resource file in Spack based dll, something may be corrupted"
-        )
-        return None
-    return str_id_data
 
 
-def get_importlib_target(lib, spec=None) -> Optional[str]:
+def get_importlib_target(
+    lib, spec=None, reloc_exe: Optional[executable.Executable] = None
+) -> Optional[str]:
     """Extract and return the dll corresponding to the given import library.
     Drives the windows compiler wrapper to obtain the DLL for which the given import
-    library provides the linker interface for"""
-    reloc = relocate(spec)
-    info = reloc("--coff", lib, "--report", output=str)
+    library provides the linker interface for.
+
+    The returned path is exactly as the wrapper reports it: an absolute Windows path
+    padded out to the wrapper's fixed name width. Callers that need to compare it
+    against real paths should ``os.path.normpath`` it first.
+    """
+    if reloc_exe is None:
+        reloc_exe = relocate(spec)
+    info = reloc_exe("--coff", lib, "--report", output=str)
+    if not info:
+        # An archive with no longnames member reports nothing and still exits 0
+        return None
     regex = re.compile("DLL: (.*)")
     match = regex.search(info)
     if match:
@@ -331,21 +440,29 @@ def get_importlib_target(lib, spec=None) -> Optional[str]:
     return None
 
 
-def verify_import_lib(lib: str, spec=None) -> bool:
+def verify_import_lib(
+    lib: str, spec=None, reloc_exe: Optional[executable.Executable] = None
+) -> bool:
     """Verifies that a given binary is a windows import library
     using the Windows compiler-wrappers 'relocate' feature
     Behind the scenes, the binary does some basic inspection of the
     structure of the library file provided and discriminates between
     import library coff files and true archive coff files. Supports
     long and short import library formats.
+
+    The wrapper exits 0 for an import library, 1 for a valid archive that is a static
+    library rather than an import library, and 2 for something it cannot parse.
+    Only 0 is a valid return in this case.
     """
-    relocate_exe = relocate(spec)
+    if reloc_exe is None:
+        reloc_exe = relocate(spec)
     out = ""
     try:
-        out = relocate_exe("--coff", lib, "--verify", output=str, error=str, ignore_errors=[1])
+        out = reloc_exe("--coff", lib, "--verify", output=str, error=str, ignore_errors=[1])
     except executable.ProcessError:
         tty.debug(f"Cannot verify library {lib} as COFF. Failed with output {out}")
-    return relocate_exe.returncode == 0
+        return False
+    return reloc_exe.returncode == 0
 
 
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
@@ -778,3 +895,8 @@ def fixup_macos_rpaths(spec):
         )
     else:
         tty.debug("No rpath fixup needed for " + specname)
+
+
+class WindowsPathTooLongError(spack.error.SpackError):
+    """A PE's absolute path exceeds what the compiler wrapper can record, and the volume
+    offers no 8.3 short form to fall back on."""
