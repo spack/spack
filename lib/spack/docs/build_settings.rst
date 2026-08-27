@@ -259,3 +259,76 @@ See :ref:`the packaging guide <abi_compatibility>` for instructions on specifyin
 
 When automatic splicing is enabled, the concretizer will combine any number of ABI-compatible specs if possible to reuse installed packages and packages available from binary caches.
 The end result of these specs is equivalent to a series of transitive/intransitive splices, but the series may be non-obvious.
+
+.. index::
+   single: concretization cache
+
+.. _concretization-cache:
+
+Concretization Cache
+--------------------
+
+Spack can cache the results of successful concretization runs and reuse them for identical solves.
+The cache is configured under the ``concretizer:concretization_cache`` attribute in ``concretizer.yaml``.
+
+``concretizer:concretization_cache:enable``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When set to ``true``, Spack will utilize a cache of solver outputs from successful concretization runs.
+When enabled, Spack will check the concretization cache prior to running the solver.
+If a previous request to solve a given problem is present in the cache, Spack will load the concrete specs and other solver data from the cache rather than running the solver.
+Specs not previously concretized will be added to the cache on a successful solve.
+The cache additionally holds solver statistics, so commands like ``spack solve`` will still return information about the run that produced a given solver result.
+
+This cache is a subcache of the :ref:`Misc Cache` and as such will be cleaned when the Misc Cache is cleaned.
+
+When ``false`` or omitted, all concretization requests will be performed from scratch.
+
+``concretizer:concretization_cache:url``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Path to the location where Spack will root the concretization cache.
+Currently this only supports paths on the local filesystem.
+
+Default location is under the :ref:`Misc Cache` at: ``$misc_cache/concretization``
+
+The cache can be shared among users on the same machine.
+Spack creates cache directories and entries with permissions that follow your umask, so sharing is controlled entirely by how the cache directory is set up.
+There are two ways to share:
+
+* **Read-only sharing**: one user (e.g. a CI account) populates the cache with a typical umask (e.g. ``022``), and other users point ``concretizer:concretization_cache:url`` at it.
+  Spack degrades gracefully in a cache it cannot write to.
+  Hits are returned, and misses simply re-run the solver.
+
+* **Read/write sharing**: point ``concretizer:concretization_cache:url`` at a directory owned by a common group, group-writable, and with the setgid bit set:
+
+  .. code-block:: console
+
+     $ chgrp spackusers $cache_dir
+     $ chmod 2770 $cache_dir
+
+  If sharers may have restrictive umasks, you can also set a default ACL so that entries are always group read/write:
+
+  .. code-block:: console
+
+     $ setfacl -d -m u::rwx,g::rwx,o::--- $cache_dir
+
+  Avoid sticky, world-writable locations like ``/tmp``: the sticky bit prevents users from replacing or pruning each other's entries.
+
+``concretizer:concretization_cache:entry_limit``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sets a limit on the number of concretization results that Spack will cache.
+The limit is evaluated after each concretization run; if Spack has stored more results than the limit allows, the oldest concretization results are pruned until 10% of the limit has been removed.
+
+Setting this value to 0 disables automatic pruning.
+It is expected that users will be responsible for maintaining this cache.
+
+``concretizer:concretization_cache:size_limit``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sets a limit on the size of the concretization cache in bytes.
+The limit is evaluated after each concretization run; if Spack has stored more results than the limit allows, the oldest concretization results are pruned until 10% of the limit has been removed.
+
+Setting this value to 0 disables automatic pruning.
+It is expected that users will be responsible for maintaining this cache.
