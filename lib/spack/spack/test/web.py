@@ -7,6 +7,8 @@ import os
 import pathlib
 import pickle
 import ssl
+import sys
+import types
 import urllib.error
 import urllib.request
 from datetime import datetime
@@ -557,7 +559,51 @@ def test_s3_url_parsing():
     assert spack.util.s3._parse_s3_endpoint_url("http://example.com") == "http://example.com"
 
 
-def test_get_s3_session_normalizes_method_and_returns_parsed_url(monkeypatch):
+@pytest.fixture
+def fake_boto3(monkeypatch):
+    """Stand in for the boto3/botocore packages.
+
+    get_s3_session imports boto3/botocore lazily so that they remain optional
+    dependencies; stub them out here so tests can exercise the real
+    get_s3_session logic without requiring those packages to be installed.
+    """
+
+    class FakeClientError(Exception):
+        pass
+
+    class FakeSession:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+        def get_credentials(self):
+            return None
+
+        def client(self, service_name, **kwargs):
+            return types.SimpleNamespace(service_name=service_name, kwargs=kwargs)
+
+    class FakeConfig:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    boto3_module = types.ModuleType("boto3")
+    boto3_module.Session = FakeSession
+
+    botocore_module = types.ModuleType("botocore")
+    botocore_module.UNSIGNED = object()
+
+    botocore_client_module = types.ModuleType("botocore.client")
+    botocore_client_module.Config = FakeConfig
+
+    botocore_exceptions_module = types.ModuleType("botocore.exceptions")
+    botocore_exceptions_module.ClientError = FakeClientError
+
+    monkeypatch.setitem(sys.modules, "boto3", boto3_module)
+    monkeypatch.setitem(sys.modules, "botocore", botocore_module)
+    monkeypatch.setitem(sys.modules, "botocore.client", botocore_client_module)
+    monkeypatch.setitem(sys.modules, "botocore.exceptions", botocore_exceptions_module)
+
+
+def test_get_s3_session_normalizes_method_and_returns_parsed_url(monkeypatch, fake_boto3):
     """Verify that "GET" and "HEAD" are treated as "fetch", and everything else
     is treated as "push"."""
     monkeypatch.setattr(spack.util.s3, "s3_client_cache", {})
