@@ -334,8 +334,6 @@ def install_from_buildcache(
 
     # now a block of curious things follow that should be fixed.
     pkg = spec.package
-    if hasattr(pkg, "_post_buildcache_install_hook"):
-        pkg._post_buildcache_install_hook()
     pkg.installed_from_binary_cache = True
 
     # inform also the parent that this package was installed from binary cache.
@@ -664,18 +662,23 @@ def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> Non
         raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
 
-def _rewire_no_db(spec: spack.spec.Spec, explicit: bool) -> None:
+def _rewire_no_db(
+    spec: spack.spec.Spec, timer: spack.util.timer.BaseTimer = spack.util.timer.NULL_TIMER
+) -> None:
     """Rewire a spliced spec from its build_spec prefix, without writing to the database."""
     tmpdir = tempfile.mkdtemp()
     try:
-        tarball = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
-        spack.binary_distribution.create_tarball(spec.build_spec, tarball)
-        spack.hooks.pre_install(spec)
-        spack.binary_distribution.extract_buildcache_tarball(tarball, destination=spec.prefix)
-        spack.binary_distribution.relocate_package(spec)
+        with timer.measure("setup"):
+            tarball = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
+            spack.binary_distribution.create_tarball(spec.build_spec, tarball)
+        with timer.measure("pre-install"):
+            spack.hooks.pre_install(spec)
+        with timer.measure("extract"):
+            spack.binary_distribution.extract_buildcache_tarball(tarball, destination=spec.prefix)
+        with timer.measure("relocate"):
+            spack.binary_distribution.relocate_package(spec)
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
-    spack.hooks.post_install(spec, explicit)
 
 
 def _install(
@@ -689,23 +692,18 @@ def _install(
     pkg.run_tests = request.run_tests
 
     # timer for install phases, dumped to install_times.json on success
-    t = spack.util.timer.Timer()
+    timer = spack.util.timer.Timer()
 
     if request.fake:
         store.layout.create_install_directory(spec)
         _do_fake_install(pkg)
-        with t.measure("post-install"):
-            spack.hooks.post_install(spec, explicit)
-        t.stop()
-        _write_timer_json(pkg, t, False)
+        _post_install(pkg, spec, explicit, timer, False)
         return
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
-        if install_from_buildcache(request.mirrors, spec, request.unsigned, state_stream, t):
-            t.stop()
-            _write_timer_json(pkg, t, True)
-            spack.hooks.post_install(spec, explicit)
+        if install_from_buildcache(request.mirrors, spec, request.unsigned, state_stream, timer):
+            _post_install(pkg, spec, explicit, timer, True)
             return
         elif install_policy == "cache_only":
             send_state("no binary available", state_stream)
@@ -715,7 +713,8 @@ def _install(
     if spec.build_spec is not spec:
         if install_policy == "source_only":
             send_state("rewiring", state_stream)
-            _rewire_no_db(spec, explicit)
+            _rewire_no_db(spec, timer)
+            _post_install(pkg, spec, explicit, timer, False)
             return
         # Binary cache was the only option; signal miss for force_source expansion.
         send_state("no binary available", state_stream)
@@ -760,7 +759,7 @@ def _install(
 
         send_state("staging", state_stream)
 
-        with t.measure("stage"):
+        with timer.measure("stage"):
             if not request.skip_patch:
                 pkg.do_patch()
             else:
@@ -793,7 +792,7 @@ def _install(
             old_debug = spack.util.tty.debug_level()
             spack.util.tty.set_debug(1)
             try:
-                with t.measure(phase.name):
+                with timer.measure(phase.name):
                     phase.execute()
             finally:
                 spack.util.tty.set_debug(old_debug)
@@ -802,10 +801,25 @@ def _install(
                 raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
 
         _archive_build_metadata(pkg)
-        with t.measure("post-install"):
-            spack.hooks.post_install(spec, explicit)
-        t.stop()
-        _write_timer_json(pkg, t, False)
+        _post_install(pkg, spec, explicit, timer, False)
+
+
+def _post_install(
+    pkg: "spack.package_base.PackageBase",
+    spec: spack.spec.Spec,
+    explicit: bool,
+    timer: spack.util.timer.BaseTimer = spack.util.timer.NULL_TIMER,
+    binary: bool = False
+) -> None:
+    # Do post install (and potentially post binary install) hooks
+    with timer.measure("post-install"):
+        if binary:
+            if hasattr(pkg, "_post_buildcache_install_hook"):
+                pkg._post_buildcache_install_hook()
+        spack.hooks.post_install(spec, explicit)
+
+    timer.stop()
+    _write_timer_json(pkg, timer, binary)
 
 
 def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
