@@ -36,11 +36,11 @@ import spack.util.parallel
 import spack.util.url
 import spack.util.url as url_util
 from spack.util import lang, tty
+from spack.util import s3 as s3_util
 from spack.util.filesystem import mkdirp, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
-from .s3 import UrllibS3Handler, get_s3_session
 
 
 class Retry:
@@ -258,7 +258,7 @@ def set_curl_env_for_ssl_certs(curl: Executable) -> None:
 
 
 def _urlopen():
-    s3 = UrllibS3Handler()
+    s3 = s3_util.UrllibS3Handler()
     gcs = GCSHandler()
     error_handler = SpackHTTPDefaultErrorHandler()
 
@@ -392,7 +392,7 @@ def read_text(url: str) -> str:
     """Fetch url and return the response body decoded as UTF-8 text."""
     try:
         return _read_text_with_retry(url)
-    except Exception as e:
+    except OSError as e:
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
 
@@ -400,7 +400,7 @@ def read_json(url: str):
     """Fetch url and return the response body parsed as JSON."""
     try:
         return _read_json_with_retry(url)
-    except Exception as e:
+    except OSError as e:
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
 
@@ -445,20 +445,7 @@ def push_to_url(
         if content_type is not None:
             extra_args.update({"ContentType": content_type})
 
-        remote_path = remote_url.path
-        while remote_path.startswith("/"):
-            remote_path = remote_path[1:]
-
-        s3 = get_s3_session(remote_url, method="push")
-        if if_match is not None:
-            # IfMatch is only supported by put_object which has additional limitations
-            if os.stat(local_file_path).st_size >= 5e9:
-                raise spack.error.SpackError(f"File too large (max. 5GB): {local_file_path}")
-
-            with open(local_file_path, "rb") as fd:
-                s3.put_object(Bucket=remote_url.netloc, Key=remote_path, Body=fd, **extra_args)
-        else:
-            s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
+        s3_util.push_object(remote_path, local_file_path, extra_args)
 
         if not keep_original:
             os.remove(local_file_path)
@@ -661,18 +648,9 @@ def url_exists(url, curl=None):
     try:
         _url_exists_urllib(url)
         return True
-    except Exception as e:
+    except OSError as e:
         tty.debug(f"Failure reading {url}: {e}")
         return False
-
-
-def _debug_print_delete_results(result):
-    if "Deleted" in result:
-        for d in result["Deleted"]:
-            tty.debug("Deleted {0}".format(d["Key"]))
-    if "Errors" in result:
-        for e in result["Errors"]:
-            tty.debug("Failed to delete {0} ({1})".format(e["Key"], e["Message"]))
 
 
 def remove_url(url, recursive=False):
@@ -687,36 +665,7 @@ def remove_url(url, recursive=False):
         return
 
     if url.scheme == "s3":
-        # Try to find a mirror for potential connection information
-        s3 = get_s3_session(url, method="push")
-        bucket = url.netloc
-        if recursive:
-            # Because list_objects_v2 can only return up to 1000 items
-            # at a time, we have to paginate to make sure we get it all
-            prefix = url.path.strip("/")
-            paginator = s3.get_paginator("list_objects_v2")
-            pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
-
-            delete_request = {"Objects": []}
-            for item in pages.search("Contents"):
-                if not item:
-                    continue
-
-                delete_request["Objects"].append({"Key": item["Key"]})
-
-                # Make sure we do not try to hit S3 with a list of more
-                # than 1000 items
-                if len(delete_request["Objects"]) >= 1000:
-                    r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
-                    _debug_print_delete_results(r)
-                    delete_request = {"Objects": []}
-
-            # Delete any items that remain
-            if len(delete_request["Objects"]):
-                r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
-                _debug_print_delete_results(r)
-        else:
-            s3.delete_object(Bucket=bucket, Key=url.path.lstrip("/"))
+        s3_util.delete_objects(url, recursive)
         return
 
     elif url.scheme == "gs":
@@ -729,53 +678,6 @@ def remove_url(url, recursive=False):
         return
 
     # Don't even try for other URL schemes.
-
-
-def _iter_s3_contents(contents, prefix):
-    for entry in contents:
-        key = entry["Key"]
-
-        if not key.startswith("/"):
-            key = "/" + key
-
-        key = os.path.relpath(key, prefix)
-
-        if key == ".":
-            continue
-
-        yield key
-
-
-def _list_s3_objects(client, bucket, prefix, num_entries, start_after=None):
-    list_args = dict(Bucket=bucket, Prefix=prefix[1:], MaxKeys=num_entries)
-
-    if start_after is not None:
-        list_args["StartAfter"] = start_after
-
-    result = client.list_objects_v2(**list_args)
-
-    last_key = None
-    if result["IsTruncated"]:
-        last_key = result["Contents"][-1]["Key"]
-
-    iter = _iter_s3_contents(result["Contents"], prefix)
-
-    return iter, last_key
-
-
-def _iter_s3_prefix(client, url, num_entries=1024):
-    key = None
-    bucket = url.netloc
-    prefix = re.sub(r"^/*", "/", url.path)
-
-    while True:
-        contents, key = _list_s3_objects(client, bucket, prefix, num_entries, start_after=key)
-
-        for x in contents:
-            yield x
-
-        if not key:
-            break
 
 
 def _iter_local_prefix(path):
@@ -799,11 +701,7 @@ def list_url(url, recursive=False):
         ]
 
     if url.scheme == "s3":
-        s3 = get_s3_session(url, method="fetch")
-        if recursive:
-            return list(_iter_s3_prefix(s3, url))
-
-        return list({key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)})
+        return s3_util.list_objects(url, recursive)
 
     elif url.scheme == "gs":
         gcs = GCSBucket(url)
@@ -830,22 +728,7 @@ def stat_url(url: str) -> Optional[Tuple[int, float]]:
         return url_stat.st_size, url_stat.st_mtime
 
     elif parsed_url.scheme == "s3":
-        s3_bucket = parsed_url.netloc
-        s3_key = parsed_url.path.lstrip("/")
-
-        s3 = get_s3_session(url, method="fetch")
-
-        try:
-            head_request = s3.head_object(Bucket=s3_bucket, Key=s3_key)
-        except s3.ClientError as e:
-            if e.response["Error"]["Code"] == "404":
-                return None
-            raise e
-
-        mtime = head_request["LastModified"].timestamp()
-        size = head_request["ContentLength"]
-        return size, mtime
-
+        return s3_util.stat_object(url)
     else:
         raise NotImplementedError(f"Unrecognized URL scheme: {parsed_url.scheme}")
 
