@@ -624,6 +624,19 @@ class Configuration:
             priority: priority of the scope
 
         """
+        # Check if scope already exists BEFORE processing its includes
+        # This allows higher-priority scopes to completely override lower-priority ones,
+        # including their transitive includes
+        if scope.name in self.scopes:
+            existing = self.scopes[scope.name]
+            tty.debug(
+                f"[CONFIGURATION: SKIP DUPLICATE SCOPE]: {scope.name} already loaded, "
+                f"keeping first instance (skipping this scope and its includes)",
+                level=2,
+            )
+            yield self
+            return
+
         # TODO: As a follow on to #48784, change this to create a graph of the
         # TODO: includes AND ensure properly sorted such that the order included
         # TODO: at the highest level is reflected in the value of an option that
@@ -641,18 +654,6 @@ class Configuration:
             # record this inclusion so that remove_scope() can use it
             self.push_scope(included_scope, priority=priority, _depth=_depth + 1)
             yield self
-
-        # Check if scope already exists - if so, keep the first one (don't replace)
-        # This allows higher-priority scopes to override which included scopes get loaded
-        if scope.name in self.scopes:
-            existing = self.scopes[scope.name]
-            tty.debug(
-                f"[CONFIGURATION: SKIP DUPLICATE SCOPE]: {scope.name} already loaded, "
-                f"keeping first instance",
-                level=2,
-            )
-            yield self
-            return
 
         tty.debug(f"[CONFIGURATION: PUSH SCOPE]: {str(scope)}, priority={priority}", level=2)
         self.scopes.add(scope.name, value=scope, priority=priority)
