@@ -72,8 +72,9 @@ class BootstrapRequest(Generic[ResultT]):
     """Software to be made available in the bootstrap store, and how to check for it.
 
     The two kinds of request, a Python module and a set of executables, differ only in the
-    spec to be installed, in the probe that tests whether the software can be used, and in
-    the arguments to be passed to the installer when building from sources.
+    spec to be installed, in the probe that tests whether the software can be used, in the
+    arguments to be passed to the installer when building from sources, and in how the spec
+    is concretized.
     """
 
     def __init__(
@@ -82,6 +83,7 @@ class BootstrapRequest(Generic[ResultT]):
         metadata_name: str,
         probe: Callable[[spack.spec.Spec], Optional[ResultT]],
         installer_args: Dict[str, Any],
+        concretize: Callable[[spack.spec.Spec], spack.spec.Spec],
     ) -> None:
         #: Spec to be installed to satisfy this request
         self.abstract_spec = abstract_spec
@@ -91,20 +93,34 @@ class BootstrapRequest(Generic[ResultT]):
         self.probe = probe
         #: Extra arguments for the installer, when building from sources
         self.installer_args = installer_args
+        #: Turns the abstract spec into the concrete one to be built from sources
+        self.concretize = concretize
 
     @classmethod
-    def for_module(cls, module: str, abstract_spec_str: str) -> "BootstrapRequest[bool]":
-        """Return a request for a module importable in the interpreter running Spack."""
+    def for_module(
+        cls,
+        module: str,
+        abstract_spec_str: str,
+        concretize: Optional[Callable[[spack.spec.Spec], spack.spec.Spec]] = None,
+    ) -> "BootstrapRequest[bool]":
+        """Return a request for a module importable in the interpreter running Spack.
+
+        Args:
+            module: module to be imported in the interpreter running Spack
+            abstract_spec_str: abstract spec that provides the module
+            concretize: how to concretize the spec, when building from sources. Defaults to
+                the regular concretizer.
+        """
         return BootstrapRequest(
             abstract_spec=spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python()),
             metadata_name=module,
             probe=functools.partial(_try_import_from_store, module),
-            # unlike the executables below, modules have always forced a source build here
             installer_args={
                 "fail_fast": True,
                 "root_policy": "source_only",
                 "dependencies_policy": "source_only",
             },
+            concretize=concretize or spack.concretize.concretize_one,
         )
 
     @classmethod
@@ -118,6 +134,7 @@ class BootstrapRequest(Generic[ResultT]):
             metadata_name=abstract_spec.name,
             probe=functools.partial(_executables_in_store, executables),
             installer_args={},
+            concretize=spack.concretize.concretize_one,
         )
 
 
@@ -151,6 +168,20 @@ class Bootstrapper:
             What the probe of the request returned, or None if bootstrapping failed
         """
         raise NotImplementedError("subclasses must implement try_to_bootstrap")
+
+
+def _matching_entries(bincache_data, abstract_spec: spack.spec.Spec) -> List[Any]:
+    """Return the metadata entries whose spec provides the abstract spec, in metadata order.
+
+    Args:
+        bincache_data: content of a buildcache metadata file
+        abstract_spec: spec to be bootstrapped
+    """
+    return [
+        entry
+        for entry in bincache_data["verified"]
+        if spack.spec.Spec(entry["spec"]).satisfies(abstract_spec)
+    ]
 
 
 class BuildcacheBootstrapper(Bootstrapper):
@@ -194,11 +225,7 @@ class BuildcacheBootstrapper(Bootstrapper):
             if not index:
                 raise RuntimeError("The binary index is empty")
 
-            for item in bincache_data["verified"]:
-                # Skip specs which are not compatible
-                if not spack.spec.Spec(item["spec"]).satisfies(request.abstract_spec):
-                    continue
-
+            for item in _matching_entries(bincache_data, request.abstract_spec):
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
                     self._install_by_hash(pkg_hash, pkg_sha256)
 
@@ -223,11 +250,7 @@ class SourceBootstrapper(Bootstrapper):
         _add_externals_if_missing()
 
         # Try to build and install from sources
-        if request.metadata_name == "clingo":
-            bootstrapper = ClingoBootstrapConcretizer(configuration=spack.config.CONFIG)
-            concrete_spec = bootstrapper.concretize()
-        else:
-            concrete_spec = spack.concretize.concretize_one(request.abstract_spec)
+        concrete_spec = request.concretize(request.abstract_spec)
 
         tty.debug(f"[BOOTSTRAP] Try installing '{request.abstract_spec}' from sources")
         with spack.config.CONFIG.override(self.mirror_scope):
@@ -256,39 +279,52 @@ def source_is_enabled(conf: ConfigDictionary) -> bool:
 
 
 def _cannot_bootstrap_message(
-    what: str, abstract_spec: str, exception_handler: GroupedExceptionHandler
+    what: str,
+    abstract_spec: spack.spec.Spec,
+    exception_handler: GroupedExceptionHandler,
+    sources_tried: int,
 ) -> str:
     """Return the error message to report when no bootstrapping source succeeded.
 
     Args:
         what: description of what could not be bootstrapped
-        abstract_spec: abstract spec that was supposed to provide it
+        abstract_spec: spec that was searched for
         exception_handler: handler that collected the failure of each source
+        sources_tried: number of sources that were tried
     """
-    msg = f'cannot bootstrap {what} from spec "{abstract_spec}" '
-    if not exception_handler:
+    msg = f'cannot bootstrap {what} from spec "{abstract_spec}"'
+    if not sources_tried:
         msg += ": no bootstrapping sources are enabled"
+    elif not exception_handler:
+        msg += ": no bootstrapping source could provide it"
     elif spack.error.debug or spack.error.SHOW_BACKTRACE:
-        msg += exception_handler.grouped_message(with_tracebacks=True)
+        msg += " " + exception_handler.grouped_message(with_tracebacks=True)
     else:
-        msg += exception_handler.grouped_message(with_tracebacks=False)
+        msg += " " + exception_handler.grouped_message(with_tracebacks=False)
         msg += "\nRun `spack --backtrace ...` for more detailed errors"
     return msg
 
 
+def enabled_bootstrapping_sources() -> List[ConfigDictionary]:
+    """Return the configured bootstrapping sources that are enabled, in order."""
+    return [x for x in bootstrapping_sources() if source_is_enabled(x)]
+
+
 def _bootstrap_or_raise(
-    request: BootstrapRequest[ResultT], what: str, abstract_spec: str, error_type: Type[Exception]
+    request: BootstrapRequest[ResultT],
+    what: str,
+    error_type: Type[Exception],
+    sources: Optional[Sequence[ConfigDictionary]] = None,
 ) -> ResultT:
     """Make the requested software available in the bootstrap store, or raise.
 
-    The enabled bootstrapping sources are tried in order, and the function exits on the
-    first success.
+    The sources are tried in order, and the function exits on the first success.
 
     Args:
         request: software to be bootstrapped, and the probe that tests for it
         what: description of the software, to be used in the error message
-        abstract_spec: abstract spec that was supposed to provide it
         error_type: exception to be raised if no source succeeds
+        sources: sources to be tried. Defaults to the enabled ones from configuration.
 
     Raises:
         error_type: if the software could not be bootstrapped
@@ -298,21 +334,27 @@ def _bootstrap_or_raise(
     if result:
         return result
 
+    if sources is None:
+        sources = enabled_bootstrapping_sources()
+
     exception_handler = GroupedExceptionHandler()
 
-    for current_config in bootstrapping_sources():
-        if not source_is_enabled(current_config):
-            continue
-
+    for current_config in sources:
         with exception_handler.forward(current_config["name"], Exception):
             result = create_bootstrapper(current_config).try_to_bootstrap(request)
             if result:
                 return result
 
-    raise error_type(_cannot_bootstrap_message(what, abstract_spec, exception_handler))
+    raise error_type(
+        _cannot_bootstrap_message(what, request.abstract_spec, exception_handler, len(sources))
+    )
 
 
-def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] = None):
+def ensure_module_importable_or_raise(
+    module: str,
+    abstract_spec: Optional[str] = None,
+    concretize: Optional[Callable[[spack.spec.Spec], spack.spec.Spec]] = None,
+):
     """Make the requested module available for import, or raise.
 
     This function tries to import a Python module in the current interpreter
@@ -325,6 +367,8 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
         module: module to be imported in the current interpreter
         abstract_spec: abstract spec that might provide the module. If not
             given it defaults to "module"
+        concretize: how to concretize the spec, when building from sources. Defaults to
+            the regular concretizer.
 
     Raises:
         ImportError: if the module couldn't be imported
@@ -336,9 +380,8 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
 
     abstract_spec = abstract_spec or module
     _bootstrap_or_raise(
-        BootstrapRequest.for_module(module, abstract_spec),
+        BootstrapRequest.for_module(module, abstract_spec, concretize=concretize),
         what=f'the "{module}" Python module',
-        abstract_spec=abstract_spec,
         error_type=ImportError,
     )
 
@@ -373,7 +416,6 @@ def ensure_executables_in_path_or_raise(
     found = _bootstrap_or_raise(
         BootstrapRequest.for_executables(executables, abstract_spec),
         what=f"any of the {', '.join(executables)} executables",
-        abstract_spec=abstract_spec,
         error_type=RuntimeError,
     )
     # Additional environment variables needed to run the command
@@ -406,14 +448,30 @@ def _add_externals_if_missing() -> None:
     )
 
 
-def clingo_root_spec() -> str:
-    """Return the root spec used to bootstrap clingo"""
-    return _root_spec("clingo-bootstrap@spack+python")
+def clingo_root_spec(platform: Optional[str] = None, target: Optional[str] = None) -> str:
+    """Return the root spec used to bootstrap clingo.
+
+    Args:
+        platform: platform the binary will run on. Defaults to the host platform.
+        target: target family the binary will run on. Defaults to the host target family.
+    """
+    return _root_spec("clingo-bootstrap@spack+python", platform=platform, target=target)
+
+
+def _concretize_clingo(abstract_spec: spack.spec.Spec) -> spack.spec.Spec:
+    """Return the clingo spec to be built, edited from a prototype.
+
+    The ``abstract_spec`` argument is discarded, so a change to ``clingo_root_spec()`` has
+    no effect on what is built from sources.
+    """
+    return ClingoBootstrapConcretizer(configuration=spack.config.CONFIG).concretize()
 
 
 def ensure_clingo_importable_or_raise() -> None:
     """Ensure that the clingo module is available for import."""
-    ensure_module_importable_or_raise(module="clingo", abstract_spec=clingo_root_spec())
+    ensure_module_importable_or_raise(
+        module="clingo", abstract_spec=clingo_root_spec(), concretize=_concretize_clingo
+    )
 
 
 def gnupg_root_spec() -> str:
