@@ -3,10 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import email.message
+import errno
 import os
 import pathlib
 import pickle
+import shutil
 import ssl
+import stat
 import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Tuple
@@ -656,3 +659,76 @@ def test_push_to_url_s3(keep_original, mock_s3_client, tmp_path):
     call = mock_s3_client.upload_file_calls[0]
     assert 3 == len(call[0])
     assert {"ContentType": "text/plain"} == call[1]["ExtraArgs"]
+
+
+@pytest.mark.parametrize("keep_original", [True, False])
+def test_push_to_url_file(keep_original, tmp_path: pathlib.Path):
+    src = tmp_path / "data.txt"
+    src.write_text("hello")
+    dst = tmp_path / "mirror" / "sub" / "data.txt"
+
+    spack.util.web.push_to_url(str(src), url_util.path_to_file_url(str(dst)), keep_original)
+
+    assert dst.read_text() == "hello"
+    assert src.exists() is keep_original
+    assert os.listdir(dst.parent) == ["data.txt"]
+
+
+@pytest.mark.not_on_windows("umask is not supported on Windows")
+@pytest.mark.parametrize("keep_original", [True, False])
+def test_push_to_url_file_preserves_mode(keep_original, tmp_path: pathlib.Path):
+    """A mirror entry keeps the mode of the file that was pushed."""
+    src = tmp_path / "data.txt"
+    src.write_text("hello")
+    os.chmod(src, 0o604)
+    dst = tmp_path / "mirror" / "data.txt"
+
+    spack.util.web.push_to_url(str(src), url_util.path_to_file_url(str(dst)), keep_original)
+
+    assert stat.S_IMODE(os.stat(dst).st_mode) == 0o604
+
+
+@pytest.mark.parametrize("keep_original", [True, False])
+def test_push_to_url_file_cross_device(keep_original, tmp_path: pathlib.Path, monkeypatch):
+    """When the rename crosses filesystems, the copy still lands atomically."""
+    monkeypatch.setattr(
+        spack.util.web,
+        "rename",
+        lambda *args: (_ for _ in ()).throw(OSError(errno.EXDEV, "cross-device link")),
+    )
+    src = tmp_path / "data.txt"
+    src.write_text("hello")
+    dst = tmp_path / "mirror" / "data.txt"
+
+    spack.util.web.push_to_url(str(src), url_util.path_to_file_url(str(dst)), keep_original)
+
+    assert dst.read_text() == "hello"
+    assert src.exists() is keep_original
+    assert os.listdir(dst.parent) == ["data.txt"]
+
+
+@pytest.mark.parametrize("keep_original", [True, False])
+def test_push_to_url_file_atomic_on_failure(keep_original, tmp_path: pathlib.Path, monkeypatch):
+    """A failed copy leaves neither a partial destination nor a leftover temporary."""
+
+    def failing_copyfile(src, dst):
+        with open(dst, "wb") as f:
+            f.write(b"partial")
+        raise OSError("simulated failure mid-copy")
+
+    monkeypatch.setattr(shutil, "copyfile", failing_copyfile)
+    monkeypatch.setattr(
+        spack.util.web,
+        "rename",
+        lambda *args: (_ for _ in ()).throw(OSError(errno.EXDEV, "cross-device link")),
+    )
+    src = tmp_path / "data.txt"
+    src.write_text("hello")
+    dst = tmp_path / "mirror" / "data.txt"
+
+    with pytest.raises(OSError, match="simulated failure"):
+        spack.util.web.push_to_url(str(src), url_util.path_to_file_url(str(dst)), keep_original)
+
+    assert not dst.exists()
+    assert os.listdir(dst.parent) == []
+    assert src.read_text() == "hello"

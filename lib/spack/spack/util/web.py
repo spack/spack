@@ -36,7 +36,7 @@ import spack.util.parallel
 import spack.util.url
 import spack.util.url as url_util
 from spack.util import lang, tty
-from spack.util.filesystem import mkdirp, working_dir
+from spack.util.filesystem import atomic_write_path, mkdirp, rename, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
@@ -421,21 +421,21 @@ def push_to_url(
     if remote_url.scheme == "file":
         remote_file_path = url_util.local_file_path(remote_url)
         mkdirp(os.path.dirname(remote_file_path))
-        if keep_original:
-            shutil.copy(local_file_path, remote_file_path)
-        else:
+        if not keep_original:
             try:
-                shutil.move(local_file_path, remote_file_path)
+                rename(local_file_path, remote_file_path)
+                return
             except OSError as e:
-                if e.errno == errno.EXDEV:
-                    # NOTE(opadron): The above move failed because it crosses
-                    # filesystem boundaries.  Copy the file (plus original
-                    # metadata), and then delete the original.  This operation
-                    # needs to be done in separate steps.
-                    shutil.copy2(local_file_path, remote_file_path)
-                    os.remove(local_file_path)
-                else:
+                if e.errno != errno.EXDEV:  # not a cross-filesystem rename
                     raise
+
+        # Rename into place so a reader never observes a partially written file.
+        with atomic_write_path(remote_file_path) as tmp:
+            shutil.copyfile(local_file_path, tmp)
+            shutil.copymode(local_file_path, tmp)
+
+        if not keep_original:
+            os.remove(local_file_path)
 
     elif remote_url.scheme == "s3":
         extra_args = {}

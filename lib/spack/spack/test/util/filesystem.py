@@ -1451,3 +1451,40 @@ def test_write_tmp_and_move_permissions(tmp_path: pathlib.Path):
         assert dst.read_text() == "updated"
     finally:
         os.umask(old_umask)
+
+
+def test_atomic_write_path_renames_and_cleans_up(tmp_path: pathlib.Path):
+    dst = tmp_path / "file.txt"
+    dst.write_text("old")
+    with fs.atomic_write_path(str(dst)) as tmp:
+        assert tmp != str(dst)
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write("new")
+    assert not os.path.exists(tmp) and dst.read_text() == "new"
+
+
+def test_atomic_write_path_failure_keeps_destination(tmp_path: pathlib.Path):
+    dst = tmp_path / "file.txt"
+    dst.write_text("old")
+    with pytest.raises(ValueError, match="expected"):
+        with fs.atomic_write_path(str(dst)) as tmp:
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write("partial")
+            raise ValueError("expected")
+    assert not os.path.exists(tmp) and dst.read_text() == "old"
+
+
+def test_atomic_write_path_failure_leaves_no_destination(tmp_path: pathlib.Path):
+    dst = tmp_path / "file.txt"
+    with pytest.raises(ValueError, match="expected"):
+        with fs.atomic_write_path(str(dst)):
+            raise ValueError("expected")
+    assert not dst.exists()
+
+
+def test_atomic_write_path_keeps_extension(tmp_path: pathlib.Path):
+    """Tests that the basename is part of the tmp file, and that it starts with a dot."""
+    dst = tmp_path / "archive.tar.gz"
+    with fs.atomic_write_path(str(dst)) as tmp:
+        assert tmp.endswith(".tar.gz")
+        assert os.path.basename(tmp).startswith(".")
