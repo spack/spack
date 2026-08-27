@@ -1181,7 +1181,7 @@ def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str, component_type: Buil
                     filename_to_mtime[url_util.path_to_file_url(local_path)] = datetime.strptime(
                         match.group(1), "%Y-%m-%d %H:%M:%S"
                     ).timestamp()
-    except Exception as e:
+    except Exception:
         tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
         return None, None
 

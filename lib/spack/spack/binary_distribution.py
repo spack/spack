@@ -544,7 +544,7 @@ class BinaryIndexCache:
         # Persist new index.json
         url_hash = compute_hash(str(mirror_metadata))
         cache_key = "{}_{}.json".format(url_hash[:10], result.hash[:10])
-        with self._index_file_cache.write_transaction(cache_key) as (old, new):
+        with self._index_file_cache.write_transaction(cache_key) as (_, new):
             new.write(result.data)
 
         self._local_index_cache[str(mirror_metadata)] = {
@@ -555,7 +555,7 @@ class BinaryIndexCache:
 
         # clean up the old cache_key if necessary
         old_cache_key = cache_entry.get("index_path", None)
-        if old_cache_key:
+        if old_cache_key and old_cache_key != cache_key:
             self._index_file_cache.remove(old_cache_key)
 
         # We fetched an index and updated the local index cache, we should
@@ -2833,7 +2833,7 @@ class EtagIndexHandlerV2(IndexHandler):
         headers = {"User-Agent": web_util.SPACK_USER_AGENT}
         # For now we only handle etags on http(s), since 304 error handling
         # in s3:// is not there yet. S3 ETag is used for push only.
-        if not (force or urllib.parse.urlparse(self.url).scheme == "s3"):
+        if not force:
             headers.update({"If-None-Match": f'"{self.etag}"'})
 
         try:
@@ -2998,7 +2998,7 @@ class EtagIndexHandler(IndexHandler):
         headers = {"User-Agent": web_util.SPACK_USER_AGENT}
         # For now we only handle etags on http(s), since 304 error handling
         # in s3:// is not there yet. S3 ETag is used for push only.
-        if not (force or urllib.parse.urlparse(self.url).scheme == "s3"):
+        if not force:
             headers.update({"If-None-Match": f'"{self.etag}"'})
 
         try:
