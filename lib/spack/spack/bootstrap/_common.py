@@ -12,7 +12,7 @@ import re
 import sys
 import sysconfig
 import warnings
-from typing import Optional, Sequence, Union
+from typing import List, Optional, Sequence, Union
 
 import spack.vendor.archspec.cpu
 from spack.vendor.typing_extensions import TypedDict
@@ -215,12 +215,18 @@ def _executables_in_store(
                 # than other platforms
                 prefix = pathlib.Path(concrete_spec.prefix)
                 # get all directories under prefix
-                searchable_paths = [str(x) for x in prefix.glob("**") if x.is_dir()]
-                binary = spack.util.executable.which_string(*executables, path=searchable_paths)
-                bin_dir = os.path.dirname(binary) if binary else ""
+                search_paths: Union[List[str], str] = [
+                    str(x) for x in prefix.glob("**") if x.is_dir()
+                ]
             else:
-                bin_dir = concrete_spec.prefix.bin
-            if bin_dir:
+                search_paths = concrete_spec.prefix.bin
+            # Only accept this spec if it actually provides one of the executables.
+            # A spec can satisfy the query and still not ship the binary we want, in
+            # which case we have to keep looking rather than claim success and let the
+            # required=True lookup below raise.
+            binary = spack.util.executable.which_string(*executables, path=search_paths)
+            if binary:
+                bin_dir = os.path.dirname(binary)
                 spack.util.environment.path_put_first("PATH", [bin_dir])
                 if query_info is not None:
                     query_info["command"] = spack.util.executable.which(
