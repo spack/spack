@@ -1012,6 +1012,14 @@ def test_repo_use_bad_syntax(config, repo_builder: RepoBuilder):
             spack.repo.PATH.get_pkg_class("erroneous")
 
 
+def test_unknownpkgerror_names_the_package(mock_packages):
+    """The error reports the package name."""
+    with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+        spack.repo.PATH.get_pkg_class("nosuchpkg")
+    assert exc_info.value.name == "nosuchpkg"
+    assert exc_info.value.message.startswith("Package 'nosuchpkg' not found")
+
+
 def test_unknownpkgerror_match_fails(mock_packages):
     """Ensure fails with basic message when get_close_matches fails."""
 
