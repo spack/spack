@@ -698,7 +698,7 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast allow-missing base-image= t/tag= private group= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force u/unsigned signed k/key= no-upload-key update-index only= with-build-dependencies without-build-dependencies fail-fast allow-missing base-image= t/tag= private group= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
@@ -710,6 +710,8 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l signed -f -
 complete -c spack -n '__fish_spack_using_command buildcache push' -l signed -d 'push signed buildcache tarballs'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l key -s k -r -f -a key
 complete -c spack -n '__fish_spack_using_command buildcache push' -l key -s k -r -d 'key for signing'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l no-upload-key -f -a upload_key
+complete -c spack -n '__fish_spack_using_command buildcache push' -l no-upload-key -d 'Don'"'"'t upload the public part of the signing to to the build cache'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l update-index -l rebuild-index -f -a update_index
 complete -c spack -n '__fish_spack_using_command buildcache push' -l update-index -l rebuild-index -d 'regenerate buildcache index after building package(s)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -f -a 'package dependencies'
@@ -734,7 +736,7 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast allow-missing base-image= t/tag= private group= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force u/unsigned signed k/key= no-upload-key update-index only= with-build-dependencies without-build-dependencies fail-fast allow-missing base-image= t/tag= private group= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
@@ -746,6 +748,8 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l signed -f
 complete -c spack -n '__fish_spack_using_command buildcache create' -l signed -d 'push signed buildcache tarballs'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l key -s k -r -f -a key
 complete -c spack -n '__fish_spack_using_command buildcache create' -l key -s k -r -d 'key for signing'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l no-upload-key -f -a upload_key
+complete -c spack -n '__fish_spack_using_command buildcache create' -l no-upload-key -d 'Don'"'"'t upload the public part of the signing to to the build cache'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l update-index -l rebuild-index -f -a update_index
 complete -c spack -n '__fish_spack_using_command buildcache create' -l update-index -l rebuild-index -d 'regenerate buildcache index after building package(s)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -f -a 'package dependencies'
