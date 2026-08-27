@@ -121,19 +121,19 @@ def test_info_fields(pkg_query, extra_args):
         # Ensure spack info knows that build_system is a single value variant
         (
             ["dual-cmake-autotools"],
-            [r"when\s*build_system=cmake", r"when\s*build_system=autotools"],
+            [r"when\s*build_system=mock_cmake", r"when\s*build_system=mock_autotools"],
             [],
         ),
         (
-            ["dual-cmake-autotools build_system=cmake"],
-            [r"when\s*build_system=cmake"],
-            [r"when\s*build_system=autotools"],
+            ["dual-cmake-autotools build_system=mock_cmake"],
+            [r"when\s*build_system=mock_cmake"],
+            [r"when\s*build_system=mock_autotools"],
         ),
-        # Ensure that gemerator=make implies build_system=cmake and therefore no autotools
+        # Ensure that gemerator=make implies build_system=mock_cmake and therefore no autotools
         (
             ["dual-cmake-autotools generator=make"],
-            [r"when\s*build_system=cmake"],
-            [r"when\s*build_system=autotools"],
+            [r"when\s*build_system=mock_cmake"],
+            [r"when\s*build_system=mock_autotools"],
         ),
         (
             ["optional-dep-test"],

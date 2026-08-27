@@ -19,16 +19,16 @@ class PerlPackage(PackageBase):
     """Specialized class for packages that are built using Perl."""
 
     build_system_class = "PerlPackage"
-    default_buildsystem = "perl"
+    default_buildsystem = "mock_perl"
 
-    build_system("perl")
-    extends("perl", when="build_system=perl")
+    build_system("mock_perl")
+    extends("perl", when="build_system=mock_perl")
 
     def test_use(self):
         pass
 
 
-@register_builder("perl")
+@register_builder("mock_perl")
 class PerlBuilder(BuilderWithDefaults):
     phases = ("configure", "build", "install")
     package_methods = ("check", "test_use")
