@@ -1183,7 +1183,7 @@ def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str, component_type: Buil
                     ).timestamp()
     except Exception as e:
         tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
-        raise e
+        return None, None
 
     return filename_to_mtime, read_fn
 
