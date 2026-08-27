@@ -2616,8 +2616,7 @@ class SpackSolverSetup:
                         )
                     continue
 
-                # raises UnknownPackageError or UnknownNamespaceError for a name that is not in
-                # the repository
+                # raises UnknownPackageError or UnknownNamespaceError for packages not in the repo
                 repo.get_pkg_class(s.fullname)
 
                 if s.concrete:

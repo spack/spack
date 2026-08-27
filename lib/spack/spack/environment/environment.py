@@ -1521,7 +1521,7 @@ class Environment:
             if spec.anonymous:
                 raise SpackEnvironmentError("cannot add anonymous specs to an environment")
             elif not spec.abstract_hash:
-                spack.concretize.validate_package_names([spec])
+                spack.concretize.ensure_existing_package_names([spec])
 
         list_to_change = self.spec_lists[list_name]
         existing = str(spec) in list_to_change.yaml_list

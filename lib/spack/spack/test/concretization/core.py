@@ -5795,7 +5795,7 @@ def test_concretize_rejects_unknown_names(spec_str, error_cls, name, config, moc
 
 def test_concretize_accepts_a_virtual_without_a_package(config, mock_packages):
     """'lapack' is a virtual, and the mock repository does not have a package.py for it."""
-    spack.concretize.validate_package_names([Spec("mpileaks ^lapack")])
+    spack.concretize.ensure_existing_package_names([Spec("mpileaks ^lapack")])
 
 
 def test_concretize_separately_rejects_unknown_names(mutable_config, mock_packages):
