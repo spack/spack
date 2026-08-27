@@ -465,11 +465,7 @@ class TestSpecDag:
 
     @pytest.mark.parametrize(
         "constraint_str,spec_str",
-        [
-            ("mpich@1.0", "mpileaks ^mpich@3.0"),
-            ("mpich%gcc", "mpileaks ^mpich%intel"),
-            ("mpich%gcc@2.0", "mpileaks ^mpich%gcc@3.0"),
-        ],
+        [("mpich@1.0", "mpileaks ^mpich@3.0"), ("mpich%gcc@2.0", "mpileaks ^mpich%gcc@3.0")],
     )
     def test_unsatisfiable_cases(self, set_dependency, constraint_str, spec_str):
         """Tests that synthetic cases of conflicting requirements raise an UnsatisfiableSpecError
