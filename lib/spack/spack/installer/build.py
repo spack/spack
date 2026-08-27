@@ -32,6 +32,7 @@ import spack.config
 import spack.error
 import spack.hooks
 import spack.mirrors.mirror
+import spack.repo
 import spack.sandbox
 import spack.spec
 import spack.store
@@ -39,6 +40,7 @@ import spack.url_buildcache
 import spack.util.environment
 import spack.util.filesystem as fs
 import spack.util.lock
+import spack.util.timer
 import spack.util.tty
 from spack.installer.base import (
     ExitCode,
@@ -49,7 +51,6 @@ from spack.installer.base import (
     Makeflags,
     ProcessExitNotifier,
 )
-from spack.old_installer import _do_fake_install, dump_packages
 from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
 
@@ -174,6 +175,112 @@ class ChildInfo:
         return exit_code
 
 
+def dump_packages(spec: spack.spec.Spec, path: str) -> None:
+    """
+    Dump all package information for a spec and its dependencies.
+
+    This creates a package repository within path for every namespace in the
+    spec DAG, and fills the repos with package files and patch files for every
+    node in the DAG.
+
+    Args:
+        spec: the Spack spec whose package information is to be dumped
+        path: the path to the build packages directory
+    """
+    fs.mkdirp(path)
+
+    # Copy in package.py files from any dependencies.
+    # Note that we copy them in as they are in the *install* directory
+    # NOT as they are in the repository, because we want a snapshot of
+    # how *this* particular build was done.
+    for node in spec.traverse(deptype="all"):
+        if node is not spec:
+            # Locate the dependency package in the install tree and find
+            # its provenance information.
+            source = spack.store.STORE.layout.build_packages_path(node)
+            source_repo_root = os.path.join(source, node.namespace)
+
+            # If there's no provenance installed for the package, skip it.
+            # If it's external, skip it because it either:
+            # 1) it wasn't built with Spack, so it has no Spack metadata
+            # 2) it was built by another Spack instance, and we do not
+            # (currently) use Spack metadata to associate repos with externals
+            # built by other Spack instances.
+            # Spack can always get something current from the builtin repo.
+            if node.external or not os.path.isdir(source_repo_root):
+                continue
+
+            # Create a source repo and get the pkg directory out of it.
+            try:
+                source_repo = spack.repo.from_path(source_repo_root)
+                source_pkg_dir = source_repo.dirname_for_package_name(node.name)
+            except spack.repo.RepoError as err:
+                spack.util.tty.debug(f"Failed to create source repo for {node.name}: {str(err)}")
+                source_pkg_dir = None
+                spack.util.tty.warn(f"Warning: Couldn't copy in provenance for {node.name}")
+
+        # Create a destination repository
+        pkg_api = spack.repo.PATH.get_repo(node.namespace).package_api
+        repo_root = os.path.join(path, node.namespace) if pkg_api < (2, 0) else path
+        repo = spack.repo.create_or_construct(
+            repo_root, namespace=node.namespace, package_api=pkg_api
+        )
+
+        # Get the location of the package in the dest repo.
+        dest_pkg_dir = repo.dirname_for_package_name(node.name)
+        if node is spec:
+            spack.repo.PATH.dump_provenance(node, dest_pkg_dir)
+        elif source_pkg_dir:
+            fs.install_tree(source_pkg_dir, dest_pkg_dir)
+
+
+def _do_fake_install(pkg: "spack.package_base.PackageBase") -> None:
+    """Make a fake install directory with fake executables, headers, and libraries."""
+    command = pkg.name
+    header = pkg.name
+    library = pkg.name
+
+    # Avoid double 'lib' for packages whose names already start with lib
+    if not pkg.name.startswith("lib"):
+        library = "lib" + library
+
+    plat_shared = ".dll" if sys.platform == "win32" else ".so"
+    plat_static = ".lib" if sys.platform == "win32" else ".a"
+    dso_suffix = ".dylib" if sys.platform == "darwin" else plat_shared
+
+    # Install fake command
+    fs.mkdirp(pkg.prefix.bin)
+    executable = lambda path, flags: os.open(path, flags, 0o700)
+    open(os.path.join(pkg.prefix.bin, command), "wb", opener=executable).close()
+
+    # Install fake header file
+    fs.mkdirp(pkg.prefix.include)
+    fs.touch(os.path.join(pkg.prefix.include, header + ".h"))
+
+    # Install fake shared and static libraries
+    fs.mkdirp(pkg.prefix.lib)
+    for suffix in [dso_suffix, plat_static]:
+        fs.touch(os.path.join(pkg.prefix.lib, library + suffix))
+
+    # Install fake man page
+    fs.mkdirp(pkg.prefix.man.man1)
+
+    packages_dir = spack.store.STORE.layout.build_packages_path(pkg.spec)
+    dump_packages(pkg.spec, packages_dir)
+
+
+def _write_timer_json(
+    pkg: "spack.package_base.PackageBase", timer: spack.util.timer.Timer, cache: bool
+) -> None:
+    extra_attributes = {"name": pkg.name, "cache": cache, "hash": pkg.spec.dag_hash()}
+    try:
+        with open(pkg.times_log_path, "w", encoding="utf-8") as timelog:
+            timer.write_json(timelog, extra_attributes=extra_attributes)
+    except Exception as e:
+        spack.util.tty.debug(str(e))
+        return
+
+
 def send_state(state: str, state_pipe: io.TextIOWrapper) -> None:
     """Send a state update message."""
     json.dump({"state": state}, state_pipe, separators=(",", ":"))
@@ -197,6 +304,7 @@ def install_from_buildcache(
     spec: spack.spec.Spec,
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
+    timer: spack.util.timer.BaseTimer = spack.util.timer.NULL_TIMER,
 ) -> bool:
     # Skip if no configured mirror accepts this spec (select/exclude filters)
     if not any(
@@ -207,9 +315,10 @@ def install_from_buildcache(
 
     send_state("fetching from build cache", state_stream)
     try:
-        tarball_stage = spack.binary_distribution.download_tarball(
-            spec.build_spec, unsigned, mirrors
-        )
+        with timer.measure("fetch"):
+            tarball_stage = spack.binary_distribution.download_tarball(
+                spec.build_spec, unsigned, mirrors
+            )
     except spack.binary_distribution.NoConfiguredBinaryMirrors:
         return False
 
@@ -217,7 +326,8 @@ def install_from_buildcache(
         return False
 
     send_state("relocating", state_stream)
-    spack.binary_distribution.extract_tarball(spec, tarball_stage, force=False)
+    with timer.measure("install"):
+        spack.binary_distribution.extract_tarball(spec, tarball_stage, force=False, timer=timer)
 
     if spec.spliced:  # overwrite old metadata with new
         spack.store.STORE.layout.write_spec(spec, spack.store.STORE.layout.spec_file_path(spec))
@@ -578,15 +688,23 @@ def _install(
     pkg = spec.package
     pkg.run_tests = request.run_tests
 
+    # timer for install phases, dumped to install_times.json on success
+    t = spack.util.timer.Timer()
+
     if request.fake:
         store.layout.create_install_directory(spec)
         _do_fake_install(pkg)
-        spack.hooks.post_install(spec, explicit)
+        with t.measure("post-install"):
+            spack.hooks.post_install(spec, explicit)
+        t.stop()
+        _write_timer_json(pkg, t, False)
         return
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
-        if install_from_buildcache(request.mirrors, spec, request.unsigned, state_stream):
+        if install_from_buildcache(request.mirrors, spec, request.unsigned, state_stream, t):
+            t.stop()
+            _write_timer_json(pkg, t, True)
             spack.hooks.post_install(spec, explicit)
             return
         elif install_policy == "cache_only":
@@ -642,10 +760,11 @@ def _install(
 
         send_state("staging", state_stream)
 
-        if not request.skip_patch:
-            pkg.do_patch()
-        else:
-            pkg.do_stage()
+        with t.measure("stage"):
+            if not request.skip_patch:
+                pkg.do_patch()
+            else:
+                pkg.do_stage()
 
         os.chdir(stage.source_path)
 
@@ -674,7 +793,8 @@ def _install(
             old_debug = spack.util.tty.debug_level()
             spack.util.tty.set_debug(1)
             try:
-                phase.execute()
+                with t.measure(phase.name):
+                    phase.execute()
             finally:
                 spack.util.tty.set_debug(old_debug)
             if stop_at is not None and phase.name == stop_at:
@@ -682,7 +802,10 @@ def _install(
                 raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
 
         _archive_build_metadata(pkg)
-        spack.hooks.post_install(spec, explicit)
+        with t.measure("post-install"):
+            spack.hooks.post_install(spec, explicit)
+        t.stop()
+        _write_timer_json(pkg, t, False)
 
 
 def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
