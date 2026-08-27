@@ -60,10 +60,7 @@ class MockPaginator:
 
 class MockClientError(Exception):
     def __init__(self, code="NoSuchKey"):
-        self.response = {
-            "Error": {"Code": code},
-            "ResponseMetadata": {"HTTPStatusCode": 404},
-        }
+        self.response = {"Error": {"Code": code}, "ResponseMetadata": {"HTTPStatusCode": 404}}
 
 
 class MockS3Client:
