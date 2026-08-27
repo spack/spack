@@ -3464,7 +3464,7 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
         (["cmake@3.27.9 %gcc", "foo %gcc"], ["%gcc"], ["cmake"], ["foo %gcc"]),
     ],
 )
-def test_spec_filters(specs, include, exclude, expected):
+def test_spec_filters(specs, include, exclude, expected, mock_packages):
     specs = [Spec(x) for x in specs]
     expected = [Spec(x) for x in expected]
     f = spack.spec_filter.SpecFilter(
