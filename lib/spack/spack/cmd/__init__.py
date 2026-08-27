@@ -10,7 +10,7 @@ import re
 import subprocess
 import sys
 import textwrap
-from typing import Callable, Container, Generator, List, Optional, Sequence, Union
+from typing import IO, Callable, Container, Generator, List, Optional, Sequence, Union
 
 import spack.concretize
 import spack.config
@@ -18,6 +18,7 @@ import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.paths
+import spack.repo
 import spack.spec
 import spack.spec_parser
 import spack.store
@@ -169,6 +170,37 @@ def quote_kvp(string: str) -> str:
 
     key, delim, value = match.groups()
     return f"{key}{delim}{spack.spec_parser.quote_if_needed(value)}"
+
+
+def report_unknown_package(
+    e: Union[spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError],
+    *,
+    hint: Optional[str] = None,
+    repo=None,
+    out: IO[str] = sys.stderr,
+) -> None:
+    """Helper function to construct helpful error messages
+
+    Args:
+        e: the error to report
+        hint: advice the command adds to the name, e.g. ``spack edit`` points at ``spack create``
+        repo: repository to take suggestions from, defaults to the configured repositories
+        out: stream to write to
+    """
+    lines = [e.message]
+
+    if isinstance(e, spack.repo.UnknownNamespaceError) and e.name == "yaml":
+        lines.append(f"Did you mean to specify a filename with './{e.namespace}.{e.name}'?")
+
+    if hint:
+        lines.append(hint)
+
+    if isinstance(e, spack.repo.UnknownPackageError) and e.name:
+        similar = spack.repo.similar_package_names(e.name, repo or spack.repo.PATH)
+        if similar:
+            lines.append("Did you mean one of the following packages?\n  " + "\n  ".join(similar))
+
+    tty.error("\n".join(lines), stream=out)
 
 
 def parse_specs(
