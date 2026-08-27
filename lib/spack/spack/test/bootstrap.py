@@ -2,11 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import pathlib
+import sys
 
 import pytest
 
 import spack.bootstrap
+import spack.bootstrap._common
 import spack.bootstrap.clingo
 import spack.bootstrap.config
 import spack.bootstrap.core
@@ -16,6 +19,7 @@ import spack.config
 import spack.environment
 import spack.store
 import spack.util.executable
+import spack.util.prefix
 
 from .conftest import _true
 
@@ -307,3 +311,145 @@ def test_use_store_does_not_try_writing_outside_root(
     with spack.store.use_store(user_store):
         assert spack.config.CONFIG.get("config:install_tree:root") == str(user_store)
     assert spack.config.CONFIG.get("config:install_tree:root") == initial_store
+
+
+def _make_executable(directory: pathlib.Path, name: str) -> pathlib.Path:
+    """Create a runnable stub called ``name`` in ``directory``.
+
+    On Windows ``which_string`` appends the executable suffixes itself, so the file on
+    disk is ``name.bat``; elsewhere the name is used verbatim and the mode bit is what
+    makes it findable.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
+    if sys.platform == "win32":
+        executable = directory / f"{name}.bat"
+        executable.write_text("@ECHO OFF\n")
+    else:
+        executable = directory / name
+        executable.write_text("#!/bin/sh\n")
+    executable.chmod(0o755)
+    return executable
+
+
+class _InstalledSpec:
+    """Stand-in for a concrete spec in the store. Only ``prefix`` is ever consulted."""
+
+    def __init__(self, prefix: pathlib.Path):
+        self.prefix = spack.util.prefix.Prefix(str(prefix))
+
+
+@pytest.fixture()
+def store_containing(monkeypatch):
+    """Report the given prefixes as installed specs matching any query."""
+
+    def _factory(*prefixes: pathlib.Path):
+        specs = [_InstalledSpec(p) for p in prefixes]
+
+        class _DB:
+            def query(self, query_spec, installed=True):
+                return list(specs)
+
+        class _Store:
+            db = _DB()
+
+        monkeypatch.setattr(spack.store, "STORE", _Store())
+        return specs
+
+    return _factory
+
+
+@pytest.fixture()
+def isolated_path(monkeypatch):
+    """``_executables_in_store`` prepends to PATH on success; keep that out of the
+    surrounding session.
+
+    Deliberately not autouse: the other tests in this module run real compiler detection
+    and executable lookups against the inherited PATH, so narrowing it for them would
+    make them fail for reasons that have nothing to do with what they cover.
+    """
+    monkeypatch.setenv("PATH", os.defpath)
+
+
+def test_executables_in_store_finds_executable_in_bin(tmp_path, store_containing, isolated_path):
+    prefix = tmp_path / "pkg"
+    _make_executable(prefix / "bin", "cl")
+    store_containing(prefix)
+    query_info = {}
+
+    found = spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper", query_info)
+
+    assert found is True
+    assert query_info["command"] is not None
+    assert query_info["spec"].prefix == str(prefix)
+    assert str(prefix / "bin") in os.environ["PATH"]
+
+
+@pytest.mark.parametrize("make_bin", [True, False], ids=["empty-bin", "no-bin"])
+def test_executables_in_store_rejects_spec_without_the_executable(
+    tmp_path, store_containing, isolated_path, make_bin
+):
+    """A spec can satisfy the query and still not ship the binary we asked for, whether
+    or not it has a bin directory at all. Claiming success there makes the
+    ``required=True`` lookup that follows raise instead of letting the caller fall back
+    to actually bootstrapping."""
+    prefix = tmp_path / "pkg"
+    (prefix / "bin" if make_bin else prefix).mkdir(parents=True)
+    store_containing(prefix)
+    query_info = {}
+
+    found = spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper", query_info)
+
+    assert found is False
+    assert query_info == {}
+
+
+def test_executables_in_store_falls_through_to_a_spec_that_has_it(tmp_path, store_containing):
+    """Several installed specs can match the query; the first one without the binary
+    must not short circuit the search."""
+    empty = tmp_path / "empty"
+    (empty / "bin").mkdir(parents=True)
+    provider = tmp_path / "provider"
+    _make_executable(provider / "bin", "cl")
+    store_containing(empty, provider)
+    query_info = {}
+
+    found = spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper", query_info)
+
+    assert found is True
+    assert query_info["spec"].prefix == str(provider)
+
+
+def test_executables_in_store_accepts_any_of_the_alternatives(tmp_path, store_containing):
+    """The executables are alternates, so the search exits on the first one present."""
+    prefix = tmp_path / "pkg"
+    _make_executable(prefix / "bin", "cl")
+    store_containing(prefix)
+
+    assert spack.bootstrap._common._executables_in_store(["nope", "cl"], "compiler-wrapper")
+
+
+def test_executables_in_store_without_installed_specs(store_containing):
+    store_containing()
+
+    assert spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper") is False
+
+
+@pytest.mark.only_windows("prefix/bin is a less common idiom on Windows")
+def test_executables_in_store_searches_below_prefix_on_windows(
+    tmp_path, store_containing, isolated_path
+):
+    """Windows packages routinely put binaries somewhere other than prefix/bin, so the
+    whole prefix is searched rather than just that one directory."""
+    prefix = tmp_path / "pkg"
+    tools = prefix / "Library" / "tools"
+    _make_executable(tools, "relocate")
+    store_containing(prefix)
+    query_info = {}
+
+    found = spack.bootstrap._common._executables_in_store(
+        ["relocate"], "compiler-wrapper", query_info
+    )
+
+    assert found is True
+    assert str(tools) in os.environ["PATH"]
+    assert query_info["spec"].prefix == str(prefix)
