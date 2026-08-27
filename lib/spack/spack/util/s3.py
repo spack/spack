@@ -224,7 +224,8 @@ def _relative_key(key, prefix):
 
 def _iter_s3_prefix(s3, url, num_entries=1024):
     bucket = url.netloc
-    prefix = url.path.strip("/") + "/"
+    stripped_path = url.path.strip("/")
+    prefix = f"{stripped_path}/" if stripped_path else ""
     paginator = s3.get_paginator("list_objects_v2")
     pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
 

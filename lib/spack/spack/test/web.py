@@ -493,6 +493,44 @@ def test_list_s3_url_skips_directory_marker_keys(monkeypatch):
     assert listing == ["real-key"]
 
 
+def test_list_s3_url_at_bucket_root(monkeypatch):
+    """Verify that a mirror with no sub-path (e.g. s3://my-bucket) gets listed with an
+    empty Prefix (not "/")."""
+
+    class RootPages:
+        def search(self, *args, **kwargs):
+            return [{"Key": "some/object.txt"}]
+
+    class RootPaginator:
+        def __init__(self):
+            self.paginate_calls = []
+
+        def paginate(self, *args, **kwargs):
+            self.paginate_calls.append(kwargs)
+            return RootPages()
+
+    class RootClient:
+        def __init__(self):
+            self.paginator = RootPaginator()
+
+        def get_paginator(self, *args, **kwargs):
+            return self.paginator
+
+    client = RootClient()
+
+    def get_s3_session(url, method="fetch"):
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
+
+    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+
+    listing = spack.util.web.list_url("s3://my-bucket", recursive=True)
+
+    assert client.paginator.paginate_calls == [{"Bucket": "my-bucket", "Prefix": ""}]
+    assert listing == ["some/object.txt"]
+
+
 def test_stat_s3_url(mock_s3_client):
     fake_s3_url = "s3://my-bucket/subdirectory/my-file"
     size, mtime = spack.util.web.stat_url(fake_s3_url)
