@@ -7,9 +7,10 @@ import urllib.parse
 import urllib.request
 import urllib.response
 from io import BufferedReader, BytesIO, IOBase
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import spack.config
+import spack.error
 from spack.util import tty
 
 #: Map (mirror name, method) tuples to s3 client instances.
@@ -267,7 +268,7 @@ def delete_objects(s3, url: urllib.parse.ParseResult, recursive: bool = False):
         paginator = s3.get_paginator("list_objects_v2")
         pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
 
-        delete_request = {"Objects": []}
+        delete_request: Dict[str, List[Dict[str, str]]] = {"Objects": []}
         for item in pages.search("Contents"):
             if not item:
                 continue
