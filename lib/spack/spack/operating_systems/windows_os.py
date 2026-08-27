@@ -17,11 +17,13 @@ from ._operating_system import OperatingSystem
 
 
 def windows_version():
-    """Windows version as a Version object"""
-    # include the build number as this provides important information
-    # for low lever packages and components like the SDK and WDK
-    # The build number is the version component that would otherwise
-    # be the patch version in semantic versioning, i.e. z of x.y.z
+    """Full Windows version, including the build number.
+
+    The build number is the component that would be the patch version in
+    semantic versioning, i.e. z of x.y.z.  It carries information some
+    low-level packages need -- the SDK and WDK track it -- so it is kept
+    here, but see :class:`WindowsOs` for why it is not part of the OS name.
+    """
     return Version(platform.version())
 
 
@@ -37,7 +39,16 @@ class WindowsOs(OperatingSystem):
         plat_ver = windows_version()
         if plat_ver < Version("10"):
             raise SpackError("Spack is not supported on Windows versions older than 10")
-        super().__init__("windows{}".format(plat_ver), plat_ver)
+        # Name the OS by its major version only.  The name is what lands in the
+        # spec, and therefore in the DAG hash, and the build number moves with
+        # every cumulative update -- so naming the OS `windows10.0.26100` means
+        # two machines that differ only by patch level share no binaries at
+        # all, despite an identical MSVC ABI.  In practice that made buildcaches
+        # unusable between a CI container and any developer machine.
+        #
+        # The full version, build number included, stays on `self.version` for
+        # the packages that genuinely track it.
+        super().__init__("windows{}".format(plat_ver.up_to(1)), plat_ver)
 
     def __str__(self):
         return self.name

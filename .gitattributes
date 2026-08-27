@@ -2,3 +2,8 @@
 *.py diff=python
 *.py text eol=lf
 lib/spack/spack/vendor/* linguist-vendored
+# Checked-in PE/COFF test fixtures. Marked binary explicitly so no EOL or encoding
+# conversion can corrupt them, whatever core.autocrlf a contributor has set.
+lib/spack/spack/test/data/windows_pe/*.dll binary
+lib/spack/spack/test/data/windows_pe/*.exe binary
+lib/spack/spack/test/data/windows_pe/*.lib binary
