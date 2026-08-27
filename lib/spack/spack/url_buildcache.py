@@ -1193,8 +1193,7 @@ def _entries_from_cache_fallback(url: str, component_type: BuildcacheComponent):
                     filename_to_mtime[entry_url] = stat_result[1]  # mtime is second element
         read_fn = url_read_method
     except OSError as err:
-        # If we got some kind of S3 (access denied or other connection error), the first non
-        # boto-specific class in the exception is Exception.  Just print a warning and return
+        # Backend-specific errors (e.g. those from S3 and GCS) get normalized to OSError.
         tty.warn(f"Encountered problem listing packages at {url}: {err}")
 
     return filename_to_mtime, read_fn
