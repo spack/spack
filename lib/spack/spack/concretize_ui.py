@@ -53,10 +53,9 @@ class ConcretizerUI:
         out of the same solve report the same duration.
         """
 
-    def on_finished(self, *, error: Optional[BaseException]) -> None:
-        """Concretization is over, successfully if ``error`` is None. Emitted exactly once per
-        concretization, from a ``finally``, so it reaches the frontend on both the success and
-        the failure path.
+    def on_finished(self) -> None:
+        """Concretization is over. Emitted exactly once per concretization, from a ``finally``,
+        so it reaches the frontend on both the success and the failure path.
         """
 
 

@@ -2762,14 +2762,10 @@ class EnvironmentConcretizer:
     def concretize(
         self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
     ) -> List[SpecPair]:
-        error: Optional[BaseException] = None
         try:
             return self._concretize(force=force, tests=tests)
-        except BaseException as e:
-            error = e
-            raise
         finally:
-            self.ui.on_finished(error=error)
+            self.ui.on_finished()
 
     def _concretize(
         self, *, force: Optional[bool], tests: Union[bool, Sequence[str]]

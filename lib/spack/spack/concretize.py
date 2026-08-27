@@ -318,14 +318,10 @@ def concretize_spec_pairs(
         ui: frontend to report progress to. Defaults to a headless frontend.
     """
     ui = ui or HeadlessUI()
-    error: Optional[BaseException] = None
     try:
         return _dispatch_concretization(to_concretize, tests=tests, ui=ui)
-    except BaseException as e:
-        error = e
-        raise
     finally:
-        ui.on_finished(error=error)
+        ui.on_finished()
 
 
 def _dispatch_concretization(

@@ -5773,24 +5773,20 @@ def test_solve_kind_from_unify_configuration(unify, expected):
 
 
 def test_concretization_reports_when_it_is_over(mutable_config, mock_packages):
-    """Tests that a concretization reports its end exactly once, with no error."""
+    """Tests that a concretization reports its end exactly once."""
     ui = RecordingUI()
     spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
-
-    assert ui.errors == [None]
-    assert len(ui.concretized) == 2
+    assert ui.finished_count == 1 and len(ui.concretized) == 2
 
 
-def test_concretization_reports_the_error_it_ended_with(mutable_config, mock_packages):
-    """Tests that a concretization that raises reports its end with the exception in ``error``,
-    before the exception propagates to the caller.
+def test_concretization_reports_its_end_when_it_raises(mutable_config, mock_packages):
+    """Tests that a concretization that raises still reports its end, and that the exception
+    propagates to the caller.
     """
     ui = RecordingUI()
-
     unsatisfiable = Spec("mpileaks ^mpich@3.0.3 ^mpich@3.0.4")
-    with pytest.raises(spack.error.UnsatisfiableSpecError) as exc_info:
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
         spack.concretize.concretize_spec_pairs(
             [(unsatisfiable, None), (Spec("pkg-b"), None)], ui=ui
         )
-
-    assert ui.errors == [exc_info.value]
+    assert ui.finished_count == 1

@@ -5119,5 +5119,4 @@ spack:
     # Both groups and their empty batches are reported, with no spec concretized
     assert set(ui.groups) == {("default", True), ("apps1", False)}
     assert [total for _, total, _ in ui.started] == [0, 0]
-    assert not ui.concretized
-    assert ui.errors == [None]
+    assert not ui.concretized and ui.finished_count == 1

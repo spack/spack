@@ -4,7 +4,7 @@
 
 """Non-fixture utilities for test code. Must be imported."""
 
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 from spack.concretize_ui import ConcretizerUI, SolveKind
 from spack.main import make_argument_parser
@@ -53,8 +53,8 @@ class RecordingUI(ConcretizerUI):
         self.started: List[Tuple[SolveKind, int, int]] = []
         #: (abstract, concrete, count, duration) for each spec that was concretized
         self.concretized: List[Tuple[Spec, Spec, int, float]] = []
-        #: the error each concretization ended with, None when it succeeded
-        self.errors: List[Optional[BaseException]] = []
+        #: how many concretizations reported that they were over
+        self.finished_count = 0
 
     def on_group_started(self, *, group: str, is_default: bool) -> None:
         self.groups.append((group, is_default))
@@ -67,5 +67,5 @@ class RecordingUI(ConcretizerUI):
     ) -> None:
         self.concretized.append((abstract, concrete, count, duration))
 
-    def on_finished(self, *, error: Optional[BaseException]) -> None:
-        self.errors.append(error)
+    def on_finished(self) -> None:
+        self.finished_count += 1
