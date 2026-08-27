@@ -288,6 +288,8 @@ class BinaryIndexCache:
                             f"'{mirror_metadata.url}'. {e.database_version_message}"
                         )
                         return
+                else:
+                    warnings.warn("Stale index in cache, consider running `spack clean -m`")
 
             spec_list = [
                 s
@@ -870,6 +872,8 @@ def _url_update_index(
     Return:
         None
     """
+    load_buildcache_index()
+
     if not retry:
         retry = web_util.Retry()
 
