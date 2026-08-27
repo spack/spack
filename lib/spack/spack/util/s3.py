@@ -315,7 +315,7 @@ def stat_object(s3, url: urllib.parse.ParseResult) -> Optional[Tuple[int, float]
     return size, mtime
 
 
-@s3_command("psuh")
+@s3_command("push")
 def push_object(s3, url: urllib.parse.ParseResult, local_file_path, extra_args):
     if extra_args is None:
         extra_args = {}
