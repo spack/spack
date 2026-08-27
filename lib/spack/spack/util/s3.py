@@ -171,11 +171,13 @@ def _s3_open(url, method="GET", extra_args={}):
             stream = BytesIO()
     except s3.ClientError as e:
         stream = BytesIO()
+        error = e.response.get("Error", {})
+        metadata = e.response.get("ResponseMetadata", {})
         raise urllib.error.HTTPError(
             url,
-            e.response["ResponseMetadata"]["HTTPStatusCode"],
-            e.response["Error"]["Message"],
-            e.response["ResponseMetadata"]["HTTPHeaders"],
+            metadata.get("HTTPStatusCode", 500),
+            error.get("Message", "Unknown S3 Error"),
+            metadata.get("HTTPHeaders", {}),
             stream,
         )
 
