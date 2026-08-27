@@ -1012,7 +1012,7 @@ def test_repo_use_bad_syntax(config, repo_builder: RepoBuilder):
             spack.repo.PATH.get_pkg_class("erroneous")
 
 
-def test_unknownpkgerror_match_fails():
+def test_unknownpkgerror_match_fails(mock_packages):
     """Ensure fails with basic message when get_close_matches fails."""
 
     def _get_close_matches(*args, **kwargs):

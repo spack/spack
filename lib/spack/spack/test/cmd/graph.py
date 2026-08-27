@@ -68,7 +68,7 @@ def test_graph_deptype():
     graph("--deptype", "all", "dt-diamond")
 
 
-def test_graph_no_specs():
+def test_graph_no_specs(mock_packages):
     """Tests spack graph with no arguments"""
 
     with pytest.raises(SpackCommandError):
