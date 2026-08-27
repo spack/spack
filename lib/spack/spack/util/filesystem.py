@@ -47,7 +47,7 @@ from typing import (
 from spack.vendor.typing_extensions import Literal
 
 from spack.util import lang, tty
-from spack.util.executable import Executable, which
+from spack.util.executable import Executable
 from spack.util.lang import dedupe, fnmatch_translate_multiple, memoized
 from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_filter
 
@@ -1381,6 +1381,72 @@ def windows_sfn(path: os.PathLike):
         k32.GetShortPathNameW(path, ctypes.byref(ret_str), sz)
         return ret_str.value
     return path
+
+
+def short_filenames_enabled(path: Optional[str] = None) -> bool:
+    """Return whether Windows generates 8.3 short filenames on the volume holding ``path``.
+
+    8.3 name creation is governed by a system wide registry value
+    (``NtfsDisable8dot3NameCreation``) which may itself defer to a per volume flag, and
+    ``fsutil 8dot3name query`` needs elevation to report either one. Rather than reading
+    those two settings and reimplementing how Windows reconciles them, this probes the
+    behavior directly: it creates a file whose name has no valid 8.3 representation and
+    asks Windows for that file's short path. A short name exists only if Windows
+    generated one when the file was created, so a shortened answer means the volume is
+    creating 8.3 names right now.
+
+    This matters because the MSVC compiler wrapper records absolute paths inside the PEs
+    it links, and falls back to a path's 8.3 form when the path is too long to store. If
+    the volume is not creating short names there is no such fallback available.
+
+    The setting is per volume, so ``path`` selects which volume to probe; it defaults to
+    the current directory. ``path`` need not exist yet, in which case its nearest
+    existing ancestor directory is probed instead.
+
+    Always returns False on non-Windows platforms.
+    """
+    if sys.platform != "win32":
+        return False
+
+    probe_dir = os.path.abspath(path if path is not None else os.getcwd())
+    # The prefix we care about often does not exist yet, but 8.3 creation is a property
+    # of the volume, so any existing ancestor gives the same answer.
+    while not os.path.isdir(probe_dir):
+        parent = os.path.dirname(probe_dir)
+        if parent == probe_dir:
+            return False
+        probe_dir = parent
+
+    if os.path.dirname(probe_dir) == probe_dir:
+        # Never write into a volume root. Those are frequently ACL protected or watched
+        # by security software, where the attempted write blocks rather than failing
+        # cleanly. Anything Spack actually installs into lives below the root, so if the
+        # walk got this far we have no real prefix to judge and report the safe answer.
+        tty.debug(f"Refusing to probe 8.3 filename creation in volume root {probe_dir}")
+        return False
+
+    try:
+        # Both the stem and the extension are too long for 8.3, so Windows must invent a
+        # short name for this file if it is creating short names at all.
+        handle, probe = tempfile.mkstemp(
+            prefix="spack-8dot3-probe", suffix=".probe", dir=probe_dir
+        )
+        os.close(handle)
+    except OSError as e:
+        # We cannot tell without writing, and a volume we cannot write to is not one we
+        # are about to install into. Report the conservative answer.
+        tty.debug(f"Could not probe 8.3 filename creation in {probe_dir}: {e}")
+        return False
+
+    try:
+        # GetShortPathNameW hands back the long path unchanged when the file has no
+        # short name, so the "~N" disambiguator is what actually distinguishes them.
+        return "~" in os.path.basename(windows_sfn(probe))
+    finally:
+        try:
+            os.unlink(probe)
+        except OSError:
+            pass
 
 
 @contextmanager
@@ -3362,39 +3428,6 @@ class SymlinkError(OSError):
 
 class AlreadyExistsError(SymlinkError):
     """Link path already exists."""
-
-
-if sys.platform == "win32":
-    import ctypes.wintypes
-
-
-def short_filenames_enabled() -> bool:
-    """Check whether Windows 8.3 (short) filename creation is enabled on this system.
-
-    8.3 name creation can be controlled two ways:
-
-    - A system-wide registry setting (``NtfsDisable8dot3NameCreation``) that either
-      forces short names on/off for every volume, or defers to a per-volume setting.
-    - A per-volume flag that only takes effect when the registry setting defers to it.
-
-    ``fsutil 8dot3name query <drive>`` reports both the registry state and the volume
-    state, then resolves them into a single effective answer for that drive
-    (e.g. "8dot3 name creation is disabled on <drive>"). This function queries the
-    system drive (``%SystemDrive%``) and parses that resolved line, so it reflects the
-    actual effective setting rather than just one of the two independent settings.
-
-    Always returns False on non-Windows platforms.
-    """
-    if sys.platform != "win32":
-        return False
-    try:
-        fsutil = which("fsutil", required=True)
-        drive = os.environ.get("SystemDrive", "C:")
-        output = fsutil("8dot3name", "query", drive, output=str, error=str)
-    except Exception:
-        return False
-    match = re.search(r"8dot3 name creation is (enabled|disabled)", output, re.IGNORECASE)
-    return bool(match) and match.group(1).lower() == "enabled"
 
 
 def fix_darwin_install_name(path: str) -> None:
