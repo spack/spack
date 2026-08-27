@@ -1,0 +1,6 @@
+enable:
+  - tcl
+tcl:
+  all:
+    autoload: none
+    conflict_on_name: false

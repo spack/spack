@@ -61,6 +61,7 @@ defs: Dict[str, Any] = {
     "ci_job_attributes": spack.schema.ci.ci_job_attributes,
     "env_modifications": spack.schema.environment.env_modifications,
     "module_file_configuration": spack.schema.modules.module_file_configuration,
+    "tcl_module_file_configuration": spack.schema.modules.tcl_module_file_configuration,
     "projections": spack.schema.projections.projections,
 }
 

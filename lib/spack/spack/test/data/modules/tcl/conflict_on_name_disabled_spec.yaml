@@ -1,0 +1,7 @@
+enable:
+  - tcl
+tcl:
+  all:
+    autoload: none
+  mpileaks:
+    conflict_on_name: false
