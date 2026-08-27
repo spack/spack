@@ -9,6 +9,7 @@ import pickle
 import ssl
 import urllib.error
 import urllib.request
+from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
 import pytest
@@ -43,7 +44,12 @@ root_with_javascript = _create_url("index_with_javascript.html")
 
 class MockPages:
     def search(self, *args, **kwargs):
-        return [{"Key": "keyone"}, {"Key": "keytwo"}, {"Key": "keythree"}]
+        return [
+            {"Key": "prefix/keyone"},
+            {"Key": "prefix/keytwo"},
+            {"Key": "prefix/keythree"},
+            {"Key": "prefix/nested/keyfour"},
+        ]
 
 
 class MockPaginator:
@@ -84,8 +90,8 @@ class MockS3Client:
 
     def delete_objects(self, *args, **kwargs):
         return {
-            "Errors": [{"Key": "keyone", "Message": "Access Denied"}],
-            "Deleted": [{"Key": "keytwo"}, {"Key": "keythree"}],
+            "Errors": [{"Key": "prefix/keyone", "Message": "Access Denied"}],
+            "Deleted": [{"Key": "prefix/keytwo"}, {"Key": "prefix/keythree"}],
         }
 
     def delete_object(self, *args, **kwargs):
@@ -98,15 +104,25 @@ class MockS3Client:
 
     def head_object(self, Bucket=None, Key=None):
         if Bucket == "my-bucket" and Key == "subdirectory/my-file":
-            return {"ResponseMetadata": {"HTTPHeaders": {}}}
+            return {
+                "ResponseMetadata": {"HTTPHeaders": {}},
+                "LastModified": datetime.fromtimestamp(1360799444.0),
+                "ContentLength": 0,
+            }
         raise self.ClientError
 
 
 @pytest.fixture
 def mock_s3_client(monkeypatch):
     client = MockS3Client("s3://my-bucket/")
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", lambda url, method="fetch": client)
-    monkeypatch.setattr(spack.util.web, "get_s3_session", lambda url, method="fetch": client)
+
+    def get_s3_session(url, method="fetch"):
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
+
+    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+
     return client
 
 
@@ -339,7 +355,6 @@ def test_gather_s3_information(monkeypatch):
 
 def test_remove_s3_url(mock_s3_client, capfd):
     fake_s3_url = "s3://my-bucket/subdirectory/mirror"
-
     current_debug_level = tty.debug_level()
     tty.set_debug(1)
 
@@ -348,9 +363,35 @@ def test_remove_s3_url(mock_s3_client, capfd):
 
     tty.set_debug(current_debug_level)
 
-    assert "Failed to delete keyone (Access Denied)" in err
-    assert "Deleted keythree" in err
-    assert "Deleted keytwo" in err
+    assert "Failed to delete prefix/keyone (Access Denied)" in err
+    assert "Deleted prefix/keythree" in err
+    assert "Deleted prefix/keytwo" in err
+
+
+def test_list_s3_url(mock_s3_client):
+    fake_s3_url = "s3://my-bucket/prefix/"
+    listing = spack.util.web.list_url(fake_s3_url, recursive=False)
+    assert "keyone" in listing
+    assert "keytwo" in listing
+    assert "keythree" in listing
+    assert "nested/keyfour" not in listing
+
+    listing = spack.util.web.list_url(fake_s3_url, recursive=True)
+    assert "keyone" in listing
+    assert "keytwo" in listing
+    assert "keythree" in listing
+    assert "nested/keyfour" in listing
+
+
+def test_stat_s3_url(mock_s3_client):
+    fake_s3_url = "s3://my-bucket/subdirectory/my-file"
+    size, mtime = spack.util.web.stat_url(fake_s3_url)
+    assert 0 == size
+    assert 1360799444.0 == mtime
+
+    with pytest.raises(OSError):
+        fake_s3_url = "s3://my-bucket/subdirectory/my-notfound-file"
+        spack.util.web.stat_url(fake_s3_url)
 
 
 def test_s3_url_exists(mock_s3_client):
