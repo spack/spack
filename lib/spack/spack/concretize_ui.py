@@ -79,11 +79,11 @@ class TerminalUI(ConcretizerUI):
     def on_concretization_started(self, *, kind: SolveKind, total: int, processes: int) -> None:
         self.kind = kind
         self.total = total
+        group, self.pending_group = self.pending_group, None
         if total == 0:
             return
-        if self.pending_group is not None:
-            tty.msg(f"Concretizing the '{self.pending_group}' group of specs")
-            self.pending_group = None
+        if group is not None:
+            tty.msg(f"Concretizing the '{group}' group of specs")
         if kind is not SolveKind.SEPARATELY:
             return
         msg = "Starting concretization"
