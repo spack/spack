@@ -127,8 +127,13 @@ class WindowsRPath:
         # be doing in this method
         # Spack should in general not modify things it has not installed
         # we can reasonably expect externals to have their link interface properly established
-        if sys.platform == "win32" and self.spec.satisfies("%compiler-wrapper"):
+        if sys.platform != "win32" or self.spec.external:
+            return
+        if self.spec.satisfies("%compiler-wrapper"):
             cw = self.spec["compiler-wrapper"]
+            # The Windows compiler-wrapper package only carries code once the real
+            # MSVC wrapper is available; otherwise it installs a placeholder and we
+            # fall back to the symlink-based simulated rpath.
             if cw.package.has_code:
                 relocate_win_rpath(self.spec)
             else:
