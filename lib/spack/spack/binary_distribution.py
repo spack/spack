@@ -2824,8 +2824,6 @@ class DefaultIndexHandlerV2(IndexHandler):
             except (ValueError, OSError) as e:
                 raise FetchIndexError(f"Remote index {url_index} is invalid") from e
 
-            # For now we only handle etags on http(s), since 304 error handling
-            # in s3:// is not there yet.
             if urllib.parse.urlparse(self.url).scheme not in ("http", "https", "s3"):
                 etag = None
             else:
@@ -2862,8 +2860,6 @@ class EtagIndexHandlerV2(IndexHandler):
         # Just do a conditional fetch immediately
         url = url_util.join(self.url, "build_cache", spack.database.INDEX_JSON_FILE)
         headers = {"User-Agent": web_util.SPACK_USER_AGENT}
-        # For now we only handle etags on http(s), since 304 error handling
-        # in s3:// is not there yet. S3 ETag is used for push only.
         if not force:
             headers.update({"If-None-Match": f'"{self.etag}"'})
 
@@ -3027,8 +3023,6 @@ class EtagIndexHandler(IndexHandler):
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
         manifest_url = cache_class.get_index_url(self.url, self.view)
         headers = {"User-Agent": web_util.SPACK_USER_AGENT}
-        # For now we only handle etags on http(s), since 304 error handling
-        # in s3:// is not there yet. S3 ETag is used for push only.
         if not force:
             headers.update({"If-None-Match": f'"{self.etag}"'})
 
