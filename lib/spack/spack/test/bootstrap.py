@@ -367,10 +367,8 @@ def _clingo_spec_for(platform: str, target: str, python_version: str) -> spack.s
 
 @pytest.mark.regression("52922")
 @pytest.mark.parametrize("metadata_file", CLINGO_METADATA, ids=lambda x: x.parent.name)
-def test_at_most_one_clingo_binary_matches_an_interpreter(metadata_file: pathlib.Path):
-    """A host must select a single clingo binary. When more than one matched, a cold
-    bootstrap installed a prefix per interpreter until one of them imported.
-    """
+def test_exactly_one_clingo_binary_matches_an_interpreter(metadata_file: pathlib.Path):
+    """A host must select a single clingo binary."""
     data = json.loads(metadata_file.read_text(encoding="utf-8"))
     entries = [spack.spec.Spec(x["spec"]) for x in data["verified"]]
     combinations = {
@@ -381,7 +379,7 @@ def test_at_most_one_clingo_binary_matches_an_interpreter(metadata_file: pathlib
     for platform, target, python_version in sorted(combinations):
         abstract_spec = _clingo_spec_for(platform, target, python_version)
         matching = spack.bootstrap.core._matching_entries(data, abstract_spec)
-        assert len(matching) <= 1, [str(x["spec"]) for x in matching]
+        assert len(matching) == 1, f"{abstract_spec} matches {[x['spec'] for x in matching]}"
 
 
 class _FakeBootstrapper(spack.bootstrap.core.Bootstrapper):
