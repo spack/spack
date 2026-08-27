@@ -2795,7 +2795,8 @@ class EnvironmentConcretizer:
         self.ui.on_group_started(group=group, is_default=group == DEFAULT_USER_SPEC_GROUP)
         unify = spack.config.CONFIG.get_config("concretizer").get("unify", False)
 
-        # A group with no new specs reports an empty batch, so it has a start and an end too
+        # Ensure the on_concretization_started gets called even if the group is already concrete.
+        # It's up to the UI to decide what to report in this case.
         if not new_user_specs:
             self.ui.on_concretization_started(
                 kind=spack.concretize.solve_kind(unify), total=0, processes=1
