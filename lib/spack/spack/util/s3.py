@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import posixpath
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -212,7 +213,8 @@ def _relative_key(key, prefix):
     if not prefix.startswith("/"):
         prefix = "/" + prefix
 
-    key = os.path.relpath(key, prefix)
+    # S3 keys are always POSIX-style, regardless of the host OS.
+    key = posixpath.relpath(key, prefix)
 
     if key == ".":
         return None
