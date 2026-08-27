@@ -259,3 +259,21 @@ def test_get_builder_class_accepts_objects_and_classes():
 
     # Names that are not defined in any package module are not builders
     assert spack.builder.get_builder_class(pkg_cls, "UnknownBuilder") is None
+
+
+def test_builders_are_resolved_by_repo_namespace(mock_packages):
+    """A same-name builder registered by another repo must not clobber the one from a
+    package's own repo. Regression test: importing the real builtin build systems during
+    a test run made mock MakefilePackage installs run a real ``make``."""
+    pkg_cls = spack.repo.PATH.get_pkg_class("printing-package")
+    mock_builder = spack.builder.BUILDER_CLS[("builtin_mock", "makefile")]
+    assert spack.builder.default_builder_cls(pkg_cls, "makefile") is mock_builder
+
+    impostor = type(
+        "MakefileBuilder", (), {"__module__": "spack_repo.other.build_systems.makefile"}
+    )
+    spack.builder.register_builder("makefile")(impostor)
+    try:
+        assert spack.builder.default_builder_cls(pkg_cls, "makefile") is mock_builder
+    finally:
+        del spack.builder.BUILDER_CLS[("other", "makefile")]
