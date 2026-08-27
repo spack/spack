@@ -635,7 +635,7 @@ def _ensure_package_builders(pkgs, error_cls):
             continue
 
         for build_system_name in sorted(build_system_names):
-            if build_system_name not in spack.builder.BUILDER_CLS:
+            if spack.builder.default_builder_cls(pkg_cls, build_system_name) is None:
                 errors.append(
                     error_cls(
                         f"The package '{pkg_name}' declares the build system "
@@ -724,7 +724,10 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
         build_system_names = _declared_build_systems(pkg_cls)
-        builder_cls_names = [spack.builder.BUILDER_CLS[x].__name__ for x in build_system_names]
+        builder_classes = (
+            spack.builder.default_builder_cls(pkg_cls, x) for x in build_system_names
+        )
+        builder_cls_names = [cls.__name__ for cls in builder_classes if cls is not None]
 
         has_builders_in_package_py = any(
             spack.builder.get_builder_class(pkg_cls, name) for name in builder_cls_names

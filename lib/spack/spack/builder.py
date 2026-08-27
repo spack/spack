@@ -20,17 +20,29 @@ import spack.util.environment
 from spack.error import SpackError
 from spack.util.prefix import Prefix
 
-#: Builder classes, as registered by the ``builder`` decorator
-BUILDER_CLS: Dict[str, Type["Builder"]] = {}
+#: Builder classes register by the ``builder`` decorator, keyed by (repo, namespace) to
+#: avoid conflicts if two repositories provide build systems with the same name.
+BUILDER_CLS: Dict[Tuple[Optional[str], str], Type["Builder"]] = {}
 
 #: Map id(pkg) to a builder, to avoid creating multiple
 #: builders for the same package object.
 _BUILDERS: Dict[int, "Builder"] = {}
 
 
+def _repo_namespace(module: str) -> Optional[str]:
+    """Return the repo namespace for a module defined in a package repo, else None."""
+    if module.startswith(spack.repo.PKG_MODULE_PREFIX_V2):
+        parts = module.split(".")
+        for marker in ("build_systems", "packages"):
+            if marker in parts:
+                return ".".join(parts[1 : parts.index(marker)]) or None
+    return None
+
+
 def register_builder(build_system_name: str):
     """Class decorator used to register the default builder for a given build system. The name
-    corresponds to the ``build_system`` variant value of the package.
+    corresponds to the ``build_system`` variant value of the package. The builder is registered
+    for the repo namespace it is defined in.
 
     Example::
 
@@ -45,10 +57,37 @@ def register_builder(build_system_name: str):
 
     def _decorator(cls):
         cls.build_system = build_system_name
-        BUILDER_CLS[build_system_name] = cls
+        BUILDER_CLS[(_repo_namespace(cls.__module__), build_system_name)] = cls
         return cls
 
     return _decorator
+
+
+def default_builder_cls(
+    pkg: Union["spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]],
+    build_system_name: str,
+) -> Optional[Type["Builder"]]:
+    """Return the builder class registered for a build system, resolved against the repos
+    that define ``pkg`` and its base classes, or None if there is no match."""
+    pkg_cls = pkg if isinstance(pkg, type) else type(pkg)
+    seen = []
+    for base in pkg_cls.__mro__:
+        namespace = _repo_namespace(getattr(base, "__module__", ""))
+        if namespace is not None and namespace not in seen:
+            seen.append(namespace)
+    for namespace in seen:
+        builder_cls = BUILDER_CLS.get((namespace, build_system_name))
+        if builder_cls is not None:
+            return builder_cls
+
+    builder_cls = BUILDER_CLS.get((None, build_system_name))
+    if builder_cls is not None:
+        return builder_cls
+
+    # A package may use a build system from a repo it inherits no classes from; fall back
+    # to the name alone when that is unambiguous.
+    matches = [cls for (_, name), cls in BUILDER_CLS.items() if name == build_system_name]
+    return matches[0] if len(matches) == 1 else None
 
 
 def create(pkg: spack.package_base.PackageBase) -> "Builder":
@@ -105,8 +144,13 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
         pkg: package object for which we need a builder
     """
     package_buildsystem = buildsystem_name(pkg)
-    default_builder_cls = BUILDER_CLS[package_buildsystem]
-    builder_cls_name = default_builder_cls.__name__
+    default_cls = default_builder_cls(pkg, package_buildsystem)
+    if default_cls is None:
+        raise SpackError(
+            f"Package {pkg.name} uses the build system '{package_buildsystem}', "
+            "which has no registered builder."
+        )
+    builder_cls_name = default_cls.__name__
     builder_class = get_builder_class(pkg, builder_cls_name)
 
     if builder_class:
@@ -116,7 +160,7 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
     # base classes and specialize certain phases or methods or attributes.
     # In that case they can store their builder class as a class level attribute.
     # See e.g. AspellDictPackage as an example.
-    base_cls = getattr(pkg, builder_cls_name, default_builder_cls)
+    base_cls = getattr(pkg, builder_cls_name, default_cls)
 
     # From here on we define classes to construct a special builder that adapts to the
     # old, single class, package format. The adapter forwards any call or access to an
