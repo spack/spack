@@ -2577,7 +2577,7 @@ class Environment:
             x.new = False
 
     def update_lockfile(self) -> None:
-        with fs.write_tmp_and_move(self.lock_path, encoding="utf-8") as f:
+        with fs.atomic_write(self.lock_path, encoding="utf-8") as f:
             sjson.dump(self._to_lockfile_dict(), stream=f)
 
     def ensure_env_directory_exists(self, dot_env: bool = False) -> None:
@@ -3629,7 +3629,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         if not self.changed:
             return
 
-        with fs.write_tmp_and_move(os.path.realpath(self.manifest_file)) as f:
+        with fs.atomic_write(os.path.realpath(self.manifest_file)) as f:
             _write_yaml(self.yaml_content, f)
         self.changed = False
 

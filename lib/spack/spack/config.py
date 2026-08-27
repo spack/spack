@@ -274,7 +274,7 @@ class DirectoryConfigScope(ConfigScope):
 
         try:
             filesystem.mkdirp(self.path)
-            with filesystem.write_tmp_and_move(filename, encoding="utf-8") as f:
+            with filesystem.atomic_write(filename, encoding="utf-8") as f:
                 syaml.dump_config(data, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
@@ -412,7 +412,7 @@ class SingleFileScope(ConfigScope):
         validate(data_to_write, self.schema)
         try:
             filesystem.mkdirp(os.path.dirname(self.path))
-            with filesystem.write_tmp_and_move(self.path, encoding="utf-8") as f:
+            with filesystem.atomic_write(self.path, encoding="utf-8") as f:
                 syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to config file {str(e)}") from e

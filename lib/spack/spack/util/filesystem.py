@@ -1204,7 +1204,7 @@ def atomic_write_path(filename: str) -> Generator[str, None, None]:
     it onto ``filename``. The temporary file is removed on failure.
 
     Use this when the caller needs only a path, because e.g. it opens the file itself. Use
-    :py:func:`write_tmp_and_move` when a file object is enough.
+    :py:func:`atomic_write` when a file object is enough.
     """
     dirname, basename = os.path.split(filename)
     # The extension is kept: callers may hand the path to code that derives a format from it.
@@ -1223,20 +1223,20 @@ def atomic_write_path(filename: str) -> Generator[str, None, None]:
 
 
 @overload
-def write_tmp_and_move(
+def atomic_write(
     filename: str, *, mode: Literal["w"] = ..., encoding: Optional[str] = ...
 ) -> ContextManager[TextIO]: ...
 
 
 @overload
-def write_tmp_and_move(
+def atomic_write(
     filename: str, *, mode: Literal["wb"], encoding: None = ...
 ) -> ContextManager[BinaryIO]: ...
 
 
 @contextmanager
 @system_path_filter
-def write_tmp_and_move(
+def atomic_write(
     filename: str, *, mode: Literal["w", "wb"] = "w", encoding: Optional[str] = None
 ) -> Generator[IO[Any], None, None]:
     """Write to a new temporary file, then atomically move into place. The temporary file is

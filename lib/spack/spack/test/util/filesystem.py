@@ -1405,47 +1405,47 @@ def test_edit_in_place_through_temporary_file(tmp_path: pathlib.Path):
     assert os.stat(tmp_path / "example.txt").st_ino == current_ino
 
 
-def test_write_tmp_and_move_replaces_and_cleans_up(tmp_path: pathlib.Path):
+def test_atomic_write_replaces_and_cleans_up(tmp_path: pathlib.Path):
     dst = tmp_path / "file.txt"
     dst.write_text("old")
-    with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
+    with fs.atomic_write(str(dst), encoding="utf-8") as f:
         f.write("new")
     assert dst.read_text() == "new"
     assert os.listdir(tmp_path) == ["file.txt"]
 
 
-def test_write_tmp_and_move_failure_keeps_destination(tmp_path: pathlib.Path):
+def test_atomic_write_failure_keeps_destination(tmp_path: pathlib.Path):
     dst = tmp_path / "file.txt"
     dst.write_text("old")
     with pytest.raises(ValueError, match="expected"):
-        with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
+        with fs.atomic_write(str(dst), encoding="utf-8") as f:
             f.write("partial")
             raise ValueError("expected")
     assert dst.read_text() == "old"
     assert os.listdir(tmp_path) == ["file.txt"]
 
 
-def test_write_tmp_and_move_binary_mode(tmp_path: pathlib.Path):
+def test_atomic_write_binary_mode(tmp_path: pathlib.Path):
     dst = tmp_path / "file.bin"
-    with fs.write_tmp_and_move(str(dst), mode="wb") as f:
+    with fs.atomic_write(str(dst), mode="wb") as f:
         f.write(b"\x00\x01\x02")
     assert dst.read_bytes() == b"\x00\x01\x02"
     assert os.listdir(tmp_path) == ["file.bin"]
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="umask is not supported on Windows")
-def test_write_tmp_and_move_permissions(tmp_path: pathlib.Path):
+def test_atomic_write_permissions(tmp_path: pathlib.Path):
     old_umask = os.umask(0o022)
     try:
         # new files are created with mode 0o666 & ~umask
         dst = tmp_path / "file.txt"
-        with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
+        with fs.atomic_write(str(dst), encoding="utf-8") as f:
             f.write("content")
         assert stat.S_IMODE(os.stat(dst).st_mode) == 0o644
 
         # permissions of an existing destination are preserved
         os.chmod(dst, 0o600)
-        with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
+        with fs.atomic_write(str(dst), encoding="utf-8") as f:
             f.write("updated")
         assert stat.S_IMODE(os.stat(dst).st_mode) == 0o600
         assert dst.read_text() == "updated"

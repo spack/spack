@@ -13,7 +13,7 @@ from typing import Optional
 
 import spack.util.crypto
 from spack.util import tty
-from spack.util.filesystem import atomic_write_path, join_path, mkdirp, write_tmp_and_move
+from spack.util.filesystem import atomic_write, atomic_write_path, join_path, mkdirp
 from spack.util.url import validate_scheme
 
 
@@ -131,7 +131,7 @@ def local_path(path: str, sha256: str, dest: Optional[str] = None) -> str:
 
                 # Stash the associated URL to aid with debugging
                 url_file = join_path(dest_dir, "source_url.txt")
-                with write_tmp_and_move(url_file, encoding="utf-8") as f:
+                with atomic_write(url_file, encoding="utf-8") as f:
                     f.write(f"{path}\n")
 
                 return cache_path
