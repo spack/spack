@@ -907,7 +907,7 @@ class RepoPath:
             if spec.name in all_packages
         ]
         if not providers:
-            raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.fullname)
+            raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.name)
         return providers
 
     @autospec
@@ -1301,10 +1301,10 @@ class Repo:
         # checking for existence. We avoid constructing FastPackageChecker,
         # which will stat all packages.
         if not spec.name:
-            raise UnknownPackageError(None, self)
+            raise UnknownPackageError(None, namespace=self.namespace, repo_root=self.root)
 
         if spec.namespace and spec.namespace != self.namespace:
-            raise UnknownPackageError(spec.name, self.namespace)
+            raise UnknownPackageError(spec.name, namespace=spec.namespace, repo_root=self.root)
 
         package_class = self.get_pkg_class(spec.name)
         try:
@@ -1326,9 +1326,7 @@ class Repo:
         Raises UnknownPackageError if not found.
         """
         if spec.namespace and spec.namespace != self.namespace:
-            raise UnknownPackageError(
-                f"Repository {self.namespace} does not contain package {spec.fullname}."
-            )
+            raise UnknownNamespaceError(spec.namespace, name=spec.name)
 
         package_path = self.filename_for_package_name(spec.name)
         if not os.path.exists(package_path):
@@ -1379,7 +1377,7 @@ class Repo:
     def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
         providers = self.provider_index.providers_for(virtual)
         if not providers:
-            raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.fullname)
+            raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.name)
         return providers
 
     @autospec
@@ -1482,7 +1480,7 @@ class Repo:
     def _resolve_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
         """Import the module for a package name without namespace, and return its class."""
         if not self.exists(pkg_name):
-            raise UnknownPackageError(pkg_name, self)
+            raise UnknownPackageError(pkg_name, namespace=self.namespace, repo_root=self.root)
 
         fullname = f"{self.full_namespace}.{self.naming_scheme.pkg_name_to_pkg_dir(pkg_name)}"
         if self.package_api >= (2, 0):
@@ -2203,18 +2201,30 @@ class UnknownEntityError(RepoError):
 class UnknownPackageError(UnknownEntityError):
     """Raised when we encounter a package spack doesn't have."""
 
-    def __init__(self, name, repo: Optional[Union[Repo, RepoPath, str]] = None):
+    def __init__(
+        self, name: Optional[str], namespace: Optional[str] = None, repo_root: Optional[str] = None
+    ):
+        """Report a package name that is not in a repository.
+
+        The attributes are strings, because `SpackError.__reduce__` pickles them and this error
+        crosses the pipe from a worker process and from a build child.
+
+        Args:
+            name: the package name that was not found
+            namespace: the namespace that was searched, if any
+            repo_root: the path of the repository that was searched, if any
+        """
         if not name:
             msg = "Attempting to retrieve anonymous package."
+        elif repo_root:
+            msg = f"Package '{name}' not found in repository '{repo_root}'"
         else:
             msg = f"Package '{name}' not found"
-            if isinstance(repo, Repo):
-                msg += f" in repository '{repo.root}'"
-            elif isinstance(repo, str) and repo:
-                msg += f" in repository '{repo}'"
 
         super().__init__(msg)
         self.name = name
+        self.namespace = namespace
+        self.repo_root = repo_root
 
 
 class UnknownNamespaceError(UnknownEntityError):

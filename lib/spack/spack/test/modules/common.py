@@ -184,7 +184,7 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
     spack.modules.module_types["tcl"].from_spec(spec, "default", True).write()
 
     def find_nothing(*args):
-        raise spack.repo.UnknownPackageError("Repo package access is disabled for test")
+        raise spack.repo.UnknownPackageError("repo-access-is-disabled-for-test")
 
     # Mock deletion of the package
     spec._package = None

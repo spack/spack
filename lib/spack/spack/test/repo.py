@@ -1047,5 +1047,6 @@ def test_similar_package_names_includes_virtuals(mock_packages):
 
 
 def test_unknownpkgerror_str_repo():
-    """Ensure reasonable error message when repo is a string."""
-    assert "not found in repository" in str(spack.repo.UnknownPackageError("pkg_a", "my_repo"))
+    """Ensure reasonable error message when the repository is known."""
+    error = spack.repo.UnknownPackageError("pkg_a", repo_root="/my/repo")
+    assert str(error) == "Package 'pkg_a' not found in repository '/my/repo'"
