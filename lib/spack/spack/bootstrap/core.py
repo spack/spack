@@ -448,9 +448,14 @@ def _add_externals_if_missing() -> None:
     )
 
 
-def clingo_root_spec() -> str:
-    """Return the root spec used to bootstrap clingo"""
-    return _root_spec("clingo-bootstrap@spack+python")
+def clingo_root_spec(platform: Optional[str] = None, target: Optional[str] = None) -> str:
+    """Return the root spec used to bootstrap clingo.
+
+    Args:
+        platform: platform the binary will run on. Defaults to the host platform.
+        target: target family the binary will run on. Defaults to the host target family.
+    """
+    return _root_spec("clingo-bootstrap@spack+python", platform=platform, target=target)
 
 
 def _concretize_clingo(abstract_spec: spack.spec.Spec) -> spack.spec.Spec:

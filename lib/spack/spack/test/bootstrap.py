@@ -354,17 +354,6 @@ def test_verify_patchelf_when_the_command_fails(mock_executable):
     assert spack.bootstrap.core.verify_patchelf(patchelf) is False
 
 
-def _clingo_spec_for(platform: str, target: str, python_version: str) -> spack.spec.Spec:
-    """Return the spec a host with the given platform, target and interpreter looks for."""
-    parts = [
-        x
-        for x in spack.bootstrap.core.clingo_root_spec().split()
-        if not x.startswith(("platform=", "target="))
-    ]
-    parts.extend([f"platform={platform}", f"target={target}", f"^python@{python_version}"])
-    return spack.spec.Spec(" ".join(parts))
-
-
 @pytest.mark.regression("52922")
 @pytest.mark.parametrize("metadata_file", CLINGO_METADATA, ids=lambda x: x.parent.name)
 def test_exactly_one_clingo_binary_matches_an_interpreter(metadata_file: pathlib.Path):
@@ -377,7 +366,8 @@ def test_exactly_one_clingo_binary_matches_an_interpreter(metadata_file: pathlib
     }
 
     for platform, target, python_version in sorted(combinations):
-        abstract_spec = _clingo_spec_for(platform, target, python_version)
+        root_spec = spack.bootstrap.core.clingo_root_spec(platform=platform, target=target)
+        abstract_spec = spack.spec.Spec(f"{root_spec} ^python@{python_version}")
         matching = spack.bootstrap.core._matching_entries(data, abstract_spec)
         assert len(matching) == 1, f"{abstract_spec} matches {[x['spec'] for x in matching]}"
 
