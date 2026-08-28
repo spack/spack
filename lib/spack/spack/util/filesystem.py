@@ -1203,8 +1203,9 @@ def atomic_write_path(filename: str) -> Generator[str, None, None]:
     """Yield the path of a new, empty temporary file next to ``filename``, then atomically move
     it onto ``filename``. The temporary file is removed on failure.
 
-    Use this when the caller needs only a path, because e.g. it opens the file itself. Use
-    :py:func:`atomic_write` when a file object is enough.
+    Only for callers that must be handed a path, because e.g. they pass it to code that opens
+    the file itself. Such a caller reopens the temporary by name, which :py:func:`atomic_write`
+    avoids; use that one whenever a file object is enough.
     """
     dirname, basename = os.path.split(filename)
     # The extension is kept: callers may hand the path to code that derives a format from it.
@@ -1242,14 +1243,26 @@ def atomic_write(
     """Write to a new temporary file, then atomically move into place. The temporary file is
     removed on failure. If ``filename`` does not exist, the new file respects umask; if it does
     exist, permissions of the existing file are preserved."""
-    with atomic_write_path(filename) as tmp:
-        with open(tmp, mode, encoding=encoding) as f:
+    dirname, basename = os.path.split(filename)
+    tmp = os.path.join(dirname, f".{basename}.{secrets.token_hex(8)}.tmp")
+    # "x" errors on collision instead of clobbering; opened outside the try block so we never
+    # unlink a file created by another process
+    f = open(tmp, mode.replace("w", "x"), encoding=encoding)
+    try:
+        with f:
             try:
                 existing_mode = stat.S_IMODE(os.stat(filename).st_mode)
                 os.chmod(f.fileno() if os.chmod in os.supports_fd else tmp, existing_mode)
             except FileNotFoundError:
                 pass
             yield f
+        rename(tmp, filename)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 @system_path_filter

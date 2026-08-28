@@ -675,9 +675,15 @@ def test_push_to_url_file(keep_original, tmp_path: pathlib.Path):
 
 
 @pytest.mark.not_on_windows("umask is not supported on Windows")
+@pytest.mark.parametrize("supports_fd", [True, False])
 @pytest.mark.parametrize("keep_original", [True, False])
-def test_push_to_url_file_preserves_mode(keep_original, tmp_path: pathlib.Path):
-    """A mirror entry keeps the mode of the file that was pushed."""
+def test_push_to_url_file_preserves_mode(
+    keep_original, supports_fd, tmp_path: pathlib.Path, monkeypatch
+):
+    """A mirror entry keeps the mode of the file that was pushed, whether the mode is set
+    through the descriptor or, where that is unsupported, through the temporary's path."""
+    if not supports_fd:
+        monkeypatch.setattr(os, "supports_fd", frozenset())
     src = tmp_path / "data.txt"
     src.write_text("hello")
     os.chmod(src, 0o604)
@@ -711,12 +717,11 @@ def test_push_to_url_file_cross_device(keep_original, tmp_path: pathlib.Path, mo
 def test_push_to_url_file_atomic_on_failure(keep_original, tmp_path: pathlib.Path, monkeypatch):
     """A failed copy leaves neither a partial destination nor a leftover temporary."""
 
-    def failing_copyfile(src, dst):
-        with open(dst, "wb") as f:
-            f.write(b"partial")
+    def failing_copyfileobj(fsrc, fdst):
+        fdst.write(b"partial")
         raise OSError("simulated failure mid-copy")
 
-    monkeypatch.setattr(shutil, "copyfile", failing_copyfile)
+    monkeypatch.setattr(shutil, "copyfileobj", failing_copyfileobj)
     monkeypatch.setattr(
         spack.util.web,
         "rename",

@@ -6,6 +6,7 @@ import hashlib
 import os.path
 import pathlib
 import shutil
+import stat
 import tempfile
 import urllib.parse
 import urllib.request
@@ -13,7 +14,7 @@ from typing import Optional
 
 import spack.util.crypto
 from spack.util import tty
-from spack.util.filesystem import atomic_write, atomic_write_path, join_path, mkdirp
+from spack.util.filesystem import atomic_write, join_path, mkdirp
 from spack.util.url import validate_scheme
 
 
@@ -124,9 +125,10 @@ def local_path(path: str, sha256: str, dest: Optional[str] = None) -> str:
 
                 cache_path = join_path(dest_dir, os.path.basename(staged_path))
                 # Rename into place so a concurrent reader never sees a truncated config file.
-                with atomic_write_path(cache_path) as tmp:
-                    shutil.copyfile(staged_path, tmp)
-                    shutil.copymode(staged_path, tmp)
+                with open(staged_path, "rb") as src, atomic_write(cache_path, mode="wb") as dst:
+                    shutil.copyfileobj(src, dst)
+                    source_mode = stat.S_IMODE(os.fstat(src.fileno()).st_mode)
+                    os.chmod(dst.fileno() if os.chmod in os.supports_fd else dst.name, source_mode)
                 tty.debug(f"Cached {path} in {cache_path}")
 
                 # Stash the associated URL to aid with debugging

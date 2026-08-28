@@ -36,7 +36,7 @@ import spack.util.parallel
 import spack.util.url
 import spack.util.url as url_util
 from spack.util import lang, tty
-from spack.util.filesystem import atomic_write_path, mkdirp, rename, working_dir
+from spack.util.filesystem import atomic_write, mkdirp, rename, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
@@ -430,9 +430,10 @@ def push_to_url(
                     raise
 
         # Rename into place so a reader never observes a partially written file.
-        with atomic_write_path(remote_file_path) as tmp:
-            shutil.copyfile(local_file_path, tmp)
-            shutil.copymode(local_file_path, tmp)
+        with open(local_file_path, "rb") as src, atomic_write(remote_file_path, mode="wb") as dst:
+            shutil.copyfileobj(src, dst)
+            source_mode = stat.S_IMODE(os.fstat(src.fileno()).st_mode)
+            os.chmod(dst.fileno() if os.chmod in os.supports_fd else dst.name, source_mode)
 
         if not keep_original:
             os.remove(local_file_path)

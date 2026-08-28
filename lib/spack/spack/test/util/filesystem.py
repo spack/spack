@@ -4,6 +4,7 @@
 
 """Tests for ``util/filesystem.py``"""
 
+import builtins
 import filecmp
 import os
 import pathlib
@@ -1488,3 +1489,27 @@ def test_atomic_write_path_keeps_extension(tmp_path: pathlib.Path):
     with fs.atomic_write_path(str(dst)) as tmp:
         assert tmp.endswith(".tar.gz")
         assert os.path.basename(tmp).startswith(".")
+
+
+def test_atomic_write_opens_the_temporary_once(tmp_path: pathlib.Path, monkeypatch):
+    """Tests that the temporary file is created and written through a single file object.
+
+    Reopening it by name would let another process replace it with a symlink between the two
+    opens, so that the write lands on whatever the symlink points at.
+    """
+    dst = tmp_path / "file.txt"
+    dst.write_text("old")
+
+    opened, real_open = [], builtins.open
+
+    def recording_open(file, *args, **kwargs):
+        opened.append(str(file))
+        return real_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", recording_open)
+    with fs.atomic_write(str(dst), encoding="utf-8") as f:
+        f.write("new")
+
+    assert len(opened) == 1, f"expected one open of the temporary, got {opened}"
+    assert opened[0] != str(dst)
+    assert dst.read_text() == "new"
