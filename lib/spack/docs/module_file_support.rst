@@ -404,8 +404,7 @@ On Linux, ``LD_LIBRARY_PATH`` is omitted: Spack packages embed RPATHs, making it
    This makes the variable behave in a way that looks broken: after ``export DYLD_FALLBACK_LIBRARY_PATH=...``,
    ``echo $DYLD_FALLBACK_LIBRARY_PATH`` still shows the value in the current shell, but a child process,
    e.g. ``env | grep DYLD``, will not have it. This is expected macOS behavior, not a bug in the generated
-   module file or in the module tool. A tool that needs the variable to survive a subprocess boundary
-   has to save and restore it itself around the call that spawns the new process.
+   module file or in the module tool.
 
 To suppress a variable from all module files, use ``exclude_env_vars``:
 
