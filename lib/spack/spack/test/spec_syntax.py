@@ -921,6 +921,84 @@ def specfile_for(config, mock_packages):
             ],
             "zlib %fortran=gcc@14.1 %c,cxx=clang",
         ),
+        # Usages requested on an edge, alone and next to other edge attributes.
+        # They are validated but not yet stored on the edge, so they don't
+        # appear in the round-tripped string.
+        (
+            "zlib-ng %[virtuals=c +sarif] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib-ng"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="%["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="virtuals=c"),
+                Token(SpecTokens.BOOL_VARIANT, value="+sarif"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+            ],
+            "zlib-ng %c=gcc",
+        ),
+        (
+            "zlib-ng %[+sarif] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib-ng"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="%["),
+                Token(SpecTokens.BOOL_VARIANT, value="+sarif"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+            ],
+            "zlib-ng %gcc",
+        ),
+        (
+            "zlib-ng %[~sarif] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib-ng"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="%["),
+                Token(SpecTokens.BOOL_VARIANT, value="~sarif"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+            ],
+            "zlib-ng %gcc",
+        ),
+        # Multiple usages on the same edge
+        (
+            "zlib-ng %[+sarif +foo] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib-ng"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="%["),
+                Token(SpecTokens.BOOL_VARIANT, value="+sarif"),
+                Token(SpecTokens.BOOL_VARIANT, value="+foo"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+            ],
+            "zlib-ng %gcc",
+        ),
+        # Two direct deps on the same name merge into one edge
+        (
+            "zlib-ng %[+sarif] gcc %[virtuals=c] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib-ng"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="%["),
+                Token(SpecTokens.BOOL_VARIANT, value="+sarif"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="%["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="virtuals=c"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+            ],
+            "zlib-ng %c=gcc",
+        ),
+        # Usages are accepted on ^ edges as well
+        (
+            "foo ^[+sarif] bar",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
+                Token(SpecTokens.BOOL_VARIANT, value="+sarif"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="bar"),
+            ],
+            "foo ^bar",
+        ),
         (
             "zlib %fortran=gcc@14.1 %c,cxx=clang",
             [
@@ -1051,6 +1129,29 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
     parser = SpecParser(spec_str)
     assert tokens == parser.tokens()
     assert expected_roundtrip == str(parser.next_spec())
+
+
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        "zlib-ng %[virtuals=c +sarif] gcc",
+        "zlib-ng %[~sarif] gcc",
+        # A repeated request with the same value is not a conflict
+        "zlib-ng %[+sarif +sarif] gcc",
+        "zlib-ng %[+sarif +foo] gcc",
+    ],
+)
+def test_edge_usage_requests(spec_str):
+    """Usages requested in edge attributes parse cleanly.
+
+    They are validated but not yet stored on the edge, so they must not leak
+    into the spec.
+
+    TODO(usages RFD): assert the values on the edge once DependencySpec grows
+    a `usage` attribute.
+    """
+    spec = SpecParser(spec_str).next_spec()
+    assert "sarif" not in str(spec)
 
 
 @pytest.mark.parametrize(
@@ -1573,6 +1674,10 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("^[@foo] zlib", "edge attributes"),
         # TODO: Remove this as soon as use variants are added and we can parse custom attributes
         ("^[foo=bar] zlib", "edge attributes"),
+        # Usages are edge-scoped and cannot be propagated
+        ("zlib %[++sarif] gcc", "propagated"),
+        # Conflicting usage values on the same edge
+        ("zlib %[+sarif ~sarif] gcc", "conflicting values"),
         # Propagating reserved names generates a parse error
         ("x namespace==foo.bar.baz", "Propagation"),
         ("x arch==linux-rhel9-x86_64", "Propagation"),
