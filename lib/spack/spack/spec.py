@@ -4783,6 +4783,7 @@ class Spec:
                         format_string=format_string,
                         include=include,
                         deptypes=deptypes,
+                        color=color,
                         _force_direct=_force_direct,
                     )
                 )

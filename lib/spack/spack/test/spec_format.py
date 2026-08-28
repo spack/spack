@@ -228,3 +228,13 @@ def test_namespace_of_anonymous_spec_on_slow_path():
 
     named = Spec("foo namespace=bar")
     assert named.format(color=True) == "bar.foo"
+
+
+def test_color_reaches_dependencies_of_transitive_dependencies():
+    """The recursion into transitive dependencies passes `color` along."""
+    s = Spec("root ^dep@2 %compiler@3")
+    colored = s._format_dependencies(color=True)
+    assert colored == colorize(
+        f"^dep{VERSION_COLOR}@@2@. %compiler{VERSION_COLOR}@@3@.", color=True
+    )
+    assert s._format_dependencies(color=False) == "^dep@2 %compiler@3"
