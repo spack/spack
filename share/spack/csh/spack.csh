@@ -36,16 +36,46 @@ if ( ${?DYLD_FALLBACK_LIBRARY_PATH} ) then
     setenv SPACK_DYLD_FALLBACK_LIBRARY_PATH $DYLD_FALLBACK_LIBRARY_PATH
 endif
 
-# accumulate initial flags for main spack command
+# accumulate initial flags for main spack command, stopping at the first
+# argument that is not a flag (the subcommand). Flags that take a required
+# value (e.g. -C DIR, --config-scope DIR) consume the value too, so it
+# isn't mistaken for the subcommand.
 set _sp_flags = ""
+set _sp_early_return = 0
 while ( $#_sp_args > 0 )
-    if ( "$_sp_args[1]" !~ "-*" ) break
-    set _sp_flags = "$_sp_flags $_sp_args[1]"
-    shift _sp_args
+    if ( "$_sp_args[1]" !~ "-*" ) then
+        break
+    else if ("$_sp_args[1]" == "--color" || "$_sp_args[1]" == "--config" || \
+             "$_sp_args[1]" == "--config-scope" || "$_sp_args[1]" == "--env" || \
+             "$_sp_args[1]" == "--env-dir" || "$_sp_args[1]" == "--print-shell-vars" || \
+             "$_sp_args[1]" == "--profile-file" || "$_sp_args[1]" == "--sorted-profile" || \
+             "$_sp_args[1]" == "--lines" || "$_sp_args[1]" == "-c" || \
+             "$_sp_args[1]" == "-C" || "$_sp_args[1]" == "-e" || "$_sp_args[1]" == "-D") then
+        # flags that take a required value
+        if ( $#_sp_args < 2 ) then
+            set _sp_flags = "$_sp_flags $_sp_args[1]"
+            shift _sp_args
+        else
+            set _sp_flags = "$_sp_flags $_sp_args[1] $_sp_args[2]"
+            shift _sp_args
+            shift _sp_args
+        endif
+    else if ("$_sp_args[1]" == "-h" || "$_sp_args[1]" == "-H" || "$_sp_args[1]" == "-V" || \
+             "$_sp_args[1]" == "--help" || "$_sp_args[1]" == "--all-help" || \
+             "$_sp_args[1]" == "--version") then
+        # flags that short-circuit to `\spack` below
+        set _sp_early_return = 1
+        set _sp_flags = "$_sp_flags $_sp_args[1]"
+        shift _sp_args
+    else
+        # all other flags take no value
+        set _sp_flags = "$_sp_flags $_sp_args[1]"
+        shift _sp_args
+    endif
 end
 
-# h and V flags don't require further output parsing.
-if ( "$_sp_flags" =~ *h* || "$_sp_flags" =~ *V* ) then
+# -h/-H/-V/--help/--all-help/--version don't require further output parsing.
+if ( $_sp_early_return == 1 ) then
     \spack $_sp_flags $_sp_args
     goto _sp_end
 endif
