@@ -1406,47 +1406,47 @@ def test_edit_in_place_through_temporary_file(tmp_path: pathlib.Path):
     assert os.stat(tmp_path / "example.txt").st_ino == current_ino
 
 
-def test_atomic_write_replaces_and_cleans_up(tmp_path: pathlib.Path):
+def test_write_tmp_and_move_replaces_and_cleans_up(tmp_path: pathlib.Path):
     dst = tmp_path / "file.txt"
     dst.write_text("old")
-    with fs.atomic_write(str(dst), encoding="utf-8") as f:
+    with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
         f.write("new")
     assert dst.read_text() == "new"
     assert os.listdir(tmp_path) == ["file.txt"]
 
 
-def test_atomic_write_failure_keeps_destination(tmp_path: pathlib.Path):
+def test_write_tmp_and_move_failure_keeps_destination(tmp_path: pathlib.Path):
     dst = tmp_path / "file.txt"
     dst.write_text("old")
     with pytest.raises(ValueError, match="expected"):
-        with fs.atomic_write(str(dst), encoding="utf-8") as f:
+        with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
             f.write("partial")
             raise ValueError("expected")
     assert dst.read_text() == "old"
     assert os.listdir(tmp_path) == ["file.txt"]
 
 
-def test_atomic_write_binary_mode(tmp_path: pathlib.Path):
+def test_write_tmp_and_move_binary_mode(tmp_path: pathlib.Path):
     dst = tmp_path / "file.bin"
-    with fs.atomic_write(str(dst), mode="wb") as f:
+    with fs.write_tmp_and_move(str(dst), mode="wb") as f:
         f.write(b"\x00\x01\x02")
     assert dst.read_bytes() == b"\x00\x01\x02"
     assert os.listdir(tmp_path) == ["file.bin"]
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="umask is not supported on Windows")
-def test_atomic_write_permissions(tmp_path: pathlib.Path):
+def test_write_tmp_and_move_permissions(tmp_path: pathlib.Path):
     old_umask = os.umask(0o022)
     try:
         # new files are created with mode 0o666 & ~umask
         dst = tmp_path / "file.txt"
-        with fs.atomic_write(str(dst), encoding="utf-8") as f:
+        with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
             f.write("content")
         assert stat.S_IMODE(os.stat(dst).st_mode) == 0o644
 
         # permissions of an existing destination are preserved
         os.chmod(dst, 0o600)
-        with fs.atomic_write(str(dst), encoding="utf-8") as f:
+        with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
             f.write("updated")
         assert stat.S_IMODE(os.stat(dst).st_mode) == 0o600
         assert dst.read_text() == "updated"
@@ -1454,44 +1454,7 @@ def test_atomic_write_permissions(tmp_path: pathlib.Path):
         os.umask(old_umask)
 
 
-def test_atomic_write_path_renames_and_cleans_up(tmp_path: pathlib.Path):
-    dst = tmp_path / "file.txt"
-    dst.write_text("old")
-    with fs.atomic_write_path(str(dst)) as tmp:
-        assert tmp != str(dst)
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.write("new")
-    assert not os.path.exists(tmp) and dst.read_text() == "new"
-
-
-def test_atomic_write_path_failure_keeps_destination(tmp_path: pathlib.Path):
-    dst = tmp_path / "file.txt"
-    dst.write_text("old")
-    with pytest.raises(ValueError, match="expected"):
-        with fs.atomic_write_path(str(dst)) as tmp:
-            with open(tmp, "w", encoding="utf-8") as f:
-                f.write("partial")
-            raise ValueError("expected")
-    assert not os.path.exists(tmp) and dst.read_text() == "old"
-
-
-def test_atomic_write_path_failure_leaves_no_destination(tmp_path: pathlib.Path):
-    dst = tmp_path / "file.txt"
-    with pytest.raises(ValueError, match="expected"):
-        with fs.atomic_write_path(str(dst)):
-            raise ValueError("expected")
-    assert not dst.exists()
-
-
-def test_atomic_write_path_keeps_extension(tmp_path: pathlib.Path):
-    """Tests that the basename is part of the tmp file, and that it starts with a dot."""
-    dst = tmp_path / "archive.tar.gz"
-    with fs.atomic_write_path(str(dst)) as tmp:
-        assert tmp.endswith(".tar.gz")
-        assert os.path.basename(tmp).startswith(".")
-
-
-def test_atomic_write_opens_the_temporary_once(tmp_path: pathlib.Path, monkeypatch):
+def test_write_tmp_and_move_opens_the_temporary_once(tmp_path: pathlib.Path, monkeypatch):
     """Tests that the temporary file is created and written through a single file object.
 
     Reopening it by name would let another process replace it with a symlink between the two
@@ -1500,14 +1463,15 @@ def test_atomic_write_opens_the_temporary_once(tmp_path: pathlib.Path, monkeypat
     dst = tmp_path / "file.txt"
     dst.write_text("old")
 
-    opened, real_open = [], builtins.open
+    opened = []
+    real_open = builtins.open
 
     def recording_open(file, *args, **kwargs):
         opened.append(str(file))
         return real_open(file, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "open", recording_open)
-    with fs.atomic_write(str(dst), encoding="utf-8") as f:
+    with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
         f.write("new")
 
     assert len(opened) == 1, f"expected one open of the temporary, got {opened}"

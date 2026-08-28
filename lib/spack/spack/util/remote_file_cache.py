@@ -14,7 +14,7 @@ from typing import Optional
 
 import spack.util.crypto
 from spack.util import tty
-from spack.util.filesystem import atomic_write, join_path, mkdirp
+from spack.util.filesystem import join_path, mkdirp, write_tmp_and_move
 from spack.util.url import validate_scheme
 
 
@@ -125,7 +125,9 @@ def local_path(path: str, sha256: str, dest: Optional[str] = None) -> str:
 
                 cache_path = join_path(dest_dir, os.path.basename(staged_path))
                 # Rename into place so a concurrent reader never sees a truncated config file.
-                with open(staged_path, "rb") as src, atomic_write(cache_path, mode="wb") as dst:
+                with open(staged_path, "rb") as src, write_tmp_and_move(
+                    cache_path, mode="wb"
+                ) as dst:
                     shutil.copyfileobj(src, dst)
                     source_mode = stat.S_IMODE(os.fstat(src.fileno()).st_mode)
                     os.chmod(dst.fileno() if os.chmod in os.supports_fd else dst.name, source_mode)
@@ -133,7 +135,7 @@ def local_path(path: str, sha256: str, dest: Optional[str] = None) -> str:
 
                 # Stash the associated URL to aid with debugging
                 url_file = join_path(dest_dir, "source_url.txt")
-                with atomic_write(url_file, encoding="utf-8") as f:
+                with write_tmp_and_move(url_file, encoding="utf-8") as f:
                     f.write(f"{path}\n")
 
                 return cache_path

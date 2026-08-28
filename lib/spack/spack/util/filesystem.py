@@ -1197,47 +1197,21 @@ def hash_directory(directory, ignore=[]):
     return md5_hash.hexdigest()
 
 
-@contextmanager
-@system_path_filter
-def atomic_write_path(filename: str) -> Generator[str, None, None]:
-    """Yield the path of a new, empty temporary file next to ``filename``, then atomically move
-    it onto ``filename``. The temporary file is removed on failure.
-
-    Only for callers that must be handed a path, because e.g. they pass it to code that opens
-    the file itself. Such a caller reopens the temporary by name, which :py:func:`atomic_write`
-    avoids; use that one whenever a file object is enough.
-    """
-    dirname, basename = os.path.split(filename)
-    # The extension is kept: callers may hand the path to code that derives a format from it.
-    tmp = os.path.join(dirname, f".tmp.{secrets.token_hex(8)}.{basename}")
-    # Created outside the try block so we never unlink a file created by another process
-    open(tmp, "xb").close()  # "x" errors on collision
-    try:
-        yield tmp
-        rename(tmp, filename)
-    except BaseException:
-        try:
-            os.unlink(tmp)
-        except OSError:
-            pass
-        raise
-
-
 @overload
-def atomic_write(
+def write_tmp_and_move(
     filename: str, *, mode: Literal["w"] = ..., encoding: Optional[str] = ...
 ) -> ContextManager[TextIO]: ...
 
 
 @overload
-def atomic_write(
+def write_tmp_and_move(
     filename: str, *, mode: Literal["wb"], encoding: None = ...
 ) -> ContextManager[BinaryIO]: ...
 
 
 @contextmanager
 @system_path_filter
-def atomic_write(
+def write_tmp_and_move(
     filename: str, *, mode: Literal["w", "wb"] = "w", encoding: Optional[str] = None
 ) -> Generator[IO[Any], None, None]:
     """Write to a new temporary file, then atomically move into place. The temporary file is

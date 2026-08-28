@@ -627,7 +627,7 @@ class ConcretizationCache:
     @staticmethod
     def _write_entry(cache_path: pathlib.Path, cache_dict: dict) -> None:
         """Write ``cache_dict`` to ``cache_path`` as gzipped JSON, atomically."""
-        with fs.atomic_write(str(cache_path), mode="wb") as f:
+        with fs.write_tmp_and_move(str(cache_path), mode="wb") as f:
             with gzip.open(f, "wt", encoding="utf-8", compresslevel=6) as gz:
                 json.dump(cache_dict, gz)
 

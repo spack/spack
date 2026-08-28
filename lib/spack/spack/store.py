@@ -248,7 +248,7 @@ class Store:
         else:
             fs.set_install_permissions(bin_dir)
 
-        with fs.atomic_write(sbang_path, mode="wb") as dst, open(
+        with fs.write_tmp_and_move(sbang_path, mode="wb") as dst, open(
             spack.paths.sbang_script, "rb"
         ) as src:
             shutil.copyfileobj(src, dst)

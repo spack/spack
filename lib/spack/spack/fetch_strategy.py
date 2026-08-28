@@ -32,6 +32,7 @@ import hashlib
 import http.client
 import os
 import re
+import secrets
 import shutil
 import sys
 import time
@@ -54,14 +55,7 @@ import spack.version
 from spack.util import crypto, tty
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
-from spack.util.filesystem import (
-    atomic_write_path,
-    get_single_file,
-    mkdirp,
-    symlink,
-    temp_cwd,
-    working_dir,
-)
+from spack.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies: List[Type["FetchStrategy"]] = []
@@ -1574,8 +1568,19 @@ class FsCacheBase:
     def store(self, fetcher, relative_dest):
         dst = os.path.join(self.root, relative_dest)
         mkdirp(os.path.dirname(dst))
-        with atomic_write_path(dst) as tmp:
+        tmp = os.path.join(
+            os.path.dirname(dst), ".tmp." + secrets.token_hex(6) + "." + os.path.basename(dst)
+        )
+        open(tmp, "xb").close()
+        try:
             fetcher.archive(tmp)
+            os.replace(tmp, dst)
+        except BaseException:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
 
 
 class FsCache(FsCacheBase):
