@@ -4,6 +4,7 @@
 
 import collections
 import filecmp
+import io
 import os
 import pathlib
 import sys
@@ -142,7 +143,7 @@ def test_archive_file_errors(
         with Stage(fetcher, path=str(tmp_path)) as stage:
             assert fetcher.archive_file is None
             with pytest.raises(fs.NoArchiveFileError):
-                fetcher.archive(str(tmp_path))
+                fetcher.archive(io.BytesIO())
             with pytest.raises(fs.NoArchiveFileError):
                 fetcher.expand()
             with pytest.raises(fs.NoArchiveFileError):

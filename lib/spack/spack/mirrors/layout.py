@@ -132,6 +132,14 @@ def default_mirror_layout(
     # an option to specify an extension, so it must be inferred for those.
     ext = ext or _determine_extension(fetcher)
 
+    # VCSFetchStrategy.archive always writes a gzipped tarball, so a declared extension that
+    # says otherwise would mislabel the mirror entry.
+    if isinstance(fetcher, spack.fetch_strategy.VCSFetchStrategy) and ext != "tar.gz":
+        raise MirrorError(
+            f"Cannot store {fetcher} in a mirror as '{ext}': sources fetched from a repository "
+            f"are archived as 'tar.gz'"
+        )
+
     if ext:
         per_package_ref += ".%s" % ext
 

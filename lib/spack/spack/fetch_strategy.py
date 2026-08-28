@@ -32,14 +32,13 @@ import hashlib
 import http.client
 import os
 import re
-import secrets
 import shutil
 import sys
 import time
 import urllib.parse
 import urllib.request
 from pathlib import PurePath
-from typing import Callable, List, Mapping, Optional, Type
+from typing import IO, Callable, List, Mapping, Optional, Type
 
 import spack.config
 import spack.error
@@ -55,7 +54,14 @@ import spack.version
 from spack.util import crypto, tty
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
-from spack.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
+from spack.util.filesystem import (
+    get_single_file,
+    mkdirp,
+    symlink,
+    temp_cwd,
+    working_dir,
+    write_tmp_and_move,
+)
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies: List[Type["FetchStrategy"]] = []
@@ -134,12 +140,12 @@ class FetchStrategy:
         For archive files, this may just re-expand the archive.
         """
 
-    def archive(self, destination):
-        """Create an archive of the downloaded data for a mirror.
+    def archive(self, fileobj: IO[bytes]) -> None:
+        """Write an archive of the downloaded data to ``fileobj``, for a mirror.
 
-        For downloaded files, this should preserve the checksum of the
-        original file. For repositories, it should just create an
-        expandable tarball out of the downloaded repository.
+        For downloaded files, this writes the bytes as they were fetched, so the checksum of
+        the original file is preserved. For repositories, it writes an expandable tarball of
+        the downloaded repository. ``fileobj`` is left open; the caller closes it.
         """
 
     @property
@@ -576,14 +582,13 @@ class URLFetchStrategy(FetchStrategy):
         with fs.exploding_archive_catch(self.stage):
             decompress(self.archive_file)
 
-    def archive(self, destination):
-        """Just moves this archive to the destination."""
+    def archive(self, fileobj: IO[bytes]) -> None:
+        """Copies the fetched archive, byte for byte, into ``fileobj``."""
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        web_util.push_to_url(
-            self.archive_file, url_util.path_to_file_url(destination), keep_original=True
-        )
+        with open(self.archive_file, "rb") as f:
+            shutil.copyfileobj(f, fileobj)
 
     @_needs_stage
     def check(self):
@@ -714,15 +719,14 @@ class VCSFetchStrategy(FetchStrategy):
         tty.debug(f"Source fetched with {self.url_attr} is already expanded.")
 
     @_needs_stage
-    def archive(self, destination, *, exclude: Optional[str] = None):
-        assert spack.util.url.extension_from_path(destination) == "tar.gz"
+    def archive(self, fileobj: IO[bytes], *, exclude: Optional[str] = None) -> None:
         assert self.stage.source_path.startswith(self.stage.path)
         # We need to prepend this dir name to every entry of the tarfile
         top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))
 
-        with working_dir(self.stage.source_path), spack.util.archive.gzip_compressed_tarfile(
-            destination
-        ) as (tar, _, _):
+        with working_dir(
+            self.stage.source_path
+        ), spack.util.archive.gzip_compressed_tarfile_from_fileobj(fileobj) as (tar, _, _):
             spack.util.archive.reproducible_tarfile_from_prefix(
                 tar=tar,
                 prefix=".",
@@ -786,8 +790,8 @@ class GoFetchStrategy(VCSFetchStrategy):
             env["GOPATH"] = os.path.join(os.getcwd(), "go")
             self.go("get", "-v", "-d", self.url, env=env)
 
-    def archive(self, destination):
-        super().archive(destination, exclude=".git")
+    def archive(self, fileobj: IO[bytes]) -> None:
+        super().archive(fileobj, exclude=".git")
 
     @_needs_stage
     def expand(self):
@@ -1155,8 +1159,8 @@ class CvsFetchStrategy(VCSFetchStrategy):
                     if os.path.isfile(path):
                         os.unlink(path)
 
-    def archive(self, destination):
-        super().archive(destination, exclude="CVS")
+    def archive(self, fileobj: IO[bytes]) -> None:
+        super().archive(fileobj, exclude="CVS")
 
     @_needs_stage
     def reset(self):
@@ -1248,8 +1252,8 @@ class SvnFetchStrategy(VCSFetchStrategy):
                 elif os.path.isdir(path):
                     shutil.rmtree(path, ignore_errors=True)
 
-    def archive(self, destination):
-        super().archive(destination, exclude=".svn")
+    def archive(self, fileobj: IO[bytes]) -> None:
+        super().archive(fileobj, exclude=".svn")
 
     @_needs_stage
     def reset(self):
@@ -1351,8 +1355,8 @@ class HgFetchStrategy(VCSFetchStrategy):
             self.stage.srcdir = repo_name
             shutil.move(repo_name, self.stage.source_path)
 
-    def archive(self, destination):
-        super().archive(destination, exclude=".hg")
+    def archive(self, fileobj: IO[bytes]) -> None:
+        super().archive(fileobj, exclude=".hg")
 
     @_needs_stage
     def reset(self):
@@ -1568,19 +1572,8 @@ class FsCacheBase:
     def store(self, fetcher, relative_dest):
         dst = os.path.join(self.root, relative_dest)
         mkdirp(os.path.dirname(dst))
-        tmp = os.path.join(
-            os.path.dirname(dst), ".tmp." + secrets.token_hex(6) + "." + os.path.basename(dst)
-        )
-        open(tmp, "xb").close()
-        try:
-            fetcher.archive(tmp)
-            os.replace(tmp, dst)
-        except BaseException:
-            try:
-                os.unlink(tmp)
-            except OSError:
-                pass
-            raise
+        with write_tmp_and_move(dst, mode="wb") as f:
+            fetcher.archive(f)
 
 
 class FsCache(FsCacheBase):

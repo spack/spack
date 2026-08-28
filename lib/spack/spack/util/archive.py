@@ -9,7 +9,7 @@ import pathlib
 import tarfile
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import Callable, Dict, Generator, List, Tuple
+from typing import IO, Callable, Dict, Generator, List, Tuple
 
 from spack.util import tty
 from spack.util.filesystem import readlink
@@ -97,6 +97,28 @@ class ChecksumWriter(io.BufferedIOBase):
 
 
 @contextmanager
+def gzip_compressed_tarfile_from_fileobj(
+    fileobj: IO[bytes],
+) -> Generator[Tuple[tarfile.TarFile, ChecksumWriter, ChecksumWriter], None, None]:
+    """Same as :py:func:`gzip_compressed_tarfile`, writing into an already open binary file
+    object. ``fileobj`` is left open; the caller closes it."""
+    # Create gzip compressed tarball of the install prefix
+    # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility.
+    #    If the filename="" is dropped, Python will use fileobj.name instead.
+    #    This should effectively mimic `gzip --no-name`.
+    # 2) On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
+    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
+    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
+    # So we follow gzip.
+    with ChecksumWriter(fileobj) as gzip_checksum, closing(
+        GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=gzip_checksum)
+    ) as gzip_file, ChecksumWriter(gzip_file) as tarfile_checksum, tarfile.TarFile(
+        name="", mode="w", fileobj=tarfile_checksum
+    ) as tar:
+        yield tar, gzip_checksum, tarfile_checksum
+
+
+@contextmanager
 def gzip_compressed_tarfile(
     path: str,
 ) -> Generator[Tuple[tarfile.TarFile, ChecksumWriter, ChecksumWriter], None, None]:
@@ -111,20 +133,8 @@ def gzip_compressed_tarfile(
         * :class:`ChecksumWriter`: checksum of the gzip compressed tarfile
         * :class:`ChecksumWriter`: checksum of the uncompressed tarfile
     """
-    # Create gzip compressed tarball of the install prefix
-    # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility.
-    #    If the filename="" is dropped, Python will use fileobj.name instead.
-    #    This should effectively mimic `gzip --no-name`.
-    # 2) On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
-    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
-    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
-    # So we follow gzip.
-    with open(path, "wb") as f, ChecksumWriter(f) as gzip_checksum, closing(
-        GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=gzip_checksum)
-    ) as gzip_file, ChecksumWriter(gzip_file) as tarfile_checksum, tarfile.TarFile(
-        name="", mode="w", fileobj=tarfile_checksum
-    ) as tar:
-        yield tar, gzip_checksum, tarfile_checksum
+    with open(path, "wb") as f, gzip_compressed_tarfile_from_fileobj(f) as tarfile_and_checksums:
+        yield tarfile_and_checksums
 
 
 def default_path_to_name(path: str) -> str:

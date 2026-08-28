@@ -12,13 +12,16 @@ import pytest
 import spack.caches
 import spack.cmd.mirror
 import spack.concretize
+import spack.error
 import spack.fetch_strategy
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.patch
+import spack.repo
 import spack.stage
 import spack.util.url as url_util
+import spack.version
 from spack.cmd.common.arguments import mirror_name_or_url
 from spack.config import Configuration
 from spack.spec import Spec
@@ -225,9 +228,8 @@ class MockFetcher:
     """
 
     @staticmethod
-    def archive(dst):
-        with open(dst, "w", encoding="utf-8"):
-            pass
+    def archive(fileobj):
+        pass
 
 
 def test_cache_store_atomic_on_failure(tmp_path: pathlib.Path):
@@ -237,9 +239,8 @@ def test_cache_store_atomic_on_failure(tmp_path: pathlib.Path):
         cachable = True
 
         @staticmethod
-        def archive(dst):
-            with open(dst, "wb") as f:
-                f.write(b"partial")
+        def archive(fileobj):
+            fileobj.write(b"partial")
             raise RuntimeError("simulated failure mid-archive")
 
     for cache in [
@@ -490,3 +491,27 @@ def test_mirror_matches(mock_packages, mutable_config):
     )
     assert m.matches_binary(spec, direction="fetch") is False
     assert m.matches_binary(spec, direction="push") is True
+
+
+def test_mirror_layout_rejects_declared_extension_for_vcs(monkeypatch):
+    """Tests that a version fetched from a repository cannot declare its own extension.
+
+    VCSFetchStrategy.archive always writes a gzipped tarball, so any other extension would
+    mislabel the mirror entry.
+    """
+
+    class MockPkg:
+        versions = {spack.version.Version("1.0"): {"extension": "zip"}}
+
+    monkeypatch.setattr(spack.repo.PATH, "get_pkg_class", lambda name: MockPkg)
+    spec = Spec("pkg-a@=1.0")
+
+    fetcher = spack.fetch_strategy.GitFetchStrategy(git="https://example.com/repo.git")
+    with pytest.raises(spack.error.MirrorError, match="archived as 'tar.gz'"):
+        spack.mirrors.layout.default_mirror_layout(fetcher, "pkg-a/pkg-a-1.0", spec)
+
+    # fetch strategies that do not archive as a tarball are not subject to the check
+    layout = spack.mirrors.layout.default_mirror_layout(
+        spack.fetch_strategy.BundleFetchStrategy(), "pkg-a/pkg-a-1.0", spec
+    )
+    assert layout.path.endswith(".zip")
