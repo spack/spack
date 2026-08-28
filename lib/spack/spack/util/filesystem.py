@@ -937,11 +937,21 @@ def install_tree(
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 
 
+def _win_is_exe(path: Union[str, pathlib.Path]) -> bool:
+    path = os.fspath(path)
+    default_pathext = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"
+    pathext_str = os.environ.get("PATHEXT", default_pathext)
+    executable_extensions = {ext.upper() for ext in pathext_str.split(";")}
+    return bool({x for x in executable_extensions if x in path.upper()})
+
+
 @system_path_filter
 def is_exe(path) -> bool:
     """Returns :obj:`True` iff the specified path exists, is a regular file, and has executable
     permissions for the current process."""
-    return os.path.isfile(path) and os.access(path, os.X_OK)
+    is_exe = os.path.isfile(path)
+    is_exe = is_exe and (os.access(path, os.X_OK) if sys.platform != "win32" else _win_is_exe(path) )
+    return  is_exe
 
 
 def has_shebang(path) -> bool:
