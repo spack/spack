@@ -55,6 +55,12 @@ either use whitespace, or you can just use ``~variant`` since it means the same
 thing.  Spack uses ``~variant`` in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ``~`` can cause shell
 expansion when it is the first character in an id typed on the command line.
+
+Inside edge properties (``%[...]`` or ``^[...]``), a boolean token such as
+``+sarif`` requests a *usage* on that edge: a build modifier that the dependency
+enacts on behalf of the dependent.  Whitespace is required between a
+``key=value`` attribute and a following usage token (``%[virtuals=c +sarif]``);
+without it the ``+`` is consumed as part of the value.
 """
 
 import json
@@ -553,6 +559,13 @@ class FileParser:
 
 
 class EdgeAttributeParser:
+    """Parse the attributes enclosed in ``%[...]`` or ``^[...]`` on a dependency edge.
+
+    Accepts ``deptypes=``, ``virtuals=`` and ``when=`` key-value pairs, and boolean
+    usage requests (``+name`` / ``~name``). Usages are validated (conflicting values
+    and propagation sigils are parse errors) but not yet stored on the edge.
+    """
+
     __slots__ = "ctx", "literal_str"
 
     def __init__(self, ctx, literal_str):
@@ -576,7 +589,16 @@ class EdgeAttributeParser:
                         'are "deptypes", "virtuals", and "when"'
                     )
                     raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
-            # TODO: Add code to accept bool variants here as soon as use variants are implemented
+            elif self.ctx.accept(SpecTokens.BOOL_VARIANT):
+                name = self.ctx.current_token.value[1:].strip()
+                value = self.ctx.current_token.value[0] == "+"
+                usage = attributes.setdefault("usage", {})
+                if usage.setdefault(name, value) != value:
+                    msg = f"conflicting values for usage '{name}' on the same edge"
+                    raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
+            elif self.ctx.expect(SpecTokens.PROPAGATED_BOOL_VARIANT):
+                msg = "usages cannot be propagated; use a single '+' or '~' sigil"
+                raise SpecParsingError(msg, self.ctx.next_token, self.literal_str)
             elif self.ctx.accept(SpecTokens.END_EDGE_PROPERTIES):
                 virtuals = attributes.get("virtuals", ())
                 virtuals += parse_virtual_assignment(self.ctx)
@@ -594,6 +616,10 @@ class EdgeAttributeParser:
         # Turn "when" into a spec
         if "when" in attributes:
             attributes["when"] = parse_one_or_raise(attributes["when"])
+
+        # Usages are parsed and validated above, but not yet attached to the edge
+        # TODO(usages RFD): pass through to DependencySpec once it grows a `usage` attribute
+        attributes.pop("usage", None)
 
         return attributes
 
