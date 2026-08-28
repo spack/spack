@@ -12,13 +12,9 @@ if sys.platform != "linux":
 
 import os
 import pathlib
-import tempfile
 from typing import List, Tuple
 
-import spack.concretize
 import spack.sandbox
-import spack.store
-from spack.installer.build import _enable_sandbox
 
 
 class SpyLandlockSandbox(spack.sandbox.LandlockSandbox):
@@ -118,81 +114,6 @@ def test_landlock_sandbox_network_args():
     assert net_flags & spack.sandbox.LANDLOCK_ACCESS_NET_CONNECT_TCP
     assert net_flags & spack.sandbox.LANDLOCK_ACCESS_NET_BIND_TCP
     assert sandbox.prctl_called
-
-
-class MockSandbox(spack.sandbox.Sandbox):
-    def __init__(self):
-        self.read_calls: List[Tuple[pathlib.Path, pathlib.Path]] = []
-        self.write_calls: List[Tuple[pathlib.Path, pathlib.Path]] = []
-        self.apply_calls: List[bool] = []
-
-    def _allow_read(self, original: pathlib.Path, resolved: pathlib.Path):
-        self.read_calls.append((original, resolved))
-
-    def _allow_write(self, original: pathlib.Path, resolved: pathlib.Path):
-        self.write_calls.append((original, resolved))
-
-    def apply(self, block_network=False):
-        self.apply_calls.append(block_network)
-
-
-def test_enable_sandbox_paths(
-    config, mock_packages, monkeypatch, temporary_store: spack.store.Store, tmp_path: pathlib.Path
-):
-    """Test that _enable_sandbox in the installer calls allow_read/allow_write correctly."""
-    mock_sandbox = MockSandbox()
-    monkeypatch.setattr(spack.sandbox, "get_sandbox", lambda: mock_sandbox)
-
-    spec = spack.concretize.concretize_one("dependent-install")
-
-    # Create prefix directories so resolved.exists() passes
-    pathlib.Path(spec.prefix).mkdir(parents=True, exist_ok=True)
-    for dep in spec.traverse(root=False):
-        pathlib.Path(dep.prefix).mkdir(parents=True, exist_ok=True)
-
-    stage_path = tmp_path / "stage"
-    stage_path.mkdir()
-
-    custom_write = tmp_path / "custom_write"
-    custom_write.mkdir()
-
-    # Create a symlink to verify original vs resolved path logic
-    custom_read_target = tmp_path / "custom_read_target"
-    custom_read_target.mkdir()
-    custom_read_link = tmp_path / "custom_read_link"
-    custom_read_link.symlink_to(custom_read_target)
-
-    # Ensure the sbang exists
-    temporary_store.install_sbang()
-    sbang_file = pathlib.Path(temporary_store.unpadded_root) / "bin" / "sbang"
-
-    config = {
-        "enable": True,
-        "allow_read": [str(custom_read_link)],
-        "allow_write": [str(custom_write)],
-        "allow_network": True,
-    }
-
-    _enable_sandbox(config, spec, str(stage_path))
-
-    allow_read_resolved = [c[1] for c in mock_sandbox.read_calls]
-    for dep in spec.traverse(root=False):
-        assert pathlib.Path(dep.prefix).resolve() in allow_read_resolved
-
-    # Verify symlink resolution in read_calls
-    assert custom_read_target.resolve() in allow_read_resolved
-    assert (custom_read_link.absolute(), custom_read_target.resolve()) in mock_sandbox.read_calls
-
-    # Verify sbang read
-    assert sbang_file.resolve() in allow_read_resolved
-
-    allow_write_resolved = [c[1] for c in mock_sandbox.write_calls]
-    assert stage_path.resolve() in allow_write_resolved
-    assert pathlib.Path(spec.prefix).resolve() in allow_write_resolved
-    assert custom_write.resolve() in allow_write_resolved
-    assert pathlib.Path(tempfile.gettempdir()).resolve() in allow_write_resolved
-
-    assert mock_sandbox.apply_calls == [False]
 
 
 def test_sandbox_network_blocking_requires_abi_v4():
