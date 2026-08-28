@@ -36,7 +36,7 @@ import spack.util.parallel
 import spack.util.url
 import spack.util.url as url_util
 from spack.util import lang, tty
-from spack.util.filesystem import mkdirp, rename, working_dir, write_tmp_and_move
+from spack.util.filesystem import copy2_tmp_and_move, mkdirp, rename, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
@@ -429,13 +429,7 @@ def push_to_url(
                 if e.errno != errno.EXDEV:  # not a cross-filesystem rename
                     raise
 
-        # Rename into place so a reader never observes a partially written file.
-        with open(local_file_path, "rb") as src, write_tmp_and_move(
-            remote_file_path, mode="wb"
-        ) as dst:
-            shutil.copyfileobj(src, dst)
-            source_mode = stat.S_IMODE(os.fstat(src.fileno()).st_mode)
-            os.chmod(dst.fileno() if os.chmod in os.supports_fd else dst.name, source_mode)
+        copy2_tmp_and_move(local_file_path, remote_file_path)
 
         if not keep_original:
             os.remove(local_file_path)

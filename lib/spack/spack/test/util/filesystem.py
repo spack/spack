@@ -1477,3 +1477,67 @@ def test_write_tmp_and_move_opens_the_temporary_once(tmp_path: pathlib.Path, mon
     assert len(opened) == 1, f"expected one open of the temporary, got {opened}"
     assert opened[0] != str(dst)
     assert dst.read_text() == "new"
+
+
+@pytest.mark.not_on_windows("modes are not fully supported on Windows")
+def test_copy2_tmp_and_move_takes_metadata_from_the_source(tmp_path: pathlib.Path):
+    """Tests that the destination gets mode and mtime of the source which preserves
+    those of the file it replaces.
+    """
+    src = tmp_path / "src.txt"
+    src.write_text("new")
+    os.chmod(src, 0o604)
+    os.utime(src, (1234567890, 1234567890))
+
+    dst = tmp_path / "dst.txt"
+    dst.write_text("old")
+    os.chmod(dst, 0o666)
+    old_inode = os.stat(dst).st_ino
+
+    fs.copy2_tmp_and_move(str(src), str(dst))
+
+    assert dst.read_text() == "new"
+    assert stat.S_IMODE(os.stat(dst).st_mode) == 0o604
+    assert os.stat(dst).st_mtime == 1234567890
+    # the destination is replaced, so readers holding it open still see the old contents
+    assert os.stat(dst).st_ino != old_inode
+    assert sorted(os.listdir(tmp_path)) == ["dst.txt", "src.txt"]
+
+
+def test_copy2_tmp_and_move_leaves_the_destination_alone_on_failure(
+    tmp_path: pathlib.Path, monkeypatch
+):
+    def failing_copy2(src, dst):
+        with open(dst, "wb") as f:
+            f.write(b"partial")
+        raise OSError("simulated failure mid-copy")
+
+    monkeypatch.setattr(shutil, "copy2", failing_copy2)
+    src = tmp_path / "src.txt"
+    src.write_text("new")
+    dst = tmp_path / "dst.txt"
+    dst.write_text("old")
+
+    with pytest.raises(OSError, match="simulated failure"):
+        fs.copy2_tmp_and_move(str(src), str(dst))
+
+    assert dst.read_text() == "old"
+    assert sorted(os.listdir(tmp_path)) == ["dst.txt", "src.txt"]
+
+
+@pytest.mark.not_on_windows("symlink creation requires elevated privileges on Windows")
+def test_copy2_tmp_and_move_replaces_a_symlink_at_the_destination(tmp_path: pathlib.Path):
+    """Tests that the destination is replaced rather than written through, so a symlink planted
+    there by another process cannot redirect the copy."""
+    src = tmp_path / "src.txt"
+    src.write_text("new")
+    outside = tmp_path / "outside.txt"
+    outside.write_text("untouched")
+    dst = tmp_path / "dst.txt"
+    os.symlink(str(outside), str(dst))
+
+    fs.copy2_tmp_and_move(str(src), str(dst))
+
+    assert outside.read_text() == "untouched"
+    assert not os.path.islink(dst)
+    assert dst.read_text() == "new"

@@ -1240,6 +1240,29 @@ def write_tmp_and_move(
 
 
 @system_path_filter
+def copy2_tmp_and_move(src: str, dst: str) -> None:
+    """Copy ``src`` to ``dst`` like :py:func:`shutil.copy2`, through a temporary file in the
+    directory of ``dst`` that is atomically moved into place. The temporary file is removed on
+    failure.
+
+    ``dst`` gets the permissions, timestamps and extended attributes of ``src``, whereas
+    :py:func:`write_tmp_and_move` preserves those of the file it replaces.
+    """
+    dirname, basename = os.path.split(dst)
+    # copy2 creates the temporary by name, so it must be unguessable to another process
+    tmp = os.path.join(dirname, f".{basename}.{secrets.token_hex(8)}.tmp")
+    try:
+        shutil.copy2(src, tmp)
+        rename(tmp, dst)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+@system_path_filter
 def touch(path):
     """Creates an empty file at the specified path."""
     if sys.platform == "win32":

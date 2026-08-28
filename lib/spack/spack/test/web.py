@@ -674,20 +674,22 @@ def test_push_to_url_file(keep_original, tmp_path: pathlib.Path):
     assert os.listdir(dst.parent) == ["data.txt"]
 
 
-@pytest.mark.not_on_windows("umask is not supported on Windows")
-@pytest.mark.parametrize("supports_fd", [True, False])
+@pytest.mark.not_on_windows("modes are not fully supported on Windows")
 @pytest.mark.parametrize("keep_original", [True, False])
-def test_push_to_url_file_preserves_mode(
-    keep_original, supports_fd, tmp_path: pathlib.Path, monkeypatch
-):
-    """A mirror entry keeps the mode of the file that was pushed, whether the mode is set
-    through the descriptor or, where that is unsupported, through the temporary's path."""
-    if not supports_fd:
-        monkeypatch.setattr(os, "supports_fd", frozenset())
+def test_push_to_url_file_preserves_mode(keep_original, tmp_path: pathlib.Path, monkeypatch):
+    """A mirror entry gets the mode of the file that was pushed, not of the entry it replaces."""
+    monkeypatch.setattr(
+        spack.util.web,
+        "rename",
+        lambda *args: (_ for _ in ()).throw(OSError(errno.EXDEV, "cross-device link")),
+    )
     src = tmp_path / "data.txt"
     src.write_text("hello")
     os.chmod(src, 0o604)
     dst = tmp_path / "mirror" / "data.txt"
+    dst.parent.mkdir()
+    dst.write_text("stale")
+    os.chmod(dst, 0o666)
 
     spack.util.web.push_to_url(str(src), url_util.path_to_file_url(str(dst)), keep_original)
 
@@ -717,11 +719,12 @@ def test_push_to_url_file_cross_device(keep_original, tmp_path: pathlib.Path, mo
 def test_push_to_url_file_atomic_on_failure(keep_original, tmp_path: pathlib.Path, monkeypatch):
     """A failed copy leaves neither a partial destination nor a leftover temporary."""
 
-    def failing_copyfileobj(fsrc, fdst):
-        fdst.write(b"partial")
+    def failing_copy2(src, dst):
+        with open(dst, "wb") as f:
+            f.write(b"partial")
         raise OSError("simulated failure mid-copy")
 
-    monkeypatch.setattr(shutil, "copyfileobj", failing_copyfileobj)
+    monkeypatch.setattr(shutil, "copy2", failing_copy2)
     monkeypatch.setattr(
         spack.util.web,
         "rename",
