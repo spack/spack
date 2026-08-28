@@ -697,13 +697,13 @@ def _install(
     if request.fake:
         store.layout.create_install_directory(spec)
         _do_fake_install(pkg)
-        _post_install(pkg, spec, explicit, timer, False)
+        _post_install(pkg, spec, explicit, timer, cache=False)
         return
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
         if install_from_buildcache(request.mirrors, spec, request.unsigned, state_stream, timer):
-            _post_install(pkg, spec, explicit, timer, True)
+            _post_install(pkg, spec, explicit, timer, cache=True)
             return
         elif install_policy == "cache_only":
             send_state("no binary available", state_stream)
@@ -714,7 +714,7 @@ def _install(
         if install_policy == "source_only":
             send_state("rewiring", state_stream)
             _rewire_no_db(spec, timer)
-            _post_install(pkg, spec, explicit, timer, False)
+            _post_install(pkg, spec, explicit, timer, cache=False)
             return
         # Binary cache was the only option; signal miss for force_source expansion.
         send_state("no binary available", state_stream)
@@ -801,25 +801,25 @@ def _install(
                 raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
 
         _archive_build_metadata(pkg)
-        _post_install(pkg, spec, explicit, timer, False)
+        _post_install(pkg, spec, explicit, timer, cache=False)
 
 
 def _post_install(
     pkg: "spack.package_base.PackageBase",
     spec: spack.spec.Spec,
     explicit: bool,
-    timer: spack.util.timer.BaseTimer = spack.util.timer.NULL_TIMER,
-    binary: bool = False
+    timer: spack.util.timer.Timer,
+    cache: bool = False,
 ) -> None:
     # Do post install (and potentially post binary install) hooks
     with timer.measure("post-install"):
-        if binary:
+        if cache:
             if hasattr(pkg, "_post_buildcache_install_hook"):
                 pkg._post_buildcache_install_hook()
         spack.hooks.post_install(spec, explicit)
 
     timer.stop()
-    _write_timer_json(pkg, timer, binary)
+    _write_timer_json(pkg, timer, cache)
 
 
 def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
