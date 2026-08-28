@@ -4359,8 +4359,7 @@ class Spec:
         if compiler_flags_str:
             parts.append(compiler_flags_str)
 
-        variants = self.variants.abbreviate_patches() if self._concrete else self.variants
-        variants_str = str(variants)
+        variants_str = self.variants.string(abbreviate_patches=self._concrete)
         if variants_str:
             parts.append(variants_str)
 
@@ -4581,9 +4580,6 @@ class Spec:
                             f"Attempted to format attribute {attribute}. "
                             f"Spec {'.'.join(parts[:idx])} has no attribute {part}"
                         )
-                    if isinstance(current, VariantMap) and current_node._concrete:
-                        current = current.abbreviate_patches()
-
                     if isinstance(current, vn.VersionList) and current == vn.any_version:
                         # don't print empty version lists
                         return ""
@@ -4630,7 +4626,8 @@ class Spec:
                     if style == spack.enums.PartStyle.HIDDEN:
                         continue
                     key_color: Optional[str] = _STYLE_COLOR_MAP.get(style, color_code)
-                    result += prefix + safe_color(sig, str(current[key]), key_color)
+                    variant_str = current[key].string(current_node._concrete)
+                    result += prefix + safe_color(sig, variant_str, key_color)
                 return result
 
             if variant_style_fn and is_variant_part and not isinstance(current, VariantMap):
@@ -4639,7 +4636,12 @@ class Spec:
                     return ""
                 color_code = _STYLE_COLOR_MAP.get(style, color_code)
 
-            return safe_color(sig, str(current), color_code)
+            if isinstance(current, (VariantMap, vt.VariantValue)):
+                string = current.string(abbreviate_patches=current_node._concrete)
+            else:
+                string = str(current)
+
+            return safe_color(sig, string, color_code)
 
         return SPEC_FORMAT_RE.sub(format_attribute, format_string).strip()
 
@@ -5454,21 +5456,9 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
             clone[name] = variant.copy()
         return clone
 
-    def abbreviate_patches(self) -> "VariantMap":
-        """The same map with patch checksums shortened to 7-character prefixes: a weaker
-        ``patches=`` constraint that the original satisfies. Rendered for concrete specs,
-        whose full checksums are in their hash. Entries are shared, so read-only."""
-        patches = self.get("patches")
-        if patches is None or not patches.values:
-            return self
-        shortened = vt.VariantValue(
-            vt.VariantType.MULTI, "patches", tuple(str(v)[:7] for v in patches.values)
-        )
-        variants = VariantMap()
-        variants.dict = {**self.dict, "patches": shortened}
-        return variants
-
-    def __str__(self):
+    def string(self, abbreviate_patches: bool = False) -> str:
+        """The string representation of the map. ``abbreviate_patches`` is passed on to each
+        variant, see :meth:`~spack.variant.VariantValue.string`."""
         if not self:
             return ""
 
@@ -5481,13 +5471,16 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
         string = io.StringIO()
 
         for key in bool_keys:
-            string.write(str(self[key]))
+            string.write(self[key].string(abbreviate_patches))
 
         for key in kv_keys:
             string.write(" ")
-            string.write(str(self[key]))
+            string.write(self[key].string(abbreviate_patches))
 
         return string.getvalue()
+
+    def __str__(self):
+        return self.string()
 
     def partition_keys(self) -> Tuple[List[str], List[str]]:
         """Partition the keys of the map into two lists: booleans and key-value pairs."""

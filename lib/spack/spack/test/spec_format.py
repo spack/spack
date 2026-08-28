@@ -252,6 +252,10 @@ def test_variants_of_concrete_spec_abbreviate_patches(config, mock_packages):
     assert prefixes in concrete.format("{variants}")
     assert "patches:=" not in concrete.format("{variants}")
     assert prefixes in concrete.format()
+    assert concrete.format("{variants.patches}") == prefixes
+    styled = concrete.format("{variants}", variant_style_fn=_always_variant(PartStyle.NORMAL))
+    assert prefixes in styled
+    assert "patches:=" not in styled
     assert concrete.satisfies(Spec(concrete.format(spack.spec.DISPLAY_FORMAT)))
 
     abstract = Spec(f"patches:={','.join(checksums)}")
