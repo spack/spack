@@ -2231,6 +2231,206 @@ class SpackSolverSetup:
             raise RuntimeError(msg)
         return clauses
 
+    def _arch_clauses(self, spec: spack.spec.Spec, f, *, name: str) -> List[AspFunction]:
+        """Return clauses for the architecture of a spec."""
+        # seed architecture at the root (we'll propagate later)
+        # TODO: use better semantics.
+        arch = spec.architecture
+        if not arch:
+            return []
+
+        clauses = []
+        if arch.platform:
+            clauses.append(f.node_platform(name, arch.platform))
+        if arch.os:
+            clauses.append(f.node_os(name, arch.os))
+        if arch.target:
+            clauses.extend(self.target_ranges(spec, f.node_target, name=name))
+        return clauses
+
+    def _variant_clauses(
+        self, spec: spack.spec.Spec, f, *, name: str, body: bool
+    ) -> List[AspFunction]:
+        """Return clauses for the variants of a spec."""
+        clauses = []
+        for vname, variant in sorted(spec.variants.items()):
+            # TODO: variant="*" means 'variant is defined to something', which used to
+            # be meaningless in concretization, as all variants had to be defined. But
+            # now that variants can be conditional, it should force a variant to exist.
+            if not variant.values:
+                continue
+
+            for value in variant.values:
+                # ensure that the value *can* be valid for the spec
+                if name and not spec.concrete and not spack.repo.PATH.is_virtual(name):
+                    variant_defs = vt.prevalidate_variant_value(
+                        self.pkg_class(name), variant, spec
+                    )
+
+                    # Record that that this is a valid possible value. Accounts for
+                    # int/str/etc., where valid values can't be listed in the package
+                    for variant_def in variant_defs:
+                        self.variant_values_from_specs.add((name, id(variant_def), value))
+
+                if variant.propagate:
+                    clauses.append(f.propagate(name, fn.variant_value(vname, value)))
+                    if self.pkg_class(name).has_variant(vname):
+                        clauses.append(f.variant_value(name, vname, value))
+                    continue
+
+                variant_clause = f.variant_value(name, vname, value)
+                if variant.concrete and variant.type == vt.VariantType.MULTI and not spec.concrete:
+                    if body is False:
+                        variant_clause.args = (
+                            f"concrete_{variant_clause.args[0]}",
+                            *variant_clause.args[1:],
+                        )
+                    else:
+                        clauses.append(fn.attr("concrete_variant_request", name, vname, value))
+                clauses.append(variant_clause)
+        return clauses
+
+    def _flag_clauses(
+        self, spec: spack.spec.Spec, f, *, name: str, context: Optional[SourceContext]
+    ) -> List[AspFunction]:
+        """Return clauses for the compiler flags of a spec."""
+        source = context.source if context else "none"
+        clauses = []
+        for flag_type, flags in spec.compiler_flags.items():
+            flag_group = " ".join(flags)
+            for flag in flags:
+                clauses.append(
+                    f.node_flag(name, fn.node_flag(flag_type, flag, flag_group, source))
+                )
+                if not spec.concrete and flag.propagate is True:
+                    clauses.append(
+                        f.propagate(
+                            name,
+                            fn.node_flag(flag_type, flag, flag_group, source),
+                            fn.edge_types("link", "run"),
+                        )
+                    )
+        return clauses
+
+    def _virtuals_from_dependents(
+        self, spec: spack.spec.Spec, *, name: str, body: bool
+    ) -> List[AspFunction]:
+        """Return clauses for the virtuals a spec provides on its incoming edges."""
+        # TODO: a loop over `edges_to_dependencies` is preferred over `edges_from_dependents`
+        # since dependents can point to specs out of scope for the solver.
+        edges = spec.edges_from_dependents()
+        clauses = []
+        if not body and not spec.concrete:
+            virtuals = sorted(set(itertools.chain.from_iterable(edge.virtuals for edge in edges)))
+            for virtual in virtuals:
+                clauses.append(fn.attr("provider_set", name, virtual))
+                clauses.append(fn.attr("virtual_node", virtual))
+            return clauses
+
+        # direct dependencies are handled under `edges_to_dependencies()`
+        virtual_iter = (edge.virtuals for edge in edges if not edge.direct)
+        virtuals = sorted(set(itertools.chain.from_iterable(virtual_iter)))
+        for virtual in virtuals:
+            clauses.append(fn.attr("virtual_on_incoming_edges", name, virtual))
+        return clauses
+
+    def _concrete_edge_clauses(
+        self,
+        dspec: spack.spec.DependencySpec,
+        *,
+        name: str,
+        concrete_build_deps: bool,
+        include_runtimes: bool,
+    ) -> Tuple[List[AspFunction], bool]:
+        """Return clauses for an edge of a concrete spec, and whether the dependency at the
+        other end still has to be traversed."""
+        dep = dspec.spec
+        clauses: List[AspFunction] = []
+
+        # GCC runtime is solved again by clingo, even on concrete specs, to give
+        # the possibility to reuse specs built against a different runtime.
+        if dep.name == "gcc-runtime":
+            clauses.append(fn.attr("compatible_runtime", name, dep.name, f"{dep.version}:"))
+            constraint_spec = spack.spec.Spec(f"{dep.name}@{dep.version}")
+            self.spec_versions(constraint_spec)
+            if not include_runtimes:
+                return clauses, False
+
+        # libc is also solved again by clingo, but in this case the compatibility
+        # is not encoded in the parent node - so we need to emit explicit facts
+        if "libc" in dspec.virtuals:
+            clauses.append(fn.attr("needs_libc", name))
+            for libc in self.libcs:
+                if libc_is_compatible(libc, dep):
+                    clauses.append(fn.attr("compatible_libc", name, libc.name, libc.version))
+            if not include_runtimes:
+                return clauses, False
+
+        # We know dependencies are real for concrete specs. For abstract
+        # specs they just mean the dep is somehow in the DAG.
+        for dtype in dt.ALL_FLAGS:
+            if not dspec.depflag & dtype:
+                continue
+            # skip build dependencies of already-installed specs
+            if concrete_build_deps or dtype != dt.BUILD:
+                clauses.append(fn.attr("depends_on", name, dep.name, dt.flag_to_string(dtype)))
+                for virtual_name in dspec.virtuals:
+                    clauses.append(fn.attr("virtual_on_edge", name, dep.name, virtual_name))
+                    clauses.append(fn.attr("virtual_node", virtual_name))
+
+        # imposing hash constraints for all but pure build deps of
+        # already-installed concrete specs.
+        if concrete_build_deps or dspec.depflag != dt.BUILD:
+            clauses.append(fn.attr("hash", dep.name, dep.dag_hash()))
+        elif not concrete_build_deps and dspec.depflag:
+            clauses.append(fn.attr("concrete_build_dependency", name, dep.name, dep.dag_hash()))
+            for virtual_name in dspec.virtuals:
+                clauses.append(fn.attr("virtual_on_build_edge", name, dep.name, virtual_name))
+
+        return clauses, True
+
+    def _dependency_edge_clauses(
+        self,
+        dspec: spack.spec.DependencySpec,
+        dependency_clauses: List[AspFunction],
+        *,
+        name: str,
+        body: bool,
+        context: Optional[SourceContext],
+    ) -> List[AspFunction]:
+        """Return the clauses of a dependency, attached to the edge that reaches it."""
+        ###
+        # Dependency expressed with "^"
+        ###
+        if not dspec.direct:
+            return dependency_clauses
+
+        ###
+        # Direct dependencies expressed with "%"
+        ###
+        dep = dspec.spec
+        clauses = [
+            fn.attr("depends_on", name, dep.name, dependency_type)
+            for dependency_type in dt.flag_to_tuple(dspec.depflag)
+        ]
+
+        for virtual in dspec.virtuals:
+            dependency_clauses.append(fn.attr("virtual_on_edge", name, dep.name, virtual))
+
+        # By default, wrap head of rules, unless the context says otherwise
+        wrap_node_requirement = body is False
+        if context and context.wrap_node_requirement is not None:
+            wrap_node_requirement = context.wrap_node_requirement
+
+        if not wrap_node_requirement:
+            clauses.extend(dependency_clauses)
+            return clauses
+
+        for clause in dependency_clauses:
+            clause.name = "node_requirement"
+            clauses.append(fn.attr("direct_dependency", name, clause))
+        return clauses
+
     def _spec_clauses(
         self,
         spec: spack.spec.Spec,
@@ -2282,74 +2482,9 @@ class SpackSolverSetup:
             clauses.append(f.namespace(name, spec.namespace))
 
         clauses.extend(self.spec_versions(spec, name=name))
-
-        # seed architecture at the root (we'll propagate later)
-        # TODO: use better semantics.
-        arch = spec.architecture
-        if arch:
-            if arch.platform:
-                clauses.append(f.node_platform(name, arch.platform))
-            if arch.os:
-                clauses.append(f.node_os(name, arch.os))
-            if arch.target:
-                clauses.extend(self.target_ranges(spec, f.node_target, name=name))
-
-        # variants
-        for vname, variant in sorted(spec.variants.items()):
-            # TODO: variant="*" means 'variant is defined to something', which used to
-            # be meaningless in concretization, as all variants had to be defined. But
-            # now that variants can be conditional, it should force a variant to exist.
-            if not variant.values:
-                continue
-
-            for value in variant.values:
-                # ensure that the value *can* be valid for the spec
-                if name and not spec.concrete and not spack.repo.PATH.is_virtual(name):
-                    variant_defs = vt.prevalidate_variant_value(
-                        self.pkg_class(name), variant, spec
-                    )
-
-                    # Record that that this is a valid possible value. Accounts for
-                    # int/str/etc., where valid values can't be listed in the package
-                    for variant_def in variant_defs:
-                        self.variant_values_from_specs.add((name, id(variant_def), value))
-
-                if variant.propagate:
-                    clauses.append(f.propagate(name, fn.variant_value(vname, value)))
-                    if self.pkg_class(name).has_variant(vname):
-                        clauses.append(f.variant_value(name, vname, value))
-                else:
-                    variant_clause = f.variant_value(name, vname, value)
-                    if (
-                        variant.concrete
-                        and variant.type == vt.VariantType.MULTI
-                        and not spec.concrete
-                    ):
-                        if body is False:
-                            variant_clause.args = (
-                                f"concrete_{variant_clause.args[0]}",
-                                *variant_clause.args[1:],
-                            )
-                        else:
-                            clauses.append(fn.attr("concrete_variant_request", name, vname, value))
-                    clauses.append(variant_clause)
-
-        # compiler flags
-        source = context.source if context else "none"
-        for flag_type, flags in spec.compiler_flags.items():
-            flag_group = " ".join(flags)
-            for flag in flags:
-                clauses.append(
-                    f.node_flag(name, fn.node_flag(flag_type, flag, flag_group, source))
-                )
-                if not spec.concrete and flag.propagate is True:
-                    clauses.append(
-                        f.propagate(
-                            name,
-                            fn.node_flag(flag_type, flag, flag_group, source),
-                            fn.edge_types("link", "run"),
-                        )
-                    )
+        clauses.extend(self._arch_clauses(spec, f, name=name))
+        clauses.extend(self._variant_clauses(spec, f, name=name, body=body))
+        clauses.extend(self._flag_clauses(spec, f, name=name, context=context))
 
         # Hash for concrete specs
         if spec.concrete:
@@ -2361,20 +2496,7 @@ class SpackSolverSetup:
             if spec.external:
                 clauses.append(fn.attr("external", name))
 
-        # TODO: a loop over `edges_to_dependencies` is preferred over `edges_from_dependents`
-        # since dependents can point to specs out of scope for the solver.
-        edges = spec.edges_from_dependents()
-        if not body and not spec.concrete:
-            virtuals = sorted(set(itertools.chain.from_iterable(edge.virtuals for edge in edges)))
-            for virtual in virtuals:
-                clauses.append(fn.attr("provider_set", name, virtual))
-                clauses.append(fn.attr("virtual_node", virtual))
-        else:
-            # direct dependencies are handled under `edges_to_dependencies()`
-            virtual_iter = (edge.virtuals for edge in edges if not edge.direct)
-            virtuals = sorted(set(itertools.chain.from_iterable(virtual_iter)))
-            for virtual in virtuals:
-                clauses.append(fn.attr("virtual_on_incoming_edges", name, virtual))
+        clauses.extend(self._virtuals_from_dependents(spec, name=name, body=body))
 
         # If the spec is external and concrete, we allow all the libcs on the system
         if spec.external and spec.concrete and spack.platforms.using_libc_compatibility():
@@ -2395,57 +2517,15 @@ class SpackSolverSetup:
             dep = dspec.spec
 
             if spec.concrete:
-                # GCC runtime is solved again by clingo, even on concrete specs, to give
-                # the possibility to reuse specs built against a different runtime.
-                if dep.name == "gcc-runtime":
-                    edge_clauses.append(
-                        fn.attr("compatible_runtime", name, dep.name, f"{dep.version}:")
-                    )
-                    constraint_spec = spack.spec.Spec(f"{dep.name}@{dep.version}")
-                    self.spec_versions(constraint_spec)
-                    if not include_runtimes:
-                        continue
-
-                # libc is also solved again by clingo, but in this case the compatibility
-                # is not encoded in the parent node - so we need to emit explicit facts
-                if "libc" in dspec.virtuals:
-                    edge_clauses.append(fn.attr("needs_libc", name))
-                    for libc in self.libcs:
-                        if libc_is_compatible(libc, dep):
-                            edge_clauses.append(
-                                fn.attr("compatible_libc", name, libc.name, libc.version)
-                            )
-                    if not include_runtimes:
-                        continue
-
-                # We know dependencies are real for concrete specs. For abstract
-                # specs they just mean the dep is somehow in the DAG.
-                for dtype in dt.ALL_FLAGS:
-                    if not dspec.depflag & dtype:
-                        continue
-                    # skip build dependencies of already-installed specs
-                    if concrete_build_deps or dtype != dt.BUILD:
-                        edge_clauses.append(
-                            fn.attr("depends_on", name, dep.name, dt.flag_to_string(dtype))
-                        )
-                        for virtual_name in dspec.virtuals:
-                            edge_clauses.append(
-                                fn.attr("virtual_on_edge", name, dep.name, virtual_name)
-                            )
-                            edge_clauses.append(fn.attr("virtual_node", virtual_name))
-
-                # imposing hash constraints for all but pure build deps of
-                # already-installed concrete specs.
-                if concrete_build_deps or dspec.depflag != dt.BUILD:
-                    edge_clauses.append(fn.attr("hash", dep.name, dep.dag_hash()))
-                elif not concrete_build_deps and dspec.depflag:
-                    edge_clauses.append(
-                        fn.attr("concrete_build_dependency", name, dep.name, dep.dag_hash())
-                    )
-                    for virtual_name in dspec.virtuals:
-                        edge_clauses.append(
-                            fn.attr("virtual_on_build_edge", name, dep.name, virtual_name)
-                        )
+                concrete_clauses, traverse = self._concrete_edge_clauses(
+                    dspec,
+                    name=name,
+                    concrete_build_deps=concrete_build_deps,
+                    include_runtimes=include_runtimes,
+                )
+                edge_clauses.extend(concrete_clauses)
+                if not traverse:
+                    continue
 
             # if the spec is abstract, descend into dependencies.
             # if it's concrete, then the hashes above take care of dependency
@@ -2459,34 +2539,11 @@ class SpackSolverSetup:
                     context=context,
                     seen=seen,
                 )
-                ###
-                # Dependency expressed with "^"
-                ###
-                if not dspec.direct:
-                    edge_clauses.extend(dependency_clauses)
-                    continue
-
-                ###
-                # Direct dependencies expressed with "%"
-                ###
-                for dependency_type in dt.flag_to_tuple(dspec.depflag):
-                    edge_clauses.append(fn.attr("depends_on", name, dep.name, dependency_type))
-
-                for virtual in dspec.virtuals:
-                    dependency_clauses.append(fn.attr("virtual_on_edge", name, dep.name, virtual))
-
-                # By default, wrap head of rules, unless the context says otherwise
-                wrap_node_requirement = body is False
-                if context and context.wrap_node_requirement is not None:
-                    wrap_node_requirement = context.wrap_node_requirement
-
-                if not wrap_node_requirement:
-                    edge_clauses.extend(dependency_clauses)
-                    continue
-
-                for clause in dependency_clauses:
-                    clause.name = "node_requirement"
-                    edge_clauses.append(fn.attr("direct_dependency", name, clause))
+                edge_clauses.extend(
+                    self._dependency_edge_clauses(
+                        dspec, dependency_clauses, name=name, body=body, context=context
+                    )
+                )
 
         clauses.extend(edge_clauses)
         return clauses
