@@ -34,6 +34,7 @@ import spack.platforms
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
+import spack.solver.clauses
 import spack.solver.core
 import spack.solver.input_analysis
 import spack.solver.reuse
@@ -5225,6 +5226,7 @@ def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
     pkg = mock_packages.get_pkg_class("trigger-and-effect-deps")
     setup = spack.solver.asp.SpackSolverSetup()
     setup.gen = spack.solver.asp.ProblemInstanceBuilder()
+    setup.clauses = spack.solver.clauses.SpecClauseGenerator()
     setup.package_dependencies_rules(pkg)
     setup.trigger_rules()
     setup.effect_rules()

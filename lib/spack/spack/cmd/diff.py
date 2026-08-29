@@ -11,7 +11,7 @@ import spack.hash_lookup
 import spack.util.spack_json as sjson
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
-from spack.solver import asp
+from spack.solver import asp, clauses
 from spack.util import tty
 from spack.util.tty.color import cprint, get_color_when
 
@@ -83,21 +83,21 @@ def compare_specs(a, b, to_string=False, color=None, ignore_packages=None):
             a.trim(pkg_name)
             b.trim(pkg_name)
 
-    # Prepare a solver setup to parse differences
-    setup = asp.SpackSolverSetup()
+    # Prepare a clause generator to parse differences
+    generator = clauses.SpecClauseGenerator()
 
     # get facts for specs, making sure to include build dependencies of concrete
     # specs and to descend into dependency hashes so we include all facts.
     a_facts = {
         shift(func)
-        for func in setup.spec_clauses(
+        for func in generator.spec_clauses(
             a, body=True, expand_hashes=True, concrete_build_deps=True, include_runtimes=True
         )
         if func.name == "attr"
     }
     b_facts = {
         shift(func)
-        for func in setup.spec_clauses(
+        for func in generator.spec_clauses(
             b, body=True, expand_hashes=True, concrete_build_deps=True, include_runtimes=True
         )
         if func.name == "attr"
