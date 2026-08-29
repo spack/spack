@@ -7,7 +7,6 @@ import errno
 import os
 import pathlib
 import pickle
-import shutil
 import ssl
 import stat
 import urllib.error
@@ -19,6 +18,7 @@ import pytest
 import spack.mirrors.mirror
 import spack.paths
 import spack.url
+import spack.util.filesystem
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
@@ -718,17 +718,16 @@ def test_push_to_url_file_cross_device(keep_original, tmp_path: pathlib.Path, mo
 @pytest.mark.parametrize("keep_original", [True, False])
 def test_push_to_url_file_atomic_on_failure(keep_original, tmp_path: pathlib.Path, monkeypatch):
     """A failed copy leaves neither a partial destination nor a leftover temporary."""
-
-    def failing_copy2(src, dst):
-        with open(dst, "wb") as f:
-            f.write(b"partial")
-        raise OSError("simulated failure mid-copy")
-
-    monkeypatch.setattr(shutil, "copy2", failing_copy2)
     monkeypatch.setattr(
         spack.util.web,
         "rename",
         lambda *args: (_ for _ in ()).throw(OSError(errno.EXDEV, "cross-device link")),
+    )
+    # copy2_tmp_and_move looks up rename in spack.util.filesystem
+    monkeypatch.setattr(
+        spack.util.filesystem,
+        "rename",
+        lambda *args: (_ for _ in ()).throw(OSError("simulated failure")),
     )
     src = tmp_path / "data.txt"
     src.write_text("hello")

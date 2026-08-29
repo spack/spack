@@ -1241,18 +1241,31 @@ def write_tmp_and_move(
 
 @system_path_filter
 def copy2_tmp_and_move(src: str, dst: str) -> None:
-    """Copy ``src`` to ``dst`` like :py:func:`shutil.copy2`, through a temporary file in the
-    directory of ``dst`` that is atomically moved into place. The temporary file is removed on
-    failure.
+    """Copy ``src`` to ``dst`` through a temporary file in the directory of ``dst``, which is
+    then moved into place. The temporary file is removed on failure.
 
-    ``dst`` gets the permissions, timestamps and extended attributes of ``src``, whereas
-    :py:func:`write_tmp_and_move` preserves those of the file it replaces.
+    ``dst`` gets the permissions and timestamps of ``src``, whereas
+    :py:func:`write_tmp_and_move` preserves those of the file it replaces. Extended attributes
+    are not copied.
     """
     dirname, basename = os.path.split(dst)
-    # copy2 creates the temporary by name, so it must be unguessable to another process
     tmp = os.path.join(dirname, f".{basename}.{secrets.token_hex(8)}.tmp")
+    # "x" errors on collision instead of clobbering; opened outside the try block so we never
+    # unlink a file created by another process
+    fdst = open(tmp, "xb")
     try:
-        shutil.copy2(src, tmp)
+        with fdst, open(src, "rb") as fsrc:
+            shutil.copyfileobj(fsrc, fdst)
+            # flush before stamping the times, or the flush on close would reset them
+            fdst.flush()
+            st = os.fstat(fsrc.fileno())
+            os.utime(
+                fdst.fileno() if os.utime in os.supports_fd else tmp,
+                ns=(st.st_atime_ns, st.st_mtime_ns),
+            )
+            os.chmod(
+                fdst.fileno() if os.chmod in os.supports_fd else tmp, stat.S_IMODE(st.st_mode)
+            )
         rename(tmp, dst)
     except BaseException:
         try:

@@ -4,7 +4,6 @@
 
 """Tests for ``util/filesystem.py``"""
 
-import builtins
 import filecmp
 import os
 import pathlib
@@ -1464,13 +1463,14 @@ def test_write_tmp_and_move_opens_the_temporary_once(tmp_path: pathlib.Path, mon
     dst.write_text("old")
 
     opened = []
-    real_open = builtins.open
+    real_open = open
 
     def recording_open(file, *args, **kwargs):
         opened.append(str(file))
         return real_open(file, *args, **kwargs)
 
-    monkeypatch.setattr(builtins, "open", recording_open)
+    # a module global shadows the builtin, so only calls made from util/filesystem.py are seen
+    monkeypatch.setattr(fs, "open", recording_open, raising=False)
     with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
         f.write("new")
 
@@ -1507,12 +1507,10 @@ def test_copy2_tmp_and_move_takes_metadata_from_the_source(tmp_path: pathlib.Pat
 def test_copy2_tmp_and_move_leaves_the_destination_alone_on_failure(
     tmp_path: pathlib.Path, monkeypatch
 ):
-    def failing_copy2(src, dst):
-        with open(dst, "wb") as f:
-            f.write(b"partial")
-        raise OSError("simulated failure mid-copy")
+    def failing_rename(src, dst):
+        raise OSError("simulated failure")
 
-    monkeypatch.setattr(shutil, "copy2", failing_copy2)
+    monkeypatch.setattr(fs, "rename", failing_rename)
     src = tmp_path / "src.txt"
     src.write_text("new")
     dst = tmp_path / "dst.txt"
