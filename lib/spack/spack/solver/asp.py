@@ -3075,6 +3075,12 @@ class SpackSolverSetup:
         self._validate_input_specs(specs)
         self.gen = ProblemInstanceBuilder()
 
+        # pkg_class() and spec_clauses() read these, so generate them at the beginning
+        self.libcs = sorted(all_libcs())
+        for node in traverse.traverse_nodes(specs):
+            if node.namespace is not None:
+                self.explicitly_required_namespaces[node.name] = node.namespace
+
         # Get compilers from buildcaches only if injected through "reuse" specs
         supported_compilers = spack.compilers.config.supported_compilers()
         compilers_from_reuse = {
@@ -3115,11 +3121,6 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
-        self.libcs = sorted(all_libcs())
-
-        for node in traverse.traverse_nodes(specs):
-            if node.namespace is not None:
-                self.explicitly_required_namespaces[node.name] = node.namespace
 
         self.requirement_parser.parse_rules_from_input_specs(specs)
         self.gen.h1("Generic information")
