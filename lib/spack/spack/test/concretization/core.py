@@ -5193,6 +5193,21 @@ def test_activating_variant_for_conditional_language_dependency(config, mock_pac
     assert s.satisfies("+fortran")
 
 
+def test_compiler_wrapper_for_language_dependency_of_type_test(config, mock_packages):
+    """Tests that a language dependency of type "test" pulls in the compiler wrapper with the
+    same dependency type, and only when tests are requested.
+    """
+    s = spack.concretize.concretize_one("language-test-dependency")
+    assert "cxx" not in s
+    assert "compiler-wrapper" not in s
+
+    s = spack.concretize.concretize_one("language-test-dependency", tests=True)
+    assert s.satisfies("%cxx=gcc")
+    edges = s.edges_to_dependencies(name="compiler-wrapper")
+    assert len(edges) == 1
+    assert edges[0].depflag == dt.TEST
+
+
 def test_when_condition_with_direct_dependency_on_virtual_provider(config, mock_packages):
     """If a when condition contains a direct dependency on a provider of a virtual, it should only
     trigger if the provider is used for that current package, and not if the provider happens to be

@@ -78,7 +78,12 @@ from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory
-from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder, all_libcs
+from .runtimes import (
+    COMPILER_EDGE_DEPTYPES,
+    COMPILER_WRAPPER_LANGUAGES,
+    RuntimePropertyRecorder,
+    all_libcs,
+)
 from .versions import Provenance
 
 GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
@@ -3216,17 +3221,22 @@ class SpackSolverSetup:
                 # Inject default flags for compilers
                 recorder("*").default_flags(compiler)
 
-            # Add a dependency on the compiler wrapper
+            # Add a dependency on the compiler wrapper, with the type of the edge the compiler
+            # is used on
             compiler_str = f"{compiler.name} /{compiler.dag_hash()}"
             for language in COMPILER_WRAPPER_LANGUAGES:
-                # Using compiler.name causes a bit of duplication, but that is taken care of by
-                # clingo during grounding.
-                recorder("*").depends_on(
-                    "compiler-wrapper",
-                    when=f"%[deptypes=build virtuals={language}] {compiler.name}",
-                    type="build",
-                    description=f"Add compiler wrapper when using {compiler.name} for {language}",
-                )
+                for deptype in COMPILER_EDGE_DEPTYPES:
+                    # Using compiler.name causes a bit of duplication, but that is taken care of
+                    # by clingo during grounding.
+                    recorder("*").depends_on(
+                        "compiler-wrapper",
+                        when=f"%[deptypes={deptype} virtuals={language}] {compiler.name}",
+                        type=deptype,
+                        description=(
+                            f"Add compiler wrapper when using {compiler.name} for {language} "
+                            f"({deptype})"
+                        ),
+                    )
 
             if not spack.platforms.using_libc_compatibility():
                 continue
