@@ -2677,8 +2677,6 @@ class SpackSolverSetup:
             )
         self._validate_input_specs(specs)
         self.gen = ProblemInstanceBuilder()
-
-        # pkg_class() and spec_clauses() read these, so generate them at the beginning
         self.clauses = SpecClauseGenerator(
             libcs=sorted(all_libcs()),
             explicitly_required_namespaces={
@@ -2964,8 +2962,7 @@ class SpackSolverSetup:
             self.gen.fact(fn.pkg_fact(spec.name, fn.condition_effect(condition_id, effect_id)))
 
             # Create subcondition with any conditional dependencies
-            # self.spec_clauses does not do anything with conditional
-            # dependencies
+            # spec_clauses() does not do anything with conditional dependencies
             self.generate_conditional_dep_conditions(spec, condition_id)
 
             if self.concretize_everything:
