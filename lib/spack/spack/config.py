@@ -1894,69 +1894,83 @@ def _create_empty_layout_scope() -> None:
         f.write("# An empty layout scope means all new XDG-compliant defaults are in use.\n")
 
 
-def _include_yaml_is_unmodified() -> bool:
-    """Check if etc/spack/include.yaml is unmodified according to git.
+def _user_scope_has_legacy_path() -> bool:
+    """Check if the user scope in etc/spack/include.yaml points to ~/.spack.
 
     Returns:
-        True if include.yaml has no uncommitted changes (clean in git status)
+        True if user scope exists and has path: "~/.spack"
     """
     include_path = os.path.join(spack.paths.etc_path, "include.yaml")
-
-    # Check if we're in a git repository
-    if not os.path.exists(os.path.join(spack.paths.prefix, ".git")):
-        # Not a git repo, consider it modified
+    if not os.path.exists(include_path):
         return False
 
     try:
-        # Run git status on the specific file
-        result = spack.util.executable.which("git")(
-            "status", "--porcelain", include_path,
-            output=str, error=str, fail_on_error=False
-        )
-        # If output is empty, file is unmodified
-        return not result.strip()
+        data = read_config_file(include_path, spack.schema.include.schema)
+        if not data or "include" not in data:
+            return False
+
+        # Look for user scope with path: "~/.spack"
+        for entry in data["include"]:
+            if isinstance(entry, dict) and entry.get("name") == "user":
+                path = entry.get("path", "")
+                if path == "~/.spack":
+                    return True
+
+        return False
     except Exception:
-        # If git fails, assume modified to be safe
+        # If we can't read, assume no legacy path
         return False
 
 
 def _create_redirect_scope() -> None:
     """Create redirect scope to override spack's includes.
 
-    This uses the include:: override syntax to redirect user scope from
-    ~/.spack to ~/.config/spack without modifying the tracked include.yaml.
+    Reads etc/spack/include.yaml, finds the user scope with path: "~/.spack",
+    changes it to "~/.config/spack", and writes to etc/spack/redirect/include.yaml
+    with include:: override syntax.
     """
+    # Read the original include.yaml
+    source_include_path = os.path.join(spack.paths.etc_path, "include.yaml")
+    data = read_config_file(source_include_path, spack.schema.include.schema)
+
+    if not data or "include" not in data:
+        tty.debug("No include section found in include.yaml, cannot create redirect")
+        return
+
+    # Copy the include list and modify the user scope path
+    modified_includes = []
+    for entry in data["include"]:
+        if isinstance(entry, dict):
+            # Make a copy of the entry
+            new_entry = entry.copy()
+
+            # If this is the user scope with legacy path, update it
+            if new_entry.get("name") == "user" and new_entry.get("path") == "~/.spack":
+                new_entry["path"] = "~/.config/spack"
+                tty.debug("Redirecting user scope from ~/.spack to ~/.config/spack")
+
+            modified_includes.append(new_entry)
+        else:
+            # Non-dict entries (shouldn't happen, but preserve them)
+            modified_includes.append(entry)
+
+    # Create redirect scope directory
     redirect_path = _redirect_scope_path()
     filesystem.mkdirp(redirect_path)
 
-    # Create include.yaml with include:: override
-    # The :: in the YAML will be parsed as an override marker
-    include_yaml_path = os.path.join(redirect_path, "include.yaml")
+    # Write the modified include.yaml with include:: override
+    redirect_include_path = os.path.join(redirect_path, "include.yaml")
 
-    content = """include::
-  # user configuration scope
-  - name: "user"
-    path_override_env_var: SPACK_USER_CONFIG_PATH
-    path: "~/.config/spack"
-    optional: true
-    prefer_modify: true
-    when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+    # Create a syaml_str with override marker for the key
+    include_key = syaml.syaml_str("include")
+    include_key.override = True
 
-  # site configuration scope
-  - name: "site"
-    path: "$spack/etc/spack/site"
-    optional: true
+    # Create the dict with the marked key
+    redirect_data = syaml.syaml_dict([(include_key, modified_includes)])
 
-  # system configuration scope
-  - name: "system"
-    path_override_env_var: SPACK_SYSTEM_CONFIG_PATH
-    path: "/etc/spack"
-    optional: true
-    when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
-"""
-
-    with open(include_yaml_path, "w", encoding="utf-8") as f:
-        f.write(content)
+    # Write to file using dump_config which preserves override markers
+    with open(redirect_include_path, "w", encoding="utf-8") as f:
+        syaml.dump_config(redirect_data, f)
 
     tty.debug(f"Created redirect scope at {redirect_path}")
 
@@ -2044,7 +2058,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # Redirect scope uses include:: to override spack's includes
     redirect_path = _redirect_scope_path()
     if not os.path.exists(redirect_path):
-        if _is_spack_writable() and _include_yaml_is_unmodified():
+        if _is_spack_writable() and _user_scope_has_legacy_path():
             tty.debug("Creating redirect scope to redirect user to ~/.config/spack")
             _create_redirect_scope()
 
