@@ -9,7 +9,7 @@ import spack.concretize
 import spack.directives
 import spack.spec
 import spack.version
-from spack.directives import _make_when_spec, depends_on, extends, patch
+from spack.directives import _make_when_spec, conflicts, depends_on, extends, patch
 from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
 from spack.repo import RepoPath
 from spack.spec import Spec
@@ -301,3 +301,29 @@ def test_patched_dependencies_sets_class_attribute():
 
     assert DoesNotPatchDependencies._patches_dependencies is False
     assert DoesNotPatchDependencies.patches  # type: ignore
+
+
+def test_diamond_inheritance_runs_shared_directives_once():
+    """A directive of a base class reachable through more than one base runs exactly once, and
+    directives run base classes first, following the MRO."""
+
+    class Base(metaclass=DirectiveMeta):
+        name = "base"
+        conflicts("%gcc")
+
+    class Left(Base):
+        conflicts("%clang")
+
+    class Right(Base):
+        conflicts("%intel")
+
+    class Diamond(Left, Right):
+        conflicts("%nvhpc")
+
+    def conflict_specs(cls):
+        return [str(spec) for spec, _ in cls.conflicts[Spec()]]
+
+    assert conflict_specs(Base) == ["%gcc"]
+    assert conflict_specs(Left) == ["%gcc", "%clang"]
+    assert conflict_specs(Right) == ["%gcc", "%intel"]
+    assert conflict_specs(Diamond) == ["%gcc", "%intel", "%clang", "%nvhpc"]
