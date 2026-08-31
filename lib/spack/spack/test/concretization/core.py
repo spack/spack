@@ -53,6 +53,7 @@ from spack.solver.reuse import spec_filter_from_packages_yaml
 from spack.spec import Spec
 from spack.test.conftest import RepoBuilder
 from spack.version import Version, VersionList, ver
+from spack.version_def import VersionDefinition
 
 
 def check_spec(abstract, concrete):
@@ -3249,16 +3250,16 @@ def test_reusable_externals_different_spec(mock_packages, tmp_path: pathlib.Path
 
 def test_concretization_version_order():
     versions = [
-        (Version("develop"), {}),
-        (Version("1.0"), {}),
-        (Version("2.0"), {"deprecated": True}),
-        (Version("1.1"), {}),
-        (Version("1.1alpha1"), {}),
-        (Version("0.9"), {"preferred": True}),
+        VersionDefinition(Version("develop"), 1, {}),
+        VersionDefinition(Version("1.0"), 2, {}),
+        VersionDefinition(Version("2.0"),3, {"deprecated": True}),
+        VersionDefinition(Version("1.1"), 4, {}),
+        VersionDefinition(Version("1.1alpha1"), 5, {}),
+        VersionDefinition(Version("0.9"), 6, {"preferred": True}),
     ]
     result = [
-        v
-        for v, _ in sorted(
+        vdef.version
+        for vdef in sorted(
             versions, key=spack.package_base.concretization_version_order, reverse=True
         )
     ]
