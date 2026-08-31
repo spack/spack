@@ -14,6 +14,7 @@ import spack.util.lang
 from spack.util.lang import (
     Singleton,
     SingletonInstantiationError,
+    cached_method,
     dedupe,
     match_predicate,
     memoized,
@@ -410,3 +411,74 @@ class TestPriorityOrderedMapping:
 
         assert list(m.values()) == [1, 2, 3]
         assert list(m.reversed_values()) == [3, 2, 1]
+
+
+def test_cached_method_caches_per_instance_and_args():
+    class Foo:
+        def __init__(self):
+            self.calls = 0
+
+        @cached_method
+        def f(self, x):
+            self.calls += 1
+            return x * 2
+
+    foo = Foo()
+    assert foo.f(2) == 4
+    assert foo.f(2) == 4
+    assert foo.calls == 1
+    assert foo.f(3) == 6
+    assert foo.calls == 2
+
+    # Each instance has its own cache
+    other = Foo()
+    assert other.f(2) == 4
+    assert other.calls == 1
+
+
+def test_cached_method_distinguishes_positional_and_keyword_args():
+    class Foo:
+        def __init__(self):
+            self.calls = 0
+
+        @cached_method
+        def f(self, x):
+            self.calls += 1
+            return x
+
+    foo = Foo()
+    assert foo.f(1) == 1
+    assert foo.f(x=1) == 1
+    assert foo.calls == 2
+
+    assert foo.f(1) == 1
+    assert foo.f(x=1) == 1
+    assert foo.calls == 2
+
+
+def test_cached_method_does_not_require_hashable_self():
+    class Unhashable:
+        __hash__ = None  # type: ignore[assignment]
+
+        @cached_method
+        def f(self, x):
+            return x
+
+    assert Unhashable().f(1) == 1
+
+
+def test_cached_method_under_property():
+    class Foo:
+        def __init__(self):
+            self.calls = 0
+
+        @property
+        @cached_method
+        def value(self) -> int:
+            self.calls += 1
+            return 42
+
+    foo = Foo()
+    assert foo.value == 42
+    assert foo.value == 42
+    assert foo.calls == 1

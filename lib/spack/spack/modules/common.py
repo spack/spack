@@ -23,19 +23,7 @@ import pathlib
 import re
 import string
 import warnings
-from typing import (
-    IO,
-    Any,
-    ClassVar,
-    Dict,
-    Iterator,
-    List,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import IO, ClassVar, Dict, Iterator, List, NamedTuple, Optional, Tuple, Type, Union
 
 import spack.vendor.jinja2
 
@@ -63,7 +51,7 @@ from spack.active_environment import active_environment
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 from spack.enums import Context
 from spack.util import tty
-from spack.util.lang import Singleton, dedupe
+from spack.util.lang import Singleton, cached_method, dedupe
 
 from .error import (
     CoreCompilersNotFoundError,
@@ -392,7 +380,6 @@ class BaseConfiguration:
         self.name = module_set_name
         self.explicit = explicit
         self._configuration_cache = {} if cache is None else cache
-        self._cache: Dict[str, Any] = {}
         _modules_cfg = spack.config.CONFIG.get_config("modules")
         _set_cfg = _modules_cfg.get(module_set_name, {})
         self._config: dict = _set_cfg.get(self.module_system, {})
@@ -413,7 +400,6 @@ class BaseConfiguration:
             self.default_projections = {"all": "{name}/{version}"}
 
         self.compiler = None
-        self._core_compilers: Optional[List[spack.spec.Spec]] = None
         if self.hierarchical:
             candidates = collections.defaultdict(list)
             language_virtuals = ("c", "cxx", "fortran")
@@ -589,6 +575,7 @@ class BaseConfiguration:
         return self.conf.get("verbose")
 
     @property
+    @cached_method
     def core_compilers(self) -> List[spack.spec.Spec]:
         """Returns the list of "Core" compilers
 
@@ -596,9 +583,6 @@ class BaseConfiguration:
             CoreCompilersNotFoundError: if the key was not specified in the configuration file or
                 the sequence is empty
         """
-        if self._core_compilers is not None:
-            return self._core_compilers
-
         compilers = []
         for c in self._config.get("core_compilers", []):
             compilers.extend(spack.spec.Spec(f"%{c}").dependencies())
@@ -613,8 +597,7 @@ class BaseConfiguration:
             msg = 'the key "core_compilers" must be set in modules.yaml'
             raise CoreCompilersNotFoundError(msg)
 
-        self._core_compilers = compilers
-        return self._core_compilers
+        return compilers
 
     @property
     def core_specs(self) -> List[str]:
@@ -627,19 +610,16 @@ class BaseConfiguration:
         return self._config.get("filter_hierarchy_specs", {})
 
     @property
+    @cached_method
     def hierarchy_tokens(self) -> List[str]:
         """Returns the list of tokens that are part of the modulefile
         hierarchy. ``compiler`` is always present.
         """
-        if "hierarchy_tokens" not in self._cache:
-            self._cache["hierarchy_tokens"] = self._compute_hierarchy_tokens()
-        return self._cache["hierarchy_tokens"]
-
-    def _compute_hierarchy_tokens(self) -> List[str]:
         configured = self._config.get("hierarchy", [])
         return list(dedupe(itertools.chain(configured, ["compiler"])))
 
     @property
+    @cached_method
     def requires(self) -> Dict[str, spack.spec.Spec]:
         """Returns a dictionary mapping all the requirements of this spec to the actual provider.
 
@@ -647,11 +627,6 @@ class BaseConfiguration:
 
         Returns an empty dictionary if hierarchical mode is disabled.
         """
-        if "requires" not in self._cache:
-            self._cache["requires"] = self._compute_requires()
-        return self._cache["requires"]
-
-    def _compute_requires(self) -> Dict[str, spack.spec.Spec]:
         if not self.hierarchical:
             return {}
 
@@ -681,17 +656,13 @@ class BaseConfiguration:
         return requirements
 
     @property
+    @cached_method
     def provides(self) -> Dict[str, spack.spec.Spec]:
         """Returns a dictionary mapping all the services provided by this
         spec to the spec itself.
 
         Returns an empty dictionary if hierarchical mode is disabled.
         """
-        if "provides" not in self._cache:
-            self._cache["provides"] = self._compute_provides()
-        return self._cache["provides"]
-
-    def _compute_provides(self) -> Dict[str, spack.spec.Spec]:
         if not self.hierarchical:
             return {}
 
@@ -724,13 +695,9 @@ class BaseConfiguration:
         return {**self.requires, **self.provides}
 
     @property
+    @cached_method
     def missing(self) -> List[str]:
         """Returns the list of tokens that are not available."""
-        if "missing" not in self._cache:
-            self._cache["missing"] = self._compute_missing()
-        return self._cache["missing"]
-
-    def _compute_missing(self) -> List[str]:
         return [x for x in self.hierarchy_tokens if x not in self.available]
 
 
@@ -739,9 +706,6 @@ class FileLayout:
 
     def __init__(self, configuration):
         self.conf = configuration
-        self._unlocked_paths: Optional[Dict[Optional[Tuple[str, ...]], List[Tuple[str, ...]]]] = (
-            None
-        )
 
     @property
     def modulerc(self) -> str:
@@ -868,6 +832,7 @@ class FileLayout:
         return parts
 
     @property
+    @cached_method
     def unlocked_paths(self) -> Dict[Optional[Tuple[str, ...]], List[Tuple[str, ...]]]:
         """Returns a dictionary mapping conditions to a list of unlocked
         paths.
@@ -876,11 +841,6 @@ class FileLayout:
         key 'None'. The other keys represent the list of services you need
         loaded to unlock the corresponding paths.
         """
-        if self._unlocked_paths is None:
-            self._unlocked_paths = self._compute_unlocked_paths()
-        return self._unlocked_paths
-
-    def _compute_unlocked_paths(self) -> Dict[Optional[Tuple[str, ...]], List[Tuple[str, ...]]]:
         unlocked: Dict[Optional[Tuple[str, ...]], List[Tuple[str, ...]]] = collections.defaultdict(
             list
         )
@@ -948,7 +908,6 @@ class ModuleContext(tengine.Context):
     def __init__(self, configuration, layout: "FileLayout") -> None:
         self.conf = configuration
         self.layout = layout
-        self._environment_modifications: Optional[List[EnvironmentModification]] = None
 
     @tengine.context_property
     def spec(self) -> spack.spec.Spec:
@@ -1024,13 +983,9 @@ class ModuleContext(tengine.Context):
         )
 
     @tengine.context_property
+    @cached_method
     def environment_modifications(self) -> List[EnvironmentModification]:
         """List of environment modifications to be processed."""
-        if self._environment_modifications is None:
-            self._environment_modifications = self._compute_environment_modifications()
-        return self._environment_modifications
-
-    def _compute_environment_modifications(self) -> List[EnvironmentModification]:
         use_view = self.conf.use_view
         assert isinstance(use_view, (bool, str))
 

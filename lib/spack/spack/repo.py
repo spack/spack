@@ -58,7 +58,7 @@ import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.util import tty
 from spack.util.filesystem import working_dir
-from spack.util.lang import Singleton, ensure_unwrapped, memoized
+from spack.util.lang import Singleton, cached_method, ensure_unwrapped
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -804,11 +804,11 @@ class RepoPath:
         """Get the first repo in precedence order."""
         return self.repos[0] if self.repos else None
 
-    @memoized
+    @cached_method
     def _all_package_names_set(self, include_virtuals) -> Set[str]:
         return {name for repo in self.repos for name in repo.all_package_names(include_virtuals)}
 
-    @memoized
+    @cached_method
     def _all_package_names(self, include_virtuals: bool) -> List[str]:
         """Return all unique package names in all repositories."""
         return sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
