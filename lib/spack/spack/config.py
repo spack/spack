@@ -1829,12 +1829,7 @@ def _detect_old_resources() -> Dict[str, bool]:
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
     share_modules = os.path.join(spack.paths.share_path, "spack", "modules")
 
-    result = {
-        'installs': False,
-        'gpg_keys': False,
-        'modules': False,
-        'licenses': False,
-    }
+    result = {"installs": False, "gpg_keys": False, "modules": False, "licenses": False}
 
     # Check for installs
     if os.path.exists(opt_spack):
@@ -1843,8 +1838,8 @@ def _detect_old_resources() -> Dict[str, bool]:
             # Quick check: any directories in opt/spack besides gpg and licenses?
             for entry in os.listdir(opt_spack):
                 entry_path = os.path.join(opt_spack, entry)
-                if os.path.isdir(entry_path) and entry not in ['gpg', 'licenses']:
-                    result['installs'] = True
+                if os.path.isdir(entry_path) and entry not in ["gpg", "licenses"]:
+                    result["installs"] = True
                     break
         except OSError:
             pass
@@ -1854,7 +1849,7 @@ def _detect_old_resources() -> Dict[str, bool]:
     if os.path.exists(gpg_dir):
         try:
             if os.listdir(gpg_dir):  # Non-empty
-                result['gpg_keys'] = True
+                result["gpg_keys"] = True
         except OSError:
             pass
 
@@ -1862,7 +1857,7 @@ def _detect_old_resources() -> Dict[str, bool]:
     if os.path.exists(share_modules):
         try:
             if os.listdir(share_modules):  # Non-empty
-                result['modules'] = True
+                result["modules"] = True
         except OSError:
             pass
 
@@ -1871,7 +1866,7 @@ def _detect_old_resources() -> Dict[str, bool]:
     if os.path.exists(licenses_dir):
         try:
             if os.listdir(licenses_dir):  # Non-empty
-                result['licenses'] = True
+                result["licenses"] = True
         except OSError:
             pass
 
@@ -2125,7 +2120,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
         tty.debug(f"Loading layout scope from {layout_scope_path}")
         yield from cfg.push_scope_incremental(
             DirectoryConfigScope("layout", layout_scope_path),
-            priority=ConfigScopePriority.CONFIG_FILES
+            priority=ConfigScopePriority.CONFIG_FILES,
         )
 
 
