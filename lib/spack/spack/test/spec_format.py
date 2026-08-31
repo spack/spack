@@ -4,6 +4,7 @@
 """Tests formatting of spec strings"""
 
 import spack.concretize
+import spack.spec
 from spack.enums import PartStyle
 from spack.spec import DIM_COLOR, HIGHLIGHT_COLOR, VARIANT_COLOR, VERSION_COLOR, Spec
 from spack.util.tty.color import colorize
@@ -238,3 +239,24 @@ def test_color_reaches_dependencies_of_transitive_dependencies():
         f"^dep{VERSION_COLOR}@@2@. %compiler{VERSION_COLOR}@@3@.", color=True
     )
     assert s._format_dependencies(color=False) == "^dep@2 %compiler@3"
+
+
+def test_variants_of_concrete_spec_abbreviate_patches(config, mock_packages):
+    """A concrete spec renders its patch checksums as 7-character prefixes with a single =,
+    a weaker constraint it satisfies; the full checksums remain available through its hash.
+    An abstract spec prints its variants exactly, so its string form round-trips."""
+    concrete = spack.concretize.concretize_one("patch")
+    checksums = concrete.variants["patches"].values
+    assert checksums
+    prefixes = "patches=" + ",".join(c[:7] for c in checksums)
+    assert prefixes in concrete.format("{variants}")
+    assert "patches:=" not in concrete.format("{variants}")
+    assert prefixes in concrete.format()
+    assert concrete.format("{variants.patches}") == prefixes
+    styled = concrete.format("{variants}", variant_style_fn=_always_variant(PartStyle.NORMAL))
+    assert prefixes in styled
+    assert "patches:=" not in styled
+    assert concrete.satisfies(Spec(concrete.format(spack.spec.DISPLAY_FORMAT)))
+
+    abstract = Spec(f"patches:={','.join(checksums)}")
+    assert abstract.format("{variants}") == f"patches:={','.join(checksums)}"

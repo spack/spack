@@ -4359,7 +4359,7 @@ class Spec:
         if compiler_flags_str:
             parts.append(compiler_flags_str)
 
-        variants_str = str(self.variants)
+        variants_str = self.variants.string(abbreviate_patches=self._concrete)
         if variants_str:
             parts.append(variants_str)
 
@@ -4626,7 +4626,8 @@ class Spec:
                     if style == spack.enums.PartStyle.HIDDEN:
                         continue
                     key_color: Optional[str] = _STYLE_COLOR_MAP.get(style, color_code)
-                    result += prefix + safe_color(sig, str(current[key]), key_color)
+                    variant_str = current[key].string(current_node._concrete)
+                    result += prefix + safe_color(sig, variant_str, key_color)
                 return result
 
             if variant_style_fn and is_variant_part and not isinstance(current, VariantMap):
@@ -4635,7 +4636,12 @@ class Spec:
                     return ""
                 color_code = _STYLE_COLOR_MAP.get(style, color_code)
 
-            return safe_color(sig, str(current), color_code)
+            if isinstance(current, (VariantMap, vt.VariantValue)):
+                string = current.string(abbreviate_patches=current_node._concrete)
+            else:
+                string = str(current)
+
+            return safe_color(sig, string, color_code)
 
         return SPEC_FORMAT_RE.sub(format_attribute, format_string).strip()
 
@@ -5450,7 +5456,9 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
             clone[name] = variant.copy()
         return clone
 
-    def __str__(self):
+    def string(self, abbreviate_patches: bool = False) -> str:
+        """The string representation of the map. ``abbreviate_patches`` is passed on to each
+        variant, see :meth:`~spack.variant.VariantValue.string`."""
         if not self:
             return ""
 
@@ -5463,13 +5471,16 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
         string = io.StringIO()
 
         for key in bool_keys:
-            string.write(str(self[key]))
+            string.write(self[key].string(abbreviate_patches))
 
         for key in kv_keys:
             string.write(" ")
-            string.write(str(self[key]))
+            string.write(self[key].string(abbreviate_patches))
 
         return string.getvalue()
+
+    def __str__(self):
+        return self.string()
 
     def partition_keys(self) -> Tuple[List[str], List[str]]:
         """Partition the keys of the map into two lists: booleans and key-value pairs."""

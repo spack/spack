@@ -487,7 +487,9 @@ class VariantValue:
     def __contains__(self, item: Union[str, bool]) -> bool:
         return item in self.values
 
-    def __str__(self) -> str:
+    def string(self, abbreviate_patches: bool = False) -> str:
+        """The string representation of this variant. With ``abbreviate_patches``, a ``patches``
+        variant is printed as 7-character checksum prefixes without the concreteness marker."""
         # boolean variants are printed +foo or ~foo
         if self.type == VariantType.BOOL:
             sigil = "+" if self.value else "~"
@@ -495,16 +497,22 @@ class VariantValue:
                 sigil *= 2
             return f"{sigil}{self.name}"
 
+        delim = "==" if self.propagate else "="
+
+        if abbreviate_patches and self.name == "patches" and self.values:
+            value_str = ",".join(str(x)[:7] for x in self.values)
+            return f"{self.name}{delim}{spack.spec_parser.quote_if_needed(value_str)}"
+
         # concrete multi-valued foo:=bar,baz
         concrete = ":" if self.type == VariantType.MULTI and self.concrete else ""
-        delim = "==" if self.propagate else "="
         if not self.values:
             value_str = "*"
-        elif self.name == "patches" and self.concrete:
-            value_str = ",".join(str(x)[:7] for x in self.values)
         else:
             value_str = ",".join(str(x) for x in self.values)
         return f"{self.name}{concrete}{delim}{spack.spec_parser.quote_if_needed(value_str)}"
+
+    def __str__(self) -> str:
+        return self.string()
 
     def __repr__(self):
         return (

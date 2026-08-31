@@ -896,6 +896,16 @@ def test_patches_variant_prefix_intersects_and_constrains():
     assert s.variants["patches"].values == ("abcdef",)
 
 
+def test_patches_variant_round_trips_through_str():
+    """A concrete-flagged patches variant prints its full checksums, so the string form
+    parses back into an equal spec."""
+    checksum_a, checksum_b = "a1" * 32, "b2" * 32
+    s = Spec(f"patches:={checksum_a},{checksum_b}")
+    round_tripped = Spec(str(s))
+    assert round_tripped == s
+    assert round_tripped.satisfies(s) and s.satisfies(round_tripped)
+
+
 def test_constrain_narrowing():
     s = Spec("foo=*")
     assert s.variants["foo"].type == spack.variant.VariantType.MULTI
