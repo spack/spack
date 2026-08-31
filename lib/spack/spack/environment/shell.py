@@ -97,7 +97,11 @@ def activate_header(
 
 def deactivate_header(shell):
     shell_cmd = ShellCmdString(shell)
-    cmds: List[str] = [shell_cmd.unset("SPACK_ENV"), shell_cmd.unset("SPACK_ENV_VIEW")]
+    cmds: List[str] = [
+        shell_cmd.unset("SPACK_ENV"),
+        shell_cmd.unset("SPACK_ENV_VIEW"),
+        shell_cmd.unset("VIRTUAL_ENV_PROMPT"),
+    ]
 
     if shell == "csh":
         cmds.append(
