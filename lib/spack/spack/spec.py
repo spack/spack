@@ -6198,13 +6198,10 @@ def _inject_patches_variant(root: Spec) -> None:
         edge_patches: List[spack.patch.Patch] = []
         for cond, deps_by_name in pkg_deps.items():
             dependency = deps_by_name.get(dspec.spec.name)
-            if not dependency:
+            if not dependency or not dependency.patches:
                 continue
 
             if not dspec.parent.satisfies(cond):
-                continue
-
-            if not dependency.patches:
                 continue
 
             for pcond, patch_list in dependency.patches.items():
