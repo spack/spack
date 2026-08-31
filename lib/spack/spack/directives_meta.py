@@ -29,15 +29,6 @@ def get_spec(spec_str: str) -> spack.spec.Spec:
     return SPEC_CACHE[spec_str]
 
 
-class Directive(tuple):
-    """A directive queued for deferred execution: its function, followed by its arguments."""
-
-    __slots__ = ()
-
-    def __call__(self, pkg):
-        return self[0](pkg, *self[1:])
-
-
 class DirectiveMeta(type):
     """Flushes the directives that were temporarily stored in the staging
     area into the package.
@@ -100,7 +91,7 @@ class DirectiveMeta(type):
             DirectiveMeta._dict_to_directives[d].append(name)
 
     @staticmethod
-    def _queued_directives(cls: type, name: str) -> Iterator[Directive]:
+    def _queued_directives(cls: type, name: str) -> Iterator[Callable]:
         """Directives of the given name queued for cls: base classes first, each class in the
         MRO once."""
         for klass in reversed(cls.__mro__):
@@ -142,7 +133,8 @@ class DirectiveMeta(type):
         # example of this is ``depends_on(..., patches=[patch(...), ...])``. In that case, we
         # should not execute those directives as part of the current package, but let the called
         # directive handle them. This function removes such directives from the execution queue.
-        if isinstance(value, (list, tuple)) and not isinstance(value, Directive):
+        # directive instances are callable tuples, so exclude them from the descent
+        if isinstance(value, (list, tuple)) and not callable(value):
             for item in value:
                 DirectiveMeta._remove_kwarg_value_directives_from_queue(item)
         elif callable(value):  # directives are always callable
