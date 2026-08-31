@@ -71,9 +71,9 @@ def shell_quote(value: str, shell: str = "sh") -> str:
             return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
         return value
     elif shell == "bat":
-        if any(c in value for c in " \t&|<>^%;,="):
-            return '"' + value.replace('"', '""') + '"'
-        return value
+        # bat uses double quotes. The %~N syntax strips quotes when passing to helpers.
+        # Double any existing double quotes to escape them.
+        return '"' + value.replace('"', '""') + '"'
     elif shell == "pwsh":
         if "'" in value or any(c in value for c in " \t\n$`;&|<>(){}[]"):
             return "'" + value.replace("'", "''") + "'"

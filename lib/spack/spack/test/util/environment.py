@@ -175,9 +175,16 @@ def test_shell_modifications_are_properly_escaped(shell):
         append_cmd = f"%{append_cmd}%"
         set_cmd = f"%{set_cmd}%"
         separator = f'"{os.pathsep}"'
+        # bat uses double quotes for quoting (single quotes are literal characters)
+        assert f'{set_cmd} VAR "$PATH"' in script
+        assert f'{append_cmd} VAR "$ANOTHER_PATH" {separator}' in script
+        assert f'{set_cmd} RM_RF "$(rm -rf /)"' in script
     elif shell == "pwsh":
         separator = f"'{os.pathsep}'"
-
-    assert f"{set_cmd} VAR '$PATH'" in script
-    assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in script
-    assert f"{set_cmd} RM_RF '$(rm -rf /)'" in script
+        assert f"{set_cmd} VAR '$PATH'" in script
+        assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in script
+        assert f"{set_cmd} RM_RF '$(rm -rf /)'" in script
+    else:
+        assert f"{set_cmd} VAR '$PATH'" in script
+        assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in script
+        assert f"{set_cmd} RM_RF '$(rm -rf /)'" in script
