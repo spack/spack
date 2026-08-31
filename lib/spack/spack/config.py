@@ -1951,7 +1951,7 @@ def _create_redirect_scope() -> None:
 
     # Create a syaml_str with override marker for the key
     include_key = syaml.syaml_str("include")
-    include_key.override = True
+    include_key.override = True  # type: ignore[attr-defined]
 
     # Create the dict with the marked key
     redirect_data = syaml.syaml_dict([(include_key, modified_includes)])
