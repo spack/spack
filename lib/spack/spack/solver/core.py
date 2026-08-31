@@ -151,7 +151,7 @@ def extract_args(model, predicate_name):
 
 class SourceContext:
     """Tracks context in which a Spec's clause-set is generated (i.e.
-    with ``SpackSolverSetup.spec_clauses``).
+    with ``SpecClauseGenerator.spec_clauses``).
 
     Facts generated for the spec may include this context.
     """
