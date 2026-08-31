@@ -1937,22 +1937,15 @@ def _create_redirect_scope() -> None:
         tty.debug("No include section found in include.yaml, cannot create redirect")
         return
 
-    # Copy the include list and modify the user scope path
     modified_includes = []
     for entry in data["include"]:
-        if isinstance(entry, dict):
-            # Make a copy of the entry
-            new_entry = entry.copy()
+        new_entry = entry.copy()
 
-            # If this is the user scope with legacy path, update it
-            if new_entry.get("name") == "user" and new_entry.get("path") == "~/.spack":
-                new_entry["path"] = "~/.config/spack"
-                tty.debug("Redirecting user scope from ~/.spack to ~/.config/spack")
+        if new_entry.get("name") == "user" and new_entry.get("path") == "~/.spack":
+            new_entry["path"] = "~/.config/spack"
+            tty.debug("Redirecting user scope from ~/.spack to ~/.config/spack")
 
-            modified_includes.append(new_entry)
-        else:
-            # Non-dict entries (shouldn't happen, but preserve them)
-            modified_includes.append(entry)
+        modified_includes.append(new_entry)
 
     # Create redirect scope directory
     redirect_path = _redirect_scope_path()
