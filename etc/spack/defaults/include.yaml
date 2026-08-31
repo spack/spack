@@ -3,14 +3,5 @@ include:
   - path: "${platform}"
     optional: true
 
-  # Layout scheme: chooses old (data lives under $spack) or xdg (data lives
-  # under ~/.local/share/spack etc.). Earlier entries override later ones,
-  # so the scheme can supersede `base` for paths that diverge between
-  # layouts. See lib/spack/docs/where_spack_writes_data.rst.
-  - name: old-layout
-    path: old
-    when: 'layout_detected("old")'
-    optional: true
-
-  # base config (lowest priority among defaults)
+  # base packages.yaml overridable by platform-specific settings
   - path: base
