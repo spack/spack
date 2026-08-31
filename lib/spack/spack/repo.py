@@ -1224,6 +1224,9 @@ class Repo:
         # Maps that goes from package name to corresponding file stat
         self._fast_package_checker: Optional[FastPackageChecker] = None
 
+        # Package classes by name, without namespace, before overrides are applied
+        self._pkg_classes: Dict[str, Type["spack.package_base.PackageBase"]] = {}
+
         # Indexes for this repository, computed lazily
         self._repo_index: Optional[RepoIndex] = None
         self._cache = cache
@@ -1478,14 +1481,8 @@ class Repo:
         """
         return not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
 
-    def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
-        """Get the class for the package out of its module.
-
-        First loads (or fetches from cache) a module for the
-        package. Then extracts the package class from the module
-        according to Spack's naming convention.
-        """
-        _, pkg_name = self.partition_package_name(pkg_name)
+    def _resolve_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
+        """Import the module for a package name without namespace, and return its class."""
         fullname = f"{self.full_namespace}.{self.naming_scheme.pkg_name_to_pkg_dir(pkg_name)}"
         if self.package_api >= (2, 0):
             fullname += ".package"
@@ -1509,6 +1506,20 @@ class Repo:
         cls = getattr(module, class_name)
         if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
+
+        return cls
+
+    def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
+        """Get the class for the package out of its module.
+
+        First loads (or fetches from cache) a module for the
+        package. Then extracts the package class from the module
+        according to Spack's naming convention.
+        """
+        _, pkg_name = self.partition_package_name(pkg_name)
+        cls = self._pkg_classes.get(pkg_name)
+        if cls is None:
+            cls = self._pkg_classes[pkg_name] = self._resolve_pkg_class(pkg_name)
 
         # Early exit if no overrides to apply or undo
         if (
