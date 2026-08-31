@@ -148,3 +148,7 @@ def test_fetch_progress_from_headers_disabled():
         {"Content-Length": "1234"}, get_time=lambda: 1.0, enabled=False
     )
     assert not progress.enabled
+
+
+def test_fetch_for_spec():
+    print("test")

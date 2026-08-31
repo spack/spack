@@ -1435,7 +1435,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             raise ValueError("Cannot retrieve fetcher for package without concrete version.")
         if not self._fetcher:
             # assign private member with the public setter api for error checking
-            self.fetcher = fs.for_package_version(self)
+            self.fetcher = fs.for_spec(self.spec)
         return self._fetcher
 
     @fetcher.setter
@@ -1908,7 +1908,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # TODO: resources
         if self.spec.versions.concrete:
             try:
-                source_id = fs.for_spec(self).source_id()
+                source_id = fs.for_spec(self.spec).source_id()
             except (fs.ExtrapolationError, fs.InvalidArgsError, spack.error.NoURLError):
                 # ExtrapolationError happens if the package has no fetchers defined.
                 # InvalidArgsError happens when there are version directives with args,

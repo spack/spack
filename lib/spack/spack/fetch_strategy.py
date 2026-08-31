@@ -191,8 +191,8 @@ class FetchStrategy:
         """
         return cls.url_attr in args
 
-
-@fetcher
+# Not registered with @fetcher because it has no url_attr so it can't be used
+# by all_strategies. for_spec() returns it for packages with no-code packages.
 class BundleFetchStrategy(FetchStrategy):
     """
     Fetch strategy associated with bundle, or no-code, packages.
@@ -1530,7 +1530,7 @@ def _check_version_attributes(
     """
     all_optionals = set(a for s in all_strategies for a in s.optional_attrs)
 
-    args = spec.package_class.version_def_for_spec(spec).kwargs
+    args = spack.repo.PATH.get_pkg_class(spec.fullname).version_def_for_spec(spec).kwargs
     extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr, "no_cache"])
     extra.intersection_update(all_optionals)
 
@@ -1590,25 +1590,25 @@ def _from_merged_attrs(
     return fetcher(**attrs)
 
 
-def for_spec(spec: "spack.spec.Spec"):
-    # TODO: remove this method when we understand why _for_spec modifies packages.
-    # See 52ac1b09c9ed3eee6489b33665beb1255c893068.
-    saved_versions = pkg.spec.versions
-    saved_when_versions = pkg.spec.when_versions
+# def for_spec(spec: "spack.spec.Spec"):
+#     # TODO: remove this method when we understand why _for_spec modifies packages.
+#     # See 52ac1b09c9ed3eee6489b33665beb1255c893068.
+#     saved_versions = spec.versions
+#     saved_when_versions = spec.when_versions
 
-    try:
-        return _for_spec(spec)
-    finally:
-        spec.versions = saved_versions
-        spec.when_versions = saved_when_versions
+#     try:
+#         return _for_spec(spec)
+#     finally:
+#         spec.versions = saved_versions
+#         spec.when_versions = saved_when_versions
 
 
-def _for_spec(spec: "spack.spec.Spec") -> FetchStrategy:
+def for_spec(spec: "spack.spec.Spec") -> FetchStrategy:
     """Determine a fetch strategy from an abstract or concrete spec."""
 
     # No-code packages have a custom fetch strategy to work around issues
     # with resource staging.
-    pkg_class = spec.package_class
+    pkg_class = spack.repo.PATH.get_pkg_class(spec.fullname)
     if not pkg_class.has_code:
         return BundleFetchStrategy()
 

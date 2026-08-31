@@ -342,7 +342,9 @@ def url_stats(args):
         for v in list(pkg_cls.versions):
             try:
                 pkg = pkg_cls(spack.spec.Spec(pkg_cls.name))
-                fetcher = fs.for_package_version(pkg, v)
+                spec_cp = pkg.spec.copy()
+                spec_cp.versions = spack.version.VersionList([v])
+                fetcher = fs.for_spec(spec_cp)
             except (fs.InvalidArgsError, fs.FetcherConflict):
                 continue
             version_stats.add(pkg_cls.name, fetcher)
