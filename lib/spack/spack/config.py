@@ -1776,6 +1776,11 @@ def _isolate_scope_path() -> str:
     return os.path.join(spack.paths.etc_path, "isolate")
 
 
+def _redirect_scope_path() -> str:
+    """Path to the redirect scope directory."""
+    return os.path.join(spack.paths.etc_path, "redirect")
+
+
 def _is_spack_writable() -> bool:
     """Check if $spack/etc/spack is writable."""
     etc_spack = spack.paths.etc_path
@@ -1889,6 +1894,73 @@ def _create_empty_layout_scope() -> None:
         f.write("# An empty layout scope means all new XDG-compliant defaults are in use.\n")
 
 
+def _include_yaml_is_unmodified() -> bool:
+    """Check if etc/spack/include.yaml is unmodified according to git.
+
+    Returns:
+        True if include.yaml has no uncommitted changes (clean in git status)
+    """
+    include_path = os.path.join(spack.paths.etc_path, "include.yaml")
+
+    # Check if we're in a git repository
+    if not os.path.exists(os.path.join(spack.paths.prefix, ".git")):
+        # Not a git repo, consider it modified
+        return False
+
+    try:
+        # Run git status on the specific file
+        result = spack.util.executable.which("git")(
+            "status", "--porcelain", include_path,
+            output=str, error=str, fail_on_error=False
+        )
+        # If output is empty, file is unmodified
+        return not result.strip()
+    except Exception:
+        # If git fails, assume modified to be safe
+        return False
+
+
+def _create_redirect_scope() -> None:
+    """Create redirect scope to override spack's includes.
+
+    This uses the include:: override syntax to redirect user scope from
+    ~/.spack to ~/.config/spack without modifying the tracked include.yaml.
+    """
+    redirect_path = _redirect_scope_path()
+    filesystem.mkdirp(redirect_path)
+
+    # Create include.yaml with include:: override
+    # The :: in the YAML will be parsed as an override marker
+    include_yaml_path = os.path.join(redirect_path, "include.yaml")
+
+    content = """include::
+  # user configuration scope
+  - name: "user"
+    path_override_env_var: SPACK_USER_CONFIG_PATH
+    path: "~/.config/spack"
+    optional: true
+    prefer_modify: true
+    when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+
+  # site configuration scope
+  - name: "site"
+    path: "$spack/etc/spack/site"
+    optional: true
+
+  # system configuration scope
+  - name: "system"
+    path_override_env_var: SPACK_SYSTEM_CONFIG_PATH
+    path: "/etc/spack"
+    optional: true
+    when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+"""
+
+    with open(include_yaml_path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    tty.debug(f"Created redirect scope at {redirect_path}")
+
+
 def _perform_migration_check(cfg: Configuration) -> None:
     """Perform migration detection and setup layout scope if needed.
 
@@ -1968,6 +2040,14 @@ def create_incremental() -> Generator[Configuration, None, None]:
     it. It is bundled inside a function so that configuration can be
     initialized lazily.
     """
+    # Check if we need to create redirect scope BEFORE loading config
+    # Redirect scope uses include:: to override spack's includes
+    redirect_path = _redirect_scope_path()
+    if not os.path.exists(redirect_path):
+        if _is_spack_writable() and _include_yaml_is_unmodified():
+            tty.debug("Creating redirect scope to redirect user to ~/.config/spack")
+            _create_redirect_scope()
+
     # Default scopes are builtins and the default scope within the Spack instance.
     # These are versioned with Spack and can be overridden by systems, sites or user scopes.
     cfg = create_from(
@@ -1997,6 +2077,19 @@ def create_incremental() -> Generator[Configuration, None, None]:
         #     init to reference lower scopes is more flexible.
         yield from cfg.push_scope_incremental(
             DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
+        )
+
+    # Add redirect scope if it exists
+    # This scope has higher priority than spack and uses include:: to override
+    # spack's includes, redirecting user scope from ~/.spack to ~/.config/spack
+    redirect_path = _redirect_scope_path()
+    if os.path.exists(redirect_path):
+        tty.debug(f"Loading redirect scope from {redirect_path}")
+        # Use priority between CONFIG_FILES (1) and ENVIRONMENT (2)
+        # Higher priority means the include:: override takes effect
+        yield from cfg.push_scope_incremental(
+            DirectoryConfigScope("redirect", redirect_path),
+            priority=1.5,  # Higher than spack's CONFIG_FILES priority
         )
 
     # Check if migration/layout scope setup is needed
