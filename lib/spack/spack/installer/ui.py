@@ -12,12 +12,12 @@ import io
 import os
 import sys
 import time
-from typing import Callable, Dict, Generator, List, NamedTuple, Optional, Union, cast
+from typing import Callable, Dict, Generator, List, NamedTuple, Optional, TextIO, Union
 
 import spack.config
 import spack.util.tty.color
 from spack.util.lang import pretty_duration
-from spack.util.log_parse import make_log_context, parse_log_events
+from spack.util.log_parse import write_log_context
 from spack.util.path import padding_filter, padding_filter_bytes
 
 if sys.platform == "win32":
@@ -173,18 +173,22 @@ class TerminalUI(InstallerUI):
     def __init__(
         self,
         total: int,
-        stdout: Optional[io.TextIOWrapper] = None,
+        stdout: Optional[TextIO] = None,
+        stderr: Optional[TextIO] = None,
         get_terminal_size: Callable[[], os.terminal_size] = os.get_terminal_size,
         get_time: Callable[[], float] = time.monotonic,
         is_tty: Optional[bool] = None,
         color: Optional[bool] = None,
         verbose: bool = False,
         filter_padding: bool = False,
+        show_log_on_error: bool = False,
     ) -> None:
         super().__init__()
         self.reads_terminal_input = True
+        #: How many trailing lines of a failed build's log to show, or None for the whole log.
+        self.log_tail: Optional[int] = None if show_log_on_error else 20
         if stdout is None:
-            stdout = cast(io.TextIOWrapper, sys.stdout)
+            stdout = sys.stdout
             if is_tty is None:
                 # For the real stdout, use GetConsoleMode-based detection on Windows, which is
                 # correct through ConPTY where isatty() is not.
@@ -210,6 +214,7 @@ class TerminalUI(InstallerUI):
         self.blocked: bool = False
 
         self.stdout = stdout
+        self.stderr = stderr if stderr is not None else sys.stderr
         self.get_terminal_size = get_terminal_size
         self.terminal_size = os.terminal_size((0, 0))
         self.terminal_size_changed: bool = True
@@ -449,22 +454,19 @@ class TerminalUI(InstallerUI):
             self.stdout.flush()
 
     def _parse_log_summary(self, build_info: BuildInfo) -> None:
-        """Parse the build log for errors/warnings and store the summary."""
+        """Store the interesting parts of a failed build's log."""
         if not build_info.log_path or not os.path.exists(build_info.log_path):
             return
-        errors, warnings, tail_event = parse_log_events(build_info.log_path, tail=20)
-        events = [*errors, *warnings]
-        if tail_event is not None:
-            events.append(tail_event)
-        if events:
-            build_info.log_summary = make_log_context(events)
+        out = io.StringIO()
+        write_log_context(out, build_info.log_path, tail=self.log_tail)
+        build_info.log_summary = out.getvalue() or None
 
     def on_finished(self, failures: List[str]) -> None:
         """Write the stored log summaries of the failed builds to stderr."""
         for build_id in failures:
             build_info = self.builds.get(build_id)
             if build_info is not None and build_info.log_summary:
-                sys.stderr.write(build_info.log_summary)
+                self.stderr.write(build_info.log_summary)
 
     def on_total_increased(self, count: int) -> None:
         self.total += count

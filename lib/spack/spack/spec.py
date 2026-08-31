@@ -211,16 +211,238 @@ def ensure_modern_format_string(fmt: str) -> None:
 def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchitecture:
     if isinstance(name, spack.vendor.archspec.cpu.Microarchitecture):
         return name
+    if name == "*":
+        # canonicalize target=* to target=: like @: in version lists
+        name = ":"
+    elif ":" in name or "," in name:
+        name = _canonical_target_range(name)
     return spack.vendor.archspec.cpu.TARGETS.get(
         name, spack.vendor.archspec.cpu.generic_microarchitecture(name)
     )
 
 
+def _closed_interval_targets(
+    lower: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    upper: spack.vendor.archspec.cpu.Microarchitecture,
+) -> Set[spack.vendor.archspec.cpu.Microarchitecture]:
+    """The targets in the closed interval between the bounds; a None lower bound means the
+    family root. The set is exact: a target below the upper bound is one of its ancestors, so
+    no target outside the table can enter the interval."""
+    candidates = set(upper.ancestors)
+    candidates.add(upper)
+    if lower is None:
+        return candidates
+    return {t for t in candidates if t >= lower}
+
+
+def _decompose_target_set(targets: Set[spack.vendor.archspec.cpu.Microarchitecture]) -> List[str]:
+    """A deterministic decomposition of a set of targets into interval elements: repeatedly
+    emit the largest interval that starts at a minimal remaining target and stays inside the
+    set. The result is a function of the set alone, so lists denoting the same targets
+    decompose identically; it is not always of minimal length."""
+    result = []
+    remaining = set(targets)
+    while remaining:
+        m = min((t for t in remaining if not any(s < t for s in remaining)), key=lambda t: t.name)
+        best, members = m, {m}
+        for u in sorted(remaining, key=lambda t: t.name):
+            if not u > m:
+                continue
+            candidates = _closed_interval_targets(m, u)
+            if len(candidates) > len(members) and candidates <= remaining:
+                best, members = u, candidates
+        if m == best:
+            result.append(m.name)
+        elif m == m.family:
+            result.append(f":{best.name}")
+        else:
+            result.append(f"{m.name}:{best.name}")
+        remaining -= members
+    return result
+
+
+def _canonical_target_range(name: str) -> str:
+    """The canonical string representation of a target. For example, `x86_64:icelake` is
+    canonicalized to `:icelake`. A list is rewritten as a decomposition of the set of targets
+    it denotes, so that lists denoting the same set, such as `nocona:haswell` and
+    `nocona:nehalem,nehalem:haswell`, have one canonical form: elements denoting no target
+    are dropped, and the rest are fused per family."""
+    elements = set()
+    for element in name.split(","):
+        if element == "*":
+            element = ":"
+        t_min, t_sep, t_max = element.partition(":")
+        if t_sep and t_max:
+            family = _make_microarchitecture(t_max).family.name
+            if not t_min or t_min == family:
+                # if the upperbound is a root, canonicalize to the singleton
+                element = t_max if t_max == family else f":{t_max}"
+            elif t_min == t_max:
+                element = t_min
+        elements.add(element)
+
+    if len(elements) <= 1:
+        return ",".join(elements)
+
+    table = spack.vendor.archspec.cpu.TARGETS
+    opens: Set[str] = set()  # lower bounds of `x:` elements
+    union: Set[spack.vendor.archspec.cpu.Microarchitecture] = set()
+    verbatim = set()  # elements with bounds outside the table cannot be compared
+    for element in elements:
+        t_min, t_sep, t_max = element.partition(":")
+        if not t_min and not t_max:
+            if t_sep:
+                # ':' is unbounded on both sides, so it contains every other element
+                return ":"
+            verbatim.add(element)
+        elif (t_min and t_min not in table) or (t_max and t_max not in table):
+            verbatim.add(element)
+        elif t_sep and not t_max:
+            opens.add(t_min)
+        else:
+            union |= _closed_interval_targets(
+                table[t_min] if t_min else None, table[t_max or t_min]
+            )
+
+    if not opens and not union and not verbatim:
+        # every element denotes the empty set: keep them rather than returning an empty string
+        return ",".join(sorted(elements))
+
+    # keep the antichain of minimal lower bounds: `y:` contains `x:` whenever y is below x
+    opens = {x for x in opens if not any(table[y] < table[x] for y in opens)}
+    # an open element already denotes every target above its bound
+    union = {t for t in union if not any(t >= table[x] for x in opens)}
+
+    kept = {f"{x}:" for x in opens} | verbatim
+    kept.update(_decompose_target_set(union))
+    return ",".join(sorted(kept))
+
+
+def _satisfies_target_range(lhs: str, rhs: str) -> bool:
+    """Whether every microarchitecture in ``rhs`` is also in ``lhs``."""
+    lhs_min, lhs_sep, lhs_max = lhs.partition(":")
+    rhs_min, rhs_sep, rhs_max = rhs.partition(":")
+
+    if not rhs_sep:
+        # rhs is concrete: contained iff it falls within lhs's bounds. Comparing with
+        # microarchitectures rather than names keeps bounds outside the table from raising.
+        t = _make_microarchitecture(rhs_min)
+        if not lhs_sep:
+            return rhs_min == lhs_min
+        return (not lhs_min or t >= _make_microarchitecture(lhs_min)) and (
+            not lhs_max or t <= _make_microarchitecture(lhs_max)
+        )
+
+    if not lhs_sep:
+        # lhs is concrete: a range is inside it only by denoting that point too.
+        return rhs_min == rhs_max == lhs_min
+
+    # Both are ranges
+    if lhs_min:
+        if not rhs_min and not rhs_max:
+            return False
+        floor = (
+            _make_microarchitecture(rhs_min)
+            if rhs_min
+            else _make_microarchitecture(rhs_max).family
+        )
+        if not floor >= _make_microarchitecture(lhs_min):
+            return False
+    if lhs_max:
+        if not rhs_max or not _make_microarchitecture(rhs_max) <= _make_microarchitecture(lhs_max):
+            return False
+    return True
+
+
+def _covered_by_target_list(element: str, rhs_elements: List[str]) -> bool:
+    """Whether every target the element denotes is in one of ``rhs_elements``. An element
+    inside a single rhs element is covered; a range with an upper bound in the table can also
+    be covered by several rhs elements jointly, so its targets are checked one by one. An open
+    element is only inside an open element, since it admits targets outside the table."""
+    if any(_satisfies_target_range(r, element) for r in rhs_elements):
+        return True
+    if len(rhs_elements) == 1:
+        return False
+    t_min, t_sep, t_max = element.partition(":")
+    table = spack.vendor.archspec.cpu.TARGETS
+    if not t_max or t_max not in table or (t_min and t_min not in table):
+        # a point is covered element-wise or not at all; so are unknown names
+        return False
+    members = _closed_interval_targets(table[t_min] if t_min else None, table[t_max])
+    return all(any(_satisfies_target_range(r, m.name) for r in rhs_elements) for m in members)
+
+
+def _parse_target_range(
+    element: str,
+) -> Tuple[
+    Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    Optional[spack.vendor.archspec.cpu.Microarchitecture],
+]:
+    """Returns a tuple of (min, max) with None meaning unbounded. For concrete targets
+    min == max."""
+    t_min, t_sep, t_max = element.partition(":")
+    if not t_sep:
+        t = _make_microarchitecture(t_min)
+        return t, t
+    return (
+        _make_microarchitecture(t_min) if t_min else None,
+        _make_microarchitecture(t_max) if t_max else None,
+    )
+
+
+@lang.memoized
+def _minimal_upper_bounds(
+    a: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    b: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+) -> List[Optional[spack.vendor.archspec.cpu.Microarchitecture]]:
+    """The minimal targets above both a and b. The target graph is not a lattice, so there is
+    not always a unique least upper bound: incomparable bounds can have several minimal common
+    upper bounds. Memoized: the search below scans the whole target table."""
+    if a is None:
+        return [b]
+    if b is None:
+        return [a]
+    if a.name == b.name:
+        return [a]
+    if a.family != b.family:
+        return []
+    if a >= b:
+        return [a]
+    if b > a:
+        return [b]
+    above = [
+        t
+        for t in spack.vendor.archspec.cpu.TARGETS.values()
+        if t.family == a.family and t >= a and t >= b
+    ]
+    return [t for t in above if not any(other < t for other in above)]
+
+
+@lang.memoized
+def _maximal_lower_bounds(
+    a: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    b: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+) -> List[Optional[spack.vendor.archspec.cpu.Microarchitecture]]:
+    """The dual of ``_minimal_upper_bounds``: the maximal targets below both a and b."""
+    if a is None:
+        return [b]
+    if b is None:
+        return [a]
+    if a.name == b.name:
+        return [a]
+    if a.family != b.family:
+        return []
+    if a <= b:
+        return [a]
+    if b < a:
+        return [b]
+    below = set(a.ancestors) & set(b.ancestors)
+    return [t for t in below if not any(t < other for other in below)]
+
+
 @lang.lazy_lexicographic_ordering
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
-
-    ANY_TARGET = _make_microarchitecture("*")
 
     @staticmethod
     def _attr_satisfies(lhs: Optional[str], rhs: Optional[str]) -> bool:
@@ -237,6 +459,79 @@ class ArchSpec:
         if not lhs or not rhs:
             return True
         return lhs == "*" or rhs == "*" or lhs == rhs
+
+    @staticmethod
+    def _target_satisfies(
+        lhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+        rhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    ) -> bool:
+        """Whether every microarchitecture in the lhs target is also in the rhs one."""
+        if not rhs:
+            return True
+
+        if lhs is None:
+            return False
+
+        # Subset test: every target of the lhs must be covered by the rhs
+        rhs_elements = str(rhs).split(",")
+        return all(
+            _covered_by_target_list(l_range, rhs_elements) for l_range in str(lhs).split(",")
+        )
+
+    @staticmethod
+    def _target_intersects(
+        lhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+        rhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    ) -> bool:
+        """Whether there is a microarchitecture in both targets."""
+        if not lhs or not rhs:
+            return True
+
+        return bool(ArchSpec._target_intersection(lhs, rhs))
+
+    @staticmethod
+    def _target_intersection(
+        lhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+        rhs: Optional[spack.vendor.archspec.cpu.Microarchitecture],
+    ) -> List[str]:
+        """The elements of the target list denoting the targets both sides contain. Every element
+        is an interval, so the overlap of two of them starts at a common upper bound of their
+        lower bounds and ends at a common lower bound of their upper bounds. Those bounds are not
+        always unique, so one pair of intervals can produce several intervals: one per
+        combination."""
+        results: List[str] = []
+
+        if not lhs or not rhs:
+            return results
+
+        for l_element in str(lhs).split(","):
+            for r_element in str(rhs).split(","):
+                # a concrete element intersects another element iff contained in it, and the
+                # overlap is the concrete element itself
+                if ":" not in r_element:
+                    if _satisfies_target_range(l_element, r_element):
+                        results.append(r_element)
+                    continue
+                if ":" not in l_element:
+                    if _satisfies_target_range(r_element, l_element):
+                        results.append(l_element)
+                    continue
+                l_min, l_max = _parse_target_range(l_element)
+                r_min, r_max = _parse_target_range(r_element)
+                for n_min in _minimal_upper_bounds(l_min, r_min):
+                    for n_max in _maximal_lower_bounds(l_max, r_max):
+                        if n_min is None and n_max is None:
+                            results.append(":")
+                        elif n_min is None:
+                            results.append(f":{n_max}")
+                        elif n_max is None:
+                            results.append(f"{n_min}:")
+                        elif n_min.name == n_max.name:
+                            results.append(n_min.name)
+                        elif n_min.family == n_max.family and n_min <= n_max:
+                            results.append(f"{n_min}:{n_max}")
+
+        return results
 
     @staticmethod
     def default_arch():
@@ -407,11 +702,11 @@ class ArchSpec:
         """
         other = self._autospec(other)
 
-        for attribute in ("platform", "os"):
-            if not self._attr_satisfies(getattr(self, attribute), getattr(other, attribute)):
-                return False
-
-        return self._target_satisfies(other, strict=True)
+        return (
+            self._attr_satisfies(self.platform, other.platform)
+            and self._attr_satisfies(self.os, other.os)
+            and self._target_satisfies(self.target, other.target)
+        )
 
     def intersects(self, other: "ArchSpec") -> bool:
         """Return True if there exists at least one concrete spec that matches both
@@ -425,138 +720,35 @@ class ArchSpec:
         """
         other = self._autospec(other)
 
-        for attribute in ("platform", "os"):
-            if not self._attr_intersects(getattr(self, attribute), getattr(other, attribute)):
-                return False
-
-        return self._target_satisfies(other, strict=False)
-
-    def _target_satisfies(self, other: "ArchSpec", strict: bool) -> bool:
-        if strict is True:
-            need_to_check = bool(other.target)
-        else:
-            need_to_check = bool(other.target and self.target)
-
-        if not need_to_check:
-            return True
-
-        # other_target is there and strict=True
-        if self.target is None:
-            return False
-
-        # self.target is not None, and other is target=*
-        if other.target == ArchSpec.ANY_TARGET:
-            return True
-
-        # target=* on the lhs overlaps any target, but is too broad to satisfy a specific one
-        if not strict and self.target == ArchSpec.ANY_TARGET:
-            return True
-
-        return bool(self._target_intersection(other))
+        return (
+            self._attr_intersects(self.platform, other.platform)
+            and self._attr_intersects(self.os, other.os)
+            and self._target_intersects(self.target, other.target)
+        )
 
     def _target_constrain(self, other: "ArchSpec") -> bool:
-        if self.target is None and other.target is None:
+        # An unconstrained target on either side means the other side is the intersection.
+        # _target_intersection cannot express that: it returns an empty list whenever one of
+        # the two has no target, which would turn into an empty target below.
+        if other.target is None:
             return False
 
-        if not other._target_satisfies(self, strict=False):
-            raise UnsatisfiableArchitectureSpecError(self, other)
-
-        if self.target_concrete:
-            return False
-
-        elif other.target_concrete:
+        if self.target is None:
             self.target = other.target
             return True
 
-        # Compute the intersection of every combination of ranges in the lists
-        results = self._target_intersection(other)
-        attribute_str = ",".join(results)
+        results = self._target_intersection(self.target, other.target)
+        if not results:
+            raise UnsatisfiableArchitectureSpecError(self, other)
 
-        intersection_target = _make_microarchitecture(attribute_str)
+        # Targets are stored canonically, so the intersection equals self.target exactly when
+        # self is already inside other.
+        intersection_target = _make_microarchitecture(",".join(results))
         if self.target == intersection_target:
             return False
 
         self.target = intersection_target
         return True
-
-    def _target_intersection(self, other):
-        results = []
-
-        if not self.target or not other.target:
-            return results
-
-        for s_target_range in str(self.target).split(","):
-            s_min, s_sep, s_max = s_target_range.partition(":")
-            for o_target_range in str(other.target).split(","):
-                o_min, o_sep, o_max = o_target_range.partition(":")
-
-                if not s_sep:
-                    # s_target_range is a concrete target
-                    # get a microarchitecture reference for at least one side
-                    # of each comparison so we can use archspec comparators
-                    s_comp = _make_microarchitecture(s_min)
-                    if not o_sep:
-                        if s_min == o_min:
-                            results.append(s_min)
-                    elif (not o_min or s_comp >= o_min) and (not o_max or s_comp <= o_max):
-                        results.append(s_min)
-                elif not o_sep:
-                    # "cast" to microarchitecture
-                    o_comp = _make_microarchitecture(o_min)
-                    if (not s_min or o_comp >= s_min) and (not s_max or o_comp <= s_max):
-                        results.append(o_min)
-                else:
-                    # Take the "min" of the two max, if there is a partial ordering.
-                    n_max = ""
-                    if s_max and o_max:
-                        _s_max = _make_microarchitecture(s_max)
-                        _o_max = _make_microarchitecture(o_max)
-                        if _s_max.family != _o_max.family:
-                            continue
-                        if _s_max <= _o_max:
-                            n_max = s_max
-                        elif _o_max < _s_max:
-                            n_max = o_max
-                        else:
-                            continue
-                    elif s_max:
-                        n_max = s_max
-                    elif o_max:
-                        n_max = o_max
-
-                    # Take the "max" of the two min.
-                    n_min = ""
-                    if s_min and o_min:
-                        _s_min = _make_microarchitecture(s_min)
-                        _o_min = _make_microarchitecture(o_min)
-                        if _s_min.family != _o_min.family:
-                            continue
-                        if _s_min >= _o_min:
-                            n_min = s_min
-                        elif _o_min > _s_min:
-                            n_min = o_min
-                        else:
-                            continue
-                    elif s_min:
-                        n_min = s_min
-                    elif o_min:
-                        n_min = o_min
-
-                    if n_min and n_max:
-                        _n_min = _make_microarchitecture(n_min)
-                        _n_max = _make_microarchitecture(n_max)
-                        if _n_min.family != _n_max.family or not _n_min <= _n_max:
-                            continue
-                        if n_min == n_max:
-                            results.append(n_min)
-                        else:
-                            results.append(f"{n_min}:{n_max}")
-                    elif n_min:
-                        results.append(f"{n_min}:")
-                    elif n_max:
-                        results.append(f":{n_max}")
-
-        return results
 
     def constrain(self, other: "ArchSpec") -> bool:
         """Projects all architecture fields that are specified in the given
@@ -1605,6 +1797,18 @@ def _satisfies_dependencies(lhs: "Spec", rhs: "Spec", *, resolve_virtuals: bool)
     return True
 
 
+def constrains_only_name_and_versions(spec: "Spec") -> bool:
+    """Whether the spec constrains nothing beyond its package name and versions."""
+    return (
+        not spec.variants
+        and not spec.compiler_flags
+        and spec.architecture is None
+        and spec.namespace is None
+        and not spec.abstract_hash
+        and not spec._dependencies
+    )
+
+
 def _satisfies_edge_attributes(
     lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtuals: bool
 ) -> bool:
@@ -1629,9 +1833,12 @@ def _satisfies_edge_attributes(
     if not name_mismatch:
         return lhs.spec._satisfies_node(rhs.spec, resolve_virtuals=resolve_virtuals)
 
-    # Right-hand side is virtual provided by left-hand side. The only node attribute supported is
-    # the version of the virtual. Avoid expensive lookups for provider metadata if there's no
-    # version constraint to check.
+    # Right-hand side is a virtual provided by the left-hand side. Virtuals currently support only
+    # names and versions, so if anything else is set on the rhs we return false, which allows
+    # future implementation to relax it once variants on virtuals become meaningful.
+    if not constrains_only_name_and_versions(rhs.spec):
+        return False
+
     if rhs.spec.versions == spack.version.any_version:
         return True
 
@@ -1678,11 +1885,14 @@ def _satisfies_edge(lhs: DependencySpec, rhs: DependencySpec, resolve_virtuals: 
 def _edge_is_redundant(
     edge: DependencySpec, given: DependencySpec, resolve_virtuals: bool
 ) -> bool:
-    """Whether ``edge`` adds nothing to ``given``: ``given`` satisfies it, and it states no
-    propagation ``given`` does not. A propagated edge is an input to the solver's objective even
-    where it does not narrow the solution set, so satisfaction alone does not make it redundant."""
+    # %foo and %%foo satisfy each other in both directions; they do not restrict the solution space
+    # but only influence optimality. That means that edge redundancy cannot be based on satisfies
+    # only, hence the exception.
     if edge.propagation != PropagationPolicy.NONE and given.propagation != edge.propagation:
         return False
+    if edge.spec.name != given.spec.name:
+        # keep ^mpi@3 next to ^mpi=mpich@3: whether mpich@3 provides mpi@3 is package metadata
+        resolve_virtuals = False
     return _satisfies_edge(given, edge, resolve_virtuals)
 
 
@@ -2100,10 +2310,12 @@ class Spec:
         and is appended as a parallel edge: whether it ends up sharing a node with another edge
         to the same name is for concretization to decide.
 
-        All scans compare only edges to the same package name: a ``^virtual`` edge and a
-        ``^[virtuals=virtual] provider`` edge are independent requirements and stay apart.
-        Anonymous edges share the ``""`` bucket, where only the redundancy scans apply:
-        without a name, two direct deps can be distinct dependencies.
+        The ``_same_direct_dep`` scan compares pairs with identical package names only, because
+        anonymous specs can refer to different nodes. The redundancy scans compare every pair of
+        edges. Across different names the comparison does not resolve virtuals, so a ``^virtual``
+        edge is redundant only against an edge listing it in its ``virtuals`` attribute, and
+        only when it constrains nothing but the name. An anonymous edge is redundant when any edge
+        satisfies it; a named edge is never redundant against an anonymous one.
 
         Returns True if ``self`` changed.
 
@@ -2126,7 +2338,9 @@ class Spec:
                     break
 
         if merged_edge is None and any(
-            _edge_is_redundant(candidate, edge, resolve_virtuals) for edge in bucket
+            _edge_is_redundant(candidate, edge, resolve_virtuals)
+            for edges in self._dependencies.values()
+            for edge in edges
         ):
             return False
 
@@ -2135,7 +2349,8 @@ class Spec:
 
         for edge in [
             edge
-            for edge in bucket
+            for edges in self._dependencies.values()
+            for edge in edges
             if edge is not merged_edge and _edge_is_redundant(edge, candidate, resolve_virtuals)
         ]:
             self._detach_edge(edge)
@@ -3716,32 +3931,14 @@ class Spec:
         deps: Union[bool, dt.DepTypes, dt.DepFlag] = True,
         *,
         propagation: Optional[PropagationPolicy] = None,
-    ) -> bool:
+    ) -> None:
         """Copies "other" into self, by overwriting all attributes.
 
         Args:
             other: spec to be copied onto ``self``
             deps: if True copies all the dependencies. If False copies None.
                 If deptype, or depflag, copy matching types.
-
-        Returns:
-            True if ``self`` changed because of the copy operation, False otherwise.
         """
-        # We don't count dependencies as changes here
-        changed = True
-        if hasattr(self, "name"):
-            changed = (
-                self.name != other.name
-                and self.versions != other.versions
-                and self.architecture != other.architecture
-                and self.variants != other.variants
-                and self.concrete != other.concrete
-                and self.external_path != other.external_path
-                and self.external_modules != other.external_modules
-                and self.compiler_flags != other.compiler_flags
-                and self.abstract_hash != other.abstract_hash
-            )
-
         self._package = None
 
         # Local node attributes get copied first.
@@ -3792,8 +3989,6 @@ class Spec:
             self._dunder_hash = None
             for h in ht.HASHES:
                 setattr(self, h.attr, None)
-
-        return changed
 
     def _dup_deps(
         self, other, depflag: dt.DepFlag, propagation: Optional[PropagationPolicy] = None
@@ -4091,7 +4286,7 @@ class Spec:
 
             edge_list = []
             for edge in spack.traverse.traverse_edges(
-                l1_specs, order="breadth", cover="edges", root=False, visited=set([0])
+                l1_specs, order="breadth", cover="edges", root=False
             ):
                 # yield each node only once, and generate a consistent id for it the
                 # first time it's encountered.
@@ -4164,7 +4359,7 @@ class Spec:
         if compiler_flags_str:
             parts.append(compiler_flags_str)
 
-        variants_str = str(self.variants)
+        variants_str = self.variants.string(abbreviate_patches=self._concrete)
         if variants_str:
             parts.append(variants_str)
 
@@ -4431,7 +4626,8 @@ class Spec:
                     if style == spack.enums.PartStyle.HIDDEN:
                         continue
                     key_color: Optional[str] = _STYLE_COLOR_MAP.get(style, color_code)
-                    result += prefix + safe_color(sig, str(current[key]), key_color)
+                    variant_str = current[key].string(current_node._concrete)
+                    result += prefix + safe_color(sig, variant_str, key_color)
                 return result
 
             if variant_style_fn and is_variant_part and not isinstance(current, VariantMap):
@@ -4440,7 +4636,12 @@ class Spec:
                     return ""
                 color_code = _STYLE_COLOR_MAP.get(style, color_code)
 
-            return safe_color(sig, str(current), color_code)
+            if isinstance(current, (VariantMap, vt.VariantValue)):
+                string = current.string(abbreviate_patches=current_node._concrete)
+            else:
+                string = str(current)
+
+            return safe_color(sig, string, color_code)
 
         return SPEC_FORMAT_RE.sub(format_attribute, format_string).strip()
 
@@ -4588,6 +4789,7 @@ class Spec:
                         format_string=format_string,
                         include=include,
                         deptypes=deptypes,
+                        color=color,
                         _force_direct=_force_direct,
                     )
                 )
@@ -5254,7 +5456,9 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
             clone[name] = variant.copy()
         return clone
 
-    def __str__(self):
+    def string(self, abbreviate_patches: bool = False) -> str:
+        """The string representation of the map. ``abbreviate_patches`` is passed on to each
+        variant, see :meth:`~spack.variant.VariantValue.string`."""
         if not self:
             return ""
 
@@ -5267,13 +5471,16 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
         string = io.StringIO()
 
         for key in bool_keys:
-            string.write(str(self[key]))
+            string.write(self[key].string(abbreviate_patches))
 
         for key in kv_keys:
             string.write(" ")
-            string.write(str(self[key]))
+            string.write(self[key].string(abbreviate_patches))
 
         return string.getvalue()
+
+    def __str__(self):
+        return self.string()
 
     def partition_keys(self) -> Tuple[List[str], List[str]]:
         """Partition the keys of the map into two lists: booleans and key-value pairs."""

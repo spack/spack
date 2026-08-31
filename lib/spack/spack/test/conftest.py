@@ -67,6 +67,7 @@ import spack.util.lock
 import spack.util.naming
 import spack.util.parallel
 import spack.util.spack_yaml as syaml
+import spack.util.tty
 import spack.util.tty.color
 import spack.util.url as url_util
 import spack.util.web
@@ -2397,6 +2398,10 @@ def nullify_globals(request, monkeypatch):
 
 
 def pytest_runtest_setup(item):
+    # Tests redirect std fds (capfd, dup2) without going through spack code, so cached isatty()
+    # results from a previous test may be stale.
+    spack.util.tty.clear_isatty_cache()
+
     # Skip test marked "not_on_windows" if they're run on Windows
     not_on_windows_marker = item.get_closest_marker(name="not_on_windows")
     if not_on_windows_marker and sys.platform == "win32":

@@ -1734,6 +1734,31 @@ def writable_scopes() -> List[ConfigScope]:
     return scopes
 
 
+def flattened_configuration(manifest: Optional[YamlConfigDict] = None) -> YamlConfigDict:
+    """Return every configuration section, merged across scopes, as a single document.
+
+    The sections are written under the top level key of an environment manifest, so that the
+    result can be read back by the same code that reads a ``spack.yaml``.
+
+    Args:
+        manifest: content of an environment manifest to merge the sections into. Its other
+            keys, like ``specs`` and ``view``, are kept as they are. Passing the manifest of
+            the active environment is what makes the result describe that environment.
+    """
+    top_level_key = spack.schema.env.TOP_LEVEL_KEY
+    if manifest is not None:
+        flattened = manifest.copy()
+        flattened[top_level_key] = manifest[top_level_key].copy()
+    else:
+        flattened = syaml.syaml_dict()
+        flattened[top_level_key] = syaml.syaml_dict()
+
+    for section in SECTION_SCHEMAS:
+        flattened[top_level_key][section] = CONFIG.get(section)
+
+    return flattened
+
+
 def _validate_section_name(section: str) -> None:
     """Exit if the section is not a valid section."""
     if section not in SECTION_SCHEMAS:

@@ -239,6 +239,34 @@ def test_sbom_download_location_from_git_url(mock_packages, install_mockery):
     assert sbom["packages"][0]["downloadLocation"] == "https://a/really.com/big/repo.git"
 
 
+def test_sbom_download_location_skips_broken_url_for_version_on_git_version(
+    mock_packages, install_mockery, monkeypatch
+):
+    """A package whose url_for_version() blows up on a git-resolved version (e.g. because it
+    assumes purely numeric version components) must not crash SBOM generation: for versions
+    that need a commit, url_for_version() should not be called at all, and the download
+    location should fall back to the package's git URL. Regression test for
+    https://github.com/spack/spack/issues/52864.
+    """
+
+    spec = spack.concretize.concretize_one("git-sparsepaths-version@1.0")
+
+    def broken_url_for_version(version):
+        # Mirrors the real-world crash: a package's custom url_for_version() doing
+        # arithmetic/formatting on version components that assumes they are all numeric.
+        major, minor = version[0], version[1]
+        return "v%02d-%02d.tar.gz" % (major, minor)
+
+    monkeypatch.setattr(spec.package, "url_for_version", broken_url_for_version)
+
+    generate_spdx_2_3(spec)
+
+    with open(sbom_path(spec), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    assert sbom["packages"][0]["downloadLocation"] == "https://a/really.com/big/repo.git"
+
+
 def test_sbom_download_location_from_package_url(mock_packages, install_mockery, monkeypatch):
     """Download location should come from the package-level URL."""
 

@@ -11,10 +11,9 @@ import re
 import sys
 import sysconfig
 import warnings
-from typing import Optional, Sequence, Union
+from typing import NamedTuple, Optional, Sequence, Union
 
 import spack.vendor.archspec.cpu
-from spack.vendor.typing_extensions import TypedDict
 
 import spack.platforms
 import spack.spec
@@ -27,7 +26,9 @@ from spack.util import tty
 from .config import spec_for_current_python
 
 
-class QueryInfo(TypedDict, total=False):
+class ExecutableInfo(NamedTuple):
+    """An executable found in the bootstrap store, and the spec that provides it."""
+
     spec: spack.spec.Spec
     command: spack.util.executable.Executable
 
@@ -40,17 +41,13 @@ def _python_import(module: str) -> bool:
     return True
 
 
-def _try_import_from_store(
-    module: str, query_spec: Union[str, "spack.spec.Spec"], query_info: Optional[QueryInfo] = None
-) -> bool:
+def _try_import_from_store(module: str, query_spec: Union[str, "spack.spec.Spec"]) -> bool:
     """Return True if the module can be imported from an already
     installed spec, False otherwise.
 
     Args:
         module: Python module to be imported
         query_spec: spec that may provide the module
-        query_info (dict or None): if a dict is passed it is populated with the
-            command found and the concrete spec providing it
     """
     # If it is a string assume it's one of the root specs by this module
     if isinstance(query_spec, str):
@@ -96,8 +93,6 @@ def _try_import_from_store(
                         f'provides the "{module}" Python module'
                     )
                     tty.debug(msg)
-                    if query_info is not None:
-                        query_info["spec"] = candidate_spec
                     return True
             except Exception as exc:  # pylint: disable=broad-except
                 msg = (
@@ -183,59 +178,45 @@ def _fix_ext_suffix(candidate_spec: "spack.spec.Spec"):
 
 
 def _executables_in_store(
-    executables: Sequence[str],
-    query_spec: Union["spack.spec.Spec", str],
-    query_info: Optional[QueryInfo] = None,
-) -> bool:
-    """Return True if at least one of the executables can be retrieved from
-    a spec in store, False otherwise.
+    executables: Sequence[str], query_spec: Union["spack.spec.Spec", str]
+) -> Optional[ExecutableInfo]:
+    """Return the first of the executables that can be retrieved from a spec in the
+    store, together with the spec providing it, or None if there is no such spec.
 
     The different executables must provide the same functionality and are
-    "alternate" to each other, i.e. the function will exit True on the first
-    executable found.
+    "alternate" to each other, i.e. the function returns on the first one found.
 
     Args:
         executables: list of executables to be searched
         query_spec: spec that may provide the executable
-        query_info (dict or None): if a dict is passed it is populated with the
-            command found and the concrete spec providing it
     """
     executables_str = ", ".join(executables)
     msg = "[BOOTSTRAP EXECUTABLES {0}] Try installed specs with query '{1}'"
     tty.debug(msg.format(executables_str, query_spec))
-    installed_specs = spack.store.STORE.db.query(query_spec, installed=True)
-    if installed_specs:
-        for concrete_spec in installed_specs:
-            bin_dir = concrete_spec.prefix.bin
-            # IF we have a "bin" directory and it contains
-            # the executables we are looking for
-            if (
-                os.path.exists(bin_dir)
-                and os.path.isdir(bin_dir)
-                and spack.util.executable.which_string(*executables, path=bin_dir)
-            ):
-                spack.util.environment.path_put_first("PATH", [bin_dir])
-                if query_info is not None:
-                    query_info["command"] = spack.util.executable.which(
-                        *executables, path=bin_dir, required=True
-                    )
-                    query_info["spec"] = concrete_spec
-                return True
-    return False
+    for concrete_spec in spack.store.STORE.db.query(query_spec, installed=True):
+        bin_dir = concrete_spec.prefix.bin
+        command = spack.util.executable.which(*executables, path=bin_dir)
+        if command is None:
+            continue
+        spack.util.environment.path_put_first("PATH", [bin_dir])
+        return ExecutableInfo(spec=concrete_spec, command=command)
+    return None
 
 
-def _root_spec(spec_str: str) -> str:
-    """Add a proper compiler and target to a spec used during bootstrapping.
+def _root_spec(spec_str: str, platform: Optional[str] = None, target: Optional[str] = None) -> str:
+    """Add the platform and target to a spec used during bootstrapping.
 
     Args:
-        spec_str: spec to be bootstrapped. Must be without compiler and target.
+        spec_str: spec to be bootstrapped. Must be without platform and target.
+        platform: platform the software will run on. Defaults to the host platform.
+        target: target family the software will run on. Defaults to the host target family.
     """
-    # Add a compiler and platform requirement to the root spec.
-    platform = str(spack.platforms.host())
+    if platform is None:
+        platform = str(spack.platforms.host())
+    if target is None:
+        target = str(spack.vendor.archspec.cpu.host().family)
 
-    spec_str += f" platform={platform}"
-    target = spack.vendor.archspec.cpu.host().family
-    spec_str += f" target={target}"
+    spec_str += f" platform={platform} target={target}"
 
     tty.debug(f"[BOOTSTRAP ROOT SPEC] {spec_str}")
     return spec_str

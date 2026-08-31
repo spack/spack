@@ -350,7 +350,7 @@ def test_external_node_completion(
 def test_external_spec_single_valued_variant_type_is_corrected(config):
     """Tests that an external spec string including a single-valued variant is parsed correctly."""
     externals_dict = [
-        {"spec": "dual-cmake-autotools@1.0 build_system=autotools", "prefix": "/usr/dual"}
+        {"spec": "dual-cmake-autotools@1.0 build_system=mock_autotools", "prefix": "/usr/dual"}
     ]
     parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
     specs = parser.all_specs()
@@ -359,8 +359,8 @@ def test_external_spec_single_valued_variant_type_is_corrected(config):
 
     # Single-valued variants return the value, not a tuple of values
     build_system_value = spec.variants["build_system"].value
-    assert build_system_value == "autotools", (
-        f"Expected 'autotools' but got {build_system_value!r} "
+    assert build_system_value == "mock_autotools", (
+        f"Expected 'mock_autotools' but got {build_system_value!r} "
         f"(type: {type(build_system_value).__name__})"
     )
 

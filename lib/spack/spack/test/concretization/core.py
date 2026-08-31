@@ -34,6 +34,7 @@ import spack.platforms
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
+import spack.solver.clauses
 import spack.solver.core
 import spack.solver.input_analysis
 import spack.solver.reuse
@@ -41,6 +42,7 @@ import spack.spec
 import spack.spec_filter
 import spack.traverse
 import spack.util.file_cache
+import spack.util.filesystem
 import spack.util.hash
 import spack.util.lang
 import spack.util.spack_yaml as syaml
@@ -57,6 +59,7 @@ from spack.spec import Spec
 from spack.store import Store
 from spack.test.conftest import RepoBuilder
 from spack.test.utilities import RecordingUI
+from spack.util.filesystem import getuid
 from spack.version import Version, VersionList, ver
 
 
@@ -3462,7 +3465,7 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
         (["cmake@3.27.9 %gcc", "foo %gcc"], ["%gcc"], ["cmake"], ["foo %gcc"]),
     ],
 )
-def test_spec_filters(specs, include, exclude, expected):
+def test_spec_filters(specs, include, exclude, expected, mock_packages):
     specs = [Spec(x) for x in specs]
     expected = [Spec(x) for x in expected]
     f = spack.spec_filter.SpecFilter(
@@ -4806,56 +4809,46 @@ def test_concretization_cache_count_cleanup(
     assert len(after - before) == 1  # one additional hash added by 1001st concretization
 
 
-@pytest.fixture()
-def corrupt_cache_entry(use_concretization_cache):
-    """Yields a cache and path for a fake entry. After the test body writes a corrupt file
-    to the path, the fixture asserts that fetch returns a miss and removes the file."""
+def _gzip_json(obj) -> bytes:
+    return gzip.compress(json.dumps(obj).encode())
+
+
+@pytest.mark.parametrize(
+    "corrupt",
+    [
+        lambda data: data[: len(data) // 2],  # EOFError: truncated deflate stream
+        lambda data: data[:10] + b"\xde\xad\xbe\xef" * 4,  # zlib.error: invalid deflate data
+        lambda data: gzip.compress(b"\xff\xfe\x80\x81"),  # UnicodeDecodeError: not utf-8
+        lambda data: b"not gzip at all",  # BadGzipFile: bad magic number
+        lambda data: gzip.compress(b"not json{{{"),  # JSONDecodeError: invalid json
+        lambda data: _gzip_json({"_meta": {"version": -1}}),  # unsupported entry version
+        lambda data: _gzip_json(  # valid version but malformed spec data
+            {
+                "_meta": {"version": spack.solver.asp.ConcretizationCache.VERSION},
+                "results": {"not": "valid"},
+            }
+        ),
+    ],
+    ids=[
+        "truncated",
+        "bad-deflate",
+        "not-utf8",
+        "bad-magic",
+        "bad-json",
+        "bad-version",
+        "bad-spec-data",
+    ],
+)
+def test_concretization_cache_removes_corrupt_entries(use_concretization_cache, corrupt):
+    """A corrupt concretization cache entry is a cache miss and the entry is deleted."""
     cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
-    problem = "some asp problem"
+    problem = "corrupt entry test"
+    cache.store(problem, Result(specs=[]), statistics=[])
     cache_path = cache._cache_path_from_problem(problem)
-    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_path.write_bytes(corrupt(cache_path.read_bytes()))
 
-    def write_gzip_json(obj):
-        with gzip.open(cache_path, "wb") as f:
-            f.write(json.dumps(obj).encode())
-
-    yield cache, cache_path, write_gzip_json
-
-    assert cache_path.exists(), "test should have written a corrupt file"
-    result, stats = cache.fetch(problem, [])
-    assert result is None
-    assert stats is None
-    assert not cache_path.exists(), "corrupt cache entry should have been removed"
-
-
-def test_concretization_cache_removes_corrupt_gzip(corrupt_cache_entry):
-    """A file that isn't valid gzip is removed on fetch."""
-    _, cache_path, _ = corrupt_cache_entry
-    cache_path.write_bytes(b"this is not gzip")
-
-
-def test_concretization_cache_removes_corrupt_json(corrupt_cache_entry):
-    """A file that is valid gzip but not valid JSON is removed on fetch."""
-    _, cache_path, _ = corrupt_cache_entry
-    with gzip.open(cache_path, "wb") as f:
-        f.write(b"not json{{{")
-
-
-def test_concretization_cache_removes_wrong_version(corrupt_cache_entry):
-    """A cache entry with an unsupported version is removed on fetch."""
-    _, _, write_gzip_json = corrupt_cache_entry
-    write_gzip_json({"_meta": {"version": -1}})
-
-
-def test_concretization_cache_removes_bad_spec_data(corrupt_cache_entry):
-    """A cache entry with valid JSON/version but malformed spec data is removed on fetch."""
-    _, _, write_gzip_json = corrupt_cache_entry
-    write_gzip_json(
-        {
-            "_meta": {"version": spack.solver.asp.ConcretizationCache.VERSION},
-            "results": {"not": "valid"},
-        }
-    )
+    assert cache.fetch(problem, specs=[]) == (None, None)
+    assert not cache_path.exists()
 
 
 def test_concretization_cache_asp_canonicalization():
@@ -5233,6 +5226,7 @@ def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
     pkg = mock_packages.get_pkg_class("trigger-and-effect-deps")
     setup = spack.solver.asp.SpackSolverSetup()
     setup.gen = spack.solver.asp.ProblemInstanceBuilder()
+    setup.clauses = spack.solver.clauses.SpecClauseGenerator()
     setup.package_dependencies_rules(pkg)
     setup.trigger_rules()
     setup.effect_rules()
@@ -5434,21 +5428,85 @@ def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cach
     cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
     problem = "write failure test"
 
-    def failing_replace(src, dst):
-        raise OSError("replace failed")
+    def failing_rename(src, dst):
+        raise OSError("rename failed")
 
-    monkeypatch.setattr(os, "replace", failing_replace)
+    monkeypatch.setattr(spack.util.filesystem, "rename", failing_rename)
 
-    # store() must not raise even though os.replace did
+    # store() must not raise even though the final rename did
     cache.store(problem, Result(specs=[]), statistics=[])
 
     # The final cache path should not exist
     cache_path = cache._cache_path_from_problem(problem)
     assert not cache_path.exists()
 
-    # No leftover temp files
-    temps = list(cache.root.glob(".tmp_*"))
+    # No leftover temp files (in-flight temp files are dot-prefixed)
+    temps = [p for p in cache.root.iterdir() if p.name.startswith(".")]
     assert temps == []
+
+
+def test_concretization_cache_fetch_updates_lru_time(use_concretization_cache):
+    """A cache hit refreshes the entry's mtime, so cleanup() sees it as recently used.
+
+    cleanup() prunes in ascending mtime order; if fetch() stopped touching entries,
+    the most-used entries would be evicted first instead of last.
+    """
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    problem = "lru update test"
+    cache.store(problem, Result(specs=[]), statistics=["stats"])
+    cache_path = cache._cache_path_from_problem(problem)
+
+    # backdate the entry, then check that a hit brings its mtime back to the present
+    old_time = cache_path.stat().st_mtime - 3600
+    os.utime(cache_path, (old_time, old_time))
+
+    result, _ = cache.fetch(problem, specs=[])
+    assert result is not None
+    assert cache_path.stat().st_mtime > old_time + 1800
+
+
+@pytest.mark.not_on_windows("test manipulates POSIX permissions")
+@pytest.mark.skipif(getuid() == 0, reason="user is root")
+def test_concretization_cache_store_readonly_cache(use_concretization_cache):
+    """store() silently skips caching when the cache directory isn't writable.
+
+    The cache is an optimization: not being able to write to it (e.g. a shared
+    cache owned by a CI user) must not fail the concretization that produced
+    the result.
+    """
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    cache.root.mkdir(parents=True, exist_ok=True)
+    old_mode = cache.root.stat().st_mode
+    os.chmod(cache.root, 0o555)
+    try:
+        # existing but read-only cache root
+        cache.store("read-only store test", Result(specs=[]), statistics=[])
+        assert not cache._cache_path_from_problem("read-only store test").exists()
+
+        # missing cache root that can't be created because its parent is read-only
+        nested = spack.solver.asp.ConcretizationCache(str(cache.root / "sub"))
+        nested.store("read-only mkdir test", Result(specs=[]), statistics=[])
+        assert not nested.root.exists()
+    finally:
+        os.chmod(cache.root, old_mode)
+
+
+@pytest.mark.not_on_windows("test checks POSIX permissions")
+def test_concretization_cache_entries_follow_umask(use_concretization_cache):
+    """Cache directories and entries follow the umask, so a shared read/write
+    cache gets group-usable entries without external fixups."""
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+
+    # typical umask for a setgid, group-writable shared cache
+    old_umask = os.umask(0o007)
+    try:
+        cache.store("umask problem", Result(specs=[]), statistics=[])
+    finally:
+        os.umask(old_umask)
+
+    assert cache.root.stat().st_mode & 0o777 == 0o770
+    entry = cache._cache_path_from_problem("umask problem")
+    assert entry.stat().st_mode & 0o777 == 0o660
 
 
 def test_concretization_cache_skips_automatic_splice(
@@ -5695,3 +5753,22 @@ def test_asp_facts_with_config_values():
     assert str(fn.max_dupes("cmake", 2)) == 'max_dupes("cmake",2)'
     assert str(fn.os_compatible(syaml.syaml_str('a"b\\c'), "d")) == r'os_compatible("a\"b\\c","d")'
     assert str(fn.variant_value("x", True)) == 'variant_value("x","True")'
+
+
+def test_target_star_concretizes(mock_packages, config):
+    """target=* is not a literal unknown target '*' but rather an unconstrained target"""
+    concrete = spack.concretize.concretize_one("pkg-a target=*")
+    assert concrete.architecture.target_concrete
+
+
+@pytest.mark.parametrize(
+    "unify,expected",
+    [
+        (True, spack.concretize_ui.SolveKind.TOGETHER),
+        (False, spack.concretize_ui.SolveKind.SEPARATELY),
+        ("when_possible", spack.concretize_ui.SolveKind.WHEN_POSSIBLE),
+    ],
+)
+def test_solve_kind_from_unify_configuration(unify, expected):
+    """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
+    assert spack.concretize.solve_kind(unify) is expected

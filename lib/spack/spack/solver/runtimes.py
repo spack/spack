@@ -82,12 +82,14 @@ class RuntimePropertyRecorder:
 
         dependency_spec = spack.spec.Spec(dependency_str)
         if dependency_spec.versions != spack.version.any_version:
-            self._setup.version_constraints[dependency_spec.name].add(dependency_spec.versions)
+            self._setup.clauses.record_version_constraint(
+                dependency_spec.name, dependency_spec.versions
+            )
 
         self.injected_dependencies.add(dependency_spec)
         body_str, node_variable = self.rule_body_from(when_spec)
 
-        head_clauses = self._setup.spec_clauses(dependency_spec, body=False)
+        head_clauses = self._setup.clauses.spec_clauses(dependency_spec, body=False)
         runtime_pkg = dependency_spec.name
         is_virtual = head_clauses[0].args[0] == "virtual_node"
         main_rule = (
@@ -137,7 +139,9 @@ class RuntimePropertyRecorder:
         when_substitutions = {}
         for s in when_spec.traverse(root=False):
             when_substitutions[f'"{s.name}"'] = self.node_for(s.name)
-        body_clauses = self._setup.spec_clauses(when_spec, name=node_placeholder, body=True)
+        body_clauses = self._setup.clauses.spec_clauses(
+            when_spec, name=node_placeholder, body=True
+        )
         for clause in body_clauses:
             if clause.args[0] == "virtual_on_incoming_edges":
                 # Substitute: attr("virtual_on_incoming_edges", ProviderNode, Virtual)
@@ -196,10 +200,12 @@ class RuntimePropertyRecorder:
         body_str, node_variable = self.rule_body_from(when_spec)
         constraint_spec = spack.spec.Spec(constraint_str)
 
-        constraint_clauses = self._setup.spec_clauses(constraint_spec, body=False)
+        constraint_clauses = self._setup.clauses.spec_clauses(constraint_spec, body=False)
         for clause in constraint_clauses:
             if clause.args[0] == "node_version_satisfies":
-                self._setup.version_constraints[constraint_spec.name].add(constraint_spec.versions)
+                self._setup.clauses.record_version_constraint(
+                    constraint_spec.name, constraint_spec.versions
+                )
                 args = f'"{constraint_spec.name}", "{constraint_spec.versions}"'
                 head_str = f"propagate({node_variable}, node_version_satisfies({args}))"
                 rule = f"{head_str} :-\n{body_str}."
@@ -218,7 +224,7 @@ class RuntimePropertyRecorder:
         for flag_type, default_values in flags.items():
             root_spec_str = f"{root_spec_str} {flag_type}='{default_values}'"
         root_spec = spack.spec.Spec(root_spec_str)
-        head_clauses = self._setup.spec_clauses(
+        head_clauses = self._setup.clauses.spec_clauses(
             root_spec, body=False, context=SourceContext(source="compiler")
         )
         self.rules.append(f"% Default compiler flags for {spec}\n")

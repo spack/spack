@@ -590,6 +590,22 @@ def test_filter_files_start_stop(tmp_path: pathlib.Path):
         assert all("X" == line.strip() for line in f.readlines())
 
 
+def _raise_on_replacement(match):
+    raise ZeroDivisionError("boom")
+
+
+def test_filter_file_restores_original_on_error(tmp_path: pathlib.Path):
+    path = tmp_path / "file.txt"
+    path.write_text("hello world\n", encoding="utf-8")
+
+    with pytest.raises(ZeroDivisionError):
+        fs.filter_file("world", _raise_on_replacement, str(path))
+
+    assert path.read_text(encoding="utf-8") == "hello world\n"
+    # the copy taken before filtering is the file that was put back
+    assert [p.name for p in tmp_path.iterdir()] == ["file.txt"]
+
+
 # Each test input is a tuple of entries which prescribe
 # - the 'subdirs' to be created from tmp_path
 # - the 'files' in that directory
@@ -1067,6 +1083,33 @@ def test_rename_dest_exists(tmp_path: pathlib.Path):
         assert os.path.exists(link2)
         assert os.path.realpath(str(link2)) == str(a)
         shutil.rmtree(str(f_dir))
+
+
+def test_force_symlink_replaces_existing(tmp_path: pathlib.Path):
+    target, other = tmp_path / "target", tmp_path / "other"
+    target.write_text("target", encoding="utf-8")
+    other.write_text("other", encoding="utf-8")
+
+    # over a regular file
+    link = tmp_path / "link"
+    link.write_text("stale", encoding="utf-8")
+    fs.force_symlink(str(target), str(link))
+    assert link.read_text(encoding="utf-8") == "target"
+
+    # over an existing link
+    fs.force_symlink(str(other), str(link))
+    assert link.read_text(encoding="utf-8") == "other"
+
+
+@pytest.mark.not_on_windows("the Windows symlink shim raises its own error type here")
+def test_force_symlink_propagates_other_errors(tmp_path: pathlib.Path):
+    """Only "the link exists" is retried; other errors propagate."""
+    target = tmp_path / "target"
+    target.write_text("target", encoding="utf-8")
+    with pytest.raises(FileNotFoundError) as exc_info:
+        fs.force_symlink(str(target), str(tmp_path / "missing" / "link"))
+    # the symlink call reports its src argument as filename
+    assert exc_info.value.filename == str(target)
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")

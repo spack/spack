@@ -6,7 +6,7 @@
 import functools
 import io
 import os
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, cast
 
 import pytest
 
@@ -49,6 +49,7 @@ def create_tui(
     verbose: bool = False,
     filter_padding: bool = False,
     color: Optional[bool] = None,
+    show_log_on_error: bool = False,
 ) -> Tuple[TerminalUI, List[float], SimpleTextIOWrapper]:
     """Helper function to create TerminalUI with mocked dependencies"""
     fake_stdout = SimpleTextIOWrapper(tty=is_tty)
@@ -64,15 +65,22 @@ def create_tui(
     tui = TerminalUI(
         total=total,
         stdout=fake_stdout,
+        stderr=SimpleTextIOWrapper(tty=False),
         get_terminal_size=mock_get_terminal_size,
         get_time=mock_get_time,
         is_tty=is_tty,
         verbose=verbose,
         filter_padding=filter_padding,
         color=color,
+        show_log_on_error=show_log_on_error,
     )
 
     return tui, time_values, fake_stdout
+
+
+def get_stderr(tui: TerminalUI) -> SimpleTextIOWrapper:
+    """The fake stderr that create_tui installed on the UI."""
+    return cast(SimpleTextIOWrapper, tui.stderr)
 
 
 def on_build_added(
@@ -229,15 +237,69 @@ class TestBasicStateManagement:
         tui.on_state_changed(build_id, "failed")
         assert tui.builds[build_id].log_summary is None
 
-    def test_print_failure_summaries(self, capsys):
-        """print_failure_summaries writes stored summaries to stderr, skipping builds without a
-        summary and unknown build ids."""
+    def test_print_failure_summaries(self, tmp_path):
+        """on_finished writes the stored summaries to stderr, skipping builds without a summary
+        and unknown build ids."""
         tui, _, _ = create_tui()
         build_ids = add_mock_builds(tui, 2)
 
-        tui.builds[build_ids[0]].log_summary = "error: nope\n"
+        log_file = tmp_path / "build.log"
+        log_file.write_text("error: nope\n")
+        tui.builds[build_ids[0]].log_path = str(log_file)
+        tui.on_state_changed(build_ids[0], "failed")
+
         tui.on_finished([*build_ids, "unknown"])
-        assert capsys.readouterr().err == "error: nope\n"
+        assert get_stderr(tui).getvalue() == "-- lines 1 to 1 --\n> error: nope\n"
+
+    def test_show_log_on_error_writes_whole_log(self, tmp_path):
+        """With show_log_on_error every line of the log is written."""
+        lines = [f"line {i}" for i in range(1, 101)]
+        lines[49] = "error: something went wrong"
+        log_file = tmp_path / "build.log"
+        log_file.write_text("\n".join(lines) + "\n")
+
+        tui, _, _ = create_tui(show_log_on_error=True)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.builds[build_id].log_path = str(log_file)
+        tui.on_state_changed(build_id, "failed")
+        tui.on_finished([build_id])
+
+        err = get_stderr(tui).getvalue()
+        assert "-- lines 1 to 100 --" in err
+        assert "  line 1\n" in err and "  line 100\n" in err
+        assert "> error: something went wrong\n" in err
+
+    def test_without_show_log_on_error_the_log_is_windowed(self, tmp_path):
+        """Without the flag, lines far away from the error and the tail are dropped."""
+        lines = [f"line {i}" for i in range(1, 101)]
+        lines[49] = "error: something went wrong"
+        log_file = tmp_path / "build.log"
+        log_file.write_text("\n".join(lines) + "\n")
+
+        tui, _, _ = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+        tui.builds[build_id].log_path = str(log_file)
+        tui.on_state_changed(build_id, "failed")
+        tui.on_finished([build_id])
+
+        err = get_stderr(tui).getvalue()
+        assert "> error: something went wrong\n" in err
+        assert "  line 1\n" not in err  # far from the error and outside the tail
+        assert "  line 100\n" in err  # in the tail
+
+    def test_show_log_on_error_without_any_match(self, tmp_path):
+        """With show_log_on_error the log is written even when nothing matched."""
+        log_file = tmp_path / "build.log"
+        log_file.write_text("".join(f"line {i}\n" for i in range(1, 101)))
+
+        tui, _, _ = create_tui(show_log_on_error=True)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.builds[build_id].log_path = str(log_file)
+        tui.on_state_changed(build_id, "failed")
+        tui.on_finished([build_id])
+
+        err = get_stderr(tui).getvalue()
+        assert "  line 1\n" in err and "  line 100\n" in err
 
     def test_on_progress(self):
         """Test that on_progress updates percentages"""
@@ -811,16 +873,17 @@ class TestLogFollowing:
         # Nothing should be printed since we're tracking pkg0, not pkg1
         assert fake_stdout.getvalue() == ""
 
-    def test_can_navigate_to_failed_build(self):
+    def test_can_navigate_to_failed_build(self, tmp_path):
         """Test that navigating to a failed build shows log summary and path"""
         tui, _, fake_stdout = create_tui(total=3)
         build_ids = add_mock_builds(tui, 3)
 
-        # Mark the middle build as failed and set log info
+        log_file = tmp_path / "pkg1.log"
+        log_file.write_text("error: something went wrong\n")
+
+        # Set log info before marking the middle build as failed, since that parses the log
+        tui.builds[build_ids[1]].log_path = str(log_file)
         tui.on_state_changed(build_ids[1], "failed")
-        build_info = tui.builds[build_ids[1]]
-        build_info.log_summary = "Error: something went wrong\n"
-        build_info.log_path = "/tmp/spack/pkg1.log"
 
         # Navigate from pkg0 to next -- should land on failed pkg1
         tui.tracked_build_id = build_ids[0]
@@ -831,8 +894,8 @@ class TestLogFollowing:
         tui.next(1)
         output = fake_stdout.getvalue()
         assert "Log summary of pkg1" in output
-        assert "Error: something went wrong" in output
-        assert "/tmp/spack/pkg1.log" in output
+        assert "> error: something went wrong" in output
+        assert f"Full log: {log_file}" in output
 
     def test_navigate_to_failed_build_without_summary(self):
         """Navigating to a failed build with no parsed errors points at the full log."""

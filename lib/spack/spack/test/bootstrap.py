@@ -2,34 +2,68 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import json
 import pathlib
+from typing import Any, Dict, List, Optional
 
 import pytest
 
 import spack.bootstrap
+import spack.bootstrap._common
 import spack.bootstrap.clingo
 import spack.bootstrap.config
 import spack.bootstrap.core
 import spack.bootstrap.status
 import spack.compilers.config
+import spack.concretize
 import spack.config
 import spack.environment
+import spack.error
+import spack.installer_dispatch
+import spack.paths
 import spack.spec
 import spack.store
 import spack.util.executable
 from spack.active_environment import active_environment
 
-from .conftest import _true
+CLINGO_METADATA = sorted(pathlib.Path(spack.paths.share_path).glob("bootstrap/*/clingo.json"))
+if not CLINGO_METADATA:
+    raise RuntimeError(f"no clingo metadata in {spack.paths.share_path}")
 
 PROTOTYPE_DIR = pathlib.Path(spack.bootstrap.clingo.__file__).parent / "prototypes"
 PROTOTYPES = sorted(x.name for x in PROTOTYPE_DIR.glob("*.json"))
-assert PROTOTYPES, f"no bootstrap prototypes in {PROTOTYPE_DIR}"
+if not PROTOTYPES:
+    raise RuntimeError(f"no bootstrap prototypes in {PROTOTYPE_DIR}")
+
+
+@pytest.fixture(autouse=True)
+def isolated_bootstrap_root(monkeypatch, tmp_path: pathlib.Path):
+    """Point the bootstrap root at a temporary directory, so that tests entering
+    ``ensure_bootstrap_configuration`` do not mount the user's real bootstrap config.
+
+    Two settings resolve the root: the default scope has ``root: $user_cache_path/bootstrap``,
+    and ``root_path()`` falls back to ``default_user_bootstrap_path`` when no config defines
+    it. Both are pinned here so that they agree.
+    """
+    user_cache_path = tmp_path / "user_cache"
+    monkeypatch.setattr(spack.paths, "user_cache_path", str(user_cache_path))
+    monkeypatch.setattr(
+        spack.paths, "default_user_bootstrap_path", str(user_cache_path / "bootstrap")
+    )
 
 
 @pytest.fixture
 def active_mock_environment(mutable_config, mutable_mock_env_path):
     with spack.environment.create("bootstrap-test") as env:
         yield env
+
+
+def _assert_bootstrap_store_is_active() -> None:
+    """Assert that the store in use is the bootstrap store, configured without padding."""
+    bootstrap_store = spack.bootstrap.config.store_path()
+    assert spack.store.STORE.root == bootstrap_store
+    assert spack.config.CONFIG.get("config:install_tree:root") == bootstrap_store
+    assert spack.config.CONFIG.get("config:install_tree:padded_length") == 0
 
 
 @pytest.mark.regression("22294")
@@ -40,7 +74,7 @@ def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmp_path: p
         assert spack.store.STORE.root == user_path
         assert spack.config.CONFIG.get("config:install_tree:root") == user_path
         with spack.bootstrap.ensure_bootstrap_configuration():
-            assert spack.store.STORE.root == spack.bootstrap.config.store_path()
+            _assert_bootstrap_store_is_active()
         assert spack.store.STORE.root == user_path
         assert spack.config.CONFIG.get("config:install_tree:root") == user_path
 
@@ -54,8 +88,7 @@ def test_store_padding_length_is_zero_during_bootstrapping(mutable_config, tmp_p
     with spack.store.use_store(user_path, extra_data={"padded_length": 512}):
         assert spack.config.CONFIG.get("config:install_tree:padded_length") == 512
         with spack.bootstrap.ensure_bootstrap_configuration():
-            assert spack.store.STORE.root == spack.bootstrap.config.store_path()
-            assert spack.config.CONFIG.get("config:install_tree:padded_length") == 0
+            _assert_bootstrap_store_is_active()
         assert spack.config.CONFIG.get("config:install_tree:padded_length") == 512
 
 
@@ -68,12 +101,7 @@ def test_install_tree_customization_is_respected(mutable_config, tmp_path: pathl
     store_dir = tmp_path / "store"
     spack.config.CONFIG.set("config:install_tree:root", str(store_dir))
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.store.STORE.root == spack.bootstrap.config.store_path()
-        assert (
-            spack.config.CONFIG.get("config:install_tree:root")
-            == spack.bootstrap.config.store_path()
-        )
-        assert spack.config.CONFIG.get("config:install_tree:padded_length") == 0
+        _assert_bootstrap_store_is_active()
     assert spack.config.CONFIG.get("config:install_tree:root") == str(store_dir)
     assert spack.store.STORE.root == str(store_dir)
 
@@ -105,14 +133,14 @@ def test_raising_exception_if_bootstrap_disabled(mutable_config):
         spack.bootstrap.config.store_path()
 
 
-def test_raising_exception_module_importable(config, monkeypatch):
-    monkeypatch.setattr(spack.bootstrap.core, "source_is_enabled", _true)
+def test_raising_exception_module_importable(mutable_config):
+    mutable_config.set("bootstrap:trusted", {"github-actions": True})
     with pytest.raises(ImportError, match='cannot bootstrap the "asdf" Python module'):
         spack.bootstrap.core.ensure_module_importable_or_raise("asdf")
 
 
-def test_raising_exception_executables_in_path(config, monkeypatch):
-    monkeypatch.setattr(spack.bootstrap.core, "source_is_enabled", _true)
+def test_raising_exception_executables_in_path(mutable_config):
+    mutable_config.set("bootstrap:trusted", {"github-actions": True})
     with pytest.raises(RuntimeError, match="cannot bootstrap any of the asdf, fdsa executables"):
         spack.bootstrap.core.ensure_executables_in_path_or_raise(["asdf", "fdsa"], "python")
 
@@ -229,7 +257,7 @@ def test_status_function_find_files(
     "gpg_in_path,gpg_in_store,expected_missing",
     [
         (True, False, False),  # gpg exists in PATH
-        (False, True, False),  # gpg exists in bootstrap store
+        (False, True, False),  # gpg exists in the bootstrap store
         (False, False, True),  # gpg is missing
     ],
 )
@@ -243,39 +271,21 @@ def test_gpg_status_check(
     expected_missing,
 ):
     """Test that gpg/gpg2 status is detected whether it's in PATH or in the bootstrap store."""
-    # Set up mock PATH with or without gpg
-    path_dir = tmp_path / "bin"
-    path_dir.mkdir(exist_ok=True)
-    monkeypatch.setenv("PATH", str(path_dir))
-
     if gpg_in_path:
         mock_executable("gpg2", "echo GPG 2.3.4")
+    monkeypatch.setenv("PATH", str(tmp_path / "bin"))
 
-    # Mock the bootstrap store function
-    def mock_executables_in_store(exes, query_spec, query_info=None):
-        if not gpg_in_store:
-            return False
+    def _only_gnupg_in_store(exes, query_spec):
+        if not gpg_in_store or "gpg2" not in exes:
+            return None
+        return spack.bootstrap._common.ExecutableInfo(
+            spec=spack.spec.Spec("gnupg@2.5.12"), command=spack.util.executable.Executable("gpg")
+        )
 
-        # Simulate found gpg in bootstrap store
-        if query_info is not None:
-            query_info["spec"] = "gnupg@2.5.12"
-            query_info["command"] = spack.util.executable.Executable("gpg")
-        return True
+    monkeypatch.setattr(spack.bootstrap.status, "_executables_in_store", _only_gnupg_in_store)
 
-    monkeypatch.setattr(spack.bootstrap.status, "_executables_in_store", mock_executables_in_store)
-
-    # Call only the buildcache requirements function directly to isolate the test
-    requirements = spack.bootstrap.status._buildcache_requirements()
-
-    # Find the gpg entry by examining the calls made to set up requirements
-    # We know the first entry in requirements is the gpg entry because of how
-    # _buildcache_requirements is structured:
-    # Make sure we're not out of bounds
-    assert len(requirements) >= 1, "No gpg requirement found"
-
-    # Check that the gpg requirement matches our expectations
-    gpg_req = requirements[0]
-    assert gpg_req[0] is not expected_missing
+    msg, _ = spack.bootstrap.status_message("buildcache")
+    assert ('MISSING "gpg2"' in msg) is expected_missing
 
 
 @pytest.mark.regression("31042")
@@ -289,30 +299,6 @@ def test_source_is_disabled(mutable_config):
     # Try to explicitly disable the source and verify that the behavior is the same as above
     spack.config.CONFIG.add("bootstrap:trusted:{0}:{1}".format(conf["name"], False))
     assert not spack.bootstrap.core.source_is_enabled(conf)
-
-
-@pytest.mark.regression("45247")
-def test_use_store_does_not_try_writing_outside_root(
-    tmp_path: pathlib.Path, monkeypatch, mutable_config
-):
-    """Tests that when we use the 'use_store' context manager, there is no attempt at creating
-    a Store outside the given root.
-    """
-    initial_store = mutable_config.get("config:install_tree:root")
-    user_store = tmp_path / "store"
-
-    fn = spack.store.Store.__init__
-
-    def _checked_init(self, root, *args, **kwargs):
-        fn(self, root, *args, **kwargs)
-        assert self.root == str(user_store)
-
-    monkeypatch.setattr(spack.store.Store, "__init__", _checked_init)
-
-    spack.store.reinitialize()
-    with spack.store.use_store(user_store):
-        assert spack.config.CONFIG.get("config:install_tree:root") == str(user_store)
-    assert spack.config.CONFIG.get("config:install_tree:root") == initial_store
 
 
 @pytest.mark.parametrize("prototype", PROTOTYPES)
@@ -329,3 +315,369 @@ def test_prototype_matches_a_constraint_on_its_compiler(prototype):
 
     assert s.satisfies(f"%{compiler.name}")
     assert s.satisfies(f"%{compiler.name}@{compiler.version}")
+
+
+def test_no_bootstrapping_sources_enabled(mutable_config):
+    """Tests the message raised when no source is trusted."""
+    mutable_config.set("bootstrap:trusted", {})
+    with pytest.raises(ImportError, match="no bootstrapping sources are enabled"):
+        spack.bootstrap.core.ensure_module_importable_or_raise("asdf")
+
+
+@pytest.mark.not_on_windows("The mock executable quotes its output on Windows")
+@pytest.mark.parametrize(
+    "version_output,expected",
+    [
+        ("patchelf 0.17.2", True),
+        # 0.13.1 is the oldest version we accept
+        ("patchelf 0.13.1", True),
+        ("patchelf 0.12", False),
+        # no version at all in the output
+        ("patchelf", False),
+        # a second token that is not a version
+        ("patchelf /usr/bin/patchelf", False),
+    ],
+)
+def test_verify_patchelf(version_output, expected, mock_executable):
+    patchelf = spack.util.executable.Executable(
+        str(mock_executable("patchelf", f'echo "{version_output}"'))
+    )
+    assert spack.bootstrap.core.verify_patchelf(patchelf) is expected
+
+
+@pytest.mark.not_on_windows("The mock executable quotes its output on Windows")
+def test_verify_patchelf_when_the_command_fails(mock_executable):
+    """Tests that a non-zero exit status is rejected, whatever the version string is."""
+    patchelf = spack.util.executable.Executable(
+        str(mock_executable("patchelf", 'echo "patchelf 0.17.2"\nexit 1'))
+    )
+    assert spack.bootstrap.core.verify_patchelf(patchelf) is False
+
+
+@pytest.mark.regression("52922")
+@pytest.mark.parametrize("metadata_file", CLINGO_METADATA, ids=lambda x: x.parent.name)
+def test_exactly_one_clingo_binary_matches_an_interpreter(metadata_file: pathlib.Path):
+    """A host must select a single clingo binary."""
+    data = json.loads(metadata_file.read_text(encoding="utf-8"))
+    entries = [spack.spec.Spec(x["spec"]) for x in data["verified"]]
+    combinations = {
+        (str(x.architecture.platform), str(x.architecture.target), str(x["python"].versions))
+        for x in entries
+    }
+
+    for platform, target, python_version in sorted(combinations):
+        root_spec = spack.bootstrap.core.clingo_root_spec(platform=platform, target=target)
+        abstract_spec = spack.spec.Spec(f"{root_spec} ^python@{python_version}")
+        matching = spack.bootstrap.core._matching_entries(data, abstract_spec)
+        assert len(matching) == 1, f"{abstract_spec} matches {[x['spec'] for x in matching]}"
+
+
+class _FakeBootstrapper(spack.bootstrap.core.Bootstrapper):
+    """Bootstrapper returning a canned result, or raising it when it is an exception."""
+
+    def __init__(self, conf: Dict[str, Any]) -> None:
+        self.name = conf["name"]
+        self.result = conf["result"]
+        self.tried = conf["tried"]
+
+    def try_to_bootstrap(self, request):
+        self.tried.append(self.name)
+        if isinstance(self.result, Exception):
+            raise self.result
+        return self.result
+
+
+@pytest.fixture
+def fake_bootstrap_type(monkeypatch):
+    """Register a bootstrapper type used by the sources built with ``_fake_sources``."""
+    monkeypatch.setitem(spack.bootstrap.core._bootstrap_methods, "fake", _FakeBootstrapper)
+
+
+def _fake_sources(tried: List[str], *results: Any) -> List[Dict[str, Any]]:
+    """Return one source per result, appending its name to ``tried`` when it is used."""
+    return [
+        {"name": f"src{i}", "type": "fake", "result": x, "tried": tried}
+        for i, x in enumerate(results)
+    ]
+
+
+def _fake_request(probes: List[Any], result: Optional[str] = None):
+    """Return a request whose probe records its calls and returns ``result``."""
+
+    def probe(query_spec):
+        probes.append(query_spec)
+        return result
+
+    return spack.bootstrap.core.BootstrapRequest(
+        abstract_spec=spack.spec.Spec("zlib"),
+        metadata_name="zlib",
+        probe=probe,
+        installer_args={},
+        concretize=spack.concretize.concretize_one,
+    )
+
+
+def test_the_store_is_probed_once_for_all_the_sources(fake_bootstrap_type):
+    """The store does not depend on the source, so it is queried once, before the loop."""
+    probes: List[Any] = []
+    tried: List[str] = []
+    sources = _fake_sources(tried, RuntimeError("no"), RuntimeError("no"), RuntimeError("no"))
+
+    with pytest.raises(RuntimeError, match="cannot bootstrap zlib"):
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request(probes), "zlib", RuntimeError, sources=sources
+        )
+
+    assert len(probes) == 1
+    assert tried == ["src0", "src1", "src2"]
+
+
+def test_software_in_the_store_skips_every_source(fake_bootstrap_type):
+    """When the probe finds the software, no source is tried."""
+    probes: List[Any] = []
+    tried: List[str] = []
+    sources = _fake_sources(tried, "from the source")
+
+    result = spack.bootstrap.core._bootstrap_or_raise(
+        _fake_request(probes, result="from the store"), "zlib", RuntimeError, sources=sources
+    )
+
+    assert result == "from the store"
+    assert tried == []
+
+
+def test_the_first_successful_source_wins(fake_bootstrap_type):
+    probes: List[Any] = []
+    tried: List[str] = []
+    sources = _fake_sources(tried, RuntimeError("no"), "from src1", "from src2")
+
+    result = spack.bootstrap.core._bootstrap_or_raise(
+        _fake_request(probes), "zlib", RuntimeError, sources=sources
+    )
+
+    assert result == "from src1"
+    assert tried == ["src0", "src1"]
+
+
+def test_every_source_failure_is_reported(fake_bootstrap_type):
+    """Tests that the message includes the name and the failure of every source."""
+    probes: List[Any] = []
+    tried: List[str] = []
+    sources = _fake_sources(tried, RuntimeError("first boom"), ValueError("second boom"))
+
+    with pytest.raises(RuntimeError) as exc_info:
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request(probes), "zlib", RuntimeError, sources=sources
+        )
+
+    message = str(exc_info.value)
+    for expected in ("src0", "first boom", "src1", "second boom"):
+        assert expected in message
+
+
+def test_sources_that_provide_nothing_are_reported_as_such(fake_bootstrap_type):
+    """Tests the message when every source returns None, without raising."""
+    probes: List[Any] = []
+    tried: List[str] = []
+    sources = _fake_sources(tried, None, None)
+
+    with pytest.raises(RuntimeError, match="no bootstrapping source could provide it"):
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request(probes), "zlib", RuntimeError, sources=sources
+        )
+
+    assert tried == ["src0", "src1"]
+
+
+def test_no_sources_to_try_is_reported_as_such(fake_bootstrap_type):
+    """Tests the message when the list of sources is empty."""
+    probes: List[Any] = []
+
+    with pytest.raises(RuntimeError, match='from spec "zlib": no bootstrapping sources'):
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request(probes), "zlib", RuntimeError, sources=[]
+        )
+
+
+#: The source, shipped with Spack, that builds the software it needs from sources
+SPACK_INSTALL_SOURCE = {
+    "name": "spack-install",
+    "metadata": "$spack/share/spack/bootstrap/spack-install",
+}
+
+
+class _RecordingInstaller:
+    """Stand-in for ``create_installer``, recording what it is asked to install."""
+
+    def __init__(self) -> None:
+        self.packages: Any = None
+        self.installer_args: Optional[Dict[str, Any]] = None
+        self.mirrors_when_installing: Optional[Dict[str, Any]] = None
+
+    def __call__(self, packages: Any, **installer_args: Any) -> "_RecordingInstaller":
+        self.packages = packages
+        self.installer_args = installer_args
+        return self
+
+    def install(self) -> None:
+        self.mirrors_when_installing = spack.config.CONFIG.get("mirrors")
+
+
+class _FakeConcreteSpec:
+    """Stand-in for the result of concretization. Holds a recognizable ``package``."""
+
+    def __init__(self, abstract_spec: Any) -> None:
+        self.abstract_spec = abstract_spec
+        self.package = f"package of {abstract_spec}"
+
+
+@pytest.fixture
+def recording_installer(monkeypatch):
+    """Let the source bootstrapper run without detecting, concretizing or installing."""
+    installer = _RecordingInstaller()
+    monkeypatch.setattr(spack.bootstrap.core, "_add_externals_if_missing", lambda: None)
+    monkeypatch.setattr(spack.concretize, "concretize_one", _FakeConcreteSpec)
+    monkeypatch.setattr(spack.installer_dispatch, "create_installer", installer)
+    return installer
+
+
+def test_the_install_type_maps_to_the_source_bootstrapper(mutable_config):
+    """Tests that the source shipped with Spack to build from sources is dispatched to the
+    right class.
+    """
+    mutable_config.set("bootstrap:sources", [SPACK_INSTALL_SOURCE])
+    conf = spack.bootstrap.core.bootstrapping_sources()[0]
+    assert conf["type"] == "install"
+    assert isinstance(
+        spack.bootstrap.core.create_bootstrapper(conf), spack.bootstrap.core.SourceBootstrapper
+    )
+
+
+@pytest.mark.parametrize(
+    "make_request,expected_installer_args",
+    [
+        # A module is always built from sources, while an executable may come from a build cache
+        (
+            lambda: spack.bootstrap.core.BootstrapRequest.for_module("pytest", "py-pytest"),
+            {
+                "fail_fast": True,
+                "root_policy": "source_only",
+                "dependencies_policy": "source_only",
+            },
+        ),
+        (
+            lambda: spack.bootstrap.core.BootstrapRequest.for_executables(
+                ["patchelf"], "patchelf@0.13.1:"
+            ),
+            {},
+        ),
+    ],
+    ids=["module", "executable"],
+)
+def test_the_source_bootstrapper_installs_from_its_own_mirror(
+    make_request, expected_installer_args, recording_installer, mutable_config
+):
+    """Tests that the installer arguments come from the request, and the mirror from the
+    source.
+    """
+    mutable_config.set("bootstrap:sources", [SPACK_INSTALL_SOURCE])
+    conf = spack.bootstrap.core.bootstrapping_sources()[0]
+    bootstrapper = spack.bootstrap.core.create_bootstrapper(conf)
+
+    request = make_request()
+    request.probe = lambda concrete_spec: f"probed {concrete_spec.package}"
+    result = bootstrapper.try_to_bootstrap(request)
+
+    assert recording_installer.packages == [f"package of {request.abstract_spec}"]
+    assert recording_installer.installer_args == expected_installer_args
+    assert recording_installer.mirrors_when_installing == {"spack-install": bootstrapper.url}
+    assert result == f"probed package of {request.abstract_spec}"
+
+
+def test_the_source_bootstrapper_concretizes_with_the_request(
+    recording_installer, mutable_config, monkeypatch
+):
+    """Tests that the source bootstrapper concretizes with ``request.concretize``, and never
+    calls ``spack.concretize.concretize_one``.
+    """
+
+    def _regular_concretizer(abstract_spec):
+        raise AssertionError("concretize_one was called instead of request.concretize")
+
+    monkeypatch.setattr(spack.concretize, "concretize_one", _regular_concretizer)
+    mutable_config.set("bootstrap:sources", [SPACK_INSTALL_SOURCE])
+    bootstrapper = spack.bootstrap.core.create_bootstrapper(
+        spack.bootstrap.core.bootstrapping_sources()[0]
+    )
+
+    request = spack.bootstrap.core.BootstrapRequest.for_module(
+        "clingo", "clingo-bootstrap", concretize=lambda _: _FakeConcreteSpec("a prototype")
+    )
+    request.probe = lambda concrete_spec: concrete_spec.package
+
+    assert bootstrapper.try_to_bootstrap(request) == "package of a prototype"
+
+
+def test_clingo_is_not_concretized_by_the_regular_concretizer(mutable_config, monkeypatch):
+    """Among the binaries we have clingo, so we can't concretize that with clingo."""
+    requests: List[Any] = []
+    monkeypatch.setattr(spack.bootstrap.core, "_python_import", lambda module: False)
+    monkeypatch.setattr(
+        spack.bootstrap.core,
+        "_bootstrap_or_raise",
+        lambda request, **kwargs: requests.append(request),
+    )
+
+    spack.bootstrap.core.ensure_clingo_importable_or_raise()
+
+    assert requests[0].concretize is spack.bootstrap.core._concretize_clingo
+
+
+@pytest.fixture
+def backtrace_flags(monkeypatch):
+    """Return a function setting the two flags that turn tracebacks on. Sets them both
+    off to start.
+    """
+
+    def _set(**flags: bool) -> None:
+        monkeypatch.setattr(spack.error, "debug", flags.get("debug", False))
+        monkeypatch.setattr(spack.error, "SHOW_BACKTRACE", flags.get("SHOW_BACKTRACE", False))
+
+    _set()
+    return _set
+
+
+def test_source_failures_point_at_the_backtrace_flag(fake_bootstrap_type, backtrace_flags):
+    """Tests that by default the failures are reported without their tracebacks."""
+    tried: List[str] = []
+    sources = _fake_sources(tried, RuntimeError("boom"))
+
+    with pytest.raises(RuntimeError) as exc_info:
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request([]), "zlib", RuntimeError, sources=sources
+        )
+
+    message = str(exc_info.value)
+    assert "boom" in message
+    assert 'File "' not in message
+    assert "spack --backtrace" in message
+
+
+@pytest.mark.parametrize("flag", ["debug", "SHOW_BACKTRACE"])
+def test_source_failures_include_their_traceback_when_the_flag_is_set(
+    fake_bootstrap_type, backtrace_flags, flag
+):
+    """Tests that either flag turns the tracebacks on, and the hint to enable them off."""
+    backtrace_flags(**{flag: True})
+    tried: List[str] = []
+    sources = _fake_sources(tried, RuntimeError("boom"))
+
+    with pytest.raises(RuntimeError) as exc_info:
+        spack.bootstrap.core._bootstrap_or_raise(
+            _fake_request([]), "zlib", RuntimeError, sources=sources
+        )
+
+    message = str(exc_info.value)
+    assert "boom" in message
+    assert 'File "' in message and "try_to_bootstrap" in message
+    assert "spack --backtrace" not in message

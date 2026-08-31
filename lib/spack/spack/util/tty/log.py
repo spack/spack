@@ -386,6 +386,7 @@ def redirect_stdio(write_fd: int) -> Dict[int, int]:
     for fd in {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}:
         saved_fds[fd] = os.dup(fd)
         os.dup2(write_fd, fd)
+    tty.clear_isatty_cache()
     return saved_fds
 
 
@@ -396,6 +397,7 @@ def restore_stdio(saved_fds: Dict[int, int]) -> None:
     for fd, saved_fd in saved_fds.items():
         os.dup2(saved_fd, fd)
         os.close(saved_fd)
+    tty.clear_isatty_cache()
 
 
 def _process_line(
@@ -792,6 +794,7 @@ def _writer_daemon(
     if stdout_fd:
         os.dup2(stdout_fd.fileno(), sys.stdout.fileno())
         stdout_fd.close()
+    tty.clear_isatty_cache()
 
     # list of streams to select from
     istreams = [read_file, stdin_file] if stdin_file else [read_file]
