@@ -1814,26 +1814,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             else:
                 fsys.touch(no_patches_file)
 
-    @classmethod
-    def all_patches(cls):
-        """Retrieve all patches associated with the package.
-
-        Retrieves patches on the package itself as well as patches on the
-        dependencies of the package."""
-        patches = []
-        for _, patch_list in cls.patches.items():
-            for patch in patch_list:
-                patches.append(patch)
-
-        pkg_deps = cls.dependencies
-        for dep_name in pkg_deps:
-            for _, dependency in pkg_deps[dep_name].items():
-                for _, patch_list in dependency.patches.items():
-                    for patch in patch_list:
-                        patches.append(patch)
-
-        return patches
-
     def content_hash(self, content: Optional[bytes] = None) -> str:
         """Create a hash based on the artifacts and patches used to build this package.
 
