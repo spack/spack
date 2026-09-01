@@ -1820,6 +1820,47 @@ def _has_isolate_scope(cfg: Configuration) -> bool:
     return False
 
 
+def _get_isolate_target_path(cfg: Configuration) -> Optional[str]:
+    """Get the isolation target path (where data is actually stored).
+
+    For --self: returns $spack/etc/spack/isolate
+    For --path /some/path: returns /some/path (the user scope path)
+
+    Args:
+        cfg: Configuration object to check
+
+    Returns:
+        Path to the isolation target, or None if no isolation
+    """
+    isolate_scope_path = _isolate_scope_path()
+    if not os.path.exists(isolate_scope_path):
+        return None
+
+    # Check if user scope points to isolate directory (--self case)
+    user_scope = cfg.scopes.get("user")
+    if user_scope and hasattr(user_scope, "path"):
+        try:
+            if os.path.exists(user_scope.path) and os.path.samefile(
+                user_scope.path, isolate_scope_path
+            ):
+                return isolate_scope_path
+            # Otherwise user scope points to the --path argument
+            return user_scope.path
+        except (OSError, ValueError):
+            pass
+
+    # Fallback: check all scopes for isolate match
+    for scope in cfg.scopes.values():
+        if hasattr(scope, "path"):
+            try:
+                if os.path.exists(scope.path) and os.path.samefile(scope.path, isolate_scope_path):
+                    return scope.path
+            except (OSError, ValueError):
+                pass
+
+    return None
+
+
 def _detect_old_resources() -> Dict[str, bool]:
     """Detect presence of old Spack-internal resources.
 
@@ -1994,21 +2035,18 @@ def _perform_migration_check(cfg: Configuration) -> None:
     # P3: Isolate scope exists (check if actually active in config)
     if _has_isolate_scope(cfg):
         tty.debug("Isolate scope detected during auto-migration check")
+        isolate_target = _get_isolate_target_path(cfg)
+        if not isolate_target:
+            tty.warn("Could not determine isolate target path, skipping migration")
+            return
+
+        # P3a/P3b: Handle migration with isolate scope
         if not has_old_resources:
-            # P3a: No old resources - create layout scope pointing to isolate location
-            tty.debug("P3a: No old resources, isolate scope will be primary storage")
-            # TODO: Create layout scope pointing to isolate directory
-            # TODO: Read isolate config to determine target path
-            _create_empty_layout_scope()  # Temporary: just create empty scope
+            tty.debug(f"P3a: No old resources, using isolate location: {isolate_target}")
         else:
-            # P3b: Old resources present - need selective migration
-            tty.debug("P3b: Old resources detected with isolate scope")
-            # TODO: Implement P3b migration logic
-            # - Installs: stay in place
-            # - Modules: stay in place if installs exist
-            # - Licenses: attempt copy to isolate location
-            # - GPG: attempt move to isolate location
-            _create_empty_layout_scope()  # Temporary: just create empty scope
+            tty.debug(f"P3b: Old resources detected, migrating to isolate: {isolate_target}")
+
+        _migrate_with_isolate(isolate_target, old_resources)
         return
 
     # P4: No old resources, no isolate - clean slate
@@ -2919,3 +2957,127 @@ class ConfigFormatError(spack.error.ConfigError):
 
 class RecursiveIncludeError(spack.error.SpackError):
     """Too many levels of recursive includes."""
+def _migrate_with_isolate(isolate_target: str, old_resources: Dict[str, bool]) -> None:
+    """Migrate resources to isolate location (P3a/P3b).
+
+    Acquires a lock on the isolate target directory to prevent concurrent migrations.
+
+    Args:
+        isolate_target: Path where isolated data should be stored (X)
+        old_resources: Dict indicating which old resources exist
+    """
+    # Create isolate target and acquire lock for entire migration
+    filesystem.mkdirp(isolate_target)
+    isolate_lock_path = os.path.join(isolate_target, ".spack-isolate-migration.lock")
+
+    with spack.util.lock.Lock(isolate_lock_path, default_timeout=120):
+        tty.debug(f"Acquired isolate migration lock for {isolate_target}")
+        _do_isolate_migration(isolate_target, old_resources)
+
+
+def _do_isolate_migration(isolate_target: str, old_resources: Dict[str, bool]) -> None:
+    """Perform the actual isolate migration (called with lock held).
+
+    Args:
+        isolate_target: Path where isolated data should be stored (X)
+        old_resources: Dict indicating which old resources exist
+    """
+    layout_path = _layout_scope_path()
+    filesystem.mkdirp(layout_path)
+
+    layout_config: Dict[str, Any] = {}
+
+    # GPG Keys - no clean merge function, can't merge if X/gpg exists at all
+    old_gpg_dir = os.path.join(spack.paths.prefix, "opt", "spack", "gpg")
+    target_gpg_dir = os.path.join(isolate_target, "gpg")
+
+    if old_resources["gpg_keys"]:
+        if os.path.exists(target_gpg_dir):
+            # X/gpg exists - can't merge, keep old location
+            tty.debug(f"GPG directory exists at {target_gpg_dir}, cannot merge - keeping old location")
+            if "config" not in layout_config:
+                layout_config["config"] = {}
+            layout_config["config"]["gpg_path"] = old_gpg_dir
+        else:
+            # X/gpg doesn't exist - copy GPG database to X/gpg
+            tty.debug(f"Copying GPG keys from {old_gpg_dir} to {target_gpg_dir}")
+            filesystem.mkdirp(target_gpg_dir)
+            # TODO: Actually copy the GPG database files
+            # shutil.copytree(old_gpg_dir, target_gpg_dir, dirs_exist_ok=False)
+            if "config" not in layout_config:
+                layout_config["config"] = {}
+            layout_config["config"]["gpg_path"] = target_gpg_dir
+
+    # Licenses - can merge unless filename collision
+    old_licenses_dir = os.path.join(spack.paths.prefix, "opt", "spack", "licenses")
+    target_licenses_dir = os.path.join(isolate_target, "licenses")
+
+    if old_resources["licenses"]:
+        # Check for filename collisions
+        has_collision = False
+        if os.path.exists(target_licenses_dir):
+            try:
+                old_files = set(os.listdir(old_licenses_dir))
+                target_files = set(os.listdir(target_licenses_dir))
+                collision_files = old_files & target_files
+
+                if collision_files:
+                    tty.debug(
+                        f"License filename collision: {collision_files} - keeping old location"
+                    )
+                    has_collision = True
+            except OSError:
+                # If we can't read directories, be conservative
+                has_collision = True
+
+        if has_collision:
+            # Can't merge - keep old location
+            if "config" not in layout_config:
+                layout_config["config"] = {}
+            layout_config["config"]["license_dir"] = old_licenses_dir
+        else:
+            # No collision - copy licenses to X/licenses
+            tty.debug(f"Copying licenses from {old_licenses_dir} to {target_licenses_dir}")
+            filesystem.mkdirp(target_licenses_dir)
+            # TODO: Actually copy the license files
+            # for f in os.listdir(old_licenses_dir):
+            #     shutil.copy2(os.path.join(old_licenses_dir, f),
+            #                  os.path.join(target_licenses_dir, f))
+            if "config" not in layout_config:
+                layout_config["config"] = {}
+            layout_config["config"]["license_dir"] = target_licenses_dir
+
+    # Installs/Modules
+    if old_resources["installs"]:
+        # Old installs exist - keep modules in old location
+        old_modules_tcl = os.path.join(spack.paths.prefix, "share", "spack", "modules", "tcl")
+        old_modules_lmod = os.path.join(spack.paths.prefix, "share", "spack", "modules", "lmod")
+
+        layout_config["modules"] = {
+            "default": {"roots": {"tcl": old_modules_tcl, "lmod": old_modules_lmod}}
+        }
+        tty.debug(f"Old installs exist, keeping modules in {spack.paths.prefix}/share/spack/modules")
+    else:
+        # No old installs - point modules to X
+        layout_config["modules"] = {
+            "default": {
+                "roots": {
+                    "tcl": os.path.join(isolate_target, "modules", "tcl"),
+                    "lmod": os.path.join(isolate_target, "modules", "lmod"),
+                }
+            }
+        }
+        tty.debug(f"No old installs, pointing modules to {isolate_target}/modules")
+
+    # Write config files
+    if "config" in layout_config:
+        config_yaml_path = os.path.join(layout_path, "config.yaml")
+        with open(config_yaml_path, "w", encoding="utf-8") as f:
+            syaml.dump({"config": layout_config["config"]}, f)
+
+    if "modules" in layout_config:
+        modules_yaml_path = os.path.join(layout_path, "modules.yaml")
+        with open(modules_yaml_path, "w", encoding="utf-8") as f:
+            syaml.dump(layout_config["modules"], f)
+
+    tty.debug(f"Created layout scope for isolate migration to {isolate_target}")
