@@ -77,11 +77,7 @@ class AspFunction:
 
 
 def quote(arg: str, quoted: QuotedStrings) -> str:
-    """The ASP literal for the string ``arg``: escaped, in double quotes, and kept for reuse.
-
-    Use :func:`quote_once` for the strings that are written out once, such as the messages that
-    explain a condition, so that they do not fill ``quoted``.
-    """
+    """The ASP literal for the string ``arg``: escaped, in double quotes, and kept for reuse."""
     return quoted.get(arg) or _quote(arg, quoted)
 
 

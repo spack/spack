@@ -84,9 +84,9 @@ class SpecClauseGenerator:
         self.version_constraints: Dict[str, Set] = collections.defaultdict(set)
         self.target_constraints: Set = set()
         self.variant_values_from_specs: Set = set()
-        #: Package classes by name, see pkg_class()
+        #: Cache for pkg_class()
         self._pkg_classes: Dict[str, Type[spack.package_base.PackageBase]] = {}
-        #: Whether a name is virtual, see is_virtual()
+        #: Cache for is_virtual()
         self._virtual_names: Dict[str, bool] = {}
 
     def record_version_constraint(self, name: str, versions) -> None:
@@ -255,7 +255,6 @@ class SpecClauseGenerator:
         self, spec: spack.spec.Spec, *, name: str, body: bool
     ) -> List[AspFunction]:
         """Return clauses for the virtuals a spec provides on its incoming edges."""
-        # without incoming edges there are no virtuals to report
         if not spec._dependents:
             return []
 
@@ -423,7 +422,6 @@ class SpecClauseGenerator:
             clauses.append(f.namespace(name, spec.namespace))
 
         clauses.extend(self.spec_versions(spec, name=name))
-        # an absent part contributes no clauses
         if spec.architecture:
             clauses.extend(self._arch_clauses(spec, f, name=name))
         if spec.variants:
@@ -495,18 +493,12 @@ class SpecClauseGenerator:
         return clauses
 
     def is_virtual(self, name: str) -> bool:
-        """Whether ``name`` is the name of a virtual package.
-
-        The answer is kept: this generator lives for a single setup, and the set of virtuals
-        does not change during one.
-        """
         result = self._virtual_names.get(name)
         if result is None:
             result = self._virtual_names[name] = spack.repo.PATH.is_virtual(name)
         return result
 
     def pkg_class(self, pkg_name: str) -> Type[spack.package_base.PackageBase]:
-        # This generator lives for a single setup, so a class it hands out cannot go stale.
         cls = self._pkg_classes.get(pkg_name)
         if cls is not None:
             return cls

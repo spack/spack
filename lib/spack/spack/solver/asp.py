@@ -1540,6 +1540,7 @@ class SpackSolverSetup:
             return
 
         self.gen.h2("Trigger conditions")
+        # We avoid high-level fn.* calls for performance reasons here.
         problem, quoted = self.gen.asp_problem, self.gen.quoted
         for name in self._trigger_cache:
             cache = self._trigger_cache[name]
@@ -1547,7 +1548,6 @@ class SpackSolverSetup:
             for (spec_str, _), (trigger_id, requirements) in cache.items():
                 problem.append(f"pkg_fact({quoted_name},trigger_id({trigger_id})).")
                 problem.append(f"pkg_fact({quoted_name},trigger_msg({quote_once(spec_str)})).")
-                # the requirements are written out as they are, with the trigger id prepended
                 for predicate in requirements:
                     problem.append(
                         f"condition_requirement({trigger_id},{predicate.args_str(quoted)})."
@@ -1561,6 +1561,7 @@ class SpackSolverSetup:
             return
 
         self.gen.h2("Imposed requirements")
+        # We avoid high-level fn.* calls for performance reasons here.
         problem, quoted = self.gen.asp_problem, self.gen.quoted
         for name in sorted(self._effect_cache):
             cache = self._effect_cache[name]
@@ -1568,7 +1569,6 @@ class SpackSolverSetup:
             for (spec_str, _), (effect_id, requirements) in cache.items():
                 problem.append(f"pkg_fact({quoted_name},effect_id({effect_id})).")
                 problem.append(f"pkg_fact({quoted_name},effect_msg({quote_once(spec_str)})).")
-                # see the note in trigger_rules()
                 for predicate in requirements:
                     problem.append(
                         f"imposed_constraint({effect_id},{predicate.args_str(quoted)})."
@@ -3113,17 +3113,14 @@ class ProblemInstanceBuilder:
 
     def __init__(self) -> None:
         self.asp_problem: List[str] = []
-        #: ASP literals of the strings written out for this problem, see core.quote()
+        #: Cache of quoted Python strings for use in ASP
         self.quoted: QuotedStrings = {}
 
     def fact(self, atom: AspFunction) -> None:
         self.asp_problem.append(f"{atom.to_str(self.quoted)}.")
 
     def pkg_fact(self, pkg_name: str, atom: AspFunction) -> None:
-        """Add ``pkg_fact(<pkg_name>, <atom>)``, the most common fact of the problem by far.
-
-        It is written out here, so that the wrapping ``AspFunction`` is never built.
-        """
+        """Fast helper for ``pkg_fact(<pkg_name>, <atom>)``"""
         quoted = self.quoted
         self.asp_problem.append(f"pkg_fact({quote(pkg_name, quoted)},{atom.to_str(quoted)}).")
 
