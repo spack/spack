@@ -721,6 +721,12 @@ All deprecation settings live under a ``deprecation:`` block, which can be given
 The threshold is set with ``allowed_severity``, which accepts the values ``"none"``, ``"low"``, ``"medium"``, ``"high"``, and ``"critical"`` in increasing order of permissiveness.
 The default is ``"none"``, meaning every deprecation is a hard error unless the user explicitly relaxes it.
 
+These five levels are named after the qualitative severity ratings of `CVSS <https://www.first.org/cvss/specification-document>`_.
+For a deprecation with reason ``vuln`` the level roughly corresponds to the rating of the advisory it refers to, so an advisory scored between 7.0 and 8.9 is declared ``"high"``.
+Spack neither computes nor verifies a score, so the level a recipe declares is the packager's judgement.
+The correspondence is a convention, and it exists so that a site can set these thresholds from the same policy it already applies to advisories elsewhere.
+The other reasons have no score to correspond to, and there the level ranks how urgently users should move off the deprecated spec.
+
 .. code-block:: yaml
 
    packages:
