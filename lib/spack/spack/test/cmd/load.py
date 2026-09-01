@@ -60,14 +60,15 @@ def test_manpath_trailing_colon(
 
     append_cmd = f"{_get_shell_cmd_invocation('_spack_env_append', shell)} MANPATH"
 
+    sep = os.pathsep
     if "bat" in shell:
-        expected_append = f'{append_cmd} "" ";"'
+        expected_append = f'{append_cmd} "" "{sep}"'
     else:
-        expected_append = f"{append_cmd} '' :"
+        expected_append = f"{append_cmd} '' {sep}"
 
     trailing_colon_found = any(expected_append in line for line in load_cmds.splitlines())
     assert trailing_colon_found, (
-        f"Expected trailing colon via: {expected_append}\n"
+        f"Expected trailing separator via: {expected_append}\n"
         f"This preserves system MANPATH entries.\n"
         f"Commands generated:\n{load_cmds}"
     )
@@ -93,20 +94,24 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
                 if not line:
                     continue
 
-                info = line.split(" ")
-                if info[1] == variable:
-                    value.insert(0, info[2])
+                info = line.split()
+                if len(info) >= 3 and info[1] == variable:
+                    # Strip quotes from value if present
+                    val = info[2].strip('"').strip("'")
+                    value.insert(0, val)
             return value
 
         # Map a prefix found in CMAKE_PREFIX_PATH back to a package name in mpileaks' DAG.
-        prefix_to_pkg = lambda prefix: next(
-            s.name for s in mpileaks_spec.traverse() if s.prefix == prefix
-        )
+        def prefix_to_pkg(prefix):
+            for s in mpileaks_spec.traverse():
+                if s.prefix == prefix:
+                    return s.name
+            return None
 
         paths_shell = extract_value(load_cmds, "CMAKE_PREFIX_PATH")
 
         # All but the last two paths are added by spack load; lookup what packages they're from.
-        pkgs = [prefix_to_pkg(p) for p in paths_shell]
+        pkgs = [prefix_to_pkg(p) for p in paths_shell if prefix_to_pkg(p)]
 
         # Do we have all the runtime packages?
         assert set(pkgs) == {

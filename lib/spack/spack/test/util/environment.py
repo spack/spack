@@ -161,9 +161,16 @@ def test_reverse_environment_modifications(working_env):
 def test_shell_modifications_are_properly_escaped(shell):
     """Test that variable values are properly escaped so that they can safely be eval'd."""
     changes = envutil.EnvironmentModifications()
-    changes.set("VAR", "$PATH")
-    changes.append_path("VAR", "$ANOTHER_PATH")
-    changes.set("RM_RF", "$(rm -rf /)")
+
+    # Use Windows syntax for bat, Unix syntax for other shells
+    if shell == "bat":
+        changes.set("VAR", "%PATH%")
+        changes.append_path("VAR", "%ANOTHER_PATH%")
+        changes.set("RM_RF", "$(rm -rf /)")
+    else:
+        changes.set("VAR", "$PATH")
+        changes.append_path("VAR", "$ANOTHER_PATH")
+        changes.set("RM_RF", "$(rm -rf /)")
 
     script = changes.shell_modifications(shell)
 
@@ -175,9 +182,9 @@ def test_shell_modifications_are_properly_escaped(shell):
         append_cmd = f"%{append_cmd}%"
         set_cmd = f"%{set_cmd}%"
         separator = f'"{os.pathsep}"'
-        # bat uses double quotes for quoting (single quotes are literal characters)
-        assert f'{set_cmd} VAR "$PATH"' in script
-        assert f'{append_cmd} VAR "$ANOTHER_PATH" {separator}' in script
+        # bat uses double quotes for quoting and %% to escape % signs
+        assert f'{set_cmd} VAR "%%PATH%%"' in script
+        assert f'{append_cmd} VAR "%%ANOTHER_PATH%%" {separator}' in script
         assert f'{set_cmd} RM_RF "$(rm -rf /)"' in script
     elif shell == "pwsh":
         separator = f"'{os.pathsep}'"

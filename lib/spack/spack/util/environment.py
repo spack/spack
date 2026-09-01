@@ -73,7 +73,8 @@ def shell_quote(value: str, shell: str = "sh") -> str:
     elif shell == "bat":
         # bat uses double quotes. The %~N syntax strips quotes when passing to helpers.
         # Double any existing double quotes to escape them.
-        return '"' + value.replace('"', '""') + '"'
+        # Also escape % as %% to prevent variable expansion (%PATH% -> %%PATH%%).
+        return '"' + value.replace('"', '""').replace("%", "%%") + '"'
     elif shell == "pwsh":
         if "'" in value or any(c in value for c in " \t\n$`;&|<>(){}[]"):
             return "'" + value.replace("'", "''") + "'"
