@@ -251,6 +251,10 @@ class SpecClauseGenerator:
         self, spec: spack.spec.Spec, *, name: str, body: bool
     ) -> List[AspFunction]:
         """Return clauses for the virtuals a spec provides on its incoming edges."""
+        # without incoming edges there are no virtuals to report
+        if not spec._dependents:
+            return []
+
         # TODO: a loop over `edges_to_dependencies` is preferred over `edges_from_dependents`
         # since dependents can point to specs out of scope for the solver.
         edges = spec.edges_from_dependents()
@@ -417,9 +421,13 @@ class SpecClauseGenerator:
             clauses.append(f.namespace(name, spec.namespace))
 
         clauses.extend(self.spec_versions(spec, name=name))
-        clauses.extend(self._arch_clauses(spec, f, name=name))
-        clauses.extend(self._variant_clauses(spec, f, name=name, body=body))
-        clauses.extend(self._flag_clauses(spec, f, name=name, context=context))
+        # an absent part contributes no clauses
+        if spec.architecture:
+            clauses.extend(self._arch_clauses(spec, f, name=name))
+        if spec.variants:
+            clauses.extend(self._variant_clauses(spec, f, name=name, body=body))
+        if spec.compiler_flags:
+            clauses.extend(self._flag_clauses(spec, f, name=name, context=context))
 
         # Hash for concrete specs
         if spec.concrete:
@@ -431,7 +439,8 @@ class SpecClauseGenerator:
             if spec.external:
                 clauses.append(fn.attr("external", name))
 
-        clauses.extend(self._virtuals_from_dependents(spec, name=name, body=body))
+        if spec._dependents:
+            clauses.extend(self._virtuals_from_dependents(spec, name=name, body=body))
 
         # If the spec is external and concrete, we allow all the libcs on the system
         if spec.external and spec.concrete and spack.platforms.using_libc_compatibility():
