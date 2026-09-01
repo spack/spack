@@ -151,7 +151,12 @@ def test_load_includes_run_env(shell, install_mockery, mock_fetch, mock_archive,
 
     load(shell, "mpileaks")
     load_cmds = _get_load_cmds(mpileaks_spec, shell)
-    set_cmd = f"{_get_shell_cmd_invocation('_spack_env_set', shell)} FOOBAR mpileaks"
+
+    if "bat" in shell:
+        set_cmd = f'{_get_shell_cmd_invocation("_spack_env_set", shell)} FOOBAR "mpileaks"'
+    else:
+        set_cmd = f"{_get_shell_cmd_invocation('_spack_env_set', shell)} FOOBAR mpileaks"
+
     assert set_cmd in load_cmds
 
 
