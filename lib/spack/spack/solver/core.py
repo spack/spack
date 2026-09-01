@@ -88,15 +88,22 @@ _QUOTED: Dict[str, str] = {}
 
 
 def quote(arg: str) -> str:
-    """The ASP literal for the string ``arg``: escaped, in double quotes, and kept for reuse."""
+    """The ASP literal for the string ``arg``: escaped, in double quotes, and kept for reuse.
+
+    Use :func:`quote_once` for the strings that are written out once, such as the messages that
+    explain a condition, so that they do not fill the cache.
+    """
     return _QUOTED.get(arg) or _quote(arg)
+
+
+def quote_once(arg: str) -> str:
+    """The ASP literal for a string that is not expected to come up again."""
+    return '"' + arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"") + '"'
 
 
 def _quote(arg: str) -> str:
     """Compute and keep the ASP literal for ``arg``; see :func:`quote`."""
-    result = _QUOTED[arg] = (
-        '"' + arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"") + '"'
-    )
+    result = _QUOTED[arg] = quote_once(arg)
     return result
 
 

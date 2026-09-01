@@ -75,7 +75,17 @@ from spack.util.lang import elide_list
 
 from .clauses import SpecClauseGenerator
 from .compat import default_clingo_control, make_error_control
-from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn, quote
+from .core import (
+    AspFunction,
+    AspVar,
+    NodeId,
+    SourceContext,
+    asp_argument,
+    extract_args,
+    fn,
+    quote,
+    quote_once,
+)
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory
@@ -1535,7 +1545,7 @@ class SpackSolverSetup:
             quoted_name = quote(name)
             for (spec_str, _), (trigger_id, requirements) in cache.items():
                 problem.append(f"pkg_fact({quoted_name},trigger_id({trigger_id})).")
-                problem.append(f"pkg_fact({quoted_name},trigger_msg({quote(spec_str)})).")
+                problem.append(f"pkg_fact({quoted_name},trigger_msg({quote_once(spec_str)})).")
                 # the requirements are written out as they are, with the trigger id prepended
                 for predicate in requirements:
                     problem.append(f"condition_requirement({trigger_id},{predicate.args_str()}).")
@@ -1554,7 +1564,7 @@ class SpackSolverSetup:
             quoted_name = quote(name)
             for (spec_str, _), (effect_id, requirements) in cache.items():
                 problem.append(f"pkg_fact({quoted_name},effect_id({effect_id})).")
-                problem.append(f"pkg_fact({quoted_name},effect_msg({quote(spec_str)})).")
+                problem.append(f"pkg_fact({quoted_name},effect_msg({quote_once(spec_str)})).")
                 # see the note in trigger_rules()
                 for predicate in requirements:
                     problem.append(f"imposed_constraint({effect_id},{predicate.args_str()}).")
@@ -1727,8 +1737,7 @@ class SpackSolverSetup:
         imposed_name: Optional[str] = None,
         msg: Optional[str] = None,
         context: Optional[ConditionContext] = None,
-    ) -> Tuple[List[AspFunction], int]:
-        clauses = []
+    ) -> Tuple[List[str], int]:
         required_name = required_spec.name or required_name
         if not required_name:
             raise ValueError(f"Must provide a name for anonymous condition: '{required_spec}'")
@@ -1749,9 +1758,13 @@ class SpackSolverSetup:
             body=True,
             context=requirement_context,
         )
-        clauses.append(fn.pkg_fact(required_name, fn.condition(condition_id)))
-        clauses.append(fn.condition_reason(condition_id, msg))
-        clauses.append(fn.pkg_fact(required_name, fn.condition_trigger(condition_id, trigger_id)))
+        quoted_name = quote(required_name)
+        quoted_msg = quote_once(msg) if type(msg) is str else asp_argument(msg)
+        clauses = [
+            f"pkg_fact({quoted_name},condition({condition_id})).",
+            f"condition_reason({condition_id},{quoted_msg}).",
+            f"pkg_fact({quoted_name},condition_trigger({condition_id},{trigger_id})).",
+        ]
         if not imposed_spec:
             return clauses, condition_id
 
@@ -1767,7 +1780,7 @@ class SpackSolverSetup:
             body=False,
             context=impose_context,
         )
-        clauses.append(fn.pkg_fact(required_name, fn.condition_effect(condition_id, effect_id)))
+        clauses.append(f"pkg_fact({quoted_name},condition_effect({condition_id},{effect_id})).")
 
         return clauses, condition_id
 
@@ -1804,8 +1817,7 @@ class SpackSolverSetup:
             msg=msg,
             context=context,
         )
-        for clause in clauses:
-            self.gen.fact(clause)
+        self.gen.asp_problem.extend(clauses)
 
         return condition_id
 
