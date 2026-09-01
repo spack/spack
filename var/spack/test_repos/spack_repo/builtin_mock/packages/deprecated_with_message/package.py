@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class DeprecatedWithMessage(Package):
-    """Package whose deprecated() directive carries guidance for the user."""
+    """Package whose deprecated() directive includes guidance for the user."""
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/deprecated-with-message-1.0.tar.gz"

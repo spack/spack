@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class DeprecatedBuildtool(Package):
-    """A build tool that carries a deprecated runtime dependency"""
+    """A build tool with a deprecated runtime dependency"""
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/deprecated-buildtool-1.0.tar.gz"
