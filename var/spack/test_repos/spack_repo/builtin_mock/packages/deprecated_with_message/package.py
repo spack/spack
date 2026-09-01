@@ -14,5 +14,18 @@ class DeprecatedWithMessage(Package):
 
     version("2.0", sha256="abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
     version("1.0", sha256="abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
+    version("0.9", sha256="abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
 
     deprecated("@1.0", reason="retired", severity="high", msg="use @2.0, which is maintained")
+
+    # two advisories on @0.9 agree on reason and severity, so they share one error term
+    deprecated(
+        "@=0.9", reason="vuln", severity="high", labels=["CVE-2026-1000"], msg="move to @2.0"
+    )
+    deprecated(
+        "@=0.9",
+        reason="vuln",
+        severity="high",
+        labels=["CVE-2026-1001"],
+        msg="also affects the ABI",
+    )

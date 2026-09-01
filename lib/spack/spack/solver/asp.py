@@ -771,10 +771,13 @@ class DeprecationKey(NamedTuple):
 
 
 class DeprecationDetails(NamedTuple):
-    """The threshold that was exceeded, and the guidance the recipe attached with msg=."""
+    """What the directives behind one error term add to it: the spec they deprecate, the
+    threshold they exceed, and the guidance their recipe attached with msg=.
+    """
 
+    spec_str: str
     allowed: int
-    msg: Optional[str]
+    messages: List[str]
 
 
 class ErrorHandler:
@@ -799,12 +802,17 @@ class ErrorHandler:
         key = DeprecationKey(str(pkg), int(cond_id), str(reason), int(severity))
         details = self.deprecation_details.get(key)
         severity_str = _severity_to_str(severity)
-        text = f"'{pkg}': deprecated spec (reason: {reason}, severity: {severity_str})"
         if details is None:
             # The directive is not in the table, so state the refusal without the threshold
-            return f"{text} is refused by the deprecation policy"
-        text = f"{text} exceeds allowed severity '{_severity_to_str(details.allowed)}'"
-        return f"{text}; {details.msg}" if details.msg else text
+            return (
+                f"'{pkg}': deprecated spec (reason: {reason}, severity: {severity_str}) "
+                f"is refused by the deprecation policy"
+            )
+        text = (
+            f"'{details.spec_str}': deprecated spec (reason: {reason}, severity: {severity_str}) "
+            f"exceeds allowed severity '{_severity_to_str(details.allowed)}'"
+        )
+        return "; ".join([text, *details.messages])
 
     def _get_cause_tree(
         self,
@@ -1531,25 +1539,32 @@ class SpackSolverSetup:
             if not entries:
                 continue
 
-            constraint_str = str(constraint_spec) or pkg.name
-            msg = f"deprecated constraint {constraint_str}"
+            constraint_str = str(constraint_spec)
+            msg = f"deprecated constraint {constraint_str or pkg.name}"
             condition_id = self.condition(constraint_spec, required_name=pkg.name, msg=msg)
+            spec_str = f"{pkg.name}{constraint_str}"
             for entry in entries:
                 reasons.add(entry.reason)
                 allowed = self.deprecation_policy.allowed_severity(pkg.name, entry.reason)
-                self.deprecation_details[
-                    DeprecationKey(
-                        pkg.name, condition_id, entry.reason.value, entry.severity.value
-                    )
-                ] = DeprecationDetails(allowed.value, entry.msg)
-                self.gen.fact(
-                    fn.pkg_fact(
-                        pkg.name,
-                        fn.deprecation_directive(
-                            condition_id, entry.reason.value, entry.severity.value
-                        ),
-                    )
+                # Directives that agree on reason and severity share one error term, so their
+                # messages accumulate under a single key
+                key = DeprecationKey(
+                    pkg.name, condition_id, entry.reason.value, entry.severity.value
                 )
+                details = self.deprecation_details.get(key)
+                if details is None:
+                    details = DeprecationDetails(spec_str, allowed.value, [])
+                    self.deprecation_details[key] = details
+                    self.gen.fact(
+                        fn.pkg_fact(
+                            pkg.name,
+                            fn.deprecation_directive(
+                                condition_id, entry.reason.value, entry.severity.value
+                            ),
+                        )
+                    )
+                if entry.msg:
+                    details.messages.append(entry.msg)
             self.gen.newline()
 
         # A threshold is only ever read next to a directive, so packages without one emit nothing
