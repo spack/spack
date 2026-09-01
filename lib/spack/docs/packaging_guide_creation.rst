@@ -784,8 +784,8 @@ For example, to flag a version that has a known CVE:
 
 The first positional argument is an optional spec constraint, in this case the version ``"@1.1.1t"``.
 If omitted, the whole package is deprecated.
-The ``reason`` keyword is required and must be one of ``"vuln"``, ``"rename"``, ``"retired"``, ``"maintenance"``, or ``"unspecified"``.
-Prefer a specific reason: ``"unspecified"`` exists for deprecations carried over from the legacy ``deprecated=True`` keyword, which records no reason at all.
+The ``reason`` keyword is required and must be one of ``"vuln"``, ``"rename"``, ``"retired"``, or ``"maintenance"``.
+A fifth value, ``"unspecified"``, is reserved: Spack records it for versions declared with ``deprecated=True``, and the directive refuses it.
 The optional ``severity`` keyword ranks the urgency: ``"low"`` (default), ``"medium"``, ``"high"``, or ``"critical"`` in increasing order.
 
 The optional ``labels`` keyword lists the advisories a deprecation refers to.
@@ -806,11 +806,9 @@ At or below the threshold the version is used like any other, with no warning an
 The default threshold rejects every deprecation, so Spack will not select a deprecated version unless the user explicitly relaxes the policy.
 See :ref:`package-deprecations-config` for how to configure the threshold.
 
-The older ``version("X.Y", deprecated=True)`` syntax is still supported and is equivalent to:
-
-.. code-block:: python
-
-   deprecated("@=X.Y", reason="unspecified", severity="critical")
+The older ``version("X.Y", deprecated=True)`` syntax is still supported.
+Spack records it as a deprecation of ``@=X.Y`` with reason ``"unspecified"`` and severity ``"critical"``.
+Since the keyword states no reason, ``"unspecified"`` marks exactly those deprecations, and a recipe cannot claim it.
 
 This also applies to package recipes that are renamed or removed.
 You should first deprecate all versions before removing a package.
