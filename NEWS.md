@@ -1,5 +1,5 @@
 ## Package API v2.6
-- Added the `deprecated()` directive to mark specific configurations or entire packages as deprecated, with a `reason`, a `severity`, and optional advisory `labels`. Accepted reasons are `vuln`, `rename`, `retired` and `maintenance`.
+- Added the `deprecated()` directive to mark specific configurations or entire packages as deprecated, with a `reason`, a `severity`, optional advisory `labels`, and an optional `msg` telling users what to use instead. Accepted reasons are `vuln`, `rename`, `retired` and `maintenance`.
 - `version(..., deprecated=True)` is now recorded as `reason="unspecified"`. That reason is reserved for the keyword, so deprecations carried over from it stay distinguishable from ones a maintainer classified deliberately.
 
 ## Package API v2.5

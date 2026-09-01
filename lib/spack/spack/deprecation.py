@@ -37,6 +37,7 @@ class Violation(NamedTuple):
     reason: DeprecationReason
     severity: DeprecationSeverity
     allowed: DeprecationSeverity
+    msg: Optional[str] = None
 
 
 def is_exempt(entry: Deprecation, exempt_labels: Set[str]) -> bool:
@@ -152,7 +153,13 @@ class Policy(NamedTuple):
         thresholds = self.thresholds(spec.name)
         exempt = self.exempt_labels(spec.name)
         return [
-            Violation(constraint, entry.reason, entry.severity, _allowed(thresholds, entry.reason))
+            Violation(
+                constraint,
+                entry.reason,
+                entry.severity,
+                _allowed(thresholds, entry.reason),
+                entry.msg,
+            )
             for constraint, entries in pkg_cls.deprecations.items()
             if spec.satisfies(constraint)
             for entry in entries
@@ -226,11 +233,13 @@ def check_deprecations(
 
 def _format_violations(spec: "spack.spec.Spec", violations: List[Violation]) -> str:
     lines = [f"    {spec.cshort_spec}"]
-    for constraint, reason, severity, allowed in violations:
+    for constraint, reason, severity, allowed, msg in violations:
         spec_str = f"{spec.name}{constraint}" if str(constraint) else spec.name
         lines.append(
             f"        {spec_str} is deprecated (reason: {reason.value}, "
             f"severity: {severity.name.lower()}); 'deprecation:allowed_severity' "
             f"is '{allowed.name.lower()}'"
         )
+        if msg:
+            lines.append(f"            {msg}")
     return "\n".join(lines)

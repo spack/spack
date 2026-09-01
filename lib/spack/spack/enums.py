@@ -4,7 +4,7 @@
 """Enumerations used throughout Spack"""
 
 import enum
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Optional, Tuple
 
 
 class InstallRecordStatus(enum.Flag):
@@ -99,3 +99,4 @@ class Deprecation(NamedTuple):
     reason: DeprecationReason
     severity: DeprecationSeverity
     labels: Tuple[str, ...] = ()
+    msg: Optional[str] = None
