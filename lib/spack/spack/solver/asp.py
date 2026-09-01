@@ -75,7 +75,7 @@ from spack.util.lang import elide_list
 
 from .clauses import SpecClauseGenerator
 from .compat import default_clingo_control, make_error_control
-from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
+from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn, quote
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory
@@ -1436,16 +1436,12 @@ class SpackSolverSetup:
         # Set the deprecation penalty, according to the package. This should be enough to move the
         # first version last if deprecated.
         if ordered_versions:
-            self.gen.fact(
-                fn.pkg_fact(pkg.name, fn.version_deprecation_penalty(len(ordered_versions)))
-            )
+            self.gen.pkg_fact(pkg.name, fn.version_deprecation_penalty(len(ordered_versions)))
 
         for weight, declared_version in enumerate(ordered_versions):
-            self.gen.fact(fn.pkg_fact(pkg.name, fn.version_declared(declared_version, weight)))
+            self.gen.pkg_fact(pkg.name, fn.version_declared(declared_version, weight))
             for origin in version_provenance[declared_version]:
-                self.gen.fact(
-                    fn.pkg_fact(pkg.name, fn.version_origin(declared_version, str(origin)))
-                )
+                self.gen.pkg_fact(pkg.name, fn.version_origin(declared_version, str(origin)))
 
         for v in self.possible_versions[pkg.name]:
             if pkg.needs_commit(v):
@@ -1455,7 +1451,7 @@ class SpackSolverSetup:
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
         for v in sorted(deprecated):
-            self.gen.fact(fn.pkg_fact(pkg.name, fn.deprecated_version(v)))
+            self.gen.pkg_fact(pkg.name, fn.deprecated_version(v))
 
     def conflict_rules(self, pkg):
         for when_spec, conflict_specs in pkg.conflicts.items():
@@ -1482,10 +1478,8 @@ class SpackSolverSetup:
                     required_name=conflict_spec.name or pkg.name,
                     msg=conflict_spec_msg,
                 )
-                self.gen.fact(
-                    fn.pkg_fact(
-                        pkg.name, fn.conflict(conflict_spec_id, when_spec_id, conflict_msg)
-                    )
+                self.gen.pkg_fact(
+                    pkg.name, fn.conflict(conflict_spec_id, when_spec_id, conflict_msg)
                 )
                 self.gen.newline()
 
@@ -1505,7 +1499,7 @@ class SpackSolverSetup:
         pkg = self.clauses.pkg_class(pkg)
 
         # Namespace of the package
-        self.gen.fact(fn.pkg_fact(pkg.name, fn.namespace(pkg.namespace)))
+        self.gen.pkg_fact(pkg.name, fn.namespace(pkg.namespace))
 
         # versions
         self.pkg_version_rules(pkg)
@@ -1538,8 +1532,8 @@ class SpackSolverSetup:
         for name in self._trigger_cache:
             cache = self._trigger_cache[name]
             for (spec_str, _), (trigger_id, requirements) in cache.items():
-                self.gen.fact(fn.pkg_fact(name, fn.trigger_id(trigger_id)))
-                self.gen.fact(fn.pkg_fact(name, fn.trigger_msg(spec_str)))
+                self.gen.pkg_fact(name, fn.trigger_id(trigger_id))
+                self.gen.pkg_fact(name, fn.trigger_msg(spec_str))
                 for predicate in requirements:
                     self.gen.fact(fn.condition_requirement(trigger_id, *predicate.args))
                 self.gen.newline()
@@ -1554,8 +1548,8 @@ class SpackSolverSetup:
         for name in sorted(self._effect_cache):
             cache = self._effect_cache[name]
             for (spec_str, _), (effect_id, requirements) in cache.items():
-                self.gen.fact(fn.pkg_fact(name, fn.effect_id(effect_id)))
-                self.gen.fact(fn.pkg_fact(name, fn.effect_msg(spec_str)))
+                self.gen.pkg_fact(name, fn.effect_id(effect_id))
+                self.gen.pkg_fact(name, fn.effect_msg(spec_str))
                 for predicate in requirements:
                     self.gen.fact(fn.imposed_constraint(effect_id, *predicate.args))
                 self.gen.newline()
@@ -1568,7 +1562,7 @@ class SpackSolverSetup:
         when: spack.spec.Spec,
         variant_def: vt.Variant,
     ):
-        pkg_fact = lambda f: self.gen.fact(fn.pkg_fact(pkg.name, f))
+        pkg_fact = lambda f: self.gen.pkg_fact(pkg.name, f)
 
         # Every variant id has a unique definition (conditional or unconditional), and
         # higher variant id definitions take precedence when variants intersect.
@@ -1813,7 +1807,7 @@ class SpackSolverSetup:
         for vpkg_name in pkg.provided_virtual_names():
             if vpkg_name not in self.possible_virtuals:
                 continue
-            self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
+            self.gen.pkg_fact(pkg.name, fn.possible_provider(vpkg_name))
 
         for when, provided in pkg.provided.items():
             for vpkg in sorted(provided):
@@ -1822,9 +1816,7 @@ class SpackSolverSetup:
 
                 msg = f"{pkg.name} provides {vpkg}{'' if when == EMPTY_SPEC else f' when {when}'}"
                 condition_id = self.condition(when, vpkg, required_name=pkg.name, msg=msg)
-                self.gen.fact(
-                    fn.pkg_fact(pkg.name, fn.provider_condition(condition_id, vpkg.name))
-                )
+                self.gen.pkg_fact(pkg.name, fn.provider_condition(condition_id, vpkg.name))
             self.gen.newline()
 
         for when, sets_of_virtuals in pkg.provided_together.items():
@@ -1833,9 +1825,7 @@ class SpackSolverSetup:
             )
             for set_id, virtuals_together in enumerate(sorted(sets_of_virtuals)):
                 for name in sorted(virtuals_together):
-                    self.gen.fact(
-                        fn.pkg_fact(pkg.name, fn.provided_together(condition_id, set_id, name))
-                    )
+                    self.gen.pkg_fact(pkg.name, fn.provided_together(condition_id, set_id, name))
             self.gen.newline()
 
     def package_dependencies_rules(self, pkg):
@@ -2382,13 +2372,13 @@ class SpackSolverSetup:
             possible_versions.sort()
             sorted_versions[pkg_name] = possible_versions
             for idx, v in enumerate(possible_versions):
-                self.gen.fact(fn.pkg_fact(pkg_name, fn.version_order(v, idx)))
+                self.gen.pkg_fact(pkg_name, fn.version_order(v, idx))
                 if v in self.git_commit_versions[pkg_name]:
                     sha = self.git_commit_versions[pkg_name].get(v)
                     if sha:
-                        self.gen.fact(fn.pkg_fact(pkg_name, fn.version_has_commit(v, sha)))
+                        self.gen.pkg_fact(pkg_name, fn.version_has_commit(v, sha))
                     else:
-                        self.gen.fact(fn.pkg_fact(pkg_name, fn.version_needs_commit(v)))
+                        self.gen.pkg_fact(pkg_name, fn.version_needs_commit(v))
             self.gen.newline()
         self.gen.newline()
 
@@ -2406,13 +2396,13 @@ class SpackSolverSetup:
                     elif start_idx is not None:
                         # End of a contiguous satisfying range found
                         version_range = fn.version_range(versions, start_idx, current_idx - 1)
-                        self.gen.fact(fn.pkg_fact(pkg_name, version_range))
+                        self.gen.pkg_fact(pkg_name, version_range)
                         start_idx = None
                 if start_idx is not None:
                     version_range = fn.version_range(
                         versions, start_idx, len(possible_versions) - 1
                     )
-                    self.gen.fact(fn.pkg_fact(pkg_name, version_range))
+                    self.gen.pkg_fact(pkg_name, version_range)
             self.gen.newline()
 
     def collect_virtual_constraints(self):
@@ -2500,7 +2490,7 @@ class SpackSolverSetup:
 
         # Tell the concretizer about possible values from specs seen in spec_clauses().
         for pkg_name, vid, value in sorted(def_info):
-            self.gen.fact(fn.pkg_fact(pkg_name, fn.variant_possible_value(vid, value)))
+            self.gen.pkg_fact(pkg_name, fn.variant_possible_value(vid, value))
 
     def register_concrete_spec(self, spec, possible: set, *, selectable: bool = True):
         # tell the solver about any installed packages that could
@@ -2928,7 +2918,7 @@ class SpackSolverSetup:
 
             # Special condition triggered by "literal_solved"
             self.gen.fact(fn.literal(trigger_id))
-            self.gen.fact(fn.pkg_fact(spec.name, fn.condition_trigger(condition_id, trigger_id)))
+            self.gen.pkg_fact(spec.name, fn.condition_trigger(condition_id, trigger_id))
             self.gen.fact(fn.condition_reason(condition_id, f"{spec} requested explicitly"))
 
             imposed_spec_key = str(spec), None
@@ -2959,7 +2949,7 @@ class SpackSolverSetup:
             )
             requirements = [x for x in requirements if x.args[0] != "depends_on"]
             cache[imposed_spec_key] = (effect_id, requirements)
-            self.gen.fact(fn.pkg_fact(spec.name, fn.condition_effect(condition_id, effect_id)))
+            self.gen.pkg_fact(spec.name, fn.condition_effect(condition_id, effect_id))
 
             # Create subcondition with any conditional dependencies
             # spec_clauses() does not do anything with conditional dependencies
@@ -3102,6 +3092,13 @@ class ProblemInstanceBuilder:
 
     def fact(self, atom: AspFunction) -> None:
         self.asp_problem.append(f"{atom}.")
+
+    def pkg_fact(self, pkg_name: str, atom: AspFunction) -> None:
+        """Add ``pkg_fact(<pkg_name>, <atom>)``, the most common fact of the problem by far.
+
+        It is written out here, so that the wrapping ``AspFunction`` is never built.
+        """
+        self.asp_problem.append(f"pkg_fact({quote(pkg_name)},{atom}).")
 
     def append(self, rule: str) -> None:
         self.asp_problem.append(rule)
