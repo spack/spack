@@ -110,6 +110,75 @@ def test_which(tmp_path: pathlib.Path, monkeypatch):
         assert exe.path == path
 
 
+@pytest.mark.not_on_windows("Executables are determined by file extension on Windows")
+def test_resolve_exe(tmp_path: pathlib.Path):
+    script = tmp_path / "script"
+    script.touch()
+
+    assert ex.resolve_exe(str(script)) is None
+
+    fs.set_executable(str(script))
+
+    assert ex.resolve_exe(str(script)) == str(script)
+    assert ex.resolve_exe(script) == str(script)
+
+    # directories and missing files are not executables
+    assert ex.resolve_exe(str(tmp_path)) is None
+    assert ex.resolve_exe(str(tmp_path / "does-not-exist")) is None
+
+
+@pytest.mark.only_windows("Test is for Windows specific behavior")
+def test_windows_resolve_exe_searches_pathext(tmp_path: pathlib.Path, monkeypatch):
+    monkeypatch.setenv("PATHEXT", ".COM;.EXE;.BAT")
+
+    for name in ("foo.exe", "bar.bat", "clang-19.1.exe", "notes.txt", "extensionless"):
+        (tmp_path / name).touch()
+
+    # a path with an executable extension is used as is
+    assert ex.resolve_exe(str(tmp_path / "foo.exe")) == str(tmp_path / "foo.exe")
+
+    # a path missing its extension is resolved against PATHEXT
+    assert ex.resolve_exe(str(tmp_path / "foo")) == str(tmp_path / "foo.exe")
+    assert ex.resolve_exe(str(tmp_path / "bar")) == str(tmp_path / "bar.bat")
+
+    # so is a path ending in something that only looks like an extension
+    assert ex.resolve_exe(str(tmp_path / "clang-19.1")) == str(tmp_path / "clang-19.1.exe")
+
+    # files Windows does not consider executable, and files that don't exist, are not
+    assert ex.resolve_exe(str(tmp_path / "notes.txt")) is None
+    assert ex.resolve_exe(str(tmp_path / "notes")) is None
+    assert ex.resolve_exe(str(tmp_path / "extensionless")) is None
+    assert ex.resolve_exe(str(tmp_path / "does-not-exist")) is None
+
+    # extensions outside of PATHEXT are not executable
+    (tmp_path / "script.cmd").touch()
+    assert ex.resolve_exe(str(tmp_path / "script.cmd")) is None
+    monkeypatch.setenv("PATHEXT", ".COM;.EXE;.BAT;.CMD")
+    assert ex.resolve_exe(str(tmp_path / "script.cmd")) == str(tmp_path / "script.cmd")
+    assert ex.resolve_exe(str(tmp_path / "script")) == str(tmp_path / "script.cmd")
+
+
+@pytest.mark.only_windows("Test is for Windows specific behavior")
+def test_which_searches_pathext(tmp_path: pathlib.Path, monkeypatch):
+    """which() finds executables whose extension is omitted, in PATHEXT order."""
+    monkeypatch.setenv("PATH", str(tmp_path))
+    monkeypatch.setenv("PATHEXT", ".COM;.EXE;.BAT")
+
+    for name in ("script.bat", "prog.com", "prog.exe", "notes.txt", "extensionless"):
+        (tmp_path / name).touch()
+
+    assert ex.which("script").path == str(tmp_path / "script.bat")
+    assert ex.which("script.bat").path == str(tmp_path / "script.bat")
+
+    # PATHEXT determines which extension wins when several are present
+    assert ex.which("prog").path == str(tmp_path / "prog.com")
+
+    # files Windows does not consider executable are not found
+    assert ex.which("notes") is None
+    assert ex.which("notes.txt") is None
+    assert ex.which("extensionless") is None
+
+
 @pytest.fixture
 def make_script_exe(tmp_path: pathlib.Path):
     if sys.platform == "win32":
