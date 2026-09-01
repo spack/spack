@@ -967,3 +967,16 @@ def test_reused_artifact_with_deprecated_build_dep_stays_reusable(
 
     assert reused.dag_hash() == lib.dag_hash()
     assert any(s.satisfies("deprecated-tool@1.0") for s in reused.traverse())
+
+
+def test_install_gate_reports_the_directive_message(
+    install_mockery, mutable_config: Configuration
+):
+    """Tests that the guidance a recipe attaches with msg= reaches the install-time gate too,
+    so a spec concretized under a laxer policy is refused with the same advice.
+    """
+    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
+        spec = spack.concretize.concretize_one("deprecated-with-message@1.0")
+
+    with pytest.raises(spack.error.InstallError, match="use @2.0, which is maintained"):
+        spack.deprecation.check_deprecations([spec])

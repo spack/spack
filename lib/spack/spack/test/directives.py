@@ -437,3 +437,22 @@ def test_deprecated_keyword_records_the_reserved_reason():
     assert len(entries) == 1
     assert entries[0].reason == DeprecationReason.UNSPECIFIED
     assert entries[0].severity == DeprecationSeverity.CRITICAL
+
+
+def test_deprecated_directive_message(mock_pkg):
+    """Tests that msg= is stored alongside the reason and the severity."""
+    spack.directives._Deprecated(
+        spec="@1.0", reason="retired", severity="high", msg="use @2.0 instead"
+    )(mock_pkg)
+    entries = mock_pkg.deprecations[spack.spec.Spec("@1.0")]
+    assert entries[0].msg == "use @2.0 instead"
+
+
+def test_deprecated_keyword_records_no_message():
+    """Tests that 'version(..., deprecated=True)' records no guidance, since it states none."""
+
+    class Pkg(metaclass=DirectiveMeta):
+        name = "mypkg"
+        version("1.0", deprecated=True)
+
+    assert Pkg.deprecations[Spec("@=1.0")][0].msg is None

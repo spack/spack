@@ -467,3 +467,19 @@ packages:
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated spec"):
         concretize_one("deprecated-tool-client")
+
+
+def test_directive_message_is_reported_on_refusal(mock_packages, mutable_config):
+    """Tests that the guidance a recipe attaches with msg= reaches the concretization error."""
+    with pytest.raises(UnsatisfiableSpecError, match="use @2.0, which is maintained"):
+        concretize_one("deprecated-with-message@1.0")
+
+
+def test_directive_without_message_reports_only_the_policy(mock_packages, mutable_config):
+    """Tests that a deprecation with no msg= reports the threshold and nothing more."""
+    with pytest.raises(UnsatisfiableSpecError) as exc_info:
+        concretize_one("deprecated-with-reason@2.0")
+
+    message = str(exc_info.value)
+    assert "exceeds allowed severity 'none'" in message
+    assert message.rstrip().endswith("'none'")

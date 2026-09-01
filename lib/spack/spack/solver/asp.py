@@ -761,11 +761,33 @@ def _spec_with_default_name(spec_str, name):
     return spec
 
 
+class DeprecationKey(NamedTuple):
+    """Identifies one deprecated() directive, the way the error term reports it."""
+
+    pkg: str
+    condition_id: int
+    reason: str
+    severity: int
+
+
+class DeprecationDetails(NamedTuple):
+    """What the error term does not carry: the threshold exceeded, and packager guidance."""
+
+    allowed: int
+    msg: Optional[str]
+
+
 class ErrorHandler:
-    def __init__(self, model, input_specs: List[spack.spec.Spec]):
+    def __init__(
+        self,
+        model,
+        input_specs: List[spack.spec.Spec],
+        deprecation_details: Optional[Dict[DeprecationKey, DeprecationDetails]] = None,
+    ):
         self.model = model
         self.input_specs = input_specs
         self.full_model = None
+        self.deprecation_details = deprecation_details or {}
 
     def multiple_values_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
@@ -773,11 +795,16 @@ class ErrorHandler:
     def no_value_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
 
-    def deprecated_error(self, pkg, reason: str, severity: str, allowed: str) -> str:
-        return (
-            f"'{pkg}': deprecated spec (reason: {reason}, severity: {_severity_to_str(severity)})"
-            f" exceeds allowed severity '{_severity_to_str(allowed)}'"
-        )
+    def deprecated_error(self, pkg, cond_id, reason: str, severity: str) -> str:
+        key = DeprecationKey(str(pkg), int(cond_id), str(reason), int(severity))
+        details = self.deprecation_details.get(key)
+        severity_str = _severity_to_str(severity)
+        text = f"'{pkg}': deprecated spec (reason: {reason}, severity: {severity_str})"
+        if details is None:
+            # The directive is not in the table, so state the refusal without the threshold
+            return f"{text} is refused by the deprecation policy"
+        text = f"{text} exceeds allowed severity '{_severity_to_str(details.allowed)}'"
+        return f"{text}; {details.msg}" if details.msg else text
 
     def _get_cause_tree(
         self,
@@ -1047,7 +1074,7 @@ class PyclingoDriver:
         min_cost, best_model = min(models)
 
         # first check for errors
-        error_handler = ErrorHandler(best_model, specs)
+        error_handler = ErrorHandler(best_model, specs, setup.deprecation_details)
         error_handler.raise_if_errors()
 
         # build specs from spec attributes in the model
@@ -1423,6 +1450,10 @@ class SpackSolverSetup:
         # Set during the call to setup
         self.pkgs: Set[str] = set()
 
+        # The error term identifies a directive by condition, reason and severity; the rest
+        # is recovered from here so the message never enters the logic program
+        self.deprecation_details: Dict[DeprecationKey, DeprecationDetails] = {}
+
         # deprecation policy resolved once per solve and reused for every package
         self.deprecation_policy = deprecation_policy or spack.deprecation.Policy.from_config(
             warn_on_legacy=True
@@ -1505,6 +1536,12 @@ class SpackSolverSetup:
             condition_id = self.condition(constraint_spec, required_name=pkg.name, msg=msg)
             for entry in entries:
                 reasons.add(entry.reason)
+                allowed = self.deprecation_policy.allowed_severity(pkg.name, entry.reason)
+                self.deprecation_details[
+                    DeprecationKey(
+                        pkg.name, condition_id, entry.reason.value, entry.severity.value
+                    )
+                ] = DeprecationDetails(allowed.value, entry.msg)
                 self.gen.fact(
                     fn.pkg_fact(
                         pkg.name,

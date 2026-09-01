@@ -432,7 +432,7 @@ node_in_deprecation_scope(node(ID, Package)) :-
 % A deprecated() directive matching a selected non-external node in scope is a concretization
 % error when its severity exceeds the configured threshold. Severity is an integer:
 % 0=none, 1=low, 2=medium, 3=high, 4=critical.
-error(1, "deprecated_error", Package, Reason, Severity, Allowed)
+error(1, "deprecated_error", Package, CondID, Reason, Severity)
   :- pkg_fact(Package, deprecation_directive(CondID, Reason, Severity)),
      condition_holds(CondID, node(ID, Package)),
      not external(node(ID, Package)),

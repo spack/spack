@@ -788,6 +788,15 @@ The ``reason`` keyword is required and must be one of ``"vuln"``, ``"rename"``, 
 A fifth value, ``"unspecified"``, is reserved: Spack records it for versions declared with ``deprecated=True``, and the directive refuses it.
 The optional ``severity`` keyword ranks the urgency: ``"low"`` (default), ``"medium"``, ``"high"``, or ``"critical"`` in increasing order.
 
+The optional ``msg`` keyword adds guidance, shown after the reason and severity when Spack refuses the spec.
+Use it to say what to install instead, which the reason alone cannot express:
+
+.. code-block:: python
+
+   deprecated("@1.1.1t", reason="retired", severity="high", msg="use @3.0, which is maintained")
+
+Keep it to a single line, since it is appended to a one-line error.
+
 The optional ``labels`` keyword lists the advisories a deprecation refers to.
 Any identifier works, so a GHSA or PYSEC id is as good as a CVE one:
 
