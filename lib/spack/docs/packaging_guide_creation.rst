@@ -784,7 +784,29 @@ For example, to flag a version that has a known CVE:
 
 The first positional argument is an optional spec constraint, in this case the version ``"@1.1.1t"``.
 If omitted, the whole package is deprecated.
-The ``reason`` keyword is required and must be one of ``"vuln"``, ``"rename"``, ``"retired"``, or ``"maintenance"``.
+The ``reason`` keyword is required, and states which category the deprecation falls into.
+Users set their tolerance per category, so the reason decides whether a site that accepts unmaintained versions still refuses this one.
+It must be one of:
+
+``vuln``
+   A known vulnerability affects the spec.
+   Use it for any advisory, whether it is a CVE, a GHSA or a PYSEC entry, and list the identifiers in ``labels`` so users can exempt the ones they have assessed.
+   Take ``severity`` from the advisory's own rating.
+
+``rename``
+   The spec was renamed upstream or in the repository, and users should move to the new name.
+   A package that changed name is the usual case, and ``msg`` is the place to name the replacement.
+   Renamed variants are not covered: deprecating a variant gives users an error, with no way to map the old value onto the new one.
+
+``retired``
+   The spec is going away.
+   The release reached its end of life, upstream removed the source archive, or the package is about to be dropped from the repository.
+
+``maintenance``
+   The maintainers no longer support the spec, although nothing is known to be wrong with it.
+   Old patch releases in a series where only the latest is tested belong here, as does a build configuration the maintainers stopped exercising.
+   These usually take a low severity, since users who need the spec can still build it.
+
 A fifth value, ``"unspecified"``, is reserved: Spack records it for versions declared with ``deprecated=True``, and the directive refuses it.
 The optional ``severity`` keyword ranks the urgency: ``"low"`` (default), ``"medium"``, ``"high"``, or ``"critical"`` in increasing order.
 
