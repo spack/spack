@@ -329,6 +329,7 @@ def deprecated(
     *,
     reason: str,
     severity: str = "low",
+    msg: Optional[str] = None,
     labels: Optional[Sequence[str]] = None,
 ):
     """Mark a spec constraint as deprecated.
@@ -341,6 +342,7 @@ def deprecated(
             it for ``version(..., deprecated=True)``, which states no reason.
         severity: how severe the deprecation is.  One of ``"low"`` (default), ``"medium"``,
             ``"high"``, ``"critical"``.
+        msg: optional guidance shown when the deprecation is refused, e.g. what to use instead.
         labels: optional advisory identifiers (e.g. CVE, GHSA or PYSEC ids) this deprecation
             refers to. Users can skip the deprecation by exempting all of them.
     """
@@ -349,17 +351,18 @@ def deprecated(
             f"reason '{reason}' is reserved: Spack records it for versions declared with "
             "'deprecated=True'. Pass a reason that states why this spec is deprecated."
         )
-    return _Deprecated(spec, reason, severity, labels)
+    return _Deprecated(spec, reason, severity, msg, labels)
 
 
 class _Deprecated(NamedTuple):
     spec: Optional[SpecType]
     reason: str
     severity: str
+    msg: Optional[str] = None
     labels: Optional[Sequence[str]] = None
 
     def __call__(self, pkg: PackageType) -> None:
-        spec, reason, severity, labels = self
+        spec, reason, severity, msg, labels = self
         if isinstance(labels, str):
             raise DirectiveError(f"{pkg.name}: 'labels' must be a list of strings, not a string")
 
@@ -367,7 +370,7 @@ class _Deprecated(NamedTuple):
         rsn = DeprecationReason(reason)
         constraint = get_spec(spec) if spec is not None else EMPTY_SPEC
         pkg.deprecations.setdefault(constraint, []).append(
-            Deprecation(rsn, sev, tuple(labels or ()))
+            Deprecation(rsn, sev, tuple(labels or ()), msg)
         )
 
 
