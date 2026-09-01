@@ -744,15 +744,15 @@ To hold some reasons to a stricter standard than others, give a mapping from rea
        deprecation:
          allowed_severity:
            default: low
-           cve: none
+           vuln: none
 
-Here a ``low``-severity rename or maintenance deprecation is allowed, while any deprecation with ``reason: cve`` is an error whatever its severity.
-The reason keys are the values accepted by the ``deprecated()`` directive: ``cve``, ``rename``, ``unavailable``, ``maintenance``, and ``unspecified``.
+Here a ``low``-severity rename or maintenance deprecation is allowed, while any deprecation with ``reason: vuln`` is an error whatever its severity.
+The reason keys are the values accepted by the ``deprecated()`` directive: ``vuln``, ``rename``, ``retired``, ``maintenance``, and ``unspecified``.
 ``unspecified`` covers the deprecations declared with the legacy ``version(..., deprecated=True)`` keyword, which records no reason.
 A per-package ``allowed_severity`` replaces the one under ``all`` outright, exactly as it does for a single value.
 
 For a single command, the ``--deprecated`` flag sets ``allowed_severity`` to ``critical`` under ``all``.
-It is applied on the command line, so it takes precedence over every configuration scope and lifts a per-reason threshold such as ``cve: none`` along with the rest.
+It is applied on the command line, so it takes precedence over every configuration scope and lifts a per-reason threshold such as ``vuln: none`` along with the rest.
 
 Which dependencies are checked is controlled by the ``scope`` setting, which is global and can only be given under ``all:``:
 

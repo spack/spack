@@ -16,8 +16,8 @@ class DeprecatedWithLabels(Package):
     version("2.0", sha256="abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
     version("1.0", sha256="abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
 
-    deprecated("@3.0", reason="cve", severity="critical", labels=["CVE-2026-0001"])
+    deprecated("@3.0", reason="vuln", severity="critical", labels=["CVE-2026-0001"])
     deprecated(
-        "@2.0", reason="cve", severity="critical", labels=["CVE-2026-0002", "GHSA-aaaa-bbbb-cccc"]
+        "@2.0", reason="vuln", severity="critical", labels=["CVE-2026-0002", "GHSA-aaaa-bbbb-cccc"]
     )
     deprecated("@1.0", reason="maintenance", severity="critical")

@@ -84,9 +84,9 @@ class DeprecationSeverity(enum.IntEnum):
 
 
 class DeprecationReason(enum.Enum):
-    CVE = "cve"
+    VULN = "vuln"
     RENAME = "rename"
-    UNAVAILABLE = "unavailable"
+    RETIRED = "retired"
     MAINTENANCE = "maintenance"
     UNSPECIFIED = "unspecified"
 
