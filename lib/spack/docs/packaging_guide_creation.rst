@@ -784,6 +784,19 @@ For example, to flag a version that has a known CVE:
 
 The first positional argument is an optional spec constraint, in this case the version ``"@1.1.1t"``.
 If omitted, the whole package is deprecated.
+
+.. warning::
+
+   The constraint is an ordinary spec, so ``@1.0`` is a range and also matches ``1.0.1`` and ``1.0.2``.
+   State the intent explicitly instead:
+
+   #. ``@=1.0`` deprecates exactly that version;
+   #. ``@1.0:1.2`` deprecates an explicit range;
+   #. ``@1.0.0``, written with three or more components, deprecates that release and anything extending it, such as ``1.0.0-custom`` or ``1.0.0.1``.
+
+   The advice under :ref:`version_constraints` prefers ranges over ``@=`` so that dependencies and conflicts are not over-constrained.
+   It does not apply to deprecations, where a constraint that matches more than intended refuses versions users still need.
+
 The ``reason`` keyword is required, and states which category the deprecation falls into.
 Users set their tolerance per category, so the reason decides whether a site that accepts unmaintained versions still refuses this one.
 It must be one of:
