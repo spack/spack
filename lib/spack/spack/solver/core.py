@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Low-level wrappers around clingo API and other basic functionality related to ASP"""
 
-from typing import Any, NamedTuple, Optional, Tuple
+from typing import Any, Dict, NamedTuple, Optional, Tuple
 
 from spack.util import lang
 
@@ -60,27 +60,45 @@ class AspFunction:
         return AspFunction(self.name, args if not self.args else self.args + args)
 
     def __str__(self) -> str:
-        parts = []
-        for arg in self.args:
-            # exact type checks first, ordered by frequency
-            if type(arg) is str:
-                arg = arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"")
-                parts.append(f'"{arg}"')
-            elif type(arg) is AspFunction or type(arg) is int or type(arg) is AspVar:
-                parts.append(str(arg))
-            # subclasses miss the checks above: config values are syaml_str / syaml_int. bool is
-            # an int subclass, but is not a number in ASP, so it is quoted below.
-            elif isinstance(arg, int) and not isinstance(arg, bool):
-                parts.append(str(arg))
-            elif isinstance(arg, str):
-                arg = arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"")
-                parts.append(f'"{arg}"')
-            else:
-                parts.append(f'"{arg}"')
-        return f"{self.name}({','.join(parts)})"
+        return f"{self.name}({','.join([asp_argument(arg) for arg in self.args])})"
 
     def __repr__(self) -> str:
         return str(self)
+
+
+#: ASP literals of the strings that have been written out, by string. String arguments are
+#: package, variant, version, ... names, of which a solve writes the same handful out over and
+#: over, and escaping one means scanning it three times.
+_QUOTED: Dict[str, str] = {}
+
+
+def quote(arg: str) -> str:
+    """The ASP literal for the string ``arg``: escaped, in double quotes, and kept for reuse."""
+    return _QUOTED.get(arg) or _quote(arg)
+
+
+def _quote(arg: str) -> str:
+    """Compute and keep the ASP literal for ``arg``; see :func:`quote`."""
+    result = _QUOTED[arg] = (
+        '"' + arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"") + '"'
+    )
+    return result
+
+
+def asp_argument(arg: Any) -> str:
+    """The ASP representation of a single argument of a function."""
+    # exact type checks first, ordered by frequency
+    if type(arg) is str:
+        return _QUOTED.get(arg) or _quote(arg)
+    if type(arg) is AspFunction or type(arg) is int or type(arg) is AspVar:
+        return str(arg)
+    # subclasses miss the checks above: config values are syaml_str / syaml_int. bool is
+    # an int subclass, but is not a number in ASP, so it is quoted below.
+    if isinstance(arg, int) and not isinstance(arg, bool):
+        return str(arg)
+    if isinstance(arg, str):
+        return _QUOTED.get(arg) or _quote(arg)
+    return f'"{arg}"'
 
 
 class _AspFunctionBuilder:
