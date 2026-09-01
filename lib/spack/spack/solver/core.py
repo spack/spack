@@ -60,22 +60,19 @@ class AspFunction:
         return AspFunction(self.name, args if not self.args else self.args + args)
 
     def __str__(self) -> str:
-        return f"{self.name}({','.join([asp_argument(arg) for arg in self.args])})"
+        return self.to_str({})
 
-    def args_str(self) -> str:
+    def to_str(self, quoted: "QuotedStrings") -> str:
+        """The ASP representation of this function, reusing the literals in ``quoted``."""
+        return f"{self.name}({','.join([asp_argument(arg, quoted) for arg in self.args])})"
+
+    def args_str(self, quoted: "QuotedStrings") -> str:
         """The arguments as they appear between the parentheses of this function.
 
         The trigger and effect rules write the arguments of a clause out under a head of
-        their own, which is what needs this separately from :meth:`__str__`.
+        their own, which is what needs this separately from :meth:`to_str`.
         """
-        # a string that has been written out before needs no further work
-        quoted = _QUOTED
-        return ",".join(
-            [
-                quoted[arg] if type(arg) is str and arg in quoted else asp_argument(arg)
-                for arg in self.args
-            ]
-        )
+        return ",".join([asp_argument(arg, quoted) for arg in self.args])
 
     def __repr__(self) -> str:
         return str(self)
@@ -83,17 +80,18 @@ class AspFunction:
 
 #: ASP literals of the strings that have been written out, by string. String arguments are
 #: package, variant, version, ... names, of which a solve writes the same handful out over and
-#: over, and escaping one means scanning it three times.
-_QUOTED: Dict[str, str] = {}
+#: over, and escaping one means scanning it three times. A problem instance owns one of these,
+#: so that the literals it collects are released together with it.
+QuotedStrings = Dict[str, str]
 
 
-def quote(arg: str) -> str:
+def quote(arg: str, quoted: QuotedStrings) -> str:
     """The ASP literal for the string ``arg``: escaped, in double quotes, and kept for reuse.
 
     Use :func:`quote_once` for the strings that are written out once, such as the messages that
-    explain a condition, so that they do not fill the cache.
+    explain a condition, so that they do not fill ``quoted``.
     """
-    return _QUOTED.get(arg) or _quote(arg)
+    return quoted.get(arg) or _quote(arg, quoted)
 
 
 def quote_once(arg: str) -> str:
@@ -101,25 +99,27 @@ def quote_once(arg: str) -> str:
     return '"' + arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"") + '"'
 
 
-def _quote(arg: str) -> str:
+def _quote(arg: str, quoted: QuotedStrings) -> str:
     """Compute and keep the ASP literal for ``arg``; see :func:`quote`."""
-    result = _QUOTED[arg] = quote_once(arg)
+    result = quoted[arg] = quote_once(arg)
     return result
 
 
-def asp_argument(arg: Any) -> str:
+def asp_argument(arg: Any, quoted: QuotedStrings) -> str:
     """The ASP representation of a single argument of a function."""
     # exact type checks first, ordered by frequency
     if type(arg) is str:
-        return _QUOTED.get(arg) or _quote(arg)
-    if type(arg) is AspFunction or type(arg) is int or type(arg) is AspVar:
+        return quoted.get(arg) or _quote(arg, quoted)
+    if type(arg) is AspFunction:
+        return arg.to_str(quoted)
+    if type(arg) is int or type(arg) is AspVar:
         return str(arg)
     # subclasses miss the checks above: config values are syaml_str / syaml_int. bool is
     # an int subclass, but is not a number in ASP, so it is quoted below.
     if isinstance(arg, int) and not isinstance(arg, bool):
         return str(arg)
     if isinstance(arg, str):
-        return _QUOTED.get(arg) or _quote(arg)
+        return quoted.get(arg) or _quote(arg, quoted)
     return f'"{arg}"'
 
 
