@@ -337,14 +337,18 @@ def deprecated(
         spec: optional spec constraint (e.g. ``"@1.0"``); if omitted, the whole package
             is deprecated.
         reason: why this spec is deprecated.  One of ``"vuln"``, ``"rename"``,
-            ``"retired"``, ``"maintenance"``, ``"unspecified"``.  Prefer a specific
-            reason: ``"unspecified"`` exists for the legacy ``deprecated=True`` keyword,
-            which records no reason at all.
+            ``"retired"``, ``"maintenance"``.  ``"unspecified"`` is reserved: Spack records
+            it for ``version(..., deprecated=True)``, which states no reason.
         severity: how severe the deprecation is.  One of ``"low"`` (default), ``"medium"``,
             ``"high"``, ``"critical"``.
         labels: optional advisory identifiers (e.g. CVE, GHSA or PYSEC ids) this deprecation
             refers to. Users can skip the deprecation by exempting all of them.
     """
+    if reason == DeprecationReason.UNSPECIFIED.value:
+        raise DirectiveError(
+            f"reason '{reason}' is reserved: Spack records it for versions declared with "
+            "'deprecated=True'. Pass a reason that states why this spec is deprecated."
+        )
     return _Deprecated(spec, reason, severity, labels)
 
 
