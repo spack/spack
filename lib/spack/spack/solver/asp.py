@@ -1540,19 +1540,9 @@ class SpackSolverSetup:
             return
 
         self.gen.h2("Trigger conditions")
-        # We avoid high-level fn.* calls for performance reasons here.
-        problem, quoted = self.gen.asp_problem, self.gen.quoted
-        for name in self._trigger_cache:
-            cache = self._trigger_cache[name]
-            quoted_name = quote(name, quoted)
+        for name, cache in self._trigger_cache.items():
             for (spec_str, _), (trigger_id, requirements) in cache.items():
-                problem.append(f"pkg_fact({quoted_name},trigger_id({trigger_id})).")
-                problem.append(f"pkg_fact({quoted_name},trigger_msg({quote_once(spec_str)})).")
-                for predicate in requirements:
-                    problem.append(
-                        f"condition_requirement({trigger_id},{predicate.args_str(quoted)})."
-                    )
-                problem.append("")
+                self.gen.trigger_facts(name, trigger_id, spec_str, requirements)
         self._trigger_cache.clear()
 
     def effect_rules(self):
@@ -1561,19 +1551,9 @@ class SpackSolverSetup:
             return
 
         self.gen.h2("Imposed requirements")
-        # We avoid high-level fn.* calls for performance reasons here.
-        problem, quoted = self.gen.asp_problem, self.gen.quoted
         for name in sorted(self._effect_cache):
-            cache = self._effect_cache[name]
-            quoted_name = quote(name, quoted)
-            for (spec_str, _), (effect_id, requirements) in cache.items():
-                problem.append(f"pkg_fact({quoted_name},effect_id({effect_id})).")
-                problem.append(f"pkg_fact({quoted_name},effect_msg({quote_once(spec_str)})).")
-                for predicate in requirements:
-                    problem.append(
-                        f"imposed_constraint({effect_id},{predicate.args_str(quoted)})."
-                    )
-                problem.append("")
+            for (spec_str, _), (effect_id, requirements) in self._effect_cache[name].items():
+                self.gen.effect_facts(name, effect_id, spec_str, requirements)
         self._effect_cache.clear()
 
     def define_variant(
@@ -1733,63 +1713,6 @@ class SpackSolverSetup:
 
         return cond_id
 
-    def _condition_clauses(
-        self,
-        required_spec: spack.spec.Spec,
-        imposed_spec: Optional[spack.spec.Spec] = None,
-        *,
-        required_name: Optional[str] = None,
-        imposed_name: Optional[str] = None,
-        msg: Optional[str] = None,
-        context: Optional[ConditionContext] = None,
-    ) -> Tuple[List[str], int]:
-        required_name = required_spec.name or required_name
-        if not required_name:
-            raise ValueError(f"Must provide a name for anonymous condition: '{required_spec}'")
-
-        if not context:
-            context = ConditionContext()
-            context.transform_imposed = remove_facts("node", "virtual_node")
-
-        # Check if we can emit the requirements before updating the condition ID counter.
-        # In this way, if a condition can't be emitted but the exception is handled in the
-        # caller, we won't emit partial facts.
-        condition_id = next(self._id_counter)
-        requirement_context = context.requirement_context()
-        trigger_id = self._get_condition_id(
-            required_name,
-            required_spec,
-            cache=self._trigger_cache,
-            body=True,
-            context=requirement_context,
-        )
-        quoted = self.gen.quoted
-        quoted_name = quote(required_name, quoted)
-        quoted_msg = quote_once(msg) if type(msg) is str else asp_argument(msg, quoted)
-        clauses = [
-            f"pkg_fact({quoted_name},condition({condition_id})).",
-            f"condition_reason({condition_id},{quoted_msg}).",
-            f"pkg_fact({quoted_name},condition_trigger({condition_id},{trigger_id})).",
-        ]
-        if not imposed_spec:
-            return clauses, condition_id
-
-        imposed_name = imposed_spec.name or imposed_name
-        if not imposed_name:
-            raise ValueError(f"Must provide a name for imposed constraint: '{imposed_spec}'")
-
-        impose_context = context.impose_context()
-        effect_id = self._get_condition_id(
-            imposed_name,
-            imposed_spec,
-            cache=self._effect_cache,
-            body=False,
-            context=impose_context,
-        )
-        clauses.append(f"pkg_fact({quoted_name},condition_effect({condition_id},{effect_id})).")
-
-        return clauses, condition_id
-
     def condition(
         self,
         required_spec: spack.spec.Spec,
@@ -1815,16 +1738,40 @@ class SpackSolverSetup:
         Returns:
             int: id of the condition created by this function
         """
-        clauses, condition_id = self._condition_clauses(
-            required_spec=required_spec,
-            imposed_spec=imposed_spec,
-            required_name=required_name,
-            imposed_name=imposed_name,
-            msg=msg,
-            context=context,
-        )
-        self.gen.asp_problem.extend(clauses)
+        required_name = required_spec.name or required_name
+        if not required_name:
+            raise ValueError(f"Must provide a name for anonymous condition: '{required_spec}'")
 
+        if not context:
+            context = ConditionContext()
+            context.transform_imposed = remove_facts("node", "virtual_node")
+
+        # Settle the trigger and the effect before emitting anything: if one of them cannot be
+        # emitted but the exception is handled in the caller, we won't have emitted partial facts.
+        condition_id = next(self._id_counter)
+        trigger_id = self._get_condition_id(
+            required_name,
+            required_spec,
+            cache=self._trigger_cache,
+            body=True,
+            context=context.requirement_context(),
+        )
+
+        effect_id = None
+        if imposed_spec:
+            imposed_name = imposed_spec.name or imposed_name
+            if not imposed_name:
+                raise ValueError(f"Must provide a name for imposed constraint: '{imposed_spec}'")
+
+            effect_id = self._get_condition_id(
+                imposed_name,
+                imposed_spec,
+                cache=self._effect_cache,
+                body=False,
+                context=context.impose_context(),
+            )
+
+        self.gen.condition_facts(required_name, condition_id, trigger_id, msg, effect_id)
         return condition_id
 
     def package_provider_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
@@ -3109,6 +3056,10 @@ class ProblemInstanceBuilder:
 
     The problem instance can be added directly to the "control" structure of clingo.
 
+    Facts are usually added as ``AspFunction`` objects, see :meth:`fact`. The facts that a solve
+    writes out by the ten thousands, those of its conditions, have a writer of their own here
+    instead: they are written out once and never looked at again, so there is no point in
+    building the objects, and the writers are the one place that spells out their ASP form.
     """
 
     def __init__(self) -> None:
@@ -3123,6 +3074,70 @@ class ProblemInstanceBuilder:
         """Fast helper for ``pkg_fact(<pkg_name>, <atom>)``"""
         quoted = self.quoted
         self.asp_problem.append(f"pkg_fact({quote(pkg_name, quoted)},{atom.to_str(quoted)}).")
+
+    def condition_facts(
+        self,
+        pkg_name: str,
+        condition_id: int,
+        trigger_id: int,
+        msg: Optional[str],
+        effect_id: Optional[int] = None,
+    ) -> None:
+        """Add the facts of a condition: the package that declares it, the reason for it, what
+        triggers it and, if there is one, the effect it has::
+
+            pkg_fact(P,condition(C)).
+            condition_reason(C,M).
+            pkg_fact(P,condition_trigger(C,T)).
+            pkg_fact(P,condition_effect(C,E)).
+        """
+        quoted = self.quoted
+        name = quote(pkg_name, quoted)
+        reason = quote_once(msg) if type(msg) is str else asp_argument(msg, quoted)
+        problem = self.asp_problem
+        problem.append(f"pkg_fact({name},condition({condition_id})).")
+        problem.append(f"condition_reason({condition_id},{reason}).")
+        problem.append(f"pkg_fact({name},condition_trigger({condition_id},{trigger_id})).")
+        if effect_id is not None:
+            problem.append(f"pkg_fact({name},condition_effect({condition_id},{effect_id})).")
+
+    def trigger_facts(
+        self, pkg_name: str, trigger_id: int, spec_str: str, requirements: List[AspFunction]
+    ) -> None:
+        """Add the facts of a trigger: its id, the spec it stands for, and the clauses of that
+        spec as its requirements, followed by a blank line::
+
+            pkg_fact(P,trigger_id(T)).
+            pkg_fact(P,trigger_msg(S)).
+            condition_requirement(T,<the arguments of a clause>).
+        """
+        quoted = self.quoted
+        name = quote(pkg_name, quoted)
+        problem = self.asp_problem
+        problem.append(f"pkg_fact({name},trigger_id({trigger_id})).")
+        problem.append(f"pkg_fact({name},trigger_msg({quote_once(spec_str)})).")
+        for clause in requirements:
+            problem.append(f"condition_requirement({trigger_id},{clause.args_str(quoted)}).")
+        problem.append("")
+
+    def effect_facts(
+        self, pkg_name: str, effect_id: int, spec_str: str, requirements: List[AspFunction]
+    ) -> None:
+        """Add the facts of an effect: its id, the spec it stands for, and the clauses of that
+        spec as the constraints it imposes, followed by a blank line::
+
+            pkg_fact(P,effect_id(E)).
+            pkg_fact(P,effect_msg(S)).
+            imposed_constraint(E,<the arguments of a clause>).
+        """
+        quoted = self.quoted
+        name = quote(pkg_name, quoted)
+        problem = self.asp_problem
+        problem.append(f"pkg_fact({name},effect_id({effect_id})).")
+        problem.append(f"pkg_fact({name},effect_msg({quote_once(spec_str)})).")
+        for clause in requirements:
+            problem.append(f"imposed_constraint({effect_id},{clause.args_str(quoted)}).")
+        problem.append("")
 
     def append(self, rule: str) -> None:
         self.asp_problem.append(rule)
