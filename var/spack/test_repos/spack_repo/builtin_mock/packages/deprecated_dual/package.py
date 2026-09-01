@@ -20,4 +20,4 @@ class DeprecatedDual(Package):
     )
 
     # Also annotate @1.0 with the new directive for reason/severity metadata
-    deprecated("@1.0", reason="cve", severity="high")
+    deprecated("@1.0", reason="vuln", severity="high")

@@ -336,8 +336,8 @@ def deprecated(
     Args:
         spec: optional spec constraint (e.g. ``"@1.0"``); if omitted, the whole package
             is deprecated.
-        reason: why this spec is deprecated.  One of ``"cve"``, ``"rename"``,
-            ``"unavailable"``, ``"maintenance"``, ``"unspecified"``.  Prefer a specific
+        reason: why this spec is deprecated.  One of ``"vuln"``, ``"rename"``,
+            ``"retired"``, ``"maintenance"``, ``"unspecified"``.  Prefer a specific
             reason: ``"unspecified"`` exists for the legacy ``deprecated=True`` keyword,
             which records no reason at all.
         severity: how severe the deprecation is.  One of ``"low"`` (default), ``"medium"``,

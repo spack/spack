@@ -65,7 +65,7 @@ packages:
     spec = concretize_one("deprecated-with-reason@2.0")
     assert spec.satisfies("@2.0")
     assert not any(
-        "deprecat" in str(w.message).lower() or "cve" in str(w.message).lower()
+        "deprecat" in str(w.message).lower() or "vuln" in str(w.message).lower()
         for w in recwarn.list
     )
 
@@ -234,9 +234,9 @@ packages:
     deprecation:
       allowed_severity:
         default: critical
-        cve: none
+        vuln: none
 """)
-    # @2.0 is deprecated with reason=cve, which the mapping forbids at any severity
+    # @2.0 is deprecated with reason=vuln, which the mapping forbids at any severity
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-with-reason@2.0")
 
@@ -253,9 +253,9 @@ packages:
   all:
     deprecation:
       allowed_severity:
-        cve: critical
+        vuln: critical
 """)
-    # reason=cve is allowed up to critical
+    # reason=vuln is allowed up to critical
     assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
 
     # reason=rename is not listed, so it falls back to 'none' rather than to 'critical'
@@ -266,7 +266,7 @@ packages:
 def test_per_package_mapping_replaces_the_one_under_all(
     mock_packages, concretize_scope, packages_yaml_write
 ):
-    """Tests that a per-package mapping replaces the one under 'all' outright, so the 'cve: none'
+    """Tests that a per-package mapping replaces the one under 'all' outright, so the 'vuln: none'
     set globally is not consulted for a package with its own threshold, while a package without
     one is still judged by 'all'.
     """
@@ -276,13 +276,13 @@ packages:
     deprecation:
       allowed_severity:
         default: high
-        cve: none
+        vuln: none
   deprecated-with-reason:
     deprecation:
       allowed_severity:
         default: critical
 """)
-    # the package with its own threshold ignores the global 'cve: none'
+    # the package with its own threshold ignores the global 'vuln: none'
     assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
 
     # a package without one is still blocked by it, so the override is scoped to the one package
@@ -319,8 +319,8 @@ def test_old_and_new_deprecation_are_checked_independently(
     override one another: each is checked against the threshold for its own reason, and either
     one above its threshold refuses the version.
     """
-    # deprecated-dual@1.0 carries unspecified/critical from the keyword and cve/high from the
-    # directive. Allowing unspecified is not enough, because cve is still forbidden.
+    # deprecated-dual@1.0 carries unspecified/critical from the keyword and vuln/high from the
+    # directive. Allowing unspecified is not enough, because vuln is still forbidden.
     packages_yaml_write("""
 packages:
   all:
@@ -331,13 +331,13 @@ packages:
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-dual@1.0")
 
-    # Symmetrically, allowing only cve leaves the keyword deprecation in force.
+    # Symmetrically, allowing only vuln leaves the keyword deprecation in force.
     packages_yaml_write("""
 packages:
   all:
     deprecation:
       allowed_severity:
-        cve: critical
+        vuln: critical
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-dual@1.0")
@@ -349,7 +349,7 @@ packages:
     deprecation:
       allowed_severity:
         unspecified: critical
-        cve: high
+        vuln: high
 """)
     assert concretize_one("deprecated-dual@1.0").satisfies("@1.0")
 
