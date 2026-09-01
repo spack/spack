@@ -7,7 +7,7 @@ be used to iterate over tokens in a string."""
 
 import enum
 import re
-from typing import Generator, Match, Optional, Type
+from typing import Dict, Generator, Match, Optional, Type
 
 
 class TokenBase(enum.Enum):
@@ -48,9 +48,25 @@ class Token:
 
 
 class Tokenizer:
-    def __init__(self, tokens: Type[TokenBase]):
+    """Tokenizer for the tokens of a :class:`TokenBase` enum.
+
+    The regexes of the tokens are joined into a single regex, in order of declaration, with a
+    named group per token. Tokens are matched by scanning the input with this regex: the kind
+    of a token is the name of the outermost group that matched, ``match.lastgroup``.
+    """
+
+    def __init__(self, tokens: Type[TokenBase], *, skip_whitespace: bool = False):
+        """
+        Args:
+            tokens: enum of tokens
+            skip_whitespace: if True, whitespace before a token is consumed by the regex itself
+                and is not part of the token, so no whitespace token is needed
+        """
         self.tokens = tokens
-        self.regex = re.compile("|".join(f"(?P<{t.name}>{t.regex})" for t in tokens))
+        #: Token kind by name of the group that matched it
+        self.kinds: Dict[str, TokenBase] = {t.name: t for t in tokens}
+        alternation = "|".join(f"(?P<{t.name}>{t.regex})" for t in tokens)
+        self.regex = re.compile(rf"\s*(?:{alternation})" if skip_whitespace else alternation)
 
     def tokenize(self, text: str) -> Generator[Token, None, None]:
         if not text:
@@ -67,4 +83,7 @@ class Tokenizer:
             assert m is not None, msg
             assert m.lastgroup is not None, msg
 
-            yield Token(self.tokens.__members__[m.lastgroup], m.group(), m.start(), m.end())
+            # Take the value and span from the group of the token, not the whole match, which
+            # may include skipped whitespace
+            name = m.lastgroup
+            yield Token(self.kinds[name], m.group(name), m.start(name), m.end(name))

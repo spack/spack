@@ -198,7 +198,7 @@ class SpecLexer(RegexLexer):
             (SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex, Name.Class),
             # DAG hash
             (SpecTokens.DAG_HASH.regex, Text),
-            (SpecTokens.WS.regex, Text),
+            (r"\s+", Text),
             # Also stop at unrecognized tokens (without consuming them)
             default("#pop"),
         ],

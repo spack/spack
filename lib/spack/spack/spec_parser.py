@@ -164,19 +164,17 @@ class SpecTokens(TokenBase):
     # DAG hash
     DAG_HASH = rf"(?:/(?:{HASH}))"
 
-    # White spaces
-    WS = r"(?:\s+)"
-
-    # Unexpected character(s)
-    UNEXPECTED = r"(?:.[\s]*)"
+    # Unexpected character
+    UNEXPECTED = r"\S"
 
 
-#: Tokenizer that includes all the regexes in the SpecTokens enum
-SPEC_TOKENIZER = Tokenizer(SpecTokens)
+#: Tokenizer that includes all the regexes in the SpecTokens enum. Whitespace between tokens is
+#: skipped by the regex itself.
+SPEC_TOKENIZER = Tokenizer(SpecTokens, skip_whitespace=True)
 
 #: Right after a dependency sigil or edge properties, ``c,cxx=gcc`` is a virtual assignment
 #: rather than a key-value pair. The tokenizer is context free, so this is matched separately.
-_VIRTUAL_ASSIGNMENT_AHEAD = re.compile(rf"(\s*)({VIRTUAL_ASSIGNMENT})")
+_VIRTUAL_ASSIGNMENT_AHEAD = re.compile(rf"\s*({VIRTUAL_ASSIGNMENT})")
 
 #: Tokens after which a dependency node starts
 _NODE_START = (SpecTokens.DEPENDENCY, SpecTokens.END_EDGE_PROPERTIES)
@@ -187,30 +185,25 @@ def tokenize(text: str, *, everything: bool = False) -> Iterator[Token]:
 
     Args:
         text: text to tokenize
-        everything: if True, also yield whitespace and unexpected tokens instead of raising
+        everything: if True, also yield unexpected tokens instead of raising
 
     Raises:
         SpecTokenizationError: when unexpected characters are found in the text
     """
-    kinds, regex, pos = SpecTokens.__members__, SPEC_TOKENIZER.regex, 0
-    ws, unexpected = SpecTokens.WS, SpecTokens.UNEXPECTED
+    kinds, regex, pos = SPEC_TOKENIZER.kinds, SPEC_TOKENIZER.regex, 0
     while True:
         # The scanner is restarted after a virtual assignment, which is matched out of band
         scanner = regex.scanner(text, pos)  # type: ignore[attr-defined]
         for m in iter(scanner.match, None):
             kind = kinds[m.lastgroup]
-            if not everything:
-                if kind is ws:
-                    continue
-                if kind is unexpected:
-                    raise SpecTokenizationError(list(tokenize(text, everything=True)), text)
-            yield Token(kind, m.group(), m.start(), m.end())
+            if kind is SpecTokens.UNEXPECTED and not everything:
+                raise SpecTokenizationError(text)
+            i = m.lastindex
+            yield Token(kind, m.group(i), m.start(i), m.end(i))
             if kind in _NODE_START:
                 va = _VIRTUAL_ASSIGNMENT_AHEAD.match(text, m.end())
                 if va:
-                    if everything and va.start(2) > va.start():
-                        yield Token(ws, va.group(1), va.start(), va.start(2))
-                    yield Token(SpecTokens.VIRTUAL_ASSIGNMENT, va.group(2), va.start(2), va.end())
+                    yield Token(SpecTokens.VIRTUAL_ASSIGNMENT, va.group(1), va.start(1), va.end())
                     pos = va.end()
                     break
         else:
@@ -248,15 +241,15 @@ class TokenContext:
 class SpecTokenizationError(spack.error.SpecSyntaxError):
     """Syntax error in a spec string"""
 
-    def __init__(self, tokens: List[Token], text: str):
+    def __init__(self, text: str):
         message = f"unexpected characters in the spec string\n{text}\n"
 
-        underline = ""
-        for token in tokens:
-            is_error = token.kind == SpecTokens.UNEXPECTED
-            underline += ("^" if is_error else " ") * (token.end - token.start)
+        underline = [" "] * len(text)
+        for token in tokenize(text, everything=True):
+            if token.kind is SpecTokens.UNEXPECTED:
+                underline[token.start : token.end] = "^" * (token.end - token.start)
 
-        message += color.colorize(f"@*r{{{underline}}}")
+        message += color.colorize(f"@*r{{{''.join(underline).rstrip()}}}")
         super().__init__(message)
 
 

@@ -43,9 +43,9 @@ class _LegacySpecTokens(TokenBase):
     # DAG hash
     DAG_HASH = SpecTokens.DAG_HASH.regex
     # White spaces
-    WS = SpecTokens.WS.regex
+    WS = r"(?:\s+)"
     # Unexpected character(s)
-    UNEXPECTED = SpecTokens.UNEXPECTED.regex
+    UNEXPECTED = r"(?:.[\s]*)"
 
 
 def _spec_str_reorder_compiler(idx: int, blocks: List[List[Token]]) -> None:
