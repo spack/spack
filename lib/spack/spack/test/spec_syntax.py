@@ -1570,6 +1570,7 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x os=debian6 platform=test target=default_target os=redhat6", "two architectures"),
         ("x target=default_target platform=test os=redhat6 os=debian6", "'platform'"),
         # Dependencies
+        ("x@1.2 ^", "abstract or anonymous"),
         ("^[@foo] zlib", "edge attributes"),
         # TODO: Remove this as soon as use variants are added and we can parse custom attributes
         ("^[foo=bar] zlib", "edge attributes"),
