@@ -277,11 +277,14 @@ def _do_fake_install(pkg: "spack.package_base.PackageBase") -> None:
     plat_shared = ".dll" if sys.platform == "win32" else ".so"
     plat_static = ".lib" if sys.platform == "win32" else ".a"
     dso_suffix = ".dylib" if sys.platform == "darwin" else plat_shared
+    # Windows tells executables apart by extension, so a fake command without one would not
+    # be an executable as far as e.g. PackageBase.command is concerned
+    exe_suffix = ".exe" if sys.platform == "win32" else ""
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
     executable = lambda path, flags: os.open(path, flags, 0o700)
-    open(os.path.join(pkg.prefix.bin, command), "wb", opener=executable).close()
+    open(os.path.join(pkg.prefix.bin, command + exe_suffix), "wb", opener=executable).close()
 
     # Install fake header file
     fs.mkdirp(pkg.prefix.include)

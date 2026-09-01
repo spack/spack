@@ -422,6 +422,9 @@ def _mock_remove(spec, db):
 
 
 def test_default_queries(database):
+    # Executables carry a .exe extension on Windows
+    exe_suffix = ".exe" if sys.platform == "win32" else ""
+
     # Testing a package whose name *doesn't* start with 'lib'
     # to ensure the library has 'lib' prepended to the name
     rec = database.get_record("zmpi")
@@ -438,7 +441,7 @@ def test_default_queries(database):
 
     command = spec["zmpi"].command
     assert isinstance(command, Executable)
-    assert command.name == "zmpi"
+    assert command.name == "zmpi" + exe_suffix
     assert os.path.exists(command.path)
 
     # Testing a package whose name *does* start with 'lib'
@@ -457,7 +460,7 @@ def test_default_queries(database):
 
     command = spec["libelf"].command
     assert isinstance(command, Executable)
-    assert command.name == "libelf"
+    assert command.name == "libelf" + exe_suffix
     assert os.path.exists(command.path)
 
 
