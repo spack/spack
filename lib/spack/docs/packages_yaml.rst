@@ -747,8 +747,10 @@ To hold some reasons to a stricter standard than others, give a mapping from rea
            vuln: none
 
 Here a ``low``-severity rename or maintenance deprecation is allowed, while any deprecation with ``reason: vuln`` is an error whatever its severity.
-The reason keys are the values accepted by the ``deprecated()`` directive: ``vuln``, ``rename``, ``retired``, ``maintenance``, and ``unspecified``.
-``unspecified`` covers the deprecations declared with the legacy ``version(..., deprecated=True)`` keyword, which records no reason.
+The reason keys are ``vuln``, ``rename``, ``retired``, ``maintenance``, and ``unspecified``.
+The first four are the values a recipe passes to the ``deprecated()`` directive.
+``unspecified`` is reserved for the deprecations Spack records from the legacy ``version(..., deprecated=True)`` keyword, and a recipe cannot pass it.
+A threshold can still be set for it here, which is how those deprecations are configured.
 A per-package ``allowed_severity`` replaces the one under ``all`` outright, exactly as it does for a single value.
 
 For a single command, the ``--deprecated`` flag sets ``allowed_severity`` to ``critical`` under ``all``.

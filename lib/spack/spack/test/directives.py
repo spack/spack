@@ -9,7 +9,15 @@ import spack.concretize
 import spack.directives
 import spack.spec
 import spack.version
-from spack.directives import _make_when_spec, conflicts, depends_on, extends, patch
+from spack.directives import (
+    _make_when_spec,
+    conflicts,
+    depends_on,
+    deprecated,
+    extends,
+    patch,
+    version,
+)
 from spack.directives_meta import DirectiveDictDescriptor, DirectiveError, DirectiveMeta
 from spack.enums import DeprecationReason, DeprecationSeverity
 from spack.repo import RepoPath
@@ -407,3 +415,25 @@ class TestDeprecatedDirective:
             spack.directives._Deprecated(
                 spec="@1.0", reason="vuln", severity="high", labels="CVE-1"
             )(mock_pkg)
+
+
+def test_deprecated_directive_refuses_the_reserved_reason():
+    """Tests that a recipe cannot claim the reason Spack records for 'deprecated=True'."""
+    with pytest.raises(DirectiveError, match="reserved"):
+
+        class Pkg(metaclass=DirectiveMeta):
+            name = "mypkg"
+            deprecated("@=1.0", reason="unspecified", severity="low")
+
+
+def test_deprecated_keyword_records_the_reserved_reason():
+    """Tests that 'version(..., deprecated=True)' is what records the reserved reason."""
+
+    class Pkg(metaclass=DirectiveMeta):
+        name = "mypkg"
+        version("1.0", deprecated=True)
+
+    entries = Pkg.deprecations[Spec("@=1.0")]
+    assert len(entries) == 1
+    assert entries[0].reason == DeprecationReason.UNSPECIFIED
+    assert entries[0].severity == DeprecationSeverity.CRITICAL
