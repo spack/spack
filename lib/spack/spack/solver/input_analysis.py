@@ -71,6 +71,9 @@ class NoStaticAnalysis(PossibleDependencyGraph):
     def __init__(self, *, configuration: spack.config.Configuration, repo: spack.repo.RepoPath):
         self.configuration = configuration
         self.repo = repo
+        #: Whether a name is virtual, by name. This object lives for a single solve, and the
+        #: set of virtuals does not change during one.
+        self._virtuals: Dict[str, bool] = {}
         self._platform_condition = spack.spec.Spec(
             f"platform={spack.platforms.host()} target={spack.vendor.archspec.cpu.host().family}:"
         )
@@ -81,7 +84,10 @@ class NoStaticAnalysis(PossibleDependencyGraph):
             self.libc_pkgs = []
 
     def is_virtual(self, name: str) -> bool:
-        return self.repo.is_virtual(name)
+        result = self._virtuals.get(name)
+        if result is None:
+            result = self._virtuals[name] = self.repo.is_virtual(name)
+        return result
 
     @lang.memoized
     def is_allowed_on_this_platform(self, *, pkg_name: str) -> bool:

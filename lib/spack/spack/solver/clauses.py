@@ -84,6 +84,10 @@ class SpecClauseGenerator:
         self.version_constraints: Dict[str, Set] = collections.defaultdict(set)
         self.target_constraints: Set = set()
         self.variant_values_from_specs: Set = set()
+        #: Package classes by name, see pkg_class()
+        self._pkg_classes: Dict[str, Type[spack.package_base.PackageBase]] = {}
+        #: Whether a name is virtual, see is_virtual()
+        self._virtual_names: Dict[str, bool] = {}
 
     def record_version_constraint(self, name: str, versions) -> None:
         """Record that `versions` was requested for package `name`."""
@@ -197,7 +201,7 @@ class SpecClauseGenerator:
 
             for value in variant.values:
                 # ensure that the value *can* be valid for the spec
-                if name and not spec.concrete and not spack.repo.PATH.is_virtual(name):
+                if name and not spec.concrete and not self.is_virtual(name):
                     variant_defs = vt.prevalidate_variant_value(
                         self.pkg_class(name), variant, spec
                     )
@@ -414,9 +418,7 @@ class SpecClauseGenerator:
         f: Union[Type[_Head], Type[_Body]] = _Body if body else _Head
 
         if name:
-            clauses.append(
-                f.node(name) if not spack.repo.PATH.is_virtual(name) else f.virtual_node(name)
-            )
+            clauses.append(f.node(name) if not self.is_virtual(name) else f.virtual_node(name))
         if spec.namespace:
             clauses.append(f.namespace(name, spec.namespace))
 
@@ -492,9 +494,26 @@ class SpecClauseGenerator:
         clauses.extend(edge_clauses)
         return clauses
 
+    def is_virtual(self, name: str) -> bool:
+        """Whether ``name`` is the name of a virtual package.
+
+        The answer is kept: this generator lives for a single setup, and the set of virtuals
+        does not change during one.
+        """
+        result = self._virtual_names.get(name)
+        if result is None:
+            result = self._virtual_names[name] = spack.repo.PATH.is_virtual(name)
+        return result
+
     def pkg_class(self, pkg_name: str) -> Type[spack.package_base.PackageBase]:
+        # This generator lives for a single setup, so a class it hands out cannot go stale.
+        cls = self._pkg_classes.get(pkg_name)
+        if cls is not None:
+            return cls
+
         request = pkg_name
         if pkg_name in self.explicitly_required_namespaces:
             namespace = self.explicitly_required_namespaces[pkg_name]
             request = f"{namespace}.{pkg_name}"
-        return spack.repo.PATH.get_pkg_class(request)
+        cls = self._pkg_classes[pkg_name] = spack.repo.PATH.get_pkg_class(request)
+        return cls
