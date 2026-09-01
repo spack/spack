@@ -1529,14 +1529,17 @@ class SpackSolverSetup:
             return
 
         self.gen.h2("Trigger conditions")
+        problem = self.gen.asp_problem
         for name in self._trigger_cache:
             cache = self._trigger_cache[name]
+            quoted_name = quote(name)
             for (spec_str, _), (trigger_id, requirements) in cache.items():
-                self.gen.pkg_fact(name, fn.trigger_id(trigger_id))
-                self.gen.pkg_fact(name, fn.trigger_msg(spec_str))
+                problem.append(f"pkg_fact({quoted_name},trigger_id({trigger_id})).")
+                problem.append(f"pkg_fact({quoted_name},trigger_msg({quote(spec_str)})).")
+                # the requirements are written out as they are, with the trigger id prepended
                 for predicate in requirements:
-                    self.gen.fact(fn.condition_requirement(trigger_id, *predicate.args))
-                self.gen.newline()
+                    problem.append(f"condition_requirement({trigger_id},{predicate.args_str()}).")
+                problem.append("")
         self._trigger_cache.clear()
 
     def effect_rules(self):
@@ -1545,14 +1548,17 @@ class SpackSolverSetup:
             return
 
         self.gen.h2("Imposed requirements")
+        problem = self.gen.asp_problem
         for name in sorted(self._effect_cache):
             cache = self._effect_cache[name]
+            quoted_name = quote(name)
             for (spec_str, _), (effect_id, requirements) in cache.items():
-                self.gen.pkg_fact(name, fn.effect_id(effect_id))
-                self.gen.pkg_fact(name, fn.effect_msg(spec_str))
+                problem.append(f"pkg_fact({quoted_name},effect_id({effect_id})).")
+                problem.append(f"pkg_fact({quoted_name},effect_msg({quote(spec_str)})).")
+                # see the note in trigger_rules()
                 for predicate in requirements:
-                    self.gen.fact(fn.imposed_constraint(effect_id, *predicate.args))
-                self.gen.newline()
+                    problem.append(f"imposed_constraint({effect_id},{predicate.args_str()}).")
+                problem.append("")
         self._effect_cache.clear()
 
     def define_variant(

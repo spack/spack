@@ -62,6 +62,21 @@ class AspFunction:
     def __str__(self) -> str:
         return f"{self.name}({','.join([asp_argument(arg) for arg in self.args])})"
 
+    def args_str(self) -> str:
+        """The arguments as they appear between the parentheses of this function.
+
+        The trigger and effect rules write the arguments of a clause out under a head of
+        their own, which is what needs this separately from :meth:`__str__`.
+        """
+        # a string that has been written out before needs no further work
+        quoted = _QUOTED
+        return ",".join(
+            [
+                quoted[arg] if type(arg) is str and arg in quoted else asp_argument(arg)
+                for arg in self.args
+            ]
+        )
+
     def __repr__(self) -> str:
         return str(self)
 
