@@ -53,26 +53,24 @@ def test_manpath_trailing_colon(
 
     load(shell, "mpileaks")
     load_cmds = _get_load_cmds(mpileaks_spec, shell)
-    cmd_str = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} MANPATH"
-    manpath_prepends = []
-    for line in load_cmds.splitlines():
-        if cmd_str in line:
-            parts = line.split()
-            if len(parts) >= 4:
-                # Format: _spack_env_prepend MANPATH /path/to/man :|;
-                manpath_prepends.append((parts[2], parts[3]))
 
-    # Verify MANPATH additions exist and include trailing separator
-    assert len(manpath_prepends) > 0, "Expected MANPATH additions from loaded packages"
+    prepend_cmd = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} MANPATH"
+    manpath_prepends = [line for line in load_cmds.splitlines() if prepend_cmd in line]
+    assert len(manpath_prepends) > 0, "Expected MANPATH prepends from loaded packages"
 
-    trailing_sep = os.pathsep
+    append_cmd = f"{_get_shell_cmd_invocation('_spack_env_append', shell)} MANPATH"
+
     if "bat" in shell:
-        trailing_sep = f'"{trailing_sep}"'
+        expected_append = f'{append_cmd} "" ";"'
+    else:
+        expected_append = f"{append_cmd} '' :"
 
-    for _, separator in manpath_prepends:
-        assert separator == trailing_sep, (
-            f"MANPATH prepend should include trailing '{os.pathsep}' to preserve system paths"
-        )
+    trailing_colon_found = any(expected_append in line for line in load_cmds.splitlines())
+    assert trailing_colon_found, (
+        f"Expected trailing colon via: {expected_append}\n"
+        f"This preserves system MANPATH entries.\n"
+        f"Commands generated:\n{load_cmds}"
+    )
 
 
 def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages, working_env):
