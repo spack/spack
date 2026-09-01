@@ -9,6 +9,8 @@ from spack.util import lang
 
 from .compat import symbol_name, symbol_string
 
+#: Type used for quoted string cache
+QuotedStrings = Dict[str, str]
 
 class AspVar:
     """Represents a variable in an ASP rule, allows for conditionally generating
@@ -62,27 +64,16 @@ class AspFunction:
     def __str__(self) -> str:
         return self.to_str({})
 
-    def to_str(self, quoted: "QuotedStrings") -> str:
+    def to_str(self, quoted: QuotedStrings) -> str:
         """The ASP representation of this function, reusing the literals in ``quoted``."""
         return f"{self.name}({','.join([asp_argument(arg, quoted) for arg in self.args])})"
 
-    def args_str(self, quoted: "QuotedStrings") -> str:
-        """The arguments as they appear between the parentheses of this function.
-
-        The trigger and effect rules write the arguments of a clause out under a head of
-        their own, which is what needs this separately from :meth:`to_str`.
-        """
+    def args_str(self, quoted: QuotedStrings) -> str:
+        """The arguments as they appear between the parentheses of this function."""
         return ",".join([asp_argument(arg, quoted) for arg in self.args])
 
     def __repr__(self) -> str:
         return str(self)
-
-
-#: ASP literals of the strings that have been written out, by string. String arguments are
-#: package, variant, version, ... names, of which a solve writes the same handful out over and
-#: over, and escaping one means scanning it three times. A problem instance owns one of these,
-#: so that the literals it collects are released together with it.
-QuotedStrings = Dict[str, str]
 
 
 def quote(arg: str, quoted: QuotedStrings) -> str:
@@ -99,10 +90,7 @@ def quote_once(arg: str) -> str:
     return '"' + arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"") + '"'
 
 
-#: Strings up to this long are kept, longer ones are written out and forgotten. Names of
-#: packages, variants, versions, targets, ... are short and come up over and over; the long
-#: arguments are the messages that explain a condition or a conflict, and those are written
-#: once each, so keeping them only costs memory.
+#: Constant that determines the maximum length of a string that's kept in the quoted cache
 MAX_QUOTED_LENGTH = 32
 
 
