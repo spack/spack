@@ -18,6 +18,7 @@ import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.spec
+import spack.spec_parser
 import spack.util.filesystem as fs
 from spack.externals import (
     ExternalSpecsParser,
@@ -331,32 +332,38 @@ def specfile_for(config, mock_packages):
         # virtual assignment on a dep of an anonymous spec (more of these later)
         (
             "%foo=bar",
-            [Token(SpecTokens.DEPENDENCY, value="%foo=bar", virtuals="foo", substitute="bar")],
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="foo=bar"),
+            ],
             "%foo=bar",
         ),
         (
             "^foo=bar",
-            [Token(SpecTokens.DEPENDENCY, value="^foo=bar", virtuals="foo", substitute="bar")],
+            [
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="foo=bar"),
+            ],
             "^foo=bar",
         ),
         # anonymous dependencies with variants
         (
-            "^*foo=bar",
+            "^* foo=bar",
             [
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="foo=bar"),
             ],
-            "^*foo=bar",
+            "^* foo=bar",
         ),
         (
-            "%*foo=bar",
+            "%* foo=bar",
             [
                 Token(SpecTokens.DEPENDENCY, value="%"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="foo=bar"),
             ],
-            "%*foo=bar",
+            "%* foo=bar",
         ),
         (
             "^*+foo",
@@ -666,12 +673,8 @@ def specfile_for(config, mock_packages):
         (
             "^mpi=openmpi",
             [
-                Token(
-                    SpecTokens.DEPENDENCY,
-                    value="^mpi=openmpi",
-                    virtuals="mpi",
-                    substitute="openmpi",
-                )
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="mpi=openmpi"),
             ],
             "^mpi=openmpi",
         ),
@@ -696,12 +699,8 @@ def specfile_for(config, mock_packages):
         (
             "^lapack,mpi=openmpi+foo+bar",
             [
-                Token(
-                    SpecTokens.DEPENDENCY,
-                    value="^lapack,mpi=openmpi",
-                    virtuals="lapack,mpi",
-                    substitute="openmpi",
-                ),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="lapack,mpi=openmpi"),
                 Token(SpecTokens.BOOL_VARIANT, value="+foo"),
                 Token(SpecTokens.BOOL_VARIANT, value="+bar"),
             ],
@@ -857,7 +856,8 @@ def specfile_for(config, mock_packages):
             "zlib %c=gcc",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
-                Token(SpecTokens.DEPENDENCY, value="%c=gcc", virtuals="c", substitute="gcc"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c=gcc"),
             ],
             "zlib %c=gcc",
         ),
@@ -876,9 +876,8 @@ def specfile_for(config, mock_packages):
             "zlib %c,cxx=gcc",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
-                Token(
-                    SpecTokens.DEPENDENCY, value="%c,cxx=gcc", virtuals="c,cxx", substitute="gcc"
-                ),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c,cxx=gcc"),
             ],
             "zlib %c,cxx=gcc",
         ),
@@ -898,9 +897,8 @@ def specfile_for(config, mock_packages):
             "zlib %c,cxx=gcc@14.1",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
-                Token(
-                    SpecTokens.DEPENDENCY, value="%c,cxx=gcc", virtuals="c,cxx", substitute="gcc"
-                ),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c,cxx=gcc"),
                 Token(SpecTokens.VERSION, value="@14.1"),
             ],
             "zlib %c,cxx=gcc@14.1",
@@ -925,19 +923,11 @@ def specfile_for(config, mock_packages):
             "zlib %fortran=gcc@14.1 %c,cxx=clang",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
-                Token(
-                    SpecTokens.DEPENDENCY,
-                    value="%fortran=gcc",
-                    virtuals="fortran",
-                    substitute="gcc",
-                ),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="fortran=gcc"),
                 Token(SpecTokens.VERSION, value="@14.1"),
-                Token(
-                    SpecTokens.DEPENDENCY,
-                    value="%c,cxx=clang",
-                    virtuals="c,cxx",
-                    substitute="clang",
-                ),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c,cxx=clang"),
             ],
             "zlib %fortran=gcc@14.1 %c,cxx=clang",
         ),
@@ -1001,7 +991,8 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
                 Token(SpecTokens.START_EDGE_PROPERTIES, "^["),
                 Token(SpecTokens.KEY_VALUE_PAIR, "when='%c'"),
-                Token(SpecTokens.END_EDGE_PROPERTIES, "] c=gcc", virtuals="c", substitute="gcc"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c=gcc"),
             ],
             "foo ^[when='%c'] c=gcc",
         ),
@@ -1019,7 +1010,8 @@ def specfile_for(config, mock_packages):
             "foo %%c,cxx=gcc",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
-                Token(SpecTokens.DEPENDENCY, "%%c,cxx=gcc", virtuals="c,cxx", substitute="gcc"),
+                Token(SpecTokens.DEPENDENCY, value="%%"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c,cxx=gcc"),
             ],
             "foo %%c,cxx=gcc",
         ),
@@ -1029,7 +1021,8 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
                 Token(SpecTokens.START_EDGE_PROPERTIES, "%%["),
                 Token(SpecTokens.KEY_VALUE_PAIR, "when='%c'"),
-                Token(SpecTokens.END_EDGE_PROPERTIES, "] c=gcc", virtuals="c", substitute="gcc"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c=gcc"),
             ],
             "foo %%[when='%c'] c=gcc",
         ),
@@ -1044,6 +1037,39 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
             ],
             "foo %%[when='%c'] c=gcc",
+        ),
+        # whitespace between a dependency sigil or edge properties and a virtual assignment
+        (
+            "zlib % c=gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c=gcc"),
+            ],
+            "zlib %c=gcc",
+        ),
+        (
+            "foo ^[when='%c']   c,cxx=builtin.gcc@14+bar",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="foo"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="when='%c'"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c,cxx=builtin.gcc"),
+                Token(SpecTokens.VERSION, value="@14"),
+                Token(SpecTokens.BOOL_VARIANT, value="+bar"),
+            ],
+            "foo ^[when='%c'] c,cxx=builtin.gcc@14+bar",
+        ),
+        # a value that is not a package name is a variant of an anonymous dependency
+        (
+            "zlib ^cflags=-O2",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="cflags=-O2"),
+            ],
+            "zlib ^* cflags=-O2",
         ),
     ],
 )
@@ -1123,6 +1149,16 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
             ],
             ["mvapich %gcc languages=c,c++", "emacs ^ncurses%gcc languages:=c"],
         ),
+        (
+            "zlib %c=gcc gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c=gcc"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+            ],
+            ["zlib %c=gcc", "gcc"],
+        ),
     ],
 )
 def test_parse_multiple_specs(text, tokens, expected_specs):
@@ -1177,6 +1213,8 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         (["zlib", "ldflags=-Wl,-rpath=$ORIGIN/_libs"], "zlib ldflags='-Wl,-rpath=$ORIGIN/_libs'"),
         # A closing bracket ends the edge attribute list, it is never part of the value
         (["mpileaks", "%[", "when=@1.0]", "gcc"], "mpileaks %[when='@1.0'] gcc"),
+        (["mpileaks", "%[when=+x]", "c=gcc"], "mpileaks %[when='+x'] c=gcc"),
+        (["mpileaks", "%c,cxx=gcc"], "mpileaks %c,cxx=gcc"),
         # Ensure that passing escaped quotes on the CLI raises a tokenization error
         (["zlib", '"-g', '-O2"'], SpecTokenizationError),
     ],
@@ -1910,14 +1948,24 @@ def test_when_edge_attribute_keeps_commas():
         # square brackets are not valid characters in an unquoted value
         ("a=']'", "a=']'"),
         ("a='['", "a='['"),
+        # an anonymous dependency is named * only where its options could be read as a name
+        ("foo ^", "foo ^*"),
+        ("pkg-a %*+foo ^*@1.0", "pkg-a %+foo ^@1.0"),
+        ("^cflags=-O2", "^* cflags=-O2"),
+        ("^* foo=bar,baz", "^* foo=bar,baz"),
+        # a virtual assignment is one token, the node options follow
+        ("zlib % c=gcc", "zlib %c=gcc"),
+        ("^mpi=intel-parallel-studio+mkl", "^mpi=intel-parallel-studio+mkl"),
+        ("%c=builtin.gcc@14", "%c=builtin.gcc@14"),
+        ("%[when=+x] c=gcc", "%[when='+x'] c=gcc"),
         # virtuals of an anonymous spec stay in the edge attributes, there is no name to
         # substitute them with
         ("%[virtuals=c] *", "%[virtuals=c] *"),
         ("%[deptypes=build virtuals=c] *", "%[deptypes=build virtuals=c] *"),
         ("^[virtuals=c,cxx] *", "^[virtuals=c,cxx] *"),
-        ("%[virtuals=c] @4.0 foo=bar", "%[virtuals=c] *@4.0 foo=bar"),
+        ("%[virtuals=c] *@4.0 foo=bar", "%[virtuals=c] @4.0 foo=bar"),
         # a star is a package name, so name=* is a variant value, not a substitute
-        ("^dev_path=*", "^*dev_path='*'"),
+        ("^dev_path=*", "^* dev_path='*'"),
         # a version bound is never truncated at a "." to make room for a key=value pair
         ("@:a.a=''", "a.a=''"),
         ("@1.2:2.0=x", "@1.2: 2.0=x"),
@@ -1976,6 +2024,21 @@ def test_exact_version_in_range_is_a_syntax_error(spec_str):
     of the spec, not a ValueError from the version list"""
     with pytest.raises(spack.error.SpecSyntaxError):
         spack.spec.Spec(spec_str)
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected_in_error",
+    [
+        ("c,cxx=gcc", "virtual assignment"),
+        ("zlib c,cxx=gcc", "virtual assignment"),
+        ("zlib %[c=gcc]", "edge attributes"),
+        # regression: an unconsumed token used to make the parser loop forever
+        ("zlib ]", "unexpected token"),
+    ],
+)
+def test_misplaced_tokens_raise(spec_str, expected_in_error):
+    with pytest.raises(SpecParsingError, match=expected_in_error):
+        spack.spec_parser.parse(spec_str)
 
 
 @pytest.mark.regression("52375")

@@ -7,7 +7,7 @@ be used to iterate over tokens in a string."""
 
 import enum
 import re
-from typing import Generator, Match, Optional, Type
+from typing import Generator, Match, Optional, Sequence, Type
 
 
 class TokenBase(enum.Enum):
@@ -29,98 +29,53 @@ class TokenBase(enum.Enum):
 class Token:
     """Represents tokens; generated from input by lexer and fed to parse()."""
 
-    __slots__ = "kind", "value", "start", "end", "subvalues"
+    __slots__ = "kind", "value", "start", "end"
 
-    def __init__(self, kind: TokenBase, value: str, start: int = 0, end: int = 0, **kwargs):
+    def __init__(self, kind: TokenBase, value: str, start: int = 0, end: int = 0):
         self.kind = kind
         self.value = value
         self.start = start
         self.end = end
-        self.subvalues = kwargs if kwargs else None
 
     def __repr__(self):
         return str(self)
 
     def __str__(self):
-        parts = [self.kind, self.value]
-        if self.subvalues:
-            parts += [self.subvalues]
-        return f"({', '.join(f'`{p}`' for p in parts)})"
+        return f"(`{self.kind}`, `{self.value}`)"
 
     def __eq__(self, other):
-        return (
-            self.kind == other.kind
-            and self.value == other.value
-            and self.subvalues == other.subvalues
-        )
-
-
-def token_match_regex(token: TokenBase):
-    """Generate a regular expression that matches the provided token and its subvalues.
-
-    This will extract named capture groups from the provided regex and prefix them with
-    token name, so they can coexist together in a larger, joined regular expression.
-
-    Returns:
-        A regex with a capture group for the token and rewritten capture groups for any subvalues.
-
-    """
-    pairs = []
-
-    def replace(m):
-        subvalue_name = m.group(1)
-        token_prefixed_subvalue_name = f"{token.name}_{subvalue_name}"
-        pairs.append((subvalue_name, token_prefixed_subvalue_name))
-        return f"(?P<{token_prefixed_subvalue_name}>"
-
-    # rewrite all subvalue capture groups so they're prefixed with the token name
-    rewritten_token_regex = re.sub(r"\(\?P<([^>]+)>", replace, token.regex)
-
-    # construct a regex that matches the token as a whole *and* the subvalue capture groups
-    token_regex = f"(?P<{token}>{rewritten_token_regex})"
-    return token_regex, pairs
+        return self.kind == other.kind and self.value == other.value
 
 
 class Tokenizer:
-    def __init__(self, tokens: Type[TokenBase]):
+    """Tokenizer for a token enum.
+
+    The tokens are matched as a single regex, in order of declaration, unless ``first`` lists
+    kinds that should be tried before the others.
+    """
+
+    def __init__(self, tokens: Type[TokenBase], first: Sequence[TokenBase] = ()):
         self.tokens = tokens
+        ordered = list(first) + [t for t in tokens if t not in first]
+        self.regex = re.compile("|".join(f"(?P<{t.name}>{t.regex})" for t in ordered))
 
-        # tokens can have named subexpressions, if their regexes define named capture groups.
-        # record this so we can associate them with the token
-        self.token_subvalues = {}
+    def _token(self, m: Match) -> Token:
+        msg = (
+            "unexpected value encountered during parsing. Please submit a bug report "
+            "at https://github.com/spack/spack/issues/new/choose"
+        )
+        assert m.lastgroup is not None, msg
+        return Token(self.tokens.__members__[m.lastgroup], m.group(), m.start(), m.end())
 
-        parts = []
-        for token in tokens:
-            token_regex, pairs = token_match_regex(token)
-            parts.append(token_regex)
-            if pairs:
-                self.token_subvalues[token.name] = pairs
-
-        self.regex = re.compile("|".join(parts))
+    def match(self, text: str, pos: int = 0) -> Optional[Token]:
+        """Return the token that matches at position ``pos`` of ``text``, if any."""
+        m = self.regex.match(text, pos)
+        return self._token(m) if m else None
 
     def tokenize(self, text: str) -> Generator[Token, None, None]:
         if not text:
             return
 
         scanner = self.regex.scanner(text)  # type: ignore[attr-defined]
-        m: Optional[Match] = None
         for m in iter(scanner.match, None):
-            # The following two assertions are to help mypy
-            msg = (
-                "unexpected value encountered during parsing. Please submit a bug report "
-                "at https://github.com/spack/spack/issues/new/choose"
-            )
-            assert m is not None, msg
-            assert m.lastgroup is not None, msg
-
-            token = Token(self.tokens.__members__[m.lastgroup], m.group(), m.start(), m.end())
-
-            # add any subvalues to the token
-            subvalues = self.token_subvalues.get(m.lastgroup)
-            if subvalues:
-                if any(m.group(rewritten) for subval, rewritten in subvalues):
-                    token.subvalues = {
-                        subval: m.group(rewritten) for subval, rewritten in subvalues
-                    }
-
-            yield token
+            yield self._token(m)

@@ -5,21 +5,24 @@
 
 Here is the EBNF grammar for a spec::
 
-    spec          = [name] [node_options] { ^[edge_properties] node } |
+    spec          = [name] [node_options] { sigil [edge_properties] dependency } |
                     [name] [node_options] hash |
                     filename
 
+    sigil         = ^ | % | %%
+    dependency    = virtual_assignment [node_options] | node
     node          =  name [node_options] |
                      [name] [node_options] hash |
                      filename
 
-    node_options    = [@(version_list|version_pair)] [%compiler] { variant }
-    edge_properties = [ { bool_variant | key_value } ]
+    node_options    = [@(version_list|version_pair)] { variant } [hash]
+    edge_properties = [ { key_value } ]
 
+    virtual_assignment = id { , id } = name
     hash          = / id
     filename      = (.|/|[a-zA-Z0-9-_]*/)([a-zA-Z0-9-_./]*)(.json|.yaml)
 
-    name          = id | namespace id
+    name          = id | namespace id | *
     namespace     = { id . }
 
     variant       = bool_variant | key_value | propagated_bv | propagated_kv
@@ -27,8 +30,6 @@ Here is the EBNF grammar for a spec::
     propagated_bv = ++id | ~~id | --id
     key_value     =  id=id |  id=quoted_id
     propagated_kv = id==id | id==quoted_id
-
-    compiler      = id [@version_list]
 
     version_pair  = git_version=vid
     version_list  = (version|version_range) [ { , (version|version_range)} ]
@@ -46,8 +47,11 @@ Here is the EBNF grammar for a spec::
 Identifiers using the ``<name>=<value>`` command, such as architectures and
 compiler flags, require a space before the name.
 
-There is one context-sensitive part: ids in versions may contain ``.``, while
-other ids may not.
+There are two context-sensitive parts: ids in versions may contain ``.``, while other ids may
+not; and a ``key=value`` pair directly after a dependency sigil or edge properties, where the
+value is a package name, is a virtual assignment ``%c,cxx=gcc`` rather than a variant of an
+anonymous dependency (write ``%*foo=bar`` for the latter). ``*`` is the name of an anonymous
+node.
 
 There is one ambiguity: since ``-`` is allowed in an id, you need to put
 whitespace space before ``-variant`` for it to be tokenized properly.  You can
@@ -84,16 +88,11 @@ GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
 GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
 GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
 
-#: Substitute a package for a virtual, e.g., c,cxx=gcc.
-#: NOTE: Overlaps w/KVP; this should be first if matched in sequence.
-VIRTUAL_ASSIGNMENT = (
-    r"(?:"
-    rf"(?P<virtuals>{IDENTIFIER}(?:,{IDENTIFIER})*)"  # comma-separated virtuals
-    rf"=(?P<substitute>{DOTTED_IDENTIFIER}|{IDENTIFIER})"  # package to substitute
-    r")"
-)
-
 STAR = r"\*"
+
+#: Substitute a package for a virtual, e.g. ``c,cxx=gcc``. Overlaps with a key-value pair, and is
+#: only tried first right after a dependency sigil or edge properties.
+VIRTUAL_ASSIGNMENT = rf"(?:{IDENTIFIER}(?:,{IDENTIFIER})*=(?:{DOTTED_IDENTIFIER}|{IDENTIFIER}))"
 
 NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
@@ -135,10 +134,10 @@ class SpecTokens(TokenBase):
     single regex obtained by ``"|".join(...)`` of all the regex in the order of declaration.
     """
 
-    # Dependency, with optional virtual assignment specifier
+    # Dependency
     START_EDGE_PROPERTIES = r"(?:(?:\^|\%\%|\%)\[)"
-    END_EDGE_PROPERTIES = rf"(?:\](?:\s*{VIRTUAL_ASSIGNMENT})?)"
-    DEPENDENCY = rf"(?:(?:\^|\%\%|\%)(?:\s*{VIRTUAL_ASSIGNMENT})?)"
+    END_EDGE_PROPERTIES = r"(?:\])"
+    DEPENDENCY = r"(?:\^|\%\%|\%)"
 
     # Version
     VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
@@ -150,6 +149,9 @@ class SpecTokens(TokenBase):
     BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
     PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}:?==(?:{VALUE}|{QUOTED_VALUE}))"
     KEY_VALUE_PAIR = rf"(?:{NAME}:?=(?:{VALUE}|{QUOTED_VALUE}))"
+
+    # Virtual assignment, after KEY_VALUE_PAIR: only tried first at the start of a dependency
+    VIRTUAL_ASSIGNMENT = rf"(?:{VIRTUAL_ASSIGNMENT})"
 
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
@@ -171,6 +173,28 @@ class SpecTokens(TokenBase):
 #: Tokenizer that includes all the regexes in the SpecTokens enum
 SPEC_TOKENIZER = Tokenizer(SpecTokens)
 
+#: Tokenizer used right after a dependency sigil or edge properties, where ``c,cxx=gcc`` is a
+#: virtual assignment rather than a key-value pair
+NODE_START_TOKENIZER = Tokenizer(SpecTokens, first=(SpecTokens.VIRTUAL_ASSIGNMENT,))
+
+#: Tokens after which a dependency node starts
+_NODE_START = (SpecTokens.DEPENDENCY, SpecTokens.END_EDGE_PROPERTIES)
+
+
+def _tokens(text: str) -> Iterator[Token]:
+    """Tokenize text, switching to NODE_START_TOKENIZER at the start of a dependency node"""
+    tokenizer, pos = SPEC_TOKENIZER, 0
+    while pos < len(text):
+        token = tokenizer.match(text, pos)
+        assert token is not None, "UNEXPECTED matches any character"
+        yield token
+        pos = token.end
+        # whitespace does not end the node start context: `% c=gcc`, `] c=gcc`
+        if token.kind in _NODE_START:
+            tokenizer = NODE_START_TOKENIZER
+        elif token.kind != SpecTokens.WS:
+            tokenizer = SPEC_TOKENIZER
+
 
 def tokenize(text: str) -> Iterator[Token]:
     """Return a token generator from the text passed as input.
@@ -178,9 +202,9 @@ def tokenize(text: str) -> Iterator[Token]:
     Raises:
         SpecTokenizationError: when unexpected characters are found in the text
     """
-    for token in SPEC_TOKENIZER.tokenize(text):
+    for token in _tokens(text):
         if token.kind == SpecTokens.UNEXPECTED:
-            raise SpecTokenizationError(list(SPEC_TOKENIZER.tokenize(text)), text)
+            raise SpecTokenizationError(list(_tokens(text)), text)
         yield token
 
 
@@ -196,25 +220,17 @@ def parseable_tokens(text: str) -> Iterator[Token]:
 class TokenContext:
     """Token context passed around by parsers"""
 
-    __slots__ = "token_stream", "current_token", "next_token", "pushed_tokens"
+    __slots__ = "token_stream", "current_token", "next_token"
 
     def __init__(self, token_stream: Iterator[Token]):
         self.token_stream = token_stream
         self.current_token = None
         self.next_token = None  # the next token to be read
-
-        # if not empty, back of list is front of stream, and we pop from here instead.
-        self.pushed_tokens: List[Token] = []
-
         self.advance()
 
     def advance(self):
         """Advance one token"""
-        self.current_token = self.next_token
-        if self.pushed_tokens:
-            self.next_token = self.pushed_tokens.pop()
-        else:
-            self.next_token = next(self.token_stream, None)
+        self.current_token, self.next_token = self.next_token, next(self.token_stream, None)
 
     def accept(self, kind: SpecTokens):
         """If the next token is of the specified kind, advance the stream and return True.
@@ -224,11 +240,6 @@ class TokenContext:
             self.advance()
             return True
         return False
-
-    def push_front(self, token=Token):
-        """Push a token onto the front of the stream. Enables a bit of lookahead."""
-        self.pushed_tokens.append(self.next_token)  # back of list is front of stream
-        self.next_token = token
 
     def expect(self, *kinds: SpecTokens):
         return self.next_token and self.next_token.kind in kinds
@@ -247,48 +258,6 @@ class SpecTokenizationError(spack.error.SpecSyntaxError):
 
         message += color.colorize(f"@*r{{{underline}}}")
         super().__init__(message)
-
-
-def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
-    """Look at subvalues and, if present, extract virtual and a push a substitute token.
-
-    This handles things like:
-
-    * ``^c=gcc``
-    * ``^c,cxx=gcc``
-    * ``%[when=+bar] c=gcc``
-    * ``%[when=+bar] c,cxx=gcc``
-
-    Virtual assignment can happen anywhere a dependency node can appear. It is
-    shorthand for ``%[virtuals=c,cxx] gcc``.
-
-    The ``virtuals=substitute`` key value pair appears in the subvalues of
-    :attr:`~spack.spec_parser.SpecTokens.DEPENDENCY` and
-    :attr:`~spack.spec_parser.SpecTokens.END_EDGE_PROPERTIES` tokens. We extract the virtuals and
-    create a token from the substitute, which is then pushed back on the parser stream so that the
-    head of the stream can be parsed like a regular node.
-
-    Returns:
-        the virtuals assigned, or None if there aren't any
-
-    """
-    assert context.current_token is not None
-
-    subvalues = context.current_token.subvalues
-    if not subvalues:
-        return ()
-
-    # build a token for the substitute that we can put back on the stream
-    pkg = subvalues["substitute"]
-    token_type = SpecTokens.UNQUALIFIED_PACKAGE_NAME
-    if "." in pkg:
-        token_type = SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME
-    start = context.current_token.value.index(pkg)
-
-    token = Token(token_type, pkg, start, start + len(pkg))
-    context.push_front(token)
-
-    return tuple(subvalues["virtuals"].split(","))
 
 
 class SpecParser:
@@ -329,33 +298,28 @@ class SpecParser:
             from spack.spec import Spec
 
             initial_spec = Spec()
+        first_token = self.ctx.next_token
         root_spec = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
         current_spec = root_spec
         while True:
             if self.ctx.accept(SpecTokens.START_EDGE_PROPERTIES):
-                has_edge_attrs = True
-            elif self.ctx.accept(SpecTokens.DEPENDENCY):
-                has_edge_attrs = False
-            else:
-                break
-
-            is_direct = self.ctx.current_token.value[0] == "%"
-            propagation = PropagationPolicy.NONE
-            if is_direct and self.ctx.current_token.value.startswith("%%"):
-                propagation = PropagationPolicy.PREFERENCE
-
-            if has_edge_attrs:
+                sigil = self.ctx.current_token.value
                 edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
                 edge_properties.setdefault("virtuals", ())
                 edge_properties.setdefault("depflag", 0)
+            elif self.ctx.accept(SpecTokens.DEPENDENCY):
+                sigil = self.ctx.current_token.value
+                edge_properties = {"virtuals": (), "depflag": 0}
             else:
-                virtuals = parse_virtual_assignment(self.ctx)
-                edge_properties = {"virtuals": virtuals, "depflag": 0}
+                break
 
-            edge_properties["direct"] = is_direct
-            edge_properties["propagation"] = propagation
+            edge_properties["direct"] = sigil[0] == "%"
+            edge_properties["propagation"] = (
+                PropagationPolicy.PREFERENCE if sigil.startswith("%%") else PropagationPolicy.NONE
+            )
 
-            dependency = self._parse_node(root_spec)
+            dependency = self._parse_dependency(root_spec, edge_properties)
+            is_direct = edge_properties["direct"]
 
             if is_direct:
                 if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
@@ -369,6 +333,9 @@ class SpecParser:
                 pending = (dependency, edge_properties, self.ctx.current_token)
 
         self._attach_pending(root_spec, pending)
+
+        if self.ctx.next_token is not None and self.ctx.next_token is first_token:
+            raise SpecParsingError("unexpected token", self.ctx.next_token, self.literal_str)
 
         return root_spec
 
@@ -394,14 +361,28 @@ class SpecParser:
         except spack.error.SpecError as e:
             raise SpecParsingError(str(e), token, self.literal_str) from e
 
-    def _parse_node(self, root_spec: "spack.spec.Spec", root: bool = True):
-        dependency = SpecNodeParser(self.ctx, self.literal_str).parse(root=root)
-        if dependency is None:
-            msg = (
-                "the dependency sigil and any optional edge attributes must be followed by a "
-                "package name or a node attribute (version, variant, etc.)"
-            )
-            raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
+    def _parse_dependency(
+        self, root_spec: "spack.spec.Spec", edge_properties: dict
+    ) -> "spack.spec.Spec":
+        """Parse the node after a dependency sigil and its optional edge properties.
+
+        A virtual assignment ``c,cxx=gcc`` adds virtuals to the edge properties and names the node.
+        """
+        from spack.spec import Spec
+
+        node_parser = SpecNodeParser(self.ctx, self.literal_str)
+        if self.ctx.accept(SpecTokens.VIRTUAL_ASSIGNMENT):
+            assert self.ctx.current_token is not None
+            virtuals, substitute = self.ctx.current_token.value.split("=")
+            edge_properties["virtuals"] += tuple(virtuals.split(","))
+            namespace, _, name = substitute.rpartition(".")
+            dependency = Spec()
+            dependency.name = name
+            dependency.namespace = namespace or None
+            node_parser.parse_options(dependency)
+        else:
+            dependency = node_parser.parse()
+
         if root_spec.concrete:
             raise spack.error.SpecError(str(root_spec), "^" + str(dependency))
         return dependency
@@ -421,14 +402,11 @@ class SpecNodeParser:
         self.literal_str = literal_str
         self.has_version = False
 
-    def parse(
-        self, initial_spec: Optional["spack.spec.Spec"] = None, root: bool = True
-    ) -> "spack.spec.Spec":
+    def parse(self, initial_spec: Optional["spack.spec.Spec"] = None) -> "spack.spec.Spec":
         """Parse a single spec node from a stream of tokens
 
         Args:
             initial_spec: object to be constructed
-            root: True if we're parsing a root, False if dependency after ^ or %
 
         Return:
             The object passed as argument
@@ -457,6 +435,11 @@ class SpecNodeParser:
 
         elif self.ctx.accept(SpecTokens.FILENAME):
             return FileParser(self.ctx).parse(initial_spec)
+
+        return self.parse_options(initial_spec)
+
+    def parse_options(self, initial_spec: "spack.spec.Spec") -> "spack.spec.Spec":
+        """Parse the options of a node (version, variants, hash) into ``initial_spec``"""
 
         def raise_parsing_error(string: str, cause: Optional[Exception] = None):
             """Raise a spec parsing error with token context."""
@@ -516,6 +499,13 @@ class SpecNodeParser:
                     break
                 self.ctx.accept(SpecTokens.DAG_HASH)
                 initial_spec.abstract_hash = self.ctx.current_token.value[1:]
+
+            elif self.ctx.expect(SpecTokens.VIRTUAL_ASSIGNMENT):
+                self.ctx.advance()
+                raise_parsing_error(
+                    "a virtual assignment such as c,cxx=gcc must directly follow a dependency "
+                    "sigil (^ or %) or edge properties"
+                )
 
             else:
                 break
@@ -582,9 +572,8 @@ class EdgeAttributeParser:
                     raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
             # TODO: Add code to accept bool variants here as soon as use variants are implemented
             elif self.ctx.accept(SpecTokens.END_EDGE_PROPERTIES):
-                virtuals = attributes.get("virtuals", ())
-                virtuals += parse_virtual_assignment(self.ctx)
-                attributes["virtuals"] = virtuals
+                if "virtuals" in attributes:
+                    attributes["virtuals"] = tuple(attributes["virtuals"])
                 break
             else:
                 msg = "unexpected token in edge attributes"
