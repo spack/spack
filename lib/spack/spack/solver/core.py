@@ -12,6 +12,7 @@ from .compat import symbol_name, symbol_string
 #: Type used for quoted string cache
 QuotedStrings = Dict[str, str]
 
+
 class AspVar:
     """Represents a variable in an ASP rule, allows for conditionally generating
     rules"""
