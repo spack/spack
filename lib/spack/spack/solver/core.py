@@ -67,7 +67,13 @@ class AspFunction:
 
     def to_str(self, quoted: QuotedStrings) -> str:
         """The ASP representation of this function, reusing the literals in ``quoted``."""
-        return f"{self.name}({','.join([asp_argument(arg, quoted) for arg in self.args])})"
+        args = self.args
+        # nearly every function takes one or two arguments; those need neither list nor join
+        if len(args) == 1:
+            return f"{self.name}({asp_argument(args[0], quoted)})"
+        if len(args) == 2:
+            return f"{self.name}({asp_argument(args[0], quoted)},{asp_argument(args[1], quoted)})"
+        return f"{self.name}({','.join([asp_argument(arg, quoted) for arg in args])})"
 
     def args_str(self, quoted: QuotedStrings) -> str:
         """The arguments as they appear between the parentheses of this function."""
