@@ -2,20 +2,34 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from typing import Mapping, Optional
 
-def get_version_lines(version_hashes_dict: dict) -> str:
+INDENT = " " * 4
+
+
+def get_version_lines(
+    version_hashes_dict: Mapping, url_overrides: Optional[Mapping] = None
+) -> str:
     """
     Renders out a set of versions like those found in a package's
     package.py file for a given set of versions and hashes.
 
     Args:
         version_hashes_dict: A dictionary of the form: version -> checksum.
+        url_overrides: A dictionary of the form: version -> url.
 
     Returns: Rendered version lines.
     """
+    url_overrides = url_overrides or {}
     version_lines = []
 
-    for v, h in version_hashes_dict.items():
-        version_lines.append(f'    version("{v}", sha256="{h}")')
+    for version in sorted(version_hashes_dict):
+        checksum = version_hashes_dict[version]
+
+        url = url_overrides.get(version)
+        url_parameter = f", url={repr(url)}" if url is not None else ""
+
+        line = f'{INDENT}version("{version}", sha256="{checksum}"{url_parameter})'
+        version_lines.append(line)
 
     return "\n".join(version_lines)
