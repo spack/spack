@@ -740,7 +740,29 @@ The other reasons have no score to correspond to, and there the level ranks how 
 In this example, ``low``-severity deprecations on any package are allowed silently, while ``medium`` and above remain errors.
 The per-package override for ``openssl`` reinstates the strictest threshold, so every deprecation on that package is an error regardless of the global setting.
 
-A single threshold applies to every deprecation reason alike.
+Every deprecation also declares a reason, which is the category it falls into.
+Reasons exist so that a threshold can discriminate between them: a site may accept a version whose maintainers stopped supporting it, while refusing anything with a known vulnerability whatever its severity.
+The five reasons are:
+
+``vuln``
+   A known vulnerability affects the spec.
+
+``rename``
+   The spec was renamed, and users should move to the new name.
+
+``retired``
+   The spec is going away, because the release reached its end of life or upstream removed it.
+
+``maintenance``
+   The maintainers no longer support the spec, although nothing is known to be wrong with it.
+
+``unspecified``
+   No reason was stated.
+   Spack records this for versions declared with the legacy ``version(..., deprecated=True)`` keyword, and a recipe cannot pass it.
+
+See :ref:`deprecate` for what a packager is expected to put in each one.
+
+A single threshold applies to every reason alike.
 To hold some reasons to a stricter standard than others, give a mapping from reason to threshold instead, with ``default`` covering the reasons it omits:
 
 .. code-block:: yaml
@@ -753,10 +775,7 @@ To hold some reasons to a stricter standard than others, give a mapping from rea
            vuln: none
 
 Here a ``low``-severity rename or maintenance deprecation is allowed, while any deprecation with ``reason: vuln`` is an error whatever its severity.
-The reason keys are ``vuln``, ``rename``, ``retired``, ``maintenance``, and ``unspecified``.
-The first four are the values a recipe passes to the ``deprecated()`` directive.
-``unspecified`` is reserved for the deprecations Spack records from the legacy ``version(..., deprecated=True)`` keyword, and a recipe cannot pass it.
-A threshold can still be set for it here, which is how those deprecations are configured.
+Setting a threshold for ``unspecified`` is how the deprecations from the legacy keyword are configured.
 A per-package ``allowed_severity`` replaces the one under ``all`` outright, exactly as it does for a single value.
 
 For a single command, the ``--deprecated`` flag sets ``allowed_severity`` to ``critical`` under ``all``.
