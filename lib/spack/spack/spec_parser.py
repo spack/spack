@@ -174,48 +174,47 @@ class SpecTokens(TokenBase):
 #: Tokenizer that includes all the regexes in the SpecTokens enum
 SPEC_TOKENIZER = Tokenizer(SpecTokens)
 
-#: Tokenizer used right after a dependency sigil or edge properties, where ``c,cxx=gcc`` is a
-#: virtual assignment rather than a key-value pair
-NODE_START_TOKENIZER = Tokenizer(SpecTokens, first=(SpecTokens.VIRTUAL_ASSIGNMENT,))
+#: Right after a dependency sigil or edge properties, ``c,cxx=gcc`` is a virtual assignment
+#: rather than a key-value pair. The tokenizer is context free, so this is matched separately.
+_VIRTUAL_ASSIGNMENT_AHEAD = re.compile(rf"(\s*)({VIRTUAL_ASSIGNMENT})")
 
 #: Tokens after which a dependency node starts
 _NODE_START = (SpecTokens.DEPENDENCY, SpecTokens.END_EDGE_PROPERTIES)
 
 
-def _tokens(text: str) -> Iterator[Token]:
-    """Tokenize text, switching to NODE_START_TOKENIZER at the start of a dependency node"""
-    tokenizer, pos = SPEC_TOKENIZER, 0
-    while pos < len(text):
-        token = tokenizer.match(text, pos)
-        assert token is not None, "UNEXPECTED matches any character"
-        yield token
-        pos = token.end
-        # whitespace does not end the node start context: `% c=gcc`, `] c=gcc`
-        if token.kind in _NODE_START:
-            tokenizer = NODE_START_TOKENIZER
-        elif token.kind != SpecTokens.WS:
-            tokenizer = SPEC_TOKENIZER
-
-
-def tokenize(text: str) -> Iterator[Token]:
+def tokenize(text: str, *, everything: bool = False) -> Iterator[Token]:
     """Return a token generator from the text passed as input.
 
-    Raises:
-        SpecTokenizationError: when unexpected characters are found in the text
-    """
-    for token in _tokens(text):
-        if token.kind == SpecTokens.UNEXPECTED:
-            raise SpecTokenizationError(list(_tokens(text)), text)
-        yield token
-
-
-def parseable_tokens(text: str) -> Iterator[Token]:
-    """Return non-whitespace tokens from the text passed as input
+    Args:
+        text: text to tokenize
+        everything: if True, also yield whitespace and unexpected tokens instead of raising
 
     Raises:
         SpecTokenizationError: when unexpected characters are found in the text
     """
-    return filter(lambda x: x.kind != SpecTokens.WS, tokenize(text))
+    kinds, regex, pos = SpecTokens.__members__, SPEC_TOKENIZER.regex, 0
+    ws, unexpected = SpecTokens.WS, SpecTokens.UNEXPECTED
+    while True:
+        # The scanner is restarted after a virtual assignment, which is matched out of band
+        scanner = regex.scanner(text, pos)  # type: ignore[attr-defined]
+        for m in iter(scanner.match, None):
+            kind = kinds[m.lastgroup]
+            if not everything:
+                if kind is ws:
+                    continue
+                if kind is unexpected:
+                    raise SpecTokenizationError(list(tokenize(text, everything=True)), text)
+            yield Token(kind, m.group(), m.start(), m.end())
+            if kind in _NODE_START:
+                va = _VIRTUAL_ASSIGNMENT_AHEAD.match(text, m.end())
+                if va:
+                    if everything and va.start(2) > va.start():
+                        yield Token(ws, va.group(1), va.start(), va.start(2))
+                    yield Token(SpecTokens.VIRTUAL_ASSIGNMENT, va.group(2), va.start(2), va.end())
+                    pos = va.end()
+                    break
+        else:
+            return
 
 
 class TokenContext:
@@ -268,13 +267,13 @@ class SpecParser:
 
     def __init__(self, literal_str: str):
         self.literal_str = literal_str
-        self.ctx = TokenContext(parseable_tokens(literal_str))
+        self.ctx = TokenContext(tokenize(literal_str))
 
     def tokens(self) -> List[Token]:
         """Return the entire list of token from the initial text. White spaces are
         filtered out.
         """
-        return list(filter(lambda x: x.kind != SpecTokens.WS, tokenize(self.literal_str)))
+        return list(tokenize(self.literal_str))
 
     def next_spec(
         self, initial_spec: Optional["spack.spec.Spec"] = None
@@ -305,9 +304,7 @@ class SpecParser:
         while True:
             if self.ctx.accept(SpecTokens.START_EDGE_PROPERTIES):
                 sigil = self.ctx.current_token.value
-                edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
-                edge_properties.setdefault("virtuals", ())
-                edge_properties.setdefault("depflag", 0)
+                edge_properties = self._parse_edge_properties()
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
                 sigil = self.ctx.current_token.value
                 edge_properties = {"virtuals": (), "depflag": 0}
@@ -361,6 +358,44 @@ class SpecParser:
             target_spec._add_dependency(dependency, **edge_properties)
         except spack.error.SpecError as e:
             raise SpecParsingError(str(e), token, self.literal_str) from e
+
+    def _parse_edge_properties(self) -> dict:
+        """Parse the ``key=value`` pairs up to and including the closing bracket of the edge
+        properties, and return them as keyword arguments for ``Spec._add_dependency``."""
+        virtuals: Tuple[str, ...] = ()
+        depflag = 0
+        when = None
+        while True:
+            token = self.ctx.next_token
+            if token is None or token.kind is not SpecTokens.KEY_VALUE_PAIR:
+                break
+            self.ctx.advance()
+            name, value = token.value.split("=", maxsplit=1)
+            name = name.rstrip(":")  # the := of a concrete variant has no meaning on an edge
+            value = strip_quotes_and_unescape(value)
+            if name == "virtuals":
+                virtuals += tuple(value.split(","))
+            elif name == "deptypes":
+                depflag |= spack.deptypes.canonicalize(value.split(","))
+            elif name == "when":
+                # A when value is one spec string, where a comma is part of the syntax: when='@1,2'
+                when = parse_one_or_raise(value)
+            else:
+                msg = (
+                    "the only edge attributes that are currently accepted "
+                    'are "deptypes", "virtuals", and "when"'
+                )
+                raise SpecParsingError(msg, token, self.literal_str)
+
+        # TODO: Add code to accept bool variants here as soon as use variants are implemented
+        if not self.ctx.accept(SpecTokens.END_EDGE_PROPERTIES):
+            msg = "unexpected token in edge attributes"
+            raise SpecParsingError(msg, self.ctx.next_token, self.literal_str)
+
+        edge_properties = {"virtuals": virtuals, "depflag": depflag}
+        if when is not None:
+            edge_properties["when"] = when
+        return edge_properties
 
     def _parse_dependency(
         self, root_spec: "spack.spec.Spec", edge_properties: dict
@@ -453,55 +488,63 @@ class SpecNodeParser:
             except Exception as e:
                 raise_parsing_error(str(e), e)
 
+        # Dispatch on the kind of the next token once, instead of trying to accept each kind
         while True:
+            token = self.ctx.next_token
+            if token is None:
+                break
+            kind = token.kind
+
             if (
-                self.ctx.accept(SpecTokens.VERSION_HASH_PAIR)
-                or self.ctx.accept(SpecTokens.GIT_VERSION)
-                or self.ctx.accept(SpecTokens.VERSION)
+                kind is SpecTokens.VERSION
+                or kind is SpecTokens.GIT_VERSION
+                or kind is SpecTokens.VERSION_HASH_PAIR
             ):
+                self.ctx.advance()
                 if self.has_version:
                     raise_parsing_error("Spec cannot have multiple versions")
 
                 initial_spec.versions = spack.version.VersionList(
-                    [spack.version.from_string(self.ctx.current_token.value[1:])]
+                    [spack.version.from_string(token.value[1:])]
                 )
                 initial_spec.attach_git_version_lookup()
                 self.has_version = True
 
-            elif self.ctx.accept(SpecTokens.BOOL_VARIANT):
-                name = self.ctx.current_token.value[1:].strip()
-                variant_value = self.ctx.current_token.value[0] == "+"
-                add_flag(name, variant_value, propagate=False, concrete=True)
+            elif kind is SpecTokens.BOOL_VARIANT:
+                self.ctx.advance()
+                name = token.value[1:].strip()
+                add_flag(name, token.value[0] == "+", propagate=False, concrete=True)
 
-            elif self.ctx.accept(SpecTokens.PROPAGATED_BOOL_VARIANT):
-                name = self.ctx.current_token.value[2:].strip()
-                variant_value = self.ctx.current_token.value[0:2] == "++"
-                add_flag(name, variant_value, propagate=True, concrete=True)
+            elif kind is SpecTokens.PROPAGATED_BOOL_VARIANT:
+                self.ctx.advance()
+                name = token.value[2:].strip()
+                add_flag(name, token.value[0:2] == "++", propagate=True, concrete=True)
 
-            elif self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
-                name, value = self.ctx.current_token.value.split("=", maxsplit=1)
+            elif kind is SpecTokens.KEY_VALUE_PAIR:
+                self.ctx.advance()
+                name, value = token.value.split("=", maxsplit=1)
                 concrete = name.endswith(":")
                 if concrete:
                     name = name[:-1]
-
                 add_flag(
                     name, strip_quotes_and_unescape(value), propagate=False, concrete=concrete
                 )
 
-            elif self.ctx.accept(SpecTokens.PROPAGATED_KEY_VALUE_PAIR):
-                name, value = self.ctx.current_token.value.split("==", maxsplit=1)
+            elif kind is SpecTokens.PROPAGATED_KEY_VALUE_PAIR:
+                self.ctx.advance()
+                name, value = token.value.split("==", maxsplit=1)
                 concrete = name.endswith(":")
                 if concrete:
                     name = name[:-1]
                 add_flag(name, strip_quotes_and_unescape(value), propagate=True, concrete=concrete)
 
-            elif self.ctx.expect(SpecTokens.DAG_HASH):
+            elif kind is SpecTokens.DAG_HASH:
                 if initial_spec.abstract_hash:
                     break
-                self.ctx.accept(SpecTokens.DAG_HASH)
-                initial_spec.abstract_hash = self.ctx.current_token.value[1:]
+                self.ctx.advance()
+                initial_spec.abstract_hash = token.value[1:]
 
-            elif self.ctx.expect(SpecTokens.VIRTUAL_ASSIGNMENT):
+            elif kind is SpecTokens.VIRTUAL_ASSIGNMENT:
                 self.ctx.advance()
                 raise_parsing_error(
                     "a virtual assignment such as c,cxx=gcc must directly follow a dependency "
@@ -545,51 +588,6 @@ class FileParser:
                 spec_from_file = Spec.from_yaml(stream)
         initial_spec._dup(spec_from_file)
         return initial_spec
-
-
-class EdgeAttributeParser:
-    __slots__ = "ctx", "literal_str"
-
-    def __init__(self, ctx, literal_str):
-        self.ctx = ctx
-        self.literal_str = literal_str
-
-    def parse(self):
-        attributes = {}
-        while True:
-            if self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
-                name, value = self.ctx.current_token.value.split("=", maxsplit=1)
-                if name.endswith(":"):
-                    name = name[:-1]
-                value = value.strip("'\" ")
-                # A when value is one spec string, where a comma is part of the syntax, e.g.
-                # when='@1,2'; deptypes and virtuals values are comma-separated lists.
-                attributes[name] = value if name == "when" else value.split(",")
-                if name not in ("deptypes", "virtuals", "when"):
-                    msg = (
-                        "the only edge attributes that are currently accepted "
-                        'are "deptypes", "virtuals", and "when"'
-                    )
-                    raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
-            # TODO: Add code to accept bool variants here as soon as use variants are implemented
-            elif self.ctx.accept(SpecTokens.END_EDGE_PROPERTIES):
-                if "virtuals" in attributes:
-                    attributes["virtuals"] = tuple(attributes["virtuals"])
-                break
-            else:
-                msg = "unexpected token in edge attributes"
-                raise SpecParsingError(msg, self.ctx.next_token, self.literal_str)
-
-        # Turn deptypes=... to depflag representation
-        if "deptypes" in attributes:
-            deptype_string = attributes.pop("deptypes")
-            attributes["depflag"] = spack.deptypes.canonicalize(deptype_string)
-
-        # Turn "when" into a spec
-        if "when" in attributes:
-            attributes["when"] = parse_one_or_raise(attributes["when"])
-
-        return attributes
 
 
 def parse(text: str, *, toolchains: Optional[Dict] = None) -> List["spack.spec.Spec"]:

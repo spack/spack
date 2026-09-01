@@ -7,7 +7,7 @@ be used to iterate over tokens in a string."""
 
 import enum
 import re
-from typing import Generator, Match, Optional, Sequence, Type
+from typing import Generator, Match, Optional, Type
 
 
 class TokenBase(enum.Enum):
@@ -48,34 +48,23 @@ class Token:
 
 
 class Tokenizer:
-    """Tokenizer for a token enum.
-
-    The tokens are matched as a single regex, in order of declaration, unless ``first`` lists
-    kinds that should be tried before the others.
-    """
-
-    def __init__(self, tokens: Type[TokenBase], first: Sequence[TokenBase] = ()):
+    def __init__(self, tokens: Type[TokenBase]):
         self.tokens = tokens
-        ordered = list(first) + [t for t in tokens if t not in first]
-        self.regex = re.compile("|".join(f"(?P<{t.name}>{t.regex})" for t in ordered))
-
-    def _token(self, m: Match) -> Token:
-        msg = (
-            "unexpected value encountered during parsing. Please submit a bug report "
-            "at https://github.com/spack/spack/issues/new/choose"
-        )
-        assert m.lastgroup is not None, msg
-        return Token(self.tokens.__members__[m.lastgroup], m.group(), m.start(), m.end())
-
-    def match(self, text: str, pos: int = 0) -> Optional[Token]:
-        """Return the token that matches at position ``pos`` of ``text``, if any."""
-        m = self.regex.match(text, pos)
-        return self._token(m) if m else None
+        self.regex = re.compile("|".join(f"(?P<{t.name}>{t.regex})" for t in tokens))
 
     def tokenize(self, text: str) -> Generator[Token, None, None]:
         if not text:
             return
 
         scanner = self.regex.scanner(text)  # type: ignore[attr-defined]
+        m: Optional[Match] = None
         for m in iter(scanner.match, None):
-            yield self._token(m)
+            # The following two assertions are to help mypy
+            msg = (
+                "unexpected value encountered during parsing. Please submit a bug report "
+                "at https://github.com/spack/spack/issues/new/choose"
+            )
+            assert m is not None, msg
+            assert m.lastgroup is not None, msg
+
+            yield Token(self.tokens.__members__[m.lastgroup], m.group(), m.start(), m.end())
