@@ -483,3 +483,16 @@ def test_directive_without_message_reports_only_the_policy(mock_packages, mutabl
     message = str(exc_info.value)
     assert "exceeds allowed severity 'none'" in message
     assert message.rstrip().endswith("'none'")
+
+
+def test_every_message_behind_one_error_term_is_reported(mock_packages, mutable_config):
+    """Tests that two deprecations agreeing on constraint, reason and severity report both of
+    their msg=, and that the error names the deprecated spec rather than only the package.
+    """
+    with pytest.raises(UnsatisfiableSpecError) as exc_info:
+        concretize_one("deprecated-with-message@0.9")
+
+    message = str(exc_info.value)
+    assert "'deprecated-with-message@=0.9'" in message
+    assert "move to @2.0" in message
+    assert "also affects the ABI" in message
