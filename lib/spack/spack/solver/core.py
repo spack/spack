@@ -99,9 +99,18 @@ def quote_once(arg: str) -> str:
     return '"' + arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"") + '"'
 
 
+#: Strings up to this long are kept, longer ones are written out and forgotten. Names of
+#: packages, variants, versions, targets, ... are short and come up over and over; the long
+#: arguments are the messages that explain a condition or a conflict, and those are written
+#: once each, so keeping them only costs memory.
+MAX_QUOTED_LENGTH = 32
+
+
 def _quote(arg: str, quoted: QuotedStrings) -> str:
-    """Compute and keep the ASP literal for ``arg``; see :func:`quote`."""
-    result = quoted[arg] = quote_once(arg)
+    """Compute the ASP literal for ``arg``, and keep it if it is short; see :func:`quote`."""
+    result = quote_once(arg)
+    if len(arg) <= MAX_QUOTED_LENGTH:
+        quoted[arg] = result
     return result
 
 
