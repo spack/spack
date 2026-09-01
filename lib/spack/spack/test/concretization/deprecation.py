@@ -319,7 +319,7 @@ def test_old_and_new_deprecation_are_checked_independently(
     override one another: each is checked against the threshold for its own reason, and either
     one above its threshold refuses the version.
     """
-    # deprecated-dual@1.0 carries unspecified/critical from the keyword and vuln/high from the
+    # deprecated-dual@1.0 has unspecified/critical from the keyword and vuln/high from the
     # directive. Allowing unspecified is not enough, because vuln is still forbidden.
     packages_yaml_write("""
 packages:

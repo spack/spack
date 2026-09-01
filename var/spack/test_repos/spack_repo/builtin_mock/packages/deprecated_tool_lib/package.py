@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class DeprecatedToolLib(Package):
-    """Not deprecated itself, but built with deprecated-tool."""
+    """Depends on deprecated-tool at build time; not itself deprecated."""
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/deprecated-tool-lib-1.0.tar.gz"
