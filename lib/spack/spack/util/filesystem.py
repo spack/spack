@@ -47,7 +47,7 @@ from typing import (
 from spack.vendor.typing_extensions import Literal
 
 from spack.util import lang, tty
-from spack.util.executable import Executable
+from spack.util.executable import Executable, resolve_exe
 from spack.util.lang import dedupe, fnmatch_translate_multiple, memoized
 from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_filter
 
@@ -937,21 +937,14 @@ def install_tree(
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 
 
-def _win_is_exe(path: Union[str, pathlib.Path]) -> bool:
-    path = os.fspath(path)
-    default_pathext = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"
-    pathext_str = os.environ.get("PATHEXT", default_pathext)
-    executable_extensions = {ext.upper() for ext in pathext_str.split(";")}
-    return bool({x for x in executable_extensions if x in path.upper()})
-
-
 @system_path_filter
 def is_exe(path) -> bool:
     """Returns :obj:`True` iff the specified path exists, is a regular file, and has executable
-    permissions for the current process."""
-    is_exe = os.path.isfile(path)
-    is_exe = is_exe and (os.access(path, os.X_OK) if sys.platform != "win32" else _win_is_exe(path) )
-    return  is_exe
+    permissions for the current process.
+
+    On Windows the extension may be omitted from ``path``, in which case the extensions in
+    ``PATHEXT`` are tried; see :func:`spack.util.executable.resolve_exe`."""
+    return resolve_exe(path) is not None
 
 
 def has_shebang(path) -> bool:

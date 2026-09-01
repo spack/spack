@@ -791,6 +791,23 @@ def test_temporary_dir_context_manager():
         assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
 
 
+def test_is_exe(tmp_path: pathlib.Path):
+    """See ``test/util/executable.py`` for how paths are resolved to executables."""
+    script = tmp_path / ("script.exe" if sys.platform == "win32" else "script")
+    script.touch()
+
+    if sys.platform != "win32":
+        # Windows determines whether a file is executable from its extension
+        assert not fs.is_exe(str(script))
+        fs.set_executable(str(script))
+
+    assert fs.is_exe(str(script))
+
+    # directories and missing files are not executables
+    assert not fs.is_exe(str(tmp_path))
+    assert not fs.is_exe(str(tmp_path / "does-not-exist"))
+
+
 @pytest.mark.not_on_windows("No shebang on Windows")
 def test_is_nonsymlink_exe_with_shebang(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):
