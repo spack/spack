@@ -907,18 +907,18 @@ def test_install_gate_honors_per_reason_thresholds(install_mockery, mutable_conf
     concretizer, so a lockfile is judged by the reason of each deprecation.
     """
     with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
-        cve = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+        vuln = spack.concretize.concretize_one("deprecated-with-reason@2.0")
         rename = spack.concretize.concretize_one("deprecated-with-reason@1.0")
 
     with mutable_config.override(
-        "packages:all:deprecation:allowed_severity", {"default": "critical", "cve": "none"}
+        "packages:all:deprecation:allowed_severity", {"default": "critical", "vuln": "none"}
     ):
         # reason=rename falls back to the 'critical' default
         spack.deprecation.check_deprecations([rename])  # must not raise
 
-        # reason=cve is forbidden at any severity
+        # reason=vuln is forbidden at any severity
         with pytest.raises(spack.error.InstallError, match="deprecated"):
-            spack.deprecation.check_deprecations([cve])
+            spack.deprecation.check_deprecations([vuln])
 
 
 def test_deprecation_gate_runs_before_any_setup_work(

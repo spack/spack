@@ -780,11 +780,11 @@ For example, to flag a version that has a known CVE:
        version("3.0.7", sha256="...")
        version("1.1.1t", sha256="...")
 
-       deprecated("@1.1.1t", reason="cve", severity="high")
+       deprecated("@1.1.1t", reason="vuln", severity="high")
 
 The first positional argument is an optional spec constraint, in this case the version ``"@1.1.1t"``.
 If omitted, the whole package is deprecated.
-The ``reason`` keyword is required and must be one of ``"cve"``, ``"rename"``, ``"unavailable"``, ``"maintenance"``, or ``"unspecified"``.
+The ``reason`` keyword is required and must be one of ``"vuln"``, ``"rename"``, ``"retired"``, ``"maintenance"``, or ``"unspecified"``.
 Prefer a specific reason: ``"unspecified"`` exists for deprecations carried over from the legacy ``deprecated=True`` keyword, which records no reason at all.
 The optional ``severity`` keyword ranks the urgency: ``"low"`` (default), ``"medium"``, ``"high"``, or ``"critical"`` in increasing order.
 
@@ -793,7 +793,7 @@ Any identifier works, so a GHSA or PYSEC id is as good as a CVE one:
 
 .. code-block:: python
 
-   deprecated("@1.1.1t", reason="cve", severity="high", labels=["CVE-2023-0286"])
+   deprecated("@1.1.1t", reason="vuln", severity="high", labels=["CVE-2023-0286"])
 
 Write one ``deprecated()`` per advisory, or per group of advisories that users would skip together.
 A deprecation can only be skipped as a whole, so grouping two advisories in one directive means a user cannot accept one without accepting the other.

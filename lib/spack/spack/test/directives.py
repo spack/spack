@@ -363,11 +363,11 @@ class TestDeprecatedDirective:
 
     def test_deprecated_directive_version_constraint(self, mock_pkg):
         """Tests the basic use of the deprecated directive."""
-        spack.directives._Deprecated(spec="@1.0", reason="cve", severity="high")(mock_pkg)
+        spack.directives._Deprecated(spec="@1.0", reason="vuln", severity="high")(mock_pkg)
         assert len(mock_pkg.deprecations) == 1
         constraint, entries = list(mock_pkg.deprecations.items())[0]
         assert constraint == spack.spec.Spec("@1.0")
-        assert entries[0].reason == DeprecationReason.CVE
+        assert entries[0].reason == DeprecationReason.VULN
         assert entries[0].severity == DeprecationSeverity.HIGH
         assert entries[0].labels == ()
 
@@ -384,11 +384,11 @@ class TestDeprecatedDirective:
             spack.directives._Deprecated(spec="@1.0", reason="bogus", severity="low")(mock_pkg)
 
         with pytest.raises(ValueError, match="extreme"):
-            spack.directives._Deprecated(spec="@1.0", reason="cve", severity="extreme")(mock_pkg)
+            spack.directives._Deprecated(spec="@1.0", reason="vuln", severity="extreme")(mock_pkg)
 
     def test_deprecated_directive_multiple_reasons(self, mock_pkg):
         """Tests cases where we have multiple deprecation reasons on the same constraint."""
-        spack.directives._Deprecated(spec="@1.0", reason="cve", severity="high")(mock_pkg)
+        spack.directives._Deprecated(spec="@1.0", reason="vuln", severity="high")(mock_pkg)
         spack.directives._Deprecated(spec="@1.0", reason="rename", severity="low")(mock_pkg)
         assert len(mock_pkg.deprecations) == 1
         assert len(mock_pkg.deprecations[spack.spec.Spec("@1.0")]) == 2
@@ -396,7 +396,7 @@ class TestDeprecatedDirective:
     def test_deprecated_directive_labels(self, mock_pkg):
         """Tests that labels are stored as a tuple of strings."""
         spack.directives._Deprecated(
-            spec="@1.0", reason="cve", severity="high", labels=["CVE-1", "GHSA-2"]
+            spec="@1.0", reason="vuln", severity="high", labels=["CVE-1", "GHSA-2"]
         )(mock_pkg)
         entries = mock_pkg.deprecations[spack.spec.Spec("@1.0")]
         assert entries[0].labels == ("CVE-1", "GHSA-2")
@@ -405,5 +405,5 @@ class TestDeprecatedDirective:
         """Tests that a bare string is refused, since iterating it would yield characters."""
         with pytest.raises(DirectiveError, match="must be a list of strings"):
             spack.directives._Deprecated(
-                spec="@1.0", reason="cve", severity="high", labels="CVE-1"
+                spec="@1.0", reason="vuln", severity="high", labels="CVE-1"
             )(mock_pkg)
