@@ -172,7 +172,7 @@ def reusable(
 ) -> List["spack.spec.Spec"]:
     """Return the subset of ``specs`` that can be reused under the deprecation policy.
 
-    A candidate is rejected when it, or any node in its checked closure, carries a disallowed
+    A candidate is rejected when it, or any node in its checked closure, has a disallowed
     deprecation. The closure is the link/run one under the ``runtime`` scope, and the whole DAG
     under ``all``, so ``all`` additionally rejects artifacts built with a deprecated tool.
 

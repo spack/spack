@@ -160,7 +160,7 @@ exempt_labels = {
     "items": {"type": "string"},
 }
 
-# 'scope' selects the deptypes of a single traversal, so it is global and lives under 'all' only
+# 'scope' selects the deptypes of a single traversal, so it is global and only 'all' takes it
 deprecation_all = {
     "type": "object",
     "description": "Deprecation policy applied to every package",

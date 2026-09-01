@@ -865,7 +865,7 @@ def test_new_installer_static_gate_sees_deferred_build_deps(
             installer = spack.installer.PackageInstaller(
                 [spec.package], dependencies_policy="auto"
             )
-            # The build tool (which carries the deprecated runtime dep) is deferred out of the
+            # The build tool (which has the deprecated runtime dep) is deferred out of the
             # initial build graph.
             assert installer.has_mirrors
             node_names = {s.name for s in installer.build_graph.nodes.values()}
@@ -951,8 +951,8 @@ def test_deprecation_gate_runs_before_any_setup_work(
 def test_reused_artifact_with_deprecated_build_dep_stays_reusable(
     install_mockery, mock_fetch, mutable_config: Configuration
 ):
-    """Under the 'runtime' scope the gate applies to what would be built, not to what is reused,
-    so an artifact that was built with a tool since deprecated is still reused as is.
+    """Under the 'runtime' scope the gate checks nodes that would be built; reused nodes are
+    exempt, so an artifact built with a tool since deprecated is still reused as is.
     """
     with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
         lib = spack.concretize.concretize_one("deprecated-tool-lib ^deprecated-tool@1.0")

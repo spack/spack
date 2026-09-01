@@ -771,7 +771,7 @@ class DeprecationKey(NamedTuple):
 
 
 class DeprecationDetails(NamedTuple):
-    """What the error term does not carry: the threshold exceeded, and packager guidance."""
+    """The threshold that was exceeded, and the guidance the recipe attached with msg=."""
 
     allowed: int
     msg: Optional[str]

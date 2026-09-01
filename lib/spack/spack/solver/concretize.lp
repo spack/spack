@@ -415,10 +415,10 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
 % 'all' checks every node in the DAG, 'runtime' checks the root unification set, i.e. the
 % non-build closure of the roots (link, run, and test edges), plus anything that would be built.
 %
-% This is intentionally the already-computed 'root' unification set rather than a dedicated
-% link/run closure as it avoids the extra grounding cost. The only difference is 'test' edges, so
+% This uses the already-computed 'root' unification set rather than a dedicated link/run
+% closure, which avoids the extra grounding cost. The only difference is 'test' edges, so
 % under 'runtime' scope concretization is slightly stricter than the install-time gate, which
-% walks link/run only. Concretization erring on the strict side is the safe direction.
+% walks link/run only.
 node_in_deprecation_scope(node(ID, Package)) :-
     attr("node", node(ID, Package)), deprecation_scope("all").
 
