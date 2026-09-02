@@ -29,7 +29,7 @@ Here is the EBNF grammar for a spec::
     propagated_kv = id==value | id:==value
     value         = bare_value | quoted_value
     bare_value    = [a-zA-Z0-9_\\-+*.,:=%^~/\\\\]+
-    quoted_value  = " { char | \\" } " | ' { char | \\' } '
+    quoted_value  = " [^"]* " | ' [^']* '
 
     version_pair  = git_version=vid
     version_list  = (version|version_range) { , (version|version_range) }
@@ -68,7 +68,6 @@ specs to avoid ambiguity.  Both are provided because ``~`` can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 
-import json
 import pathlib
 import re
 import sys
@@ -109,8 +108,8 @@ HASH = r"[a-zA-Z_0-9]+"
 #: These are legal values that *can* be parsed bare, without quotes on the command line.
 VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=%^\~\/\\]+)"
 
-#: Quoted values can be *anything* in between quotes, including escaped quotes.
-QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
+#: Quoted values can be anything in between quotes, except the quote itself: there is no escaping
+QUOTED_VALUE = r"(?:'[^']*'|\"[^\"]*\")"
 
 #: A version starts and ends with an alphanumeric character and is the whole run of version
 #: characters, so a following ``=`` cannot be satisfied by backtracking into a shorter version.
@@ -128,9 +127,6 @@ SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*?)(\]*)$")
 WINDOWS_FILENAME = r"(?:\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)(?:[a-zA-Z0-9-_\.\\]*)(?:\.json|\.yaml)"
 UNIX_FILENAME = r"(?:\.|\/|[a-zA-Z0-9-_]*\/)(?:[a-zA-Z0-9-_\.\/]*)(?:\.json|\.yaml)"
 FILENAME = WINDOWS_FILENAME if sys.platform == "win32" else UNIX_FILENAME
-
-#: Regex to strip quotes. Group 2 will be the unquoted string.
-STRIP_QUOTES = re.compile(r"^(['\"])(.*)\1$")
 
 #: Values that match this (e.g., variants, flags) can be left unquoted in Spack output
 NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.\-]+$")
@@ -404,7 +400,7 @@ class SpecParser:
                 when = self._parse_condition(when)
                 break
             self.curr = self.scanner.match()
-            value = strip_quotes_and_unescape(value)
+            value = strip_quotes(value)
             if name == "virtuals":
                 virtuals += tuple(value.split(","))
             elif name == "deptypes":
@@ -554,7 +550,7 @@ class SpecParser:
                 concrete = name.endswith(":")
                 if concrete:
                     name = name[:-1]
-                value = strip_quotes_and_unescape(value)
+                value = strip_quotes(value)
                 self._add_flag(spec, token, name, value, False, concrete)
                 self.curr = scanner.match()
 
@@ -563,7 +559,7 @@ class SpecParser:
                 concrete = name.endswith(":")
                 if concrete:
                     name = name[:-1]
-                value = strip_quotes_and_unescape(value)
+                value = strip_quotes(value)
                 self._add_flag(spec, token, name, value, True, concrete)
                 self.curr = scanner.match()
 
@@ -768,32 +764,28 @@ class SpecParsingError(spack.error.SpecSyntaxError):
         super().__init__(message)
 
 
-def strip_quotes_and_unescape(string: str) -> str:
+def strip_quotes(string: str) -> str:
     """Remove surrounding single or double quotes from string, if present."""
-    match = STRIP_QUOTES.match(string)
-    if not match:
-        return string
-
-    # replace any escaped quotes with bare quotes
-    quote, result = match.groups()
-    return result.replace(rf"\{quote}", quote)
+    if len(string) >= 2 and string[0] in "'\"" and string[-1] == string[0]:
+        return string[1:-1]
+    return string
 
 
 def quote_if_needed(value: str) -> str:
-    """Add quotes around the value if it requires quotes.
+    """Add quotes around the value if it requires quotes, i.e. unless it matches
+    :data:`NO_QUOTES_NEEDED`. Single quotes are used, or double quotes around a value that
+    contains single quotes. There is no escaping: a value that contains both kinds of quotes
+    cannot be written in a spec string.
 
-    This will add quotes around the value unless it matches :data:`NO_QUOTES_NEEDED`.
-
-    This adds:
-
-    * single quotes by default
-    * double quotes around any value that contains single quotes
-
-    If double quotes are used, we json-escape the string. That is, we escape ``\\``,
-    ``"``, and control codes.
-
+    Raises:
+        spack.error.SpecSyntaxError: if the value contains both single and double quotes
     """
     if NO_QUOTES_NEEDED.match(value):
         return value
-
-    return json.dumps(value) if "'" in value else f"'{value}'"
+    if "'" not in value:
+        return f"'{value}'"
+    if '"' not in value:
+        return f'"{value}"'
+    raise spack.error.SpecSyntaxError(
+        f"cannot quote the value {value!r}: it contains both single and double quotes"
+    )

@@ -162,7 +162,7 @@ _NEEDS_QUOTES = re.compile(r"^[^a-zA-Z_0-9\-+*.,:=%^~/\\]|[^a-zA-Z_0-9\-+*.,:=%^
 
 
 def quote_kvp(string: str) -> str:
-    """For strings like ``name=value`` or ``name==value``, quote and escape the value if needed.
+    """For strings like ``name=value`` or ``name==value``, quote the value if needed.
 
     This is a compromise to respect quoting of key-value pairs on the CLI. The shell
     strips quotes from quoted arguments, so we cannot know *exactly* how CLI arguments
