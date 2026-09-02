@@ -1776,11 +1776,6 @@ def _isolate_scope_path() -> str:
     return os.path.join(spack.paths.etc_path, "isolate")
 
 
-def _redirect_scope_path() -> str:
-    """Path to the redirect scope directory."""
-    return os.path.join(spack.paths.etc_path, "redirect")
-
-
 def _is_spack_writable() -> bool:
     """Check if $spack/etc/spack is writable."""
     etc_spack = spack.paths.etc_path
@@ -1930,80 +1925,6 @@ def _create_empty_layout_scope() -> None:
         f.write("# An empty layout scope means all new XDG-compliant defaults are in use.\n")
 
 
-def _user_scope_has_legacy_path() -> bool:
-    """Check if the user scope in etc/spack/include.yaml points to ~/.spack.
-
-    Returns:
-        True if user scope exists and has path: "~/.spack"
-    """
-    include_path = os.path.join(spack.paths.etc_path, "include.yaml")
-    if not os.path.exists(include_path):
-        return False
-
-    try:
-        data = read_config_file(include_path, spack.schema.include.schema)
-        if not data or "include" not in data:
-            return False
-
-        # Look for user scope with path: "~/.spack"
-        for entry in data["include"]:
-            if isinstance(entry, dict) and entry.get("name") == "user":
-                path = entry.get("path", "")
-                if path == "~/.spack":
-                    return True
-
-        return False
-    except Exception:
-        # If we can't read, assume no legacy path
-        return False
-
-
-def _create_redirect_scope() -> None:
-    """Create redirect scope to override spack's includes.
-
-    Reads etc/spack/include.yaml, finds the user scope with path: "~/.spack",
-    changes it to "~/.config/spack", and writes to etc/spack/redirect/include.yaml
-    with include:: override syntax.
-    """
-    # Read the original include.yaml
-    source_include_path = os.path.join(spack.paths.etc_path, "include.yaml")
-    data = read_config_file(source_include_path, spack.schema.include.schema)
-
-    if not data or "include" not in data:
-        tty.debug("No include section found in include.yaml, cannot create redirect")
-        return
-
-    modified_includes = []
-    for entry in data["include"]:
-        new_entry = entry.copy()
-
-        if new_entry.get("name") == "user" and new_entry.get("path") == "~/.spack":
-            new_entry["path"] = "~/.config/spack"
-            tty.debug("Redirecting user scope from ~/.spack to ~/.config/spack")
-
-        modified_includes.append(new_entry)
-
-    # Create redirect scope directory
-    redirect_path = _redirect_scope_path()
-    filesystem.mkdirp(redirect_path)
-
-    # Write the modified include.yaml with include:: override
-    redirect_include_path = os.path.join(redirect_path, "include.yaml")
-
-    # Create a syaml_str with override marker for the key
-    include_key = syaml.syaml_str("include")
-    include_key.override = True  # type: ignore[attr-defined]
-
-    # Create the dict with the marked key
-    redirect_data = syaml.syaml_dict([(include_key, modified_includes)])
-
-    # Write to file using dump_config which preserves override markers
-    with open(redirect_include_path, "w", encoding="utf-8") as f:
-        syaml.dump_config(redirect_data, f)
-
-    tty.debug(f"Created redirect scope at {redirect_path}")
-
-
 def _perform_migration_check(cfg: Configuration) -> None:
     """Perform migration detection and setup layout scope if needed.
 
@@ -2080,14 +2001,6 @@ def create_incremental() -> Generator[Configuration, None, None]:
     it. It is bundled inside a function so that configuration can be
     initialized lazily.
     """
-    # Check if we need to create redirect scope BEFORE loading config
-    # Redirect scope uses include:: to override spack's includes
-    redirect_path = _redirect_scope_path()
-    if not os.path.exists(redirect_path):
-        if _is_spack_writable() and _user_scope_has_legacy_path():
-            tty.debug("Creating redirect scope to redirect user to ~/.config/spack")
-            _create_redirect_scope()
-
     # Default scopes are builtins and the default scope within the Spack instance.
     # These are versioned with Spack and can be overridden by systems, sites or user scopes.
     cfg = create_from(
@@ -2117,19 +2030,6 @@ def create_incremental() -> Generator[Configuration, None, None]:
         #     init to reference lower scopes is more flexible.
         yield from cfg.push_scope_incremental(
             DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
-        )
-
-    # Add redirect scope if it exists
-    # This scope has higher priority than spack and uses include:: to override
-    # spack's includes, redirecting user scope from ~/.spack to ~/.config/spack
-    redirect_path = _redirect_scope_path()
-    if os.path.exists(redirect_path):
-        tty.debug(f"Loading redirect scope from {redirect_path}")
-        # Use priority between CONFIG_FILES (1) and ENVIRONMENT (2)
-        # Higher priority means the include:: override takes effect
-        yield from cfg.push_scope_incremental(
-            DirectoryConfigScope("redirect", redirect_path),
-            priority=1.5,  # Higher than spack's CONFIG_FILES priority
         )
 
     # Check if migration/layout scope setup is needed
