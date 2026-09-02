@@ -819,10 +819,12 @@ It must be one of:
    None of the categories above applies.
    A spec its maintainers no longer support, although nothing is known to be wrong with it, belongs here.
    These usually take a low severity, since users who need the spec can still build it.
+   ``msg`` is required with this reason, since the category alone does not say why the spec is deprecated.
 
 The optional ``severity`` keyword ranks the urgency: ``"low"`` (default), ``"medium"``, ``"high"``, or ``"critical"`` in increasing order.
 
-The optional ``msg`` keyword adds guidance, shown after the reason and severity when Spack refuses the spec.
+The ``msg`` keyword adds guidance, shown after the reason and severity when Spack refuses the spec.
+It is optional for every reason but ``"unspecified"``.
 Use it to say what to install instead, which the reason alone cannot express:
 
 .. code-block:: python
