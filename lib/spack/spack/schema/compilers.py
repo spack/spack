@@ -41,6 +41,10 @@ flags: Dict[str, Any] = {
             "anyOf": [{"type": "string"}, {"type": "null"}],
             "description": "Flags for linker libraries, e.g. -lpthread",
         },
+        "hipflags": {
+            "anyOf": [{"type": "string"}, {"type": "null"}],
+            "description": "Flags for HIP compiler, e.g. --amdgpu-target=gfx90a",
+        },
     },
 }
 

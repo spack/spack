@@ -1141,7 +1141,15 @@ class CompilerFlag(str):
         return CompilerFlag(d["value"], propagate=d.get("propagate", False))
 
 
-_valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags"]
+_valid_compiler_flags = [
+    "cflags",
+    "cxxflags",
+    "fflags",
+    "ldflags",
+    "ldlibs",
+    "cppflags",
+    "hipflags",
+]
 
 
 class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
