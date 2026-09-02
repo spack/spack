@@ -971,7 +971,7 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.END_EDGE_PROPERTIES, "]"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
             ],
-            "foo ^[when='%c'] c=gcc",
+            "foo ^[when=%c] c=gcc",
         ),
         (
             "foo ^[when='%c' virtuals=c]gcc",
@@ -983,18 +983,18 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.END_EDGE_PROPERTIES, "]"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
             ],
-            "foo ^[when='%c'] c=gcc",
+            "foo ^[when=%c] c=gcc",
         ),
         (
-            "foo ^[when='%c'] c=gcc",
+            "foo ^[when=%c] c=gcc",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
                 Token(SpecTokens.START_EDGE_PROPERTIES, "^["),
-                Token(SpecTokens.KEY_VALUE_PAIR, "when='%c'"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "when=%c"),
                 Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
                 Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c=gcc"),
             ],
-            "foo ^[when='%c'] c=gcc",
+            "foo ^[when=%c] c=gcc",
         ),
         # Test dependency propagation
         (
@@ -1016,15 +1016,15 @@ def specfile_for(config, mock_packages):
             "foo %%c,cxx=gcc",
         ),
         (
-            "foo %%[when='%c'] c=gcc",
+            "foo %%[when=%c] c=gcc",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
                 Token(SpecTokens.START_EDGE_PROPERTIES, "%%["),
-                Token(SpecTokens.KEY_VALUE_PAIR, "when='%c'"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "when=%c"),
                 Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
                 Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c=gcc"),
             ],
-            "foo %%[when='%c'] c=gcc",
+            "foo %%[when=%c] c=gcc",
         ),
         (
             "foo %%[when='%c' virtuals=c] gcc",
@@ -1036,7 +1036,7 @@ def specfile_for(config, mock_packages):
                 Token(SpecTokens.END_EDGE_PROPERTIES, "]"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
             ],
-            "foo %%[when='%c'] c=gcc",
+            "foo %%[when=%c] c=gcc",
         ),
         # whitespace between a dependency sigil or edge properties and a virtual assignment
         (
@@ -1049,17 +1049,17 @@ def specfile_for(config, mock_packages):
             "zlib %c=gcc",
         ),
         (
-            "foo ^[when='%c']   c,cxx=builtin.gcc@14+bar",
+            "foo ^[when=%c]   c,cxx=builtin.gcc@14+bar",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="foo"),
                 Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
-                Token(SpecTokens.KEY_VALUE_PAIR, value="when='%c'"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "when=%c"),
                 Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
                 Token(SpecTokens.VIRTUAL_ASSIGNMENT, value="c,cxx=builtin.gcc"),
                 Token(SpecTokens.VERSION, value="@14"),
                 Token(SpecTokens.BOOL_VARIANT, value="+bar"),
             ],
-            "foo ^[when='%c'] c,cxx=builtin.gcc@14+bar",
+            "foo ^[when=%c] c,cxx=builtin.gcc@14+bar",
         ),
         # a value that is not a package name is a variant of an anonymous dependency
         (
@@ -1214,10 +1214,10 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         # Ensure that $ORIGIN is handled correctly
         (["zlib", "ldflags=-Wl,-rpath=$ORIGIN/_libs"], "zlib ldflags='-Wl,-rpath=$ORIGIN/_libs'"),
         # A closing bracket ends the edge attribute list, it is never part of the value
-        (["mpileaks", "%[", "when=@1.0]", "gcc"], "mpileaks %[when='@1.0'] gcc"),
-        (["mpileaks", "%[when=+x]", "c=gcc"], "mpileaks %[when='+x'] c=gcc"),
+        (["mpileaks", "%[", "when=@1.0]", "gcc"], "mpileaks %[when=@1.0] gcc"),
+        (["mpileaks", "%[when=+x]", "c=gcc"], "mpileaks %[when=+x] c=gcc"),
         # a value that parses as it is stays unquoted: c=gcc@14 is a virtual assignment
-        (["mpileaks", "%[when=+x]", "c=gcc@14"], "mpileaks %[when='+x'] c=gcc@14"),
+        (["mpileaks", "%[when=+x]", "c=gcc@14"], "mpileaks %[when=+x] c=gcc@14"),
         (["mpileaks", "%c=gcc@14"], "mpileaks %c=gcc@14"),
         (["mpileaks", "%c,cxx=gcc"], "mpileaks %c,cxx=gcc"),
         # Ensure that passing escaped quotes on the CLI raises a tokenization error
@@ -1241,28 +1241,28 @@ def test_cli_spec_roundtrip(args, expected):
         (
             "foo%my_toolchain",
             {"my_toolchain": "%[when='%c' virtuals=c]gcc"},
-            ["foo %[when='%c'] c=gcc"],
+            ["foo %[when=%c] c=gcc"],
         ),
-        ("foo%my_toolchain", {"my_toolchain": "%[when='%c'] c=gcc"}, ["foo %[when='%c'] c=gcc"]),
+        ("foo%my_toolchain", {"my_toolchain": "%[when=%c] c=gcc"}, ["foo %[when=%c] c=gcc"]),
         (
             "foo%my_toolchain",
             {"my_toolchain": "+bar cflags=baz %[when='%c' virtuals=c]gcc"},
-            ["foo cflags=baz +bar %[when='%c'] c=gcc"],
+            ["foo cflags=baz +bar %[when=%c] c=gcc"],
         ),
         (
             "foo%my_toolchain",
-            {"my_toolchain": "+bar cflags=baz %[when='%c']c=gcc"},
-            ["foo cflags=baz +bar %[when='%c'] c=gcc"],
+            {"my_toolchain": "+bar cflags=baz %[when=%c]c=gcc"},
+            ["foo cflags=baz +bar %[when=%c] c=gcc"],
         ),
         (
             "foo%my_toolchain2",
             {"my_toolchain2": "%[when='%c' virtuals=c]gcc %[when='+mpi' virtuals=mpi]mpich"},
-            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
-            {"my_toolchain2": "%[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"},
-            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            {"my_toolchain2": "%[when=%c] c=gcc %[when=+mpi] mpi=mpich"},
+            ["foo %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain bar%my_toolchain2",
@@ -1270,15 +1270,15 @@ def test_cli_spec_roundtrip(args, expected):
                 "my_toolchain": "%[when='%c' virtuals=c]gcc",
                 "my_toolchain2": "%[when='%c' virtuals=c]gcc %[when='+mpi' virtuals=mpi]mpich",
             },
-            ["foo %[when='%c'] c=gcc", "bar %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc", "bar %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain bar%my_toolchain2",
             {
-                "my_toolchain": "%[when='%c'] c=gcc",
-                "my_toolchain2": "%[when='%c'] c=gcc %[when='+mpi']mpi=mpich",
+                "my_toolchain": "%[when=%c] c=gcc",
+                "my_toolchain2": "%[when=%c] c=gcc %[when=+mpi]mpi=mpich",
             },
-            ["foo %[when='%c'] c=gcc", "bar %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc", "bar %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
@@ -1288,7 +1288,7 @@ def test_cli_spec_roundtrip(args, expected):
                     {"spec": "%[virtuals=mpi]mpich", "when": "+mpi"},
                 ]
             },
-            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
@@ -1298,17 +1298,17 @@ def test_cli_spec_roundtrip(args, expected):
                     {"spec": "%mpi=mpich", "when": "+mpi"},
                 ]
             },
-            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
             {"my_toolchain2": [{"spec": "%[virtuals=c]gcc %[virtuals=mpi]mpich", "when": "%c"}]},
-            ["foo %[when='%c'] c=gcc %[when='%c'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc %[when=%c] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
             {"my_toolchain2": [{"spec": "%c=gcc %mpi=mpich", "when": "%c"}]},
-            ["foo %[when='%c'] c=gcc %[when='%c'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc %[when=%c] mpi=mpich"],
         ),
         # Test that we don't get caching wrong in the parser
         (
@@ -1320,8 +1320,8 @@ def test_cli_spec_roundtrip(args, expected):
                 ]
             },
             [
-                "foo %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich "
-                "^bar %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich"
+                "foo %[when=%c] c=gcc %[when=%mpi] mpi=mpich "
+                "^bar %[when=%c] c=gcc %[when=%mpi] mpi=mpich"
             ],
         ),
         (
@@ -1333,8 +1333,8 @@ def test_cli_spec_roundtrip(args, expected):
                 ]
             },
             [
-                "foo %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich "
-                "^bar %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich"
+                "foo %[when=%c] c=gcc %[when=%mpi] mpi=mpich "
+                "^bar %[when=%c] c=gcc %[when=%mpi] mpi=mpich"
             ],
         ),
     ],
@@ -1941,10 +1941,58 @@ def test_parse_multiple_edge_attributes(input_args, expected):
 
 
 def test_when_edge_attribute_keeps_commas():
-    """A when value is one spec string, where a comma is part of the syntax, unlike the
+    """A when value is one spec, where a comma is part of the syntax, unlike the
     comma-separated deptypes and virtuals lists."""
     edge = spack.spec.Spec("foo ^[when='@1,2'] bar").edges_to_dependencies(name="bar")[0]
     assert edge.when == spack.spec.Spec("@1,2")
+    edge = spack.spec.Spec("foo ^[when=@1,2] bar").edges_to_dependencies(name="bar")[0]
+    assert edge.when == spack.spec.Spec("@1,2")
+
+
+def test_when_edge_attribute_extends_to_closing_bracket():
+    """The when condition is a spec that extends up to the closing bracket: what follows it are
+    node options of the condition, not further edge attributes."""
+    edge = spack.spec.Spec("foo ^[when=bar virtuals=c] baz").edges_to_dependencies(name="baz")[0]
+    assert edge.when == spack.spec.Spec("bar virtuals=c")
+    assert edge.virtuals == ()
+
+    edge = spack.spec.Spec("foo ^[virtuals=c when=bar] baz").edges_to_dependencies(name="baz")[0]
+    assert edge.when == spack.spec.Spec("bar")
+    assert edge.virtuals == ("c",)
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected_in_error",
+    [
+        ("foo ^[when=] bar", "expected a spec after when="),
+        ("foo ^[when=", "expected a spec after when="),
+        ("foo ^[when=bar baz] qux", "unexpected token in edge attributes"),
+        ("foo ^[when=bar ^baz", "unexpected token in edge attributes"),
+    ],
+)
+def test_when_edge_attribute_errors(spec_str, expected_in_error):
+    with pytest.raises(SpecParsingError, match=expected_in_error):
+        SpecParser(spec_str).all_specs()
+
+
+def test_when_is_a_variant_name_outside_edge_attributes():
+    spec = spack.spec.Spec("foo when=bar")
+    assert str(spec) == "foo when=bar"
+
+
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        "foo ^[when='+x' virtuals=c] bar",
+        'foo ^[when="+x" virtuals=c] bar',
+        "foo ^[when='+x']c=bar",
+    ],
+)
+def test_when_edge_attribute_quoted_precedes_other_attributes(spec_str):
+    """A quoted condition is a value like any other edge attribute, so it can come first"""
+    edge = spack.spec.Spec(spec_str).edges_to_dependencies(name="bar")[0]
+    assert edge.when == spack.spec.Spec("+x")
+    assert edge.virtuals == ("c",)
 
 
 @pytest.mark.parametrize(
@@ -1962,7 +2010,7 @@ def test_when_edge_attribute_keeps_commas():
         ("zlib % c=gcc", "zlib %c=gcc"),
         ("^mpi=intel-parallel-studio+mkl", "^mpi=intel-parallel-studio+mkl"),
         ("%c=builtin.gcc@14", "%c=builtin.gcc@14"),
-        ("%[when=+x] c=gcc", "%[when='+x'] c=gcc"),
+        ("%[when=+x] c=gcc", "%[when=+x] c=gcc"),
         # virtuals of an anonymous spec stay in the edge attributes, there is no name to
         # substitute them with
         ("%[virtuals=c] *", "%[virtuals=c] *"),
@@ -1971,10 +2019,14 @@ def test_when_edge_attribute_keeps_commas():
         ("%[virtuals=c] *@4.0 foo=bar", "%[virtuals=c] @4.0 foo=bar"),
         # a star is a package name, so name=* is a variant value, not a substitute
         ("^dev_path=*", "^* dev_path='*'"),
-        # a when= value is a spec, whose own quotes cannot be nested in a quoted value
-        ('%[when="a=*"]', "%[when=a='*'] *"),
+        # a when= value is a spec, which extends to the closing bracket and is printed unquoted
+        ("%[when=a=*]", "%[when=a='*'] *"),
+        ("x %[when=a=']'] gcc", "x %[when=a=']'] gcc"),
         ("""x %[when="a=']'"] gcc""", "x %[when=a=']'] gcc"),
         ("%[when='@1,2' virtuals=c] *", "%[virtuals=c when=@1:2] *"),
+        ("%[virtuals=c when=@1,2] *", "%[virtuals=c when=@1:2] *"),
+        ("%[deptypes=build virtuals=c when=@1,2] *", "%[deptypes=build virtuals=c when=@1:2] *"),
+        ("x %[when=%c=gcc] y", "x %[when=%c=gcc] y"),
         # a version bound is never truncated at a "." to make room for a key=value pair
         ("@:a.a=''", "a.a=''"),
         ("@1.2:2.0=x", "@1.2: 2.0=x"),

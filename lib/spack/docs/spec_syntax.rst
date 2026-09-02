@@ -652,6 +652,14 @@ We can express conditional constraints by specifying the ``when`` edge attribute
 
 This tells Spack that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.
 
+The value of ``when`` is a spec, which extends up to the closing bracket.
+It is therefore the last edge attribute, unless it is quoted:
+
+.. code-block:: spec
+
+   $ spack install hdf5 ^[virtuals=mpi when=+mpi] mpich@3.1
+   $ spack install hdf5 ^[when='+mpi' virtuals=mpi] mpich@3.1
+
 Dependency propagation
 ^^^^^^^^^^^^^^^^^^^^^^
 

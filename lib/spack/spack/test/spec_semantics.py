@@ -1657,19 +1657,19 @@ class TestSpecSemantics:
             # Ensure the 'when=+debug' is referred to 'callpath', and not to 'mpileaks',
             # and that we can concretize the spec despite 'callpath' has no debug variant
             (
-                "mpileaks+debug ^callpath %[when=+debug virtuals=mpi] zmpi",
+                "mpileaks+debug ^callpath %[virtuals=mpi when=+debug] zmpi",
                 [
                     ("^zmpi", False),
                     ("^mpich", False),
-                    ("mpileaks+debug  %[when=+debug virtuals=mpi] zmpi", False),
+                    ("mpileaks+debug  %[virtuals=mpi when=+debug] zmpi", False),
                 ],
                 [("^zmpi", False), ("^[virtuals=mpi] mpich", True)],
             ),
             # Ensure we don't skip conditional edges when testing because we associate them
             # with the wrong node (e.g. mpileaks instead of mpich)
             (
-                "mpileaks~debug ^mpich+debug %[when=+debug virtuals=c] llvm",
-                [("^mpich+debug %[when=+debug virtuals=c] gcc", False)],
+                "mpileaks~debug ^mpich+debug %[virtuals=c when=+debug] llvm",
+                [("^mpich+debug %[virtuals=c when=+debug] gcc", False)],
                 [("^mpich %[virtuals=c] gcc", False), ("^mpich %[virtuals=c] llvm", True)],
             ),
         ],

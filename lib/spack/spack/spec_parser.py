@@ -5,44 +5,46 @@
 
 Here is the EBNF grammar for a spec::
 
-    spec          = [name] [node_options] { sigil [edge_properties] dependency } |
-                    [name] [node_options] hash |
-                    filename
+    spec          = node { sigil [edge_properties] dependency }
 
     sigil         = ^ | % | %%
-    dependency    = virtual_assignment [node_options] | node
-    node          =  name [node_options] |
-                     [name] [node_options] hash |
-                     filename
+    dependency    = virtual_assignment { node_option } | node
+    node          = [name] { node_option } | filename
+    node_option   = @version_list | @version_pair | variant | hash
 
-    node_options    = [@(version_list|version_pair)] { variant } [hash]
-    edge_properties = [ { key_value } ]
+    edge_properties = [ { key_value | when=quoted_spec } [ when=spec ] ]
+    quoted_spec     = " spec " | ' spec '
 
-    virtual_assignment = id { , id } = name
-    hash          = / id
+    virtual_assignment = id { , id } = (id | namespace id)
+    hash          = / [a-zA-Z0-9_]+
     filename      = (.|/|[a-zA-Z0-9-_]*/)([a-zA-Z0-9-_./]*)(.json|.yaml)
 
     name          = id | namespace id | *
-    namespace     = { id . }
+    namespace     = id . { id . }
 
     variant       = bool_variant | key_value | propagated_bv | propagated_kv
-    bool_variant  =  +id |  ~id |  -id
+    bool_variant  = +id | ~id | -id
     propagated_bv = ++id | ~~id | --id
-    key_value     =  id=id |  id=quoted_id
-    propagated_kv = id==id | id==quoted_id
+    key_value     = id=value | id:=value
+    propagated_kv = id==value | id:==value
+    value         = bare_value | quoted_value
+    bare_value    = [a-zA-Z0-9_\\-+*.,:=%^~/\\\\]+
+    quoted_value  = " { char | \\" } " | ' { char | \\' } '
 
     version_pair  = git_version=vid
-    version_list  = (version|version_range) [ { , (version|version_range)} ]
-    version_range = vid:vid | vid: | :vid | :
-    version       = vid
+    version_list  = (version|version_range) { , (version|version_range) }
+    version_range = [vid] : [vid]
+    version       = [=] vid
 
-    git_version   = git.(vid) | git_hash
+    git_version   = git.(ref) | git_hash
     git_hash      = [A-Fa-f0-9]{40}
-
-    quoted_id     = " id_with_ws " | ' id_with_ws '
-    id_with_ws    = [a-zA-Z0-9_][a-zA-Z_0-9-.\\s]*
-    vid           = [a-zA-Z0-9_][a-zA-Z_0-9-.]*
+    ref           = [a-zA-Z0-9_][a-zA-Z_0-9-./]*
+    vid           = [a-zA-Z0-9_] [ [a-zA-Z_0-9-.]* [a-zA-Z0-9_] ]
     id            = [a-zA-Z0-9_][a-zA-Z_0-9-]*
+
+The options of a node come in any order, with at most one version and one hash: a second hash
+starts the next spec, as in ``spack find /abc /def``. ``:=`` marks a concrete variant value, and
+``==`` or ``:==`` propagate the value to dependencies.
 
 Identifiers using the ``<name>=<value>`` command, such as architectures and
 compiler flags, require a space before the name.
@@ -52,6 +54,11 @@ not; and a ``key=value`` pair directly after a dependency sigil or edge properti
 value is a package name, is a virtual assignment ``%c,cxx=gcc`` rather than a variant of an
 anonymous dependency (write ``%*foo=bar`` for the latter). ``*`` is the name of an anonymous
 node.
+
+The ``when=`` edge property is a condition on the edge, and its value is a spec that extends up
+to the closing bracket, so it must be the last edge property: ``^[virtuals=mpi when=+mpi] mpich``.
+A quoted condition, ``^[when='+mpi' virtuals=mpi] mpich``, is a value like any other and can
+precede other edge properties.
 
 There is one ambiguity: since ``-`` is allowed in an id, you need to put
 whitespace space before ``-variant`` for it to be tokenized properly.  You can
@@ -151,6 +158,10 @@ class SpecTokens(TokenBase):
     BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
     PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}:?==(?:{VALUE}|{QUOTED_VALUE}))"
     KEY_VALUE_PAIR = rf"(?:{NAME}:?=(?:{VALUE}|{QUOTED_VALUE}))"
+    # The when= condition of edge properties whose spec does not start with a value character,
+    # e.g. ^[when=@1.2] dep. Otherwise when=+foo is a key-value pair like any other, which the
+    # edge properties parser reads as the start of a condition, so `when` is still a variant name.
+    WHEN = r"when="
 
     # Virtual assignment, after KEY_VALUE_PAIR: only tried first at the start of a dependency
     VIRTUAL_ASSIGNMENT = rf"(?:{VIRTUAL_ASSIGNMENT})"
@@ -358,27 +369,48 @@ class SpecParser:
             raise SpecParsingError(str(e), token, self.literal_str) from e
 
     def _parse_edge_properties(self) -> dict:
-        """Parse the ``key=value`` pairs of the edge properties, up to the closing bracket, and
-        return them as keyword arguments for ``Spec._add_dependency``. The closing bracket is
-        left as the current token, since a virtual assignment may follow it."""
+        """Parse the ``key=value`` pairs of the edge properties and the ``when=`` condition, up
+        to the closing bracket, and return them as keyword arguments for ``Spec._add_dependency``.
+        The closing bracket is left as the current token, since a virtual assignment may follow
+        it."""
         virtuals: Tuple[str, ...] = ()
         depflag = 0
         when = None
         kinds = SPEC_TOKENIZER.kinds
         while self.curr is not None:
             token = self.curr
-            if kinds[token.lastgroup] is not SpecTokens.KEY_VALUE_PAIR:
+            kind = kinds[token.lastgroup]
+            if kind is SpecTokens.WHEN:
+                # when= followed by a spec that does not start with a value character, e.g. @1.2
+                self.curr = self.scanner.match()
+                if (
+                    self.curr is None
+                    or kinds[self.curr.lastgroup] is SpecTokens.END_EDGE_PROPERTIES
+                ):
+                    raise SpecParsingError("expected a spec after when=", token, self.literal_str)
+                when = self._parse_condition(when)
                 break
-            self.curr = self.scanner.match()
+            if kind is not SpecTokens.KEY_VALUE_PAIR:
+                break
             name, value = token.group(token.lastindex).split("=", maxsplit=1)
             name = name.rstrip(":")  # the := of a concrete variant has no meaning on an edge
+            if name == "when" and value[0] not in "'\"":
+                # An unquoted condition is a spec that starts at the value and extends up to the
+                # closing bracket: rescan from the value, since the tokenizer is context free
+                self.scanner = SPEC_TOKENIZER.regex.scanner(  # type: ignore[attr-defined]
+                    self.literal_str, token.end() - len(value)
+                )
+                self.curr = self.scanner.match()
+                when = self._parse_condition(when)
+                break
+            self.curr = self.scanner.match()
             value = strip_quotes_and_unescape(value)
             if name == "virtuals":
                 virtuals += tuple(value.split(","))
             elif name == "deptypes":
                 depflag |= spack.deptypes.canonicalize(value.split(","))
             elif name == "when":
-                # A when value is one spec string, where a comma is part of the syntax: when='@1,2'
+                # A quoted condition is a value like any other, so it can precede other attributes
                 condition = parse_one_or_raise(value)
                 if when is None:
                     when = condition
@@ -386,8 +418,9 @@ class SpecParser:
                     when.constrain(condition)
             else:
                 msg = (
-                    "the only edge attributes that are currently accepted "
-                    'are "deptypes", "virtuals", and "when"'
+                    'the only edge attributes that are currently accepted are "deptypes", '
+                    '"virtuals", and a "when=<spec>" condition, which must be the last unless '
+                    "quoted"
                 )
                 raise SpecParsingError(msg, token, self.literal_str)
 
@@ -400,6 +433,16 @@ class SpecParser:
         if when is not None:
             edge_properties["when"] = when
         return edge_properties
+
+    def _parse_condition(self, when: Optional["spack.spec.Spec"]) -> "spack.spec.Spec":
+        """Parse the unquoted ``when=`` condition of edge properties, which is a spec that
+        extends up to the closing bracket, and constrain the condition ``when`` so far with it"""
+        condition = self.next_spec()
+        assert condition is not None  # there is a token, so there is a spec
+        if when is None:
+            return condition
+        when.constrain(condition)
+        return when
 
     def _parse_dependency(
         self, root_spec: "spack.spec.Spec", edge_properties: dict
