@@ -55,12 +55,13 @@ def test_version_deprecated_true_registers_in_deprecations(mock_packages):
 def test_allowed_deprecation_concretizes_without_warning(
     mock_packages, concretize_scope, packages_yaml_write, recwarn
 ):
-    """An allowed deprecation (severity <= threshold) concretizes silently, with no warning."""
+    """A deprecation matched by a selector concretizes silently, with no warning."""
     packages_yaml_write("""
 packages:
   all:
     deprecation:
-      allowed_severity: critical
+      allow:
+      - severity: critical
 """)
     spec = concretize_one("deprecated-with-reason@2.0")
     assert spec.satisfies("@2.0")
@@ -70,31 +71,33 @@ packages:
     )
 
 
-def test_allowed_deprecation_severity_per_package_blocks(
+def test_per_package_selector_blocks_a_higher_severity(
     mock_packages, concretize_scope, packages_yaml_write
 ):
-    """Tests that when the allowed severity < severity, concretization fails."""
+    """Tests that when a severity exceeds the one a selector allows, concretization fails."""
     packages_yaml_write("""
 packages:
   deprecated-with-reason:
     deprecation:
-      allowed_severity: medium
+      allow:
+      - severity: medium
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-with-reason@2.0")
 
 
-def test_allowed_deprecation_severity_all_blocks(
+def test_selector_under_all_blocks_a_higher_severity(
     mock_packages, concretize_scope, packages_yaml_write
 ):
-    """Tests that the all:deprecation:allowed_severity applies when no per-package override
-    exists.
+    """Tests that the selectors under all:deprecation:allow apply when a package declares none
+    of its own.
     """
     packages_yaml_write("""
 packages:
   all:
     deprecation:
-      allowed_severity: low
+      allow:
+      - severity: low
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-with-reason@2.0")
@@ -107,7 +110,7 @@ def test_coexistence_old_and_new_deprecation(mock_packages, mutable_config):
     assert spec.satisfies("@2.0")
 
     # With deprecations allowed, @1.0 concretizes without error.
-    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
+    with mutable_config.override("packages:all:deprecation:allow", [{"severity": "critical"}]):
         assert concretize_one("deprecated-dual@1.0").satisfies("@1.0")
 
 
@@ -156,32 +159,30 @@ def test_old_style_deprecation_uses_exact_version(mock_packages):
     assert not spack.spec.Spec("deprecated-old-style@=1.0.1").satisfies(constraint)
 
 
-def test_exempt_label_skips_deprecation(mock_packages, concretize_scope, packages_yaml_write):
-    """Tests that exempting the only label of a deprecation skips it, without relaxing the
-    severity threshold.
+def test_label_selector_skips_deprecation(mock_packages, concretize_scope, packages_yaml_write):
+    """Tests that a selector listing the only label of a deprecation skips it, without allowing
+    any severity.
     """
     packages_yaml_write("""
 packages:
   all:
     deprecation:
-      allowed_severity: none
-      exempt_labels:
-      - CVE-2026-0001
+      allow:
+      - labels: [CVE-2026-0001]
 """)
     assert concretize_one("deprecated-with-labels@3.0").satisfies("@3.0")
 
 
-def test_partially_exempt_labels_do_not_skip_deprecation(
+def test_partially_listed_labels_do_not_skip_deprecation(
     mock_packages, concretize_scope, packages_yaml_write
 ):
-    """Tests that a deprecation listing two labels stays an error until both are exempted."""
+    """Tests that a deprecation citing two labels stays an error until a selector lists both."""
     packages_yaml_write("""
 packages:
   all:
     deprecation:
-      allowed_severity: none
-      exempt_labels:
-      - CVE-2026-0002
+      allow:
+      - labels: [CVE-2026-0002]
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-with-labels@2.0")
@@ -190,32 +191,28 @@ packages:
 packages:
   all:
     deprecation:
-      allowed_severity: none
-      exempt_labels:
-      - CVE-2026-0002
-      - GHSA-aaaa-bbbb-cccc
+      allow:
+      - labels: [CVE-2026-0002, GHSA-aaaa-bbbb-cccc]
 """)
     assert concretize_one("deprecated-with-labels@2.0").satisfies("@2.0")
 
 
-def test_per_package_exempt_labels_replace_the_ones_under_all(
+def test_per_package_label_selector_replaces_the_one_under_all(
     mock_packages, concretize_scope, packages_yaml_write
 ):
-    """Tests that a non-empty per-package list replaces the one under 'all', like every other
-    'packages' setting.
+    """Tests that a per-package list replaces the one under 'all', like every other 'packages'
+    setting.
     """
     packages_yaml_write("""
 packages:
   all:
     deprecation:
-      allowed_severity: none
-      exempt_labels:
-      - CVE-2026-0001
+      allow:
+      - labels: [CVE-2026-0001]
   deprecated-with-labels:
     deprecation:
-      exempt_labels:
-      - CVE-2026-0002
-      - GHSA-aaaa-bbbb-cccc
+      allow:
+      - labels: [CVE-2026-0002, GHSA-aaaa-bbbb-cccc]
 """)
     # @2.0 deprecation is skipped by the per-package list
     assert concretize_one("deprecated-with-labels@2.0").satisfies("@2.0")
@@ -224,65 +221,68 @@ packages:
         concretize_one("deprecated-with-labels@3.0")
 
 
-def test_per_reason_threshold_blocks_only_the_named_reason(
+def test_reason_list_allows_only_the_reasons_it_names(
     mock_packages, concretize_scope, packages_yaml_write
 ):
-    """Tests that a mapping holds one reason to a stricter threshold than the others."""
-    packages_yaml_write("""
-packages:
-  all:
-    deprecation:
-      allowed_severity:
-        default: critical
-        vuln: none
-""")
-    # @2.0 is deprecated with reason=vuln, which the mapping forbids at any severity
-    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
-        concretize_one("deprecated-with-reason@2.0")
-
-    # @1.0 is deprecated with reason=rename, which falls back to the 'critical' default
-    assert concretize_one("deprecated-with-reason@1.0").satisfies("@1.0")
-
-
-def test_per_reason_threshold_without_a_default_is_strict(
-    mock_packages, concretize_scope, packages_yaml_write
-):
-    """Tests that a mapping omitting 'default' leaves the unlisted reasons at 'none'."""
-    packages_yaml_write("""
-packages:
-  all:
-    deprecation:
-      allowed_severity:
-        vuln: critical
-""")
-    # reason=vuln is allowed up to critical
-    assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
-
-    # reason=rename is not listed, so it falls back to 'none' rather than to 'critical'
-    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
-        concretize_one("deprecated-with-reason@1.0")
-
-
-def test_per_package_mapping_replaces_the_one_under_all(
-    mock_packages, concretize_scope, packages_yaml_write
-):
-    """Tests that a per-package mapping replaces the one under 'all' outright, so the 'vuln: none'
-    set globally is not consulted for a package with its own threshold, while a package without
-    one is still judged by 'all'.
+    """Tests that a selector naming several reasons holds the ones it omits to the strictest
+    policy, whatever their severity.
     """
     packages_yaml_write("""
 packages:
   all:
     deprecation:
-      allowed_severity:
-        default: high
-        vuln: none
+      allow:
+      - reason: [rename, retired, maintenance, unspecified]
+        severity: critical
+""")
+    # @2.0 is deprecated with reason=vuln, which the selector omits
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-with-reason@2.0")
+
+    # @1.0 is deprecated with reason=rename, which the selector names
+    assert concretize_one("deprecated-with-reason@1.0").satisfies("@1.0")
+
+
+def test_a_selector_naming_a_reason_allows_no_other(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that a selector constrained to one reason does not allow the others."""
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allow:
+      - reason: vuln
+        severity: critical
+""")
+    # reason=vuln is allowed up to critical
+    assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
+
+    # reason=rename is matched by no selector, so it stays disallowed
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-with-reason@1.0")
+
+
+def test_per_package_allow_replaces_the_one_under_all(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that a per-package list replaces the one under 'all' outright, so the global
+    selectors are not consulted for a package with its own list, while a package without one is
+    still judged by 'all'.
+    """
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allow:
+      - reason: [rename, retired, maintenance, unspecified]
+        severity: high
   deprecated-with-reason:
     deprecation:
-      allowed_severity:
-        default: critical
+      allow:
+      - severity: critical
 """)
-    # the package with its own threshold ignores the global 'vuln: none'
+    # the package with its own list is not bound by the reasons the global one names
     assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
 
     # a package without one is still blocked by it, so the override is scoped to the one package
@@ -290,34 +290,28 @@ packages:
         concretize_one("deprecated-with-labels@3.0")
 
 
-def test_string_threshold_is_shorthand_for_default(
+def test_selector_without_a_reason_matches_every_reason(
     mock_packages, concretize_scope, packages_yaml_write
 ):
-    """Tests that a bare string behaves like a mapping with only 'default'."""
+    """Tests that a selector that constrains only the severity applies to every reason."""
     packages_yaml_write("""
 packages:
   all:
     deprecation:
-      allowed_severity: critical
+      allow:
+      - severity: critical
 """)
+    # @2.0 is deprecated with reason=vuln, @1.0 with reason=rename
     assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
-
-    packages_yaml_write("""
-packages:
-  all:
-    deprecation:
-      allowed_severity:
-        default: critical
-""")
-    assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
+    assert concretize_one("deprecated-with-reason@1.0").satisfies("@1.0")
 
 
 def test_old_and_new_deprecation_are_checked_independently(
     mock_packages, concretize_scope, packages_yaml_write
 ):
     """Tests that version(..., deprecated=True) and deprecated() on the same version do not
-    override one another: each is checked against the threshold for its own reason, and either
-    one above its threshold refuses the version.
+    override one another: each is matched against the selectors on its own, and either one left
+    unmatched refuses the version.
     """
     # deprecated-dual@1.0 has unspecified/critical from the keyword and vuln/high from the
     # directive. Allowing unspecified is not enough, because vuln is still forbidden.
@@ -325,8 +319,9 @@ def test_old_and_new_deprecation_are_checked_independently(
 packages:
   all:
     deprecation:
-      allowed_severity:
-        unspecified: critical
+      allow:
+      - reason: unspecified
+        severity: critical
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-dual@1.0")
@@ -336,20 +331,23 @@ packages:
 packages:
   all:
     deprecation:
-      allowed_severity:
-        vuln: critical
+      allow:
+      - reason: vuln
+        severity: critical
 """)
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-dual@1.0")
 
-    # Both above their thresholds is what it takes.
+    # A selector for each of them is what it takes.
     packages_yaml_write("""
 packages:
   all:
     deprecation:
-      allowed_severity:
-        unspecified: critical
-        vuln: high
+      allow:
+      - reason: unspecified
+        severity: critical
+      - reason: vuln
+        severity: high
 """)
     assert concretize_one("deprecated-dual@1.0").satisfies("@1.0")
 
@@ -367,7 +365,7 @@ def lib_built_with_deprecated_tool(mutable_config, temporary_store):
 
     Models a library installed back when the tool it was built with was still allowed.
     """
-    with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
+    with mutable_config.override("packages:all:deprecation:allow", [{"severity": "critical"}]):
         spec = concretize_one("deprecated-tool-lib ^deprecated-tool@1.0")
     assert spec["deprecated-tool"].satisfies("@1.0")
     for node in spec.traverse():
@@ -422,7 +420,8 @@ packages:
   all:
     deprecation:
       scope: runtime
-      allowed_severity: critical
+      allow:
+      - severity: critical
   deprecated-tool:
     prefer: ["@1.0"]
 """)
@@ -434,7 +433,7 @@ packages:
   all:
     deprecation:
       scope: runtime
-      allowed_severity: none
+      allow: []
   deprecated-tool:
     prefer: ["@1.0"]
 """)
@@ -476,13 +475,16 @@ def test_directive_message_is_reported_on_refusal(mock_packages, mutable_config)
 
 
 def test_directive_without_message_reports_only_the_policy(mock_packages, mutable_config):
-    """Tests that a deprecation with no msg= reports the threshold and nothing more."""
+    """Tests that a deprecation with no msg= names the configuration to change, and nothing
+    more.
+    """
     with pytest.raises(UnsatisfiableSpecError) as exc_info:
         concretize_one("deprecated-with-reason@2.0")
 
+    config_path = "'packages:deprecated-with-reason:deprecation:allow'"
     message = str(exc_info.value)
-    assert "exceeds allowed severity 'none'" in message
-    assert message.rstrip().endswith("'none'")
+    assert f"is not allowed by {config_path}" in message
+    assert message.rstrip().endswith(config_path)
 
 
 def test_every_message_behind_one_error_term_is_reported(mock_packages, mutable_config):
@@ -496,3 +498,57 @@ def test_every_message_behind_one_error_term_is_reported(mock_packages, mutable_
     assert "'deprecated-with-message@=0.9'" in message
     assert "move to @2.0" in message
     assert "also affects the ABI" in message
+
+
+def test_selector_attributes_are_conjunctive(mock_packages, concretize_scope, packages_yaml_write):
+    """Tests that the attributes of one selector all have to match. deprecated-with-labels@3.0
+    is a critical vulnerability labeled CVE-2026-0001, so a selector naming that label matches
+    only while its other attributes do too.
+    """
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allow:
+      - labels: [CVE-2026-0001]
+""")
+    assert concretize_one("deprecated-with-labels@3.0").satisfies("@3.0")
+
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allow:
+      - labels: [CVE-2026-0001]
+        severity: high
+""")
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-with-labels@3.0")
+
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allow:
+      - labels: [CVE-2026-0001]
+        reason: rename
+""")
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-with-labels@3.0")
+
+
+def test_one_matching_selector_is_enough(mock_packages, concretize_scope, packages_yaml_write):
+    """Tests that a deprecation is skipped as soon as one selector in the list matches it."""
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allow:
+      - reason: vuln
+        severity: critical
+      - reason: rename
+        severity: low
+""")
+    # @2.0 is vuln/critical, @1.0 is rename/low, and each is matched by a different selector
+    assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
+    assert concretize_one("deprecated-with-reason@1.0").satisfies("@1.0")

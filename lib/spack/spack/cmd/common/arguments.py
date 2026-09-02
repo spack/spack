@@ -682,8 +682,8 @@ def add_concretizer_args(subparser):
     subgroup.add_argument(
         "--deprecated",
         action=ConfigSetAction,
-        dest="packages:all:deprecation:allowed_severity",
-        const="critical",
+        dest="packages:all:deprecation:allow",
+        const=[{"severity": "critical"}],
         default=None,
         help="allow the concretizer to select deprecated versions of any severity",
     )

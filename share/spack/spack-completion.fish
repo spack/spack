@@ -667,7 +667,7 @@ complete -c spack -n '__fish_spack_using_command build-env' -l reuse -f -a concr
 complete -c spack -n '__fish_spack_using_command build-env' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command build-env' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command build-env' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command build-env' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command build-env' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command build-env' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 complete -c spack -n '__fish_spack_using_command build-env' -l dump -r -f -a dump
 complete -c spack -n '__fish_spack_using_command build-env' -l dump -r -d 'dump a source-able environment to FILE'
@@ -1024,7 +1024,7 @@ complete -c spack -n '__fish_spack_using_command ci generate' -l reuse -f -a con
 complete -c spack -n '__fish_spack_using_command ci generate' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command ci generate' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command ci generate' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command ci generate' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command ci generate' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command ci generate' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 complete -c spack -n '__fish_spack_using_command ci generate' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command ci generate' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
@@ -1214,7 +1214,7 @@ complete -c spack -n '__fish_spack_using_command concretize' -l reuse -f -a conc
 complete -c spack -n '__fish_spack_using_command concretize' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command concretize' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command concretize' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command concretize' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command concretize' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command concretize' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
@@ -1237,7 +1237,7 @@ complete -c spack -n '__fish_spack_using_command concretise' -l reuse -f -a conc
 complete -c spack -n '__fish_spack_using_command concretise' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command concretise' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command concretise' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command concretise' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command concretise' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command concretise' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 complete -c spack -n '__fish_spack_using_command concretise' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command concretise' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
@@ -1501,7 +1501,7 @@ complete -c spack -n '__fish_spack_using_command dev-build' -l reuse -f -a concr
 complete -c spack -n '__fish_spack_using_command dev-build' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command dev-build' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command dev-build' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command dev-build' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command dev-build' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command dev-build' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 
 # spack develop
@@ -1873,7 +1873,7 @@ complete -c spack -n '__fish_spack_using_command fetch' -l reuse -f -a concretiz
 complete -c spack -n '__fish_spack_using_command fetch' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command fetch' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command fetch' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 
 # spack find
@@ -2197,7 +2197,7 @@ complete -c spack -n '__fish_spack_using_command install' -l reuse -f -a concret
 complete -c spack -n '__fish_spack_using_command install' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command install' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command install' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command install' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command install' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 
 # spack isolate
@@ -2410,7 +2410,7 @@ complete -c spack -n '__fish_spack_using_command mirror create' -l reuse -f -a c
 complete -c spack -n '__fish_spack_using_command mirror create' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command mirror create' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command mirror create' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command mirror create' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command mirror create' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command mirror create' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 
 # spack mirror add-archive
@@ -2720,7 +2720,7 @@ complete -c spack -n '__fish_spack_using_command patch' -l reuse -f -a concretiz
 complete -c spack -n '__fish_spack_using_command patch' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command patch' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command patch' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command patch' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command patch' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command patch' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 
 # spack pkg
@@ -3058,7 +3058,7 @@ complete -c spack -n '__fish_spack_using_command solve' -l reuse -f -a concretiz
 complete -c spack -n '__fish_spack_using_command solve' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command solve' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command solve' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command solve' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command solve' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command solve' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 
 # spack spec
@@ -3096,7 +3096,7 @@ complete -c spack -n '__fish_spack_using_command spec' -l reuse -f -a concretize
 complete -c spack -n '__fish_spack_using_command spec' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command spec' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command spec' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command spec' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command spec' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command spec' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 
 # spack stage
@@ -3120,7 +3120,7 @@ complete -c spack -n '__fish_spack_using_command stage' -l reuse -f -a concretiz
 complete -c spack -n '__fish_spack_using_command stage' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command stage' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command stage' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command stage' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command stage' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command stage' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 
 # spack style
@@ -3253,7 +3253,7 @@ complete -c spack -n '__fish_spack_using_command test-env' -l reuse -f -a concre
 complete -c spack -n '__fish_spack_using_command test-env' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command test-env' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command test-env' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
-complete -c spack -n '__fish_spack_using_command test-env' -l deprecated -f -a packages_all_deprecation_allowed_severity
+complete -c spack -n '__fish_spack_using_command test-env' -l deprecated -f -a packages_all_deprecation_allow
 complete -c spack -n '__fish_spack_using_command test-env' -l deprecated -d 'allow the concretizer to select deprecated versions of any severity'
 complete -c spack -n '__fish_spack_using_command test-env' -l dump -r -f -a dump
 complete -c spack -n '__fish_spack_using_command test-env' -l dump -r -d 'dump a source-able environment to FILE'
