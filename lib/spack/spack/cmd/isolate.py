@@ -88,17 +88,22 @@ def _isolate_include_config(new_user_path):
 
 
 def _setup_isolate_scope(new_user_path, overwrite: bool):
+    # Check if this is --self (isolate scope IS the user path)
+    is_self = os.path.exists(ISOLATE_SCOPE_PATH) and os.path.samefile(
+        new_user_path, ISOLATE_SCOPE_PATH
+    )
+
     # Bypass overwriting/pre-existing when using --self
     if os.path.exists(ISOLATE_SCOPE_PATH):
-        if os.path.samefile(new_user_path, ISOLATE_SCOPE_PATH):
+        if is_self:
             pass
         elif overwrite:
             shutil.rmtree(ISOLATE_SCOPE_PATH)
-            os.mkdir(ISOLATE_SCOPE_PATH)
+            os.makedirs(ISOLATE_SCOPE_PATH)
         else:
             raise Exception("An isolation already exists for this Spack instance")
     else:
-        os.mkdir(ISOLATE_SCOPE_PATH)
+        os.makedirs(ISOLATE_SCOPE_PATH, exist_ok=True)
 
     # Write configuration files into isolate scope
     _isolate_bootstrap_config(new_user_path)
@@ -106,7 +111,9 @@ def _setup_isolate_scope(new_user_path, overwrite: bool):
     _isolate_repos_config(new_user_path)
 
     # Write include.yaml with include:: override to redirect user scope
-    _isolate_include_config(new_user_path)
+    # Skip for --self since the isolate scope itself IS the user scope
+    if not is_self:
+        _isolate_include_config(new_user_path)
 
 
 # _get_new_user_scope no longer needed - moved into _isolate_include_config

@@ -18,3 +18,9 @@ include:
     path: "/etc/spack"
     optional: true
     when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+
+  # layout scope - auto-generated path overrides for shared Spack
+  # Loaded last so user/site/system can override it
+  - name: "layout"
+    path: "$spack/etc/spack/layout"
+    optional: true

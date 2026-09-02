@@ -702,13 +702,22 @@ class Configuration:
         scope = next(s for s in self.scopes.reversed_values() if s.writable)
 
         # if a scope prefers that we edit another, respect that.
-        while scope:
-            preferred = scope
-            scope = next(
-                (s for s in scope.included_scopes if s.writable and s.prefer_modify), None
-            )
+        # Search recursively through the tree to find prefer_modify scopes
+        def find_preferred(s: ConfigScope) -> Optional[ConfigScope]:
+            for included in s.included_scopes:
+                if included.writable and included.prefer_modify:
+                    # This scope is marked prefer_modify, but check if it delegates further
+                    deeper = find_preferred(included)
+                    return deeper if deeper else included
+                elif included.writable:
+                    # Not prefer_modify itself, but might have prefer_modify descendants
+                    deeper = find_preferred(included)
+                    if deeper:
+                        return deeper
+            return None
 
-        return preferred
+        preferred = find_preferred(scope)
+        return preferred if preferred else scope
 
     def matching_scopes(self, reg_expr) -> List[ConfigScope]:
         """
@@ -2034,7 +2043,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
 
     # Check if migration/layout scope setup is needed
     # This happens AFTER the spack scope is loaded (so we can check if isolate scope
-    # is active) but BEFORE we load the layout scope (so we can create it if needed)
+    # is active). The layout scope itself will be loaded via standard_scopes/include.yaml
     if not _has_layout_scope():
         # Use Spack's file locking to prevent concurrent migration
         lock_dir = os.path.join(spack.paths.var_path, "locks")
@@ -2049,17 +2058,6 @@ def create_incremental() -> Generator[Configuration, None, None]:
                 _perform_migration_check(cfg)
         finally:
             migration_lock.release_write()
-
-    # Add layout scope after all other config scopes (including spack and its includes)
-    # This scope is auto-generated and contains path overrides for shared Spack.
-    # It has lower priority than all scopes in include.yaml so user config always wins.
-    layout_scope_path = _layout_scope_path()
-    if os.path.exists(layout_scope_path):
-        tty.debug(f"Loading layout scope from {layout_scope_path}")
-        yield from cfg.push_scope_incremental(
-            DirectoryConfigScope("layout", layout_scope_path),
-            priority=ConfigScopePriority.CONFIG_FILES,
-        )
 
 
 def create() -> Configuration:
@@ -2870,9 +2868,13 @@ def _migrate_with_isolate(isolate_target: str, old_resources: Dict[str, bool]) -
     filesystem.mkdirp(isolate_target)
     isolate_lock_path = os.path.join(isolate_target, ".spack-isolate-migration.lock")
 
-    with spack.util.lock.Lock(isolate_lock_path, default_timeout=120):
+    lock = spack.util.lock.Lock(isolate_lock_path, default_timeout=120)
+    lock.acquire_write()
+    try:
         tty.debug(f"Acquired isolate migration lock for {isolate_target}")
         _do_isolate_migration(isolate_target, old_resources)
+    finally:
+        lock.release_write()
 
 
 def _do_isolate_migration(isolate_target: str, old_resources: Dict[str, bool]) -> None:
