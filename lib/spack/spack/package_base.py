@@ -2749,7 +2749,7 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
     if details is not None and details.get("deprecated", False):
         return True
 
-    version_spec = spack.spec.Spec(f"@={version}")
+    version_spec = spack.spec.Spec(f"{pkg.name}@={version}")
     return any(version_spec.satisfies(constraint) for constraint in pkg.deprecations)
 
 

@@ -1534,7 +1534,7 @@ class SpackSolverSetup:
             constraint_str = str(constraint_spec)
             msg = f"deprecated constraint {constraint_str or pkg.name}"
             condition_id = self.condition(constraint_spec, required_name=pkg.name, msg=msg)
-            spec_str = f"{pkg.name}{constraint_str}"
+            spec_str = spack.deprecation.deprecated_spec_str(pkg.name, constraint_spec)
             for entry in entries:
                 # Directives that agree on reason and severity share one error term, so their
                 # messages accumulate under a single key
