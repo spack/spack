@@ -174,6 +174,14 @@ class Policy:
         ]
 
 
+def deprecated_spec_str(pkg_name: str, constraint: "spack.spec.Spec") -> str:
+    """Format the spec a ``deprecated()`` directive refers to."""
+    constraint_str = str(constraint)
+    if not constraint_str:
+        return pkg_name
+    return constraint_str if constraint.name else f"{pkg_name}{constraint_str}"
+
+
 def reusable(
     specs: Iterable["spack.spec.Spec"], *, policy: Optional[Policy] = None
 ) -> List["spack.spec.Spec"]:
@@ -236,7 +244,7 @@ def check_deprecations(
 def _format_violations(spec: "spack.spec.Spec", violations: List[Violation]) -> str:
     lines = [f"    {spec.cshort_spec}"]
     for constraint, reason, severity, msg in violations:
-        spec_str = f"{spec.name}{constraint}" if str(constraint) else spec.name
+        spec_str = deprecated_spec_str(spec.name, constraint)
         lines.append(
             f"        {spec_str} is deprecated (reason: {reason.value}, "
             f"severity: {severity.name.lower()}); not allowed by "

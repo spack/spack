@@ -15,5 +15,6 @@ class DeprecatedWithReason(Package):
     version("2.0", sha256="abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
     version("1.0", sha256="abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
 
-    deprecated("@2.0", reason="vuln", severity="critical")
+    # @2.0 spells out the package name, @1.0 leaves the constraint anonymous
+    deprecated("deprecated-with-reason@2.0", reason="vuln", severity="critical")
     deprecated("@1.0", reason="rename", severity="low")
