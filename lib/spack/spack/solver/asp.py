@@ -771,12 +771,11 @@ class DeprecationKey(NamedTuple):
 
 
 class DeprecationDetails(NamedTuple):
-    """What the directives behind one error term add to it: the spec they deprecate, the
-    threshold they exceed, and the guidance their recipe attached with msg=.
+    """Additional information that the directives behind one error term add to it: the spec they deprecate,
+    and the guidance their recipe attached with msg=.
     """
 
     spec_str: str
-    allowed: int
     messages: List[str]
 
 
@@ -801,18 +800,13 @@ class ErrorHandler:
     def deprecated_error(self, pkg, cond_id, reason: str, severity: str) -> str:
         key = DeprecationKey(str(pkg), int(cond_id), str(reason), int(severity))
         details = self.deprecation_details.get(key)
-        severity_str = _severity_to_str(severity)
-        if details is None:
-            # The directive is not in the table, so state the refusal without the threshold
-            return (
-                f"'{pkg}': deprecated spec (reason: {reason}, severity: {severity_str}) "
-                f"is refused by the deprecation policy"
-            )
+        spec_str = details.spec_str if details is not None else str(pkg)
         text = (
-            f"'{details.spec_str}': deprecated spec (reason: {reason}, severity: {severity_str}) "
-            f"exceeds allowed severity '{_severity_to_str(details.allowed)}'"
+            f"'{spec_str}': deprecated spec (reason: {reason}, "
+            f"severity: {_severity_to_str(severity)}) is not allowed by "
+            f"'packages:{pkg}:deprecation:allow'"
         )
-        return "; ".join([text, *details.messages])
+        return "; ".join([text, *(details.messages if details is not None else [])])
 
     def _get_cause_tree(
         self,
@@ -1531,11 +1525,9 @@ class SpackSolverSetup:
                 self.gen.newline()
 
     def deprecation_rules(self, pkg):
-        """Emit facts for deprecated() directives on pkg, skipping the exempted ones."""
-        exempt = self.deprecation_policy.exempt_labels(pkg.name)
-        reasons = set()
+        """Emit facts for the deprecated() directives on pkg that the policy does not allow."""
         for constraint_spec, all_entries in pkg.deprecations.items():
-            entries = [x for x in all_entries if not spack.deprecation.is_exempt(x, exempt)]
+            entries = [x for x in all_entries if not self.deprecation_policy.allows(pkg.name, x)]
             if not entries:
                 continue
 
@@ -1544,8 +1536,6 @@ class SpackSolverSetup:
             condition_id = self.condition(constraint_spec, required_name=pkg.name, msg=msg)
             spec_str = f"{pkg.name}{constraint_str}"
             for entry in entries:
-                reasons.add(entry.reason)
-                allowed = self.deprecation_policy.allowed_severity(pkg.name, entry.reason)
                 # Directives that agree on reason and severity share one error term, so their
                 # messages accumulate under a single key
                 key = DeprecationKey(
@@ -1553,7 +1543,7 @@ class SpackSolverSetup:
                 )
                 details = self.deprecation_details.get(key)
                 if details is None:
-                    details = DeprecationDetails(spec_str, allowed.value, [])
+                    details = DeprecationDetails(spec_str, [])
                     self.deprecation_details[key] = details
                     self.gen.fact(
                         fn.pkg_fact(
@@ -1566,13 +1556,6 @@ class SpackSolverSetup:
                 if entry.msg:
                     details.messages.append(entry.msg)
             self.gen.newline()
-
-        # A threshold is only ever read next to a directive, so packages without one emit nothing
-        for reason in sorted(reasons, key=lambda x: x.value):
-            allowed = self.deprecation_policy.allowed_severity(pkg.name, reason)
-            self.gen.fact(
-                fn.pkg_fact(pkg.name, fn.allowed_deprecation_severity(reason.value, allowed.value))
-            )
 
     def config_compatible_os(self):
         """Facts about compatible os's specified in configs"""

@@ -429,19 +429,17 @@ node_in_deprecation_scope(node(ID, Package)) :-
 node_in_deprecation_scope(node(ID, Package)) :-
     build(node(ID, Package)), deprecation_scope("runtime").
 
-% A deprecated() directive matching a selected non-external node in scope is a concretization
-% error when its severity exceeds the configured threshold. Severity is an integer:
+% Directives are emitted only when the deprecation policy does not allow them, so a directive
+% matching a selected non-external node in scope is a concretization error. Reason and severity
+% appear in the error term for the message, with severity as an integer:
 % 0=none, 1=low, 2=medium, 3=high, 4=critical.
 error(1, "deprecated_error", Package, CondID, Reason, Severity)
   :- pkg_fact(Package, deprecation_directive(CondID, Reason, Severity)),
      condition_holds(CondID, node(ID, Package)),
      not external(node(ID, Package)),
-     node_in_deprecation_scope(node(ID, Package)),
-     pkg_fact(Package, allowed_deprecation_severity(Reason, Allowed)),
-     Severity > Allowed.
+     node_in_deprecation_scope(node(ID, Package)).
 
 #defined deprecation_directive/3.
-#defined allowed_deprecation_severity/2.
 #defined deprecation_scope/1.
 
 %-----------------------------------------------------------------------------
