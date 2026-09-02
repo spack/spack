@@ -16,10 +16,12 @@ from spack.spec import Spec
 install = SpackCommand("install")
 
 
-def _get_shell_cmd_invocation(cmd, shell):
+def _get_shell_cmd_invocation(cmd, var, shell):
     if "bat" in shell:
-        return f"%{cmd}%"
-    return cmd
+        return f'%{cmd}% "{var}"'
+    elif "pwsh" in shell:
+        return f"{cmd} '{var}'"
+    return f"{cmd} {var}"
 
 
 def test_paths_to_spec_scripts(install_mockery, mock_fetch, mock_archive, mock_packages):
@@ -111,14 +113,13 @@ def test_contents_of_shell_scripts(
         elif shell == "pwsh":
             separator = f"'{os.pathsep}'"
         assert (
-            f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)}"
-            f" {uenv.spack_loaded_hashes_var} {pkg.dag_hash()} {separator}"
+            f"{_get_shell_cmd_invocation('_spack_env_prepend', uenv.spack_loaded_hashes_var, shell)}"
+            f" {pkg.dag_hash()} {separator}"
             in load_script.splitlines()
         )
 
         assert (
-            f"{_get_shell_cmd_invocation('_spack_env_remove_value', shell)}"
-            f" {uenv.spack_loaded_hashes_var} "
+            f"{_get_shell_cmd_invocation('_spack_env_remove_value', uenv.spack_loaded_hashes_var, shell)} "
             f"{pkg.dag_hash()} {separator}" in unload_script.splitlines()
         )
 
@@ -158,12 +159,12 @@ def test_install_individual_specs_scripts(
         separator = f"'{os.pathsep}'"
 
     assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)}"
-        f" CMAKE_PREFIX_PATH {dyninst_spec.prefix} {separator}" in dyninst_load
+        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', shell)}"
+        f" {dyninst_spec.prefix} {separator}" in dyninst_load
     )
     assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)}"
-        f" CMAKE_PREFIX_PATH {mpich_spec.prefix} {separator}" in mpich_load
+        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', shell)}"
+        f" {mpich_spec.prefix} {separator}" in mpich_load
     )
 
     assert mpich_spec.name not in dyninst_load
@@ -204,21 +205,21 @@ def test_install_multiple_specs_shell_scripts(
         separator = f"'{os.pathsep}'"
 
     assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)}"
-        f" CMAKE_PREFIX_PATH {dyninst_spec.prefix} {separator}" in dyninst_load
+        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', shell)}"
+        f" {dyninst_spec.prefix} {separator}" in dyninst_load
     )
     assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)}"
-        f" CMAKE_PREFIX_PATH {hypre_spec.prefix} {separator}" in hypre_load
+        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', shell)}"
+        f" {hypre_spec.prefix} {separator}" in hypre_load
     )
 
     assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)}"
-        f" CMAKE_PREFIX_PATH {dyninst_spec.prefix} {separator}" not in hypre_load
+        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', shell)}"
+        f" {dyninst_spec.prefix} {separator}" not in hypre_load
     )
     assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)}"
-        f" CMAKE_PREFIX_PATH {hypre_spec.prefix} {separator}" not in dyninst_load
+        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', shell)}"
+        f" {hypre_spec.prefix} {separator}" not in dyninst_load
     )
 
     assert hypre_spec.name not in dyninst_load
