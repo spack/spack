@@ -749,7 +749,7 @@ The other reasons have no score to correspond to, and there the level ranks how 
 
 ``reason`` is the category a deprecation falls into, either a single value or a list of them.
 Reasons exist so that a selector can discriminate between them: a site may accept a version whose maintainers stopped supporting it, while refusing anything with a known vulnerability whatever its severity.
-The five reasons are:
+The four reasons are:
 
 ``vuln``
    A known vulnerability affects the spec.
@@ -760,12 +760,9 @@ The five reasons are:
 ``retired``
    The spec is going away, because the release reached its end of life or upstream removed it.
 
-``maintenance``
-   The maintainers no longer support the spec, although nothing is known to be wrong with it.
-
 ``unspecified``
-   No reason was stated.
-   Spack records this for versions declared with the legacy ``version(..., deprecated=True)`` keyword, and a recipe cannot pass it.
+   None of the reasons above applies, for instance a spec its maintainers no longer support although nothing is known to be wrong with it.
+   Spack also records this reason for versions declared with the legacy ``version(..., deprecated=True)`` keyword.
 
 See :ref:`deprecate` for what a packager is expected to put in each one.
 
@@ -777,14 +774,13 @@ Because selectors are matched independently, a list can hold some reasons to a s
      all:
        deprecation:
          allow:
-         - reason: [rename, retired, maintenance, unspecified]
+         - reason: [rename, retired, unspecified]
            severity: low
          - reason: vuln
            severity: none
 
-Here a ``low``-severity rename, retirement or maintenance deprecation is allowed, while a vulnerability is allowed only if it was assessed to have no consequence.
+Here a ``low``-severity rename, retirement or unspecified deprecation is allowed, while a vulnerability is allowed only if it was assessed to have no consequence.
 A reason that appears in no selector is refused whatever its severity, so a reason added in a later Spack version stays refused until the configuration names it.
-Listing ``unspecified`` is how the deprecations from the legacy keyword are allowed.
 
 For a single command, the ``--deprecated`` flag adds a selector allowing any severity under ``all:``.
 It is applied on the command line, so it is in force whatever the configuration files say.
@@ -826,6 +822,18 @@ Individual advisories can be allowed without allowing a whole severity, by listi
 Such a selector matches a deprecation only if it declares ``labels`` (see :ref:`deprecate`) and *every* one of them is listed.
 A directive that cites two advisories therefore stays an error until both appear in the same selector, and a directive with no labels is never matched by one.
 A selector that constrains only the labels matches whatever the severity, which is what lets a site accept one advisory it assessed without accepting anything else.
+
+Spack attaches the reserved label ``version_deprecated`` to the deprecations that come from the legacy ``version(..., deprecated=True)`` keyword, which is how they can be allowed on their own:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       deprecation:
+         allow:
+         - labels: [version_deprecated]
+
+The directive refuses that label, so this selector matches no deprecation a recipe declares, including one with reason ``unspecified``.
 
 .. _package_permissions:
 

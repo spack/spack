@@ -815,12 +815,11 @@ It must be one of:
    The spec is going away.
    The release reached its end of life, upstream removed the source archive, or the package is about to be dropped from the repository.
 
-``maintenance``
-   The maintainers no longer support the spec, although nothing is known to be wrong with it.
-   Old patch releases in a series where only the latest is tested belong here, as does a build configuration the maintainers stopped exercising.
+``unspecified``
+   None of the categories above applies.
+   A spec its maintainers no longer support, although nothing is known to be wrong with it, belongs here.
    These usually take a low severity, since users who need the spec can still build it.
 
-A fifth value, ``"unspecified"``, is reserved: Spack records it for versions declared with ``deprecated=True``, and the directive refuses it.
 The optional ``severity`` keyword ranks the urgency: ``"low"`` (default), ``"medium"``, ``"high"``, or ``"critical"`` in increasing order.
 
 The optional ``msg`` keyword adds guidance, shown after the reason and severity when Spack refuses the spec.
@@ -851,8 +850,8 @@ The list is empty by default, so Spack will not select a deprecated version unle
 See :ref:`package-deprecations-config` for how to write that list.
 
 The older ``version("X.Y", deprecated=True)`` syntax is still supported.
-Spack records it as a deprecation of ``@=X.Y`` with reason ``"unspecified"`` and severity ``"critical"``.
-Since the keyword states no reason, ``"unspecified"`` marks exactly those deprecations, and a recipe cannot claim it.
+Spack records it as a deprecation of ``@=X.Y`` with reason ``"unspecified"``, severity ``"critical"``, and the reserved label ``version_deprecated``.
+That label is what tells these deprecations apart from a recipe that passes ``reason="unspecified"`` itself, so users can allow one set without the other.
 
 This also applies to package recipes that are renamed or removed.
 You should first deprecate all versions before removing a package.

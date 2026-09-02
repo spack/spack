@@ -63,7 +63,12 @@ import spack.util.tty.color
 import spack.variant
 from spack.dependency import Dependency, intern_dependency
 from spack.directives_meta import DirectiveError, directive, get_spec
-from spack.enums import Deprecation, DeprecationReason, DeprecationSeverity
+from spack.enums import (
+    LEGACY_DEPRECATION_LABEL,
+    Deprecation,
+    DeprecationReason,
+    DeprecationSeverity,
+)
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
 from spack.version import StandardVersion, VersionChecksumError, VersionError
@@ -281,7 +286,9 @@ class _Version(NamedTuple):
         pkg.versions[version] = kwargs
 
         if kwargs.get("deprecated", False):
-            _Deprecated(f"@={version}", "unspecified", "critical")(pkg)
+            _Deprecated(
+                f"@={version}", "unspecified", "critical", labels=(LEGACY_DEPRECATION_LABEL,)
+            )(pkg)
 
 
 @directive("conflicts")
@@ -337,19 +344,18 @@ def deprecated(
     Args:
         spec: optional spec constraint (e.g. ``"@1.0"``); if omitted, the whole package
             is deprecated.
-        reason: why this spec is deprecated.  One of ``"vuln"``, ``"rename"``,
-            ``"retired"``, ``"maintenance"``.  ``"unspecified"`` is reserved: Spack records
-            it for ``version(..., deprecated=True)``, which states no reason.
+        reason: why this spec is deprecated.  One of ``"vuln"``, ``"rename"``, ``"retired"``,
+            or ``"unspecified"`` when none of them applies.
         severity: how severe the deprecation is.  One of ``"low"`` (default), ``"medium"``,
             ``"high"``, ``"critical"``.
         msg: optional guidance shown when the deprecation is refused, e.g. what to use instead.
         labels: optional advisory identifiers (e.g. CVE, GHSA or PYSEC ids) this deprecation
-            refers to. Users can skip the deprecation by exempting all of them.
+            refers to. Users can skip the deprecation by allowing all of them.
     """
-    if reason == DeprecationReason.UNSPECIFIED.value:
+    if isinstance(labels, (list, tuple)) and LEGACY_DEPRECATION_LABEL in labels:
         raise DirectiveError(
-            f"reason '{reason}' is reserved: Spack records it for versions declared with "
-            "'deprecated=True'. Pass a reason that states why this spec is deprecated."
+            f"label '{LEGACY_DEPRECATION_LABEL}' is reserved: Spack records it for versions "
+            "declared with 'deprecated=True', so that they can be selected apart."
         )
     return _Deprecated(spec, reason, severity, msg, labels)
 
@@ -366,8 +372,22 @@ class _Deprecated(NamedTuple):
         if isinstance(labels, str):
             raise DirectiveError(f"{pkg.name}: 'labels' must be a list of strings, not a string")
 
-        sev = DeprecationSeverity(severity)  # type: ignore[arg-type]
-        rsn = DeprecationReason(reason)
+        try:
+            sev = DeprecationSeverity(severity)  # type: ignore[arg-type]
+        except ValueError:
+            valid = ", ".join(x.name.lower() for x in DeprecationSeverity)
+            raise DirectiveError(
+                f"{pkg.name}: '{severity}' is not a valid severity, use one of {valid}"
+            ) from None
+
+        try:
+            rsn = DeprecationReason(reason)
+        except ValueError:
+            valid = ", ".join(x.value for x in DeprecationReason)
+            raise DirectiveError(
+                f"{pkg.name}: '{reason}' is not a valid reason, use one of {valid}"
+            ) from None
+
         constraint = get_spec(spec) if spec is not None else EMPTY_SPEC
         pkg.deprecations.setdefault(constraint, []).append(
             Deprecation(rsn, sev, tuple(labels or ()), msg)

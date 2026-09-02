@@ -87,8 +87,12 @@ class DeprecationReason(enum.Enum):
     VULN = "vuln"
     RENAME = "rename"
     RETIRED = "retired"
-    MAINTENANCE = "maintenance"
     UNSPECIFIED = "unspecified"
+
+
+# Label attached to the deprecations that come from version(..., deprecated=True), so that they
+# can be selected apart from the ones a recipe declares with reason="unspecified"
+LEGACY_DEPRECATION_LABEL = "version_deprecated"
 
 
 class Deprecation(NamedTuple):
