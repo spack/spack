@@ -152,7 +152,7 @@ def stack_changed(env_path: str) -> bool:
     if git_dir is None:
         return False
 
-    rel_env_path = os.path.relpath(env_path, git_dir)
+    rel_env_path = spack.util.path.convert_to_posix_path(os.path.relpath(env_path, git_dir))
     stack_paths = [rel_env_path]
 
     # Get the gitlab pipeline config from the CI variable. GitLab documents
@@ -165,7 +165,7 @@ def stack_changed(env_path: str) -> bool:
             ci_config_path = os.path.relpath(ci_config_path, git_dir)
         else:
             ci_config_path = os.path.normpath(ci_config_path)
-        stack_paths.append(ci_config_path)
+        stack_paths.append(spack.util.path.convert_to_posix_path(ci_config_path))
 
     with fs.working_dir(git_dir):
         diff = git(
