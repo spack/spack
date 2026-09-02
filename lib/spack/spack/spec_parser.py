@@ -91,7 +91,8 @@ GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
 STAR = r"\*"
 
 #: Substitute a package for a virtual, e.g. ``c,cxx=gcc``. Overlaps with a key-value pair, and is
-#: only tried first right after a dependency sigil or edge properties.
+#: only tried first right after a dependency sigil or edge properties, where the whole value must
+#: be a package name: ``foo=bar:baz`` is a key-value pair (see ``_VIRTUAL_ASSIGNMENT_AHEAD``).
 VIRTUAL_ASSIGNMENT = rf"(?:{IDENTIFIER}(?:,{IDENTIFIER})*=(?:{DOTTED_IDENTIFIER}|{IDENTIFIER}))"
 
 NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
@@ -174,7 +175,12 @@ SPEC_TOKENIZER = Tokenizer(SpecTokens, skip_whitespace=True)
 
 #: Right after a dependency sigil or edge properties, ``c,cxx=gcc`` is a virtual assignment
 #: rather than a key-value pair. The tokenizer is context free, so this is matched separately.
-_VIRTUAL_ASSIGNMENT_AHEAD = re.compile(rf"\s*({VIRTUAL_ASSIGNMENT})")
+#: What may follow the substitute: whitespace, a variant, version or hash of the node, a sigil, the
+#: closing bracket of a when= condition, or the end of the input. Anything else makes the whole
+#: key=value pair a variant of an anonymous node instead, e.g. ``^foo=bar:baz``.
+_VIRTUAL_ASSIGNMENT_AHEAD = re.compile(
+    rf"\s*({VIRTUAL_ASSIGNMENT})(?=\s|[+~]{{1,2}}\s*[a-zA-Z_0-9]|[@/^%\]]|$)"
+)
 
 #: Tokens after which a dependency node starts
 _NODE_START = (SpecTokens.DEPENDENCY, SpecTokens.END_EDGE_PROPERTIES)
@@ -373,7 +379,11 @@ class SpecParser:
                 depflag |= spack.deptypes.canonicalize(value.split(","))
             elif name == "when":
                 # A when value is one spec string, where a comma is part of the syntax: when='@1,2'
-                when = parse_one_or_raise(value)
+                condition = parse_one_or_raise(value)
+                if when is None:
+                    when = condition
+                else:
+                    when.constrain(condition)
             else:
                 msg = (
                     "the only edge attributes that are currently accepted "
@@ -476,9 +486,12 @@ class SpecParser:
                     raise SpecParsingError(
                         "Spec cannot have multiple versions", token, self.literal_str
                     )
-                spec.versions = spack.version.VersionList(
-                    [spack.version.from_string(token.group(token.lastindex)[1:])]
-                )
+                try:
+                    spec.versions = spack.version.VersionList(
+                        [spack.version.from_string(token.group(token.lastindex)[1:])]
+                    )
+                except ValueError as e:
+                    raise SpecParsingError(str(e), token, self.literal_str) from e
                 spec.attach_git_version_lookup()
                 has_version = True
                 self.curr = scanner.match()

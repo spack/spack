@@ -142,6 +142,15 @@ SPEC_FORMAT_RE = re.compile(
 
 IDENTIFIER_RE = r"\w[\w-]*"
 
+#: Attributes set through ``name=value`` that print unquoted, so their value must parse bare
+_STRING_ATTRIBUTES = frozenset(
+    ("arch", "architecture", "platform", "os", "operating_system", "target", "namespace")
+)
+_BARE_VALUE = re.compile(spack.spec_parser.VALUE)
+_NAMESPACE_VALUE = re.compile(
+    rf"{spack.spec_parser.IDENTIFIER}(?:\.{spack.spec_parser.IDENTIFIER})*"
+)
+
 # Coloring of specs when using color output. Fields are printed with
 # different colors to enhance readability.
 # See spack.util.tty.color for descriptions of the color codes.
@@ -2165,8 +2174,16 @@ class Spec:
             )
 
         valid_flags = FlagMap.valid_compiler_flags()
+        if name in _STRING_ATTRIBUTES:
+            # These print unquoted, so they must be values that parse without quotes
+            if type(value) is not str:
+                raise ValueError(f"{name} must have a string value")
+            pattern = _NAMESPACE_VALUE if name == "namespace" else _BARE_VALUE
+            if not pattern.fullmatch(value):
+                raise ValueError(f"invalid value {value!r} for {name}")
+
         if name == "arch" or name == "architecture":
-            assert type(value) is str, "architecture have a string value"
+            assert isinstance(value, str)  # checked above, for mypy
             parts = tuple(value.split("-"))
             plat, os, tgt = parts if len(parts) == 3 else (None, None, value)
             self._set_architecture(platform=plat, os=os, target=tgt)
