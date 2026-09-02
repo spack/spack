@@ -18,7 +18,7 @@ into the intermediate representation.
 import re
 import uuid
 import warnings
-from typing import Any, Callable, Dict, List, NamedTuple, Tuple, Union
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from spack.vendor.typing_extensions import TypedDict
 
@@ -26,6 +26,7 @@ import spack.archspec
 import spack.deptypes
 import spack.repo
 import spack.spec
+import spack.variant as vt
 from spack.error import SpackError
 from spack.util import tty
 
@@ -93,6 +94,24 @@ def complete_architecture(node: spack.spec.Spec) -> None:
         node.compiler_flags.setdefault(flag_type, [])
 
 
+def _default_variant_value(node: spack.spec.Spec, vdef: vt.Variant) -> Optional[vt.VariantValue]:
+    """Returns the default value of a variant definition, restricted to the values that are
+    available for this node, or None if no value is available.
+    """
+    default, available = vdef.make_default(), vdef.possible_values(when=node)
+    if available is None:
+        return default
+
+    selected = tuple(value for value in default.values if value in available)
+    if len(selected) == len(default.values):
+        return default
+    elif selected:
+        return vdef.make_variant(*selected)
+    elif vdef.multi or not available:
+        return None
+    return vdef.make_variant(available[0])
+
+
 def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
     """Completes a node with variants and architecture information.
 
@@ -114,8 +133,11 @@ def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
             variants_dict.pop(when)
             for name, vdef in variants_by_name.items():
                 if name not in node.variants:
+                    default = _default_variant_value(node, vdef)
+                    if default is None:
+                        continue
                     # Cannot use Spec.constrain, because we lose information on the variant type
-                    node.variants[name] = vdef.make_default()
+                    node.variants[name] = default
                 elif (
                     node.variants[name].type != vdef.variant_type
                     and len(node.variants[name].values) == 1

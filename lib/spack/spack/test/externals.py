@@ -8,6 +8,7 @@ import pytest
 from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
+import spack.concretize
 import spack.traverse
 from spack.compilers.config import CompilerFactory
 from spack.config import Configuration
@@ -407,3 +408,63 @@ def test_external_compiler_with_non_compiler_dependency(mutable_config: Configur
             if c.name == "compiler-with-deps":
                 assert c.external
                 assert c["binutils-for-test"].external
+
+
+@pytest.mark.regression("52943")
+@pytest.mark.parametrize(
+    "external_spec,expected,not_expected",
+    [
+        # The declared defaults, 'mock_cmake' and 'new', are available on this version
+        (
+            "conditional-build-system@2.0",
+            ["build_system=mock_cmake", "flavor=new"],
+            ["build_system=mock_autotools", "flavor=old", "+static", "~static"],
+        ),
+        # The declared defaults are not available on this version
+        (
+            "conditional-build-system@1.0",
+            ["build_system=mock_autotools", "flavor=old", "~static"],
+            ["build_system=mock_cmake", "flavor=new"],
+        ),
+        # A value given by the user is never overridden
+        (
+            "conditional-build-system@1.0 flavor=old",
+            ["build_system=mock_autotools", "flavor=old"],
+            ["flavor=new"],
+        ),
+    ],
+)
+def test_external_completion_skips_unavailable_default_values(
+    config, external_spec, expected, not_expected
+):
+    """Tests that completing an external spec doesn't use variant values that are conditional on
+    a version the external doesn't have.
+    """
+    externals_dict: List[ExternalDict] = [{"spec": external_spec, "prefix": "/usr"}]
+    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+
+    specs = parser.all_specs()
+    assert len(specs) == 1
+    for constraint in expected:
+        assert specs[0].satisfies(constraint), f"{specs[0]} does not satisfy {constraint}"
+    for constraint in not_expected:
+        assert not specs[0].satisfies(constraint), f"{specs[0]} satisfies {constraint}"
+
+
+@pytest.mark.regression("52943")
+def test_external_with_unavailable_default_value_is_usable(mutable_config: Configuration):
+    """Tests that an external can be used when the default value of one of its variants is
+    conditional on a version the external doesn't have.
+    """
+    packages_config = {
+        "conditional-build-system": {
+            "externals": [{"spec": "conditional-build-system@1.0", "prefix": "/usr"}],
+            "buildable": False,
+        }
+    }
+    with mutable_config.override("packages", packages_config):
+        s = spack.concretize.concretize_one("conditional-build-system@1.0")
+
+    assert s.external
+    assert s.satisfies("build_system=mock_autotools")
+    assert s.satisfies("flavor=old")
