@@ -39,14 +39,16 @@ def test_version_deprecated_true_prefers_non_deprecated(config, mock_packages):
 
 def test_version_deprecated_true_registers_in_deprecations(mock_packages):
     """Tests that version(..., deprecated=True) populates pkg.deprecations with
-    reason=unspecified and severity=critical.
+    reason=unspecified, severity=critical, and the label marking where it comes from.
     """
     pkg_cls = spack.repo.PATH.get_pkg_class("deprecated-old-style")
     all_entries = [x for entries in pkg_cls.deprecations.values() for x in entries]
     assert all(
         x
         == spack.enums.Deprecation(
-            spack.enums.DeprecationReason.UNSPECIFIED, spack.enums.DeprecationSeverity.CRITICAL
+            spack.enums.DeprecationReason.UNSPECIFIED,
+            spack.enums.DeprecationSeverity.CRITICAL,
+            (spack.enums.LEGACY_DEPRECATION_LABEL,),
         )
         for x in all_entries
     )
@@ -232,7 +234,7 @@ packages:
   all:
     deprecation:
       allow:
-      - reason: [rename, retired, maintenance, unspecified]
+      - reason: [rename, retired, unspecified]
         severity: critical
 """)
     # @2.0 is deprecated with reason=vuln, which the selector omits
@@ -275,7 +277,7 @@ packages:
   all:
     deprecation:
       allow:
-      - reason: [rename, retired, maintenance, unspecified]
+      - reason: [rename, retired, unspecified]
         severity: high
   deprecated-with-reason:
     deprecation:
@@ -552,3 +554,26 @@ packages:
     # @2.0 is vuln/critical, @1.0 is rename/low, and each is matched by a different selector
     assert concretize_one("deprecated-with-reason@2.0").satisfies("@2.0")
     assert concretize_one("deprecated-with-reason@1.0").satisfies("@1.0")
+
+
+def test_legacy_deprecations_are_selectable_alone(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that the reserved label selects the deprecations coming from
+    version(..., deprecated=True), without selecting the ones a recipe declares with
+    reason="unspecified".
+    """
+    packages_yaml_write(
+        f"""
+packages:
+  all:
+    deprecation:
+      allow:
+      - labels: [{spack.enums.LEGACY_DEPRECATION_LABEL}]
+"""
+    )
+    assert concretize_one("deprecated-old-style@1.0").satisfies("@1.0")
+
+    # deprecated-with-labels@1.0 is unspecified/critical too, but has no labels
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-with-labels@1.0")

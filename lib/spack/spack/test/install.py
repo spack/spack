@@ -915,7 +915,7 @@ def test_install_gate_honors_per_reason_selectors(install_mockery, mutable_confi
 
     with mutable_config.override(
         "packages:all:deprecation:allow",
-        [{"reason": ["rename", "retired", "maintenance", "unspecified"], "severity": "critical"}],
+        [{"reason": ["rename", "retired", "unspecified"], "severity": "critical"}],
     ):
         # reason=rename is one of the reasons the selector names
         spack.deprecation.check_deprecations([rename])  # must not raise
