@@ -468,3 +468,22 @@ def test_external_with_unavailable_default_value_is_usable(mutable_config: Confi
     assert s.external
     assert s.satisfies("build_system=mock_autotools")
     assert s.satisfies("flavor=old")
+
+
+@pytest.mark.regression("52943")
+def test_external_with_value_conditional_on_another_version(mutable_config: Configuration):
+    """Tests that an external declared with a variant value that is conditional on a version the
+    external doesn't have is still used, since the external spec is concrete.
+    """
+    packages_config = {
+        "conditional-build-system": {
+            # 'flavor=new' is declared 'when="@2:"', so it is not available at v1.0
+            "externals": [{"spec": "conditional-build-system@1.0 flavor=new", "prefix": "/usr"}],
+            "buildable": False,
+        }
+    }
+    with mutable_config.override("packages", packages_config):
+        s = spack.concretize.concretize_one("conditional-build-system@1.0")
+
+    assert s.external
+    assert s.satisfies("flavor=new")

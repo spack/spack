@@ -1598,6 +1598,13 @@ error(10, "'Spec({1}={2})' is not a valid value for '{0}' variant '{1}'", Packag
     not variant_possible_value(node(ID, Package), Variant, Value),
     build(node(ID, Package)).
 
+% Taking a conditional value imposes the condition attached to it.
+% The condition should not be imposed on concrete packages.
+do_not_impose(EffectID, node(ID, Package))
+  :- pkg_fact(Package, conditional_value_condition(ConditionID)),
+     pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+     concrete(node(ID, Package)).
+
 % Some multi valued variants accept multiple values from disjoint sets. Ensure that we
 % respect that constraint and we don't pick values from more than one set at once
 error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come from disjoint value sets", Package, Variant, Value1, Value2)
