@@ -762,7 +762,8 @@ The four reasons are:
 
 ``unspecified``
    None of the reasons above applies, for instance a spec its maintainers no longer support although nothing is known to be wrong with it.
-   Spack also records this reason for versions declared with the legacy ``version(..., deprecated=True)`` keyword.
+   A recipe stating this reason has to explain itself with a message, so the error still says what is wrong and what to use instead.
+   Spack also records this reason for versions declared with the legacy ``version(..., deprecated=True)`` keyword, which carries no message.
 
 See :ref:`deprecate` for what a packager is expected to put in each one.
 

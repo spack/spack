@@ -20,4 +20,4 @@ class DeprecatedWithLabels(Package):
     deprecated(
         "@2.0", reason="vuln", severity="critical", labels=["CVE-2026-0002", "GHSA-aaaa-bbbb-cccc"]
     )
-    deprecated("@1.0", reason="unspecified", severity="critical")
+    deprecated("@1.0", reason="unspecified", severity="critical", msg="use @3.0 instead")

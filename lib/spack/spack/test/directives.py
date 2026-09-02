@@ -466,8 +466,17 @@ def test_deprecated_directive_accepts_an_unspecified_reason():
 
     class Pkg(metaclass=DirectiveMeta):
         name = "mypkg"
-        deprecated("@=1.0", reason="unspecified", severity="low")
+        deprecated("@=1.0", reason="unspecified", severity="low", msg="use @=2.0")
 
     (entry,) = Pkg.deprecations[Spec("@=1.0")]
     assert entry.reason == DeprecationReason.UNSPECIFIED
     assert entry.labels == ()
+
+
+def test_unspecified_reason_requires_a_message():
+    """Tests that a recipe stating no category has to say why the spec is deprecated."""
+    with pytest.raises(DirectiveError, match="requires a 'msg' argument"):
+
+        class Pkg(metaclass=DirectiveMeta):
+            name = "mypkg"
+            deprecated("@=1.0", reason="unspecified")

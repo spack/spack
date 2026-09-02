@@ -349,6 +349,7 @@ def deprecated(
         severity: how severe the deprecation is.  One of ``"low"`` (default), ``"medium"``,
             ``"high"``, ``"critical"``.
         msg: optional guidance shown when the deprecation is refused, e.g. what to use instead.
+            It is required when ``reason`` is ``"unspecified"``.
         labels: optional advisory identifiers (e.g. CVE, GHSA or PYSEC ids) this deprecation
             refers to. Users can skip the deprecation by allowing all of them.
     """
@@ -356,6 +357,11 @@ def deprecated(
         raise DirectiveError(
             f"label '{LEGACY_DEPRECATION_LABEL}' is reserved: Spack records it for versions "
             "declared with 'deprecated=True', so that they can be selected apart."
+        )
+    if reason == DeprecationReason.UNSPECIFIED.value and not msg:
+        raise DirectiveError(
+            f"reason '{reason}' requires a 'msg' argument: say why this spec is deprecated, "
+            "and what to use instead."
         )
     return _Deprecated(spec, reason, severity, msg, labels)
 
