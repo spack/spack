@@ -98,8 +98,8 @@ And this would run the ``test_platform`` test from that file:
    $ spack unit-test lib/spack/spack/test/architecture.py::test_platform
 
 This allows you to develop iteratively: make a change, test that change, make another change, test that change, etc.
-We use `pytest <http://pytest.org/>`_ as our tests framework, and these types of arguments are just passed to the ``pytest`` command underneath.
-See `the pytest docs <https://doc.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_ for more details on test selection syntax.
+We use `pytest <https://docs.pytest.org/>`_ as our tests framework, and these types of arguments are just passed to the ``pytest`` command underneath.
+See `the pytest docs <https://docs.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_ for more details on test selection syntax.
 
 ``spack unit-test`` has a few special options that can help you understand what tests are available.
 To get a list of all available unit test files, run:
@@ -123,7 +123,7 @@ For example, to see just the tests in ``architecture.py``:
 .. command-output:: spack unit-test --list-long lib/spack/spack/test/architecture.py
 
 You can also combine any of these options with a ``pytest`` keyword search.
-See the `pytest usage documentation <https://doc.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_ for more details on test selection syntax.
+See the `pytest usage documentation <https://docs.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_ for more details on test selection syntax.
 For example, to see the names of all tests that have "spec" or "concretize" somewhere in their names:
 
 .. command-output:: spack unit-test --list-names -k "spec and concretize"
@@ -139,7 +139,7 @@ To see the output *live*, use the ``-s`` argument to ``pytest``:
 Unit tests are crucial to making sure bugs are not introduced into Spack.
 If you are modifying core Spack libraries or adding new functionality, please add new unit tests for your feature and consider strengthening existing tests.
 You will likely be asked to do this if you submit a pull request to the Spack project on GitHub.
-Check out the `pytest documentation <http://pytest.org/>`_ and feel free to ask for guidance on how to write tests!
+Check out the `pytest documentation <https://docs.pytest.org/>`_ and feel free to ask for guidance on how to write tests!
 
 Style Tests
 ^^^^^^^^^^^^
