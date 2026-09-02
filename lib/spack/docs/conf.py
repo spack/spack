@@ -204,7 +204,10 @@ class SpecLexer(RegexLexer):
         ],
         "edge_properties": [
             (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
+            # An unquoted when= condition is a spec up to the closing bracket
+            (SpecTokens.WHEN.regex, Name.Function, "spec"),
             (SpecTokens.END_EDGE_PROPERTIES.regex, Name.Variable, "#pop"),
+            (r"\s+", Text),
         ],
     }
 

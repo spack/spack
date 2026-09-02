@@ -108,14 +108,14 @@ HASH = r"[a-zA-Z_0-9]+"
 #: These are legal values that *can* be parsed bare, without quotes on the command line.
 VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=%^\~\/\\]+)"
 
-#: Quoted values can be anything in between quotes, except the quote itself: there is no escaping
+#: Quoted values can be anything in between quotes, except the quote itself. There is no escaping.
 QUOTED_VALUE = r"(?:'[^']*'|\"[^\"]*\")"
 
 #: A version starts and ends with an alphanumeric character and is the whole run of version
 #: characters, so a following ``=`` cannot be satisfied by backtracking into a shorter version.
 VERSION = r"=?(?:[a-zA-Z0-9_](?:[a-zA-Z_0-9\-\.]*[a-zA-Z0-9_])?(?![a-zA-Z_0-9\-\.]))"
-#: The upper bound of a range is not the key of a key-value pair: ``@1.2:develop=foo`` is ``@1.2:``
-#: and a variant.
+#: The upper bound of a range is not the key of a key-value pair, so ``@1.2:develop=foo`` is
+#: ``@1.2:`` and a variant.
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
 VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
 
