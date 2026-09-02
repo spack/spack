@@ -672,3 +672,61 @@ def test_ci_stack_changed(git, mock_git_package_changes, monkeypatch):
         commit("Update stack env")
 
     assert ci.stack_changed(stack_env)
+
+
+@pytest.mark.parametrize(
+    "candidate,changed_path,expected",
+    [
+        ("env", "env/spack.yaml", True),
+        ("env", "env", True),
+        ("env", "environments/spack.yaml", False),
+        (".gitlab-ci.yml", ".gitlab-ci.yml", True),
+        (".gitlab-ci.yml", ".gitlab-ci.yml.bak", False),
+        (".", "anything/at/all", True),
+        ("", "anything/at/all", True),
+    ],
+)
+def test_stack_path_matches(candidate, changed_path, expected):
+    assert ci._stack_path_matches(candidate, changed_path) is expected
+
+
+def test_ci_stack_changed_outside_git_repo(tmp_path):
+    """Verify that stack_changed() returns False (and doesn't raise)
+    when the environment is outside a git repository."""
+    assert ci.stack_changed(str(tmp_path / "spack.yaml")) is False
+
+
+def test_ci_stack_changed_initial_commit(mock_git_repo, git):
+    """Verify that stack_changed() returns False (and doesn't raise)
+    on a repo's initial commit."""
+    with fs.working_dir(mock_git_repo):
+        first_commit = git("rev-list", "--max-parents=0", "HEAD", output=str).strip()
+        git("checkout", first_commit)
+
+    fake_env_path = os.path.join(mock_git_repo, os.path.sep.join(("no", "such", "env", "path")))
+    assert ci.stack_changed(fake_env_path) is False
+
+
+def test_ci_stack_changed_relative_ci_config_path(git, mock_git_package_changes, monkeypatch):
+    """Verify that a relative path to CI_CONFIG_PATH is usable as-is
+    without going through os.path.relpath."""
+    repo, filename, commits = mock_git_package_changes
+    stack_env = os.path.join(repo.root, "env", "spack.yaml")
+
+    monkeypatch.setenv("CI_CONFIG_PATH", os.path.join(".ci", "pipeline.yml"))
+    assert not ci.stack_changed(stack_env)
+
+    with fs.working_dir(repo.root):
+        with open(os.path.join(".ci", "pipeline.yml"), "a", encoding="utf-8") as fd:
+            fd.write("another_job: { script: [echo 'Hello'] }")
+        git("add", os.path.join(".ci", "pipeline.yml"))
+        git(
+            "commit",
+            "--no-gpg-sign",
+            "--date",
+            "2020-01-%02d 12:0:00 +0300" % len(commits),
+            "-am",
+            "Update pipeline.yml",
+        )
+
+    assert ci.stack_changed(stack_env)
