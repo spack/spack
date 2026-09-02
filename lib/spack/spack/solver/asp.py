@@ -771,8 +771,8 @@ class DeprecationKey(NamedTuple):
 
 
 class DeprecationDetails(NamedTuple):
-    """Additional information that the directives behind one error term add to it: the spec they deprecate,
-    and the guidance their recipe attached with msg=.
+    """Additional information that the directives behind one error term add to it: the spec
+    they deprecate, and the guidance their recipe attached with msg=.
     """
 
     spec_str: str

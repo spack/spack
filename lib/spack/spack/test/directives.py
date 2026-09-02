@@ -19,7 +19,7 @@ from spack.directives import (
     version,
 )
 from spack.directives_meta import DirectiveDictDescriptor, DirectiveError, DirectiveMeta
-from spack.enums import DeprecationReason, DeprecationSeverity
+from spack.enums import LEGACY_DEPRECATION_LABEL, DeprecationReason, DeprecationSeverity
 from spack.repo import RepoPath
 from spack.spec import Spec
 
@@ -387,11 +387,11 @@ class TestDeprecatedDirective:
         assert constraint == spack.spec.EMPTY_SPEC
 
     def test_deprecated_directive_invalid_arguments(self, mock_pkg):
-        """Tests that an invalid value raises a ValueError."""
-        with pytest.raises(ValueError, match="bogus"):
+        """Tests that an invalid value is reported along with the values that are accepted."""
+        with pytest.raises(DirectiveError, match="'bogus' is not a valid reason, use one of "):
             spack.directives._Deprecated(spec="@1.0", reason="bogus", severity="low")(mock_pkg)
 
-        with pytest.raises(ValueError, match="extreme"):
+        with pytest.raises(DirectiveError, match="'extreme' is not a valid severity, use one of "):
             spack.directives._Deprecated(spec="@1.0", reason="vuln", severity="extreme")(mock_pkg)
 
     def test_deprecated_directive_multiple_reasons(self, mock_pkg):
@@ -417,17 +417,19 @@ class TestDeprecatedDirective:
             )(mock_pkg)
 
 
-def test_deprecated_directive_refuses_the_reserved_reason():
-    """Tests that a recipe cannot claim the reason Spack records for 'deprecated=True'."""
+def test_deprecated_directive_refuses_the_reserved_label():
+    """Tests that a recipe cannot claim the label Spack records for 'deprecated=True'."""
     with pytest.raises(DirectiveError, match="reserved"):
 
         class Pkg(metaclass=DirectiveMeta):
             name = "mypkg"
-            deprecated("@=1.0", reason="unspecified", severity="low")
+            deprecated("@=1.0", reason="vuln", labels=[LEGACY_DEPRECATION_LABEL])
 
 
-def test_deprecated_keyword_records_the_reserved_reason():
-    """Tests that 'version(..., deprecated=True)' is what records the reserved reason."""
+def test_deprecated_keyword_records_the_reserved_label():
+    """Tests that 'version(..., deprecated=True)' records an unspecified reason, the highest
+    severity, and the label that tells it apart from a recipe stating no reason.
+    """
 
     class Pkg(metaclass=DirectiveMeta):
         name = "mypkg"
@@ -437,6 +439,7 @@ def test_deprecated_keyword_records_the_reserved_reason():
     assert len(entries) == 1
     assert entries[0].reason == DeprecationReason.UNSPECIFIED
     assert entries[0].severity == DeprecationSeverity.CRITICAL
+    assert entries[0].labels == (LEGACY_DEPRECATION_LABEL,)
 
 
 def test_deprecated_directive_message(mock_pkg):
@@ -456,3 +459,15 @@ def test_deprecated_keyword_records_no_message():
         version("1.0", deprecated=True)
 
     assert Pkg.deprecations[Spec("@=1.0")][0].msg is None
+
+
+def test_deprecated_directive_accepts_an_unspecified_reason():
+    """Tests that a recipe can state that a deprecation falls into none of the categories."""
+
+    class Pkg(metaclass=DirectiveMeta):
+        name = "mypkg"
+        deprecated("@=1.0", reason="unspecified", severity="low")
+
+    (entry,) = Pkg.deprecations[Spec("@=1.0")]
+    assert entry.reason == DeprecationReason.UNSPECIFIED
+    assert entry.labels == ()
