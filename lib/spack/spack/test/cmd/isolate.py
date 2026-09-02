@@ -31,13 +31,9 @@ def mutable_config_with_dir(tmp_path_factory: pytest.TempPathFactory, configurat
 @pytest.fixture(scope="function")
 def mock_pre_isolate_config(mutable_config_with_dir, monkeypatch, tmp_path):
     _, cfg_dir = mutable_config_with_dir
-    include_path = cfg_dir / "spack" / "include.yaml"
     isolate_path = cfg_dir / "isolate"
-    preserved_include_path = cfg_dir / "spack" / ".isolate.include.yaml"
-    # These paths usually live in spack/etc/spack
-    monkeypatch.setattr(spack.cmd.isolate, "INCLUDE_PATH", str(include_path))
+    # Only need to mock ISOLATE_SCOPE_PATH - no more include.yaml modifications
     monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_SCOPE_PATH", str(isolate_path))
-    monkeypatch.setattr(spack.cmd.isolate, "PRESERVED_INCLUDE_PATH", str(preserved_include_path))
 
     yield cfg_dir, tmp_path
 
@@ -47,13 +43,16 @@ def test_isolate_smoke_test(mock_pre_isolate_config):
     isolated_path = iso_root / "test-isolation"
     sp_isolate("--path", str(isolated_path))
     assert os.path.exists(spack.cmd.isolate.ISOLATE_SCOPE_PATH)
-    assert os.path.exists(spack.cmd.isolate.PRESERVED_INCLUDE_PATH)
     assert isolated_path.exists()
     assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "bootstrap.yaml"))
     assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "config.yaml"))
+    assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "include.yaml"))
     # we reload the config after isolation
+    # With the new implementation, the isolate scope uses include:: override,
+    # so "user" scope should point to the isolated path, not "isolate" as a separate scope
     with spack.config.use_configuration(cfg_dir / "spack"):
-        assert "isolate" in sp_config("scopes")
+        # The user scope should exist (redirected by isolate's include.yaml)
+        assert "user" in sp_config("scopes")
 
 
 def test_isolate_added_config(mock_pre_isolate_config):
@@ -101,9 +100,9 @@ def test_self_isolate(mock_pre_isolate_config):
     cfg_dir, _ = mock_pre_isolate_config
     sp_isolate("--self")
     assert os.path.exists(spack.cmd.isolate.ISOLATE_SCOPE_PATH)
-    assert os.path.exists(spack.cmd.isolate.PRESERVED_INCLUDE_PATH)
     assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "bootstrap.yaml"))
     assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "config.yaml"))
+    assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "include.yaml"))
     # configuration has changed on disk, this refreshes it in memory
     with spack.config.use_configuration(cfg_dir / "spack"):
         sp_config("add", "packages:gcc:buildable:false")

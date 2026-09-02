@@ -8,8 +8,6 @@ import textwrap
 from argparse import ArgumentParser
 from typing import cast
 
-from spack.vendor.ruamel.yaml.compat import ordereddict
-
 import spack.config
 import spack.paths
 import spack.schema.include
@@ -20,26 +18,10 @@ description = "isolate the current spack instance from the home directory"
 section = "config"
 level = "long"
 
-INCLUDE_PATH = os.path.join(spack.paths.etc_path, "include.yaml")
-PRESERVED_INCLUDE_PATH = os.path.join(spack.paths.etc_path, ".isolate.include.yaml")
 ISOLATE_SCOPE_PATH = os.path.join(spack.paths.etc_path, "isolate")
 
 
-def _get_scope_indices(included_scopes):
-    user_index = None
-    site_index = None
-    system_index = None
-    iso_index = None
-    for i, entry in enumerate(included_scopes):
-        if entry["name"] == "user":
-            user_index = i
-        elif entry["name"] == "site":
-            site_index = i
-        elif entry["name"] == "system":
-            system_index = i
-        elif entry["name"] == "isolate":
-            iso_index = i
-    return user_index, site_index, system_index, iso_index
+# _get_scope_indices no longer needed - we don't modify etc/spack/include.yaml
 
 
 def _isolate_bootstrap_config(new_user_path):
@@ -78,6 +60,33 @@ def _isolate_repos_config(new_user_path):
         syaml.dump({"repos": new_repos_config}, f)
 
 
+def _isolate_include_config(new_user_path):
+    """Write include.yaml with include:: override to redirect user scope."""
+    user_scope_dict = {
+        "name": "user",
+        "path": new_user_path,
+        "optional": True,
+        "prefer_modify": True,
+        "when": '"SPACK_DISABLE_LOCAL_CONFIG" not in env',
+    }
+
+    # Create the include list with just the user scope
+    # (site and system will still come from the default include.yaml)
+    include_list = [user_scope_dict]
+
+    # Create a syaml_str with override marker for the key
+    include_key = syaml.syaml_str("include")
+    include_key.override = True  # type: ignore[attr-defined]
+
+    # Create the dict with the marked key
+    include_data = syaml.syaml_dict([(include_key, include_list)])
+
+    # Write to isolate scope's include.yaml
+    include_yaml_path = os.path.join(ISOLATE_SCOPE_PATH, "include.yaml")
+    with open(include_yaml_path, "w", encoding="utf-8") as f:
+        syaml.dump_config(include_data, f)
+
+
 def _setup_isolate_scope(new_user_path, overwrite: bool):
     # Bypass overwriting/pre-existing when using --self
     if os.path.exists(ISOLATE_SCOPE_PATH):
@@ -90,23 +99,17 @@ def _setup_isolate_scope(new_user_path, overwrite: bool):
             raise Exception("An isolation already exists for this Spack instance")
     else:
         os.mkdir(ISOLATE_SCOPE_PATH)
-    isolate_dict = {}
-    isolate_dict["name"] = "isolate"
-    isolate_dict["path"] = ISOLATE_SCOPE_PATH
+
+    # Write configuration files into isolate scope
     _isolate_bootstrap_config(new_user_path)
     _isolate_config_config(new_user_path)
     _isolate_repos_config(new_user_path)
-    return isolate_dict
+
+    # Write include.yaml with include:: override to redirect user scope
+    _isolate_include_config(new_user_path)
 
 
-def _get_new_user_scope(new_user_path):
-    return {
-        "name": "user",
-        "path": new_user_path,
-        "optional": True,
-        "prefer_modify": True,
-        "when": '"SPACK_DISABLE_LOCAL_CONFIG" not in env',
-    }
+# _get_new_user_scope no longer needed - moved into _isolate_include_config
 
 
 def _ensure_destination_setup(destination: str, overwrite: bool):
@@ -119,13 +122,7 @@ def _ensure_destination_setup(destination: str, overwrite: bool):
     return os.path.abspath(destination)
 
 
-def _preserve_and_extract_include():
-    if not os.path.exists(PRESERVED_INCLUDE_PATH):
-        shutil.copy(INCLUDE_PATH, PRESERVED_INCLUDE_PATH)
-    include_config = cast(
-        ordereddict, spack.config.read_config_file(INCLUDE_PATH, spack.schema.include.schema)
-    )
-    return include_config["include"]
+# _preserve_and_extract_include no longer needed - we don't modify etc/spack/include.yaml
 
 
 def setup_parser(subparser: ArgumentParser):
@@ -149,40 +146,17 @@ def setup_parser(subparser: ArgumentParser):
 
 def _do_isolate(args):
     destination = _ensure_destination_setup(args.path, args.overwrite)
-    include_config: list = _preserve_and_extract_include()
-    isolate_scope = _setup_isolate_scope(destination, args.overwrite)
-    user_index, site_index, system_index, old_isolate_index = _get_scope_indices(include_config)
-    # No need for a separate isolation scope when using --self
-    if not os.path.samefile(destination, ISOLATE_SCOPE_PATH):
-        # insert the isolate scope above the below user and site but above system
-        if old_isolate_index is not None:  # first try the old isolate index (--overwrite)
-            include_config[old_isolate_index] = isolate_scope
-        elif site_index is not None:  # otherwise put it below the site scope
-            include_config.insert(site_index + 1, isolate_scope)
-        elif system_index is not None:  # if there is no site scope, put it above the system scope
-            include_config.insert(system_index, isolate_scope)
-        elif user_index is not None:  # if there is no system scope, put it below the user scope
-            include_config.insert(user_index + 1, isolate_scope)
-        else:  # Strange changes have been made if there is no site, system, or user scope
-            include_config.append(isolate_scope)
-
-    new_user_scope = _get_new_user_scope(destination)
-    if user_index is not None:
-        include_config[user_index] = new_user_scope
-    else:
-        include_config.insert(0, new_user_scope)
-
-    with open(INCLUDE_PATH, "w", encoding="utf-8") as f:
-        syaml.dump({"include": include_config}, f)
+    _setup_isolate_scope(destination, args.overwrite)
+    # No need to modify etc/spack/include.yaml anymore - the isolate scope's
+    # include.yaml with include:: override handles the redirection
 
 
 def _undo_isolate():
     if not os.path.exists(ISOLATE_SCOPE_PATH):
         raise RuntimeError("Cannot find isolation to undo")
-    if not os.path.exists(PRESERVED_INCLUDE_PATH):
-        raise RuntimeError("Cannot find pre-isolate include.yaml")
+    # Simply remove the isolate scope directory
+    # No need to restore include.yaml since we never modified it
     shutil.rmtree(ISOLATE_SCOPE_PATH)
-    shutil.copy(PRESERVED_INCLUDE_PATH, INCLUDE_PATH)
 
 
 def isolate(parser, args):
