@@ -160,7 +160,11 @@ class Policy:
         if spec.external:
             return []
 
-        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+        try:
+            pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+        except spack.repo.UnknownPackageError:
+            return []
+
         return [
             Violation(constraint, entry.reason, entry.severity, entry.msg)
             for constraint, entries in pkg_cls.deprecations.items()
@@ -193,12 +197,7 @@ def reusable(
     for node in spack.traverse.traverse_nodes(
         candidates, deptype=deptypes, order="post", key=spack.traverse.by_dag_hash
     ):
-        try:
-            violates = bool(resolved.disallowed(node))
-        except spack.repo.UnknownPackageError:
-            # The package is gone from the repository; it is dropped later in the solve anyway
-            violates = False
-        if violates or any(
+        if resolved.disallowed(node) or any(
             edge.spec.dag_hash() in rejected
             for edge in node.edges_to_dependencies(depflag=deptypes)
         ):
