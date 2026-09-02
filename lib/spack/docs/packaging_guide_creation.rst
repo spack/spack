@@ -803,7 +803,7 @@ It must be one of:
 
 ``vuln``
    A known vulnerability affects the spec.
-   Use it for any advisory, whether it is a CVE, a GHSA or a PYSEC entry, and list the identifiers in ``labels`` so users can exempt the ones they have assessed.
+   Use it for any advisory, whether it is a CVE, a GHSA or a PYSEC entry, and list the identifiers in ``labels`` so users can allow the ones they have assessed.
    Take ``severity`` from the advisory's own rating.
 
 ``rename``
@@ -841,14 +841,14 @@ Any identifier works, so a GHSA or PYSEC id is as good as a CVE one:
 
 Write one ``deprecated()`` per advisory, or per group of advisories that users would skip together.
 A deprecation can only be skipped as a whole, so grouping two advisories in one directive means a user cannot accept one without accepting the other.
-See :ref:`package-deprecations-config` for how users exempt them.
+See :ref:`package-deprecations-config` for how users allow them.
 
 Whether a deprecated version can be selected depends on the user's configuration.
-If its severity exceeds the configured threshold, Spack refuses to use it.
+Users list the deprecations they allow, by severity, reason and labels, and Spack refuses the ones no entry in that list matches.
 This is a hard error both at concretization time and before the spec is installed.
-At or below the threshold the version is used like any other, with no warning and no penalty.
-The default threshold rejects every deprecation, so Spack will not select a deprecated version unless the user explicitly relaxes the policy.
-See :ref:`package-deprecations-config` for how to configure the threshold.
+An allowed deprecation is used like any other version, with no warning and no penalty.
+The list is empty by default, so Spack will not select a deprecated version unless the user explicitly allows it.
+See :ref:`package-deprecations-config` for how to write that list.
 
 The older ``version("X.Y", deprecated=True)`` syntax is still supported.
 Spack records it as a deprecation of ``@=X.Y`` with reason ``"unspecified"`` and severity ``"critical"``.

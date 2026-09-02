@@ -709,39 +709,46 @@ Going back to the example, if ``gperftools@2.3:`` was requested, then Spack will
 Allowing Deprecated Versions
 ----------------------------
 
-When a package uses the ``deprecated()`` directive (see :ref:`deprecate`), Spack checks the selected deprecation severity against a per-package threshold.
-Deprecations whose severity *exceeds* the threshold are refused: this is a concretization error, and also an install-time error for specs concretized earlier (for example from a lockfile).
-Those at or below the threshold are allowed silently and the deprecated version is treated like any other, with no warning and no penalty in the solve.
+When a package uses the ``deprecated()`` directive (see :ref:`deprecate`), Spack refuses the deprecated spec unless the configuration allows it.
+A refusal is a concretization error, and also an install-time error for specs concretized earlier (for example from a lockfile).
+An allowed deprecation is skipped entirely: the deprecated version is treated like any other, with no warning and no penalty in the solve.
 
 The install-time check is static and does not depend on local install status: a spec is refused if a disallowed deprecation is found in the checked closure of the requested packages, even when the deprecated dependency is already installed.
 The check runs once, upfront, so an install never fails halfway because a deprecated spec was discovered late.
 
 All deprecation settings live under a ``deprecation:`` block, which can be given globally under ``all:`` or for a specific package.
-
-The threshold is set with ``allowed_severity``, which accepts the values ``"none"``, ``"low"``, ``"medium"``, ``"high"``, and ``"critical"`` in increasing order of permissiveness.
-The default is ``"none"``, meaning every deprecation is a hard error unless the user explicitly relaxes it.
-
-These five levels are named after the qualitative severity ratings of `CVSS <https://www.first.org/cvss/specification-document>`_.
-For a deprecation with reason ``vuln`` the level roughly corresponds to the rating of the advisory it refers to, so an advisory scored between 7.0 and 8.9 is declared ``"high"``.
-Spack neither computes nor verifies a score, so the level a recipe declares is the packager's judgement.
-The correspondence is a convention, and it exists so that a site can set these thresholds from the same policy it already applies to advisories elsewhere.
-The other reasons have no score to correspond to, and there the level ranks how urgently users should move off the deprecated spec.
+Which deprecations are allowed is set with ``allow:``, a list of selectors:
 
 .. code-block:: yaml
 
    packages:
      all:
        deprecation:
-         allowed_severity: low
+         allow:
+         - severity: low
      openssl:
        deprecation:
-         allowed_severity: none
+         allow: []
 
-In this example, ``low``-severity deprecations on any package are allowed silently, while ``medium`` and above remain errors.
-The per-package override for ``openssl`` reinstates the strictest threshold, so every deprecation on that package is an error regardless of the global setting.
+A ``deprecated()`` directive is skipped when at least one selector matches it.
+The default is an empty list, which allows none of them, so Spack will not select a deprecated version unless the configuration says so.
 
-Every deprecation also declares a reason, which is the category it falls into.
-Reasons exist so that a threshold can discriminate between them: a site may accept a version whose maintainers stopped supporting it, while refusing anything with a known vulnerability whatever its severity.
+In this example, deprecations of severity ``low`` on any package are allowed silently, while ``medium`` and above remain errors.
+The list for ``openssl`` replaces the one under ``all:``, so every deprecation on that package is an error regardless of the global setting.
+
+A selector may constrain the ``severity``, the ``reason``, and the ``labels`` of a deprecation.
+Attributes given in the same selector all have to match, and an attribute that is omitted matches anything.
+
+``severity`` is a maximum, so ``medium`` also matches ``low``.
+The values are ``"none"``, ``"low"``, ``"medium"``, ``"high"`` and ``"critical"``, in increasing order of urgency.
+They are named after the qualitative severity ratings of `CVSS <https://www.first.org/cvss/specification-document>`_.
+For a deprecation with reason ``vuln`` the level roughly corresponds to the rating of the advisory it refers to, so an advisory scored between 7.0 and 8.9 is declared ``"high"``.
+Spack neither computes nor verifies a score, so the level a recipe declares is the packager's judgement.
+The correspondence is a convention, and it exists so that a site can write these selectors from the same policy it already applies to advisories elsewhere.
+The other reasons have no score to correspond to, and there the level ranks how urgently users should move off the deprecated spec.
+
+``reason`` is the category a deprecation falls into, either a single value or a list of them.
+Reasons exist so that a selector can discriminate between them: a site may accept a version whose maintainers stopped supporting it, while refusing anything with a known vulnerability whatever its severity.
 The five reasons are:
 
 ``vuln``
@@ -762,24 +769,30 @@ The five reasons are:
 
 See :ref:`deprecate` for what a packager is expected to put in each one.
 
-A single threshold applies to every reason alike.
-To hold some reasons to a stricter standard than others, give a mapping from reason to threshold instead, with ``default`` covering the reasons it omits:
+Because selectors are matched independently, a list can hold some reasons to a stricter standard than others:
 
 .. code-block:: yaml
 
    packages:
      all:
        deprecation:
-         allowed_severity:
-           default: low
-           vuln: none
+         allow:
+         - reason: [rename, retired, maintenance, unspecified]
+           severity: low
+         - reason: vuln
+           severity: none
 
-Here a ``low``-severity rename or maintenance deprecation is allowed, while any deprecation with ``reason: vuln`` is an error whatever its severity.
-Setting a threshold for ``unspecified`` is how the deprecations from the legacy keyword are configured.
-A per-package ``allowed_severity`` replaces the one under ``all`` outright, exactly as it does for a single value.
+Here a ``low``-severity rename, retirement or maintenance deprecation is allowed, while a vulnerability is allowed only if it was assessed to have no consequence.
+A reason that appears in no selector is refused whatever its severity, so a reason added in a later Spack version stays refused until the configuration names it.
+Listing ``unspecified`` is how the deprecations from the legacy keyword are allowed.
 
-For a single command, the ``--deprecated`` flag sets ``allowed_severity`` to ``critical`` under ``all``.
-It is applied on the command line, so it takes precedence over every configuration scope and lifts a per-reason threshold such as ``vuln: none`` along with the rest.
+For a single command, the ``--deprecated`` flag adds a selector allowing any severity under ``all:``.
+It is applied on the command line, so it is in force whatever the configuration files say.
+A package with an ``allow:`` list of its own is unaffected, since that list replaces the one under ``all:``.
+
+Since ``allow:`` is a list, configuration scopes merge it by concatenation, like every other list in ``packages.yaml``.
+Two scopes that both set it therefore allow the union of what each one allows.
+Write ``allow::`` in a scope that has to replace what the lower ones set, rather than add to it.
 
 Which dependencies are checked is controlled by the ``scope`` setting, which is global and can only be given under ``all:``:
 
@@ -796,24 +809,23 @@ Nodes that come from reuse are exempt, so an artifact that was built with a tool
 With ``"all"``, every node in the DAG is checked instead, including the build dependencies recorded in reused artifacts.
 The stricter ``"all"`` scope is technically more correct, since a compromised build tool can in principle affect its dependents, but it is also more likely to reject an install over a deprecation that has no effect on the produced binaries.
 
-Individual advisories can be skipped without relaxing the threshold, using ``exempt_labels``:
+Individual advisories can be allowed without allowing a whole severity, by listing them under ``labels``:
 
 .. code-block:: yaml
 
    packages:
      all:
        deprecation:
-         allowed_severity: none
-         exempt_labels:
-         - CVE-2023-0286
+         allow:
+         - labels: [CVE-2023-0286]
      openssl:
        deprecation:
-         exempt_labels:
-         - GHSA-xxxx-yyyy-zzzz
+         allow:
+         - labels: [GHSA-xxxx-yyyy-zzzz]
 
-A deprecation is skipped only if it declares ``labels`` (see :ref:`deprecate`) and *every* one of them is exempt.
-A directive that lists two advisories therefore stays an error until both are exempted, and a directive with no labels can never be skipped this way.
-As with the other settings, a non-empty per-package list replaces the one under ``all`` rather than adding to it.
+Such a selector matches a deprecation only if it declares ``labels`` (see :ref:`deprecate`) and *every* one of them is listed.
+A directive that cites two advisories therefore stays an error until both appear in the same selector, and a directive with no labels is never matched by one.
+A selector that constrains only the labels matches whatever the severity, which is what lets a site accept one advisory it assessed without accepting anything else.
 
 .. _package_permissions:
 

@@ -4,20 +4,18 @@
 """Shared deprecation policy used by both the concretizer and the installer.
 
 A version (or, more generally, a spec constraint) is marked deprecated via the ``deprecated()``
-directive with a severity.
+directive, with a reason, a severity, and the advisory labels it refers to.
 
-Whether a deprecation is tolerated is defined by
-``packages:<name>:deprecation:allowed_severity``, which is either a single severity or a mapping
-from deprecation reason to severity, falling back to ``packages:all`` and the legacy
-``config:deprecated`` flag.  A directive that declares ``labels`` is skipped outright when every
-one of them is listed in ``packages:<name>:deprecation:exempt_labels``.
+Which deprecations are tolerated is defined by ``packages:<name>:deprecation:allow``, a list of
+selectors falling back to ``packages:all`` and finally to the legacy ``config:deprecated`` flag.
+A directive is skipped when at least one selector matches it.
 
 This module centralizes that policy so the concretization-time gate and the install-time gate
 cannot drift.
 """
 
 import warnings
-from typing import TYPE_CHECKING, Dict, Iterable, List, NamedTuple, Optional, Set, Union
+from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, List, NamedTuple, Optional, Set
 
 import spack.config
 import spack.deptypes as dt
@@ -36,73 +34,90 @@ class Violation(NamedTuple):
     constraint: "spack.spec.Spec"
     reason: DeprecationReason
     severity: DeprecationSeverity
-    allowed: DeprecationSeverity
     msg: Optional[str] = None
 
 
-def is_exempt(entry: Deprecation, exempt_labels: Set[str]) -> bool:
-    """A deprecation is skipped only when it declares labels and every one of them is exempt."""
-    return bool(entry.labels) and exempt_labels.issuperset(entry.labels)
+class Selector(NamedTuple):
+    """One entry of ``packages:<name>:deprecation:allow``.
 
+    The attributes are AND-ed, and an attribute left empty matches any deprecation.
+    """
 
-#: Allowed severity per deprecation reason. The ``None`` key covers the reasons not listed.
-Thresholds = Dict[Optional[DeprecationReason], DeprecationSeverity]
+    #: Reasons this entry selects
+    reasons: FrozenSet[DeprecationReason] = frozenset()
+    #: Maximum severity this entry selects
+    severity: Optional[DeprecationSeverity] = None
+    #: Labels the user assessed. A deprecation is selected only if it declares labels, and all
+    #: of them are listed here.
+    labels: FrozenSet[str] = frozenset()
 
-
-def _parse_thresholds(value: Union[str, dict]) -> Thresholds:
-    if isinstance(value, str):
-        return {None: DeprecationSeverity(value)}  # type: ignore[arg-type]
-    return {
-        (None if key == "default" else DeprecationReason(key)): DeprecationSeverity(
-            severity  # type: ignore[arg-type]
+    @staticmethod
+    def from_config(data: dict) -> "Selector":
+        reasons = data.get("reason", [])
+        if isinstance(reasons, str):
+            reasons = [reasons]
+        severity = data.get("severity")
+        return Selector(
+            reasons=frozenset(DeprecationReason(x) for x in reasons),
+            severity=DeprecationSeverity(severity) if severity is not None else None,
+            labels=frozenset(data.get("labels", ())),
         )
-        for key, severity in value.items()
-    }
+
+    def matches(self, entry: Deprecation) -> bool:
+        if self.reasons and entry.reason not in self.reasons:
+            return False
+        if self.severity is not None and entry.severity > self.severity:
+            return False
+        if self.labels and not (entry.labels and self.labels.issuperset(entry.labels)):
+            return False
+        return True
 
 
-def _allowed(thresholds: Thresholds, reason: DeprecationReason) -> DeprecationSeverity:
-    """Return the threshold for a reason, falling back to the default and finally to ``none``."""
-    if reason in thresholds:
-        return thresholds[reason]
-    return thresholds.get(None, DeprecationSeverity.NONE)
+def _default_selectors(packages_yaml: dict, warn_on_legacy: bool = False) -> List[Selector]:
+    """Return the selectors from ``packages:all:deprecation:allow``.
 
-
-def _default_thresholds(packages_yaml: dict, warn_on_legacy: bool = False) -> Thresholds:
-    """Return the default thresholds from ``packages:all:deprecation``.
-
-    Falls back to the legacy ``config:deprecated`` flag (mapped to ``critical``) and finally to
-    ``none``, meaning every deprecation is disallowed.
+    Falls back to the legacy ``config:deprecated`` flag (which allows any severity) and finally
+    to the empty list, meaning every deprecation is disallowed.
 
     Args:
         packages_yaml: the ``packages`` configuration.
         warn_on_legacy: emit a warning when the deprecated ``config:deprecated`` flag is
             what relaxes the policy.
     """
-    value = packages_yaml.get("all", {}).get("deprecation", {}).get("allowed_severity")
+    value = packages_yaml.get("all", {}).get("deprecation", {}).get("allow")
     if value is not None:
-        return _parse_thresholds(value)
+        return [Selector.from_config(x) for x in value]
 
     if spack.config.CONFIG.get("config:deprecated", False):
         if warn_on_legacy:
             warnings.warn(
-                "config:deprecated is deprecated. "
-                "Use 'packages:all:deprecation:allowed_severity:critical' instead",
+                "config:deprecated is deprecated. Use an entry with 'severity: critical' under "
+                "'packages:all:deprecation:allow' instead",
                 UserWarning,
                 stacklevel=2,
             )
-        return {None: DeprecationSeverity.CRITICAL}
+        return [Selector(severity=DeprecationSeverity.CRITICAL)]
 
-    return {None: DeprecationSeverity.NONE}
+    return []
 
 
-class Policy(NamedTuple):
+class Policy:
     """Deprecation policy resolved from the ``packages`` configuration."""
 
-    packages_yaml: dict
-    #: Thresholds from ``packages:all``, used when a package has no ``allowed_severity``
-    default_thresholds: Thresholds
-    #: Global check scope from ``packages:all:deprecation:scope`` ("runtime" or "all")
-    scope: str = "runtime"
+    def __init__(
+        self, packages_yaml: dict, default_selectors: List[Selector], scope: str = "runtime"
+    ) -> None:
+        """
+        Args:
+            packages_yaml: the ``packages`` configuration.
+            default_selectors: selectors from ``packages:all``, used for the packages that
+                declare none of their own.
+            scope: check scope from ``packages:all:deprecation:scope`` ("runtime" or "all").
+        """
+        self.packages_yaml = packages_yaml
+        self.default_selectors = default_selectors
+        self.scope = scope
+        self._selectors: Dict[str, List[Selector]] = {}
 
     @staticmethod
     def from_config(warn_on_legacy: bool = False) -> "Policy":
@@ -114,33 +129,29 @@ class Policy(NamedTuple):
         """
         packages_yaml = spack.config.CONFIG.get_config("packages")
         scope = packages_yaml.get("all", {}).get("deprecation", {}).get("scope", "runtime")
-        return Policy(packages_yaml, _default_thresholds(packages_yaml, warn_on_legacy), scope)
+        return Policy(packages_yaml, _default_selectors(packages_yaml, warn_on_legacy), scope)
 
     @property
     def deptypes(self) -> int:
         """Dependency types to traverse for the configured deprecation scope."""
         return dt.ALL if self.scope == "all" else dt.LINK | dt.RUN
 
-    def thresholds(self, pkg_name: str) -> Thresholds:
-        """Return the thresholds for a package."""
-        override = (
-            self.packages_yaml.get(pkg_name, {}).get("deprecation", {}).get("allowed_severity")
-        )
-        return _parse_thresholds(override) if override is not None else self.default_thresholds
-
-    def allowed_severity(self, pkg_name: str, reason: DeprecationReason) -> DeprecationSeverity:
-        """Return the allowed severity for a reason on a package."""
-        return _allowed(self.thresholds(pkg_name), reason)
-
-    def exempt_labels(self, pkg_name: str) -> Set[str]:
-        """Return the exempt labels for a package. A non-empty per-package list replaces the one
-        under ``all``, like every other ``packages`` setting.
+    def selectors(self, pkg_name: str) -> List[Selector]:
+        """Return the selectors for a package. A package that declares an ``allow`` list
+        replaces the one under ``all``, like every other ``packages`` setting.
         """
-        for name in (pkg_name, "all"):
-            labels = self.packages_yaml.get(name, {}).get("deprecation", {}).get("exempt_labels")
-            if labels:
-                return set(labels)
-        return set()
+        if pkg_name not in self._selectors:
+            override = self.packages_yaml.get(pkg_name, {}).get("deprecation", {}).get("allow")
+            self._selectors[pkg_name] = (
+                [Selector.from_config(x) for x in override]
+                if override is not None
+                else self.default_selectors
+            )
+        return self._selectors[pkg_name]
+
+    def allows(self, pkg_name: str, entry: Deprecation) -> bool:
+        """Return True if a deprecation is allowed on a package, hence skipped."""
+        return any(x.matches(entry) for x in self.selectors(pkg_name))
 
     def disallowed(self, spec: "spack.spec.Spec") -> List[Violation]:
         """Returns the list of deprecation-policy violations for a spec. External specs are
@@ -150,20 +161,12 @@ class Policy(NamedTuple):
             return []
 
         pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-        thresholds = self.thresholds(spec.name)
-        exempt = self.exempt_labels(spec.name)
         return [
-            Violation(
-                constraint,
-                entry.reason,
-                entry.severity,
-                _allowed(thresholds, entry.reason),
-                entry.msg,
-            )
+            Violation(constraint, entry.reason, entry.severity, entry.msg)
             for constraint, entries in pkg_cls.deprecations.items()
             if spec.satisfies(constraint)
             for entry in entries
-            if entry.severity > _allowed(thresholds, entry.reason) and not is_exempt(entry, exempt)
+            if not self.allows(spec.name, entry)
         ]
 
 
@@ -226,19 +229,19 @@ def check_deprecations(
         raise spack.error.InstallError(
             "the following specs are deprecated and cannot be installed:\n\n"
             + "\n".join(violations)
-            + "\n\n    Relax 'packages:<name>:deprecation:allowed_severity' in your "
+            + "\n\n    Add an entry to 'packages:<name>:deprecation:allow' in your "
             "configuration to install them anyway."
         )
 
 
 def _format_violations(spec: "spack.spec.Spec", violations: List[Violation]) -> str:
     lines = [f"    {spec.cshort_spec}"]
-    for constraint, reason, severity, allowed, msg in violations:
+    for constraint, reason, severity, msg in violations:
         spec_str = f"{spec.name}{constraint}" if str(constraint) else spec.name
         lines.append(
             f"        {spec_str} is deprecated (reason: {reason.value}, "
-            f"severity: {severity.name.lower()}); 'deprecation:allowed_severity' "
-            f"is '{allowed.name.lower()}'"
+            f"severity: {severity.name.lower()}); not allowed by "
+            f"'packages:{spec.name}:deprecation:allow'"
         )
         if msg:
             lines.append(f"            {msg}")

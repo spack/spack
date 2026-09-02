@@ -1724,7 +1724,7 @@ spack:
     def test_deprecated_versions_not_selected(
         self, spec_str, expected, mutable_config: Configuration
     ):
-        with mutable_config.override("packages:all:deprecation:allowed_severity", "critical"):
+        with mutable_config.override("packages:all:deprecation:allow", [{"severity": "critical"}]):
             s = spack.concretize.concretize_one(spec_str)
             s.satisfies(expected)
 
