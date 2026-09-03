@@ -13,35 +13,6 @@ UNIX_SHELLS = ["sh", "csh", "fish"]
 WINDOWS_SHELLS = ["bat", "pwsh"]
 
 
-def path_to_env_script(env, shell: str, script_type: str, view: Optional[str] = None) -> str:
-    """Returns path to the shell script for activating or deactivating an environment.
-
-    Args:
-        env: the environment whose shell script we are returning the path of
-        shell: the shell that the user is running
-        script_type: Either 'activate' or 'deactivate'
-        view: the name of the environment's view
-    """
-    if script_type == "activate":
-        activate_extensions = {"sh": "", "csh": "", "fish": "", "bat": ".bat", "pwsh": ".ps1"}
-        extension = activate_extensions.get(shell, "")
-    else:
-        extension = ".ps1" if shell == "pwsh" else f".{shell}"
-
-    script_name = (
-        f"{view}_{script_type}{extension}" if view else f"noview_{script_type}{extension}"
-    )
-
-    script_path = os.path.join(env.path, ".spack-env", script_name)
-    if not os.path.isfile(script_path):
-        if script_type == "activate":
-            write_env_activate_script(env, view)
-        else:
-            write_env_deactivate_script(env, view)
-
-    return script_path
-
-
 def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
     """Check if a script needs to be regenerated.
 
@@ -62,6 +33,75 @@ def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
     script_mtime = os.stat(script_path).st_mtime
     return lockfile_mtime >= script_mtime
 
+
+def _get_activate_commands(env, view: Optional[str] = None, shell: str = "sh") -> str:
+    """Get the commands to activate an environment.
+
+    Args:
+        env: the environment to activate
+        view: the name of the environment's view
+        shell: the shell that the user is running
+    Returns:
+        A list of commands to activate the environment
+    """
+    env_mods = spack.environment.shell.activate(env=env, view=view)
+
+    cmds = ""
+    cmds += spack.environment.shell.activate_commands(env, view)
+    cmds += env_mods.shell_modifications(shell)
+
+    return cmds
+
+
+def _get_deactivate_commands(env, view: Optional[str] = None, shell: str = "sh") -> str:
+    """Get the commands to deactivate an environment.
+
+    Args:
+        env: the environment to deactivate
+        view: the name of the environment's view
+        shell: the shell that the user is running
+    Returns:
+        A list of commands to deactivate the environment
+    """
+    env_mods = spack.environment.shell.deactivate(env, view)
+
+    cmds = ""
+    cmds += spack.environment.shell.deactivate_commands(shell)
+    cmds += env_mods.shell_modifications(shell)
+
+    return cmds
+
+def path_to_env_script(env, shell: str, script_type: str, view: Optional[str] = None) -> str:
+    """Returns path to the shell script for activating or deactivating an environment.
+
+    Args:
+        env: the environment whose shell script we are returning the path of
+        shell: the shell that the user is running
+        script_type: Either 'activate' or 'deactivate'
+        view: the name of the environment's view
+    """
+    if script_type == "activate":
+        activate_extensions = {"sh": "", "csh": "", "fish": "", "bat": ".bat", "pwsh": ".ps1"}
+        extension = activate_extensions.get(shell, "")
+    else:
+        extension = ".ps1" if shell == "pwsh" else f".{shell}"
+
+    script_name = (
+        f"{view}_{script_type}{extension}" if view else f"noview_{script_type}{extension}"
+    )
+
+    script_path = os.path.join(env.path, ".spack-env", script_name)
+
+    if not os.path.isfile(script_path):
+        # If the script doesn't exist, regenerate it
+        if script_type == "activate":
+            cmds = _get_activate_commands(env, view=view, shell=shell)
+            uenv.write_shell_script(script_path, cmds, shell)
+        else:
+            cmds = _get_deactivate_commands(env, view=view, shell=shell)
+            uenv.write_shell_script(script_path, cmds, shell)
+
+    return script_path
 
 def regenerate_env_scripts(env):
     """Regenerate the activation and deactivation scripts for an environment.
@@ -112,10 +152,7 @@ def write_env_activate_script(env: "spack.environment.Environment", view: Option
         script_exists = os.path.isfile(activate_script_path)
 
         if not script_exists or _script_needs_update(lockfile_mtime, activate_script_path):
-            env_mods = spack.environment.shell.activate(env=env, view=view)
-
-            cmds = spack.environment.shell.activate_commands(env, view)
-            cmds += env_mods.shell_modifications(shell)
+            cmds = _get_activate_commands(env, view=view, shell=shell)
 
             uenv.write_shell_script(activate_script_path, cmds, shell)
 
@@ -140,10 +177,7 @@ def write_env_deactivate_script(env, view: Optional[str] = None):
         script_exists = os.path.isfile(deactivate_script_path)
 
         if not script_exists or _script_needs_update(lockfile_mtime, deactivate_script_path):
-            env_mods = spack.environment.shell.deactivate(env, view)
-
-            cmds = spack.environment.shell.deactivate_commands(shell)
-            cmds += env_mods.shell_modifications(shell)
+            cmds = _get_deactivate_commands(env, view=view, shell=shell)
 
             uenv.write_shell_script(deactivate_script_path, cmds, shell)
 
