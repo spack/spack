@@ -168,7 +168,11 @@ def quote_kvp(string: str) -> str:
         return string
 
     key, delim, value = match.groups()
-    return f"{key}{delim}{spack.spec_parser.quote_if_needed(value)}"
+    # A closing bracket ends a list of edge attributes, it is never part of the value. It ends up
+    # here because the shell splits e.g. "%[virtuals=c deptypes=build]" into separate arguments.
+    unbracketed = value.rstrip("]")
+    brackets = value[len(unbracketed) :]
+    return f"{key}{delim}{spack.spec_parser.quote_if_needed(unbracketed)}{brackets}"
 
 
 def parse_specs(
