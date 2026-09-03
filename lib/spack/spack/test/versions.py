@@ -873,6 +873,17 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
     assert v_equivalent == v.ref_version
 
 
+def test_git_versions_are_not_shared_between_specs():
+    """Plain version lists are interned, but a list holding a GitVersion is not: the GitVersion
+    carries the ref lookup of the package it belongs to."""
+    assert spack.spec.Spec("foo@1.2.3").versions is spack.spec.Spec("bar@1.2.3").versions
+
+    foo, bar = spack.spec.Spec("foo@git.develop"), spack.spec.Spec("bar@git.develop")
+    assert foo.versions is not bar.versions
+    assert foo.version._ref_lookup.pkg_name == "foo"
+    assert bar.version._ref_lookup.pkg_name == "bar"
+
+
 @pytest.mark.parametrize(
     "lhs_str,rhs_str,expected",
     [

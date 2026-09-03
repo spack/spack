@@ -3294,7 +3294,7 @@ class SpecBuilder:
             variant.append(value)
 
     def version(self, node, version):
-        self._specs[node].versions = vn.VersionList([vn.Version(version)])
+        self._specs[node].versions = vn.intern_version_list(vn.VersionList([vn.Version(version)]))
 
     def node_flag(self, node, node_flag):
         self._specs[node].compiler_flags.add_flag(

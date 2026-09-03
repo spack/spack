@@ -55,6 +55,10 @@ class VersionStrComponent:
 
     @staticmethod
     def from_string(string: str) -> "VersionStrComponent":
+        cached = _STR_COMPONENT_CACHE.get(string)
+        if cached is not None:
+            return cached
+
         value: Union[int, str] = string
         if len(string) >= iv_min_len:
             try:
@@ -62,7 +66,9 @@ class VersionStrComponent:
             except ValueError:
                 pass
 
-        return VersionStrComponent(value)
+        result = VersionStrComponent(value)
+        _STR_COMPONENT_CACHE[string] = result
+        return result
 
     def __hash__(self) -> int:
         return hash(self.data)
@@ -121,6 +127,13 @@ VersionTuple = Tuple[VersionComponentTuple, PrereleaseTuple]
 
 #: Separators from a parsed version.
 SeparatorTuple = Tuple[str, ...]
+
+#: Version literals repeat heavily across package recipes: a solve for trilinos parses 46k
+#: StandardVersions with only 4.4k distinct values. These types are immutable once constructed,
+#: so every occurrence of a literal hands out the same object.
+_STR_COMPONENT_CACHE: Dict[str, "VersionStrComponent"] = {}
+_STANDARD_VERSION_CACHE: Dict[str, "StandardVersion"] = {}
+_CLOSED_OPEN_RANGE_CACHE: Dict[Tuple, "ClosedOpenRange"] = {}
 
 
 def parse_string_components(string: str) -> Tuple[VersionTuple, SeparatorTuple]:
@@ -245,8 +258,14 @@ class StandardVersion(ConcreteVersion):
 
     @staticmethod
     def from_string(string: str) -> "StandardVersion":
+        cached = _STANDARD_VERSION_CACHE.get(string)
+        if cached is not None:
+            return cached
+
         version, separators = parse_string_components(string)
-        return StandardVersion(string, version, separators)
+        result = StandardVersion(string, version, separators)
+        _STANDARD_VERSION_CACHE[string] = result
+        return result
 
     @staticmethod
     def typemin() -> "StandardVersion":
@@ -803,6 +822,13 @@ class ClosedOpenRange(VersionType):
     @classmethod
     def from_version_range(cls, lo: StandardVersion, hi: StandardVersion) -> "ClosedOpenRange":
         """Construct ClosedOpenRange from lo:hi range."""
+        # StandardVersions compare equal when they parse the same, so "3.0.0" and "3.0.00" are
+        # one key; the original strings are part of the key to hand back the range as written.
+        key = (lo._string, lo.version, hi._string, hi.version)
+        cached = _CLOSED_OPEN_RANGE_CACHE.get(key)
+        if cached is not None:
+            return cached
+
         try:
             r = ClosedOpenRange(lo, _next_version(hi))
         except EmptyRangeError as e:
@@ -811,6 +837,7 @@ class ClosedOpenRange(VersionType):
         # Cache hash and string representation
         r._hash = hash((lo, hi))
         r._string = _str_range(lo, hi)
+        _CLOSED_OPEN_RANGE_CACHE[key] = r
         return r
 
     def __str__(self) -> str:
@@ -1094,10 +1121,13 @@ class VersionList(VersionType):
 
     @classmethod
     def any(cls) -> "VersionList":
-        """Return a VersionList that matches any version."""
-        version_list = cls.__new__(cls)
-        version_list.versions = [_UNBOUNDED_RANGE]
-        return version_list
+        """Return a VersionList that matches any version.
+
+        Every Spec starts out with one of these, so they are all the same object. Constraining a
+        spec replaces its VersionList instead of mutating it, which keeps this shared instance
+        intact.
+        """
+        return _ANY_VERSION_LIST
 
     def update(self, other: "VersionList") -> None:
         self.add(other)
@@ -1368,3 +1398,33 @@ _STANDARD_VERSION_TYPEMAX = StandardVersion(
 _UNBOUNDED_RANGE = ClosedOpenRange.from_version_range(
     _STANDARD_VERSION_TYPEMIN, _STANDARD_VERSION_TYPEMAX
 )
+
+#: Shared by every unconstrained spec; see VersionList.any().
+_ANY_VERSION_LIST = VersionList.__new__(VersionList)
+_ANY_VERSION_LIST.versions = [_UNBOUNDED_RANGE]
+
+#: Version constraints repeat across package recipes and across the nodes of a solve: 24k lists
+#: for a trilinos solve hold only 3.7k distinct values.
+_VERSION_LIST_CACHE: Dict[str, VersionList] = {}
+
+
+def intern_version_list(version_list: VersionList) -> VersionList:
+    """Return the shared VersionList equal to ``version_list``.
+
+    Callers must treat the result as immutable, which is how specs already use it: constraining a
+    spec replaces its VersionList instead of mutating it.
+
+    A list holding anything but plain versions and ranges is returned as it is. GitVersion stores a
+    ref lookup for the package it belongs to and caches the version that lookup resolves to, so two
+    packages that name the same git ref need a list each.
+    """
+    for v in version_list.versions:
+        if not isinstance(v, (StandardVersion, ClosedOpenRange)):
+            return version_list
+
+    key = str(version_list)
+    cached = _VERSION_LIST_CACHE.get(key)
+    if cached is not None:
+        return cached
+    _VERSION_LIST_CACHE[key] = version_list
+    return version_list

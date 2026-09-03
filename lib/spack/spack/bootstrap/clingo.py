@@ -39,7 +39,7 @@ def _select_best_version(
         best_version = spack.package_base.sort_by_pkg_preference(allowed_versions, pkg=pkg_cls)[0]
     except (KeyError, ValueError, IndexError):
         return
-    node.versions.versions = [spack.version.from_string(f"={best_version}")]
+    node.versions = spack.version.VersionList([spack.version.from_string(f"={best_version}")])
 
 
 def _add_compilers_if_missing() -> None:
@@ -178,7 +178,7 @@ class ClingoBootstrapConcretizer:
 
         # Can't use re2c@3.1 with Python 3.6
         if self.host_python.satisfies("@3.6"):
-            s["re2c"].versions.versions = [spack.version.from_string("=2.2")]
+            s["re2c"].versions = spack.version.VersionList([spack.version.from_string("=2.2")])
 
         for edge in spack.traverse.traverse_edges([s], cover="edges"):
             if edge.spec.name == "python":
