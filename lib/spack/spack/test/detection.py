@@ -91,7 +91,7 @@ def test_detect_specs_deduplicates_across_prefixes(tmp_path, monkeypatch, mock_p
     assert len(detected) == 1
 
 
-def test_prefix_cuts_at_last_bin_or_lib(tmp_path: pathlib.Path, monkeypatch):
+def test_prefix_cuts_at_last_bin_or_lib(tmp_path: pathlib.Path):
     """Prefixes should be cut at the LAST occurrence
     of bin/lib/lib64, not the first, so nested paths like .../bin/gcc/bin don't
     produce a garbage prefix."""
@@ -131,7 +131,7 @@ def test_prefix_cuts_at_last_bin_or_lib(tmp_path: pathlib.Path, monkeypatch):
 
 
 def test_prefix_before_last_supports_windows_paths():
-    path = pathlib.PureWindowsPath(r"C:\\Apps\\Lib64\\foo\\LIB")
+    path = pathlib.PureWindowsPath(r"C:\Apps\Lib64\foo\LIB")
     assert (
         spack.detection.common.prefix_before_last(path, ("lib", "lib64")) == r"C:\Apps\Lib64\foo"
     )
