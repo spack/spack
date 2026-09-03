@@ -1727,7 +1727,7 @@ class Environment:
 
         # Manipulate selected specs
         for s, mutator in modify_specs:
-            modified = s.mutate(mutator, rehash=False)
+            modified = s.mutate(mutator)
             if modified:
                 modified_specs.append(s)
 
@@ -1742,10 +1742,13 @@ class Environment:
             parent.clear_caches()
 
         # Compute new hashes and update the env list of specs
+        roots = [root for root, _ in modified_roots]
+        spack.spec.assign_package_hashes(roots, repo=spack.repo.PATH)
+
         hash_mutations = {}
         for root, old_hash in modified_roots:
-            # New hash must be computed after we finalize concretization
-            root._finalize_concretization()
+            # New hash must be computed after the package hashes are assigned
+            root._mark_concrete_and_assign_dag_hashes()
             new_hash = root.dag_hash()
             self.specs_by_hash.pop(old_hash)
             self.specs_by_hash[new_hash] = root

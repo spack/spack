@@ -1941,9 +1941,10 @@ class Spec:
         self.namespace = None
         self.abstract_hash = None
 
-        # initial values for all spec hash types
+        # initial values for all spec hash types. The package hash is assigned directly, by
+        # assign_package_hashes.
         self._hash = None
-        self._package_hash = None
+        self._package_hash: Optional[str] = None
         self._full_hash = None
         self._build_hash = None
 
@@ -2582,8 +2583,6 @@ class Spec:
         """
         # TODO: currently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
-        if hash.override is not None:
-            return hash.override(self)
         node_dict = self.to_node_dict(hash=hash)
         json_text = json.dumps(
             node_dict, ensure_ascii=True, indent=None, separators=(",", ":"), sort_keys=False
@@ -3233,42 +3232,11 @@ class Spec:
                 s.clear_caches()
             s._mark_root_concrete(value)
 
-    def _finalize_concretization(self):
-        """Assign hashes to this spec, and mark it concrete.
+    def _mark_concrete_and_assign_dag_hashes(self):
+        """Mark this spec concrete and assign its dag hashes.
 
-        There are special semantics to consider for ``package_hash``, because we can't
-        call it on *already* concrete specs, but we need to assign it *at concretization
-        time* to just-concretized specs. So, the concretizer must assign the package
-        hash *before* marking their specs concrete (so that we know which specs were
-        already concrete before this latest concretization).
-
-        ``dag_hash`` is also tricky, since it cannot compute ``package_hash()`` lazily.
-        Because ``package_hash`` needs to be assigned *at concretization time*,
-        ``to_node_dict()`` can't just assume that it can compute ``package_hash`` itself
-        -- it needs to either see or not see a ``_package_hash`` attribute.
-
-        Rules of thumb for ``package_hash``:
-          1. Old-style concrete specs from *before* ``dag_hash`` included ``package_hash``
-             will not have a ``_package_hash`` attribute at all.
-          2. New-style concrete specs will have a ``_package_hash`` assigned at
-             concretization time.
-          3. Abstract specs will not have a ``_package_hash`` attribute at all.
-
-        """
-        for spec in self.traverse():
-            # Already concrete specs either already have a package hash (new dag_hash())
-            # or they never will b/c we can't know it (old dag_hash()). Skip them.
-            #
-            # We only assign package hash to not-yet-concrete specs, for which we know
-            # we can compute the hash.
-            if not spec.concrete:
-                # we need force=True here because package hash assignment has to happen
-                # before we mark concrete, so that we know what was *already* concrete.
-                spec._cached_hash(ht.package_hash, force=True)
-
-                # keep this check here to ensure package hash is saved
-                assert getattr(spec, ht.package_hash.attr)
-
+        This is the repository-free half of concretization. The one value that only a package
+        can supply, the package hash, is assigned beforehand by ``assign_package_hashes``."""
         # Mark everything in the spec as concrete
         self._mark_concrete()
 
@@ -5207,7 +5175,7 @@ class Spec:
 
         return spec
 
-    def mutate(self, mutator, rehash=True) -> bool:
+    def mutate(self, mutator) -> bool:
         """Mutate concrete spec to match constraints represented by mutator.
 
         Mutation can modify the spec version, variants, compiler flags, and architecture.
@@ -5216,7 +5184,9 @@ class Spec:
         Variant values can be replaced with the literal ``None`` to remove the variant.
         ``None`` as a variant value is represented by ``VariantValue(..., (None,))``.
 
-        If ``rehash``, concrete spec and its dependents have hashes updated.
+        A mutated spec keeps no package hash: it describes the version and variants that just
+        changed, and only a package can supply a new one. The dag hashes of this node and its
+        dependents are stale too. ``rehash_mutated`` reassigns all of it.
 
         Returns whether the spec was modified by the mutation"""
         assert self.concrete
@@ -5276,18 +5246,10 @@ class Spec:
                 self.architecture.target = mutator.target
                 changed = True
 
-        if changed and rehash:
-            roots = []
-            for parent in spack.traverse.traverse_nodes([self], direction="parents"):
-                if not parent.dependents():
-                    roots.append(parent)
-                # invalidate hashes
-                parent._mark_root_concrete(False)
-                parent.clear_caches()
-
-            for root in roots:
-                # compute new hashes on full DAGs
-                root._finalize_concretization()
+        if changed:
+            # The package hash describes the version and variants that just changed, so it no
+            # longer applies. Reassigning it needs a package, which is left to rehash_mutated.
+            self._package_hash = None
 
         return changed
 
@@ -6141,6 +6103,43 @@ def eval_conditional(string):
     valid_variables = get_host_environment()
     valid_variables.update({"re": re, "env": os.environ})
     return eval(string, valid_variables)
+
+
+def assign_package_hashes(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath") -> None:
+    """Assign to every not-yet-concrete node the hash of the package contents it is being
+    concretized with.
+
+    The package hash describes the ``package.py`` a node was concretized with, so it can only be
+    assigned at concretization time, and only by whoever knows the repository the node comes
+    from. Run this before marking nodes concrete, so that specs that were already concrete are
+    told apart from the ones this concretization produced.
+
+    Rules of thumb for ``package_hash``:
+      1. Old-style concrete specs from *before* ``dag_hash`` included ``package_hash`` do not
+         have one, and never will, since we cannot know what their package looked like.
+      2. New-style concrete specs have one assigned here, at concretization time.
+      3. Abstract specs do not have one.
+    """
+    for spec in spack.traverse.traverse_nodes(list(specs), key=id):
+        if not spec.concrete and not spec._package_hash:
+            spec._package_hash = repo.get_pkg_class(spec.fullname)(spec).content_hash()
+
+
+def rehash_mutated(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath") -> None:
+    """Make nodes concrete again after ``Spec.mutate`` changed them.
+
+    Mutation invalidates the package hash of the mutated node and the dag hash of every
+    dependent, so invalidate them and reassign all of it."""
+    roots = []
+    for parent in spack.traverse.traverse_nodes(list(specs), direction="parents"):
+        if not parent.dependents():
+            roots.append(parent)
+        parent._mark_root_concrete(False)
+        parent.clear_caches()
+
+    assign_package_hashes(roots, repo=repo)
+    for root in roots:
+        root._mark_concrete_and_assign_dag_hashes()
 
 
 def _inject_patches_variant(root: Spec) -> None:

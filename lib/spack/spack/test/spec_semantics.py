@@ -2997,7 +2997,8 @@ def test_mark_concrete_roundtrip_preserves_hashes(spec_str, config, mock_package
     assert all(getattr(node, ht.dag_hash.attr) is None for node in s.traverse())
 
     # Re-finalize the DAG: the cleared hashes must recompute to the original values.
-    s._finalize_concretization()
+    spack.spec.assign_package_hashes([s], repo=spack.repo.PATH)
+    s._mark_concrete_and_assign_dag_hashes()
     roundtrip = {node.name: node.dag_hash() for node in s.traverse()}
     assert roundtrip == original
 
