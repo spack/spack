@@ -183,8 +183,8 @@ def library_prefix(library_dir: str) -> str:
     components = library_dir.split(os.sep)
     # convert to lowercase to match lib, LIB, Lib, etc.
     lowered_components = library_dir.lower().split(os.sep)
-    if "lib64" in lowered_components:
-       idx = max(i for i, comp in enumerate(lowered_components) if comp == "lib64")
+   if "lib64" in lowered_components:
+        idx = max(i for i, comp in enumerate(lowered_components) if comp == "lib64")
         return os.sep.join(components[:idx])
     elif "lib" in lowered_components:
         idx = max(i for i, comp in enumerate(lowered_components) if comp == "lib")
