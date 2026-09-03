@@ -69,8 +69,8 @@ class VersionStrComponent:
 
     def __str__(self) -> str:
         return (
-            ("infinity" if self.data >= len(infinity_versions) else infinity_versions[self.data])
-            if isinstance(self.data, int)
+            ("infinity" if self.data >= len(infinity_versions) else infinity_versions[self.data])  # type: ignore[return-value] # noqa: E501
+            if type(self.data) is int
             else self.data
         )
 
@@ -78,23 +78,23 @@ class VersionStrComponent:
         return f'VersionStrComponent("{self}")'
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, VersionStrComponent) and self.data == other.data
+        return type(other) is self.__class__ and self.data == other.data
 
     # ignore typing for certain parts of these methods b/c a) they are performance-critical, and
     # b) mypy isn't smart enough to figure out that if l_inf and r_inf are the same, comparing
     # self.data and other.data is type safe.
     def __lt__(self, other: object) -> bool:
-        l_inf = isinstance(self.data, int)
-        if isinstance(other, int):
+        l_inf = type(self.data) is int
+        if type(other) is int:
             return not l_inf
-        r_inf = isinstance(other.data, int)  # type: ignore
+        r_inf = type(other.data) is int  # type: ignore[attr-defined]
         return (not l_inf and r_inf) if l_inf ^ r_inf else self.data < other.data  # type: ignore
 
     def __gt__(self, other: object) -> bool:
-        l_inf = isinstance(self.data, int)
-        if isinstance(other, int):
+        l_inf = type(self.data) is int
+        if type(other) is int:
             return l_inf
-        r_inf = isinstance(other.data, int)  # type: ignore
+        r_inf = type(other.data) is int  # type: ignore[attr-defined]
         return (l_inf and not r_inf) if l_inf ^ r_inf else self.data > other.data  # type: ignore
 
     def __le__(self, other: object) -> bool:
@@ -270,44 +270,48 @@ class StandardVersion(ConcreteVersion):
         return True
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, StandardVersion):
+        if type(other) is self.__class__:
             return self.version == other.version
         return False
 
     def __ne__(self, other: object) -> bool:
-        if isinstance(other, StandardVersion):
+        if type(other) is self.__class__:
             return self.version != other.version
         return True
 
     def __lt__(self, other: object) -> bool:
-        if isinstance(other, StandardVersion):
-            return self.version < other.version
-        if isinstance(other, ClosedOpenRange):
+        ty = type(other)
+        if ty is self.__class__:
+            return self.version < other.version  # type: ignore[attr-defined]
+        if ty is ClosedOpenRange:
             # Use <= here so that Version(x) < ClosedOpenRange(Version(x), ...).
-            return self <= other.lo
+            return self <= other.lo  # type: ignore[attr-defined]
         return NotImplemented
 
     def __le__(self, other: object) -> bool:
-        if isinstance(other, StandardVersion):
-            return self.version <= other.version
-        if isinstance(other, ClosedOpenRange):
+        ty = type(other)
+        if ty is self.__class__:
+            return self.version <= other.version  # type: ignore[attr-defined]
+        if ty is ClosedOpenRange:
             # Versions are never equal to ranges, so follow < logic.
-            return self <= other.lo
+            return self <= other.lo  # type: ignore[attr-defined]
         return NotImplemented
 
     def __ge__(self, other: object) -> bool:
-        if isinstance(other, StandardVersion):
-            return self.version >= other.version
-        if isinstance(other, ClosedOpenRange):
+        ty = type(other)
+        if ty is self.__class__:
+            return self.version >= other.version  # type: ignore[attr-defined]
+        if ty is ClosedOpenRange:
             # Versions are never equal to ranges, so follow > logic.
-            return self > other.lo
+            return self > other.lo  # type: ignore[attr-defined]
         return NotImplemented
 
     def __gt__(self, other: object) -> bool:
-        if isinstance(other, StandardVersion):
-            return self.version > other.version
-        if isinstance(other, ClosedOpenRange):
-            return self > other.lo
+        ty = type(other)
+        if ty is self.__class__:
+            return self.version > other.version  # type: ignore[attr-defined]
+        if ty is ClosedOpenRange:
+            return self > other.lo  # type: ignore[attr-defined]
         return NotImplemented
 
     def __iter__(self) -> Iterator:
@@ -321,13 +325,14 @@ class StandardVersion(ConcreteVersion):
 
         release = self.version[0]
 
-        if isinstance(idx, int):
+        ty = type(idx)
+        if ty is int:
             return release[idx]
 
-        elif isinstance(idx, slice):
+        elif ty is slice:
             string_arg = []
 
-            pairs = zip(release[idx], self.separators[idx])
+            pairs = zip(release[idx], self.separators[idx])  # type: ignore[arg-type]
             for token, sep in pairs:
                 string_arg.append(str(token))
                 string_arg.append(str(sep))
@@ -356,45 +361,44 @@ class StandardVersion(ConcreteVersion):
         # versions still have a dual interpretation as singleton sets
         # or elements. x in y should be: is the lhs-element in the
         # rhs-set. Instead this function also does subset checks.
-        if isinstance(lhs, VersionType):
+        if type(lhs) in (StandardVersion, GitVersion, ClosedOpenRange, VersionList):
             return lhs.satisfies(rhs)
         raise TypeError(f"'in' not supported for instances of {type(lhs)}")
 
     def intersects(self, other: VersionType) -> bool:
-        if isinstance(other, StandardVersion):
+        if type(other) is self.__class__:
             return self == other
         return other.intersects(self)
 
     def satisfies(self, other: VersionType) -> bool:
-        if isinstance(other, VersionList):
-            return other.intersects(self)
-
-        if isinstance(other, ClosedOpenRange):
-            return other.intersects(self)
-
-        if isinstance(other, GitVersion):
+        ty = type(other)
+        if ty is GitVersion:
             return False
 
-        if isinstance(other, StandardVersion):
+        if ty is self.__class__:
             return self == other
+
+        if ty is ClosedOpenRange:
+            return other.intersects(self)
+
+        if ty is VersionList:
+            return other.intersects(self)
 
         raise NotImplementedError
 
     def union(self, other: VersionType) -> VersionType:
-        if isinstance(other, StandardVersion):
+        if type(other) is self.__class__:
             return self if self == other else VersionList([self, other])
         return other.union(self)
 
     def intersection(self, other: VersionType) -> VersionType:
-        if isinstance(other, StandardVersion):
+        if type(other) is self.__class__:
             return self if self == other else VersionList()
         return other.intersection(self)
 
     def isdevelop(self) -> bool:
         """Triggers on the special case of the ``@develop-like`` version."""
-        return any(
-            isinstance(p, VersionStrComponent) and isinstance(p.data, int) for p in self.version[0]
-        )
+        return any(type(p) is VersionStrComponent and type(p.data) is int for p in self.version[0])
 
     def is_prerelease(self) -> bool:
         return self.version[1][0] != FINAL
@@ -405,7 +409,7 @@ class StandardVersion(ConcreteVersion):
 
         This can be used to pass Spack versions to libraries that have stricter version schema.
         """
-        numeric = tuple(0 if isinstance(v, VersionStrComponent) else v for v in self.version[0])
+        numeric = tuple(0 if type(v) is VersionStrComponent else v for v in self.version[0])
         if self.is_prerelease():
             numeric += (0, *self.version[1][1:])
         return ".".join(str(v) for v in numeric)
@@ -611,32 +615,34 @@ class GitVersion(ConcreteVersion):
 
     def intersects(self, other: VersionType) -> bool:
         # For concrete things intersects = satisfies = equality
-        if isinstance(other, GitVersion):
+        ty = type(other)
+        if ty is self.__class__:
             return self == other
-        if isinstance(other, StandardVersion):
+        if ty is StandardVersion:
             return False
-        if isinstance(other, ClosedOpenRange):
+        if ty is ClosedOpenRange:
             return self.ref_version.intersects(other)
-        if isinstance(other, VersionList):
-            return any(self.intersects(rhs) for rhs in other)
-        raise TypeError(f"'intersects()' not supported for instances of {type(other)}")
+        if ty is VersionList:
+            return any(self.intersects(rhs) for rhs in other)  # type: ignore[attr-defined]
+        raise TypeError(f"'intersects()' not supported for instances of {ty}")
 
     def intersection(self, other: VersionType) -> VersionType:
-        if isinstance(other, ConcreteVersion):
+        if type(other) in (self.__class__, StandardVersion):
             return self if self == other else VersionList()
         return other.intersection(self)
 
     def satisfies(self, other: VersionType) -> bool:
         # Concrete versions mean we have to do an equality check
-        if isinstance(other, GitVersion):
+        ty = type(other)
+        if ty is self.__class__:
             return self == other
-        if isinstance(other, StandardVersion):
+        if ty is StandardVersion:
             return False
-        if isinstance(other, ClosedOpenRange):
+        if ty is ClosedOpenRange:
             return self.ref_version.satisfies(other)
-        if isinstance(other, VersionList):
-            return any(self.satisfies(rhs) for rhs in other)
-        raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
+        if ty is VersionList:
+            return any(self.satisfies(rhs) for rhs in other)  # type: ignore[attr-defined]
+        raise TypeError(f"'satisfies()' not supported for instances of {ty}")
 
     def __str__(self) -> str:
         s = ""
@@ -661,7 +667,7 @@ class GitVersion(ConcreteVersion):
     def __eq__(self, other: object) -> bool:
         # GitVersion cannot be equal to StandardVersion, otherwise == is not transitive
         return (
-            isinstance(other, GitVersion)
+            type(other) is self.__class__
             and self.ref == other.ref
             # TODO(psakiev) this needs to chamge to commits when we turn on lookups
             and self.ref_version == other.ref_version
@@ -671,45 +677,49 @@ class GitVersion(ConcreteVersion):
         return not self == other
 
     def __lt__(self, other: object) -> bool:
-        if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) < (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
+        ty = type(other)
+        if ty is self.__class__:
+            return (self.ref_version, self.ref) < (other.ref_version, other.ref)  # type: ignore[attr-defined] # noqa: E501
+        if ty is StandardVersion:
             # GitVersion at equal ref version is larger than StandardVersion
             return self.ref_version < other
-        if isinstance(other, ClosedOpenRange):
+        if ty is ClosedOpenRange:
             return self.ref_version < other
-        raise TypeError(f"'<' not supported between instances of {type(self)} and {type(other)}")
+        raise TypeError(f"'<' not supported between instances of {type(self)} and {ty}")
 
     def __le__(self, other: object) -> bool:
-        if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) <= (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
-            # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use < comparison.
+        ty = type(other)
+        if ty is self.__class__:
+            return (self.ref_version, self.ref) <= (other.ref_version, other.ref)  # type: ignore[attr-defined] # noqa: E501
+        if ty is StandardVersion:
+            # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use < comparsion.
             return self.ref_version < other
-        if isinstance(other, ClosedOpenRange):
+        if ty is ClosedOpenRange:
             # Equality is not a thing
             return self.ref_version < other
-        raise TypeError(f"'<=' not supported between instances of {type(self)} and {type(other)}")
+        raise TypeError(f"'<=' not supported between instances of {type(self)} and {ty}")
 
     def __ge__(self, other: object) -> bool:
-        if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) >= (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
+        ty = type(other)
+        if ty is self.__class__:
+            return (self.ref_version, self.ref) >= (other.ref_version, other.ref)  # type: ignore[attr-defined] # noqa: E501
+        if ty is StandardVersion:
             # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use >= here.
             return self.ref_version >= other
-        if isinstance(other, ClosedOpenRange):
+        if ty is ClosedOpenRange:
             return self.ref_version > other
-        raise TypeError(f"'>=' not supported between instances of {type(self)} and {type(other)}")
+        raise TypeError(f"'>=' not supported between instances of {type(self)} and {ty}")
 
     def __gt__(self, other: object) -> bool:
-        if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) > (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
+        ty = type(other)
+        if ty is self.__class__:
+            return (self.ref_version, self.ref) > (other.ref_version, other.ref)  # type: ignore[attr-defined] # noqa: E501
+        if ty is StandardVersion:
             # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use >= here.
             return self.ref_version >= other
-        if isinstance(other, ClosedOpenRange):
+        if ty is ClosedOpenRange:
             return self.ref_version > other
-        raise TypeError(f"'>' not supported between instances of {type(self)} and {type(other)}")
+        raise TypeError(f"'>' not supported between instances of {type(self)} and {ty}")
 
     def __hash__(self):
         # hashing should not cause version lookup
@@ -829,93 +839,103 @@ class ClosedOpenRange(VersionType):
         return self._hash
 
     def __eq__(self, other):
-        if isinstance(other, ClosedOpenRange):
-            return (self.lo, self.hi) == (other.lo, other.hi)
-        if isinstance(other, StandardVersion):
+        ty = type(other)
+        if ty is StandardVersion:
             return False
+        if ty is self.__class__:
+            return (self.lo, self.hi) == (other.lo, other.hi)
         return NotImplemented
 
     def __ne__(self, other):
-        if isinstance(other, StandardVersion):
+        ty = type(other)
+        if ty is StandardVersion:
             return True
-        if isinstance(other, ClosedOpenRange):
+        if ty is self.__class__:
             return (self.lo, self.hi) != (other.lo, other.hi)
         return NotImplemented
 
     def __lt__(self, other):
-        if isinstance(other, ClosedOpenRange):
-            return (self.lo, self.hi) < (other.lo, other.hi)
-        if isinstance(other, StandardVersion):
+        ty = type(other)
+        if ty is StandardVersion:
             return other > self
+        if ty is self.__class__:
+            return (self.lo, self.hi) < (other.lo, other.hi)
         return NotImplemented
 
     def __le__(self, other):
-        if isinstance(other, StandardVersion):
+        ty = type(other)
+        if ty is StandardVersion:
             return other >= self
-        if isinstance(other, ClosedOpenRange):
+        if ty is self.__class__:
             return (self.lo, self.hi) <= (other.lo, other.hi)
         return NotImplemented
 
     def __ge__(self, other):
-        if isinstance(other, StandardVersion):
+        ty = type(other)
+        if ty is StandardVersion:
             return other <= self
-        if isinstance(other, ClosedOpenRange):
+        if ty is self.__class__:
             return (self.lo, self.hi) >= (other.lo, other.hi)
         return NotImplemented
 
     def __gt__(self, other):
-        if isinstance(other, StandardVersion):
+        ty = type(other)
+        if ty is StandardVersion:
             return other < self
-        if isinstance(other, ClosedOpenRange):
+        if ty is self.__class__:
             return (self.lo, self.hi) > (other.lo, other.hi)
         return NotImplemented
 
     def __contains__(rhs, lhs):
-        if isinstance(lhs, (ConcreteVersion, ClosedOpenRange, VersionList)):
+        if type(lhs) in (GitVersion, StandardVersion, rhs.__class__, VersionList):
             return lhs.satisfies(rhs)
         raise TypeError(f"'in' not supported between instances of {type(rhs)} and {type(lhs)}")
 
     def intersects(self, other: VersionType) -> bool:
-        if isinstance(other, StandardVersion):
+        ty = type(other)
+        if ty is StandardVersion:
             return self.lo <= other < self.hi
-        if isinstance(other, ClosedOpenRange):
-            return (self.lo < other.hi) and (other.lo < self.hi)
-        if isinstance(other, GitVersion):
-            return self.lo <= other.ref_version < self.hi
-        if isinstance(other, VersionList):
-            return any(self.intersects(rhs) for rhs in other)
-        raise TypeError(f"'intersects' not supported for instances of {type(other)}")
+        if ty is GitVersion:
+            return self.lo <= other.ref_version < self.hi  # type: ignore[attr-defined]
+        if ty is self.__class__:
+            return (self.lo < other.hi) and (other.lo < self.hi)  # type: ignore[attr-defined]
+        if ty is VersionList:
+            return any(self.intersects(rhs) for rhs in other)  # type: ignore[attr-defined]
+        raise TypeError(f"'intersects' not supported for instances of {ty}")
 
     def satisfies(self, other: VersionType) -> bool:
-        if isinstance(other, ConcreteVersion):
+        ty = type(other)
+        if ty in (GitVersion, StandardVersion):
             return False
-        if isinstance(other, ClosedOpenRange):
-            return not (self.lo < other.lo or other.hi < self.hi)
-        if isinstance(other, VersionList):
-            return any(self.satisfies(rhs) for rhs in other)
-        raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
+        if ty is self.__class__:
+            return not (self.lo < other.lo or other.hi < self.hi)  # type: ignore[attr-defined]
+        if ty is VersionList:
+            return any(self.satisfies(rhs) for rhs in other)  # type: ignore[attr-defined]
+        raise TypeError(f"'satisfies()' not supported for instances of {ty}")
 
     def _union_if_not_disjoint(self, other: VersionType) -> Optional["ClosedOpenRange"]:
         """Same as union, but returns None when the union is not connected. This function is not
         implemented for version lists as right-hand side, as that makes little sense."""
-        if isinstance(other, ClosedOpenRange):
-            # Notice <= cause we want union(1:2, 3:4) = 1:4.
-            return (
-                ClosedOpenRange(min(self.lo, other.lo), max(self.hi, other.hi))
-                if self.lo <= other.hi and other.lo <= self.hi
-                else None
-            )
+        ty = type(other)
 
-        if isinstance(other, StandardVersion):
+        if ty is StandardVersion:
             return self if self.lo <= other < self.hi else None
 
-        if isinstance(other, GitVersion):
-            return self if self.lo <= other.ref_version < self.hi else None
+        if ty is GitVersion:
+            return self if self.lo <= other.ref_version < self.hi else None  # type: ignore[attr-defined] # noqa: E501
+
+        if ty is self.__class__:
+            # Notice <= cause we want union(1:2, 3:4) = 1:4.
+            return (
+                ClosedOpenRange(min(self.lo, other.lo), max(self.hi, other.hi))  # type: ignore[attr-defined] # noqa: E501
+                if self.lo <= other.hi and other.lo <= self.hi  # type: ignore[attr-defined] # noqa: E501
+                else None
+            )
 
         raise TypeError(f"'union()' not supported for instances of {type(other)}")
 
     def union(self, other: VersionType) -> VersionType:
-        if isinstance(other, VersionList):
+        if type(other) is VersionList:
             v = other.copy()
             v.add(self)
             return v
@@ -925,13 +945,14 @@ class ClosedOpenRange(VersionType):
 
     def intersection(self, other: VersionType) -> VersionType:
         # range - version -> singleton or nothing.
-        if isinstance(other, ClosedOpenRange):
+        ty = type(other)
+        if ty is self.__class__:
             # range - range -> range or nothing.
-            max_lo = max(self.lo, other.lo)
-            min_hi = min(self.hi, other.hi)
+            max_lo = max(self.lo, other.lo)  # type: ignore[attr-defined]
+            min_hi = min(self.hi, other.hi)  # type: ignore[attr-defined]
             return ClosedOpenRange(max_lo, min_hi) if max_lo < min_hi else VersionList()
 
-        if isinstance(other, ConcreteVersion):
+        if ty in (GitVersion, StandardVersion):
             return other if self.intersects(other) else VersionList()
 
         raise TypeError(f"'intersection()' not supported for instances of {type(other)}")
@@ -945,59 +966,40 @@ class VersionList(VersionType):
     versions: List[VersionType]
 
     def __init__(self, vlist: Optional[Union[str, VersionType, Iterable]] = None):
-        if isinstance(vlist, str):
-            vlist = from_string(vlist)
-            if isinstance(vlist, VersionList):
+        ty = type(vlist)
+        if vlist is None:
+            self.versions = []
+
+        elif issubclass(ty, str):
+            vlist = from_string(vlist)  # type: ignore[arg-type]
+            if type(vlist) is self.__class__:
                 self.versions = vlist.versions
             else:
                 self.versions = [vlist]
 
-        elif vlist is None:
+        elif ty in (GitVersion, StandardVersion, ClosedOpenRange):
+            self.versions = [vlist]  # type: ignore[list-item]
+
+        elif vlist in (_STANDARD_VERSION_TYPEMIN, _STANDARD_VERSION_TYPEMAX, _UNBOUNDED_RANGE):
+            self.versions = [vlist]  # type: ignore[list-item]
+
+        elif ty is self.__class__:
+            self.versions = vlist[:]  # type: ignore[index,assignment]
+
+        elif ty is list or issubclass(ty, Iterable):
+            # NB: Attempt to avoid the very expensive Iterable subclass check until we can hold off
+            #     no longer. Also note that str is Iterable, and must therefore be checked first.
             self.versions = []
-
-        elif isinstance(vlist, VersionList):
-            self.versions = vlist[:]
-
-        elif isinstance(vlist, (ConcreteVersion, ClosedOpenRange)):
-            self.versions = [vlist]
-
-        elif isinstance(vlist, Iterable):
-            self.versions = []
-            for v in vlist:
-                self.add(ver(v))
+            for el in vlist:    # type: ignore[union-attr]
+                self.add(ver(el))
 
         else:
-            raise TypeError(f"Cannot construct VersionList from {type(vlist)}")
+            raise TypeError(f"Cannot construct VersionList from {vlist}")
 
     def add(self, item: VersionType) -> None:
-        if isinstance(item, ClosedOpenRange):
-            i = bisect_left(self, item)
+        ty = type(item)
 
-            # Note: can span multiple concrete versions to the left (as well as to the right).
-            # For instance insert 1.2: into [1.2, hash=1.2, 1.3, 1.4:1.5]
-            # would bisect at i = 1 and merge i = 0 too.
-            while i > 0:
-                union = item._union_if_not_disjoint(self[i - 1])
-                if union is None:  # disjoint
-                    break
-                item = union
-                del self.versions[i - 1]
-                i -= 1
-
-            while i < len(self):
-                union = item._union_if_not_disjoint(self[i])
-                if union is None:
-                    break
-                item = union
-                del self.versions[i]
-
-            self.versions.insert(i, item)
-
-        elif isinstance(item, VersionList):
-            for v in item:
-                self.add(v)
-
-        elif isinstance(item, (StandardVersion, GitVersion)):
+        if ty in (StandardVersion, GitVersion):
             i = bisect_left(self, item)
             # Only insert when prev and next are not intersected.
             if (i == 0 or not item.intersects(self[i - 1])) and (
@@ -1005,12 +1007,41 @@ class VersionList(VersionType):
             ):
                 self.versions.insert(i, item)
 
+        elif ty is ClosedOpenRange:
+            i = bisect_left(self, item)
+
+            # Note: can span multiple concrete versions to the left (as well as to the right).
+            # For instance insert 1.2: into [1.2, hash=1.2, 1.3, 1.4:1.5]
+            # would bisect at i = 1 and merge i = 0 too.
+            while i > 0:
+                union = item._union_if_not_disjoint(self[i - 1])  # type: ignore[attr-defined]
+                if union is None:  # disjoint
+                    break
+                item = union
+                del self.versions[i - 1]
+                i -= 1
+
+            while i < len(self):
+                union = item._union_if_not_disjoint(self[i])  # type: ignore[attr-defined]
+                if union is None:
+                    break
+                item = union
+                del self.versions[i]
+
+            self.versions.insert(i, item)
+
+        elif ty is self.__class__:
+            for v in item:  # type: ignore[attr-defined]
+                self.add(v)
+
         else:
             raise TypeError("Can't add %s to VersionList" % type(item))
 
     @property
     def concrete(self) -> Optional[ConcreteVersion]:
-        return self[0] if len(self) == 1 and isinstance(self[0], ConcreteVersion) else None
+        return (
+            self[0] if len(self) == 1 and type(self[0]) in (GitVersion, StandardVersion) else None
+        )
 
     @property
     def concrete_range_as_version(self) -> Optional[ConcreteVersion]:
@@ -1019,9 +1050,10 @@ class VersionList(VersionType):
         if len(self) != 1:
             return None
         v = self[0]
-        if isinstance(v, ConcreteVersion):
+        ty = type(v)
+        if ty in (GitVersion, StandardVersion):
             return v
-        if isinstance(v, ClosedOpenRange) and _next_version(v.lo) == v.hi:
+        if ty is ClosedOpenRange and _next_version(v.lo) == v.hi:
             return v.lo
         return None
 
@@ -1030,18 +1062,16 @@ class VersionList(VersionType):
 
     def lowest(self) -> Optional[StandardVersion]:
         """Get the lowest version in the list."""
-        return next((v for v in self.versions if isinstance(v, StandardVersion)), None)
+        return next((v for v in self.versions if type(v) is StandardVersion), None)
 
     def highest(self) -> Optional[StandardVersion]:
         """Get the highest version in the list."""
-        return next((v for v in reversed(self.versions) if isinstance(v, StandardVersion)), None)
+        return next((v for v in reversed(self.versions) if type(v) is StandardVersion), None)
 
     def highest_numeric(self) -> Optional[StandardVersion]:
         """Get the highest numeric version in the list."""
         numeric = (
-            v
-            for v in reversed(self.versions)
-            if isinstance(v, StandardVersion) and not v.isdevelop()
+            v for v in reversed(self.versions) if type(v) is StandardVersion and not v.isdevelop()
         )
         return next(numeric, None)
 
@@ -1052,28 +1082,30 @@ class VersionList(VersionType):
     def satisfies(self, other: VersionType) -> bool:
         # This exploits the fact that version lists are "reduced" and normalized, so we can
         # never have a list like [1:3, 2:4] since that would be normalized to [1:4]
-        if isinstance(other, VersionList):
-            return all(any(lhs.satisfies(rhs) for rhs in other) for lhs in self)
+        ty = type(other)
+        if ty is self.__class__:
+            return all(any(lhs.satisfies(rhs) for rhs in other) for lhs in self)  # type: ignore[attr-defined] # noqa: E501
 
-        if isinstance(other, (ConcreteVersion, ClosedOpenRange)):
+        if ty in (GitVersion, StandardVersion, ClosedOpenRange):
             return all(lhs.satisfies(other) for lhs in self)
 
         raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
 
     def intersects(self, other: VersionType) -> bool:
-        if isinstance(other, (ClosedOpenRange, StandardVersion)):
-            return any(v.intersects(other) for v in self)
-
-        if isinstance(other, VersionList):
+        ty = type(other)
+        if ty is self.__class__:
             s = o = 0
-            while s < len(self) and o < len(other):
-                if self[s].intersects(other[o]):
+            while s < len(self) and o < len(other):  # type: ignore[arg-type]
+                if self[s].intersects(other[o]):  # type: ignore[index]
                     return True
-                elif self[s] < other[o]:
+                elif self[s] < other[o]:  # type: ignore[index]
                     s += 1
                 else:
                     o += 1
             return False
+
+        if ty in (ClosedOpenRange, StandardVersion):
+            return any(v.intersects(other) for v in self)
 
         raise TypeError(f"'intersects()' not supported for instances of {type(other)}")
 
@@ -1109,9 +1141,15 @@ class VersionList(VersionType):
 
     def intersection(self, other: VersionType) -> "VersionList":
         result = VersionList()
-        if isinstance(other, VersionList):
+        if type(other) is self.__class__:
             for lhs, rhs in ((self, other), (other, self)):
                 for x in lhs:
+                    if x is _UNBOUNDED_RANGE:
+                        result.add(rhs)
+                        continue
+                    elif len(rhs.versions) == 1 and rhs.versions[0] is _UNBOUNDED_RANGE:
+                        result.add(x)
+                        continue
                     i = bisect_left(rhs.versions, x)
                     if i > 0:
                         result.add(rhs[i - 1].intersection(x))
@@ -1133,11 +1171,12 @@ class VersionList(VersionType):
 
     # typing this and getitem are a pain in Python 3.6
     def __contains__(self, other):
-        if isinstance(other, (ClosedOpenRange, StandardVersion)):
+        ty = type(other)
+        if ty in (ClosedOpenRange, StandardVersion):
             i = bisect_left(self, other)
             return (i > 0 and other in self[i - 1]) or (i < len(self) and other in self[i])
 
-        if isinstance(other, VersionList):
+        if ty is self.__class__:
             return all(item in self for item in other)
 
         return False
@@ -1158,32 +1197,32 @@ class VersionList(VersionType):
         return bool(self.versions)
 
     def __eq__(self, other) -> bool:
-        if isinstance(other, VersionList):
+        if type(other) is self.__class__:
             return self.versions == other.versions
         return False
 
     def __ne__(self, other) -> bool:
-        if isinstance(other, VersionList):
+        if type(other) is self.__class__:
             return self.versions != other.versions
         return False
 
     def __lt__(self, other) -> bool:
-        if isinstance(other, VersionList):
+        if type(other) is self.__class__:
             return self.versions < other.versions
         return NotImplemented
 
     def __le__(self, other) -> bool:
-        if isinstance(other, VersionList):
+        if type(other) is self.__class__:
             return self.versions <= other.versions
         return NotImplemented
 
     def __ge__(self, other) -> bool:
-        if isinstance(other, VersionList):
+        if type(other) is self.__class__:
             return self.versions >= other.versions
         return NotImplemented
 
     def __gt__(self, other) -> bool:
-        if isinstance(other, VersionList):
+        if type(other) is self.__class__:
             return self.versions > other.versions
         return NotImplemented
 
@@ -1226,12 +1265,12 @@ def _next_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
     """
     # First deal with the infinity case.
     data = v.data
-    if isinstance(data, int):
+    if type(data) is int:
         return VersionStrComponent(data + 1)
 
     # Find the next non-infinity string.
     while True:
-        data = _next_str(data)
+        data = _next_str(data)  # type: ignore[arg-type]
         if data not in infinity_versions:
             break
 
@@ -1246,12 +1285,12 @@ def _prev_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
     """
     # First deal with the infinity case. Allow underflows
     data = v.data
-    if isinstance(data, int):
+    if type(data) is int:
         return VersionStrComponent(data - 1)
 
     # Find the next string.
     while True:
-        data = _prev_str(data)
+        data = _prev_str(data)  # type: ignore[arg-type]
         if data not in infinity_versions:
             break
 
@@ -1267,10 +1306,10 @@ def _next_version(v: StandardVersion) -> StandardVersion:
     elif len(release) == 0:
         release = (VersionStrComponent("A"),)
         separators = ("",)
-    elif isinstance(release[-1], VersionStrComponent):
+    elif type(release[-1]) is VersionStrComponent:
         release = release[:-1] + (_next_version_str_component(release[-1]),)
     else:
-        release = release[:-1] + (release[-1] + 1,)
+        release = release[:-1] + (release[-1] + 1,)  # type: ignore[operator]
 
     # Avoid constructing a string here for performance. Instead, pass "" to
     # StandardVersion to lazily stringify.
@@ -1289,10 +1328,10 @@ def _prev_version(v: StandardVersion) -> StandardVersion:
         )
     elif len(release) == 0:
         return v
-    elif isinstance(release[-1], VersionStrComponent):
+    elif type(release[-1]) is VersionStrComponent:
         release = release[:-1] + (_prev_version_str_component(release[-1]),)
     else:
-        release = release[:-1] + (release[-1] - 1,)
+        release = release[:-1] + (release[-1] - 1,)  # type: ignore[operator]
 
     # Avoid constructing a string here for performance. Instead, pass "" to
     # StandardVersion to lazily stringify.
@@ -1300,8 +1339,9 @@ def _prev_version(v: StandardVersion) -> StandardVersion:
 
 
 def Version(string: Union[str, int]) -> Union[StandardVersion, GitVersion]:
-    if not isinstance(string, (str, int)):
-        raise TypeError(f"Cannot construct a version from {type(string)}")
+    ty = type(string)
+    if ty not in (str, int):
+        raise TypeError(f"Cannot construct a version from {ty}")
     string = str(string)
     if is_git_version(string):
         return GitVersion(string)
@@ -1309,8 +1349,10 @@ def Version(string: Union[str, int]) -> Union[StandardVersion, GitVersion]:
 
 
 def VersionRange(lo: Union[str, StandardVersion], hi: Union[str, StandardVersion]):
-    lo = lo if isinstance(lo, StandardVersion) else StandardVersion.from_string(lo)
-    hi = hi if isinstance(hi, StandardVersion) else StandardVersion.from_string(hi)
+    if lo is _STANDARD_VERSION_TYPEMIN and hi is _STANDARD_VERSION_TYPEMAX:
+        return _UNBOUNDED_RANGE
+    lo = lo if type(lo) is StandardVersion else StandardVersion.from_string(lo)  # type: ignore[arg-type] # noqa: E501
+    hi = hi if type(hi) is StandardVersion else StandardVersion.from_string(hi)  # type: ignore[arg-type] # noqa: E501
     return ClosedOpenRange.from_version_range(lo, hi)
 
 
@@ -1347,16 +1389,17 @@ def ver(obj: Union[VersionType, str, list, tuple, int, float]) -> VersionType:
     """Returns a :class:`~spack.version.ClosedOpenRange`, :class:`~spack.version.StandardVersion`,
     :class:`~spack.version.GitVersion`, or :class:`~spack.version.VersionList` from the argument.
     """
-    if isinstance(obj, VersionType):
-        return obj
-    elif isinstance(obj, str):
-        return from_string(obj)
-    elif isinstance(obj, (list, tuple)):
-        return VersionList(obj)
-    elif isinstance(obj, (int, float)):
+    ty = type(obj)
+    if ty in (StandardVersion, GitVersion, ClosedOpenRange, VersionList):
+        return obj  # type: ignore[return-value]
+    elif issubclass(ty, str):
+        return from_string(obj)  # type: ignore[arg-type]
+    elif ty in (list, tuple):
+        return VersionList(obj)  # type: ignore[arg-type]
+    elif ty in (int, float):
         return from_string(str(obj))
     else:
-        raise TypeError("ver() can't convert %s to version!" % type(obj))
+        raise TypeError("ver() can't convert %s to version!" % ty)
 
 
 _STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))
