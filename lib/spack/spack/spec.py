@@ -1941,9 +1941,9 @@ class Spec:
         self.namespace = None
         self.abstract_hash = None
 
-        # initial values for all spec hash types. The package hash is assigned directly, by
-        # assign_package_hashes.
-        self._hash = None
+        # initial values for all spec hash types. The dag hash is computed by spec_hash; the
+        # package hash is assigned by assign_package_hashes. Both are spelled out for typing.
+        self._hash: Optional[str] = None
         self._package_hash: Optional[str] = None
         self._full_hash = None
         self._build_hash = None
@@ -2575,17 +2575,9 @@ class Spec:
     def set_prefix(self, value: str) -> None:
         self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
-    def spec_hash(self, hash: ht.SpecHashDescriptor) -> str:
-        """Utility method for computing different types of Spec hashes.
-
-        Arguments:
-            hash: type of hash to generate.
-        """
-        if hash is not ht.dag_hash:
-            raise ValueError(
-                f"{hash.name} cannot be computed: it is assigned, or read from old spec files"
-            )
-        node_dict = self.to_node_dict(hash=hash)
+    def spec_hash(self) -> str:
+        """Compute the dag hash of this spec, from the JSON serialization of its node dicts."""
+        node_dict = self.to_node_dict()
         json_text = json.dumps(
             node_dict, ensure_ascii=True, indent=None, separators=(",", ":"), sort_keys=False
         )
@@ -2593,30 +2585,24 @@ class Spec:
         # original hash when splicing so that we can avoid relocation issues
         out = spack.util.hash.b32_hash(json_text)
         if self.build_spec is not self:
-            return out[:-7] + self.build_spec.spec_hash(hash)[-7:]
+            return out[:-7] + self.build_spec.spec_hash()[-7:]
         return out
 
-    def _cached_hash(
-        self, hash: ht.SpecHashDescriptor, length: Optional[int] = None, force: bool = False
-    ) -> str:
-        """Helper function for storing a cached hash on the spec.
+    def _cached_hash(self, length: Optional[int] = None, force: bool = False) -> str:
+        """Helper function for storing the cached dag hash on the spec.
 
-        This will run spec_hash() with the deptype and package_hash
-        parameters, and if this spec is concrete, it will store the value
-        in the supplied attribute on this spec.
+        This will run spec_hash() and, if this spec is concrete, store the value in ``_hash``.
 
         Arguments:
-            hash: type of hash to generate.
             length: length of hash prefix to return (default is full hash string)
             force: cache the hash even if spec is not concrete (default False)
         """
-        hash_string = getattr(self, hash.attr, None)
-        if hash_string:
-            return hash_string[:length]
+        if self._hash:
+            return self._hash[:length]
 
-        hash_string = self.spec_hash(hash)
+        hash_string = self.spec_hash()
         if force or self.concrete:
-            setattr(self, hash.attr, hash_string)
+            self._hash = hash_string
 
         return hash_string[:length]
 
@@ -2627,13 +2613,13 @@ class Spec:
         NOTE: Versions of Spack prior to 1.0 only did not include test deps.
 
         """
-        return self._cached_hash(ht.dag_hash, length)
+        return self._cached_hash(length)
 
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
 
-    def to_node_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
+    def to_node_dict(self) -> Dict[str, Any]:
         """Create a dictionary representing the state of this Spec.
 
         This method creates the content that is eventually hashed by Spack to create identifiers
@@ -2682,9 +2668,6 @@ class Spec:
 
         See :meth:`to_dict()` for a "complete" spec hash, with hashes for each node and nodes for
         each dependency (instead of just their hashes).
-
-        Arguments:
-            hash: type of hash to generate.
         """
         d: Dict[str, Any] = {"name": self.name}
 
@@ -2748,7 +2731,7 @@ class Spec:
             if hasattr(variant, "_patches_in_order_of_appearance"):
                 d["patches"] = variant._patches_in_order_of_appearance
 
-        if self._concrete and hash.package_hash and self._package_hash:
+        if self._concrete and self._package_hash:
             # The package hash is assigned at concretization time. We don't want to compute one for
             # a concrete spec, where a) the package might not exist, or b) the `dag_hash` didn't
             # include the package hash when the spec was concretized.
@@ -2760,14 +2743,14 @@ class Spec:
             d["package_hash"] = package_hash
 
         # Note: Relies on sorting dict by keys later in algorithm.
-        deps = self._dependencies_dict(depflag=hash.depflag)
+        deps = self._dependencies_dict()
         if deps:
             dependencies = []
             for name, edges_for_name in sorted(deps.items()):
                 for dspec in edges_for_name:
                     dep_attrs: Dict[str, Any] = {
                         "name": name,
-                        hash.name: dspec.spec._cached_hash(hash),
+                        "hash": dspec.spec.dag_hash(),
                         "parameters": {
                             "deptypes": dt.flag_to_tuple(dspec.depflag),
                             "virtuals": dspec.virtuals,
@@ -2786,10 +2769,7 @@ class Spec:
 
         # Name is included in case this is replacing a virtual.
         if self._build_spec:
-            d["build_spec"] = {
-                "name": self.build_spec.name,
-                hash.name: self.build_spec._cached_hash(hash),
-            }
+            d["build_spec"] = {"name": self.build_spec.name, "hash": self.build_spec.dag_hash()}
 
         # Annotations
         d["annotations"] = {"original_specfile_version": self.annotations.original_spec_format}
@@ -2798,7 +2778,7 @@ class Spec:
 
         return d
 
-    def to_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         """Create a dictionary suitable for writing this spec to YAML or JSON.
 
         This dictionary is like the one that is ultimately written to a ``spec.json`` file in each
@@ -2861,50 +2841,41 @@ class Spec:
         """
         node_list = []  # Using a list to preserve preorder traversal for hash.
         hash_set = set()
-        for s in self.traverse(order="pre", deptype=hash.depflag):
-            spec_hash = s._cached_hash(hash)
+        for s in self.traverse(order="pre"):
+            spec_hash = s.dag_hash()
 
             if spec_hash not in hash_set:
-                node_list.append(s.node_dict_with_hashes(hash))
+                node_list.append(s.node_dict_with_hashes())
                 hash_set.add(spec_hash)
 
             if s.build_spec is not s:
-                build_spec_list = s.build_spec.to_dict(hash)["spec"]["nodes"]
+                build_spec_list = s.build_spec.to_dict()["spec"]["nodes"]
                 for node in build_spec_list:
-                    node_hash = node[hash.name]
+                    node_hash = node["hash"]
                     if node_hash not in hash_set:
                         node_list.append(node)
                         hash_set.add(node_hash)
 
         return {"spec": {"_meta": {"version": SPECFILE_FORMAT_VERSION}, "nodes": node_list}}
 
-    def node_dict_with_hashes(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
-        """Returns a dict of this spec with the dag hash, and optionally another hash or id.
-
-        Arguments:
-            hash: Optional other hash to include. If this is the dag hash, it's only included once.
-
-        """
-        node = self.to_node_dict(hash)
+    def node_dict_with_hashes(self) -> Dict[str, Any]:
+        """Returns the node dict of this spec with its dag hash."""
+        node = self.to_node_dict()
         # All specs have at least a DAG hash
-        node[ht.dag_hash.name] = self.dag_hash()
+        node["hash"] = self.dag_hash()
 
         if not self.concrete:
             node["concrete"] = False
 
-        # we can also give them other hash types if we want
-        if hash.name != ht.dag_hash.name:
-            node[hash.name] = self._cached_hash(hash)
-
         return node
 
-    def to_yaml(self, stream=None, hash=ht.dag_hash):
-        return syaml.dump(self.to_dict(hash), stream=stream, default_flow_style=False)
+    def to_yaml(self, stream=None):
+        return syaml.dump(self.to_dict(), stream=stream, default_flow_style=False)
 
-    def to_json(self, stream=None, *, hash=ht.dag_hash, pretty=False):
+    def to_json(self, stream=None, *, pretty=False):
         if stream is None:
-            return sjson.dumps(self.to_dict(hash), pretty=pretty)
-        sjson.dump(self.to_dict(hash), stream, pretty=pretty)
+            return sjson.dumps(self.to_dict(), pretty=pretty)
+        sjson.dump(self.to_dict(), stream, pretty=pretty)
         return None
 
     @staticmethod
@@ -3242,7 +3213,7 @@ class Spec:
         # Any specs that were concrete before finalization will already have a cached
         # DAG hash.
         for spec in self.traverse():
-            spec._cached_hash(ht.dag_hash)
+            spec._cached_hash()
 
     def index(self, deptype="all"):
         """Return a dictionary that points to all the dependencies in this
@@ -6056,7 +6027,7 @@ def save_dependency_specfiles(root: Spec, output_directory: str, dependencies: L
         json_path = os.path.join(output_directory, f"{spec.name}.json")
 
         with open(json_path, "w", encoding="utf-8") as fd:
-            fd.write(spec.to_json(hash=ht.dag_hash))
+            fd.write(spec.to_json())
 
 
 def get_host_environment_metadata() -> Dict[str, str]:

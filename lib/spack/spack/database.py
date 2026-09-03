@@ -53,7 +53,6 @@ except ImportError:
     pass
 
 import spack.deptypes as dt
-import spack.hash_types as ht
 import spack.spec
 import spack.traverse as tr
 import spack.util.filesystem as fs
@@ -115,7 +114,7 @@ _DEFAULT_PKG_LOCK_TIMEOUT = None
 
 #: Types of dependencies tracked by the database
 #: We store by DAG hash, so we track the dependencies that the DAG hash includes.
-_TRACKED_DEPENDENCIES = ht.dag_hash.depflag
+_TRACKED_DEPENDENCIES = dt.ALL
 
 #: Default list of fields written for each install record
 DEFAULT_INSTALL_RECORD_FIELDS = (
@@ -706,7 +705,7 @@ class Database:
         except (TypeError, ValueError) as e:
             raise sjson.SpackJSONError("error writing JSON database:", e)
 
-    def _read_spec_from_dict(self, spec_reader, hash_key, installs, hash=ht.dag_hash):
+    def _read_spec_from_dict(self, spec_reader, hash_key, installs):
         """Recursively construct a spec from a hash in a YAML database.
 
         Does not do any locking.
@@ -721,7 +720,7 @@ class Database:
                 spec_dict[name]["hash"] = hash_key
         else:
             # new format, already a singleton
-            spec_dict[hash.name] = hash_key
+            spec_dict["hash"] = hash_key
 
         # Build spec from dict first.
         return spec_reader.from_node_dict(spec_dict)

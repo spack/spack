@@ -47,7 +47,6 @@ import spack.config
 import spack.database
 import spack.deptypes as dt
 import spack.error
-import spack.hash_types as ht
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirrors.mirror
@@ -1543,7 +1542,7 @@ def _oci_push(
         )
 
     def extra_config(spec: spack.spec.Spec):
-        spec_dict = spec.to_dict(hash=ht.dag_hash)
+        spec_dict = spec.to_dict()
         spec_dict["buildcache_layout_version"] = spack.mirrors.mirror.BINARY_MEDIA_TYPE_VERSION
         spec_dict["binary_cache_checksum"] = {
             "hash_algorithm": "sha256",

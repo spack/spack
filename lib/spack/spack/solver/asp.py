@@ -48,7 +48,6 @@ import spack.deptypes as dt
 import spack.error
 import spack.externals_config
 import spack.hash_lookup
-import spack.hash_types as ht
 import spack.package_base
 import spack.package_prefs
 import spack.platforms
@@ -319,7 +318,7 @@ def spec_dict_to_json(spec_dict: SpecDict) -> Dict:
                     "specs are not serializable."
                 )
             if not spec.concrete:
-                spec._cached_hash(ht.dag_hash, force=True)
+                spec._cached_hash(force=True)
 
         # Traverse every spec reachable from spec_dict's values, deduped by hash, and add them
         # to the serialized entries either a) with their original NodeId, or b) with None if they

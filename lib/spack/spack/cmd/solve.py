@@ -11,7 +11,6 @@ import spack.binary_distribution
 import spack.cmd
 import spack.cmd.spec
 import spack.config
-import spack.hash_types as ht
 import spack.package_base
 import spack.spec
 from spack.active_environment import active_environment
@@ -108,9 +107,9 @@ def _process_result(result, show, required_format, kwargs):
                 # With -y, just print YAML to output.
                 if required_format == "yaml":
                     # use write because to_yaml already has a newline.
-                    sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
+                    sys.stdout.write(spec.to_yaml())
                 elif required_format == "json":
-                    print(spec.to_json(hash=ht.dag_hash))
+                    print(spec.to_json())
                 else:
                     print(spec.format(required_format))
         else:

@@ -21,7 +21,6 @@ import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
-import spack.hash_types as ht
 import spack.hooks.sbom_generate
 import spack.old_installer
 import spack.package_base
@@ -688,7 +687,7 @@ def test_cdash_install_from_spec_json(
 
         pkg_spec = spack.concretize.concretize_one("pkg-c")
         with open(spec_json_path, "w", encoding="utf-8") as fd:
-            fd.write(pkg_spec.to_json(hash=ht.dag_hash))
+            fd.write(pkg_spec.to_json())
 
         install(
             "--log-format=cdash",
@@ -917,7 +916,7 @@ def test_install_no_add_in_env(
         # file on disk, and the spec is installed but not added as a root
         mpi_spec_json_path = tmp_path / f"{mpi_spec.name}.json"
         with open(mpi_spec_json_path, "w", encoding="utf-8") as fd:
-            fd.write(mpi_spec.to_json(hash=ht.dag_hash))
+            fd.write(mpi_spec.to_json())
 
         install(str(mpi_spec_json_path))
         assert mpi_spec not in e.roots()
