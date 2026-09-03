@@ -1682,13 +1682,14 @@ class SpecAnnotations:
 def _format_edge_attributes(
     edge: DependencySpec, *, deptypes: bool = True, when: bool = True, virtuals: bool = False
 ) -> str:
-    """Format the ``[key=value ...] `` edge attributes of an edge, or return an empty string."""
-    when_str = f"when='{edge.when}'" if when and edge.when != EMPTY_SPEC else ""
+    """Format the ``[key=value ...] `` edge attributes of an edge, or return an empty string.
+    The ``when=`` condition is a spec that extends up to the closing bracket, so it comes last."""
     deptypes_str = (
         f"deptypes={','.join(dt.flag_to_tuple(edge.depflag))}" if deptypes and edge.depflag else ""
     )
     virtuals_str = f"virtuals={','.join(edge.virtuals)}" if virtuals and edge.virtuals else ""
-    attrs = " ".join(s for s in (when_str, deptypes_str, virtuals_str) if s)
+    when_str = f"when={edge.when}" if when and edge.when != EMPTY_SPEC else ""
+    attrs = " ".join(s for s in (deptypes_str, virtuals_str, when_str) if s)
     return f"[{attrs}] " if attrs else ""
 
 
