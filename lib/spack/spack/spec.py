@@ -5464,8 +5464,16 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
 _EMPTY_VARIANT_MAP = VariantMap()
 
 
+if TYPE_CHECKING:
+    _PropagatedVariantsBase = List[vt.VariantValue]
+else:
+    # a plain base: on Python 3.6 subclassing typing.List goes through GenericMeta, which slows
+    # down every instantiation; from 3.7 the two are equivalent at runtime
+    _PropagatedVariantsBase = list
+
+
 @lang.lazy_lexicographic_ordering
-class PropagatedVariants(List[vt.VariantValue]):
+class PropagatedVariants(_PropagatedVariantsBase):
     """The propagation requests of a node, as a canonically ordered list of values.
 
     A propagated value is a conditional constraint: it binds every node of the closure that has
