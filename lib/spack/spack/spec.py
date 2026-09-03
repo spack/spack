@@ -5477,35 +5477,26 @@ _EMPTY_VARIANT_MAP = VariantMap()
 if TYPE_CHECKING:
     _PropagatedVariantsBase = List[vt.VariantValue]
 else:
-    # a plain base: on Python 3.6 subclassing typing.List goes through GenericMeta, which slows
-    # down every instantiation; from 3.7 the two are equivalent at runtime
-    _PropagatedVariantsBase = list
+    _PropagatedVariantsBase = list  # subclassing typing.List is slow on 3.6 (GenericMeta)
 
 
 @lang.lazy_lexicographic_ordering
 class PropagatedVariants(_PropagatedVariantsBase):
     """The propagation requests of a node, as a canonically ordered list of values.
 
-    A propagated value is a conditional constraint: it binds every node of the closure that has
-    the variant and for which the value is possible. Two requests never contradict each other,
-    since a DAG in which no node has the variant satisfies both, so the meet of two request
-    sets is their union and :meth:`add` never raises.
+    A propagated value binds every closure node that has the variant with the value possible,
+    so no two requests contradict: a DAG without the variant satisfies both, and the meet of
+    two request sets is their union. It is canonicalized so equal sets have equal state, string
+    form and node dict: the solver grounds one propagate fact per value, so the abstract values
+    of one variant merge into a single sorted value set (``foo==a foo==b`` is ``foo==a,b``) and
+    an empty one (``foo==*``) is dropped; bool values stay one entry per value (``++foo ~~foo``
+    is two requests); and values a concrete request contains are dropped as implied. Entries
+    are ordered by name, then bools, the abstract value set, concrete value sets.
 
-    The union is canonicalized so that equal request sets have equal state, string form and
-    node dict: the solver grounds one propagate fact per value, which makes an abstract
-    multi-value one request per value, so the abstract values of one variant merge into a
-    single sorted value set (``foo==a,b`` and ``foo==a foo==b`` are the same constraint) and an
-    empty one (``foo==*``) is no request at all; bool values stay one entry per value, since a
-    bool variant is exclusive only on a node that has it (``++foo ~~foo`` is two requests); and
-    a value a concrete request of the same variant contains is already implied, so it is
-    dropped. Entries are ordered by name, then bools before the abstract value set before
-    concrete value sets.
-
-    Specs share these lists — almost every spec shares :data:`EMPTY_PROPAGATED_VARIANTS` — so a
-    list is never modified once it exists: :meth:`with_value`, :meth:`constrained` and
-    :meth:`without` return the list to store back on the spec, self when nothing changed, and
-    the mutators inherited from list raise. The entries are shared along with the list, so they
-    are not modified either."""
+    Specs share these lists, almost all of them :data:`EMPTY_PROPAGATED_VARIANTS`, so a list
+    and its entries are never modified once they exist: :meth:`with_value`, :meth:`constrained`
+    and :meth:`without` return the list to store back on the spec, self when nothing changed,
+    and the mutators inherited from list raise."""
 
     __slots__ = ()
 
@@ -5515,7 +5506,7 @@ class PropagatedVariants(_PropagatedVariantsBase):
             # a single value from an old node dict is one abstract request
             value = vt.VariantValue(vt.VariantType.MULTI, value.name, value.values)
 
-        abstract = self._abstract_entry(value.name)
+        abstract = next((e for e in self if e.name == value.name and not e.concrete), None)
 
         if value.concrete:  # a bool value or an exact value set: one entry per distinct request
             if value in self:
@@ -5565,9 +5556,6 @@ class PropagatedVariants(_PropagatedVariantsBase):
                     return False
         return True
 
-    def _abstract_entry(self, name: str) -> Optional[vt.VariantValue]:
-        return next((e for e in self if e.name == name and not e.concrete), None)
-
     @staticmethod
     def _sort_key(e: vt.VariantValue) -> Tuple[str, int, Tuple[str, ...]]:
         rank = 0 if e.type == vt.VariantType.BOOL else (2 if e.concrete else 1)
@@ -5575,18 +5563,11 @@ class PropagatedVariants(_PropagatedVariantsBase):
 
     def to_node_list(self) -> List[Dict[str, Any]]:
         """The entries as a list for a node dict, in canonical order."""
-        result = []
-        for e in self:
-            entry: Dict[str, Any] = {"name": e.name, "value": e.yaml_entry()[1]}
-            if e.concrete:
-                entry["concrete"] = True
-            result.append(entry)
-        return result
+        return [{"name": e.name, "value": e.yaml_entry()[1], "concrete": e.concrete} for e in self]
 
     @staticmethod
     def from_node_list(entries: List[Dict[str, Any]]) -> "PropagatedVariants":
-        """Inverse of :meth:`to_node_list`. Entries merge through :meth:`with_value`, so a
-        non-canonical list still loads into canonical state."""
+        """Inverse of :meth:`to_node_list`; merging through :meth:`with_value` canonicalizes."""
         result = EMPTY_PROPAGATED_VARIANTS
         for entry in entries:
             result = result.with_value(
@@ -5597,8 +5578,7 @@ class PropagatedVariants(_PropagatedVariantsBase):
         return result
 
     def values(self) -> Iterator[vt.VariantValue]:
-        """The entries, named for symmetry with ``VariantMap.values()``."""
-        return iter(self)
+        return iter(self)  # named for symmetry with VariantMap.values()
 
     def _immutable(self, *args, **kwargs) -> NoReturn:
         raise TypeError("PropagatedVariants is immutable, store the result of with_value()")
@@ -5616,12 +5596,8 @@ class PropagatedVariants(_PropagatedVariantsBase):
     def __str__(self) -> str:
         return _variants_string(_EMPTY_VARIANT_MAP, self)
 
-    def __repr__(self) -> str:
-        return f"PropagatedVariants({list.__repr__(self)})"
 
-
-#: Shared by every spec without propagation requests — nearly all of them, and every concrete
-#: one.
+#: Shared by every spec without propagation requests: nearly all of them, and every concrete one.
 EMPTY_PROPAGATED_VARIANTS = PropagatedVariants()
 
 
