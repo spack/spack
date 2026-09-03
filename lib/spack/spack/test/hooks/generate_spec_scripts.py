@@ -112,16 +112,16 @@ def test_contents_of_shell_scripts(
             separator = f'"{os.pathsep}"'
         elif shell == "pwsh":
             separator = f"'{os.pathsep}'"
-        assert (
-            f"{_get_shell_cmd_invocation('_spack_env_prepend', uenv.spack_loaded_hashes_var, shell)}"
-            f" {pkg.dag_hash()} {separator}"
-            in load_script.splitlines()
-        )
 
-        assert (
-            f"{_get_shell_cmd_invocation('_spack_env_remove_value', uenv.spack_loaded_hashes_var, shell)} "
-            f"{pkg.dag_hash()} {separator}" in unload_script.splitlines()
+        prepend_var = _get_shell_cmd_invocation(
+            "_spack_env_prepend", uenv.spack_loaded_hashes_var, shell
         )
+        assert f"{prepend_var} {pkg.dag_hash()} {separator}" in load_script.splitlines()
+
+        remove_var = _get_shell_cmd_invocation(
+            "_spack_env_remove_value", uenv.spack_loaded_hashes_var, shell
+        )
+        assert f"{remove_var} {pkg.dag_hash()} {separator}" in unload_script.splitlines()
 
 
 @pytest.mark.parametrize(

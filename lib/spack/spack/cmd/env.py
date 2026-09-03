@@ -397,10 +397,7 @@ def env_activate(args):
 
     ev.activate(active_env, use_env_repo=True)
 
-    # Validate that the environment view is accessible. This will print warnings if
-    # packages or repos are missing/broken. Note: write_env_activate_script may use
-    # cached scripts if the lockfile hasn't changed, so this check ensures we catch
-    # repo context changes (e.g., a repo being removed) even when using cached scripts.
+    # Validate that the environment view is accessible.
     spack.environment.shell.validate_view(active_env, view)
 
     cmds = env_script.get_shell_unique_env_cmds(args.shell, prompt=env_prompt)
