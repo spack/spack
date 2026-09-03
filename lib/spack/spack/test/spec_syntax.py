@@ -1216,8 +1216,10 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         (["zlib", 'cflags="-O3 -g" +bar baz'], """zlib cflags='"-O3 -g" +bar baz'"""),
         # Use double quotes if internal single quotes are present
         (["zlib", "cflags='-O3 -g' +bar baz"], '''zlib cflags="'-O3 -g' +bar baz"'''),
-        # Use single quotes and escape single quotes with internal single and double quotes
-        (["zlib", "cflags='-O3 -g' \"+bar baz\""], 'zlib cflags="\'-O3 -g\' \\"+bar baz\\""'),
+        # There is no escaping: a value cannot contain both kinds of quotes
+        (["zlib", '''cflags='-O3 -g' "+bar baz"'''], spack.error.SpecSyntaxError),
+        # and a backslash is a character like any other: the compiler gets the define as typed
+        (["zlib", r"cflags=-DCHAR=\'x\'"], r'''zlib cflags="-DCHAR=\'x\'"'''),
         # Ensure that empty strings are handled correctly on CLI
         (["zlib", "ldflags=", "+pic"], "zlib+pic"),
         # These flags are assumed to be quoted by the shell, but the space doesn't matter because
@@ -1993,9 +1995,20 @@ def test_when_edge_attribute_keeps_commas():
         ("%[virtuals=c] *@4.0 foo=bar", "%[virtuals=c] @4.0 foo=bar"),
         # a star is a package name, so name=* is a variant value, not a substitute
         ("^dev_path=*", "^* dev_path='*'"),
+        # a when= value is a spec, whose own quotes cannot be nested in a quoted value
+        ('%[when="a=*"]', "%[when=a='*'] *"),
+        ("""x %[when="a=']'"] gcc""", "x %[when=a=']'] gcc"),
+        ("%[when='@1,2' virtuals=c] *", "%[virtuals=c when=@1:2] *"),
         # a version bound is never truncated at a "." to make room for a key=value pair
         ("@:a.a=''", "a.a=''"),
         ("@1.2:2.0=x", "@1.2: 2.0=x"),
+        # there is no escaping in quoted values: a backslash is a character like any other, and a
+        # value that contains one kind of quote is quoted with the other
+        (r"a='x\' b='y'", r"a='x\' b=y"),
+        (r"""a="it's\"""", r"""a="it's\""""),
+        # nor is there json-style escaping of non-ASCII or control characters on output
+        ('a="café\'s"', 'a="café\'s"'),
+        ('a="x\'\ty"', 'a="x\'\ty"'),
         # a key=value pair after a sigil is a virtual assignment only if the whole value is a
         # package name, otherwise it is a variant of an anonymous dependency
         ("^foo=bar:baz", "^* foo='bar:baz'"),
