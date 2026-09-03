@@ -525,6 +525,12 @@ class TestSpecSemantics:
             ("mpich~foo", "mpich+foo"),
             ("mpich+foo", "mpich~foo"),
             ("mpich foo=True", "mpich foo=False"),
+            # propagated constraints on the same variant contradict like variants do
+            ("mpich~~foo", "mpich++foo"),
+            ("mpich++foo", "mpich~~foo"),
+            ("mpich foo==True", "mpich foo==False"),
+            ("mpich foo:==a", "mpich foo:==b"),
+            ("mpich foo==a,c", "mpich foo:==a,b"),
             ("libelf@0:2.0", "libelf@2.1:3"),
             ("libelf@0:2.5%gcc@4.8:4.9", "libelf@2.1:3%gcc@4.5:4.7"),
             ("libelf+debug", "libelf~debug"),
@@ -660,25 +666,19 @@ class TestSpecSemantics:
             # knows
             ("pkg foo=a", "pkg foo==b", "pkg foo=a foo==b"),
             ("pkg foo==b", "pkg foo=a", "pkg foo=a foo==b"),
-            # requests union: a DAG in which no node has the variant satisfies both
-            ("pkg++foo", "pkg~~foo", "pkg~~foo++foo"),
-            ("pkg~~foo", "pkg++foo", "pkg~~foo++foo"),
+            # propagated constraints on the same variant merge like variants do
             ("pkg foo==a", "pkg foo==b", "pkg foo==a,b"),
             ("pkg foo==a", "pkg foo==a,b", "pkg foo==a,b"),
-            # an exact request absorbs the values it contains, in either operand order
             ("pkg foo==a", "pkg foo:==a", "pkg foo:==a"),
             ("pkg foo:==a", "pkg foo==a", "pkg foo:==a"),
-            ("pkg foo:==a", "pkg foo:==b", "pkg foo:==a foo:==b"),
-            ("pkg foo==a,c", "pkg foo:==a,b", "pkg foo==c foo:==a,b"),
-            ("pkg foo:==a,b", "pkg foo==a,c", "pkg foo==c foo:==a,b"),
-            # propagating any value is no request at all
+            # propagating any value constrains nothing
             ("pkg foo==a", "pkg foo==*", "pkg foo==a"),
             ("pkg foo==*", "pkg foo==a", "pkg foo==a"),
         ],
     )
     def test_propagation_constrain_keeps_both(self, lhs, rhs, expected):
-        """Setting a variant and propagating it are incomparable constraints, and so are two
-        different propagation requests, so the greatest lower bound keeps both."""
+        """Setting a variant and propagating it are incomparable constraints, so the greatest
+        lower bound keeps both."""
         original, lhs, expected = Spec(lhs), Spec(lhs), Spec(expected)
         assert lhs.constrain(rhs) is (original != expected)
         assert lhs == expected
@@ -693,9 +693,7 @@ class TestSpecSemantics:
             ("hdf5 foo=a,b foo==b", "hdf5 foo=a", True),
             ("hdf5 foo==b", "hdf5 foo==b,c", False),
             ("hdf5 foo==b,c", "hdf5 foo==b", True),
-            ("hdf5~~mpi ++mpi", "hdf5++mpi", True),
-            ("hdf5++mpi", "hdf5~~mpi ++mpi", False),
-            # an exact request implies the plain requests for its values, not conversely
+            # an exact propagated value set implies the abstract one for its values, not conversely
             ("hdf5 foo:==a", "hdf5 foo==a", True),
             ("hdf5 foo==a", "hdf5 foo:==a", False),
         ],
@@ -716,25 +714,19 @@ class TestSpecSemantics:
         ],
     )
     def test_propagation_conflicts_left_to_concretizer(self, spec_str):
-        """Whether propagated values collide with a variant, or with each other, on a node that
-        actually has the variant is left to the concretizer; the specs are representable and
-        round-trip."""
+        """Whether a propagated value collides with a variant, or with a value propagated from
+        another node, on a node that actually has the variant is left to the concretizer; the
+        specs are representable and round-trip."""
         spec = Spec(spec_str)
         assert spec.satisfies(spec)
         assert Spec(str(spec)) == spec
 
-    @pytest.mark.parametrize("spec_str", ["pkg+foo+foo", "pkg foo=a foo=b"])
-    def test_duplicate_variant_within_the_plain_slot_rejected(self, spec_str):
+    @pytest.mark.parametrize(
+        "spec_str", ["pkg+foo+foo", "pkg foo=a foo=b", "pkg++foo++foo", "pkg foo==a foo==b"]
+    )
+    def test_duplicate_variant_within_a_slot_rejected(self, spec_str):
         with pytest.raises(spack.spec_parser.SpecParsingError):
             Spec(spec_str)
-
-    @pytest.mark.parametrize(
-        "spec_str,canonical",
-        [("pkg++foo++foo", "pkg++foo"), ("pkg foo==a foo==b", "pkg foo==a,b")],
-    )
-    def test_duplicate_propagation_requests_union(self, spec_str, canonical):
-        assert Spec(spec_str) == Spec(canonical)
-        assert str(Spec(spec_str)) == str(Spec(canonical))
 
     @pytest.mark.parametrize(
         "lhs,rhs,expected",
@@ -745,8 +737,8 @@ class TestSpecSemantics:
             ("pkg++foo", "pkg ^dep~foo", True),
             ("pkg++foo", "pkg+foo", True),
             ("pkg+foo", "pkg~~foo", True),
-            # propagation requests never contradict each other
-            ("pkg++foo", "pkg~~foo", True),
+            # propagated constraints on the same variant intersect like variants do
+            ("pkg++foo", "pkg~~foo", False),
             ("pkg foo==a", "pkg foo==b", True),
             # a non-bool propagated value never contradicts a variant set on a node
             ("pkg foo=a", "pkg foo==b", True),
@@ -763,21 +755,14 @@ class TestSpecSemantics:
             "pkg+foo++bar",
             "pkg foo=a,b foo==b",
             "pkg+a~b++c~~d baz=qux foo==bar",
-            "pkg~~foo++foo",
-            "pkg foo==a foo:==b",
+            "pkg bar:==a,b foo==c",
         ],
     )
     def test_propagation_str_round_trip(self, spec_str):
         assert str(Spec(spec_str)) == spec_str
 
-    def test_propagating_any_value_is_vacuous(self):
-        """A propagated value binds only nodes where it is possible, so propagating any value
-        constrains nothing and canonicalizes away."""
-        assert Spec("pkg foo==*") == Spec("pkg")
-        assert str(Spec("pkg foo==*")) == "pkg"
-
     def test_propagation_canonical_form(self):
-        """Equal request sets have equal state however they were built, so string form, node
+        """Equal propagated constraints have equal state however they were built, so string form, node
         dict and hash agree and the concretization cache is keyed consistently."""
         merged = Spec("pkg foo==a")
         merged.constrain("pkg foo==b")
@@ -788,7 +773,7 @@ class TestSpecSemantics:
         assert hash(merged) == hash(parsed)
 
     def test_propagation_mark_concrete_raises(self):
-        """Propagation requests are conditional statements, which concrete specs cannot have."""
+        """Propagated variants are conditional constraints, which concrete specs cannot have."""
         with pytest.raises(SpecError, match="propagate"):
             Spec("pkg++foo")._mark_concrete()
 

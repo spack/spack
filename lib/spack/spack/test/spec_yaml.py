@@ -570,9 +570,9 @@ def test_from_dict_reads_legacy_propagate_list():
     "parameters" with their name in "propagate"."""
     node = {
         "name": "hdf5",
-        "parameters": {"mpi": True, "foo": ["bar", "baz"], "cxxstd": "17"},
+        "parameters": {"mpi": True, "foo": ["bar", "baz"], "cxxstd": ["17"]},
         "propagate": ["foo", "mpi", "cxxstd"],
-        "abstract": ["foo"],
+        "abstract": ["foo", "cxxstd"],
         "concrete": False,
     }
     reconstructed = spack.spec.SpecfileLatest.from_node_dict(node)

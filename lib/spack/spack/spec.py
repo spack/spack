@@ -1701,10 +1701,12 @@ def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
     # booleans come first, and they don't need a star. key-value pairs do. If there are
     # no key value pairs, we're left with either an empty spec, which needs * as in
     # '^*', or we're left with arch, which is a key value pair, and needs a star.
-    for variants in (dep.spec.variants, dep.spec.propagated_variants):
-        for v in variants.values():
-            if v.type == vt.VariantType.BOOL:
-                return "*" if dep.spec.architecture else ""
+    for v in dep.spec.variants.values():
+        if v.type == vt.VariantType.BOOL:
+            return "*" if dep.spec.architecture else ""
+    for v in dep.spec.propagated_variants:
+        if v.type == vt.VariantType.BOOL:
+            return "*" if dep.spec.architecture else ""
 
     return "*"
 
@@ -2192,10 +2194,12 @@ class Spec:
                 self.compiler_flags.add_flag(name, flag, propagation, flag_group)
         else:
             variant = vt.VariantValue.from_string_or_bool(name, value, concrete=concrete)
-            if propagate:
-                self.propagated_variants = self.propagated_variants.with_value(variant)
-            else:
+            if not propagate:
                 self.variants[name] = variant
+            elif self.propagated_variants.get(name) is not None:
+                raise vt.DuplicateVariantError(f'Cannot propagate variant "{name}" twice')
+            else:
+                self.propagated_variants = self.propagated_variants.with_value(variant)
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
@@ -2941,11 +2945,11 @@ class Spec:
                 raise ValueError("{0} is not a variant of {1}".format(vname, new_spec.name))
 
         # propagated variants are conditional, so they need not exist on this package
-        for value in change_spec.propagated_variants.values():
-            new_spec.propagated_variants = new_spec.propagated_variants.without(value.name)
-        new_spec.propagated_variants = new_spec.propagated_variants.constrained(
-            change_spec.propagated_variants
-        )
+        if change_spec.propagated_variants:
+            overridden = {v.name for v in change_spec.propagated_variants}
+            new_spec.propagated_variants = PropagatedVariants(
+                v for v in new_spec.propagated_variants if v.name not in overridden
+            ).constrained(change_spec.propagated_variants)
 
         if change_spec.compiler_flags:
             for flagname, flagvals in change_spec.compiler_flags.items():
@@ -3200,6 +3204,10 @@ class Spec:
         """Mark just this spec (not dependencies) concrete."""
         if self._concrete == value:
             return
+        if value and self.propagated_variants:
+            raise spack.error.SpecError(
+                f"cannot mark '{self}' concrete: concrete specs cannot propagate variants"
+            )
         self._concrete = value
         # A direct dependency is a constraint written with %, so the flag belongs on abstract
         # specs only; every edge of a materialized DAG is one anyway.
@@ -3207,10 +3215,6 @@ class Spec:
             edge.direct = not value
         if value:
             self._validate_version()
-            if self.propagated_variants:
-                raise spack.error.SpecError(
-                    f"cannot mark '{self}' concrete: concrete specs cannot propagate variants"
-                )
             for variant in self.variants.values():
                 variant.concrete = True
 
@@ -3818,47 +3822,53 @@ class Spec:
         return self._satisfies_variants_when_self_abstract(other)
 
     def _satisfies_variants_when_self_concrete(self, other: "Spec") -> bool:
+        self_dict = self.variants.dict
         for name, variant in other.variants.items():
-            if not (name in self.variants and self.variants[name].satisfies(variant)):
+            mine = self_dict.get(name)
+            if mine is None or not mine.satisfies(variant):
                 return False
         # a propagated value applies to a closure node only if the node has the variant and the
         # value is possible there; possible values are package knowledge this check must not
         # consult, so only a bool value on a bool variant, whose values are always possible, can
         # contradict; any other propagated value is satisfied vacuously
-        for v in other.propagated_variants:
-            if v.type != vt.VariantType.BOOL:
-                continue
+        bools = [v for v in other.propagated_variants if v.type == vt.VariantType.BOOL]
+        if bools:
             for node in self.traverse():
-                mine = node.variants.dict.get(v.name)
-                if mine is not None and mine.type == vt.VariantType.BOOL and not mine.satisfies(v):
-                    return False
+                node_dict = node.variants.dict
+                for v in bools:
+                    mine = node_dict.get(v.name)
+                    if (
+                        mine is not None
+                        and mine.type == vt.VariantType.BOOL
+                        and not mine.satisfies(v)
+                    ):
+                        return False
         return True
 
     def _satisfies_variants_when_self_abstract(self, other: "Spec") -> bool:
         # a variant asserts existence and value on this node, a propagated variant constrains
         # every closure node that has the variant; neither implies the other, so the slots are
         # compared independently, each as a subset test
+        self_dict = self.variants.dict
         for name, variant in other.variants.items():
-            if name not in self.variants or not self.variants[name].satisfies(variant):
+            mine = self_dict.get(name)
+            if mine is None or not mine.satisfies(variant):
                 return False
         return self.propagated_variants.satisfies(other.propagated_variants)
 
     def _intersects_variants(self, other: "Spec") -> bool:
-        # propagated values never contradict each other or a node's variants: a DAG in which no
-        # node has the variant satisfies any combination of requests, so only the plain slot
-        # can rule out an intersection
+        # each slot is checked pairwise; a propagated bool contradicting a variant of a node in
+        # the closure is left to the concretizer, as intersects is optimistic
         self_dict = self.variants.dict
-        other_dict = other.variants.dict
-        return all(self_dict[k].intersects(other_dict[k]) for k in other_dict if k in self_dict)
+        for name, variant in other.variants.items():
+            mine = self_dict.get(name)
+            if mine is not None and not mine.intersects(variant):
+                return False
+        return self.propagated_variants.intersects(other.propagated_variants)
 
     def _constrain_variants(self, other: "Spec") -> bool:
         """Add all variants in other that aren't in self to self. Also constrain all multi-valued
         variants that are already present. Return True iff self changed"""
-        if other is not None and other._concrete:
-            for k in self.variants:
-                if k not in other.variants:
-                    raise vt.UnsatisfiableVariantSpecError(self.variants[k], "<absent>")
-
         changed = False
         for name, value in other.variants.items():
             if name in self.variants:
@@ -4338,7 +4348,7 @@ class Spec:
             parts.append(compiler_flags_str)
 
         variants_str = _variants_string(
-            self.variants, self.propagated_variants, abbreviate_patches=self._concrete
+            self.variants.dict, self.propagated_variants, abbreviate_patches=self._concrete
         )
         if variants_str:
             parts.append(variants_str)
@@ -4597,15 +4607,10 @@ class Spec:
                     return ""
                 color_code = _STYLE_COLOR_MAP.get(style, color_code)
 
-            if attribute in ("variants", "propagated_variants") and isinstance(
-                current, (VariantMap, PropagatedVariants)
-            ):
-                # the whole-slot attributes render both variant slots, booleans before
-                # key-value pairs
-                if isinstance(current, VariantMap):
-                    variants, propagated_variants = current, current_node.propagated_variants
-                else:
-                    variants, propagated_variants = _EMPTY_VARIANT_MAP, current
+            if attribute == "variants":
+                # {variants} is the whole variant part of the node, i.e. both slots
+                variants = current_node.variants.dict
+                propagated_variants = current_node.propagated_variants
                 if not variant_style_fn:
                     string = _variants_string(
                         variants, propagated_variants, abbreviate_patches=current_node._concrete
@@ -4621,13 +4626,13 @@ class Spec:
                     result += prefix + safe_color(sig, variant_str, key_color)
                 return result
 
-            if variant_style_fn and is_variant_part and not isinstance(current, VariantMap):
+            if variant_style_fn and is_variant_part:
                 style = variant_style_fn(current_node, parts[-1])
                 if style == spack.enums.PartStyle.HIDDEN:
                     return ""
                 color_code = _STYLE_COLOR_MAP.get(style, color_code)
 
-            if isinstance(current, (VariantMap, vt.VariantValue)):
+            if isinstance(current, vt.VariantValue):
                 string = current.string(abbreviate_patches=current_node._concrete)
             else:
                 string = str(current)
@@ -5329,7 +5334,7 @@ class Spec:
                     self.namespace,
                     self.versions,
                     (self.variants if self.variants.dict else None),
-                    (self.propagated_variants if self.propagated_variants else None),
+                    self.propagated_variants,
                     self.architecture,
                     self.abstract_hash,
                 )
@@ -5354,9 +5359,6 @@ class Spec:
         variants = state.pop("variants", None)
         if variants:
             state["_variants_data"] = variants.dict
-        propagated_variants = state.pop("propagated_variants", None)
-        if propagated_variants:
-            state["_propagated_variants_data"] = list(propagated_variants)
         flags = state.pop("compiler_flags", None)
         if flags:
             state["_compiler_flags_data"] = flags.dict
@@ -5365,18 +5367,12 @@ class Spec:
 
     def __setstate__(self, state):
         variants_data = state.pop("_variants_data", None)
-        propagated_variants_data = state.pop("_propagated_variants_data", None)
         compiler_flags_data = state.pop("_compiler_flags_data", None)
         self.__dict__.update(state)
         self._package = None
 
         # Reconstruct variants and compiler_flags
         self.variants = VariantMap()
-        self.propagated_variants = (
-            PropagatedVariants(propagated_variants_data)
-            if propagated_variants_data
-            else EMPTY_PROPAGATED_VARIANTS
-        )
         self.compiler_flags = FlagMap()
         if variants_data is not None:
             self.variants.dict = variants_data
@@ -5458,13 +5454,10 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
     def string(self, abbreviate_patches: bool = False) -> str:
         """The string representation of the map. ``abbreviate_patches`` is passed on to each
         variant, see :meth:`~spack.variant.VariantValue.string`."""
-        return _variants_string(self, EMPTY_PROPAGATED_VARIANTS, abbreviate_patches)
+        return _variants_string(self.dict, (), abbreviate_patches)
 
     def __str__(self):
         return self.string()
-
-
-_EMPTY_VARIANT_MAP = VariantMap()
 
 
 if TYPE_CHECKING:
@@ -5473,117 +5466,64 @@ else:
     _PropagatedVariantsBase = tuple  # subclassing typing.Tuple is slow on 3.6 (GenericMeta)
 
 
-@lang.lazy_lexicographic_ordering
 class PropagatedVariants(_PropagatedVariantsBase):
-    """The propagation requests of a node, as a canonically ordered tuple of values.
+    """The propagated variants of a node: one value per variant name, sorted by name.
 
-    A propagated value binds every closure node that has the variant with the value possible,
-    so no two requests contradict: a DAG without the variant satisfies both, and the meet of
-    two request sets is their union. It is canonicalized so equal sets have equal state, string
-    form and node dict: the solver grounds one propagate fact per value, so the abstract values
-    of one variant merge into a single sorted value set (``foo==a foo==b`` is ``foo==a,b``) and
-    an empty one (``foo==*``) is dropped; bool values stay one entry per value (``++foo ~~foo``
-    is two requests); and values a concrete request contains are dropped as implied. Entries
-    are ordered by name, then bools, the abstract value set, concrete value sets.
-
-    Specs share these tuples, almost all of them :data:`EMPTY_PROPAGATED_VARIANTS`, and the
-    entries are never modified once they exist: :meth:`with_value`, :meth:`constrained` and
-    :meth:`without` return the tuple to store back on the spec, self when nothing changed."""
+    Constraints on the same variant merge like the values of :class:`VariantMap` do, through
+    :meth:`~spack.variant.VariantValue.constrain`, so ``foo==a foo==b`` is ``foo==a,b`` and
+    ``++foo ~~foo`` is unsatisfiable. Specs share these tuples, almost all of them
+    :data:`EMPTY_PROPAGATED_VARIANTS`, and the entries are never modified once they exist:
+    :meth:`with_value` and :meth:`constrained` return the tuple to store back on the spec, self
+    when nothing changed."""
 
     __slots__ = ()
 
+    def get(self, name: str) -> Optional[vt.VariantValue]:
+        for entry in self:
+            if entry.name == name:
+                return entry
+        return None
+
     def with_value(self, value: vt.VariantValue) -> "PropagatedVariants":
-        """This set with one propagation request merged in; self when it adds nothing."""
-        if value.type == vt.VariantType.SINGLE:
-            # a single value from an old node dict is one abstract request
-            value = vt.VariantValue(vt.VariantType.MULTI, value.name, value.values)
-
-        abstract = next((e for e in self if e.name == value.name and not e.concrete), None)
-
-        if value.concrete:  # a bool value or an exact value set: one entry per distinct request
-            if value in self:
-                return self
-            entries = [e for e in self if e is not abstract]
-            entries.append(value.copy())
-            if abstract is not None:
-                remaining = tuple(v for v in abstract.values if v not in value.values)
-                if remaining:
-                    entries.append(vt.VariantValue(vt.VariantType.MULTI, value.name, remaining))
-        else:
-            implied = {v for e in self if e.concrete and e.name == value.name for v in e.values}
-            fresh = tuple(v for v in value.values if v not in implied)
-            if not fresh:
-                return self
-            if abstract is not None:
-                for v in fresh:
-                    if v not in abstract.values:
-                        break
-                else:
+        """This set with a value merged into the one of the same name, or added; self when
+        nothing changed. Raises if the two constraints on the variant do not intersect."""
+        for i, entry in enumerate(self):
+            if entry.name == value.name:
+                merged = entry.copy()
+                if not merged.constrain(value):
                     return self
-            entries = [e for e in self if e is not abstract]
-            merged = fresh if abstract is None else (*abstract.values, *fresh)
-            entries.append(vt.VariantValue(vt.VariantType.MULTI, value.name, merged))
-        entries.sort(key=self._sort_key)
-        return PropagatedVariants(entries)
+                return PropagatedVariants((*self[:i], merged, *self[i + 1 :]))
+            if entry.name > value.name:
+                return PropagatedVariants((*self[:i], value.copy(), *self[i:]))
+        return PropagatedVariants((*self, value.copy()))
 
     def constrained(self, other: "PropagatedVariants") -> "PropagatedVariants":
-        """The union of the two request sets; self when other adds nothing."""
+        """This set with every value of other merged in; self when nothing changed."""
         result = self
         for entry in other:
             result = result.with_value(entry)
         return result
 
-    def without(self, name: str) -> "PropagatedVariants":
-        """This set with all requests for the given variant name dropped."""
-        remaining = [e for e in self if e.name != name]
-        if len(remaining) == len(self):
-            return self
-        return PropagatedVariants(remaining) if remaining else EMPTY_PROPAGATED_VARIANTS
-
     def satisfies(self, other: "PropagatedVariants") -> bool:
-        """Whether self requests everything other requests."""
         for entry in other:
-            if entry.concrete:
-                if entry not in self:
-                    return False
-                continue
-            for v in entry.values:
-                for e in self:
-                    if e.name == entry.name and v in e.values:
-                        break
-                else:
-                    return False
+            mine = self.get(entry.name)
+            if mine is None or not mine.satisfies(entry):
+                return False
         return True
 
-    @staticmethod
-    def _sort_key(e: vt.VariantValue) -> Tuple[str, int, Tuple[str, ...]]:
-        rank = 0 if e.type == vt.VariantType.BOOL else (2 if e.concrete else 1)
-        return (e.name, rank, tuple(str(v) for v in e.values))
+    def intersects(self, other: "PropagatedVariants") -> bool:
+        for entry in other:
+            mine = self.get(entry.name)
+            if mine is not None and not mine.intersects(entry):
+                return False
+        return True
 
     def to_node_list(self) -> List[Dict[str, Any]]:
-        """The entries as a list for a node dict, in canonical order."""
+        """The entries as a list for a node dict."""
         return [{"name": e.name, "value": e.yaml_entry()[1], "concrete": e.concrete} for e in self]
 
-    @staticmethod
-    def from_node_list(entries: List[Dict[str, Any]]) -> "PropagatedVariants":
-        """Inverse of :meth:`to_node_list`; merging through :meth:`with_value` canonicalizes."""
-        result = EMPTY_PROPAGATED_VARIANTS
-        for entry in entries:
-            result = result.with_value(
-                vt.VariantValue.from_node_dict(
-                    entry["name"], entry["value"], abstract=not entry.get("concrete", False)
-                )
-            )
-        return result
-
-    def values(self) -> Iterator[vt.VariantValue]:
-        return iter(self)  # named for symmetry with VariantMap.values()
-
-    def _cmp_iter(self):
-        yield from self
-
     def __str__(self) -> str:
-        return _variants_string(_EMPTY_VARIANT_MAP, self)
+        return _variants_string({}, self)
 
 
 #: Immutable container shared by specs that don't have propagated variants as constraints
@@ -5591,35 +5531,39 @@ EMPTY_PROPAGATED_VARIANTS = PropagatedVariants()
 
 
 def _variant_parts(
-    variants: VariantMap, propagated_variants: PropagatedVariants
-) -> Iterator[Tuple[vt.VariantValue, bool, str]]:
-    """Yield (value, propagated, prefix) over both variant slots of a node in an order that
+    variants: Dict[str, vt.VariantValue], propagated_variants: Iterable[vt.VariantValue]
+) -> List[Tuple[vt.VariantValue, bool, str]]:
+    """The (value, propagated, prefix) parts of both variant slots of a node, in an order that
     parses back into the same two slots: all booleans before all key-value pairs, since an
     unquoted value would swallow a following sigil or ``==`` (e.g. ``foo=bar~~c`` lexes as a
     single value)."""
-    parts = [
-        (value, propagated)
-        for values, propagated in (
-            (sorted(variants.values(), key=lambda v: v.name), False),
-            (propagated_variants.values(), True),
-        )
-        for value in values
-    ]
-    for value, propagated in parts:
+    parts: List[Tuple[vt.VariantValue, bool, str]] = []
+    key_value_parts: List[Tuple[vt.VariantValue, bool, str]] = []
+    for _, value in sorted(variants.items()):
         if value.type == vt.VariantType.BOOL:
-            yield value, propagated, ""
-    for value, propagated in parts:
-        if value.type != vt.VariantType.BOOL:
-            yield value, propagated, " "
+            parts.append((value, False, ""))
+        else:
+            key_value_parts.append((value, False, " "))
+    for value in propagated_variants:
+        if value.type == vt.VariantType.BOOL:
+            parts.append((value, True, ""))
+        else:
+            key_value_parts.append((value, True, " "))
+    parts.extend(key_value_parts)
+    return parts
 
 
 def _variants_string(
-    variants: VariantMap, propagated_variants: PropagatedVariants, abbreviate_patches: bool = False
+    variants: Dict[str, vt.VariantValue],
+    propagated_variants: Iterable[vt.VariantValue],
+    abbreviate_patches: bool = False,
 ) -> str:
-    return "".join(
-        prefix + value.string(abbreviate_patches, propagated=propagated)
-        for value, propagated, prefix in _variant_parts(variants, propagated_variants)
-    )
+    if not variants and not propagated_variants:
+        return ""
+    string = ""
+    for value, propagated, prefix in _variant_parts(variants, propagated_variants):
+        string += prefix + value.string(abbreviate_patches, propagated)
+    return string
 
 
 class SpecBuildInterface(lang.ObjectWrapper, Spec):
@@ -5867,9 +5811,12 @@ class SpecfileReaderBase(abc.ABC):
                 else:
                     spec.variants[name] = variant
 
-        spec.propagated_variants = spec.propagated_variants.constrained(
-            PropagatedVariants.from_node_list(node.get("propagated_parameters", ()))
-        )
+        for entry in node.get("propagated_parameters", ()):
+            spec.propagated_variants = spec.propagated_variants.with_value(
+                vt.VariantValue.from_node_dict(
+                    entry["name"], entry["value"], abstract=not entry.get("concrete", False)
+                )
+            )
 
         spec.external_path = None
         spec.external_modules = None

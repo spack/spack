@@ -199,18 +199,10 @@ class SpecClauseGenerator:
             if not variant.values:
                 continue
 
+            if name and not spec.concrete and not self.is_virtual(name):
+                self._record_possible_values(name, variant, spec)
+
             for value in variant.values:
-                # ensure that the value *can* be valid for the spec
-                if name and not spec.concrete and not self.is_virtual(name):
-                    variant_defs = vt.prevalidate_variant_value(
-                        self.pkg_class(name), variant, spec
-                    )
-
-                    # Record that that this is a valid possible value. Accounts for
-                    # int/str/etc., where valid values can't be listed in the package
-                    for variant_def in variant_defs:
-                        self.variant_values_from_specs.add((name, id(variant_def), value))
-
                 variant_clause = f.variant_value(name, vname, value)
                 if variant.concrete and variant.type == vt.VariantType.MULTI and not spec.concrete:
                     if body is False:
@@ -222,28 +214,29 @@ class SpecClauseGenerator:
                         clauses.append(fn.attr("concrete_variant_request", name, vname, value))
                 clauses.append(variant_clause)
 
-        for variant in spec.propagated_variants.values():
+        for variant in spec.propagated_variants:
             vname = variant.name
             for value in variant.values:
                 clauses.append(f.propagate(name, fn.variant_value(vname, value)))
 
             # a propagated variant is conditional: it applies only where the variant exists,
-            # so it need not exist on this package
-            if not (
-                name
-                and not spack.repo.PATH.is_virtual(name)
-                and self.pkg_class(name).has_variant(vname)
-            ):
-                continue
-
-            # the source node takes the values itself, so a validator-accepted value that
-            # is not listed in the package must be recorded as a possible value
-            variant_defs = vt.prevalidate_variant_value(self.pkg_class(name), variant, spec)
-            for value in variant.values:
-                for variant_def in variant_defs:
-                    self.variant_values_from_specs.add((name, id(variant_def), value))
-                clauses.append(f.variant_value(name, vname, value))
+            # so it need not exist on this package; where it does, the source node takes the
+            # values itself
+            if name and not self.is_virtual(name) and self.pkg_class(name).has_variant(vname):
+                self._record_possible_values(name, variant, spec)
+                for value in variant.values:
+                    clauses.append(f.variant_value(name, vname, value))
         return clauses
+
+    def _record_possible_values(
+        self, name: str, variant: vt.VariantValue, spec: spack.spec.Spec
+    ) -> None:
+        """Ensure the values of the variant *can* be valid for the package, and record them as
+        possible values of the definitions that accept them. Accounts for int/str/etc., where
+        valid values can't be listed in the package."""
+        for variant_def in vt.prevalidate_variant_value(self.pkg_class(name), variant, spec):
+            for value in variant.values:
+                self.record_variant_value(name, variant_def, value)
 
     def _flag_clauses(
         self, spec: spack.spec.Spec, f, *, name: str, context: Optional[SourceContext]

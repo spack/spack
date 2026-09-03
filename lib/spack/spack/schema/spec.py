@@ -191,8 +191,8 @@ spec_node = {
                     "concrete": {"type": "boolean"},
                 },
             },
-            "description": "Propagation requests, i.e. ++foo or foo==bar (for abstract specs), "
-            "in canonical order; multiple entries per variant name can occur",
+            "description": "Propagated variants, i.e. ++foo or foo==bar (for abstract specs), one "
+            "per variant name, sorted by name",
         },
         "abstract": {
             "type": "array",
