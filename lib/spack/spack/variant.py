@@ -573,17 +573,16 @@ def BoolValuedVariant(name: str, value: bool, propagate: bool = False) -> Varian
     return VariantValue(VariantType.BOOL, name, (value,), propagate=propagate)
 
 
-#: Variant values repeat across the nodes of a solve and across package recipes: a solve for
-#: trilinos stores 38 490 of them, holding 1 883 distinct values. They are immutable, so every
-#: occurrence hands out the same object.
+#: Variant values repeat across the nodes of a solve and across package recipes. They are
+#: immutable, so every occurrence of a value is the same object.
 _VARIANT_VALUE_CACHE: Dict[Tuple, VariantValue] = {}
 
 
 def intern_variant_value(value: VariantValue) -> VariantValue:
     """Return the shared VariantValue equal to ``value``.
 
-    The result carries ``_key``, which identifies it exactly, unlike ``__eq__``, which ignores the
-    variant type. Maps of variant values are interned by the keys of the values they hold.
+    The result has a ``_key`` that identifies it exactly, including the variant type that
+    ``__eq__`` ignores. Maps of variant values are interned by the keys of the values they hold.
     """
     key = (value.type, value.name, value.propagate, value.concrete, value._values)
     cached = _VARIANT_VALUE_CACHE.get(key)

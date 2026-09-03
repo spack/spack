@@ -874,8 +874,8 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
 
 
 def test_git_versions_are_not_shared_between_specs():
-    """Plain version lists are interned, but a list holding a GitVersion is not: the GitVersion
-    carries the ref lookup of the package it belongs to."""
+    """Plain version lists are interned. A list holding a GitVersion is not, since the
+    GitVersion stores the ref lookup of the package it belongs to."""
     assert spack.spec.Spec("foo@1.2.3").versions is spack.spec.Spec("bar@1.2.3").versions
 
     foo, bar = spack.spec.Spec("foo@git.develop"), spack.spec.Spec("bar@git.develop")

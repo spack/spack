@@ -1285,9 +1285,9 @@ class FlagMap(lang.HashableMap[str, Tuple[CompilerFlag, ...]]):
 
 EdgeMap = Dict[str, List[DependencySpec]]
 
-#: Backs every edge map without edges and every spec without extra attributes. 82% of the edge maps
-#: and 99.96% of the extra attributes of a solve are empty. Reads work on it unchanged, including
-#: the ``spec.extra_attributes`` that package recipes do; writers replace it with a private dict.
+#: Backs every edge map without edges and every spec without extra attributes. Reads work on it
+#: unchanged, including the ``spec.extra_attributes`` that package recipes do; writers replace it
+#: with a private dict.
 _EMPTY_DICT: Dict = {}
 
 
@@ -1676,7 +1676,7 @@ def tree(
 
 
 class SpecAnnotations:
-    """What a spec file said about a spec, beyond the spec itself.
+    """What a spec file records about a spec, beyond the spec itself.
 
     Specs share these, so an instance is never modified once it exists: the ``with_*`` methods
     return the annotations to store back on the spec.
@@ -1699,7 +1699,7 @@ class SpecAnnotations:
         return SpecAnnotations(spec_format, self.compiler_node_attribute)
 
     def with_compiler(self, compiler: "Spec") -> "SpecAnnotations":
-        """These annotations, recording the compiler a spec file named."""
+        """These annotations, recording the compiler attribute of a spec file."""
         return SpecAnnotations(self.original_spec_format, compiler)
 
     def __repr__(self) -> str:
@@ -1709,8 +1709,7 @@ class SpecAnnotations:
         return result
 
 
-#: Shared by every spec written in the current spec file format without a legacy compiler, which
-#: is 95% of the specs of a solve.
+#: Shared by every spec written in the current spec file format without a legacy compiler.
 DEFAULT_ANNOTATIONS = SpecAnnotations()
 
 
@@ -5427,7 +5426,7 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
     """Map of variant instances, keyed by variant name.
 
     Specs share these maps, so a map is never modified once it exists: the ``with_*`` methods
-    return the map to store back on the spec, and the mutators of the base class refuse.
+    return the map to store back on the spec, and the mutators inherited from dict raise.
     """
 
     __slots__ = ()
@@ -5509,11 +5508,11 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
         return bool_keys, kv_keys
 
 
-#: The variants of the nodes of a solve repeat heavily: a solve for trilinos holds 33 766 variant
-#: maps taking 2 675 distinct values, and every spec without variants shares the empty one.
+#: Variant maps repeat across the nodes of a solve and across package recipes. They are immutable,
+#: so equal maps are one object, and every spec without variants shares the empty one.
 _VARIANT_MAP_CACHE: Dict[Tuple, VariantMap] = {}
 
-#: The same for compiler flags, where 33 766 maps take 18 distinct values.
+#: The same for compiler flags.
 _FLAG_MAP_CACHE: Dict[Tuple, FlagMap] = {}
 
 

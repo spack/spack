@@ -305,7 +305,7 @@ class CompilerFactory:
                 continue
 
             for s in detected:
-                # specs share their extra attributes, so replace them instead of writing through
+                # specs share their extra attributes, so store a new dict
                 attributes: Dict[str, Any] = {
                     key: compiler_dict[key]
                     for key in ("flags", "environment", "extra_rpaths")

@@ -128,9 +128,8 @@ VersionTuple = Tuple[VersionComponentTuple, PrereleaseTuple]
 #: Separators from a parsed version.
 SeparatorTuple = Tuple[str, ...]
 
-#: Version literals repeat heavily across package recipes: a solve for trilinos parses 46k
-#: StandardVersions with only 4.4k distinct values. These types are immutable once constructed,
-#: so every occurrence of a literal hands out the same object.
+#: Version literals repeat across package recipes. These types are immutable once constructed, so
+#: every occurrence of a literal is the same object.
 _STR_COMPONENT_CACHE: Dict[str, "VersionStrComponent"] = {}
 _STANDARD_VERSION_CACHE: Dict[str, "StandardVersion"] = {}
 _CLOSED_OPEN_RANGE_CACHE: Dict[Tuple, "ClosedOpenRange"] = {}
@@ -823,7 +822,7 @@ class ClosedOpenRange(VersionType):
     def from_version_range(cls, lo: StandardVersion, hi: StandardVersion) -> "ClosedOpenRange":
         """Construct ClosedOpenRange from lo:hi range."""
         # StandardVersions compare equal when they parse the same, so "3.0.0" and "3.0.00" are
-        # one key; the original strings are part of the key to hand back the range as written.
+        # one key; the original strings are part of the key, so the range is returned as written.
         key = (lo._string, lo.version, hi._string, hi.version)
         cached = _CLOSED_OPEN_RANGE_CACHE.get(key)
         if cached is not None:
@@ -1124,8 +1123,7 @@ class VersionList(VersionType):
         """Return a VersionList that matches any version.
 
         Every Spec starts out with one of these, so they are all the same object. Constraining a
-        spec replaces its VersionList instead of mutating it, which keeps this shared instance
-        intact.
+        spec replaces its VersionList, which leaves this shared instance intact.
         """
         return _ANY_VERSION_LIST
 
@@ -1403,8 +1401,7 @@ _UNBOUNDED_RANGE = ClosedOpenRange.from_version_range(
 _ANY_VERSION_LIST = VersionList.__new__(VersionList)
 _ANY_VERSION_LIST.versions = [_UNBOUNDED_RANGE]
 
-#: Version constraints repeat across package recipes and across the nodes of a solve: 24k lists
-#: for a trilinos solve hold only 3.7k distinct values.
+#: Version constraints repeat across package recipes and across the nodes of a solve.
 _VERSION_LIST_CACHE: Dict[str, VersionList] = {}
 
 
@@ -1412,11 +1409,11 @@ def intern_version_list(version_list: VersionList) -> VersionList:
     """Return the shared VersionList equal to ``version_list``.
 
     Callers must treat the result as immutable, which is how specs already use it: constraining a
-    spec replaces its VersionList instead of mutating it.
+    spec replaces its VersionList.
 
     A list holding anything but plain versions and ranges is returned as it is. GitVersion stores a
     ref lookup for the package it belongs to and caches the version that lookup resolves to, so two
-    packages that name the same git ref need a list each.
+    packages that name the same git ref have a list each.
     """
     for v in version_list.versions:
         if not isinstance(v, (StandardVersion, ClosedOpenRange)):

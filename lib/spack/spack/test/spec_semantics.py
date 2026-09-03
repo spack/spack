@@ -2777,7 +2777,7 @@ def test_constrain_does_not_share_flags_or_architecture_with_the_rhs(mock_packag
 
 
 def test_copy_shares_variants_and_keeps_specs_independent():
-    """Specs share variant maps, so constraining one must leave the other alone."""
+    """Specs share variant maps, so constraining one does not change the other."""
     old = Spec("foo=bar")
     new = old.copy()
     assert new.variants is old.variants
@@ -2789,8 +2789,8 @@ def test_copy_shares_variants_and_keeps_specs_independent():
 
 
 def test_copy_shares_flags_and_keeps_specs_independent(mock_packages):
-    """CompilerFlag values are immutable, so a copy shares them. Constraining the copy leaves the
-    flags of the original alone, including their propagation."""
+    """CompilerFlag values are immutable, so a copy shares them. Constraining the copy does not
+    change the flags of the original, including their propagation."""
     old = Spec("pkg-a cflags=-O2 cflags=-g")
     new = old.copy()
     assert new.compiler_flags["cflags"] is old.compiler_flags["cflags"]
