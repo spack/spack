@@ -175,11 +175,8 @@ def _env_create(
             include_concrete=include_concrete,
         )
         tty.msg(colorize(f"Created independent environment in: @c{{{cescape(env.path)}}}"))
-    tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")
+        tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")
 
-    view = ev.default_view_name if with_view is not False else None
-    env_script.write_env_activate_script(env, view=view)
-    env_script.write_env_deactivate_script(env, view=view)
     return env
 
 
@@ -373,8 +370,7 @@ def env_activate(args):
             active_env, shell=args.shell, script_type="deactivate", view=current_view
         )
 
-        if not os.path.isfile(env_deactivate_script):
-            env_script.write_env_deactivate_script(active_env, current_view)
+        env_script.write_env_deactivate_script(active_env, current_view)
 
         sys.stdout.write(env_script.source_env_script(env_deactivate_script, args.shell))
 
@@ -475,8 +471,7 @@ def env_deactivate(args):
         active_environment(), shell=args.shell, script_type="deactivate", view=view
     )
 
-    if not os.path.isfile(env_deactivate_script_path):
-        env_script.write_env_deactivate_script(active_environment(), view)
+    env_script.write_env_deactivate_script(active_environment(), view)
 
     ev.deactivate()
 

@@ -31,7 +31,15 @@ def path_to_env_script(env, shell: str, script_type: str, view: Optional[str] = 
     script_name = (
         f"{view}_{script_type}{extension}" if view else f"noview_{script_type}{extension}"
     )
-    return os.path.join(env.path, ".spack-env", script_name)
+
+    script_path = os.path.join(env.path, ".spack-env", script_name)
+    if not os.path.isfile(script_path):
+        if script_type == "activate":
+            write_env_activate_script(env, view)
+        else:
+            write_env_deactivate_script(env, view)
+
+    return script_path
 
 
 def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
