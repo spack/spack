@@ -799,6 +799,10 @@ def test_empty_version_range_raises():
         assert VersionRange("2", "1.0")
     with pytest.raises(EmptyRangeError, match="2:1.0 is an empty range"):
         assert ver("2:1.0")
+    with pytest.raises(EmptyRangeError, match="2:1 is an empty range"):
+        assert ver("2:1")
+    with pytest.raises(EmptyRangeError, match="1.21:1.20 is an empty range"):
+        assert ver("1.21:1.20")
 
 
 def test_version_empty_slice():

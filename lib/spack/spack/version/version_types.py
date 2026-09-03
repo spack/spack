@@ -793,7 +793,7 @@ class ClosedOpenRange(VersionType):
     __slots__ = ("lo", "hi", "_string", "_hash")
 
     def __init__(self, lo: StandardVersion, hi: StandardVersion):
-        if hi < lo:
+        if hi <= lo:
             raise EmptyRangeError(f"{lo}..{hi} is an empty range")
         self.lo: StandardVersion = lo
         self.hi: StandardVersion = hi
