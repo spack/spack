@@ -13,27 +13,6 @@ UNIX_SHELLS = ["sh", "csh", "fish"]
 WINDOWS_SHELLS = ["bat", "pwsh"]
 
 
-def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
-    """Check if a script needs to be regenerated.
-
-    Args:
-        lockfile_mtime: The modification time of the environment's lockfile
-        script_path: Path to the cached activation/deactivation script
-
-    Returns:
-        True if the script doesn't exist or is older than the lockfile
-    """
-    if not os.path.isfile(script_path):
-        return True
-
-    # Script does NOT need update if no lockfile exists
-    if lockfile_mtime == 0.0:
-        return False
-
-    script_mtime = os.stat(script_path).st_mtime
-    return lockfile_mtime >= script_mtime
-
-
 def _get_activate_commands(env, view: Optional[str] = None, shell: str = "sh") -> str:
     """Get the commands to activate an environment.
 
@@ -71,6 +50,56 @@ def _get_deactivate_commands(env, view: Optional[str] = None, shell: str = "sh")
 
     return cmds
 
+
+def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
+    """Check if a script needs to be regenerated.
+
+    Args:
+        lockfile_mtime: The modification time of the environment's lockfile
+        script_path: Path to the cached activation/deactivation script
+
+    Returns:
+        True if the script doesn't exist or is older than the lockfile
+    """
+    if not os.path.isfile(script_path):
+        return True
+
+    # Script does NOT need update if no lockfile exists
+    if lockfile_mtime == 0.0:
+        return False
+
+    script_mtime = os.stat(script_path).st_mtime
+    return lockfile_mtime >= script_mtime
+
+
+def _write_env_script(env: "spack.environment.Environment", view: Optional[str] = None, activate: bool = True):
+    """Helper method for write_env_(de)activate_script methods"""
+
+    # Ensure .env subdir exists
+    env.ensure_env_directory_exists(dot_env=True)
+
+    # Get lockfile modification time
+    lockfile_mtime = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.0
+
+    if activate:
+        script_type = "activate"
+        shells = WINDOWS_SHELLS if sys.platform == "win32" else ["sh"]
+
+    else:
+        script_type = "deactivate"
+        shells = WINDOWS_SHELLS if sys.platform == "win32" else ["sh", "csh", "fish"]
+
+
+    for shell in shells:
+        script_path = path_to_env_script(env, shell, script_type, view)
+        if _script_needs_update(lockfile_mtime, script_path):
+            if activate:
+                cmds = _get_activate_commands(env, view=view, shell=shell)
+            else:
+                cmds = _get_deactivate_commands(env, view=view, shell=shell)
+            uenv.write_shell_script(script_path, cmds, shell)
+
+
 def path_to_env_script(env, shell: str, script_type: str, view: Optional[str] = None) -> str:
     """Returns path to the shell script for activating or deactivating an environment.
 
@@ -92,16 +121,8 @@ def path_to_env_script(env, shell: str, script_type: str, view: Optional[str] = 
 
     script_path = os.path.join(env.path, ".spack-env", script_name)
 
-    if not os.path.isfile(script_path):
-        # If the script doesn't exist, regenerate it
-        if script_type == "activate":
-            cmds = _get_activate_commands(env, view=view, shell=shell)
-            uenv.write_shell_script(script_path, cmds, shell)
-        else:
-            cmds = _get_deactivate_commands(env, view=view, shell=shell)
-            uenv.write_shell_script(script_path, cmds, shell)
-
     return script_path
+
 
 def regenerate_env_scripts(env):
     """Regenerate the activation and deactivation scripts for an environment.
@@ -136,25 +157,7 @@ def write_env_activate_script(env: "spack.environment.Environment", view: Option
         env: the environment the activation script is written for
         view: the name of the environment's view
     """
-    # Ensure .env subdir exists
-    env.ensure_env_directory_exists(dot_env=True)
-
-    # Get lockfile modification time
-    lockfile_mtime = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.0
-
-    # Generate script for sh only on Unix (csh & fish source the same script)
-    shells = WINDOWS_SHELLS if sys.platform == "win32" else UNIX_SHELLS
-    if sys.platform != "win32":
-        shells = ["sh"]
-
-    for shell in shells:
-        activate_script_path = path_to_env_script(env, shell, "activate", view)
-        script_exists = os.path.isfile(activate_script_path)
-
-        if not script_exists or _script_needs_update(lockfile_mtime, activate_script_path):
-            cmds = _get_activate_commands(env, view=view, shell=shell)
-
-            uenv.write_shell_script(activate_script_path, cmds, shell)
+    return _write_env_script(env, view, activate=True)
 
 
 def write_env_deactivate_script(env, view: Optional[str] = None):
@@ -164,26 +167,11 @@ def write_env_deactivate_script(env, view: Optional[str] = None):
         env: the environment the deactivation script is written for
         view: the name of the environment's view
     """
-    # Ensure .env subdir exists
-    env.ensure_env_directory_exists(dot_env=True)
-
-    # Get lockfile modification time
-    lockfile_mtime = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.0
-
-    shells = WINDOWS_SHELLS if sys.platform == "win32" else UNIX_SHELLS
-
-    for shell in shells:
-        deactivate_script_path = path_to_env_script(env, shell, "deactivate", view)
-        script_exists = os.path.isfile(deactivate_script_path)
-
-        if not script_exists or _script_needs_update(lockfile_mtime, deactivate_script_path):
-            cmds = _get_deactivate_commands(env, view=view, shell=shell)
-
-            uenv.write_shell_script(deactivate_script_path, cmds, shell)
+    _write_env_script(env, view, activate=False)
 
 
 def get_shell_unique_env_cmds(shell, prompt: Optional[str] = None) -> str:
-    """Returns the prompt, view, and despacktivate commands which are unique to each shell.
+    """Returns the prompt and despacktivate commands which are unique to each shell.
 
     Args:
         shell: the shell that the user is running
