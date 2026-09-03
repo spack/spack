@@ -1869,12 +1869,12 @@ def _detect_old_resources() -> Dict[str, bool]:
     """Detect presence of old Spack-internal resources.
 
     Returns:
-        Dictionary with keys: 'installs', 'gpg_keys', 'modules', 'licenses'
+        Dictionary with keys: 'installs', 'gpg_keys', 'modules', 'licenses', 'environments'
     """
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
     share_modules = os.path.join(spack.paths.share_path, "spack", "modules")
 
-    result = {"installs": False, "gpg_keys": False, "modules": False, "licenses": False}
+    result = {"installs": False, "gpg_keys": False, "modules": False, "licenses": False, "environments": False}
 
     # Check for installs
     if os.path.exists(opt_spack):
@@ -1912,6 +1912,19 @@ def _detect_old_resources() -> Dict[str, bool]:
         try:
             if os.listdir(licenses_dir):  # Non-empty
                 result["licenses"] = True
+        except OSError:
+            pass
+
+    # Check for environments
+    old_envs_dir = spack.paths.old_envs_path
+    if os.path.exists(old_envs_dir):
+        try:
+            # Check for any directories (environments)
+            for entry in os.listdir(old_envs_dir):
+                entry_path = os.path.join(old_envs_dir, entry)
+                if os.path.isdir(entry_path):
+                    result["environments"] = True
+                    break
         except OSError:
             pass
 
@@ -1992,6 +2005,7 @@ def _perform_migration_check(cfg: Configuration) -> None:
     print(f"DEBUG:   GPG keys: {old_resources['gpg_keys']}")
     print(f"DEBUG:   Modules: {old_resources['modules']}")
     print(f"DEBUG:   Licenses: {old_resources['licenses']}")
+    print(f"DEBUG:   Environments: {old_resources['environments']}")
 
     # TODO: Implement P5 migration logic
     # - Installs: stay in place (create layout scope entry)
@@ -2948,6 +2962,44 @@ def _do_isolate_migration(isolate_target: str, old_resources: Dict[str, bool]) -
             if "config" not in layout_config:
                 layout_config["config"] = {}
             layout_config["config"]["license_dir"] = target_licenses_dir
+
+    # Environments - avoid relocating if there's ANY name collision
+    old_envs_dir = spack.paths.old_envs_path
+    target_envs_dir = os.path.join(isolate_target, "environments")
+
+    if old_resources.get("environments", False):
+        # Check for any directory name collisions
+        has_collision = False
+        if os.path.exists(target_envs_dir):
+            try:
+                old_env_names = set(
+                    d for d in os.listdir(old_envs_dir) if os.path.isdir(os.path.join(old_envs_dir, d))
+                )
+                target_env_names = set(
+                    d for d in os.listdir(target_envs_dir) if os.path.isdir(os.path.join(target_envs_dir, d))
+                )
+                collision_names = old_env_names & target_env_names
+
+                if collision_names:
+                    tty.debug(
+                        f"Environment name collision: {collision_names} - keeping old location"
+                    )
+                    has_collision = True
+            except OSError:
+                # If we can't read directories, be conservative
+                has_collision = True
+
+        if has_collision:
+            # Can't merge - keep old location for ALL environments
+            if "config" not in layout_config:
+                layout_config["config"] = {}
+            layout_config["config"]["environments_root"] = old_envs_dir
+        else:
+            # No collision - environments can be relocated to X/environments
+            # Note: actual migration of environments is handled elsewhere
+            if "config" not in layout_config:
+                layout_config["config"] = {}
+            layout_config["config"]["environments_root"] = target_envs_dir
 
     # Installs/Modules
     if old_resources["installs"]:
