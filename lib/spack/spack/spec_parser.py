@@ -97,6 +97,8 @@ GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
 #: Git refs include branch names, and can contain ``.`` and ``/``
 GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
 GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
+#: A package name, optionally with a namespace
+PACKAGE_NAME = rf"(?:{DOTTED_IDENTIFIER}|{IDENTIFIER})"
 
 STAR = r"\*"
 
@@ -368,11 +370,10 @@ _KV_VALUE = "kv_value"
 # node, e.g. ``^foo=bar:baz``, and the sigil is a token of its own.
 _VIRTUALS_LIST = rf"{IDENTIFIER}(?:,{IDENTIFIER})*"  # comma-separated virtuals
 _SUBSTITUTE_END = r"(?=\s|[+~]{1,2}\s*[a-zA-Z_0-9]|[@/^%\]]|$)"
-_SUBSTITUTE = rf"(?:{DOTTED_IDENTIFIER}|{IDENTIFIER}){_SUBSTITUTE_END}"  # package to substitute
+_SUBSTITUTE = rf"{PACKAGE_NAME}{_SUBSTITUTE_END}"  # package to substitute for them
 
-#: A virtual assignment of several virtuals that does not follow a dependency sigil or edge
-#: properties, e.g. ``zlib c,cxx=gcc``, fails to tokenize at the comma. It is only matched on that
-#: error path, to point out the mistake, so that it costs nothing in the token regex.
+#: A virtual assignment outside a dependency, ``zlib c,cxx=gcc``, fails to tokenize at the comma:
+#: matched on that error path only, so that it costs nothing in the token regex
 _MISPLACED_VIRTUAL_ASSIGNMENT = re.compile(rf"{_VIRTUALS_LIST}={_SUBSTITUTE}")
 
 #: Token kind -> regex. FAST_SPEC_REGEX is the ``|``-alternation of these in order: tokens are
@@ -409,10 +410,8 @@ SPEC_TOKENS: Dict[str, str] = {
         rf"(?P<{_KV_SEP}>:?==?)"  # separator: ``=``, ``==``, ``:=`` or ``:==``
         rf"(?P<{_KV_VALUE}>{VALUE}|{QUOTED_VALUE})"  # bare or quoted value
     ),
-    # the when= condition of edge properties whose spec does not start with a value character,
-    # e.g. ``^[when=@1.2] dep``. Otherwise ``when=+foo`` is a key-value pair like any other, which
-    # the edge properties parser reads as the start of a condition, so ``when`` is still a
-    # variant name elsewhere.
+    # ``when=`` of edge properties whose spec is not a value, e.g. ``^[when=@1.2] dep``; otherwise
+    # ``when=+foo`` is a key-value pair like any other, and ``when`` a variant name elsewhere
     _WHEN: r"when=",
     # path to a spec file, e.g. ``./foo/bar.json``
     _FILENAME: FILENAME,
@@ -479,22 +478,18 @@ class SpecParser:
         return tokens
 
     def _raise_tokenization_error(self) -> None:
-        # A virtual assignment of several virtuals outside a dependency, `zlib c,cxx=gcc`, fails
-        # at the comma: point out the mistake instead of underlining the comma
+        # A virtual assignment outside a dependency, `zlib c,cxx=gcc`, fails at the comma: point
+        # out the mistake instead of underlining the comma
         if self.curr is not None and self.curr.group(_UNEXPECTED) == ",":
-            start = self.curr.start(_UNEXPECTED)
-            while start > 0 and (
-                self.literal_str[start - 1].isalnum() or self.literal_str[start - 1] in "_-"
-            ):
-                start -= 1
-            assignment = _MISPLACED_VIRTUAL_ASSIGNMENT.match(self.literal_str, start)
-            if assignment:
-                raise SpecParsingError(
-                    "a virtual assignment such as c,cxx=gcc must directly follow a dependency "
-                    "sigil (^ or %) or edge properties",
-                    assignment,
-                    self.literal_str,
-                )
+            comma = self.curr.start(_UNEXPECTED)
+            for assignment in _MISPLACED_VIRTUAL_ASSIGNMENT.finditer(self.literal_str):
+                if assignment.start() <= comma < assignment.end():
+                    raise SpecParsingError(
+                        "a virtual assignment such as c,cxx=gcc must directly follow a "
+                        "dependency sigil (^ or %) or edge properties",
+                        assignment,
+                        self.literal_str,
+                    )
         raise SpecTokenizationError(self.literal_str)
 
     def _raise_parsing_error(self, message: str) -> None:
@@ -550,62 +545,53 @@ class SpecParser:
                         if not self.curr:
                             self._raise_parsing_error("unexpected token in edge attributes")
 
-                        if self.curr.lastgroup == _KEY_VALUE_PAIR:
-                            name = self.curr.group(_KV_NAME)
-                            if name not in ("deptypes", "virtuals", "when"):
+                        kind = self.curr.lastgroup
+                        name = self.curr.group(_KV_NAME) if kind == _KEY_VALUE_PAIR else "when"
+
+                        if kind == _KEY_VALUE_PAIR and name != "when":
+                            if name not in ("deptypes", "virtuals"):
                                 msg = (
                                     "the only edge attributes that are currently accepted are "
                                     '"deptypes", "virtuals", and a "when=<spec>" condition, '
                                     "which must be the last unless quoted"
                                 )
                                 self._raise_parsing_error(msg)
-                            value = self.curr.group(_KV_VALUE)
-                            if name == "when" and value[0] not in "'\"":
-                                # An unquoted condition is a spec that starts at the value and
-                                # extends up to the closing bracket, e.g. when=+mpi %c=gcc: the
-                                # tokenizer is context free, so rescan from the value
-                                self._rescan(self.curr.start(_KV_VALUE))
-                                conditions = self._parse_condition(conditions)
-                                continue
-
-                            value = strip_quotes(value)
-                            token = self.curr
+                            value = strip_quotes(self.curr.group(_KV_VALUE))
+                            attributes[name] = [v.strip() for v in value.split(",")]
                             self.curr, self.next = self.next, self.scanner.match()
 
-                            # A quoted when value is one spec string, where a comma is part of
-                            # the syntax, e.g. when='@1,2'; deptypes and virtuals values are
-                            # comma-separated lists. Repeated attributes combine: a second
-                            # when= constrains the condition, like virtuals accumulate.
-                            if name == "when":
+                        elif kind == _KEY_VALUE_PAIR or kind == _WHEN:
+                            # The condition is a spec. Quoted, it is a value like any other pair.
+                            # Unquoted, it extends up to the closing bracket: the tokenizer is
+                            # context free, so restart the scanner at the value, which is either
+                            # that of the pair or what follows a bare WHEN token (when=@1.2).
+                            value = self.curr.group(_KV_VALUE) if kind == _KEY_VALUE_PAIR else ""
+                            if value[:1] in ("'", '"'):
                                 try:
-                                    condition = parse_one_or_raise(value)
-                                except ValueError as e:
-                                    # e.g. when='a b' or when='': a syntax error of the spec, not
-                                    # a ValueError that a SpecSyntaxError handler would miss
-                                    raise SpecParsingError(
-                                        "expected a single spec as the when= condition",
-                                        token,
-                                        self.literal_str,
-                                    ) from e
-                                if conditions is None:
-                                    conditions = condition
-                                else:
-                                    conditions.constrain(condition)
+                                    condition = parse_one_or_raise(strip_quotes(value))
+                                except ValueError:
+                                    msg = "expected a single spec as the when= condition"
+                                    self._raise_parsing_error(msg)
+                                self.curr, self.next = self.next, self.scanner.match()
                             else:
-                                attributes[name] = [v.strip() for v in value.split(",")]
-
-                        elif self.curr.lastgroup == _WHEN:
-                            # when= followed by a spec that does not start with a value
-                            # character, e.g. when=@1.2
-                            when_token = self.curr
-                            self.curr, self.next = self.next, self.scanner.match()
-                            if not self.curr or self.curr.lastgroup == _END_EDGE_PROPERTIES:
-                                raise SpecParsingError(
-                                    "expected a spec after when=", when_token, self.literal_str
+                                if not value and (
+                                    not self.next or self.next.lastgroup == _END_EDGE_PROPERTIES
+                                ):
+                                    self._raise_parsing_error("expected a spec after when=")
+                                self._rescan(
+                                    self.curr.start(_KV_VALUE) if value else self.curr.end()
                                 )
-                            conditions = self._parse_condition(conditions)
+                                parsed = self.next_spec()
+                                assert parsed is not None  # there is a token, so there is a spec
+                                condition = parsed
+                            # Repeated attributes combine: conditions are constrained, like
+                            # virtuals accumulate and deptypes are or-ed
+                            if conditions is None:
+                                conditions = condition
+                            else:
+                                conditions.constrain(condition)
 
-                        elif self.curr.lastgroup == _END_EDGE_PROPERTIES:
+                        elif kind == _END_EDGE_PROPERTIES:
                             # Closing ], optionally fused with a virtual assignment, as in
                             # ^[deptypes=link] mpi=openmpi
                             virtuals_str = self.curr.group(_END_EDGE_VIRTUALS)
@@ -693,23 +679,10 @@ class SpecParser:
         return root_spec
 
     def _rescan(self, pos: int) -> None:
-        """Restart the scanner at ``pos`` in the input, e.g. at the value of a ``key=value`` pair
-        that turns out to be the start of an unquoted ``when=`` condition"""
+        """Restart the scanner at ``pos`` in the input, the value of an unquoted when= condition"""
         self.scanner = FAST_SPEC_REGEX.scanner(self.literal_str, pos)  # type: ignore[attr-defined]
         self.curr = self.scanner.match()
         self.next = self.scanner.match()
-
-    def _parse_condition(
-        self, conditions: Optional["spack.spec.Spec"]
-    ) -> Optional["spack.spec.Spec"]:
-        """Parse the unquoted ``when=`` condition of edge properties, which is a spec that extends
-        up to the closing bracket, and constrain the condition ``conditions`` so far with it"""
-        condition = self.next_spec()
-        assert condition is not None  # there is a token, so there is a spec
-        if conditions is None:
-            return condition
-        conditions.constrain(condition)
-        return conditions
 
     def _attach_pending(self, root_spec: "spack.spec.Spec", pending: Optional[tuple]) -> None:
         """Attach the pending ^ dependency, whose sub-dag is complete now."""
@@ -792,9 +765,9 @@ class SpecParser:
                     else:
                         spec.versions = spack.version.VersionList(curr.group(_VERSION_LIST))
                 except ValueError as e:
-                    # The tokenizer accepts more than VersionList does, e.g. @=1:2: that is a
-                    # syntax error of the spec, with the version underlined
-                    raise SpecParsingError(str(e), curr, self.literal_str) from e
+                    # The tokenizer accepts more than VersionList does, e.g. @=1:2
+                    self.curr = curr
+                    self._raise_parsing_error(str(e))
                 has_version = True
 
             elif kind == _BOOL_VARIANT:

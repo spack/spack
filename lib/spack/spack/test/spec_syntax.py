@@ -18,7 +18,6 @@ import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.spec
-import spack.spec_parser
 import spack.util.filesystem as fs
 from spack.externals import (
     ExternalSpecsParser,
@@ -315,17 +314,6 @@ def specfile_for(config, mock_packages):
         # TODO: consider making these format to "*" instead of ""
         ("@:", [Token("VERSION", value="@:")], r""),
         ("*", [Token("UNQUALIFIED_PACKAGE_NAME", value="*")], r""),
-        # virtual assignment on a dep of an anonymous spec (more of these later)
-        (
-            "%foo=bar",
-            [Token("DEPENDENCY", value="%foo=bar", edge_virtuals="foo", edge_substitute="bar")],
-            "%foo=bar",
-        ),
-        (
-            "^foo=bar",
-            [Token("DEPENDENCY", value="^foo=bar", edge_virtuals="foo", edge_substitute="bar")],
-            "^foo=bar",
-        ),
         # anonymous dependencies with variants
         (
             "^* foo=bar",
@@ -1062,15 +1050,7 @@ def specfile_for(config, mock_packages):
             ],
             "foo %%[when=%c] c=gcc",
         ),
-        # whitespace between a dependency sigil or edge properties and a virtual assignment
-        (
-            "zlib % c=gcc",
-            [
-                Token("UNQUALIFIED_PACKAGE_NAME", value="zlib"),
-                Token("DEPENDENCY", value="% c=gcc", edge_virtuals="c", edge_substitute="gcc"),
-            ],
-            "zlib %c=gcc",
-        ),
+        # whitespace between edge properties and a virtual assignment
         (
             "foo ^[when=%c]   c,cxx=builtin.gcc@14+bar",
             [
@@ -1087,16 +1067,6 @@ def specfile_for(config, mock_packages):
                 Token("BOOL_VARIANT", value="+bar", bv_prefix="+", bv_name="bar"),
             ],
             "foo ^[when=%c] c,cxx=builtin.gcc@14+bar",
-        ),
-        # a value that is not a package name is a variant of an anonymous dependency
-        (
-            "zlib ^cflags=-O2",
-            [
-                Token("UNQUALIFIED_PACKAGE_NAME", value="zlib"),
-                Token("DEPENDENCY", value="^"),
-                Token("KEY_VALUE_PAIR", value="cflags=-O2"),
-            ],
-            "zlib ^* cflags=-O2",
         ),
     ],
 )
@@ -1242,11 +1212,8 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         (["zlib", "ldflags=-Wl,-rpath=$ORIGIN/_libs"], "zlib ldflags='-Wl,-rpath=$ORIGIN/_libs'"),
         # A closing bracket ends the edge attribute list, it is never part of the value
         (["mpileaks", "%[", "when=@1.0]", "gcc"], "mpileaks %[when=@1.0] gcc"),
-        (["mpileaks", "%[when=+x]", "c=gcc"], "mpileaks %[when=+x] c=gcc"),
         # a value that parses as it is stays unquoted: c=gcc@14 is a virtual assignment
         (["mpileaks", "%[when=+x]", "c=gcc@14"], "mpileaks %[when=+x] c=gcc@14"),
-        (["mpileaks", "%c=gcc@14"], "mpileaks %c=gcc@14"),
-        (["mpileaks", "%c,cxx=gcc"], "mpileaks %c,cxx=gcc"),
         # Ensure that passing escaped quotes on the CLI raises a tokenization error
         (["zlib", '"-g', '-O2"'], SpecTokenizationError),
     ],
@@ -1651,11 +1618,46 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x target==x86_64", "Propagation"),
         ("x dev_path==/foo/bar/baz", "Propagation"),
         ("x patches==abcde12345,12345abcde", "Propagation"),
+        # a when= condition is a spec, which extends up to the closing bracket
+        ("foo ^[when=] bar", "expected a spec after when="),
+        ("foo ^[when=", "expected a spec after when="),
+        ("foo ^[when=bar baz] qux", "unexpected token in edge attributes"),
+        ("foo ^[when=bar ^baz", "unexpected token in edge attributes"),
+        # a quoted condition is a single spec: neither two specs nor none
+        ("foo ^[when='bar baz'] qux", "expected a single spec as the when= condition"),
+        ("foo ^[when=''] qux", "expected a single spec as the when= condition"),
+        # the parts of an architecture and the namespace print unquoted, so they must be values
+        # that parse without quotes, and a namespace a dotted identifier
+        ("x os='a b'", "invalid value"),
+        ("x target='x?y'", "invalid value"),
+        ("x platform=''", "invalid value"),
+        ("x os=''", "invalid value"),
+        ("x arch='a b'", "invalid value"),
+        ("x namespace=a+b", "invalid value"),
+        ("x namespace=','", "invalid value"),
+        ("x namespace=''", "invalid value"),
+        # they have a string value like arch, so the bool variant form is an error rather than
+        # silently dropped
+        ("x ~os", "must have a string value"),
+        ("x ~platform", "must have a string value"),
+        ("x ~target", "must have a string value"),
+        ("x ~namespace", "must have a string value"),
+        ("x +os", "must have a string value"),
+        # = marks an exact version, which cannot be a bound of a range: a syntax error of the
+        # spec, not a ValueError from the version list
+        ("x @=1:2", "Bad characters in version string"),
+        ("x @1:=2", "Bad characters in version string"),
+        # a virtual assignment must directly follow a dependency sigil or edge properties
+        ("c,cxx=gcc", "virtual assignment"),
+        ("zlib c,cxx=gcc", "virtual assignment"),
+        ("zlib %[c=gcc]", "edge attributes"),
+        # regression: an unconsumed token used to make the parser loop forever
+        ("zlib ]", "unexpected token"),
     ],
 )
 def test_error_conditions(text, match_string):
     with pytest.raises(SpecParsingError, match=match_string):
-        SpecParser(text).next_spec()
+        SpecParser(text).all_specs()
 
 
 @pytest.mark.parametrize(
@@ -1965,61 +1967,10 @@ def test_parse_multiple_edge_attributes(input_args, expected):
 
 
 def test_when_edge_attribute_keeps_commas():
-    """A when value is one spec, where a comma is part of the syntax, unlike the
+    """A when value is one spec string, where a comma is part of the syntax, unlike the
     comma-separated deptypes and virtuals lists."""
     edge = spack.spec.Spec("foo ^[when='@1,2'] bar").edges_to_dependencies(name="bar")[0]
     assert edge.when == spack.spec.Spec("@1,2")
-    edge = spack.spec.Spec("foo ^[when=@1,2] bar").edges_to_dependencies(name="bar")[0]
-    assert edge.when == spack.spec.Spec("@1,2")
-
-
-def test_when_edge_attribute_extends_to_closing_bracket():
-    """The when condition is a spec that extends up to the closing bracket: what follows it are
-    node options of the condition, not further edge attributes."""
-    edge = spack.spec.Spec("foo ^[when=bar virtuals=c] baz").edges_to_dependencies(name="baz")[0]
-    assert edge.when == spack.spec.Spec("bar virtuals=c")
-    assert edge.virtuals == ()
-
-    edge = spack.spec.Spec("foo ^[virtuals=c when=bar] baz").edges_to_dependencies(name="baz")[0]
-    assert edge.when == spack.spec.Spec("bar")
-    assert edge.virtuals == ("c",)
-
-
-@pytest.mark.parametrize(
-    "spec_str,expected_in_error",
-    [
-        ("foo ^[when=] bar", "expected a spec after when="),
-        ("foo ^[when=", "expected a spec after when="),
-        ("foo ^[when=bar baz] qux", "unexpected token in edge attributes"),
-        ("foo ^[when=bar ^baz", "unexpected token in edge attributes"),
-        # a quoted condition is a single spec: neither two specs nor none
-        ("foo ^[when='bar baz'] qux", "expected a single spec as the when= condition"),
-        ("foo ^[when=''] qux", "expected a single spec as the when= condition"),
-    ],
-)
-def test_when_edge_attribute_errors(spec_str, expected_in_error):
-    with pytest.raises(SpecParsingError, match=expected_in_error):
-        SpecParser(spec_str).all_specs()
-
-
-def test_when_is_a_variant_name_outside_edge_attributes():
-    spec = spack.spec.Spec("foo when=bar")
-    assert str(spec) == "foo when=bar"
-
-
-@pytest.mark.parametrize(
-    "spec_str",
-    [
-        "foo ^[when='+x' virtuals=c] bar",
-        'foo ^[when="+x" virtuals=c] bar',
-        "foo ^[when='+x']c=bar",
-    ],
-)
-def test_when_edge_attribute_quoted_precedes_other_attributes(spec_str):
-    """A quoted condition is a value like any other edge attribute, so it can come first"""
-    edge = spack.spec.Spec(spec_str).edges_to_dependencies(name="bar")[0]
-    assert edge.when == spack.spec.Spec("+x")
-    assert edge.virtuals == ("c",)
 
 
 @pytest.mark.parametrize(
@@ -2032,12 +1983,10 @@ def test_when_edge_attribute_quoted_precedes_other_attributes(spec_str):
         ("foo ^", "foo ^*"),
         ("pkg-a %*+foo ^*@1.0", "pkg-a %+foo ^@1.0"),
         ("^cflags=-O2", "^* cflags=-O2"),
-        ("^* foo=bar,baz", "^* foo=bar,baz"),
         # a virtual assignment is one token, the node options follow
         ("zlib % c=gcc", "zlib %c=gcc"),
         ("^mpi=intel-parallel-studio+mkl", "^mpi=intel-parallel-studio+mkl"),
         ("%c=builtin.gcc@14", "%c=builtin.gcc@14"),
-        ("%[when=+x] c=gcc", "%[when=+x] c=gcc"),
         # virtuals of an anonymous spec stay in the edge attributes, there is no name to
         # substitute them with
         ("%[virtuals=c] *", "%[virtuals=c] *"),
@@ -2048,8 +1997,15 @@ def test_when_edge_attribute_quoted_precedes_other_attributes(spec_str):
         ("^dev_path=*", "^* dev_path='*'"),
         # a when= value is a spec, which extends to the closing bracket and is printed unquoted
         ("%[when=a=*]", "%[when=a='*'] *"),
-        ("x %[when=a=']'] gcc", "x %[when=a=']'] gcc"),
         ("""x %[when="a=']'"] gcc""", "x %[when=a=']'] gcc"),
+        ("foo ^[when=bar virtuals=c] baz", "foo ^[when=bar virtuals=c] baz"),
+        ("foo when=bar", "foo when=bar"),
+        # a quoted when= is a value like any other, so it can precede other edge attributes
+        ("foo ^[when='+x' virtuals=c] bar", "foo ^[when=+x] c=bar"),
+        ('foo ^[when="+x" virtuals=c] bar', "foo ^[when=+x] c=bar"),
+        ("foo ^[when='+x']c=bar", "foo ^[when=+x] c=bar"),
+        # repeated edge attributes combine: conditions are constrained, like virtuals accumulate
+        ("x ^[when='+a' when='+b'] y", "x ^[when=+a+b] y"),
         ("%[when='@1,2' virtuals=c] *", "%[virtuals=c when=@1:2] *"),
         ("%[virtuals=c when=@1,2] *", "%[virtuals=c when=@1:2] *"),
         ("%[deptypes=build virtuals=c when=@1,2] *", "%[deptypes=build virtuals=c when=@1:2] *"),
@@ -2077,63 +2033,6 @@ def test_spec_str_round_trips(spec_str, expected):
     spec = spack.spec.Spec(spec_str)
     assert str(spec) == expected
     assert spack.spec.Spec(str(spec)) == spec
-
-
-@pytest.mark.parametrize(
-    "spec_str", ["x os='a b'", "x target='x?y'", "x platform=''", "x os=''", "x arch='a b'"]
-)
-def test_architecture_parts_must_be_bare_values(spec_str):
-    """The parts of an architecture print unquoted, so anything that needs quotes cannot
-    round-trip and is rejected"""
-    with pytest.raises(SpecParsingError):
-        spack.spec.Spec(spec_str)
-
-
-@pytest.mark.parametrize("spec_str", ["x namespace=a+b", "x namespace=','", "x namespace=''"])
-def test_namespace_must_be_dotted_identifier(spec_str):
-    """A namespace prints as a prefix of the package name, so anything else cannot round-trip"""
-    with pytest.raises(SpecParsingError):
-        spack.spec.Spec(spec_str)
-
-
-@pytest.mark.parametrize(
-    "spec_str", ["x ~os", "x ~platform", "x ~target", "x ~namespace", "x +os"]
-)
-def test_bool_variant_form_of_string_attributes_raises(spec_str):
-    """The parts of an architecture and the namespace have a string value, like ``arch`` itself,
-    so the bool variant form is an error rather than silently dropped"""
-    with pytest.raises(SpecParsingError):
-        spack.spec.Spec(spec_str)
-
-
-def test_duplicate_when_edge_attribute_constrains():
-    """Repeated edge attributes combine: virtuals accumulate, deptypes are or-ed, and conditions
-    are constrained, rather than the last one silently replacing the others"""
-    edge = spack.spec.Spec("x ^[when='+a' when='+b'] y").edges_to_dependencies(name="y")[0]
-    assert edge.when == spack.spec.Spec("+a+b")
-
-
-@pytest.mark.parametrize("spec_str", ["x @=1:2", "x @1:=2"])
-def test_exact_version_in_range_is_a_syntax_error(spec_str):
-    """``=`` marks an exact version, which cannot be a bound of a range: that is a syntax error
-    of the spec, not a ValueError from the version list"""
-    with pytest.raises(spack.error.SpecSyntaxError):
-        spack.spec.Spec(spec_str)
-
-
-@pytest.mark.parametrize(
-    "spec_str,expected_in_error",
-    [
-        ("c,cxx=gcc", "virtual assignment"),
-        ("zlib c,cxx=gcc", "virtual assignment"),
-        ("zlib %[c=gcc]", "edge attributes"),
-        # regression: an unconsumed token used to make the parser loop forever
-        ("zlib ]", "unexpected token"),
-    ],
-)
-def test_misplaced_tokens_raise(spec_str, expected_in_error):
-    with pytest.raises(SpecParsingError, match=expected_in_error):
-        spack.spec_parser.parse(spec_str)
 
 
 @pytest.mark.regression("52375")

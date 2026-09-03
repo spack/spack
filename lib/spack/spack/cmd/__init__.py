@@ -158,7 +158,7 @@ def get_command(cmd_name):
 #: starts with a character that cannot start a value, like the ``@`` of ``when=@1.0``, or it has a
 #: character that no spec token can hold, like the whitespace, quotes or ``$`` the shell quoting
 #: was needed for. A value like ``gcc@14`` parses as a name followed by a version.
-_NEEDS_QUOTES = re.compile(r"^[^a-zA-Z_0-9\-+*.,:=%^~/\\]|[^a-zA-Z_0-9\-+*.,:=%^~/\\@]")
+_PARSES_BARE = re.compile(rf"{spack.spec_parser.VALUE}(?:@{spack.spec_parser.VALUE}?)*")
 
 
 def quote_kvp(string: str) -> str:
@@ -179,7 +179,7 @@ def quote_kvp(string: str) -> str:
         return string
 
     key, delim, value, brackets = match.groups()
-    if value and not _NEEDS_QUOTES.search(value):
+    if _PARSES_BARE.fullmatch(value):
         return string
     return f"{key}{delim}{spack.spec_parser.quote_if_needed(value)}{brackets}"
 

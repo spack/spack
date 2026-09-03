@@ -147,9 +147,7 @@ _STRING_ATTRIBUTES = frozenset(
     ("arch", "architecture", "platform", "os", "operating_system", "target", "namespace")
 )
 _BARE_VALUE = re.compile(spack.spec_parser.VALUE)
-_NAMESPACE_VALUE = re.compile(
-    rf"{spack.spec_parser.IDENTIFIER}(?:\.{spack.spec_parser.IDENTIFIER})*"
-)
+_NAMESPACE_VALUE = re.compile(spack.spec_parser.PACKAGE_NAME)
 
 # Coloring of specs when using color output. Fields are printed with
 # different colors to enhance readability.
@@ -1679,28 +1677,8 @@ class SpecAnnotations:
         return result
 
 
-def _format_edge_attributes(
-    edge: DependencySpec, *, deptypes: bool = True, when: bool = True, virtuals: bool = False
-) -> str:
-    """Format the ``[key=value ...] `` edge attributes of an edge, or return an empty string.
-    The ``when=`` condition is a spec that extends up to the closing bracket, so it comes last."""
-    deptypes_str = (
-        f"deptypes={','.join(dt.flag_to_tuple(edge.depflag))}" if deptypes and edge.depflag else ""
-    )
-    virtuals_str = f"virtuals={','.join(edge.virtuals)}" if virtuals and edge.virtuals else ""
-    when_str = f"when={edge.when}" if when and edge.when != EMPTY_SPEC else ""
-    attrs = " ".join(s for s in (deptypes_str, virtuals_str, when_str) if s)
-    return f"[{attrs}] " if attrs else ""
-
-
 def _format_edge(
-    edge: DependencySpec,
-    sigil: str,
-    dep_format: str,
-    *,
-    deptypes: bool = True,
-    when: bool = True,
-    anonymous: Optional[bool] = None,
+    edge: DependencySpec, sigil: str, dep_format: str, *, deptypes: bool = True, when: bool = True
 ) -> str:
     """Format an edge and its child node in spec syntax, e.g. ``%[when=+foo] c,cxx=gcc@14``.
 
@@ -1710,25 +1688,24 @@ def _format_edge(
         dep_format: the formatted child node, without name for an anonymous node
         deptypes: whether to include the deptypes of the edge
         when: whether to include the condition of the edge
-        anonymous: whether the child node is anonymous; defaults to it having no name. An
-            anonymous node is named ``*`` where its options could otherwise be read as a name
     """
-    if anonymous is None:
-        anonymous = not edge.spec.name
-
-    # The virtual assignment shorthand substitutes a package name. An anonymous node is named *,
-    # and keeps its virtuals in the edge attributes: %[virtuals=c] * foo=bar
-    attributes = _format_edge_attributes(edge, deptypes=deptypes, when=when, virtuals=anonymous)
+    # The virtual assignment shorthand substitutes a package name, so an anonymous node keeps its
+    # virtuals in the edge attributes, and is named * where its options could otherwise be read
+    # as a name: %[virtuals=c] * foo=bar, ^*. The when= condition extends up to the closing
+    # bracket, so it comes last.
+    anonymous = not edge.spec.name
+    attrs = []
+    if deptypes and edge.depflag:
+        attrs.append(f"deptypes={','.join(dt.flag_to_tuple(edge.depflag))}")
+    if anonymous and edge.virtuals:
+        attrs.append(f"virtuals={','.join(edge.virtuals)}")
+    if when and edge.when != EMPTY_SPEC:
+        attrs.append(f"when={edge.when}")
+    attributes = f"[{' '.join(attrs)}] " if attrs else ""
     virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals and not anonymous else ""
-    name = ""
-    if anonymous:
-        # Only a leading key=value pair, or an empty node, is ambiguous: `^* foo=bar`, `^*`. Other
-        # options start with a sigil that cannot start a name: `^+foo`, `^@1.0`.
-        if dep_format[:1].isalnum() or dep_format[:1] == "_":
-            name = "* "
-        elif not dep_format:
-            name = "*"
-    return f"{sigil}{attributes}{virtuals}{name}{dep_format}"
+    star = anonymous and (not dep_format or dep_format[:1].isalnum() or dep_format[:1] == "_")
+    node = " ".join(s for s in ("*" if star else "", dep_format) if s)
+    return f"{sigil}{attributes}{virtuals}{node}"
 
 
 def _satisfying_edges(
@@ -4710,11 +4687,7 @@ class Spec:
         def format_edge(edge: DependencySpec, sigil: str, dep_spec: Optional[Spec] = None) -> str:
             dep_spec = dep_spec or edge.spec
             return _format_edge(
-                edge,
-                sigil,
-                dep_spec.format(format_string, color=color),
-                deptypes=deptypes,
-                anonymous=not dep_spec.name,
+                edge, sigil, dep_spec.format(format_string, color=color), deptypes=deptypes
             )
 
         # direct dependencies
