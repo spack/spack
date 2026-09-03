@@ -14,7 +14,6 @@ from spack.spec import Spec, VariantMap
 from spack.variant import (
     BoolValuedVariant,
     ConditionalValue,
-    DuplicateVariantError,
     InconsistentValidationError,
     InvalidVariantValueError,
     MultipleValuesInExclusiveVariantError,
@@ -415,45 +414,17 @@ class TestVariant:
 
 
 class TestVariantMapTest:
-    def test_invalid_values(self) -> None:
-        # Value with invalid type
+    def test_set(self) -> None:
+        # All three types of variants are accepted, keyed by their own name
         a = VariantMap()
-        with pytest.raises(TypeError):
-            a["foo"] = 2
+        a.set(BoolValuedVariant("foo", True))
+        a.set(SingleValuedVariant("bar", "baz"))
+        a.set(MultiValuedVariant("foobar", ("a", "b", "c", "d", "e")))
+        assert list(a) == ["foo", "bar", "foobar"]
 
-        # Duplicate variant
-        a["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        with pytest.raises(DuplicateVariantError):
-            a["foo"] = MultiValuedVariant("foo", ("bar",))
-
-        with pytest.raises(DuplicateVariantError):
-            a["foo"] = SingleValuedVariant("foo", "bar")
-
-        with pytest.raises(DuplicateVariantError):
-            a["foo"] = BoolValuedVariant("foo", True)
-
-        # Non matching names between key and vspec.name
-        with pytest.raises(KeyError):
-            a["bar"] = MultiValuedVariant("foo", ("bar",))
-
-    def test_set_item(self) -> None:
-        # Check that all the three types of variants are accepted
-        a = VariantMap()
-
-        a["foo"] = BoolValuedVariant("foo", True)
-        a["bar"] = SingleValuedVariant("bar", "baz")
-        a["foobar"] = MultiValuedVariant("foobar", ("a", "b", "c", "d", "e"))
-
-    def test_substitute(self) -> None:
-        # Check substitution of a key that exists
-        a = VariantMap()
-        a["foo"] = BoolValuedVariant("foo", True)
-        a.substitute(SingleValuedVariant("foo", "bar"))
-
-        # Trying to substitute something that is not
-        # in the map will raise a KeyError
-        with pytest.raises(KeyError):
-            a.substitute(BoolValuedVariant("bar", True))
+        # An entry already under that name is replaced
+        a.set(SingleValuedVariant("foo", "bar"))
+        assert a["foo"] == SingleValuedVariant("foo", "bar")
 
     def test_satisfies_and_constrain(self) -> None:
         # foo=bar foobar=fee feebar=foo

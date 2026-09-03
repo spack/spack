@@ -1585,6 +1585,12 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x target==x86_64", "Propagation"),
         ("x dev_path==/foo/bar/baz", "Propagation"),
         ("x patches==abcde12345,12345abcde", "Propagation"),
+        # The same variant cannot be specified twice, set or propagated
+        ("x +foo +foo", "twice"),
+        ("x +foo ~foo", "twice"),
+        ("x foo=bar foo=baz", "twice"),
+        ("x ++foo ~~foo", "twice"),
+        ("x foo==bar foo==baz", "twice"),
     ],
 )
 def test_error_conditions(text, match_string):

@@ -214,8 +214,7 @@ class SpecClauseGenerator:
                         clauses.append(fn.attr("concrete_variant_request", name, vname, value))
                 clauses.append(variant_clause)
 
-        for variant in spec.propagated_variants:
-            vname = variant.name
+        for vname, variant in sorted(spec.propagated_variants.items()):
             for value in variant.values:
                 clauses.append(f.propagate(name, fn.variant_value(vname, value)))
 

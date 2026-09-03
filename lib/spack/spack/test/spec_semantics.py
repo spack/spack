@@ -762,8 +762,8 @@ class TestSpecSemantics:
         assert str(Spec(spec_str)) == spec_str
 
     def test_propagation_canonical_form(self):
-        """Equal propagated constraints have equal state however they were built, so string form, node
-        dict and hash agree and the concretization cache is keyed consistently."""
+        """Equal propagated constraints have equal state however they were built, so string
+        form, node dict and hash agree and the concretization cache is keyed consistently."""
         merged = Spec("pkg foo==a")
         merged.constrain("pkg foo==b")
         parsed = Spec("pkg foo==b,a")
