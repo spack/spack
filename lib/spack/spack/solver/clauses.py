@@ -222,7 +222,7 @@ class SpecClauseGenerator:
                         clauses.append(fn.attr("concrete_variant_request", name, vname, value))
                 clauses.append(variant_clause)
 
-        for vname, variant in sorted(spec.propagated_variants.items()):
+        for vname, variant in spec.propagated_variants.items():
             # a propagated variant is conditional: it applies only where the variant exists,
             # so it need not exist on this package
             source_has_variant = (

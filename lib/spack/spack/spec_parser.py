@@ -612,10 +612,6 @@ class SpecParser:
 
         self._attach_pending(root_spec, pending)
 
-        # A propagated variant contradicting a node's variant is unsatisfiable; this is a
-        # semantic error, not a syntactic one, so it is raised unwrapped.
-        root_spec._validate_propagation()
-
         return root_spec
 
     def _attach_pending(self, root_spec: "spack.spec.Spec", pending: Optional[tuple]) -> None:

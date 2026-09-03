@@ -181,15 +181,18 @@ spec_node = {
             "before the split into propagated_parameters it also listed variants",
         },
         "propagated_parameters": {
-            "type": "object",
-            "additionalProperties": True,
-            "description": "Propagated variants, i.e. ++foo or foo==bar (for abstract specs)",
-        },
-        "propagated_abstract": {
             "type": "array",
-            "items": {"type": "string"},
-            "description": "List of propagated multi-valued variants that are abstract, i.e. "
-            "foo==bar,baz instead of foo:==bar,baz (for abstract specs)",
+            "items": {
+                "type": "object",
+                "required": ["name", "values"],
+                "properties": {
+                    "name": {"type": "string"},
+                    "values": {"type": "array"},
+                    "concrete": {"type": "boolean"},
+                },
+            },
+            "description": "Propagation requests, i.e. ++foo or foo==bar (for abstract specs), "
+            "in canonical order; multiple entries per variant name can occur",
         },
         "abstract": {
             "type": "array",

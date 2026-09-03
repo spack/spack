@@ -170,11 +170,10 @@ def assert_actionable_error(exc_info, *required_part: str) -> None:
             ["quantum-espresso@:0.1", "No version exists"],
             id="version_constraint_unsatisfied",
         ),
-        # hypre propagates ~~shared to its deps, but openblas is explicitly +shared; this is
-        # rejected when the input spec is constructed.
+        # hypre propagates ~~shared to its deps, but openblas is explicitly +shared.
         pytest.param(
             "hypre ~~shared ^openblas +shared",
-            ["'+shared' on 'openblas'", "'~~shared' propagated from 'hypre'"],
+            ["shared", "hypre", "'openblas' requires conflicting variant values"],
             id="propagation_excluded",
         ),
         # dependency-foo-bar (++bar) and direct-dep-foo-bar (~~bar) both propagate

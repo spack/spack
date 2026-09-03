@@ -525,9 +525,6 @@ class TestSpecSemantics:
             ("mpich~foo", "mpich+foo"),
             ("mpich+foo", "mpich~foo"),
             ("mpich foo=True", "mpich foo=False"),
-            ("mpich~~foo", "mpich++foo"),
-            ("mpich++foo", "mpich~~foo"),
-            ("mpich foo==True", "mpich foo==False"),
             ("libelf@0:2.0", "libelf@2.1:3"),
             ("libelf@0:2.5%gcc@4.8:4.9", "libelf@2.1:3%gcc@4.5:4.7"),
             ("libelf+debug", "libelf~debug"),
@@ -642,13 +639,16 @@ class TestSpecSemantics:
         "lhs,rhs", [("hdf5 ^foo~mpi", "hdf5++mpi"), ("hdf5++mpi", "hdf5 ^foo~mpi")]
     )
     def test_propagation_conflicts_with_node_in_closure(self, lhs, rhs):
-        """A propagated variant that contradicts a variant set on a node in the closure:
-        disjoint."""
+        """A propagated bool value contradicting a bool variant on a node in the closure
+        denotes the empty set, but the spec operations stay pairwise per slot and leave the
+        contradiction to the concretizer: neither side is inside the other, yet they intersect
+        and merge."""
         lhs, rhs = Spec(lhs), Spec(rhs)
         assert not lhs.satisfies(rhs)
-        assert not lhs.intersects(rhs)
-        with pytest.raises(UnsatisfiableSpecError):
-            lhs.constrain(rhs)
+        assert not rhs.satisfies(lhs)
+        assert lhs.intersects(rhs)
+        lhs.constrain(rhs)
+        assert lhs == Spec("hdf5++mpi ^foo~mpi")
 
     @pytest.mark.parametrize(
         "lhs,rhs,expected",
@@ -660,14 +660,23 @@ class TestSpecSemantics:
             # knows
             ("pkg foo=a", "pkg foo==b", "pkg foo=a foo==b"),
             ("pkg foo==b", "pkg foo=a", "pkg foo=a foo==b"),
+            # requests union: a DAG in which no node has the variant satisfies both
+            ("pkg++foo", "pkg~~foo", "pkg~~foo++foo"),
+            ("pkg~~foo", "pkg++foo", "pkg~~foo++foo"),
+            ("pkg foo==a", "pkg foo==b", "pkg foo==a,b"),
+            ("pkg foo==a", "pkg foo==a,b", "pkg foo==a,b"),
+            # an exact request absorbs the values it contains
+            ("pkg foo==a", "pkg foo:==a", "pkg foo:==a"),
+            ("pkg foo:==a", "pkg foo==a", "pkg foo:==a"),
+            ("pkg foo:==a", "pkg foo:==b", "pkg foo:==a foo:==b"),
         ],
     )
     def test_propagation_constrain_keeps_both(self, lhs, rhs, expected):
-        """Setting a variant and propagating it are incomparable constraints, so the greatest
-        lower bound keeps both."""
-        lhs = Spec(lhs)
-        assert lhs.constrain(rhs) is True
-        assert lhs == Spec(expected)
+        """Setting a variant and propagating it are incomparable constraints, and so are two
+        different propagation requests, so the greatest lower bound keeps both."""
+        original, lhs, expected = Spec(lhs), Spec(lhs), Spec(expected)
+        assert lhs.constrain(rhs) is (original != expected)
+        assert lhs == expected
 
     @pytest.mark.parametrize(
         "lhs,rhs,expected",
@@ -679,46 +688,60 @@ class TestSpecSemantics:
             ("hdf5 foo=a,b foo==b", "hdf5 foo=a", True),
             ("hdf5 foo==b", "hdf5 foo==b,c", False),
             ("hdf5 foo==b,c", "hdf5 foo==b", True),
+            ("hdf5~~mpi ++mpi", "hdf5++mpi", True),
+            ("hdf5++mpi", "hdf5~~mpi ++mpi", False),
+            # an exact request implies the plain requests for its values, not conversely
+            ("hdf5 foo:==a", "hdf5 foo==a", True),
+            ("hdf5 foo==a", "hdf5 foo:==a", False),
         ],
     )
     def test_propagation_satisfies_per_slot(self, lhs, rhs, expected):
         assert Spec(lhs).satisfies(rhs) is expected
 
     @pytest.mark.parametrize(
-        "spec_str", ["pkg+foo~~foo", "pkg~foo++foo", "pkg~~shared ^dep+shared"]
+        "spec_str",
+        [
+            "pkg+foo~~foo",
+            "pkg~foo++foo",
+            "pkg~~shared ^dep+shared",
+            "pkg++shared ^dep~~shared",
+            "pkg~~shared ^dep++shared",
+            "pkg foo==a,b ^dep foo:=b",
+            "pkg foo==b ^dep foo=a",
+        ],
     )
-    def test_bool_propagation_conflict_rejected_at_construction(self, spec_str):
-        """A bool propagated value contradicting a bool variant in the closure is
-        unsatisfiable: both values of a bool variant are always possible, so the propagation
-        applies wherever the variant exists."""
-        with pytest.raises(UnsatisfiableSpecError):
-            Spec(spec_str)
+    def test_propagation_conflicts_left_to_concretizer(self, spec_str):
+        """Whether propagated values collide with a variant, or with each other, on a node that
+        actually has the variant is left to the concretizer; the specs are representable and
+        round-trip."""
+        spec = Spec(spec_str)
+        assert spec.satisfies(spec)
+        assert Spec(str(spec)) == spec
 
-    def test_propagation_between_propagated_slots_is_not_a_conflict(self):
-        """Sibling propagation requests are conditional statements; only the solver can tell
-        whether they collide on a node that actually has the variant."""
-        Spec("pkg++shared ^dep~~shared")
-        Spec("pkg~~shared ^dep++shared")
-
-    def test_non_bool_propagation_does_not_conflict_with_node_variant(self):
-        """A non-bool propagated value applies to a node only if it is a possible value
-        there, which only the solver knows, so it never contradicts a variant set on a
-        node."""
-        Spec("pkg foo==a,b ^dep foo:=b")
-        Spec("pkg foo==b ^dep foo=a")
-
-    @pytest.mark.parametrize("spec_str", ["pkg+foo+foo", "pkg++foo++foo", "pkg foo==a foo==b"])
-    def test_duplicate_variant_within_one_slot_rejected(self, spec_str):
+    @pytest.mark.parametrize("spec_str", ["pkg+foo+foo", "pkg foo=a foo=b"])
+    def test_duplicate_variant_within_the_plain_slot_rejected(self, spec_str):
         with pytest.raises(spack.spec_parser.SpecParsingError):
             Spec(spec_str)
 
     @pytest.mark.parametrize(
+        "spec_str,canonical",
+        [("pkg++foo++foo", "pkg++foo"), ("pkg foo==a foo==b", "pkg foo==a,b")],
+    )
+    def test_duplicate_propagation_requests_union(self, spec_str, canonical):
+        assert Spec(spec_str) == Spec(canonical)
+        assert str(Spec(spec_str)) == str(Spec(canonical))
+
+    @pytest.mark.parametrize(
         "lhs,rhs,expected",
         [
-            ("pkg++foo", "pkg ^dep~foo", False),
+            # a propagated bool contradicting a bool variant in the closure is genuinely
+            # empty, but detecting it takes a closure walk; intersects stays pairwise per slot
+            # and leaves it to the concretizer
+            ("pkg++foo", "pkg ^dep~foo", True),
             ("pkg++foo", "pkg+foo", True),
-            ("pkg+foo", "pkg~~foo", False),
-            ("pkg++foo", "pkg~~foo", False),
+            ("pkg+foo", "pkg~~foo", True),
+            # propagation requests never contradict each other
+            ("pkg++foo", "pkg~~foo", True),
             ("pkg foo==a", "pkg foo==b", True),
             # a non-bool propagated value never contradicts a variant set on a node
             ("pkg foo=a", "pkg foo==b", True),
@@ -730,10 +753,28 @@ class TestSpecSemantics:
         assert Spec(rhs).intersects(lhs) is expected
 
     @pytest.mark.parametrize(
-        "spec_str", ["pkg+foo++bar", "pkg foo=a,b foo==b", "pkg+a~b++c~~d baz=qux foo==bar"]
+        "spec_str",
+        [
+            "pkg+foo++bar",
+            "pkg foo=a,b foo==b",
+            "pkg+a~b++c~~d baz=qux foo==bar",
+            "pkg~~foo++foo",
+            "pkg foo==a foo:==b",
+        ],
     )
     def test_propagation_str_round_trip(self, spec_str):
         assert str(Spec(spec_str)) == spec_str
+
+    def test_propagation_canonical_form(self):
+        """Equal request sets have equal state however they were built, so string form, node
+        dict and hash agree and the concretization cache is keyed consistently."""
+        merged = Spec("pkg foo==a")
+        merged.constrain("pkg foo==b")
+        parsed = Spec("pkg foo==b,a")
+        assert merged == parsed
+        assert str(merged) == str(parsed)
+        assert merged.to_dict() == parsed.to_dict()
+        assert hash(merged) == hash(parsed)
 
     def test_basic_satisfies_conditional_dep(self):
         """Tests basic semantic of satisfies with conditional dependencies, on a concrete spec"""
