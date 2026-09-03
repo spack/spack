@@ -3260,7 +3260,7 @@ class SpecBuilder:
         if node not in self._specs:
             self._specs[node] = spack.spec.Spec(node.pkg)
             for flag_type in spack.spec.FlagMap.valid_compiler_flags():
-                self._specs[node].compiler_flags[flag_type] = []
+                self._specs[node].compiler_flags[flag_type] = ()
 
     def _arch(self, node):
         arch = self._specs[node].architecture
@@ -3493,7 +3493,7 @@ def reorder_flags(specs: SpecDict) -> None:
             msg = f"{set(compiler_flags)} does not equal {set(ordered_flags)}"
             assert set(compiler_flags) == set(ordered_flags), msg
 
-            spec.compiler_flags.update({flag_type: ordered_flags})
+            spec.compiler_flags.update({flag_type: tuple(ordered_flags)})
 
 
 def post_process_fresh_solve(specs: SpecDict, splices: Optional[SpliceDict]) -> None:

@@ -450,7 +450,7 @@ class TestConcretize:
         for _ in range(3):
             s = spack.concretize.concretize_one(spec_str)
             assert all(
-                s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
+                s.compiler_flags[x] == ("-O0", "-g") for x in ("cflags", "cxxflags", "fflags")
             )
 
     @pytest.mark.parametrize(

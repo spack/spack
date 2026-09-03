@@ -1544,8 +1544,8 @@ class TestSpecSemantics:
         # 'variant=value' (regardless of whether it in fact does).
         assert "foo=baz" not in new_spec
         assert "foobar=baz" in new_spec
-        assert new_spec.compiler_flags["cflags"] == ["-O2"]
-        assert new_spec.compiler_flags["cxxflags"] == ["-O1"]
+        assert new_spec.compiler_flags["cflags"] == ("-O2",)
+        assert new_spec.compiler_flags["cxxflags"] == ("-O1",)
 
     def test_spec_override_with_nonexisting_variant(self):
         init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
@@ -2776,14 +2776,19 @@ def test_constrain_does_not_share_flags_or_architecture_with_the_rhs(mock_packag
     assert rhs.to_dict() == before
 
 
-def test_copy_does_not_share_flag_instances(mock_packages):
-    """CompilerFlag is a mutable string in FlagMap; it should not be shared on copy."""
-    old = Spec("pkg-a cflags=-O2 cflags==-g")
+def test_copy_shares_flags_and_keeps_specs_independent(mock_packages):
+    """CompilerFlag values are immutable, so a copy shares them. Constraining the copy leaves the
+    flags of the original alone, including their propagation."""
+    old = Spec("pkg-a cflags=-O2 cflags=-g")
     new = old.copy()
-    assert len(new.compiler_flags["cflags"]) == len(old.compiler_flags["cflags"]) == 2
-    for x, y in zip(old.compiler_flags["cflags"], new.compiler_flags["cflags"]):
-        assert x is not y
-        assert x == y and x.propagate == y.propagate and x.flag_group == y.flag_group
+    assert new.compiler_flags["cflags"] is old.compiler_flags["cflags"]
+
+    new.constrain(Spec("pkg-a cflags==-O2 cflags=-O3"))
+
+    assert [str(f) for f in old.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert [f.propagate for f in old.compiler_flags["cflags"]] == [False, False]
+    assert [str(f) for f in new.compiler_flags["cflags"]] == ["-O2", "-g", "-O3"]
+    assert [f.propagate for f in new.compiler_flags["cflags"]] == [True, False, False]
 
 
 @pytest.mark.parametrize(

@@ -1121,10 +1121,11 @@ class CompilerFlag(str):
         obj.source = kwargs.pop("source", None)
         return obj
 
-    def copy(self) -> "CompilerFlag":
-        return CompilerFlag(
-            self, propagate=self.propagate, flag_group=self.flag_group, source=self.source
-        )
+    def as_propagated(self) -> "CompilerFlag":
+        """This flag, marked as propagating to dependencies."""
+        if self.propagate:
+            return self
+        return CompilerFlag(self, propagate=True, flag_group=self.flag_group, source=self.source)
 
     def to_dict(self) -> Dict[str, Any]:
         """Value and propagation of this flag, unlike ``FlagMap.yaml_entry``, which is its value
@@ -1144,7 +1145,7 @@ class CompilerFlag(str):
 _valid_compiler_flags = ("cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags")
 
 
-class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
+class FlagMap(lang.HashableMap[str, Tuple[CompilerFlag, ...]]):
     __slots__ = ()
 
     def satisfies(self, other):
@@ -1159,26 +1160,26 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         Return whether the spec changed.
         """
         changed = False
-        for flag_type in other:
-            if flag_type not in self:
-                # copy the list and its flags, so that self and other share no mutable state
-                self[flag_type] = [f.copy() for f in other[flag_type]]
+        for flag_type, other_flags in other.items():
+            flags = self.get(flag_type)
+            if flags is None:
+                self[flag_type] = other_flags
                 changed = True
                 continue
 
-            extra_other = set(other[flag_type]) - set(self[flag_type])
+            extra_other = set(other_flags) - set(flags)
             if extra_other:
-                self[flag_type] = list(self[flag_type]) + [
-                    x.copy() for x in other[flag_type] if x in extra_other
-                ]
+                flags = (*flags, *(x for x in other_flags if x in extra_other))
                 changed = True
 
             # Next, if any flags in other propagate, we force them to propagate in our case.
-            other_propagate = {f for f in other[flag_type] if f.propagate}
-            for f in self[flag_type]:
-                if not f.propagate and f in other_propagate:
-                    f.propagate = True
-                    changed = True
+            other_propagate = {f for f in other_flags if f.propagate}
+            if any(f in other_propagate and not f.propagate for f in flags):
+                flags = tuple(f.as_propagated() if f in other_propagate else f for f in flags)
+                changed = True
+
+            if flags is not self.get(flag_type):
+                self[flag_type] = flags
 
         # TODO: what happens if flag groups with a partial (but not complete)
         # intersection specify different behaviors for flag propagation?
@@ -1197,18 +1198,15 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
     def from_dict(d: Dict[str, List[Dict[str, Any]]]) -> "FlagMap":
         result = FlagMap()
         for flag_type, flags in d.items():
-            result[flag_type] = [CompilerFlag.from_dict(flag) for flag in flags]
+            result[flag_type] = tuple(CompilerFlag.from_dict(flag) for flag in flags)
         return result
 
     @staticmethod
     def valid_compiler_flags():
         return _valid_compiler_flags
 
-    def copy(self):
-        clone = FlagMap()
-        for flag_type, flags in self.items():
-            clone[flag_type] = [f.copy() for f in flags]
-        return clone
+    def copy(self) -> "FlagMap":
+        return FlagMap(self)
 
     def add_flag(self, flag_type, value, propagation, flag_group=None, source=None):
         """Stores the flag's value in CompilerFlag and adds it
@@ -1224,10 +1222,7 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         flag_group = flag_group or value
         flag = CompilerFlag(value, propagate=propagation, flag_group=flag_group, source=source)
 
-        if flag_type not in self:
-            self[flag_type] = [flag]
-        else:
-            self[flag_type].append(flag)
+        self[flag_type] = (*self.get(flag_type, ()), flag)
 
     def yaml_entry(self, flag_type):
         """Returns the flag type and a list of the flag values since the
@@ -5657,7 +5652,7 @@ class SpecfileReaderBase(abc.ABC):
             if name in _valid_compiler_flags:
                 if name in spec.compiler_flags:
                     continue
-                spec.compiler_flags[name] = []
+                spec.compiler_flags[name] = ()
                 for val in values:
                     spec.compiler_flags.add_flag(name, val, propagate)
             else:

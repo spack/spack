@@ -217,5 +217,5 @@ class ClingoBootstrapConcretizer:
         initial_spec.namespace = "builtin"
         initial_spec.architecture = self.host_architecture
         for flag_type in spack.spec.FlagMap.valid_compiler_flags():
-            initial_spec.compiler_flags[flag_type] = []
+            initial_spec.compiler_flags[flag_type] = ()
         return spack.spec.parse_with_version_concrete(initial_spec)

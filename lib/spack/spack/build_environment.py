@@ -444,7 +444,8 @@ def set_wrapper_environment_variables_for_flags(pkg, env):
         else:
             handler = pkg.flag_handler.__func__
 
-        injf, envf, bsf = handler(pkg, flag, spec.compiler_flags[flag][:])
+        # recipes mutate the list they are handed, so pass a list of the stored flags
+        injf, envf, bsf = handler(pkg, flag, list(spec.compiler_flags[flag]))
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
