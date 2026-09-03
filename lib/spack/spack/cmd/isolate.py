@@ -105,15 +105,26 @@ def _setup_isolate_scope(new_user_path, overwrite: bool):
     else:
         os.makedirs(ISOLATE_SCOPE_PATH, exist_ok=True)
 
+    # For --self, create a user-redirect subdirectory for user config additions
+    # The isolate scope's config files point to isolate/bootstrap, isolate/cache, etc.
+    # But user additions go to isolate/user-redirect
+    if is_self:
+        user_redirect_path = os.path.join(ISOLATE_SCOPE_PATH, "user-redirect")
+        os.makedirs(user_redirect_path, exist_ok=True)
+        final_user_path = user_redirect_path
+    else:
+        final_user_path = new_user_path
+
     # Write configuration files into isolate scope
+    # These still point to new_user_path for artifact locations
     _isolate_bootstrap_config(new_user_path)
     _isolate_config_config(new_user_path)
     _isolate_repos_config(new_user_path)
 
     # Write include.yaml with include:: override to redirect user scope
-    # Skip for --self since the isolate scope itself IS the user scope
-    if not is_self:
-        _isolate_include_config(new_user_path)
+    # For --self, this points to user-redirect/
+    # For --path, this points to the external path
+    _isolate_include_config(final_user_path)
 
 
 # _get_new_user_scope no longer needed - moved into _isolate_include_config

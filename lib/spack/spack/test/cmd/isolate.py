@@ -218,12 +218,14 @@ def test_self_isolate(monkeypatch, tmp_path):
     assert (isolate_scope_path / "bootstrap.yaml").exists()
     assert (isolate_scope_path / "config.yaml").exists()
     assert (isolate_scope_path / "include.yaml").exists()
+    assert (isolate_scope_path / "user-redirect").exists()
 
     # Reload config to pick up isolate scope
     spack.config.CONFIG = spack.config.create()
 
     sp_config("add", "packages:gcc:buildable:false")
-    new_config_path = isolate_scope_path / "packages.yaml"
+    # Config goes to user-redirect subdirectory
+    new_config_path = isolate_scope_path / "user-redirect" / "packages.yaml"
     assert new_config_path.exists()
     with open(new_config_path) as f:
         text = f.read().strip()
@@ -263,8 +265,9 @@ def test_self_isolate_overwrite(monkeypatch, tmp_path):
     with pytest.raises(Exception):
         sp_isolate("--self")
 
-    new_concr_config_path = isolate_scope_path / "concretizer.yaml"
-    new_pkgs_config_path = isolate_scope_path / "packages.yaml"
+    # Config goes to user-redirect subdirectory
+    new_concr_config_path = isolate_scope_path / "user-redirect" / "concretizer.yaml"
+    new_pkgs_config_path = isolate_scope_path / "user-redirect" / "packages.yaml"
 
     # Reload and add config
     spack.config.CONFIG = spack.config.create()
