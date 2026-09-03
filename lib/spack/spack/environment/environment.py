@@ -1731,24 +1731,18 @@ class Environment:
             if modified:
                 modified_specs.append(s)
 
-        # Identify roots modified and invalidate all dependent hashes
-        modified_roots = []
-        for parent in traverse.traverse_nodes(modified_specs, direction="parents"):
-            # record whether this parent is a root before we modify the hash
-            if parent.dag_hash() in self.specs_by_hash:
-                modified_roots.append((parent, parent.dag_hash()))
-            # modify the parent to invalidate hashes
-            parent._mark_root_concrete(False)
-            parent.clear_caches()
+        # Identify roots modified, before their hashes change
+        modified_roots = [
+            (parent, parent.dag_hash())
+            for parent in traverse.traverse_nodes(modified_specs, direction="parents")
+            if parent.dag_hash() in self.specs_by_hash
+        ]
 
-        # Compute new hashes and update the env list of specs
-        roots = [root for root, _ in modified_roots]
-        spack.spec.assign_package_hashes(roots, repo=spack.repo.PATH)
+        spack.spec.rehash_mutated(modified_specs, repo=spack.repo.PATH)
 
+        # Update the env list of specs
         hash_mutations = {}
         for root, old_hash in modified_roots:
-            # New hash must be computed after the package hashes are assigned
-            root._mark_concrete_and_assign_dag_hashes()
             new_hash = root.dag_hash()
             self.specs_by_hash.pop(old_hash)
             self.specs_by_hash[new_hash] = root

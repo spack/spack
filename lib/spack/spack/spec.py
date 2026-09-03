@@ -2581,8 +2581,10 @@ class Spec:
         Arguments:
             hash: type of hash to generate.
         """
-        # TODO: currently we strip build dependencies by default.  Rethink
-        # this when we move to using package hashing on all specs.
+        if hash is not ht.dag_hash:
+            raise ValueError(
+                f"{hash.name} cannot be computed: it is assigned, or read from old spec files"
+            )
         node_dict = self.to_node_dict(hash=hash)
         json_text = json.dumps(
             node_dict, ensure_ascii=True, indent=None, separators=(",", ":"), sort_keys=False
@@ -2746,12 +2748,7 @@ class Spec:
             if hasattr(variant, "_patches_in_order_of_appearance"):
                 d["patches"] = variant._patches_in_order_of_appearance
 
-        if (
-            self._concrete
-            and hash.package_hash
-            and hasattr(self, "_package_hash")
-            and self._package_hash
-        ):
+        if self._concrete and hash.package_hash and self._package_hash:
             # The package hash is assigned at concretization time. We don't want to compute one for
             # a concrete spec, where a) the package might not exist, or b) the `dag_hash` didn't
             # include the package hash when the spec was concretized.
@@ -4123,9 +4120,7 @@ class Spec:
         yield self.compiler_flags
         yield self.architecture
         yield self.abstract_hash
-
-        # this is not present on older specs
-        yield getattr(self, "_package_hash", None)
+        yield self._package_hash
 
     def eq_node(self, other):
         """Equality with another spec, not including dependencies."""

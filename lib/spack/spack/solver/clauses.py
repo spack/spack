@@ -423,10 +423,9 @@ class SpecClauseGenerator:
 
         # Hash for concrete specs
         if spec.concrete:
-            # older specs do not have package hashes, so we have to do this carefully
-            package_hash = getattr(spec, "_package_hash", None)
-            if package_hash:
-                clauses.append(fn.attr("package_hash", name, package_hash))
+            # older specs do not have package hashes
+            if spec._package_hash:
+                clauses.append(fn.attr("package_hash", name, spec._package_hash))
             clauses.append(fn.attr("hash", name, spec.dag_hash()))
             if spec.external:
                 clauses.append(fn.attr("external", name))
