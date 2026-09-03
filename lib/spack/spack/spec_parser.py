@@ -539,7 +539,7 @@ class SpecParser:
 
                     # Collect edge attributes (key=value pairs) up to the closing bracket
                     attributes: Dict[str, List[str]] = {}
-                    when_string: Optional[str] = None
+                    conditions: Optional["spack.spec.Spec"] = None
                     substitute = None
                     while self.curr:
                         if self.curr.lastgroup == _KEY_VALUE_PAIR:
@@ -554,9 +554,14 @@ class SpecParser:
                             value = strip_quotes_and_unescape(value)
                             # A when value is one spec string, where a comma is part of the
                             # syntax, e.g. when='@1,2'; deptypes and virtuals values are
-                            # comma-separated lists.
+                            # comma-separated lists. Repeated attributes combine: a second
+                            # when= constrains the condition, like virtuals accumulate.
                             if name == "when":
-                                when_string = value
+                                condition = parse_one_or_raise(value)
+                                if conditions is None:
+                                    conditions = condition
+                                else:
+                                    conditions.constrain(condition)
                             else:
                                 attributes[name] = [v.strip() for v in value.split(",")]
 
@@ -586,10 +591,6 @@ class SpecParser:
                         depflag = spack.deptypes.canonicalize(attributes["deptypes"])
 
                     virtuals_tuple = tuple(attributes.get("virtuals", ()))
-
-                    conditions = None
-                    if when_string is not None:
-                        conditions = SpecParser(when_string).next_spec()
 
                     dep_spec = self._parse_node(initial_name=substitute)
 
@@ -725,13 +726,18 @@ class SpecParser:
                     self.curr = curr
                     self._raise_parsing_error("Spec cannot have multiple versions")
 
-                if curr.group(_GIT_VERSION):
-                    spec.versions = spack.version.VersionList(
-                        [spack.version.GitVersion(curr.group(_GIT_VERSION))]
-                    )
-                    spec.attach_git_version_lookup()
-                else:
-                    spec.versions = spack.version.VersionList(curr.group(_VERSION_LIST))
+                try:
+                    if curr.group(_GIT_VERSION):
+                        spec.versions = spack.version.VersionList(
+                            [spack.version.GitVersion(curr.group(_GIT_VERSION))]
+                        )
+                        spec.attach_git_version_lookup()
+                    else:
+                        spec.versions = spack.version.VersionList(curr.group(_VERSION_LIST))
+                except ValueError as e:
+                    # The tokenizer accepts more than VersionList does, e.g. @=1:2: that is a
+                    # syntax error of the spec, with the version underlined
+                    raise SpecParsingError(str(e), curr, self.literal_str) from e
                 has_version = True
 
             elif kind == _BOOL_VARIANT:
