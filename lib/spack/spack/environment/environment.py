@@ -2583,18 +2583,6 @@ class Environment:
         for x in self.concretized_roots:
             x.new = False
 
-        # Regenerate activation/deactivation scripts for this environment
-        current_env_path = os.environ.get(spack_env_var, None)
-        if current_env_path == self.path:
-            # This environment is currently active, preserve the active view
-            view = os.environ.get(spack_env_view_var, None)
-        else:
-            # This environment is not active, use its default view if it has one
-            view = default_view_name if self.has_view(default_view_name) else None
-
-        write_env_activate_script(self, view)
-        write_env_deactivate_script(self, view)
-
     def update_lockfile(self) -> None:
         with fs.write_tmp_and_move(self.lock_path, encoding="utf-8") as f:
             sjson.dump(self._to_lockfile_dict(), stream=f)

@@ -392,6 +392,7 @@ def env_activate(args):
         active_env, shell=args.shell, script_type="activate", view=view
     )
 
+    # Will only write the activation/deactivation scripts if they don't exist
     env_script.write_env_activate_script(active_env, view)
     env_script.write_env_deactivate_script(active_env, view)
 

@@ -72,7 +72,9 @@ def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
     return lockfile_mtime >= script_mtime
 
 
-def _write_env_script(env: "spack.environment.Environment", view: Optional[str] = None, activate: bool = True):
+def _write_env_script(
+    env: "spack.environment.Environment", view: Optional[str] = None, activate: bool = True
+):
     """Helper method for write_env_(de)activate_script methods"""
 
     # Ensure .env subdir exists
@@ -88,7 +90,6 @@ def _write_env_script(env: "spack.environment.Environment", view: Optional[str] 
     else:
         script_type = "deactivate"
         shells = WINDOWS_SHELLS if sys.platform == "win32" else ["sh", "csh", "fish"]
-
 
     for shell in shells:
         script_path = path_to_env_script(env, shell, script_type, view)
