@@ -10,10 +10,33 @@ import pytest
 import spack.cmd.isolate
 import spack.config
 import spack.main
+import spack.paths
 from spack.test.conftest import _create_mock_configuration_scopes
 
 sp_isolate = spack.main.SpackCommand("isolate")
 sp_config = spack.main.SpackCommand("config")
+
+
+@pytest.fixture
+def mock_spack_paths(monkeypatch, tmp_path):
+    """Set up a mock spack instance with paths redirected to tmp_path.
+
+    Returns a tuple of (base_prefix, etc_spack, isolate_scope_path).
+    """
+    from spack.paths import SpackPaths
+
+    base_prefix = tmp_path / "mock_spack"
+    base_prefix.mkdir()
+    etc_spack = base_prefix / "etc" / "spack"
+    etc_spack.mkdir(parents=True)
+
+    mock_paths = SpackPaths(_prefix=str(base_prefix))
+    monkeypatch.setattr(spack.paths, "locations", mock_paths)
+
+    isolate_scope_path = etc_spack / "isolate"
+    monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_SCOPE_PATH", str(isolate_scope_path))
+
+    return base_prefix, etc_spack, isolate_scope_path
 
 
 @pytest.fixture(scope="function")
@@ -81,16 +104,11 @@ def test_isolate_smoke_test(mock_pre_isolate_config):
         assert "user" in sp_config("scopes")
 
 
-def test_isolate_added_config(monkeypatch, tmp_path):
+def test_isolate_added_config(mock_spack_paths, tmp_path):
     """Test that config added after isolate goes to the isolated path."""
-    from spack.paths import SpackPaths
     import spack.util.spack_yaml as syaml
 
-    # Set up a mock spack instance
-    base_prefix = tmp_path / "mock_spack"
-    base_prefix.mkdir()
-    etc_spack = base_prefix / "etc" / "spack"
-    etc_spack.mkdir(parents=True)
+    base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
 
     # Create include.yaml that references isolate scope
     include_yaml = etc_spack / "include.yaml"
@@ -102,14 +120,6 @@ def test_isolate_added_config(monkeypatch, tmp_path):
     standard_scopes_dir.mkdir()
     with open(standard_scopes_dir / "include.yaml", "w") as f:
         f.write('include:\n  - name: "user"\n    path: "~/.config/spack"\n    optional: true\n    prefer_modify: true\n')
-
-    # Mock paths
-    mock_paths = SpackPaths(_prefix=str(base_prefix))
-    monkeypatch.setattr(spack.paths, "locations", mock_paths)
-
-    # Mock ISOLATE_SCOPE_PATH to point to etc/spack/isolate
-    isolate_scope_path = etc_spack / "isolate"
-    monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_SCOPE_PATH", str(isolate_scope_path))
 
     # Create isolated user path
     isolated_path = tmp_path / "test-isolation"
@@ -138,19 +148,9 @@ config:
     assert text == expected_text
 
 
-def test_isolate_overwrite_same_dir(monkeypatch, tmp_path):
+def test_isolate_overwrite_same_dir(mock_spack_paths, tmp_path):
     """Test that --overwrite works when isolating to the same directory."""
-    from spack.paths import SpackPaths
-
-    # Set up mock paths
-    base_prefix = tmp_path / "mock_spack"
-    base_prefix.mkdir()
-    etc_spack = base_prefix / "etc" / "spack"
-    etc_spack.mkdir(parents=True)
-
-    mock_paths = SpackPaths(_prefix=str(base_prefix))
-    monkeypatch.setattr(spack.paths, "locations", mock_paths)
-    monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_SCOPE_PATH", str(etc_spack / "isolate"))
+    base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
 
     isolated_path1 = tmp_path / "test-isolation1"
     sp_isolate("--path", str(isolated_path1))
@@ -159,20 +159,9 @@ def test_isolate_overwrite_same_dir(monkeypatch, tmp_path):
     sp_isolate("--overwrite", "--path", str(isolated_path1))
 
 
-def test_isolate_overwrite_different_dir(monkeypatch, tmp_path):
+def test_isolate_overwrite_different_dir(mock_spack_paths, tmp_path):
     """Test that --overwrite works when switching to a different directory."""
-    from spack.paths import SpackPaths
-
-    # Set up mock paths
-    base_prefix = tmp_path / "mock_spack"
-    base_prefix.mkdir()
-    etc_spack = base_prefix / "etc" / "spack"
-    etc_spack.mkdir(parents=True)
-
-    mock_paths = SpackPaths(_prefix=str(base_prefix))
-    monkeypatch.setattr(spack.paths, "locations", mock_paths)
-    isolate_scope_path = etc_spack / "isolate"
-    monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_SCOPE_PATH", str(isolate_scope_path))
+    base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
 
     isolated_path1 = tmp_path / "test-isolation1"
     isolated_path2 = tmp_path / "test-isolation2"
@@ -188,15 +177,9 @@ bootstrap:
     assert text == expected_text
 
 
-def test_self_isolate(monkeypatch, tmp_path):
+def test_self_isolate(mock_spack_paths, tmp_path):
     """Test --self isolate (stores isolation in Spack's prefix)."""
-    from spack.paths import SpackPaths
-
-    # Set up mock paths
-    base_prefix = tmp_path / "mock_spack"
-    base_prefix.mkdir()
-    etc_spack = base_prefix / "etc" / "spack"
-    etc_spack.mkdir(parents=True)
+    base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
 
     # Create include.yaml
     with open(etc_spack / "include.yaml", "w") as f:
@@ -207,11 +190,6 @@ def test_self_isolate(monkeypatch, tmp_path):
     standard_scopes_dir.mkdir()
     with open(standard_scopes_dir / "include.yaml", "w") as f:
         f.write('include:\n  - name: "user"\n    path: "~/.config/spack"\n    optional: true\n    prefer_modify: true\n')
-
-    mock_paths = SpackPaths(_prefix=str(base_prefix))
-    monkeypatch.setattr(spack.paths, "locations", mock_paths)
-    isolate_scope_path = etc_spack / "isolate"
-    monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_SCOPE_PATH", str(isolate_scope_path))
 
     sp_isolate("--self")
     assert isolate_scope_path.exists()
@@ -236,15 +214,9 @@ packages:
     assert text == expected_text
 
 
-def test_self_isolate_overwrite(monkeypatch, tmp_path):
+def test_self_isolate_overwrite(mock_spack_paths, tmp_path):
     """Test --self --overwrite clears previous isolate config."""
-    from spack.paths import SpackPaths
-
-    # Set up mock paths
-    base_prefix = tmp_path / "mock_spack"
-    base_prefix.mkdir()
-    etc_spack = base_prefix / "etc" / "spack"
-    etc_spack.mkdir(parents=True)
+    base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
 
     # Create include.yaml
     with open(etc_spack / "include.yaml", "w") as f:
@@ -255,11 +227,6 @@ def test_self_isolate_overwrite(monkeypatch, tmp_path):
     standard_scopes_dir.mkdir()
     with open(standard_scopes_dir / "include.yaml", "w") as f:
         f.write('include:\n  - name: "user"\n    path: "~/.config/spack"\n    optional: true\n    prefer_modify: true\n')
-
-    mock_paths = SpackPaths(_prefix=str(base_prefix))
-    monkeypatch.setattr(spack.paths, "locations", mock_paths)
-    isolate_scope_path = etc_spack / "isolate"
-    monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_SCOPE_PATH", str(isolate_scope_path))
 
     sp_isolate("--self")
     with pytest.raises(Exception):
@@ -295,20 +262,9 @@ packages:
     assert text == expected_text
 
 
-def test_isolate_undo(monkeypatch, tmp_path):
+def test_isolate_undo(mock_spack_paths, tmp_path):
     """Test that --undo removes the isolate scope."""
-    from spack.paths import SpackPaths
-
-    # Set up mock paths
-    base_prefix = tmp_path / "mock_spack"
-    base_prefix.mkdir()
-    etc_spack = base_prefix / "etc" / "spack"
-    etc_spack.mkdir(parents=True)
-
-    mock_paths = SpackPaths(_prefix=str(base_prefix))
-    monkeypatch.setattr(spack.paths, "locations", mock_paths)
-    isolate_scope_path = etc_spack / "isolate"
-    monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_SCOPE_PATH", str(isolate_scope_path))
+    base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
 
     isolated_path = tmp_path / "test-isolation"
     sp_isolate("--path", str(isolated_path))
