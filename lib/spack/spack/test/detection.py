@@ -127,14 +127,14 @@ def test_prefix_cuts_at_last_bin_or_lib(tmp_path: pathlib.Path, monkeypatch):
     # the innermost recognized component wins, regardless of its name
     mixed_lib = tmp_path / "lib64" / "foo" / "lib"
     mixed_lib.mkdir(parents=True)
-    assert spack.detection.common.library_prefix(str(mixed_lib)) == str(
-        tmp_path / "lib64" / "foo"
-    )
+    assert spack.detection.common.library_prefix(str(mixed_lib)) == str(tmp_path / "lib64" / "foo")
 
 
 def test_prefix_before_last_supports_windows_paths():
     path = pathlib.PureWindowsPath(r"C:\\Apps\\Lib64\\foo\\LIB")
-    assert spack.detection.common.prefix_before_last(path, ("lib", "lib64")) == r"C:\Apps\Lib64\foo"
+    assert (
+        spack.detection.common.prefix_before_last(path, ("lib", "lib64")) == r"C:\Apps\Lib64\foo"
+    )
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Skip Windows paths on not Windows")
