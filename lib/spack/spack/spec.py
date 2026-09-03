@@ -70,7 +70,6 @@ from typing import (
     List,
     Match,
     NamedTuple,
-    NoReturn,
     Optional,
     Sequence,
     Set,
@@ -5475,14 +5474,14 @@ _EMPTY_VARIANT_MAP = VariantMap()
 
 
 if TYPE_CHECKING:
-    _PropagatedVariantsBase = List[vt.VariantValue]
+    _PropagatedVariantsBase = Tuple[vt.VariantValue, ...]
 else:
-    _PropagatedVariantsBase = list  # subclassing typing.List is slow on 3.6 (GenericMeta)
+    _PropagatedVariantsBase = tuple  # subclassing typing.Tuple is slow on 3.6 (GenericMeta)
 
 
 @lang.lazy_lexicographic_ordering
 class PropagatedVariants(_PropagatedVariantsBase):
-    """The propagation requests of a node, as a canonically ordered list of values.
+    """The propagation requests of a node, as a canonically ordered tuple of values.
 
     A propagated value binds every closure node that has the variant with the value possible,
     so no two requests contradict: a DAG without the variant satisfies both, and the meet of
@@ -5493,10 +5492,9 @@ class PropagatedVariants(_PropagatedVariantsBase):
     is two requests); and values a concrete request contains are dropped as implied. Entries
     are ordered by name, then bools, the abstract value set, concrete value sets.
 
-    Specs share these lists, almost all of them :data:`EMPTY_PROPAGATED_VARIANTS`, so a list
-    and its entries are never modified once they exist: :meth:`with_value`, :meth:`constrained`
-    and :meth:`without` return the list to store back on the spec, self when nothing changed,
-    and the mutators inherited from list raise."""
+    Specs share these tuples, almost all of them :data:`EMPTY_PROPAGATED_VARIANTS`, and the
+    entries are never modified once they exist: :meth:`with_value`, :meth:`constrained` and
+    :meth:`without` return the tuple to store back on the spec, self when nothing changed."""
 
     __slots__ = ()
 
@@ -5579,16 +5577,6 @@ class PropagatedVariants(_PropagatedVariantsBase):
 
     def values(self) -> Iterator[vt.VariantValue]:
         return iter(self)  # named for symmetry with VariantMap.values()
-
-    def _immutable(self, *args, **kwargs) -> NoReturn:
-        raise TypeError("PropagatedVariants is immutable, store the result of with_value()")
-
-    append = extend = insert = remove = pop = clear = sort = reverse = _immutable
-    __setitem__ = __delitem__ = __iadd__ = __imul__ = _immutable  # type: ignore[assignment]
-
-    def __reduce__(self):
-        # the default list pickling replays append, which raises
-        return PropagatedVariants, (tuple(self),)
 
     def _cmp_iter(self):
         yield from self
