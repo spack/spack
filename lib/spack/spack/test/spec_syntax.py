@@ -1992,6 +1992,9 @@ def test_when_edge_attribute_extends_to_closing_bracket():
         ("foo ^[when=", "expected a spec after when="),
         ("foo ^[when=bar baz] qux", "unexpected token in edge attributes"),
         ("foo ^[when=bar ^baz", "unexpected token in edge attributes"),
+        # a quoted condition is a single spec: neither two specs nor none
+        ("foo ^[when='bar baz'] qux", "expected a single spec as the when= condition"),
+        ("foo ^[when=''] qux", "expected a single spec as the when= condition"),
     ],
 )
 def test_when_edge_attribute_errors(spec_str, expected_in_error):

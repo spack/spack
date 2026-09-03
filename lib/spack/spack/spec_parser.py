@@ -569,6 +569,7 @@ class SpecParser:
                                 continue
 
                             value = strip_quotes(value)
+                            token = self.curr
                             self.curr, self.next = self.next, self.scanner.match()
 
                             # A quoted when value is one spec string, where a comma is part of
@@ -576,7 +577,16 @@ class SpecParser:
                             # comma-separated lists. Repeated attributes combine: a second
                             # when= constrains the condition, like virtuals accumulate.
                             if name == "when":
-                                condition = parse_one_or_raise(value)
+                                try:
+                                    condition = parse_one_or_raise(value)
+                                except ValueError as e:
+                                    # e.g. when='a b' or when='': a syntax error of the spec, not
+                                    # a ValueError that a SpecSyntaxError handler would miss
+                                    raise SpecParsingError(
+                                        "expected a single spec as the when= condition",
+                                        token,
+                                        self.literal_str,
+                                    ) from e
                                 if conditions is None:
                                     conditions = condition
                                 else:
