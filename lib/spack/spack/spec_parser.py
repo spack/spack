@@ -118,7 +118,10 @@ VERSION = r"=?(?:[a-zA-Z0-9_](?:[a-zA-Z_0-9\-\.]*[a-zA-Z0-9_])?(?![a-zA-Z_0-9\-\
 #: The upper bound of a range is not the key of a key-value pair, so ``@1.2:develop=foo`` is
 #: ``@1.2:`` and a variant.
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
-VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
+#: A version or a range, with the lower bound factored out so that a plain version is matched
+#: once, instead of as a failed range first and then again as a version
+_VERSION_OR_RANGE = rf"(?:{VERSION}(?::(?:{VERSION}(?!\s*=))?)?|:(?:{VERSION}(?!\s*=))?)"
+VERSION_LIST = rf"{_VERSION_OR_RANGE}(?:\s*,\s*{_VERSION_OR_RANGE})*"
 
 SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
 
