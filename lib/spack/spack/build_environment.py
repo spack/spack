@@ -1124,8 +1124,7 @@ def load_external_modules(context: SetupContext) -> None:
         context: A populated SetupContext object
     """
     for spec, _ in context.external:
-        external_modules = spec.external_modules or []
-        for external_module in external_modules:
+        for external_module in spec.external_modules or ():
             spack.util.module_cmd.load_module(external_module)
 
 

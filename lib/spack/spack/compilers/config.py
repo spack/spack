@@ -315,7 +315,7 @@ class CompilerFactory:
                     s.extra_attributes = {**s.extra_attributes, **attributes}
 
                 if "modules" in compiler_dict:
-                    s.external_modules = list(compiler_dict["modules"])
+                    s.external_modules = tuple(compiler_dict["modules"])
 
             result.extend(detected)
 

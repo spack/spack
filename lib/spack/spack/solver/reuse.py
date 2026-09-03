@@ -108,10 +108,12 @@ def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) ->
             expected_prefix = entry.get("prefix")
             if expected_prefix is not None:
                 expected_prefix = spack.util.path.path_to_os_path(expected_prefix)[0]
+            expected_modules = entry.get("modules")
             if (
                 spec.satisfies(entry["spec"])
                 and spec.external_path == expected_prefix
-                and spec.external_modules == entry.get("modules")
+                and spec.external_modules
+                == (tuple(expected_modules) if expected_modules else None)
             ):
                 return True
 

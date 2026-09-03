@@ -87,7 +87,7 @@ def test_compiler_conversion_modules(mock_compiler):
     mock_compiler["modules"] = modules
     compiler_spec = CompilerFactory.from_legacy_yaml(mock_compiler)[0]
     assert compiler_spec.external
-    assert compiler_spec.external_modules == modules
+    assert compiler_spec.external_modules == tuple(modules)
 
 
 @pytest.mark.regression("49717")
