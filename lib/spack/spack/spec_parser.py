@@ -120,8 +120,7 @@ VERSION = r"=?(?:[a-zA-Z0-9_](?:[a-zA-Z_0-9\-\.]*[a-zA-Z0-9_])?(?![a-zA-Z_0-9\-\
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
 VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
 
-#: Split ``key=value]]`` into key, delimiter, value and closing brackets of edge attributes
-SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*?)(\]*)$")
+SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
 
 #: A filename starts either with a ``.`` or a ``/`` or a ``{name}/``, or on Windows, a drive letter
 #: followed by a colon and ``\`` or ``.`` or ``{name}\``

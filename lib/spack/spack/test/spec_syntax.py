@@ -1212,6 +1212,22 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         (["zlib", "ldflags=-Wl,-rpath=$ORIGIN/_libs"], "zlib ldflags='-Wl,-rpath=$ORIGIN/_libs'"),
         # A closing bracket ends the edge attribute list, it is never part of the value
         (["mpileaks", "%[", "when=@1.0]", "gcc"], "mpileaks %[when=@1.0] gcc"),
+        # but a bracket that has its opening one in the value is part of the value
+        (["zlib", "cflags=-DFOO=[1]"], "zlib cflags='-DFOO=[1]'"),
+        (["zlib", "cflags=-DX=']'"], "zlib cflags=\"-DX=']'\""),
+        # what follows the closing bracket is the dependency, and not part of the value either
+        (["x", "%[virtuals=c", "deptypes=build]gcc@14"], "x %[deptypes=build] c=gcc@14"),
+        (
+            ["x", "%[virtuals=c", "when=+a]gcc", "^[virtuals=mpi", "when=~b]mpich"],
+            "x %[when=+a] c=gcc ^[when=~b] mpi=mpich",
+        ),
+        # a when= value is a spec, which is not quoted even if it starts with a non-value character
+        (["x", "%[virtuals=c", "when=@1.0", "+debug]", "gcc"], "x %[when=@1.0+debug] c=gcc"),
+        # a value that is still quoted is left alone, the user quoted the whole argument
+        (["x", "cflags=' a b'"], "x cflags='a b'"),
+        # the limit: a when= condition with a quoted value only tokenizes inside brackets, so as
+        # one argument it is quoted as a whole and its bracket ends up in the condition
+        (["x", "%[virtuals=c", "when=a=']']", "gcc"], SpecParsingError),
         # a value that parses as it is stays unquoted: c=gcc@14 is a virtual assignment
         (["mpileaks", "%[when=+x]", "c=gcc@14"], "mpileaks %[when=+x] c=gcc@14"),
         # Ensure that passing escaped quotes on the CLI raises a tokenization error
