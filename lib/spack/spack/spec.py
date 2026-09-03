@@ -5586,7 +5586,7 @@ class PropagatedVariants(_PropagatedVariantsBase):
         return _variants_string(_EMPTY_VARIANT_MAP, self)
 
 
-#: Shared by every spec without propagation requests: nearly all of them, and every concrete one.
+#: Immutable container shared by specs that don't have propagated variants as constraints
 EMPTY_PROPAGATED_VARIANTS = PropagatedVariants()
 
 
