@@ -87,6 +87,7 @@ def test_detect_specs_deduplicates_across_prefixes(tmp_path, monkeypatch, mock_p
     # Both prefixes produce cmake@3.17.1; only the first should be kept.
     assert len(detected) == 1
 
+
 def test_prefix_cuts_at_last_bin_or_lib(tmp_path: pathlib.Path):
     """Prefixes should be cut at the LAST occurrence
     of bin/lib/lib64, not the first, so nested paths like .../bin/gcc/bin don't
