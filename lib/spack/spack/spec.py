@@ -70,6 +70,7 @@ from typing import (
     List,
     Match,
     NamedTuple,
+    NoReturn,
     Optional,
     Sequence,
     Set,
@@ -1937,7 +1938,7 @@ class Spec:
         self.name: str = ""
         self.versions = vn.VersionList.any()
         self.variants = VariantMap()
-        self.propagated_variants = PropagatedVariants()
+        self.propagated_variants = EMPTY_PROPAGATED_VARIANTS
         self.architecture = None
         self.compiler_flags = FlagMap()
         self._dependents = {}
@@ -2195,7 +2196,7 @@ class Spec:
         else:
             variant = vt.VariantValue.from_string_or_bool(name, value, concrete=concrete)
             if propagate:
-                self.propagated_variants.add(variant)
+                self.propagated_variants = self.propagated_variants.with_value(variant)
             else:
                 self.variants[name] = variant
 
@@ -2944,8 +2945,10 @@ class Spec:
 
         # propagated variants are conditional, so they need not exist on this package
         for value in change_spec.propagated_variants.values():
-            new_spec.propagated_variants.discard(value.name)
-        new_spec.propagated_variants.constrain(change_spec.propagated_variants)
+            new_spec.propagated_variants = new_spec.propagated_variants.without(value.name)
+        new_spec.propagated_variants = new_spec.propagated_variants.constrained(
+            change_spec.propagated_variants
+        )
 
         if change_spec.compiler_flags:
             for flagname, flagvals in change_spec.compiler_flags.items():
@@ -3870,7 +3873,10 @@ class Spec:
             else:
                 self.variants[name] = value.copy()
                 changed = True
-        return changed | self.propagated_variants.constrain(other.propagated_variants)
+        propagated = self.propagated_variants.constrained(other.propagated_variants)
+        changed |= propagated is not self.propagated_variants
+        self.propagated_variants = propagated
+        return changed
 
     @property  # type: ignore[misc] # decorated prop not supported in mypy
     def patches(self):
@@ -3924,7 +3930,7 @@ class Spec:
         self.architecture = other.architecture.copy() if other.architecture else None
         self.compiler_flags = other.compiler_flags.copy()
         self.variants = other.variants.copy()
-        self.propagated_variants = other.propagated_variants.copy()
+        self.propagated_variants = other.propagated_variants
         self._build_spec = other._build_spec
 
         # Clear dependencies
@@ -5373,7 +5379,11 @@ class Spec:
 
         # Reconstruct variants and compiler_flags
         self.variants = VariantMap()
-        self.propagated_variants = PropagatedVariants(propagated_variants_data or ())
+        self.propagated_variants = (
+            PropagatedVariants(propagated_variants_data)
+            if propagated_variants_data
+            else EMPTY_PROPAGATED_VARIANTS
+        )
         self.compiler_flags = FlagMap()
         if variants_data is not None:
             self.variants.dict = variants_data
@@ -5455,7 +5465,7 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
     def string(self, abbreviate_patches: bool = False) -> str:
         """The string representation of the map. ``abbreviate_patches`` is passed on to each
         variant, see :meth:`~spack.variant.VariantValue.string`."""
-        return _variants_string(self, _EMPTY_PROPAGATED_VARIANTS, abbreviate_patches)
+        return _variants_string(self, EMPTY_PROPAGATED_VARIANTS, abbreviate_patches)
 
     def __str__(self):
         return self.string()
@@ -5489,13 +5499,18 @@ class PropagatedVariants(_PropagatedVariantsBase):
     bool variant is exclusive only on a node that has it (``++foo ~~foo`` is two requests); and
     a value a concrete request of the same variant contains is already implied, so it is
     dropped. Entries are ordered by name, then bools before the abstract value set before
-    concrete value sets. Mutate only through :meth:`add`, :meth:`constrain` and
-    :meth:`discard`, which maintain the canonical form."""
+    concrete value sets.
+
+    Specs share these lists — almost every spec shares :data:`EMPTY_PROPAGATED_VARIANTS` — so a
+    list is never modified once it exists: :meth:`with_value`, :meth:`constrained` and
+    :meth:`without` return the list to store back on the spec, self when nothing changed, and
+    the mutators inherited from list raise. The entries are shared along with the list, so they
+    are not modified either."""
 
     __slots__ = ()
 
-    def add(self, value: vt.VariantValue) -> bool:
-        """Merge one propagation request into the set. Returns True iff the set changed."""
+    def with_value(self, value: vt.VariantValue) -> "PropagatedVariants":
+        """This set with one propagation request merged in; self when it adds nothing."""
         if value.type == vt.VariantType.SINGLE:
             # a single value from an old node dict is one abstract request
             value = vt.VariantValue(vt.VariantType.MULTI, value.name, value.values)
@@ -5504,34 +5519,39 @@ class PropagatedVariants(_PropagatedVariantsBase):
 
         if value.concrete:  # a bool value or an exact value set: one entry per distinct request
             if value in self:
-                return False
-            self.append(value.copy())
+                return self
+            entries = [e for e in self if e is not abstract]
+            entries.append(value.copy())
             if abstract is not None:
                 remaining = tuple(v for v in abstract.values if v not in value.values)
                 if remaining:
-                    abstract.set(*remaining)
-                else:
-                    self.remove(abstract)
-            self.sort(key=self._sort_key)
-            return True
+                    entries.append(vt.VariantValue(vt.VariantType.MULTI, value.name, remaining))
+        else:
+            implied = {v for e in self if e.concrete and e.name == value.name for v in e.values}
+            fresh = tuple(v for v in value.values if v not in implied)
+            if not fresh:
+                return self
+            if abstract is not None and all(v in abstract.values for v in fresh):
+                return self
+            entries = [e for e in self if e is not abstract]
+            merged = fresh if abstract is None else (*abstract.values, *fresh)
+            entries.append(vt.VariantValue(vt.VariantType.MULTI, value.name, merged))
+        entries.sort(key=self._sort_key)
+        return PropagatedVariants(entries)
 
-        implied = {v for e in self if e.concrete and e.name == value.name for v in e.values}
-        fresh = tuple(v for v in value.values if v not in implied)
-        if not fresh:
-            return False
-        if abstract is not None:
-            # values do not change an entry's position: it sorts by name and concreteness
-            return abstract.constrain(vt.VariantValue(vt.VariantType.MULTI, value.name, fresh))
-        self.append(vt.VariantValue(vt.VariantType.MULTI, value.name, fresh))
-        self.sort(key=self._sort_key)
-        return True
-
-    def constrain(self, other: "PropagatedVariants") -> bool:
-        """Union other's requests into self. Never raises. Returns True iff self changed."""
-        changed = False
+    def constrained(self, other: "PropagatedVariants") -> "PropagatedVariants":
+        """The union of the two request sets; self when other adds nothing."""
+        result = self
         for entry in other:
-            changed |= self.add(entry)
-        return changed
+            result = result.with_value(entry)
+        return result
+
+    def without(self, name: str) -> "PropagatedVariants":
+        """This set with all requests for the given variant name dropped."""
+        remaining = [e for e in self if e.name != name]
+        if len(remaining) == len(self):
+            return self
+        return PropagatedVariants(remaining) if remaining else EMPTY_PROPAGATED_VARIANTS
 
     def satisfies(self, other: "PropagatedVariants") -> bool:
         """Whether self requests everything other requests."""
@@ -5544,10 +5564,6 @@ class PropagatedVariants(_PropagatedVariantsBase):
                 if not all(any(v in e.values for e in mine) for v in entry.values):
                     return False
         return True
-
-    def discard(self, name: str) -> None:
-        """Drop all requests for the given variant name."""
-        self[:] = [e for e in self if e.name != name]
 
     def _abstract_entry(self, name: str) -> Optional[vt.VariantValue]:
         return next((e for e in self if e.name == name and not e.concrete), None)
@@ -5569,23 +5585,30 @@ class PropagatedVariants(_PropagatedVariantsBase):
 
     @staticmethod
     def from_node_list(entries: List[Dict[str, Any]]) -> "PropagatedVariants":
-        """Inverse of :meth:`to_node_list`. Entries merge through :meth:`add`, so a
+        """Inverse of :meth:`to_node_list`. Entries merge through :meth:`with_value`, so a
         non-canonical list still loads into canonical state."""
-        result = PropagatedVariants()
+        result = EMPTY_PROPAGATED_VARIANTS
         for entry in entries:
-            result.add(
+            result = result.with_value(
                 vt.VariantValue.from_node_dict(
                     entry["name"], entry["value"], abstract=not entry.get("concrete", False)
                 )
             )
         return result
 
-    def copy(self) -> "PropagatedVariants":
-        return PropagatedVariants(e.copy() for e in self)
-
     def values(self) -> Iterator[vt.VariantValue]:
         """The entries, named for symmetry with ``VariantMap.values()``."""
         return iter(self)
+
+    def _immutable(self, *args, **kwargs) -> NoReturn:
+        raise TypeError("PropagatedVariants is immutable, store the result of with_value()")
+
+    append = extend = insert = remove = pop = clear = sort = reverse = _immutable
+    __setitem__ = __delitem__ = __iadd__ = __imul__ = _immutable  # type: ignore[assignment]
+
+    def __reduce__(self):
+        # the default list pickling replays append, which raises
+        return PropagatedVariants, (tuple(self),)
 
     def _cmp_iter(self):
         yield from self
@@ -5597,7 +5620,9 @@ class PropagatedVariants(_PropagatedVariantsBase):
         return f"PropagatedVariants({list.__repr__(self)})"
 
 
-_EMPTY_PROPAGATED_VARIANTS = PropagatedVariants()
+#: Shared by every spec without propagation requests — nearly all of them, and every concrete
+#: one.
+EMPTY_PROPAGATED_VARIANTS = PropagatedVariants()
 
 
 def _variant_parts(
@@ -5873,11 +5898,11 @@ class SpecfileReaderBase(abc.ABC):
                 if propagate:
                     # files from before propagated variants had their own attribute listed them
                     # under "parameters" with their name in "propagate"
-                    spec.propagated_variants.add(variant)
+                    spec.propagated_variants = spec.propagated_variants.with_value(variant)
                 else:
                     spec.variants[name] = variant
 
-        spec.propagated_variants.constrain(
+        spec.propagated_variants = spec.propagated_variants.constrained(
             PropagatedVariants.from_node_list(node.get("propagated_parameters", ()))
         )
 
