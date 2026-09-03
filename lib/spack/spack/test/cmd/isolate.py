@@ -1,10 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
-import pathlib
-import shutil
-
 import pytest
 
 import spack.cmd.isolate
