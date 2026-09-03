@@ -147,6 +147,15 @@ def _convert_to_iterable(single_val_or_multiple):
         return [x]
 
 
+def prefix_before_last(path: pathlib.PurePath, names: Tuple[str, ...]) -> Optional[str]:
+    """Parent of the innermost component whose lowercased name is in names, or None."""
+    while path.name:
+        if path.name.lower() in names:
+            return str(path.parent) if path.parent.name else ""
+        path = path.parent
+    return None
+
+
 def executable_prefix(executable_dir: str) -> str:
     """Given a directory where an executable is found, guess the prefix
     (i.e. the "root" directory of that installation) and return it.
@@ -159,13 +168,8 @@ def executable_prefix(executable_dir: str) -> str:
     # prefix
     assert os.path.isdir(executable_dir)
 
-    components = executable_dir.split(os.sep)
-    # convert to lower to match Bin, BIN, bin
-    lowered_components = executable_dir.lower().split(os.sep)
-    if "bin" not in lowered_components:
-        return executable_dir
-    idx = max(i for i, comp in enumerate(lowered_components) if comp == "bin")
-    return os.sep.join(components[:idx])
+    prefix = prefix_before_last(pathlib.PurePath(executable_dir), ("bin",))
+    return executable_dir if prefix is None else prefix
 
 
 def library_prefix(library_dir: str) -> str:
@@ -180,20 +184,9 @@ def library_prefix(library_dir: str) -> str:
     # to get a Spack-compatible prefix
     assert os.path.isdir(library_dir)
 
-    components = library_dir.split(os.sep)
-    # convert to lowercase to match lib, LIB, Lib, etc.
-    lowered_components = library_dir.lower().split(os.sep)
-    if "lib64" in lowered_components:
-        idx = max(i for i, comp in enumerate(lowered_components) if comp == "lib64")
-        return os.sep.join(components[:idx])
-    elif "lib" in lowered_components:
-        idx = max(i for i, comp in enumerate(lowered_components) if comp == "lib")
-        return os.sep.join(components[:idx])
-    elif sys.platform == "win32" and "bin" in lowered_components:
-        idx = max(i for i, comp in enumerate(lowered_components) if comp == "bin")
-        return os.sep.join(components[:idx])
-    else:
-        return library_dir
+    names = ("lib", "lib64", "bin") if sys.platform == "win32" else ("lib", "lib64")
+    prefix = prefix_before_last(pathlib.PurePath(library_dir), names)
+    return library_dir if prefix is None else prefix
 
 
 def update_configuration(

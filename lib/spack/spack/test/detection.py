@@ -5,6 +5,8 @@ import collections
 import pathlib
 import sys
 
+import pytest
+
 import spack.detection
 import spack.detection.common
 import spack.detection.path
@@ -122,8 +124,22 @@ def test_prefix_cuts_at_last_bin_or_lib(tmp_path: pathlib.Path, monkeypatch):
     expected_lib64 = str(tmp_path / "lib64" / "foo")
     assert spack.detection.common.library_prefix(str(nested_lib64)) == expected_lib64
 
-    # on win32, library_prefix falls back to cutting at "bin" if no lib/lib64 found
-    monkeypatch.setattr(sys, "platform", "win32")
+    # the innermost recognized component wins, regardless of its name
+    mixed_lib = tmp_path / "lib64" / "foo" / "lib"
+    mixed_lib.mkdir(parents=True)
+    assert spack.detection.common.library_prefix(str(mixed_lib)) == str(
+        tmp_path / "lib64" / "foo"
+    )
+
+
+def test_prefix_before_last_supports_windows_paths():
+    path = pathlib.PureWindowsPath(r"C:\\Apps\\Lib64\\foo\\LIB")
+    assert spack.detection.common.prefix_before_last(path, ("lib", "lib64")) == r"C:\Apps\Lib64\foo"
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Skip Windows paths on not Windows")
+def test_library_prefix_cuts_at_bin_on_windows(tmp_path: pathlib.Path):
+    """On Windows, library prefixes fall back to cutting at the last bin directory."""
     nested_win_bin = tmp_path / "winbin" / "foo" / "bin"
     nested_win_bin.mkdir(parents=True)
     expected_win_bin = str(tmp_path / "winbin" / "foo")
