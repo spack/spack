@@ -313,15 +313,7 @@ class VariantValue:
     type: VariantType
     _values: ValueType
 
-    # _patches_in_order_of_appearance is attached to the "patches" variant after concretization
-    __slots__ = (
-        "name",
-        "propagate",
-        "concrete",
-        "type",
-        "_values",
-        "_patches_in_order_of_appearance",
-    )
+    __slots__ = ("name", "propagate", "concrete", "type", "_values")
 
     def __init__(
         self,
