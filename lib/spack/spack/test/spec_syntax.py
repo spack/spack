@@ -1181,6 +1181,8 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         (["zlib ldflags='' +pic"], "zlib+pic"),
         # Ensure that $ORIGIN is handled correctly
         (["zlib", "ldflags=-Wl,-rpath=$ORIGIN/_libs"], "zlib ldflags='-Wl,-rpath=$ORIGIN/_libs'"),
+        # A closing bracket ends the edge attribute list, it is never part of the value
+        (["mpileaks", "%[", "when=@1.0]", "gcc"], "mpileaks %[when='@1.0'] gcc"),
         # Ensure that passing escaped quotes on the CLI raises a tokenization error
         (["zlib", '"-g', '-O2"'], SpecTokenizationError),
     ],
@@ -1903,6 +1905,80 @@ def test_when_edge_attribute_keeps_commas():
     comma-separated deptypes and virtuals lists."""
     edge = spack.spec.Spec("foo ^[when='@1,2'] bar").edges_to_dependencies(name="bar")[0]
     assert edge.when == spack.spec.Spec("@1,2")
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected",
+    [
+        # square brackets are not valid characters in an unquoted value
+        ("a=']'", "a=']'"),
+        ("a='['", "a='['"),
+        # virtuals of an anonymous spec stay in the edge attributes, there is no name to
+        # substitute them with
+        ("%[virtuals=c] *", "%[virtuals=c] *"),
+        ("%[deptypes=build virtuals=c] *", "%[deptypes=build virtuals=c] *"),
+        ("^[virtuals=c,cxx] *", "^[virtuals=c,cxx] *"),
+        ("%[virtuals=c] @4.0 foo=bar", "%[virtuals=c] *@4.0 foo=bar"),
+        # a star is a package name, so name=* is a variant value, not a substitute
+        ("^dev_path=*", "^*dev_path='*'"),
+        # a version bound is never truncated at a "." to make room for a key=value pair
+        ("@:a.a=''", "a.a=''"),
+        ("@1.2:2.0=x", "@1.2: 2.0=x"),
+        # a key=value pair after a sigil is a virtual assignment only if the whole value is a
+        # package name, otherwise it is a variant of an anonymous dependency
+        ("^foo=bar:baz", "^* foo='bar:baz'"),
+        ("^foo=bar,baz", "^* foo=bar,baz"),
+        ("^foo=bar=baz", "^* foo='bar=baz'"),
+        ("%x=y~", "%* x='y~'"),
+    ],
+)
+def test_spec_str_round_trips(spec_str, expected):
+    """The string of a spec must be parseable, and parse back to the same spec."""
+    spec = spack.spec.Spec(spec_str)
+    assert str(spec) == expected
+    assert spack.spec.Spec(str(spec)) == spec
+
+
+@pytest.mark.parametrize(
+    "spec_str", ["x os='a b'", "x target='x?y'", "x platform=''", "x os=''", "x arch='a b'"]
+)
+def test_architecture_parts_must_be_bare_values(spec_str):
+    """The parts of an architecture print unquoted, so anything that needs quotes cannot
+    round-trip and is rejected"""
+    with pytest.raises(SpecParsingError):
+        spack.spec.Spec(spec_str)
+
+
+@pytest.mark.parametrize("spec_str", ["x namespace=a+b", "x namespace=','", "x namespace=''"])
+def test_namespace_must_be_dotted_identifier(spec_str):
+    """A namespace prints as a prefix of the package name, so anything else cannot round-trip"""
+    with pytest.raises(SpecParsingError):
+        spack.spec.Spec(spec_str)
+
+
+@pytest.mark.parametrize(
+    "spec_str", ["x ~os", "x ~platform", "x ~target", "x ~namespace", "x +os"]
+)
+def test_bool_variant_form_of_string_attributes_raises(spec_str):
+    """The parts of an architecture and the namespace have a string value, like ``arch`` itself,
+    so the bool variant form is an error rather than silently dropped"""
+    with pytest.raises(SpecParsingError):
+        spack.spec.Spec(spec_str)
+
+
+def test_duplicate_when_edge_attribute_constrains():
+    """Repeated edge attributes combine: virtuals accumulate, deptypes are or-ed, and conditions
+    are constrained, rather than the last one silently replacing the others"""
+    edge = spack.spec.Spec("x ^[when='+a' when='+b'] y").edges_to_dependencies(name="y")[0]
+    assert edge.when == spack.spec.Spec("+a+b")
+
+
+@pytest.mark.parametrize("spec_str", ["x @=1:2", "x @1:=2"])
+def test_exact_version_in_range_is_a_syntax_error(spec_str):
+    """``=`` marks an exact version, which cannot be a bound of a range: that is a syntax error
+    of the spec, not a ValueError from the version list"""
+    with pytest.raises(spack.error.SpecSyntaxError):
+        spack.spec.Spec(spec_str)
 
 
 @pytest.mark.regression("52375")
