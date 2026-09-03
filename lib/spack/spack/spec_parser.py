@@ -5,21 +5,24 @@
 
 Here is the EBNF grammar for a spec::
 
-    spec          = [name] [node_options] { ^[edge_properties] node } |
+    spec          = [name] [node_options] { sigil [edge_properties] dependency } |
                     [name] [node_options] hash |
                     filename
 
+    sigil         = ^ | % | %%
+    dependency    = virtual_assignment [node_options] | node
     node          =  name [node_options] |
                      [name] [node_options] hash |
                      filename
 
-    node_options    = [@(version_list|version_pair)] [%compiler] { variant }
-    edge_properties = [ { bool_variant | key_value } ]
+    node_options    = [@(version_list|version_pair)] { variant } [hash]
+    edge_properties = [ { key_value } ]
 
+    virtual_assignment = id { , id } = name
     hash          = / id
     filename      = (.|/|[a-zA-Z0-9-_]*/)([a-zA-Z0-9-_./]*)(.json|.yaml)
 
-    name          = id | namespace id
+    name          = id | namespace id | *
     namespace     = { id . }
 
     variant       = bool_variant | key_value | propagated_bv | propagated_kv
@@ -27,8 +30,6 @@ Here is the EBNF grammar for a spec::
     propagated_bv = ++id | ~~id | --id
     key_value     =  id=id |  id=quoted_id
     propagated_kv = id==id | id==quoted_id
-
-    compiler      = id [@version_list]
 
     version_pair  = git_version=vid
     version_list  = (version|version_range) [ { , (version|version_range)} ]
@@ -46,8 +47,11 @@ Here is the EBNF grammar for a spec::
 Identifiers using the ``<name>=<value>`` command, such as architectures and
 compiler flags, require a space before the name.
 
-There is one context-sensitive part: ids in versions may contain ``.``, while
-other ids may not.
+There are two context-sensitive parts: ids in versions may contain ``.``, while other ids may
+not; and a ``key=value`` pair directly after a dependency sigil or edge properties, where the
+value is a package name, is a virtual assignment ``%c,cxx=gcc`` rather than a variant of an
+anonymous dependency (write ``%* foo=bar`` for the latter). ``*`` is the name of an anonymous
+node.
 
 There is one ambiguity: since ``-`` is allowed in an id, you need to put
 whitespace space before ``-variant`` for it to be tokenized properly.  You can
@@ -357,9 +361,18 @@ _KV_VALUE = "kv_value"
 
 # The virtual assignment ``c,cxx=gcc`` substitutes a package for one or more virtuals. Both
 # END_EDGE_PROPERTIES and DEPENDENCY embed it, each with its own group names; only that context
-# distinguishes it from KEY_VALUE_PAIR.
+# distinguishes it from KEY_VALUE_PAIR. It applies only if the whole value is a package name,
+# i.e. the substitute is followed by whitespace, a variant, version or hash of the node, a sigil,
+# a closing bracket, or the end of the input. Otherwise the pair is a variant of an anonymous
+# node, e.g. ``^foo=bar:baz``, and the sigil is a token of its own.
 _VIRTUALS_LIST = rf"{IDENTIFIER}(?:,{IDENTIFIER})*"  # comma-separated virtuals
-_SUBSTITUTE = rf"{DOTTED_IDENTIFIER}|{IDENTIFIER}"  # package to substitute for them
+_SUBSTITUTE_END = r"(?=\s|[+~]{1,2}\s*[a-zA-Z_0-9]|[@/^%\]]|$)"
+_SUBSTITUTE = rf"(?:{DOTTED_IDENTIFIER}|{IDENTIFIER}){_SUBSTITUTE_END}"  # package to substitute
+
+#: A virtual assignment of several virtuals that does not follow a dependency sigil or edge
+#: properties, e.g. ``zlib c,cxx=gcc``, fails to tokenize at the comma. It is only matched on that
+#: error path, to point out the mistake, so that it costs nothing in the token regex.
+_MISPLACED_VIRTUAL_ASSIGNMENT = re.compile(rf"{_VIRTUALS_LIST}={_SUBSTITUTE}")
 
 #: Token kind -> regex. FAST_SPEC_REGEX is the ``|``-alternation of these in order: tokens are
 #: tried top to bottom, so more specific tokens come first (e.g. FILENAME before package names).
@@ -460,6 +473,22 @@ class SpecParser:
         return tokens
 
     def _raise_tokenization_error(self) -> None:
+        # A virtual assignment of several virtuals outside a dependency, `zlib c,cxx=gcc`, fails
+        # at the comma: point out the mistake instead of underlining the comma
+        if self.curr is not None and self.curr.group(_UNEXPECTED) == ",":
+            start = self.curr.start(_UNEXPECTED)
+            while start > 0 and (
+                self.literal_str[start - 1].isalnum() or self.literal_str[start - 1] in "_-"
+            ):
+                start -= 1
+            assignment = _MISPLACED_VIRTUAL_ASSIGNMENT.match(self.literal_str, start)
+            if assignment:
+                raise SpecParsingError(
+                    "a virtual assignment such as c,cxx=gcc must directly follow a dependency "
+                    "sigil (^ or %) or edge properties",
+                    assignment,
+                    self.literal_str,
+                )
         raise SpecTokenizationError(self.literal_str)
 
     def _raise_parsing_error(self, message: str) -> None:
@@ -483,6 +512,7 @@ class SpecParser:
         if self.curr.lastgroup == _UNEXPECTED:
             self._raise_tokenization_error()
 
+        first_token = self.curr
         root_spec = self._parse_node(initial_spec)
         current_spec = root_spec
 
@@ -616,6 +646,10 @@ class SpecParser:
 
         self._attach_pending(root_spec, pending)
 
+        if self.curr is not None and self.curr is first_token:
+            # Nothing was consumed, e.g. a stray ] in `zlib ]`: raise instead of looping forever
+            self._raise_parsing_error("unexpected token")
+
         return root_spec
 
     def _attach_pending(self, root_spec: "spack.spec.Spec", pending: Optional[tuple]) -> None:
@@ -651,34 +685,34 @@ class SpecParser:
         # 1. Package name (or spec file). A missing name is fine: anonymous specs like
         # `@1.2 +debug` are valid.
         if initial_name:
-            # Name came from a virtual assignment on the incoming edge, e.g. %c,cxx=gcc
+            # Name came from a virtual assignment on the incoming edge, e.g. %c,cxx=gcc: only
+            # node options can follow, a package name starts the next spec (`zlib %c=gcc gcc`)
             if "." in initial_name:
                 spec.namespace, spec.name = initial_name.rsplit(".", 1)
             else:
                 spec.name = initial_name
-        if not curr:
-            return spec
-        kind = curr.lastgroup
-        value = curr.group(kind)
-        if kind == _UNQUALIFIED_PACKAGE_NAME:
-            if value != "*":  # `*` is an anonymous node, as in `%*+shared`
-                spec.name = value
-            curr = next
-            next = scanner.match() if curr is not None else None
-        elif kind == _FULLY_QUALIFIED_PACKAGE_NAME:
-            spec.namespace, spec.name = value.rsplit(".", 1)
-            curr = next
-            next = scanner.match() if curr is not None else None
-        elif kind == _FILENAME:
-            # A spec file is a complete node: read it and return
-            if not os.path.exists(value):
-                raise spack.error.NoSuchSpecFileError(f"No such spec file: '{value}'")
-            spec._dup(spack.spec.Spec.from_specfile(value))
-            self.curr, self.next = next, scanner.match()
-            return spec
-        elif kind == _UNEXPECTED:
-            self._raise_tokenization_error()
-        # else: no name; fall through to attributes of an anonymous node
+        elif curr:
+            kind = curr.lastgroup
+            value = curr.group(kind)
+            if kind == _UNQUALIFIED_PACKAGE_NAME:
+                if value != "*":  # `*` is an anonymous node, as in `%*+shared`
+                    spec.name = value
+                curr = next
+                next = scanner.match() if curr is not None else None
+            elif kind == _FULLY_QUALIFIED_PACKAGE_NAME:
+                spec.namespace, spec.name = value.rsplit(".", 1)
+                curr = next
+                next = scanner.match() if curr is not None else None
+            elif kind == _FILENAME:
+                # A spec file is a complete node: read it and return
+                if not os.path.exists(value):
+                    raise spack.error.NoSuchSpecFileError(f"No such spec file: '{value}'")
+                spec._dup(spack.spec.Spec.from_specfile(value))
+                self.curr, self.next = next, scanner.match()
+                return spec
+            elif kind == _UNEXPECTED:
+                self._raise_tokenization_error()
+            # else: no name; fall through to attributes of an anonymous node
 
         # 2. Node attributes: version, variants, flags, and abstract hash, in any order
         has_version = False

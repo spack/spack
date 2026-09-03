@@ -2800,14 +2800,14 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "mpileaks",
             "callpath",
             {"virtuals": ("mpi", "lapack")},
-            "mpileaks ^[virtuals=lapack,mpi] callpath",
+            "mpileaks ^lapack,mpi=callpath",
             "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=('lapack', 'mpi'))",
         ),
         (
             "",
             "callpath",
             {"virtuals": ("mpi", "lapack"), "direct": True},
-            " %[virtuals=lapack,mpi] callpath",
+            " %lapack,mpi=callpath",
             "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True)",
         ),
         (
@@ -2818,7 +2818,7 @@ def test_copy_does_not_share_flag_instances(mock_packages):
                 "direct": True,
                 "propagation": PropagationPolicy.PREFERENCE,
             },
-            " %%[virtuals=lapack,mpi] callpath",
+            " %%lapack,mpi=callpath",
             "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True,"
             " propagation=PropagationPolicy.PREFERENCE)",
         ),
@@ -2838,6 +2838,21 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "DependencySpec('mpileaks+foo', 'callpath+bar', depflag=0, virtuals=(), direct=True,"
             " propagation=PropagationPolicy.PREFERENCE)",
         ),
+        # an anonymous child is named *, so that foo=bar is not read as a virtual assignment
+        (
+            "mpileaks",
+            "foo=bar",
+            {"virtuals": ()},
+            "mpileaks ^* foo=bar",
+            "DependencySpec('mpileaks', 'foo=bar', depflag=0, virtuals=())",
+        ),
+        (
+            "mpileaks",
+            "@4.0",
+            {"virtuals": ("c",), "direct": True},
+            "mpileaks %[virtuals=c] @4.0",
+            "DependencySpec('mpileaks', '@4.0', depflag=0, virtuals=('c',), direct=True)",
+        ),
     ],
 )
 def test_edge_representation(parent_str, child_str, kwargs, expected_str, expected_repr):
@@ -2847,6 +2862,10 @@ def test_edge_representation(parent_str, child_str, kwargs, expected_str, expect
     edge = DependencySpec(parent, child, depflag=0, **kwargs)
     assert str(edge) == expected_str
     assert repr(edge) == expected_repr
+    # the string is used as a constraint, so it must parse back to the same edge
+    parsed = Spec(str(edge)).edges_to_dependencies()[0]
+    assert parsed.spec == child and parsed.virtuals == edge.virtuals
+    assert parsed.direct == edge.direct and parsed.propagation == edge.propagation
 
 
 def test_parallel_edges_sort_with_differing_propagation(mock_packages):
