@@ -100,7 +100,11 @@ VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=%^\~\/\\]+)"
 #: Quoted values can be *anything* in between quotes, including escaped quotes.
 QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
 
-VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
+#: A version starts and ends with an alphanumeric character and is the whole run of version
+#: characters, so a following ``=`` cannot be satisfied by backtracking into a shorter version.
+VERSION = r"=?(?:[a-zA-Z0-9_](?:[a-zA-Z_0-9\-\.]*[a-zA-Z0-9_])?(?![a-zA-Z_0-9\-\.]))"
+#: The upper bound of a range is not the key of a key-value pair: ``@1.2:develop=foo`` is ``@1.2:``
+#: and a variant.
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
 VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
 
