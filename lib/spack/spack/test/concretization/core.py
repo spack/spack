@@ -738,6 +738,12 @@ spack:
         for dep in spec.traverse(root=False):
             assert "invino" not in dep.variants.keys()
 
+    def test_concretize_propagate_validator_accepted_value(self):
+        """A propagated value that is accepted by a variant's validator, without being listed
+        in the package, is a possible value on the source node"""
+        spec = spack.concretize.concretize_one("raiser exc_type==ValueError")
+        assert spec.satisfies("exc_type=ValueError")
+
     def test_concretize_propagate_variant_exclude_dependency_fail(self):
         """Tests that a propagating variant cannot be allowed to be excluded by any of
         the source package's dependencies"""

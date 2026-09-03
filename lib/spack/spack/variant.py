@@ -814,12 +814,16 @@ def prevalidate_variant_value(
         list of variant definitions that will accept the given value. List will be empty
         only if the variant is a reserved variant.
     """
-    # do not validate non-user variants or optional variants
-    if variant.name in RESERVED_NAMES or variant.propagate:
+    # do not validate non-user variants
+    if variant.name in RESERVED_NAMES:
         return []
 
     # raise if there is no definition at all
     if not pkg_cls.has_variant(variant.name):
+        # a propagated variant is conditional: it applies only where the variant exists,
+        # so it need not exist on this package
+        if variant.propagate:
+            return []
         raise UnknownVariantError(
             f"No such variant '{variant.name}' in package {pkg_cls.name}", [variant.name]
         )
