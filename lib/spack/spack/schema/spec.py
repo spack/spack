@@ -184,10 +184,10 @@ spec_node = {
             "type": "array",
             "items": {
                 "type": "object",
-                "required": ["name", "values"],
+                "required": ["name", "value"],
                 "properties": {
                     "name": {"type": "string"},
-                    "values": {"type": "array"},
+                    "value": {},
                     "concrete": {"type": "boolean"},
                 },
             },

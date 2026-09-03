@@ -222,26 +222,26 @@ class SpecClauseGenerator:
                         clauses.append(fn.attr("concrete_variant_request", name, vname, value))
                 clauses.append(variant_clause)
 
-        for vname, variant in spec.propagated_variants.items():
+        for variant in spec.propagated_variants.values():
+            vname = variant.name
+            for value in variant.values:
+                clauses.append(f.propagate(name, fn.variant_value(vname, value)))
+
             # a propagated variant is conditional: it applies only where the variant exists,
             # so it need not exist on this package
-            source_has_variant = (
+            if not (
                 name
                 and not spack.repo.PATH.is_virtual(name)
                 and self.pkg_class(name).has_variant(vname)
-            )
+            ):
+                continue
+
+            # the source node takes the values itself, so a validator-accepted value that
+            # is not listed in the package must be recorded as a possible value
+            variant_defs = vt.prevalidate_variant_value(self.pkg_class(name), variant, spec)
             for value in variant.values:
-                clauses.append(f.propagate(name, fn.variant_value(vname, value)))
-                if not source_has_variant:
-                    continue
-
-                # the source node takes the value itself, so a validator-accepted value that
-                # is not listed in the package must be recorded as a possible value
-                for variant_def in vt.prevalidate_variant_value(
-                    self.pkg_class(name), variant, spec
-                ):
+                for variant_def in variant_defs:
                     self.variant_values_from_specs.add((name, id(variant_def), value))
-
                 clauses.append(f.variant_value(name, vname, value))
         return clauses
 

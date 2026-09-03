@@ -1310,8 +1310,8 @@ def _analyze_variants_in_directive(pkg, constraint, *, directive, error_cls, fil
     variant_names = pkg.variant_names()
     summary = f"{requestor}: wrong variant in '{directive}' directive"
 
-    for name in sorted({v.name for v in constraint.propagated_variants}):
-        propagation_summary = f"{requestor}: propagating variant in '{directive}' directive"
+    propagation_summary = f"{requestor}: propagating variant in '{directive}' directive"
+    for name in sorted({v.name for v in constraint.propagated_variants.values()}):
         msg = f"using {constraint} in a directive, which propagates the '{name}' variant"
         errors.append(error_cls(summary=propagation_summary, details=[msg, f"in {filename}"]))
 
