@@ -2776,6 +2776,18 @@ def test_constrain_does_not_share_flags_or_architecture_with_the_rhs(mock_packag
     assert rhs.to_dict() == before
 
 
+def test_copy_shares_variants_and_keeps_specs_independent():
+    """Specs share variant maps, so constraining one must leave the other alone."""
+    old = Spec("foo=bar")
+    new = old.copy()
+    assert new.variants is old.variants
+
+    new.constrain(Spec("foobar=baz"))
+
+    assert "foobar" not in old.variants
+    assert new.variants["foobar"].value == ("baz",)
+
+
 def test_copy_shares_flags_and_keeps_specs_independent(mock_packages):
     """CompilerFlag values are immutable, so a copy shares them. Constraining the copy leaves the
     flags of the original alone, including their propagation."""

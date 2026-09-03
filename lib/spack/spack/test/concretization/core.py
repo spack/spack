@@ -4458,10 +4458,12 @@ def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypat
 
     def _mock_resolve(spec) -> None:
         if first_call:
-            spec.variants["commit"] = vt.SingleValuedVariant("commit", f"{'b' * 40}")
+            spec.variants = spec.variants.with_value(
+                vt.SingleValuedVariant("commit", f"{'b' * 40}")
+            )
             return
 
-        spec.variants["commit"] = vt.SingleValuedVariant("commit", f"{'a' * 40}")
+        spec.variants = spec.variants.with_value(vt.SingleValuedVariant("commit", f"{'a' * 40}"))
 
     monkeypatch.setattr(spack.package_base.PackageBase, "_resolve_git_provenance", _mock_resolve)
 
@@ -4738,7 +4740,9 @@ def test_concretization_cache_reapplies_patches_on_hit(
         for s in root.traverse():
             if s.name == "patch" and not s.concrete and "patches" in s.variants:
                 existing = list(s.variants["patches"].value)
-                s.variants.set(s.variants["patches"].with_values((*existing, EXTRA_SHA256)))
+                s.variants = s.variants.with_value(
+                    s.variants["patches"].with_values((*existing, EXTRA_SHA256))
+                )
                 break
 
     monkeypatch.setattr(spack.spec, "_inject_patches_variant", inject_with_new_patch)

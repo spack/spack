@@ -135,7 +135,7 @@ class ProviderIndex:
                     # TODO: fix this comment.
                     # We want satisfaction other than flags
                     provider_spec = provider_spec_readonly.copy()
-                    provider_spec.compiler_flags = spec.compiler_flags.copy()
+                    provider_spec.compiler_flags = spec.compiler_flags
 
                     if spec.intersects(provider_spec, deps=False):
                         provided_name = provided_spec.name

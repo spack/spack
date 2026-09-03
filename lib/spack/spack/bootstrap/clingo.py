@@ -164,7 +164,7 @@ class ClingoBootstrapConcretizer:
             # Clear patches, we'll compute them correctly later
             node.patches.clear()
             if "patches" in node.variants:
-                del node.variants["patches"]
+                node.variants = node.variants.without("patches")
 
             node.architecture.os = str(self.host_os)
             node.architecture = self.host_architecture
@@ -216,6 +216,5 @@ class ClingoBootstrapConcretizer:
     def _external_spec(self, initial_spec) -> "spack.spec.Spec":
         initial_spec.namespace = "builtin"
         initial_spec.architecture = self.host_architecture
-        for flag_type in spack.spec.FlagMap.valid_compiler_flags():
-            initial_spec.compiler_flags[flag_type] = ()
+        initial_spec.compiler_flags = spack.spec.EMPTY_COMPILER_FLAGS
         return spack.spec.parse_with_version_concrete(initial_spec)

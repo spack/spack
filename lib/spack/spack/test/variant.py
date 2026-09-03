@@ -414,32 +414,57 @@ class TestVariant:
 
 
 class TestVariantMapTest:
-    def test_set(self) -> None:
+    def test_with_value(self) -> None:
         # All three types of variants are accepted, keyed by their own name
         a = VariantMap()
 
-        a.set(BoolValuedVariant("foo", True))
-        a.set(SingleValuedVariant("bar", "baz"))
-        a.set(MultiValuedVariant("foobar", ("a", "b", "c", "d", "e")))
+        a = a.with_value(BoolValuedVariant("foo", True))
+        a = a.with_value(SingleValuedVariant("bar", "baz"))
+        a = a.with_value(MultiValuedVariant("foobar", ("a", "b", "c", "d", "e")))
 
         assert list(a) == ["foo", "bar", "foobar"]
 
         # An entry already under that name is replaced
-        a.set(SingleValuedVariant("foo", "bar"))
-        assert a["foo"] == SingleValuedVariant("foo", "bar")
+        b = a.with_value(SingleValuedVariant("foo", "bar"))
+        assert b["foo"] == SingleValuedVariant("foo", "bar")
+
+        # The map it was built from is untouched, and storing the same value again is a no-op
+        assert a["foo"] == BoolValuedVariant("foo", True)
+        assert b.with_value(SingleValuedVariant("foo", "bar")) is b
+
+    def test_map_is_immutable(self) -> None:
+        a = VariantMap().with_value(BoolValuedVariant("foo", True))
+        with pytest.raises(TypeError):
+            a["bar"] = SingleValuedVariant("bar", "baz")
+        with pytest.raises(TypeError):
+            a.pop("foo")
+
+    def test_maps_are_interned(self) -> None:
+        a = VariantMap().with_value(SingleValuedVariant("foo", "bar"))
+        b = VariantMap().with_value(SingleValuedVariant("foo", "bar"))
+        assert a is b
+        assert a.without("foo") is spack.spec.EMPTY_VARIANTS
 
     def test_satisfies_and_constrain(self) -> None:
         # foo=bar foobar=fee feebar=foo
         a = Spec()
-        a.variants["foo"] = MultiValuedVariant("foo", ("bar",))
-        a.variants["foobar"] = SingleValuedVariant("foobar", "fee")
-        a.variants["feebar"] = SingleValuedVariant("feebar", "foo")
+        a.variants = a.variants.with_values(
+            [
+                MultiValuedVariant("foo", ("bar",)),
+                SingleValuedVariant("foobar", "fee"),
+                SingleValuedVariant("feebar", "foo"),
+            ]
+        )
 
         # foo=bar,baz foobar=fee shared=True
         b = Spec()
-        b.variants["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        b.variants["foobar"] = SingleValuedVariant("foobar", "fee")
-        b.variants["shared"] = BoolValuedVariant("shared", True)
+        b.variants = b.variants.with_values(
+            [
+                MultiValuedVariant("foo", ("bar", "baz")),
+                SingleValuedVariant("foobar", "fee"),
+                BoolValuedVariant("shared", True),
+            ]
+        )
 
         # concrete, different values do not intersect / satisfy each other
         assert not a.intersects(b) and not b.intersects(a)
@@ -447,30 +472,28 @@ class TestVariantMapTest:
 
         # foo=bar,baz foobar=fee feebar=foo shared=True
         c = Spec()
-        c.variants["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        c.variants["foobar"] = SingleValuedVariant("foobar", "fee")
-        c.variants["feebar"] = SingleValuedVariant("feebar", "foo")
-        c.variants["shared"] = BoolValuedVariant("shared", True)
+        c.variants = c.variants.with_values(
+            [
+                MultiValuedVariant("foo", ("bar", "baz")),
+                SingleValuedVariant("foobar", "fee"),
+                SingleValuedVariant("feebar", "foo"),
+                BoolValuedVariant("shared", True),
+            ]
+        )
 
         # concrete values cannot be constrained
         with pytest.raises(spack.variant.UnsatisfiableVariantSpecError):
             a._constrain_variants(b)
 
-    def test_copy(self) -> None:
-        a = VariantMap()
-        a["foo"] = BoolValuedVariant("foo", True)
-        a["bar"] = SingleValuedVariant("bar", "baz")
-        a["foobar"] = MultiValuedVariant("foobar", ("a", "b", "c", "d", "e"))
-
-        c = a.copy()
-        assert a == c
-
     def test_str(self) -> None:
-        c = VariantMap()
-        c["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        c["foobar"] = SingleValuedVariant("foobar", "fee")
-        c["feebar"] = SingleValuedVariant("feebar", "foo")
-        c["shared"] = BoolValuedVariant("shared", True)
+        c = VariantMap().with_values(
+            [
+                MultiValuedVariant("foo", ("bar", "baz")),
+                SingleValuedVariant("foobar", "fee"),
+                SingleValuedVariant("feebar", "foo"),
+                BoolValuedVariant("shared", True),
+            ]
+        )
         assert str(c) == "+shared feebar=foo foo:=bar,baz foobar=fee"
 
 

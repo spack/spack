@@ -90,8 +90,7 @@ def complete_architecture(node: spack.spec.Spec) -> None:
         node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
 
     node.namespace = spack.repo.PATH.repo_for_pkg(node.name).namespace
-    for flag_type in spack.spec.FlagMap.valid_compiler_flags():
-        node.compiler_flags.setdefault(flag_type, ())
+    node.compiler_flags = node.compiler_flags.with_all_flag_types()
 
 
 def _default_variant_value(node: spack.spec.Spec, vdef: vt.Variant) -> Optional[vt.VariantValue]:
@@ -139,7 +138,7 @@ def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
                     if default is None:
                         continue
                     # Cannot use Spec.constrain, because we lose information on the variant type
-                    node.variants.set(default)
+                    node.variants = node.variants.with_value(default)
                 elif (
                     node.variants[name].type != vdef.variant_type
                     and len(node.variants[name].values) == 1
@@ -148,7 +147,7 @@ def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
                     # using the package definition, preserving the user-specified value.
                     existing = node.variants[name]
                     corrected = vdef.make_variant(*existing.values)
-                    node.variants.set(corrected)
+                    node.variants = node.variants.with_value(corrected)
             changed = True
 
 

@@ -1024,7 +1024,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         else:
             v_attrs = cls.versions.get(spec.version, {})
             if "commit" in v_attrs:
-                spec.variants.set(spack.variant.SingleValuedVariant("commit", v_attrs["commit"]))
+                spec.variants = spec.variants.with_value(
+                    spack.variant.SingleValuedVariant("commit", v_attrs["commit"])
+                )
                 return
             ref = v_attrs.get("tag") or v_attrs.get("branch")
 
@@ -1058,7 +1060,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             sha = spack.util.git.get_commit_sha(url, ref)
 
         if sha:
-            spec.variants.set(spack.variant.SingleValuedVariant("commit", sha))
+            spec.variants = spec.variants.with_value(
+                spack.variant.SingleValuedVariant("commit", sha)
+            )
 
     def resolve_binary_provenance(self):
         """
