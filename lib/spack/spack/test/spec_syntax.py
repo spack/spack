@@ -1241,6 +1241,9 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         # A closing bracket ends the edge attribute list, it is never part of the value
         (["mpileaks", "%[", "when=@1.0]", "gcc"], "mpileaks %[when='@1.0'] gcc"),
         (["mpileaks", "%[when=+x]", "c=gcc"], "mpileaks %[when='+x'] c=gcc"),
+        # a value that parses as it is stays unquoted: c=gcc@14 is a virtual assignment
+        (["mpileaks", "%[when=+x]", "c=gcc@14"], "mpileaks %[when='+x'] c=gcc@14"),
+        (["mpileaks", "%c=gcc@14"], "mpileaks %c=gcc@14"),
         (["mpileaks", "%c,cxx=gcc"], "mpileaks %c,cxx=gcc"),
         # Ensure that passing escaped quotes on the CLI raises a tokenization error
         (["zlib", '"-g', '-O2"'], SpecTokenizationError),
