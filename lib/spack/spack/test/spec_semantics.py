@@ -225,13 +225,13 @@ class TestSpecSemantics:
             ("mpich foo=1", "mpich foo=1", "mpich foo=1"),
             ("mpich foo==1", "mpich foo==1", "mpich foo==1"),
             ("mpich+foo", "mpich foo=True", "mpich+foo"),
-            ("mpich++foo", "mpich foo=True", "mpich+foo"),
+            ("mpich++foo", "mpich foo=True", "mpich+foo ++foo"),
             ("mpich foo=true", "mpich+foo", "mpich+foo"),
             ("mpich foo==true", "mpich++foo", "mpich++foo"),
             ("mpich~foo", "mpich foo=FALSE", "mpich~foo"),
-            ("mpich~~foo", "mpich foo=FALSE", "mpich~foo"),
+            ("mpich~~foo", "mpich foo=FALSE", "mpich~foo ~~foo"),
             ("mpich foo=False", "mpich~foo", "mpich~foo"),
-            ("mpich foo==False", "mpich~foo", "mpich~foo"),
+            ("mpich foo==False", "mpich~foo", "mpich~foo ~~foo"),
             ("mpich foo=*", "mpich~foo", "mpich~foo"),
             ("mpich+foo", "mpich foo=*", "mpich+foo"),
             (
@@ -274,9 +274,9 @@ class TestSpecSemantics:
             ("libelf debug=2", "libelf debug=2 foo=1", "libelf debug=2 foo=1"),
             ("libelf+debug", "libelf~foo", "libelf+debug~foo"),
             ("libelf+debug", "libelf+debug~foo", "libelf+debug~foo"),
-            ("libelf++debug", "libelf+debug+foo", "libelf+debug+foo"),
+            ("libelf++debug", "libelf+debug+foo", "libelf+debug+foo ++debug"),
             ("libelf debug==2", "libelf foo=1", "libelf debug==2 foo=1"),
-            ("libelf debug==2", "libelf debug=2 foo=1", "libelf debug=2 foo=1"),
+            ("libelf debug==2", "libelf debug=2 foo=1", "libelf debug=2 foo=1 debug==2"),
             ("libelf++debug", "libelf++debug~foo", "libelf++debug~foo"),
             ("libelf foo=bar,baz", "libelf foo=*", "libelf foo=bar,baz"),
             ("libelf foo=*", "libelf foo=bar,baz", "libelf foo=bar,baz"),
@@ -560,6 +560,10 @@ class TestSpecSemantics:
             ("multivalue-variant foo=bar", "multivalue-variant +foo"),
             ("multivalue-variant foo=bar", "multivalue-variant ~foo"),
             ("multivalue-variant fee=bar", "multivalue-variant fee=baz"),
+            # both values of a bool variant are always possible, so a propagated bool applies
+            # to every node in the closure that has the variant
+            ("mpileaks+debug", "mpileaks~~debug"),
+            ("mpileaks ^mpich+debug", "mpileaks~~debug"),
         ],
     )
     def test_concrete_specs_which_do_not_satisfy_abstract(self, lhs, rhs):
@@ -577,7 +581,18 @@ class TestSpecSemantics:
             assert rhs.constrain(lhs)
 
     @pytest.mark.parametrize(
-        "lhs,rhs", [("mpich", "mpich++foo"), ("mpich", "mpich~~foo"), ("mpich", "mpich foo==1")]
+        "lhs,rhs",
+        [
+            ("mpich", "mpich++foo"),
+            ("mpich", "mpich~~foo"),
+            ("mpich", "mpich foo==1"),
+            ("mpileaks~debug", "mpileaks~~debug"),
+            # a non-bool propagated value applies to a node only if it is a possible value
+            # there; satisfies cannot know that without the variant definition, so a node that
+            # has the variant without the value does not contradict satisfaction
+            ("multivalue-variant foo=bar", "multivalue-variant foo==baz"),
+            ("multivalue-variant foo=bar", "multivalue-variant foo==quux"),
+        ],
     )
     def test_concrete_specs_which_satisfy_abstract(self, lhs, rhs):
         lhs, rhs = spack.concretize.concretize_one(lhs), Spec(rhs)
@@ -597,25 +612,20 @@ class TestSpecSemantics:
     @pytest.mark.parametrize(
         "lhs,rhs,expected,constrained",
         [
-            # hdf5++mpi satisfies hdf5, and vice versa, because of the non-contradiction semantic
             ("hdf5++mpi", "hdf5", True, "hdf5++mpi"),
-            ("hdf5", "hdf5++mpi", True, "hdf5++mpi"),
-            # Same holds true for arbitrary propagated variants
-            ("hdf5++mpi", "hdf5++shared", True, "hdf5++mpi++shared"),
-            # Here hdf5+mpi satisfies hdf5++mpi but not vice versa
-            ("hdf5++mpi", "hdf5+mpi", False, "hdf5+mpi"),
-            ("hdf5+mpi", "hdf5++mpi", True, "hdf5+mpi"),
-            # Non contradiction is violated
-            ("hdf5 ^foo~mpi", "hdf5++mpi", False, "hdf5++mpi ^foo~mpi"),
-            ("hdf5++mpi", "hdf5 ^foo~mpi", False, "hdf5++mpi ^foo~mpi"),
+            ("hdf5", "hdf5++mpi", False, "hdf5++mpi"),
+            ("hdf5++mpi", "hdf5++shared", False, "hdf5++mpi++shared"),
+            # setting and propagating are independent constraints, and constrain keeps both
+            ("hdf5++mpi", "hdf5+mpi", False, "hdf5+mpi ++mpi"),
+            ("hdf5+mpi", "hdf5++mpi", False, "hdf5+mpi ++mpi"),
         ],
     )
     def test_abstract_specs_with_propagation(self, lhs, rhs, expected, constrained):
         """Tests (and documents) behavior of variant propagation on abstract specs.
 
-        Propagated variants do not comply with subset semantic, making it difficult to give
-        precise definitions. Here we document the behavior that has been decided for the
-        practical cases we face.
+        Setting a variant (+mpi) asserts existence and value on one node; propagating it
+        (++mpi) constrains every node of the closure that has the variant. Satisfies is a
+        subset test for both variant maps, and constrain merges them independently.
         """
         lhs, rhs, constrained = Spec(lhs), Spec(rhs), Spec(constrained)
         assert lhs.satisfies(rhs) is expected
@@ -627,6 +637,103 @@ class TestSpecSemantics:
         c = rhs.copy()
         c.constrain(lhs)
         assert c == constrained
+
+    @pytest.mark.parametrize(
+        "lhs,rhs", [("hdf5 ^foo~mpi", "hdf5++mpi"), ("hdf5++mpi", "hdf5 ^foo~mpi")]
+    )
+    def test_propagation_conflicts_with_node_in_closure(self, lhs, rhs):
+        """A propagated variant that contradicts a variant set on a node in the closure:
+        disjoint."""
+        lhs, rhs = Spec(lhs), Spec(rhs)
+        assert not lhs.satisfies(rhs)
+        assert not lhs.intersects(rhs)
+        with pytest.raises(UnsatisfiableSpecError):
+            lhs.constrain(rhs)
+
+    @pytest.mark.parametrize(
+        "lhs,rhs,expected",
+        [
+            ("pkg+foo", "pkg++foo", "pkg+foo ++foo"),
+            ("pkg++foo", "pkg+foo", "pkg+foo ++foo"),
+            # a non-bool propagated value is not merged into the node's variants: whether it
+            # applies to the node depends on it being a possible value, which only the solver
+            # knows
+            ("pkg foo=a", "pkg foo==b", "pkg foo=a foo==b"),
+            ("pkg foo==b", "pkg foo=a", "pkg foo=a foo==b"),
+        ],
+    )
+    def test_propagation_constrain_keeps_both(self, lhs, rhs, expected):
+        """Setting a variant and propagating it are incomparable constraints, so the greatest
+        lower bound keeps both."""
+        lhs = Spec(lhs)
+        assert lhs.constrain(rhs) is True
+        assert lhs == Spec(expected)
+
+    @pytest.mark.parametrize(
+        "lhs,rhs,expected",
+        [
+            ("hdf5++mpi", "hdf5++mpi", True),
+            ("hdf5+mpi ++mpi", "hdf5++mpi", True),
+            ("hdf5+mpi ++mpi", "hdf5+mpi", True),
+            ("hdf5 foo=a,b foo==b", "hdf5 foo==b", True),
+            ("hdf5 foo=a,b foo==b", "hdf5 foo=a", True),
+            ("hdf5 foo==b", "hdf5 foo==b,c", False),
+            ("hdf5 foo==b,c", "hdf5 foo==b", True),
+        ],
+    )
+    def test_propagation_satisfies_per_slot(self, lhs, rhs, expected):
+        assert Spec(lhs).satisfies(rhs) is expected
+
+    @pytest.mark.parametrize(
+        "spec_str", ["pkg+foo~~foo", "pkg~foo++foo", "pkg~~shared ^dep+shared"]
+    )
+    def test_bool_propagation_conflict_rejected_at_construction(self, spec_str):
+        """A bool propagated value contradicting a bool variant in the closure is
+        unsatisfiable: both values of a bool variant are always possible, so the propagation
+        applies wherever the variant exists."""
+        with pytest.raises(UnsatisfiableSpecError):
+            Spec(spec_str)
+
+    def test_propagation_between_propagated_slots_is_not_a_conflict(self):
+        """Sibling propagation requests are conditional statements; only the solver can tell
+        whether they collide on a node that actually has the variant."""
+        Spec("pkg++shared ^dep~~shared")
+        Spec("pkg~~shared ^dep++shared")
+
+    def test_non_bool_propagation_does_not_conflict_with_node_variant(self):
+        """A non-bool propagated value applies to a node only if it is a possible value
+        there, which only the solver knows, so it never contradicts a variant set on a
+        node."""
+        Spec("pkg foo==a,b ^dep foo:=b")
+        Spec("pkg foo==b ^dep foo=a")
+
+    @pytest.mark.parametrize("spec_str", ["pkg+foo+foo", "pkg++foo++foo", "pkg foo==a foo==b"])
+    def test_duplicate_variant_within_one_slot_rejected(self, spec_str):
+        with pytest.raises(spack.spec_parser.SpecParsingError):
+            Spec(spec_str)
+
+    @pytest.mark.parametrize(
+        "lhs,rhs,expected",
+        [
+            ("pkg++foo", "pkg ^dep~foo", False),
+            ("pkg++foo", "pkg+foo", True),
+            ("pkg+foo", "pkg~~foo", False),
+            ("pkg++foo", "pkg~~foo", False),
+            ("pkg foo==a", "pkg foo==b", True),
+            # a non-bool propagated value never contradicts a variant set on a node
+            ("pkg foo=a", "pkg foo==b", True),
+            ("pkg foo==b", "pkg ^dep foo:=a", True),
+        ],
+    )
+    def test_propagation_intersects(self, lhs, rhs, expected):
+        assert Spec(lhs).intersects(rhs) is expected
+        assert Spec(rhs).intersects(lhs) is expected
+
+    @pytest.mark.parametrize(
+        "spec_str", ["pkg+foo++bar", "pkg foo=a,b foo==b", "pkg+a~b++c~~d baz=qux foo==bar"]
+    )
+    def test_propagation_str_round_trip(self, spec_str):
+        assert str(Spec(spec_str)) == spec_str
 
     def test_basic_satisfies_conditional_dep(self):
         """Tests basic semantic of satisfies with conditional dependencies, on a concrete spec"""
@@ -2396,7 +2503,9 @@ def test_equality_discriminate_on_propagation(lhs, rhs):
 
 
 def test_comparison_multivalued_variants():
-    assert Spec("x=a") < Spec("x=a,b") < Spec("x==a,b") < Spec("x==a,b,c")
+    # an empty variant map compares before a non-empty one, so propagated-only specs sort
+    # first
+    assert Spec("x==a,b") < Spec("x==a,b,c") < Spec("x=a") < Spec("x=a,b")
 
 
 @pytest.mark.parametrize(
@@ -2434,6 +2543,7 @@ def test_spec_ordering(specs_in_expected_order):
 
 EMPTY_VER = vn.VersionList(":")
 EMPTY_VAR = Spec().variants
+EMPTY_PVAR = Spec().propagated_variants
 EMPTY_FLG = Spec().compiler_flags
 
 
@@ -2441,7 +2551,10 @@ EMPTY_FLG = Spec().compiler_flags
     "spec,expected_tuplified",
     [
         # simple, no dependencies
-        [("a"), ((("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),), ())],
+        [
+            ("a"),
+            ((("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),), ()),
+        ],
         # with some node attributes
         [
             ("a@1.0 +foo cflags='-O3 -g'"),
@@ -2452,6 +2565,7 @@ EMPTY_FLG = Spec().compiler_flags
                         None,
                         vn.VersionList(["1.0"]),
                         Spec("+foo").variants,
+                        EMPTY_PVAR,
                         Spec("cflags='-O3 -g'").compiler_flags,
                         None,
                         None,
@@ -2466,8 +2580,8 @@ EMPTY_FLG = Spec().compiler_flags
             ("a^b"),
             (
                 (
-                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
                 ),
                 ((0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),),
             ),
@@ -2477,10 +2591,10 @@ EMPTY_FLG = Spec().compiler_flags
             ("a^b^c^d"),
             (
                 (
-                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
                 ),
                 (
                     (0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),
@@ -2494,10 +2608,10 @@ EMPTY_FLG = Spec().compiler_flags
             ("a%b%c%d"),
             (
                 (
-                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
                 ),
                 (
                     (0, 1, 0, (), True, PropagationPolicy.NONE, Spec()),
@@ -2511,13 +2625,13 @@ EMPTY_FLG = Spec().compiler_flags
             ("a  ^b %c %d  ^e %f %g"),
             (
                 (
-                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("e", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("f", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
-                    ("g", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("e", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("f", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
+                    ("g", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
                 ),
                 (
                     (0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),

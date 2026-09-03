@@ -304,37 +304,23 @@ class VariantValue:
     be narrowed from multi to single to boolean, this limits the number of values that can be
     stored in the variant. Multi-valued variants can either be concrete or abstract: abstract
     means that the variant takes at least the values specified, but may take more when concretized.
-    Concrete means that the variant takes exactly the values specified. Lastly, a variant can be
-    marked as propagating, which means that it should be propagated to dependencies."""
+    Concrete means that the variant takes exactly the values specified. Whether the variant is
+    propagated to dependencies is not part of the value: it is determined by the map that holds
+    it, ``Spec.variants`` or ``Spec.propagated_variants``."""
 
     name: str
-    propagate: bool
     concrete: bool
     type: VariantType
     _values: ValueType
 
     # _patches_in_order_of_appearance is attached to the "patches" variant after concretization
-    __slots__ = (
-        "name",
-        "propagate",
-        "concrete",
-        "type",
-        "_values",
-        "_patches_in_order_of_appearance",
-    )
+    __slots__ = ("name", "concrete", "type", "_values", "_patches_in_order_of_appearance")
 
     def __init__(
-        self,
-        type: VariantType,
-        name: str,
-        value: ValueType,
-        *,
-        propagate: bool = False,
-        concrete: bool = False,
+        self, type: VariantType, name: str, value: ValueType, *, concrete: bool = False
     ) -> None:
         self.name = name
         self.type = type
-        self.propagate = propagate
         # only multi-valued variants can be abstract
         self.concrete = concrete or type in (VariantType.BOOL, VariantType.SINGLE)
 
@@ -343,44 +329,32 @@ class VariantValue:
 
     @staticmethod
     def from_node_dict(
-        name: str, value: Union[str, List[str]], *, propagate: bool = False, abstract: bool = False
+        name: str, value: Union[str, List[str]], *, abstract: bool = False
     ) -> "VariantValue":
         """Reconstruct a variant from a node dict."""
         if isinstance(value, list):
-            return VariantValue(
-                VariantType.MULTI, name, tuple(value), propagate=propagate, concrete=not abstract
-            )
+            return VariantValue(VariantType.MULTI, name, tuple(value), concrete=not abstract)
 
         # todo: is this necessary? not literal true / false in json/yaml?
         elif str(value).upper() == "TRUE" or str(value).upper() == "FALSE":
-            return VariantValue(
-                VariantType.BOOL, name, (str(value).upper() == "TRUE",), propagate=propagate
-            )
+            return VariantValue(VariantType.BOOL, name, (str(value).upper() == "TRUE",))
 
-        return VariantValue(VariantType.SINGLE, name, (value,), propagate=propagate)
+        return VariantValue(VariantType.SINGLE, name, (value,))
 
     @staticmethod
     def from_string_or_bool(
-        name: str, value: Union[str, bool], *, propagate: bool = False, concrete: bool = False
+        name: str, value: Union[str, bool], *, concrete: bool = False
     ) -> "VariantValue":
         if value is True or value is False:
-            return VariantValue(VariantType.BOOL, name, (value,), propagate=propagate)
+            return VariantValue(VariantType.BOOL, name, (value,))
 
         elif value.upper() in ("TRUE", "FALSE"):
-            return VariantValue(
-                VariantType.BOOL, name, (value.upper() == "TRUE",), propagate=propagate
-            )
+            return VariantValue(VariantType.BOOL, name, (value.upper() == "TRUE",))
 
         elif value == "*":
-            return VariantValue(VariantType.MULTI, name, (), propagate=propagate)
+            return VariantValue(VariantType.MULTI, name, ())
 
-        return VariantValue(
-            VariantType.MULTI,
-            name,
-            tuple(value.split(",")),
-            propagate=propagate,
-            concrete=concrete,
-        )
+        return VariantValue(VariantType.MULTI, name, tuple(value.split(",")), concrete=concrete)
 
     @staticmethod
     def from_concretizer(name: str, value: str, type: str) -> "VariantValue":
@@ -431,14 +405,11 @@ class VariantValue:
 
     def _cmp_iter(self) -> Iterable:
         yield self.name
-        yield self.propagate
         yield self.concrete
         yield from (str(v) for v in self.values)
 
     def copy(self) -> "VariantValue":
-        return VariantValue(
-            self.type, self.name, self.values, propagate=self.propagate, concrete=self.concrete
-        )
+        return VariantValue(self.type, self.name, self.values, concrete=self.concrete)
 
     def _merged_values(self, other: "VariantValue") -> Tuple[Union[str, bool], ...]:
         """The values of both sides. For patches a value identified by a checksum prefix and the
@@ -496,9 +467,6 @@ class VariantValue:
         old_values = self.values
         self.set(*self._merged_values(other))
         changed = old_values != self.values
-        if self.propagate and not other.propagate:
-            self.propagate = False
-            changed = True
         if not self.concrete and other.concrete:
             self.concrete = True
             changed = True
@@ -513,17 +481,18 @@ class VariantValue:
     def __contains__(self, item: Union[str, bool]) -> bool:
         return item in self.values
 
-    def string(self, abbreviate_patches: bool = False) -> str:
+    def string(self, abbreviate_patches: bool = False, propagated: bool = False) -> str:
         """The string representation of this variant. With ``abbreviate_patches``, a ``patches``
-        variant is printed as 7-character checksum prefixes without the concreteness marker."""
+        variant is printed as 7-character checksum prefixes without the concreteness marker.
+        With ``propagated``, the sigil is doubled: ``++foo``, ``foo==bar``."""
         # boolean variants are printed +foo or ~foo
         if self.type == VariantType.BOOL:
             sigil = "+" if self.value else "~"
-            if self.propagate:
+            if propagated:
                 sigil *= 2
             return f"{sigil}{self.name}"
 
-        delim = "==" if self.propagate else "="
+        delim = "==" if propagated else "="
 
         if abbreviate_patches and self.name == "patches" and self.values:
             value_str = ",".join(str(x)[:7] for x in self.values)
@@ -543,22 +512,20 @@ class VariantValue:
     def __repr__(self):
         return (
             f"VariantValue({self.type!r}, {self.name!r}, {self.values!r}, "
-            f"propagate={self.propagate!r}, concrete={self.concrete!r})"
+            f"concrete={self.concrete!r})"
         )
 
 
-def MultiValuedVariant(name: str, value: ValueType, propagate: bool = False) -> VariantValue:
-    return VariantValue(VariantType.MULTI, name, value, propagate=propagate, concrete=True)
+def MultiValuedVariant(name: str, value: ValueType) -> VariantValue:
+    return VariantValue(VariantType.MULTI, name, value, concrete=True)
 
 
-def SingleValuedVariant(
-    name: str, value: Union[bool, str], propagate: bool = False
-) -> VariantValue:
-    return VariantValue(VariantType.SINGLE, name, (value,), propagate=propagate)
+def SingleValuedVariant(name: str, value: Union[bool, str]) -> VariantValue:
+    return VariantValue(VariantType.SINGLE, name, (value,))
 
 
-def BoolValuedVariant(name: str, value: bool, propagate: bool = False) -> VariantValue:
-    return VariantValue(VariantType.BOOL, name, (value,), propagate=propagate)
+def BoolValuedVariant(name: str, value: bool) -> VariantValue:
+    return VariantValue(VariantType.BOOL, name, (value,))
 
 
 class VariantValueRemoval(VariantValue):
@@ -820,10 +787,6 @@ def prevalidate_variant_value(
 
     # raise if there is no definition at all
     if not pkg_cls.has_variant(variant.name):
-        # a propagated variant is conditional: it applies only where the variant exists,
-        # so it need not exist on this package
-        if variant.propagate:
-            return []
         raise UnknownVariantError(
             f"No such variant '{variant.name}' in package {pkg_cls.name}", [variant.name]
         )

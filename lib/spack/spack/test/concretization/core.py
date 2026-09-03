@@ -746,10 +746,9 @@ spack:
 
     def test_concretize_propagate_variant_exclude_dependency_fail(self):
         """Tests that a propagating variant cannot be allowed to be excluded by any of
-        the source package's dependencies"""
-        spec = Spec("hypre ~~shared ^openblas +shared")
+        the source package's dependencies; this is already rejected at construction"""
         with pytest.raises(spack.error.UnsatisfiableSpecError):
-            spec = spack.concretize.concretize_one(spec)
+            Spec("hypre ~~shared ^openblas +shared")
 
     def test_concretize_propagate_same_variant_from_direct_dep_fail(self):
         """Test that when propagating a variant from the source package and a direct

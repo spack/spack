@@ -505,6 +505,9 @@ e: *id002
         "hdf5~~mpi++shared",
         "hdf5 cflags==-g foo==bar cxxflags==-O3",
         "hdf5 cflags=-g foo==bar cxxflags==-O3",
+        # the same variant name set and propagated
+        "hdf5+mpi++mpi",
+        "hdf5 foo=a,b foo==b",
         "hdf5%gcc",
         "hdf5%cmake",
         "hdf5^gcc",
@@ -544,6 +547,10 @@ def test_pickle_roundtrip_for_abstract_specs(spec_str):
         'zlib cflags="-O2 -g"',
         # several dimensions at once
         "zlib ++mpi cflags==-g foo=bar,baz target=x86_64:",
+        # the same variant name set and propagated, abstract and concrete
+        "zlib+mpi++mpi",
+        "zlib foo=a,b foo==b",
+        "zlib foo:=a,b foo==b",
     ],
 )
 def test_dict_roundtrip_for_abstract_specs(spec_str):
@@ -556,6 +563,20 @@ def test_dict_roundtrip_for_abstract_specs(spec_str):
     assert s == t
     assert str(s) == str(t)
     assert s.to_dict() == t.to_dict()
+
+
+def test_from_dict_reads_legacy_propagate_list():
+    """Node dicts written before propagated variants had their own attribute listed them under
+    "parameters" with their name in "propagate"."""
+    node = {
+        "name": "hdf5",
+        "parameters": {"mpi": True, "foo": ["bar", "baz"]},
+        "propagate": ["foo", "mpi"],
+        "abstract": ["foo"],
+        "concrete": False,
+    }
+    reconstructed = spack.spec.SpecfileLatest.from_node_dict(node)
+    assert reconstructed == spack.spec.Spec("hdf5++mpi foo==bar,baz")
 
 
 def test_specfile_alias_is_updated():
