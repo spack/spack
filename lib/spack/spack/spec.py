@@ -3207,7 +3207,10 @@ class Spec:
             edge.direct = not value
         if value:
             self._validate_version()
-            assert not self.propagated_variants, "concrete specs cannot propagate variants"
+            if self.propagated_variants:
+                raise spack.error.SpecError(
+                    f"cannot mark '{self}' concrete: concrete specs cannot propagate variants"
+                )
             for variant in self.variants.values():
                 variant.concrete = True
 

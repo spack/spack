@@ -787,6 +787,11 @@ class TestSpecSemantics:
         assert merged.to_dict() == parsed.to_dict()
         assert hash(merged) == hash(parsed)
 
+    def test_propagation_mark_concrete_raises(self):
+        """Propagation requests are conditional statements, which concrete specs cannot have."""
+        with pytest.raises(SpecError, match="propagate"):
+            Spec("pkg++foo")._mark_concrete()
+
     def test_basic_satisfies_conditional_dep(self):
         """Tests basic semantic of satisfies with conditional dependencies, on a concrete spec"""
         concrete = spack.concretize.concretize_one("mpileaks ^mpich")
