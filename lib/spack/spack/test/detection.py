@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import pathlib
+import sys
 
 import spack.detection
 import spack.detection.common
@@ -88,7 +89,7 @@ def test_detect_specs_deduplicates_across_prefixes(tmp_path, monkeypatch, mock_p
     assert len(detected) == 1
 
 
-def test_prefix_cuts_at_last_bin_or_lib(tmp_path: pathlib.Path):
+def test_prefix_cuts_at_last_bin_or_lib(tmp_path: pathlib.Path, monkeypatch):
     """Prefixes should be cut at the LAST occurrence
     of bin/lib/lib64, not the first, so nested paths like .../bin/gcc/bin don't
     produce a garbage prefix."""
@@ -120,3 +121,10 @@ def test_prefix_cuts_at_last_bin_or_lib(tmp_path: pathlib.Path):
     nested_lib64.mkdir(parents=True)
     expected_lib64 = str(tmp_path / "lib64" / "foo")
     assert spack.detection.common.library_prefix(str(nested_lib64)) == expected_lib64
+
+    # on win32, library_prefix falls back to cutting at "bin" if no lib/lib64 found
+    monkeypatch.setattr(sys, "platform", "win32")
+    nested_win_bin = tmp_path / "winbin" / "foo" / "bin"
+    nested_win_bin.mkdir(parents=True)
+    expected_win_bin = str(tmp_path / "winbin" / "foo")
+    assert spack.detection.common.library_prefix(str(nested_win_bin)) == expected_win_bin
