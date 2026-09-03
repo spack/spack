@@ -665,10 +665,15 @@ class TestSpecSemantics:
             ("pkg~~foo", "pkg++foo", "pkg~~foo++foo"),
             ("pkg foo==a", "pkg foo==b", "pkg foo==a,b"),
             ("pkg foo==a", "pkg foo==a,b", "pkg foo==a,b"),
-            # an exact request absorbs the values it contains
+            # an exact request absorbs the values it contains, in either operand order
             ("pkg foo==a", "pkg foo:==a", "pkg foo:==a"),
             ("pkg foo:==a", "pkg foo==a", "pkg foo:==a"),
             ("pkg foo:==a", "pkg foo:==b", "pkg foo:==a foo:==b"),
+            ("pkg foo==a,c", "pkg foo:==a,b", "pkg foo==c foo:==a,b"),
+            ("pkg foo:==a,b", "pkg foo==a,c", "pkg foo==c foo:==a,b"),
+            # propagating any value is no request at all
+            ("pkg foo==a", "pkg foo==*", "pkg foo==a"),
+            ("pkg foo==*", "pkg foo==a", "pkg foo==a"),
         ],
     )
     def test_propagation_constrain_keeps_both(self, lhs, rhs, expected):
@@ -764,6 +769,12 @@ class TestSpecSemantics:
     )
     def test_propagation_str_round_trip(self, spec_str):
         assert str(Spec(spec_str)) == spec_str
+
+    def test_propagating_any_value_is_vacuous(self):
+        """A propagated value binds only nodes where it is possible, so propagating any value
+        constrains nothing and canonicalizes away."""
+        assert Spec("pkg foo==*") == Spec("pkg")
+        assert str(Spec("pkg foo==*")) == "pkg"
 
     def test_propagation_canonical_form(self):
         """Equal request sets have equal state however they were built, so string form, node

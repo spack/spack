@@ -570,13 +570,13 @@ def test_from_dict_reads_legacy_propagate_list():
     "parameters" with their name in "propagate"."""
     node = {
         "name": "hdf5",
-        "parameters": {"mpi": True, "foo": ["bar", "baz"]},
-        "propagate": ["foo", "mpi"],
+        "parameters": {"mpi": True, "foo": ["bar", "baz"], "cxxstd": "17"},
+        "propagate": ["foo", "mpi", "cxxstd"],
         "abstract": ["foo"],
         "concrete": False,
     }
     reconstructed = spack.spec.SpecfileLatest.from_node_dict(node)
-    assert reconstructed == spack.spec.Spec("hdf5++mpi foo==bar,baz")
+    assert reconstructed == spack.spec.Spec("hdf5++mpi foo==bar,baz cxxstd==17")
 
 
 def test_specfile_alias_is_updated():
