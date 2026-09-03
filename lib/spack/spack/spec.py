@@ -1687,7 +1687,7 @@ def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
     if dep.spec.name:
         return ""
 
-    # virtuals without a name always need *: %c=* @4.0 foo=bar
+    # virtuals without a name always need *: %[virtuals=c] *@4.0 foo=bar
     if dep.virtuals:
         return "*"
 
@@ -4725,15 +4725,20 @@ class Spec:
             dep_spec = dep_spec or edge.spec
             dep_format = dep_spec.format(format_string, color=color)
 
+            # the virtuals=substitute shorthand substitutes a package name, which an anonymous
+            # spec does not have, so its virtuals go in the edge attributes: %[virtuals=c] *
+            anonymous_virtuals = bool(edge.virtuals) and not dep_spec.name
             edge_attributes = (
-                self._format_edge_attributes(edge, deptypes=deptypes, virtuals=False)
-                if edge.depflag or edge.when != EMPTY_SPEC
+                self._format_edge_attributes(edge, deptypes=deptypes, virtuals=anonymous_virtuals)
+                if edge.depflag or edge.when != EMPTY_SPEC or anonymous_virtuals
                 else ""
             )
-            virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals else ""
+            virtuals = (
+                f"{','.join(edge.virtuals)}=" if edge.virtuals and not anonymous_virtuals else ""
+            )
             star = _anonymous_star(edge, dep_format)
 
-            return f"{sigil}{edge_attributes}{star}{virtuals}{dep_format}"
+            return f"{sigil}{edge_attributes}{virtuals}{star}{dep_format}"
 
         # direct dependencies
         for edge in sorted(direct, key=lambda x: x.spec.name):
