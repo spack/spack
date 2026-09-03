@@ -1701,14 +1701,12 @@ def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
     # booleans come first, and they don't need a star. key-value pairs do. If there are
     # no key value pairs, we're left with either an empty spec, which needs * as in
     # '^*', or we're left with arch, which is a key value pair, and needs a star.
-    if not any(
-        v.type == vt.VariantType.BOOL
-        for variants in (dep.spec.variants, dep.spec.propagated_variants)
-        for v in variants.values()
-    ):
-        return "*"
+    for variants in (dep.spec.variants, dep.spec.propagated_variants):
+        for v in variants.values():
+            if v.type == vt.VariantType.BOOL:
+                return "*" if dep.spec.architecture else ""
 
-    return "*" if dep.spec.architecture else ""
+    return "*"
 
 
 def _satisfying_edges(
@@ -3817,37 +3815,30 @@ class Spec:
         return self._satisfies_variants_when_self_abstract(other)
 
     def _satisfies_variants_when_self_concrete(self, other: "Spec") -> bool:
-        if not all(
-            name in self.variants and self.variants[name].satisfies(variant)
-            for name, variant in other.variants.items()
-        ):
-            return False
-        if not other.propagated_variants:
-            return True
+        for name, variant in other.variants.items():
+            if not (name in self.variants and self.variants[name].satisfies(variant)):
+                return False
         # a propagated value applies to a closure node only if the node has the variant and the
         # value is possible there; possible values are package knowledge this check must not
         # consult, so only a bool value on a bool variant, whose values are always possible, can
         # contradict; any other propagated value is satisfied vacuously
-        propagated = [
-            v for v in other.propagated_variants.values() if v.type == vt.VariantType.BOOL
-        ]
-        if not propagated:
-            return True
-        return all(
-            node.variants[v.name].satisfies(v)
-            for node in self.traverse()
-            for v in propagated
-            if v.name in node.variants and node.variants[v.name].type == vt.VariantType.BOOL
-        )
+        for v in other.propagated_variants:
+            if v.type != vt.VariantType.BOOL:
+                continue
+            for node in self.traverse():
+                mine = node.variants.dict.get(v.name)
+                if mine is not None and mine.type == vt.VariantType.BOOL and not mine.satisfies(v):
+                    return False
+        return True
 
     def _satisfies_variants_when_self_abstract(self, other: "Spec") -> bool:
         # a variant asserts existence and value on this node, a propagated variant constrains
         # every closure node that has the variant; neither implies the other, so the slots are
         # compared independently, each as a subset test
-        return all(
-            name in self.variants and self.variants[name].satisfies(variant)
-            for name, variant in other.variants.items()
-        ) and self.propagated_variants.satisfies(other.propagated_variants)
+        for name, variant in other.variants.items():
+            if name not in self.variants or not self.variants[name].satisfies(variant):
+                return False
+        return self.propagated_variants.satisfies(other.propagated_variants)
 
     def _intersects_variants(self, other: "Spec") -> bool:
         # propagated values never contradict each other or a node's variants: a DAG in which no
@@ -5520,8 +5511,12 @@ class PropagatedVariants(_PropagatedVariantsBase):
             fresh = tuple(v for v in value.values if v not in implied)
             if not fresh:
                 return self
-            if abstract is not None and all(v in abstract.values for v in fresh):
-                return self
+            if abstract is not None:
+                for v in fresh:
+                    if v not in abstract.values:
+                        break
+                else:
+                    return self
             entries = [e for e in self if e is not abstract]
             merged = fresh if abstract is None else (*abstract.values, *fresh)
             entries.append(vt.VariantValue(vt.VariantType.MULTI, value.name, merged))
@@ -5548,9 +5543,12 @@ class PropagatedVariants(_PropagatedVariantsBase):
             if entry.concrete:
                 if entry not in self:
                     return False
-            else:
-                mine = [e for e in self if e.name == entry.name]
-                if not all(any(v in e.values for e in mine) for v in entry.values):
+                continue
+            for v in entry.values:
+                for e in self:
+                    if e.name == entry.name and v in e.values:
+                        break
+                else:
                     return False
         return True
 
