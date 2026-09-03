@@ -603,6 +603,9 @@ Concretizing the spec above produces the following DAG:
 where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former.
 The ``lapack`` and ``blas`` dependencies are satisfied by ``openblas``.
 
+Note that ``^foo=bar`` binds the virtual ``foo`` to the package ``bar``.
+To constrain a variant of an unnamed dependency instead, use ``*`` as the name: ``^* foo=bar`` means "some dependency has the variant ``foo`` set to ``bar``".
+
 .. index:: edge attribute
 
 Dependency edge attributes
