@@ -9,6 +9,7 @@ from typing import Tuple
 
 import spack.bootstrap.config
 import spack.repo
+import spack.store
 import spack.user_environment as uenv
 import spack.util.filesystem as fs
 import spack.util.tty as tty
@@ -74,11 +75,13 @@ def make_repo_path(root):
     Args:
         root: the root of the environment
     """
+    if not os.path.isdir(root):
+        return None
     repos = (
         spack.repo.from_path(os.path.dirname(p))
         for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
     )
-    return spack.repo.RepoPath(*repos)
+    return spack.repo.RepoPath(*repos) if repos else None
 
 
 def get_environment_modifications(spec, shell, repo=None) -> Tuple[str, str]:
@@ -143,11 +146,10 @@ def post_install(spec, explicit=None):
             load_script_path = path_to_load_shell_script(spec, shell)
             unload_script_path = path_to_unload_shell_script(spec, shell)
 
-            spack_dir = os.path.join(spec.prefix, ".spack")
+            spack_dir = spack.store.STORE.layout.metadata_path(spec)
             fs.mkdirp(spack_dir)
 
-            repo_path = make_repo_path(spack_dir)
-            cached_repo = repo_path if repo_path and repo_path.repos else None
+            cached_repo = make_repo_path(spack_dir)
 
             # Write shell script to load & unload
             load_mods, unload_mods = get_environment_modifications(spec, shell, cached_repo)

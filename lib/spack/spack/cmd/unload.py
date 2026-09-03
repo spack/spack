@@ -101,15 +101,11 @@ def unload(parser, args):
             unload_script_path = spec_script.path_to_unload_shell_script(spec, shell)
 
             if not os.path.isfile(unload_script_path):
-                spack_dir = os.path.join(spec.prefix, ".spack")
+                spack_dir = spack.store.STORE.layout.metadata_path(spec)
 
                 try:
                     # Try to get cached repo if it exists
-                    cached_repo = None
-                    if os.path.isdir(spack_dir):
-                        repo_path = spec_script.make_repo_path(spack_dir)
-                        cached_repo = repo_path if repo_path and repo_path.repos else None
-
+                    cached_repo = spec_script.make_repo_path(spack_dir)
                     _, mods = spec_script.get_environment_modifications(spec, shell, cached_repo)
                 except Exception as err:
                     tty.die(f"Error generating environment modifications for {spec}:\n{err}")
@@ -119,6 +115,7 @@ def unload(parser, args):
                     tty.debug(f"Error writing to {unload_script_path}\n{err}")
                     sys.stdout.write(mods)
                     return 1
+
             commands = spec_script.source_script(unload_script_path, shell)
 
         sys.stdout.write(commands)

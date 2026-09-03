@@ -1068,9 +1068,9 @@ class SetupContext:
             tty.debug(f"Adding env modifications for {dspec.name}")
             if cached_repo:
                 try:
-                    pkg = cached_repo.get_pkg_class(dspec.name)(dspec)
+                    pkg = cached_repo.get_pkg_class(dspec.fullname)(dspec)
                 except spack.repo.UnknownPackageError:
-                    tty.debug(f"{dspec.name} not found in cached repo, using package from dspec")
+                    tty.debug(f"{dspec.fullname} not found in cached repo, using package from dspec")
                     pkg = dspec.package
             else:
                 pkg = dspec.package
