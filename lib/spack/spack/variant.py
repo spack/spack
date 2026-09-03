@@ -16,6 +16,7 @@ from typing import (
     Any,
     Callable,
     Collection,
+    Dict,
     Iterable,
     List,
     Optional,
@@ -242,9 +243,7 @@ class Variant:
 
     def make_default(self) -> "VariantValue":
         """Factory that creates a variant holding the default value(s)."""
-        variant = VariantValue.from_string_or_bool(self.name, self.default)
-        variant.type = self.variant_type
-        return variant
+        return VariantValue.from_string_or_bool(self.name, self.default).as_type(self.variant_type)
 
     def make_variant(self, *value: Union[str, bool]) -> "VariantValue":
         """Factory that creates a variant holding the value(s) passed."""
@@ -329,9 +328,7 @@ class VariantValue:
         self.propagate = propagate
         # only multi-valued variants can be abstract
         self.concrete = concrete or type in (VariantType.BOOL, VariantType.SINGLE)
-
-        # Invokes property setter
-        self.set(*value)
+        self._values = self._validated(value)
 
     @staticmethod
     def from_node_dict(
@@ -402,8 +399,8 @@ class VariantValue:
     def value(self) -> Union[ValueType, bool, str]:
         return self._values[0] if self.type != VariantType.MULTI else self._values
 
-    def set(self, *value: Union[bool, str]) -> None:
-        """Set the value(s) of the variant."""
+    def _validated(self, value: ValueType) -> ValueType:
+        """The value(s) sorted and deduplicated, checked against this variant's type."""
         if len(value) > 1:
             value = tuple(sorted(set(value)))
 
@@ -419,18 +416,39 @@ class VariantValue:
         if "*" in value:
             raise InvalidVariantValueError("cannot use reserved value '*'")
 
-        self._values = value
+        return value
+
+    def with_values(self, value: ValueType) -> "VariantValue":
+        """This variant, with different value(s)."""
+        return VariantValue(
+            self.type, self.name, value, propagate=self.propagate, concrete=self.concrete
+        )
+
+    def with_value_added(self, value: Union[str, bool]) -> "VariantValue":
+        """This variant, with one more value."""
+        return self.with_values((*self._values, value))
+
+    def as_type(self, type: VariantType) -> "VariantValue":
+        """This variant, as a different variant type."""
+        if type == self.type:
+            return self
+        return VariantValue(
+            type, self.name, self._values, propagate=self.propagate, concrete=self.concrete
+        )
+
+    def as_concrete(self) -> "VariantValue":
+        """This variant, marked concrete."""
+        if self.concrete:
+            return self
+        return VariantValue(
+            self.type, self.name, self._values, propagate=self.propagate, concrete=True
+        )
 
     def _cmp_iter(self) -> Iterable:
         yield self.name
         yield self.propagate
         yield self.concrete
         yield from (str(v) for v in self.values)
-
-    def copy(self) -> "VariantValue":
-        return VariantValue(
-            self.type, self.name, self.values, propagate=self.propagate, concrete=self.concrete
-        )
 
     def _merged_values(self, other: "VariantValue") -> Tuple[Union[str, bool], ...]:
         """The values of both sides. For patches a value identified by a checksum prefix and the
@@ -481,26 +499,26 @@ class VariantValue:
         # both abstract: the union is a valid concretization of both
         return True
 
-    def constrain(self, other: "VariantValue") -> bool:
-        """Constrain self with other if they intersect. Returns true iff self was changed."""
+    def constrained(self, other: "VariantValue") -> Optional["VariantValue"]:
+        """This variant constrained with other, or None when other adds nothing to it. Raises
+        UnsatisfiableVariantSpecError if the two do not intersect."""
         if not self.intersects(other):
             raise UnsatisfiableVariantSpecError(self, other)
-        old_values = self.values
-        self.set(*self._merged_values(other))
-        changed = old_values != self.values
-        if self.propagate and not other.propagate:
-            self.propagate = False
-            changed = True
-        if not self.concrete and other.concrete:
-            self.concrete = True
-            changed = True
-        if self.type > other.type:
-            self.type = other.type
-            changed = True
-        return changed
-
-    def append(self, value: Union[str, bool]) -> None:
-        self.set(*self.values, value)
+        result = VariantValue(
+            min(self.type, other.type),
+            self.name,
+            self._merged_values(other),
+            propagate=self.propagate and other.propagate,
+            concrete=self.concrete or other.concrete,
+        )
+        if (
+            result._values == self._values
+            and result.type == self.type
+            and result.propagate == self.propagate
+            and result.concrete == self.concrete
+        ):
+            return None
+        return result
 
     def __contains__(self, item: Union[str, bool]) -> bool:
         return item in self.values
@@ -551,6 +569,22 @@ def SingleValuedVariant(
 
 def BoolValuedVariant(name: str, value: bool, propagate: bool = False) -> VariantValue:
     return VariantValue(VariantType.BOOL, name, (value,), propagate=propagate)
+
+
+#: Variant values repeat across the nodes of a solve and across package recipes: a solve for
+#: trilinos stores 38 490 of them, holding 1 883 distinct values. They are immutable, so every
+#: occurrence hands out the same object.
+_VARIANT_VALUE_CACHE: Dict[Tuple, VariantValue] = {}
+
+
+def intern_variant_value(value: VariantValue) -> VariantValue:
+    """Return the shared VariantValue equal to ``value``."""
+    key = (value.type, value.name, value.propagate, value.concrete, value._values)
+    cached = _VARIANT_VALUE_CACHE.get(key)
+    if cached is not None:
+        return cached
+    _VARIANT_VALUE_CACHE[key] = value
+    return value
 
 
 class VariantValueRemoval(VariantValue):

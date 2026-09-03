@@ -3291,7 +3291,7 @@ class SpecBuilder:
                 f"Can't have multiple values for single-valued variant: "
                 f"{node}, {name}, {value}, {variant_type}, {variant_id}"
             )
-            variant.append(value)
+            spec.variants.set(variant.with_value_added(value))
 
     def version(self, node, version):
         self._specs[node].versions = vn.intern_version_list(vn.VersionList([vn.Version(version)]))

@@ -45,8 +45,8 @@ class TestMultiValuedVariant:
         assert a == c
         assert hash(a) == hash(c)
 
-        # Check the copy
-        d = a.copy()
+        # Check an equal value
+        d = MultiValuedVariant("foo", ("bar", "baz"))
         assert str(a) == str(d)
         assert d.values == ("bar", "baz")
         assert "bar" in d
@@ -106,15 +106,15 @@ class TestMultiValuedVariant:
         a = MultiValuedVariant("foo", ("bar", "baz"))
         b = MultiValuedVariant("foo", ("bar",))
         with pytest.raises(UnsatisfiableVariantSpecError):
-            a.constrain(b)
+            a.constrained(b)
         with pytest.raises(UnsatisfiableVariantSpecError):
-            b.constrain(a)
+            b.constrained(a)
 
         # Try to constrain on the same value
         a = MultiValuedVariant("foo", ("bar", "baz"))
-        b = a.copy()
+        b = MultiValuedVariant("foo", ("bar", "baz"))
 
-        assert not a.constrain(b)
+        assert a.constrained(b) is None
         assert a == b == MultiValuedVariant("foo", ("bar", "baz"))
 
         # Try to constrain on a different name
@@ -122,7 +122,7 @@ class TestMultiValuedVariant:
         b = MultiValuedVariant("fee", ("bar",))
 
         with pytest.raises(UnsatisfiableVariantSpecError):
-            a.constrain(b)
+            a.constrained(b)
 
     def test_yaml_entry(self):
         a = MultiValuedVariant("foo", ("bar", "baz", "barbaz"))
@@ -145,8 +145,8 @@ class TestSingleValuedVariant:
         assert a.value == "bar"
         assert "bar" in a
 
-        # Check the copy
-        b = a.copy()
+        # Check an equal value
+        b = SingleValuedVariant("foo", "bar")
         assert str(a) == str(b)
         assert b.values == ("bar",)
         assert b.value == "bar"
@@ -190,7 +190,7 @@ class TestSingleValuedVariant:
         a = SingleValuedVariant("foo", "bar")
         b = SingleValuedVariant("foo", "bar")
 
-        assert not a.constrain(b)
+        assert a.constrained(b) is None
         assert a == SingleValuedVariant("foo", "bar")
 
         # Try to constrain on a value with a different value
@@ -202,13 +202,13 @@ class TestSingleValuedVariant:
         b = SingleValuedVariant("fee", "bar")
 
         with pytest.raises(UnsatisfiableVariantSpecError):
-            b.constrain(a)
+            b.constrained(a)
 
         # Try to constrain on the same value
         a = SingleValuedVariant("foo", "bar")
-        b = a.copy()
+        b = SingleValuedVariant("foo", "bar")
 
-        assert not a.constrain(b)
+        assert a.constrained(b) is None
         assert a == SingleValuedVariant("foo", "bar")
 
     def test_yaml_entry(self):
@@ -227,8 +227,8 @@ class TestBoolValuedVariant:
         assert a.values == (True,)
         assert True in a
 
-        # Copy - True value
-        b = a.copy()
+        # An equal value - True
+        b = BoolValuedVariant("foo", True)
         assert str(a) == str(b)
         assert b.value is True
         assert b.values == (True,)
@@ -237,9 +237,9 @@ class TestBoolValuedVariant:
         assert a is not b
         assert hash(a) == hash(b)
 
-        # Copy - False value
+        # An equal value - False
         a = BoolValuedVariant("foo", False)
-        b = a.copy()
+        b = BoolValuedVariant("foo", False)
         assert str(a) == str(b)
         assert b.value is False
         assert b.values == (False,)
@@ -307,7 +307,7 @@ class TestBoolValuedVariant:
         a = BoolValuedVariant("foo", True)
         b = BoolValuedVariant("foo", True)
 
-        assert not a.constrain(b)
+        assert a.constrained(b) is None
         assert a == BoolValuedVariant("foo", True)
 
         # Try to constrain on a value with a different value
@@ -315,20 +315,20 @@ class TestBoolValuedVariant:
         b = BoolValuedVariant("foo", False)
 
         with pytest.raises(UnsatisfiableVariantSpecError):
-            b.constrain(a)
+            b.constrained(a)
 
         # Try to constrain on a value with a different value
         a = BoolValuedVariant("foo", True)
         b = BoolValuedVariant("fee", True)
 
         with pytest.raises(UnsatisfiableVariantSpecError):
-            b.constrain(a)
+            b.constrained(a)
 
         # Try to constrain on the same value
         a = BoolValuedVariant("foo", True)
-        b = a.copy()
+        b = BoolValuedVariant("foo", True)
 
-        assert not a.constrain(b)
+        assert a.constrained(b) is None
         assert a == BoolValuedVariant("foo", True)
 
     def test_yaml_entry(self):
@@ -363,7 +363,7 @@ class TestVariant:
 
         # Multiple values are not allowed
         with pytest.raises(MultipleValuesInExclusiveVariantError):
-            vspec.set("bar", "baz")
+            vspec.with_values(("bar", "baz"))
 
         # Inconsistent vspec
         vspec.name = "FOO"
@@ -375,7 +375,7 @@ class TestVariant:
         vspec = a.make_variant("bar", "baz")
         a.validate_or_raise(vspec, "test-package")
         # Add an invalid value
-        vspec.set("bar", "baz", "barbaz")
+        vspec = vspec.with_values(("bar", "baz", "barbaz"))
         with pytest.raises(InvalidVariantValueError):
             a.validate_or_raise(vspec, "test-package")
 
@@ -389,9 +389,9 @@ class TestVariant:
         a = Variant("foo", default="1024", description="", values=validator, multi=False)
         vspec = a.make_default()
         a.validate_or_raise(vspec, "test-package")
-        vspec.set("2056")
+        vspec = vspec.with_values(("2056",))
         a.validate_or_raise(vspec, "test-package")
-        vspec.set("foo")
+        vspec = vspec.with_values(("foo",))
         with pytest.raises(InvalidVariantValueError):
             a.validate_or_raise(vspec, "test-package")
 
