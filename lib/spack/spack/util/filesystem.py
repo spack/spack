@@ -1240,13 +1240,12 @@ def write_tmp_and_move(
 
 
 @system_path_filter
-def copy2_tmp_and_move(src: str, dst: str) -> None:
+def copy_atomically(src: str, dst: str) -> None:
     """Copy ``src`` to ``dst`` through a temporary file in the directory of ``dst``, which is
-    then moved into place. The temporary file is removed on failure.
+    then moved into place.
 
-    ``dst`` gets the permissions and timestamps of ``src``, whereas
-    :py:func:`write_tmp_and_move` preserves those of the file it replaces. Extended attributes
-    are not copied.
+    The final rename is guaranteed to be atomic on POSIX, and is best-effort elsewhere (e.g.
+    on Windows).
     """
     dirname, basename = os.path.split(dst)
     tmp = os.path.join(dirname, f".{basename}.{secrets.token_hex(8)}.tmp")
@@ -1256,13 +1255,7 @@ def copy2_tmp_and_move(src: str, dst: str) -> None:
     try:
         with fdst, open(src, "rb") as fsrc:
             shutil.copyfileobj(fsrc, fdst)
-            # flush before stamping the times, or the flush on close would reset them
-            fdst.flush()
             st = os.fstat(fsrc.fileno())
-            os.utime(
-                fdst.fileno() if os.utime in os.supports_fd else tmp,
-                ns=(st.st_atime_ns, st.st_mtime_ns),
-            )
             os.chmod(
                 fdst.fileno() if os.chmod in os.supports_fd else tmp, stat.S_IMODE(st.st_mode)
             )
@@ -1273,6 +1266,27 @@ def copy2_tmp_and_move(src: str, dst: str) -> None:
         except OSError:
             pass
         raise
+
+
+@system_path_filter
+def move_atomically(src: str, dst: str) -> None:
+    """Move ``src`` to ``dst``, replacing ``dst`` if it exists.
+
+    The function falls back to :py:func:`copy_atomically` followed by the removal of ``src``
+    when the two are on different filesystems.
+
+    The replacement of ``dst`` is guaranteed to be atomic on POSIX, and is best-effort elsewhere
+    (e.g. on Windows).
+    """
+    try:
+        rename(src, dst)
+        return
+    except OSError as e:
+        if e.errno != errno.EXDEV:  # not a cross-filesystem rename
+            raise
+
+    copy_atomically(src, dst)
+    os.unlink(src)
 
 
 @system_path_filter

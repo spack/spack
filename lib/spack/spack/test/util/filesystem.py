@@ -4,6 +4,7 @@
 
 """Tests for ``util/filesystem.py``"""
 
+import errno
 import filecmp
 import os
 import pathlib
@@ -1480,62 +1481,114 @@ def test_write_tmp_and_move_opens_the_temporary_once(tmp_path: pathlib.Path, mon
 
 
 @pytest.mark.not_on_windows("modes are not fully supported on Windows")
-def test_copy2_tmp_and_move_takes_metadata_from_the_source(tmp_path: pathlib.Path):
-    """Tests that the destination gets mode and mtime of the source which preserves
-    those of the file it replaces.
-    """
+def test_copy_atomically_takes_the_mode_from_the_source(tmp_path: pathlib.Path):
+    """Tests that the destination gets the mode of the source."""
     src = tmp_path / "src.txt"
     src.write_text("new")
     os.chmod(src, 0o604)
-    os.utime(src, (1234567890, 1234567890))
 
     dst = tmp_path / "dst.txt"
     dst.write_text("old")
-    os.chmod(dst, 0o666)
     old_inode = os.stat(dst).st_ino
 
-    fs.copy2_tmp_and_move(str(src), str(dst))
+    fs.copy_atomically(str(src), str(dst))
 
+    st = os.stat(dst)
     assert dst.read_text() == "new"
-    assert stat.S_IMODE(os.stat(dst).st_mode) == 0o604
-    assert os.stat(dst).st_mtime == 1234567890
+    assert stat.S_IMODE(st.st_mode) == 0o604
     # the destination is replaced, so readers holding it open still see the old contents
-    assert os.stat(dst).st_ino != old_inode
+    assert st.st_ino != old_inode
     assert sorted(os.listdir(tmp_path)) == ["dst.txt", "src.txt"]
 
 
-def test_copy2_tmp_and_move_leaves_the_destination_alone_on_failure(
-    tmp_path: pathlib.Path, monkeypatch
-):
-    def failing_rename(src, dst):
-        raise OSError("simulated failure")
-
-    monkeypatch.setattr(fs, "rename", failing_rename)
-    src = tmp_path / "src.txt"
-    src.write_text("new")
+def test_copy_atomically_leaves_the_destination_alone_on_failure(tmp_path: pathlib.Path):
+    """A copy that fails after the temporary is created leaves neither a partial destination
+    nor the temporary behind.
+    """
     dst = tmp_path / "dst.txt"
     dst.write_text("old")
 
-    with pytest.raises(OSError, match="simulated failure"):
-        fs.copy2_tmp_and_move(str(src), str(dst))
+    with pytest.raises(FileNotFoundError):
+        fs.copy_atomically(str(tmp_path / "does-not-exist.txt"), str(dst))
 
     assert dst.read_text() == "old"
-    assert sorted(os.listdir(tmp_path)) == ["dst.txt", "src.txt"]
+    assert os.listdir(tmp_path) == ["dst.txt"]
 
 
 @pytest.mark.not_on_windows("symlink creation requires elevated privileges on Windows")
-def test_copy2_tmp_and_move_replaces_a_symlink_at_the_destination(tmp_path: pathlib.Path):
-    """Tests that the destination is replaced rather than written through, so a symlink planted
-    there by another process cannot redirect the copy."""
+def test_copy_atomically_replaces_a_symlink_at_the_destination(tmp_path: pathlib.Path):
+    """Tests that a symlink at the destination is replaced by a regular file, and the file it
+    points at is left alone.
+    """
     src = tmp_path / "src.txt"
     src.write_text("new")
+
     outside = tmp_path / "outside.txt"
     outside.write_text("untouched")
+
     dst = tmp_path / "dst.txt"
     os.symlink(str(outside), str(dst))
 
-    fs.copy2_tmp_and_move(str(src), str(dst))
+    fs.copy_atomically(str(src), str(dst))
 
     assert outside.read_text() == "untouched"
     assert not os.path.islink(dst)
     assert dst.read_text() == "new"
+
+
+def test_move_atomically_replaces_the_destination(tmp_path: pathlib.Path):
+    src = tmp_path / "src.txt"
+    src.write_text("new")
+    dst = tmp_path / "dst.txt"
+    dst.write_text("old")
+
+    fs.move_atomically(str(src), str(dst))
+
+    assert dst.read_text() == "new"
+    assert os.listdir(tmp_path) == ["dst.txt"]
+
+
+def test_move_atomically_across_filesystems(tmp_path: pathlib.Path, monkeypatch):
+    """Tests the move when the two directories are on different filesystems, which a real
+    ``rename`` reports as EXDEV.
+    """
+    src_dir = tmp_path / "one"
+    dst_dir = tmp_path / "two"
+    src_dir.mkdir()
+    dst_dir.mkdir()
+
+    def rename_across_directories(src, dst):
+        if os.path.dirname(src) != os.path.dirname(dst):
+            raise OSError(errno.EXDEV, "cross-device link")
+        return os.rename(src, dst)
+
+    monkeypatch.setattr(fs, "rename", rename_across_directories)
+    src = src_dir / "src.txt"
+    src.write_text("new")
+    dst = dst_dir / "dst.txt"
+    dst.write_text("old")
+
+    fs.move_atomically(str(src), str(dst))
+
+    assert dst.read_text() == "new"
+    assert os.listdir(src_dir) == []
+    assert os.listdir(dst_dir) == ["dst.txt"]
+
+
+def test_move_atomically_leaves_both_sides_alone_on_failure(tmp_path: pathlib.Path):
+    """Tests that non-EXDEV errors are reported to the caller, with the source and the destination
+    as they were.
+    """
+    src = tmp_path / "src.txt"
+    src.write_text("new")
+    # a non-empty directory cannot be renamed onto, on POSIX or through the Windows shim
+    dst = tmp_path / "dst"
+    dst.mkdir()
+    (dst / "content.txt").write_text("old")
+
+    with pytest.raises(OSError):
+        fs.move_atomically(str(src), str(dst))
+
+    assert src.read_text() == "new"
+    assert (dst / "content.txt").read_text() == "old"
+    assert sorted(os.listdir(tmp_path)) == ["dst", "src.txt"]

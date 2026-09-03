@@ -13,7 +13,7 @@ from typing import Optional
 
 import spack.util.crypto
 from spack.util import tty
-from spack.util.filesystem import copy2_tmp_and_move, join_path, mkdirp, write_tmp_and_move
+from spack.util.filesystem import copy_atomically, join_path, mkdirp, write_tmp_and_move
 from spack.util.url import validate_scheme
 
 
@@ -123,7 +123,7 @@ def local_path(path: str, sha256: str, dest: Optional[str] = None) -> str:
                     mkdirp(dest_dir)
 
                 cache_path = join_path(dest_dir, os.path.basename(staged_path))
-                copy2_tmp_and_move(staged_path, cache_path)
+                copy_atomically(staged_path, cache_path)
                 tty.debug(f"Cached {path} in {cache_path}")
 
                 # Stash the associated URL to aid with debugging

@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import email.message
-import errno
 import functools
 import io
 import json
@@ -36,7 +35,7 @@ import spack.util.parallel
 import spack.util.url
 import spack.util.url as url_util
 from spack.util import lang, tty
-from spack.util.filesystem import copy2_tmp_and_move, mkdirp, rename, working_dir
+from spack.util.filesystem import copy_atomically, mkdirp, move_atomically, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
@@ -421,18 +420,10 @@ def push_to_url(
     if remote_url.scheme == "file":
         remote_file_path = url_util.local_file_path(remote_url)
         mkdirp(os.path.dirname(remote_file_path))
-        if not keep_original:
-            try:
-                rename(local_file_path, remote_file_path)
-                return
-            except OSError as e:
-                if e.errno != errno.EXDEV:  # not a cross-filesystem rename
-                    raise
-
-        copy2_tmp_and_move(local_file_path, remote_file_path)
-
-        if not keep_original:
-            os.remove(local_file_path)
+        if keep_original:
+            copy_atomically(local_file_path, remote_file_path)
+        else:
+            move_atomically(local_file_path, remote_file_path)
 
     elif remote_url.scheme == "s3":
         extra_args = {}
