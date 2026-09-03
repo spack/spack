@@ -822,7 +822,7 @@ Shell Script Generation
 """"""""""""""""""""""
 
 Behind the scenes, when you run ``spack load`` or ``spack unload``, Spack uses shell scripts for each package.
-These scripts are created during package installation or upon first use of ``spack load``.
+These scripts are created during package installation (or upon first use of ``spack load`` for older installations).
 The scripts are stored in the ``.spack`` directory within each package's installation prefix:
 
 .. code-block:: spec
@@ -841,9 +841,9 @@ For Windows systems, additional scripts are generated with platform-specific ext
 
 The shell scripts contain all the environment modifications needed for the package, including:
 
-1. Updating PATH to include the package's bin directory
-2. Setting MANPATH for man pages
-3. Setting other package-specific environment variables
+1. Prefix inspections for paths to add to canonical environment variables, such as PATH and MANPATH
+2. Environment variables set by the package's `setup_run_environment` method
+3. Environment variables set by the package's link and run dependencies' `setup_dependent_run_environment` methods.
 4. Tracking which packages are loaded via SPACK_LOADED_HASHES environment variable
 
 To customize which environment variables are modified, see `customize-env-modifications https://spack.readthedocs.io/en/latest/module_file_support.html#global-environment-modifications`.

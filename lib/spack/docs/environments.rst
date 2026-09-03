@@ -205,11 +205,10 @@ When you create and activate an environment, Spack automatically generates shell
 These scripts are stored in the ``.spack-env`` directory within your environment directory and handle tasks like:
 
 - Setting environment variables (including ``SPACK_ENV``)
-- Managing the prompt to show the active environment
 - Setting up environment variables for views
 
 The activation and deactivation scripts are generated for different shells (sh, csh, fish, bat, and pwsh on Windows).
-For efficiency, the activation and deactivation scripts for sh, csh, and fish are combined into single files.
+Script names follow the pattern ``{view_name}-activate.{ext}`` and ``{view_name}-deactivate.{ext}`` where ``{view_name}`` is the name of the environment view (typically ``default``) and ``{ext}`` is the shell-specific extension (e.g., ``.sh``, ``.csh``, ``.fish``, ``.bat``, ``.ps1``).
 
 Internally, Spack uses these scripts when you run commands like:
 
@@ -222,14 +221,16 @@ You can also use these scripts directly by sourcing them:
 
 .. code-block:: console
 
-   $ source /path/to/environment/.spack-env/activate
-   $ source /path/to/environment/.spack-env/deactivate.sh
+   $ source /path/to/environment/.spack-env/default-activate.sh
+   $ source /path/to/environment/.spack-env/default-deactivate.sh
+
+If your environment has multiple views, each view will have its own pair of activation/deactivation scripts named after that view.
 
 The activation scripts are automatically regenerated when:
 
 1. A new environment is created
 2. An environment view is regenerated
-3. The environment's lockfile has been modified since the last activation
+3. The environment's lockfile is written or modified
 
 This ensures that the environment variables and setup always reflect the current state of your environment and its views.
 
@@ -238,7 +239,7 @@ Shell Compatibility
 
 Spack supports environment activation in multiple shells:
 
-* **Bash/sh**: The default shell with full support for all features
+* **Bash/dash/zsh/sh**: The default shell with full support for all features
 * **csh/tcsh**: Command-line support with environment variables and aliases
 * **fish**: Complete support with functions instead of aliases
 * **Windows batch (bat)**: Basic support for Windows command prompt
@@ -249,7 +250,7 @@ You can also specify which shell script to generate:
 
 .. code-block:: console
 
-   $ spack env activate --sh myenv    # For bash/sh
+   $ spack env activate --sh myenv    # For bash/dash/zsh/sh
    $ spack env activate --csh myenv   # For csh/tcsh
    $ spack env activate --fish myenv  # For fish
    $ spack env activate --bat myenv   # For Windows cmd.exe
@@ -258,7 +259,7 @@ You can also specify which shell script to generate:
 The generated script adds several features to your shell:
 
 1. Sets ``SPACK_ENV`` to point to your environment's location
-2. Updates your prompt to show the active environment (optional with ``--prompt``)
+2. Updates your prompt to show the active environment name (only when activated with the ``-p`` or ``--prompt`` flag)
 3. Adds a ``despacktivate`` alias/function to easily deactivate the environment
 4. Sets up view-related environment variables if a view is enabled
 
