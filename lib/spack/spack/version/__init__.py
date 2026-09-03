@@ -37,7 +37,7 @@ from .version_types import (
 )
 
 #: This version contains all possible versions.
-any_version: VersionList = VersionList([":"])
+any_version: VersionList = VersionList.any()
 
 __all__ = [
     "ClosedOpenRange",

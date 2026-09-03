@@ -3490,7 +3490,7 @@ class Spec:
             changed = True
 
         new_versions = self.versions.intersection(other.versions)
-        if new_versions.versions != self.versions.versions:
+        if new_versions != self.versions:
             self.versions = vn.intern_version_list(new_versions)
             changed = True
         changed |= self._constrain_variants(other)

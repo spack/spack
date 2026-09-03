@@ -4,7 +4,7 @@
 
 import re
 from bisect import bisect_left
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Iterable, Iterator, List, Optional, Tuple, Union
 
 from spack.util.typing import SupportsRichComparison
 
@@ -942,9 +942,7 @@ class ClosedOpenRange(VersionType):
 
     def union(self, other: VersionType) -> VersionType:
         if isinstance(other, VersionList):
-            v = other.copy()
-            v.add(self)
-            return v
+            return other.union(self)
 
         result = self._union_if_not_disjoint(other)
         return result if result is not None else VersionList([self, other])
@@ -963,76 +961,90 @@ class ClosedOpenRange(VersionType):
         raise TypeError(f"'intersection()' not supported for instances of {type(other)}")
 
 
-class VersionList(VersionType):
-    """Sorted, non-redundant list of Version and ClosedOpenRange elements."""
+def _add(versions: List[VersionType], item: VersionType) -> None:
+    """Insert ``item`` into the sorted, non-redundant list ``versions``, merging as needed."""
+    if isinstance(item, ClosedOpenRange):
+        i = bisect_left(versions, item)
 
-    __slots__ = ("versions",)
+        # Note: can span multiple concrete versions to the left (as well as to the right).
+        # For instance insert 1.2: into [1.2, hash=1.2, 1.3, 1.4:1.5]
+        # would bisect at i = 1 and merge i = 0 too.
+        while i > 0:
+            union = item._union_if_not_disjoint(versions[i - 1])
+            if union is None:  # disjoint
+                break
+            item = union
+            del versions[i - 1]
+            i -= 1
 
-    versions: List[VersionType]
+        while i < len(versions):
+            union = item._union_if_not_disjoint(versions[i])
+            if union is None:
+                break
+            item = union
+            del versions[i]
 
-    def __init__(self, vlist: Optional[Union[str, VersionType, Iterable]] = None):
+        versions.insert(i, item)
+
+    elif isinstance(item, VersionList):
+        for v in item:
+            _add(versions, v)
+
+    elif isinstance(item, (StandardVersion, GitVersion)):
+        i = bisect_left(versions, item)
+        # Only insert when prev and next are not intersected.
+        if (i == 0 or not item.intersects(versions[i - 1])) and (
+            i == len(versions) or not item.intersects(versions[i])
+        ):
+            versions.insert(i, item)
+
+    else:
+        raise TypeError("Can't add %s to VersionList" % type(item))
+
+
+if TYPE_CHECKING:
+    _VersionListBase = Tuple[VersionType, ...]
+else:
+    _VersionListBase = tuple  # subclassing typing.Tuple is slow on 3.6 (GenericMeta)
+
+
+class VersionList(VersionType, _VersionListBase):
+    """Sorted, non-redundant tuple of Version and ClosedOpenRange elements.
+
+    Specs share these tuples, many of them interned, and the entries are never modified once
+    they exist: :meth:`union` and :meth:`intersection` return the list to store back on the
+    spec."""
+
+    __slots__ = ()
+
+    def __new__(cls, vlist: Optional[Union[str, VersionType, Iterable]] = None) -> "VersionList":
+        if vlist is None:
+            return tuple.__new__(cls)
+
         if isinstance(vlist, str):
-            vlist = from_string(vlist)
-            if isinstance(vlist, VersionList):
-                self.versions = vlist.versions
-            else:
-                self.versions = [vlist]
+            parsed = from_string(vlist)
+            if isinstance(parsed, VersionList):
+                return parsed
+            return tuple.__new__(cls, (parsed,))
 
-        elif vlist is None:
-            self.versions = []
+        if isinstance(vlist, VersionList):
+            return vlist
 
-        elif isinstance(vlist, VersionList):
-            self.versions = vlist[:]
+        if isinstance(vlist, (ConcreteVersion, ClosedOpenRange)):
+            return tuple.__new__(cls, (vlist,))
 
-        elif isinstance(vlist, (ConcreteVersion, ClosedOpenRange)):
-            self.versions = [vlist]
-
-        elif isinstance(vlist, Iterable):
-            self.versions = []
+        if isinstance(vlist, Iterable):
+            versions: List[VersionType] = []
             for v in vlist:
-                self.add(ver(v))
+                _add(versions, ver(v))
+            return tuple.__new__(cls, versions)
 
-        else:
-            raise TypeError(f"Cannot construct VersionList from {type(vlist)}")
+        raise TypeError(f"Cannot construct VersionList from {type(vlist)}")
 
-    def add(self, item: VersionType) -> None:
-        if isinstance(item, ClosedOpenRange):
-            i = bisect_left(self, item)
-
-            # Note: can span multiple concrete versions to the left (as well as to the right).
-            # For instance insert 1.2: into [1.2, hash=1.2, 1.3, 1.4:1.5]
-            # would bisect at i = 1 and merge i = 0 too.
-            while i > 0:
-                union = item._union_if_not_disjoint(self[i - 1])
-                if union is None:  # disjoint
-                    break
-                item = union
-                del self.versions[i - 1]
-                i -= 1
-
-            while i < len(self):
-                union = item._union_if_not_disjoint(self[i])
-                if union is None:
-                    break
-                item = union
-                del self.versions[i]
-
-            self.versions.insert(i, item)
-
-        elif isinstance(item, VersionList):
-            for v in item:
-                self.add(v)
-
-        elif isinstance(item, (StandardVersion, GitVersion)):
-            i = bisect_left(self, item)
-            # Only insert when prev and next are not intersected.
-            if (i == 0 or not item.intersects(self[i - 1])) and (
-                i == len(self) or not item.intersects(self[i])
-            ):
-                self.versions.insert(i, item)
-
-        else:
-            raise TypeError("Can't add %s to VersionList" % type(item))
+    @classmethod
+    def _from_sorted(cls, versions: Iterable[VersionType]) -> "VersionList":
+        """Construct from already sorted, non-redundant entries."""
+        return tuple.__new__(cls, versions)
 
     @property
     def concrete(self) -> Optional[ConcreteVersion]:
@@ -1051,23 +1063,18 @@ class VersionList(VersionType):
             return v.lo
         return None
 
-    def copy(self) -> "VersionList":
-        return VersionList(self)
-
     def lowest(self) -> Optional[StandardVersion]:
         """Get the lowest version in the list."""
-        return next((v for v in self.versions if isinstance(v, StandardVersion)), None)
+        return next((v for v in self if isinstance(v, StandardVersion)), None)
 
     def highest(self) -> Optional[StandardVersion]:
         """Get the highest version in the list."""
-        return next((v for v in reversed(self.versions) if isinstance(v, StandardVersion)), None)
+        return next((v for v in reversed(self) if isinstance(v, StandardVersion)), None)
 
     def highest_numeric(self) -> Optional[StandardVersion]:
         """Get the highest numeric version in the list."""
         numeric = (
-            v
-            for v in reversed(self.versions)
-            if isinstance(v, StandardVersion) and not v.isdevelop()
+            v for v in reversed(self) if isinstance(v, StandardVersion) and not v.isdevelop()
         )
         return next(numeric, None)
 
@@ -1127,39 +1134,25 @@ class VersionList(VersionType):
         """
         return _ANY_VERSION_LIST
 
-    def update(self, other: "VersionList") -> None:
-        self.add(other)
-
     def union(self, other: VersionType) -> VersionType:
-        result = self.copy()
-        result.add(other)
-        return result
+        versions = list(self)
+        _add(versions, other)
+        return VersionList._from_sorted(versions)
 
     def intersection(self, other: VersionType) -> "VersionList":
-        result = VersionList()
         if isinstance(other, VersionList):
+            result: List[VersionType] = []
             for lhs, rhs in ((self, other), (other, self)):
                 for x in lhs:
-                    i = bisect_left(rhs.versions, x)
+                    i = bisect_left(rhs, x)
                     if i > 0:
-                        result.add(rhs[i - 1].intersection(x))
+                        _add(result, rhs[i - 1].intersection(x))
                     if i < len(rhs):
-                        result.add(rhs[i].intersection(x))
-            return result
+                        _add(result, rhs[i].intersection(x))
+            return VersionList._from_sorted(result)
         else:
             return self.intersection(VersionList(other))
 
-    def intersect(self, other: VersionType) -> bool:
-        """Intersect this spec's list with other.
-
-        Return True if the spec changed as a result; False otherwise
-        """
-        isection = self.intersection(other)
-        changed = isection.versions != self.versions
-        self.versions = isection.versions
-        return changed
-
-    # typing this and getitem are a pain in Python 3.6
     def __contains__(self, other):
         if isinstance(other, (ClosedOpenRange, StandardVersion)):
             i = bisect_left(self, other)
@@ -1170,62 +1163,47 @@ class VersionList(VersionType):
 
         return False
 
-    def __getitem__(self, index):
-        return self.versions[index]
-
-    def __iter__(self) -> Iterator:
-        return iter(self.versions)
-
-    def __reversed__(self) -> Iterator:
-        return reversed(self.versions)
-
-    def __len__(self) -> int:
-        return len(self.versions)
-
-    def __bool__(self) -> bool:
-        return bool(self.versions)
-
     def __eq__(self, other) -> bool:
-        if isinstance(other, VersionList):
-            return self.versions == other.versions
-        return False
+        return isinstance(other, VersionList) and tuple.__eq__(self, other)
 
     def __ne__(self, other) -> bool:
-        if isinstance(other, VersionList):
-            return self.versions != other.versions
-        return False
+        return isinstance(other, VersionList) and tuple.__ne__(self, other)
 
     def __lt__(self, other) -> bool:
         if isinstance(other, VersionList):
-            return self.versions < other.versions
+            return tuple.__lt__(self, other)
         return NotImplemented
 
     def __le__(self, other) -> bool:
         if isinstance(other, VersionList):
-            return self.versions <= other.versions
+            return tuple.__le__(self, other)
         return NotImplemented
 
     def __ge__(self, other) -> bool:
         if isinstance(other, VersionList):
-            return self.versions >= other.versions
+            return tuple.__ge__(self, other)
         return NotImplemented
 
     def __gt__(self, other) -> bool:
         if isinstance(other, VersionList):
-            return self.versions > other.versions
+            return tuple.__gt__(self, other)
         return NotImplemented
 
-    def __hash__(self) -> int:
-        return hash(tuple(self.versions))
+    __hash__ = tuple.__hash__
+
+    def __reduce__(self):
+        # going through intern_version_list means specs that shared a list still share it after
+        # unpickling
+        return _unpickle_version_list, (tuple(self),)
 
     def __str__(self) -> str:
-        if not self.versions:
+        if not self:
             return ""
 
-        return ",".join(f"={v}" if type(v) is StandardVersion else str(v) for v in self.versions)
+        return ",".join(f"={v}" if type(v) is StandardVersion else str(v) for v in self)
 
     def __repr__(self) -> str:
-        return str(self.versions)
+        return repr(list(self))
 
 
 def _next_str(s: str) -> str:
@@ -1398,8 +1376,7 @@ _UNBOUNDED_RANGE = ClosedOpenRange.from_version_range(
 )
 
 #: Shared by every unconstrained spec; see VersionList.any().
-_ANY_VERSION_LIST = VersionList.__new__(VersionList)
-_ANY_VERSION_LIST.versions = [_UNBOUNDED_RANGE]
+_ANY_VERSION_LIST = VersionList._from_sorted((_UNBOUNDED_RANGE,))
 
 #: Version constraints repeat across package recipes and across the nodes of a solve.
 _VERSION_LIST_CACHE: Dict[str, VersionList] = {}
@@ -1408,14 +1385,11 @@ _VERSION_LIST_CACHE: Dict[str, VersionList] = {}
 def intern_version_list(version_list: VersionList) -> VersionList:
     """Return the shared VersionList equal to ``version_list``.
 
-    Callers must treat the result as immutable, which is how specs already use it: constraining a
-    spec replaces its VersionList.
-
     A list holding anything but plain versions and ranges is returned as it is. GitVersion stores a
     ref lookup for the package it belongs to and caches the version that lookup resolves to, so two
     packages that name the same git ref have a list each.
     """
-    for v in version_list.versions:
+    for v in version_list:
         if not isinstance(v, (StandardVersion, ClosedOpenRange)):
             return version_list
 
@@ -1425,3 +1399,7 @@ def intern_version_list(version_list: VersionList) -> VersionList:
         return cached
     _VERSION_LIST_CACHE[key] = version_list
     return version_list
+
+
+def _unpickle_version_list(versions: Tuple[VersionType, ...]) -> VersionList:
+    return intern_version_list(VersionList._from_sorted(versions))
