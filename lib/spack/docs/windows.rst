@@ -85,6 +85,39 @@ Spack requires the utilities vendored by this project.
 A tool for extracting ``.xz`` files is required for extracting source tarballs.
 The latest 7-Zip can be located at https://sourceforge.net/projects/sevenzip/.
 
+.. _windows_scripted_prerequisites:
+
+Scripted alternative
+^^^^^^^^^^^^^^^^^^^^
+
+Once you have a Spack checkout (Step 2 below), the Visual Studio components above can be
+installed without clicking through the installer UI:
+
+.. code-block:: console
+
+   $ powershell -ExecutionPolicy Bypass -File share\spack\qa\windows_install_msvc.ps1 -Apply -Elevate
+
+The script requests only the components Spack needs, so no IDE workload, ARM/ARM64 toolset or
+WDK is pulled in: the MSVC x64/x86 toolset, a Windows SDK, and "C++ CMake tools for Windows".
+It then installs the Intel oneAPI Fortran compiler, because MSVC provides none, and runs the
+``spack compiler find`` and ``spack external find`` commands described in Step 3 for you.
+
+Without ``-Apply`` the script only reports what it would do. ``-Elevate`` requests the
+administrator token the installers require. Because Build Tools installations expose no
+privacy UI, the script also opts out of the Visual Studio Customer Experience Improvement
+Program; pass ``-KeepTelemetry`` to leave that setting alone, and ``-SkipFortran`` to omit the
+Fortran compiler. Run ``Get-Help`` on the script for the full list of options.
+
+Every run finishes with a verification pass that checks for the files Spack actually consumes,
+such as ``cl.exe``, the bundled ``cmake.exe`` and ``ninja.exe``, and the SDK's
+``ucrt\x64\libucrt.lib`` and ``um\x64\OpenGL32.Lib``. The script exits non-zero if any of them
+are missing, so it can be used to check an existing machine as well as to set up a new one.
+
+A companion script, ``share\spack\qa\windows_reset_msvc.ps1``, removes a Visual Studio
+toolchain again along with the stale directories and registry keys it leaves behind. It exists
+to test Spack's Windows setup from a known-clean state, so do not run it on a machine whose
+toolchain you want to keep.
+
 Step 2: Install and setup Spack
 -------------------------------
 
