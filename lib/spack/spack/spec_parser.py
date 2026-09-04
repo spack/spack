@@ -687,12 +687,16 @@ class SpecParser:
                     self._raise_parsing_error("Spec cannot have multiple versions")
 
                 if curr.group(_GIT_VERSION):
-                    spec.versions = spack.version.VersionList(
-                        [spack.version.GitVersion(curr.group(_GIT_VERSION))]
+                    spec.versions = spack.version.intern_version_list(
+                        spack.version.VersionList(
+                            [spack.version.GitVersion(curr.group(_GIT_VERSION))]
+                        )
                     )
                     spec.attach_git_version_lookup()
                 else:
-                    spec.versions = spack.version.VersionList(curr.group(_VERSION_LIST))
+                    spec.versions = spack.version.intern_version_list(
+                        spack.version.VersionList(curr.group(_VERSION_LIST))
+                    )
                 has_version = True
 
             elif kind == _BOOL_VARIANT:

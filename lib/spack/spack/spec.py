@@ -71,6 +71,7 @@ from typing import (
     List,
     Match,
     NamedTuple,
+    NoReturn,
     Optional,
     Sequence,
     Set,
@@ -1121,10 +1122,11 @@ class CompilerFlag(str):
         obj.source = kwargs.pop("source", None)
         return obj
 
-    def copy(self) -> "CompilerFlag":
-        return CompilerFlag(
-            self, propagate=self.propagate, flag_group=self.flag_group, source=self.source
-        )
+    def as_propagated(self) -> "CompilerFlag":
+        """This flag, marked as propagating to dependencies."""
+        if self.propagate:
+            return self
+        return CompilerFlag(self, propagate=True, flag_group=self.flag_group, source=self.source)
 
     def to_dict(self) -> Dict[str, Any]:
         """Value and propagation of this flag, unlike ``FlagMap.yaml_entry``, which is its value
@@ -1144,7 +1146,12 @@ class CompilerFlag(str):
 _valid_compiler_flags = ("cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags")
 
 
-class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
+class FlagMap(lang.HashableMap[str, Tuple[CompilerFlag, ...]]):
+    """Map of compiler flags, keyed by flag type.
+
+    Specs share these maps, so a map is never modified once it exists; see :class:`VariantMap`.
+    """
+
     __slots__ = ()
 
     def satisfies(self, other):
@@ -1153,37 +1160,63 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
     def intersects(self, other):
         return True
 
-    def constrain(self, other):
-        """Add all flags in other that aren't in self to self.
-
-        Return whether the spec changed.
-        """
-        changed = False
-        for flag_type in other:
-            if flag_type not in self:
-                # copy the list and its flags, so that self and other share no mutable state
-                self[flag_type] = [f.copy() for f in other[flag_type]]
-                changed = True
+    def constrained(self, other: "FlagMap") -> Optional["FlagMap"]:
+        """This map with all flags of other added to it, or None when other adds nothing."""
+        merged = None
+        for flag_type, other_flags in other.items():
+            flags = self.get(flag_type)
+            if flags is None:
+                merged = merged if merged is not None else dict(self)
+                merged[flag_type] = other_flags
                 continue
 
-            extra_other = set(other[flag_type]) - set(self[flag_type])
+            extra_other = set(other_flags) - set(flags)
             if extra_other:
-                self[flag_type] = list(self[flag_type]) + [
-                    x.copy() for x in other[flag_type] if x in extra_other
-                ]
-                changed = True
+                flags = (*flags, *(x for x in other_flags if x in extra_other))
 
             # Next, if any flags in other propagate, we force them to propagate in our case.
-            other_propagate = {f for f in other[flag_type] if f.propagate}
-            for f in self[flag_type]:
-                if not f.propagate and f in other_propagate:
-                    f.propagate = True
-                    changed = True
+            other_propagate = {f for f in other_flags if f.propagate}
+            if any(f in other_propagate and not f.propagate for f in flags):
+                flags = tuple(f.as_propagated() if f in other_propagate else f for f in flags)
+
+            if flags is not self[flag_type]:
+                merged = merged if merged is not None else dict(self)
+                merged[flag_type] = flags
 
         # TODO: what happens if flag groups with a partial (but not complete)
         # intersection specify different behaviors for flag propagation?
 
-        return changed
+        return None if merged is None else intern_flag_map(FlagMap(merged))
+
+    def with_flags(self, flag_type: str, flags: Tuple[CompilerFlag, ...]) -> "FlagMap":
+        """This map, with ``flags`` stored under ``flag_type``, replacing any entry there."""
+        if self.get(flag_type) == flags and flag_type in self:
+            return self
+        return intern_flag_map(FlagMap({**self, flag_type: flags}))
+
+    def with_all_flag_types(self) -> "FlagMap":
+        """This map, with an empty entry for every flag type it does not have; a concrete spec
+        records them all."""
+        if len(self) == len(_valid_compiler_flags):
+            return self
+        return intern_flag_map(FlagMap({**{f: () for f in _valid_compiler_flags}, **self}))
+
+    def with_flag(
+        self, flag_type: str, value: str, propagation: bool, flag_group=None, source=None
+    ) -> "FlagMap":
+        """This map, with one more flag stored under ``flag_type``."""
+        flag = CompilerFlag(
+            value, propagate=propagation, flag_group=flag_group or value, source=source
+        )
+        return self.with_flags(flag_type, (*self.get(flag_type, ()), flag))
+
+    def _immutable(self, *args, **kwargs) -> NoReturn:
+        raise TypeError("FlagMap is immutable, store the result of with_flag() instead")
+
+    add_flag = __setitem__ = __delitem__ = pop = popitem = setdefault = update = clear = _immutable
+
+    def __reduce__(self):
+        return _flag_map_from_items, (tuple(self.items()),)
 
     def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
         """Values and propagation of the flags, unlike ``yaml_entry``, which drops everything but
@@ -1195,39 +1228,16 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
 
     @staticmethod
     def from_dict(d: Dict[str, List[Dict[str, Any]]]) -> "FlagMap":
-        result = FlagMap()
-        for flag_type, flags in d.items():
-            result[flag_type] = [CompilerFlag.from_dict(flag) for flag in flags]
-        return result
+        return intern_flag_map(
+            FlagMap(
+                (flag_type, tuple(CompilerFlag.from_dict(flag) for flag in flags))
+                for flag_type, flags in d.items()
+            )
+        )
 
     @staticmethod
     def valid_compiler_flags():
         return _valid_compiler_flags
-
-    def copy(self):
-        clone = FlagMap()
-        for flag_type, flags in self.items():
-            clone[flag_type] = [f.copy() for f in flags]
-        return clone
-
-    def add_flag(self, flag_type, value, propagation, flag_group=None, source=None):
-        """Stores the flag's value in CompilerFlag and adds it
-        to the FlagMap
-
-        Args:
-            flag_type (str): the type of flag
-            value (str): the flag's value that will be added to the flag_type's
-                corresponding list
-            propagation (bool): if ``True`` the flag value will be passed to
-                the packages' dependencies. If``False`` it will not be passed
-        """
-        flag_group = flag_group or value
-        flag = CompilerFlag(value, propagate=propagation, flag_group=flag_group, source=source)
-
-        if flag_type not in self:
-            self[flag_type] = [flag]
-        else:
-            self[flag_type].append(flag)
 
     def yaml_entry(self, flag_type):
         """Returns the flag type and a list of the flag values since the
@@ -1242,7 +1252,7 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         return flag_type, [str(flag) for flag in self[flag_type]]
 
     def _cmp_iter(self):
-        for k, v in sorted(self.dict.items()):
+        for k, v in sorted(self.items()):
             yield k
 
             def flags():
@@ -1275,14 +1285,24 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
 
 EdgeMap = Dict[str, List[DependencySpec]]
 
+#: Backs every edge map without edges and every spec without extra attributes. Reads work on it
+#: unchanged, including the ``spec.extra_attributes`` that package recipes do; writers replace it
+#: with a private dict.
+_EMPTY_DICT: Dict = {}
 
-def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> None:
+
+def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> EdgeMap:
+    """Add ``edge`` under ``key``, returning the map to store back on the spec: an empty map is
+    shared, so a private one takes its place on the first write."""
+    if edge_map is _EMPTY_DICT:
+        return {key: [edge]}
     if key in edge_map:
         lst = edge_map[key]
         lst.append(edge)
         lst.sort()
     else:
         edge_map[key] = [edge]
+    return edge_map
 
 
 def _select_edges(
@@ -1656,25 +1676,41 @@ def tree(
 
 
 class SpecAnnotations:
+    """What a spec file records about a spec, beyond the spec itself.
+
+    Specs share these, so an instance is never modified once it exists: the ``with_*`` methods
+    return the annotations to store back on the spec.
+    """
+
     __slots__ = ("original_spec_format", "compiler_node_attribute")
 
-    def __init__(self) -> None:
-        self.original_spec_format = SPECFILE_FORMAT_VERSION
-        self.compiler_node_attribute: Optional["Spec"] = None
+    def __init__(
+        self,
+        original_spec_format: int = SPECFILE_FORMAT_VERSION,
+        compiler_node_attribute: Optional["Spec"] = None,
+    ) -> None:
+        self.original_spec_format = original_spec_format
+        self.compiler_node_attribute = compiler_node_attribute
 
     def with_spec_format(self, spec_format: int) -> "SpecAnnotations":
-        self.original_spec_format = spec_format
-        return self
+        """These annotations, recording a different spec file format."""
+        if spec_format == self.original_spec_format:
+            return self
+        return SpecAnnotations(spec_format, self.compiler_node_attribute)
 
     def with_compiler(self, compiler: "Spec") -> "SpecAnnotations":
-        self.compiler_node_attribute = compiler
-        return self
+        """These annotations, recording the compiler attribute of a spec file."""
+        return SpecAnnotations(self.original_spec_format, compiler)
 
     def __repr__(self) -> str:
         result = f"SpecAnnotations().with_spec_format({self.original_spec_format})"
         if self.compiler_node_attribute:
             result += f".with_compiler({str(self.compiler_node_attribute)})"
         return result
+
+
+#: Shared by every spec written in the current spec file format without a legacy compiler.
+DEFAULT_ANNOTATIONS = SpecAnnotations()
 
 
 def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
@@ -1933,11 +1969,11 @@ class Spec:
         # init an empty spec that matches anything.
         self.name: str = ""
         self.versions = vn.VersionList.any()
-        self.variants = VariantMap()
+        self.variants = EMPTY_VARIANTS
         self.architecture = None
-        self.compiler_flags = FlagMap()
-        self._dependents = {}
-        self._dependencies = {}
+        self.compiler_flags = EMPTY_FLAGS
+        self._dependents = _EMPTY_DICT
+        self._dependencies = _EMPTY_DICT
         self.namespace = None
         self.abstract_hash = None
 
@@ -1959,29 +1995,41 @@ class Spec:
         # whether the spec is concrete or not; set at the end of concretization
         self._concrete = False
 
+        # sha256s of this spec's patches in the order the concretizer applies them; the "patches"
+        # variant stores the same set, but sorted
+        self._patches_in_order_of_appearance: Optional[Tuple[str, ...]] = None
+
         # External detection details that can be set by internal Spack calls
         # in the constructor.
         self._external_path = external_path
-        if external_modules:
-            self.external_modules = list(external_modules)
-        else:
-            self.external_modules = None
+        self.external_modules = external_modules
 
         # This attribute is used to store custom information for external specs.
-        self.extra_attributes: Dict[str, Any] = {}
+        self.extra_attributes: Dict[str, Any] = _EMPTY_DICT
 
         # This attribute holds the original build copy of the spec if it is
         # deployed differently than it was built. None signals that the spec
         # is deployed "as built."
         # Build spec should be the actual build spec unless marked dirty.
         self._build_spec = None
-        self.annotations = SpecAnnotations()
+        self.annotations = DEFAULT_ANNOTATIONS
 
         if isinstance(spec_like, str):
             spack.spec_parser.parse_one_or_raise(spec_like, self)
 
         elif spec_like is not None:
             raise TypeError(f"Can't make spec out of {type(spec_like)}")
+
+    @property
+    def external_modules(self) -> Optional[Tuple[str, ...]]:
+        return self._external_modules
+
+    @external_modules.setter
+    def external_modules(self, modules) -> None:
+        # a plain tuple of strings: a module list read from a configuration file may contain
+        # YAML formatting that is discarded (non-essential) when stored as a Spec dictionary,
+        # and specs share the modules without copying them
+        self._external_modules = tuple(modules) if modules else None
 
     @property
     def external_path(self):
@@ -2004,12 +2052,12 @@ class Spec:
 
     def clear_dependencies(self):
         """Trim the dependencies of this spec."""
-        self._dependencies.clear()
+        self._dependencies = _EMPTY_DICT
 
     def clear_edges(self):
         """Trim the dependencies and dependents of this spec."""
-        self._dependencies.clear()
-        self._dependents.clear()
+        self._dependencies = _EMPTY_DICT
+        self._dependents = _EMPTY_DICT
 
     def detach(self, deptype="all"):
         """Remove any reference that dependencies have of this node.
@@ -2028,7 +2076,7 @@ class Spec:
                 for edge in dependents_copy:
                     if edge.parent.dag_hash() == key:
                         continue
-                    _add_edge_to_map(dep._dependents, edge.parent.name, edge)
+                    dep._dependents = _add_edge_to_map(dep._dependents, edge.parent.name, edge)
 
     def _get_dependency(self, name):
         # WARNING: This function is an implementation detail of the
@@ -2187,10 +2235,16 @@ class Spec:
             flags_and_propagation = spack.compilers.flags.tokenize_flags(value, propagate)
             flag_group = " ".join(x for (x, y) in flags_and_propagation)
             for flag, propagation in flags_and_propagation:
-                self.compiler_flags.add_flag(name, flag, propagation, flag_group)
+                self.compiler_flags = self.compiler_flags.with_flag(
+                    name, flag, propagation, flag_group
+                )
         else:
-            self.variants[name] = vt.VariantValue.from_string_or_bool(
-                name, value, propagate=propagate, concrete=concrete
+            if name in self.variants:
+                raise vt.DuplicateVariantError(f'Cannot specify variant "{name}" twice')
+            self.variants = self.variants.with_value(
+                vt.VariantValue.from_string_or_bool(
+                    name, value, propagate=propagate, concrete=concrete
+                )
             )
 
     def _set_architecture(self, **kwargs):
@@ -2347,8 +2401,10 @@ class Spec:
 
         if not owned:
             candidate.spec = candidate.spec.copy(deps=True)
-        _add_edge_to_map(self._dependencies, candidate.spec.name, candidate)
-        _add_edge_to_map(candidate.spec._dependents, self.name, candidate)
+        self._dependencies = _add_edge_to_map(self._dependencies, candidate.spec.name, candidate)
+        candidate.spec._dependents = _add_edge_to_map(
+            candidate.spec._dependents, self.name, candidate
+        )
         return True
 
     def _detach_edge(self, edge: DependencySpec) -> None:
@@ -2735,17 +2791,15 @@ class Spec:
         if self.external:
             d["external"] = {
                 "path": self.external_path,
-                "module": self.external_modules or None,
+                "module": list(self.external_modules) if self.external_modules else None,
                 "extra_attributes": syaml.sorted_dict(self.extra_attributes),
             }
 
         if not self._concrete:
             d["concrete"] = False
 
-        if "patches" in self.variants:
-            variant = self.variants["patches"]
-            if hasattr(variant, "_patches_in_order_of_appearance"):
-                d["patches"] = variant._patches_in_order_of_appearance
+        if self._patches_in_order_of_appearance:
+            d["patches"] = list(self._patches_in_order_of_appearance)
 
         if (
             self._concrete
@@ -2931,16 +2985,13 @@ class Spec:
 
         for vname, value in change_spec.variants.items():
             if vname in package_cls.variant_names():
-                if vname in new_spec.variants:
-                    new_spec.variants.substitute(value)
-                else:
-                    new_spec.variants[vname] = value
+                new_spec.variants = new_spec.variants.with_value(value)
             else:
                 raise ValueError("{0} is not a variant of {1}".format(vname, new_spec.name))
 
         if change_spec.compiler_flags:
             for flagname, flagvals in change_spec.compiler_flags.items():
-                new_spec.compiler_flags[flagname] = flagvals
+                new_spec.compiler_flags = new_spec.compiler_flags.with_flags(flagname, flagvals)
         if change_spec.architecture:
             new_spec.architecture = ArchSpec.override(
                 new_spec.architecture, change_spec.architecture
@@ -3173,15 +3224,11 @@ class Spec:
 
     def _patches_assigned(self):
         """Whether patches have been assigned to this spec by the concretizer."""
-        # FIXME: _patches_in_order_of_appearance is attached after concretization
-        # FIXME: to store the order of patches.
-        # FIXME: Probably needs to be refactored in a cleaner way.
         if "patches" not in self.variants:
             return False
 
         # ensure that patch state is consistent
-        patch_variant = self.variants["patches"]
-        assert hasattr(patch_variant, "_patches_in_order_of_appearance"), (
+        assert self._patches_in_order_of_appearance is not None, (
             "patches should always be assigned with a patch variant."
         )
 
@@ -3198,8 +3245,7 @@ class Spec:
             edge.direct = not value
         if value:
             self._validate_version()
-            for variant in self.variants.values():
-                variant.concrete = True
+            self.variants = self.variants.as_concrete()
 
     def _validate_version(self):
         # Specs that were concretized with just a git sha as version, without associated
@@ -3445,16 +3491,22 @@ class Spec:
                     dependents[""] = remaining
                 else:
                     del dependents[""]
-                _add_edge_to_map(dependents, self.name, edge)
+                edge.spec._dependents = _add_edge_to_map(dependents, self.name, edge)
 
         if not self.namespace and other.namespace:
             self.namespace = other.namespace
             changed = True
 
-        changed |= self.versions.intersect(other.versions)
+        new_versions = self.versions.intersection(other.versions)
+        if new_versions != self.versions:
+            self.versions = vn.intern_version_list(new_versions)
+            changed = True
         changed |= self._constrain_variants(other)
 
-        changed |= self.compiler_flags.constrain(other.compiler_flags)
+        merged_flags = self.compiler_flags.constrained(other.compiler_flags)
+        if merged_flags is not None:
+            self.compiler_flags = merged_flags
+            changed = True
 
         sarch, oarch = self.architecture, other.architecture
         if sarch is not None and oarch is not None:
@@ -3855,8 +3907,8 @@ class Spec:
         return result
 
     def _intersects_variants(self, other: "Spec") -> bool:
-        self_dict = self.variants.dict
-        other_dict = other.variants.dict
+        self_dict = self.variants
+        other_dict = other.variants
         return all(self_dict[k].intersects(other_dict[k]) for k in other_dict if k in self_dict)
 
     def _constrain_variants(self, other: "Spec") -> bool:
@@ -3867,19 +3919,24 @@ class Spec:
                 if k not in other.variants:
                     raise vt.UnsatisfiableVariantSpecError(self.variants[k], "<absent>")
 
-        changed = False
+        variants = self.variants
         for k in other.variants:
             if k in self.variants:
                 if not self.variants[k].intersects(other.variants[k]):
                     raise vt.UnsatisfiableVariantSpecError(self.variants[k], other.variants[k])
                 # If they are compatible merge them
-                changed |= self.variants[k].constrain(other.variants[k])
+                merged = self.variants[k].constrained(other.variants[k])
+                if merged is not None:
+                    variants = variants.with_value(merged)
             else:
-                # If it is not present copy it straight away
-                self.variants[k] = other.variants[k].copy()
-                changed = True
+                # If it is not present take it straight away
+                variants = variants.with_value(other.variants[k])
 
-        return changed
+        if variants is self.variants:
+            return False
+
+        self.variants = variants
+        return True
 
     @property  # type: ignore[misc] # decorated prop not supported in mypy
     def patches(self):
@@ -3896,7 +3953,7 @@ class Spec:
 
             # translate patch sha256sums to patch objects by consulting the index
             if self._patches_assigned():
-                sha256s = list(self.variants["patches"]._patches_in_order_of_appearance)
+                sha256s = list(self._patches_in_order_of_appearance or [])
                 pkg_cls = spack.repo.PATH.get_pkg_class(self.fullname)
                 try:
                     self._patches = spack.repo.PATH.get_patches_for_package(sha256s, pkg_cls)
@@ -3929,23 +3986,17 @@ class Spec:
 
         # Local node attributes get copied first.
         self.name = other.name
-        self.versions = other.versions.copy()
+        self.versions = other.versions
         self.architecture = other.architecture.copy() if other.architecture else None
-        self.compiler_flags = other.compiler_flags.copy()
-        self.variants = other.variants.copy()
+        self.compiler_flags = other.compiler_flags
+        self.variants = other.variants
         self._build_spec = other._build_spec
 
         # Clear dependencies
-        self._dependents = {}
-        self._dependencies = {}
+        self._dependents = _EMPTY_DICT
+        self._dependencies = _EMPTY_DICT
 
-        # FIXME: we manage _patches_in_order_of_appearance specially here
-        # to keep it from leaking out of spec.py, but we should figure
-        # out how to handle it more elegantly in the Variant classes.
-        for k, v in other.variants.items():
-            patches = getattr(v, "_patches_in_order_of_appearance", None)
-            if patches:
-                self.variants[k]._patches_in_order_of_appearance = patches
+        self._patches_in_order_of_appearance = other._patches_in_order_of_appearance
 
         self.external_path = other.external_path
         self.external_modules = other.external_modules
@@ -4006,8 +4057,12 @@ class Spec:
                 when=edge.when,
             )
             # Don't use add_dependency_edge here, copy edges verbatim
-            _add_edge_to_map(new_parent._dependencies, new_child.name, new_edge)
-            _add_edge_to_map(new_child._dependents, new_parent.name, new_edge)
+            new_parent._dependencies = _add_edge_to_map(
+                new_parent._dependencies, new_child.name, new_edge
+            )
+            new_child._dependents = _add_edge_to_map(
+                new_child._dependents, new_parent.name, new_edge
+            )
 
     def copy(self, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, **kwargs):
         """Make a copy of this spec.
@@ -4954,11 +5009,11 @@ class Spec:
         they are only present because of ``dep_name``.
         """
         for spec in list(self.traverse()):
-            new_dependencies = {}
+            new_dependencies: EdgeMap = _EMPTY_DICT
             for pkg_name, edge_list in spec._dependencies.items():
                 for edge in edge_list:
                     if (dep_name not in edge.virtuals) and (not dep_name == edge.spec.name):
-                        _add_edge_to_map(new_dependencies, edge.spec.name, edge)
+                        new_dependencies = _add_edge_to_map(new_dependencies, edge.spec.name, edge)
             spec._dependencies = new_dependencies
 
     def _virtuals_provided(self, root):
@@ -5252,17 +5307,19 @@ class Spec:
             if variant == self.variants.get(name, None):
                 continue
 
-            old_variant = self.variants.pop(name, None)
-            if not isinstance(variant, vt.VariantValueRemoval):  # sigil type for removing variant
+            old_variant = self.variants.get(name)
+            if isinstance(variant, vt.VariantValueRemoval):  # sigil type for removing variant
+                self.variants = self.variants.without(name)
+            else:
                 if old_variant:
-                    variant.type = old_variant.type  # coerce variant type to match
-                self.variants[name] = variant
+                    variant = variant.as_type(old_variant.type)  # coerce variant type to match
+                self.variants = self.variants.with_value(variant)
             changed = True
 
         for name, flags in mutator.compiler_flags.items():
             if not flags or flags == self.compiler_flags[name]:
                 continue
-            self.compiler_flags[name] = flags
+            self.compiler_flags = self.compiler_flags.with_flags(name, flags)
             changed = True
 
         if mutator.architecture:
@@ -5318,7 +5375,7 @@ class Spec:
                     self.name,
                     self.namespace,
                     self.versions,
-                    (self.variants if self.variants.dict else None),
+                    (self.variants or None),
                     self.architecture,
                     self.abstract_hash,
                 )
@@ -5339,39 +5396,23 @@ class Spec:
         state.pop("last_query", None)
         state.pop("indirect_spec", None)
 
-        # Optimize variants and compiler_flags serialization
-        variants = state.pop("variants", None)
-        if variants:
-            state["_variants_data"] = variants.dict
-        flags = state.pop("compiler_flags", None)
-        if flags:
-            state["_compiler_flags_data"] = flags.dict
-
         return state
 
     def __setstate__(self, state):
-        variants_data = state.pop("_variants_data", None)
-        compiler_flags_data = state.pop("_compiler_flags_data", None)
         self.__dict__.update(state)
         self._package = None
 
-        # Reconstruct variants and compiler_flags
-        self.variants = VariantMap()
-        self.compiler_flags = FlagMap()
-        if variants_data is not None:
-            self.variants.dict = variants_data
-        if compiler_flags_data is not None:
-            self.compiler_flags.dict = compiler_flags_data
-
         # Reconstruct dependents map
         if not hasattr(self, "_dependents"):
-            self._dependents = {}
+            self._dependents = _EMPTY_DICT
 
         for edges in self._dependencies.values():
             for edge in edges:
                 if not hasattr(edge.spec, "_dependents"):
-                    edge.spec._dependents = {}
-                _add_edge_to_map(edge.spec._dependents, edge.parent.name, edge)
+                    edge.spec._dependents = _EMPTY_DICT
+                edge.spec._dependents = _add_edge_to_map(
+                    edge.spec._dependents, edge.parent.name, edge
+                )
 
     def attach_git_version_lookup(self):
         # Add a git lookup method for GitVersions
@@ -5390,44 +5431,49 @@ class Spec:
 
 
 class VariantMap(lang.HashableMap[str, vt.VariantValue]):
-    """Map containing variant instances. New values can be added only
-    if the key is not already present."""
+    """Map of variant instances, keyed by variant name.
+
+    Specs share these maps, so a map is never modified once it exists: the ``with_*`` methods
+    return the map to store back on the spec, and the mutators inherited from dict raise.
+    """
 
     __slots__ = ()
 
-    def __setitem__(self, name, vspec):
-        # Raise a TypeError if vspec is not of the right type
-        if not isinstance(vspec, vt.VariantValue):
-            raise TypeError(
-                "VariantMap accepts only values of variant types "
-                f"[got {type(vspec).__name__} instead]"
-            )
+    def with_value(self, vspec: vt.VariantValue) -> "VariantMap":
+        """This map, with ``vspec`` stored under its own name, replacing any entry there."""
+        vspec = vt.intern_variant_value(vspec)
+        if self.get(vspec.name) is vspec:
+            return self
+        return intern_variant_map(VariantMap({**self, vspec.name: vspec}))
 
-        # Raise an error if the variant was already in this map
-        if name in self.dict:
-            msg = 'Cannot specify variant "{0}" twice'.format(name)
-            raise vt.DuplicateVariantError(msg)
+    def with_values(self, values: Iterable[vt.VariantValue]) -> "VariantMap":
+        """This map, with every value in ``values`` stored under its own name."""
+        merged = dict(self)
+        for vspec in values:
+            merged[vspec.name] = vt.intern_variant_value(vspec)
+        if len(merged) == len(self) and all(v is self[k] for k, v in merged.items()):
+            return self
+        return intern_variant_map(VariantMap(merged))
 
-        # Raise an error if name and vspec.name don't match
-        if name != vspec.name:
-            raise KeyError(
-                f'Inconsistent key "{name}", must be "{vspec.name}" to match VariantSpec'
-            )
+    def without(self, name: str) -> "VariantMap":
+        """This map, with the entry under ``name`` removed."""
+        if name not in self:
+            return self
+        return intern_variant_map(VariantMap({k: v for k, v in self.items() if k != name}))
 
-        # Set the item
-        super().__setitem__(name, vspec)
+    def as_concrete(self) -> "VariantMap":
+        """This map, with every value marked concrete."""
+        if all(v.concrete for v in self.values()):
+            return self
+        return self.with_values([v.as_concrete() for v in self.values()])
 
-    def substitute(self, vspec):
-        """Substitutes the entry under ``vspec.name`` with ``vspec``.
+    def _immutable(self, *args, **kwargs) -> NoReturn:
+        raise TypeError("VariantMap is immutable, store the result of with_value() instead")
 
-        Args:
-            vspec: variant spec to be substituted
-        """
-        if vspec.name not in self:
-            raise KeyError(f"cannot substitute a key that does not exist [{vspec.name}]")
+    set = __setitem__ = __delitem__ = pop = popitem = setdefault = update = clear = _immutable
 
-        # Set the item
-        super().__setitem__(vspec.name, vspec)
+    def __reduce__(self):
+        return _variant_map_from_items, (tuple(self.items()),)
 
     def partition_variants(self):
         non_prop, prop = lang.stable_partition(self.values(), lambda x: not x.propagate)
@@ -5435,12 +5481,6 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
         non_prop = [x.name for x in non_prop]
         prop = [x.name for x in prop]
         return non_prop, prop
-
-    def copy(self) -> "VariantMap":
-        clone = VariantMap()
-        for name, variant in self.items():
-            clone[name] = variant.copy()
-        return clone
 
     def string(self, abbreviate_patches: bool = False) -> str:
         """The string representation of the map. ``abbreviate_patches`` is passed on to each
@@ -5474,6 +5514,61 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
             sorted(self.keys()), lambda x: self[x].type == vt.VariantType.BOOL
         )
         return bool_keys, kv_keys
+
+
+#: Variant maps repeat across the nodes of a solve and across package recipes. They are immutable,
+#: so equal maps are one object, and every spec without variants shares the empty one.
+_VARIANT_MAP_CACHE: Dict[Tuple, VariantMap] = {}
+
+#: The same for compiler flags.
+_FLAG_MAP_CACHE: Dict[Tuple, FlagMap] = {}
+
+
+def intern_variant_map(variants: VariantMap) -> VariantMap:
+    """Return the shared VariantMap equal to ``variants``. Every value it holds is interned, and
+    a value's key names it, so the keys of its values identify the map."""
+    if len(variants) > 1:
+        key = tuple(variants[name]._key for name in sorted(variants))
+    else:
+        key = tuple(v._key for v in variants.values())
+    cached = _VARIANT_MAP_CACHE.get(key)
+    if cached is not None:
+        return cached
+    _VARIANT_MAP_CACHE[key] = variants
+    return variants
+
+
+def intern_flag_map(flags: FlagMap) -> FlagMap:
+    """Return the shared FlagMap equal to ``flags``."""
+    key = tuple(
+        sorted(
+            (flag_type, tuple((str(f), f.propagate, f.flag_group, f.source) for f in values))
+            for flag_type, values in flags.items()
+        )
+    )
+    cached = _FLAG_MAP_CACHE.get(key)
+    if cached is not None:
+        return cached
+    _FLAG_MAP_CACHE[key] = flags
+    return flags
+
+
+def _variant_map_from_items(items: Tuple[Tuple[str, vt.VariantValue], ...]) -> VariantMap:
+    """Rebuild an interned VariantMap; see :meth:`VariantMap.__reduce__`."""
+    return EMPTY_VARIANTS.with_values(v for _, v in items)
+
+
+def _flag_map_from_items(items: Tuple[Tuple[str, Tuple[CompilerFlag, ...]], ...]) -> FlagMap:
+    """Rebuild an interned FlagMap; see :meth:`FlagMap.__reduce__`."""
+    return intern_flag_map(FlagMap(items))
+
+
+#: Shared by every spec without variants and without compiler flags.
+EMPTY_VARIANTS = intern_variant_map(VariantMap())
+EMPTY_FLAGS = intern_flag_map(FlagMap())
+
+#: Shared by every spec that records all flag types with no flags, as concrete specs do.
+EMPTY_COMPILER_FLAGS = intern_flag_map(FlagMap((f, ()) for f in _valid_compiler_flags))
 
 
 class SpecBuildInterface(lang.ObjectWrapper, Spec):
@@ -5530,13 +5625,12 @@ def substitute_abstract_variants(spec: Spec):
     # This method needs to be best effort so that it works in matrix exclusion
     # in $spack/lib/spack/spack/spec_list.py
     unknown = []
-    for name, v in spec.variants.items():
+    for name, v in list(spec.variants.items()):
         if v.concrete and v.type == vt.VariantType.MULTI:
             continue
 
         if name in ("dev_path", "commit"):
-            v.type = vt.VariantType.SINGLE
-            v.concrete = True
+            spec.variants = spec.variants.with_value(v.as_type(vt.VariantType.SINGLE))
             continue
         elif name in vt.RESERVED_NAMES:
             continue
@@ -5561,7 +5655,7 @@ def substitute_abstract_variants(spec: Spec):
 
         new_variant = pkg_variant.make_variant(*v.values)
         pkg_variant.validate_or_raise(new_variant, spec.name)
-        spec.variants.substitute(new_variant)
+        spec.variants = spec.variants.with_value(new_variant)
 
     if unknown:
         variants = spack.util.string.plural(len(unknown), "variant")
@@ -5577,7 +5671,7 @@ def parse_with_version_concrete(spec_like: Union[str, Spec]):
     s = Spec(spec_like)
     interpreted_version = s.versions.concrete_range_as_version
     if interpreted_version:
-        s.versions = vn.VersionList([interpreted_version])
+        s.versions = vn.intern_version_list(vn.VersionList([interpreted_version]))
     return s
 
 
@@ -5690,7 +5784,7 @@ class SpecfileReaderBase(abc.ABC):
         spec.abstract_hash = node.get("abstract_hash", None)
 
         if "version" in node or "versions" in node:
-            spec.versions = vn.VersionList.from_dict(node)
+            spec.versions = vn.intern_version_list(vn.VersionList.from_dict(node))
             spec.attach_git_version_lookup()
 
         if "arch" in node:
@@ -5702,18 +5796,27 @@ class SpecfileReaderBase(abc.ABC):
 
         propagated_names = node.get("propagate", [])
         abstract_variants = set(node.get("abstract", ()))
+        variants = []
+        flags = {}
         for name, values in node.get("parameters", {}).items():
             propagate = name in propagated_names
             if name in _valid_compiler_flags:
                 if name in spec.compiler_flags:
                     continue
-                spec.compiler_flags[name] = []
-                for val in values:
-                    spec.compiler_flags.add_flag(name, val, propagate)
-            else:
-                spec.variants[name] = vt.VariantValue.from_node_dict(
-                    name, values, propagate=propagate, abstract=name in abstract_variants
+                flags[name] = tuple(
+                    CompilerFlag(val, propagate=propagate, flag_group=val) for val in values
                 )
+            else:
+                variants.append(
+                    vt.VariantValue.from_node_dict(
+                        name, values, propagate=propagate, abstract=name in abstract_variants
+                    )
+                )
+
+        if variants:
+            spec.variants = spec.variants.with_values(variants)
+        if flags:
+            spec.compiler_flags = intern_flag_map(FlagMap({**spec.compiler_flags, **flags}))
 
         spec.external_path = None
         spec.external_modules = None
@@ -5725,9 +5828,7 @@ class SpecfileReaderBase(abc.ABC):
             if node["external"]:
                 spec.external_path = node["external"]["path"]
                 spec.external_modules = node["external"]["module"]
-                if spec.external_modules is False:
-                    spec.external_modules = None
-                spec.extra_attributes = node["external"].get("extra_attributes") or {}
+                spec.extra_attributes = node["external"].get("extra_attributes") or _EMPTY_DICT
 
         # specs read in are concrete unless marked abstract
         if node.get("concrete", True):
@@ -5736,21 +5837,24 @@ class SpecfileReaderBase(abc.ABC):
         if "patches" in node:
             patches = node["patches"]
             if len(patches) > 0:
-                mvar = spec.variants.setdefault("patches", vt.MultiValuedVariant("patches", ()))
-                mvar.set(*patches)
-                # FIXME: Monkey patches mvar to store patches order
-                mvar._patches_in_order_of_appearance = patches
+                mvar = spec.variants.get("patches") or vt.MultiValuedVariant("patches", ())
+                spec.variants = spec.variants.with_value(mvar.with_values(tuple(patches)))
+                spec._patches_in_order_of_appearance = tuple(patches)
 
         # Annotate the compiler spec, might be used later
         if "annotations" not in node:
             # Specfile v4 and earlier
-            spec.annotations.with_spec_format(cls.SPEC_VERSION)
+            spec.annotations = spec.annotations.with_spec_format(cls.SPEC_VERSION)
             if "compiler" in node:
-                spec.annotations.with_compiler(cls.legacy_compiler(node))
+                spec.annotations = spec.annotations.with_compiler(cls.legacy_compiler(node))
         else:
-            spec.annotations.with_spec_format(node["annotations"]["original_specfile_version"])
+            spec.annotations = spec.annotations.with_spec_format(
+                node["annotations"]["original_specfile_version"]
+            )
             if "compiler" in node["annotations"]:
-                spec.annotations.with_compiler(Spec(f"{node['annotations']['compiler']}"))
+                spec.annotations = spec.annotations.with_compiler(
+                    Spec(f"{node['annotations']['compiler']}")
+                )
 
         # Don't read dependencies here; from_dict() is used by
         # from_yaml() and from_json() to read the root *and* each dependency
@@ -5834,8 +5938,10 @@ def wire_spec_nodes(
                 when=Spec(dep.when) if dep.when else EMPTY_SPEC,
                 propagation=PropagationPolicy[dep.propagation],
             )
-            _add_edge_to_map(node_spec._dependencies, edge.spec.name, edge)
-            _add_edge_to_map(edge.spec._dependents, edge.parent.name, edge)
+            node_spec._dependencies = _add_edge_to_map(
+                node_spec._dependencies, edge.spec.name, edge
+            )
+            edge.spec._dependents = _add_edge_to_map(edge.spec._dependents, edge.parent.name, edge)
 
         if "build_spec" in node.keys():
             bname, bhash, _ = reader.extract_build_spec_info_from_node_dict(
@@ -6194,20 +6300,17 @@ def _inject_patches_variant(root: Spec) -> None:
             continue
 
         patches = list(spec_to_patches[id(spec)])
-        variant: vt.VariantValue = spec.variants.setdefault(
-            "patches", vt.MultiValuedVariant("patches", ())
+        variant = spec.variants.get("patches") or vt.MultiValuedVariant("patches", ())
+        spec.variants = spec.variants.with_value(
+            variant.with_values(tuple(p.sha256 for p in patches))
         )
-        variant.set(*(p.sha256 for p in patches))
-        # FIXME: Monkey patches variant to store patches order
         ordered_hashes = [(*p.ordering_key, p.sha256) for p in patches if p.ordering_key]
         ordered_hashes.sort()
         tty.debug(
             f"Ordered hashes [{spec.name}]: "
             + ", ".join("/".join(str(e) for e in t) for t in ordered_hashes)
         )
-        setattr(
-            variant, "_patches_in_order_of_appearance", [sha256 for _, _, sha256 in ordered_hashes]
-        )
+        spec._patches_in_order_of_appearance = tuple(sha256 for _, _, sha256 in ordered_hashes)
 
 
 class InvalidVariantForSpecError(spack.error.SpecError):

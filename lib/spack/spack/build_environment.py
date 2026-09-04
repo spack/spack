@@ -444,7 +444,8 @@ def set_wrapper_environment_variables_for_flags(pkg, env):
         else:
             handler = pkg.flag_handler.__func__
 
-        injf, envf, bsf = handler(pkg, flag, spec.compiler_flags[flag][:])
+        # flag_handler mutates this list, so pass a list of the stored flags
+        injf, envf, bsf = handler(pkg, flag, list(spec.compiler_flags[flag]))
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
@@ -1123,8 +1124,7 @@ def load_external_modules(context: SetupContext) -> None:
         context: A populated SetupContext object
     """
     for spec, _ in context.external:
-        external_modules = spec.external_modules or []
-        for external_module in external_modules:
+        for external_module in spec.external_modules or ():
             spack.util.module_cmd.load_module(external_module)
 
 

@@ -170,9 +170,7 @@ def test_patch_in_spec(mock_packages, config):
     # patch directive.
     assert (bar_sha256, foo_sha256, baz_sha256) == spec.variants["patches"].value
 
-    assert (foo_sha256, bar_sha256, baz_sha256) == tuple(
-        spec.variants["patches"]._patches_in_order_of_appearance
-    )
+    assert (foo_sha256, bar_sha256, baz_sha256) == tuple(spec._patches_in_order_of_appearance)
 
 
 def test_stale_patch_cache_falls_back_to_fresh(mock_packages: RepoPath, config):
@@ -234,7 +232,7 @@ def test_patch_order(mock_packages, config):
     )
 
     dep = spec["patch"]
-    patch_order = dep.variants["patches"]._patches_in_order_of_appearance
+    patch_order = dep._patches_in_order_of_appearance
     # 'mid2' comes after 'mid1' alphabetically
     # 'top' comes after 'mid1'/'mid2' alphabetically
     # 'patch' comes last of all specs in the dag, alphabetically, so the

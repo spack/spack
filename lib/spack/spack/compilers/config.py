@@ -305,12 +305,17 @@ class CompilerFactory:
                 continue
 
             for s in detected:
-                for key in ("flags", "environment", "extra_rpaths"):
-                    if key in compiler_dict:
-                        s.extra_attributes[key] = compiler_dict[key]
+                # specs share their extra attributes, so store a new dict
+                attributes: Dict[str, Any] = {
+                    key: compiler_dict[key]
+                    for key in ("flags", "environment", "extra_rpaths")
+                    if key in compiler_dict
+                }
+                if attributes:
+                    s.extra_attributes = {**s.extra_attributes, **attributes}
 
                 if "modules" in compiler_dict:
-                    s.external_modules = list(compiler_dict["modules"])
+                    s.external_modules = tuple(compiler_dict["modules"])
 
             result.extend(detected)
 
