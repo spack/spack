@@ -1,6 +1,7 @@
 #!/bin/sh
 #
-# Copyright sbang project developers. See COPYRIGHT file for details.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# sbang project developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,6 +21,14 @@
 # `sbang` will run the real interpreter with the script as its argument.
 #
 # See https://github.com/spack/sbang for more details.
+#
+# If using python- or ruby- style source code encoding, put that on the second
+# line of the file and the shebang line for the long path to the real
+# interpreter on the third line, like this:
+#
+#     #!/bin/sh /path/to/sbang
+#     # -*- coding: utf-8 -*-
+#     #!/long/path/to/real/interpreter with arguments
 #
 
 # Generic error handling
@@ -45,19 +54,39 @@ elif [ ! -f "$script" ]; then
 fi
 
 # Search the first two lines of script for interpreters.
+# Search the third line if one of the first two is an encoding declaration
 lines=0
 while read -r line && [ $lines -ne 2 ]; do
     if [ "${line#\#!}" != "$line" ]; then
         shebang_line="${line#\#!}"
+        lines=$((lines+1))
     elif [ "${line#//!}" != "$line" ]; then      # // comments
         shebang_line="${line#//!}"
+        lines=$((lines+1))
     elif [ "${line#--!}" != "$line" ]; then      # -- lua comments
         shebang_line="${line#--!}"
+        lines=$((lines+1))
     elif [ "${line#<?php\ }" != "$line" ]; then  # php comments
         shebang_line="${line#<?php\ \#!}"
         shebang_line="${shebang_line%\ ?>}"
+        lines=$((lines+1))
+    else
+        # Check whether this is a python/ruby encoding line
+        # Strip leading whitespace, whitespace is allowed before encoding
+        leading_whitespace=${line%%[![:space:]]*}
+        line=${line#"$leading_whitespace"}
+
+        # encoding declaration starts with comment character
+        if [ "${line#\#}" != "$line" ]; then
+            case "$line" in
+                *"coding:"* | *"coding="*)
+                    ;;  # skip encoding line
+                *)
+                    lines=$((lines+1))
+                    ;;
+            esac
+        fi
     fi
-    lines=$((lines+1))
 done < "$script"
 
 # error if we did not find any interpreter
@@ -77,13 +106,17 @@ EOF
 #
 # will be true for '#!/usr/bin/perl' and '#!/usr/bin/env perl'
 interpreter_is() {
-    if [ "${interpreter##*/}" = "$1" ]; then
-        return 0
-    elif [ "$interpreter" = "/usr/bin/env" ] && [ "$arg1" = "$1" ]; then
-        return 0
-    else
-        return 1
+    case "${interpreter##*/}" in
+        "$1"*) return 0 ;;
+    esac
+
+    if [ "$interpreter" = "/usr/bin/env" ]; then
+        case "$arg1" in
+            "$1"*) return 0 ;;
+        esac
     fi
+
+    return 1
 }
 
 if interpreter_is "sbang"; then
