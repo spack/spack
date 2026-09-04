@@ -379,7 +379,6 @@ def test_explicit_as_set_marks_only_those_specs(temporary_store, mock_packages):
     assert not _record(temporary_store, b).explicit
 
 
-@pytest.mark.not_on_windows("Windows has no POSIX jobserver, only NoopJobServer")
 def test_change_jobs_commands_adjust_parallelism(temporary_store, mock_packages):
     """ChangeJobs commands queued by the UI adjust the jobserver, and the new job counts are
     reported back through jobs_changed events."""
