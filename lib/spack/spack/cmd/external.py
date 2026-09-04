@@ -36,13 +36,19 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=False,
         help="packages with detected externals won't be built with Spack",
     )
-    find_parser.add_argument("--exclude", action="append", help="packages to exclude from search")
+    find_parser.add_argument(
+        "--exclude",
+        action="append",
+        metavar="package",
+        help="do not search for this package (multiple use allowed)",
+    )
     find_parser.add_argument(
         "-p",
         "--path",
         default=None,
+        metavar="directory",
         action="append",
-        help="one or more alternative search paths for finding externals",
+        help="search this prefix or bin path instead of PATH (multiple use allowed)",
     )
     find_parser.add_argument(
         "--scope",
@@ -54,7 +60,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--all", action="store_true", help="search for all packages that Spack knows about"
     )
     arguments.add_common_arguments(find_parser, ["tags", "jobs"])
-    find_parser.add_argument("packages", nargs=argparse.REMAINDER)
+    # NOTE: this argument is *optional*, unlike common.arguments.packages
+    find_parser.add_argument(
+        "packages",
+        nargs=argparse.REMAINDER,
+        metavar="package(s)",
+        help="search for only these packages",
+    )
     find_parser.epilog = (
         'The search is by default on packages tagged with the "build-tools" or '
         '"core-packages" tags. Use the --all option to search for every possible '
@@ -121,11 +133,18 @@ def external_find(args):
 
     # If the user specified both --all and --tag, then --all has precedence
     if args.all or args.packages:
+        if args.tags:
+            # We may want to elevate this to an error
+            tty.warn("Ignoring --tag argument: 'all' or package list provided")
         # Each detectable package has at least the detectable tag
         args.tags = ["detectable"]
     elif not args.tags:
         # If the user didn't specify anything, search for build tools by default
         args.tags = ["core-packages", "build-tools"]
+
+    if args.all and args.packages:
+        # We may want to elevate this to an error or change the behavior: it's counterintuitive
+        tty.warn("Ignoring --all argument: package list was provided")
 
     candidate_packages = packages_to_search_for(
         names=args.packages, tags=args.tags, exclude=args.exclude

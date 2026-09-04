@@ -1821,9 +1821,9 @@ complete -c spack -n '__fish_spack_using_command external find' -s h -l help -d 
 complete -c spack -n '__fish_spack_using_command external find' -l not-buildable -f -a not_buildable
 complete -c spack -n '__fish_spack_using_command external find' -l not-buildable -d 'packages with detected externals won'"'"'t be built with Spack'
 complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -f -a exclude
-complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -d 'packages to exclude from search'
+complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -d 'do not search for this package (multiple use allowed)'
 complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -f -a path
-complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -d 'one or more alternative search paths for finding externals'
+complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -d 'search this prefix or bin path instead of PATH (multiple use allowed)'
 complete -c spack -n '__fish_spack_using_command external find' -l scope -r -f -a '_builtin defaults:base defaults system site user spack command_line'
 complete -c spack -n '__fish_spack_using_command external find' -l scope -r -d 'configuration scope to modify'
 complete -c spack -n '__fish_spack_using_command external find' -l all -f -a all
