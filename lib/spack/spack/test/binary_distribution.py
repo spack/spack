@@ -498,7 +498,9 @@ def test_update_sbang(tmp_path: pathlib.Path, temporary_mirror, mock_fetch, inst
 
     # Switch the store to the new install tree locations
     with spack.store.use_store(str(tmp_path)):
-        s._prefix = None  # clear the cached old prefix
+        # Re-stamp the prefix from the new store's layout (the spec is not yet installed there).
+        s._prefix = None
+        spack.store.STORE.set_prefixes([s])
         new_prefix, new_sbang_shebang = s.prefix, sbang.sbang_shebang_line()
         assert old_prefix != new_prefix
         assert old_sbang_shebang != new_sbang_shebang

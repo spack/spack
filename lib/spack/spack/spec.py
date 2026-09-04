@@ -1492,14 +1492,19 @@ class ForwardQueryToPackage:
                 # A callback can return None to trigger an error indicating
                 # that the query failed.
                 if value is None:
+                    try:
+                        prefix = str(instance.prefix)
+                    except spack.error.SpecError:
+                        prefix = "<unset>"
                     msg = "Query of package '{name}' for '{attrib}' failed\n"
-                    msg += "\tprefix : {spec.prefix}\n"
+                    msg += "\tprefix : {prefix}\n"
                     msg += "\tspec : {spec}\n"
                     msg += "\tqueried as : {query.name}\n"
                     msg += "\textra parameters : {query.extra_parameters}"
                     message = msg.format(
                         name=pkg.name,
                         attrib=self.attribute_name,
+                        prefix=prefix,
                         spec=instance,
                         query=instance.last_query,
                     )
@@ -2421,34 +2426,6 @@ class Spec:
         """Returns whether this Spec is being deployed as built i.e. whether it has been spliced"""
         return self.build_spec is not self
 
-    @property
-    def installed(self):
-        """Whether the spec is installed, locally or in an upstream."""
-        if not self.concrete:
-            return False
-
-        try:
-            # If the spec is in the DB, check the installed
-            # attribute of the record
-            from spack.store import STORE
-
-            return STORE.db.get_record(self).installed
-        except KeyError:
-            # If the spec is not in the DB, the method
-            #  above raises a Key error
-            return False
-
-    @property
-    def installed_upstream(self):
-        """Whether the spec is installed in an upstream database."""
-        if not self.concrete:
-            return False
-
-        from spack.store import STORE
-
-        upstream, record = STORE.db.query_by_spec_hash(self.dag_hash())
-        return upstream and record and record.installed
-
     @overload
     def traverse(
         self,
@@ -2561,13 +2538,15 @@ class Spec:
             raise spack.error.SpecError(f"Spec is not concrete: {self}")
 
         if self._prefix is None:
-            from spack.store import STORE
-
-            _, record = STORE.db.query_by_spec_hash(self.dag_hash())
-            if record and record.path:
-                self.set_prefix(record.path)
+            if self.external:
+                # An external spec records its prefix on the spec itself, so it needs no store.
+                self.set_prefix(self.external_path)
             else:
-                self.set_prefix(STORE.layout.path_for_spec(self))
+                raise spack.error.SpecError(
+                    f"cannot determine the prefix of {self.short_spec}: its install prefix has "
+                    "not been set. The prefix of a non-external spec is set from its database "
+                    "record or by the installer; read it only after one of those has run."
+                )
         assert self._prefix is not None
         return self._prefix
 
