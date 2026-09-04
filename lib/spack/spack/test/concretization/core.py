@@ -5772,3 +5772,23 @@ def test_target_star_concretizes(mock_packages, config):
 def test_solve_kind_from_unify_configuration(unify, expected):
     """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
     assert spack.concretize.solve_kind(unify) is expected
+
+
+def test_concretization_reports_when_it_is_over(mutable_config, mock_packages):
+    """Tests that a concretization reports its end exactly once."""
+    ui = RecordingUI()
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+    assert ui.finished_count == 1 and len(ui.concretized) == 2
+
+
+def test_concretization_reports_its_end_when_it_raises(mutable_config, mock_packages):
+    """Tests that a concretization that raises still reports its end, and that the exception
+    propagates to the caller.
+    """
+    ui = RecordingUI()
+    unsatisfiable = Spec("mpileaks ^mpich@3.0.3 ^mpich@3.0.4")
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        spack.concretize.concretize_spec_pairs(
+            [(unsatisfiable, None), (Spec("pkg-b"), None)], ui=ui
+        )
+    assert ui.finished_count == 1

@@ -31,6 +31,7 @@ from typing import (
 
 import spack
 import spack.active_environment
+import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -2761,6 +2762,14 @@ class EnvironmentConcretizer:
     def concretize(
         self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
     ) -> List[SpecPair]:
+        try:
+            return self._concretize(force=force, tests=tests)
+        finally:
+            self.ui.on_finished()
+
+    def _concretize(
+        self, *, force: Optional[bool], tests: Union[bool, Sequence[str]]
+    ) -> List[SpecPair]:
         if force is None:
             force = spack.config.CONFIG.get("concretizer:force")
         self._prepare_environment_for_concretization(force=force)
@@ -2780,14 +2789,20 @@ class EnvironmentConcretizer:
     def _concretize_single_group(
         self, *, group: str, tests: Union[bool, Sequence[str]]
     ) -> List[SpecPair]:
-        # Exit early if the set of concretized specs is the set of user specs
         new_user_specs, kept_user_specs = self._partition_user_specs(group=group)
-        if not new_user_specs:
-            return []
 
         # Pick the right concretization strategy
         self.ui.on_group_started(group=group, is_default=group == DEFAULT_USER_SPEC_GROUP)
         unify = spack.config.CONFIG.get_config("concretizer").get("unify", False)
+
+        # Ensure the on_concretization_started gets called even if the group is already concrete.
+        # It's up to the UI to decide what to report in this case.
+        if not new_user_specs:
+            self.ui.on_concretization_started(
+                kind=spack.concretize.solve_kind(unify), total=0, processes=1
+            )
+            return []
+
         factory = ReusableSpecsFactory(env=self.env, group=group)
         if unify == "when_possible":
             partial_result = self._concretize_together_where_possible(
@@ -2886,8 +2901,6 @@ class EnvironmentConcretizer:
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
-        import spack.concretize
-
         specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
         result = spack.concretize.concretize_together_when_possible(
             specs_to_concretize, tests=tests, factory=factory, ui=self.ui
@@ -2907,8 +2920,6 @@ class EnvironmentConcretizer:
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
-        import spack.concretize
-
         to_concretize = self._user_spec_pairs(to_compute, to_keep)
         try:
             concrete_pairs = spack.concretize.concretize_together(
@@ -2946,8 +2957,6 @@ class EnvironmentConcretizer:
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
         """Concretization strategy that concretizes separately one user spec after the other"""
-        import spack.concretize
-
         to_concretize = [(x, None) for x in to_compute]
         concrete_pairs = spack.concretize.concretize_separately(
             to_concretize, tests=tests, factory=factory, ui=self.ui

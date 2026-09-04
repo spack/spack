@@ -53,6 +53,8 @@ class RecordingUI(ConcretizerUI):
         self.started: List[Tuple[SolveKind, int, int]] = []
         #: (abstract, concrete, count, duration) for each spec that was concretized
         self.concretized: List[Tuple[Spec, Spec, int, float]] = []
+        #: how many concretizations reported that they were over
+        self.finished_count = 0
 
     def on_group_started(self, *, group: str, is_default: bool) -> None:
         self.groups.append((group, is_default))
@@ -64,3 +66,6 @@ class RecordingUI(ConcretizerUI):
         self, abstract: Spec, *, concrete: Spec, count: int, duration: float
     ) -> None:
         self.concretized.append((abstract, concrete, count, duration))
+
+    def on_finished(self) -> None:
+        self.finished_count += 1
