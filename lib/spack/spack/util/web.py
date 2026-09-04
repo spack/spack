@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import email.message
-import errno
 import functools
 import io
 import json
@@ -36,7 +35,7 @@ import spack.util.parallel
 import spack.util.url
 import spack.util.url as url_util
 from spack.util import lang, tty
-from spack.util.filesystem import mkdirp, working_dir
+from spack.util.filesystem import copy_atomically, mkdirp, move_atomically, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
@@ -422,20 +421,9 @@ def push_to_url(
         remote_file_path = url_util.local_file_path(remote_url)
         mkdirp(os.path.dirname(remote_file_path))
         if keep_original:
-            shutil.copy(local_file_path, remote_file_path)
+            copy_atomically(local_file_path, remote_file_path)
         else:
-            try:
-                shutil.move(local_file_path, remote_file_path)
-            except OSError as e:
-                if e.errno == errno.EXDEV:
-                    # NOTE(opadron): The above move failed because it crosses
-                    # filesystem boundaries.  Copy the file (plus original
-                    # metadata), and then delete the original.  This operation
-                    # needs to be done in separate steps.
-                    shutil.copy2(local_file_path, remote_file_path)
-                    os.remove(local_file_path)
-                else:
-                    raise
+            move_atomically(local_file_path, remote_file_path)
 
     elif remote_url.scheme == "s3":
         extra_args = {}

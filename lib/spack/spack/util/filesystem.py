@@ -1240,6 +1240,56 @@ def write_tmp_and_move(
 
 
 @system_path_filter
+def copy_atomically(src: str, dst: str) -> None:
+    """Copy ``src`` to ``dst`` through a temporary file in the directory of ``dst``, which is
+    then moved into place.
+
+    The final rename is guaranteed to be atomic on POSIX, and is best-effort elsewhere (e.g.
+    on Windows).
+    """
+    dirname, basename = os.path.split(dst)
+    tmp = os.path.join(dirname, f".{basename}.{secrets.token_hex(8)}.tmp")
+    # "x" errors on collision instead of clobbering; opened outside the try block so we never
+    # unlink a file created by another process
+    fdst = open(tmp, "xb")
+    try:
+        with fdst, open(src, "rb") as fsrc:
+            shutil.copyfileobj(fsrc, fdst)
+            st = os.fstat(fsrc.fileno())
+            os.chmod(
+                fdst.fileno() if os.chmod in os.supports_fd else tmp, stat.S_IMODE(st.st_mode)
+            )
+        rename(tmp, dst)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+@system_path_filter
+def move_atomically(src: str, dst: str) -> None:
+    """Move ``src`` to ``dst``, replacing ``dst`` if it exists.
+
+    The function falls back to :py:func:`copy_atomically` followed by the removal of ``src``
+    when the two are on different filesystems.
+
+    The replacement of ``dst`` is guaranteed to be atomic on POSIX, and is best-effort elsewhere
+    (e.g. on Windows).
+    """
+    try:
+        rename(src, dst)
+        return
+    except OSError as e:
+        if e.errno != errno.EXDEV:  # not a cross-filesystem rename
+            raise
+
+    copy_atomically(src, dst)
+    os.unlink(src)
+
+
+@system_path_filter
 def touch(path):
     """Creates an empty file at the specified path."""
     if sys.platform == "win32":
