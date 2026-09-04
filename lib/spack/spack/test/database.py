@@ -1324,7 +1324,7 @@ def test_query_with_predicate_fn(database):
 
 
 @pytest.mark.regression("49964")
-def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
+def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path, mock_packages):
     """Tests that we can query a reindexed database from before compilers as dependencies,
     and get appropriate results for %<compiler> and similar selections.
     """

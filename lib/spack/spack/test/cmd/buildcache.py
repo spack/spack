@@ -680,7 +680,7 @@ def test_install_v2_layout(
     assert "deprecated" in output
 
 
-def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config):
+def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config, mock_packages):
     """Make sure first unsigned migration results in usable buildcache,
     leaving the previous layout in place. Also test that a subsequent one
     doesn't need to migrate anything, and that using --delete-existing
@@ -717,7 +717,7 @@ def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config):
     assert not os.path.exists(build_cache_path)
 
 
-def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_config):
+def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_config, mock_packages):
     """Test a signed migration requires a signing key, requires the public
     key originally used to sign the pkgs, fails and prints reasonable messages
     if those requirements are unmet, and eventually succeeds when they are met."""
@@ -756,7 +756,7 @@ def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_conf
     assert "libdwarf" in output and "libelf" in output
 
 
-def test_unsigned_migrate_of_signed_mirror(v2_buildcache_layout, mutable_config):
+def test_unsigned_migrate_of_signed_mirror(v2_buildcache_layout, mutable_config, mock_packages):
     """Test spack can do an unsigned migration of a signed buildcache by
     ignoring signatures and skipping re-signing."""
 

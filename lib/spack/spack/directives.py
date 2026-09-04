@@ -138,7 +138,7 @@ def _make_when_spec(value: Union[WhenType, Tuple[str, ...]]) -> Optional[spack.s
             # reduce the when-stack to a single spec by combining all constraints.
             combined_spec = spack.spec.Spec(value[0])
             for cond in value[1:]:
-                combined_spec._constrain_symbolically(get_spec(cond))
+                combined_spec.constrain(get_spec(cond))
             _WHEN_STACK_CACHE[value] = combined_spec
         return combined_spec
 
