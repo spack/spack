@@ -19,6 +19,7 @@ import warnings
 import zlib
 from typing import (
     IO,
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -42,7 +43,6 @@ import spack
 import spack.caches
 import spack.compilers.config
 import spack.compilers.flags
-import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -81,6 +81,9 @@ from .requirements import RequirementKind, RequirementOrigin, RequirementParser,
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory
 from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder, all_libcs
 from .versions import Provenance
+
+if TYPE_CHECKING:
+    import spack.concretize
 
 GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
 
@@ -1375,7 +1378,7 @@ class SpackSolverSetup:
     clauses: "SpecClauseGenerator"
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
-    def __init__(self, tests: spack.concretize.TestsType = False):
+    def __init__(self, tests: "spack.concretize.TestsType" = False):
         self.possible_graph = create_graph_analyzer()
 
         # these are all initialized in setup()
@@ -3711,7 +3714,7 @@ class Solver:
         out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
-        tests: spack.concretize.TestsType = False,
+        tests: "spack.concretize.TestsType" = False,
         setup_only: bool = False,
         allow_deprecated: bool = False,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
@@ -3760,7 +3763,7 @@ class Solver:
         out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
-        tests: spack.concretize.TestsType = False,
+        tests: "spack.concretize.TestsType" = False,
         allow_deprecated: bool = False,
     ) -> Generator[Result, None, None]:
         """Solve for a stable model of specs in multiple rounds.
