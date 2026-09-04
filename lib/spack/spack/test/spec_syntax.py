@@ -316,22 +316,22 @@ def specfile_for(config, mock_packages):
         ("*", [Token("UNQUALIFIED_PACKAGE_NAME", value="*")], r""),
         # anonymous dependencies with variants
         (
-            "^*foo=bar",
+            "^* foo=bar",
             [
                 Token("DEPENDENCY", value="^"),
                 Token("UNQUALIFIED_PACKAGE_NAME", value="*"),
                 Token("KEY_VALUE_PAIR", value="foo=bar"),
             ],
-            "^*foo=bar",
+            "^* foo=bar",
         ),
         (
-            "%*foo=bar",
+            "%* foo=bar",
             [
                 Token("DEPENDENCY", value="%"),
                 Token("UNQUALIFIED_PACKAGE_NAME", value="*"),
                 Token("KEY_VALUE_PAIR", value="foo=bar"),
             ],
-            "%*foo=bar",
+            "%* foo=bar",
         ),
         (
             "^*+foo",
@@ -976,7 +976,7 @@ def specfile_for(config, mock_packages):
                 Token("END_EDGE_PROPERTIES", "]"),
                 Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
             ],
-            "foo ^[when='%c'] c=gcc",
+            "foo ^[when=%c] c=gcc",
         ),
         (
             "foo ^[when='%c' virtuals=c]gcc",
@@ -988,14 +988,14 @@ def specfile_for(config, mock_packages):
                 Token("END_EDGE_PROPERTIES", "]"),
                 Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
             ],
-            "foo ^[when='%c'] c=gcc",
+            "foo ^[when=%c] c=gcc",
         ),
         (
-            "foo ^[when='%c'] c=gcc",
+            "foo ^[when=%c] c=gcc",
             [
                 Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
                 Token("DEPENDENCY", "^[", edge_bracket="["),
-                Token("KEY_VALUE_PAIR", "when='%c'", kv_name="when", kv_sep="=", kv_value="'%c'"),
+                Token("KEY_VALUE_PAIR", "when=%c", kv_name="when", kv_sep="=", kv_value="%c"),
                 Token(
                     "END_EDGE_PROPERTIES",
                     "] c=gcc",
@@ -1003,7 +1003,7 @@ def specfile_for(config, mock_packages):
                     end_edge_substitute="gcc",
                 ),
             ],
-            "foo ^[when='%c'] c=gcc",
+            "foo ^[when=%c] c=gcc",
         ),
         # Test dependency propagation
         (
@@ -1024,11 +1024,11 @@ def specfile_for(config, mock_packages):
             "foo %%c,cxx=gcc",
         ),
         (
-            "foo %%[when='%c'] c=gcc",
+            "foo %%[when=%c] c=gcc",
             [
                 Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
                 Token("DEPENDENCY", "%%[", edge_bracket="["),
-                Token("KEY_VALUE_PAIR", "when='%c'", kv_name="when", kv_sep="=", kv_value="'%c'"),
+                Token("KEY_VALUE_PAIR", "when=%c", kv_name="when", kv_sep="=", kv_value="%c"),
                 Token(
                     "END_EDGE_PROPERTIES",
                     "] c=gcc",
@@ -1036,7 +1036,7 @@ def specfile_for(config, mock_packages):
                     end_edge_substitute="gcc",
                 ),
             ],
-            "foo %%[when='%c'] c=gcc",
+            "foo %%[when=%c] c=gcc",
         ),
         (
             "foo %%[when='%c' virtuals=c] gcc",
@@ -1048,7 +1048,25 @@ def specfile_for(config, mock_packages):
                 Token("END_EDGE_PROPERTIES", "]"),
                 Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
             ],
-            "foo %%[when='%c'] c=gcc",
+            "foo %%[when=%c] c=gcc",
+        ),
+        # whitespace between edge properties and a virtual assignment
+        (
+            "foo ^[when=%c]   c,cxx=builtin.gcc@14+bar",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", value="foo"),
+                Token("DEPENDENCY", value="^[", edge_bracket="["),
+                Token("KEY_VALUE_PAIR", "when=%c", kv_name="when", kv_sep="=", kv_value="%c"),
+                Token(
+                    "END_EDGE_PROPERTIES",
+                    "]   c,cxx=builtin.gcc",
+                    end_edge_virtuals="c,cxx",
+                    end_edge_substitute="builtin.gcc",
+                ),
+                Token("VERSION", value="@14", version_list="14"),
+                Token("BOOL_VARIANT", value="+bar", bv_prefix="+", bv_name="bar"),
+            ],
+            "foo ^[when=%c] c,cxx=builtin.gcc@14+bar",
         ),
     ],
 )
@@ -1129,6 +1147,15 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
             ],
             ["mvapich %gcc languages=c,c++", "emacs ^ncurses%gcc languages:=c"],
         ),
+        (
+            "zlib %c=gcc gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", value="zlib"),
+                Token("DEPENDENCY", value="%c=gcc"),
+                Token("UNQUALIFIED_PACKAGE_NAME", value="gcc"),
+            ],
+            ["zlib %c=gcc", "gcc"],
+        ),
     ],
 )
 def test_parse_multiple_specs(text, tokens, expected_specs):
@@ -1159,8 +1186,10 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         (["zlib", 'cflags="-O3 -g" +bar baz'], """zlib cflags='"-O3 -g" +bar baz'"""),
         # Use double quotes if internal single quotes are present
         (["zlib", "cflags='-O3 -g' +bar baz"], '''zlib cflags="'-O3 -g' +bar baz"'''),
-        # Use single quotes and escape single quotes with internal single and double quotes
-        (["zlib", "cflags='-O3 -g' \"+bar baz\""], 'zlib cflags="\'-O3 -g\' \\"+bar baz\\""'),
+        # There is no escaping: a value cannot contain both kinds of quotes
+        (["zlib", '''cflags='-O3 -g' "+bar baz"'''], spack.error.SpecSyntaxError),
+        # and a backslash is a character like any other: the compiler gets the define as typed
+        (["zlib", r"cflags=-DCHAR=\'x\'"], r'''zlib cflags="-DCHAR=\'x\'"'''),
         # Ensure that empty strings are handled correctly on CLI
         (["zlib", "ldflags=", "+pic"], "zlib+pic"),
         # These flags are assumed to be quoted by the shell, but the space doesn't matter because
@@ -1181,6 +1210,26 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         (["zlib ldflags='' +pic"], "zlib+pic"),
         # Ensure that $ORIGIN is handled correctly
         (["zlib", "ldflags=-Wl,-rpath=$ORIGIN/_libs"], "zlib ldflags='-Wl,-rpath=$ORIGIN/_libs'"),
+        # A closing bracket ends the edge attribute list, it is never part of the value
+        (["mpileaks", "%[", "when=@1.0]", "gcc"], "mpileaks %[when=@1.0] gcc"),
+        # but a bracket that has its opening one in the value is part of the value
+        (["zlib", "cflags=-DFOO=[1]"], "zlib cflags='-DFOO=[1]'"),
+        (["zlib", "cflags=-DX=']'"], "zlib cflags=\"-DX=']'\""),
+        # what follows the closing bracket is the dependency, and not part of the value either
+        (["x", "%[virtuals=c", "deptypes=build]gcc@14"], "x %[deptypes=build] c=gcc@14"),
+        (
+            ["x", "%[virtuals=c", "when=+a]gcc", "^[virtuals=mpi", "when=~b]mpich"],
+            "x %[when=+a] c=gcc ^[when=~b] mpi=mpich",
+        ),
+        # a when= value is a spec, which is not quoted even if it starts with a non-value character
+        (["x", "%[virtuals=c", "when=@1.0", "+debug]", "gcc"], "x %[when=@1.0+debug] c=gcc"),
+        # a value that is still quoted is left alone, the user quoted the whole argument
+        (["x", "cflags=' a b'"], "x cflags='a b'"),
+        # the limit: a when= condition with a quoted value only tokenizes inside brackets, so as
+        # one argument it is quoted as a whole and its bracket ends up in the condition
+        (["x", "%[virtuals=c", "when=a=']']", "gcc"], SpecParsingError),
+        # a value that parses as it is stays unquoted: c=gcc@14 is a virtual assignment
+        (["mpileaks", "%[when=+x]", "c=gcc@14"], "mpileaks %[when=+x] c=gcc@14"),
         # Ensure that passing escaped quotes on the CLI raises a tokenization error
         (["zlib", '"-g', '-O2"'], SpecTokenizationError),
     ],
@@ -1202,28 +1251,28 @@ def test_cli_spec_roundtrip(args, expected):
         (
             "foo%my_toolchain",
             {"my_toolchain": "%[when='%c' virtuals=c]gcc"},
-            ["foo %[when='%c'] c=gcc"],
+            ["foo %[when=%c] c=gcc"],
         ),
-        ("foo%my_toolchain", {"my_toolchain": "%[when='%c'] c=gcc"}, ["foo %[when='%c'] c=gcc"]),
+        ("foo%my_toolchain", {"my_toolchain": "%[when=%c] c=gcc"}, ["foo %[when=%c] c=gcc"]),
         (
             "foo%my_toolchain",
             {"my_toolchain": "+bar cflags=baz %[when='%c' virtuals=c]gcc"},
-            ["foo cflags=baz +bar %[when='%c'] c=gcc"],
+            ["foo cflags=baz +bar %[when=%c] c=gcc"],
         ),
         (
             "foo%my_toolchain",
-            {"my_toolchain": "+bar cflags=baz %[when='%c']c=gcc"},
-            ["foo cflags=baz +bar %[when='%c'] c=gcc"],
+            {"my_toolchain": "+bar cflags=baz %[when=%c]c=gcc"},
+            ["foo cflags=baz +bar %[when=%c] c=gcc"],
         ),
         (
             "foo%my_toolchain2",
             {"my_toolchain2": "%[when='%c' virtuals=c]gcc %[when='+mpi' virtuals=mpi]mpich"},
-            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
-            {"my_toolchain2": "%[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"},
-            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            {"my_toolchain2": "%[when=%c] c=gcc %[when=+mpi] mpi=mpich"},
+            ["foo %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain bar%my_toolchain2",
@@ -1231,15 +1280,15 @@ def test_cli_spec_roundtrip(args, expected):
                 "my_toolchain": "%[when='%c' virtuals=c]gcc",
                 "my_toolchain2": "%[when='%c' virtuals=c]gcc %[when='+mpi' virtuals=mpi]mpich",
             },
-            ["foo %[when='%c'] c=gcc", "bar %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc", "bar %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain bar%my_toolchain2",
             {
-                "my_toolchain": "%[when='%c'] c=gcc",
-                "my_toolchain2": "%[when='%c'] c=gcc %[when='+mpi']mpi=mpich",
+                "my_toolchain": "%[when=%c] c=gcc",
+                "my_toolchain2": "%[when=%c] c=gcc %[when=+mpi]mpi=mpich",
             },
-            ["foo %[when='%c'] c=gcc", "bar %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc", "bar %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
@@ -1249,7 +1298,7 @@ def test_cli_spec_roundtrip(args, expected):
                     {"spec": "%[virtuals=mpi]mpich", "when": "+mpi"},
                 ]
             },
-            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
@@ -1259,17 +1308,17 @@ def test_cli_spec_roundtrip(args, expected):
                     {"spec": "%mpi=mpich", "when": "+mpi"},
                 ]
             },
-            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc %[when=+mpi] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
             {"my_toolchain2": [{"spec": "%[virtuals=c]gcc %[virtuals=mpi]mpich", "when": "%c"}]},
-            ["foo %[when='%c'] c=gcc %[when='%c'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc %[when=%c] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
             {"my_toolchain2": [{"spec": "%c=gcc %mpi=mpich", "when": "%c"}]},
-            ["foo %[when='%c'] c=gcc %[when='%c'] mpi=mpich"],
+            ["foo %[when=%c] c=gcc %[when=%c] mpi=mpich"],
         ),
         # Test that we don't get caching wrong in the parser
         (
@@ -1281,8 +1330,8 @@ def test_cli_spec_roundtrip(args, expected):
                 ]
             },
             [
-                "foo %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich "
-                "^bar %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich"
+                "foo %[when=%c] c=gcc %[when=%mpi] mpi=mpich "
+                "^bar %[when=%c] c=gcc %[when=%mpi] mpi=mpich"
             ],
         ),
         (
@@ -1294,8 +1343,8 @@ def test_cli_spec_roundtrip(args, expected):
                 ]
             },
             [
-                "foo %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich "
-                "^bar %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich"
+                "foo %[when=%c] c=gcc %[when=%mpi] mpi=mpich "
+                "^bar %[when=%c] c=gcc %[when=%mpi] mpi=mpich"
             ],
         ),
     ],
@@ -1585,11 +1634,46 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x target==x86_64", "Propagation"),
         ("x dev_path==/foo/bar/baz", "Propagation"),
         ("x patches==abcde12345,12345abcde", "Propagation"),
+        # a when= condition is a spec, which extends up to the closing bracket
+        ("foo ^[when=] bar", "expected a spec after when="),
+        ("foo ^[when=", "expected a spec after when="),
+        ("foo ^[when=bar baz] qux", "unexpected token in edge attributes"),
+        ("foo ^[when=bar ^baz", "unexpected token in edge attributes"),
+        # a quoted condition is a single spec: neither two specs nor none
+        ("foo ^[when='bar baz'] qux", "expected a single spec as the when= condition"),
+        ("foo ^[when=''] qux", "expected a single spec as the when= condition"),
+        # the parts of an architecture and the namespace print unquoted, so they must be values
+        # that parse without quotes, and a namespace a dotted identifier
+        ("x os='a b'", "invalid value"),
+        ("x target='x?y'", "invalid value"),
+        ("x platform=''", "invalid value"),
+        ("x os=''", "invalid value"),
+        ("x arch='a b'", "invalid value"),
+        ("x namespace=a+b", "invalid value"),
+        ("x namespace=','", "invalid value"),
+        ("x namespace=''", "invalid value"),
+        # they have a string value like arch, so the bool variant form is an error rather than
+        # silently dropped
+        ("x ~os", "must have a string value"),
+        ("x ~platform", "must have a string value"),
+        ("x ~target", "must have a string value"),
+        ("x ~namespace", "must have a string value"),
+        ("x +os", "must have a string value"),
+        # = marks an exact version, which cannot be a bound of a range: a syntax error of the
+        # spec, not a ValueError from the version list
+        ("x @=1:2", "Bad characters in version string"),
+        ("x @1:=2", "Bad characters in version string"),
+        # a virtual assignment must directly follow a dependency sigil or edge properties
+        ("c,cxx=gcc", "virtual assignment"),
+        ("zlib c,cxx=gcc", "virtual assignment"),
+        ("zlib %[c=gcc]", "edge attributes"),
+        # regression: an unconsumed token used to make the parser loop forever
+        ("zlib ]", "unexpected token"),
     ],
 )
 def test_error_conditions(text, match_string):
     with pytest.raises(SpecParsingError, match=match_string):
-        SpecParser(text).next_spec()
+        SpecParser(text).all_specs()
 
 
 @pytest.mark.parametrize(
@@ -1903,6 +1987,68 @@ def test_when_edge_attribute_keeps_commas():
     comma-separated deptypes and virtuals lists."""
     edge = spack.spec.Spec("foo ^[when='@1,2'] bar").edges_to_dependencies(name="bar")[0]
     assert edge.when == spack.spec.Spec("@1,2")
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected",
+    [
+        # square brackets are not valid characters in an unquoted value
+        ("a=']'", "a=']'"),
+        ("a='['", "a='['"),
+        # an anonymous dependency is named * only where its options could be read as a name
+        ("foo ^", "foo ^*"),
+        ("pkg-a %*+foo ^*@1.0", "pkg-a %+foo ^@1.0"),
+        ("^cflags=-O2", "^* cflags=-O2"),
+        # a virtual assignment is one token, the node options follow
+        ("zlib % c=gcc", "zlib %c=gcc"),
+        ("^mpi=intel-parallel-studio+mkl", "^mpi=intel-parallel-studio+mkl"),
+        ("%c=builtin.gcc@14", "%c=builtin.gcc@14"),
+        # virtuals of an anonymous spec stay in the edge attributes, there is no name to
+        # substitute them with
+        ("%[virtuals=c] *", "%[virtuals=c] *"),
+        ("%[deptypes=build virtuals=c] *", "%[deptypes=build virtuals=c] *"),
+        ("^[virtuals=c,cxx] *", "^[virtuals=c,cxx] *"),
+        ("%[virtuals=c] *@4.0 foo=bar", "%[virtuals=c] @4.0 foo=bar"),
+        # a star is a package name, so name=* is a variant value, not a substitute
+        ("^dev_path=*", "^* dev_path='*'"),
+        # a when= value is a spec, which extends to the closing bracket and is printed unquoted
+        ("%[when=a=*]", "%[when=a='*'] *"),
+        ("""x %[when="a=']'"] gcc""", "x %[when=a=']'] gcc"),
+        ("foo ^[when=bar virtuals=c] baz", "foo ^[when=bar virtuals=c] baz"),
+        ("foo when=bar", "foo when=bar"),
+        # a quoted when= is a value like any other, so it can precede other edge attributes
+        ("foo ^[when='+x' virtuals=c] bar", "foo ^[when=+x] c=bar"),
+        ('foo ^[when="+x" virtuals=c] bar', "foo ^[when=+x] c=bar"),
+        ("foo ^[when='+x']c=bar", "foo ^[when=+x] c=bar"),
+        # repeated edge attributes combine: conditions are constrained, like virtuals accumulate
+        ("x ^[when='+a' when='+b'] y", "x ^[when=+a+b] y"),
+        ("%[when='@1,2' virtuals=c] *", "%[virtuals=c when=@1:2] *"),
+        ("%[virtuals=c when=@1,2] *", "%[virtuals=c when=@1:2] *"),
+        ("%[deptypes=build virtuals=c when=@1,2] *", "%[deptypes=build virtuals=c when=@1:2] *"),
+        ("x %[when=%c=gcc] y", "x %[when=%c=gcc] y"),
+        # a version bound is never truncated at a "." to make room for a key=value pair
+        ("@:a.a=''", "a.a=''"),
+        ("@1.2:2.0=x", "@1.2: 2.0=x"),
+        # there is no escaping in quoted values: a backslash is a character like any other, and a
+        # value that contains one kind of quote is quoted with the other
+        (r"a='x\' b='y'", r"a='x\' b=y"),
+        (r"""a="it's\"""", r"""a="it's\""""),
+        # nor is there json-style escaping of non-ASCII or control characters on output
+        ('a="café\'s"', 'a="café\'s"'),
+        ('a="x\'\ty"', 'a="x\'\ty"'),
+        # a key=value pair after a sigil is a virtual assignment only if the whole value is a
+        # package name, otherwise it is a variant of an anonymous dependency
+        ("^foo=bar:baz", "^* foo='bar:baz'"),
+        ("^foo=bar,baz", "^* foo=bar,baz"),
+        ("^foo=bar=baz", "^* foo='bar=baz'"),
+        ("%x=y~", "%* x='y~'"),
+    ],
+)
+def test_spec_str_round_trips(spec_str, expected):
+    """The string of a spec must be parseable, and parse back to the same spec."""
+    spec = spack.spec.Spec(spec_str)
+    assert str(spec) == expected
+    assert spack.spec.Spec(str(spec)) == spec
 
 
 @pytest.mark.regression("52375")

@@ -603,6 +603,9 @@ Concretizing the spec above produces the following DAG:
 where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former.
 The ``lapack`` and ``blas`` dependencies are satisfied by ``openblas``.
 
+Note that ``^foo=bar`` binds the virtual ``foo`` to the package ``bar``.
+To constrain a variant of an unnamed dependency instead, use ``*`` as the name: ``^* foo=bar`` means "some dependency has the variant ``foo`` set to ``bar``".
+
 .. index:: edge attribute
 
 Dependency edge attributes
@@ -648,6 +651,14 @@ We can express conditional constraints by specifying the ``when`` edge attribute
    $ spack install hdf5 ^[when=+mpi] mpich@3.1
 
 This tells Spack that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.
+
+The value of ``when`` is a spec, which extends up to the closing bracket.
+It is therefore the last edge attribute, unless it is quoted:
+
+.. code-block:: spec
+
+   $ spack install hdf5 ^[virtuals=mpi when=+mpi] mpich@3.1
+   $ spack install hdf5 ^[when='+mpi' virtuals=mpi] mpich@3.1
 
 Dependency propagation
 ^^^^^^^^^^^^^^^^^^^^^^

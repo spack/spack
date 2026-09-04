@@ -5,49 +5,60 @@
 
 Here is the EBNF grammar for a spec::
 
-    spec          = [name] [node_options] { ^[edge_properties] node } |
-                    [name] [node_options] hash |
-                    filename
+    spec          = node { sigil [edge_properties] dependency }
 
-    node          =  name [node_options] |
-                     [name] [node_options] hash |
-                     filename
+    sigil         = ^ | % | %%
+    dependency    = virtual_assignment { node_option } | node
+    node          = [name] { node_option } | filename
+    node_option   = @version_list | @version_pair | variant | hash
 
-    node_options    = [@(version_list|version_pair)] [%compiler] { variant }
-    edge_properties = [ { bool_variant | key_value } ]
+    edge_properties = [ { key_value | when=quoted_spec } [ when=spec ] ]
+    quoted_spec     = " spec " | ' spec '
 
-    hash          = / id
+    virtual_assignment = id { , id } = (id | namespace id)
+    hash          = / [a-zA-Z0-9_]+
     filename      = (.|/|[a-zA-Z0-9-_]*/)([a-zA-Z0-9-_./]*)(.json|.yaml)
 
-    name          = id | namespace id
-    namespace     = { id . }
+    name          = id | namespace id | *
+    namespace     = id . { id . }
 
     variant       = bool_variant | key_value | propagated_bv | propagated_kv
-    bool_variant  =  +id |  ~id |  -id
+    bool_variant  = +id | ~id | -id
     propagated_bv = ++id | ~~id | --id
-    key_value     =  id=id |  id=quoted_id
-    propagated_kv = id==id | id==quoted_id
-
-    compiler      = id [@version_list]
+    key_value     = id=value | id:=value
+    propagated_kv = id==value | id:==value
+    value         = bare_value | quoted_value
+    bare_value    = [a-zA-Z0-9_\\-+*.,:=%^~/\\\\]+
+    quoted_value  = " [^"]* " | ' [^']* '
 
     version_pair  = git_version=vid
-    version_list  = (version|version_range) [ { , (version|version_range)} ]
-    version_range = vid:vid | vid: | :vid | :
-    version       = vid
+    version_list  = (version|version_range) { , (version|version_range) }
+    version_range = [vid] : [vid]
+    version       = [=] vid
 
-    git_version   = git.(vid) | git_hash
+    git_version   = git.(ref) | git_hash
     git_hash      = [A-Fa-f0-9]{40}
-
-    quoted_id     = " id_with_ws " | ' id_with_ws '
-    id_with_ws    = [a-zA-Z0-9_][a-zA-Z_0-9-.\\s]*
-    vid           = [a-zA-Z0-9_][a-zA-Z_0-9-.]*
+    ref           = [a-zA-Z0-9_][a-zA-Z_0-9-./]*
+    vid           = [a-zA-Z0-9_] [ [a-zA-Z_0-9-.]* [a-zA-Z0-9_] ]
     id            = [a-zA-Z0-9_][a-zA-Z_0-9-]*
+
+The options of a node come in any order, with at most one version and one hash: a second hash
+starts the next spec, as in ``spack find /abc /def``. ``:=`` marks a concrete variant value, and
+``==`` or ``:==`` propagate the value to dependencies.
 
 Identifiers using the ``<name>=<value>`` command, such as architectures and
 compiler flags, require a space before the name.
 
-There is one context-sensitive part: ids in versions may contain ``.``, while
-other ids may not.
+There are two context-sensitive parts: ids in versions may contain ``.``, while other ids may
+not; and a ``key=value`` pair directly after a dependency sigil or edge properties, where the
+value is a package name, is a virtual assignment ``%c,cxx=gcc`` rather than a variant of an
+anonymous dependency (write ``%* foo=bar`` for the latter). ``*`` is the name of an anonymous
+node.
+
+The ``when=`` edge property is a condition on the edge, and its value is a spec that extends up
+to the closing bracket, so it must be the last edge property: ``^[virtuals=mpi when=+mpi] mpich``.
+A quoted condition, ``^[when='+mpi' virtuals=mpi] mpich``, is a value like any other and can
+precede other edge properties.
 
 There is one ambiguity: since ``-`` is allowed in an id, you need to put
 whitespace space before ``-variant`` for it to be tokenized properly.  You can
@@ -57,7 +68,6 @@ specs to avoid ambiguity.  Both are provided because ``~`` can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 
-import json
 import os
 import re
 import sys
@@ -87,6 +97,8 @@ GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
 #: Git refs include branch names, and can contain ``.`` and ``/``
 GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
 GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
+#: A package name, optionally with a namespace
+PACKAGE_NAME = rf"(?:{DOTTED_IDENTIFIER}|{IDENTIFIER})"
 
 STAR = r"\*"
 
@@ -97,12 +109,19 @@ HASH = r"[a-zA-Z_0-9]+"
 #: These are legal values that *can* be parsed bare, without quotes on the command line.
 VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=%^\~\/\\]+)"
 
-#: Quoted values can be *anything* in between quotes, including escaped quotes.
-QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
+#: Quoted values can be anything in between quotes, except the quote itself. There is no escaping.
+QUOTED_VALUE = r"(?:'[^']*'|\"[^\"]*\")"
 
-VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
+#: A version starts and ends with an alphanumeric character and is the whole run of version
+#: characters, so a following ``=`` cannot be satisfied by backtracking into a shorter version.
+VERSION = r"=?(?:[a-zA-Z0-9_](?:[a-zA-Z_0-9\-\.]*[a-zA-Z0-9_])?(?![a-zA-Z_0-9\-\.]))"
+#: The upper bound of a range is not the key of a key-value pair, so ``@1.2:develop=foo`` is
+#: ``@1.2:`` and a variant.
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
-VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
+#: A version or a range, with the lower bound factored out so that a plain version is matched
+#: once, instead of as a failed range first and then again as a version
+_VERSION_OR_RANGE = rf"(?:{VERSION}(?::(?:{VERSION}(?!\s*=))?)?|:(?:{VERSION}(?!\s*=))?)"
+VERSION_LIST = rf"{_VERSION_OR_RANGE}(?:\s*,\s*{_VERSION_OR_RANGE})*"
 
 SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
 
@@ -112,11 +131,8 @@ WINDOWS_FILENAME = r"(?:\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)(?:[a-zA-Z0-9-_\.\\]*)(?
 UNIX_FILENAME = r"(?:\.|\/|[a-zA-Z0-9-_]*\/)(?:[a-zA-Z0-9-_\.\/]*)(?:\.json|\.yaml)"
 FILENAME = WINDOWS_FILENAME if sys.platform == "win32" else UNIX_FILENAME
 
-#: Regex to strip quotes. Group 2 will be the unquoted string.
-STRIP_QUOTES = re.compile(r"^(['\"])(.*)\1$")
-
 #: Values that match this (e.g., variants, flags) can be left unquoted in Spack output
-NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.\-\[\]]+$")
+NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.\-]+$")
 
 
 class SpecTokenizationError(spack.error.SpecSyntaxError):
@@ -292,35 +308,31 @@ class SpecParsingError(spack.error.SpecSyntaxError):
         super().__init__(message)
 
 
-def strip_quotes_and_unescape(string: str) -> str:
+def strip_quotes(string: str) -> str:
     """Remove surrounding single or double quotes from string, if present."""
-    match = STRIP_QUOTES.match(string)
-    if not match:
-        return string
-
-    # replace any escaped quotes with bare quotes
-    quote, result = match.groups()
-    return result.replace(rf"\{quote}", quote)
+    if len(string) >= 2 and string[0] in "'\"" and string[-1] == string[0]:
+        return string[1:-1]
+    return string
 
 
 def quote_if_needed(value: str) -> str:
-    """Add quotes around the value if it requires quotes.
+    """Add quotes around the value if it requires quotes, i.e. unless it matches
+    :data:`NO_QUOTES_NEEDED`. Single quotes are used, or double quotes around a value that
+    contains single quotes. There is no escaping: a value that contains both kinds of quotes
+    cannot be written in a spec string.
 
-    This will add quotes around the value unless it matches :data:`NO_QUOTES_NEEDED`.
-
-    This adds:
-
-    * single quotes by default
-    * double quotes around any value that contains single quotes
-
-    If double quotes are used, we json-escape the string. That is, we escape ``\\``,
-    ``"``, and control codes.
-
+    Raises:
+        spack.error.SpecSyntaxError: if the value contains both single and double quotes
     """
     if NO_QUOTES_NEEDED.match(value):
         return value
-
-    return json.dumps(value) if "'" in value else f"'{value}'"
+    if "'" not in value:
+        return f"'{value}'"
+    if '"' not in value:
+        return f'"{value}"'
+    raise spack.error.SpecSyntaxError(
+        f"cannot quote the value {value!r}: it contains both single and double quotes"
+    )
 
 
 # Token kinds: names of the top-level capture groups in FAST_SPEC_REGEX, compared against
@@ -330,6 +342,7 @@ _DEPENDENCY = "DEPENDENCY"
 _VERSION = "VERSION"
 _BOOL_VARIANT = "BOOL_VARIANT"
 _KEY_VALUE_PAIR = "KEY_VALUE_PAIR"
+_WHEN = "WHEN"
 _FILENAME = "FILENAME"
 _FULLY_QUALIFIED_PACKAGE_NAME = "FULLY_QUALIFIED_PACKAGE_NAME"
 _UNQUALIFIED_PACKAGE_NAME = "UNQUALIFIED_PACKAGE_NAME"
@@ -353,9 +366,17 @@ _KV_VALUE = "kv_value"
 
 # The virtual assignment ``c,cxx=gcc`` substitutes a package for one or more virtuals. Both
 # END_EDGE_PROPERTIES and DEPENDENCY embed it, each with its own group names; only that context
-# distinguishes it from KEY_VALUE_PAIR.
+# distinguishes it from KEY_VALUE_PAIR. It applies only if the whole value is a package name,
+# i.e. the substitute is followed by whitespace, a variant, version or hash of the node, a sigil,
+# a closing bracket, or the end of the input. Otherwise the pair is a variant of an anonymous
+# node, e.g. ``^foo=bar:baz``, and the sigil is a token of its own.
 _VIRTUALS_LIST = rf"{IDENTIFIER}(?:,{IDENTIFIER})*"  # comma-separated virtuals
-_SUBSTITUTE = rf"{DOTTED_IDENTIFIER}|{IDENTIFIER}"  # package to substitute for them
+_SUBSTITUTE_END = r"(?=\s|[+~]{1,2}\s*[a-zA-Z_0-9]|[@/^%\]]|$)"
+_SUBSTITUTE = rf"{PACKAGE_NAME}{_SUBSTITUTE_END}"  # package to substitute for them
+
+#: A virtual assignment outside a dependency, ``zlib c,cxx=gcc``, fails to tokenize at the comma:
+#: matched on that error path only, so that it costs nothing in the token regex
+_MISPLACED_VIRTUAL_ASSIGNMENT = re.compile(rf"{_VIRTUALS_LIST}={_SUBSTITUTE}")
 
 #: Token kind -> regex. FAST_SPEC_REGEX is the ``|``-alternation of these in order: tokens are
 #: tried top to bottom, so more specific tokens come first (e.g. FILENAME before package names).
@@ -391,6 +412,9 @@ SPEC_TOKENS: Dict[str, str] = {
         rf"(?P<{_KV_SEP}>:?==?)"  # separator: ``=``, ``==``, ``:=`` or ``:==``
         rf"(?P<{_KV_VALUE}>{VALUE}|{QUOTED_VALUE})"  # bare or quoted value
     ),
+    # ``when=`` of edge properties whose spec is not a value, e.g. ``^[when=@1.2] dep``; otherwise
+    # ``when=+foo`` is a key-value pair like any other, and ``when`` a variant name elsewhere
+    _WHEN: r"when=",
     # path to a spec file, e.g. ``./foo/bar.json``
     _FILENAME: FILENAME,
     # package name with namespace, e.g. ``builtin.mpich``
@@ -456,6 +480,18 @@ class SpecParser:
         return tokens
 
     def _raise_tokenization_error(self) -> None:
+        # A virtual assignment outside a dependency, `zlib c,cxx=gcc`, fails at the comma: point
+        # out the mistake instead of underlining the comma
+        if self.curr is not None and self.curr.group(_UNEXPECTED) == ",":
+            comma = self.curr.start(_UNEXPECTED)
+            for assignment in _MISPLACED_VIRTUAL_ASSIGNMENT.finditer(self.literal_str):
+                if assignment.start() <= comma < assignment.end():
+                    raise SpecParsingError(
+                        "a virtual assignment such as c,cxx=gcc must directly follow a "
+                        "dependency sigil (^ or %) or edge properties",
+                        assignment,
+                        self.literal_str,
+                    )
         raise SpecTokenizationError(self.literal_str)
 
     def _raise_parsing_error(self, message: str) -> None:
@@ -479,6 +515,7 @@ class SpecParser:
         if self.curr.lastgroup == _UNEXPECTED:
             self._raise_tokenization_error()
 
+        first_token = self.curr
         root_spec = self._parse_node(initial_spec)
         current_spec = root_spec
 
@@ -504,30 +541,59 @@ class SpecParser:
 
                     # Collect edge attributes (key=value pairs) up to the closing bracket
                     attributes: Dict[str, List[str]] = {}
-                    when_string: Optional[str] = None
+                    conditions: Optional["spack.spec.Spec"] = None
                     substitute = None
-                    while self.curr:
-                        if self.curr.lastgroup == _KEY_VALUE_PAIR:
-                            name = self.curr.group(_KV_NAME)
-                            if name not in ("deptypes", "virtuals", "when"):
+                    while True:
+                        if not self.curr:
+                            self._raise_parsing_error("unexpected token in edge attributes")
+
+                        kind = self.curr.lastgroup
+                        name = self.curr.group(_KV_NAME) if kind == _KEY_VALUE_PAIR else "when"
+
+                        if kind == _KEY_VALUE_PAIR and name != "when":
+                            if name not in ("deptypes", "virtuals"):
                                 msg = (
-                                    "the only edge attributes that are currently accepted "
-                                    'are "deptypes", "virtuals", and "when"'
+                                    "the only edge attributes that are currently accepted are "
+                                    '"deptypes", "virtuals", and a "when=<spec>" condition, '
+                                    "which must be the last unless quoted"
                                 )
                                 self._raise_parsing_error(msg)
-                            value = self.curr.group(_KV_VALUE)
-                            value = strip_quotes_and_unescape(value)
-                            # A when value is one spec string, where a comma is part of the
-                            # syntax, e.g. when='@1,2'; deptypes and virtuals values are
-                            # comma-separated lists.
-                            if name == "when":
-                                when_string = value
-                            else:
-                                attributes[name] = [v.strip() for v in value.split(",")]
-
+                            value = strip_quotes(self.curr.group(_KV_VALUE))
+                            attributes[name] = [v.strip() for v in value.split(",")]
                             self.curr, self.next = self.next, self.scanner.match()
 
-                        elif self.curr.lastgroup == _END_EDGE_PROPERTIES:
+                        elif kind == _KEY_VALUE_PAIR or kind == _WHEN:
+                            # The condition is a spec. Quoted, it is a value like any other pair.
+                            # Unquoted, it extends up to the closing bracket: the tokenizer is
+                            # context free, so restart the scanner at the value, which is either
+                            # that of the pair or what follows a bare WHEN token (when=@1.2).
+                            value = self.curr.group(_KV_VALUE) if kind == _KEY_VALUE_PAIR else ""
+                            if value[:1] in ("'", '"'):
+                                try:
+                                    condition = parse_one_or_raise(strip_quotes(value))
+                                except ValueError:
+                                    msg = "expected a single spec as the when= condition"
+                                    self._raise_parsing_error(msg)
+                                self.curr, self.next = self.next, self.scanner.match()
+                            else:
+                                if not value and (
+                                    not self.next or self.next.lastgroup == _END_EDGE_PROPERTIES
+                                ):
+                                    self._raise_parsing_error("expected a spec after when=")
+                                self._rescan(
+                                    self.curr.start(_KV_VALUE) if value else self.curr.end()
+                                )
+                                parsed = self.next_spec()
+                                assert parsed is not None  # there is a token, so there is a spec
+                                condition = parsed
+                            # Repeated attributes combine: conditions are constrained, like
+                            # virtuals accumulate and deptypes are or-ed
+                            if conditions is None:
+                                conditions = condition
+                            else:
+                                conditions.constrain(condition)
+
+                        elif kind == _END_EDGE_PROPERTIES:
                             # Closing ], optionally fused with a virtual assignment, as in
                             # ^[deptypes=link] mpi=openmpi
                             virtuals_str = self.curr.group(_END_EDGE_VIRTUALS)
@@ -544,17 +610,13 @@ class SpecParser:
                             break
                         else:
                             # Only key=value pairs can occur between brackets
-                            self._raise_parsing_error("Unexpected token in edge attributes")
+                            self._raise_parsing_error("unexpected token in edge attributes")
 
                     depflag = 0
                     if "deptypes" in attributes:
                         depflag = spack.deptypes.canonicalize(attributes["deptypes"])
 
                     virtuals_tuple = tuple(attributes.get("virtuals", ()))
-
-                    conditions = None
-                    if when_string is not None:
-                        conditions = SpecParser(when_string).next_spec()
 
                     dep_spec = self._parse_node(initial_name=substitute)
 
@@ -612,7 +674,17 @@ class SpecParser:
 
         self._attach_pending(root_spec, pending)
 
+        if self.curr is not None and self.curr is first_token:
+            # Nothing was consumed, e.g. a stray ] in `zlib ]`: raise instead of looping forever
+            self._raise_parsing_error("unexpected token")
+
         return root_spec
+
+    def _rescan(self, pos: int) -> None:
+        """Restart the scanner at ``pos`` in the input, the value of an unquoted when= condition"""
+        self.scanner = FAST_SPEC_REGEX.scanner(self.literal_str, pos)  # type: ignore[attr-defined]
+        self.curr = self.scanner.match()
+        self.next = self.scanner.match()
 
     def _attach_pending(self, root_spec: "spack.spec.Spec", pending: Optional[tuple]) -> None:
         """Attach the pending ^ dependency, whose sub-dag is complete now."""
@@ -647,34 +719,34 @@ class SpecParser:
         # 1. Package name (or spec file). A missing name is fine: anonymous specs like
         # `@1.2 +debug` are valid.
         if initial_name:
-            # Name came from a virtual assignment on the incoming edge, e.g. %c,cxx=gcc
+            # Name came from a virtual assignment on the incoming edge, e.g. %c,cxx=gcc: only
+            # node options can follow, a package name starts the next spec (`zlib %c=gcc gcc`)
             if "." in initial_name:
                 spec.namespace, spec.name = initial_name.rsplit(".", 1)
             else:
                 spec.name = initial_name
-        if not curr:
-            return spec
-        kind = curr.lastgroup
-        value = curr.group(kind)
-        if kind == _UNQUALIFIED_PACKAGE_NAME:
-            if value != "*":  # `*` is an anonymous node, as in `%*+shared`
-                spec.name = value
-            curr = next
-            next = scanner.match() if curr is not None else None
-        elif kind == _FULLY_QUALIFIED_PACKAGE_NAME:
-            spec.namespace, spec.name = value.rsplit(".", 1)
-            curr = next
-            next = scanner.match() if curr is not None else None
-        elif kind == _FILENAME:
-            # A spec file is a complete node: read it and return
-            if not os.path.exists(value):
-                raise spack.error.NoSuchSpecFileError(f"No such spec file: '{value}'")
-            spec._dup(spack.spec.Spec.from_specfile(value))
-            self.curr, self.next = next, scanner.match()
-            return spec
-        elif kind == _UNEXPECTED:
-            self._raise_tokenization_error()
-        # else: no name; fall through to attributes of an anonymous node
+        elif curr:
+            kind = curr.lastgroup
+            value = curr.group(kind)
+            if kind == _UNQUALIFIED_PACKAGE_NAME:
+                if value != "*":  # `*` is an anonymous node, as in `%*+shared`
+                    spec.name = value
+                curr = next
+                next = scanner.match() if curr is not None else None
+            elif kind == _FULLY_QUALIFIED_PACKAGE_NAME:
+                spec.namespace, spec.name = value.rsplit(".", 1)
+                curr = next
+                next = scanner.match() if curr is not None else None
+            elif kind == _FILENAME:
+                # A spec file is a complete node: read it and return
+                if not os.path.exists(value):
+                    raise spack.error.NoSuchSpecFileError(f"No such spec file: '{value}'")
+                spec._dup(spack.spec.Spec.from_specfile(value))
+                self.curr, self.next = next, scanner.match()
+                return spec
+            elif kind == _UNEXPECTED:
+                self._raise_tokenization_error()
+            # else: no name; fall through to attributes of an anonymous node
 
         # 2. Node attributes: version, variants, flags, and abstract hash, in any order
         has_version = False
@@ -686,13 +758,18 @@ class SpecParser:
                     self.curr = curr
                     self._raise_parsing_error("Spec cannot have multiple versions")
 
-                if curr.group(_GIT_VERSION):
-                    spec.versions = spack.version.VersionList(
-                        [spack.version.GitVersion(curr.group(_GIT_VERSION))]
-                    )
-                    spec.attach_git_version_lookup()
-                else:
-                    spec.versions = spack.version.VersionList(curr.group(_VERSION_LIST))
+                try:
+                    if curr.group(_GIT_VERSION):
+                        spec.versions = spack.version.VersionList(
+                            [spack.version.GitVersion(curr.group(_GIT_VERSION))]
+                        )
+                        spec.attach_git_version_lookup()
+                    else:
+                        spec.versions = spack.version.VersionList(curr.group(_VERSION_LIST))
+                except ValueError as e:
+                    # The tokenizer accepts more than VersionList does, e.g. @=1:2
+                    self.curr = curr
+                    self._raise_parsing_error(str(e))
                 has_version = True
 
             elif kind == _BOOL_VARIANT:
@@ -713,7 +790,7 @@ class SpecParser:
                 propagate = "==" in sep
                 concrete = sep.startswith(":")
                 try:
-                    spec._add_flag(name, strip_quotes_and_unescape(value), propagate, concrete)
+                    spec._add_flag(name, strip_quotes(value), propagate, concrete)
                 except Exception as e:
                     self.curr = curr
                     self._raise_parsing_error(str(e))

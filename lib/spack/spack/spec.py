@@ -142,6 +142,13 @@ SPEC_FORMAT_RE = re.compile(
 
 IDENTIFIER_RE = r"\w[\w-]*"
 
+#: Attributes set through ``name=value`` that print unquoted, so their value must parse bare
+_STRING_ATTRIBUTES = frozenset(
+    ("arch", "architecture", "platform", "os", "operating_system", "target", "namespace")
+)
+_BARE_VALUE = re.compile(spack.spec_parser.VALUE)
+_NAMESPACE_VALUE = re.compile(spack.spec_parser.PACKAGE_NAME)
+
 # Coloring of specs when using color output. Fields are printed with
 # different colors to enhance readability.
 # See spack.util.tty.color for descriptions of the color codes.
@@ -1069,22 +1076,15 @@ class DependencySpec:
             unconditional: if True, removes any condition statement from the representation
         """
 
-        parent_str, child_str = self.parent.format(), self.spec.format()
-        virtuals_str = f"virtuals={','.join(self.virtuals)}" if self.virtuals else ""
-
-        when_str = ""
-        if not unconditional and self.when != Spec():
-            when_str = f"when='{self.when}'"
-
-        dep_sigil = "%" if self.direct else "^"
+        sigil = "%" if self.direct else "^"
         if self.propagation == PropagationPolicy.PREFERENCE:
-            dep_sigil = "%%"
+            sigil = "%%"
 
-        edge_attrs = [x for x in (virtuals_str, when_str) if x]
-
-        if edge_attrs:
-            return f"{parent_str} {dep_sigil}[{' '.join(edge_attrs)}] {child_str}"
-        return f"{parent_str} {dep_sigil}{child_str}"
+        # deptypes are not part of the string, since it is used as a constraint in the solver
+        edge_str = _format_edge(
+            self, sigil, self.spec.format(), deptypes=False, when=not unconditional
+        )
+        return f"{self.parent.format()} {edge_str}"
 
     def flip(self) -> "DependencySpec":
         """Flips the dependency and keeps its type. Drops all other information."""
@@ -1677,35 +1677,35 @@ class SpecAnnotations:
         return result
 
 
-def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
-    """Determine if a spec needs a star to disambiguate it from an anonymous spec w/variants.
+def _format_edge(
+    edge: DependencySpec, sigil: str, dep_format: str, *, deptypes: bool = True, when: bool = True
+) -> str:
+    """Format an edge and its child node in spec syntax, e.g. ``%[when=+foo] c,cxx=gcc@14``.
 
-    Returns:
-        "*" if a star is needed, "" otherwise
+    Args:
+        edge: the edge to format
+        sigil: ``^``, ``%`` or ``%%``
+        dep_format: the formatted child node, without name for an anonymous node
+        deptypes: whether to include the deptypes of the edge
+        when: whether to include the condition of the edge
     """
-    # named spec never needs star
-    if dep.spec.name:
-        return ""
-
-    # virtuals without a name always need *: %c=* @4.0 foo=bar
-    if dep.virtuals:
-        return "*"
-
-    # versions are first so checking for @ is faster than != VersionList(':')
-    if dep_format.startswith("@"):
-        return ""
-
-    # compiler flags are key-value pairs and can be ambiguous with virtual assignment
-    if dep.spec.compiler_flags:
-        return "*"
-
-    # booleans come first, and they don't need a star. key-value pairs do. If there are
-    # no key value pairs, we're left with either an empty spec, which needs * as in
-    # '^*', or we're left with arch, which is a key value pair, and needs a star.
-    if not any(v.type == vt.VariantType.BOOL for v in dep.spec.variants.values()):
-        return "*"
-
-    return "*" if dep.spec.architecture else ""
+    # The virtual assignment shorthand substitutes a package name, so an anonymous node keeps its
+    # virtuals in the edge attributes, and is named * where its options could otherwise be read
+    # as a name: %[virtuals=c] * foo=bar, ^*. The when= condition extends up to the closing
+    # bracket, so it comes last.
+    anonymous = not edge.spec.name
+    attrs = []
+    if deptypes and edge.depflag:
+        attrs.append(f"deptypes={','.join(dt.flag_to_tuple(edge.depflag))}")
+    if anonymous and edge.virtuals:
+        attrs.append(f"virtuals={','.join(edge.virtuals)}")
+    if when and edge.when != EMPTY_SPEC:
+        attrs.append(f"when={edge.when}")
+    attributes = f"[{' '.join(attrs)}] " if attrs else ""
+    virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals and not anonymous else ""
+    star = anonymous and (not dep_format or dep_format[:1].isalnum() or dep_format[:1] == "_")
+    node = " ".join(s for s in ("*" if star else "", dep_format) if s)
+    return f"{sigil}{attributes}{virtuals}{node}"
 
 
 def _satisfying_edges(
@@ -2076,36 +2076,6 @@ class Spec:
         """
         return _select_edges(self._dependencies, child=name, depflag=depflag, virtuals=virtuals)
 
-    @property
-    def edge_attributes(self) -> str:
-        """Helper method to print edge attributes in spec strings."""
-        edges = self.edges_from_dependents()
-        if not edges:
-            return ""
-
-        union = DependencySpec(parent=Spec(), spec=self, depflag=0, virtuals=())
-        all_direct_edges = all(x.direct for x in edges)
-        dep_conditions = set()
-
-        for edge in edges:
-            union.update_deptypes(edge.depflag)
-            union.update_virtuals(edge.virtuals)
-            dep_conditions.add(edge.when)
-
-        deptypes_str = ""
-        if not all_direct_edges and union.depflag:
-            deptypes_str = f"deptypes={','.join(dt.flag_to_tuple(union.depflag))}"
-
-        virtuals_str = f"virtuals={','.join(union.virtuals)}" if union.virtuals else ""
-
-        conditions = [str(c) for c in dep_conditions if c != Spec()]
-        when_str = f"when='{','.join(conditions)}'" if conditions else ""
-
-        result = " ".join(filter(lambda x: bool(x), (when_str, deptypes_str, virtuals_str)))
-        if result:
-            result = f"[{result}]"
-        return result
-
     def dependencies(
         self,
         name: Optional[str] = None,
@@ -2168,8 +2138,16 @@ class Spec:
                 f"Propagation with '==' is not supported for '{name}'."
             )
 
+        if name in _STRING_ATTRIBUTES:
+            # These print unquoted, so they must be values that parse without quotes
+            if type(value) is not str:
+                raise ValueError(f"{name} must have a string value")
+            pattern = _NAMESPACE_VALUE if name == "namespace" else _BARE_VALUE
+            if not pattern.fullmatch(value):
+                raise ValueError(f"invalid value {value!r} for {name}")
+
         if name == "arch" or name == "architecture":
-            assert type(value) is str, "architecture have a string value"
+            assert isinstance(value, str)  # checked above, for mypy
             parts = tuple(value.split("-"))
             plat, os, tgt = parts if len(parts) == 3 else (None, None, value)
             self._set_architecture(platform=plat, os=os, target=tgt)
@@ -4677,21 +4655,6 @@ class Spec:
         ]
         return str(path_ctor(*output_path_components))
 
-    def _format_edge_attributes(self, dep: DependencySpec, deptypes=True, virtuals=True):
-        deptypes_str = (
-            f"deptypes={','.join(dt.flag_to_tuple(dep.depflag))}"
-            if deptypes and dep.depflag
-            else ""
-        )
-        when_str = f"when='{(dep.when)}'" if dep.when != EMPTY_SPEC else ""
-        virtuals_str = f"virtuals={','.join(dep.virtuals)}" if virtuals and dep.virtuals else ""
-
-        attrs = " ".join(s for s in (when_str, deptypes_str, virtuals_str) if s)
-        if attrs:
-            attrs = f"[{attrs}] "
-
-        return attrs
-
     def _format_dependencies(
         self,
         format_string: str = DEFAULT_FORMAT,
@@ -4723,17 +4686,9 @@ class Spec:
         # helper for direct and transitive loops below
         def format_edge(edge: DependencySpec, sigil: str, dep_spec: Optional[Spec] = None) -> str:
             dep_spec = dep_spec or edge.spec
-            dep_format = dep_spec.format(format_string, color=color)
-
-            edge_attributes = (
-                self._format_edge_attributes(edge, deptypes=deptypes, virtuals=False)
-                if edge.depflag or edge.when != EMPTY_SPEC
-                else ""
+            return _format_edge(
+                edge, sigil, dep_spec.format(format_string, color=color), deptypes=deptypes
             )
-            virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals else ""
-            star = _anonymous_star(edge, dep_format)
-
-            return f"{sigil}{edge_attributes}{star}{virtuals}{dep_format}"
 
         # direct dependencies
         for edge in sorted(direct, key=lambda x: x.spec.name):
