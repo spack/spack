@@ -1,3 +1,7 @@
+## Package API v2.6
+- Added the `deprecated()` directive to mark specific configurations or entire packages as deprecated, with a `reason`, a `severity`, optional advisory `labels`, and an optional `msg` telling users what to use instead. Accepted reasons are `vuln`, `rename`, `retired` and `unspecified`.
+- `version(..., deprecated=True)` is now recorded as `reason="unspecified"`, `severity="critical"`, and the label `version_deprecated`.
+
 ## Package API v2.5
 - Added `cuda-lang` and `hip-lang` as language virtuals (analogous to `c`, `cxx`, `fortran`).
 

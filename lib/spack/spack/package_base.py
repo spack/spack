@@ -53,6 +53,7 @@ import spack.variant
 import spack.version
 import spack.version.git_ref_lookup
 from spack.compilers.adaptor import DeprecatedCompiler
+from spack.enums import Deprecation
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.resource import Resource
@@ -574,6 +575,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     splice_specs: Dict[spack.spec.Spec, Tuple[spack.spec.Spec, Union[None, str, List[str]]]]
     #: Class level dictionary populated by :func:`~spack.directives.redistribute` directives
     disable_redistribute: Dict[spack.spec.Spec, DisableRedistribute]
+    #: Class level dictionary populated by :func:`~spack.directives.deprecated` directives
+    deprecations: Dict[spack.spec.Spec, List[Deprecation]]
 
     #: Must be defined as a fallback for old specs that don't have the ``build_system`` variant
     default_buildsystem: str
@@ -1630,33 +1633,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if not ignore_checksum:
                 raise spack.error.FetchError(
                     "Will not fetch %s" % self.spec.format("{name}{@version}"), ck_msg
-                )
-
-        deprecated = spack.config.CONFIG.get("config:deprecated")
-        if not deprecated and self.versions.get(self.version, {}).get("deprecated", False):
-            tty.warn(
-                "{0} is deprecated and may be removed in a future Spack release.".format(
-                    self.spec.format("{name}{@version}")
-                )
-            )
-
-            # Ask the user whether to install deprecated version if we're
-            # interactive, but just fail if non-interactive.
-            dp_msg = (
-                "If you are willing to be a maintainer for this version "
-                "of the package, submit a PR to remove `deprecated=False"
-                "`, or use `--deprecated` to skip this check."
-            )
-            ignore_deprecation = False
-            if sys.stdout.isatty():
-                ignore_deprecation = tty.get_yes_or_no("  Fetch anyway?", default=False)
-
-                if ignore_deprecation:
-                    tty.debug("Fetching deprecated version. {0}".format(dp_msg))
-
-            if not ignore_deprecation:
-                raise spack.error.FetchError(
-                    "Will not fetch {0}".format(self.spec.format("{name}{@version}")), dp_msg
                 )
 
         self.stage.create()
@@ -2770,7 +2746,11 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
         version = StandardVersion.from_string(version)
 
     details = pkg.versions.get(version)
-    return details is not None and details.get("deprecated", False)
+    if details is not None and details.get("deprecated", False):
+        return True
+
+    version_spec = spack.spec.Spec(f"{pkg.name}@={version}")
+    return any(version_spec.satisfies(constraint) for constraint in pkg.deprecations)
 
 
 def preferred_version(
@@ -2787,7 +2767,7 @@ def preferred_version(
 
     def _version_order(version_info):
         version, info = version_info
-        deprecated_key = not info.get("deprecated", False)
+        deprecated_key = not deprecated_version(pkg, version)
         return (deprecated_key, *concretization_version_order(version_info))
 
     version, _ = max(pkg.versions.items(), key=_version_order)

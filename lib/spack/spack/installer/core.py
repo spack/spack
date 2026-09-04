@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
 
 import spack.binary_distribution
 import spack.config
+import spack.deprecation
 import spack.error
 import spack.mirrors.mirror
 import spack.report
@@ -211,6 +212,7 @@ class PackageInstaller:
 
         specs = [pkg.spec for pkg in packages]
 
+        self.roots = specs
         self.has_mirrors = bool(spack.mirrors.mirror.MirrorCollection(binary=True))
         self.root_policy: InstallPolicy = root_policy
         self.dependencies_policy: InstallPolicy = dependencies_policy
@@ -295,6 +297,10 @@ class PackageInstaller:
         self.next_database_write = 0.0
 
     def install(self) -> None:
+        # Refuse disallowed deprecations before updating any index, so an install that cannot
+        # succeed does no work first
+        spack.deprecation.check_deprecations(self.roots)
+
         # check what specs we could fetch from binaries (checks against cache, not remotely)
         try:
             spack.binary_distribution.BINARY_INDEX.update()

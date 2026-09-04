@@ -366,18 +366,6 @@ version_constraint_satisfied(node(ID,Package), Constraint) :-
 
 attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
 
-% If we select a deprecated version, mark the package as deprecated
-attr("deprecated", node(ID, Package), Version) :-
-     attr("version", node(ID, Package), Version),
-     not external(node(ID, Package)),
-     pkg_fact(Package, deprecated_version(Version)).
-
-error(100, "Package '{0}' needs the deprecated version '{1}', and this is not allowed", Package, Version)
-  :- deprecated_versions_not_allowed(),
-     attr("version", node(ID, Package), Version),
-     build(node(ID, Package)),
-     pkg_fact(Package, deprecated_version(Version)).
-
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
 
@@ -396,13 +384,6 @@ version_weight(node(ID, Package), Weight)
   :- attr("version", node(ID, Package), Version),
      attr("node", node(ID, Package)),
      pkg_fact(Package, version_declared(Version, Weight)).
-
-version_deprecation_penalty(node(ID, Package), Penalty)
-  :- pkg_fact(Package, deprecated_version(Version)),
-     pkg_fact(Package, version_deprecation_penalty(Penalty)),
-     attr("node", node(ID, Package)),
-     attr("version", node(ID, Package), Version),
-     not external(node(ID, Package)).
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
@@ -430,7 +411,36 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
      pkg_fact(Package, version_has_commit(Version, Psha)),
      Vsha != Psha.
 
-#defined deprecated_versions_not_allowed/0.
+% Which nodes are subject to the deprecation policy, per the global 'deprecation_scope':
+% 'all' checks every node in the DAG, 'runtime' checks the root unification set, i.e. the
+% non-build closure of the roots (link, run, and test edges), plus anything that would be built.
+%
+% This uses the already-computed 'root' unification set rather than a dedicated link/run
+% closure, which avoids the extra grounding cost. The only difference is 'test' edges, so
+% under 'runtime' scope concretization is slightly stricter than the install-time gate, which
+% walks link/run only.
+node_in_deprecation_scope(node(ID, Package)) :-
+    attr("node", node(ID, Package)), deprecation_scope("all").
+
+node_in_deprecation_scope(node(ID, Package)) :-
+    unification_set("root", node(ID, Package)), deprecation_scope("runtime").
+
+% Under 'runtime' also gate what we would compile; reused nodes are concrete, hence not 'build'
+node_in_deprecation_scope(node(ID, Package)) :-
+    build(node(ID, Package)), deprecation_scope("runtime").
+
+% Directives are emitted only when the deprecation policy does not allow them, so a directive
+% matching a selected non-external node in scope is a concretization error. Reason and severity
+% appear in the error term for the message, with severity as an integer:
+% 0=none, 1=low, 2=medium, 3=high, 4=critical.
+error(1, "deprecated_error", Package, CondID, Reason, Severity)
+  :- pkg_fact(Package, deprecation_directive(CondID, Reason, Severity)),
+     condition_holds(CondID, node(ID, Package)),
+     not external(node(ID, Package)),
+     node_in_deprecation_scope(node(ID, Package)).
+
+#defined deprecation_directive/3.
+#defined deprecation_scope/1.
 
 %-----------------------------------------------------------------------------
 % Spec conditions and imposed constraints
@@ -2265,7 +2275,6 @@ build_priority(PackageNode, concr_offset) :- concrete(PackageNode), attr("node",
 
 opt_criterion(0, "high", "", 0, "requirement weight").
 
-opt_criterion(12, "built", "fixed", 0, "deprecated versions used").
 opt_criterion(11, "built", "fixed", 0, "version badness (roots)").
 opt_criterion(10, "built", "fixed", 0, "variant penalty (roots)").
 opt_criterion(9, "built", "fixed", 0, "default values of variants not being used (roots)").
@@ -2283,7 +2292,6 @@ opt_criterion(2, "hinge", "", 0, "number of packages to build (vs. reuse)").
 opt_criterion(1, "hinge", "", 0, "number of nodes from the same package").
 opt_criterion(0, "hinge", "", 0, "build unification sets").
 
-opt_criterion(12, "concr", "fixed", 0, "deprecated versions used").
 opt_criterion(11, "concr", "fixed", 0, "version badness (roots)").
 opt_criterion(10, "concr", "fixed", 0, "variant penalty (roots)").
 opt_criterion(9, "concr", "fixed", 0, "default values of variants not being used (roots)").
@@ -2383,15 +2391,6 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
       opt_priority(Priority, _, _, _, "build unification sets")
 }.
 
-% Minimize the number of deprecated versions being used
-#minimize {
-    1@Priority, PackageNode  
-    : attr("deprecated", PackageNode, _),
-      not external(PackageNode),
-      build_priority(PackageNode, BuildPriority),
-      opt_priority(Priority, BuildPriority, _, _, "deprecated versions used")
-}.
-
 % Minimize the:
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
@@ -2400,12 +2399,6 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
     Weight@Priority, PackageNode
     : attr("root", PackageNode),
       version_weight(PackageNode, Weight),
-      build_priority(PackageNode, BuildPriority),
-      opt_priority(Priority, BuildPriority, _, _, "version badness (roots)");
-    
-    Penalty@Priority, PackageNode
-    : attr("root", PackageNode),
-      version_deprecation_penalty(PackageNode, Penalty),
       build_priority(PackageNode, BuildPriority),
       opt_priority(Priority, BuildPriority, _, _, "version badness (roots)")
 }.
@@ -2484,13 +2477,6 @@ compiler_penalty(PackageNode, C-1) :-
 #minimize{
     Weight@Priority, node(X, Package)
     : version_weight(node(X, Package), Weight),
-      not attr("root", node(X, Package)),
-      not runtime(Package),
-      build_priority(node(X, Package), BuildPriority),
-      opt_priority(Priority, BuildPriority, _, _, "version badness (non roots)");
-
-    Penalty@Priority, node(X, Package)
-    : version_deprecation_penalty(node(X, Package), Penalty),
       not attr("root", node(X, Package)),
       not runtime(Package),
       build_priority(node(X, Package), BuildPriority),

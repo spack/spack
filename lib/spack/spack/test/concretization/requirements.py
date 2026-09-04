@@ -477,26 +477,20 @@ packages:
 
 
 @pytest.mark.parametrize(
-    "allow_deprecated,expected,not_expected",
-    [(True, ["@=2.3", "%gcc"], []), (False, ["%gcc"], ["@=2.3"])],
+    "allow,expected,not_expected",
+    [([{"severity": "critical"}], ["@=2.3"], []), ([], ["%gcc"], ["@=2.3"])],
 )
 def test_requirements_and_deprecated_versions(
-    allow_deprecated,
-    expected,
-    not_expected,
-    concretize_scope,
-    test_repo,
-    mutable_config: Configuration,
+    allow, expected, not_expected, concretize_scope, test_repo, mutable_config: Configuration
 ):
-    """Tests the expected behavior of requirements and deprecated versions.
+    """Tests the interaction between requirements and deprecation gating.
 
-    If deprecated versions are not allowed, concretization should just pick
-    the other requirement.
-
-    If deprecated versions are allowed, both requirements are honored.
+    The any_of constraint can be satisfied either by the deprecated version @=2.3 or by %gcc.
+    With no selector, @=2.3 is a hard error, so the solver satisfies the requirement via %gcc.
+    With a selector matching it, the deprecation is allowed with no penalty, so the solver is
+    free to satisfy the requirement with @=2.3.
     """
-    # 2.3 is a deprecated versions. Ensure that any_of picks both constraints,
-    # since they are possible
+    # 2.3 is a deprecated version. The any_of is satisfiable by %gcc alone.
     conf_str = """\
 packages:
   y:
@@ -505,7 +499,7 @@ packages:
 """
     update_packages_config(conf_str)
 
-    with mutable_config.override("config:deprecated", allow_deprecated):
+    with mutable_config.override("packages:all:deprecation:allow", allow):
         s1 = spack.concretize.concretize_one("y")
         for constrain in expected:
             assert s1.satisfies(constrain)

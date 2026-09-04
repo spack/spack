@@ -771,25 +771,89 @@ At the same time, there are many reasons to keep old versions of software:
 #. Requirements for older packages (e.g., some packages still rely on Qt 3)
 
 In general, you should not remove old versions from a ``package.py`` directly.
-Instead, you should first deprecate them using the following syntax:
+Instead, you should first deprecate them using the ``deprecated()`` directive.
+For example, to flag a version that has a known CVE:
 
 .. code-block:: python
 
-   version("1.2.3", sha256="...", deprecated=True)
+   class Openssl(Package):
+       version("3.0.7", sha256="...")
+       version("1.1.1t", sha256="...")
 
+       deprecated("@1.1.1t", reason="vuln", severity="high")
 
-This has two effects.
-First, ``spack info`` will no longer advertise that version.
-Second, commands like ``spack install`` that fetch the package will require user approval:
+The first positional argument is an optional spec constraint, in this case the version ``"@1.1.1t"``.
+If omitted, the whole package is deprecated.
 
-.. code-block:: spec
+.. warning::
 
-   $ spack install openssl@1.0.1e
-   ==> Warning: openssl@1.0.1e is deprecated and may be removed in a future Spack release.
-   ==>   Fetch anyway? [y/N]
+   The constraint is an ordinary spec, so ``@1.0`` is a range and also matches ``1.0.1`` and ``1.0.2``.
+   State the intent explicitly instead:
 
+   #. ``@=1.0`` deprecates exactly that version;
+   #. ``@1.0:1.2`` deprecates an explicit range;
+   #. ``@1.0.0``, written with three or more components, deprecates that release and anything extending it, such as ``1.0.0-custom`` or ``1.0.0.1``.
 
-If you use ``spack install --deprecated``, this check can be skipped.
+   The advice under :ref:`version_constraints` prefers ranges over ``@=`` so that dependencies and conflicts are not over-constrained.
+   It does not apply to deprecations, where a constraint that matches more than intended refuses versions users still need.
+
+The ``reason`` keyword is required, and states which category the deprecation falls into.
+Users set their tolerance per category, so the reason decides whether a site that accepts unmaintained versions still refuses this one.
+It must be one of:
+
+``vuln``
+   A known vulnerability affects the spec.
+   Use it for any advisory, whether it is a CVE, a GHSA or a PYSEC entry, and list the identifiers in ``labels`` so users can allow the ones they have assessed.
+   Take ``severity`` from the advisory's own rating.
+
+``rename``
+   The spec was renamed upstream or in the repository, and users should move to the new name.
+   A package that changed name is the usual case, and ``msg`` is the place to name the replacement.
+   Renamed variants are not covered: deprecating a variant gives users an error, with no way to map the old value onto the new one.
+
+``retired``
+   The spec is going away.
+   The release reached its end of life, upstream removed the source archive, or the package is about to be dropped from the repository.
+
+``unspecified``
+   None of the categories above applies.
+   A spec its maintainers no longer support, although nothing is known to be wrong with it, belongs here.
+   These usually take a low severity, since users who need the spec can still build it.
+   ``msg`` is required with this reason, since the category alone does not say why the spec is deprecated.
+
+The optional ``severity`` keyword ranks the urgency: ``"low"`` (default), ``"medium"``, ``"high"``, or ``"critical"`` in increasing order.
+
+The ``msg`` keyword adds guidance, shown after the reason and severity when Spack refuses the spec.
+It is optional for every reason but ``"unspecified"``.
+Use it to say what to install instead, which the reason alone cannot express:
+
+.. code-block:: python
+
+   deprecated("@1.1.1t", reason="retired", severity="high", msg="use @3.0, which is maintained")
+
+Keep it to a single line, since it is appended to a one-line error.
+
+The optional ``labels`` keyword lists the advisories a deprecation refers to.
+Any identifier works, so a GHSA or PYSEC id is as good as a CVE one:
+
+.. code-block:: python
+
+   deprecated("@1.1.1t", reason="vuln", severity="high", labels=["CVE-2023-0286"])
+
+Write one ``deprecated()`` per advisory, or per group of advisories that users would skip together.
+A deprecation can only be skipped as a whole, so grouping two advisories in one directive means a user cannot accept one without accepting the other.
+See :ref:`package-deprecations-config` for how users allow them.
+
+Whether a deprecated version can be selected depends on the user's configuration.
+Users list the deprecations they allow, by severity, reason and labels, and Spack refuses the ones no entry in that list matches.
+This is a hard error both at concretization time and before the spec is installed.
+An allowed deprecation is used like any other version, with no warning and no penalty.
+The list is empty by default, so Spack will not select a deprecated version unless the user explicitly allows it.
+See :ref:`package-deprecations-config` for how to write that list.
+
+The older ``version("X.Y", deprecated=True)`` syntax is still supported.
+Spack records it as a deprecation of ``@=X.Y`` with reason ``"unspecified"``, severity ``"critical"``, and the reserved label ``version_deprecated``.
+That label is what tells these deprecations apart from a recipe that passes ``reason="unspecified"`` itself, so users can allow one set without the other.
 
 This also applies to package recipes that are renamed or removed.
 You should first deprecate all versions before removing a package.
@@ -798,7 +862,7 @@ If you need to rename it, you can deprecate the old package and create a new pac
 Version deprecations should always last at least one release cycle of the builtin package repository before the version is completely removed.
 No version should be removed without such a deprecation process.
 This gives users a chance to complain about the deprecation in case the old version is needed for some application.
-If you require a deprecated version of a package, simply submit a PR to remove ``deprecated=True`` from the package.
+If you require a deprecated version of a package, simply submit a PR to remove the ``deprecated()`` directive from the package.
 However, you may be asked to help maintain this version of the package if the current maintainers are unwilling to support this older version.
 
 

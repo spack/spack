@@ -1722,7 +1722,7 @@ spack:
     def test_deprecated_versions_not_selected(
         self, spec_str, expected, mutable_config: Configuration
     ):
-        with mutable_config.override("config:deprecated", True):
+        with mutable_config.override("packages:all:deprecation:allow", [{"severity": "critical"}]):
             s = spack.concretize.concretize_one(spec_str)
             s.satisfies(expected)
 
@@ -2130,7 +2130,7 @@ spack:
             # pkg_fact("pkg-b", version_origin("0.9", "package_py")).
 
             weights = weights_from_result(result, name="version badness (non roots)")
-            assert weights["reused"] == 3 and weights["built"] == 0
+            assert weights["reused"] == 4 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")
@@ -2314,7 +2314,7 @@ spack:
         mutable_config.set("packages", packages_yaml["packages"])
 
         setup = spack.solver.asp.SpackSolverSetup()
-        asp_problem = setup.setup([Spec("mpileaks")], reuse=[], allow_deprecated=False).asp_problem
+        asp_problem = setup.setup([Spec("mpileaks")], reuse=[]).asp_problem
 
         assert all(x in asp_problem for x in expected)
 
@@ -5163,23 +5163,6 @@ packages:
     assert mpileaks.satisfies("%c=gcc@12")
 
 
-def test_concrete_specs_skip_prechecks(config: Configuration, mock_packages):
-    """Test that concrete specs are not checked for unknown versions and dependencies."""
-
-    specs = [spack.spec.Spec("zlib"), spack.spec.Spec("deprecated-versions@=1.1.0")]
-
-    with pytest.raises(spack.solver.asp.DeprecatedVersionError):
-        spack.solver.asp.SpackSolverSetup().setup(specs)
-
-    with config.override("config:deprecated", True):
-        concrete_spec = spack.concretize.concretize_one(specs[1])
-
-    # Try again with the same version but a concrete spec
-    specs[1] = concrete_spec
-
-    spack.solver.asp.SpackSolverSetup().setup(specs)
-
-
 @pytest.mark.regression("51683")
 def test_activating_variant_for_conditional_language_dependency(config, mock_packages):
     """Tests that a dependency on a conditional language can be concretized, and that the solver
@@ -5772,3 +5755,31 @@ def test_target_star_concretizes(mock_packages, config):
 def test_solve_kind_from_unify_configuration(unify, expected):
     """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
     assert spack.concretize.solve_kind(unify) is expected
+
+
+@pytest.mark.regression("51964")
+def test_concrete_input_specs_skip_the_dependency_precheck(mock_packages, config, monkeypatch):
+    """Concrete input specs represent the rest of an environment under unify:true, and may have
+    been concretized against an older recipe, so they are not checked against the possible
+    dependencies of the roots.
+    """
+    spec = spack.concretize.concretize_one("pkg-a@1.0 foobar=bar")
+    assert "pkg-b" in spec
+
+    # the recipe stops declaring the dependency after the spec was concretized
+    pkg_cls = spack.repo.PATH.get_pkg_class("pkg-a")
+    monkeypatch.setattr(
+        pkg_cls,
+        "dependencies",
+        {
+            when: {name: dep for name, dep in deps.items() if name != "pkg-b"}
+            for when, deps in pkg_cls.dependencies.items()
+        },
+    )
+
+    # an abstract spec is still checked against the possible dependencies
+    with pytest.raises(spack.solver.asp.InvalidDependencyError):
+        spack.solver.asp.SpackSolverSetup().setup([spack.spec.Spec("pkg-a ^pkg-b")])
+
+    # the concrete one is not
+    spack.solver.asp.SpackSolverSetup().setup([spec])

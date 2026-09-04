@@ -13,6 +13,7 @@ import spack
 import spack.caches
 import spack.ci
 import spack.config
+import spack.package_base
 import spack.repo
 import spack.spec
 import spack.util.executable
@@ -726,7 +727,9 @@ def repo_show_version_updates(args):
         specs_to_output = [
             spec
             for spec in specs_to_output
-            if not repo.get_pkg_class(spec.name).versions[spec.version].get("deprecated", False)
+            if not spack.package_base.deprecated_version(
+                repo.get_pkg_class(spec.name), spec.version
+            )
         ]
 
     if not specs_to_output:

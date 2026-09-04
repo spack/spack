@@ -9,8 +9,17 @@ import spack.concretize
 import spack.directives
 import spack.spec
 import spack.version
-from spack.directives import _make_when_spec, conflicts, depends_on, extends, patch
-from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
+from spack.directives import (
+    _make_when_spec,
+    conflicts,
+    depends_on,
+    deprecated,
+    extends,
+    patch,
+    version,
+)
+from spack.directives_meta import DirectiveDictDescriptor, DirectiveError, DirectiveMeta
+from spack.enums import LEGACY_DEPRECATION_LABEL, DeprecationReason, DeprecationSeverity
 from spack.repo import RepoPath
 from spack.spec import Spec
 
@@ -327,3 +336,147 @@ def test_diamond_inheritance_runs_shared_directives_once():
     assert conflict_specs(Left) == ["%gcc", "%clang"]
     assert conflict_specs(Right) == ["%gcc", "%intel"]
     assert conflict_specs(Diamond) == ["%gcc", "%intel", "%clang", "%nvhpc"]
+
+
+class MockPkg:
+    name = "mypkg"
+    deprecations: dict = {}
+
+
+@pytest.fixture
+def mock_pkg():
+    pkg = MockPkg()
+    pkg.deprecations = {}
+    return pkg
+
+
+class TestDeprecatedDirective:
+    def test_severity_ordering(self):
+        """Tests that severity values are kept in the correct order."""
+        assert (
+            DeprecationSeverity("none")
+            < DeprecationSeverity("low")
+            < DeprecationSeverity("medium")
+            < DeprecationSeverity("high")
+            < DeprecationSeverity("critical")
+        )
+
+    def test_severity_and_reason_invalid_values(self):
+        """Tests that an invalid value raises a ValueError."""
+        with pytest.raises(ValueError, match="bogus"):
+            DeprecationSeverity("bogus")
+
+        with pytest.raises(ValueError, match="foo"):
+            DeprecationReason("foo")
+
+    def test_deprecated_directive_version_constraint(self, mock_pkg):
+        """Tests the basic use of the deprecated directive."""
+        spack.directives._Deprecated(spec="@1.0", reason="vuln", severity="high")(mock_pkg)
+        assert len(mock_pkg.deprecations) == 1
+        constraint, entries = list(mock_pkg.deprecations.items())[0]
+        assert constraint == spack.spec.Spec("@1.0")
+        assert entries[0].reason == DeprecationReason.VULN
+        assert entries[0].severity == DeprecationSeverity.HIGH
+        assert entries[0].labels == ()
+
+    def test_deprecated_directive_whole_package(self, mock_pkg):
+        """Tests the deprecated directive on a package."""
+        spack.directives._Deprecated(spec=None, reason="rename", severity="low")(mock_pkg)
+        assert len(mock_pkg.deprecations) == 1
+        constraint = list(mock_pkg.deprecations.keys())[0]
+        assert constraint == spack.spec.EMPTY_SPEC
+
+    def test_deprecated_directive_invalid_arguments(self, mock_pkg):
+        """Tests that an invalid value is reported along with the values that are accepted."""
+        with pytest.raises(DirectiveError, match="'bogus' is not a valid reason, use one of "):
+            spack.directives._Deprecated(spec="@1.0", reason="bogus", severity="low")(mock_pkg)
+
+        with pytest.raises(DirectiveError, match="'extreme' is not a valid severity, use one of "):
+            spack.directives._Deprecated(spec="@1.0", reason="vuln", severity="extreme")(mock_pkg)
+
+    def test_deprecated_directive_multiple_reasons(self, mock_pkg):
+        """Tests cases where we have multiple deprecation reasons on the same constraint."""
+        spack.directives._Deprecated(spec="@1.0", reason="vuln", severity="high")(mock_pkg)
+        spack.directives._Deprecated(spec="@1.0", reason="rename", severity="low")(mock_pkg)
+        assert len(mock_pkg.deprecations) == 1
+        assert len(mock_pkg.deprecations[spack.spec.Spec("@1.0")]) == 2
+
+    def test_deprecated_directive_labels(self, mock_pkg):
+        """Tests that labels are stored as a tuple of strings."""
+        spack.directives._Deprecated(
+            spec="@1.0", reason="vuln", severity="high", labels=["CVE-1", "GHSA-2"]
+        )(mock_pkg)
+        entries = mock_pkg.deprecations[spack.spec.Spec("@1.0")]
+        assert entries[0].labels == ("CVE-1", "GHSA-2")
+
+    def test_deprecated_directive_labels_must_not_be_a_string(self, mock_pkg):
+        """Tests that a bare string is refused, since iterating it would yield characters."""
+        with pytest.raises(DirectiveError, match="must be a list of strings"):
+            spack.directives._Deprecated(
+                spec="@1.0", reason="vuln", severity="high", labels="CVE-1"
+            )(mock_pkg)
+
+
+def test_deprecated_directive_refuses_the_reserved_label():
+    """Tests that a recipe cannot claim the label Spack records for 'deprecated=True'."""
+    with pytest.raises(DirectiveError, match="reserved"):
+
+        class Pkg(metaclass=DirectiveMeta):
+            name = "mypkg"
+            deprecated("@=1.0", reason="vuln", labels=[LEGACY_DEPRECATION_LABEL])
+
+
+def test_deprecated_keyword_records_the_reserved_label():
+    """Tests that 'version(..., deprecated=True)' records an unspecified reason, the highest
+    severity, and the label that tells it apart from a recipe stating no reason.
+    """
+
+    class Pkg(metaclass=DirectiveMeta):
+        name = "mypkg"
+        version("1.0", deprecated=True)
+
+    entries = Pkg.deprecations[Spec("@=1.0")]
+    assert len(entries) == 1
+    assert entries[0].reason == DeprecationReason.UNSPECIFIED
+    assert entries[0].severity == DeprecationSeverity.CRITICAL
+    assert entries[0].labels == (LEGACY_DEPRECATION_LABEL,)
+
+
+def test_deprecated_directive_message(mock_pkg):
+    """Tests that msg= is stored alongside the reason and the severity."""
+    spack.directives._Deprecated(
+        spec="@1.0", reason="retired", severity="high", msg="use @2.0 instead"
+    )(mock_pkg)
+    entries = mock_pkg.deprecations[spack.spec.Spec("@1.0")]
+    assert entries[0].msg == "use @2.0 instead"
+
+
+def test_deprecated_keyword_records_no_message():
+    """Tests that 'version(..., deprecated=True)' records no guidance, since it states none."""
+
+    class Pkg(metaclass=DirectiveMeta):
+        name = "mypkg"
+        version("1.0", deprecated=True)
+
+    assert Pkg.deprecations[Spec("@=1.0")][0].msg is None
+
+
+def test_deprecated_directive_accepts_an_unspecified_reason():
+    """Tests that a recipe can state that a deprecation falls into none of the categories."""
+
+    class Pkg(metaclass=DirectiveMeta):
+        name = "mypkg"
+        deprecated("@=1.0", reason="unspecified", severity="low", msg="use @=2.0")
+
+    (entry,) = Pkg.deprecations[Spec("@=1.0")]
+    assert entry.reason == DeprecationReason.UNSPECIFIED
+    assert entry.labels == ()
+
+
+def test_unspecified_reason_requires_a_message():
+    """Tests that a recipe stating no category has to say why the spec is deprecated."""
+    with pytest.raises(DirectiveError, match="requires a 'msg' argument"):
+
+        class Pkg(metaclass=DirectiveMeta):
+            name = "mypkg"
+            deprecated("@=1.0", reason="unspecified")

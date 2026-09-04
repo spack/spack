@@ -10,6 +10,7 @@
 from typing import Any, Dict
 
 import spack.schema.environment
+from spack.enums import DeprecationReason
 
 from .compilers import extra_rpaths, flags, implicit_rpaths
 
@@ -122,6 +123,62 @@ package_attributes = {
     "patternProperties": {r"^[a-zA-Z_]\w*$": {}},
 }
 
+severity_value = {"type": "string", "enum": ["none", "low", "medium", "high", "critical"]}
+
+reason_value = {"type": "string", "enum": [x.value for x in DeprecationReason]}
+
+# Keys within one selector are AND-ed, and a key that is omitted matches anything
+deprecation_selector = {
+    "type": "object",
+    "description": "Selects the deprecations to allow. 'severity' is a maximum, so 'medium' "
+    "also selects 'low'. A deprecation is selected by 'labels' only if it declares labels and "
+    "every one of them is listed here.",
+    "additionalProperties": False,
+    "minProperties": 1,
+    "properties": {
+        "reason": {
+            "oneOf": [reason_value, {"type": "array", "minItems": 1, "items": reason_value}]
+        },
+        "severity": severity_value,
+        "labels": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    },
+}
+
+deprecation_allow = {
+    "type": "array",
+    "description": "Deprecations to allow. A deprecated() directive matched by at least one "
+    "entry is skipped, and any other one is a concretization error. The default is to allow "
+    "none of them.",
+    "default": [],
+    "items": deprecation_selector,
+}
+
+deprecation_scope = {
+    "type": "string",
+    "description": "Which dependencies are checked against the deprecation policy. "
+    "'runtime' checks only the link/run closure of the requested packages; 'all' checks "
+    "every node in the DAG, including build dependencies of build dependencies.",
+    "enum": ["runtime", "all"],
+    "default": "runtime",
+}
+
+# 'scope' selects the deptypes of a single traversal, so it is global and only 'all' takes it
+deprecation_all = {
+    "type": "object",
+    "description": "Deprecation policy applied to every package",
+    "default": {},
+    "additionalProperties": False,
+    "properties": {"allow": deprecation_allow, "scope": deprecation_scope},
+}
+
+deprecation_pkg = {
+    "type": "object",
+    "description": "Deprecation policy for this package, replacing the one under 'all'",
+    "default": {},
+    "additionalProperties": False,
+    "properties": {"allow": deprecation_allow},
+}
+
 REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"
 
 #: Properties for inclusion in other schemas
@@ -189,6 +246,7 @@ properties: Dict[str, Any] = {
                         },
                     },
                     "variants": variants,
+                    "deprecation": deprecation_all,
                 },
                 "deprecatedProperties": [
                     {
@@ -237,6 +295,7 @@ properties: Dict[str, Any] = {
                 # attribute, it could be useful to set it here
                 "package_attributes": package_attributes,
                 "variants": variants,
+                "deprecation": deprecation_pkg,
                 "externals": {
                     "type": "array",
                     "description": "List of external, system-installed instances of this package",
