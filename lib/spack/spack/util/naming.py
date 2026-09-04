@@ -8,6 +8,8 @@ import re
 import string
 from typing import List, Tuple
 
+import spack.error
+
 __all__ = [
     "pkg_name_to_class_name",
     "valid_module_name",
@@ -61,6 +63,8 @@ _VALID_MODULE_RE_V1 = re.compile(r"^\w[\w-]*$")
 
 _VALID_MODULE_RE_V2 = re.compile(r"^[a-z_][a-z0-9_]*$")
 
+_VALID_PACKAGE_NAME = re.compile(r"^[a-z0-9]+(-[a-z0-9-]+)*$")
+
 
 class NamingScheme:
     """Base class for package naming schemes."""
@@ -95,9 +99,14 @@ class NamingSchemeV2(NamingScheme):
     """Naming scheme for Package API v2.x where directory names are Python submodule names."""
 
     def pkg_dir_to_pkg_name(self, dirname: str) -> str:
-        return dirname.lstrip("_").replace("_", "-")
+        name = dirname.lstrip("_").replace("_", "-")
+        if not is_valid_name(name):
+            raise NamingSchemeError(f"Invalid or malformed package name: {name}")
+        return name
 
     def pkg_name_to_pkg_dir(self, name: str) -> str:
+        if not is_valid_name(name):
+            raise NamingSchemeError(f"Invalid or malformed package name: {name}")
         name = name.replace("-", "_")
         if name[0].isdigit() or name in RESERVED_NAMES_ONLY_LOWERCASE:
             name = f"_{name}"
@@ -175,6 +184,11 @@ def possible_spack_module_names(python_mod_name: str) -> List[str]:
         results.append("".join(s))
 
     return results
+
+
+def is_valid_name(name: str) -> bool:
+    """Check if a package name is valid under the Spack naming rules."""
+    return _VALID_PACKAGE_NAME.match(name) is not None
 
 
 def simplify_name(name: str) -> str:
@@ -313,3 +327,7 @@ class NamespaceTrie:
         stream = io.StringIO()
         self._str_helper(stream)
         return stream.getvalue()
+
+
+class NamingSchemeError(spack.error.SpackError):
+    """Package name does not adhere to naming scheme."""
