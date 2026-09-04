@@ -61,6 +61,13 @@ _VALID_MODULE_RE_V1 = re.compile(r"^\w[\w-]*$")
 
 _VALID_MODULE_RE_V2 = re.compile(r"^[a-z_][a-z0-9_]*$")
 
+_VALID_PKG_NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+
+
+def is_valid_name(name: str) -> bool:
+    """Check if a pkg name is valid under the Spack naming rules"""
+    return _VALID_PKG_NAME_RE.match(name) is not None
+
 
 class NamingScheme:
     """Base class for package naming schemes."""
@@ -208,6 +215,11 @@ def simplify_name(name: str) -> str:
     # e.g. backports.ssl_match_hostname -> backports-ssl-match-hostname
     name = name.replace("_", "-")
     name = name.replace(".", "-")
+
+    # Strip preceeding dashes, these are not allowed
+    # NOTE: This must come after converting _ ->  -
+    # e.g. (_foo ->) -foo -> foo
+    name = name.lstrip("-")
 
     # Replace "++" with "pp" and "+" with "-plus"
     # e.g. gtk+   -> gtk-plus
