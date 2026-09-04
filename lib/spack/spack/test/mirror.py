@@ -23,7 +23,7 @@ from spack.cmd.common.arguments import mirror_name_or_url
 from spack.config import Configuration
 from spack.spec import Spec
 from spack.util.executable import which
-from spack.util.filesystem import resolve_link_target_relative_to_the_link, working_dir
+from spack.util.filesystem import working_dir
 from spack.util.spack_yaml import SpackYAMLError
 
 pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")]
@@ -196,9 +196,6 @@ def test_mirror_with_url_patches(mock_packages, monkeypatch, mutable_config: Con
     def successful_apply(*args, **kwargs):
         pass
 
-    def successful_make_alias(*args, **kwargs):
-        pass
-
     with spack.stage.Stage("spack-mirror-test") as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
 
@@ -206,9 +203,6 @@ def test_mirror_with_url_patches(mock_packages, monkeypatch, mutable_config: Con
         monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, "expand", successful_expand)
         monkeypatch.setattr(spack.patch, "apply_patch", successful_apply)
         monkeypatch.setattr(spack.caches.MirrorCache, "store", record_store)
-        monkeypatch.setattr(
-            spack.mirrors.layout.DefaultLayout, "make_alias", successful_make_alias
-        )
 
         with mutable_config.override("config:checksum", False):
             spack.cmd.mirror.create(mirror_root, list(spec.traverse()))
@@ -251,22 +245,18 @@ def test_cache_store_atomic_on_failure(tmp_path: pathlib.Path):
         assert not (tmp_path / "pkg" / "pkg-1.0.tar.gz").exists()
 
 
-@pytest.mark.regression("14067")
-def test_mirror_layout_make_alias(tmp_path: pathlib.Path):
-    """Confirm that the cosmetic symlink created in the mirror cache (which may
-    be relative) targets the storage path correctly.
-    """
+def test_mirror_layout_no_alias_created(tmp_path: pathlib.Path):
+    """Confirm that storing an entry in the mirror cache does not create a
+    human-readable alias next to the content-addressed storage path."""
     alias = os.path.join("zlib", "zlib-1.2.11.tar.gz")
     path = os.path.join("_source-cache", "archive", "c3", "c3e5.tar.gz")
     cache = spack.caches.MirrorCache(root=str(tmp_path), skip_unstable_versions=False)
     layout = spack.mirrors.layout.DefaultLayout(alias, path)
 
     cache.store(MockFetcher(), layout.path)
-    layout.make_alias(cache.root)
 
-    link_target = resolve_link_target_relative_to_the_link(os.path.join(cache.root, layout.alias))
-    assert os.path.exists(link_target)
-    assert os.path.normpath(link_target) == os.path.join(cache.root, layout.path)
+    assert os.path.exists(os.path.join(cache.root, layout.path))
+    assert not os.path.lexists(os.path.join(cache.root, alias))
 
 
 @pytest.mark.regression("31627")
