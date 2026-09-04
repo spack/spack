@@ -1025,7 +1025,7 @@ class Database:
         }
         upstream_hashes.difference_update(spec.dag_hash() for spec in known_specs)
 
-        def create_node(edge: spack.spec.DependencySpec, is_upstream: bool):
+        def create_node(edge: tr.EdgeType, is_upstream: bool):
             if is_upstream:
                 return
 
@@ -1070,8 +1070,8 @@ class Database:
                     "but was not found on the file system. It is now marked as missing."
                 )
 
-        def create_edge(edge: spack.spec.DependencySpec, is_upstream: bool):
-            if not edge.parent:
+        def create_edge(edge: tr.EdgeType, is_upstream: bool):
+            if edge.parent is None:
                 return
             parent_record = self._data[edge.parent.dag_hash()]
             if is_upstream:
@@ -1931,11 +1931,7 @@ class Database:
 class NoUpstreamVisitor:
     """Gives edges to upstream specs, but does follow edges from upstream specs."""
 
-    def __init__(
-        self,
-        upstream_hashes: Set[str],
-        on_visit: Callable[["spack.spec.DependencySpec", bool], None],
-    ):
+    def __init__(self, upstream_hashes: Set[str], on_visit: Callable[[tr.EdgeType, bool], None]):
         self.upstream_hashes = upstream_hashes
         self.on_visit = on_visit
 

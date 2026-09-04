@@ -2555,7 +2555,10 @@ class SpackSolverSetup:
             possible_deps = self.pkgs
             if spack.repo.PATH.is_virtual(edge.spec.name):
                 possible_deps = self.possible_virtuals
-            if edge.spec.name not in possible_deps and not str(edge.when):
+            if edge.spec.name in possible_deps:
+                continue
+            # conditional dependency edges may not apply; roots are unconditional
+            if edge.parent is None or not str(edge.when):
                 raise InvalidDependencyError(
                     f"'{edge.spec.name}' is not a possible dependency of any root spec"
                 )
@@ -2980,7 +2983,7 @@ class SpackSolverSetup:
         the when-spec is added as a subcondition of the trigger to ensure the dependency
         is only activated when the subcondition holds.
         """
-        for dspec in spec.traverse_edges():
+        for dspec in spec.traverse_edges(root=False):
             # Ignore unconditional deps
             if dspec.when == EMPTY_SPEC:
                 continue

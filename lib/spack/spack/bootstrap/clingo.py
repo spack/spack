@@ -180,7 +180,7 @@ class ClingoBootstrapConcretizer:
         if self.host_python.satisfies("@3.6"):
             s["re2c"].versions.versions = [spack.version.from_string("=2.2")]
 
-        for edge in spack.traverse.traverse_edges([s], cover="edges"):
+        for edge in spack.traverse.traverse_edges([s], cover="edges", root=False):
             if edge.spec.name == "python":
                 edge.spec = self.host_python
 

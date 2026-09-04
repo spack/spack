@@ -218,7 +218,7 @@ def _parse_toolchain_config(toolchain_config: Union[str, List[Dict]]) -> "spack.
 
             if when:
                 when_spec = Spec(when)
-                for edge in toolchain_part.traverse_edges():
+                for edge in toolchain_part.traverse_edges(root=False):
                     if edge.when is EMPTY_SPEC:
                         edge.when = when_spec.copy()
                     else:
