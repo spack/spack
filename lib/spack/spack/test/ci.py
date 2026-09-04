@@ -471,24 +471,16 @@ def test_ci_run_standalone_tests_missing_requirements(working_env, config, capfd
     err = capfd.readouterr()[1]
     assert "Job spec is required" in err
 
-    args = {"job_spec": spack.concretize.concretize_one("printing-package")}
-    ci.run_standalone_tests(**args)
-    err = capfd.readouterr()[1]
-    assert "Reproduction directory is required" in err
-
 
 @pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_junit(
-    tmp_path: pathlib.Path, repro_dir, working_env, mock_test_stage, capfd, monkeypatch
+    tmp_path: pathlib.Path, working_env, mock_test_stage, capfd, monkeypatch
 ):
-    # the generated test script runs `spack` from PATH
-    monkeypatch.setenv("PATH", f"{spack.paths.bin_path}{os.pathsep}{os.environ['PATH']}")
     log_file = tmp_path / "junit.xml"
 
     ci.run_standalone_tests(
         log_file=str(log_file),
         job_spec=spack.concretize.concretize_one("printing-package"),
-        repro_dir=str(repro_dir),
         fail_fast=True,
     )
     err = capfd.readouterr()[1]
@@ -501,8 +493,6 @@ def test_ci_run_standalone_tests_not_installed_cdash(
     tmp_path: pathlib.Path, repro_dir, working_env, mock_test_stage, capfd, monkeypatch
 ):
     """Test run_standalone_tests with cdash and related options."""
-    # the generated test script runs `spack` from PATH
-    monkeypatch.setenv("PATH", f"{spack.paths.bin_path}{os.pathsep}{os.environ['PATH']}")
     log_file = tmp_path / "junit.xml"
 
     # Cover when CDash handler provided (with the log file as well)
@@ -519,7 +509,6 @@ def test_ci_run_standalone_tests_not_installed_cdash(
     ci.run_standalone_tests(
         log_file=str(log_file),
         job_spec=spack.concretize.concretize_one("printing-package"),
-        repro_dir=str(repro_dir),
         cdash=handler,
     )
     out = capfd.readouterr()[0]

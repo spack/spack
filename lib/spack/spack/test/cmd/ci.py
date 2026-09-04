@@ -637,10 +637,12 @@ def test_ci_rebuild_mock_success(
     monkeypatch,
     broken_tests,
 ):
-    pkg_name = "archive-files"
+    pkg_name = "simple-standalone-test"
     rebuild_env = create_rebuild_env(tmp_path, pkg_name, broken_tests)
+    broken_spec_path = tmp_path / "working_dir" / "naughty-list" / rebuild_env.root_spec_dag_hash
+    broken_spec_path.parent.mkdir(exist_ok=True)
+    broken_spec_path.write_text("")
 
-    monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "echo")
     # the cdash url in the environment is fake; never upload reports to it
     monkeypatch.setattr(spack.reporters.cdash.CDash, "upload", lambda self, filename: None)
 
@@ -658,7 +660,43 @@ def test_ci_rebuild_mock_success(
             assert "Unable to run stand-alone tests" in out
         else:
             # No installation means no package to test and no test log to copy
-            assert "Cannot copy test logs" in out
+            assert "Testing package " in out
+
+        assert not broken_spec_path.exists()
+
+
+def test_ci_rebuild_mock_failure(
+    tmp_path: pathlib.Path,
+    working_env,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_fetch,
+    mock_binary_index,
+    monkeypatch,
+):
+    pkg_name = "failing-build"
+    rebuild_env = create_rebuild_env(tmp_path, pkg_name, False)
+
+    # the cdash url in the environment is fake; never upload reports to it
+    monkeypatch.setattr(spack.reporters.cdash.CDash, "upload", lambda self, filename: None)
+
+    with working_dir(rebuild_env.env_dir):
+        activate_rebuild_env(tmp_path, pkg_name, rebuild_env)
+
+        out = ci_cmd("rebuild", "--tests", fail_on_error=False)
+        print(out)
+
+        # We didn"t really run the build so build output file(s) are missing
+        assert "Reporting broken develop build" in out
+        assert "Unable to run stand-alone tests due to unsuccessful installation" in out
+        assert "Unable to copy files" in out
+        assert "No such file or directory" in out
+
+        # Make sure the broken spec is reported
+        # rebuild env is mocked as spack_protected_branch
+        assert (
+            tmp_path / "working_dir" / "naughty-list" / rebuild_env.root_spec_dag_hash
+        ).exists()
 
 
 def test_ci_rebuild_mock_failure_to_push(
@@ -679,7 +717,7 @@ def test_ci_rebuild_mock_failure_to_push(
     def mock_success(*args, **kwargs):
         return 0
 
-    monkeypatch.setattr(ci, "process_command", mock_success)
+    monkeypatch.setattr(spack.cmd.ci, "install_cmd", mock_success)
 
     # Mock failure to push to the build cache
     def mock_push_or_raise(*args, **kwargs):
@@ -2319,7 +2357,6 @@ def test_ci_verify_versions_standard_duplicates(
         monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
 
         out = ci_cmd("verify-versions", commits[-3], commits[-4], fail_on_error=False)
-        print(f"'{out}'")
         assert "Validated diff-test@2.1.7" in out
         assert "Invalid checksum found diff-test@2.1.8" in out
 
