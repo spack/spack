@@ -649,9 +649,8 @@ def test_ci_rebuild_mock_success(
 
         out = ci_cmd("rebuild", "--tests", fail_on_error=False)
 
-        # We didn"t really run the build so build output file(s) are missing
-        assert "Unable to copy files" in out
-        assert "No such file or directory" in out
+        # We didn't really run the build so build output file(s) are missing
+        assert "No build logs or archived files found" in out
 
         if broken_tests:
             # We generate a skipped tests report in this case
