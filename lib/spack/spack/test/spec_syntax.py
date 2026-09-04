@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import io
 import itertools
 import os
 import pathlib
@@ -16,7 +17,6 @@ import spack.error
 import spack.hash_lookup
 import spack.platforms.test
 import spack.repo
-import spack.solver.asp
 import spack.spec
 import spack.util.filesystem as fs
 from spack.externals import (
@@ -1702,21 +1702,23 @@ def test_parse_filename_missing_slash_as_spec(specfile_for, tmp_path: pathlib.Pa
     assert spec.namespace == "libelf"
     assert spec.fullname == "libelf.yaml"
 
-    # Check that if we concretize this spec, we get a good error
-    # message that mentions we might've meant a file.
-    with pytest.raises(spack.repo.UnknownEntityError) as exc_info:
+    # Concretizing it reports the namespace, which the command line turns into a hint that a
+    # filename was meant.
+    with pytest.raises(spack.repo.UnknownNamespaceError) as exc_info:
         spack.concretize.concretize_one(spec)
-    assert exc_info.value.long_message
-    assert (
-        "Did you mean to specify a filename with './libelf.yaml'?" in exc_info.value.long_message
-    )
+    assert (exc_info.value.namespace, exc_info.value.name) == ("libelf", "yaml")
+
+    out = io.StringIO()
+    spack.cmd.report_unknown_package(exc_info.value, out=out)
+    assert "Did you mean to specify a filename with './libelf.yaml'?" in out.getvalue()
 
     # make sure that only happens when the spec ends in yaml
-    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
-        spack.concretize.concretize_one("builtin_mock.doesnotexist")
-    assert not exc_info.value.long_message or (
-        "Did you mean to specify a filename with" not in exc_info.value.long_message
-    )
+    with pytest.raises(spack.repo.UnknownNamespaceError) as exc_info:
+        spack.concretize.concretize_one("nosuchnamespace.doesnotexist")
+
+    out = io.StringIO()
+    spack.cmd.report_unknown_package(exc_info.value, out=out)
+    assert "Did you mean to specify a filename with" not in out.getvalue()
 
 
 def test_parse_specfile_dependency(config, mock_packages, tmp_path: pathlib.Path):

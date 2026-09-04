@@ -8,6 +8,7 @@ import pickle
 import pytest
 
 import spack.error
+import spack.repo
 import spack.solver.asp
 from spack.spec import Spec
 
@@ -23,6 +24,22 @@ def test_error_keeps_its_state_through_a_pipe():
     assert type(replayed) is spack.error.SpackError
     assert (replayed.message, replayed.long_message) == ("boom", "details")
     assert replayed.traceback == "Traceback from the child\n"
+
+
+def test_unknown_package_error_keeps_its_state_through_a_pipe():
+    """Tests that the error a worker process raises for an unknown name replays in the parent."""
+    error = spack.repo.UnknownPackageError("pkg-a", namespace="builtin", repo_root="/x/y")
+
+    replayed = pickle.loads(pickle.dumps(error))
+
+    assert type(replayed) is spack.repo.UnknownPackageError
+    assert (replayed.name, replayed.namespace, replayed.repo_root) == ("pkg-a", "builtin", "/x/y")
+
+
+def test_unknown_package_error_holds_no_objects():
+    """The error is raised on paths that pickle it, so it stores strings and nothing else."""
+    error = spack.repo.UnknownPackageError("pkg-a", namespace="builtin", repo_root="/x/y")
+    assert all(isinstance(value, (str, bool, type(None))) for value in vars(error).values())
 
 
 @pytest.mark.parametrize(

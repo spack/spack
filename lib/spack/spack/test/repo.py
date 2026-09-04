@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import difflib
 import os
 import pathlib
 
@@ -1012,17 +1013,40 @@ def test_repo_use_bad_syntax(config, repo_builder: RepoBuilder):
             spack.repo.PATH.get_pkg_class("erroneous")
 
 
-def test_unknownpkgerror_match_fails(mock_packages):
-    """Ensure fails with basic message when get_close_matches fails."""
+def test_unknownpkgerror_names_the_package(mock_packages):
+    """The error reports the package name."""
+    with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+        spack.repo.PATH.get_pkg_class("nosuchpkg")
+    assert exc_info.value.name == "nosuchpkg"
+    assert exc_info.value.message.startswith("Package 'nosuchpkg' not found")
+
+
+def test_similar_package_names(mock_packages):
+    """Ensure a misspelled name is close to the package that was meant."""
+    assert "mpileaks" in spack.repo.similar_package_names("mpileak", mock_packages)
+
+
+def test_similar_package_names_match_fails(mock_packages):
+    """Ensure the suggestions are empty when get_close_matches fails."""
 
     def _get_close_matches(*args, **kwargs):
         raise MemoryError("Too many packages to compare")
 
-    # Confirm that the error indicates there were no matches (default).
-    exception = spack.repo.UnknownPackageError("pkg_a", get_close_matches=_get_close_matches)
-    assert "mean one of the following" not in str(exception)
+    assert (
+        spack.repo.similar_package_names(
+            "mpileak", mock_packages, get_close_matches=_get_close_matches
+        )
+        == []
+    )
+
+
+def test_similar_package_names_includes_virtuals(mock_packages):
+    """A virtual is a valid suggestion, and the names excluding virtuals come from the index."""
+    assert spack.repo.similar_package_names("mpj", mock_packages) == ["mpi"]
+    assert difflib.get_close_matches("mpj", mock_packages.all_package_names()) == []
 
 
 def test_unknownpkgerror_str_repo():
-    """Ensure reasonable error message when repo is a string."""
-    assert "not found in repository" in str(spack.repo.UnknownPackageError("pkg_a", "my_repo"))
+    """Ensure reasonable error message when the repository is known."""
+    error = spack.repo.UnknownPackageError("pkg_a", repo_root="/my/repo")
+    assert str(error) == "Package 'pkg_a' not found in repository '/my/repo'"

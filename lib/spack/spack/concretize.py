@@ -29,6 +29,27 @@ if TYPE_CHECKING:
     from spack.solver.reuse import SpecFiltersFactory
 
 
+def ensure_existing_package_names(specs: Sequence[Spec]) -> None:
+    """Raise if a spec refers to an package that does not exist in the repository.
+
+    Args:
+        specs: specs whose nodes are checked, dependencies included
+    """
+    for root in specs:
+        for spec in root.traverse():
+            if not spec.name:
+                continue
+            # raises UnknownNamespaceError for a namespace that is not configured
+            repo = spack.repo.PATH.repo_for_pkg(spec)
+            # exists() is a directory listing, is_virtual() reads the provider index, so a name
+            # with a package.py never reaches the index
+            if repo.exists(spec.name) or spack.repo.PATH.is_virtual(spec.name):
+                continue
+            raise spack.repo.UnknownPackageError(
+                spec.name, namespace=spec.namespace, repo_root=repo.root
+            )
+
+
 def _concretize_specs_together(
     abstract_specs: Sequence[Spec],
     *,
@@ -45,6 +66,7 @@ def _concretize_specs_together(
     """
     from spack.solver.asp import Solver
 
+    ensure_existing_package_names(abstract_specs)
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     result = Solver(specs_factory=factory).solve(
         abstract_specs, tests=tests, allow_deprecated=allow_deprecated
@@ -112,6 +134,7 @@ def concretize_together_when_possible(
     ui = ui or HeadlessUI()
 
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
+    ensure_existing_package_names(to_concretize)
     old_concrete_to_abstract = {
         concrete: abstract for (abstract, concrete) in spec_list if concrete
     }
@@ -167,6 +190,9 @@ def concretize_separately(
 
     ui = ui or HeadlessUI()
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
+    # validate in the parent process, cause validation failures in sub-processes result in a
+    # RuntimeError instead of UnknownPackageError
+    ensure_existing_package_names(to_concretize)
     args = [
         (i, str(abstract), tests, factory)
         for i, abstract in enumerate(to_concretize)
@@ -268,6 +294,8 @@ def concretize_one(
             raise spack.error.SpecError(
                 f"Spec {node} has no name; cannot concretize an anonymous spec"
             )
+
+    ensure_existing_package_names([spec])
 
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     result = Solver(specs_factory=factory).solve(

@@ -312,8 +312,19 @@ def test_env_add_nonexistent_fails():
     env("create", "test")
 
     e = ev.read("test")
-    with pytest.raises(ev.SpackEnvironmentError, match=r"no such package"):
+    with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
         e.add("thispackagedoesnotexist")
+    assert exc_info.value.name == "thispackagedoesnotexist"
+
+
+def test_env_add_nonexistent_dependency_fails():
+    """The names of dependencies are checked too, so they cannot reach the manifest."""
+    env("create", "test")
+
+    e = ev.read("test")
+    with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+        e.add("mpileaks ^thispackagedoesnotexist")
+    assert exc_info.value.name == "thispackagedoesnotexist"
 
 
 def test_env_list(mutable_mock_env_path):

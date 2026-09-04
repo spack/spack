@@ -2540,21 +2540,25 @@ packages:
     @pytest.mark.regression("43141")
     @pytest.mark.regression("52567")
     @pytest.mark.parametrize(
-        "spec_str,expected_match",
+        "spec_str,error_cls,expected_match",
         [
             # A package does not exist
-            ("pkg-a ^foo", "since 'foo' does not exist"),
+            ("pkg-a ^foo", spack.repo.UnknownPackageError, "Package 'foo' not found"),
             # Request a compiler for a package that doesn't need it
-            ("pkg-c %gcc", "cannot depend on gcc"),
+            ("pkg-c %gcc", spack.error.UnsatisfiableSpecError, "cannot depend on gcc"),
             # Request a compiler for a language the package doesn't use, while another
             # compiler is requested for a language it does use. Only the unusable language
             # must be reported.
-            ("pkg-b %c=gcc %fortran=llvm", "cannot depend on fortran"),
+            (
+                "pkg-b %c=gcc %fortran=llvm",
+                spack.error.UnsatisfiableSpecError,
+                "cannot depend on fortran",
+            ),
         ],
     )
-    def test_errors_on_statically_checked_preconditions(self, spec_str, expected_match):
+    def test_errors_on_statically_checked_preconditions(self, spec_str, error_cls, expected_match):
         """Tests that the solver can report a case where the compiler cannot be set"""
-        with pytest.raises(spack.error.UnsatisfiableSpecError, match=expected_match):
+        with pytest.raises(error_cls, match=expected_match):
             spack.concretize.concretize_one(spec_str)
 
     @pytest.mark.regression("36339")
@@ -5772,3 +5776,31 @@ def test_target_star_concretizes(mock_packages, config):
 def test_solve_kind_from_unify_configuration(unify, expected):
     """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
     assert spack.concretize.solve_kind(unify) is expected
+
+
+@pytest.mark.parametrize(
+    "spec_str,error_cls,name",
+    [
+        ("mpileak", spack.repo.UnknownPackageError, "mpileak"),
+        ("mpileaks ^nosuchpkg", spack.repo.UnknownPackageError, "nosuchpkg"),
+        ("nosuchnamespace.mpileaks", spack.repo.UnknownNamespaceError, "mpileaks"),
+    ],
+)
+def test_concretize_rejects_unknown_names(spec_str, error_cls, name, config, mock_packages):
+    """A name that is not in the repository is rejected before the solve."""
+    with pytest.raises(error_cls) as exc_info:
+        spack.concretize.concretize_one(spec_str)
+    assert exc_info.value.name == name
+
+
+def test_concretize_accepts_a_virtual_without_a_package(config, mock_packages):
+    """'lapack' is a virtual, and the mock repository does not have a package.py for it."""
+    spack.concretize.ensure_existing_package_names([Spec("mpileaks ^lapack")])
+
+
+def test_concretize_separately_rejects_unknown_names(mutable_config, mock_packages):
+    """The check runs in the parent: a worker reports an error as a plain string."""
+    spec_list = [(Spec("mpileaks"), None), (Spec("nosuchpkg"), None)]
+    with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+        spack.concretize.concretize_separately(spec_list)
+    assert exc_info.value.name == "nosuchpkg"
