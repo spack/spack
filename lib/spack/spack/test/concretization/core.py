@@ -1052,22 +1052,11 @@ spack:
 
     @pytest.mark.regression("7239")
     def test_regression_issue_7239(self):
-        # Constructing a SpecBuildInterface from another SpecBuildInterface
-        # results in an inconsistent MRO
+        # Indexing a spec is idempotent: it returns the node, not a wrapper around it
+        s = spack.concretize.concretize_one(Spec("mpileaks"))
 
-        # Normal Spec
-        s = Spec("mpileaks")
-        s = spack.concretize.concretize_one(s)
-
-        assert spack.util.lang.ObjectWrapper not in s.__class__.__mro__
-
-        # Spec wrapped in a build interface
-        build_interface = s["mpileaks"]
-        assert spack.util.lang.ObjectWrapper in build_interface.__class__.__mro__
-
-        # Mimics asking the build interface from a build interface
-        build_interface = s["mpileaks"]["mpileaks"]
-        assert spack.util.lang.ObjectWrapper in build_interface.__class__.__mro__
+        assert s["mpileaks"] is s
+        assert s["mpileaks"]["mpileaks"] is s
 
     @pytest.mark.regression("7705")
     def test_regression_issue_7705(self):

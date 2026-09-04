@@ -1434,7 +1434,7 @@ class ForwardQueryToPackage:
         self.default = default_handler
         self.indirect = _indirect
 
-    def __get__(self, instance: "SpecBuildInterface", cls):
+    def __get__(self, instance: Optional["Spec"], cls):
         """Retrieves the property from Package using a well defined chain
         of responsibility.
 
@@ -1456,19 +1456,22 @@ class ForwardQueryToPackage:
         indicating a query failure, e.g. that library files were not found in a
         'libs' query.
         """
+        if instance is None:
+            return self
+
+        pkg = instance.package
+
+        query = instance.last_query
+        if query is None:
+            # The spec was not obtained through __getitem__, so associate an empty query with it.
+            query = instance.last_query = QueryState(instance.name, [], False, None)
+
         # TODO: this indirection exist solely for `spec["python"].command` to actually return
         # spec["python-venv"].command. It should be removed when `python` is a virtual.
-        if self.indirect and instance.indirect_spec:
-            pkg = instance.indirect_spec.package
-        else:
-            pkg = instance.wrapped_obj.package
-        try:
-            query = instance.last_query
-        except AttributeError:
-            # There has been no query yet: this means
-            # a spec is trying to access its own attributes
-            _ = instance.wrapped_obj[instance.wrapped_obj.name]  # NOQA: ignore=F841
-            query = instance.last_query
+        if self.indirect and instance.name == "python" and query.parent is not None:
+            python_venvs = query.parent.dependencies("python-venv")
+            if python_venvs:
+                pkg = python_venvs[0].package
 
         callbacks_chain = []
         # First in the chain : specialized attribute for virtual packages
@@ -1480,7 +1483,7 @@ class ForwardQueryToPackage:
         # Final resort : default callback
         if self.default is not None:
             _default = self.default  # make mypy happy
-            callbacks_chain.append(lambda: _default(instance.wrapped_obj))
+            callbacks_chain.append(lambda: _default(instance))
 
         # Trigger the callbacks in order, the first one producing a
         # value wins
@@ -1498,10 +1501,7 @@ class ForwardQueryToPackage:
                     msg += "\tqueried as : {query.name}\n"
                     msg += "\textra parameters : {query.extra_parameters}"
                     message = msg.format(
-                        name=pkg.name,
-                        attrib=self.attribute_name,
-                        spec=instance,
-                        query=instance.last_query,
+                        name=pkg.name, attrib=self.attribute_name, spec=instance, query=query
                     )
                 else:
                     return value
@@ -1519,11 +1519,11 @@ class ForwardQueryToPackage:
         # properties defined and no default handler, or that all callbacks
         # raised AttributeError. In this case, we raise AttributeError with an
         # appropriate message.
-        fmt = "'{name}' package has no relevant attribute '{query}'\n"
+        fmt = "'{name}' package has no relevant attribute '{attrib}'\n"
         fmt += "\tspec : '{spec}'\n"
-        fmt += "\tqueried as : '{spec.last_query.name}'\n"
-        fmt += "\textra parameters : '{spec.last_query.extra_parameters}'\n"
-        message = fmt.format(name=pkg.name, query=self.attribute_name, spec=instance)
+        fmt += "\tqueried as : '{query.name}'\n"
+        fmt += "\textra parameters : '{query.extra_parameters}'\n"
+        message = fmt.format(name=pkg.name, attrib=self.attribute_name, spec=instance, query=query)
         raise AttributeError(message)
 
     def __set__(self, instance, value):
@@ -1532,8 +1532,13 @@ class ForwardQueryToPackage:
         raise AttributeError(msg.format(cls_name, self.attribute_name))
 
 
-# Represents a query state in a BuildInterface object
-QueryState = collections.namedtuple("QueryState", ["name", "extra_parameters", "isvirtual"])
+class QueryState(NamedTuple):
+    """Last ``__getitem__`` query state of a spec"""
+
+    name: str
+    extra_parameters: List[str]
+    isvirtual: bool
+    parent: Optional["Spec"]
 
 
 def tree(
@@ -2392,6 +2397,12 @@ class Spec:
             return self
         edges_by_package = next(iter(self._dependents.values()))
         return edges_by_package[0].parent.root
+
+    # Attributes forwarded to the associated package instance
+    home = ForwardQueryToPackage("home", default_handler=None)
+    headers = ForwardQueryToPackage("headers", default_handler=_headers_default_handler)
+    libs = ForwardQueryToPackage("libs", default_handler=_libs_default_handler)
+    command = ForwardQueryToPackage("command", default_handler=None, _indirect=True)
 
     @property
     def package(self):
@@ -4046,15 +4057,14 @@ class Spec:
             raise spack.error.SpecError("Spec version is not concrete: " + str(self))
         return self.versions[0]
 
-    def __getitem__(self, name: str):
-        """Get a dependency from the spec by its name. This call implicitly
-        sets a query state in the package being retrieved. The behavior of
-        packages may be influenced by additional query parameters that are
-        passed after a colon symbol.
+    #: Used to store the last query parameters when this spec was accessed via ``__getitem__``.
+    last_query: Optional[QueryState] = None
 
-        Note that if a virtual package is queried a copy of the Spec is
-        returned while for non-virtual a reference is returned.
-        """
+    def __getitem__(self, name: str) -> "Spec":
+        """Get a (transitive) dependency by name. Optionally, query parameters can be passed after
+        a colon symbol, e.g. ``spec["foo:bar,baz"]``. The name and query parameters are stored in
+        the ``last_query`` attribute, so that a package can branch based on the query when
+        returning libraries, headers, etc."""
         query_parameters: List[str] = name.split(":")
         if len(query_parameters) > 2:
             raise KeyError("key has more than one ':' symbol. At most one is admitted.")
@@ -4078,8 +4088,11 @@ class Spec:
             raise KeyError(f"No spec with name {name} in {self}") from e
 
         if self._concrete:
-            return SpecBuildInterface(
-                edge.spec, name, query_parameters, _parent=self, is_virtual=name in edge.virtuals
+            edge.spec.last_query = QueryState(
+                name=name,
+                extra_parameters=query_parameters,
+                isvirtual=name in edge.virtuals,
+                parent=self,
             )
 
         return edge.spec
@@ -5333,11 +5346,9 @@ class Spec:
         # As with to_dict, do not include dependents. This avoids serializing more than intended.
         state.pop("_dependents", None)
 
-        # Do not pickle attributes dynamically set by SpecBuildInterface
-        state.pop("wrapped_obj", None)
-        state.pop("token", None)
+        # The query a node was reached by is transient, and holds a reference to the spec that was
+        # indexed.
         state.pop("last_query", None)
-        state.pop("indirect_spec", None)
 
         # Optimize variants and compiler_flags serialization
         variants = state.pop("variants", None)
@@ -5474,47 +5485,6 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
             sorted(self.keys()), lambda x: self[x].type == vt.VariantType.BOOL
         )
         return bool_keys, kv_keys
-
-
-class SpecBuildInterface(lang.ObjectWrapper, Spec):
-    # home is available in the base Package so no default is needed
-    home = ForwardQueryToPackage("home", default_handler=None)
-    headers = ForwardQueryToPackage("headers", default_handler=_headers_default_handler)
-    libs = ForwardQueryToPackage("libs", default_handler=_libs_default_handler)
-    command = ForwardQueryToPackage("command", default_handler=None, _indirect=True)
-
-    def __init__(
-        self,
-        spec: "Spec",
-        name: str,
-        query_parameters: List[str],
-        _parent: "Spec",
-        is_virtual: bool,
-    ):
-        lang.ObjectWrapper.__init__(self, spec)
-        # Adding new attributes goes after ObjectWrapper.__init__ call since the ObjectWrapper
-        # resets __dict__ to behave like the passed object
-        original_spec = getattr(spec, "wrapped_obj", spec)
-        self.wrapped_obj = original_spec
-        self.token = original_spec, name, query_parameters, _parent, is_virtual
-        self.last_query = QueryState(
-            name=name, extra_parameters=query_parameters, isvirtual=is_virtual
-        )
-
-        # TODO: this ad-hoc logic makes `spec["python"].command` return
-        # `spec["python-venv"].command` and should be removed when `python` is a virtual.
-        self.indirect_spec = None
-        if spec.name == "python":
-            python_venvs = _parent.dependencies("python-venv")
-            if not python_venvs:
-                return
-            self.indirect_spec = python_venvs[0]
-
-    def __reduce__(self):
-        return SpecBuildInterface, self.token
-
-    def copy(self, *args, **kwargs):
-        return self.wrapped_obj.copy(*args, **kwargs)
 
 
 def substitute_abstract_variants(spec: Spec):
