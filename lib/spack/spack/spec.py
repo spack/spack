@@ -915,8 +915,8 @@ class DeprecatedCompilerSpec(lang.DeprecatedProperty):
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
-class DependencySpec:
-    """DependencySpecs represent an edge in the DAG, and contain dependency types
+class Edge:
+    """Edge represents an edge in the DAG, and contains dependency types
     and information on the virtuals being provided.
 
     Dependencies can be one (or more) of several types:
@@ -984,11 +984,11 @@ class DependencySpec:
         self.virtuals = tuple(sorted(union))
         return True
 
-    def copy(self, *, keep_virtuals: bool = True, keep_parent: bool = True) -> "DependencySpec":
+    def copy(self, *, keep_virtuals: bool = True, keep_parent: bool = True) -> "Edge":
         """Return a copy of this edge"""
         parent = self.parent if keep_parent else Spec()
         virtuals = self.virtuals if keep_virtuals else ()
-        return DependencySpec(
+        return Edge(
             parent,
             self.spec,
             depflag=self.depflag,
@@ -998,7 +998,7 @@ class DependencySpec:
             when=self.when,
         )
 
-    def _constrain(self, other: "DependencySpec") -> bool:
+    def _constrain(self, other: "Edge") -> bool:
         """Constrain this edge with another edge. Precondition: parent and child of self and other
         are compatible, and both edges have the same when condition. Used as an internal helper
         function in Spec.constrain.
@@ -1060,7 +1060,7 @@ class DependencySpec:
             keywords.append(f"propagation=PropagationPolicy.{self.propagation.name}")
 
         keywords_str = ", ".join(keywords)
-        return f"DependencySpec({self.parent.format()!r}, {self.spec.format()!r}, {keywords_str})"
+        return f"Edge({self.parent.format()!r}, {self.spec.format()!r}, {keywords_str})"
 
     def format(self, *, unconditional: bool = False) -> str:
         """Returns a string, using the spec syntax, representing this edge
@@ -1086,11 +1086,9 @@ class DependencySpec:
             return f"{parent_str} {dep_sigil}[{' '.join(edge_attrs)}] {child_str}"
         return f"{parent_str} {dep_sigil}{child_str}"
 
-    def flip(self) -> "DependencySpec":
+    def flip(self) -> "Edge":
         """Flips the dependency and keeps its type. Drops all other information."""
-        return DependencySpec(
-            parent=self.spec, spec=self.parent, depflag=self.depflag, virtuals=()
-        )
+        return Edge(parent=self.spec, spec=self.parent, depflag=self.depflag, virtuals=())
 
 
 class CompilerFlag(str):
@@ -1273,10 +1271,10 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         return result
 
 
-EdgeMap = Dict[str, List[DependencySpec]]
+EdgeMap = Dict[str, List[Edge]]
 
 
-def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> None:
+def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: Edge) -> None:
     if key in edge_map:
         lst = edge_map[key]
         lst.append(edge)
@@ -1292,7 +1290,7 @@ def _select_edges(
     child: Optional[str] = None,
     depflag: dt.DepFlag = dt.ALL,
     virtuals: Optional[Union[str, Sequence[str]]] = None,
-) -> List[DependencySpec]:
+) -> List[Edge]:
     """Selects a list of edges and returns them.
 
     If an edge:
@@ -1314,7 +1312,7 @@ def _select_edges(
         return []
 
     # Start from all the edges we store
-    selected: Iterable[DependencySpec] = itertools.chain.from_iterable(edge_map.values())
+    selected: Iterable[Edge] = itertools.chain.from_iterable(edge_map.values())
 
     # Filter by parent name
     if parent is not None:
@@ -1677,7 +1675,7 @@ class SpecAnnotations:
         return result
 
 
-def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
+def _anonymous_star(dep: Edge, dep_format: str) -> str:
     """Determine if a spec needs a star to disambiguate it from an anonymous spec w/variants.
 
     Returns:
@@ -1709,8 +1707,8 @@ def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
 
 
 def _satisfying_edges(
-    lhs_node: "Spec", rhs_edge: DependencySpec, *, resolve_virtuals: bool
-) -> Iterator[DependencySpec]:
+    lhs_node: "Spec", rhs_edge: Edge, *, resolve_virtuals: bool
+) -> Iterator[Edge]:
     """Yield every edge in ``lhs_node`` that satisfies ``rhs_edge`` structurally, ignoring the
     target's own dependencies, in priority order: direct deps of all types, then the historical
     compiler node, then a BFS over transitive link/run deps."""
@@ -1729,7 +1727,7 @@ def _satisfying_edges(
     # Include the historical compiler node if available as an ad-hoc edge.
     compiler_spec = lhs_node.annotations.compiler_node_attribute
     if compiler_spec is not None:
-        compiler_edge = DependencySpec(
+        compiler_edge = Edge(
             lhs_node,
             compiler_spec,
             depflag=dt.BUILD,
@@ -1749,7 +1747,7 @@ def _satisfying_edges(
     # performance, iterate the _dependencies edge map directly instead of going through
     # edges_to_dependencies.
     depflag = dt.LINK | dt.RUN
-    queue: Deque[DependencySpec] = collections.deque()
+    queue: Deque[Edge] = collections.deque()
     queue.extend(
         e for edges in lhs_node._dependencies.values() for e in edges if e.depflag & depflag
     )
@@ -1809,9 +1807,7 @@ def constrains_only_name_and_versions(spec: "Spec") -> bool:
     )
 
 
-def _satisfies_edge_attributes(
-    lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtuals: bool
-) -> bool:
+def _satisfies_edge_attributes(lhs: "Edge", rhs: "Edge", resolve_virtuals: bool) -> bool:
     """Helper function for satisfaction tests, which checks edge attributes and the target node.
     It skips verification of the parent node."""
     name_mismatch = rhs.spec.name and lhs.spec.name != rhs.spec.name
@@ -1848,7 +1844,7 @@ def _satisfies_edge_attributes(
     return lhs.spec._provides_virtual(rhs.spec)
 
 
-def _same_direct_dep(lhs: DependencySpec, rhs: DependencySpec) -> bool:
+def _same_direct_dep(lhs: Edge, rhs: Edge) -> bool:
     """Two edges of one parent refer to the same dependency when they are direct deps, refer to the
     same package name, and have the same when condition.
 
@@ -1863,7 +1859,7 @@ def _same_direct_dep(lhs: DependencySpec, rhs: DependencySpec) -> bool:
     )
 
 
-def _satisfies_edge(lhs: DependencySpec, rhs: DependencySpec, resolve_virtuals: bool) -> bool:
+def _satisfies_edge(lhs: Edge, rhs: Edge, resolve_virtuals: bool) -> bool:
     """Whether every DAG satisfying ``lhs`` satisfies ``rhs``."""
     # Only a direct dependency can satisfy a direct dependency. _satisfies_edge_attributes does
     # not compare this itself: its other caller, _satisfying_edges, filters on it externally,
@@ -1882,12 +1878,10 @@ def _satisfies_edge(lhs: DependencySpec, rhs: DependencySpec, resolve_virtuals: 
     return _satisfies_dependencies(lhs.spec, rhs.spec, resolve_virtuals=resolve_virtuals)
 
 
-def _edge_is_redundant(
-    edge: DependencySpec, given: DependencySpec, resolve_virtuals: bool
-) -> bool:
-    # %foo and %%foo satisfy each other in both directions; they do not restrict the solution space
-    # but only influence optimality. That means that edge redundancy cannot be based on satisfies
-    # only, hence the exception.
+def _edge_is_redundant(edge: Edge, given: Edge, resolve_virtuals: bool) -> bool:
+    """Whether ``edge`` adds nothing to ``given``: ``given`` satisfies it, and it states no
+    propagation ``given`` does not. A propagated edge is an input to the solver's objective even
+    where it does not narrow the solution set, so satisfaction alone does not make it redundant."""
     if edge.propagation != PropagationPolicy.NONE and given.propagation != edge.propagation:
         return False
     if edge.spec.name != given.spec.name:
@@ -2049,7 +2043,7 @@ class Spec:
         depflag: dt.DepFlag = dt.ALL,
         *,
         virtuals: Optional[Union[str, Sequence[str]]] = None,
-    ) -> List[DependencySpec]:
+    ) -> List[Edge]:
         """Return a list of edges connecting this node in the DAG
         to parents.
 
@@ -2066,7 +2060,7 @@ class Spec:
         depflag: dt.DepFlag = dt.ALL,
         *,
         virtuals: Optional[Union[str, Sequence[str]]] = None,
-    ) -> List[DependencySpec]:
+    ) -> List[Edge]:
         """Returns a list of edges connecting this node in the DAG to children.
 
         Args:
@@ -2083,7 +2077,7 @@ class Spec:
         if not edges:
             return ""
 
-        union = DependencySpec(parent=Spec(), spec=self, depflag=0, virtuals=())
+        union = Edge(parent=Spec(), spec=self, depflag=0, virtuals=())
         all_direct_edges = all(x.direct for x in edges)
         dep_conditions = set()
 
@@ -2270,7 +2264,7 @@ class Spec:
                 edge.update_virtuals(virtuals=virtuals)
                 return
 
-        candidate = DependencySpec(
+        candidate = Edge(
             self,
             dependency_spec,
             depflag=depflag,
@@ -2282,7 +2276,7 @@ class Spec:
         self._add_or_merge_edge(candidate)
 
     def _add_or_merge_edge(
-        self, candidate: DependencySpec, owned: bool = True, resolve_virtuals: bool = False
+        self, candidate: Edge, owned: bool = True, resolve_virtuals: bool = False
     ) -> bool:
         """Add ``candidate`` as a dependency edge.
 
@@ -2316,7 +2310,7 @@ class Spec:
         # A package has at most one direct dependency per name, so an unconditional direct dep
         # is merged into an existing one (_same_direct_dep) by constraining, the only merge
         # that can raise.
-        merged_edge: Optional[DependencySpec] = None
+        merged_edge: Optional[Edge] = None
         if name and candidate.when is EMPTY_SPEC:
             for edge in bucket:
                 if _same_direct_dep(edge, candidate):
@@ -2351,7 +2345,7 @@ class Spec:
         _add_edge_to_map(candidate.spec._dependents, self.name, candidate)
         return True
 
-    def _detach_edge(self, edge: DependencySpec) -> None:
+    def _detach_edge(self, edge: Edge) -> None:
         """Remove an edge from this spec and from the dependents of the node it points at.
         A bucket that runs empty is deleted: consumers distinguish "no dependents" by the
         absence of the key, not by an empty list."""
@@ -2514,7 +2508,7 @@ class Spec:
         depth: Literal[False] = False,
         key: Callable[["Spec"], Any] = ...,
         visited: Optional[Set[Any]] = ...,
-    ) -> Iterable[DependencySpec]: ...
+    ) -> Iterable[Edge]: ...
 
     @overload
     def traverse_edges(
@@ -2528,7 +2522,7 @@ class Spec:
         depth: Literal[True],
         key: Callable[["Spec"], Any] = ...,
         visited: Optional[Set[Any]] = ...,
-    ) -> Iterable[Tuple[int, DependencySpec]]: ...
+    ) -> Iterable[Tuple[int, Edge]]: ...
 
     def traverse_edges(
         self,
@@ -2541,7 +2535,7 @@ class Spec:
         depth: bool = False,
         key: Callable[["Spec"], Any] = id,
         visited: Optional[Set[Any]] = None,
-    ) -> Iterable[Union[DependencySpec, Tuple[int, DependencySpec]]]:
+    ) -> Iterable[Union[Edge, Tuple[int, Edge]]]:
         """Shorthand for :meth:`~spack.traverse.traverse_edges`"""
         return spack.traverse.traverse_edges(
             [self],
@@ -3482,7 +3476,7 @@ class Spec:
 
         changed = False
         for other_edge in other.edges_to_dependencies():
-            candidate = DependencySpec(
+            candidate = Edge(
                 self,
                 other_edge.spec,
                 depflag=other_edge.depflag,
@@ -3621,7 +3615,7 @@ class Spec:
         # A package has at most one direct dependency per name, so a concretization satisfies
         # all unconditional direct edges to one name with a single node. Transitive constraints
         # to one name never conflict with each other: a DAG can hold two nodes of the same name.
-        groups: Dict[str, List[DependencySpec]] = {}
+        groups: Dict[str, List[Edge]] = {}
         for edge in itertools.chain(self.edges_to_dependencies(), other.edges_to_dependencies()):
             if edge.direct and edge.spec.name and edge.when is EMPTY_SPEC:
                 groups.setdefault(edge.spec.name, []).append(edge)
@@ -3996,7 +3990,7 @@ class Spec:
             edge_propagation = edge.propagation if propagation is None else propagation
             new_parent = new_specs[spid(edge.parent)]
             new_child = new_specs[spid(edge.spec)]
-            new_edge = DependencySpec(
+            new_edge = Edge(
                 new_parent,
                 new_child,
                 depflag=edge.depflag,
@@ -4677,7 +4671,7 @@ class Spec:
         ]
         return str(path_ctor(*output_path_components))
 
-    def _format_edge_attributes(self, dep: DependencySpec, deptypes=True, virtuals=True):
+    def _format_edge_attributes(self, dep: Edge, deptypes=True, virtuals=True):
         deptypes_str = (
             f"deptypes={','.join(dt.flag_to_tuple(dep.depflag))}"
             if deptypes and dep.depflag
@@ -4695,7 +4689,7 @@ class Spec:
     def _format_dependencies(
         self,
         format_string: str = DEFAULT_FORMAT,
-        include: Optional[Callable[[DependencySpec], bool]] = None,
+        include: Optional[Callable[[Edge], bool]] = None,
         deptypes: bool = True,
         color: Optional[bool] = False,
         _force_direct: bool = False,
@@ -4714,14 +4708,14 @@ class Spec:
         parts = []
         if self.concrete:
             direct = self.edges_to_dependencies()
-            transitive: List[DependencySpec] = []
+            transitive: List[Edge] = []
         else:
             direct, transitive = lang.stable_partition(
                 self.edges_to_dependencies(), predicate_fn=lambda x: x.direct
             )
 
         # helper for direct and transitive loops below
-        def format_edge(edge: DependencySpec, sigil: str, dep_spec: Optional[Spec] = None) -> str:
+        def format_edge(edge: Edge, sigil: str, dep_spec: Optional[Spec] = None) -> str:
             dep_spec = dep_spec or edge.spec
             dep_format = dep_spec.format(format_string, color=color)
 
@@ -5825,7 +5819,7 @@ def wire_spec_nodes(
                     f"node '{node['name']}' references missing dep hash {dep.name}/{dep.hash}"
                 )
             # Add edges exactly as they are stored
-            edge = DependencySpec(
+            edge = Edge(
                 node_spec,
                 dep_spec,
                 depflag=dt.canonicalize(dep.deptypes),
@@ -5906,7 +5900,7 @@ class SpecfileV1(SpecfileReaderBase):
 
     @classmethod
     def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name) -> List[DepSpecComponents]:
-        """Read the DependencySpec portion of a YAML-formatted Spec.
+        """Read the Edge portion of a YAML-formatted Spec.
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
         """
@@ -5964,7 +5958,7 @@ class SpecfileV2(SpecfileReaderBase):
 
     @classmethod
     def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name) -> List[DepSpecComponents]:
-        """Read the DependencySpec portion of a YAML-formatted Spec.
+        """Read the Edge portion of a YAML-formatted Spec.
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
         """
