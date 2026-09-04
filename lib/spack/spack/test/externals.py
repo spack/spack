@@ -372,3 +372,44 @@ def test_external_spec_multi_valued_variant_is_not_changed():
     specs = parser.all_specs()
     assert len(specs) == 1
     assert specs[0].variants["v"].value == ("bar", "foo")
+
+
+@pytest.mark.regression("52943")
+@pytest.mark.parametrize(
+    "external_spec,expected,not_expected",
+    [
+        # The declared defaults, 'mock_cmake' and 'new', are available on this version
+        (
+            "conditional-build-system@2.0",
+            ["build_system=mock_cmake", "flavor=new"],
+            ["build_system=mock_autotools", "flavor=old", "+static", "~static"],
+        ),
+        # The declared defaults are not available on this version
+        (
+            "conditional-build-system@1.0",
+            ["build_system=mock_autotools", "flavor=old", "~static"],
+            ["build_system=mock_cmake", "flavor=new"],
+        ),
+        # A value given by the user is never overridden
+        (
+            "conditional-build-system@1.0 flavor=old",
+            ["build_system=mock_autotools", "flavor=old"],
+            ["flavor=new"],
+        ),
+    ],
+)
+def test_external_completion_skips_unavailable_default_values(
+    config, external_spec, expected, not_expected
+):
+    """Tests that completing an external spec doesn't use variant values that are conditional on
+    a version the external doesn't have.
+    """
+    externals_dict: List[ExternalDict] = [{"spec": external_spec, "prefix": "/usr"}]
+    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+
+    specs = parser.all_specs()
+    assert len(specs) == 1
+    for constraint in expected:
+        assert specs[0].satisfies(constraint), f"{specs[0]} does not satisfy {constraint}"
+    for constraint in not_expected:
+        assert not specs[0].satisfies(constraint), f"{specs[0]} satisfies {constraint}"
