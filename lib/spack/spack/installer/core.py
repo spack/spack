@@ -182,6 +182,8 @@ class PackageInstaller:
         install_deps: bool = True,
         install_package: bool = True,
         install_source: bool = False,
+        debug_source: bool = False,
+        debug_symbols: bool = False,
         keep_prefix: bool = False,
         keep_stage: bool = False,
         restage: bool = True,
@@ -203,6 +205,8 @@ class PackageInstaller:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
         self.install_source = install_source
+        self.debug_source = debug_source
+        self.debug_symbols = debug_symbols
         self.stop_at = stop_at
         self.stop_before = stop_before
         self.tests: Union[bool, List[str], Set[str]] = tests
@@ -769,6 +773,8 @@ class PackageInstaller:
             skip_patch=self.skip_patch,
             fake=self.fake,
             install_source=self.install_source,
+            debug_source=self.debug_source,
+            debug_symbols=self.debug_symbols,
             run_tests=run_tests,
             log_path=self.log_paths[dag_hash],
             stop_before=self.stop_before if is_root else None,
