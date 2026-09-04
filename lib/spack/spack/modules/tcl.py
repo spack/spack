@@ -14,6 +14,11 @@ class TclConfiguration(BaseConfiguration):
 
     module_system = "tcl"
 
+    @property
+    def conflict_on_name(self) -> bool:
+        """Whether a reflexive conflict on the module name should be added"""
+        return self.conf.get("conflict_on_name", True)
+
     def manipulate_path(self, token: str) -> str:
         if token in self.hierarchy_tokens:
             return "${{{0}_name}} ${{{0}_version}}".format(token)

@@ -503,6 +503,11 @@ class BaseConfiguration:
         return self.conf.get("conflict", [])
 
     @property
+    def conflict_on_name(self) -> bool:
+        """Whether a reflexive conflict on the module name should be added"""
+        return False
+
+    @property
     def excluded(self) -> bool:
         """Returns True if the module has been excluded, False otherwise."""
 
@@ -1120,11 +1125,37 @@ class ModuleContext(tengine.Context):
         """List of conflicts for the module file."""
         fmts = []
         projection = proj.get_projection(self.conf.projections, self.spec)
+        if self.conf.conflict_on_name:
+            item = self._reflexive_conflict_scheme(projection)
+            if item is not None:
+                fmts.append(self.spec.format(item))
         for item in self.conf.conflicts:
             self._verify_conflict_naming_consistency_or_raise(item, projection)
             item = self.spec.format(item)
-            fmts.append(item)
+            if item not in fmts:
+                fmts.append(item)
         return fmts
+
+    def _reflexive_conflict_scheme(self, projection: str) -> Optional[str]:
+        """Scheme of the conflict to be declared on the module name, so that modules
+        generated for different versions of the same package cannot be loaded
+        simultaneously. It is the projection truncated after the first path component
+        holding the ``{name}`` token, or None if no such conflict can be expressed with
+        the projection in use.
+        """
+        parts = projection.split("/")
+        # No reflexive conflict can be derived if the component holding {name} also
+        # distinguishes versions or is the last one (the conflict would match only the
+        # module itself)
+        for i, part in enumerate(parts[:-1]):
+            fields = [field for _, field, _, _ in string.Formatter().parse(part) if field]
+            if "name" in fields and "version" not in fields:
+                return "/".join(parts[: i + 1])
+        tty.debug(
+            f"no conflict on module name can be derived from projection '{projection}' "
+            f"for {self.spec.cshort_spec}"
+        )
+        return None
 
     def _verify_conflict_naming_consistency_or_raise(self, item: str, projection: str) -> None:
         f = string.Formatter()
