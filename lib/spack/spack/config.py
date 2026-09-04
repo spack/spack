@@ -235,6 +235,7 @@ class DirectoryConfigScope(ConfigScope):
         self.path = path
         self.writable = writable
         self.prefer_modify = prefer_modify
+        self.last_read: Dict[str, Any] = {}
 
     @property
     def exists(self) -> bool:
@@ -259,6 +260,10 @@ class DirectoryConfigScope(ConfigScope):
             schema = SECTION_SCHEMAS[section]
             data = read_config_file(path, schema)
             self.sections[section] = data
+            if data:
+                self.last_read[section] = data.copy()
+            else:
+                self.last_read[section] = None
         return self.sections[section]
 
     def _write_section(self, section: str) -> None:
@@ -268,6 +273,12 @@ class DirectoryConfigScope(ConfigScope):
         filename = self.get_section_filename(section)
         data = self._get_section(section)
         if data is None:
+            return
+
+        if data == self.last_read.get(section, None):
+            # data is unchanged since we last read it
+            # no need to write it again
+            tty.debug("Skipping unneeded write of unmodified %s" % filename)
             return
 
         validate(data, SECTION_SCHEMAS[section])
