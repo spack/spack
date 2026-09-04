@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import pathlib
+import sys
+
+import pytest
 
 import spack.detection
 import spack.detection.common
@@ -86,3 +89,58 @@ def test_detect_specs_deduplicates_across_prefixes(tmp_path, monkeypatch, mock_p
 
     # Both prefixes produce cmake@3.17.1; only the first should be kept.
     assert len(detected) == 1
+
+
+def test_prefix_cuts_at_last_bin_or_lib(tmp_path: pathlib.Path):
+    """Prefixes should be cut at the LAST occurrence
+    of bin/lib/lib64, not the first, so nested paths like .../bin/gcc/bin don't
+    produce a garbage prefix."""
+
+    # nested bin: only the last "bin" should be cut
+    nested_bin = tmp_path / "bin" / "gcc" / "bin"
+    nested_bin.mkdir(parents=True)
+    expected_bin = str(tmp_path / "bin" / "gcc")
+    assert spack.detection.common.executable_prefix(str(nested_bin)) == expected_bin
+
+    # simple, single "bin"
+    simple_bin = tmp_path / "simple" / "bin"
+    simple_bin.mkdir(parents=True)
+    assert spack.detection.common.executable_prefix(str(simple_bin)) == str(tmp_path / "simple")
+
+    # no "bin" component at all
+    no_bin = tmp_path / "opt" / "gcc"
+    no_bin.mkdir(parents=True)
+    assert spack.detection.common.executable_prefix(str(no_bin)) == str(no_bin)
+
+    # nested lib: only the last "lib" should be cut
+    nested_lib = tmp_path / "lib" / "foo" / "lib"
+    nested_lib.mkdir(parents=True)
+    expected_lib = str(tmp_path / "lib" / "foo")
+    assert spack.detection.common.library_prefix(str(nested_lib)) == expected_lib
+
+    # nested lib64: only the last "lib64" should be cut
+    nested_lib64 = tmp_path / "lib64" / "foo" / "lib64"
+    nested_lib64.mkdir(parents=True)
+    expected_lib64 = str(tmp_path / "lib64" / "foo")
+    assert spack.detection.common.library_prefix(str(nested_lib64)) == expected_lib64
+
+    # the innermost recognized component wins, regardless of its name
+    mixed_lib = tmp_path / "lib64" / "foo" / "lib"
+    mixed_lib.mkdir(parents=True)
+    assert spack.detection.common.library_prefix(str(mixed_lib)) == str(tmp_path / "lib64" / "foo")
+
+
+def test_prefix_before_last_supports_windows_paths():
+    path = pathlib.PureWindowsPath(r"C:\Apps\Lib64\foo\LIB")
+    assert (
+        spack.detection.common.prefix_before_last(path, ("lib", "lib64")) == r"C:\Apps\Lib64\foo"
+    )
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Skip Windows paths on not Windows")
+def test_library_prefix_cuts_at_bin_on_windows(tmp_path: pathlib.Path):
+    """On Windows, library prefixes fall back to cutting at the last bin directory."""
+    nested_win_bin = tmp_path / "winbin" / "foo" / "bin"
+    nested_win_bin.mkdir(parents=True)
+    expected_win_bin = str(tmp_path / "winbin" / "foo")
+    assert spack.detection.common.library_prefix(str(nested_win_bin)) == expected_win_bin
