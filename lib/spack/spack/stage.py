@@ -496,7 +496,7 @@ class Stage(AbstractStage):
             fnames.append(url_util.default_download_filename(self.default_fetcher.url))
 
         if self.mirror_layout:
-            fnames.append(os.path.basename(self.mirror_layout.path))
+            fnames.extend(os.path.basename(path) for path in self.mirror_layout)
 
         paths = [os.path.join(self.path, f) for f in fnames]
         if not expanded:
@@ -561,16 +561,19 @@ class Stage(AbstractStage):
         # TODO: CompositeFetchStrategy here.
         if not self.default_fetcher_only and self.mirror_layout and self.mirrors:
             # Add URL strategies for all the mirrors with the digest
-            # Insert fetchers in the order that the URLs are provided.
+            # Insert fetchers in the order that the URLs are provided. Try all paths of the
+            # mirror layout (e.g. both the digest-based storage path and the human-readable
+            # alias), since a mirror may only have the resource under one of them.
             fetchers[:0] = (
                 fs.from_url_scheme(
-                    url_util.join(mirror.fetch_url, *self.mirror_layout.path.split(os.sep)),
+                    url_util.join(mirror.fetch_url, *rel_path.split(os.sep)),
                     checksum=digest,
                     expand=expand,
                     extension=extension,
                 )
                 for mirror in self.mirrors
                 if not spack.oci.image.is_oci_url(mirror.fetch_url)  # no support for mirrors yet
+                for rel_path in self.mirror_layout
             )
 
         if not self.default_fetcher_only and self.mirror_layout and self.default_fetcher.cachable:

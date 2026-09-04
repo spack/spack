@@ -18,6 +18,8 @@ import pytest
 import spack.config
 import spack.error
 import spack.fetch_strategy
+import spack.mirrors.layout
+import spack.mirrors.mirror
 import spack.stage
 import spack.util.executable
 import spack.util.url as url_util
@@ -533,6 +535,32 @@ class TestStage:
 
         check_destroy(stage, self.stage_name)
         assert search_fn.performed_search
+
+    def test_fetch_from_mirror_with_only_alias_path(self, mock_stage_archive, tmp_path):
+        """A mirror that only has the human-readable per-package alias (not the digest-based
+        ``_source-cache`` storage path) should still be usable."""
+        archive = mock_stage_archive()
+
+        # A layout whose primary (digest) path does not exist on the mirror; only the
+        # human-readable alias does.
+        layout = spack.mirrors.layout.DefaultLayout(
+            alias_path=os.path.join("test-files", _archive_fn),
+            digest_path=os.path.join("_source-cache", "archive", "ab", "abc123.tar.gz"),
+        )
+        mirror_root = tmp_path / "mirror"
+        (mirror_root / "test-files").mkdir(parents=True)
+        shutil.copy(str(archive.tmpdir / _archive_fn), str(mirror_root / layout.alias))
+
+        mirror = spack.mirrors.mirror.Mirror(url_util.path_to_file_url(str(mirror_root)))
+        stage = Stage(
+            FailingFetchStrategy(), name=self.stage_name, mirror_paths=layout, mirrors=[mirror]
+        )
+        with stage:
+            stage.fetch(mirror_only=True)
+            assert stage.archive_file is not None
+            stage.expand_archive()
+            assert stage.expanded
+        check_destroy(stage, self.stage_name)
 
     def test_ensure_one_stage_entry(self, mock_stage_archive):
         archive = mock_stage_archive()
