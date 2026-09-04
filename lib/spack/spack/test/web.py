@@ -7,12 +7,16 @@ import os
 import pathlib
 import pickle
 import ssl
+import sys
+import types
 import urllib.error
 import urllib.request
+from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
 import pytest
 
+import spack.error
 import spack.mirrors.mirror
 import spack.paths
 import spack.url
@@ -43,7 +47,12 @@ root_with_javascript = _create_url("index_with_javascript.html")
 
 class MockPages:
     def search(self, *args, **kwargs):
-        return [{"Key": "keyone"}, {"Key": "keytwo"}, {"Key": "keythree"}]
+        return [
+            {"Key": "prefix/keyone"},
+            {"Key": "prefix/keytwo"},
+            {"Key": "prefix/keythree"},
+            {"Key": "prefix/nested/keyfour"},
+        ]
 
 
 class MockPaginator:
@@ -52,11 +61,8 @@ class MockPaginator:
 
 
 class MockClientError(Exception):
-    def __init__(self):
-        self.response = {
-            "Error": {"Code": "NoSuchKey"},
-            "ResponseMetadata": {"HTTPStatusCode": 404},
-        }
+    def __init__(self, code="NoSuchKey"):
+        self.response = {"Error": {"Code": code}, "ResponseMetadata": {"HTTPStatusCode": 404}}
 
 
 class MockS3Client:
@@ -67,6 +73,7 @@ class MockS3Client:
         KWArgs = Dict[str, Any]
         self.put_object_calls: List[Tuple[Args, KWArgs]] = []
         self.upload_file_calls: List[Tuple[Args, KWArgs]] = []
+        self.delete_object_calls: List[Tuple[Args, KWArgs]] = []
         self.ClientError = MockClientError
 
     def put_object(self, *args, **kwargs):
@@ -84,12 +91,12 @@ class MockS3Client:
 
     def delete_objects(self, *args, **kwargs):
         return {
-            "Errors": [{"Key": "keyone", "Message": "Access Denied"}],
-            "Deleted": [{"Key": "keytwo"}, {"Key": "keythree"}],
+            "Errors": [{"Key": "prefix/keyone", "Message": "Access Denied"}],
+            "Deleted": [{"Key": "prefix/keytwo"}, {"Key": "prefix/keythree"}],
         }
 
     def delete_object(self, *args, **kwargs):
-        pass
+        self.delete_object_calls.append((args, kwargs))
 
     def get_object(self, Bucket=None, Key=None):
         if Bucket == "my-bucket" and Key == "subdirectory/my-file":
@@ -98,15 +105,29 @@ class MockS3Client:
 
     def head_object(self, Bucket=None, Key=None):
         if Bucket == "my-bucket" and Key == "subdirectory/my-file":
-            return {"ResponseMetadata": {"HTTPHeaders": {}}}
+            return {
+                "ResponseMetadata": {"HTTPHeaders": {}},
+                "LastModified": datetime.fromtimestamp(1360799444.0),
+                "ContentLength": 0,
+            }
+        if Bucket == "my-bucket" and Key == "subdirectory/actually-missing-file":
+            # HeadObject reports a missing key as "404", as opposed to other
+            # S3 APIs that include more specific information like "NoSuchKey".
+            raise self.ClientError(code="404")
         raise self.ClientError
 
 
 @pytest.fixture
 def mock_s3_client(monkeypatch):
     client = MockS3Client("s3://my-bucket/")
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", lambda url, method="fetch": client)
-    monkeypatch.setattr(spack.util.web, "get_s3_session", lambda url, method="fetch": client)
+
+    def get_s3_session(url, method="fetch"):
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
+
+    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+
     return client
 
 
@@ -339,7 +360,6 @@ def test_gather_s3_information(monkeypatch):
 
 def test_remove_s3_url(mock_s3_client, capfd):
     fake_s3_url = "s3://my-bucket/subdirectory/mirror"
-
     current_debug_level = tty.debug_level()
     tty.set_debug(1)
 
@@ -348,9 +368,182 @@ def test_remove_s3_url(mock_s3_client, capfd):
 
     tty.set_debug(current_debug_level)
 
-    assert "Failed to delete keyone (Access Denied)" in err
-    assert "Deleted keythree" in err
-    assert "Deleted keytwo" in err
+    assert "Failed to delete prefix/keyone (Access Denied)" in err
+    assert "Deleted prefix/keythree" in err
+    assert "Deleted prefix/keytwo" in err
+
+
+def test_remove_s3_url_non_recursive(mock_s3_client):
+    fake_s3_url = "s3://my-bucket/subdirectory/mirror"
+
+    spack.util.web.remove_url(fake_s3_url, recursive=False)
+
+    assert len(mock_s3_client.delete_object_calls) == 1
+    _, kwargs = mock_s3_client.delete_object_calls[0]
+    assert kwargs == {"Bucket": "my-bucket", "Key": "subdirectory/mirror"}
+
+
+def test_delete_objects_batches_over_1000_keys(monkeypatch):
+    """Verify that delete_objects flushes its delete request in batches of
+    <=1000 keys, since that's the limit enforced by the underlying S3 API."""
+
+    class ManyKeysPages:
+        def search(self, *args, **kwargs):
+            return ({"Key": f"prefix/key{i}"} for i in range(1500))
+
+    class ManyKeysPaginator:
+        def paginate(self, *args, **kwargs):
+            return ManyKeysPages()
+
+    class BatchTrackingS3Client:
+        ClientError = MockClientError
+
+        def __init__(self):
+            self.delete_objects_calls = []
+
+        def get_paginator(self, *args, **kwargs):
+            return ManyKeysPaginator()
+
+        def delete_objects(self, Bucket, Delete):
+            self.delete_objects_calls.append(list(Delete["Objects"]))
+            return {}
+
+    client = BatchTrackingS3Client()
+
+    def get_s3_session(url, method="fetch"):
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
+
+    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+
+    spack.util.web.remove_url("s3://my-bucket/prefix", recursive=True)
+
+    assert [len(batch) for batch in client.delete_objects_calls] == [1000, 500]
+
+
+def test_list_s3_url(mock_s3_client):
+    fake_s3_url = "s3://my-bucket/prefix/"
+    listing = spack.util.web.list_url(fake_s3_url, recursive=False)
+    assert "keyone" in listing
+    assert "keytwo" in listing
+    assert "keythree" in listing
+    assert "nested/keyfour" not in listing
+
+    listing = spack.util.web.list_url(fake_s3_url, recursive=True)
+    assert "keyone" in listing
+    assert "keytwo" in listing
+    assert "keythree" in listing
+    assert "nested/keyfour" in listing
+
+
+def test_list_s3_url_wraps_client_error(monkeypatch):
+    """Verify that list_url normalizes ClientError to OSError."""
+
+    class FailingPaginator:
+        def paginate(self, *args, **kwargs):
+            raise MockClientError()
+
+    class FailingClient:
+        ClientError = MockClientError
+
+        def get_paginator(self, *args, **kwargs):
+            return FailingPaginator()
+
+    client = FailingClient()
+
+    def get_s3_session(url, method="fetch"):
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
+
+    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+
+    with pytest.raises(OSError):
+        spack.util.web.list_url("s3://my-bucket/prefix/", recursive=True)
+
+
+def test_list_s3_url_skips_directory_marker_keys(monkeypatch):
+    """Verify that a key which exactly matches the specified prefix
+    is skipped instead of getting listed as an empty relative path."""
+
+    class MarkerPages:
+        def search(self, *args, **kwargs):
+            return [{"Key": "prefix/"}, {"Key": "prefix/real-key"}]
+
+    class MarkerPaginator:
+        def paginate(self, *args, **kwargs):
+            return MarkerPages()
+
+    class MarkerClient:
+        def get_paginator(self, *args, **kwargs):
+            return MarkerPaginator()
+
+    client = MarkerClient()
+
+    def get_s3_session(url, method="fetch"):
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
+
+    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+
+    listing = spack.util.web.list_url("s3://my-bucket/prefix/", recursive=True)
+    assert listing == ["real-key"]
+
+
+def test_list_s3_url_at_bucket_root(monkeypatch):
+    """Verify that a mirror with no sub-path (e.g. s3://my-bucket) gets listed with an
+    empty Prefix (not "/")."""
+
+    class RootPages:
+        def search(self, *args, **kwargs):
+            return [{"Key": "some/object.txt"}]
+
+    class RootPaginator:
+        def __init__(self):
+            self.paginate_calls = []
+
+        def paginate(self, *args, **kwargs):
+            self.paginate_calls.append(kwargs)
+            return RootPages()
+
+    class RootClient:
+        def __init__(self):
+            self.paginator = RootPaginator()
+
+        def get_paginator(self, *args, **kwargs):
+            return self.paginator
+
+    client = RootClient()
+
+    def get_s3_session(url, method="fetch"):
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
+
+    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+
+    listing = spack.util.web.list_url("s3://my-bucket", recursive=True)
+
+    assert client.paginator.paginate_calls == [{"Bucket": "my-bucket", "Prefix": ""}]
+    assert listing == ["some/object.txt"]
+
+
+def test_stat_s3_url(mock_s3_client):
+    fake_s3_url = "s3://my-bucket/subdirectory/my-file"
+    size, mtime = spack.util.web.stat_url(fake_s3_url)
+    assert 0 == size
+    assert 1360799444.0 == mtime
+
+    with pytest.raises(OSError):
+        fake_s3_url = "s3://my-bucket/subdirectory/my-notfound-file"
+        spack.util.web.stat_url(fake_s3_url)
+
+
+def test_stat_s3_url_returns_none_for_404(mock_s3_client):
+    fake_s3_url = "s3://my-bucket/subdirectory/actually-missing-file"
+    assert spack.util.web.stat_url(fake_s3_url) is None
 
 
 def test_s3_url_exists(mock_s3_client):
@@ -364,6 +557,67 @@ def test_s3_url_exists(mock_s3_client):
 def test_s3_url_parsing():
     assert spack.util.s3._parse_s3_endpoint_url("example.com") == "https://example.com"
     assert spack.util.s3._parse_s3_endpoint_url("http://example.com") == "http://example.com"
+
+
+@pytest.fixture
+def fake_boto3(monkeypatch):
+    """Stand in for the boto3/botocore packages.
+
+    get_s3_session imports boto3/botocore lazily so that they remain optional
+    dependencies; stub them out here so tests can exercise the real
+    get_s3_session logic without requiring those packages to be installed.
+    """
+
+    class FakeClientError(Exception):
+        pass
+
+    class FakeSession:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+        def get_credentials(self):
+            return None
+
+        def client(self, service_name, **kwargs):
+            return types.SimpleNamespace(service_name=service_name, kwargs=kwargs)
+
+    class FakeConfig:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    boto3_module = types.ModuleType("boto3")
+    boto3_module.Session = FakeSession
+
+    botocore_module = types.ModuleType("botocore")
+    botocore_module.UNSIGNED = object()
+
+    botocore_client_module = types.ModuleType("botocore.client")
+    botocore_client_module.Config = FakeConfig
+
+    botocore_exceptions_module = types.ModuleType("botocore.exceptions")
+    botocore_exceptions_module.ClientError = FakeClientError
+
+    monkeypatch.setitem(sys.modules, "boto3", boto3_module)
+    monkeypatch.setitem(sys.modules, "botocore", botocore_module)
+    monkeypatch.setitem(sys.modules, "botocore.client", botocore_client_module)
+    monkeypatch.setitem(sys.modules, "botocore.exceptions", botocore_exceptions_module)
+
+
+def test_get_s3_session_normalizes_method_and_returns_parsed_url(monkeypatch, fake_boto3):
+    """Verify that "GET" and "HEAD" are treated as "fetch", and everything else
+    is treated as "push"."""
+    monkeypatch.setattr(spack.util.s3, "s3_client_cache", {})
+
+    fetch_client, parsed_url = spack.util.s3.get_s3_session("s3://my-bucket/prefix", method="GET")
+    assert parsed_url.geturl() == "s3://my-bucket/prefix"
+    assert (None, "fetch") in spack.util.s3.s3_client_cache
+
+    head_client, _ = spack.util.s3.get_s3_session("s3://my-bucket/prefix", method="head")
+    assert head_client is fetch_client
+
+    push_client, _ = spack.util.s3.get_s3_session("s3://my-bucket/prefix", method="anything-else")
+    assert (None, "push") in spack.util.s3.s3_client_cache
+    assert push_client is not fetch_client
 
 
 def test_detailed_http_error_pickle(tmp_path: pathlib.Path):
@@ -656,3 +910,37 @@ def test_push_to_url_s3(keep_original, mock_s3_client, tmp_path):
     call = mock_s3_client.upload_file_calls[0]
     assert 3 == len(call[0])
     assert {"ContentType": "text/plain"} == call[1]["ExtraArgs"]
+
+
+def test_push_object_defaults_extra_args_to_empty_dict(mock_s3_client, tmp_path):
+    local_data = tmp_path / "data.txt"
+    local_data.write_text("hello")
+
+    spack.util.s3.push_object("s3://bucket/and/path/data.txt", str(local_data), None)
+
+    assert 1 == len(mock_s3_client.upload_file_calls)
+    call = mock_s3_client.upload_file_calls[0]
+    assert call[1]["ExtraArgs"] == {}
+
+
+def test_push_object_rejects_oversized_file_for_if_match(monkeypatch, mock_s3_client, tmp_path):
+    """IfMatch is only supported via put_object, which can't handle files >= 5GB."""
+    local_data = tmp_path / "data.txt"
+    local_data.write_text("hello")
+
+    class HugeStatResult:
+        st_size = int(6e9)
+
+    real_stat = os.stat
+
+    def fake_stat(path, *args, **kwargs):
+        if str(path) == str(local_data):
+            return HugeStatResult()
+        return real_stat(path, *args, **kwargs)
+
+    monkeypatch.setattr(spack.util.s3.os, "stat", fake_stat)
+
+    with pytest.raises(spack.error.SpackError, match="File too large"):
+        spack.util.s3.push_object(
+            "s3://bucket/and/path/data.txt", str(local_data), {"IfMatch": "etag1234"}
+        )

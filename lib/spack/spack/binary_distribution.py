@@ -726,37 +726,27 @@ def _url_generate_package_index(
     Return:
         None
     """
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        try:
-            with timer.measure("list"):
-                filename_to_mtime_mapping, read_fn = get_entries_from_cache(
-                    url, tmpspecsdir, component_type=BuildcacheComponent.SPEC
-                )
-            file_list = list(filename_to_mtime_mapping.keys())
-        except ListMirrorSpecsError as e:
-            raise GenerateIndexError(f"Unable to generate package index: {e}") from e
-
-        tty.debug(f"Retrieving spec descriptor files from {url} to build index")
-
-        if not db:
-            db = BuildCacheDatabase(tmpdir)
-            db._write()
-
-        try:
-            _read_specs_and_push_index(
-                file_list,
-                read_fn,
-                name,
-                filter_fn,
-                url,
-                db,
-                str(db.database_directory),
-                timer=timer,
+    try:
+        with timer.measure("list"):
+            filename_to_mtime_mapping, read_fn = get_entries_from_cache(
+                url, component_type=BuildcacheComponent.SPEC
             )
-        except Exception as e:
-            raise GenerateIndexError(
-                f"Encountered problem pushing package index to {url}: {e}"
-            ) from e
+        file_list = list(filename_to_mtime_mapping.keys())
+    except ListMirrorSpecsError as e:
+        raise GenerateIndexError(f"Unable to generate package index: {e}") from e
+
+    tty.debug(f"Retrieving spec descriptor files from {url} to build index")
+
+    if not db:
+        db = BuildCacheDatabase(tmpdir)
+        db._write()
+
+    try:
+        _read_specs_and_push_index(
+            file_list, read_fn, name, filter_fn, url, db, str(db.database_directory), timer=timer
+        )
+    except Exception as e:
+        raise GenerateIndexError(f"Encountered problem pushing package index to {url}: {e}") from e
 
 
 def generate_key_index(mirror_url: str, tmpdir: str) -> None:

@@ -23,7 +23,7 @@ from .url_buildcache import BuildcacheComponent, URLBuildcacheEntry, get_entries
 
 
 def _fetch_manifests(
-    mirror: Mirror, tmpspecsdir: str
+    mirror: Mirror,
 ) -> Tuple[Dict[str, float], Callable[[str], URLBuildcacheEntry], List[str]]:
     """
     Fetch all manifests from the buildcache for a given mirror.
@@ -37,7 +37,7 @@ def _fetch_manifests(
              callable to read each manifest, and a list of blobs in the mirror.
     """
     manifest_file_to_mtime_mapping, read_fn = get_entries_from_cache(
-        mirror.fetch_url, tmpspecsdir, BuildcacheComponent.MANIFEST
+        mirror.fetch_url, BuildcacheComponent.MANIFEST
     )
     url_to_list = url_util.join(
         mirror.fetch_url, spack.binary_distribution.buildcache_relative_blobs_path()
@@ -123,7 +123,6 @@ def _prune_orphans(
     read_fn: Callable[[str], URLBuildcacheEntry],
     blobs: List[str],
     pruning_started_at: float,
-    tmpspecsdir: str,
     dry_run: bool,
 ) -> int:
     """
@@ -217,7 +216,6 @@ def prune_direct(
     manifest_to_mtime_mapping: Dict[str, float],
     read_fn: Callable[[str], URLBuildcacheEntry],
     blob_list: List[str],
-    tmpspecsdir: str,
     pruning_started_at: float,
     dry_run: bool,
 ) -> None:
@@ -250,10 +248,6 @@ def prune_direct(
 
     tty.info(f"Loaded {len(keep_hashes)} hashes to keep from {keeplist_file}")
     total_pruned: Optional[int] = None
-    manifests_url = url_util.join(
-        mirror.fetch_url,
-        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.MANIFEST),
-    )
 
     # Determine which manifests correspond to specs we want to prune
     manifests_to_prune: List[str] = []
@@ -262,8 +256,6 @@ def prune_direct(
     tty.info(f"Found {len(manifest_to_mtime_mapping)} total manifests in mirror")
 
     for manifest in manifest_to_mtime_mapping.keys():
-        # Convert back from local to remote path.
-        manifest = manifest.replace(tmpspecsdir, manifests_url)
         if not fnmatch(
             manifest,
             URLBuildcacheEntry.get_buildcache_component_include_pattern(BuildcacheComponent.SPEC),
@@ -323,7 +315,6 @@ def prune_orphan(
     manifest_to_mtime_mapping: Dict[str, float],
     read_fn: Callable[[str], URLBuildcacheEntry],
     blob_list: List[str],
-    tmpspecsdir: str,
     pruning_started_at: float,
     dry_run: bool,
 ) -> None:
@@ -346,7 +337,6 @@ def prune_orphan(
             read_fn=read_fn,
             blobs=blob_list,
             pruning_started_at=pruning_started_at,
-            tmpspecsdir=tmpspecsdir,
             dry_run=dry_run,
         )
         if pruned == 0:
@@ -415,27 +405,23 @@ def prune_buildcache(mirror: Mirror, keeplist: Optional[str] = None, dry_run: bo
     else:
         started_at = get_buildcache_normalized_time(mirror)
 
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        try:
-            manifest_to_mtime_mapping, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
-        except Exception as e:
-            raise BuildcachePruningException("Error getting entries from buildcache") from e
+    try:
+        manifest_to_mtime_mapping, read_fn, blob_list = _fetch_manifests(mirror)
+    except Exception as e:
+        raise BuildcachePruningException("Error getting entries from buildcache") from e
 
-        if keeplist:
-            prune_direct(
-                mirror,
-                pathlib.Path(keeplist),
-                manifest_to_mtime_mapping,
-                read_fn,
-                blob_list,
-                tmpspecsdir,
-                started_at,
-                dry_run,
-            )
-
-        prune_orphan(
-            mirror, manifest_to_mtime_mapping, read_fn, blob_list, tmpspecsdir, started_at, dry_run
+    if keeplist:
+        prune_direct(
+            mirror,
+            pathlib.Path(keeplist),
+            manifest_to_mtime_mapping,
+            read_fn,
+            blob_list,
+            started_at,
+            dry_run,
         )
+
+    prune_orphan(mirror, manifest_to_mtime_mapping, read_fn, blob_list, started_at, dry_run)
 
 
 class BuildcachePruningException(spack.error.SpackError):
