@@ -148,7 +148,7 @@ def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
                     # using the package definition, preserving the user-specified value.
                     existing = node.variants[name]
                     corrected = vdef.make_variant(*existing.values)
-                    node.variants.substitute(corrected)
+                    node.variants.set(corrected)
             changed = True
 
 

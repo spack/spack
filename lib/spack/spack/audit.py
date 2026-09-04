@@ -1309,6 +1309,12 @@ def _analyze_variants_in_directive(pkg, constraint, *, directive, error_cls, fil
     errors = []
     variant_names = pkg.variant_names()
     summary = f"{requestor}: wrong variant in '{directive}' directive"
+
+    propagation_summary = f"{requestor}: propagating variant in '{directive}' directive"
+    for name in sorted(constraint.propagated_variants):
+        msg = f"using {constraint} in a directive, which propagates the '{name}' variant"
+        errors.append(error_cls(summary=propagation_summary, details=[msg, f"in {filename}"]))
+
     for name, v in constraint.variants.items():
         if name == "commit":
             # Automatic variant
@@ -1318,11 +1324,6 @@ def _analyze_variants_in_directive(pkg, constraint, *, directive, error_cls, fil
             msg = f"variant {name} does not exist in {pkg.name}"
             errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))
             continue
-
-        if v.propagate:
-            propagation_summary = f"{requestor}: propagating variant in '{directive}' directive"
-            msg = f"using {constraint} in a directive, which propagates the '{name}' variant"
-            errors.append(error_cls(summary=propagation_summary, details=[msg, f"in {filename}"]))
 
         try:
             spack.variant.prevalidate_variant_value(pkg, v, constraint, strict=True)
