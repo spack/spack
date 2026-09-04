@@ -139,10 +139,16 @@ def _parse_link_paths(string):
 class CompilerPropertyDetector:
     """Detects compiler properties of a given compiler spec. Useful for compiler wrappers."""
 
-    def __init__(self, compiler_spec: spack.spec.Spec):
+    def __init__(self, compiler_spec: spack.spec.Spec, *, cache: Optional["CompilerCache"] = None):
+        """
+        Args:
+            compiler_spec: concrete spec of the compiler to inspect.
+            cache: where the verbose output of the compiler is stored. Defaults to the
+                process-wide cache, since package recipes construct detectors without one.
+        """
         assert compiler_spec.concrete, "only concrete compiler specs are allowed"
         self.spec = compiler_spec
-        self.cache = COMPILER_CACHE
+        self.cache = cache if cache is not None else COMPILER_CACHE
 
     @contextlib.contextmanager
     def compiler_environment(self):
@@ -366,7 +372,11 @@ class CompilerCache:
     """Base class for compiler output cache. Default implementation does not cache anything."""
 
     def value(self, compiler: spack.spec.Spec) -> Dict[str, Optional[str]]:
-        return {"c_compiler_output": CompilerPropertyDetector(compiler)._compile_dummy_c_source()}
+        return {
+            "c_compiler_output": CompilerPropertyDetector(
+                compiler, cache=self
+            )._compile_dummy_c_source()
+        }
 
     def get(self, compiler: spack.spec.Spec) -> CompilerCacheEntry:
         return CompilerCacheEntry.from_dict(self.value(compiler))
