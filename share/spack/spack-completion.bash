@@ -1880,7 +1880,7 @@ _spack_repo_migrate() {
 _spack_repo_update() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --remote -r --scope --branch -b --tag -t --commit -c"
+        SPACK_COMPREPLY="-h --help --remote -r --scope --branch -b --force -f --tag -t --commit -c"
     else
         SPACK_COMPREPLY=""
     fi

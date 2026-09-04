@@ -2957,7 +2957,7 @@ complete -c spack -n '__fish_spack_using_command repo migrate' -l fix -f -a fix
 complete -c spack -n '__fish_spack_using_command repo migrate' -l fix -d 'automatically migrate the repository to the latest Package API'
 
 # spack repo update
-set -g __fish_spack_optspecs_spack_repo_update h/help r/remote= scope= b/branch= t/tag= c/commit=
+set -g __fish_spack_optspecs_spack_repo_update h/help r/remote= scope= b/branch= f/force t/tag= c/commit=
 
 complete -c spack -n '__fish_spack_using_command repo update' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo update' -s h -l help -d 'show this help message and exit'
@@ -2967,6 +2967,8 @@ complete -c spack -n '__fish_spack_using_command repo update' -l scope -r -f -a 
 complete -c spack -n '__fish_spack_using_command repo update' -l scope -r -d 'configuration scope to modify'
 complete -c spack -n '__fish_spack_using_command repo update' -l branch -s b -r -f -a branch
 complete -c spack -n '__fish_spack_using_command repo update' -l branch -s b -r -d 'name of a branch to change to'
+complete -c spack -n '__fish_spack_using_command repo update' -l force -s f -f -a force
+complete -c spack -n '__fish_spack_using_command repo update' -l force -s f -d 'force an update of a divergent branch'
 complete -c spack -n '__fish_spack_using_command repo update' -l tag -s t -r -f -a tag
 complete -c spack -n '__fish_spack_using_command repo update' -l tag -s t -r -d 'name of a tag to change to'
 complete -c spack -n '__fish_spack_using_command repo update' -l commit -s c -r -f -a commit
