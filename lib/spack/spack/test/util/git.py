@@ -27,7 +27,7 @@ def test_git_not_found(monkeypatch):
 def test_modified_files(mock_git_package_changes):
     repo, filename, commits = mock_git_package_changes
 
-    with working_dir(repo.packages_path):
+    with working_dir(repo.root):
         files = spack.util.git.get_modified_files(from_ref="HEAD~1", to_ref="HEAD")
         assert len(files) == 1
         assert files[0] == filename
