@@ -2645,6 +2645,8 @@ complete -c spack -n '__fish_spack_using_command_pos 0 module tcl' -f -a find -d
 complete -c spack -n '__fish_spack_using_command_pos 0 module tcl' -f -a rm -d 'remove module files'
 complete -c spack -n '__fish_spack_using_command_pos 0 module tcl' -f -a loads -d 'prompt the list of modules associated with a constraint'
 complete -c spack -n '__fish_spack_using_command_pos 0 module tcl' -f -a setdefault -d 'set the default module file for a package'
+complete -c spack -n '__fish_spack_using_command_pos 0 module tcl' -f -a cachebuild -d 'build module cache'
+complete -c spack -n '__fish_spack_using_command_pos 0 module tcl' -f -a cacheclear -d 'clear module cache'
 complete -c spack -n '__fish_spack_using_command module tcl' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command module tcl' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command module tcl' -s n -l name -r -f -a module_set_name
@@ -2699,6 +2701,16 @@ set -g __fish_spack_optspecs_spack_module_tcl_setdefault h/help
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 module tcl setdefault' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command module tcl setdefault' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command module tcl setdefault' -s h -l help -d 'show this help message and exit'
+
+# spack module tcl cachebuild
+set -g __fish_spack_optspecs_spack_module_tcl_cachebuild h/help
+complete -c spack -n '__fish_spack_using_command module tcl cachebuild' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command module tcl cachebuild' -s h -l help -d 'show this help message and exit'
+
+# spack module tcl cacheclear
+set -g __fish_spack_optspecs_spack_module_tcl_cacheclear h/help
+complete -c spack -n '__fish_spack_using_command module tcl cacheclear' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command module tcl cacheclear' -s h -l help -d 'show this help message and exit'
 
 # spack patch
 set -g __fish_spack_optspecs_spack_patch h/help n/no-checksum f/force U/fresh reuse fresh-roots deprecated

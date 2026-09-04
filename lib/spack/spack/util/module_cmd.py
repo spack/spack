@@ -82,6 +82,7 @@ def module(
             stderr=subprocess.STDOUT,
             shell=True,
             executable="/bin/bash",
+            env=environb,
         )
         # Decode and str to return a string object in both python 2 and 3
         return str(module_p.communicate()[0].decode())
