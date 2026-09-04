@@ -1642,13 +1642,14 @@ class SpackSolverSetup:
                 # the conditional value is always "possible", but it imposes its when condition as
                 # a constraint if the conditional value is taken. This may seem backwards, but it
                 # ensures that the conditional can only occur when its condition holds.
-                self.condition(
+                condition_id = self.condition(
                     required_spec=variant_has_value,
                     imposed_spec=value.when,
                     required_name=pkg.name,
                     imposed_name=pkg.name,
                     msg=f"{pkg.name} variant {name} has value '{value.value}' when {value.when}",
                 )
+                pkg_fact(fn.conditional_value_condition(condition_id))
             else:
                 vstring = f"{name}='{value.value}'"
 

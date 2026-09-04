@@ -157,6 +157,32 @@ class Variant:
     def values_defined_by_validator(self) -> bool:
         return self.values is None
 
+    def possible_values(
+        self, *, when: Optional["spack.spec.Spec"] = None
+    ) -> Optional["ValueType"]:
+        """Returns the values this variant can take, with conditional values unwrapped.
+
+        Values are returned in the order they are declared in the package. Values that are
+        statically disabled are never returned.
+
+        Args:
+            when: if given, a conditional value is returned only if this spec satisfies the
+                condition attached to it
+
+        Returns:
+            the values, or None if they are checked by a validator instead of being listed
+        """
+        if self.values is None:
+            return None
+
+        result: List[Union[bool, str]] = []
+        for value in self.values:
+            if not isinstance(value, ConditionalValue):
+                result.append(value)
+            elif value.when is not None and (when is None or when.satisfies(value.when)):
+                result.append(value.value)
+        return tuple(result)
+
     def validate_or_raise(self, vspec: "VariantValue", pkg_name: str):
         """Validate a variant spec against this package variant. Raises an
         exception if any error is found.
