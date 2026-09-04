@@ -1626,6 +1626,7 @@ class Database:
         hashes: Optional[Iterable[str]] = None,
         in_buildcache: Optional[bool] = None,
         origin: Optional[str] = None,
+        repo=None,
     ) -> List["spack.spec.Spec"]:
         installed = normalize_query(installed)
 
@@ -1691,9 +1692,9 @@ class Database:
             not results
             and query_spec is not None
             and deferred
-            and spack.repo.PATH.is_virtual(query_spec.name)
+            and (repo if repo is not None else spack.repo.PATH).is_virtual(query_spec.name)
         ):
-            results = [spec for spec in deferred if spec.satisfies(query_spec)]
+            results = [spec for spec in deferred if spec.satisfies(query_spec, repo=repo)]
 
         return results
 
@@ -1709,6 +1710,7 @@ class Database:
         hashes: Optional[List[str]] = None,
         in_buildcache: Optional[bool] = None,
         origin: Optional[str] = None,
+        repo=None,
     ) -> List["spack.spec.Spec"]:
         """Queries the local Spack database.
 
@@ -1755,6 +1757,7 @@ class Database:
                 hashes=hashes,
                 in_buildcache=in_buildcache,
                 origin=origin,
+                repo=repo,
             )
 
     def query(
@@ -1771,6 +1774,7 @@ class Database:
         origin: Optional[str] = None,
         install_tree: str = "all",
         sort: bool = True,
+        repo=None,
     ) -> List["spack.spec.Spec"]:
         """Queries the Spack database including all upstream databases.
 
@@ -1828,6 +1832,7 @@ class Database:
                     hashes=hashes,
                     in_buildcache=in_buildcache,
                     origin=origin,
+                    repo=repo,
                 )
             )
 
@@ -1852,6 +1857,7 @@ class Database:
                     hashes=hashes,
                     in_buildcache=in_buildcache,
                     origin=origin,
+                    repo=repo,
                 )
             )
 

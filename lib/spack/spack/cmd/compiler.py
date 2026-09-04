@@ -240,9 +240,10 @@ def _all_available_compilers(scope: Optional[str], remote: bool) -> List[Spec]:
     compilers = compilers_from_yaml + compilers_from_store
 
     if remote:
-        compilers.extend(
-            [x for x in spack.binary_distribution.update_cache_and_get_specs() if _is_compiler(x)]
+        candidates = spack.binary_distribution.update_cache_and_get_specs(
+            config=spack.config.CONFIG
         )
+        compilers.extend([x for x in candidates if _is_compiler(x)])
     return compilers
 
 

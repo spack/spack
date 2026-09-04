@@ -9,6 +9,7 @@ from typing import List, Optional, Tuple
 
 import spack.binary_distribution
 import spack.config
+import spack.context_factory
 import spack.environment as ev
 import spack.repo
 import spack.solver.reuse
@@ -18,7 +19,6 @@ import spack.util.lang
 from spack import cmd
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
-from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.util import tty
 from spack.util.tty import color
 from spack.util.tty.color import colorize
@@ -345,14 +345,7 @@ def _find_query(
     q_args = query_arguments(args)
     concretized_but_not_installed = []
     if args.show_configured_externals:
-        packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
-        completion_mode = spack.config.CONFIG.get("concretizer:externals:completion")
-        results = spack.solver.reuse.spec_filter_from_packages_yaml(
-            external_parser=create_external_parser(packages_with_externals, completion_mode),
-            packages_with_externals=packages_with_externals,
-            include=[],
-            exclude=[],
-        ).selected_specs()
+        results = spack.solver.reuse.reusable_external_specs(spack.context_factory.default())
     elif env:
         all_env_specs = env.all_specs()
         if args.constraint:

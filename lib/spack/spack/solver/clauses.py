@@ -68,15 +68,18 @@ class SpecClauseGenerator:
     def __init__(
         self,
         *,
+        repo: spack.repo.RepoPath,
         libcs: Optional[List[spack.spec.Spec]] = None,
         explicitly_required_namespaces: Optional[Dict[str, str]] = None,
     ) -> None:
         """
         Arguments:
+            repo: repositories where package recipes are looked up
             libcs: libcs available on the system, used for compatibility clauses
             explicitly_required_namespaces: package name to namespace, for specs that
                 requested one explicitly
         """
+        self.repo = repo
         self.libcs = libcs if libcs is not None else []
         self.explicitly_required_namespaces = (
             explicitly_required_namespaces if explicitly_required_namespaces is not None else {}
@@ -495,7 +498,7 @@ class SpecClauseGenerator:
     def is_virtual(self, name: str) -> bool:
         result = self._virtual_names.get(name)
         if result is None:
-            result = self._virtual_names[name] = spack.repo.PATH.is_virtual(name)
+            result = self._virtual_names[name] = self.repo.is_virtual(name)
         return result
 
     def pkg_class(self, pkg_name: str) -> Type[spack.package_base.PackageBase]:
@@ -507,5 +510,5 @@ class SpecClauseGenerator:
         if pkg_name in self.explicitly_required_namespaces:
             namespace = self.explicitly_required_namespaces[pkg_name]
             request = f"{namespace}.{pkg_name}"
-        cls = self._pkg_classes[pkg_name] = spack.repo.PATH.get_pkg_class(request)
+        cls = self._pkg_classes[pkg_name] = self.repo.get_pkg_class(request)
         return cls

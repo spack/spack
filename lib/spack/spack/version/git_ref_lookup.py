@@ -40,8 +40,11 @@ class GitRefLookup(AbstractRefLookup):
     represented by tags in the git repository.
     """
 
-    def __init__(self, pkg_name):
+    def __init__(self, pkg_name, *, repo=None, misc_cache=None, config=None):
         self.pkg_name = pkg_name
+        self._repo = repo
+        self._misc_cache = misc_cache
+        self._config = config
 
         self.data: Dict[str, Tuple[Optional[str], int]] = {}
 
@@ -63,16 +66,22 @@ class GitRefLookup(AbstractRefLookup):
         return self._cache_key
 
     @property
+    def misc_cache(self):
+        """Cache holding the ref metadata. Defaults to the process-wide one."""
+        return self._misc_cache if self._misc_cache is not None else spack.caches.MISC_CACHE
+
+    @property
     def cache_path(self):
         if not self._cache_path:
-            self._cache_path = spack.caches.MISC_CACHE.cache_path(self.cache_key)
+            self._cache_path = self.misc_cache.cache_path(self.cache_key)
         return self._cache_path
 
     @property
     def pkg(self):
         if not self._pkg:
             try:
-                pkg = spack.repo.PATH.get_pkg_class(self.pkg_name)
+                repo = self._repo if self._repo is not None else spack.repo.PATH
+                pkg = repo.get_pkg_class(self.pkg_name)
                 pkg.git
             except (spack.repo.RepoError, AttributeError) as e:
                 raise VersionLookupError(f"Couldn't get the git repo for {self.pkg_name}") from e
@@ -83,7 +92,7 @@ class GitRefLookup(AbstractRefLookup):
     def fetcher(self):
         if not self._fetcher:
             # We require the full git repository history
-            fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git)
+            fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git, config=self._config)
             fetcher.get_full_repo = True
             self._fetcher = fetcher
         return self._fetcher
@@ -95,12 +104,12 @@ class GitRefLookup(AbstractRefLookup):
 
     def save(self):
         """Save the data to file"""
-        with spack.caches.MISC_CACHE.write_transaction(self.cache_key) as (old, new):
+        with self.misc_cache.write_transaction(self.cache_key) as (old, new):
             sjson.dump(self.data, new)
 
     def load_data(self):
         """Load data if the path already exists."""
-        with spack.caches.MISC_CACHE.read_transaction(self.cache_key) as cache_file:
+        with self.misc_cache.read_transaction(self.cache_key) as cache_file:
             if cache_file is not None:
                 self.data = sjson.load(cache_file)
 

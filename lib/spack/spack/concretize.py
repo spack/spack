@@ -26,7 +26,26 @@ SpecPair = Tuple[Spec, Spec]
 TestsType = Union[bool, Iterable[str]]
 
 if TYPE_CHECKING:
+    from spack.solver.asp import Solver
     from spack.solver.reuse import SpecFiltersFactory
+
+
+def ensure_compilers_in_configuration() -> None:
+    """Write the compilers found on the system to packages.yaml, if none are configured.
+
+    A solve sees compilers as externals declared in the configuration, so detection has to run
+    before it, and in the parent process of a parallel concretization: the workers would
+    otherwise write the configuration file at the same time.
+    """
+    _ = spack.compilers.config.all_compilers()
+
+
+def _solver(*, factory: Optional["SpecFiltersFactory"] = None) -> "Solver":
+    """Return a solver to concretize with, with the compilers already in the configuration."""
+    from spack.solver.asp import Solver
+
+    ensure_compilers_in_configuration()
+    return Solver(specs_factory=factory)
 
 
 def _concretize_specs_together(
@@ -43,10 +62,8 @@ def _concretize_specs_together(
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
     """
-    from spack.solver.asp import Solver
-
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = Solver(specs_factory=factory).solve(
+    result = _solver(factory=factory).solve(
         abstract_specs, tests=tests, allow_deprecated=allow_deprecated
     )
     return [s.copy() for s in result.specs]
@@ -107,7 +124,6 @@ def concretize_together_when_possible(
         factory: optional factory to produce a list of specs to be reused
         ui: frontend to report progress to. Defaults to a headless frontend.
     """
-    from spack.solver.asp import Solver
 
     ui = ui or HeadlessUI()
 
@@ -123,7 +139,7 @@ def concretize_together_when_possible(
         kind=SolveKind.WHEN_POSSIBLE, total=len(to_concretize), processes=1
     )
     start = time.monotonic()
-    for result in Solver(specs_factory=factory).solve_in_rounds(
+    for result in _solver(factory=factory).solve_in_rounds(
         to_concretize, tests=tests, allow_deprecated=allow_deprecated
     ):
         now = time.monotonic()
@@ -191,9 +207,7 @@ def concretize_separately(
     # all the indexes if there's any need for that.
     _ = spack.repo.PATH.provider_index
 
-    # Ensure we have compilers in packages.yaml to avoid that
-    # processes try to write the config file in parallel
-    _ = spack.compilers.config.all_compilers()
+    ensure_compilers_in_configuration()
 
     # Solve the environment in parallel on Linux. imap_unordered falls back to a serial map when
     # parallelism is disabled (e.g. Windows)
@@ -254,7 +268,7 @@ def concretize_one(
         tests: if False disregard test dependencies, if a list of names activate them for
             the packages in the list, if True activate test dependencies for all packages.
     """
-    from spack.solver.asp import Solver, SpecBuilder
+    from spack.solver.asp import SpecBuilder
 
     if isinstance(spec, str):
         spec = Spec(spec)
@@ -270,9 +284,7 @@ def concretize_one(
             )
 
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = Solver(specs_factory=factory).solve(
-        [spec], tests=tests, allow_deprecated=allow_deprecated
-    )
+    result = _solver(factory=factory).solve([spec], tests=tests, allow_deprecated=allow_deprecated)
 
     # take the best answer
     opt, i, answer = min(result.answers)

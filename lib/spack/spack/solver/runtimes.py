@@ -5,12 +5,11 @@ from typing import Set, Tuple
 
 import spack.compilers.config
 import spack.compilers.libraries
-import spack.config
 import spack.hash_lookup
-import spack.repo
 import spack.spec
 import spack.util.libc
 import spack.version
+from spack.context import SpackContext
 
 from .core import SourceContext, fn
 from .versions import Provenance
@@ -173,7 +172,7 @@ class RuntimePropertyRecorder:
 
         imposed_spec = spack.spec.Spec(f"{self.current_package}{impose}")
         when_spec = spack.spec.Spec(f"{self.current_package}{when}")
-        when_spec = spack.hash_lookup.lookup_hash(when_spec)
+        when_spec = spack.hash_lookup.lookup_hash(when_spec, context=self._setup.context)
 
         assert imposed_spec.versions.concrete, f"{impose} must have a concrete version"
 
@@ -248,8 +247,9 @@ class RuntimePropertyRecorder:
         facts for the runtimes.
         """
         self._setup.gen.h2("Runtimes: declarations")
+        repo = self._setup.context.repo
         runtime_pkgs = sorted(
-            {x.name for x in self.injected_dependencies if not spack.repo.PATH.is_virtual(x.name)}
+            {x.name for x in self.injected_dependencies if not repo.is_virtual(x.name)}
         )
         for runtime_pkg in runtime_pkgs:
             self._setup.gen.fact(fn.runtime(runtime_pkg))
@@ -270,12 +270,15 @@ class RuntimePropertyRecorder:
         self._setup.effect_rules()
 
 
-def all_libcs() -> Set[spack.spec.Spec]:
+def all_libcs(context: SpackContext) -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
+    cache = spack.compilers.libraries.FileCompilerCache(context.misc_cache)
     libcs = set()
-    for c in spack.compilers.config.all_compilers_from(spack.config.CONFIG):
-        candidate = spack.compilers.libraries.CompilerPropertyDetector(c).default_libc()
+    for c in spack.compilers.config.all_compilers_from(context.config, repo=context.repo):
+        candidate = spack.compilers.libraries.CompilerPropertyDetector(
+            c, cache=cache
+        ).default_libc()
         if candidate is not None:
             libcs.add(candidate)
 
