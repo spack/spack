@@ -8,6 +8,7 @@ import pytest
 
 import spack.cmd.compiler
 import spack.compilers.config
+import spack.detection.common
 import spack.main
 import spack.util.pattern
 import spack.version
@@ -143,6 +144,49 @@ done
     assert len(compilers_added_by_find) == 1
     new_compiler = compilers_added_by_find.pop()
     assert new_compiler.version == spack.version.Version(expected_version)
+
+
+@pytest.mark.not_on_windows("Cannot execute bash script on Windows")
+@pytest.mark.parametrize("subdir", [False, True])
+def test_compiler_find_skips_installed_packages(mutable_config, monkeypatch, tmp_path, subdir):
+    """Tests that 'spack compiler find' does not add a compiler that lives inside a
+    Spack install prefix — whether the detected external_path is exactly the install
+    prefix (subdir=False) or a subdirectory of it (subdir=True).
+    """
+    expected_version = "4.5.3"
+
+    # We put a mock compiler executable in a prefix, and we will also mock
+    # db.query to report that as a spack installation prefix
+    install_root = tmp_path / "install_root"
+    bin_parent = (install_root / "compiler") if subdir else install_root
+    bin_dir = bin_parent / "bin"
+    bin_dir.mkdir(parents=True)
+
+    gcc = bin_dir / "gcc"
+    gcc.write_text(
+        f'#!/bin/sh\nfor arg in "$@"; do\n  if [ "$arg" = -dumpversion ];'
+        f" then echo '{expected_version}'; fi\ndone\n"
+    )
+    gcc.chmod(0o755)
+
+    monkeypatch.setattr(
+        spack.detection.common, "_installed_spec_prefixes", lambda: {str(install_root)}
+    )
+
+    compilers_before_find = set(spack.compilers.config.all_compilers())
+    args = spack.util.pattern.Bunch(
+        all=None,
+        compiler_spec=None,
+        add_paths=[str(bin_parent)],
+        scope=None,
+        mixed_toolchain=False,
+        jobs=1,
+    )
+    spack.cmd.compiler.compiler_find(args)
+    compilers_after_find = set(spack.compilers.config.all_compilers())
+
+    compilers_added_by_find = compilers_after_find - compilers_before_find
+    assert len(compilers_added_by_find) == 0
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
