@@ -25,7 +25,6 @@ import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
-import spack.hash_types as ht
 import spack.paths
 import spack.repo
 import spack.spec
@@ -178,7 +177,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
     if spec_str == "dtuse":
         assert spec.external and spec.extra_attributes == extra_attributes
 
-    spec_dict = spec.to_dict(hash=ht.dag_hash)
+    spec_dict = spec.to_dict()
     spec_yaml = spec.to_yaml()
     spec_json = spec.to_json()
 
@@ -206,7 +205,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
     from_json_rev = Spec.from_json(json_string_rev)
 
     # Strip spec if we stripped the yaml
-    spec = spec.copy(deps=ht.dag_hash.depflag)
+    spec = spec.copy(deps=dt.ALL)
 
     # specs and their hashes are equal to the original
     assert (

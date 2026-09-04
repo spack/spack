@@ -16,6 +16,10 @@ from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.util.unparse import unparse
 
+# This module tests package content hashing itself, so it needs the real thing rather than the
+# trivial stand-in the mock_package_hash_for_tests fixture installs.
+pytestmark = pytest.mark.use_package_hash
+
 datadir = os.path.join(spack.paths.test_path, "data", "unparse")
 
 

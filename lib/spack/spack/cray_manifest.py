@@ -19,7 +19,6 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
-from spack import hash_types
 from spack.detection.path import ExecutablesFinder
 from spack.schema.cray_manifest import schema as manifest_schema
 from spack.util import tty
@@ -175,11 +174,8 @@ def spec_from_entry(entry):
 
     (spec,) = spack.cmd.parse_specs(spec_str.split())
 
-    for ht in [hash_types.dag_hash, hash_types.build_hash, hash_types.full_hash]:
-        setattr(spec, ht.attr, entry["hash"])
-
+    spec._hash = entry["hash"]
     spec._concrete = True
-    spec._hashes_final = True
     spec.external_path = entry["prefix"]
     spec.origin = "external-db"
     spec.namespace = pkg_cls.namespace

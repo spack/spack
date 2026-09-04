@@ -1882,7 +1882,7 @@ def test_spec_trim(mock_packages, config):
 def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
     # create an "old" spec with no package hash
     bottom = spack.concretize.concretize_one("dt-diamond-bottom")
-    delattr(bottom, "_package_hash")
+    bottom._package_hash = None
 
     dummy_hash = "zd4m26eis2wwbvtyfiliar27wkcv3ehk"
     bottom._hash = dummy_hash
@@ -1902,7 +1902,7 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
     assert spec["dt-diamond-bottom"]._hash == dummy_hash
 
     # make sure package hash is NOT recomputed
-    assert not getattr(spec["dt-diamond-bottom"], "_package_hash", None)
+    assert spec["dt-diamond-bottom"]._package_hash is None
 
 
 def test_package_hash_affects_dunder_and_dag_hash(mock_packages, config):
@@ -2997,7 +2997,8 @@ def test_mark_concrete_roundtrip_preserves_hashes(spec_str, config, mock_package
     assert all(getattr(node, ht.dag_hash.attr) is None for node in s.traverse())
 
     # Re-finalize the DAG: the cleared hashes must recompute to the original values.
-    s._finalize_concretization()
+    spack.spec.assign_package_hashes([s], repo=spack.repo.PATH)
+    s._mark_concrete_and_assign_dag_hashes()
     roundtrip = {node.name: node.dag_hash() for node in s.traverse()}
     assert roundtrip == original
 

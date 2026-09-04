@@ -27,7 +27,6 @@ import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
 import spack.externals_config
-import spack.hash_types as ht
 import spack.package_base
 import spack.paths
 import spack.platforms
@@ -1593,8 +1592,8 @@ spack:
         new_root_without_reuse = spack.concretize.concretize_one("root")
 
         # validate that the graphs are the same with reuse, but not without
-        assert ht.build_hash(root) == ht.build_hash(new_root_with_reuse)
-        assert ht.build_hash(root) != ht.build_hash(new_root_without_reuse)
+        assert root["changing"].variants == new_root_with_reuse["changing"].variants
+        assert root["changing"].variants != new_root_without_reuse["changing"].variants
 
         # DAG hash should be the same with reuse since only the dependency changed
         assert root.dag_hash() == new_root_with_reuse.dag_hash()
