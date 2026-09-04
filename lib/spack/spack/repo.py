@@ -27,6 +27,7 @@ from typing import (
     Callable,
     Dict,
     Generator,
+    Iterable,
     Iterator,
     List,
     Mapping,
@@ -47,6 +48,7 @@ import spack.patch
 import spack.paths
 import spack.provider_index
 import spack.tag
+import spack.traverse
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.filesystem as fs
@@ -56,6 +58,7 @@ import spack.util.lock
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
+import spack.version
 from spack.util import tty
 from spack.util.filesystem import working_dir
 from spack.util.lang import Singleton, ensure_unwrapped, memoized
@@ -2119,6 +2122,125 @@ PATH = cast(RepoPath, Singleton(lambda: create_and_enable(spack.config.CONFIG)))
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
 sys.meta_path.append(REPOS_FINDER)
+
+
+def freeze_provided_virtuals(specs: Iterable["spack.spec.Spec"]) -> None:
+    """Fill in the versions of the virtuals each node provides, on every node where they are not
+    frozen yet. This can be called after concretization but before nodes are marked concrete, so we
+    can't branch on concreteness yet."""
+    # Post order, so children are frozen before a `provides` when clause constrains a dependency.
+    for spec in spack.traverse.traverse_nodes(list(specs), order="post", key=id):
+        if spec._provided_virtuals is not None:
+            continue
+
+        # When several `provides` clauses match, the provided version is their intersection.
+        provided: Dict[str, spack.version.VersionList] = {}
+        try:
+            declared = PATH.get_pkg_class(spec.fullname).provided
+        except Exception as e:
+            warnings.warn(f"cannot reconstruct provided virtuals on {spec.name}: {e}")
+        else:
+            for when_spec, vspecs in declared.items():
+                if not spec.satisfies(when_spec):
+                    continue
+                for vspec in vspecs:
+                    if vspec.name in provided:
+                        provided[vspec.name] = provided[vspec.name].intersection(vspec.versions)
+                    else:
+                        provided[vspec.name] = vspec.versions.copy()
+
+        spec._provided_virtuals = provided
+
+
+def reconstruct_virtuals(
+    specs: Iterable["spack.spec.Spec"], *, edges_lack_virtuals: bool = False
+) -> None:
+    """Fill in the virtual data that belongs on a concrete spec but that older spec files did not
+    record:
+
+    - on each node, the versions of the virtuals it provides
+    - on each edge, the virtuals it consumes from its child
+
+    The two are guarded independently, since the node data was added without a specfile format
+    bump: a format 5 document written by an older Spack has edge virtuals but no node ones.
+
+    Nodes are filled from the cached provider index to avoid package module imports. Only nodes
+    marked concrete are filled, and callers set per-node concreteness before calling. Callers
+    pass every node, not just roots: the check below reads ``specs``, and traversal is only for
+    ordering."""
+    specs = list(specs)
+    if not edges_lack_virtuals and not any(
+        spec._provided_virtuals is None and spec.concrete for spec in specs
+    ):
+        return
+
+    # Post order, so children are frozen before a `provides` when clause constrains a dependency.
+    nodes = list(spack.traverse.traverse_nodes(specs, order="post", key=id))
+
+    # Provider name -> [(constrained provider spec, virtual name, provided versions)]. The index
+    # is keyed by name, not by namespace, so a same-named package from another namespace resolves
+    # too. Packages absent from the configured repos are absent from the index and provide
+    # nothing, without warning.
+    providers: Dict[str, List[Tuple["spack.spec.Spec", str, "spack.version.VersionList"]]] = {}
+    if any(spec._provided_virtuals is None and spec.concrete for spec in nodes):
+        try:
+            index = PATH.provider_index
+        except Exception as e:
+            tty.debug(f"cannot load the provider index, no virtuals are reconstructed: {e}")
+        else:
+            for vname, vmap in index.providers.items():
+                for vspec, pspecs in vmap.items():
+                    for pspec in pspecs:
+                        providers.setdefault(pspec.name, []).append((pspec, vname, vspec.versions))
+
+    for spec in nodes:
+        if spec._provided_virtuals is not None or not spec.concrete:
+            continue
+
+        # Intersected when several clauses match, see freeze_provided_virtuals.
+        provided: Dict[str, spack.version.VersionList] = {}
+        for pspec, vname, versions in providers.get(spec.name, ()):
+            if not spec.satisfies(pspec):
+                continue
+            if vname in provided:
+                provided[vname] = provided[vname].intersection(versions)
+            else:
+                provided[vname] = versions.copy()
+
+        spec._provided_virtuals = provided
+
+    for spec in nodes:
+        if not spec.concrete:
+            continue
+
+        if not edges_lack_virtuals and spec.original_spec_format() >= 3:
+            continue
+
+        try:
+            pkg_cls = PATH.get_pkg_class(spec.fullname)
+        except Exception as e:
+            warnings.warn(f"cannot reconstruct virtual dependencies on {spec.name}: {e}")
+            continue
+
+        needed: Set[str] = set()
+        for name, when_deps in pkg_cls.dependencies_by_name(when=True).items():
+            if not PATH.is_virtual(name):
+                continue
+            for when_dep in when_deps:
+                if spec.satisfies(when_dep):
+                    needed.add(name)
+                    break
+
+        if not needed:
+            continue
+
+        # The provided virtuals were frozen above, so the child side needs no package instance.
+        for edge in spec.edges_to_dependencies():
+            if not edge.spec.concrete:
+                continue
+            virtuals_to_add = needed & set(edge.spec.provided_virtuals)
+            if virtuals_to_add:
+                edge.update_virtuals(virtuals_to_add)
 
 
 @contextlib.contextmanager

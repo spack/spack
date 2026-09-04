@@ -486,6 +486,10 @@ class SpecParser:
         # merging it earlier would compare an incomplete sub-dag against the existing edges.
         pending: Optional[tuple] = None
 
+        # Whether any edge carries a when condition, so that only those specs pay for the
+        # canonicalization pass below.
+        saw_when = False
+
         while self.curr:
             if self.curr.lastgroup == _DEPENDENCY:
                 # ^ (transitive) or % / %% (direct) edge, followed by a dependency node
@@ -555,6 +559,7 @@ class SpecParser:
                     conditions = None
                     if when_string is not None:
                         conditions = SpecParser(when_string).next_spec()
+                        saw_when = True
 
                     dep_spec = self._parse_node(initial_name=substitute)
 
@@ -611,6 +616,18 @@ class SpecParser:
                 break
 
         self._attach_pending(root_spec, pending)
+
+        # The parser creates conditional edges on the root and on its ^ dependencies only, and
+        # the sub-dags above settled every node they hang off, so the two levels are the whole
+        # canonicalization. Root first: merging its edges can narrow a dependency node, which
+        # can settle that node's own conditions.
+        if saw_when:
+            try:
+                root_spec._canonicalize_conditional_edges()
+                for edge in root_spec.edges_to_dependencies():
+                    edge.spec._canonicalize_conditional_edges()
+            except spack.error.SpecError as e:
+                raise SpecParsingError(str(e), self.curr, self.literal_str) from e
 
         return root_spec
 
