@@ -12,6 +12,7 @@ import spack.config
 import spack.package_prefs
 import spack.paths
 import spack.repo
+import spack.solver.asp
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.config import Configuration
@@ -319,6 +320,151 @@ mpi:
         # ensure that once config is in place, external is used
         spec = spack.concretize.concretize_one("mpi")
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
+
+    def test_buildable_false(self):
+        conf = syaml.load_config(
+            """\
+libelf:
+  buildable: false
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("libelf")
+
+        spec = concretize("mpich")
+        assert spec["mpich"].name == "mpich"
+
+    def test_buildable_false_virtual(self):
+        conf = syaml.load_config(
+            """\
+mpi:
+  buildable: false
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        spec = concretize("libelf")
+        assert spec["libelf"].name == "libelf"
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("mpich")
+
+    def test_buildable_false_all(self):
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("libelf")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("mpich")
+
+    def test_buildable_false_all_true_package(self):
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+libelf:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        spec = concretize("libelf")
+        assert spec["libelf"].name == "libelf"
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("mpich")
+
+    def test_buildable_false_all_true_virtual(self):
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+mpi:
+  buildable: true
+gcc-runtime:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("libelf")
+
+        spec = concretize("mpich")
+        assert spec["mpich"].name == "mpich"
+
+    def test_buildable_false_virtual_true_package(self):
+        conf = syaml.load_config(
+            """\
+mpi:
+  buildable: false
+mpich:
+  buildable: true
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("zmpi")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("mpich")
+
+    def test_buildable_false_all_concrete_failure(self):
+        """Test that concretization fails when packages:all:buildable:false
+        and no externals are configured for a required package."""
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+"""
+        )
+        spack.config.CONFIG.set("packages", conf)
+
+        # Should fail because libelf cannot be built and has no externals
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
+            spack.concretize.concretize_one("libelf")
+
+        assert "buildable:false" in str(exc_info.value)
+
+    def test_buildable_false_provider_overrides_virtual_true(self):
+        """Test that a virtual provider explicitly set to buildable:false
+        cannot be built even when the virtual package is buildable:true
+        and packages:all:buildable:true."""
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: true
+mpi:
+  buildable: true
+mpich:
+  buildable: false
+gcc-runtime:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
+        spack.config.CONFIG.set("packages", conf)
+
+        # Should fail because mpich provider is explicitly not buildable
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
+            spack.concretize.concretize_one("mpich")
+
+        assert "buildable:false" in str(exc_info.value)
 
     def test_config_permissions_from_all(self, configure_permissions):
         # Although these aren't strictly about concretization, they are

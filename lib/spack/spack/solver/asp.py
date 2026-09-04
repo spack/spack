@@ -2092,20 +2092,48 @@ class SpackSolverSetup:
                 self.gen.newline()
                 requirement_weight += 1
 
-    def external_packages(self, packages_with_externals):
-        """Facts on external packages, from packages.yaml and implicit externals."""
-        self.gen.h1("External packages")
-        for pkg_name, data in packages_with_externals.items():
-            if pkg_name == "all":
+    def buildable_constraints(self, packages_with_externals):
+        """Facts on 'buildable' constraints from packages.yaml,
+        including per-package and all:buildable.
+        """
+        all_buildable = packages_with_externals.get("all", {}).get("buildable", True)
+
+        if all_buildable:
+            # Emit buildable_false only for packages explicitly marked non-buildable
+            self.gen.h1("External packages")
+            for pkg_name, data in packages_with_externals.items():
+                if pkg_name == "all":
+                    continue
+                if pkg_name not in self.pkgs:
+                    continue
+                if not data.get("buildable", True):
+                    self.gen.h2(f"External package: {pkg_name}")
+                    self.gen.fact(fn.buildable_false(pkg_name))
+            return
+
+        # packages:all:buildable is False - mark every package non-buildable unless
+        # it is explicitly buildable or provides a virtual that is explicitly buildable
+        self.gen.h1("Buildable constraints from packages:all:buildable")
+        packages_config = spack.config.CONFIG.get("packages", {})
+        buildable_virtuals = {
+            v
+            for v, vdata in packages_config.items()
+            if spack.repo.PATH.is_virtual(v) and vdata.get("buildable", False)
+        }
+
+        for pkg_name in sorted(self.pkgs):
+            pkg_data = packages_with_externals.get(pkg_name, {})
+            if pkg_data.get("buildable", False):
                 continue
 
-            # This package is not among possible dependencies
-            if pkg_name not in self.pkgs:
+            if any(
+                provider.name == pkg_name
+                for virtual_name in buildable_virtuals
+                for provider in spack.repo.PATH.providers_for(virtual_name)
+            ):
                 continue
 
-            if not data.get("buildable", True):
-                self.gen.h2(f"External package: {pkg_name}")
-                self.gen.fact(fn.buildable_false(pkg_name))
+            self.gen.fact(fn.buildable_false(pkg_name))
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
@@ -2785,7 +2813,7 @@ class SpackSolverSetup:
         self.target_defaults(specs + dev_specs)
 
         self.virtual_requirements_and_weights()
-        self.external_packages(packages_with_externals)
+        self.buildable_constraints(packages_with_externals)
 
         # TODO: make a config option for this undocumented feature
         checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
