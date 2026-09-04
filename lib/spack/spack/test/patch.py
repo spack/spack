@@ -24,7 +24,7 @@ import spack.util.url as url_util
 from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import Executable
+from spack.util.executable import Executable, ProcessError
 from spack.util.filesystem import mkdirp, touch, working_dir
 
 # various sha256 sums (using variables for legibility)
@@ -583,3 +583,32 @@ def test_patch_lookup_for_shadowed_package(mock_packages, config, repo_builder):
         # raises SpecError if the lookup uses the bare name: the shadowing
         # class's patch index has no such sha256
         assert {p.sha256 for p in spec.patches} == {foo_sha256, baz_sha256}
+
+
+def test_patch_reversed_patch_no_prompt(mock_packages, install_mockery, mock_fetch, capfd):
+    """Test to ensure patches that could cause patch to prompt for user interaction
+    do not and correctly fail to apply"""
+    spec = spack.concretize.concretize_one("reversed-patch")
+    with spec.package.stage as stage:
+        if not os.path.isdir(stage.source_path):
+            os.makedirs(stage.source_path)
+        with working_dir(stage.source_path):
+            with open("message.txt", "w+", encoding="utf-8") as f:
+                f.write("fixed\n")
+        # ensure patching failed
+        with pytest.raises(ProcessError):
+            spec.package.do_patch()
+        # now ensure it failed under the right circumstances
+        cap = capfd.readouterr()
+        # ensure it was a reverse patch that failed
+        # freebsd/macos patch reports this case differently than gnu patch
+        # which is what we use on posix and windows
+        darwin_or_freebsd = sys.platform == "darwin" or sys.platform.startswith("freebsd")
+        failure_str = (
+            "Ignoring previously applied (or reversed) patch"
+            if darwin_or_freebsd
+            else "Reversed (or previously applied) patch detected"
+        )
+        assert failure_str in cap.out
+        # ensure the user was not prompted
+        assert "Assume -R?" not in cap.out
