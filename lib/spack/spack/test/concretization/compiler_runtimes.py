@@ -10,6 +10,7 @@ import pytest
 import spack.vendor.archspec.cpu
 
 import spack.concretize
+import spack.context_factory
 import spack.database
 import spack.paths
 import spack.repo
@@ -21,9 +22,9 @@ from spack.solver.reuse import reusable_external_specs
 from spack.version import Version
 
 
-def _concretize_with_reuse(*, root_str, reused_str, config):
+def _concretize_with_reuse(*, root_str, reused_str):
     reused_spec = spack.concretize.concretize_one(reused_str)
-    external_specs = reusable_external_specs(config, repo=spack.repo.PATH)
+    external_specs = reusable_external_specs(spack.context_factory.default())
     setup = spack.solver.asp.SpackSolverSetup(tests=False)
     driver = spack.solver.asp.PyclingoDriver()
     result, _, _ = driver.solve(
@@ -122,9 +123,7 @@ def test_reusing_specs_with_gcc_runtime(
 
     Reusable runtime versions should be lower, or equal, to that of parent nodes.
     """
-    root, reused_spec = _concretize_with_reuse(
-        root_str=root_str, reused_str=reused_str, config=mutable_config
-    )
+    root, reused_spec = _concretize_with_reuse(root_str=root_str, reused_str=reused_str)
 
     runtime_a = root.dependencies("gcc-runtime")[0]
     assert runtime_a.satisfies(expected["pkg-a"]), runtime_a.tree()
@@ -156,9 +155,7 @@ def test_views_can_handle_duplicate_runtime_nodes(
     """Tests that an environment is able to select the latest version of a runtime node to be
     linked in a view, in case more than one compatible version is in the DAG.
     """
-    root, reused_spec = _concretize_with_reuse(
-        root_str=root_str, reused_str=reused_str, config=mutable_config
-    )
+    root, reused_spec = _concretize_with_reuse(root_str=root_str, reused_str=reused_str)
 
     # Mock the installation status to allow selecting nodes for the view
     monkeypatch.setattr(spack.database.Database, "installed", lambda self, spec: True)
@@ -188,9 +185,7 @@ def test_runtimes_are_not_reused_if_compiler_not_used(runtime_repo, mutable_conf
     """Tests that, if we can reuse specs with a more recent runtime version than the compiler we
     asked for, we will not end-up with a DAG using the recent runtime, and the old compiler.
     """
-    root, reused = _concretize_with_reuse(
-        root_str="pkg-a %gcc@9", reused_str="pkg-a %gcc@10", config=mutable_config
-    )
+    root, reused = _concretize_with_reuse(root_str="pkg-a %gcc@9", reused_str="pkg-a %gcc@10")
 
     assert "gcc-runtime" in root
     gcc_runtime, gcc = root["gcc-runtime"], root["gcc"]

@@ -7,6 +7,7 @@ import pytest
 
 import spack.concretize
 import spack.config
+import spack.context_factory
 import spack.error
 import spack.old_installer
 import spack.package_base
@@ -1327,7 +1328,7 @@ def test_requirements_on_compilers_and_reuse(
     reused_nodes = list(reused_spec.traverse())
     update_packages_config(packages_yaml)
     root_specs = [Spec(input_spec)]
-    external_specs = reusable_external_specs(mutable_config, repo=spack.repo.PATH)
+    external_specs = reusable_external_specs(spack.context_factory.default())
 
     with mutable_config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
@@ -1510,7 +1511,7 @@ packages:
     update_packages_config(packages_yaml)
     initial_mpileaks = spack.concretize.concretize_one("mpileaks+debug")
     reused_nodes = list(initial_mpileaks.traverse())
-    external_specs = reusable_external_specs(mutable_config, repo=spack.repo.PATH)
+    external_specs = reusable_external_specs(spack.context_factory.default())
 
     # Ask for just "mpileaks" and check the spec is reused
     with mutable_config.override("concretizer:reuse", True):

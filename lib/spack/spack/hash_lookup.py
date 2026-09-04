@@ -12,27 +12,25 @@ from typing import List, Optional
 
 import spack.active_environment
 import spack.binary_distribution
-import spack.config
 import spack.context_factory
 import spack.error
 import spack.externals_config
-import spack.repo
 import spack.spec
 from spack.context import SpackContext
 from spack.enums import InstallRecordStatus
 
 
 def _matching_external_specs(
-    spec: "spack.spec.Spec", *, config: spack.config.Configuration, repo: spack.repo.RepoPath
+    spec: "spack.spec.Spec", *, context: SpackContext
 ) -> List["spack.spec.Spec"]:
     """Return configured externals from packages.yaml that match spec by abstract hash."""
     try:
         packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
-            config, repo=repo
+            context
         )
-        completion_mode = config.get("concretizer:externals:completion")
+        completion_mode = context.config.get("concretizer:externals:completion")
         parser = spack.externals_config.create_external_parser(
-            packages_with_externals, completion_mode, repo=repo
+            packages_with_externals, completion_mode, repo=context.repo
         )
     except spack.error.SpackError:
         return []
@@ -50,7 +48,7 @@ def _lookup_one(spec: "spack.spec.Spec", *, context: SpackContext) -> "spack.spe
 
     matches = (
         (active_env.all_matching_specs(spec) if active_env else [])
-        or _matching_external_specs(spec, config=context.config, repo=context.repo)
+        or _matching_external_specs(spec, context=context)
         or context.store.db.query(spec, installed=InstallRecordStatus.ANY, repo=context.repo)
         or spack.binary_distribution.BinaryCacheQuery(
             True, index=context.binary_index, config=context.config

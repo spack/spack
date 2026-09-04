@@ -2112,7 +2112,7 @@ spack:
         ]
         root_spec = Spec("pkg-a foobar=bar")
 
-        external_specs = reusable_external_specs(mutable_config, repo=spack.repo.PATH)
+        external_specs = reusable_external_specs(spack.context_factory.default())
         with mutable_config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
@@ -2139,7 +2139,7 @@ spack:
     @pytest.mark.regression("51112")
     def test_variant_penalty(self, mutable_config):
         """Test package preferences during concretization."""
-        external_specs = reusable_external_specs(mutable_config, repo=spack.repo.PATH)
+        external_specs = reusable_external_specs(spack.context_factory.default())
 
         # The variant definition is similar to
         #
@@ -2498,7 +2498,7 @@ packages:
         know a concretization exists.
         """
         specs = [Spec(s) for s in specs]
-        external_specs = reusable_external_specs(mutable_config, repo=spack.repo.PATH)
+        external_specs = reusable_external_specs(spack.context_factory.default())
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(setup, specs, reuse=external_specs)
@@ -3394,7 +3394,7 @@ def test_filtering_reused_specs(
     mutable_config.set("concretizer:reuse", reuse_yaml)
     context = spack.context_factory.default()
     packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
-        mutable_config, repo=context.repo
+        context
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
@@ -3438,7 +3438,7 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     mutable_config.set("concretizer:reuse", reuse_yaml)
     context = spack.context_factory.default()
     packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
-        mutable_config, repo=context.repo
+        context
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(

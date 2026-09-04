@@ -456,9 +456,7 @@ def test_find_external_nonempty_default_manifest_dir(
 
 def _reusable_hashes(context):
     """Return the dag hashes the concretizer would reuse, for the given context."""
-    packages_with_externals = external_config_with_implicit_externals(
-        context.config, repo=context.repo
-    )
+    packages_with_externals = external_config_with_implicit_externals(context)
     completion_mode = context.config.get("concretizer:externals:completion")
     selector = ReusableSpecsSelector(
         context=context,

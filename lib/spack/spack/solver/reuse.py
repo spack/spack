@@ -149,11 +149,10 @@ def _is_reusable(
     return False
 
 
-def reusable_external_specs(
-    configuration: spack.config.Configuration, *, repo: spack.repo.RepoPath
-) -> List[spack.spec.Spec]:
-    """Return the reusable external specs declared in a configuration's ``packages.yaml``."""
-    packages_with_externals = external_config_with_implicit_externals(configuration, repo=repo)
+def reusable_external_specs(context: SpackContext) -> List[spack.spec.Spec]:
+    """Return the reusable external specs declared in a context's ``packages.yaml``."""
+    configuration, repo = context.config, context.repo
+    packages_with_externals = external_config_with_implicit_externals(context)
     completion_mode = configuration.get("concretizer:externals:completion")
     spec_filter = spec_filter_from_packages_yaml(
         external_parser=create_external_parser(
@@ -311,7 +310,7 @@ class ReusableSpecsSelector:
                     has_external_source = True
                     if include:
                         # Since libcs are implicit externals, we need to implicitly include them
-                        include = include + sorted(all_libcs(configuration, repo=repo))
+                        include = include + sorted(all_libcs(context))
                     self.reuse_sources.append(
                         spec_filter_from_packages_yaml(
                             external_parser=external_parser,

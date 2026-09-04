@@ -5,12 +5,11 @@ from typing import Set, Tuple
 
 import spack.compilers.config
 import spack.compilers.libraries
-import spack.config
 import spack.hash_lookup
-import spack.repo
 import spack.spec
 import spack.util.libc
 import spack.version
+from spack.context import SpackContext
 
 from .core import SourceContext, fn
 from .versions import Provenance
@@ -271,14 +270,15 @@ class RuntimePropertyRecorder:
         self._setup.effect_rules()
 
 
-def all_libcs(
-    configuration: spack.config.Configuration, *, repo: spack.repo.RepoPath
-) -> Set[spack.spec.Spec]:
+def all_libcs(context: SpackContext) -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
+    cache = spack.compilers.libraries.FileCompilerCache(context.misc_cache)
     libcs = set()
-    for c in spack.compilers.config.all_compilers_from(configuration, repo=repo):
-        candidate = spack.compilers.libraries.CompilerPropertyDetector(c).default_libc()
+    for c in spack.compilers.config.all_compilers_from(context.config, repo=context.repo):
+        candidate = spack.compilers.libraries.CompilerPropertyDetector(
+            c, cache=cache
+        ).default_libc()
         if candidate is not None:
             libcs.add(candidate)
 

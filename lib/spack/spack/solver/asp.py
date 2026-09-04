@@ -68,7 +68,7 @@ import spack.variant as vt
 import spack.version as vn
 from spack import traverse
 from spack.active_environment import active_environment
-from spack.compilers.libraries import CompilerPropertyDetector
+from spack.compilers.libraries import CompilerPropertyDetector, FileCompilerCache
 from spack.context import SpackContext
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
@@ -255,8 +255,8 @@ def dag_closure_by_deptype(
     return facts
 
 
-def c_compiler_runs(compiler) -> bool:
-    return CompilerPropertyDetector(compiler).compiler_verbose_output() is not None
+def c_compiler_runs(detector: CompilerPropertyDetector) -> bool:
+    return detector.compiler_verbose_output() is not None
 
 
 def extend_flag_list(flag_list: MutableSequence[str], new_flags: Sequence[str]) -> None:
@@ -1399,6 +1399,7 @@ class SpackSolverSetup:
         self, tests: spack.concretize.TestsType = False, *, context: Optional[SpackContext] = None
     ):
         self.context = context or spack.context_factory.default()
+        self.compiler_cache = FileCompilerCache(self.context.misc_cache)
         self.possible_graph = create_graph_analyzer(self.context)
 
         # these are all initialized in setup()
@@ -2665,15 +2666,13 @@ class SpackSolverSetup:
         reuse = reuse or []
         if packages_with_externals is None:
             packages_with_externals = (
-                spack.externals_config.external_config_with_implicit_externals(
-                    self.context.config, repo=self.context.repo
-                )
+                spack.externals_config.external_config_with_implicit_externals(self.context)
             )
         self._validate_input_specs(specs)
         self.gen = ProblemInstanceBuilder()
         self.clauses = SpecClauseGenerator(
             repo=self.context.repo,
-            libcs=sorted(all_libcs(self.context.config, repo=self.context.repo)),
+            libcs=sorted(all_libcs(self.context)),
             explicitly_required_namespaces={
                 node.name: node.namespace
                 for node in traverse.traverse_nodes(specs)
@@ -2891,7 +2890,9 @@ class SpackSolverSetup:
 
             current_libc = None
             if compiler.external or self.context.store.db.installed(compiler):
-                current_libc = CompilerPropertyDetector(compiler).default_libc()
+                current_libc = CompilerPropertyDetector(
+                    compiler, cache=self.compiler_cache
+                ).default_libc()
             else:
                 try:
                     current_libc = compiler["libc"]
@@ -3206,9 +3207,11 @@ def possible_compilers(
 ) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
     result, rejected = set(), set()
 
+    cache = FileCompilerCache(context.misc_cache)
     # Compilers defined in configuration
     for c in spack.compilers.config.all_compilers_from(context.config, repo=context.repo):
-        if spack.platforms.using_libc_compatibility() and not c_compiler_runs(c):
+        detector = CompilerPropertyDetector(c, cache=cache)
+        if spack.platforms.using_libc_compatibility() and not c_compiler_runs(detector):
             rejected.add(c)
             try:
                 compiler = c.extra_attributes["compilers"]["c"]
@@ -3221,10 +3224,7 @@ def possible_compilers(
 
             continue
 
-        if (
-            spack.platforms.using_libc_compatibility()
-            and not CompilerPropertyDetector(c).default_libc()
-        ):
+        if spack.platforms.using_libc_compatibility() and not detector.default_libc():
             rejected.add(c)
             warnings.warn(
                 f"cannot detect libc from {c}. The compiler will not be used "
@@ -3776,9 +3776,7 @@ class Solver:
 
         # Compute packages configuration with implicit externals once and reuse it
         self.packages_with_externals = (
-            spack.externals_config.external_config_with_implicit_externals(
-                self.context.config, repo=self.context.repo
-            )
+            spack.externals_config.external_config_with_implicit_externals(self.context)
         )
         completion_mode = self.context.config.get("concretizer:externals:completion")
         self.selector = ReusableSpecsSelector(

@@ -11,6 +11,7 @@ import spack.compilers.config
 import spack.compilers.libraries
 import spack.repo
 import spack.util.executable
+import spack.util.file_cache
 import spack.util.filesystem as fs
 import spack.util.module_cmd
 
@@ -146,3 +147,28 @@ class TestCompilerPropertyDetector:
         with pytest.raises(spack.util.module_cmd.ModuleLoadError):
             with detector.compiler_environment():
                 pass
+
+
+def test_detector_uses_the_cache_it_is_given(mock_packages, mock_gcc, monkeypatch, tmp_path):
+    """A detector given a cache writes the compiler output there, and leaves the process-wide
+    cache alone. Callers with an injected file cache rely on this to keep the two apart.
+    """
+    entries = os.path.join("compilers", "compilers.json")
+    given, process_wide = tmp_path / "given", tmp_path / "process-wide"
+    monkeypatch.setattr(
+        spack.compilers.libraries,
+        "COMPILER_CACHE",
+        spack.compilers.libraries.FileCompilerCache(
+            spack.util.file_cache.FileCache(str(process_wide))
+        ),
+    )
+    cache = spack.compilers.libraries.FileCompilerCache(
+        spack.util.file_cache.FileCache(str(given))
+    )
+
+    spack.compilers.libraries.CompilerPropertyDetector(
+        mock_gcc, cache=cache
+    ).compiler_verbose_output()
+
+    assert (given / entries).exists()
+    assert not (process_wide / entries).exists()

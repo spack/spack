@@ -8,10 +8,10 @@ from typing import Any, Dict
 
 import spack.compilers.config
 import spack.compilers.libraries
-import spack.config
 import spack.platforms
 import spack.repo
 import spack.spec
+from spack.context import SpackContext
 from spack.externals import (
     ExternalSpecsParser,
     complete_architecture,
@@ -44,9 +44,7 @@ def _normalize_packages_yaml(packages_yaml: Dict[str, Any], *, repo: spack.repo.
             entry.setdefault("externals", []).extend(specs)
 
 
-def external_config_with_implicit_externals(
-    configuration: spack.config.Configuration, *, repo: spack.repo.RepoPath
-) -> Dict[str, Any]:
+def external_config_with_implicit_externals(context: SpackContext) -> Dict[str, Any]:
     """Return packages.yaml augmented with implicit libc externals on Linux.
 
     Normalizes the configuration so that virtual-package keys are replaced by
@@ -54,9 +52,10 @@ def external_config_with_implicit_externals(
     compilers when running on a libc-compatibility platform.
 
     Args:
-        configuration: configuration whose ``packages`` section is processed.
-        repo: package repository to query.
+        context: resources to read the ``packages`` section, the package repositories and the
+            cached compiler output from.
     """
+    configuration, repo = context.config, context.repo
     packages_yaml = configuration.deepcopy_as_builtin("packages", line_info=True)
     _normalize_packages_yaml(packages_yaml, repo=repo)
 
@@ -64,9 +63,12 @@ def external_config_with_implicit_externals(
     if not spack.platforms.using_libc_compatibility():
         return packages_yaml
 
+    cache = spack.compilers.libraries.FileCompilerCache(context.misc_cache)
     seen = set()
     for compiler in spack.compilers.config.all_compilers_from(configuration, repo=repo):
-        libc = spack.compilers.libraries.CompilerPropertyDetector(compiler).default_libc()
+        libc = spack.compilers.libraries.CompilerPropertyDetector(
+            compiler, cache=cache
+        ).default_libc()
         if libc and libc not in seen:
             seen.add(libc)
             entry = {"spec": f"{libc}", "prefix": libc.external_path}

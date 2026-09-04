@@ -9,6 +9,7 @@ from typing import List, Optional, Tuple
 
 import spack.binary_distribution
 import spack.config
+import spack.context_factory
 import spack.environment as ev
 import spack.repo
 import spack.solver.reuse
@@ -344,9 +345,7 @@ def _find_query(
     q_args = query_arguments(args)
     concretized_but_not_installed = []
     if args.show_configured_externals:
-        results = spack.solver.reuse.reusable_external_specs(
-            spack.config.CONFIG, repo=spack.repo.PATH
-        )
+        results = spack.solver.reuse.reusable_external_specs(spack.context_factory.default())
     elif env:
         all_env_specs = env.all_specs()
         if args.constraint:
