@@ -116,7 +116,9 @@ def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
     """Completes a node with variants and architecture information.
 
     Architecture is completed first, delegating to ``complete_architecture``.
-    Variants are then added to the node, using their default value.
+    Variants are then added to the node, using their default value where possible.
+    For conditional variant values, the evaluation is greedy and may currently fail if the
+    conditional value is gated on another variant.
     """
     complete_architecture(node)
     pkg_class = spack.repo.PATH.get_pkg_class(node.name)
