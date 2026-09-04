@@ -66,6 +66,7 @@ from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
+from .generate_env_scripts import write_env_activate_script, write_env_deactivate_script
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = Tuple[Spec, Spec]
@@ -453,6 +454,10 @@ def create_in_dir(
                 # relative paths outside of env
                 _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=copied)
                 _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=copied)
+
+    view = default_view_name if with_view is not False else None
+    write_env_activate_script(env, view=view)
+    write_env_deactivate_script(env, view=view)
 
     return env
 
@@ -1948,8 +1953,10 @@ class Environment:
             tty.debug("Skip view update, this environment does not maintain a view")
             return
 
-        for view in self.views.values():
+        for view_name, view in self.views.items():
             view.regenerate(self)
+            write_env_activate_script(self, view_name)
+            write_env_deactivate_script(self, view_name)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""

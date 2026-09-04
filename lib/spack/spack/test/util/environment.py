@@ -56,13 +56,6 @@ def test_filter_system_paths():
     assert expected == filtered
 
 
-def deprioritize_system_paths():
-    expected = [p for p in test_paths if p.startswith("/nonsense_path")]
-    expected.extend([p for p in test_paths if not p.startswith("/nonsense_path")])
-    filtered = envutil.deprioritize_system_paths(test_paths)
-    assert expected == filtered
-
-
 def test_prune_duplicate_paths():
     test_paths = ["/a/b", "/a/c", "/a/b", "/a/a", "/a/c", "/a/a/.."]
     expected = ["/a/b", "/a/c", "/a/a", "/a/a/.."]
@@ -162,35 +155,43 @@ def test_reverse_environment_modifications(working_env):
     assert os.environ == start_env
 
 
-def test_shell_modifications_are_properly_escaped():
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_shell_modifications_are_properly_escaped(shell):
     """Test that variable values are properly escaped so that they can safely be eval'd."""
     changes = envutil.EnvironmentModifications()
-    changes.set("VAR", "$PATH")
-    changes.append_path("VAR", "$ANOTHER_PATH")
-    changes.set("RM_RF", "$(rm -rf /)")
 
-    script = changes.shell_modifications(shell="sh")
-    assert f"export VAR='$PATH{os.pathsep}$ANOTHER_PATH'" in script
-    assert "export RM_RF='$(rm -rf /)'" in script
+    # Use Windows syntax for bat, Unix syntax for other shells
+    if shell == "bat":
+        changes.set("VAR", "%PATH%")
+        changes.append_path("VAR", "%ANOTHER_PATH%")
+        changes.set("RM_RF", "$(rm -rf /)")
+    else:
+        changes.set("VAR", "$PATH")
+        changes.append_path("VAR", "$ANOTHER_PATH")
+        changes.set("RM_RF", "$(rm -rf /)")
 
+    script = changes.shell_modifications(shell)
 
-@pytest.mark.parametrize(
-    "shell,set_expected,unset_expected,join_sep",
-    [
-        ("sh", "export FOO=bar", "unset FOO", ";\n"),
-        ("csh", "setenv FOO bar", "unsetenv FOO", ";\n"),
-        ("fish", "set -gx FOO bar", "set -e FOO", ";\n"),
-        ("bat", 'set "FOO=bar"', 'set "FOO="', "\n"),
-        ("pwsh", "$Env:FOO='bar'", "Set-Item -Path Env:FOO", "\n"),
-    ],
-)
-def test_shell_cmd_string(shell, set_expected, unset_expected, join_sep):
-    shell_cmd = envutil.ShellCmdString(shell)
-    assert shell_cmd.set("FOO", "bar") == set_expected
-    assert shell_cmd.unset("FOO") == unset_expected
-    assert shell_cmd.join([]) == ""
-    assert shell_cmd.join([set_expected]) == set_expected + join_sep
-    assert (
-        shell_cmd.join([set_expected, unset_expected])
-        == set_expected + join_sep + unset_expected + join_sep
-    )
+    append_cmd = "_spack_env_append"
+    set_cmd = "_spack_env_set"
+    separator = os.pathsep
+
+    if shell == "bat":
+        append_cmd = f"%{append_cmd}%"
+        set_cmd = f"%{set_cmd}%"
+        separator = f'"{os.pathsep}"'
+        # bat uses double quotes for quoting and %% to escape % signs
+        assert f'{set_cmd} VAR "%%PATH%%"' in script
+        assert f'{append_cmd} VAR "%%ANOTHER_PATH%%" {separator}' in script
+        assert f'{set_cmd} RM_RF "$(rm -rf /)"' in script
+    elif shell == "pwsh":
+        separator = f"'{os.pathsep}'"
+        assert f"{set_cmd} VAR '$PATH'" in script
+        assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in script
+        assert f"{set_cmd} RM_RF '$(rm -rf /)'" in script
+    else:
+        assert f"{set_cmd} VAR '$PATH'" in script
+        assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in script
+        assert f"{set_cmd} RM_RF '$(rm -rf /)'" in script

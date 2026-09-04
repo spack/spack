@@ -73,6 +73,7 @@ import spack.multimethod
 import spack.package_base
 import spack.paths
 import spack.platforms
+import spack.repo
 import spack.schema.environment
 import spack.spec
 import spack.stage
@@ -1044,7 +1045,9 @@ class SetupContext:
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
 
-    def get_env_modifications(self) -> EnvironmentModifications:
+    def get_env_modifications(
+        self, cached_repo: Optional[spack.repo.RepoPath] = None
+    ) -> EnvironmentModifications:
         """Returns the environment variable modifications for the given input specs and context.
         Environment modifications include:
         - Updating PATH for packages that are required at runtime
@@ -1056,11 +1059,21 @@ class SetupContext:
 
         The (partial) order imposed on the specs is externals first, then topological
         from leaf to root. That way externals cannot contribute search paths that would shadow
-        Spack's prefixes, and dependents override variables set by dependencies."""
+        Spack's prefixes, and dependents override variables set by dependencies.
+
+            Args:
+            cached_repo: Optional, this repo will be used to obtain package objects for"""
         env = EnvironmentModifications()
         for dspec, flag in chain(self.external, self.nonexternal):
             tty.debug(f"Adding env modifications for {dspec.name}")
-            pkg = dspec.package
+            if cached_repo:
+                try:
+                    pkg = cached_repo.get_pkg_class(dspec.fullname)(dspec)
+                except spack.repo.UnknownPackageError:
+                    tty.debug(f"{dspec.fullname} not found in cached repo, using package from dspec")
+                    pkg = dspec.package
+            else:
+                pkg = dspec.package
 
             if self.should_setup_dependent_build_env & flag:
                 self._make_buildtime_detectable(dspec, env)
