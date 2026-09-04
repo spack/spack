@@ -117,15 +117,21 @@ def environment_name(path: Union[str, pathlib.Path]) -> str:
     """
     env_root = pathlib.Path(env_root_path()).resolve()
     path_path = pathlib.Path(path)
+    path_path_resolved = path_path.resolve()
 
     # For a managed environment created in Spack, env.path is ENV_ROOT/NAME
     # For a tracked environment from `spack env track`, the path is symlinked to ENV_ROOT/NAME
-    # So if ENV_ROOT/NAME resolves to env.path we know the environment is tracked/managed.
-    # Otherwise, it is an independent environment and  we return the path.
+    # If env.path is under ENV_ROOT, we return the relative path from ENV_ROOT.
+    # If ENV_ROOT/NAME resolves to env.path we know the environment is tracked/managed.
+    # Otherwise, it is an independent environment and we return the full path.
     #
     # We resolve both paths fully because the env_root itself could also be a symlink,
     # and any directory in env.path could be a symlink.
-    if (env_root / path_path.name).resolve() == path_path.resolve():
+    if path_path_resolved.drive == env_root.drive and os.path.commonpath(
+        [path_path_resolved, env_root]
+    ) == str(env_root):
+        return str(path_path_resolved.relative_to(env_root))
+    elif (env_root / path_path.name).resolve() == path_path_resolved:
         return path_path.name
     else:
         return str(path)
