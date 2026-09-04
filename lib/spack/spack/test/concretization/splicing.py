@@ -311,3 +311,24 @@ def test_fresh_ancestor_of_spliced_dep_is_not_spliced(install_specs, mutable_con
     # The leaf node is not spliced
     splice_z = concrete["splice-z"]
     assert splice_z.satisfies("@1.0.2") and not splice_z.spliced
+
+
+def test_spliced_spec_keeps_package_hash(install_specs, mutable_config):
+    """Tests that a spliced node keeps the package hash of the spec it was copied from"""
+    splice_t = install_specs("splice-t@1.0 ^splice-h@1.0.1 ^splice-z@1.0.0")[0]
+    mutable_config.set("packages", _make_specs_non_buildable(["splice-t"]))
+
+    _enable_splicing()
+    spliced = spack.concretize.concretize_one("splice-t@1.0 ^splice-h@1.0.2 ^splice-z@1.0.0")
+
+    # Spec has been spliced, and its package.py is the one it was built from
+    assert spliced.dag_hash() != splice_t.dag_hash()
+    assert spliced._package_hash == splice_t._package_hash
+    assert spliced.to_node_dict()["package_hash"] == splice_t._package_hash
+
+    # the dag hash must match a from-scratch recomputation that re-derives
+    # package hashes from the repo
+    recomputed = spliced.copy()
+    recomputed._mark_concrete(False)
+    recomputed._finalize_concretization()
+    assert recomputed.dag_hash() == spliced.dag_hash()

@@ -5295,6 +5295,10 @@ class Spec:
         """
         Clears all cached hashes in a Spec, while preserving other properties.
         """
+        assert all(
+            attr in ("_dunder_hash", "_prefix") or any(attr == h.attr for h in ht.HASHES)
+            for attr in ignore
+        ), f"unknown attribute in ignore: {ignore}"
         for h in ht.HASHES:
             if h.attr not in ignore:
                 if hasattr(self, h.attr):
