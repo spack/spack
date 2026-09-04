@@ -42,7 +42,7 @@ def spec_for_current_python() -> str:
 def root_path() -> str:
     """Root of all the bootstrap related folders"""
     return spack.config.canonicalize_path(
-        spack.config.CONFIG.get("bootstrap:root", spack.paths.default_user_bootstrap_path)
+        spack.config.CONFIG.get("bootstrap:root", "$state_home/bootstrap")
     )
 
 
@@ -126,7 +126,10 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
     config_scopes: MutableSequence["spack.config.ConfigScope"] = [
         spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)
     ]
-    configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, ("bootstrap", _config_path()))
+    configuration_paths = (
+        ("defaults", os.path.join(spack.paths.etc_path, "defaults")),
+        ("bootstrap", _config_path()),
+    )
     for name, path in configuration_paths:
         generic_scope = spack.config.DirectoryConfigScope(name, path)
         config_scopes.append(generic_scope)

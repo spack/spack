@@ -464,13 +464,6 @@ def test_substitute_user(mock_low_high_config, tmp_path: pathlib.Path):
     )
 
 
-def test_substitute_user_cache(mock_low_high_config):
-    user_cache_path = spack.paths.user_cache_path
-    assert os.path.join(user_cache_path, "baz") == spack.config.canonicalize_path(
-        os.path.join("$user_cache_path", "baz")
-    )
-
-
 def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
     assert tempdir == spack.config.canonicalize_path("$tempdir")
@@ -1233,23 +1226,35 @@ def test_internal_config_scope_cache_clearing():
 def test_system_config_path_is_overridable(working_env):
     p = "/some/path"
     os.environ["SPACK_SYSTEM_CONFIG_PATH"] = p
-    assert spack.paths._get_system_config_path() == p
+    from spack.paths import SpackPaths
+
+    paths = SpackPaths()
+    assert paths.system_config_path == p
 
 
 def test_system_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_SYSTEM_CONFIG_PATH"] = ""
-    assert os.sep + os.path.join("etc", "spack") == spack.paths._get_system_config_path()
+    from spack.paths import SpackPaths
+
+    paths = SpackPaths()
+    assert os.sep + os.path.join("etc", "spack") == paths.system_config_path
 
 
 def test_user_config_path_is_overridable(working_env):
     p = "/some/path"
     os.environ["SPACK_USER_CONFIG_PATH"] = p
-    assert p == spack.paths._get_user_config_path()
+    from spack.paths import SpackPaths
+
+    paths = SpackPaths()
+    assert p == paths.user_config_path
 
 
-def test_user_config_path_is_default_when_env_var_is_empty(working_env):
+def test_user_config_path_is_default_when_env_var_is_empty(working_env, mutable_empty_config):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
-    assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
+    from spack.paths import SpackPaths
+
+    paths = SpackPaths()
+    assert os.path.expanduser(os.path.join("~", ".config", "spack")) == paths.user_config_path
 
 
 def test_default_install_tree(monkeypatch, default_config):
@@ -1522,17 +1527,6 @@ def test_override_included_config(working_env, tmp_path, include_config_factory)
     assert "test3" in includes
 
 
-def test_user_cache_path_is_overridable(working_env):
-    p = "/some/path"
-    os.environ["SPACK_USER_CACHE_PATH"] = p
-    assert spack.paths._get_user_cache_path() == p
-
-
-def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
-    os.environ["SPACK_USER_CACHE_PATH"] = ""
-    assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_cache_path()
-
-
 def test_config_file_dir_failure(tmp_path: pathlib.Path, mutable_empty_config):
     with pytest.raises(spack.config.ConfigFileError, match="not a file"):
         spack.config.read_config_file(str(tmp_path))
@@ -1749,9 +1743,9 @@ def test_included_path_string_no_parent_path(
 
 def test_included_path_substitution():
     # check a straight path substitution
-    entry = {"path": "$user_cache_path/path/to/config.yaml"}
+    entry = {"path": "$spack/path/to/config.yaml"}
     include = spack.config.included_path(entry)
-    assert spack.paths.user_cache_path in include.path
+    assert spack.paths.spack_root in include.path
 
     # check path through an environment variable
     path = "/path/to/project/packages.yaml"
@@ -1992,7 +1986,7 @@ def test_included_path_git_temp_dest(mock_low_high_config):
 
 
 def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
-    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+    spack.config.CONFIG.set("config:locations:state", str(tmp_path))
 
     paths = ["concretizer.yaml"]
     entry = {

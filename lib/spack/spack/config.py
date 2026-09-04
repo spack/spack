@@ -71,6 +71,7 @@ import spack.schema.view
 import spack.util.executable
 import spack.util.git
 import spack.util.hash
+import spack.util.lock
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -144,14 +145,64 @@ MAX_RECURSIVE_INCLUDES = 100
 # placeholder object for unspecified default for get methods
 default_sigil = object()
 
+#: configurable config vars -- these cannot be used by include paths
+#: nor by other paths that can affect config values
+CONFIGURABLE_VARS = ("state_home", "cache_home", "data_home", "user_cache_path")
+_CVARS_RE = "|".join(CONFIGURABLE_VARS)
+CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
+
+#: Global flag to ignore user-fallback scope during config processing
+ignore_user_fallback = False
+
+#: Saved debug messages to be printed after debug level is set
+saved_debug_msgs: List[str] = []
+
+
+def substitute_include_path(path, context):
+    """Substitute path variables in include paths, with validation.
+
+    Args:
+        path: path string that may contain variables
+        context: context string for error messages
+
+    Returns:
+        Substituted path string
+
+    Raises:
+        ValueError: if path contains prohibited configurable variables
+    """
+    banned_var = re.match(CONFIGURABLE_VARS_REGEX, path)
+    if banned_var:
+        msg = (
+            "Included scope is defined in terms of prohibited config variable."
+            f" ({banned_var.group(0)}): {path}"
+            f"\n    Context: {context}"
+            "\n\n    Include config paths may not refer to configurable config variables."
+        )
+        raise ValueError(msg)
+
+    return substitute_path_variables(path)
+
+
+def clear_accumulated_debug_msgs():
+    """tty.debug messages will be dropped at module definition time for main.py
+    Functions can save debugging output to be printed later (if the user has
+    enabled -d).
+    """
+    global saved_debug_msgs
+    for msg in saved_debug_msgs:
+        tty.debug(msg)
+    saved_debug_msgs = []
+
 
 class ConfigScope:
-    def __init__(self, name: str, included: bool = False) -> None:
+    def __init__(self, name: str, included: bool = False, when: str = "") -> None:
         self.name = name
         self.writable = False
         self.sections = syaml.syaml_dict()
         self.prefer_modify = False
         self.included = included
+        self.when = when
 
         #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -169,8 +220,37 @@ class ConfigScope:
 
                 # Do not include duplicate scopes
                 for included_scope in included_scopes:
-                    if any([included_scope.name == scope.name for scope in self._included_scopes]):
-                        warnings.warn(f"Ignoring duplicate included scope: {included_scope.name}")
+                    prior_matches = [
+                        x for x in self._included_scopes if included_scope.name == x.name
+                    ]
+                    if prior_matches:
+                        prior_match = prior_matches[0]
+                        if hasattr(prior_match, "path"):
+                            at = f" at {prior_match.path}"
+                        else:
+                            at = ""
+                        if (
+                            hasattr(included_scope, "path")
+                            and pathlib.Path(included_scope.path).resolve()
+                            == pathlib.Path(os.path.expanduser("~/.config/spack")).resolve()
+                        ):
+                            # Spack's default configs include two mutually exclusive instances
+                            # of user config: a legacy one in ~/.spack, and a preferred one in
+                            # ~/.config/spack, if a higher priority "user" scope is activated
+                            # we don't warn when this default one is omitted.
+                            msg = (
+                                f"Dropping config scope '{included_scope.name}'"
+                                f" at {included_scope.path}"
+                                f" for higher-precedence scope with same name{at}"
+                            )
+                            if tty._debug:
+                                tty.debug(msg)
+                            else:
+                                saved_debug_msgs.append(msg)
+                        else:
+                            warnings.warn(
+                                f"Ignoring duplicate included scope: {included_scope.name}"
+                            )
                         continue
 
                     if included_scope not in self._included_scopes:
@@ -230,8 +310,9 @@ class DirectoryConfigScope(ConfigScope):
         writable: bool = True,
         prefer_modify: bool = True,
         included: bool = False,
+        when: str = "",
     ) -> None:
-        super().__init__(name, included)
+        super().__init__(name, included, when)
         self.path = path
         self.writable = writable
         self.prefer_modify = prefer_modify
@@ -293,6 +374,7 @@ class SingleFileScope(ConfigScope):
         writable: bool = True,
         prefer_modify: bool = True,
         included: bool = False,
+        when: str = "",
     ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -311,7 +393,7 @@ class SingleFileScope(ConfigScope):
                        config:
                          install_tree: $spack/opt/spack
         """
-        super().__init__(name, included)
+        super().__init__(name, included, when)
         self._raw_data: Optional[YamlConfigDict] = None
         self.schema = schema
         self.path = path
@@ -1330,7 +1412,11 @@ class OptionalInclude:
             # directories are treated as regular ConfigScopes
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
             return DirectoryConfigScope(
-                config_name, config_path, prefer_modify=self.prefer_modify, included=True
+                config_name,
+                config_path,
+                prefer_modify=self.prefer_modify,
+                included=True,
+                when=self.when,
             )
         elif ext == ".yaml" or ext == ".yml":
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
@@ -1340,6 +1426,7 @@ class OptionalInclude:
                 spack.schema.merged.schema,
                 prefer_modify=self.prefer_modify,
                 included=True,
+                when=self.when,
             )
         elif exists:
             raise ValueError(
@@ -1406,7 +1493,10 @@ class IncludePath(OptionalInclude):
             path = os.environ[path_override_env_var]
         else:
             path = entry.get("path", "")
-        self.path = substitute_path_variables(path)
+
+        context_prefix = f"({self.name}) " if self.name else ""
+        context = f"{context_prefix}{path}"
+        self.path = substitute_include_path(path, context)
 
         self.sha256 = entry.get("sha256", "")
         self.remote = "sha256" in entry
@@ -1676,6 +1766,275 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
     return config_paths
 
 
+def _layout_scope_path() -> str:
+    """Path to the layout scope directory."""
+    return os.path.join(spack.paths.etc_path, "layout")
+
+
+def _isolate_scope_path() -> str:
+    """Path to the isolate scope directory."""
+    return os.path.join(spack.paths.etc_path, "isolate")
+
+
+def _redirect_scope_path() -> str:
+    """Path to the redirect scope directory."""
+    return os.path.join(spack.paths.etc_path, "redirect")
+
+
+def _is_spack_writable() -> bool:
+    """Check if $spack/etc/spack is writable."""
+    etc_spack = spack.paths.etc_path
+    return os.access(etc_spack, os.W_OK)
+
+
+def _has_layout_scope() -> bool:
+    """Check if layout scope exists."""
+    return os.path.exists(_layout_scope_path())
+
+
+def _has_isolate_scope(cfg: Configuration) -> bool:
+    """Check if any scope points to the isolate directory.
+
+    This could be a scope named "isolate" (--path case) or "user" (--self case)
+    or any other name - we just check if any scope's path matches.
+
+    Args:
+        cfg: Configuration object to check
+
+    Returns:
+        True if any scope points to the isolate directory
+    """
+    isolate_path = _isolate_scope_path()
+    if not os.path.exists(isolate_path):
+        return False
+
+    for scope in cfg.scopes.values():
+        if hasattr(scope, "path"):
+            try:
+                if os.path.exists(scope.path) and os.path.samefile(scope.path, isolate_path):
+                    return True
+            except (OSError, ValueError):
+                # If comparison fails, continue checking other scopes
+                pass
+
+    return False
+
+
+def _detect_old_resources() -> Dict[str, bool]:
+    """Detect presence of old Spack-internal resources.
+
+    Returns:
+        Dictionary with keys: 'installs', 'gpg_keys', 'modules', 'licenses'
+    """
+    opt_spack = os.path.join(spack.paths.opt_path, "spack")
+    share_modules = os.path.join(spack.paths.share_path, "spack", "modules")
+
+    result = {"installs": False, "gpg_keys": False, "modules": False, "licenses": False}
+
+    # Check for installs
+    if os.path.exists(opt_spack):
+        # Check if there are any actual package installs (not just empty directories)
+        try:
+            # Quick check: any directories in opt/spack besides gpg and licenses?
+            for entry in os.listdir(opt_spack):
+                entry_path = os.path.join(opt_spack, entry)
+                if os.path.isdir(entry_path) and entry not in ["gpg", "licenses"]:
+                    result["installs"] = True
+                    break
+        except OSError:
+            pass
+
+    # Check for GPG keys
+    gpg_dir = os.path.join(opt_spack, "gpg")
+    if os.path.exists(gpg_dir):
+        try:
+            if os.listdir(gpg_dir):  # Non-empty
+                result["gpg_keys"] = True
+        except OSError:
+            pass
+
+    # Check for modules
+    if os.path.exists(share_modules):
+        try:
+            if os.listdir(share_modules):  # Non-empty
+                result["modules"] = True
+        except OSError:
+            pass
+
+    # Check for licenses
+    licenses_dir = os.path.join(opt_spack, "licenses")
+    if os.path.exists(licenses_dir):
+        try:
+            if os.listdir(licenses_dir):  # Non-empty
+                result["licenses"] = True
+        except OSError:
+            pass
+
+    return result
+
+
+def _create_empty_layout_scope() -> None:
+    """Create an empty layout scope directory.
+
+    This is used for P4 (no old resources, no isolate) to indicate that
+    migration has been checked and new XDG defaults should be used.
+    """
+    layout_path = _layout_scope_path()
+    filesystem.mkdirp(layout_path)
+
+    # Create a marker file to indicate this is intentionally empty
+    marker_path = os.path.join(layout_path, ".spack-layout-scope")
+    with open(marker_path, "w", encoding="utf-8") as f:
+        f.write("# This directory was created by Spack's auto-migration logic.\n")
+        f.write("# An empty layout scope means all new XDG-compliant defaults are in use.\n")
+
+
+def _user_scope_has_legacy_path() -> bool:
+    """Check if the user scope in etc/spack/include.yaml points to ~/.spack.
+
+    Returns:
+        True if user scope exists and has path: "~/.spack"
+    """
+    include_path = os.path.join(spack.paths.etc_path, "include.yaml")
+    if not os.path.exists(include_path):
+        return False
+
+    try:
+        data = read_config_file(include_path, spack.schema.include.schema)
+        if not data or "include" not in data:
+            return False
+
+        # Look for user scope with path: "~/.spack"
+        for entry in data["include"]:
+            if isinstance(entry, dict) and entry.get("name") == "user":
+                path = entry.get("path", "")
+                if path == "~/.spack":
+                    return True
+
+        return False
+    except Exception:
+        # If we can't read, assume no legacy path
+        return False
+
+
+def _create_redirect_scope() -> None:
+    """Create redirect scope to override spack's includes.
+
+    Reads etc/spack/include.yaml, finds the user scope with path: "~/.spack",
+    changes it to "~/.config/spack", and writes to etc/spack/redirect/include.yaml
+    with include:: override syntax.
+    """
+    # Read the original include.yaml
+    source_include_path = os.path.join(spack.paths.etc_path, "include.yaml")
+    data = read_config_file(source_include_path, spack.schema.include.schema)
+
+    if not data or "include" not in data:
+        tty.debug("No include section found in include.yaml, cannot create redirect")
+        return
+
+    modified_includes = []
+    for entry in data["include"]:
+        new_entry = entry.copy()
+
+        if new_entry.get("name") == "user" and new_entry.get("path") == "~/.spack":
+            new_entry["path"] = "~/.config/spack"
+            tty.debug("Redirecting user scope from ~/.spack to ~/.config/spack")
+
+        modified_includes.append(new_entry)
+
+    # Create redirect scope directory
+    redirect_path = _redirect_scope_path()
+    filesystem.mkdirp(redirect_path)
+
+    # Write the modified include.yaml with include:: override
+    redirect_include_path = os.path.join(redirect_path, "include.yaml")
+
+    # Create a syaml_str with override marker for the key
+    include_key = syaml.syaml_str("include")
+    include_key.override = True  # type: ignore[attr-defined]
+
+    # Create the dict with the marked key
+    redirect_data = syaml.syaml_dict([(include_key, modified_includes)])
+
+    # Write to file using dump_config which preserves override markers
+    with open(redirect_include_path, "w", encoding="utf-8") as f:
+        syaml.dump_config(redirect_data, f)
+
+    tty.debug(f"Created redirect scope at {redirect_path}")
+
+
+def _perform_migration_check(cfg: Configuration) -> None:
+    """Perform migration detection and setup layout scope if needed.
+
+    This implements the decision tree from feature-summaries/shared-spack-auto-migrate.md
+
+    Called during config initialization with migration lock held, after spack scope
+    is loaded so we can check if isolate scope is active.
+
+    Args:
+        cfg: Configuration object with spack scope loaded
+    """
+    print("DEBUG: _perform_migration_check() called")
+
+    # P1: Not writable - cannot do anything
+    if not _is_spack_writable():
+        print("DEBUG: P1: Spack instance is read-only")
+        tty.debug("Spack instance is read-only, skipping auto-migration check")
+        return
+
+    # P2: Layout scope already exists - migration already complete
+    if _has_layout_scope():
+        tty.debug("Layout scope already exists, skipping auto-migration check")
+        return
+
+    # Detect old resources
+    old_resources = _detect_old_resources()
+    has_old_resources = any(old_resources.values())
+
+    # P3: Isolate scope exists (check if actually active in config)
+    if _has_isolate_scope(cfg):
+        tty.debug("Isolate scope detected during auto-migration check")
+        if not has_old_resources:
+            # P3a: No old resources - create layout scope pointing to isolate location
+            tty.debug("P3a: No old resources, isolate scope will be primary storage")
+            # TODO: Create layout scope pointing to isolate directory
+            # TODO: Read isolate config to determine target path
+            _create_empty_layout_scope()  # Temporary: just create empty scope
+        else:
+            # P3b: Old resources present - need selective migration
+            tty.debug("P3b: Old resources detected with isolate scope")
+            # TODO: Implement P3b migration logic
+            # - Installs: stay in place
+            # - Modules: stay in place if installs exist
+            # - Licenses: attempt copy to isolate location
+            # - GPG: attempt move to isolate location
+            _create_empty_layout_scope()  # Temporary: just create empty scope
+        return
+
+    # P4: No old resources, no isolate - clean slate
+    if not has_old_resources:
+        tty.debug("P4: Clean Spack instance, using XDG-compliant defaults")
+        # Empty layout scope means "use all new defaults"
+        _create_empty_layout_scope()
+        return
+
+    # P5: Old resources present, no isolate - migrate what we can
+    print("DEBUG: P5: Old resources detected, performing selective migration")
+    print(f"DEBUG:   Installs: {old_resources['installs']}")
+    print(f"DEBUG:   GPG keys: {old_resources['gpg_keys']}")
+    print(f"DEBUG:   Modules: {old_resources['modules']}")
+    print(f"DEBUG:   Licenses: {old_resources['licenses']}")
+
+    # TODO: Implement P5 migration logic
+    # - Installs: stay in place (create layout scope entry)
+    # - Modules: stay in place if installs exist (create layout scope entry)
+    # - Licenses: attempt move to ~/.local/share/spack/licenses
+    # - GPG: attempt move to ~/.local/share/spack/gpg
+
+    # For now, just create empty scope so we mark migration as checked
+    _create_empty_layout_scope()
+
+
 def create_incremental() -> Generator[Configuration, None, None]:
     """Singleton Configuration instance.
 
@@ -1683,6 +2042,14 @@ def create_incremental() -> Generator[Configuration, None, None]:
     it. It is bundled inside a function so that configuration can be
     initialized lazily.
     """
+    # Check if we need to create redirect scope BEFORE loading config
+    # Redirect scope uses include:: to override spack's includes
+    redirect_path = _redirect_scope_path()
+    if not os.path.exists(redirect_path):
+        if _is_spack_writable() and _user_scope_has_legacy_path():
+            tty.debug("Creating redirect scope to redirect user to ~/.config/spack")
+            _create_redirect_scope()
+
     # Default scopes are builtins and the default scope within the Spack instance.
     # These are versioned with Spack and can be overridden by systems, sites or user scopes.
     cfg = create_from(
@@ -1712,6 +2079,48 @@ def create_incremental() -> Generator[Configuration, None, None]:
         #     init to reference lower scopes is more flexible.
         yield from cfg.push_scope_incremental(
             DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
+        )
+
+    # Add redirect scope if it exists
+    # This scope has higher priority than spack and uses include:: to override
+    # spack's includes, redirecting user scope from ~/.spack to ~/.config/spack
+    redirect_path = _redirect_scope_path()
+    if os.path.exists(redirect_path):
+        tty.debug(f"Loading redirect scope from {redirect_path}")
+        # Use priority between CONFIG_FILES (1) and ENVIRONMENT (2)
+        # Higher priority means the include:: override takes effect
+        yield from cfg.push_scope_incremental(
+            DirectoryConfigScope("redirect", redirect_path),
+            priority=1.5,  # Higher than spack's CONFIG_FILES priority
+        )
+
+    # Check if migration/layout scope setup is needed
+    # This happens AFTER the spack scope is loaded (so we can check if isolate scope
+    # is active) but BEFORE we load the layout scope (so we can create it if needed)
+    if not _has_layout_scope():
+        # Use Spack's file locking to prevent concurrent migration
+        lock_dir = os.path.join(spack.paths.var_path, "locks")
+        filesystem.mkdirp(lock_dir)
+        lock_path = os.path.join(lock_dir, "migration.lock")
+
+        migration_lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+        migration_lock.acquire_write()
+        try:
+            # Check again - another instance may have completed while we waited
+            if not _has_layout_scope():
+                _perform_migration_check(cfg)
+        finally:
+            migration_lock.release_write()
+
+    # Add layout scope after all other config scopes (including spack and its includes)
+    # This scope is auto-generated and contains path overrides for shared Spack.
+    # It has lower priority than all scopes in include.yaml so user config always wins.
+    layout_scope_path = _layout_scope_path()
+    if os.path.exists(layout_scope_path):
+        tty.debug(f"Loading layout scope from {layout_scope_path}")
+        yield from cfg.push_scope_incremental(
+            DirectoryConfigScope("layout", layout_scope_path),
+            priority=ConfigScopePriority.CONFIG_FILES,
         )
 
 
@@ -2256,6 +2665,76 @@ def get_user():
 NOMATCH = object()
 
 
+_frozen_home = {}
+
+
+def freeze(home_vars):
+    global _frozen_home
+
+    _frozen_home = home_vars
+
+
+def is_frozen():
+    """Indicates that config-based variables have been set in place in
+    such a way that applying new configuration to them would be ignored."""
+    return bool(_frozen_home)
+
+
+def collect():
+    return {
+        "data": _resolve_location_var("data"),
+        "state": _resolve_location_var("state"),
+        "cache": _resolve_location_var("cache"),
+    }
+
+
+def _resolve_location_var(location_key):
+    """Resolve a config:locations entry to a concrete path.
+
+    Args:
+        location_key: one of 'data', 'cache', or 'state'
+
+    Returns:
+        A resolved path string or None
+    """
+    if _frozen_home and location_key in _frozen_home:
+        return _frozen_home[location_key]
+
+    location_list = CONFIG.get(f"config:locations:{location_key}", default=[])
+
+    if isinstance(location_list, str):
+        # Schema allows specifying a single item as a string in place of list
+        location_list = [location_list]
+
+    for item in location_list:
+        # Attempt to resolve all variables in the entry
+        try:
+            candidate = os.path.normpath(substitute_path_variables(item))
+        except RecursionError:
+            # Catch recursion error in case someone tries `data: $data_home` or
+            # a cycle among the three
+            tty.warn(f"Skipping recursive definition in locations config: {item}.")
+        # Look for unresolved env var or config vars in candidate
+        var_pattern = r"\$\{?([a-zA-Z_][a-zA-Z0-9_]*)\}?"
+        unresolved_vars = re.search(var_pattern, candidate)
+
+        if unresolved_vars:
+            continue
+        return candidate
+
+    # Fallback to XDG defaults if nothing in config matched (e.g. if a user set
+    # config::)
+    expanded_home = os.path.expanduser("~")
+    if location_key == "data":
+        return os.path.join(expanded_home, ".local", "share", "spack")
+    elif location_key == "state":
+        return os.path.join(expanded_home, ".local", "state", "spack")
+    elif location_key == "cache":
+        return os.path.join(expanded_home, ".cache", "spack")
+    else:
+        raise ValueError(f"Unexpected request: {location_key}")
+
+
 # Substitutions to perform
 def replacements():
     arch = architecture()
@@ -2276,6 +2755,9 @@ def replacements():
         "date": lambda: __import__("datetime").date.today().strftime("%Y-%m-%d"),
         "env": lambda: CONFIG.env_path or NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
+        "data_home": lambda: _resolve_location_var("data"),
+        "cache_home": lambda: _resolve_location_var("cache"),
+        "state_home": lambda: _resolve_location_var("state"),
     }
 
 

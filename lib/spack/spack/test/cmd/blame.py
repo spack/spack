@@ -73,7 +73,7 @@ def test_blame_file_outside_spack_repo(tmp_path: Path):
 def test_blame_spack_not_git_clone(monkeypatch):
     """Ensure attempt to get blame when spack not a git clone fails."""
     non_git_dir = os.path.join(spack.paths.prefix, "..")
-    monkeypatch.setattr(spack.paths, "prefix", non_git_dir)
+    monkeypatch.setattr(spack.paths.locations, "prefix", non_git_dir)
 
     with pytest.raises(SpackCommandError):
         out = blame(".")

@@ -24,6 +24,7 @@ import textwrap
 import traceback
 import warnings
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any, List, Optional, Set, Tuple
 
 import spack.vendor.archspec.cpu
@@ -561,6 +562,7 @@ def setup_main_options(args):
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
+    spack.config.clear_accumulated_debug_msgs()
     tty.set_stacktrace(args.stacktrace)
 
     # debug must be set first so that it can even affect behavior of
@@ -894,6 +896,104 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
 _ENV = object()
 
 
+def _old_dotspack_warning():
+    """Check if ~/.spack is in use and return a warning message if so.
+
+    Returns:
+        str or None: Warning message if ~/.spack is in use, None otherwise
+    """
+    old_dotspack = Path(os.path.expanduser("~/.spack")).resolve()
+
+    # Don't warn if it doesn't exist
+    if not old_dotspack.exists():
+        tty.debug("Skip .spack warning: no ~/.spack directory")
+        return None
+
+    # Helper to check if old_dotspack is a prefix
+    def uses_old_dotspack(path):
+        try:
+            Path(path).resolve().relative_to(old_dotspack)
+            return True
+        except ValueError:
+            return False
+
+    # Check if user has explicitly configured $data_home, $state_home, or $cache_home
+    # to point to ~/.spack - if so, they've made a conscious choice and we shouldn't warn
+    import spack.config
+
+    for config_var in ["$data_home", "$state_home", "$cache_home"]:
+        try:
+            resolved = spack.config.substitute_config_variables(config_var)
+            if uses_old_dotspack(resolved):
+                tty.debug(
+                    f"Skip .spack warning: user explicitly configured "
+                    f"{config_var} to use ~/.spack (resolved to {resolved})"
+                )
+                return None
+        except Exception:
+            # If substitution fails, just continue
+            pass
+
+    # Check if any config scope is using ~/.spack (means explicit configuration)
+    reasons = []
+    # The 'when' condition for the fallback ~/.spack scope
+    fallback_when = (
+        'not exists("~/.config/spack") and "SPACK_USER_CONFIG_PATH" not in env'
+        ' and "SPACK_DISABLE_LOCAL_CONFIG" not in env'
+    )
+
+    for scope in spack.config.CONFIG.scopes.values():
+        if hasattr(scope, "path") and uses_old_dotspack(scope.path):
+            tty.debug(f"Scope {scope.name} uses ~/.spack: checking if this is a fallback")
+            # Check if this is the fallback scope (has the specific 'when' condition)
+            if hasattr(scope, "when") and scope.when == fallback_when:
+                reasons.append("Fallback ~/.spack scope activated")
+            else:
+                # A config scope explicitly targets ~/.spack: don't warn
+                tty.debug(
+                    f"Skip .spack warning: scope {scope.name} explicitly"
+                    f" uses ~/.spack: {scope.path}"
+                )
+                return None
+
+    # If we found fallback usage, return the warning message
+    if reasons:
+        return f"""\
+Spack is using the old ~/.spack directory layout.
+  Reasons: {", ".join(reasons)}
+
+If all spack instances are >= 1.2, you can use
+
+  spack migrate --clear
+
+to silence this warning (and you can stop reading).
+
+If you need both pre-1.2 and 1.2+ instances, you can run
+
+  spack migrate
+
+(without --clear) this will create a copy of the user config for 1.2+
+instances to use; that is usually fine, but pre-1.2 instances and
+1.2+ instances will have divergent config (unless e.g.
+SPACK_DISABLE_LOCAL_CONFIG is set).
+
+You can run
+
+  spack migrate --i-need-old-spack
+
+for more info (including examples of what "divergence" means).
+"""
+    tty.debug("No config scopes found that use old location (~/.spack)")
+    return None
+
+
+def _warn_about_old_dotspack():
+    """Warn if ~/.spack exists and is in use (not explicitly configured)."""
+    warning = _old_dotspack_warning()
+    if warning:
+        tty.warn(warning)
+
+
 def add_command_line_scopes(
     cfg: spack.config.Configuration, command_line_scopes: List[str]
 ) -> None:
@@ -1046,7 +1146,10 @@ def _main(argv=None):
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
     with bootstrap_context:
-        return finish_parse_and_run(parser, cmd_name, args, env_format_error)
+        if cmd_name != "migrate":
+            _warn_about_old_dotspack()
+        result = finish_parse_and_run(parser, cmd_name, args, env_format_error)
+        return result
 
 
 def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):

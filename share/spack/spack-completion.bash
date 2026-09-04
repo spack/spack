@@ -396,7 +396,7 @@ _spack() {
     then
         SPACK_COMPREPLY="--color -v --verbose -k --insecure -b --bootstrap -V --version -h --help -H --all-help -c --config -C --config-scope -e --env -D --env-dir -E --no-env --use-env-repo -d --debug -t --backtrace --timestamp -m --mock --print-shell-vars --stacktrace -l --enable-locks -L --disable-locks"
     else
-        SPACK_COMPREPLY="add arch audit blame bootstrap build-env buildcache cd change checksum ci clean commands compiler compilers concretize concretise config containerize containerise create debug deconcretize dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install isolate license list load location log-parse logs maintainers make-installer mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="add arch audit blame bootstrap build-env buildcache cd change checksum ci clean commands compiler compilers concretize concretise config containerize containerise create debug deconcretize dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install isolate license list load location log-parse logs maintainers make-installer mark migrate mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -757,7 +757,7 @@ _spack_clean() {
 _spack_commands() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --update-completion -a --aliases --format --header --update"
+        SPACK_COMPREPLY="-h --help --update-completion --layout-specific-scopes -a --aliases --format --header --update"
     else
         SPACK_COMPREPLY=""
     fi
@@ -1464,6 +1464,10 @@ _spack_mark() {
     else
         _installed_packages
     fi
+}
+
+_spack_migrate() {
+    SPACK_COMPREPLY="-h --help --dry-run --clear --restore --i-need-old-spack"
 }
 
 _spack_mirror() {
