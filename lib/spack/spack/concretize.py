@@ -17,6 +17,7 @@ import spack.hash_lookup
 import spack.repo
 import spack.traverse
 import spack.util.parallel
+import spack.version.git_ref_lookup
 from spack.concretize_ui import ConcretizerUI, HeadlessUI, SolveKind
 from spack.spec import Spec
 from spack.util import tty
@@ -258,7 +259,7 @@ def concretize_one(
 
     if isinstance(spec, str):
         spec = Spec(spec)
-    spec = spack.hash_lookup.lookup_hash(spec)
+    spec = spack.version.git_ref_lookup.assign_git_versions(spack.hash_lookup.lookup_hash(spec))
 
     if spec.concrete:
         return spec.copy()

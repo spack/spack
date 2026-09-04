@@ -545,6 +545,21 @@ def test_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
     assert "git-test-commit" in output
 
 
+@pytest.mark.usefixtures("install_mockery", "mock_fetch")
+def test_find_based_on_git_ref(mock_git_version_info, monkeypatch, no_git_ref_lookup):
+    """A bare git ref query matches the installed spec built from that ref, whatever Spack
+    version was assigned to it, without cloning the repository."""
+    repo_path, filename, commits = mock_git_version_info
+    file_url = pathlib.Path(repo_path).as_uri()
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
+
+    with no_git_ref_lookup.allowed():
+        install("--fake", "git-test-commit@git.1.x")
+
+    assert "git.1.x=1.2" in find("git-test-commit@git.1.x")
+    assert "No package matches" in find("git-test-commit@git.main", fail_on_error=False)
+
+
 @pytest.mark.usefixtures("mock_packages")
 @pytest.mark.parametrize(
     "spack_yaml,expected,not_expected",

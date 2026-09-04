@@ -109,7 +109,6 @@ import spack.util.tty.color as clr
 import spack.variant as vt
 import spack.version
 import spack.version as vn
-import spack.version.git_ref_lookup
 from spack.util import lang, tty
 
 from .enums import PropagationPolicy
@@ -3101,13 +3100,7 @@ class Spec:
 
         # get the right reader
         reader = specfile_reader_for_version(version)
-        spec = reader.load(data)
-
-        # Handle git versions
-        for s in spec.traverse():
-            s.attach_git_version_lookup()
-
-        return spec
+        return reader.load(data)
 
     @staticmethod
     def from_yaml(stream) -> "Spec":
@@ -3210,15 +3203,15 @@ class Spec:
         if not isinstance(v, vn.GitVersion):
             return
 
-        try:
-            v.ref_version
-        except vn.VersionLookupError:
-            before = self.cformat("{name}{@version}{/hash:7}")
-            v.std_version = vn.StandardVersion.from_string("develop")
-            tty.debug(
-                f"the git sha of {before} could not be resolved to spack version; "
-                f"it has been replaced by {self.cformat('{name}{@version}{/hash:7}')}."
-            )
+        if v.std_version is not None:
+            return
+
+        before = self.cformat("{name}{@version}{/hash:7}")
+        v.std_version = vn.StandardVersion.from_string("develop")
+        tty.debug(
+            f"the git sha of {before} could not be resolved to spack version; "
+            f"it has been replaced by {self.cformat('{name}{@version}{/hash:7}')}."
+        )
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
@@ -5373,14 +5366,6 @@ class Spec:
                     edge.spec._dependents = {}
                 _add_edge_to_map(edge.spec._dependents, edge.parent.name, edge)
 
-    def attach_git_version_lookup(self):
-        # Add a git lookup method for GitVersions
-        if not self.name:
-            return
-        for v in self.versions:
-            if isinstance(v, vn.GitVersion) and v.std_version is None:
-                v.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(self.fullname))
-
     def original_spec_format(self) -> int:
         """Returns the spec format originally used for this spec."""
         return self.annotations.original_spec_format
@@ -5691,7 +5676,6 @@ class SpecfileReaderBase(abc.ABC):
 
         if "version" in node or "versions" in node:
             spec.versions = vn.VersionList.from_dict(node)
-            spec.attach_git_version_lookup()
 
         if "arch" in node:
             spec.architecture = ArchSpec.from_dict(node)
