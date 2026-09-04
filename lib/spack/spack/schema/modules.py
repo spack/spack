@@ -106,8 +106,15 @@ common_props = {
     },
     "defaults": {
         **array_of_strings,
-        "description": "List of specs for which to create default module symlinks when multiple "
+        "description": "List of specs for which to define a default module version when multiple "
         "versions exist",
+    },
+    "defaults_format": {
+        "type": "string",
+        "enum": ["symlink", "modulerc"],
+        "default": "symlink",
+        "description": "Mechanism used to define default module versions: a 'default' symlink "
+        "or a default version statement in the modulerc file",
     },
     "hide_implicits": {
         "type": "boolean",

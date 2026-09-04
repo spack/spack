@@ -26,6 +26,7 @@ import warnings
 from typing import (
     IO,
     Any,
+    Callable,
     ClassVar,
     Dict,
     Iterator,
@@ -68,6 +69,7 @@ from spack.util.lang import Singleton, dedupe
 from .error import (
     CoreCompilersNotFoundError,
     DefaultTemplateNotDefined,
+    DefaultVersionCmdFormatNotDefined,
     HideCmdFormatNotDefined,
     ModulercHeaderNotDefined,
     ModulesError,
@@ -463,6 +465,11 @@ class BaseConfiguration:
     def defaults(self) -> List[str]:
         """Returns the specs configured as defaults or []."""
         return self.conf.get("defaults", [])
+
+    @property
+    def defaults_format(self) -> str:
+        """Mechanism used to define default module versions ("symlink" or "modulerc")."""
+        return self._config.get("defaults_format", "symlink")
 
     @property
     def env(self) -> spack.util.environment.EnvironmentModifications:
@@ -1227,6 +1234,7 @@ class ModuleContext(tengine.Context):
 class BaseModuleFileWriter:
     default_template: str
     hide_cmd_format: str
+    default_version_cmd_format: str
     modulerc_header: List[str]
 
     configuration_class: ClassVar[Type["BaseConfiguration"]]
@@ -1234,6 +1242,7 @@ class BaseModuleFileWriter:
     _required_attrs = (
         ("default_template", DefaultTemplateNotDefined),
         ("hide_cmd_format", HideCmdFormatNotDefined),
+        ("default_version_cmd_format", DefaultVersionCmdFormatNotDefined),
         ("modulerc_header", ModulercHeaderNotDefined),
     )
 
@@ -1352,21 +1361,78 @@ class BaseModuleFileWriter:
         if os.path.exists(self.layout.filename):
             fp.set_permissions_by_spec(self.layout.filename, self.spec)
 
-        # Symlink defaults if needed
+        # Record default version if needed
         self.update_module_defaults()
 
         # record module hiddenness if implicit
         self.update_module_hiddenness()
 
-    def update_module_defaults(self) -> None:
-        if any(self.spec.satisfies(default) for default in self.conf.defaults):
-            # This spec matches a default, it needs to be symlinked to default
-            # Symlink to a tmp location first and move, so that existing
-            # symlinks do not cause an error.
-            default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
-            default_tmp = os.path.join(os.path.dirname(self.layout.filename), ".tmp_spack_default")
-            os.symlink(self.layout.filename, default_tmp)
-            os.rename(default_tmp, default_path)
+    def update_module_defaults(self, remove: bool = False) -> None:
+        """Update the default version definition for this module.
+
+        Depending on the ``defaults_format`` configuration option, the default version is
+        defined with a ``default`` symlink or with a default version statement in the
+        modulerc file. The definition possibly left over by the other format is cleaned up,
+        so that module trees converge to the configured format when module files are
+        rewritten.
+
+        Args:
+            remove (bool): if True, default version information for module is removed.
+        """
+        is_default = not remove and any(
+            self.spec.satisfies(default) for default in self.conf.defaults
+        )
+        default_version_cmd = self.default_version_cmd_format % self.layout.use_name
+
+        # a directory holds a single default: when this module becomes the default, drop
+        # the definition possibly owned by another module file, in whatever format; a
+        # module that is not the default only drops the definitions it owns
+        remove_matching = self._is_default_version_cmd if is_default else None
+
+        if self.conf.defaults_format == "modulerc":
+            self._update_modulerc_entries(
+                [default_version_cmd], present=is_default, remove_matching=remove_matching
+            )
+            # remove default symlink left over from symlink format
+            self._remove_default_symlink(only_own=not is_default)
+        else:
+            # remove default version statement left over from modulerc format
+            self._update_modulerc_entries(
+                [default_version_cmd], present=False, remove_matching=remove_matching
+            )
+            if is_default:
+                # This spec matches a default, it needs to be symlinked to default
+                # Symlink to a tmp location first and move, so that existing
+                # symlinks do not cause an error.
+                default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
+                default_tmp = os.path.join(
+                    os.path.dirname(self.layout.filename), ".tmp_spack_default"
+                )
+                os.symlink(self.layout.filename, default_tmp)
+                os.rename(default_tmp, default_path)
+            else:
+                # remove default symlink left over if module is not the default anymore
+                self._remove_default_symlink(only_own=True)
+
+    def _is_default_version_cmd(self, line: str) -> bool:
+        """Returns True if line is a default version statement, whatever module it targets."""
+        prefix, _, suffix = self.default_version_cmd_format.partition("%s")
+        return line.startswith(prefix) and line.endswith(suffix)
+
+    def _remove_default_symlink(self, only_own: bool) -> None:
+        """Removes the default symlink.
+
+        Args:
+            only_own (bool): if True, only remove the symlink if it targets this module file.
+        """
+        default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
+        try:
+            if os.path.islink(default_path) and (
+                not only_own or os.readlink(default_path) == self.layout.filename
+            ):
+                os.unlink(default_path)
+        except OSError:
+            pass
 
     def update_module_hiddenness(self, remove: bool = False) -> None:
         """Update modulerc file corresponding to module to add or remove
@@ -1376,46 +1442,66 @@ class BaseModuleFileWriter:
             remove (bool): if True, hiddenness information for module is
                 removed from modulerc.
         """
-        modulerc_path = self.layout.modulerc
         hide_module_cmd = self.hide_cmd_format % self.layout.use_name
         hidden = self.conf.hidden and not remove
-        modulerc_exists = os.path.exists(modulerc_path)
-        updated = False
+        self._update_modulerc_entries([hide_module_cmd], present=hidden)
 
+    def _update_modulerc_entries(
+        self,
+        lines: List[str],
+        present: bool,
+        remove_matching: Optional[Callable[[str], bool]] = None,
+        modulerc_path: Optional[str] = None,
+    ) -> None:
+        """Add or remove command lines in a modulerc file of this module.
+
+        Lines owned by other features are preserved. The modulerc file is created when
+        needed and removed when its content boils down to the header.
+
+        Args:
+            lines: modulerc command lines owned by the calling feature
+            present: whether lines should be in modulerc after the update
+            remove_matching: additional lines matching this predicate are removed
+            modulerc_path: modulerc file to update (the modulerc file next to this
+                module file if not set)
+        """
+        if modulerc_path is None:
+            modulerc_path = self.layout.modulerc
+        modulerc_exists = os.path.exists(modulerc_path)
+
+        content = []
         if modulerc_exists:
             with open(modulerc_path, encoding="utf-8") as f:
                 content = f.read().splitlines()
-            already_hidden = hide_module_cmd in content
 
-            # remove hide command if module not hidden
-            if already_hidden and not hidden:
-                content.remove(hide_module_cmd)
-                updated = True
+        def keep(line: str) -> bool:
+            if line in lines:
+                return present
+            return remove_matching is None or not remove_matching(line)
 
-            # add hide command if module is hidden
-            elif not already_hidden and hidden:
-                if not content:
-                    content = self.modulerc_header.copy()
-                content.append(hide_module_cmd)
-                updated = True
-        else:
-            content = self.modulerc_header.copy()
-            if hidden:
-                content.append(hide_module_cmd)
-                updated = True
+        updated_content = [x for x in content if keep(x)]
+        if present:
+            for line in lines:
+                if line not in updated_content:
+                    if not updated_content:
+                        updated_content = self.modulerc_header.copy()
+                    updated_content.append(line)
 
         # no modulerc file change if no content update
-        if updated:
-            is_empty = content == self.modulerc_header or not content
-            # remove existing modulerc if empty
-            if modulerc_exists and is_empty:
+        if updated_content == content:
+            return
+
+        is_empty = updated_content == self.modulerc_header or not updated_content
+        # remove existing modulerc if empty
+        if is_empty:
+            if modulerc_exists:
                 os.remove(modulerc_path)
-            # create or update modulerc
-            elif not is_empty:
-                # ensure file ends with a newline character
-                content.append("")
-                with open(modulerc_path, "w", encoding="utf-8") as f:
-                    f.write("\n".join(content))
+        # create or update modulerc
+        else:
+            # ensure file ends with a newline character
+            updated_content.append("")
+            with open(modulerc_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(updated_content))
 
     def remove(self) -> None:
         """Deletes the module file."""
@@ -1423,7 +1509,8 @@ class BaseModuleFileWriter:
         if os.path.exists(mod_file):
             try:
                 os.remove(mod_file)  # Remove the module file
-                self.remove_module_defaults()  # Remove default targeting module file
+                # Remove default version targeting module file
+                self.update_module_defaults(remove=True)
                 self.update_module_hiddenness(remove=True)  # Remove hide cmd in modulerc
                 os.removedirs(
                     os.path.dirname(mod_file)
@@ -1431,18 +1518,6 @@ class BaseModuleFileWriter:
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
-
-    def remove_module_defaults(self) -> None:
-        if not any(self.spec.satisfies(default) for default in self.conf.defaults):
-            return
-
-        # This spec matches a default, symlink needs to be removed as we remove the module
-        # file it targets.
-        default_symlink = os.path.join(os.path.dirname(self.layout.filename), "default")
-        try:
-            os.unlink(default_symlink)
-        except OSError:
-            pass
 
 
 @contextlib.contextmanager
