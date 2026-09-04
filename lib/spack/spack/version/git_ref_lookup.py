@@ -5,7 +5,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
 import spack.caches
 import spack.fetch_strategy
@@ -17,7 +17,10 @@ import spack.util.spack_json as sjson
 from spack.util.filesystem import mkdirp, working_dir
 
 from .common import VersionLookupError
-from .lookup import AbstractRefLookup
+from .version_types import GitVersion, StandardVersion
+
+if TYPE_CHECKING:
+    import spack.spec
 
 # regular expression for semantic versioning
 _VERSION_CORE = r"\d+\.\d+\.\d+"
@@ -32,7 +35,7 @@ _SEMVER = rf"{_VERSION_CORE}(?:{_PRERELEASE})?(?:{_BUILD})?"
 SEMVER_REGEX = re.compile(rf"{_SEMVER}$")
 
 
-class GitRefLookup(AbstractRefLookup):
+class GitRefLookup:
     """An object for cached lookups of git refs
 
     GitRefLookup objects delegate to the MISC_CACHE for locking. GitRefLookup objects may
@@ -209,3 +212,41 @@ class GitRefLookup(AbstractRefLookup):
                 )
 
         return prev_version, distance
+
+
+def assign_git_version(pkg_name: str, version: GitVersion) -> None:
+    """Assign a Spack version to ``version`` in place, if it has none, by looking its ref up
+    in the git repository of package ``pkg_name``, which may clone it.
+
+    This is the only place where ``pkg@git.<ref>`` without ``=<version>`` triggers a lookup.
+    Every path on which a git version becomes solver input goes through it: input specs via
+    :func:`assign_git_versions`, and ``packages.yaml`` version preferences directly.
+
+    Raises a ``VersionLookupError`` when the package has no ``git`` attribute or the ref is
+    unknown.
+    """
+    if version.std_version is not None:
+        return
+    version_string, distance = GitRefLookup(pkg_name).get(version.ref)
+    version_string = version_string or "0"
+    # Add a -git.<distance> suffix when we're not exactly on a tag
+    if distance > 0:
+        version_string += f"-git.{distance}"
+    version.std_version = StandardVersion.from_string(version_string)
+
+
+def assign_git_versions(spec: "spack.spec.Spec") -> "spack.spec.Spec":
+    """Assign a Spack version to every unassigned git ref version in ``spec``, in place, and
+    return ``spec`` so the call composes with :func:`spack.hash_lookup.lookup_hash`.
+
+    Called once when a spec enters concretization, the same way ``lookup_hash`` expands
+    abstract hashes; it is the pre-solve counterpart of ``PackageBase._resolve_git_provenance``,
+    which assigns the commit afterwards. No-op when every git ref already has a version.
+    """
+    for node in spec.traverse():
+        if not node.name:
+            continue
+        for v in node.versions:
+            if isinstance(v, GitVersion):
+                assign_git_version(node.fullname, v)
+    return spec

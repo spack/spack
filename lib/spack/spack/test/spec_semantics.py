@@ -3390,3 +3390,86 @@ def test_copy_keeps_a_redundant_parallel_edge_and_its_subtree(mock_packages):
 
     assert copy == original
     assert copy.to_dict() == original.to_dict()
+
+
+def test_git_ref_spec_operations_are_pure(no_git_ref_lookup):
+    """Parsing, printing, copying, comparing and serializing a spec with a git ref version
+    never triggers a repository lookup; the ref stays abstract until concretization."""
+    spec = Spec("git-test-commit@git.main")
+    assert str(spec) == "git-test-commit@git.main"
+    assert spec.copy() == spec
+    assert Spec.from_dict(spec.to_dict()) == spec
+    assert hash(spec) == hash(Spec("git-test-commit@git.main"))
+    assert spec != Spec("git-test-commit@git.main=1.0")
+
+    # an unassigned ref matches any assigned version of that ref, and constrains to it
+    assigned = Spec("git-test-commit@git.main=1.0")
+    assert assigned.satisfies(spec)
+    assert not spec.satisfies(assigned)
+    assert spec.intersects(assigned) and assigned.intersects(spec)
+    assert not spec.intersects(Spec("git-test-commit@git.develop"))
+    assert not spec.intersects(Spec("git-test-commit@=1.0"))
+    constrained = spec.copy()
+    assert constrained.constrain(assigned)
+    assert constrained == assigned
+
+    # an unassigned ref may still be assigned any version: it is inside an unconstrained spec,
+    # intersects every version range, and constraining it by one keeps the bare ref
+    assert spec.satisfies(Spec("git-test-commit"))
+    assert not spec.satisfies(Spec("git-test-commit@1.0"))
+    assert spec.intersects(Spec("git-test-commit@1.0"))
+    narrowed = spec.copy()
+    assert not narrowed.constrain(Spec("git-test-commit@1.0"))
+    assert narrowed == spec
+
+
+# The meet of a git ref without an assigned version and a proper version range cannot be
+# expressed in the spec language: ``@git.main`` denotes every version the ref may be assigned,
+# so it intersects ``@1:3``, but there is no spec for "git.main, assigned within 1:3". So
+# ``constrain`` keeps the bare ref, which admits assignments outside the range, and the laws
+# that need the meet to be a lower bound fail on exactly these operands. Each is pinned as an
+# expected failure named for what breaks, so that the gap is not forgotten: they start passing
+# the day the language can express the meet, or bare git refs are gone.
+lossy_git_ref_meet = pytest.mark.xfail(
+    strict=True, reason="the meet of a bare git ref and a version range is lossy"
+)
+
+
+@lossy_git_ref_meet
+def test_meet_of_git_ref_and_range_is_a_lower_bound():
+    lhs, rhs = Spec("pkg-a@git.main"), Spec("pkg-a@1:3")
+    assert lhs.intersects(rhs)
+    result = lhs.copy()
+    result.constrain(rhs)
+    assert result.satisfies(rhs)
+
+
+@lossy_git_ref_meet
+def test_meet_of_git_ref_and_range_is_the_greatest_lower_bound():
+    lhs, rhs = Spec("pkg-a@git.main"), Spec("pkg-a@1:3")
+    result = lhs.copy()
+    result.constrain(rhs)
+    outside = Spec("pkg-a@git.main=5.0")
+    assert outside.satisfies(lhs) and not outside.satisfies(rhs)
+    assert not outside.satisfies(result)
+
+
+@lossy_git_ref_meet
+def test_meet_with_git_ref_is_associative():
+    a, b, c = Spec("pkg-a@1:3"), Spec("pkg-a@develop"), Spec("pkg-a@git.main")
+    # (a ∧ b) is empty: develop is outside 1:3
+    assert not a.intersects(b)
+    # a ∧ (b ∧ c) is not: b ∧ c keeps the bare ref, which a then intersects
+    right = c.copy()
+    right.constrain(b)
+    assert not a.intersects(right)
+
+
+@lossy_git_ref_meet
+def test_meet_with_git_ref_is_monotonic():
+    a, b, c = Spec("pkg-a@git.main"), Spec("pkg-a"), Spec("pkg-a@1:3")
+    assert a.satisfies(b)
+    narrowed, widened = a.copy(), b.copy()
+    narrowed.constrain(c)
+    widened.constrain(c)
+    assert narrowed.satisfies(widened)

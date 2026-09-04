@@ -20,7 +20,6 @@ from .common import (
     is_git_version,
     iv_min_len,
 )
-from .lookup import AbstractRefLookup
 
 # Valid version characters
 VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$")
@@ -520,16 +519,21 @@ class GitVersion(ConcreteVersion):
     There are two distinct categories of git versions:
 
     1) GitVersions instantiated with an associated reference version (e.g. ``git.foo=1.2``)
-    2) GitVersions requiring commit lookups
+    2) GitVersions with a bare ref (e.g. ``git.foo``), assigned a version at concretization
 
-    Git ref versions that are not paired with a known version are handled separately from
-    all other version comparisons. When Spack identifies a git ref version, it associates a
-    ``CommitLookup`` object with the version. This object handles caching of information
-    from the git repo. When executing comparisons with a git ref version, Spack queries the
-    ``CommitLookup`` for the most recent version previous to this git ref, as well as the
-    distance between them expressed as a number of commits. If the previous version is
-    ``X.Y.Z`` and the distance is ``D``, the git commit version is represented by the
-    tuple ``(X, Y, Z, '', D)``. The component ``''`` cannot be parsed as part of any valid
+    Git ref versions that are not paired with a known version have no Spack version until one
+    is assigned by :func:`spack.version.git_ref_lookup.assign_git_versions`, which happens
+    once when a spec enters concretization. Until then, the version is abstract: it prints as
+    the bare ref, compares equal only to the same unassigned ref, matches any assigned
+    version of the same ref when used as a constraint, and may still be assigned any version:
+    it intersects every version range, satisfies only the universal one, and is ordered only
+    against other unassigned refs, by ref. Its meet with a range cannot be expressed, so
+    ``constrain`` keeps the bare ref. No operation on a ``GitVersion`` itself does I/O.
+
+    Assignment queries the git repo for the most recent version previous to this git ref, as
+    well as the distance between them expressed as a number of commits. If the previous
+    version is ``X.Y.Z`` and the distance is ``D``, the git commit version is represented by
+    the tuple ``(X, Y, Z, '', D)``. The component ``''`` cannot be parsed as part of any valid
     version, but is a valid component. This allows a git ref version to be less than (older
     than) every Version newer than its previous version, but still newer than its previous
     version.
@@ -550,7 +554,7 @@ class GitVersion(ConcreteVersion):
     sufficient.
     """
 
-    __slots__ = ("has_git_prefix", "commit_sha", "ref", "is_commit", "std_version", "_ref_lookup")
+    __slots__ = ("has_git_prefix", "commit_sha", "ref", "is_commit", "std_version")
 
     def __init__(self, string: str):
         # TODO will be required for concrete specs when commit lookup added
@@ -559,9 +563,6 @@ class GitVersion(ConcreteVersion):
 
         # optional user supplied git ref
         self.ref: Optional[str] = None
-
-        # An object that can lookup git refs to compare them to versions
-        self._ref_lookup: Optional[AbstractRefLookup] = None
 
         self.has_git_prefix = string.startswith("git.")
 
@@ -575,8 +576,8 @@ class GitVersion(ConcreteVersion):
                 spack_version, *parse_string_components(spack_version)
             )
         else:
-            # The ref_version is lazily attached after parsing, since we don't know what
-            # package it applies to here.
+            # Assigned later by spack.version.git_ref_lookup.assign_git_versions, since we
+            # don't know what package the ref applies to here.
             self.std_version = None
             self.ref = normalized_string
 
@@ -589,51 +590,55 @@ class GitVersion(ConcreteVersion):
 
     @property
     def ref_version(self) -> StandardVersion:
-        # Return cached version if we have it
-        if self.std_version is not None:
-            return self.std_version
+        """The Spack version assigned to this git ref, used for ordering.
 
-        if self.ref_lookup is None:
+        Raises a ``VersionLookupError`` when no version has been assigned yet. Assignment
+        happens once at concretization, see
+        :func:`spack.version.git_ref_lookup.assign_git_versions`.
+        """
+        if self.std_version is None:
             raise VersionLookupError(
-                f"git ref '{self.ref}' cannot be looked up: call attach_lookup first"
+                f"git ref '{self.ref}' has no Spack version assigned: use '{self}=<version>'"
             )
-
-        version_string, distance = self.ref_lookup.get(self.ref)
-        version_string = version_string or "0"
-
-        # Add a -git.<distance> suffix when we're not exactly on a tag
-        if distance > 0:
-            version_string += f"-git.{distance}"
-        self.std_version = StandardVersion(
-            version_string, *parse_string_components(version_string)
-        )
         return self.std_version
 
     def intersects(self, other: VersionType) -> bool:
-        # For concrete things intersects = satisfies = equality
         if isinstance(other, GitVersion):
-            return self == other
+            return self.satisfies(other) or other.satisfies(self)
         if isinstance(other, StandardVersion):
             return False
         if isinstance(other, ClosedOpenRange):
-            return self.ref_version.intersects(other)
+            # An unassigned ref may be assigned any version, so some assignment is in the range
+            if self.std_version is None:
+                return True
+            return self.std_version.intersects(other)
         if isinstance(other, VersionList):
             return any(self.intersects(rhs) for rhs in other)
         raise TypeError(f"'intersects()' not supported for instances of {type(other)}")
 
     def intersection(self, other: VersionType) -> VersionType:
-        if isinstance(other, ConcreteVersion):
-            return self if self == other else VersionList()
+        if isinstance(other, GitVersion):
+            if not self.intersects(other):
+                return VersionList()
+            # Prefer the side with an assigned version
+            return other if self.std_version is None else self
+        if isinstance(other, StandardVersion):
+            return VersionList()
         return other.intersection(self)
 
     def satisfies(self, other: VersionType) -> bool:
-        # Concrete versions mean we have to do an equality check
         if isinstance(other, GitVersion):
-            return self == other
+            # An unassigned constraint matches any assignment of the same ref
+            return self.ref == other.ref and (
+                other.std_version is None or self.std_version == other.std_version
+            )
         if isinstance(other, StandardVersion):
             return False
         if isinstance(other, ClosedOpenRange):
-            return self.ref_version.satisfies(other)
+            # An unassigned ref may be assigned any version, so only the universe contains it
+            if self.std_version is None:
+                return other == _UNBOUNDED_RANGE
+            return self.std_version.satisfies(other)
         if isinstance(other, VersionList):
             return any(self.satisfies(rhs) for rhs in other)
         raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
@@ -642,14 +647,10 @@ class GitVersion(ConcreteVersion):
         s = ""
         if self.ref:
             s += f"git.{self.ref}" if self.has_git_prefix else self.ref
-        # Note: the solver actually depends on str(...) to produce the effective version.
-        # So when a lookup is attached, we require the resolved version to be printed.
-        # But for standalone git versions that don't have a repo attached, it would still
-        # be nice if we could print @<hash>.
-        try:
-            s += f"={self.ref_version}"
-        except VersionLookupError:
-            pass
+        # Note: the solver depends on str(...) to produce the effective version, so every git
+        # version must be assigned before it reaches the solver.
+        if self.std_version is not None:
+            s += f"={self.std_version}"
         return s
 
     def __repr__(self):
@@ -659,57 +660,55 @@ class GitVersion(ConcreteVersion):
         return True
 
     def __eq__(self, other: object) -> bool:
-        # GitVersion cannot be equal to StandardVersion, otherwise == is not transitive
+        # GitVersion cannot be equal to StandardVersion, otherwise == is not transitive.
+        # Compares the assigned version as stored: never triggers a lookup.
         return (
             isinstance(other, GitVersion)
             and self.ref == other.ref
-            # TODO(psakiev) this needs to chamge to commits when we turn on lookups
-            and self.ref_version == other.ref_version
+            and self.std_version == other.std_version
         )
 
     def __ne__(self, other: object) -> bool:
         return not self == other
 
-    def __lt__(self, other: object) -> bool:
+    def _order(self, other: object) -> Optional[int]:
+        """The sign of ``self`` compared to ``other``, or None where the two are unordered.
+
+        An unassigned ref may be assigned any version, so it has no place on the version line:
+        it is unordered against every assigned or standard version and every range. Unassigned
+        refs are ordered among themselves by ref, so that a list of them is canonical.
+        """
         if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) < (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
-            # GitVersion at equal ref version is larger than StandardVersion
-            return self.ref_version < other
-        if isinstance(other, ClosedOpenRange):
-            return self.ref_version < other
-        raise TypeError(f"'<' not supported between instances of {type(self)} and {type(other)}")
+            if self.std_version is None and other.std_version is None:
+                lhs, rhs = self.ref or "", other.ref or ""
+                return (lhs > rhs) - (lhs < rhs)
+            if self.std_version is None or other.std_version is None:
+                return None
+            lhs_key, rhs_key = (self.std_version, self.ref), (other.std_version, other.ref)
+            return (lhs_key > rhs_key) - (lhs_key < rhs_key)
+        if not isinstance(other, (StandardVersion, ClosedOpenRange)):
+            raise TypeError(f"ordering not supported between {type(self)} and {type(other)}")
+        if self.std_version is None:
+            return None
+        # A git version at equal assigned version is larger than the standard version, and a
+        # version is never equal to a range, so the sign is never zero.
+        return -1 if self.std_version < other else 1
+
+    def __lt__(self, other: object) -> bool:
+        order = self._order(other)
+        return order is not None and order < 0
 
     def __le__(self, other: object) -> bool:
-        if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) <= (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
-            # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use < comparison.
-            return self.ref_version < other
-        if isinstance(other, ClosedOpenRange):
-            # Equality is not a thing
-            return self.ref_version < other
-        raise TypeError(f"'<=' not supported between instances of {type(self)} and {type(other)}")
+        order = self._order(other)
+        return order is not None and order <= 0
 
     def __ge__(self, other: object) -> bool:
-        if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) >= (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
-            # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use >= here.
-            return self.ref_version >= other
-        if isinstance(other, ClosedOpenRange):
-            return self.ref_version > other
-        raise TypeError(f"'>=' not supported between instances of {type(self)} and {type(other)}")
+        order = self._order(other)
+        return order is not None and order >= 0
 
     def __gt__(self, other: object) -> bool:
-        if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) > (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
-            # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use >= here.
-            return self.ref_version >= other
-        if isinstance(other, ClosedOpenRange):
-            return self.ref_version > other
-        raise TypeError(f"'>' not supported between instances of {type(self)} and {type(other)}")
+        order = self._order(other)
+        return order is not None and order > 0
 
     def __hash__(self):
         # hashing should not cause version lookup
@@ -717,27 +716,6 @@ class GitVersion(ConcreteVersion):
 
     def __contains__(self, other: object) -> bool:
         raise NotImplementedError
-
-    @property
-    def ref_lookup(self):
-        if self._ref_lookup:
-            # Get operation ensures dict is populated
-            self._ref_lookup.get(self.ref)
-            return self._ref_lookup
-
-    def attach_lookup(self, lookup: AbstractRefLookup):
-        """
-        Use the git fetcher to look up a version for a commit.
-
-        Since we want to optimize the clone and lookup, we do the clone once
-        and store it in the user specified git repository cache. We also need
-        context of the package to get known versions, which could be tags if
-        they are linked to Git Releases. If we are unable to determine the
-        context of the version, we cannot continue. This implementation is
-        alongside the GitFetcher because eventually the git repos cache will
-        be one and the same with the source cache.
-        """
-        self._ref_lookup = lookup
 
     def __iter__(self):
         return self.ref_version.__iter__()
@@ -881,7 +859,7 @@ class ClosedOpenRange(VersionType):
         if isinstance(other, ClosedOpenRange):
             return (self.lo < other.hi) and (other.lo < self.hi)
         if isinstance(other, GitVersion):
-            return self.lo <= other.ref_version < self.hi
+            return other.intersects(self)
         if isinstance(other, VersionList):
             return any(self.intersects(rhs) for rhs in other)
         raise TypeError(f"'intersects' not supported for instances of {type(other)}")
@@ -910,7 +888,7 @@ class ClosedOpenRange(VersionType):
             return self if self.lo <= other < self.hi else None
 
         if isinstance(other, GitVersion):
-            return self if self.lo <= other.ref_version < self.hi else None
+            return self if other.satisfies(self) else None
 
         raise TypeError(f"'union()' not supported for instances of {type(other)}")
 

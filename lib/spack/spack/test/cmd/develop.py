@@ -79,6 +79,22 @@ class TestDevelop:
             develop("mpich@1.0")
             self.check_develop(e, spack.spec.Spec("mpich@=1.0"))
 
+    def test_develop_git_ref(self, tmp_path: pathlib.Path, mock_git_version_info, monkeypatch):
+        """A develop spec with a bare git ref gets its Spack version assigned when the
+        environment is concretized, like a root spec would."""
+        repo_path, _, _ = mock_git_version_info
+        monkeypatch.setattr(
+            spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
+        )
+        env("create", "test")
+        with ev.read("test") as e:
+            develop("--no-clone", "-p", str(tmp_path), "git-test-commit@git.1.x")
+            e.add("git-test-commit")
+            e.concretize()
+            (root,) = e.concrete_roots()
+            assert str(root.version) == "git.1.x=1.2"
+            assert root.variants["dev_path"].value == str(tmp_path)
+
     def test_develop_no_args(self):
         env("create", "test")
         with ev.read("test") as e:

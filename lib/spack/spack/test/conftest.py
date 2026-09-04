@@ -72,6 +72,7 @@ import spack.util.tty.color
 import spack.util.url as url_util
 import spack.util.web
 import spack.version
+import spack.version.git_ref_lookup
 from spack.config import Configuration
 from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
@@ -232,6 +233,39 @@ def _mock_git_version_info_template(git, tmp_path_factory: pytest.TempPathFactor
         commits = list(reversed(commits))
 
     return repo_path, filename, commits
+
+
+class _GitRefLookupGuard:
+    """Handle returned by :func:`no_git_ref_lookup`: ``allowed()`` re-enables lookups for the
+    block that legitimately needs one, such as a concretization."""
+
+    def __init__(self, monkeypatch, original, forbidden):
+        self._monkeypatch = monkeypatch
+        self._original = original
+        self._forbidden = forbidden
+
+    @contextlib.contextmanager
+    def allowed(self):
+        self._monkeypatch.setattr(spack.version.git_ref_lookup.GitRefLookup, "get", self._original)
+        try:
+            yield
+        finally:
+            self._monkeypatch.setattr(
+                spack.version.git_ref_lookup.GitRefLookup, "get", self._forbidden
+            )
+
+
+@pytest.fixture
+def no_git_ref_lookup(monkeypatch):
+    """Fail the test on any git ref lookup, to check that an operation is pure. The returned
+    handle's ``allowed()`` re-enables lookups for a block that needs them."""
+
+    def forbidden(self, ref):
+        raise AssertionError(f"unexpected git ref lookup of '{ref}'")
+
+    original = spack.version.git_ref_lookup.GitRefLookup.get
+    monkeypatch.setattr(spack.version.git_ref_lookup.GitRefLookup, "get", forbidden)
+    return _GitRefLookupGuard(monkeypatch, original, forbidden)
 
 
 @pytest.fixture

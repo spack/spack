@@ -2001,7 +2001,7 @@ class SpackSolverSetup:
                 spack.hash_lookup.replace_hash(spec)
                 if not spec.name:
                     spec.name = pkg_name
-                spec.attach_git_version_lookup()
+                spack.version.git_ref_lookup.assign_git_versions(spec)
 
                 when_spec = spec
                 if virtual and spec.name != pkg_name:
@@ -2148,6 +2148,7 @@ class SpackSolverSetup:
                 cfg_ver = vn.ver(vstr)
 
                 if isinstance(cfg_ver, vn.GitVersion):
+                    spack.version.git_ref_lookup.assign_git_version(pkg_name, cfg_ver)
                     if not require_checksum or cfg_ver.is_commit:
                         from_packages_yaml.append(cfg_ver)
                 else:
@@ -2709,7 +2710,9 @@ class SpackSolverSetup:
         env = active_environment()
         if env:
             dev_specs = tuple(
-                spack.spec.Spec(info["spec"]).constrained(
+                spack.version.git_ref_lookup.assign_git_versions(
+                    spack.spec.Spec(info["spec"])
+                ).constrained(
                     'dev_path="%s"'
                     % spack.config.canonicalize_path(info["path"], default_wd=env.path)
                 )
@@ -2998,7 +3001,7 @@ class SpackSolverSetup:
                 if name not in self.pkgs or versions == vn.any_version:
                     continue
 
-                s.attach_git_version_lookup()
+                spack.version.git_ref_lookup.assign_git_versions(s)
                 v = versions.concrete
 
                 if not v:
@@ -3575,16 +3578,6 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     for s in specs.values():
         _ensure_no_deprecated(s, spack.store.STORE)
 
-    # Add git version lookup info to concrete Specs (this is generated for
-    # abstract specs as well but the Versions may be replaced during the
-    # concretization process)
-    for root in specs.values():
-        for spec in root.traverse():
-            if isinstance(spec.version, vn.GitVersion):
-                spec.version.attach_lookup(
-                    spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
-                )
-
     new_specs = execute_explicit_splices(specs)
     specs.clear()
     specs.update(new_specs)
@@ -3618,6 +3611,7 @@ def execute_explicit_splices(specs: SpecDict) -> SpecDict:
                 # The first iteration, we need to replace the abstract hash
                 if not replacement.concrete:
                     spack.hash_lookup.replace_hash(replacement)
+                    spack.version.git_ref_lookup.assign_git_versions(replacement)
                 current_spec = current_spec.splice(replacement, transitive)
         new_key = NodeId(id=key.id, pkg=current_spec.name)
         new_specs[new_key] = current_spec
@@ -3765,7 +3759,10 @@ class Solver:
           setup_only: if True, stop after setup and don't solve (default False).
           allow_deprecated: allow deprecated version in the solve
         """
-        specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
+        specs = [
+            spack.version.git_ref_lookup.assign_git_versions(spack.hash_lookup.lookup_hash(s))
+            for s in specs
+        ]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
@@ -3819,7 +3816,10 @@ class Solver:
         if not specs:
             return
 
-        specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
+        specs = [
+            spack.version.git_ref_lookup.assign_git_versions(spack.hash_lookup.lookup_hash(s))
+            for s in specs
+        ]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
