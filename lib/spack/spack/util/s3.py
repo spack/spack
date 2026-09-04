@@ -146,7 +146,7 @@ class WrapStream(BufferedReader):
         return getattr(self.raw, key)
 
 
-def _s3_open(url, method="GET"):
+def _s3_open(url, method="GET", extra_args={}):
     parsed = urllib.parse.urlparse(url)
     s3 = get_s3_session(url, method="fetch")
 
@@ -163,14 +163,23 @@ def _s3_open(url, method="GET"):
 
     try:
         if method == "GET":
-            obj = s3.get_object(Bucket=bucket, Key=key)
+            obj = s3.get_object(Bucket=bucket, Key=key, **extra_args)
             # NOTE(opadron): Apply workaround here (see above)
             stream = WrapStream(obj["Body"])
         elif method == "HEAD":
-            obj = s3.head_object(Bucket=bucket, Key=key)
+            obj = s3.head_object(Bucket=bucket, Key=key, **extra_args)
             stream = BytesIO()
     except s3.ClientError as e:
-        raise urllib.error.URLError(e) from e
+        stream = BytesIO()
+        error = e.response.get("Error", {})
+        metadata = e.response.get("ResponseMetadata", {})
+        raise urllib.error.HTTPError(
+            url,
+            metadata.get("HTTPStatusCode", 500),
+            error.get("Message", "Unknown S3 Error"),
+            metadata.get("HTTPHeaders", {}),
+            stream,
+        )
 
     headers = obj["ResponseMetadata"]["HTTPHeaders"]
 
@@ -180,5 +189,11 @@ def _s3_open(url, method="GET"):
 class UrllibS3Handler(urllib.request.BaseHandler):
     def s3_open(self, req):
         orig_url = req.get_full_url()
-        url, headers, stream = _s3_open(orig_url, method=req.get_method())
+
+        if_none_match = req.get_header("If-none-match")
+        extra_args = {}
+        if if_none_match:
+            extra_args["IfNoneMatch"] = if_none_match
+
+        url, headers, stream = _s3_open(orig_url, method=req.get_method(), extra_args=extra_args)
         return urllib.response.addinfourl(stream, headers, url)
