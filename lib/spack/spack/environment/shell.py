@@ -16,82 +16,92 @@ from spack.util.environment import EnvironmentModifications, ShellCmdString
 from spack.util.tty.color import colorize
 
 
-def activate_header(env, shell, prompt=None, view: Optional[str] = None):
-    # Construct the commands to run
+def _make_spack_prompt(shell: str, prompt: str) -> List[str]:
     shell_cmd = ShellCmdString(shell)
-    cmds: List[str] = [shell_cmd.set("SPACK_ENV", env.path)]
-    if view:
-        cmds.append(shell_cmd.set("SPACK_ENV_VIEW", view))
-
     if shell == "csh":
         # TODO: figure out how to make color work for csh
-        cmds.append('alias despacktivate "spack env deactivate"')
-        if prompt:
-            cmds.append('if (! $?SPACK_OLD_PROMPT ) setenv SPACK_OLD_PROMPT "${prompt}"')
-            cmds.append('set prompt="%s ${prompt}"' % prompt)
+        return [
+            'if (! $?SPACK_OLD_PROMPT ) setenv SPACK_OLD_PROMPT "${prompt}"',
+            'set prompt="%s ${prompt}"' % prompt,
+        ]
     elif shell == "fish":
-        if "color" in os.getenv("TERM", "") and prompt:
-            prompt = colorize("@G{%s} " % prompt, color=True)
-
-        cmds.append("function despacktivate")
-        cmds.append("   spack env deactivate")
-        cmds.append("end")
-        #
         # NOTE: We're not changing the fish_prompt function (which is fish's
         # solution to the PS1 variable) here. This is a bit fiddly, and easy to
         # screw up => spend time reasearching a solution. Feedback welcome.
-        #
+        return []
     elif shell == "bat":
         # TODO: Color
-        if prompt:
-            old_prompt = os.environ.get("SPACK_OLD_PROMPT")
-            if not old_prompt:
-                old_prompt = os.environ.get("PROMPT")
-            cmds.append(shell_cmd.set("SPACK_OLD_PROMPT", str(old_prompt)))
-            cmds.append(shell_cmd.set("PROMPT", f"{prompt} $P$G"))
+        old_prompt = os.environ.get("SPACK_OLD_PROMPT")
+        if not old_prompt:
+            old_prompt = os.environ.get("PROMPT")
+        return [
+            shell_cmd.set("SPACK_OLD_PROMPT", str(old_prompt)),
+            shell_cmd.set("PROMPT", f"{prompt} $P$G"),
+        ]
     elif shell == "pwsh":
-        if prompt:
-            cmds.append(
-                "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
-                ' | Split-Path -leaf; if(!"$Env:SPACK_OLD_PROMPT") '
-                '{$Env:SPACK_OLD_PROMPT="[spack] PS $pth>"}; '
-                '"%s PS $pth>"}' % prompt
-            )
+        return [
+            "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
+            ' | Split-Path -leaf; if(!"$Env:SPACK_OLD_PROMPT") '
+            '{$Env:SPACK_OLD_PROMPT="[spack] PS $pth>"}; '
+            '"%s PS $pth>"}' % prompt
+        ]
     else:
         bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
         zsh_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=False, zsh=True)
-
-        cmds.append("alias despacktivate='spack env deactivate'")
-        if prompt:
-            cmds.append(
-                textwrap.dedent(
-                    rf"""
-                    if [ -z ${{SPACK_OLD_PS1+x}} ]; then
-                        if [ -z ${{PS1+x}} ]; then
-                            PS1='$$$$';
-                        fi;
-                        export SPACK_OLD_PS1="${{PS1}}";
+        return [
+            textwrap.dedent(
+                rf"""
+                if [ -z ${{SPACK_OLD_PS1+x}} ]; then
+                    if [ -z ${{PS1+x}} ]; then
+                        PS1='$$$$';
                     fi;
-                    if [ -n "${{TERM:-}}" ] && [ "${{TERM#*color}}" != "${{TERM}}" ] && \
-                       [ -n "${{BASH:-}}" ];
-                    then
-                        export PS1="{bash_color_prompt} ${{PS1}}";
-                    elif [ -n "${{TERM:-}}" ] && [ "${{TERM#*color}}" != "${{TERM}}" ] && \
-                         [ -n "${{ZSH_NAME:-}}" ];
-                    then
-                        export PS1="{zsh_color_prompt} ${{PS1}}";
-                    else
-                        export PS1="{prompt} ${{PS1}}";
-                    fi
-                    """
-                ).strip("\n")
-            )
+                    export SPACK_OLD_PS1="${{PS1}}";
+                fi;
+                if [ -n "${{TERM:-}}" ] && [ "${{TERM#*color}}" != "${{TERM}}" ] && \
+                    [ -n "${{BASH:-}}" ];
+                then
+                    export PS1="{bash_color_prompt} ${{PS1}}";
+                elif [ -n "${{TERM:-}}" ] && [ "${{TERM#*color}}" != "${{TERM}}" ] && \
+                        [ -n "${{ZSH_NAME:-}}" ];
+                then
+                    export PS1="{zsh_color_prompt} ${{PS1}}";
+                else
+                    export PS1="{prompt} ${{PS1}}";
+                fi
+                """
+            ).strip("\n")
+        ]
+
+
+def activate_header(
+    env: ev.Environment, shell: str, prompt: bool = False, view: Optional[str] = None
+):
+    short_name = env.name
+    if short_name == env.path:
+        short_name = os.path.basename(short_name)
+
+    # Construct the commands to run
+    shell_cmd = ShellCmdString(shell)
+    cmds: List[str] = [
+        shell_cmd.set("SPACK_ENV", env.path),
+        shell_cmd.set("VIRTUAL_ENV_PROMPT", short_name),
+    ]
+    if view:
+        cmds.append(shell_cmd.set("SPACK_ENV_VIEW", view))
+    cmds.extend(shell_cmd.alias("despacktivate", "spack env deactivate"))
+
+    if prompt:
+        cmds.extend(_make_spack_prompt(shell, f"[{short_name}]"))
     return shell_cmd.join(cmds)
 
 
 def deactivate_header(shell):
     shell_cmd = ShellCmdString(shell)
-    cmds: List[str] = [shell_cmd.unset("SPACK_ENV"), shell_cmd.unset("SPACK_ENV_VIEW")]
+    cmds: List[str] = [
+        shell_cmd.unset("SPACK_ENV"),
+        shell_cmd.unset("SPACK_ENV_VIEW"),
+        shell_cmd.unset("VIRTUAL_ENV_PROMPT"),
+    ]
 
     if shell == "csh":
         cmds.append(

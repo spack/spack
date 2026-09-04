@@ -175,19 +175,20 @@ def test_shell_modifications_are_properly_escaped():
 
 
 @pytest.mark.parametrize(
-    "shell,set_expected,unset_expected,join_sep",
+    "shell,set_expected,unset_expected,alias,join_sep",
     [
-        ("sh", "export FOO=bar", "unset FOO", ";\n"),
-        ("csh", "setenv FOO bar", "unsetenv FOO", ";\n"),
-        ("fish", "set -gx FOO bar", "set -e FOO", ";\n"),
-        ("bat", 'set "FOO=bar"', 'set "FOO="', "\n"),
-        ("pwsh", "$Env:FOO='bar'", "Set-Item -Path Env:FOO", "\n"),
+        ("sh", "export FOO=bar", "unset FOO", ["alias foo='spack bar'"], ";\n"),
+        ("csh", "setenv FOO bar", "unsetenv FOO", ['alias foo "spack bar"'], ";\n"),
+        ("fish", "set -gx FOO bar", "set -e FOO", ["function foo", "spack bar", "end"], ";\n"),
+        ("bat", 'set "FOO=bar"', 'set "FOO="', [], "\n"),
+        ("pwsh", "$Env:FOO='bar'", "Set-Item -Path Env:FOO", [], "\n"),
     ],
 )
-def test_shell_cmd_string(shell, set_expected, unset_expected, join_sep):
+def test_shell_cmd_string(shell, set_expected, unset_expected, alias, join_sep):
     shell_cmd = envutil.ShellCmdString(shell)
     assert shell_cmd.set("FOO", "bar") == set_expected
     assert shell_cmd.unset("FOO") == unset_expected
+    assert shell_cmd.alias("foo", "spack bar") == alias
     assert shell_cmd.join([]) == ""
     assert shell_cmd.join([set_expected]) == set_expected + join_sep
     assert (
