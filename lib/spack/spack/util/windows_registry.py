@@ -10,6 +10,7 @@ import os
 import re
 import sys
 from contextlib import contextmanager
+from typing import List
 
 from spack.util import tty
 
@@ -359,18 +360,21 @@ class WindowsRegistryView:
             WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), recursive=recursive
         )
 
-    def find_subkeys(self, subkey_name: str, recursive: bool = True):
+    def find_subkeys(self, subkey_name: str, recursive: bool = True) -> List["RegistryKey"]:
         """Exactly the same as find_subkey, except this function tries to match
         a regex to multiple keys
 
         Args:
             subkey_name: subkey to be searched for
         Return:
-            the desired subkeys as a list of RegistryKey object, or none
+            the desired subkeys as a list of RegistryKey objects, empty if there are no matches
         """
         kwargs = {"collect_all_matching": True, "recursive": recursive}
-        return self._traverse_subkeys(
-            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), **kwargs
+        return (
+            self._traverse_subkeys(
+                WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), **kwargs
+            )
+            or []
         )
 
     def find_value(self, val_name: str, recursive: bool = True):
