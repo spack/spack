@@ -3365,6 +3365,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         """
         result = []
         for yaml_spec_str in self.configuration["specs"]:
+            # Skip definition references (e.g. "$profilers") and matrices, which
+            # are not parseable as a single spec.
+            if not isinstance(yaml_spec_str, str) or yaml_spec_str.startswith("$"):
+                continue
             if Spec(yaml_spec_str) == Spec(user_spec):
                 result.append(yaml_spec_str)
 
