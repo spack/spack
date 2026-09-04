@@ -84,6 +84,10 @@ class SpecClauseGenerator:
         self.version_constraints: Dict[str, Set] = collections.defaultdict(set)
         self.target_constraints: Set = set()
         self.variant_values_from_specs: Set = set()
+        #: Cache for pkg_class()
+        self._pkg_classes: Dict[str, Type[spack.package_base.PackageBase]] = {}
+        #: Cache for is_virtual()
+        self._virtual_names: Dict[str, bool] = {}
 
     def record_version_constraint(self, name: str, versions) -> None:
         """Record that `versions` was requested for package `name`."""
@@ -197,7 +201,7 @@ class SpecClauseGenerator:
 
             for value in variant.values:
                 # ensure that the value *can* be valid for the spec
-                if name and not spec.concrete and not spack.repo.PATH.is_virtual(name):
+                if name and not spec.concrete and not self.is_virtual(name):
                     variant_defs = vt.prevalidate_variant_value(
                         self.pkg_class(name), variant, spec
                     )
@@ -251,6 +255,9 @@ class SpecClauseGenerator:
         self, spec: spack.spec.Spec, *, name: str, body: bool
     ) -> List[AspFunction]:
         """Return clauses for the virtuals a spec provides on its incoming edges."""
+        if not spec._dependents:
+            return []
+
         # TODO: a loop over `edges_to_dependencies` is preferred over `edges_from_dependents`
         # since dependents can point to specs out of scope for the solver.
         edges = spec.edges_from_dependents()
@@ -410,16 +417,17 @@ class SpecClauseGenerator:
         f: Union[Type[_Head], Type[_Body]] = _Body if body else _Head
 
         if name:
-            clauses.append(
-                f.node(name) if not spack.repo.PATH.is_virtual(name) else f.virtual_node(name)
-            )
+            clauses.append(f.node(name) if not self.is_virtual(name) else f.virtual_node(name))
         if spec.namespace:
             clauses.append(f.namespace(name, spec.namespace))
 
         clauses.extend(self.spec_versions(spec, name=name))
-        clauses.extend(self._arch_clauses(spec, f, name=name))
-        clauses.extend(self._variant_clauses(spec, f, name=name, body=body))
-        clauses.extend(self._flag_clauses(spec, f, name=name, context=context))
+        if spec.architecture:
+            clauses.extend(self._arch_clauses(spec, f, name=name))
+        if spec.variants:
+            clauses.extend(self._variant_clauses(spec, f, name=name, body=body))
+        if spec.compiler_flags:
+            clauses.extend(self._flag_clauses(spec, f, name=name, context=context))
 
         # Hash for concrete specs
         if spec.concrete:
@@ -431,7 +439,8 @@ class SpecClauseGenerator:
             if spec.external:
                 clauses.append(fn.attr("external", name))
 
-        clauses.extend(self._virtuals_from_dependents(spec, name=name, body=body))
+        if spec._dependents:
+            clauses.extend(self._virtuals_from_dependents(spec, name=name, body=body))
 
         # If the spec is external and concrete, we allow all the libcs on the system
         if spec.external and spec.concrete and spack.platforms.using_libc_compatibility():
@@ -483,9 +492,20 @@ class SpecClauseGenerator:
         clauses.extend(edge_clauses)
         return clauses
 
+    def is_virtual(self, name: str) -> bool:
+        result = self._virtual_names.get(name)
+        if result is None:
+            result = self._virtual_names[name] = spack.repo.PATH.is_virtual(name)
+        return result
+
     def pkg_class(self, pkg_name: str) -> Type[spack.package_base.PackageBase]:
+        cls = self._pkg_classes.get(pkg_name)
+        if cls is not None:
+            return cls
+
         request = pkg_name
         if pkg_name in self.explicitly_required_namespaces:
             namespace = self.explicitly_required_namespaces[pkg_name]
             request = f"{namespace}.{pkg_name}"
-        return spack.repo.PATH.get_pkg_class(request)
+        cls = self._pkg_classes[pkg_name] = spack.repo.PATH.get_pkg_class(request)
+        return cls
