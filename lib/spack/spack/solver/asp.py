@@ -1629,8 +1629,8 @@ class SpackSolverSetup:
 
             # make a spec indicating whether the variant has this conditional value
             variant_has_value = spack.spec.Spec()
-            variant_has_value.variants[name] = vt.VariantValue(
-                vt.VariantType.MULTI, name, (value.value,)
+            variant_has_value.variants.set(
+                vt.VariantValue(vt.VariantType.MULTI, name, (value.value,))
             )
 
             if value.when:
@@ -3285,7 +3285,7 @@ class SpecBuilder:
         spec = self._specs[node]
         variant = spec.variants.get(name)
         if not variant:
-            spec.variants[name] = vt.VariantValue.from_concretizer(name, value, variant_type)
+            spec.variants.set(vt.VariantValue.from_concretizer(name, value, variant_type))
         else:
             assert variant_type == "multi", (
                 f"Can't have multiple values for single-valued variant: "
@@ -3632,7 +3632,7 @@ def _specs_with_commits(spec):
 
     if isinstance(spec.version, vn.GitVersion):
         if "commit" not in spec.variants and spec.version.commit_sha:
-            spec.variants["commit"] = vt.SingleValuedVariant("commit", spec.version.commit_sha)
+            spec.variants.set(vt.SingleValuedVariant("commit", spec.version.commit_sha))
 
     pkg_class._resolve_git_provenance(spec)
 
