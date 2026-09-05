@@ -1258,7 +1258,9 @@ def touch(path):
 @system_path_filter
 def touchp(path):
     """Like ``touch``, but creates any parent directories needed for the file."""
-    mkdirp(os.path.dirname(path))
+    parent=os.path.dirname(path)
+    if parent:
+        mkdirp(parent)
     touch(path)
 
 
