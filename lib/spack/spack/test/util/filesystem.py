@@ -26,6 +26,7 @@ def stage(tmp_path_factory: pytest.TempPathFactory):
 
     with fs.working_dir(s):
         # Create source file hierarchy
+        fs.touchp("base")
         fs.touchp("source/1")
         fs.touchp("source/a/b/2")
         fs.touchp("source/a/b/3")
