@@ -369,7 +369,7 @@ class StandardVersion(ConcreteVersion):
             return any(self.satisfies(rhs) for rhs in other)
 
         if isinstance(other, ClosedOpenRange):
-            return other.lo <= self < other.hi
+            return other.intersects(self)
 
         if isinstance(other, GitVersion):
             return False
@@ -525,9 +525,6 @@ class GitVersion(ConcreteVersion):
     1) ``git.foo=1.2``: the ref is assigned the version 1.2, and is concrete
     2) ``git.foo``: short for ``git.foo=:`` (unconstrained ref)
     3) ``git.foo=1.2:1.3``: the ref is constrained to the range 1.2:1.3
-
-    A version or range covers the refs assigned a version in it: ``git.foo=1.2`` satisfies
-    ``=1.2``, but not the other way around.
 
     Assignment queries the git repo for the most recent version previous to this git ref, as
     well as the distance between them expressed as a number of commits. If the previous
@@ -925,9 +922,6 @@ class ClosedOpenRange(VersionType):
         if isinstance(other, StandardVersion):
             return other if self.intersects(other) else VersionList()
 
-        if isinstance(other, VersionList):
-            return other.intersection(self)
-
         raise TypeError(f"'intersection()' not supported for instances of {type(other)}")
 
 
@@ -1050,16 +1044,16 @@ class VersionList(VersionType):
             ):
                 return
             i = bisect_left(self.versions, item)
-            # Skip when prev or next covers it.
-            if (i > 0 and item.satisfies(self[i - 1])) or (
-                i < len(self) and item.satisfies(self[i])
+            # Only insert when prev and next do not cover it.
+            if (i == 0 or not item.satisfies(self[i - 1])) and (
+                i == len(self) or not item.satisfies(self[i])
             ):
-                return
-            # A version covers the refs assigned it, which sort right after it.
-            j = i
-            while j < len(self) and self[j].satisfies(item):
-                j += 1
-            self.versions[i:j] = [item]
+                # Similarly to @1 consuming @=1, @=1 consumes @git.foo=1, and they are ordered
+                # contiguously.
+                j = i
+                while j < len(self.versions) and self.versions[j].satisfies(item):
+                    j += 1
+                self.versions[i:j] = [item]
 
         else:
             raise TypeError("Can't add %s to VersionList" % type(item))
