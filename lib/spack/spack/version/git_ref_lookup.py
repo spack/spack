@@ -17,7 +17,7 @@ import spack.util.spack_json as sjson
 from spack.util.filesystem import mkdirp, working_dir
 
 from .common import VersionLookupError
-from .version_types import GitVersion, StandardVersion
+from .version_types import GitVersion, StandardVersion, VersionList, VersionType
 
 if TYPE_CHECKING:
     import spack.spec
@@ -210,29 +210,40 @@ class GitRefLookup:
         return prev_version, distance
 
 
-def assign_git_version(pkg_name: str, version: GitVersion) -> None:
-    """Assign a Spack version to ``version`` in place, if it has none, by looking its ref up
-    in the git repository of package ``pkg_name``. This may trigger a git clone.
+def assign_git_version(pkg_name: str, version: VersionType) -> VersionType:
+    """Return ``version`` with a Spack version assigned, by looking its ref up in the git
+    repository of package ``pkg_name``, or ``version`` itself when it is not a git ref or has
+    one already. This may trigger a git clone.
 
     Raises a ``VersionLookupError`` when the package has no ``git`` attribute, the ref is
     unknown, or the version found is outside the range the ref is constrained to.
     """
-    if version.std_version is not None:
-        return
+    if not isinstance(version, GitVersion) or version.std_version is not None:
+        return version
     version_string, distance = GitRefLookup(pkg_name).get(version.ref)
     version_string = version_string or "0"
     # Add a -git.<distance> suffix when we're not exactly on a tag
     if distance > 0:
         version_string += f"-git.{distance}"
-    version.assign(StandardVersion.from_string(version_string))
+    return version.assigned(StandardVersion.from_string(version_string))
+
+
+def _needs_assignment(node: "spack.spec.Spec") -> bool:
+    return bool(node.name) and any(
+        isinstance(v, GitVersion) and v.std_version is None for v in node.versions
+    )
 
 
 def assign_git_versions(spec: "spack.spec.Spec") -> "spack.spec.Spec":
-    """Assign a Spack version to every git ref version in ``spec`` that has none, in place."""
-    for node in spec.traverse():
-        if not node.name:
-            continue
-        for v in node.versions:
-            if isinstance(v, GitVersion):
-                assign_git_version(node.fullname, v)
-    return spec
+    """Return a copy of ``spec`` in which every git ref version is assigned a Spack version.
+
+    Non-destructive: returns ``spec`` itself when no node has a git ref without one."""
+    if not any(_needs_assignment(node) for node in spec.traverse()):
+        return spec
+    result = spec.copy()
+    for node in result.traverse():
+        if _needs_assignment(node):
+            node.versions = VersionList(
+                [assign_git_version(node.fullname, v) for v in node.versions]
+            )
+    return result

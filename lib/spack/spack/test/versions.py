@@ -707,8 +707,7 @@ def test_versions_from_git(git, mock_git_version_info, monkeypatch, mock_package
     )
 
     for commit in commits:
-        spec = spack.spec.Spec("git-test-commit@%s" % commit)
-        assign_git_versions(spec)
+        spec = assign_git_versions(spack.spec.Spec("git-test-commit@%s" % commit))
         version: GitVersion = spec.version
         comparator = [str(v) if not isinstance(v, int) else v for v in version.ref_version]
 
@@ -789,17 +788,14 @@ def test_git_ref_constraint_round_trips_through_str():
 def test_git_ref_assignment_must_be_within_the_constraint():
     """Assigning a git ref a version outside the range it is constrained to fails, instead of
     silently dropping the range."""
-    v = GitVersion("git.main=1:1.3")
-    v.assign(Version("1.2"))
-    assert str(v) == "git.main=1.2"
+    assert str(GitVersion("git.main=1:1.3").assigned(Version("1.2"))) == "git.main=1.2"
     with pytest.raises(VersionLookupError, match="outside the range 1.3:"):
-        GitVersion("git.main=1.3:").assign(Version("1.2"))
+        GitVersion("git.main=1.3:").assigned(Version("1.2"))
 
 
 def test_git_branch_with_slash(monkeypatch):
     monkeypatch.setattr(GitRefLookup, "get", lambda self, ref: ("1.2", 0))
-    spec = spack.spec.Spec("git-test-commit@git.feature/bar")
-    assign_git_versions(spec)
+    spec = assign_git_versions(spack.spec.Spec("git-test-commit@git.feature/bar"))
     assert str(spec.version) == "git.feature/bar=1.2"
     serialized = VersionList([spec.version]).to_dict()
     assert VersionList.from_dict(serialized) == VersionList([spec.version])
@@ -974,8 +970,7 @@ def test_git_versions_without_explicit_reference(
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
-    spec = spack.spec.Spec(spec_str)
-    assign_git_versions(spec)
+    spec = assign_git_versions(spack.spec.Spec(spec_str))
 
     for test_str, expected in tested_intersects:
         assert spec.intersects(test_str) is expected, test_str

@@ -3207,7 +3207,7 @@ class Spec:
             return
 
         before = self.cformat("{name}{@version}{/hash:7}")
-        v.assign(vn.StandardVersion.from_string("develop"))
+        self.versions = vn.VersionList([v.assigned(vn.StandardVersion.from_string("develop"))])
         tty.debug(
             f"the git sha of {before} could not be resolved to spack version; "
             f"it has been replaced by {self.cformat('{name}{@version}{/hash:7}')}."

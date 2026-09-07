@@ -597,15 +597,15 @@ class GitVersion(ConcreteVersion):
         """The Spack version assigned to this ref, or None while it is only constrained."""
         return self.constraint if isinstance(self.constraint, StandardVersion) else None
 
-    def assign(self, version: StandardVersion) -> None:
-        """Assign the Spack version this ref stands for. Raises a ``VersionLookupError`` when
-        the version is outside the constraint on the ref."""
+    def assigned(self, version: StandardVersion) -> "GitVersion":
+        """This ref assigned the Spack version it stands for. Raises a ``VersionLookupError``
+        when the version is outside the constraint on the ref."""
         if not version.satisfies(self.constraint):
             raise VersionLookupError(
                 f"git ref '{self.ref}' corresponds to version {version}, "
                 f"which is outside the range {self.constraint} it is constrained to"
             )
-        self.constraint = version
+        return self._with_constraint(version)
 
     @property
     def ref_version(self) -> StandardVersion:

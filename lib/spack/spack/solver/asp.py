@@ -1997,11 +1997,10 @@ class SpackSolverSetup:
             self.gen.newline()
 
             for input_spec in requirement_grp:
-                spec = spack.spec.Spec(input_spec)
-                spack.hash_lookup.replace_hash(spec)
+                spec = spack.hash_lookup.lookup_hash(spack.spec.Spec(input_spec))
                 if not spec.name:
                     spec.name = pkg_name
-                spack.version.git_ref_lookup.assign_git_versions(spec)
+                spec = spack.version.git_ref_lookup.assign_git_versions(spec)
 
                 when_spec = spec
                 if virtual and spec.name != pkg_name:
@@ -2145,10 +2144,9 @@ class SpackSolverSetup:
             from_packages_yaml: List[GitOrStandardVersion] = []
 
             for vstr in packages_yaml[pkg_name]["version"]:
-                cfg_ver = vn.ver(vstr)
+                cfg_ver = spack.version.git_ref_lookup.assign_git_version(pkg_name, vn.ver(vstr))
 
                 if isinstance(cfg_ver, vn.GitVersion):
-                    spack.version.git_ref_lookup.assign_git_version(pkg_name, cfg_ver)
                     if not require_checksum or cfg_ver.is_commit:
                         from_packages_yaml.append(cfg_ver)
                 else:
@@ -2996,12 +2994,11 @@ class SpackSolverSetup:
                 continue
 
             for s in traverse.traverse_nodes(self._specs_from_requires(pkg_name, d["require"])):
-                name, versions = s.name, s.versions
-
-                if name not in self.pkgs or versions == vn.any_version:
+                if s.name not in self.pkgs or s.versions == vn.any_version:
                     continue
 
-                spack.version.git_ref_lookup.assign_git_versions(s)
+                s = spack.version.git_ref_lookup.assign_git_versions(s)
+                name, versions = s.name, s.versions
                 v = versions.concrete
 
                 if not v:
@@ -3611,7 +3608,6 @@ def execute_explicit_splices(specs: SpecDict) -> SpecDict:
                 # The first iteration, we need to replace the abstract hash
                 if not replacement.concrete:
                     spack.hash_lookup.replace_hash(replacement)
-                    spack.version.git_ref_lookup.assign_git_versions(replacement)
                 current_spec = current_spec.splice(replacement, transitive)
         new_key = NodeId(id=key.id, pkg=current_spec.name)
         new_specs[new_key] = current_spec
