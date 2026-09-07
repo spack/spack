@@ -123,8 +123,7 @@ def test_git_user_supplied_reference_satisfaction(
     assert hash_eq_ver.intersects(just_hash)
     assert just_hash.intersects(hash_eq_ver)
 
-    # A ref assigned 2.2 is a version 2.2, so it is inside @=2.2, but not the other way around:
-    # a plain 2.2 does not come from that ref. They are not the same version either.
+    # A git ref assigned =2.2 satisfies @=2.2, but not the other way around.
     assert hash_eq_ver.satisfies(just_ver)
     assert not just_ver.satisfies(hash_eq_ver)
     assert hash_eq_ver.intersects(just_ver)

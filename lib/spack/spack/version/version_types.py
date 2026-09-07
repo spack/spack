@@ -366,9 +366,6 @@ class StandardVersion(ConcreteVersion):
 
     def satisfies(self, other: VersionType) -> bool:
         if isinstance(other, VersionList):
-            # A version is in a union when it is in one of its elements. Not the same as
-            # intersecting the list: a git ref assigned this version intersects it without
-            # containing it.
             return any(self.satisfies(rhs) for rhs in other)
 
         if isinstance(other, ClosedOpenRange):
@@ -1051,8 +1048,8 @@ class VersionList(VersionType):
             if (i == 0 or not item.satisfies(self[i - 1])) and (
                 i == len(self) or not item.satisfies(self[i])
             ):
-                # A standard version covers every ref assigned it, and those sort right after
-                # it, so drop the run of elements it covers before inserting.
+                # Similarly to @1 consuming @=1, @=1 consumes @git.foo=1, and they are ordered
+                # contiguously.
                 j = i
                 while j < len(self.versions) and self.versions[j].satisfies(item):
                     j += 1
