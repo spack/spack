@@ -448,11 +448,6 @@ def test_intersection():
     check_intersection([], "git.foo=1.0:", ":0.9")
     check_intersection(["=1.0", "git.main"], ["=1.0", "git.main"], ["=1.0", "git.main"])
 
-    # An exact version assigns the ref that version, the same way a range constrains it
-    check_intersection("git.foo=1.2", "git.foo", "=1.2")
-    check_intersection("git.foo=1.2", "git.foo=1.0:", "=1.2")
-    check_intersection([], "git.foo=1.0:", "=0.9")
-
 
 def test_intersect_with_containment():
     check_intersection("1.6.5", "1.6.5", ":1.6")
@@ -916,23 +911,16 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
         (f"git.{'a' * 40}=develop", f"git.{'a' * 40}=develop", (True, True, True)),
         (f"git.{'a' * 40}=develop", f"git.{'b' * 40}=develop", (False, False, False)),
         # GitVersion without an assigned version: matched by any assignment of the same ref, and
-        # may be assigned any version, so it meets every version and range but satisfies only
-        # the unbounded one
+        # may be assigned any version, so it meets every range but satisfies only the unbounded
         ("git.foo", "git.foo", (True, True, True)),
         ("git.foo", "git.foo=1.2", (True, False, True)),
         ("git.foo", "git.bar", (False, False, False)),
         ("git.foo=1.2", "git.foo=1.3", (False, False, False)),
-        # An exact version says which Spack version, not where it came from, so it holds the
-        # refs assigned it, the same way the range 1.2 does
-        ("git.foo", "=1.2", (True, False, False)),
-        ("git.foo=1.2", "=1.2", (True, True, False)),
-        ("git.foo=1.2", "=1.3", (False, False, False)),
+        ("git.foo", "=1.2", (False, False, False)),
+        ("git.foo=1.2", "=1.2", (False, False, False)),
         ("git.foo", "1.0:", (True, False, False)),
         ("git.foo", ":", (True, True, False)),
         ("=1.0,git.main", "git.main", (True, False, True)),
-        # A version inside a list of git refs: it meets them without being inside their union,
-        # which is not the same question as whether it intersects the list
-        ("=1.0", "git.main,git.foo", (True, False, False)),
         ("=1.0,1.2:", "git.main", (True, False, False)),
         # GitVersion constrained to a range: between the bare ref and an assignment inside it
         ("git.foo=1.0:", "git.foo", (True, True, False)),
@@ -941,7 +929,6 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
         ("git.foo=1.0:", "1.0:", (True, True, False)),
         ("git.foo=1.0:", "1.1:", (True, False, False)),
         ("git.foo=1.0:", ":0.9", (False, False, False)),
-        ("git.foo=1.0:", "=1.2", (True, False, False)),
         ("git.foo=1.2:1.2", "git.foo=1.2", (True, False, True)),
     ],
 )
@@ -1065,13 +1052,8 @@ def test_boolness_of_versions():
 
 
 def test_version_list_normalization():
-    # An exact version covers the refs assigned it, so it absorbs them however they were added
-    assert VersionList(["=1.2", "ref=1.2"]) == VersionList(["=1.2"])
-    assert VersionList(["ref=1.2", "=1.2"]) == VersionList(["=1.2"])
-
-    # But not the refs assigned another version, or constrained to a range
-    assert len(VersionList(["=1.2", "ref=1.3"])) == 2
-    assert len(VersionList(["=1.2", "ref=1.2:1.3"])) == 2
+    # Git versions and ordinary versions can live together in a VersionList
+    assert len(VersionList(["=1.2", "ref=1.2"])) == 2
 
     # But when a range is added, the only disjoint bit is the range.
     assert VersionList(["=1.2", "ref=1.2", "ref=1.3", "1.2:1.3"]) == VersionList(["1.2:1.3"])

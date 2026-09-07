@@ -366,10 +366,7 @@ class StandardVersion(ConcreteVersion):
 
     def satisfies(self, other: VersionType) -> bool:
         if isinstance(other, VersionList):
-            # A version is in a union when it is in one of its elements. Not the same as
-            # intersecting the list: a git ref assigned this version intersects it without
-            # containing it.
-            return any(self.satisfies(rhs) for rhs in other)
+            return other.intersects(self)
 
         if isinstance(other, ClosedOpenRange):
             return other.intersects(self)
@@ -629,7 +626,9 @@ class GitVersion(ConcreteVersion):
     def intersects(self, other: VersionType) -> bool:
         if isinstance(other, GitVersion):
             return self.ref == other.ref and self.constraint.intersects(other.constraint)
-        if isinstance(other, (StandardVersion, ClosedOpenRange)):
+        if isinstance(other, StandardVersion):
+            return False
+        if isinstance(other, ClosedOpenRange):
             return self.constraint.intersects(other)
         if isinstance(other, VersionList):
             return any(self.intersects(rhs) for rhs in other)
@@ -640,7 +639,9 @@ class GitVersion(ConcreteVersion):
             if self.ref != other.ref:
                 return VersionList()
             constraint = self.constraint.intersection(other.constraint)
-        elif isinstance(other, (StandardVersion, ClosedOpenRange)):
+        elif isinstance(other, StandardVersion):
+            return VersionList()
+        elif isinstance(other, ClosedOpenRange):
             constraint = self.constraint.intersection(other)
         else:
             return other.intersection(self)
@@ -656,7 +657,9 @@ class GitVersion(ConcreteVersion):
     def satisfies(self, other: VersionType) -> bool:
         if isinstance(other, GitVersion):
             return self.ref == other.ref and self.constraint.satisfies(other.constraint)
-        if isinstance(other, (StandardVersion, ClosedOpenRange)):
+        if isinstance(other, StandardVersion):
+            return False
+        if isinstance(other, ClosedOpenRange):
             return self.constraint.satisfies(other)
         if isinstance(other, VersionList):
             return any(self.satisfies(rhs) for rhs in other)
@@ -1051,12 +1054,7 @@ class VersionList(VersionType):
             if (i == 0 or not item.satisfies(self[i - 1])) and (
                 i == len(self) or not item.satisfies(self[i])
             ):
-                # A standard version covers every ref assigned it, and those sort right after
-                # it, so drop the run of elements it covers before inserting.
-                j = i
-                while j < len(self.versions) and self.versions[j].satisfies(item):
-                    j += 1
-                self.versions[i:j] = [item]
+                self.versions.insert(i, item)
 
         else:
             raise TypeError("Can't add %s to VersionList" % type(item))
