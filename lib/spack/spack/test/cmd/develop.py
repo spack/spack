@@ -19,6 +19,7 @@ from spack.config import Configuration
 from spack.error import SpackError
 from spack.fetch_strategy import URLFetchStrategy
 from spack.main import SpackCommand
+from spack.version.git_ref_lookup import GitRefLookup
 
 add = SpackCommand("add")
 develop = SpackCommand("develop")
@@ -79,13 +80,10 @@ class TestDevelop:
             develop("mpich@1.0")
             self.check_develop(e, spack.spec.Spec("mpich@=1.0"))
 
-    def test_develop_git_ref(self, tmp_path: pathlib.Path, mock_git_version_info, monkeypatch):
+    def test_develop_git_ref(self, tmp_path: pathlib.Path, monkeypatch):
         """A develop spec with a bare git ref gets its Spack version assigned when the
         environment is concretized."""
-        repo_path, _, _ = mock_git_version_info
-        monkeypatch.setattr(
-            spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
-        )
+        monkeypatch.setattr(GitRefLookup, "get", lambda self, ref: ("1.2", 0))
         env("create", "test")
         with ev.read("test") as e:
             develop("--no-clone", "-p", str(tmp_path), "git-test-commit@git.1.x")

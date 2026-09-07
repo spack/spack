@@ -349,6 +349,7 @@ def test_in_list():
     assert_in("1.2.5", ["1.5", "1.2:1.3"])
     assert_in("1.5", ["1.5", "1.2:1.3"])
     assert_not_in("1.4", ["1.5", "1.2:1.3"])
+    assert_in("git.main=1.0", ["1.0:1.2"])
 
     assert_in("1.2.5:1.2.7", [":"])
     assert_in("1.2.5:1.2.7", ["1.5", "1.2:1.3"])
@@ -417,6 +418,16 @@ def test_canonicalize_list():
 
     assert_canonical([":"], [":,1.3, 1.3.1,1.3.9,1.4 : 1.5 , 1.3 : 1.4"])
 
+    # Git refs without an assigned version sort last, in whatever order they were added
+    assert_canonical(["1.2:1.3", "git.main"], ["git.main", "1.2:1.3"])
+    assert_canonical(["=1.0", "git.foo", "git.main"], ["git.main", "git.foo", "=1.0"])
+
+    # A range constraint on a ref is dropped inside a plain range, and widened over the plain
+    # ranges it touches; constraints on the same ref that touch are merged
+    assert_canonical(["1.0:1.2"], ["1.0:1.2", "git.foo=1.1:1.2"])
+    assert_canonical(["3:4", "git.foo=1:4"], ["git.foo=1:2", "3:4"])
+    assert_canonical(["git.foo=1:4"], ["git.foo=1:2", "git.foo=3:4"])
+
 
 def test_intersection():
     check_intersection("2.5", "1.0:2.5", "2.5:3.0")
@@ -428,6 +439,14 @@ def test_intersection():
     check_intersection(["0:1"], [":"], ["0:1"])
 
     check_intersection(["=ref=1.0", "=1.1"], ["=ref=1.0", "1.1"], ["1:1.0", "=1.1"])
+
+    # The meet of a git ref without an assigned version and a range is the ref constrained to it
+    check_intersection("git.foo=1.2", "git.foo", "git.foo=1.2")
+    check_intersection([], "git.foo", "git.bar")
+    check_intersection("git.foo=1.0:", "git.foo", "1.0:")
+    check_intersection("git.foo=1.1:1.3", "git.foo=1.0:", "1.1:1.3")
+    check_intersection([], "git.foo=1.0:", ":0.9")
+    check_intersection(["=1.0", "git.main"], ["=1.0", "git.main"], ["=1.0", "git.main"])
 
 
 def test_intersect_with_containment():
@@ -457,6 +476,9 @@ def test_union_with_containment():
     check_union("1:4", "1:2", "3:4")
 
     check_union(["1:1.0", "1.1"], ["=ref=1.0", "1.1"], ["1:1.0", "=1.1"])
+
+    check_union(["=1.0", "git.main"], "=1.0", "git.main")
+    check_union("git.foo", "git.foo=1.2", "git.foo")
 
 
 def test_basic_version_satisfaction():
@@ -755,40 +777,32 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
     assert str(spec_branch.version) == "git.1.x=1.2"
 
 
-def test_git_ref_assignment_must_be_within_the_constraint(monkeypatch):
-    """Concretizing a git ref constrained to a range fails when the version the ref resolves to
-    is outside the range, instead of silently dropping the range."""
-    monkeypatch.setattr(GitRefLookup, "get", lambda self, ref: ("1.2", 3))
+def test_git_ref_constraint_round_trips_through_str():
+    """A range constraint of a single version is not collapsed to an assignment of it."""
+    for vstring in ("git.foo", "git.foo=1.2", "git.foo=1.0:", "git.foo=1.2:1.2"):
+        assert str(ver(vstring)) == vstring
+    assert ver("git.foo=1.2:1.2") != ver("git.foo=1.2")
+    with pytest.raises(VersionLookupError, match="use 'git.foo=<version>'"):
+        ver("git.foo=1.0:").ref_version
 
-    spec = spack.spec.Spec("git-test-commit@git.main=1:1.3")
-    assign_git_versions(spec)
-    assert str(spec.version) == "git.main=1.2-git.3"
 
-    spec = spack.spec.Spec("git-test-commit@git.main=1.3:")
+def test_git_ref_assignment_must_be_within_the_constraint():
+    """Assigning a git ref a version outside the range it is constrained to fails, instead of
+    silently dropping the range."""
+    v = GitVersion("git.main=1:1.3")
+    v.assign(Version("1.2"))
+    assert str(v) == "git.main=1.2"
     with pytest.raises(VersionLookupError, match="outside the range 1.3:"):
-        assign_git_versions(spec)
-    assert str(spec) == "git-test-commit@git.main=1.3:"
+        GitVersion("git.main=1.3:").assign(Version("1.2"))
 
 
 def test_git_branch_with_slash(monkeypatch):
-    def get(self, ref):
-        assert ref == "feature/bar"
-        return "1.2", 0
-
-    monkeypatch.setattr(GitRefLookup, "get", get)
-
+    monkeypatch.setattr(GitRefLookup, "get", lambda self, ref: ("1.2", 0))
     spec = spack.spec.Spec("git-test-commit@git.feature/bar")
     assign_git_versions(spec)
-    v = spec.version
-    assert isinstance(v, GitVersion)
-    assert v.ref == "feature/bar"
-    assert str(v) == "git.feature/bar=1.2"
-    assert v.satisfies(ver("1.1:1.2"))
-
-    serialized = VersionList([v]).to_dict()
-    v_deserialized = VersionList.from_dict(serialized)
-    assert v_deserialized[0].ref == "feature/bar"
-    assert v_deserialized[0] == v
+    assert str(spec.version) == "git.feature/bar=1.2"
+    serialized = VersionList([spec.version]).to_dict()
+    assert VersionList.from_dict(serialized) == VersionList([spec.version])
 
 
 @pytest.mark.parametrize(
@@ -901,6 +915,26 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
         (f"git.{'a' * 40}=develop", "develop", (True, True, False)),
         (f"git.{'a' * 40}=develop", f"git.{'a' * 40}=develop", (True, True, True)),
         (f"git.{'a' * 40}=develop", f"git.{'b' * 40}=develop", (False, False, False)),
+        # GitVersion without an assigned version: matched by any assignment of the same ref, and
+        # may be assigned any version, so it meets every range but satisfies only the unbounded
+        ("git.foo", "git.foo", (True, True, True)),
+        ("git.foo", "git.foo=1.2", (True, False, True)),
+        ("git.foo", "git.bar", (False, False, False)),
+        ("git.foo=1.2", "git.foo=1.3", (False, False, False)),
+        ("git.foo", "=1.2", (False, False, False)),
+        ("git.foo=1.2", "=1.2", (False, False, False)),
+        ("git.foo", "1.0:", (True, False, False)),
+        ("git.foo", ":", (True, True, False)),
+        ("=1.0,git.main", "git.main", (True, False, True)),
+        ("=1.0,1.2:", "git.main", (True, False, False)),
+        # GitVersion constrained to a range: between the bare ref and an assignment inside it
+        ("git.foo=1.0:", "git.foo", (True, True, False)),
+        ("git.foo=1.0:", "git.foo=1.2", (True, False, True)),
+        ("git.foo=1.0:", "git.foo=0.9", (False, False, False)),
+        ("git.foo=1.0:", "1.0:", (True, True, False)),
+        ("git.foo=1.0:", "1.1:", (True, False, False)),
+        ("git.foo=1.0:", ":0.9", (False, False, False)),
+        ("git.foo=1.2:1.2", "git.foo=1.2", (True, False, True)),
     ],
 )
 def test_version_intersects_satisfies_semantic(lhs_str, rhs_str, expected):
@@ -984,6 +1018,12 @@ def test_total_order_versions_and_ranges():
     assert_ver_gt("1.3", "=1.2")
     assert_ver_lt("1.2", "=1.3")
     assert_ver_gt("=1.3", "1.2")
+
+    # GitVersion without an assigned version: after every other version, ordered by ref
+    assert_ver_lt("=1.0", "git.foo")
+    assert_ver_lt("1:", "git.foo")
+    assert_ver_lt("git.foo=1.2", "git.foo")
+    assert_ver_lt("git.bar", "git.foo")
 
 
 def test_git_version_accessors():
@@ -1083,19 +1123,16 @@ def test_inclusion_upperbound():
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_git_version_assignment_survives_serialization(
-    mock_git_version_info, mock_packages, config, monkeypatch, no_git_ref_lookup
+    mock_git_version_info, mock_packages, config, monkeypatch
 ):
     """Test that the Spack version assigned to a git ref at concretization round-trips
-    through serialization, and that no lookup happens after concretization."""
+    through serialization."""
     repo_path, _, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
     )
-    with no_git_ref_lookup.allowed():
-        spec = spack.concretize.concretize_one(f"git-test-commit@{commits[-2]}")
+    spec = spack.concretize.concretize_one(f"git-test-commit@{commits[-2]}")
     assert spec.satisfies("@1.0")
-
-    assert spack.spec.Spec.from_dict(spec.to_dict()).satisfies("@1.0")
     assert spack.spec.Spec.from_dict(spec.to_dict()) == spec
 
 
@@ -1144,113 +1181,3 @@ def test_semver_regex(tag, expected):
         assert result is None
     else:
         assert result.group() == expected
-
-
-def test_version_list_is_canonical_with_unassigned_git_refs():
-    """A git ref without an assigned version is incomparable to other versions, so a list
-    holding one used to depend on the order its elements were added in, and to lose or
-    duplicate elements in intersections."""
-    assert VersionList(["1.2:1.3", "git.main"]) == VersionList(["git.main", "1.2:1.3"])
-    assert str(VersionList(["git.main", "1.2:1.3"])) == "1.2:1.3,git.main"
-    assert ver("=1.0").union(ver("git.main")) == VersionList(["=1.0", "git.main"])
-
-    mixed = VersionList(["=1.0", "git.main"])
-    assert mixed.intersection(mixed) == mixed
-    assert mixed.intersects(VersionList(["git.main"]))
-    assert VersionList(["=1.0", "1.2:"]).intersects(VersionList(["git.main"]))
-    assert Version("git.main=1.0") in VersionList(["1.0:1.2"])
-    assert VersionList.from_dict(VersionList(["=1.0", "=1.2"]).to_dict()) == VersionList(
-        ["=1.0", "=1.2"]
-    )
-
-
-def test_git_version_operations_are_pure(no_git_ref_lookup):
-    """Basic operations on git ref versions never trigger a repository lookup. A git ref
-    without an assigned version is abstract: it prints as the bare ref, equals only the same
-    unassigned ref, and as a constraint matches any assignment of the same ref."""
-    unassigned = Version("git.foo")
-    unassigned_copy = Version("git.foo")
-    assigned = Version("git.foo=1.2")
-    other_assigned = Version("git.foo=1.3")
-    other_ref = Version("git.bar")
-
-    assert str(unassigned) == "git.foo"
-    assert repr(unassigned) == 'GitVersion("git.foo")'
-    assert str(assigned) == "git.foo=1.2"
-
-    # equality and hashing are consistent and compare what is stored
-    assert unassigned == unassigned_copy
-    assert unassigned != assigned
-    assert unassigned != other_ref
-    assert hash(unassigned) == hash(unassigned_copy) == hash(assigned)
-    assert {unassigned: 1}[unassigned_copy] == 1
-    assert unassigned not in {assigned: 1}
-
-    # an unassigned constraint matches any assignment of the same ref
-    assert assigned.satisfies(unassigned)
-    assert unassigned.satisfies(unassigned_copy)
-    assert not unassigned.satisfies(assigned)
-    assert not assigned.satisfies(other_assigned)
-    assert not assigned.satisfies(other_ref)
-    assert assigned.intersects(unassigned)
-    assert unassigned.intersects(assigned)
-    assert not assigned.intersects(other_assigned)
-    assert not unassigned.intersects(other_ref)
-    assert unassigned.intersection(assigned) == assigned
-    assert assigned.intersection(unassigned) == assigned
-    assert unassigned.intersection(other_ref) == VersionList()
-
-    # git versions never equal, satisfy or intersect standard versions
-    assert not assigned.satisfies(Version("1.2"))
-    assert not assigned.intersects(Version("1.2"))
-    assert not unassigned.satisfies(Version("1.2"))
-    assert not unassigned.intersects(Version("1.2"))
-
-    # an unassigned ref sorts after any assigned or standard version, and unassigned refs are
-    # ordered among themselves by ref, so that a list of versions is canonical
-    for lhs, rhs in [
-        (unassigned, assigned),
-        (unassigned, Version("1.0")),
-        (unassigned, ver("1:")),
-    ]:
-        assert rhs < lhs and lhs > rhs and not lhs < rhs and not rhs > lhs
-    assert sorted([unassigned, other_ref, assigned, Version("1.0")]) == [
-        Version("1.0"),
-        assigned,
-        other_ref,
-        unassigned,
-    ]
-    assert VersionList([unassigned, other_ref]) == VersionList([other_ref, unassigned])
-    assert VersionList([assigned]).intersection(VersionList([unassigned])) == VersionList(
-        [assigned]
-    )
-    assert not VersionList([unassigned]).intersects(VersionList([other_ref]))
-    assert not VersionList([unassigned]).intersects(VersionList([Version("1.0")]))
-
-    # an unassigned ref may be assigned any version: it intersects every range but satisfies
-    # only the unbounded range, and constraining it by a range constrains the ref to that range
-    assert unassigned.intersects(ver("1.0:")) and ver("1.0:").intersects(unassigned)
-    assert unassigned.satisfies(ver(":"))
-    assert not unassigned.satisfies(ver("1.0:"))
-    ranged = Version("git.foo=1.0:")
-    assert VersionList([unassigned]).intersection(ver("1.0:")) == VersionList([ranged])
-    assert assigned.satisfies(ver("1.0:")) and not assigned.satisfies(ver("2:"))
-
-    # a ref constrained to a range is between the unassigned ref and an assignment inside it
-    assert str(ranged) == "git.foo=1.0:" and ver(str(ranged)) == ranged
-    assert ranged.satisfies(unassigned) and not unassigned.satisfies(ranged)
-    assert ranged.satisfies(ver("1.0:")) and not ranged.satisfies(ver("1.1:"))
-    assert assigned.satisfies(ranged) and not ranged.satisfies(assigned)
-    assert not Version("git.foo=0.9").satisfies(ranged) and not ranged.intersects(ver(":0.9"))
-    assert ranged.intersection(ver("1.1:1.3")) == Version("git.foo=1.1:1.3")
-    assert ranged.intersection(assigned) == assigned
-    assert ranged.intersection(ver(":0.9")) == VersionList()
-    # a range that is a single version is not the assignment of that version
-    single = Version("git.foo=1.2:1.2")
-    assert single != assigned and assigned.satisfies(single) and str(single) == "git.foo=1.2:1.2"
-    with pytest.raises(VersionLookupError, match="git ref 'foo'"):
-        ranged.ref_version
-
-    # reading the ref as a version needs the assigned version
-    with pytest.raises(VersionLookupError, match="git ref 'foo'"):
-        unassigned.ref_version

@@ -796,16 +796,7 @@ def specfile_for(config, mock_packages):
             ],
             "git-test@git.foo/bar=1.2:1.3",
         ),
-        # Git refs as elements of a version list. A range constraint on a ref is widened over
-        # the plain ranges it touches, which cover the ref anyway, to keep the list canonical.
-        (
-            "git-test@git.foo=1:2,3:4",
-            [
-                Token("UNQUALIFIED_PACKAGE_NAME", "git-test"),
-                Token("VERSION", "@git.foo=1:2,3:4", version_list="git.foo=1:2,3:4"),
-            ],
-            "git-test@3:4,git.foo=1:4",
-        ),
+        # Git refs as elements of a version list, which is canonical
         (
             "git-test@git.main,1.2:1.3,git.foo=1:2,git.foo=3:4",
             [
