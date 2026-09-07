@@ -101,8 +101,9 @@ def assert_does_not_satisfy(v1, v2):
 
 
 def check_intersection(expected, a, b):
-    """Asserts that 'a' intersect 'b' == 'expected'."""
+    """Asserts that 'a' intersect 'b' == 'expected', from either side."""
     assert ver(expected) == ver(a).intersection(ver(b))
+    assert ver(expected) == ver(b).intersection(ver(a))
 
 
 def check_union(expected, a, b):
@@ -427,6 +428,8 @@ def test_intersection():
     check_intersection(["1.0", "2.5:2.7"], ["1.0:2.7"], ["2.5:3.0", "1.0"])
     check_intersection(["2.5:2.7"], ["1.1:2.7"], ["2.5:3.0", "1.0"])
     check_intersection(["0:1"], [":"], ["0:1"])
+    check_intersection(["1.0", "2.5:2.7"], "1.0:2.7", ["2.5:3.0", "1.0"])
+    check_intersection([], "1.0:1.2", ["3.0"])
 
     check_intersection(["=ref=1.0", "=1.1"], ["=ref=1.0", "1.1"], ["1:1.0", "=1.1"])
 
@@ -881,6 +884,10 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
         ("4.7.3", "4.7", (True, True, False)),
         ("4.7.3", "4", (True, True, False)),
         ("4.7.3", "4.8", (False, False, False)),
+        # VersionList
+        ("4.7.3", "4.3:4.5,4.7", (True, True, False)),
+        ("4.7.3", "4.3:4.5,4.8", (False, False, False)),
+        ("4.7", "4.6,=4.7", (True, False, False)),
         # GitVersion
         (f"git.{'a' * 40}=develop", "develop", (True, True, False)),
         (f"git.{'a' * 40}=develop", f"git.{'a' * 40}=develop", (True, True, True)),
