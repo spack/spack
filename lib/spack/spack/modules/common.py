@@ -574,6 +574,12 @@ class BaseConfiguration:
         filter_subsection = self.conf.get("filter", {})
         return filter_subsection.get("exclude_env_vars", [])
 
+    @property
+    def exclude_variants(self) -> List[str]:
+        """List of variants that should not be defined."""
+        filter_subsection = self.conf.get("filter", {})
+        return filter_subsection.get("exclude_variants", [])
+
     def _create_list_for(self, what: str) -> List[spack.spec.Spec]:
         return [
             item
@@ -733,6 +739,21 @@ class BaseConfiguration:
     def _compute_missing(self) -> List[str]:
         return [x for x in self.hierarchy_tokens if x not in self.available]
 
+    @property
+    def variants_mode(self) -> str:
+        """Returns module file variants definition mode."""
+        return "none"
+
+    @property
+    def variants(self) -> Dict[str, Dict[str, Any]]:
+        """Returns an empty dictionary if variant mode is not supported."""
+        return {}
+
+    @property
+    def variants_spec(self) -> str:
+        """Returns aggregated spec string of variants."""
+        return ""
+
 
 class FileLayout:
     """Provides information on the layout of module files."""
@@ -761,8 +782,8 @@ class FileLayout:
         return self.conf.root
 
     @property
-    def use_name(self) -> str:
-        """Returns the name used to load the module (e.g. with ``module load``)."""
+    def name(self) -> str:
+        """Returns the name of the module file in the modulepath directory."""
         projection = proj.get_projection(self.conf.projections, self.spec)
         if not projection:
             projection = self.conf.default_projections["all"]
@@ -775,6 +796,13 @@ class FileLayout:
         path_elements = [name]
         path_elements.extend(map(self.spec.format, self.conf.suffixes))
         return "-".join(path_elements)
+
+    @property
+    def use_name(self) -> str:
+        """Returns the name used to load the module (e.g. with ``module load``)."""
+        if self.conf.variants:
+            return f"{self.name} {self.conf.variants_spec}"
+        return self.name
 
     @property
     def arch_dirname(self) -> str:
@@ -793,9 +821,9 @@ class FileLayout:
     def filename(self) -> str:
         """Absolute path to the module file for the current spec."""
         # Just the name of the file
-        filename = self.use_name
+        filename = self.name
         if self.conf.file_extension:
-            filename = f"{self.use_name}.{self.conf.file_extension}"
+            filename += f".{self.conf.file_extension}"
 
         if self.conf.hierarchical:
             # Get the list of requirements and build an **ordered**
@@ -1223,6 +1251,21 @@ class ModuleContext(tengine.Context):
                 value.append((condition, self.conf.join_path(parts)))
         return value
 
+    @tengine.context_property
+    def variants(self) -> Dict[str, Dict[str, Any]]:
+        """Returns a dict of defined variants keyed by variant name."""
+        return self.conf.variants
+
+    @tengine.context_property
+    def variants_spec(self) -> str:
+        """Returns aggregated spec string of variants."""
+        return self.conf.variants_spec
+
+    @tengine.context_property
+    def hash(self) -> str:
+        """Returns hash of this installation"""
+        return self.spec.dag_hash(length=7)
+
 
 class BaseModuleFileWriter:
     default_template: str
@@ -1377,7 +1420,7 @@ class BaseModuleFileWriter:
                 removed from modulerc.
         """
         modulerc_path = self.layout.modulerc
-        hide_module_cmd = self.hide_cmd_format % self.layout.use_name
+        hide_module_cmd = self.hide_cmd_format % self.layout.name
         hidden = self.conf.hidden and not remove
         modulerc_exists = os.path.exists(modulerc_path)
         updated = False
