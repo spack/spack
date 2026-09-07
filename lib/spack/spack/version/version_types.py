@@ -618,6 +618,16 @@ class GitVersion(ConcreteVersion):
             return VersionList()
         return other.intersection(self)
 
+    def union(self, other: VersionType) -> VersionType:
+        if isinstance(other, GitVersion):
+            if self.satisfies(other):
+                return other
+            if other.satisfies(self):
+                return self
+        result = VersionList([self])
+        result.add(other)
+        return result
+
     def satisfies(self, other: VersionType) -> bool:
         if isinstance(other, GitVersion):
             # An unassigned constraint matches any assignment of the same ref
@@ -705,7 +715,9 @@ class GitVersion(ConcreteVersion):
         return hash(self.ref)
 
     def __contains__(self, other: object) -> bool:
-        raise NotImplementedError
+        if isinstance(other, VersionType):
+            return other.satisfies(self)
+        raise TypeError(f"'in' not supported for instances of {type(other)}")
 
     def __iter__(self):
         return self.ref_version.__iter__()
@@ -905,8 +917,21 @@ class ClosedOpenRange(VersionType):
         raise TypeError(f"'intersection()' not supported for instances of {type(other)}")
 
 
+def _is_unassigned_ref(v: VersionType) -> bool:
+    return isinstance(v, GitVersion) and v.std_version is None
+
+
+def _element_str(v: VersionType) -> str:
+    return f"={v}" if type(v) is StandardVersion else str(v)
+
+
 class VersionList(VersionType):
-    """Sorted, non-redundant list of Version and ClosedOpenRange elements."""
+    """Sorted, non-redundant list of Version and ClosedOpenRange elements.
+
+    The list is canonical: two lists denoting the same set of versions are equal, however they
+    were built. Standard versions, ranges and git refs with an assigned version come first, in
+    their total order. Git refs without an assigned version are incomparable to those, so they
+    form a tail of their own, ordered by ref."""
 
     __slots__ = ("versions",)
 
@@ -937,9 +962,17 @@ class VersionList(VersionType):
         else:
             raise TypeError(f"Cannot construct VersionList from {type(vlist)}")
 
+    def _tail_start(self) -> int:
+        """The index where the git refs without an assigned version start."""
+        i = len(self.versions)
+        while i > 0 and _is_unassigned_ref(self.versions[i - 1]):
+            i -= 1
+        return i
+
     def add(self, item: VersionType) -> None:
         if isinstance(item, ClosedOpenRange):
-            i = bisect_left(self, item)
+            tail = self._tail_start()
+            i = bisect_left(self.versions, item, 0, tail)
 
             # Note: can span multiple concrete versions to the left (as well as to the right).
             # For instance insert 1.2: into [1.2, hash=1.2, 1.3, 1.4:1.5]
@@ -951,25 +984,44 @@ class VersionList(VersionType):
                 item = union
                 del self.versions[i - 1]
                 i -= 1
+                tail -= 1
 
-            while i < len(self):
+            while i < tail:
                 union = item._union_if_not_disjoint(self[i])
                 if union is None:
                     break
                 item = union
                 del self.versions[i]
+                tail -= 1
 
             self.versions.insert(i, item)
+            # Only the unbounded range covers git refs without an assigned version.
+            kept = [v for v in self.versions[tail + 1 :] if not v.satisfies(item)]
+            del self.versions[tail + 1 :]
+            self.versions.extend(kept)
 
         elif isinstance(item, VersionList):
             for v in item:
                 self.add(v)
 
+        elif _is_unassigned_ref(item):
+            # Skip when already covered: by the same ref, or by the unbounded range.
+            if any(item.satisfies(v) for v in self.versions):
+                return
+            # An unassigned ref covers every assigned version of the same ref.
+            self.versions = [v for v in self.versions if not v.satisfies(item)]
+            i = bisect_left(self.versions, item, self._tail_start())
+            self.versions.insert(i, item)
+
         elif isinstance(item, (StandardVersion, GitVersion)):
-            i = bisect_left(self, item)
-            # Only insert when prev and next are not intersected.
-            if (i == 0 or not item.intersects(self[i - 1])) and (
-                i == len(self) or not item.intersects(self[i])
+            tail = self._tail_start()
+            # Skip when covered by an unassigned ref.
+            if any(item.satisfies(v) for v in self.versions[tail:]):
+                return
+            i = bisect_left(self.versions, item, 0, tail)
+            # Only insert when prev and next do not cover it.
+            if (i == 0 or not item.satisfies(self[i - 1])) and (
+                i == tail or not item.satisfies(self[i])
             ):
                 self.versions.insert(i, item)
 
@@ -1029,19 +1081,24 @@ class VersionList(VersionType):
         raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
 
     def intersects(self, other: VersionType) -> bool:
-        if isinstance(other, (ClosedOpenRange, StandardVersion)):
+        if isinstance(other, (ClosedOpenRange, ConcreteVersion)):
             return any(v.intersects(other) for v in self)
 
         if isinstance(other, VersionList):
+            # Walk the two sorted prefixes in lockstep
+            s_tail, o_tail = self._tail_start(), other._tail_start()
             s = o = 0
-            while s < len(self) and o < len(other):
+            while s < s_tail and o < o_tail:
                 if self[s].intersects(other[o]):
                     return True
                 elif self[s] < other[o]:
                     s += 1
                 else:
                     o += 1
-            return False
+            # The unassigned refs are not ordered against the prefixes: check them one by one
+            return any(v.intersects(other) for v in self.versions[s_tail:]) or any(
+                v.intersects(self) for v in other.versions[o_tail:]
+            )
 
         raise TypeError(f"'intersects()' not supported for instances of {type(other)}")
 
@@ -1049,7 +1106,7 @@ class VersionList(VersionType):
         """Generate human-readable dict for YAML."""
         if self.concrete:
             return {"version": str(self[0])}
-        return {"versions": [str(v) for v in self]}
+        return {"versions": [_element_str(v) for v in self]}
 
     @staticmethod
     def from_dict(dictionary) -> "VersionList":
@@ -1078,13 +1135,25 @@ class VersionList(VersionType):
     def intersection(self, other: VersionType) -> "VersionList":
         result = VersionList()
         if isinstance(other, VersionList):
-            for lhs, rhs in ((self, other), (other, self)):
-                for x in lhs:
-                    i = bisect_left(rhs.versions, x)
+            s_tail, o_tail = self._tail_start(), other._tail_start()
+            # Every element of a sorted prefix meets at most its two neighbors in the other one
+            for lhs, lhs_tail, rhs, rhs_tail in (
+                (self, s_tail, other, o_tail),
+                (other, o_tail, self, s_tail),
+            ):
+                for x in lhs.versions[:lhs_tail]:
+                    i = bisect_left(rhs.versions, x, 0, rhs_tail)
                     if i > 0:
                         result.add(rhs[i - 1].intersection(x))
-                    if i < len(rhs):
+                    if i < rhs_tail:
                         result.add(rhs[i].intersection(x))
+            # The unassigned refs are not ordered against the prefixes: meet them one by one
+            for x in self.versions[s_tail:]:
+                for y in other.versions:
+                    result.add(x.intersection(y))
+            for x in other.versions[o_tail:]:
+                for y in self.versions[:s_tail]:
+                    result.add(x.intersection(y))
             return result
         else:
             return self.intersection(VersionList(other))
@@ -1101,13 +1170,8 @@ class VersionList(VersionType):
 
     # typing this and getitem are a pain in Python 3.6
     def __contains__(self, other):
-        if isinstance(other, (ClosedOpenRange, StandardVersion)):
-            i = bisect_left(self, other)
-            return (i > 0 and other in self[i - 1]) or (i < len(self) and other in self[i])
-
-        if isinstance(other, VersionList):
-            return all(item in self for item in other)
-
+        if isinstance(other, VersionType):
+            return other.satisfies(self)
         return False
 
     def __getitem__(self, index):
@@ -1162,7 +1226,7 @@ class VersionList(VersionType):
         if not self.versions:
             return ""
 
-        return ",".join(f"={v}" if type(v) is StandardVersion else str(v) for v in self.versions)
+        return ",".join(_element_str(v) for v in self.versions)
 
     def __repr__(self) -> str:
         return str(self.versions)

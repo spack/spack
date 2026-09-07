@@ -1131,6 +1131,24 @@ def test_semver_regex(tag, expected):
         assert result.group() == expected
 
 
+def test_version_list_is_canonical_with_unassigned_git_refs():
+    """A git ref without an assigned version is incomparable to other versions, so a list
+    holding one used to depend on the order its elements were added in, and to lose or
+    duplicate elements in intersections."""
+    assert VersionList(["1.2:1.3", "git.main"]) == VersionList(["git.main", "1.2:1.3"])
+    assert str(VersionList(["git.main", "1.2:1.3"])) == "1.2:1.3,git.main"
+    assert ver("=1.0").union(ver("git.main")) == VersionList(["=1.0", "git.main"])
+
+    mixed = VersionList(["=1.0", "git.main"])
+    assert mixed.intersection(mixed) == mixed
+    assert mixed.intersects(VersionList(["git.main"]))
+    assert VersionList(["=1.0", "1.2:"]).intersects(VersionList(["git.main"]))
+    assert Version("git.main=1.0") in VersionList(["1.0:1.2"])
+    assert VersionList.from_dict(VersionList(["=1.0", "=1.2"]).to_dict()) == VersionList(
+        ["=1.0", "=1.2"]
+    )
+
+
 def test_git_version_operations_are_pure(no_git_ref_lookup):
     """Basic operations on git ref versions never trigger a repository lookup. A git ref
     without an assigned version is abstract: it prints as the bare ref, equals only the same
