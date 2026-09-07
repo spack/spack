@@ -36,12 +36,8 @@ SEMVER_REGEX = re.compile(rf"{_SEMVER}$")
 
 
 class GitRefLookup:
-    """An object for cached lookups of git refs
-
-    GitRefLookup objects delegate to the MISC_CACHE for locking. GitRefLookup objects may
-    be attached to a GitVersion to allow for comparisons between git refs and versions as
-    represented by tags in the git repository.
-    """
+    """An object for cached lookups of git refs. GitRefLookup objects delegate to the MISC_CACHE
+    for locking."""
 
     def __init__(self, pkg_name):
         self.pkg_name = pkg_name
