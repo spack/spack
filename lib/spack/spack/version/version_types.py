@@ -513,18 +513,24 @@ class StandardVersion(ConcreteVersion):
         return self.up_to(3)
 
 
+#: What a git ref may stand for: the Spack version it is assigned, or a range of them.
+GitConstraint = Union[StandardVersion, "ClosedOpenRange"]
+
+
 class GitVersion(ConcreteVersion):
     """Class to represent versions interpreted from git refs.
 
-    There are two distinct categories of git versions:
+    A git version is a ref together with a constraint on the Spack version the ref stands for:
 
-    1) GitVersions instantiated with an associated reference version (e.g. ``git.foo=1.2``)
-    2) GitVersions with a bare ref (e.g. ``git.foo``), assigned a version at concretization
+    1) ``git.foo=1.2``: the ref is assigned the version 1.2, and is concrete
+    2) ``git.foo``: the ref may stand for any version, and is assigned one at concretization
+    3) ``git.foo=1.2:1.3``: the ref may stand for any version in the range, and the one it is
+       assigned at concretization must be in it. This is the meet of ``git.foo`` and ``1.2:1.3``.
 
-    Git versions without an associated StandardVersion currently break the algebra of version
-    comparison, so some operations are best-effort: they intersects every version range, satisfy
-    only ``@:``, and are ordered only against other unassigned refs, by ref. The intersection with
-    a range keeps the bare ref because it's more specific, even though the range could be disjoint.
+    A git version denotes the set of assignments its constraint allows, so it satisfies a range
+    when its constraint does, intersects one when its constraint does, and its meet with one
+    narrows the constraint. Git versions with a range constraint are ordered among themselves by
+    ref and constraint, and are incomparable to everything else.
 
     Assignment queries the git repo for the most recent version previous to this git ref, as
     well as the distance between them expressed as a number of commits. If the previous
@@ -550,15 +556,14 @@ class GitVersion(ConcreteVersion):
     sufficient.
     """
 
-    __slots__ = ("has_git_prefix", "commit_sha", "ref", "is_commit", "std_version")
+    __slots__ = ("has_git_prefix", "commit_sha", "ref", "is_commit", "constraint")
 
     def __init__(self, string: str):
         # TODO will be required for concrete specs when commit lookup added
         self.commit_sha: Optional[str] = None
-        self.std_version: Optional[StandardVersion] = None
 
-        # optional user supplied git ref
-        self.ref: Optional[str] = None
+        #: The Spack versions this ref may stand for: the version it is assigned, or a range
+        self.constraint: "GitConstraint"
 
         self.has_git_prefix = string.startswith("git.")
 
@@ -566,14 +571,15 @@ class GitVersion(ConcreteVersion):
         normalized_string = string[4:] if self.has_git_prefix else string
 
         if "=" in normalized_string:
-            # Store the git reference, and parse the user provided version.
-            self.ref, spack_version = normalized_string.split("=")
-            self.std_version = StandardVersion(
-                spack_version, *parse_string_components(spack_version)
-            )
+            # Store the git reference, and parse the user provided version or range.
+            self.ref, constraint = normalized_string.split("=")
+            if ":" in constraint:
+                self.constraint = _parse_range(constraint)
+            else:
+                self.constraint = StandardVersion.from_string(constraint)
         else:
-            self.std_version = None
             self.ref = normalized_string
+            self.constraint = _UNBOUNDED_RANGE
 
         # Used by fetcher
         self.is_commit: bool = is_git_commit_sha(self.ref)
@@ -581,6 +587,31 @@ class GitVersion(ConcreteVersion):
         # translations
         if self.is_commit:
             self.commit_sha = self.ref
+
+    def _with_constraint(self, constraint: "GitConstraint") -> "GitVersion":
+        """The same ref under another constraint."""
+        result = GitVersion.__new__(GitVersion)
+        result.has_git_prefix = self.has_git_prefix
+        result.commit_sha = self.commit_sha
+        result.ref = self.ref
+        result.is_commit = self.is_commit
+        result.constraint = constraint
+        return result
+
+    @property
+    def std_version(self) -> Optional[StandardVersion]:
+        """The Spack version assigned to this ref, or None while it is only constrained."""
+        return self.constraint if isinstance(self.constraint, StandardVersion) else None
+
+    def assign(self, version: StandardVersion) -> None:
+        """Assign the Spack version this ref stands for. Raises a ``VersionLookupError`` when
+        the version is outside the constraint on the ref."""
+        if not version.satisfies(self.constraint):
+            raise VersionLookupError(
+                f"git ref '{self.ref}' corresponds to version {version}, "
+                f"which is outside the range {self.constraint} it is constrained to"
+            )
+        self.constraint = version
 
     @property
     def ref_version(self) -> StandardVersion:
@@ -595,28 +626,29 @@ class GitVersion(ConcreteVersion):
 
     def intersects(self, other: VersionType) -> bool:
         if isinstance(other, GitVersion):
-            return self.satisfies(other) or other.satisfies(self)
+            return self.ref == other.ref and self.constraint.intersects(other.constraint)
         if isinstance(other, StandardVersion):
             return False
         if isinstance(other, ClosedOpenRange):
-            if self.std_version is None:
-                # We have insufficient information to determine whether an unassigned git ref is
-                # disjoint from a range. Conservatively, assume intersection.
-                return True
-            return self.std_version.intersects(other)
+            return self.constraint.intersects(other)
         if isinstance(other, VersionList):
             return any(self.intersects(rhs) for rhs in other)
         raise TypeError(f"'intersects()' not supported for instances of {type(other)}")
 
     def intersection(self, other: VersionType) -> VersionType:
         if isinstance(other, GitVersion):
-            if not self.intersects(other):
+            if self.ref != other.ref:
                 return VersionList()
-            # Prefer the side with an assigned version
-            return other if self.std_version is None else self
-        if isinstance(other, StandardVersion):
+            constraint = self.constraint.intersection(other.constraint)
+        elif isinstance(other, StandardVersion):
             return VersionList()
-        return other.intersection(self)
+        elif isinstance(other, ClosedOpenRange):
+            constraint = self.constraint.intersection(other)
+        else:
+            return other.intersection(self)
+        if isinstance(constraint, (StandardVersion, ClosedOpenRange)):
+            return self._with_constraint(constraint)
+        return VersionList()
 
     def union(self, other: VersionType) -> VersionType:
         if isinstance(other, GitVersion):
@@ -630,28 +662,26 @@ class GitVersion(ConcreteVersion):
 
     def satisfies(self, other: VersionType) -> bool:
         if isinstance(other, GitVersion):
-            # An unassigned constraint matches any assignment of the same ref
-            return self.ref == other.ref and (
-                other.std_version is None or self.std_version == other.std_version
-            )
+            return self.ref == other.ref and self.constraint.satisfies(other.constraint)
         if isinstance(other, StandardVersion):
             return False
         if isinstance(other, ClosedOpenRange):
-            if self.std_version is None:
-                # We have insufficient information to determine whether an unassigned git ref
-                # satisfies a range; the best we know is that it satisfies the unbounded range.
-                return other == _UNBOUNDED_RANGE
-            return self.std_version.satisfies(other)
+            return self.constraint.satisfies(other)
         if isinstance(other, VersionList):
             return any(self.satisfies(rhs) for rhs in other)
         raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
 
     def __str__(self) -> str:
-        s = ""
-        if self.ref:
-            s += f"git.{self.ref}" if self.has_git_prefix else self.ref
-        if self.std_version is not None:
-            s += f"={self.std_version}"
+        s = f"git.{self.ref}" if self.has_git_prefix else self.ref
+        if isinstance(self.constraint, StandardVersion):
+            s += f"={self.constraint}"
+        elif self.constraint != _UNBOUNDED_RANGE:
+            # Never collapse lo:lo to lo, which would read as an assigned version.
+            lo, hi = self.constraint.lo, _prev_version(self.constraint.hi)
+            s += "={}:{}".format(
+                "" if lo == _STANDARD_VERSION_TYPEMIN else lo,
+                "" if hi == _STANDARD_VERSION_TYPEMAX else hi,
+            )
         return s
 
     def __repr__(self):
@@ -665,7 +695,7 @@ class GitVersion(ConcreteVersion):
         return (
             isinstance(other, GitVersion)
             and self.ref == other.ref
-            and self.std_version == other.std_version
+            and self.constraint == other.constraint
         )
 
     def __ne__(self, other: object) -> bool:
@@ -677,15 +707,17 @@ class GitVersion(ConcreteVersion):
         the git ref will correspond to."""
         if isinstance(other, GitVersion):
             if self.std_version is None and other.std_version is None:
-                # both unasigned, order by ref
-                lhs, rhs = self.ref or "", other.ref or ""
-                return (lhs > rhs) - (lhs < rhs)
+                # both unassigned, order by ref then constraint
+                lhs_ranged = (self.ref, self.constraint)
+                rhs_ranged = (other.ref, other.constraint)
+                return (lhs_ranged > rhs_ranged) - (lhs_ranged < rhs_ranged)
             if self.std_version is None or other.std_version is None:
                 # one is unassigned, incomparable
                 return None
             # both assigned, order by assigned version then ref
-            lhs_key, rhs_key = (self.std_version, self.ref), (other.std_version, other.ref)
-            return (lhs_key > rhs_key) - (lhs_key < rhs_key)
+            lhs_assigned = (self.std_version, self.ref)
+            rhs_assigned = (other.std_version, other.ref)
+            return (lhs_assigned > rhs_assigned) - (lhs_assigned < rhs_assigned)
         if not isinstance(other, (StandardVersion, ClosedOpenRange)):
             raise TypeError(f"ordering not supported between {type(self)} and {type(other)}")
         if self.std_version is None:
@@ -911,13 +943,17 @@ class ClosedOpenRange(VersionType):
             min_hi = min(self.hi, other.hi)
             return ClosedOpenRange(max_lo, min_hi) if max_lo < min_hi else VersionList()
 
-        if isinstance(other, ConcreteVersion):
+        if isinstance(other, GitVersion):
+            return other.intersection(self)
+
+        if isinstance(other, StandardVersion):
             return other if self.intersects(other) else VersionList()
 
         raise TypeError(f"'intersection()' not supported for instances of {type(other)}")
 
 
 def _is_unassigned_ref(v: VersionType) -> bool:
+    """Whether ``v`` is a git ref that is constrained to a range rather than assigned a version."""
     return isinstance(v, GitVersion) and v.std_version is None
 
 
@@ -931,7 +967,12 @@ class VersionList(VersionType):
     The list is canonical: two lists denoting the same set of versions are equal, however they
     were built. Standard versions, ranges and git refs with an assigned version come first, in
     their total order. Git refs without an assigned version are incomparable to those, so they
-    form a tail of their own, ordered by ref."""
+    form a tail of their own, ordered by ref and constraint.
+
+    A plain range covers every git ref inside it, so a range constraint on a ref that lies
+    inside one is dropped, and one that overlaps or touches a plain range is widened to include
+    it, since the part outside a plain range cannot always be written down. That keeps the list
+    a function of what was added and not of the order it was added in."""
 
     __slots__ = ("versions",)
 
@@ -969,6 +1010,38 @@ class VersionList(VersionType):
             i -= 1
         return i
 
+    def _add_ranged_ref(self, item: GitVersion) -> None:
+        """Add a git ref constrained to a range."""
+        # Skip when already covered: by a plain range, or by a wider constraint on the ref.
+        if any(item.satisfies(v) for v in self.versions):
+            return
+        # It covers assigned versions of the ref and narrower constraints on it.
+        self.versions = [v for v in self.versions if not v.satisfies(item)]
+        # Widen it over the plain ranges it touches, and merge it with the constraints on the
+        # same ref it then touches, until nothing touches it anymore.
+        constraint = item.constraint
+        assert isinstance(constraint, ClosedOpenRange)
+        widened = True
+        while widened:
+            widened = False
+            for v in list(self.versions):
+                if isinstance(v, ClosedOpenRange):
+                    union = constraint._union_if_not_disjoint(v)
+                    if union is not None and union != constraint:
+                        constraint, widened = union, True
+                elif (
+                    isinstance(v, GitVersion)
+                    and v.ref == item.ref
+                    and isinstance(v.constraint, ClosedOpenRange)
+                ):
+                    union = constraint._union_if_not_disjoint(v.constraint)
+                    if union is not None:
+                        constraint, widened = union, True
+                        self.versions.remove(v)
+        item = item._with_constraint(constraint)
+        i = bisect_left(self.versions, item, self._tail_start())
+        self.versions.insert(i, item)
+
     def add(self, item: VersionType) -> None:
         if isinstance(item, ClosedOpenRange):
             tail = self._tail_start()
@@ -995,23 +1068,25 @@ class VersionList(VersionType):
                 tail -= 1
 
             self.versions.insert(i, item)
-            # Only the unbounded range covers git refs without an assigned version.
-            kept = [v for v in self.versions[tail + 1 :] if not v.satisfies(item)]
+            # Drop the constraints on git refs it covers, and re-add the ones it touches so that
+            # they are widened over it.
+            refs = self.versions[tail + 1 :]
             del self.versions[tail + 1 :]
-            self.versions.extend(kept)
+            for v in refs:
+                assert isinstance(v, GitVersion) and isinstance(v.constraint, ClosedOpenRange)
+                if v.satisfies(item):
+                    continue
+                if v.constraint._union_if_not_disjoint(item) is None:
+                    self.versions.append(v)
+                else:
+                    self._add_ranged_ref(v)
 
         elif isinstance(item, VersionList):
             for v in item:
                 self.add(v)
 
-        elif _is_unassigned_ref(item):
-            # Skip when already covered: by the same ref, or by the unbounded range.
-            if any(item.satisfies(v) for v in self.versions):
-                return
-            # An unassigned ref covers every assigned version of the same ref.
-            self.versions = [v for v in self.versions if not v.satisfies(item)]
-            i = bisect_left(self.versions, item, self._tail_start())
-            self.versions.insert(i, item)
+        elif isinstance(item, GitVersion) and isinstance(item.constraint, ClosedOpenRange):
+            self._add_ranged_ref(item)
 
         elif isinstance(item, (StandardVersion, GitVersion)):
             tail = self._tail_start()
@@ -1346,6 +1421,14 @@ def VersionRange(lo: Union[str, StandardVersion], hi: Union[str, StandardVersion
     return ClosedOpenRange.from_version_range(lo, hi)
 
 
+def _parse_range(string: str) -> ClosedOpenRange:
+    """Parse ``lo:hi``, ``lo:``, ``:hi`` or ``:`` into a range."""
+    s, e = string.split(":")
+    lo = _STANDARD_VERSION_TYPEMIN if s == "" else StandardVersion.from_string(s)
+    hi = _STANDARD_VERSION_TYPEMAX if e == "" else StandardVersion.from_string(e)
+    return VersionRange(lo, hi)
+
+
 def from_string(string: str) -> VersionType:
     """Converts a string to a version object. This is private. Client code should use ver()."""
     string = string.replace(" ", "")
@@ -1354,20 +1437,18 @@ def from_string(string: str) -> VersionType:
     if "," in string:
         return VersionList([from_string(x) for x in string.split(",")])
 
-    # ClosedOpenRange
-    elif ":" in string:
-        s, e = string.split(":")
-        lo = _STANDARD_VERSION_TYPEMIN if s == "" else StandardVersion.from_string(s)
-        hi = _STANDARD_VERSION_TYPEMAX if e == "" else StandardVersion.from_string(e)
-        return VersionRange(lo, hi)
-
     # StandardVersion
     elif string.startswith("="):
         # @=1.2.3 is an exact version
         return Version(string[1:])
 
+    # GitVersion, possibly constrained to a range
     elif is_git_version(string):
         return GitVersion(string)
+
+    # ClosedOpenRange
+    elif ":" in string:
+        return _parse_range(string)
 
     else:
         # @1.2.3 is short for 1.2.3:1.2.3

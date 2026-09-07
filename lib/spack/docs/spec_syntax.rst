@@ -283,6 +283,10 @@ For example:
    foo@git.my_ref=3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # use the given commit, but treat it as develop for version comparisons
 
+A version range after the ``=`` constrains the Spack version the git ref may be associated with, without fixing it.
+This is what constraining a git ref by a version range yields: ``foo@git.my_ref`` together with ``foo@3:4`` is ``foo@git.my_ref=3:4``.
+Concretization then fails if the version resolved from the git ref falls outside the range.
+
 Details about how versions are compared and how Spack determines if one version is less than another are discussed in the developer guide.
 
 .. index::

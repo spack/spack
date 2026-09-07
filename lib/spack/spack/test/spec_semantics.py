@@ -3414,28 +3414,24 @@ def test_git_ref_spec_operations_are_pure(no_git_ref_lookup):
     assert constrained == assigned
 
     # an unassigned ref may still be assigned any version: it is inside an unconstrained spec,
-    # intersects every version range, and constraining it by one keeps the bare ref
+    # intersects every version range, and constraining it by one constrains the ref to it
     assert spec.satisfies(Spec("git-test-commit"))
     assert not spec.satisfies(Spec("git-test-commit@1.0"))
     assert spec.intersects(Spec("git-test-commit@1.0"))
     narrowed = spec.copy()
-    assert not narrowed.constrain(Spec("git-test-commit@1.0"))
-    assert narrowed == spec
+    assert narrowed.constrain(Spec("git-test-commit@1.0"))
+    assert narrowed == Spec("git-test-commit@git.main=1.0:1.0")
+    assert str(narrowed) == "git-test-commit@git.main=1.0:1.0"
+    assert narrowed.satisfies(spec) and narrowed.satisfies("@1.0") and not spec.satisfies(narrowed)
+    assert assigned.satisfies(narrowed)
+    assert not Spec("git-test-commit@git.main=2.0").satisfies(narrowed)
 
 
-# The meet of a git ref without an assigned version and a proper version range cannot be
-# expressed in the spec language. For example, ``@git.main`` and ``@1:3`` intersect because
-# ``@git.main=2.0`` satisfies both, but the meet of the two is not expressible: it would be
-# "git.main, assigned within 1:3". The current implementation takes ``@git.main`` as the meet,
-# which breaks algebraic identities. The tests below keep track of these gaps, and can be removed
-# either when the spec language is extended to express the meet, or when bare git refs are removed
-# as a feature.
-lossy_git_ref_meet = pytest.mark.xfail(
-    strict=True, reason="the meet of a bare git ref and a version range is lossy"
-)
+# The meet of a git ref without an assigned version and a version range is the ref constrained
+# to that range: ``@git.main`` and ``@1:3`` meet in ``@git.main=1:3``, which ``@git.main=2.0``
+# satisfies and ``@git.main=5.0`` does not. The tests below pin the lattice laws that follow.
 
 
-@lossy_git_ref_meet
 def test_meet_of_git_ref_and_range_is_a_lower_bound():
     lhs, rhs = Spec("pkg-a@git.main"), Spec("pkg-a@1:3")
     assert lhs.intersects(rhs)
@@ -3444,7 +3440,6 @@ def test_meet_of_git_ref_and_range_is_a_lower_bound():
     assert result.satisfies(rhs)
 
 
-@lossy_git_ref_meet
 def test_meet_of_git_ref_and_range_is_the_greatest_lower_bound():
     lhs, rhs = Spec("pkg-a@git.main"), Spec("pkg-a@1:3")
     result = lhs.copy()
@@ -3454,7 +3449,6 @@ def test_meet_of_git_ref_and_range_is_the_greatest_lower_bound():
     assert not outside.satisfies(result)
 
 
-@lossy_git_ref_meet
 def test_meet_with_git_ref_is_associative():
     a, b, c = Spec("pkg-a@1:3"), Spec("pkg-a@develop"), Spec("pkg-a@git.main")
     # (a ∧ b) is empty: develop is outside 1:3
@@ -3462,10 +3456,10 @@ def test_meet_with_git_ref_is_associative():
     # a ∧ (b ∧ c) is not: b ∧ c keeps the bare ref, which a then intersects
     right = c.copy()
     right.constrain(b)
+    assert right == Spec("pkg-a@git.main=develop:develop")
     assert not a.intersects(right)
 
 
-@lossy_git_ref_meet
 def test_meet_with_git_ref_is_monotonic():
     a, b, c = Spec("pkg-a@git.main"), Spec("pkg-a"), Spec("pkg-a@1:3")
     assert a.satisfies(b)

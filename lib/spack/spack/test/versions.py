@@ -755,6 +755,21 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
     assert str(spec_branch.version) == "git.1.x=1.2"
 
 
+def test_git_ref_assignment_must_be_within_the_constraint(monkeypatch):
+    """Concretizing a git ref constrained to a range fails when the version the ref resolves to
+    is outside the range, instead of silently dropping the range."""
+    monkeypatch.setattr(GitRefLookup, "get", lambda self, ref: ("1.2", 3))
+
+    spec = spack.spec.Spec("git-test-commit@git.main=1:1.3")
+    assign_git_versions(spec)
+    assert str(spec.version) == "git.main=1.2-git.3"
+
+    spec = spack.spec.Spec("git-test-commit@git.main=1.3:")
+    with pytest.raises(VersionLookupError, match="outside the range 1.3:"):
+        assign_git_versions(spec)
+    assert str(spec) == "git-test-commit@git.main=1.3:"
+
+
 def test_git_branch_with_slash(monkeypatch):
     def get(self, ref):
         assert ref == "feature/bar"
@@ -1205,13 +1220,29 @@ def test_git_version_operations_are_pure(no_git_ref_lookup):
     assert not VersionList([unassigned]).intersects(VersionList([Version("1.0")]))
 
     # an unassigned ref may be assigned any version: it intersects every range but satisfies
-    # only the universe, and constraining it by a range keeps the bare ref
+    # only the unbounded range, and constraining it by a range constrains the ref to that range
     assert unassigned.intersects(ver("1.0:")) and ver("1.0:").intersects(unassigned)
     assert unassigned.satisfies(ver(":"))
     assert not unassigned.satisfies(ver("1.0:"))
     assert not unassigned < ver("1:") and not ver("1:") < unassigned
-    assert VersionList([unassigned]).intersection(ver("1.0:")) == VersionList([unassigned])
+    ranged = Version("git.foo=1.0:")
+    assert VersionList([unassigned]).intersection(ver("1.0:")) == VersionList([ranged])
     assert assigned.satisfies(ver("1.0:")) and not assigned.satisfies(ver("2:"))
+
+    # a ref constrained to a range is between the unassigned ref and an assignment inside it
+    assert str(ranged) == "git.foo=1.0:" and ver(str(ranged)) == ranged
+    assert ranged.satisfies(unassigned) and not unassigned.satisfies(ranged)
+    assert ranged.satisfies(ver("1.0:")) and not ranged.satisfies(ver("1.1:"))
+    assert assigned.satisfies(ranged) and not ranged.satisfies(assigned)
+    assert not Version("git.foo=0.9").satisfies(ranged) and not ranged.intersects(ver(":0.9"))
+    assert ranged.intersection(ver("1.1:1.3")) == Version("git.foo=1.1:1.3")
+    assert ranged.intersection(assigned) == assigned
+    assert ranged.intersection(ver(":0.9")) == VersionList()
+    # a range that is a single version is not the assignment of that version
+    single = Version("git.foo=1.2:1.2")
+    assert single != assigned and assigned.satisfies(single) and str(single) == "git.foo=1.2:1.2"
+    with pytest.raises(VersionLookupError, match="git ref 'foo'"):
+        ranged.ref_version
 
     # reading the ref as a version needs the assigned version
     with pytest.raises(VersionLookupError, match="git ref 'foo'"):

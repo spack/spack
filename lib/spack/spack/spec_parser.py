@@ -13,7 +13,7 @@ Here is the EBNF grammar for a spec::
                      [name] [node_options] hash |
                      filename
 
-    node_options    = [@(version_list|version_pair)] [%compiler] { variant }
+    node_options    = [@version_list] [%compiler] { variant }
     edge_properties = [ { bool_variant | key_value } ]
 
     hash          = / id
@@ -30,8 +30,8 @@ Here is the EBNF grammar for a spec::
 
     compiler      = id [@version_list]
 
-    version_pair  = git_version=vid
-    version_list  = (version|version_range) [ { , (version|version_range)} ]
+    version_list  = version_item [ { , version_item } ]
+    version_item  = version | version_range | git_version [= (version|version_range)]
     version_range = vid:vid | vid: | :vid | :
     version       = vid
 
@@ -102,7 +102,10 @@ QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
 
 VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
-VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
+#: A git ref, optionally assigned a version or constrained to a range, e.g. ``git.main=1.2:``
+GIT_VERSION_ITEM = rf"(?:{GIT_VERSION_PATTERN}(?:=(?:{VERSION_RANGE}|{VERSION}))?)"
+VERSION_LIST_ITEM = rf"(?:{GIT_VERSION_ITEM}|{VERSION_RANGE}|{VERSION})"
+VERSION_LIST = rf"{VERSION_LIST_ITEM}(?:\s*,\s*{VERSION_LIST_ITEM})*"
 
 SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
 
@@ -343,7 +346,6 @@ _EDGE_VIRTUALS = "edge_virtuals"
 _EDGE_SUBSTITUTE = "edge_substitute"
 _END_EDGE_VIRTUALS = "end_edge_virtuals"
 _END_EDGE_SUBSTITUTE = "end_edge_substitute"
-_GIT_VERSION = "git_version"
 _VERSION_LIST = "version_list"
 _BV_PREFIX = "bv_prefix"
 _BV_NAME = "bv_name"
@@ -374,11 +376,8 @@ SPEC_TOKENS: Dict[str, str] = {
         rf"|(?:\s*(?P<{_EDGE_VIRTUALS}>{_VIRTUALS_LIST})=(?P<{_EDGE_SUBSTITUTE}>{_SUBSTITUTE}))?"
         r")"
     ),
-    # ``@`` followed by a git version or a version list
-    _VERSION: (
-        rf"@(?:(?P<{_GIT_VERSION}>{GIT_VERSION_PATTERN}(?:={VERSION})?)"
-        rf"|\s*(?P<{_VERSION_LIST}>{VERSION_LIST}))"
-    ),
+    # ``@`` followed by a version list, whose items may be git versions
+    _VERSION: rf"@\s*(?P<{_VERSION_LIST}>{VERSION_LIST})",
     # boolean variant, e.g. ``+debug``, ``~qt_4``, or propagated, e.g. ``++debug``
     _BOOL_VARIANT: (
         rf"(?P<{_BV_PREFIX}>\+\+|~~|--|[~+-])"  # propagated (``++``/``~~``/``--``) or plain
@@ -686,12 +685,7 @@ class SpecParser:
                     self.curr = curr
                     self._raise_parsing_error("Spec cannot have multiple versions")
 
-                if curr.group(_GIT_VERSION):
-                    spec.versions = spack.version.VersionList(
-                        [spack.version.GitVersion(curr.group(_GIT_VERSION))]
-                    )
-                else:
-                    spec.versions = spack.version.VersionList(curr.group(_VERSION_LIST))
+                spec.versions = spack.version.VersionList(curr.group(_VERSION_LIST))
                 has_version = True
 
             elif kind == _BOOL_VARIANT:

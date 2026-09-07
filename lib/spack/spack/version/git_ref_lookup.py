@@ -218,8 +218,8 @@ def assign_git_version(pkg_name: str, version: GitVersion) -> None:
     """Assign a Spack version to ``version`` in place, if it has none, by looking its ref up
     in the git repository of package ``pkg_name``. This may trigger a git clone.
 
-    Raises a ``VersionLookupError`` when the package has no ``git`` attribute or the ref is
-    unknown.
+    Raises a ``VersionLookupError`` when the package has no ``git`` attribute, the ref is
+    unknown, or the version found is outside the range the ref is constrained to.
     """
     if version.std_version is not None:
         return
@@ -228,7 +228,7 @@ def assign_git_version(pkg_name: str, version: GitVersion) -> None:
     # Add a -git.<distance> suffix when we're not exactly on a tag
     if distance > 0:
         version_string += f"-git.{distance}"
-    version.std_version = StandardVersion.from_string(version_string)
+    version.assign(StandardVersion.from_string(version_string))
 
 
 def assign_git_versions(spec: "spack.spec.Spec") -> "spack.spec.Spec":
