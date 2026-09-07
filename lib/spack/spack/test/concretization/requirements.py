@@ -123,11 +123,12 @@ def test_git_user_supplied_reference_satisfaction(
     assert hash_eq_ver.intersects(just_hash)
     assert just_hash.intersects(hash_eq_ver)
 
-    # Git versions and literal versions are distinct versions, like
-    # pkg@10.1.0 and pkg@10.1.0-suffix are distinct versions.
-    assert not hash_eq_ver.satisfies(just_ver)
+    # A ref assigned 2.2 is a version 2.2, so it is inside @=2.2, but not the other way around:
+    # a plain 2.2 does not come from that ref. They are not the same version either.
+    assert hash_eq_ver.satisfies(just_ver)
     assert not just_ver.satisfies(hash_eq_ver)
-    assert not hash_eq_ver.intersects(just_ver)
+    assert hash_eq_ver.intersects(just_ver)
+    assert just_ver.intersects(hash_eq_ver)
     assert hash_eq_ver != just_ver
     assert just_ver != hash_eq_ver
     assert not hash_eq_ver == just_ver

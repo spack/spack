@@ -2035,7 +2035,8 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         # range in the ref constrained to that range
         (Spec, "pkg-a@git.main", "pkg-a@git.main=1.0", (True, False, True)),
         (Spec, "pkg-a@git.main", "pkg-a@git.develop", (False, False, False)),
-        (Spec, "pkg-a@git.main", "pkg-a@=1.0", (False, False, False)),
+        (Spec, "pkg-a@git.main", "pkg-a@=1.0", (True, False, False)),
+        (Spec, "pkg-a@git.main=1.0", "pkg-a@=1.0", (True, True, False)),
         (Spec, "pkg-a@git.main", "pkg-a@1:3", (True, False, False)),
         (Spec, "pkg-a@git.main", "pkg-a", (True, True, False)),
         (Spec, "pkg-a@git.main=1:3", "pkg-a@1:3", (True, True, False)),
@@ -2123,6 +2124,9 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
         (Spec, "pkg-a@git.main", "pkg-a@git.main=1.0", True, "pkg-a@git.main=1.0"),
         (Spec, "pkg-a@git.main", "pkg-a@1:3", True, "pkg-a@git.main=1:3"),
         (Spec, "pkg-a@git.main", "pkg-a@develop", True, "pkg-a@git.main=develop:develop"),
+        # An exact version says which Spack version the ref stands for, so the meet assigns it
+        (Spec, "pkg-a@git.main", "pkg-a@=1.0", True, "pkg-a@git.main=1.0"),
+        (Spec, "pkg-a@git.main=1:3", "pkg-a@=2.0", True, "pkg-a@git.main=2.0"),
     ],
 )
 def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_packages):
