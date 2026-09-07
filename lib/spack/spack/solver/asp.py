@@ -1268,13 +1268,11 @@ class SpackSolverSetup:
                 if details is None:
                     details = DeprecationDetails(spec_str, [])
                     self.deprecation_details[key] = details
-                    self.gen.fact(
-                        fn.pkg_fact(
-                            pkg.name,
-                            fn.deprecation_directive(
-                                condition_id, entry.reason.value, entry.severity.value
-                            ),
-                        )
+                    self.gen.pkg_fact(
+                        pkg.name,
+                        fn.deprecation_directive(
+                            condition_id, entry.reason.value, entry.severity.value
+                        ),
                     )
                 if entry.msg:
                     details.messages.append(entry.msg)
