@@ -332,7 +332,15 @@ error(10000, no_value_error, Attribute, Package)
 error(100, multiple_values_error, Attribute, Package)
   :- attr("node", node(ID, Package)),
      attr_single_value(Attribute),
-     2 { attr(Attribute, node(ID, Package), Value) }.
+     2 { attr(Attribute, node(ID, Package), Value) },
+     Attribute != "node_os".
+
+% For the os the message includes the conflicting values, which is cheap enough to ground.
+error(100, multiple_values_error, "node_os", Package, OS1, OS2)
+  :- attr("node", node(ID, Package)),
+     attr("node_os", node(ID, Package), OS1),
+     attr("node_os", node(ID, Package), OS2),
+     OS1 < OS2.
 
 %-----------------------------------------------------------------------------
 % Version semantics
@@ -1140,9 +1148,11 @@ error(100, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
      not has_provider(node(X, Virtual)).
 
-error(100, "Multiple providers are required for the same '{0}' virtual", Virtual)
+error(100, "Multiple providers are required for the same '{0}' virtual: '{1}' and '{2}'", Virtual, Provider1, Provider2)
   :- attr("virtual_node", node(X, Virtual)),
-     2 { provider(P, node(X, Virtual)) }.
+     provider(node(_, Provider1), node(X, Virtual)),
+     provider(node(_, Provider2), node(X, Virtual)),
+     Provider1 < Provider2.
 
 % virtual roots imply virtual nodes, and that one provider is a root
 attr("virtual_node", VirtualNode) :- attr("virtual_root", VirtualNode).

@@ -210,6 +210,12 @@ def assert_actionable_error(exc_info, *required_part: str) -> None:
             ["fortan", "cxxxx", "zlib %c,cxxxx,fortan=gcc"],
             id="two_unknown_virtuals_on_edge",
         ),
+        # Two providers requested for the same virtual: the error must name both.
+        pytest.param(
+            "mpileaks ^mpich ^zmpi",
+            ["Multiple providers are required for the same 'mpi' virtual: 'mpich' and 'zmpi'"],
+            id="two_providers_for_virtual",
+        ),
     ],
 )
 def test_input_spec_driven_errors(
