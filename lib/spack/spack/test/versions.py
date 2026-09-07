@@ -1206,12 +1206,20 @@ def test_git_version_operations_are_pure(no_git_ref_lookup):
     assert not unassigned.satisfies(Version("1.2"))
     assert not unassigned.intersects(Version("1.2"))
 
-    # an unassigned ref is neither less nor greater than any assigned or standard version, and
-    # unassigned refs are ordered among themselves by ref so that a list of them is canonical
-    for lhs, rhs in [(unassigned, assigned), (unassigned, Version("1.0"))]:
-        assert not lhs < rhs and not rhs < lhs
-        assert not lhs > rhs and not rhs > lhs
-    assert sorted([unassigned, other_ref]) == [other_ref, unassigned]
+    # an unassigned ref sorts after any assigned or standard version, and unassigned refs are
+    # ordered among themselves by ref, so that a list of versions is canonical
+    for lhs, rhs in [
+        (unassigned, assigned),
+        (unassigned, Version("1.0")),
+        (unassigned, ver("1:")),
+    ]:
+        assert rhs < lhs and lhs > rhs and not lhs < rhs and not rhs > lhs
+    assert sorted([unassigned, other_ref, assigned, Version("1.0")]) == [
+        Version("1.0"),
+        assigned,
+        other_ref,
+        unassigned,
+    ]
     assert VersionList([unassigned, other_ref]) == VersionList([other_ref, unassigned])
     assert VersionList([assigned]).intersection(VersionList([unassigned])) == VersionList(
         [assigned]
@@ -1224,7 +1232,6 @@ def test_git_version_operations_are_pure(no_git_ref_lookup):
     assert unassigned.intersects(ver("1.0:")) and ver("1.0:").intersects(unassigned)
     assert unassigned.satisfies(ver(":"))
     assert not unassigned.satisfies(ver("1.0:"))
-    assert not unassigned < ver("1:") and not ver("1:") < unassigned
     ranged = Version("git.foo=1.0:")
     assert VersionList([unassigned]).intersection(ver("1.0:")) == VersionList([ranged])
     assert assigned.satisfies(ver("1.0:")) and not assigned.satisfies(ver("2:"))

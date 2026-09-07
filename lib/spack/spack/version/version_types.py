@@ -530,7 +530,7 @@ class GitVersion(ConcreteVersion):
     A git version denotes the set of assignments its constraint allows, so it satisfies a range
     when its constraint does, intersects one when its constraint does, and its meet with one
     narrows the constraint. Git versions with a range constraint are ordered among themselves by
-    ref and constraint, and are incomparable to everything else.
+    ref and constraint, and come after every other version, so that a list of versions sorts.
 
     Assignment queries the git repo for the most recent version previous to this git ref, as
     well as the distance between them expressed as a number of commits. If the previous
@@ -619,8 +619,9 @@ class GitVersion(ConcreteVersion):
 
         Raises a ``VersionLookupError`` when no version has been assigned yet."""
         if self.std_version is None:
+            bare = self._with_constraint(_UNBOUNDED_RANGE)
             raise VersionLookupError(
-                f"git ref '{self.ref}' has no Spack version assigned: use '{self}=<version>'"
+                f"git ref '{self.ref}' has no Spack version assigned: use '{bare}=<version>'"
             )
         return self.std_version
 
@@ -701,19 +702,20 @@ class GitVersion(ConcreteVersion):
     def __ne__(self, other: object) -> bool:
         return not self == other
 
-    def _order(self, other: object) -> Optional[int]:
-        """The sign of ``self`` compared to ``other``, or None where the two are incomparable.
-        For example, ``@git.foo`` is incomparable to ``@1.2`` because we don't know what version
-        the git ref will correspond to."""
+    def _order(self, other: object) -> int:
+        """The sign of ``self`` compared to ``other``. This is the order versions are stored in,
+        not a statement about which is newer: a git ref without an assigned version comes after
+        every other version, since we don't know what version it will correspond to."""
         if isinstance(other, GitVersion):
             if self.std_version is None and other.std_version is None:
-                # both unassigned, order by ref then constraint
+                # both constrained to a range, order by ref then constraint
                 lhs_ranged = (self.ref, self.constraint)
                 rhs_ranged = (other.ref, other.constraint)
                 return (lhs_ranged > rhs_ranged) - (lhs_ranged < rhs_ranged)
-            if self.std_version is None or other.std_version is None:
-                # one is unassigned, incomparable
-                return None
+            if self.std_version is None:
+                return 1
+            if other.std_version is None:
+                return -1
             # both assigned, order by assigned version then ref
             lhs_assigned = (self.std_version, self.ref)
             rhs_assigned = (other.std_version, other.ref)
@@ -721,26 +723,21 @@ class GitVersion(ConcreteVersion):
         if not isinstance(other, (StandardVersion, ClosedOpenRange)):
             raise TypeError(f"ordering not supported between {type(self)} and {type(other)}")
         if self.std_version is None:
-            # unassigned git ref is incomparable to any non-git version
-            return None
+            return 1
         # otherwise compare by assigned version
         return -1 if self.std_version < other else 1
 
     def __lt__(self, other: object) -> bool:
-        order = self._order(other)
-        return order is not None and order < 0
+        return self._order(other) < 0
 
     def __le__(self, other: object) -> bool:
-        order = self._order(other)
-        return order is not None and order <= 0
+        return self._order(other) <= 0
 
     def __ge__(self, other: object) -> bool:
-        order = self._order(other)
-        return order is not None and order >= 0
+        return self._order(other) >= 0
 
     def __gt__(self, other: object) -> bool:
-        order = self._order(other)
-        return order is not None and order > 0
+        return self._order(other) > 0
 
     def __hash__(self):
         # hashing should not cause version lookup
@@ -952,8 +949,8 @@ class ClosedOpenRange(VersionType):
         raise TypeError(f"'intersection()' not supported for instances of {type(other)}")
 
 
-def _is_unassigned_ref(v: VersionType) -> bool:
-    """Whether ``v`` is a git ref that is constrained to a range rather than assigned a version."""
+def _is_ranged_ref(v: VersionType) -> bool:
+    """Whether ``v`` is a git ref constrained to a range, rather than assigned a version."""
     return isinstance(v, GitVersion) and v.std_version is None
 
 
@@ -965,9 +962,8 @@ class VersionList(VersionType):
     """Sorted, non-redundant list of Version and ClosedOpenRange elements.
 
     The list is canonical: two lists denoting the same set of versions are equal, however they
-    were built. Standard versions, ranges and git refs with an assigned version come first, in
-    their total order. Git refs without an assigned version are incomparable to those, so they
-    form a tail of their own, ordered by ref and constraint.
+    were built. Git refs without an assigned version sort after every other version, so they
+    form a tail of the list, and one of them may intersect elements anywhere before it.
 
     A plain range covers every git ref inside it, so a range constraint on a ref that lies
     inside one is dropped, and one that overlaps or touches a plain range is widened to include
@@ -1003,10 +999,10 @@ class VersionList(VersionType):
         else:
             raise TypeError(f"Cannot construct VersionList from {type(vlist)}")
 
-    def _tail_start(self) -> int:
-        """The index where the git refs without an assigned version start."""
+    def _ranged_refs_start(self) -> int:
+        """The index where the git refs constrained to a range start: they sort last."""
         i = len(self.versions)
-        while i > 0 and _is_unassigned_ref(self.versions[i - 1]):
+        while i > 0 and _is_ranged_ref(self.versions[i - 1]):
             i -= 1
         return i
 
@@ -1039,13 +1035,11 @@ class VersionList(VersionType):
                         constraint, widened = union, True
                         self.versions.remove(v)
         item = item._with_constraint(constraint)
-        i = bisect_left(self.versions, item, self._tail_start())
-        self.versions.insert(i, item)
+        self.versions.insert(bisect_left(self.versions, item), item)
 
     def add(self, item: VersionType) -> None:
         if isinstance(item, ClosedOpenRange):
-            tail = self._tail_start()
-            i = bisect_left(self.versions, item, 0, tail)
+            i = bisect_left(self.versions, item)
 
             # Note: can span multiple concrete versions to the left (as well as to the right).
             # For instance insert 1.2: into [1.2, hash=1.2, 1.3, 1.4:1.5]
@@ -1057,21 +1051,20 @@ class VersionList(VersionType):
                 item = union
                 del self.versions[i - 1]
                 i -= 1
-                tail -= 1
 
-            while i < tail:
+            while i < len(self):
                 union = item._union_if_not_disjoint(self[i])
                 if union is None:
                     break
                 item = union
                 del self.versions[i]
-                tail -= 1
 
             self.versions.insert(i, item)
             # Drop the constraints on git refs it covers, and re-add the ones it touches so that
-            # they are widened over it.
-            refs = self.versions[tail + 1 :]
-            del self.versions[tail + 1 :]
+            # they are widened over it. They come after it, not necessarily next to it.
+            start = self._ranged_refs_start()
+            refs, touching = self.versions[start:], []
+            del self.versions[start:]
             for v in refs:
                 assert isinstance(v, GitVersion) and isinstance(v.constraint, ClosedOpenRange)
                 if v.satisfies(item):
@@ -1079,7 +1072,9 @@ class VersionList(VersionType):
                 if v.constraint._union_if_not_disjoint(item) is None:
                     self.versions.append(v)
                 else:
-                    self._add_ranged_ref(v)
+                    touching.append(v)
+            for v in touching:
+                self._add_ranged_ref(v)
 
         elif isinstance(item, VersionList):
             for v in item:
@@ -1089,14 +1084,13 @@ class VersionList(VersionType):
             self._add_ranged_ref(item)
 
         elif isinstance(item, (StandardVersion, GitVersion)):
-            tail = self._tail_start()
-            # Skip when covered by an unassigned ref.
-            if any(item.satisfies(v) for v in self.versions[tail:]):
+            # Skip when covered by a constraint on the ref, which comes after everything else.
+            if any(item.satisfies(v) for v in self.versions[self._ranged_refs_start() :]):
                 return
-            i = bisect_left(self.versions, item, 0, tail)
+            i = bisect_left(self.versions, item)
             # Only insert when prev and next do not cover it.
             if (i == 0 or not item.satisfies(self[i - 1])) and (
-                i == tail or not item.satisfies(self[i])
+                i == len(self) or not item.satisfies(self[i])
             ):
                 self.versions.insert(i, item)
 
@@ -1160,8 +1154,8 @@ class VersionList(VersionType):
             return any(v.intersects(other) for v in self)
 
         if isinstance(other, VersionList):
-            # Walk the two sorted prefixes in lockstep
-            s_tail, o_tail = self._tail_start(), other._tail_start()
+            # Walk the two lists in lockstep, up to the git refs without an assigned version
+            s_tail, o_tail = self._ranged_refs_start(), other._ranged_refs_start()
             s = o = 0
             while s < s_tail and o < o_tail:
                 if self[s].intersects(other[o]):
@@ -1170,7 +1164,7 @@ class VersionList(VersionType):
                     s += 1
                 else:
                     o += 1
-            # The unassigned refs are not ordered against the prefixes: check them one by one
+            # Those refs can intersect elements anywhere in the other list: check them one by one
             return any(v.intersects(other) for v in self.versions[s_tail:]) or any(
                 v.intersects(self) for v in other.versions[o_tail:]
             )
@@ -1210,8 +1204,9 @@ class VersionList(VersionType):
     def intersection(self, other: VersionType) -> "VersionList":
         result = VersionList()
         if isinstance(other, VersionList):
-            s_tail, o_tail = self._tail_start(), other._tail_start()
-            # Every element of a sorted prefix meets at most its two neighbors in the other one
+            s_tail, o_tail = self._ranged_refs_start(), other._ranged_refs_start()
+            # Up to the git refs without an assigned version, an element meets at most its two
+            # neighbors in the other list
             for lhs, lhs_tail, rhs, rhs_tail in (
                 (self, s_tail, other, o_tail),
                 (other, o_tail, self, s_tail),
@@ -1222,7 +1217,7 @@ class VersionList(VersionType):
                         result.add(rhs[i - 1].intersection(x))
                     if i < rhs_tail:
                         result.add(rhs[i].intersection(x))
-            # The unassigned refs are not ordered against the prefixes: meet them one by one
+            # Those refs can meet elements anywhere in the other list: meet them one by one
             for x in self.versions[s_tail:]:
                 for y in other.versions:
                     result.add(x.intersection(y))

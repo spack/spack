@@ -232,7 +232,7 @@ def assign_git_version(pkg_name: str, version: GitVersion) -> None:
 
 
 def assign_git_versions(spec: "spack.spec.Spec") -> "spack.spec.Spec":
-    """Assign a Spack version to every unassigned git ref version in ``spec``, in place."""
+    """Assign a Spack version to every git ref version in ``spec`` that has none, in place."""
     for node in spec.traverse():
         if not node.name:
             continue
