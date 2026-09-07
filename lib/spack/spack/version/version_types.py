@@ -513,7 +513,7 @@ class StandardVersion(ConcreteVersion):
         return self.up_to(3)
 
 
-#: What a git ref may stand for: the Spack version it is assigned, or a range of them.
+#: A git version can be mapped to a specific version, or be constrained by a version range
 GitConstraint = Union[StandardVersion, "ClosedOpenRange"]
 
 
@@ -523,14 +523,8 @@ class GitVersion(ConcreteVersion):
     A git version is a ref together with a constraint on the Spack version the ref stands for:
 
     1) ``git.foo=1.2``: the ref is assigned the version 1.2, and is concrete
-    2) ``git.foo``: the ref may stand for any version, and is assigned one at concretization
-    3) ``git.foo=1.2:1.3``: the ref may stand for any version in the range, and the one it is
-       assigned at concretization must be in it. This is the meet of ``git.foo`` and ``1.2:1.3``.
-
-    A git version denotes the set of assignments its constraint allows, so it satisfies a range
-    when its constraint does, intersects one when its constraint does, and its meet with one
-    narrows the constraint. Git versions with a range constraint are ordered among themselves by
-    ref and constraint, and come after every other version, so that a list of versions sorts.
+    2) ``git.foo``: short for ``git.foo=:`` (unconstrained ref)
+    3) ``git.foo=1.2:1.3``: the ref is constrained to the range 1.2:1.3
 
     Assignment queries the git repo for the most recent version previous to this git ref, as
     well as the distance between them expressed as a number of commits. If the previous
@@ -946,16 +940,7 @@ def _element_str(v: VersionType) -> str:
 
 
 class VersionList(VersionType):
-    """Sorted, non-redundant list of Version and ClosedOpenRange elements.
-
-    The list is canonical: two lists denoting the same set of versions are equal, however they
-    were built. Git refs without an assigned version sort after every other version, so they
-    form a tail of the list, and one of them may intersect elements anywhere before it.
-
-    A plain range covers every git ref inside it, so a range constraint on a ref that lies
-    inside one is dropped, and one that overlaps or touches a plain range is widened to include
-    it, since the part outside a plain range cannot always be written down. That keeps the list
-    a function of what was added and not of the order it was added in."""
+    """Sorted, non-redundant list of Version and ClosedOpenRange elements."""
 
     __slots__ = ("versions",)
 
