@@ -2119,7 +2119,7 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
         ),
         # target=* can be constrained by a specific target
         (Spec, "target=*", "target=haswell", True, "target=haswell"),
-        # A git ref without or without an assigned version can be constrained further
+        # A git ref with or without an assigned version can be constrained further
         (Spec, "pkg-a@git.main", "pkg-a@git.main=1.0", True, "pkg-a@git.main=1.0"),
         (Spec, "pkg-a@git.main", "pkg-a@1:3", True, "pkg-a@git.main=1:3"),
         (Spec, "pkg-a@git.main", "pkg-a@develop", True, "pkg-a@git.main=develop:develop"),
