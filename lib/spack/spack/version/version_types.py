@@ -196,6 +196,15 @@ class VersionType(SupportsRichComparison):
     def __hash__(self) -> int:
         raise NotImplementedError
 
+    def __contains__(rhs, lhs) -> bool:
+        # We should probably get rid of `x in y` for versions, since
+        # versions still have a dual interpretation as singleton sets
+        # or elements. x in y should be: is the lhs-element in the
+        # rhs-set. Instead this function also does subset checks.
+        if isinstance(lhs, VersionType):
+            return lhs.satisfies(rhs)
+        raise TypeError(f"'in' not supported for instances of {type(lhs)}")
+
 
 class ConcreteVersion(VersionType):
     """Base type for versions that represents a single (non-range or list) version."""
@@ -349,15 +358,6 @@ class StandardVersion(ConcreteVersion):
     def __hash__(self) -> int:
         # If this is a final release, do not hash the prerelease part for backward compat.
         return hash(self.version if self.is_prerelease() else self.version[0])
-
-    def __contains__(rhs, lhs) -> bool:
-        # We should probably get rid of `x in y` for versions, since
-        # versions still have a dual interpretation as singleton sets
-        # or elements. x in y should be: is the lhs-element in the
-        # rhs-set. Instead this function also does subset checks.
-        if isinstance(lhs, VersionType):
-            return lhs.satisfies(rhs)
-        raise TypeError(f"'in' not supported for instances of {type(lhs)}")
 
     def intersects(self, other: VersionType) -> bool:
         if isinstance(other, StandardVersion):
@@ -619,11 +619,15 @@ class GitVersion(ConcreteVersion):
 
         Raises a ``VersionLookupError`` when no version has been assigned yet."""
         if self.std_version is None:
-            bare = self._with_constraint(_UNBOUNDED_RANGE)
             raise VersionLookupError(
-                f"git ref '{self.ref}' has no Spack version assigned: use '{bare}=<version>'"
+                f"git ref '{self.ref}' has no Spack version assigned: "
+                f"use '{self._ref_str}=<version>'"
             )
         return self.std_version
+
+    @property
+    def _ref_str(self) -> str:
+        return f"git.{self.ref}" if self.has_git_prefix else self.ref
 
     def intersects(self, other: VersionType) -> bool:
         if isinstance(other, GitVersion):
@@ -652,14 +656,9 @@ class GitVersion(ConcreteVersion):
         return VersionList()
 
     def union(self, other: VersionType) -> VersionType:
-        if isinstance(other, GitVersion):
-            if self.satisfies(other):
-                return other
-            if other.satisfies(self):
-                return self
         result = VersionList([self])
         result.add(other)
-        return result
+        return result[0] if len(result) == 1 else result
 
     def satisfies(self, other: VersionType) -> bool:
         if isinstance(other, GitVersion):
@@ -673,17 +672,15 @@ class GitVersion(ConcreteVersion):
         raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
 
     def __str__(self) -> str:
-        s = f"git.{self.ref}" if self.has_git_prefix else self.ref
         if isinstance(self.constraint, StandardVersion):
-            s += f"={self.constraint}"
-        elif self.constraint != _UNBOUNDED_RANGE:
-            # Never collapse lo:lo to lo, which would read as an assigned version.
-            lo, hi = self.constraint.lo, _prev_version(self.constraint.hi)
-            s += "={}:{}".format(
-                "" if lo == _STANDARD_VERSION_TYPEMIN else lo,
-                "" if hi == _STANDARD_VERSION_TYPEMAX else hi,
-            )
-        return s
+            return f"{self._ref_str}={self.constraint}"
+        if self.constraint == _UNBOUNDED_RANGE:
+            return self._ref_str
+        # Never collapse lo:lo to lo, which would read as an assigned version.
+        constraint = str(self.constraint)
+        if ":" not in constraint:
+            constraint = f"{constraint}:{constraint}"
+        return f"{self._ref_str}={constraint}"
 
     def __repr__(self):
         return f'GitVersion("{self}")'
@@ -742,11 +739,6 @@ class GitVersion(ConcreteVersion):
     def __hash__(self):
         # hashing should not cause version lookup
         return hash(self.ref)
-
-    def __contains__(self, other: object) -> bool:
-        if isinstance(other, VersionType):
-            return other.satisfies(self)
-        raise TypeError(f"'in' not supported for instances of {type(other)}")
 
     def __iter__(self):
         return self.ref_version.__iter__()
@@ -879,11 +871,6 @@ class ClosedOpenRange(VersionType):
             return (self.lo, self.hi) > (other.lo, other.hi)
         return NotImplemented
 
-    def __contains__(rhs, lhs):
-        if isinstance(lhs, (ConcreteVersion, ClosedOpenRange, VersionList)):
-            return lhs.satisfies(rhs)
-        raise TypeError(f"'in' not supported between instances of {type(rhs)} and {type(lhs)}")
-
     def intersects(self, other: VersionType) -> bool:
         if isinstance(other, StandardVersion):
             return self.lo <= other < self.hi
@@ -1009,32 +996,26 @@ class VersionList(VersionType):
     def _add_ranged_ref(self, item: GitVersion) -> None:
         """Add a git ref constrained to a range."""
         # Skip when already covered: by a plain range, or by a wider constraint on the ref.
-        if any(item.satisfies(v) for v in self.versions):
+        if item.satisfies(self):
             return
-        # It covers assigned versions of the ref and narrower constraints on it.
-        self.versions = [v for v in self.versions if not v.satisfies(item)]
-        # Widen it over the plain ranges it touches, and merge it with the constraints on the
-        # same ref it then touches, until nothing touches it anymore.
+        # Widen it over the plain ranges it touches, then merge it with the constraints on the
+        # same ref it touches. One pass in list order suffices: plain ranges come first and are
+        # pairwise disjoint, and a constraint on the ref already contains the plain ranges it
+        # touches, so merging it cannot make the result touch anything new.
         constraint = item.constraint
         assert isinstance(constraint, ClosedOpenRange)
-        widened = True
-        while widened:
-            widened = False
-            for v in list(self.versions):
-                if isinstance(v, ClosedOpenRange):
-                    union = constraint._union_if_not_disjoint(v)
-                    if union is not None and union != constraint:
-                        constraint, widened = union, True
-                elif (
-                    isinstance(v, GitVersion)
-                    and v.ref == item.ref
-                    and isinstance(v.constraint, ClosedOpenRange)
-                ):
-                    union = constraint._union_if_not_disjoint(v.constraint)
-                    if union is not None:
-                        constraint, widened = union, True
-                        self.versions.remove(v)
+        for v in self.versions:
+            if isinstance(v, ClosedOpenRange):
+                union = constraint._union_if_not_disjoint(v)
+            elif isinstance(v, GitVersion) and v.ref == item.ref:
+                union = constraint._union_if_not_disjoint(v.constraint)
+            else:
+                continue
+            if union is not None:
+                constraint = union
         item = item._with_constraint(constraint)
+        # It covers assigned versions of the ref, and the constraints on it that were merged.
+        self.versions = [v for v in self.versions if not v.satisfies(item)]
         self.versions.insert(bisect_left(self.versions, item), item)
 
     def add(self, item: VersionType) -> None:
@@ -1060,32 +1041,27 @@ class VersionList(VersionType):
                 del self.versions[i]
 
             self.versions.insert(i, item)
-            # Drop the constraints on git refs it covers, and re-add the ones it touches so that
-            # they are widened over it. They come after it, not necessarily next to it.
-            start = self._ranged_refs_start()
-            refs, touching = self.versions[start:], []
-            del self.versions[start:]
-            for v in refs:
-                assert isinstance(v, GitVersion) and isinstance(v.constraint, ClosedOpenRange)
-                if v.satisfies(item):
-                    continue
-                if v.constraint._union_if_not_disjoint(item) is None:
-                    self.versions.append(v)
-                else:
-                    touching.append(v)
-            for v in touching:
-                self._add_ranged_ref(v)
+            # Re-add the constraints on git refs: it may cover or touch them, and they come
+            # after it, not necessarily next to it.
+            if _is_ranged_ref(self.versions[-1]):
+                start = self._ranged_refs_start()
+                refs, self.versions = self.versions[start:], self.versions[:start]
+                for v in refs:
+                    self.add(v)
 
         elif isinstance(item, VersionList):
             for v in item:
                 self.add(v)
 
-        elif isinstance(item, GitVersion) and isinstance(item.constraint, ClosedOpenRange):
+        elif _is_ranged_ref(item):
+            assert isinstance(item, GitVersion)
             self._add_ranged_ref(item)
 
         elif isinstance(item, (StandardVersion, GitVersion)):
             # Skip when covered by a constraint on the ref, which comes after everything else.
-            if any(item.satisfies(v) for v in self.versions[self._ranged_refs_start() :]):
+            if isinstance(item, GitVersion) and any(
+                item.satisfies(v) for v in self.versions[self._ranged_refs_start() :]
+            ):
                 return
             i = bisect_left(self.versions, item)
             # Only insert when prev and next do not cover it.
@@ -1164,6 +1140,8 @@ class VersionList(VersionType):
                     s += 1
                 else:
                     o += 1
+            if s_tail == len(self.versions) and o_tail == len(other.versions):
+                return False
             # Those refs can intersect elements anywhere in the other list: check them one by one
             return any(v.intersects(other) for v in self.versions[s_tail:]) or any(
                 v.intersects(self) for v in other.versions[o_tail:]
@@ -1204,26 +1182,20 @@ class VersionList(VersionType):
     def intersection(self, other: VersionType) -> "VersionList":
         result = VersionList()
         if isinstance(other, VersionList):
-            s_tail, o_tail = self._ranged_refs_start(), other._ranged_refs_start()
-            # Up to the git refs without an assigned version, an element meets at most its two
-            # neighbors in the other list
-            for lhs, lhs_tail, rhs, rhs_tail in (
-                (self, s_tail, other, o_tail),
-                (other, o_tail, self, s_tail),
-            ):
+            for lhs, rhs in ((self, other), (other, self)):
+                lhs_tail, rhs_tail = lhs._ranged_refs_start(), rhs._ranged_refs_start()
+                # Up to the git refs without an assigned version, an element meets at most its
+                # two neighbors in the other list
                 for x in lhs.versions[:lhs_tail]:
                     i = bisect_left(rhs.versions, x, 0, rhs_tail)
                     if i > 0:
                         result.add(rhs[i - 1].intersection(x))
                     if i < rhs_tail:
                         result.add(rhs[i].intersection(x))
-            # Those refs can meet elements anywhere in the other list: meet them one by one
-            for x in self.versions[s_tail:]:
-                for y in other.versions:
-                    result.add(x.intersection(y))
-            for x in other.versions[o_tail:]:
-                for y in self.versions[:s_tail]:
-                    result.add(x.intersection(y))
+                # Those refs can meet elements anywhere in the other list: meet them one by one
+                for x in lhs.versions[lhs_tail:]:
+                    for y in rhs.versions:
+                        result.add(x.intersection(y))
             return result
         else:
             return self.intersection(VersionList(other))
@@ -1237,12 +1209,6 @@ class VersionList(VersionType):
         changed = isection.versions != self.versions
         self.versions = isection.versions
         return changed
-
-    # typing this and getitem are a pain in Python 3.6
-    def __contains__(self, other):
-        if isinstance(other, VersionType):
-            return other.satisfies(self)
-        return False
 
     def __getitem__(self, index):
         return self.versions[index]
