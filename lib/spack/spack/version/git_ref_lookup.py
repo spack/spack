@@ -212,8 +212,7 @@ class GitRefLookup:
 
 def assign_git_version(pkg_name: str, version: VersionType) -> VersionType:
     """Return ``version`` with a Spack version assigned, by looking its ref up in the git
-    repository of package ``pkg_name``, or ``version`` itself when it is not a git ref or has
-    one already. This may trigger a git clone.
+    repository of package ``pkg_name``. This may trigger a git clone.
 
     Raises a ``VersionLookupError`` when the package has no ``git`` attribute, the ref is
     unknown, or the version found is outside the range the ref is constrained to.
@@ -235,9 +234,8 @@ def _needs_assignment(node: "spack.spec.Spec") -> bool:
 
 
 def assign_git_versions(spec: "spack.spec.Spec") -> "spack.spec.Spec":
-    """Return a copy of ``spec`` in which every git ref version is assigned a Spack version.
-
-    Non-destructive: returns ``spec`` itself when no node has a git ref without one."""
+    """Return a copy of ``spec`` in which every git ref version is assigned a Spack version, or
+    ``self`` when there are no git ref versions to assign."""
     if not any(_needs_assignment(node) for node in spec.traverse()):
         return spec
     result = spec.copy()
