@@ -11,7 +11,7 @@ from spack.util import tty
 
 
 def _for_each_enabled(
-    spec: spack.spec.Spec, method_name: str, explicit: Optional[bool] = None
+    spec: spack.spec.Spec, method_name: str, explicit: Optional[bool] = None, add_op: bool = True
 ) -> None:
     """Calls a method for each enabled module"""
     set_names: Set[str] = set(spack.config.CONFIG.get("modules", {}).keys())
@@ -22,7 +22,9 @@ def _for_each_enabled(
             continue
 
         for module_type in enabled:
-            generator = spack.modules.module_types[module_type].from_spec(spec, name, explicit)
+            generator = spack.modules.module_types[module_type].from_spec(
+                spec, name, explicit, add_op=add_op
+            )
             try:
                 getattr(generator, method_name)()
             except RuntimeError as e:
@@ -36,4 +38,4 @@ def post_install(spec, explicit: bool):
 
 
 def post_uninstall(spec):
-    _for_each_enabled(spec, "remove")
+    _for_each_enabled(spec, "remove_installation", add_op=False)
