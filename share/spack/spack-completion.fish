@@ -1827,7 +1827,7 @@ complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r 
 complete -c spack -n '__fish_spack_using_command external find' -l scope -r -f -a '_builtin defaults:base defaults system site user spack command_line'
 complete -c spack -n '__fish_spack_using_command external find' -l scope -r -d 'configuration scope to modify'
 complete -c spack -n '__fish_spack_using_command external find' -l all -f -a all
-complete -c spack -n '__fish_spack_using_command external find' -l all -d 'search for all packages that Spack knows about'
+complete -c spack -n '__fish_spack_using_command external find' -l all -d 'search for all packages (if in a concretized environment, search for packages in the environment'"'"'s concretization; otherwise search for all detectable packages)'
 complete -c spack -n '__fish_spack_using_command external find' -s t -l tag -r -f -a tags
 complete -c spack -n '__fish_spack_using_command external find' -s t -l tag -r -d 'filter a package query by tag (multiple use allowed)'
 complete -c spack -n '__fish_spack_using_command external find' -s j -l jobs -r -f -a jobs
