@@ -321,10 +321,14 @@ def refresh(module_type, specs, args):
 
     # Detect name clashes in module files
     file2writer = collections.defaultdict(list)
+    module_variations = 0
     for item in writers:
+        # One module file may hold multiple package installations
+        if item.layout.filename in file2writer and item.layout.hold_other_installations:
+            module_variations += 1
         file2writer[item.layout.filename].append(item)
 
-    if len(file2writer) != len(writers):
+    if (len(file2writer) + module_variations) != len(writers):
         spec_fmt_str = "{name}@={version}%{compiler}/{hash:7} {variants} arch={arch}"
         message = "Name clashes detected in module files:\n"
         for filename, writer_list in file2writer.items():
@@ -354,7 +358,13 @@ def refresh(module_type, specs, args):
         module_type_root, writers, overwrite=args.delete_tree
     )
     errors = []
+    written_filenames = set()
     for x in writers:
+        # Skip already written module files when one file handles multiple installations
+        if x.layout.filename in written_filenames:
+            continue
+        written_filenames.add(x.layout.filename)
+
         try:
             x.write(overwrite=True)
         except spack.error.SpackError as e:
