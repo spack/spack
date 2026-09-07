@@ -3424,12 +3424,12 @@ def test_git_ref_spec_operations_are_pure(no_git_ref_lookup):
 
 
 # The meet of a git ref without an assigned version and a proper version range cannot be
-# expressed in the spec language: ``@git.main`` denotes every version the ref may be assigned,
-# so it intersects ``@1:3``, but there is no spec for "git.main, assigned within 1:3". So
-# ``constrain`` keeps the bare ref, which admits assignments outside the range, and the laws
-# that need the meet to be a lower bound fail on exactly these operands. Each is pinned as an
-# expected failure named for what breaks, so that the gap is not forgotten: they start passing
-# the day the language can express the meet, or bare git refs are gone.
+# expressed in the spec language. For example, ``@git.main`` and ``@1:3`` intersect because
+# ``@git.main=2.0`` satisfies both, but the meet of the two is not expressible: it would be
+# "git.main, assigned within 1:3". The current implementation takes ``@git.main`` as the meet,
+# which breaks algebraic identities. The tests below keep track of these gaps, and can be removed
+# either when the spec language is extended to express the meet, or when bare git refs are removed
+# as a feature.
 lossy_git_ref_meet = pytest.mark.xfail(
     strict=True, reason="the meet of a bare git ref and a version range is lossy"
 )

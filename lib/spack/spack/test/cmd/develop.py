@@ -81,7 +81,7 @@ class TestDevelop:
 
     def test_develop_git_ref(self, tmp_path: pathlib.Path, mock_git_version_info, monkeypatch):
         """A develop spec with a bare git ref gets its Spack version assigned when the
-        environment is concretized, like a root spec would."""
+        environment is concretized."""
         repo_path, _, _ = mock_git_version_info
         monkeypatch.setattr(
             spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False

@@ -61,6 +61,7 @@ from spack.test.conftest import RepoBuilder
 from spack.test.utilities import RecordingUI
 from spack.util.filesystem import getuid
 from spack.version import Version, VersionList, ver
+from spack.version.git_ref_lookup import GitRefLookup
 
 
 def check_spec(abstract, concrete):
@@ -5778,7 +5779,6 @@ def test_solve_kind_from_unify_configuration(unify, expected):
 def test_git_ref_version_is_assigned_once_at_concretization(mock_git_version_info, monkeypatch):
     """A bare git ref gets its Spack version assigned by exactly one lookup when the spec is
     concretized; concretizing the result again does no lookup."""
-    from spack.version.git_ref_lookup import GitRefLookup
 
     repo_path, _, _ = mock_git_version_info
     monkeypatch.setattr(

@@ -521,14 +521,10 @@ class GitVersion(ConcreteVersion):
     1) GitVersions instantiated with an associated reference version (e.g. ``git.foo=1.2``)
     2) GitVersions with a bare ref (e.g. ``git.foo``), assigned a version at concretization
 
-    Git ref versions that are not paired with a known version have no Spack version until one
-    is assigned by :func:`spack.version.git_ref_lookup.assign_git_versions`, which happens
-    once when a spec enters concretization. Until then, the version is abstract: it prints as
-    the bare ref, compares equal only to the same unassigned ref, matches any assigned
-    version of the same ref when used as a constraint, and may still be assigned any version:
-    it intersects every version range, satisfies only the universal one, and is ordered only
-    against other unassigned refs, by ref. Its meet with a range cannot be expressed, so
-    ``constrain`` keeps the bare ref. No operation on a ``GitVersion`` itself does I/O.
+    Git versions without an associated StandardVersion currently break the algebra of version
+    comparison, so some operations are best-effort: they intersects every version range, satisfy
+    only ``@:``, and are ordered only against other unassigned refs, by ref. The intersection with
+    a range keeps the bare ref because it's more specific, even though the range could be disjoint.
 
     Assignment queries the git repo for the most recent version previous to this git ref, as
     well as the distance between them expressed as a number of commits. If the previous
@@ -576,8 +572,6 @@ class GitVersion(ConcreteVersion):
                 spack_version, *parse_string_components(spack_version)
             )
         else:
-            # Assigned later by spack.version.git_ref_lookup.assign_git_versions, since we
-            # don't know what package the ref applies to here.
             self.std_version = None
             self.ref = normalized_string
 
@@ -592,10 +586,7 @@ class GitVersion(ConcreteVersion):
     def ref_version(self) -> StandardVersion:
         """The Spack version assigned to this git ref, used for ordering.
 
-        Raises a ``VersionLookupError`` when no version has been assigned yet. Assignment
-        happens once at concretization, see
-        :func:`spack.version.git_ref_lookup.assign_git_versions`.
-        """
+        Raises a ``VersionLookupError`` when no version has been assigned yet."""
         if self.std_version is None:
             raise VersionLookupError(
                 f"git ref '{self.ref}' has no Spack version assigned: use '{self}=<version>'"
@@ -608,8 +599,9 @@ class GitVersion(ConcreteVersion):
         if isinstance(other, StandardVersion):
             return False
         if isinstance(other, ClosedOpenRange):
-            # An unassigned ref may be assigned any version, so some assignment is in the range
             if self.std_version is None:
+                # We have insufficient information to determine whether an unassigned git ref is
+                # disjoint from a range. Conservatively, assume intersection.
                 return True
             return self.std_version.intersects(other)
         if isinstance(other, VersionList):
@@ -635,8 +627,9 @@ class GitVersion(ConcreteVersion):
         if isinstance(other, StandardVersion):
             return False
         if isinstance(other, ClosedOpenRange):
-            # An unassigned ref may be assigned any version, so only the universe contains it
             if self.std_version is None:
+                # We have insufficient information to determine whether an unassigned git ref
+                # satisfies a range; the best we know is that it satisfies the unbounded range.
                 return other == _UNBOUNDED_RANGE
             return self.std_version.satisfies(other)
         if isinstance(other, VersionList):
@@ -647,8 +640,6 @@ class GitVersion(ConcreteVersion):
         s = ""
         if self.ref:
             s += f"git.{self.ref}" if self.has_git_prefix else self.ref
-        # Note: the solver depends on str(...) to produce the effective version, so every git
-        # version must be assigned before it reaches the solver.
         if self.std_version is not None:
             s += f"={self.std_version}"
         return s
@@ -661,7 +652,6 @@ class GitVersion(ConcreteVersion):
 
     def __eq__(self, other: object) -> bool:
         # GitVersion cannot be equal to StandardVersion, otherwise == is not transitive.
-        # Compares the assigned version as stored: never triggers a lookup.
         return (
             isinstance(other, GitVersion)
             and self.ref == other.ref
@@ -672,26 +662,26 @@ class GitVersion(ConcreteVersion):
         return not self == other
 
     def _order(self, other: object) -> Optional[int]:
-        """The sign of ``self`` compared to ``other``, or None where the two are unordered.
-
-        An unassigned ref may be assigned any version, so it has no place on the version line:
-        it is unordered against every assigned or standard version and every range. Unassigned
-        refs are ordered among themselves by ref, so that a list of them is canonical.
-        """
+        """The sign of ``self`` compared to ``other``, or None where the two are incomparable.
+        For example, ``@git.foo`` is incomparable to ``@1.2`` because we don't know what version
+        the git ref will correspond to."""
         if isinstance(other, GitVersion):
             if self.std_version is None and other.std_version is None:
+                # both unasigned, order by ref
                 lhs, rhs = self.ref or "", other.ref or ""
                 return (lhs > rhs) - (lhs < rhs)
             if self.std_version is None or other.std_version is None:
+                # one is unassigned, incomparable
                 return None
+            # both assigned, order by assigned version then ref
             lhs_key, rhs_key = (self.std_version, self.ref), (other.std_version, other.ref)
             return (lhs_key > rhs_key) - (lhs_key < rhs_key)
         if not isinstance(other, (StandardVersion, ClosedOpenRange)):
             raise TypeError(f"ordering not supported between {type(self)} and {type(other)}")
         if self.std_version is None:
+            # unassigned git ref is incomparable to any non-git version
             return None
-        # A git version at equal assigned version is larger than the standard version, and a
-        # version is never equal to a range, so the sign is never zero.
+        # otherwise compare by assigned version
         return -1 if self.std_version < other else 1
 
     def __lt__(self, other: object) -> bool:
