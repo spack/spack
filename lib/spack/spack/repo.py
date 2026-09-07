@@ -560,11 +560,30 @@ class PatchIndexer(Indexer):
     def _create(self) -> spack.patch.PatchCache:
         return spack.patch.PatchCache(repository=self.repository)
 
-    def needs_update(self):
-        # TODO: patches can change under a package and we should handle
-        # TODO: it, but we currently punt. This should be refactored to
-        # TODO: check whether patches changed each time a package loads,
-        # TODO: tell the RepoIndex to reindex them.
+    def needs_update(self, pkg_cls: Type["spack.package_base.PackageBase"]) -> bool:
+        """Check if any file patches for this package are missing from the index.
+
+        Only checks FilePatch objects, since UrlPatch hashes are in package.py
+        and would trigger FastPackageChecker if they changed.
+
+        Args:
+            pkg_cls: Package class to check
+
+        Returns:
+            True if any file patch hashes are missing from the index
+        """
+        if not self.index:
+            return False
+
+        # Get all patches from the package class
+        for when_spec, patches in pkg_cls.patches.items():
+            for patch in patches:
+                # Only check FilePatch - UrlPatch changes would update package.py mtime
+                if isinstance(patch, spack.patch.FilePatch):
+                    # If this hash is not in the index, we need an update
+                    if patch.sha256 not in self.index.index:
+                        return True
+
         return False
 
     def read(self, stream):
@@ -899,6 +918,16 @@ class RepoPath:
             pass
 
         current_index = self.get_patch_index(allow_stale=False)
+
+        # Check if this package has file patches missing from the index
+        # This can happen when patch files change but package.py doesn't (so FastPackageChecker
+        # doesn't detect the change). If patches are missing, update just this package.
+        repo = self.repo_for_pkg(pkg_cls.name)
+        if repo._repo_index is not None:
+            patch_indexer = repo._repo_index.indexers.get("patches")
+            if patch_indexer and patch_indexer.needs_update(pkg_cls):
+                current_index.update_packages({pkg_cls.fullname})
+
         return [current_index.patch_for_package(sha256, pkg_cls) for sha256 in sha256s]
 
     def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
