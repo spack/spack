@@ -159,7 +159,14 @@ tcl_configuration = {
     "description": "Configuration for Tcl module files compatible with Environment Modules and "
     "Lmod",
     "additionalKeysAreSpecs": True,
-    "properties": {**common_props},
+    "properties": {
+        **common_props,
+        "variants": {
+            "type": "string",
+            "enum": ["none", "all"],
+            "description": "Define variants in module files",
+        },
+    },
     "additionalProperties": ref_module_file_configuration,
 }
 
