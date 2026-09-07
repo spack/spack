@@ -331,6 +331,7 @@ error(10000, no_value_error, Attribute, Package)
 % Error when multiple attr need to be selected
 error(100, multiple_values_error, Attribute, Package)
   :- attr("node", node(ID, Package)),
+     not multiple_values_explained(node(ID, Package), Attribute),
      attr_single_value(Attribute),
      2 { attr(Attribute, node(ID, Package), Value) }.
 
@@ -1909,6 +1910,15 @@ will_build_packages() :- build(X).
 1 { attr("node_platform", PackageNode, Platform) : allowed_platform(Platform) } 1
   :- attr("node", PackageNode).
 
+error(100, "'{0} platform={1}' is not compatible with this machine (platform={2})", Package, Platform, Allowed)
+  :- attr("node_platform", node(X, Package), Platform),
+     not allowed_platform(Platform),
+     allowed_platform(Allowed).
+
+% The error above explains the situation; the generic multiple-values error would only add noise.
+multiple_values_explained(node(X, Package), "node_platform")
+  :- attr("node_platform", node(X, Package), Platform), not allowed_platform(Platform).
+
 % setting platform on a node is a hard constraint
 attr("node_platform", PackageNode, Platform)
  :- attr("node", PackageNode), attr("node_platform_set", PackageNode, Platform).
@@ -1949,11 +1959,13 @@ attr("node_os", PackageNode, OS) :- attr("node_os_set", PackageNode, OS), attr("
 % Each node has only one target chosen among the known targets
 1 { attr("node_target", PackageNode, Target) : target(Target) } 1 :- attr("node", PackageNode).
 
-% If a node must satisfy a target constraint, enforce it
+% If a node must satisfy a target constraint, enforce it. A target unknown to this machine is
+% reported by a dedicated error below, so don't repeat the mismatch for it here.
 error(10, "'{0} target={1}' cannot satisfy constraint 'target={2}'", Package, Target, Constraint)
   :- attr("node_target", node(X, Package), Target),
      attr("node_target_satisfies", node(X, Package), Constraint),
-     not target_satisfies(Constraint, Target).
+     not target_satisfies(Constraint, Target),
+     not multiple_values_explained(node(X, Package), "node_target").
 
 % If a node has a target and the target satisfies a constraint, then the target
 % associated with the node satisfies the same constraint
@@ -2026,6 +2038,10 @@ error(100, "'{0} target={1}' is not compatible with this machine", Package, Targ
   :- attr("node", node(X, Package)),
      attr("node_target", node(X, Package), Target),
      not target(Target).
+
+% The error above explains the situation; the generic multiple-values error would only add noise.
+multiple_values_explained(node(X, Package), "node_target")
+  :- attr("node_target", node(X, Package), Target), not target(Target).
 
 %-----------------------------------------------------------------------------
 % Compiler flags
