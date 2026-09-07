@@ -62,6 +62,7 @@ spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
 
 PushResult = namedtuple("PushResult", "success url")
+test_cmd = spack.main.SpackCommand("test")
 
 urlopen = web_util.urlopen  # alias for mocking in tests
 
@@ -683,7 +684,7 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     """
     tty.debug(f"test stage: {test_stage}")
     if not os.path.exists(test_stage):
-        tty.error(f"Cannot copy test logs: job test stage ({test_stage}) does not exist")
+        tty.warn(f"Cannot copy test logs: job test stage ({test_stage}) does not exist")
         return
 
     copy_files_to_artifacts(
@@ -1334,7 +1335,6 @@ def run_standalone_tests(
     fail_fast: bool = False,
     log_file: Optional[str] = None,
     job_spec: Optional[spack.spec.Spec] = None,
-    repro_dir: Optional[str] = None,
     timeout: Optional[int] = None,
 ):
     """Run stand-alone tests on the current spec.
@@ -1344,7 +1344,6 @@ def run_standalone_tests(
         fail_fast: terminate tests after the first failure
         log_file: test log file name if NOT CDash reporting
         job_spec: spec that was built
-        repro_dir: reproduction directory
         timeout: maximum time (in seconds) that tests are allowed to run
     """
     if cdash and log_file:
@@ -1356,11 +1355,7 @@ def run_standalone_tests(
         tty.error("Job spec is required to run stand-alone tests")
         return
 
-    if not repro_dir:
-        tty.error("Reproduction directory is required for stand-alone tests")
-        return
-
-    test_args = ["spack", "--color=always", "--backtrace", "--verbose", "test", "run"]
+    test_args = ["run"]
     if fail_fast:
         test_args.append("--fail-fast")
 
@@ -1376,6 +1371,4 @@ def run_standalone_tests(
     test_args.append(job_spec.name)
 
     tty.debug(f"Running {job_spec.name} stand-alone tests")
-    exit_code = process_command("test", test_args, repro_dir)
-
-    tty.debug(f"spack test exited {exit_code}")
+    test_cmd(*test_args, capture=False)

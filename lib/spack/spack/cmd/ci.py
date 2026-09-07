@@ -11,6 +11,7 @@ from typing import Dict, List
 from urllib.parse import urlparse, urlunparse
 
 import spack.binary_distribution
+import spack.bootstrap
 import spack.ci as spack_ci
 import spack.cmd
 import spack.cmd.common.arguments
@@ -19,6 +20,7 @@ import spack.environment as ev
 import spack.error
 import spack.fetch_strategy
 import spack.hash_types as ht
+import spack.main
 import spack.mirrors.mirror
 import spack.package_base
 import spack.repo
@@ -41,8 +43,10 @@ section = "build"
 level = "long"
 
 SPACK_COMMAND = "spack"
-INSTALL_FAIL_CODE = 1
+INSTALL_SUCCESS_CODE = 0
 FAILED_CREATE_BUILDCACHE_CODE = 100
+
+install_cmd = spack.main.SpackCommand("install")
 
 
 def deindent(desc):
@@ -462,16 +466,7 @@ def ci_rebuild(args):
 
     # No hash match anywhere means we need to rebuild spec
 
-    # Start with spack arguments
-    spack_cmd = [SPACK_COMMAND, "--color=always", "install"]
-
-    config = cfg.CONFIG.get("config")
-    if not config["verify_ssl"]:
-        spack_cmd.append("-k")
-
-    install_args = [
-        f"--use-buildcache={spack_ci.common.win_quote('package:never,dependencies:only')}"
-    ]
+    install_args = ["--use-buildcache", "package:never,dependencies:only"]
 
     can_verify = spack_ci.can_verify_binaries()
     verify_binaries = can_verify and spack_is_pr_pipeline is False
@@ -485,146 +480,16 @@ def ci_rebuild(args):
     if fail_fast:
         install_args.append("--fail-fast")
 
-    slash_hash = spack_ci.common.win_quote("/" + job_spec.dag_hash())
+    spec_hash = "/" + job_spec.dag_hash()
 
-    # Arguments when installing the root from sources
-    deps_install_args = install_args + ["--only=dependencies"]
-    root_install_args = install_args + ["--verbose", "--keep-stage", "--only=package"]
+    # Run Bootstrap
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.ensure_core_dependencies()
 
-    if cdash_handler:
-        # Add additional arguments to `spack install` for CDash reporting.
-        root_install_args.extend(cdash_handler.args())
-
-    commands = [
-        # apparently there's a race when spack bootstraps? do it up front once
-        [SPACK_COMMAND, "-e", unicode_escape(env.path), "bootstrap", "now"],
-        spack_cmd + deps_install_args + [slash_hash],
-        spack_cmd + root_install_args + [slash_hash],
-    ]
-    tty.debug("Installing {0} from source".format(job_spec.name))
-    install_exit_code = spack_ci.process_command("install", commands, repro_dir)
-
-    # Now do the post-install tasks
-    tty.debug("spack install exited {0}".format(install_exit_code))
-
-    # If a spec fails to build in a spack develop pipeline, we add it to a
-    # list of known broken hashes.  This allows spack PR pipelines to
-    # avoid wasting compute cycles attempting to build those hashes.
-    if install_exit_code == INSTALL_FAIL_CODE and spack_is_develop_pipeline:
-        tty.debug("Install failed on develop")
-        if "broken-specs-url" in ci_config:
-            broken_specs_url = ci_config["broken-specs-url"]
-            dev_fail_hash = job_spec.dag_hash()
-            broken_spec_path = url_util.join(broken_specs_url, dev_fail_hash)
-            tty.msg("Reporting broken develop build as: {0}".format(broken_spec_path))
-            spack_ci.write_broken_spec(
-                broken_spec_path,
-                job_spec_pkg_name,
-                spack_ci_stack_name,
-                os.environ.get("CI_JOB_URL"),
-                os.environ.get("CI_PIPELINE_URL"),
-                job_spec.to_dict(hash=ht.dag_hash),
-            )
-
-    # Copy logs and archived files from the install metadata (.spack) directory to artifacts now
-    spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
-
-    # Clear the stage directory
-    spack.stage.purge()
-
-    # If the installation succeeded and we're running stand-alone tests for
-    # the package, run them and copy the output. Failures of any kind should
-    # *not* terminate the build process or preclude creating the build cache.
-    broken_tests = (
-        "broken-tests-packages" in ci_config
-        and job_spec.name in ci_config["broken-tests-packages"]
-    )
-    reports_dir = fs.join_path(os.getcwd(), "cdash_report")
-    if args.tests and broken_tests:
-        tty.warn("Unable to run stand-alone tests since listed in ci's 'broken-tests-packages'")
-        if cdash_handler:
-            msg = "Package is listed in ci's broken-tests-packages"
-            cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
-            cdash_handler.copy_test_results(reports_dir, job_test_dir)
-    elif args.tests:
-        if install_exit_code == 0:
-            try:
-                # First ensure we will use a reasonable test stage directory
-                stage_root = os.path.dirname(str(job_spec.package.stage.path))
-                test_stage = fs.join_path(stage_root, "spack-standalone-tests")
-                tty.debug("Configuring test_stage to {0}".format(test_stage))
-                config_test_path = "config:test_stage:{0}".format(test_stage)
-                cfg.CONFIG.add(config_test_path, scope=cfg.CONFIG.default_modify_scope())
-
-                # Run the tests, resorting to junit results if not using cdash
-                log_file = (
-                    None if cdash_handler else fs.join_path(test_stage, "ci-test-results.xml")
-                )
-                spack_ci.run_standalone_tests(
-                    cdash=cdash_handler,
-                    job_spec=job_spec,
-                    fail_fast=fail_fast,
-                    log_file=log_file,
-                    repro_dir=repro_dir,
-                    timeout=args.timeout,
-                )
-
-            except Exception as err:
-                # If there is any error, just print a warning.
-                msg = "Error processing stand-alone tests: {0}".format(str(err))
-                tty.warn(msg)
-
-            finally:
-                # Copy the test log/results files
-                spack_ci.copy_test_logs_to_artifacts(test_stage, job_test_dir)
-                if cdash_handler:
-                    cdash_handler.copy_test_results(reports_dir, job_test_dir)
-                elif log_file:
-                    spack_ci.copy_files_to_artifacts(log_file, job_test_dir)
-                else:
-                    tty.warn("No recognized test results reporting option")
-
-        else:
-            tty.warn("Unable to run stand-alone tests due to unsuccessful installation")
-            if cdash_handler:
-                msg = "Failed to install the package"
-                cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
-                cdash_handler.copy_test_results(reports_dir, job_test_dir)
-
-    if install_exit_code == 0:
-        # If the install succeeded, push it to the buildcache destination. Failure to push
-        # will result in a non-zero exit code. Pushing is best-effort.
-        for result in spack_ci.create_buildcache(
-            input_spec=job_spec,
-            destination_mirror_urls=[buildcache_destination.push_url],
-            sign_binaries=spack_ci.can_sign_binaries(),
-        ):
-            if not result.success:
-                install_exit_code = FAILED_CREATE_BUILDCACHE_CODE
-            (tty.msg if result.success else tty.error)(
-                f"{'Pushed' if result.success else 'Failed to push'} "
-                f"{job_spec.format('{name}{@version}{/hash:7}', color=clr.get_color_when())} "
-                f"to {result.url}"
-            )
-
-        # If this is a develop pipeline, check if the spec that we just built is
-        # on the broken-specs list. If so, remove it.
-        if spack_is_develop_pipeline and "broken-specs-url" in ci_config:
-            broken_specs_url = ci_config["broken-specs-url"]
-            just_built_hash = job_spec.dag_hash()
-            broken_spec_path = url_util.join(broken_specs_url, just_built_hash)
-            if web_util.url_exists(broken_spec_path):
-                tty.msg("Removing {0} from the list of broken specs".format(broken_spec_path))
-                try:
-                    web_util.remove_url(broken_spec_path)
-                except Exception as err:
-                    # If there is an S3 error (e.g., access denied or connection
-                    # error), the first non boto-specific class in the exception
-                    # hierarchy is Exception.  Just print a warning and return.
-                    msg = "Error removing {0} from broken specs list: {1}"
-                    tty.warn(msg.format(broken_spec_path, err))
-
-    else:
+    # TODO: (kwryankrattiger) Reproduce build is currently broken. Suppress the output of these
+    # instructions for now. When the feature is working again move the print to before the
+    # installation is printed to avoid the details be lost to install log truncation.
+    if False:
         # If the install did not succeed, print out some instructions on how to reproduce this
         # build failure outside of the pipeline environment.
         tty.debug("spack install exited non-zero, will not create buildcache")
@@ -650,6 +515,158 @@ If this project does not have public pipelines, you will need to first:
 
 """
         )
+
+    # Turn color output on
+    reset_color = clr.get_color_when()
+    clr.set_color_when(True)
+
+    install_exit_code = INSTALL_SUCCESS_CODE
+    tty.debug("Installing dependencies for {0} from cache ".format(job_spec.name))
+    try:
+        # Install deps
+        install_cmd(*install_args, "--only=dependencies", spec_hash, capture=False)
+    except spack.error.SpackError as e:
+        # If the deps fail to install early exit
+        tty.error(f"Failed to install dependencies: {e}")
+        raise
+
+    # CDash reporting for the current spec
+    if cdash_handler:
+        # Add additional arguments to `spack install` for CDash reporting.
+        install_args.extend(cdash_handler.args())
+        reports_dir = fs.join_path(os.getcwd(), "cdash_report")
+
+    tty.debug("Installing {0} from source".format(job_spec.name))
+    try:
+        # Install package
+        install_cmd(
+            *install_args, "--verbose", "--keep-stage", "--only=package", spec_hash, capture=False
+        )
+        tty.debug("spack install succeeded")
+    except spack.error.SpackError:
+        # If a spec fails to build in a spack develop pipeline, we add it to a
+        # list of known broken hashes.  This allows spack PR pipelines to
+        # avoid wasting compute cycles attempting to build those hashes.
+        tty.debug("spack install failed")
+        if spack_is_develop_pipeline:
+            tty.debug("Install failed on develop")
+            if "broken-specs-url" in ci_config:
+                broken_specs_url = ci_config["broken-specs-url"]
+                dev_fail_hash = job_spec.dag_hash()
+                broken_spec_path = url_util.join(broken_specs_url, dev_fail_hash)
+                tty.msg("Reporting broken develop build as: {0}".format(broken_spec_path))
+                spack_ci.write_broken_spec(
+                    broken_spec_path,
+                    job_spec_pkg_name,
+                    spack_ci_stack_name,
+                    os.environ.get("CI_JOB_URL"),
+                    os.environ.get("CI_PIPELINE_URL"),
+                    job_spec.to_dict(hash=ht.dag_hash),
+                )
+
+        # Skip tests
+        tty.warn("Unable to run stand-alone tests due to unsuccessful installation")
+        if cdash_handler:
+            msg = "Failed to install the package"
+            cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
+            cdash_handler.copy_test_results(reports_dir, job_test_dir)
+
+        # Forward install error
+        raise
+
+    finally:
+        # Reset the color mode
+        clr.set_color_when(reset_color)
+        # Copy logs and archived files from the install metadata (.spack) directory to artifacts
+        spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
+        # Clear the stage directory
+        spack.stage.purge()
+
+    # If the installation succeeded and we're running stand-alone tests for
+    # the package, run them and copy the output. Failures of any kind should
+    # *not* terminate the build process or preclude creating the build cache.
+    if args.tests:
+        broken_tests = (
+            "broken-tests-packages" in ci_config
+            and job_spec.name in ci_config["broken-tests-packages"]
+        )
+        if broken_tests:
+            tty.warn(
+                "Unable to run stand-alone tests since listed in ci's 'broken-tests-packages'"
+            )
+            if cdash_handler:
+                msg = "Package is listed in ci's broken-tests-packages"
+                cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
+                cdash_handler.copy_test_results(reports_dir, job_test_dir)
+        else:
+            try:
+                # First ensure we will use a reasonable test stage directory
+                stage_root = os.path.dirname(str(job_spec.package.stage.path))
+                test_stage = fs.join_path(stage_root, "spack-stage-standalone-tests")
+                tty.debug("Configuring test_stage to {0}".format(test_stage))
+                config_test_path = "config:test_stage:{0}".format(test_stage)
+                cfg.CONFIG.add(config_test_path, scope=cfg.CONFIG.default_modify_scope())
+
+                # Run the tests, resorting to junit results if not using cdash
+                log_file = (
+                    None if cdash_handler else fs.join_path(test_stage, "ci-test-results.xml")
+                )
+                spack_ci.run_standalone_tests(
+                    cdash=cdash_handler,
+                    job_spec=job_spec,
+                    fail_fast=fail_fast,
+                    log_file=log_file,
+                    timeout=args.timeout,
+                )
+
+            except Exception as err:
+                # If there is any error, just print a warning.
+                msg = "Error processing stand-alone tests: {0}".format(str(err))
+                tty.warn(msg)
+
+            finally:
+                # Copy the test log/results files
+                spack_ci.copy_test_logs_to_artifacts(test_stage, job_test_dir)
+                if cdash_handler:
+                    cdash_handler.copy_test_results(reports_dir, job_test_dir)
+                elif log_file:
+                    spack_ci.copy_files_to_artifacts(log_file, job_test_dir)
+                else:
+                    tty.warn("No recognized test results reporting option")
+
+                spack.stage.purge()
+
+    # If the install succeeded, push it to the buildcache destination. Failure to push
+    # will result in a non-zero exit code. Pushing is best-effort.
+    for result in spack_ci.create_buildcache(
+        input_spec=job_spec,
+        destination_mirror_urls=[buildcache_destination.push_url],
+        sign_binaries=spack_ci.can_sign_binaries(),
+    ):
+        if not result.success:
+            install_exit_code = FAILED_CREATE_BUILDCACHE_CODE
+        (tty.msg if result.success else tty.error)(
+            f"{'Pushed' if result.success else 'Failed to push'} "
+            f"{job_spec.format('{name}{@version}{/hash:7}', color=clr.get_color_when())} "
+            f"to {result.url}"
+        )
+
+    # If this is a develop pipeline, check if the spec that we just built is
+    # on the broken-specs list. If so, remove it.
+    if spack_is_develop_pipeline and "broken-specs-url" in ci_config:
+        broken_specs_url = ci_config["broken-specs-url"]
+        just_built_hash = job_spec.dag_hash()
+        broken_spec_path = url_util.join(broken_specs_url, just_built_hash)
+        if web_util.url_exists(broken_spec_path):
+            tty.msg("Removing {0} from the list of broken specs".format(broken_spec_path))
+            try:
+                web_util.remove_url(broken_spec_path)
+            except Exception as err:
+                # If there is an S3 error (e.g., access denied or connection
+                # error), the first non boto-specific class in the exception
+                # hierarchy is Exception.  Just print a warning and return.
+                msg = "Error removing {0} from broken specs list: {1}"
+                tty.warn(msg.format(broken_spec_path, err))
 
     rebuild_timer.stop()
     try:
