@@ -1,0 +1,8 @@
+enable:
+  - tcl
+tcl:
+  hide_implicits: True
+  hash_length: 0
+  variants: all
+  all:
+    autoload: direct
