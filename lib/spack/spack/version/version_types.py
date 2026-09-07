@@ -556,8 +556,8 @@ class GitVersion(ConcreteVersion):
         # TODO will be required for concrete specs when commit lookup added
         self.commit_sha: Optional[str] = None
 
-        #: The Spack versions this ref may stand for: the version it is assigned, or a range
-        self.constraint: "GitConstraint"
+        #: The Spack versions this ref is constrained to (``@:`` for unconstrained).
+        self.constraint: GitConstraint
 
         self.has_git_prefix = string.startswith("git.")
 
