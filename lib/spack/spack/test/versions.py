@@ -443,7 +443,6 @@ def test_intersection():
 
     check_intersection(["=ref=1.0", "=1.1"], ["=ref=1.0", "1.1"], ["1:1.0", "=1.1"])
 
-    # The meet of a git ref without an assigned version and a range is the ref constrained to it
     check_intersection("git.foo=1.2", "git.foo", "git.foo=1.2")
     check_intersection([], "git.foo", "git.bar")
     check_intersection("git.foo=1.0:", "git.foo", "1.0:")
@@ -913,8 +912,6 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
         (f"git.{'a' * 40}=develop", "develop", (True, True, False)),
         (f"git.{'a' * 40}=develop", f"git.{'a' * 40}=develop", (True, True, True)),
         (f"git.{'a' * 40}=develop", f"git.{'b' * 40}=develop", (False, False, False)),
-        # GitVersion without an assigned version: matched by any assignment of the same ref, and
-        # may be assigned any version, so it meets every range but satisfies only the unbounded
         ("git.foo", "git.foo", (True, True, True)),
         ("git.foo", "git.foo=1.2", (True, False, True)),
         ("git.foo", "git.bar", (False, False, False)),
@@ -925,7 +922,6 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
         ("git.foo", ":", (True, True, False)),
         ("=1.0,git.main", "git.main", (True, False, True)),
         ("=1.0,1.2:", "git.main", (True, False, False)),
-        # GitVersion constrained to a range: between the bare ref and an assignment inside it
         ("git.foo=1.0:", "git.foo", (True, True, False)),
         ("git.foo=1.0:", "git.foo=1.2", (True, False, True)),
         ("git.foo=1.0:", "git.foo=0.9", (False, False, False)),
