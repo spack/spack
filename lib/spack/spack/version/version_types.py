@@ -369,7 +369,7 @@ class StandardVersion(ConcreteVersion):
             return other.intersects(self)
 
         if isinstance(other, ClosedOpenRange):
-            return other.lo <= self < other.hi
+            return other.intersects(self)
 
         if isinstance(other, GitVersion):
             return False
@@ -927,9 +927,6 @@ class ClosedOpenRange(VersionType):
 
         if isinstance(other, StandardVersion):
             return other if self.intersects(other) else VersionList()
-
-        if isinstance(other, VersionList):
-            return other.intersection(self)
 
         raise TypeError(f"'intersection()' not supported for instances of {type(other)}")
 
