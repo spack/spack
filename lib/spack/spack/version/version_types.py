@@ -694,9 +694,10 @@ class GitVersion(ConcreteVersion):
         return not self == other
 
     def _order(self, other: object) -> int:
-        """The sign of ``self`` compared to ``other``. This is the order versions are stored in,
-        not a statement about which is newer: a git ref without an assigned version comes after
-        every other version, since we don't know what version it will correspond to."""
+        """The sign of ``self`` compared to ``other``, defining the storage order of versions.
+        A git ref without an assigned version comes after every other version, since we
+        don't know what version it will correspond to.
+        """
         if isinstance(other, GitVersion):
             if self.std_version is None and other.std_version is None:
                 # both constrained to a range, order by ref then constraint

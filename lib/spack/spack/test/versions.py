@@ -786,8 +786,7 @@ def test_git_ref_constraint_round_trips_through_str():
 
 
 def test_git_ref_assignment_must_be_within_the_constraint():
-    """Assigning a git ref a version outside the range it is constrained to fails, instead of
-    silently dropping the range."""
+    """Assigning a git ref a version outside the range raises `VersionLookupError`."""
     assert str(GitVersion("git.main=1:1.3").assigned(Version("1.2"))) == "git.main=1.2"
     with pytest.raises(VersionLookupError, match="outside the range 1.3:"):
         GitVersion("git.main=1.3:").assigned(Version("1.2"))
