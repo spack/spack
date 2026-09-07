@@ -1453,6 +1453,10 @@ class PackageInstaller:
         # List of build requests
         self.build_requests = [BuildRequest(pkg, install_args) for pkg in packages]
 
+        # Set the install prefix on every node, so packages can read Spec.prefix during the
+        # build without the spec reaching into the store (mirrors the new installer).
+        spack.store.STORE.set_prefixes([br.spec for br in self.build_requests])
+
         # When no reporter is configured, use NullInstallRecord to skip log file reads.
         if not create_reports:
             for br in self.build_requests:

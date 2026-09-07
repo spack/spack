@@ -139,6 +139,7 @@ def test_package_installer_with_injected_ui(temporary_store, mock_packages):
     Uses the mark-explicit path (spec installed implicitly, requested explicitly) so the loop
     schedules, reports, and persists to the database without spawning build processes."""
     spec = _make_concrete("trivial-install-test-package")
+    temporary_store.set_prefixes([spec])
     temporary_store.layout.create_install_directory(spec)
     temporary_store.db.add(spec, explicit=False)
 
@@ -237,6 +238,7 @@ def test_overwrite_reinstalls_through_event_loop(temporary_store, mock_packages)
     """An overwrite install of an already-installed spec launches a build and refreshes the
     database record."""
     spec = _make_concrete("trivial-install-test-package")
+    temporary_store.set_prefixes([spec])
     temporary_store.layout.create_install_directory(spec)
     temporary_store.db.add(spec, explicit=True)
     old_time = _record(temporary_store, spec).installation_time

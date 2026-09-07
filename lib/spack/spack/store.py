@@ -32,7 +32,9 @@ import spack.directory_layout
 import spack.error
 import spack.package_prefs
 import spack.paths
+import spack.repo
 import spack.spec
+import spack.traverse
 import spack.util.lang
 import spack.util.path
 from spack.util import filesystem as fs
@@ -213,6 +215,34 @@ class Store:
     def reindex(self) -> None:
         """Convenience function to reindex the store DB with its own layout."""
         return self.db.reindex()
+
+    def set_prefixes(self, specs: List["spack.spec.Spec"]) -> None:
+        """Set the install prefix on every non-external node reachable from ``specs``.
+
+        Installed specs get the path recorded in the database (which may live in an upstream
+        or a non-default install tree); everything else gets the deterministic layout path.
+        External specs resolve their prefix from ``external_path`` on access, so they are skipped.
+        """
+        # Dedup by identity (not by hash): duplicate objects that share a dag hash -- e.g. an
+        # unbound runtime present in several included concrete environments -- are distinct specs
+        # and each needs its own prefix stamped. Always re-resolve rather than skipping specs that
+        # already have a prefix: the install prefix is relative to *this* store, and a spec may
+        # have been stamped against a different one (e.g. at concretization time).
+        with self.db.read_transaction():
+            for s in spack.traverse.traverse_nodes(specs):
+                if s.external:
+                    continue
+                _, record = self.db.query_by_spec_hash(s.dag_hash())
+                if record and record.path:
+                    s.set_prefix(record.path)
+                    continue
+                try:
+                    # The layout path depends on the package (projections), which may live in a
+                    # repo that is no longer available (e.g. a stale lockfile spec). Leave such a
+                    # spec unstamped rather than failing here; reading its prefix will raise later.
+                    s.set_prefix(self.layout.path_for_spec(s))
+                except spack.repo.UnknownEntityError:
+                    continue
 
     def install_sbang(self) -> None:
         """Install the sbang script in this store's bin directory.

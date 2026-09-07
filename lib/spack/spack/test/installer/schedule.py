@@ -881,6 +881,9 @@ def _schedule(
     explicit: Optional[Set[str]] = None,
 ) -> ScheduleResult:
     """Call schedule_builds() with inert defaults, so tests spell out only what they are about."""
+    # The real BuildGraph stamps prefixes on its nodes; mirror that here for specs a test did not
+    # give a deliberate prefix, so schedule_builds() can read Spec.prefix.
+    store.set_prefixes([s for s in build_graph.nodes.values() if s._prefix is None])
     return schedule_builds(
         pending,
         build_graph,
@@ -905,6 +908,7 @@ class TestScheduleBuilds:
 
     def _mark_installed(self, spec, store):
         """Create the install directory structure and register the spec in the DB as installed."""
+        store.set_prefixes([spec])
         store.layout.create_install_directory(spec)
         store.db.add(spec, explicit=True)
 
@@ -1071,6 +1075,7 @@ class TestScheduleBuilds:
     ):
         """An installed-implicit spec in explicit set produces a DbUpdate."""
         spec = self._make_spec("trivial-install-test-package")
+        temporary_store.set_prefixes([spec])
         temporary_store.layout.create_install_directory(spec)
         temporary_store.db.add(spec, explicit=False)
         pending = [spec.dag_hash()]
