@@ -161,18 +161,20 @@ def quote_kvp(string: str) -> str:
     strips quotes from quoted arguments, so we cannot know *exactly* how CLI arguments
     were quoted. To compensate, we re-add quotes around anything staritng with ``name=``
     or ``name==``, and we assume the rest of the argument is the value. This covers the
-    common cases of passign flags, e.g., ``cflags="-O2 -g"`` on the command line.
+    common cases of passing flags, e.g., ``cflags="-O2 -g"`` on the command line.
+
+    A trailing ``]`` closes the edge attributes when the shell splits an argument like
+    ``%[virtuals=c deptypes=build]``, it is never part of the value. Quoting turns a virtual
+    assignment whose substitute needs quotes into a variant of an anonymous dependency: the
+    arguments ``%[when=+x]`` ``c=gcc@14`` become ``c='gcc@14'``. Use the edge attribute
+    ``%[when=+x virtuals=c] gcc@14`` or quote the whole spec instead.
     """
     match = spack.spec_parser.SPLIT_KVP.match(string)
     if not match:
         return string
 
-    key, delim, value = match.groups()
-    # A closing bracket ends a list of edge attributes, it is never part of the value. It ends up
-    # here because the shell splits e.g. "%[virtuals=c deptypes=build]" into separate arguments.
-    unbracketed = value.rstrip("]")
-    brackets = value[len(unbracketed) :]
-    return f"{key}{delim}{spack.spec_parser.quote_if_needed(unbracketed)}{brackets}"
+    key, delim, value, brackets = match.groups()
+    return f"{key}{delim}{spack.spec_parser.quote_if_needed(value)}{brackets}"
 
 
 def parse_specs(

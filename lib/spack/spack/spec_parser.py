@@ -118,7 +118,8 @@ GIT_VERSION_ITEM = rf"(?:{GIT_VERSION_PATTERN}(?:={VERSION_OR_RANGE})?)"
 VERSION_LIST_ITEM = rf"(?:{GIT_VERSION_ITEM}|={VERSION}|{VERSION_OR_RANGE})"
 VERSION_LIST = rf"{VERSION_LIST_ITEM}(?:\s*,\s*{VERSION_LIST_ITEM})*"
 
-SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
+#: Split ``key=value]]`` into key, delimiter, value and closing brackets of edge attributes
+SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*?)(\]*)$")
 
 #: A filename starts either with a ``.`` or a ``/`` or a ``{name}/``, or on Windows, a drive letter
 #: followed by a colon and ``\`` or ``.`` or ``{name}\``
