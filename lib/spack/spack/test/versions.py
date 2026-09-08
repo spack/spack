@@ -792,7 +792,11 @@ def test_git_ref_assignment_must_be_within_the_constraint():
 
 
 def test_git_branch_with_slash(monkeypatch):
-    monkeypatch.setattr(GitRefLookup, "get", lambda self, ref: ("1.2", 0))
+    def get(self, ref):
+        assert ref == "feature/bar"
+        return "1.2", 0
+
+    monkeypatch.setattr(GitRefLookup, "get", get)
     spec = assign_git_versions(spack.spec.Spec("git-test-commit@git.feature/bar"))
     assert str(spec.version) == "git.feature/bar=1.2"
     serialized = VersionList([spec.version]).to_dict()
