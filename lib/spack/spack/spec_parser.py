@@ -102,9 +102,10 @@ QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
 
 VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
+VERSION_OR_RANGE = rf"(?:{VERSION_RANGE}|{VERSION})"
 #: A git ref, optionally assigned a version or constrained to a range, e.g. ``git.main=1.2:``
-GIT_VERSION_ITEM = rf"(?:{GIT_VERSION_PATTERN}(?:=(?:{VERSION_RANGE}|{VERSION}))?)"
-VERSION_LIST_ITEM = rf"(?:{GIT_VERSION_ITEM}|{VERSION_RANGE}|{VERSION})"
+GIT_VERSION_ITEM = rf"(?:{GIT_VERSION_PATTERN}(?:={VERSION_OR_RANGE})?)"
+VERSION_LIST_ITEM = rf"(?:{GIT_VERSION_ITEM}|{VERSION_OR_RANGE})"
 VERSION_LIST = rf"{VERSION_LIST_ITEM}(?:\s*,\s*{VERSION_LIST_ITEM})*"
 
 SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
