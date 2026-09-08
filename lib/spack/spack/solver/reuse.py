@@ -30,11 +30,7 @@ def spec_filter_from_store(store, *, is_reusable, repo, include=None, exclude=No
     """Constructs a filter that takes the specs from the store passed as argument."""
     factory = functools.partial(_specs_from_store, store=store)
     return SpecFilter(
-        factory=factory,
-        is_usable=is_reusable,
-        include=include or [],
-        exclude=exclude or [],
-        repo=repo,
+        factory=factory, is_usable=is_reusable, include=include, exclude=exclude, repo=repo
     )
 
 
@@ -46,11 +42,7 @@ def spec_filter_from_buildcache(
         _specs_from_mirror, binary_index=context.binary_index, config=context.config
     )
     return SpecFilter(
-        factory=factory,
-        is_usable=is_reusable,
-        include=include or [],
-        exclude=exclude or [],
-        repo=context.repo,
+        factory=factory, is_usable=is_reusable, include=include, exclude=exclude, repo=context.repo
     )
 
 
@@ -59,11 +51,7 @@ def spec_filter_from_environment(
 ) -> SpecFilter:
     factory = functools.partial(_specs_from_environment, env=env)
     return SpecFilter(
-        factory=factory,
-        is_usable=is_reusable,
-        include=include or [],
-        exclude=exclude or [],
-        repo=repo,
+        factory=factory, is_usable=is_reusable, include=include, exclude=exclude, repo=repo
     )
 
 
@@ -73,8 +61,8 @@ def spec_filter_from_packages_yaml(
     return SpecFilter(
         external_parser.all_specs,
         is_usable=is_reusable,
-        include=include or [],
-        exclude=exclude or [],
+        include=include,
+        exclude=exclude,
         repo=repo,
     )
 

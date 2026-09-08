@@ -1918,11 +1918,6 @@ def _edge_is_redundant(
     return _satisfies_edge(given, edge, resolve_virtuals, repo)
 
 
-def _repo_or_default(repo: Optional["spack.repo.RepoPath"]) -> "spack.repo.RepoPath":
-    """Return ``repo``, or the process-wide repositories when no repository was injected."""
-    return repo if repo is not None else spack.repo.PATH
-
-
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec:
     compiler = DeprecatedCompilerSpec()
@@ -3226,7 +3221,7 @@ class Spec:
         Args:
             repo: repositories to look packages up in. Defaults to the process-wide ones.
         """
-        repo = _repo_or_default(repo)
+        repo = spack.repo.repo_or_default(repo)
         # FIXME: this function should be lazy, and collect all the errors
         # FIXME: before raising the exceptions, instead of being greedy and
         # FIXME: raise just the first one encountered
@@ -3498,7 +3493,7 @@ class Spec:
             if not resolve_virtuals:
                 return False
 
-            repo = _repo_or_default(repo)
+            repo = spack.repo.repo_or_default(repo)
             self_virtual = repo.is_virtual(self.name)
             other_virtual = repo.is_virtual(other.name)
             if self_virtual and other_virtual:
@@ -3595,7 +3590,7 @@ class Spec:
             return True
 
         # For virtual dependencies, we need to dig a little deeper.
-        repo = _repo_or_default(repo)
+        repo = spack.repo.repo_or_default(repo)
         self_index = spack.provider_index.ProviderIndex(
             repository=repo, specs=self.traverse(), restrict=True
         )
@@ -3644,7 +3639,7 @@ class Spec:
             return False
 
         # Get the package instance
-        repo = _repo_or_default(repo)
+        repo = spack.repo.repo_or_default(repo)
         if self.concrete:
             try:
                 pkg = self._package_from(repo)
@@ -3838,7 +3833,7 @@ class Spec:
         TODO: this only checks in the package; it doesn't resurrect old
         patches from install directories, but it probably should.
         """
-        return self._patches_from(_repo_or_default(None))
+        return self._patches_from(spack.repo.repo_or_default(None))
 
     def _patches_from(self, repo: "spack.repo.RepoPath") -> List["spack.patch.Patch"]:
         """Return the patch objects for this spec, looked up in ``repo``.
@@ -4923,7 +4918,10 @@ class Spec:
         """Return set of virtuals provided by self in the context of root"""
         if root is self:
             # Could be using any virtual the package can provide
-            return {v.name for v in self._package_from(_repo_or_default(repo)).virtuals_provided}
+            return {
+                v.name
+                for v in self._package_from(spack.repo.repo_or_default(repo)).virtuals_provided
+            }
 
         hashes = [s.dag_hash() for s in root.traverse()]
         in_edges = set(
@@ -5466,7 +5464,7 @@ def substitute_abstract_variants(spec: Spec, *, repo=None):
         spec: spec on which to operate the substitution
         repo: repositories to look the package up in. Defaults to the process-wide ones.
     """
-    repo = _repo_or_default(repo)
+    repo = spack.repo.repo_or_default(repo)
     # This method needs to be best effort so that it works in matrix exclusion
     # in $spack/lib/spack/spack/spec_list.py
     unknown = []

@@ -103,9 +103,7 @@ def supported_compilers(*, repo: Optional[spack.repo.RepoPath] = None) -> List[s
     Args:
         repo: package repository to query. If None, the global ``spack.repo.PATH`` is used.
     """
-    if repo is None:
-        repo = spack.repo.PATH
-    return sorted(repo.packages_with_tags(COMPILER_TAG))
+    return sorted(spack.repo.repo_or_default(repo).packages_with_tags(COMPILER_TAG))
 
 
 def all_compilers(

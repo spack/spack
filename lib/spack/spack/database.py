@@ -1687,7 +1687,7 @@ class Database:
             not results
             and query_spec is not None
             and deferred
-            and (repo if repo is not None else spack.repo.PATH).is_virtual(query_spec.name)
+            and spack.repo.repo_or_default(repo).is_virtual(query_spec.name)
         ):
             results = [spec for spec in deferred if spec.satisfies(query_spec, repo=repo)]
 

@@ -247,7 +247,7 @@ class ExternalSpecsParser:
             spack.repo.UnknownPackageError: if a package does not exist,
                 and allow_nonexisting is False.
         """
-        self.repo = repo if repo is not None else spack.repo.PATH
+        self.repo = spack.repo.repo_or_default(repo)
         self.external_dicts = external_dicts
         self.specs_by_external_id: Dict[str, ExternalSpecAndConfig] = {}
         self.specs_by_name: Dict[str, List[ExternalSpecAndConfig]] = {}

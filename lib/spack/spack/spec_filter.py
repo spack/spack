@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import spack.spec
 
@@ -15,8 +15,8 @@ class SpecFilter:
         self,
         factory: Callable[[], List[spack.spec.Spec]],
         is_usable: Callable[[spack.spec.Spec], bool],
-        include: List[str],
-        exclude: List[str],
+        include: Optional[List[str]] = None,
+        exclude: Optional[List[str]] = None,
         repo=None,
     ) -> None:
         """
@@ -31,8 +31,8 @@ class SpecFilter:
         """
         self.factory = factory
         self.is_usable = is_usable
-        self.include = include
-        self.exclude = exclude
+        self.include = include or []
+        self.exclude = exclude or []
         self.repo = repo
 
     def is_selected(self, s: spack.spec.Spec) -> bool:

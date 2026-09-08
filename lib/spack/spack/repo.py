@@ -72,6 +72,15 @@ _API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
 SPACK_REPO_INDEX_FILE_NAME = "spack-repo-index.yaml"
 
 
+def repo_or_default(repo: Optional["RepoPath"]) -> "RepoPath":
+    """Return ``repo``, or the process-wide repositories when none was injected.
+
+    Call sites using this still read a process global; they are the ones left to convert to a
+    required argument.
+    """
+    return repo if repo is not None else PATH
+
+
 def package_repository_lock(config: spack.config.Configuration) -> spack.util.lock.Lock:
     """Lock for process safety when cloning remote package repositories"""
     return spack.util.lock.Lock(
@@ -763,9 +772,7 @@ class RepoPath:
             cache = spack.caches.MISC_CACHE
 
         return RepoPath.from_descriptors(
-            descriptors=RepoDescriptors.from_config(
-                lock=package_repository_lock(config), config=config
-            ),
+            descriptors=RepoDescriptors.from_config(config),
             cache=cache,
             overrides=package_attributes_overrides(config),
         )
@@ -2017,9 +2024,8 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
         return f"RepoDescriptors({self.descriptors!r})"
 
     @staticmethod
-    def from_config(
-        lock: spack.util.lock.Lock, config: spack.config.Configuration, scope=None
-    ) -> "RepoDescriptors":
+    def from_config(config: spack.config.Configuration, scope=None) -> "RepoDescriptors":
+        lock = package_repository_lock(config)
         return RepoDescriptors(
             {
                 name: parse_config_descriptor(name, cfg, lock)
