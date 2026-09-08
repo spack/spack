@@ -23,7 +23,7 @@ from .common import (
 )
 
 # Valid version characters
-VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$")
+VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 # regex for version segments
 SEGMENT_REGEX = re.compile(r"(?:(?P<num>[0-9]+)|(?P<str>[a-zA-Z]+))(?P<sep>[_.-]*)")
@@ -546,16 +546,14 @@ class GitVersion(ConcreteVersion):
         # Drop `git.` prefix
         normalized_string = string[4:] if self.has_git_prefix else string
 
-        if "=" in normalized_string:
-            # Store the git reference, and parse the user provided version or range.
-            self.ref, constraint = normalized_string.split("=")
-            if ":" in constraint:
-                self.constraint = _parse_range(constraint)
-            else:
-                self.constraint = StandardVersion.from_string(constraint)
-        else:
-            self.ref = normalized_string
+        # Store the git reference, and parse the user provided version or range.
+        self.ref, sep, constraint = normalized_string.partition("=")
+        if not sep:
             self.constraint = _UNBOUNDED_RANGE
+        elif ":" in constraint:
+            self.constraint = _parse_range(constraint)
+        else:
+            self.constraint = StandardVersion.from_string(constraint)
 
         # Used by fetcher
         self.is_commit: bool = is_git_commit_sha(self.ref)
@@ -1334,7 +1332,7 @@ def VersionRange(lo: Union[str, StandardVersion], hi: Union[str, StandardVersion
 
 def _parse_range(string: str) -> ClosedOpenRange:
     """Parse ``lo:hi``, ``lo:``, ``:hi`` or ``:`` into a range."""
-    s, e = string.split(":")
+    s, _, e = string.partition(":")
     lo = _STANDARD_VERSION_TYPEMIN if s == "" else StandardVersion.from_string(s)
     hi = _STANDARD_VERSION_TYPEMAX if e == "" else StandardVersion.from_string(e)
     return VersionRange(lo, hi)

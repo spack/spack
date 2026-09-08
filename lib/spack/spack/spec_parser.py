@@ -31,7 +31,7 @@ Here is the EBNF grammar for a spec::
     compiler      = id [@version_list]
 
     version_list  = version_item [ { , version_item } ]
-    version_item  = version | version_range | git_version [= (version|version_range)]
+    version_item  = version | =version | version_range | git_version [= (version|version_range)]
     version_range = vid:vid | vid: | :vid | :
     version       = vid
 
@@ -101,12 +101,13 @@ VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=%^\~\/\\]+)"
 #: Quoted values can be *anything* in between quotes, including escaped quotes.
 QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
 
-VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
+VERSION = r"[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b"
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
 VERSION_OR_RANGE = rf"(?:{VERSION_RANGE}|{VERSION})"
 #: A git ref, optionally assigned a version or constrained to a range, e.g. ``git.main=1.2:``
 GIT_VERSION_ITEM = rf"(?:{GIT_VERSION_PATTERN}(?:={VERSION_OR_RANGE})?)"
-VERSION_LIST_ITEM = rf"(?:{GIT_VERSION_ITEM}|{VERSION_OR_RANGE})"
+#: Either a git version, an exact version, or a version range.
+VERSION_LIST_ITEM = rf"(?:{GIT_VERSION_ITEM}|={VERSION}|{VERSION_OR_RANGE})"
 VERSION_LIST = rf"{VERSION_LIST_ITEM}(?:\s*,\s*{VERSION_LIST_ITEM})*"
 
 SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
