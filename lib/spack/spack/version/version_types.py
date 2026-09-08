@@ -529,7 +529,7 @@ class GitVersion(ConcreteVersion):
 
     Git versions of the form ``git.<ref>=<version>`` are concrete and can be compared to other
     versions. Git versions with a range constraint can be made concrete by calling
-    ``assigned()` with a version that satisfies the constraint.
+    ``assigned`` with a version that satisfies the constraint.
     """
 
     __slots__ = ("has_git_prefix", "commit_sha", "ref", "is_commit", "constraint")
