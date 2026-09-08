@@ -303,12 +303,14 @@ def _concretize_one(
             return spec.copy()
 
         start = time.monotonic()
-        concrete = _solve_one(spec, tests=tests, factory=factory)
+        concrete = _solve_one(spec, tests=tests, factory=factory, ui=ui)
         ui.on_spec_concretized(spec, concrete=concrete, count=1, duration=time.monotonic() - start)
         return concrete
 
 
-def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFactory"]) -> Spec:
+def _solve_one(
+    spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFactory"], ui: ConcretizerUI
+) -> Spec:
     """Run the single solve that concretizes ``spec``, and pick its answer."""
     from spack.solver.asp import Solver
 
@@ -319,7 +321,7 @@ def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFa
             )
 
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = Solver(specs_factory=factory).solve(
+    result = Solver(specs_factory=factory, ui=ui).solve(
         [spec], tests=tests, allow_deprecated=allow_deprecated
     )
 
