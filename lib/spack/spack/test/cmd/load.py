@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
+import shutil
 import sys
 
 import pytest
@@ -24,7 +25,7 @@ def _get_shell_cmd_invocation(cmd, shell):
     return cmd
 
 
-def _get_load_cmds(spec, shell):
+def _get_load_cmds_from_script(spec, shell):
     load_script_file = spec_script.path_to_load_shell_script(spec, shell[2:])
 
     with open(load_script_file, "r", encoding="utf-8") as f:
@@ -52,7 +53,7 @@ def test_manpath_trailing_colon(
     os.environ["MANPATH"] = "/usr/share/man" + os.pathsep + "/usr/local/share/man"
 
     load(shell, "mpileaks")
-    load_cmds = _get_load_cmds(mpileaks_spec, shell)
+    load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
 
     prepend_cmd = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} MANPATH"
     manpath_prepends = [line for line in load_cmds.splitlines() if prepend_cmd in line]
@@ -86,7 +87,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
 
         load(shell, "mpileaks")
 
-        load_cmds = _get_load_cmds(mpileaks_spec, shell)
+        load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
 
         def extract_value(output, variable):
             value = []
@@ -136,7 +137,9 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
     else:
         paths_sh = test_load_shell("--sh")
         paths_csh = test_load_shell("--csh")
+        paths_fish = test_load_shell("--fish")
         assert paths_sh == paths_csh
+        assert paths_sh == paths_fish
 
 
 @pytest.mark.parametrize(
@@ -150,7 +153,7 @@ def test_load_includes_run_env(shell, install_mockery, mock_fetch, mock_archive,
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
     load(shell, "mpileaks")
-    load_cmds = _get_load_cmds(mpileaks_spec, shell)
+    load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
 
     if "bat" in shell:
         set_cmd = f'{_get_shell_cmd_invocation("_spack_env_set", shell)} FOOBAR "mpileaks"'
@@ -180,7 +183,7 @@ def test_load_first(shell, install_mockery, mock_fetch, mock_archive, mock_packa
 def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that spack load prints an error message without a shell."""
     install("--fake", "mpileaks")
-    os.environ["SPACK_SHELL"] = ""
+    # os.environ["SPACK_SHELL"] = ""
 
     out = load("mpileaks", fail_on_error=False)
     assert "To set up shell support" in out
@@ -263,8 +266,6 @@ def test_load_script_directory_creation(
 
     spec_cache_dir = os.path.join(mpileaks_spec.prefix, ".spack")
     if os.path.exists(spec_cache_dir):
-        import shutil
-
         shutil.rmtree(spec_cache_dir)
 
     assert not os.path.exists(spec_cache_dir)
@@ -346,12 +347,12 @@ def test_load_script_content_consistency(
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
     load(shell, "mpileaks")
-    first_content = _get_load_cmds(mpileaks_spec, shell)
+    first_content = _get_load_cmds_from_script(mpileaks_spec, shell)
 
     os.remove(spec_script.path_to_load_shell_script(mpileaks_spec, shell[2:]))
     load(shell, "mpileaks")
 
-    second_content = _get_load_cmds(mpileaks_spec, shell)
+    second_content = _get_load_cmds_from_script(mpileaks_spec, shell)
 
     first_lines = [line for line in first_content.splitlines() if "Generated on:" not in line]
     second_lines = [line for line in second_content.splitlines() if "Generated on:" not in line]
@@ -407,7 +408,7 @@ def test_unload_script_reverses_load(
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
     load(shell, "mpileaks")
-    load_cmds = _get_load_cmds(mpileaks_spec, shell)
+    load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
 
     os.environ[uenv.spack_loaded_hashes_var] = mpileaks_spec.dag_hash()
     unload(shell, "mpileaks")
