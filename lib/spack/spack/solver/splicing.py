@@ -5,6 +5,7 @@ from functools import cmp_to_key
 from typing import Dict, List, NamedTuple
 
 import spack.deptypes as dt
+import spack.hash_types as ht
 from spack.spec import Spec
 from spack.traverse import by_dag_hash, traverse_nodes
 
@@ -55,7 +56,7 @@ def _resolve_collected_splices(
             continue
 
         new_spec = spec.copy(deps=False)
-        new_spec.clear_caches(ignore=("package_hash",))
+        new_spec.clear_caches(ignore=(ht.package_hash.attr,))
 
         is_reused = spec.concrete
         if is_reused:
