@@ -5,6 +5,7 @@ import gzip
 import json
 import os
 import pathlib
+import pickle
 import platform
 import re
 import sys
@@ -35,6 +36,7 @@ import spack.repo
 import spack.solver.asp
 import spack.solver.clauses
 import spack.solver.core
+import spack.solver.error
 import spack.solver.input_analysis
 import spack.solver.result
 import spack.solver.reuse
@@ -45,6 +47,7 @@ import spack.util.file_cache
 import spack.util.filesystem
 import spack.util.hash
 import spack.util.lang
+import spack.util.parallel
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.concretize_ui import SolveKind
@@ -6074,3 +6077,73 @@ def test_a_running_solve_reports_progress(mutable_config, mock_packages, monkeyp
     assert best_cost is not None
     # The solve finished on the next turn, so it also reported its end
     assert len(ui.finished) == 1
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        lambda: spack.solver.error.UnsatisfiableSpecError("boom"),
+        lambda: spack.solver.error.InternalConcretizerError("boom"),
+        lambda: spack.solver.error.SolverError(Spec("pkg-a")),
+        lambda: spack.solver.error.OutputDoesNotSatisfyInputError(
+            [(Spec("pkg-a"), Spec("pkg-b")), (Spec("pkg-c"), None)]
+        ),
+    ],
+    ids=["unsatisfiable", "internal", "solver", "output-does-not-satisfy-input"],
+)
+def test_concretizer_errors_survive_a_pipe(factory):
+    """Tests that the errors a solve can raise round trip through pickle, so a worker process
+    can hand them back to the process that owns the pool without losing their type.
+    """
+    error = factory()
+    replayed = pickle.loads(pickle.dumps(error))
+
+    assert type(replayed) is type(error)
+    assert str(replayed) == str(error)
+
+
+def test_output_does_not_satisfy_input_keeps_its_specs():
+    """Tests that the specs of the error survive a pipe, and not just the message built from
+    them: spack.main._handle_solver_bug reports them, and dumps them to JSON for bug reports.
+    """
+    unsolved = [(Spec("pkg-a"), Spec("pkg-b")), (Spec("pkg-c"), None)]
+    error = spack.solver.error.OutputDoesNotSatisfyInputError(unsolved)
+
+    replayed = pickle.loads(pickle.dumps(error))
+
+    assert [(str(i), str(o) if o else None) for i, o in replayed.input_to_output] == [
+        ("pkg-a", "pkg-b"),
+        ("pkg-c", None),
+    ]
+
+
+@pytest.mark.not_on_windows("process pools are disabled on Windows")
+@pytest.mark.enable_parallelism
+def test_worker_error_keeps_its_type_and_replays_its_events(mutable_config, mock_packages):
+    """Tests that a solve failing in a worker process reaches the owning process as the error it
+    raised, carrying the traceback of the worker.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    ui = RecordingUI()
+    # More than one spec, otherwise imap_unordered falls back to a serial map
+    specs = [(Spec("pkg-b"), None), (Spec("pkg-a@99.99.99"), None)]
+
+    with pytest.raises(spack.solver.error.InvalidVersionError) as exc_info:
+        spack.concretize.concretize_separately(specs, ui=ui)
+
+    # Tracebacks don't pickle, so the worker records its own for the parent to print
+    assert "concretize.py" in exc_info.value.traceback
+
+
+def test_failed_solve_reports_the_same_way_without_parallelism(mutable_config, mock_packages):
+    """Tests that disabling parallelism doesn't change how a failed solve is reported: the task
+    returns its outcome either way, so the serial path raises the same error.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    assert not spack.util.parallel.ENABLE_PARALLELISM, "this test wants the serial fallback"
+    ui = RecordingUI()
+
+    with pytest.raises(spack.solver.error.InvalidVersionError):
+        spack.concretize.concretize_separately(
+            [(Spec("pkg-b"), None), (Spec("pkg-a@99.99.99"), None)], ui=ui
+        )

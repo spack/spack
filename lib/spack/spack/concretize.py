@@ -7,6 +7,7 @@ import contextlib
 import importlib
 import sys
 import time
+import traceback
 from collections import Counter
 from typing import (
     TYPE_CHECKING,
@@ -15,6 +16,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
@@ -40,6 +42,20 @@ from spack.concretize_ui import (
 )
 from spack.spec import Spec
 from spack.util import tty
+
+
+class SolveOutcome(NamedTuple):
+    """What a worker process hands back for one spec, whether the solve worked or not."""
+
+    #: Where the spec was in the input, which the pool does not preserve
+    position: int
+    #: The concretized spec, or None if the solve raised
+    concrete: Optional[Spec]
+    #: Seconds spent in the solve
+    duration: float
+    #: What the solve raised, or None if it succeeded
+    error: Optional[Exception]
+
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
 SpecPair = Tuple[Spec, Spec]
@@ -226,19 +242,26 @@ def _concretize_separately(
 
     # Solve the environment in parallel on Linux. imap_unordered falls back to a serial map when
     # parallelism is disabled (e.g. Windows), and when there is at most one spec to solve
-    for j, (i, concrete, duration) in enumerate(
+    for j, outcome in enumerate(
         spack.util.parallel.imap_unordered(
-            _concretize_task,
-            args,
-            processes=processes,
-            debug=tty.is_debug(),
-            maxtaskperchild=1,
-            serialize_env=True,
+            _concretize_task, args, processes=processes, maxtaskperchild=1, serialize_env=True
         ),
         start=1,
     ):
-        ret.append((i, concrete))
-        ui.on_spec_concretized(to_concretize[i], concrete=concrete, count=j, duration=duration)
+        if outcome.error is not None:
+            raise outcome.error
+        if outcome.concrete is None:
+            raise spack.error.SpackError(
+                f"concretization of {to_concretize[outcome.position]} produced neither a spec nor "
+                f"an error"
+            )
+        ret.append((outcome.position, outcome.concrete))
+        ui.on_spec_concretized(
+            to_concretize[outcome.position],
+            concrete=outcome.concrete,
+            count=j,
+            duration=outcome.duration,
+        )
 
     # Add specs in original order, then combine the ones passed in as abstract with the ones
     # passed in as pairs
@@ -251,12 +274,18 @@ def _concretize_separately(
 
 def _concretize_task(
     packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"]],
-) -> Tuple[int, Spec, float]:
+) -> SolveOutcome:
     index, spec_str, tests, factory = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
-        spec = concretize_one(Spec(spec_str), tests=tests, factory=factory)
-        return index, spec, time.time() - start
+        try:
+            spec = concretize_one(Spec(spec_str), tests=tests, factory=factory)
+        except Exception as e:
+            # Tracebacks don't pickle, so record this one where the parent can print it
+            if isinstance(e, spack.error.SpackError):
+                e.traceback = traceback.format_exc()
+            return SolveOutcome(index, None, time.time() - start, e)
+        return SolveOutcome(index, spec, time.time() - start, None)
 
 
 def concretize_one(
