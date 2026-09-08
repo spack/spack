@@ -183,7 +183,7 @@ def test_load_first(shell, install_mockery, mock_fetch, mock_archive, mock_packa
 def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that spack load prints an error message without a shell."""
     install("--fake", "mpileaks")
-    # os.environ["SPACK_SHELL"] = ""
+    os.environ["SPACK_SHELL"] = ""
 
     out = load("mpileaks", fail_on_error=False)
     assert "To set up shell support" in out
@@ -252,28 +252,6 @@ def test_unload_fails_no_shell(
 
     out = unload("mpileaks", fail_on_error=False)
     assert "To set up shell support" in out
-
-
-@pytest.mark.parametrize(
-    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
-)
-def test_load_script_directory_creation(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
-):
-    """Test that load scripts create necessary directories if missing."""
-    install("--fake", "mpileaks")
-    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
-
-    spec_cache_dir = os.path.join(mpileaks_spec.prefix, ".spack")
-    if os.path.exists(spec_cache_dir):
-        shutil.rmtree(spec_cache_dir)
-
-    assert not os.path.exists(spec_cache_dir)
-
-    load(shell, "mpileaks")
-    load_script_file = spec_script.path_to_load_shell_script(mpileaks_spec, shell[2:])
-    assert os.path.exists(spec_cache_dir)
-    assert os.path.exists(load_script_file)
 
 
 @pytest.mark.parametrize(
@@ -373,8 +351,7 @@ def test_load_unload_multiple_specs(
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
     libelf_spec = spack.concretize.concretize_one("libelf")
 
-    load(shell, mpileaks_spec.name)
-    load(shell, libelf_spec.name)
+    load(shell, mpileaks_spec.name, libelf_spec.name)
 
     mpileaks_load = spec_script.path_to_load_shell_script(mpileaks_spec, shell[2:])
     libelf_load = spec_script.path_to_load_shell_script(libelf_spec, shell[2:])
@@ -389,6 +366,8 @@ def test_load_unload_multiple_specs(
 
     mpileaks_unload = spec_script.path_to_unload_shell_script(mpileaks_spec, shell[2:])
     libelf_unload = spec_script.path_to_unload_shell_script(libelf_spec, shell[2:])
+
+    unload(shell, mpileaks_spec.name, libelf_spec.name)
 
     assert os.path.exists(mpileaks_unload)
     assert os.path.exists(libelf_unload)

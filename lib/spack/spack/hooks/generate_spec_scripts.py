@@ -33,9 +33,9 @@ def _get_shell_script_path(spec, shell: str, load: bool) -> str:
         extension = ".ps1"
 
     if load:
-        return os.path.join(spec.prefix, ".spack", f"load{extension}")
+        return os.path.join(spack.store.STORE.layout.metadata_path(spec), f"load{extension}")
     else:
-        return os.path.join(spec.prefix, ".spack", f"unload{extension}")
+        return os.path.join(spack.store.STORE.layout.metadata_path(spec), f"unload{extension}")
 
 
 def path_to_load_shell_script(spec, shell: str) -> str:
