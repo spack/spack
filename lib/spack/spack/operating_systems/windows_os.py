@@ -7,14 +7,23 @@ import os
 import pathlib
 import platform
 import subprocess
-from typing import List
+from typing import Dict, List, Tuple
 
+from spack.archspec import HOST_TARGET_FAMILY
 from spack.error import SpackError
 from spack.util import lang, tty
 from spack.util import windows_registry as winreg
 from spack.version import Version
 
 from ._operating_system import OperatingSystem
+
+#: Directory holding the native MSVC toolset for each host architecture family.
+#: MSVC lays out its compilers as ``bin/<host>/<target>`` under each toolset version;
+#: only the entry whose host and target both match the machine Spack runs on is native.
+NATIVE_MSVC_TOOLSET_DIRS: Dict[str, Tuple[str, str]] = {
+    "x86_64": ("Hostx64", "x64"),
+    "aarch64": ("Hostarm64", "arm64"),
+}
 
 
 def windows_version():
@@ -186,8 +195,13 @@ class WindowsOs(OperatingSystem):
         several levels below one, so the roots are never search paths in their own right.
         """
         _compiler_search_paths = []
-        for p in self.msvc_paths:
-            _compiler_search_paths.extend(glob.glob(os.path.join(p, "*", "bin", "*", "*")))
+        system_arch_family = NATIVE_MSVC_TOOLSET_DIRS.get(HOST_TARGET_FAMILY.name)
+        if system_arch_family is not None:
+            host_dir, target_dir = system_arch_family
+            for p in self.msvc_paths:
+                _compiler_search_paths.extend(
+                    glob.glob(os.path.join(p, "*", "bin", host_dir, target_dir))
+                )
         oneapi_root = self.oneapi_root
         if oneapi_root:
             _compiler_search_paths.extend(
