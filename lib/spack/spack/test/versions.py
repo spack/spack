@@ -837,7 +837,6 @@ def test_version_git_vs_base(string, git):
     ],
 )
 def test_invalid_version_strings(string, error):
-    """A malformed version is a ValueError naming what is wrong, not an internal error."""
     with pytest.raises(ValueError, match=re.escape(error)):
         ver(string)
 
