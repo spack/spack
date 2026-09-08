@@ -34,6 +34,7 @@ import spack.traverse
 import spack.util.parallel
 from spack.concretize_ui import (
     DEFAULT_USER_SPEC_GROUP,
+    BufferedUI,
     ConcretizerUI,
     HeadlessUI,
     SolveKind,
@@ -53,6 +54,8 @@ class SolveOutcome(NamedTuple):
     concrete: Optional[Spec]
     #: Seconds spent in the solve
     duration: float
+    #: The events of the solve, to replay into the frontend
+    buffered: BufferedUI
     #: What the solve raised, or None if it succeeded
     error: Optional[Exception]
 
@@ -212,8 +215,16 @@ def _concretize_separately(
     )
 
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
+    # Workers can't call the frontend, so each buffers its events and we replay them here. The
+    # buffer is per task, so the serial fallback doesn't accumulate events across specs.
     args = [
-        (i, str(abstract), tests, factory)
+        (
+            i,
+            str(abstract),
+            tests,
+            factory,
+            BufferedUI(solves=ui.reports_solves, asp_program=ui.reports_asp_program),
+        )
         for i, abstract in enumerate(to_concretize)
         if not abstract.concrete
     ]
@@ -248,6 +259,8 @@ def _concretize_separately(
         ),
         start=1,
     ):
+        # Replay before raising, so a solve that failed still reports what it had to say
+        outcome.buffered.replay(ui)
         if outcome.error is not None:
             raise outcome.error
         if outcome.concrete is None:
@@ -273,19 +286,19 @@ def _concretize_separately(
 
 
 def _concretize_task(
-    packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"]],
+    packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"], BufferedUI],
 ) -> SolveOutcome:
-    index, spec_str, tests, factory = packed_arguments
+    index, spec_str, tests, factory, buffered = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
         try:
-            spec = concretize_one(Spec(spec_str), tests=tests, factory=factory)
+            spec = concretize_one(Spec(spec_str), tests=tests, factory=factory, ui=buffered)
         except Exception as e:
             # Tracebacks don't pickle, so record this one where the parent can print it
             if isinstance(e, spack.error.SpackError):
                 e.traceback = traceback.format_exc()
-            return SolveOutcome(index, None, time.time() - start, e)
-        return SolveOutcome(index, spec, time.time() - start, None)
+            return SolveOutcome(index, None, time.time() - start, buffered, e)
+        return SolveOutcome(index, spec, time.time() - start, buffered, None)
 
 
 def concretize_one(
