@@ -101,7 +101,11 @@ VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=%^\~\/\\]+)"
 #: Quoted values can be *anything* in between quotes, including escaped quotes.
 QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
 
-VERSION = r"[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b"
+#: A version is the whole run of version characters, not ending in ``-`` or ``.``, so a
+#: following ``=`` cannot be satisfied by backtracking into a shorter version.
+VERSION = r"[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*(?<![\-\.])(?![a-zA-Z_0-9\-\.])"
+#: The upper bound of a range is not the key of a key-value pair: ``@1.2:develop=foo`` is ``@1.2:``
+#: and a variant.
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
 VERSION_OR_RANGE = rf"(?:{VERSION_RANGE}|{VERSION})"
 #: A git ref, optionally assigned a version or constrained to a range, e.g. ``git.main=1.2:``
