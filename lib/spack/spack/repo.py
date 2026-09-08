@@ -1483,14 +1483,14 @@ class Repo:
 
     def _resolve_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
         """Import the module for a package name without namespace, and return its class."""
+        if not self.exists(pkg_name):
+            raise UnknownPackageError(pkg_name, self)
+
         fullname = f"{self.full_namespace}.{self.naming_scheme.pkg_name_to_pkg_dir(pkg_name)}"
         if self.package_api >= (2, 0):
             fullname += ".package"
 
         class_name = nm.pkg_name_to_class_name(pkg_name)
-
-        if not self.exists(pkg_name):
-            raise UnknownPackageError(fullname, self)
 
         try:
             if self.python_path:
