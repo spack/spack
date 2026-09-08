@@ -3699,6 +3699,14 @@ def _develop_specs_from_env(spec, env):
     assert spec.satisfies(dev_info["spec"])
 
 
+def _resolve_input_specs(specs: Sequence[spack.spec.Spec]) -> List[spack.spec.Spec]:
+    """Replace ``/hash`` references by the specs they refer to, and assign git ref versions."""
+    return [
+        spack.version.git_ref_lookup.assign_git_versions(spack.hash_lookup.lookup_hash(s))
+        for s in specs
+    ]
+
+
 class Solver:
     """This is the main external interface class for solving.
 
@@ -3755,10 +3763,7 @@ class Solver:
           setup_only: if True, stop after setup and don't solve (default False).
           allow_deprecated: allow deprecated version in the solve
         """
-        specs = [
-            spack.version.git_ref_lookup.assign_git_versions(spack.hash_lookup.lookup_hash(s))
-            for s in specs
-        ]
+        specs = _resolve_input_specs(specs)
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
@@ -3812,10 +3817,7 @@ class Solver:
         if not specs:
             return
 
-        specs = [
-            spack.version.git_ref_lookup.assign_git_versions(spack.hash_lookup.lookup_hash(s))
-            for s in specs
-        ]
+        specs = _resolve_input_specs(specs)
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
