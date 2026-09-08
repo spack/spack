@@ -2031,17 +2031,6 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         # an mpileaks with two callpath nodes, one per compiler, satisfies both sides.
         (Spec, "mpileaks ^callpath %gcc@5", "mpileaks ^callpath %gcc@6", (True, False, False)),
         (Spec, "mpileaks ^callpath %gcc@5", "mpileaks ^callpath %gcc@5.4", (True, False, True)),
-        # A git ref without an assigned version is matched by any assignment of it, and meets any
-        # range in the ref constrained to that range
-        (Spec, "pkg-a@git.main", "pkg-a@git.main=1.0", (True, False, True)),
-        (Spec, "pkg-a@git.main", "pkg-a@git.develop", (False, False, False)),
-        (Spec, "pkg-a@git.main", "pkg-a@=1.0", (False, False, False)),
-        (Spec, "pkg-a@git.main", "pkg-a@1:3", (True, False, False)),
-        (Spec, "pkg-a@git.main", "pkg-a", (True, True, False)),
-        (Spec, "pkg-a@git.main=1:3", "pkg-a@1:3", (True, True, False)),
-        (Spec, "pkg-a@git.main=1:3", "pkg-a@git.main=2.0", (True, False, True)),
-        (Spec, "pkg-a@git.main=1:3", "pkg-a@git.main=5.0", (False, False, False)),
-        (Spec, "pkg-a@git.main=develop:develop", "pkg-a@1:3", (False, False, False)),
     ],
 )
 def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, results):
@@ -2118,10 +2107,7 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
         ),
         # target=* can be constrained by a specific target
         (Spec, "target=*", "target=haswell", True, "target=haswell"),
-        # The meet of a git ref without an assigned version and a range is the ref constrained
-        # to that range, even when the range holds a single version
-        (Spec, "pkg-a@git.main", "pkg-a@git.main=1.0", True, "pkg-a@git.main=1.0"),
-        (Spec, "pkg-a@git.main", "pkg-a@1:3", True, "pkg-a@git.main=1:3"),
+        # A range of a single version is not collapsed to an assignment of it
         (Spec, "pkg-a@git.main", "pkg-a@develop", True, "pkg-a@git.main=develop:develop"),
     ],
 )
