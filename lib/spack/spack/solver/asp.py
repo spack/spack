@@ -3313,7 +3313,7 @@ def post_process_concretization_result(specs: SpecDict, *, context: SpackContext
         _specs_with_commits(s, repo=context.repo)
 
     # mark concrete and assign hashes to all specs in the solve
-    spack.spec.finalize_concretization(roots.values(), repo=spack.repo.PATH)
+    spack.spec.finalize_concretization(roots.values(), repo=context.repo)
 
     # Unify hashes (this is to avoid duplicates of runtimes and compilers)
     unifier = ConcreteSpecsByHash()

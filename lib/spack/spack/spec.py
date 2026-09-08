@@ -3838,15 +3838,23 @@ class Spec:
         TODO: this only checks in the package; it doesn't resurrect old
         patches from install directories, but it probably should.
         """
+        return self._patches_from(_repo_or_default(None))
+
+    def _patches_from(self, repo: "spack.repo.RepoPath") -> List["spack.patch.Patch"]:
+        """Return the patch objects for this spec, looked up in ``repo``.
+
+        The result is memoized on first call, so a later call with a different repository
+        returns the patches found by the first one.
+        """
         if not hasattr(self, "_patches"):
             self._patches = []
 
             # translate patch sha256sums to patch objects by consulting the index
             if self._patches_assigned():
                 sha256s = list(self.variants["patches"]._patches_in_order_of_appearance)
-                pkg_cls = spack.repo.PATH.get_pkg_class(self.fullname)
+                pkg_cls = repo.get_pkg_class(self.fullname)
                 try:
-                    self._patches = spack.repo.PATH.get_patches_for_package(sha256s, pkg_cls)
+                    self._patches = repo.get_patches_for_package(sha256s, pkg_cls)
                 except spack.error.PatchLookupError as e:
                     raise spack.error.SpecError(
                         f"{e}. This may mean the patch was modified or removed. "
@@ -6078,7 +6086,7 @@ def finalize_concretization(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath
     specs = list(specs)
     for spec in spack.traverse.traverse_nodes(specs):
         if not spec.concrete and not spec._package_hash:
-            spec._package_hash = repo.get_pkg_class(spec.fullname)(spec).content_hash()
+            spec._package_hash = repo.get_pkg_class(spec.fullname)(spec).content_hash(repo=repo)
     for spec in specs:
         spec._mark_concrete()
         spec.dag_hash()  # caches the hash of every node

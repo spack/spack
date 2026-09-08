@@ -1813,7 +1813,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             else:
                 fsys.touch(no_patches_file)
 
-    def content_hash(self, content: Optional[bytes] = None) -> str:
+    def content_hash(self, content: Optional[bytes] = None, *, repo: "spack.repo.RepoPath") -> str:
         """Create a hash based on the artifacts and patches used to build this package.
 
         This includes:
@@ -1826,6 +1826,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         happens to be called on a package with an abstract spec, only applicable (i.e.,
         determinable) portions of the hash will be included.
 
+        Args:
+            content: optionally provide the package.py contents to hash, instead of reading
+                them from ``repo``.
+            repo: repositories the package.py and the patches are read from.
         """
         # list of components to make up the hash
         hash_content = []
@@ -1861,11 +1865,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # we have to call package_hash *before* marking specs concrete
         if self.spec._patches_assigned():
             hash_content.extend(
-                ":".join((p.sha256, str(p.level))).encode("utf-8") for p in self.spec.patches
+                ":".join((p.sha256, str(p.level))).encode("utf-8")
+                for p in self.spec._patches_from(repo)
             )
 
         # package.py contents
-        hash_content.append(package_hash(self.spec, source=content).encode("utf-8"))
+        hash_content.append(package_hash(self.spec, source=content, repo=repo).encode("utf-8"))
 
         # put it all together and encode as base32
         b32_hash = base64.b32encode(

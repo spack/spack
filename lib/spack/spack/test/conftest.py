@@ -2202,7 +2202,7 @@ def brand_new_binary_cache():
     )
 
 
-def _trivial_content_hash(self, content=None) -> str:
+def _trivial_content_hash(self, content=None, *, repo: spack.repo.RepoPath) -> str:
     """Return a trivial package hash for tests to avoid expensive AST parsing."""
     # Pad package name to consistent length and cap at 32 chars for realistic hash length
     return base64.b32encode(f"{self.spec.name:<32}".encode()[:32]).decode().lower()

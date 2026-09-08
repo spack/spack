@@ -6190,3 +6190,17 @@ def test_develop_specs_never_read_the_global_config(
 
         assert result.specs
         assert str(develop_dir) in result.specs[0].variants["dev_path"]
+
+
+@pytest.mark.use_package_hash
+def test_package_hash_is_assigned_through_the_injected_repository(break_globals, injected_context):
+    """Assigning a package hash reads package.py and resolves the patches applied to a node,
+    so it goes through the injected repositories like the rest of the solve.
+
+    Most tests replace the package hash with a mock that reads no repository at all, which
+    would hide both lookups, hence the marker. "patch" is used because it has patches, so the
+    patch index is consulted on top of package.py.
+    """
+    with break_globals("repo"):
+        result = spack.solver.asp.Solver(context=injected_context).solve([Spec("patch")])
+        assert result.specs[0].dag_hash()
