@@ -118,8 +118,10 @@ QUOTED_VALUE = r"(?:'[^']*'|\"[^\"]*\")"
 VERSION = r"[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*(?<![\-\.])(?![a-zA-Z_0-9\-\.])"
 #: The upper bound of a range is not the key of a key-value pair, so ``@1.2:develop=foo`` is
 #: ``@1.2:`` and a variant.
-VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
-VERSION_OR_RANGE = rf"(?:{VERSION_RANGE}|{VERSION})"
+_RANGE_END = rf"(?::(?:{VERSION}(?!\s*=))?)"
+#: A version or a range, with the lower bound factored out so that a plain version is matched
+#: once, instead of as a failed range first and then again as a version
+VERSION_OR_RANGE = rf"(?:{VERSION}{_RANGE_END}?|{_RANGE_END})"
 #: A git ref, optionally assigned a version or constrained to a range, e.g. ``git.main=1.2:``
 GIT_VERSION_ITEM = rf"(?:{GIT_VERSION_PATTERN}(?:={VERSION_OR_RANGE})?)"
 #: Either a git version, an exact version, or a version range.
