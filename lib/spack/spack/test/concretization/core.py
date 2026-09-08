@@ -56,7 +56,7 @@ import spack.util.parallel
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 import spack.version.git_ref_lookup
-from spack.concretize_ui import HeadlessUI, SolveKind
+from spack.concretize_ui import BufferedUI, HeadlessUI, SolveKind
 from spack.config import Configuration
 from spack.database import Database
 from spack.externals import ExternalDependencyError
@@ -5818,6 +5818,9 @@ def test_every_span_is_closed_when_a_solve_raises(mutable_config, mock_packages)
 
     assert (ui.started, ui.ended) == (1, 1)
     assert (len(ui.groups), ui.groups_ended) == (1, 1)
+    # A solve that raised has no result to report
+    assert len(ui.solves) == len(ui.finished)
+    assert ui.finished[-1][0] is None
 
 
 @pytest.mark.parametrize("total,announced", [(2, True), (0, False)])
@@ -6353,7 +6356,8 @@ def test_output_does_not_satisfy_input_keeps_its_specs():
 @pytest.mark.enable_parallelism
 def test_worker_error_keeps_its_type_and_replays_its_events(mutable_config, mock_packages):
     """Tests that a solve failing in a worker process reaches the owning process as the error it
-    raised, carrying the traceback of the worker.
+    raised, with the traceback recorded in the worker, and that the events it had already
+    reported are replayed before it is raised.
     """
     mutable_config.set("concretizer:concretization_cache:enable", False)
     ui = RecordingUI()
@@ -6365,6 +6369,8 @@ def test_worker_error_keeps_its_type_and_replays_its_events(mutable_config, mock
 
     # Tracebacks don't pickle, so the worker records its own for the parent to print
     assert "concretize.py" in exc_info.value.traceback
+    # The solve reported its start before it failed, and that event is replayed
+    assert ["pkg-a@99.99.99"] in [[str(x) for x in solve] for solve in ui.solves]
 
 
 def test_failed_solve_reports_the_same_way_without_parallelism(mutable_config, mock_packages):
@@ -6380,6 +6386,110 @@ def test_failed_solve_reports_the_same_way_without_parallelism(mutable_config, m
             [(Spec("pkg-b"), None), (Spec("pkg-a@99.99.99"), None)], ui=ui, processes=2
         )
 
+    assert ["pkg-a@99.99.99"] in [[str(x) for x in solve] for solve in ui.solves]
+
+
+@pytest.mark.not_on_windows("process pools are disabled on Windows")
+@pytest.mark.enable_parallelism
+def test_solves_in_workers_are_replayed_to_the_frontend(mutable_config, mock_packages):
+    """Tests that solves running in a worker process report to the frontend of the owning
+    process. The events of one spec arrive together, before that spec is reported as done.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    ui = RecordingUI()
+    specs = [(Spec("pkg-a"), None), (Spec("pkg-b"), None)]
+
+    spack.concretize._concretize_separately(specs, ui=ui, processes=2)
+
+    assert len(ui.solves) == len(ui.finished) == 2
+    assert {str(x[0]) for x in ui.solves} == {"pkg-a", "pkg-b"}
+    assert [cached for _, _, _, cached in ui.finished] == [False, False]
+    # Solves are replayed, so the ASP program crossed the process boundary too
+    assert len(ui.programs) == 2
+    # A progress tick is live-only, so it is never replayed
+    assert ui.progress == []
+
+
+def test_worker_solves_are_not_buffered_for_a_headless_frontend(mutable_config, mock_packages):
+    """Tests that a frontend that renders no solve keeps the workers from shipping one back,
+    since a whole Result, and an ASP program of tens of MiB, would cross a pipe per spec.
+    """
+    ui = HeadlessUI()
+    assert ui.reports_solves is False and ui.reports_asp_program is False
+
+    buffered = BufferedUI(solves=ui.reports_solves, asp_program=ui.reports_asp_program)
+    outcome = spack.concretize._concretize_task((0, "pkg-a", False, None, buffered))
+
+    assert outcome.error is None
+    assert outcome.concrete is not None and outcome.concrete.concrete
+
+    replayed = RecordingUI()
+    outcome.buffered.replay(replayed)
+    assert replayed.solves == [] and replayed.programs == [] and replayed.finished == []
+
+
+def test_buffered_ui_records_only_what_is_asked_for(mutable_config, mock_packages):
+    """Tests that a buffer set up without the ASP program drops it, and replays the rest."""
+    buffered = BufferedUI(asp_program=False)
+    spack.solver.asp.Solver(context=spack.context.default(), ui=buffered).solve([Spec("pkg-a")])
+
+    ui = RecordingUI()
+    buffered.replay(ui)
+    assert [str(x) for x in ui.solves[0]] == ["pkg-a"]
+    assert len(ui.finished) == 1 and ui.programs == []
+
+
+def test_buffered_asp_program_round_trips_exactly(mutable_config, mock_packages):
+    """Tests that a buffered ASP program is replayed byte for byte, and pickles to a fraction of
+    its size.
+
+    Some entries of a program embed a newline, so joining the lines and splitting them back is
+    not a round trip, which is why the buffer pickles instead.
+    """
+    ui = RecordingUI()
+    spack.solver.asp.Solver(context=spack.context.default(), ui=ui).solve([Spec("pkg-a")])
+    program = ui.programs[0]
+    assert any("\n" in line for line in program), "expected entries that embed a newline"
+
+    buffered = BufferedUI(asp_program=True)
+    buffered.on_asp_program_generated(program)
+    replayed = RecordingUI()
+    buffered.replay(replayed)
+
+    assert replayed.programs == [program]
+    # The buffer is what crosses the pipe from a worker
+    assert len(pickle.dumps(buffered)) < len(pickle.dumps(program)) / 4
+
+
+def test_worker_solves_are_replayed_the_same_way_without_parallelism(
+    mutable_config, mock_packages
+):
+    """Tests that disabling parallelism doesn't change what the frontend sees. The serial path
+    builds a buffer per task too, so events don't accumulate across specs.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    assert not spack.util.parallel.ENABLE_PARALLELISM, "this test wants the serial fallback"
+
+    ui = RecordingUI()
+    spack.concretize._concretize_separately(
+        [(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui, processes=2
+    )
+
+    assert len(ui.solves) == len(ui.finished) == len(ui.programs) == 2
+    # Each solve reports its own specs, rather than accumulating the ones before it
+    assert [[str(x) for x in specs] for specs in ui.solves] == [["pkg-a"], ["pkg-b"]]
+
+
+def test_buffered_ui_records_warnings_for_a_frontend_that_renders_no_solve():
+    """Tests that a worker buffers its warnings even when the frontend wants no solve shipped."""
+    buffered = BufferedUI(solves=False)
+    buffered.on_warning("something happened", key="a-key")
+
+    ui = RecordingUI()
+    buffered.replay(ui)
+
+    assert ui.warnings == [("something happened", "a-key")]
+
 
 def test_diagnostics_are_reported_without_a_frontend(mutable_config, mock_packages):
     """Tests that a caller passing no frontend still sees the warnings of a concretization."""
@@ -6387,3 +6497,21 @@ def test_diagnostics_are_reported_without_a_frontend(mutable_config, mock_packag
 
     with pytest.warns(UserWarning, match='using "deprecated-versions@1.1.0"'):
         spack.concretize.concretize_one("deprecated-versions@1.1.0")
+
+
+@pytest.mark.parametrize("unify", [True, "when_possible", False])
+def test_diagnostics_are_reported_under_every_unify_mode(unify, mutable_config, mock_packages):
+    """Tests that a diagnostic found while concretizing more than one spec is reported to the
+    frontend of the concretization, whatever the unification strategy.
+    """
+    mutable_config.set("concretizer:unify", unify)
+    mutable_config.set("config:deprecated", True)
+    ui = RecordingUI()
+
+    spack.concretize.concretize_spec_pairs(
+        [(Spec("deprecated-versions@1.1.0"), None), (Spec("pkg-a"), None)], ui=ui
+    )
+
+    assert 'using "deprecated-versions@1.1.0" which is a deprecated version' in [
+        message for message, _ in ui.warnings
+    ]
