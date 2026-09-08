@@ -24,7 +24,9 @@ def is_git_version(string: str) -> bool:
     if string.startswith("git."):
         return True
     ref, sep, _ = string.partition("=")
-    return bool(ref) and ":" not in ref if sep else is_git_commit_sha(ref)
+    if not sep:
+        return is_git_commit_sha(ref)
+    return bool(ref) and ":" not in ref
 
 
 class VersionError(spack.error.SpackError):
