@@ -2580,7 +2580,6 @@ packages:
         database_mutable_config: Database,
         mock_packages,
         transitive,
-        capfd,
     ):
         mpich_spec = database_mutable_config.query("mpich")[0]
         splice_info = {
@@ -2590,7 +2589,12 @@ packages:
         }
         mutable_config.set("concretizer", {"splice": {"explicit": [splice_info]}})
 
-        spec = spack.concretize.concretize_one("hdf5 ^zmpi")
+        with pytest.warns(
+            UserWarning, match="explicit splice configuration has caused"
+        ) as recorded:
+            spec = spack.concretize.concretize_one(
+                "hdf5 ^zmpi", ui=spack.concretize_ui.TerminalUI()
+            )
 
         assert spec.satisfies(f"^mpich@{mpich_spec.version}")
         assert spec.build_spec.dependencies(name="zmpi", deptype="link")
@@ -2598,10 +2602,9 @@ packages:
         assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
         assert not spec.dependencies(name="zmpi", deptype="link")
 
-        captured = capfd.readouterr()
-        assert "Warning: explicit splice configuration has caused" in captured.err
-        assert "hdf5 ^zmpi" in captured.err
-        assert str(spec) in captured.err
+        warned = "\n".join(str(x.message) for x in recorded)
+        assert "hdf5 ^zmpi" in warned
+        assert str(spec) in warned
 
     def test_explicit_splice_fails_nonexistent(
         self, mutable_config: Configuration, mock_packages, mock_store
@@ -6208,3 +6211,46 @@ def test_terminal_ui_reports_a_keyed_warning_once():
         ui.on_warning("unkeyed diagnostic")
         ui.on_warning("unkeyed diagnostic")
     assert len(recorded) == 2
+
+
+def test_deprecated_version_warns_on_a_concretization_cache_hit(
+    use_concretization_cache, mutable_config: Configuration
+):
+    """Tests that a result served from the concretization cache reports the same diagnostics as a
+    fresh solve. SpecBuilder does not run on a cache hit, so the warnings are stored on the Result.
+    """
+    mutable_config.set("config:deprecated", True)
+    spec_str = "deprecated-versions@1.1.0"
+    message = 'using "deprecated-versions@1.1.0" which is a deprecated version'
+
+    fresh = RecordingUI()
+    spack.concretize.concretize_one(spec_str, ui=fresh)
+    assert [cached for _, _, _, cached in fresh.finished] == [False]
+    assert message in [text for text, _ in fresh.warnings]
+
+    from_cache = RecordingUI()
+    spack.concretize.concretize_one(spec_str, ui=from_cache)
+    assert [cached for _, _, _, cached in from_cache.finished] == [True]
+    assert message in [text for text, _ in from_cache.warnings]
+
+
+def test_result_warnings_are_serialized(mock_packages, mutable_config: Configuration):
+    """Tests that the diagnostics of a solve are part of what the concretization cache stores."""
+    specs = [Spec("deprecated-versions@1.1.0")]
+
+    result = spack.solver.asp.Solver(context=spack.context.default()).solve(
+        specs, allow_deprecated=True
+    )
+
+    assert result.warnings == ['using "deprecated-versions@1.1.0" which is a deprecated version']
+    assert (
+        spack.solver.result.Result.from_dict(result.to_dict(), specs, repo=result.repo) == result
+    )
+
+
+def test_diagnostics_are_reported_without_a_frontend(mutable_config, mock_packages):
+    """Tests that a caller passing no frontend still sees the warnings of a concretization."""
+    mutable_config.set("config:deprecated", True)
+
+    with pytest.warns(UserWarning, match='using "deprecated-versions@1.1.0"'):
+        spack.concretize.concretize_one("deprecated-versions@1.1.0")

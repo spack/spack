@@ -643,3 +643,12 @@ packages:
     )
     with pytest.warns(UserWarning, match="not-a-real-uarch"):
         concretize_one("x4", ui=TerminalUI())
+
+
+def test_solve_command_reports_warnings(mutable_config, mock_packages):
+    """Tests that spack solve shows the warnings of the solves it runs."""
+    mutable_config.set("concretizer:unify", True)
+    mutable_config.set("config:deprecated", True)
+
+    with pytest.warns(UserWarning, match='using "deprecated-versions@1.1.0"'):
+        solve("deprecated-versions@1.1.0")

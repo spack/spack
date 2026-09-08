@@ -764,6 +764,9 @@ class PyclingoDriver:
         # add best spec to the results
         result.answers.append((list(min_cost), 0, spec_dict))
 
+        # diagnostics collected while building the specs, cached along with the answer
+        result.warnings = builder.warnings
+
         # get optimization criteria
         criteria_args = extract_args(best_model, "opt_priority")
         result.criteria = build_criteria_names(min_cost, criteria_args)
@@ -925,6 +928,16 @@ class PyclingoDriver:
         # apply post-concretization transformations
         for _, _, spec_dict in result.answers:
             post_process_concretization_result(spec_dict, context=setup.context, ui=ui)
+
+        # Building the specs is what finds the diagnostics that are not about the model itself.
+        # It has to run after post-processing and after the cache store, since a cache hit
+        # rebuilds them from the answers anyway.
+        result.ensure_specs()
+
+        # emitted here, so that a cached result reports the same diagnostics as a fresh solve.
+        # Keyed by the message, so specs sharing a diagnostic report it once between them.
+        for message in result.warnings:
+            ui.on_warning(message, key=message)
 
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
@@ -3015,6 +3028,9 @@ class SpecBuilder:
         self._specs: Dict[NodeId, spack.spec.Spec] = {}
         self.repo = repo
 
+        #: Diagnostics about the answer set, stored on the Result
+        self.warnings: List[str] = []
+
         # Matches parent nodes to splice node
         self._splices: SpliceDict = {}
 
@@ -3084,7 +3100,7 @@ class SpecBuilder:
         dependencies[0].update_virtuals(virtual)
 
     def deprecated(self, node: NodeId, version: str) -> None:
-        tty.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
+        self.warnings.append(f'using "{node.pkg}@{version}" which is a deprecated version')
 
     def splice_at_hash(
         self, parent_node: NodeId, splice_node: NodeId, child_name: str, child_hash: str
