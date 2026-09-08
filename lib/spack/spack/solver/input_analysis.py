@@ -86,11 +86,9 @@ class NoStaticAnalysis(PossibleDependencyGraph):
 
     def is_allowed_on_this_platform(self, *, pkg_name: str) -> bool:
         """Returns true if a package is allowed on the current host"""
-        result = self._allowed_on_platform.get(pkg_name)
-        if result is None:
-            result = self._compute_allowed_on_platform(pkg_name)
-            self._allowed_on_platform[pkg_name] = result
-        return result
+        if pkg_name not in self._allowed_on_platform:
+            self._allowed_on_platform[pkg_name] = self._compute_allowed_on_platform(pkg_name)
+        return self._allowed_on_platform[pkg_name]
 
     def _compute_allowed_on_platform(self, pkg_name: str) -> bool:
         pkg_cls = self.repo.get_pkg_class(pkg_name)
@@ -289,11 +287,9 @@ class StaticAnalysis(NoStaticAnalysis):
         super().__init__(configuration=configuration, repo=repo)
 
     def providers_for(self, virtual_str: str) -> List[spack.spec.Spec]:
-        result = self._providers.get(virtual_str)
-        if result is None:
-            result = self._compute_providers_for(virtual_str)
-            self._providers[virtual_str] = result
-        return result
+        if virtual_str not in self._providers:
+            self._providers[virtual_str] = self._compute_providers_for(virtual_str)
+        return self._providers[virtual_str]
 
     def _compute_providers_for(self, virtual_str: str) -> List[spack.spec.Spec]:
         candidates = super().providers_for(virtual_str)
@@ -311,11 +307,9 @@ class StaticAnalysis(NoStaticAnalysis):
         return self._buildcache_specs
 
     def can_be_installed(self, *, pkg_name) -> bool:
-        result = self._installable.get(pkg_name)
-        if result is None:
-            result = self._compute_can_be_installed(pkg_name)
-            self._installable[pkg_name] = result
-        return result
+        if pkg_name not in self._installable:
+            self._installable[pkg_name] = self._compute_can_be_installed(pkg_name)
+        return self._installable[pkg_name]
 
     def _compute_can_be_installed(self, pkg_name: str) -> bool:
         if self.configuration.get(f"packages:{pkg_name}:buildable", True):
@@ -335,11 +329,10 @@ class StaticAnalysis(NoStaticAnalysis):
         return False
 
     def _is_provider_candidate(self, *, pkg_name: str, virtual: str) -> bool:
-        result = self._provider_candidates.get((pkg_name, virtual))
-        if result is None:
-            result = self._compute_is_provider_candidate(pkg_name, virtual)
-            self._provider_candidates[(pkg_name, virtual)] = result
-        return result
+        key = (pkg_name, virtual)
+        if key not in self._provider_candidates:
+            self._provider_candidates[key] = self._compute_is_provider_candidate(*key)
+        return self._provider_candidates[key]
 
     def _compute_is_provider_candidate(self, pkg_name: str, virtual: str) -> bool:
         if not self.is_allowed_on_this_platform(pkg_name=pkg_name):
@@ -359,11 +352,10 @@ class StaticAnalysis(NoStaticAnalysis):
         """Returns true if the context can determine that the condition cannot ever
         be met on pkg_name.
         """
-        result = self._unreachable.get((pkg_name, when_spec))
-        if result is None:
-            result = self._compute_unreachable(pkg_name, when_spec)
-            self._unreachable[(pkg_name, when_spec)] = result
-        return result
+        key = (pkg_name, when_spec)
+        if key not in self._unreachable:
+            self._unreachable[key] = self._compute_unreachable(pkg_name, when_spec)
+        return self._unreachable[key]
 
     def _compute_unreachable(self, pkg_name: str, when_spec: Union[str, spack.spec.Spec]) -> bool:
         candidates = self.configuration.get(f"packages:{pkg_name}:require", [])

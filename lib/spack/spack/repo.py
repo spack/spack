@@ -816,19 +816,17 @@ class RepoPath:
         self._package_names_set.clear()
 
     def _all_package_names_set(self, include_virtuals: bool) -> Set[str]:
-        result = self._package_names_set.get(include_virtuals)
-        if result is None:
+        if include_virtuals not in self._package_names_set:
             result = {n for repo in self.repos for n in repo.all_package_names(include_virtuals)}
             self._package_names_set[include_virtuals] = result
-        return result
+        return self._package_names_set[include_virtuals]
 
     def all_package_names(self, include_virtuals: bool = False) -> List[str]:
         """Return all unique package names in all repositories."""
-        result = self._package_names.get(include_virtuals)
-        if result is None:
+        if include_virtuals not in self._package_names:
             result = sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
             self._package_names[include_virtuals] = result
-        return result
+        return self._package_names[include_virtuals]
 
     def package_path(self, name: str) -> str:
         """Get path to package.py file for this repo."""
