@@ -16,6 +16,8 @@ import spack.package_base
 import spack.spec
 from spack.active_environment import active_environment
 from spack.solver import asp
+from spack.solver.error import format_unsolved
+from spack.solver.result import OptimizationKind
 from spack.util import tty
 from spack.util.tty import color
 
@@ -85,9 +87,9 @@ def _process_result(result, show, required_format, kwargs):
 
             if grey_out:
                 lc = "@K"
-            elif criterion.kind == asp.OptimizationKind.CONCRETE:
+            elif criterion.kind == OptimizationKind.CONCRETE:
                 lc = "@b"
-            elif criterion.kind == asp.OptimizationKind.BUILD:
+            elif criterion.kind == OptimizationKind.BUILD:
                 lc = "@g"
             else:
                 lc = "@y"
@@ -121,7 +123,7 @@ def _process_result(result, show, required_format, kwargs):
         print()
 
     if result.unsolved_specs and "solutions" in show:
-        tty.msg(asp.Result.format_unsolved(result.unsolved_specs))
+        tty.msg(format_unsolved(result.unsolved_specs))
 
 
 def solve(parser, args):

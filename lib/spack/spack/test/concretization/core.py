@@ -37,6 +37,7 @@ import spack.solver.asp
 import spack.solver.clauses
 import spack.solver.core
 import spack.solver.input_analysis
+import spack.solver.result
 import spack.solver.reuse
 import spack.spec
 import spack.spec_filter
@@ -327,9 +328,9 @@ def gcc11_with_flags(compiler_factory):
 def weights_from_result(result: Result, *, name: str) -> Dict[str, int]:
     weights = {}
     for x in result.criteria:
-        if x.name == name and x.kind == spack.solver.asp.OptimizationKind.CONCRETE:
+        if x.name == name and x.kind == spack.solver.result.OptimizationKind.CONCRETE:
             weights["reused"] = x.value
-        elif x.name == name and x.kind == spack.solver.asp.OptimizationKind.BUILD:
+        elif x.name == name and x.kind == spack.solver.result.OptimizationKind.BUILD:
             weights["built"] = x.value
     return weights
 
@@ -4545,7 +4546,7 @@ def test_result_roundtrip(mock_packages, config, specs):
     """Test that a solve result can be serialized and brought back."""
     solver = spack.solver.asp.Solver()
     result = solver.solve(specs)
-    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict(), specs)
+    roundtrip = spack.solver.result.Result.from_dict(result.to_dict(), specs)
 
     # ensure that we didn't duplicate spec objects during the round trip -- specs need
     # to come back as exactly the same graph they were before.
@@ -4571,10 +4572,12 @@ def test_spec_dict_roundtrip(mock_packages, config, spec_str):
     dangling-hash bug in wire_spec_nodes.
     """
     spec = spack.concretize.concretize_one(spec_str)
-    nid = spack.solver.asp.SpecBuilder.make_node(pkg=spec.name)
+    nid = spack.solver.core.min_dupe_node(pkg=spec.name)
     spec_dict = {nid: spec}
 
-    roundtrip = spack.solver.asp.spec_dict_from_json(spack.solver.asp.spec_dict_to_json(spec_dict))
+    roundtrip = spack.solver.result.spec_dict_from_json(
+        spack.solver.result.spec_dict_to_json(spec_dict)
+    )
 
     # SpecDict shape is preserved exactly (no synthetic NodeIds leak into the dict)
     assert list(roundtrip.keys()) == [nid]
@@ -4611,11 +4614,11 @@ def test_concretization_cache_store_skips_spliced_results(mock_packages, use_con
     abstract_dep = Spec("pkg-b")
     root._add_dependency(abstract_dep, depflag=dt.LINK, virtuals=())
     root._add_dependency(spliced, depflag=dt.LINK, virtuals=())
-    nid = spack.solver.asp.SpecBuilder.make_node(pkg=root.name)
+    nid = spack.solver.core.min_dupe_node(pkg=root.name)
 
     # serialization refuses spliced specs, and must clean up any force-cached hashes
     with pytest.raises(spack.solver.asp.SpliceSerializationError):
-        spack.solver.asp.spec_dict_to_json({nid: root})
+        spack.solver.result.spec_dict_to_json({nid: root})
     assert abstract_dep._hash is None
     assert root._hash is None
 
@@ -5409,7 +5412,7 @@ def test_specs_from_mirror_warns_when_index_missing(monkeypatch):
 def test_spec_dict_from_json_invalid_data(data):
     """spec_dict_from_json raises ValueError on missing or malformed input."""
     with pytest.raises(ValueError, match="Invalid spec dict data"):
-        spack.solver.asp.spec_dict_from_json(data)
+        spack.solver.result.spec_dict_from_json(data)
 
 
 def test_concretization_cache_remove_entry_oserror(tmp_path):
