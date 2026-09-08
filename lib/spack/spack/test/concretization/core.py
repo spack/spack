@@ -6014,3 +6014,63 @@ def test_result_warnings_survive_serialization(mock_packages, mutable_config: Co
 
     assert result.warnings == ['using "deprecated-versions@1.1.0" which is a deprecated version']
     assert spack.solver.result.Result.from_dict(result.to_dict(), specs) == result
+
+
+class SlowSolveHandle:
+    """Wraps a clingo solve handle, so that the first wait() reports the solve as unfinished."""
+
+    def __init__(self, handle) -> None:
+        self.handle = handle
+        self.waits = 0
+
+    def __enter__(self):
+        self.handle.__enter__()
+        return self
+
+    def __exit__(self, *args):
+        return self.handle.__exit__(*args)
+
+    def __getattr__(self, name):
+        return getattr(self.handle, name)
+
+    def wait(self, timeout):
+        self.waits += 1
+        finished = self.handle.wait(timeout)
+        return finished if self.waits > 1 else False
+
+
+class SlowControl:
+    """Wraps a clingo control, so that its solves take one extra turn of the wait loop."""
+
+    def __init__(self, control) -> None:
+        self.control = control
+
+    def __getattr__(self, name):
+        return getattr(self.control, name)
+
+    def solve(self, *args, **kwargs):
+        return SlowSolveHandle(self.control.solve(*args, **kwargs))
+
+
+def test_a_running_solve_reports_progress(mutable_config, mock_packages, monkeypatch):
+    """Tests that a solve that doesn't finish within a turn of the wait loop reports how long it
+    has been running and what it has found so far. The models are collected in clingo's thread,
+    but the event is emitted from this one.
+    """
+    # This asserts on a solve that runs, so it must not be served by a warm cache
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    real_control = spack.solver.asp.default_clingo_control
+    monkeypatch.setattr(
+        spack.solver.asp, "default_clingo_control", lambda: SlowControl(real_control())
+    )
+
+    ui = RecordingUI()
+    spack.solver.asp.Solver(ui=ui).solve([Spec("pkg-a")])
+
+    assert len(ui.progress) == 1
+    elapsed, models, best_cost = ui.progress[0]
+    assert elapsed >= 0.0
+    assert models >= 1
+    assert best_cost is not None
+    # The solve finished on the next turn, so it also reported its end
+    assert len(ui.finished) == 1

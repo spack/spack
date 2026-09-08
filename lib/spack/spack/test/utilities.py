@@ -67,6 +67,8 @@ class RecordingUI(ConcretizerUI):
         self.programs: List[List[str]] = []
         #: (result, timer, statistics, cached) for each solve that finished
         self.finished: List[Tuple[Optional[Result], BaseTimer, Optional[Dict], bool]] = []
+        #: (elapsed, models, best_cost) for each progress tick of a running solve
+        self.progress: List[Tuple[float, int, Optional[List[int]]]] = []
 
     def on_concretization_started(self) -> None:
         self.started += 1
@@ -90,6 +92,11 @@ class RecordingUI(ConcretizerUI):
 
     def on_asp_program_generated(self, program: List[str]) -> None:
         self.programs.append(program)
+
+    def on_solve_progress(
+        self, *, elapsed: float, models: int, best_cost: Optional[List[int]]
+    ) -> None:
+        self.progress.append((elapsed, models, best_cost))
 
     def on_solve_finished(
         self,

@@ -710,7 +710,8 @@ class PyclingoDriver:
         timer.start("solve")
         # A timeout of 0 means no timeout
         time_limit = spack.config.CONFIG.get("concretizer:timeout", 0)
-        timeout_end = time.monotonic() + time_limit if time_limit > 0 else float("inf")
+        solve_start = time.monotonic()
+        timeout_end = solve_start + time_limit if time_limit > 0 else float("inf")
         error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
         with self.control.solve(on_model=on_model, async_=True) as handle:
             # Allow handling of interrupts every second.
@@ -722,6 +723,14 @@ class PyclingoDriver:
             finished = False
             while not finished and time.monotonic() < timeout_end:
                 finished = handle.wait(1.0)
+                if not finished:
+                    # on_model runs in clingo's thread, so report progress from this one
+                    current = models[-1][0] if models else None
+                    ui.on_solve_progress(
+                        elapsed=time.monotonic() - solve_start,
+                        models=len(models),
+                        best_cost=current,
+                    )
 
             if not finished:
                 specs_str = ", ".join(spack.util.lang.elide_list([str(s) for s in specs], 4))
