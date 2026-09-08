@@ -1974,6 +1974,120 @@ def _should_auto_migrate() -> bool:
     return any(old_resources.values())
 
 
+def _migrate_user_config_programmatic() -> bool:
+    """Programmatically migrate ~/.spack to ~/.config/spack.
+
+    Returns:
+        True if migration was performed, False if skipped
+    """
+    old_location = os.path.expanduser("~/.spack")
+    new_config_location = os.path.expanduser("~/.config/spack")
+
+    # Skip if new location already exists
+    if os.path.exists(new_config_location):
+        tty.debug(f"{new_config_location} already exists, skipping user config migration")
+        return False
+
+    if not os.path.exists(old_location):
+        tty.debug("No ~/.spack to migrate")
+        return False
+
+    # Import here to avoid circular dependency at module load time
+    import spack.cmd.migrate
+
+    # Find config files to migrate
+    config_files = []
+    if os.path.isdir(old_location):
+        found = filesystem.find(old_location, ["*.yaml", "*.yml"], recursive=True)
+        package_repos_dir = os.path.join(old_location, "package_repos")
+        config_files = [
+            os.path.relpath(f, old_location)
+            for f in found
+            if not filesystem.path_contains_subdirectory(f, package_repos_dir)
+        ]
+
+    if not config_files:
+        tty.debug("No config files found in ~/.spack to migrate")
+        return False
+
+    # Perform migration
+    os.makedirs(new_config_location, exist_ok=True)
+    tty.debug(f"Migrating config files from {old_location} to {new_config_location}")
+
+    for config_file in config_files:
+        old_path = os.path.join(old_location, config_file)
+        new_path = os.path.join(new_config_location, config_file)
+
+        # Process paths using migrate command logic (handles the 4 path rewriting rules)
+        modified_data, _ = spack.cmd.migrate.process_config_file_paths(
+            old_path, old_location, new_config_location
+        )
+
+        # Ensure parent directory exists
+        os.makedirs(os.path.dirname(new_path), exist_ok=True)
+
+        if modified_data is not None:
+            with open(new_path, "w", encoding="utf-8") as f:
+                syaml.dump(modified_data, f)
+        else:
+            shutil.copy2(old_path, new_path)
+
+    tty.debug(f"User config migrated from {old_location} to {new_config_location}")
+    return True
+
+
+def _move_directory_contents(src_dir: str, dst_dir: str, resource_name: str) -> bool:
+    """Move contents of src_dir to dst_dir, checking for collisions.
+
+    Args:
+        src_dir: Source directory
+        dst_dir: Destination directory
+        resource_name: Name of resource for logging (e.g., "licenses", "environments")
+
+    Returns:
+        True if move was successful, False if skipped due to collision
+    """
+    if not os.path.exists(src_dir):
+        return True  # Nothing to move
+
+    try:
+        src_entries = set(os.listdir(src_dir))
+    except OSError:
+        tty.warn(f"Cannot read {resource_name} directory: {src_dir}")
+        return False
+
+    if not src_entries:
+        return True  # Empty source, nothing to move
+
+    # Check for collisions
+    if os.path.exists(dst_dir):
+        try:
+            dst_entries = set(os.listdir(dst_dir))
+            collisions = src_entries & dst_entries
+            if collisions:
+                tty.debug(
+                    f"Cannot move {resource_name}: collisions detected: {collisions}"
+                )
+                return False
+        except OSError:
+            tty.warn(f"Cannot read destination {resource_name} directory: {dst_dir}")
+            return False
+
+    # No collisions, perform move
+    filesystem.mkdirp(dst_dir)
+    for entry in src_entries:
+        src_path = os.path.join(src_dir, entry)
+        dst_path = os.path.join(dst_dir, entry)
+        try:
+            shutil.move(src_path, dst_path)
+            tty.debug(f"Moved {resource_name}: {entry}")
+        except (OSError, shutil.Error) as e:
+            tty.warn(f"Failed to move {resource_name} {entry}: {e}")
+            return False
+
+    return True
+
+
 def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[str] = None) -> None:
     """Perform auto-migration of Spack data from old to new locations.
 
@@ -2041,6 +2155,9 @@ def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[s
         if custom_license_config:
             # User configured custom location, don't migrate
             tty.debug(f"Licenses have custom config: {custom_license_config}, not migrating")
+            if "config" not in layout_config:
+                layout_config["config"] = {}
+            layout_config["config"]["license_dir"] = old_licenses_dir
         else:
             # Determine destination
             if is_isolate_command and isolate_target:
@@ -2050,12 +2167,21 @@ def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[s
                 data_home = substitute_path_variables("$data_home")
                 target_licenses_dir = os.path.join(data_home, "licenses")
 
-            # TODO: Actually attempt to move/copy licenses
-            # For now, keep in old location
-            if "config" not in layout_config:
-                layout_config["config"] = {}
-            layout_config["config"]["license_dir"] = old_licenses_dir
-            tty.debug(f"Licenses exist in old location, keeping at {old_licenses_dir}")
+            # Attempt to move licenses
+            if _move_directory_contents(old_licenses_dir, target_licenses_dir, "licenses"):
+                # Successfully moved, point config to new location
+                if is_isolate_command:
+                    if "config" not in layout_config:
+                        layout_config["config"] = {}
+                    layout_config["config"]["license_dir"] = target_licenses_dir
+                # For non-isolate, new default is used automatically
+                tty.debug(f"Moved licenses from {old_licenses_dir} to {target_licenses_dir}")
+            else:
+                # Move failed, keep in old location
+                if "config" not in layout_config:
+                    layout_config["config"] = {}
+                layout_config["config"]["license_dir"] = old_licenses_dir
+                tty.debug(f"Licenses kept in old location: {old_licenses_dir}")
 
     # 4. Handle environments
     # Attempt to move to destination, or keep in old location if can't
@@ -2066,6 +2192,9 @@ def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[s
         if custom_env_config:
             # User configured custom location, don't migrate
             tty.debug(f"Environments have custom config: {custom_env_config}, not migrating")
+            if "config" not in layout_config:
+                layout_config["config"] = {}
+            layout_config["config"]["environments_root"] = old_envs_dir
         else:
             # Determine destination
             if is_isolate_command and isolate_target:
@@ -2075,17 +2204,25 @@ def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[s
                 data_home = substitute_path_variables("$data_home")
                 target_envs_dir = os.path.join(data_home, "environments")
 
-            # TODO: Actually attempt to move environments
-            # For now, keep in old location
-            if "config" not in layout_config:
-                layout_config["config"] = {}
-            layout_config["config"]["environments_root"] = old_envs_dir
-            tty.debug(f"Environments exist in old location, keeping at {old_envs_dir}")
+            # Attempt to move environments
+            if _move_directory_contents(old_envs_dir, target_envs_dir, "environments"):
+                # Successfully moved, point config to new location
+                if is_isolate_command:
+                    if "config" not in layout_config:
+                        layout_config["config"] = {}
+                    layout_config["config"]["environments_root"] = target_envs_dir
+                # For non-isolate, new default is used automatically
+                tty.debug(f"Moved environments from {old_envs_dir} to {target_envs_dir}")
+            else:
+                # Move failed, keep in old location
+                if "config" not in layout_config:
+                    layout_config["config"] = {}
+                layout_config["config"]["environments_root"] = old_envs_dir
+                tty.debug(f"Environments kept in old location: {old_envs_dir}")
 
-    # 5. TODO: Copy ~/.spack to ~/.config/spack (unless isolate command)
+    # 5. Copy ~/.spack to ~/.config/spack (unless isolate command)
     if not is_isolate_command:
-        # TODO: Implement user config migration
-        tty.debug("TODO: Migrate ~/.spack to ~/.config/spack")
+        _migrate_user_config_programmatic()
 
     # Write layout scope config files
     if "config" in layout_config:
