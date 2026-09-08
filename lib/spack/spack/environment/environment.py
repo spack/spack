@@ -31,6 +31,7 @@ from typing import (
 
 import spack
 import spack.active_environment
+import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -1519,10 +1520,8 @@ class Environment:
         if list_name == USER_SPECS_KEY:
             if spec.anonymous:
                 raise SpackEnvironmentError("cannot add anonymous specs to an environment")
-            elif not spack.repo.PATH.exists(spec.name) and not spec.abstract_hash:
-                virtuals = spack.repo.PATH.provider_index.providers.keys()
-                if spec.name not in virtuals:
-                    raise SpackEnvironmentError(f"no such package: {spec.name}")
+            elif not spec.abstract_hash:
+                spack.concretize.validate_package_names([spec])
 
         list_to_change = self.spec_lists[list_name]
         existing = str(spec) in list_to_change.yaml_list
@@ -2886,8 +2885,6 @@ class EnvironmentConcretizer:
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
-        import spack.concretize
-
         specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
         result = spack.concretize.concretize_together_when_possible(
             specs_to_concretize, tests=tests, factory=factory, ui=self.ui
@@ -2907,8 +2904,6 @@ class EnvironmentConcretizer:
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
-        import spack.concretize
-
         to_concretize = self._user_spec_pairs(to_compute, to_keep)
         try:
             concrete_pairs = spack.concretize.concretize_together(
@@ -2946,8 +2941,6 @@ class EnvironmentConcretizer:
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
         """Concretization strategy that concretizes separately one user spec after the other"""
-        import spack.concretize
-
         to_concretize = [(x, None) for x in to_compute]
         concrete_pairs = spack.concretize.concretize_separately(
             to_concretize, tests=tests, factory=factory, ui=self.ui
