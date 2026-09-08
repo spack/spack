@@ -51,7 +51,6 @@ import spack.util.path
 import spack.util.web
 import spack.variant
 import spack.version
-import spack.version.git_ref_lookup
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
@@ -2682,9 +2681,6 @@ def _for_package_version(pkg, version=None):
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
         if isinstance(version, spack.version.GitVersion):
-            # Populate the version with comparisons to other commits
-            version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(pkg.name))
-
             if not commit and version.is_commit:
                 commit = version.ref
             version_meta_data = pkg.versions.get(version.std_version)

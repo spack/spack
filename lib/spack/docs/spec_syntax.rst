@@ -266,12 +266,13 @@ Acceptable syntaxes for this are:
 
 Spack always needs to associate a Spack version with the git reference, which is used for version comparison.
 This Spack version is heuristically taken from the closest valid git tag among the ancestors of the git ref.
+The association happens once, when the spec is concretized, and requires a clone of the package's git repository.
 
 Once a Spack version is associated with a git ref, it is always printed with the git ref.
-For example, if the commit ``@git.abcdefg`` is tagged ``0.19``, then the spec will be shown as ``@git.abcdefg=0.19``.
+For example, if the commit ``@git.abcdef`` is tagged ``0.19``, then the concrete spec will be shown as ``@git.abcdef=0.19``.
 
 If the git ref is not exactly a tag, then the distance to the nearest tag is also part of the resolved version.
-``@git.abcdefg=0.19.git.8`` means that the commit is 8 commits away from the ``0.19`` tag.
+``@git.abcdef=0.19.git.8`` means that the commit is 8 commits away from the ``0.19`` tag.
 
 In cases where Spack cannot resolve a sensible version from a git ref, users can specify the Spack version to use for the git ref.
 This is done by appending ``=`` and the Spack version to the git ref.

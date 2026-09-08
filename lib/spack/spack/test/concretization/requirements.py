@@ -115,9 +115,13 @@ def test_git_user_supplied_reference_satisfaction(
     just_ver = Spec("v@=2.2")
     hash_eq_other_ver = Spec(f"v@{commits[0]}=2.3")
 
+    # A bare git ref is abstract: it is not equal to an assigned version of the same ref,
+    # but as a constraint it matches any assignment of that ref.
     assert not hash_eq_ver == just_hash
-    assert not hash_eq_ver.satisfies(just_hash)
-    assert not hash_eq_ver.intersects(just_hash)
+    assert hash_eq_ver.satisfies(just_hash)
+    assert not just_hash.satisfies(hash_eq_ver)
+    assert hash_eq_ver.intersects(just_hash)
+    assert just_hash.intersects(hash_eq_ver)
 
     # Git versions and literal versions are distinct versions, like
     # pkg@10.1.0 and pkg@10.1.0-suffix are distinct versions.
@@ -269,7 +273,8 @@ packages:
     assert spack.concretize.concretize_one("v").satisfies(f"@{commits[0]}=2.2")
     assert spack.concretize.concretize_one("v@2.3").satisfies(f"@{commits[1]}=2.3")
 
-    # When installing by hash, a lookup is triggered, so it's not mapped to =2.3.
+    # A bare hash gets its version assigned by a git lookup at concretization, so it is not
+    # mapped to the =2.3 preference.
     s3 = spack.concretize.concretize_one(f"v@{commits[1]}")
     assert s3.satisfies(f"v@{commits[1]}")
     assert not s3.satisfies("@2.3")

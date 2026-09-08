@@ -15,7 +15,6 @@ import pytest
 import spack.concretize
 import spack.package_base
 import spack.spec
-import spack.version
 from spack.util.filesystem import working_dir
 from spack.version import (
     ClosedOpenRange,
@@ -29,7 +28,7 @@ from spack.version import (
     is_git_version,
     ver,
 )
-from spack.version.git_ref_lookup import SEMVER_REGEX
+from spack.version.git_ref_lookup import SEMVER_REGEX, GitRefLookup, assign_git_versions
 
 
 def assert_ver_lt(a, b):
@@ -351,6 +350,7 @@ def test_in_list():
     assert_in("1.2.5", ["1.5", "1.2:1.3"])
     assert_in("1.5", ["1.5", "1.2:1.3"])
     assert_not_in("1.4", ["1.5", "1.2:1.3"])
+    assert_in("git.main=1.0", ["1.0:1.2"])
 
     assert_in("1.2.5:1.2.7", [":"])
     assert_in("1.2.5:1.2.7", ["1.5", "1.2:1.3"])
@@ -419,6 +419,16 @@ def test_canonicalize_list():
 
     assert_canonical([":"], [":,1.3, 1.3.1,1.3.9,1.4 : 1.5 , 1.3 : 1.4"])
 
+    # Git refs without an assigned version sort last, in whatever order they were added
+    assert_canonical(["1.2:1.3", "git.main"], ["git.main", "1.2:1.3"])
+    assert_canonical(["=1.0", "git.foo", "git.main"], ["git.main", "git.foo", "=1.0"])
+
+    # A range constraint on a ref is dropped inside a plain range, and widened over the plain
+    # ranges it touches; constraints on the same ref that touch are merged
+    assert_canonical(["1.0:1.2"], ["1.0:1.2", "git.foo=1.1:1.2"])
+    assert_canonical(["3:4", "git.foo=1:4"], ["git.foo=1:2", "3:4"])
+    assert_canonical(["git.foo=1:4"], ["git.foo=1:2", "git.foo=3:4"])
+
 
 def test_intersection():
     check_intersection("2.5", "1.0:2.5", "2.5:3.0")
@@ -432,6 +442,13 @@ def test_intersection():
     check_intersection([], "1.0:1.2", ["3.0"])
 
     check_intersection(["=ref=1.0", "=1.1"], ["=ref=1.0", "1.1"], ["1:1.0", "=1.1"])
+
+    check_intersection("git.foo=1.2", "git.foo", "git.foo=1.2")
+    check_intersection([], "git.foo", "git.bar")
+    check_intersection("git.foo=1.0:", "git.foo", "1.0:")
+    check_intersection("git.foo=1.1:1.3", "git.foo=1.0:", "1.1:1.3")
+    check_intersection([], "git.foo=1.0:", ":0.9")
+    check_intersection(["=1.0", "git.main"], ["=1.0", "git.main"], ["=1.0", "git.main"])
 
 
 def test_intersect_with_containment():
@@ -461,6 +478,9 @@ def test_union_with_containment():
     check_union("1:4", "1:2", "3:4")
 
     check_union(["1:1.0", "1.1"], ["=ref=1.0", "1.1"], ["1:1.0", "=1.1"])
+
+    check_union(["=1.0", "git.main"], "=1.0", "git.main")
+    check_union("git.foo", "git.foo=1.2", "git.foo")
 
 
 def test_basic_version_satisfaction():
@@ -689,7 +709,7 @@ def test_versions_from_git(git, mock_git_version_info, monkeypatch, mock_package
     )
 
     for commit in commits:
-        spec = spack.spec.Spec("git-test-commit@%s" % commit)
+        spec = assign_git_versions(spack.spec.Spec("git-test-commit@%s" % commit))
         version: GitVersion = spec.version
         comparator = [str(v) if not isinstance(v, int) else v for v in version.ref_version]
 
@@ -758,23 +778,32 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
     assert str(spec_branch.version) == "git.1.x=1.2"
 
 
-def test_git_branch_with_slash():
-    class MockLookup(object):
-        def get(self, ref):
-            assert ref == "feature/bar"
-            return "1.2", 0
+def test_git_ref_constraint_round_trips_through_str():
+    """A range constraint of a single version is not collapsed to an assignment of it."""
+    for vstring in ("git.foo", "git.foo=1.2", "git.foo=1.0:", "git.foo=1.2:1.2"):
+        assert str(ver(vstring)) == vstring
+    assert ver("git.foo=1.2:1.2") != ver("git.foo=1.2")
+    with pytest.raises(VersionLookupError, match="use 'git.foo=<version>'"):
+        ver("git.foo=1.0:").ref_version
 
-    v = spack.version.from_string("git.feature/bar")
-    assert isinstance(v, GitVersion)
-    v.attach_lookup(MockLookup())
 
-    # Create a version range
-    test_number_version = spack.version.from_string("1.2")
-    v.satisfies(test_number_version)
+def test_git_ref_assignment_must_be_within_the_constraint():
+    """Assigning a git ref a version outside the range raises `VersionLookupError`."""
+    assert str(GitVersion("git.main=1:1.3").assigned(Version("1.2"))) == "git.main=1.2"
+    with pytest.raises(VersionLookupError, match="outside the range 1.3:"):
+        GitVersion("git.main=1.3:").assigned(Version("1.2"))
 
-    serialized = VersionList([v]).to_dict()
-    v_deserialized = VersionList.from_dict(serialized)
-    assert v_deserialized[0].ref == "feature/bar"
+
+def test_git_branch_with_slash(monkeypatch):
+    def get(self, ref):
+        assert ref == "feature/bar"
+        return "1.2", 0
+
+    monkeypatch.setattr(GitRefLookup, "get", get)
+    spec = assign_git_versions(spack.spec.Spec("git-test-commit@git.feature/bar"))
+    assert str(spec.version) == "git.feature/bar=1.2"
+    serialized = VersionList([spec.version]).to_dict()
+    assert VersionList.from_dict(serialized) == VersionList([spec.version])
 
 
 @pytest.mark.parametrize(
@@ -872,7 +901,6 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
     v = Version(vstring)
     v_equivalent = Version(eq_vstring)
     assert v.is_commit == is_commit
-    assert not v._ref_lookup
     assert v_equivalent == v.ref_version
 
 
@@ -892,6 +920,23 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
         (f"git.{'a' * 40}=develop", "develop", (True, True, False)),
         (f"git.{'a' * 40}=develop", f"git.{'a' * 40}=develop", (True, True, True)),
         (f"git.{'a' * 40}=develop", f"git.{'b' * 40}=develop", (False, False, False)),
+        ("git.foo", "git.foo", (True, True, True)),
+        ("git.foo", "git.foo=1.2", (True, False, True)),
+        ("git.foo", "git.bar", (False, False, False)),
+        ("git.foo=1.2", "git.foo=1.3", (False, False, False)),
+        ("git.foo", "=1.2", (False, False, False)),
+        ("git.foo=1.2", "=1.2", (False, False, False)),
+        ("git.foo", "1.0:", (True, False, False)),
+        ("git.foo", ":", (True, True, False)),
+        ("=1.0,git.main", "git.main", (True, False, True)),
+        ("=1.0,1.2:", "git.main", (True, False, False)),
+        ("git.foo=1.0:", "git.foo", (True, True, False)),
+        ("git.foo=1.0:", "git.foo=1.2", (True, False, True)),
+        ("git.foo=1.0:", "git.foo=0.9", (False, False, False)),
+        ("git.foo=1.0:", "1.0:", (True, True, False)),
+        ("git.foo=1.0:", "1.1:", (True, False, False)),
+        ("git.foo=1.0:", ":0.9", (False, False, False)),
+        ("git.foo=1.2:1.2", "git.foo=1.2", (True, False, True)),
     ],
 )
 def test_version_intersects_satisfies_semantic(lhs_str, rhs_str, expected):
@@ -931,13 +976,13 @@ def test_git_versions_without_explicit_reference(
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
-    spec = spack.spec.Spec(spec_str)
+    spec = assign_git_versions(spack.spec.Spec(spec_str))
 
     for test_str, expected in tested_intersects:
         assert spec.intersects(test_str) is expected, test_str
 
-    for test_str, expected in tested_intersects:
-        assert spec.intersects(test_str) is expected, test_str
+    for test_str, expected in tested_satisfies:
+        assert spec.satisfies(test_str) is expected, test_str
 
 
 def test_total_order_versions_and_ranges():
@@ -974,6 +1019,12 @@ def test_total_order_versions_and_ranges():
     assert_ver_gt("1.3", "=1.2")
     assert_ver_lt("1.2", "=1.3")
     assert_ver_gt("=1.3", "1.2")
+
+    # GitVersion without an assigned version: after every other version, ordered by ref
+    assert_ver_lt("=1.0", "git.foo")
+    assert_ver_lt("1:", "git.foo")
+    assert_ver_lt("git.foo=1.2", "git.foo")
+    assert_ver_lt("git.bar", "git.foo")
 
 
 def test_git_version_accessors():
@@ -1072,23 +1123,18 @@ def test_inclusion_upperbound():
 
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
-def test_git_version_repo_attached_after_serialization(
+def test_git_version_assignment_survives_serialization(
     mock_git_version_info, mock_packages, config, monkeypatch
 ):
-    """Test that a GitVersion instance can be serialized and deserialized
-    without losing its repository reference.
-    """
+    """Test that the Spack version assigned to a git ref at concretization round-trips
+    through serialization."""
     repo_path, _, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
     )
     spec = spack.concretize.concretize_one(f"git-test-commit@{commits[-2]}")
-
-    # Before serialization, the repo is attached
     assert spec.satisfies("@1.0")
-
-    # After serialization, the repo is still attached
-    assert spack.spec.Spec.from_dict(spec.to_dict()).satisfies("@1.0")
+    assert spack.spec.Spec.from_dict(spec.to_dict()) == spec
 
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")

@@ -400,7 +400,7 @@ def specfile_for(config, mock_packages):
                 Token(
                     "VERSION",
                     value=f"@{'abc12' * 8}=develop",
-                    git_version=f"{'abc12' * 8}=develop",
+                    version_list=f"{'abc12' * 8}=develop",
                 ),
             ],
             rf"develop-branch-version@{'abc12' * 8}=develop",
@@ -487,7 +487,7 @@ def specfile_for(config, mock_packages):
                 Token(
                     "VERSION",
                     value=f"@git.{'a' * 40}=develop",
-                    git_version=f"git.{'a' * 40}=develop",
+                    version_list=f"git.{'a' * 40}=develop",
                 ),
                 Token("BOOL_VARIANT", value="+var1", bv_prefix="+", bv_name="var1"),
                 Token("BOOL_VARIANT", value="+var2", bv_prefix="+", bv_name="var2"),
@@ -783,9 +783,43 @@ def specfile_for(config, mock_packages):
             "git-test@git.foo/bar",
             [
                 Token("UNQUALIFIED_PACKAGE_NAME", "git-test"),
-                Token("VERSION", "@git.foo/bar", git_version="git.foo/bar"),
+                Token("VERSION", "@git.foo/bar", version_list="git.foo/bar"),
             ],
             "git-test@git.foo/bar",
+        ),
+        # A git ref constrained to a range of versions
+        (
+            "git-test@git.foo/bar=1.2:1.3",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "git-test"),
+                Token("VERSION", "@git.foo/bar=1.2:1.3", version_list="git.foo/bar=1.2:1.3"),
+            ],
+            "git-test@git.foo/bar=1.2:1.3",
+        ),
+        # Git refs as elements of a version list, which is canonical
+        (
+            "git-test@git.main,1.2:1.3,git.foo=1:2,git.foo=3:4",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "git-test"),
+                Token(
+                    "VERSION",
+                    "@git.main,1.2:1.3,git.foo=1:2,git.foo=3:4",
+                    version_list="git.main,1.2:1.3,git.foo=1:2,git.foo=3:4",
+                ),
+            ],
+            "git-test@1.2:1.3,git.foo=1:4,git.main",
+        ),
+        (
+            "git-test@git.foo=:1.3 ^pkg-b@git.bar=1.2: +baz",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "git-test"),
+                Token("VERSION", "@git.foo=:1.3", version_list="git.foo=:1.3"),
+                Token("DEPENDENCY", value="^"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "pkg-b"),
+                Token("VERSION", "@git.bar=1.2:", version_list="git.bar=1.2:"),
+                Token("BOOL_VARIANT", "+baz", bv_prefix="+", bv_name="baz"),
+            ],
+            "git-test@git.foo=:1.3 ^pkg-b@git.bar=1.2:+baz",
         ),
         # Variant propagation
         (

@@ -5,7 +5,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
 import spack.caches
 import spack.fetch_strategy
@@ -17,7 +17,10 @@ import spack.util.spack_json as sjson
 from spack.util.filesystem import mkdirp, working_dir
 
 from .common import VersionLookupError
-from .lookup import AbstractRefLookup
+from .version_types import GitVersion, StandardVersion, VersionList, VersionType
+
+if TYPE_CHECKING:
+    import spack.spec
 
 # regular expression for semantic versioning
 _VERSION_CORE = r"\d+\.\d+\.\d+"
@@ -32,13 +35,9 @@ _SEMVER = rf"{_VERSION_CORE}(?:{_PRERELEASE})?(?:{_BUILD})?"
 SEMVER_REGEX = re.compile(rf"{_SEMVER}$")
 
 
-class GitRefLookup(AbstractRefLookup):
-    """An object for cached lookups of git refs
-
-    GitRefLookup objects delegate to the MISC_CACHE for locking. GitRefLookup objects may
-    be attached to a GitVersion to allow for comparisons between git refs and versions as
-    represented by tags in the git repository.
-    """
+class GitRefLookup:
+    """An object for cached lookups of git refs. GitRefLookup objects delegate to the MISC_CACHE
+    for locking."""
 
     def __init__(self, pkg_name):
         self.pkg_name = pkg_name
@@ -209,3 +208,58 @@ class GitRefLookup(AbstractRefLookup):
                 )
 
         return prev_version, distance
+
+
+def assign_git_version(pkg_name: str, version: VersionType) -> VersionType:
+    """Return ``version`` with a Spack version assigned, by looking its ref up in the git
+    repository of package ``pkg_name``. This may trigger a git clone.
+
+    Assignment queries the git repo for the most recent version previous to this git ref, as
+    well as the distance between them expressed as a number of commits. If the previous
+    version is ``X.Y.Z`` and the distance is ``D``, the git commit version is represented by
+    the tuple ``(X, Y, Z, '', D)``. The component ``''`` cannot be parsed as part of any valid
+    version, but is a valid component. This allows a git ref version to be less than (older
+    than) every Version newer than its previous version, but still newer than its previous
+    version.
+
+    To find the previous version from a git ref version, Spack queries the git repo for its
+    tags. Any tag that matches a version known to Spack is associated with that version, as
+    is any tag that is a known version prepended with the character ``v`` (i.e., a tag
+    ``v1.0`` is associated with the known version ``1.0``). Additionally, any tag that
+    represents a semver version (X.Y.Z with X, Y, Z all integers) is associated with the
+    version it represents, even if that version is not known to Spack. Each tag is then
+    queried in git to see whether it is an ancestor of the git ref in question, and if so
+    the distance between the two. The previous version is the version that is an ancestor
+    with the least distance from the git ref in question.
+
+    Raises a ``VersionLookupError`` when the package has no ``git`` attribute, the ref is
+    unknown, or the version found is outside the range the ref is constrained to.
+    """
+    if not isinstance(version, GitVersion) or version.std_version is not None:
+        return version
+    version_string, distance = GitRefLookup(pkg_name).get(version.ref)
+    version_string = version_string or "0"
+    # Add a -git.<distance> suffix when we're not exactly on a tag
+    if distance > 0:
+        version_string += f"-git.{distance}"
+    return version.assigned(StandardVersion.from_string(version_string))
+
+
+def _needs_assignment(node: "spack.spec.Spec") -> bool:
+    return bool(node.name) and any(
+        isinstance(v, GitVersion) and v.std_version is None for v in node.versions
+    )
+
+
+def assign_git_versions(spec: "spack.spec.Spec") -> "spack.spec.Spec":
+    """Return a copy of ``spec`` in which every git ref version is assigned a Spack version, or
+    ``spec`` itself when there are no git ref versions to assign."""
+    if not any(_needs_assignment(node) for node in spec.traverse()):
+        return spec
+    result = spec.copy()
+    for node in result.traverse():
+        if _needs_assignment(node):
+            node.versions = VersionList(
+                [assign_git_version(node.fullname, v) for v in node.versions]
+            )
+    return result

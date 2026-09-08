@@ -61,6 +61,7 @@ from spack.test.conftest import RepoBuilder
 from spack.test.utilities import RecordingUI
 from spack.util.filesystem import getuid
 from spack.version import Version, VersionList, ver
+from spack.version.git_ref_lookup import GitRefLookup
 
 
 def check_spec(abstract, concrete):
@@ -5772,3 +5773,19 @@ def test_target_star_concretizes(mock_packages, config):
 def test_solve_kind_from_unify_configuration(unify, expected):
     """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
     assert spack.concretize.solve_kind(unify) is expected
+
+
+@pytest.mark.usefixtures("config", "mock_packages")
+def test_git_ref_version_is_assigned_once_at_concretization(monkeypatch):
+    """A bare git ref gets its Spack version assigned by exactly one lookup when the spec is
+    concretized; concretizing the result again does no lookup."""
+    calls = []
+
+    def get(self, ref):
+        calls.append(ref)
+        return "1.2", 0
+
+    monkeypatch.setattr(GitRefLookup, "get", get)
+    concrete = spack.concretize.concretize_one("git-test-commit@git.1.x")
+    assert str(concrete.version) == "git.1.x=1.2" and calls == ["1.x"]
+    assert spack.concretize.concretize_one(concrete) == concrete and calls == ["1.x"]
