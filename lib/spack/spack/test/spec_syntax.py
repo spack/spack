@@ -1353,6 +1353,11 @@ def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config
         ("cflags=''-Wl,a,b,c''", r"cflags=''-Wl,a,b,c''\n            ^ ^ ^ ^^"),
         ("@1.2:   develop   = foo", r"@1.2:   develop   = foo\n                  ^"),
         ("@1.2:develop   = foo", r"@1.2:develop   = foo\n               ^"),
+        # = marks an exact version: neither a bound of a range nor the constraint of a git ref
+        ("x@=1:2", r"x@=1:2\n    ^"),
+        ("x@1:=2", r"x@1:=2\n    ^"),
+        ("x@git.foo==1.2", r"x@git.foo==1.2\n         ^^"),
+        ("x@git.foo=1:=2", r"x@git.foo=1:=2\n            ^"),
     ],
 )
 def test_error_reporting(text, expected_in_error):
