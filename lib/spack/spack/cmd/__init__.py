@@ -154,26 +154,33 @@ def get_command(cmd_name):
     return getattr(get_module(cmd_name), pname)
 
 
+#: A key=value argument needs quotes only if its value cannot be parsed as it is: it is empty, it
+#: starts with a character that cannot start a value, like the ``@`` of ``when=@1.0``, or it has a
+#: character that no spec token can hold, like the whitespace, quotes or ``$`` the shell quoting
+#: was needed for. A value like ``gcc@14`` parses as a name followed by a version.
+_NEEDS_QUOTES = re.compile(r"^[^a-zA-Z_0-9\-+*.,:=%^~/\\]|[^a-zA-Z_0-9\-+*.,:=%^~/\\@]")
+
+
 def quote_kvp(string: str) -> str:
     """For strings like ``name=value`` or ``name==value``, quote and escape the value if needed.
 
     This is a compromise to respect quoting of key-value pairs on the CLI. The shell
     strips quotes from quoted arguments, so we cannot know *exactly* how CLI arguments
-    were quoted. To compensate, we re-add quotes around anything staritng with ``name=``
-    or ``name==``, and we assume the rest of the argument is the value. This covers the
-    common cases of passing flags, e.g., ``cflags="-O2 -g"`` on the command line.
+    were quoted. To compensate, we re-add quotes around anything starting with ``name=``
+    or ``name==`` whose value cannot be parsed as it is, and we assume the rest of the
+    argument is the value. This covers the common cases of passing flags, e.g.,
+    ``cflags="-O2 -g"`` on the command line, while ``c=gcc@14`` stays a virtual assignment.
 
     A trailing ``]`` closes the edge attributes when the shell splits an argument like
-    ``%[virtuals=c deptypes=build]``, it is never part of the value. Quoting turns a virtual
-    assignment whose substitute needs quotes into a variant of an anonymous dependency: the
-    arguments ``%[when=+x]`` ``c=gcc@14`` become ``c='gcc@14'``. Use the edge attribute
-    ``%[when=+x virtuals=c] gcc@14`` or quote the whole spec instead.
+    ``%[virtuals=c deptypes=build]``, it is never part of the value.
     """
     match = spack.spec_parser.SPLIT_KVP.match(string)
     if not match:
         return string
 
     key, delim, value, brackets = match.groups()
+    if value and not _NEEDS_QUOTES.search(value):
+        return string
     return f"{key}{delim}{spack.spec_parser.quote_if_needed(value)}{brackets}"
 
 
