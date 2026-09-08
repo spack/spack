@@ -834,7 +834,6 @@ def env_view(args):
 
     if args.action == ViewAction.regenerate:
         env.regenerate_views()
-        env_script.regenerate_env_scripts(env)
     elif args.action == ViewAction.enable:
         if args.view_path:
             view_path = args.view_path

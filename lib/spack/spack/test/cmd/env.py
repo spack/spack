@@ -206,7 +206,6 @@ def test_env_update_activate_script(shell):
 def test_env_scripts_regenerate_after_lockfile_change(shell):
     """Test that environment activation and deactivation scripts are regenerated
     when the lockfile is modified"""
-    import time
 
     env("create", "test")
     environ = ev.read("test")
@@ -226,8 +225,6 @@ def test_env_scripts_regenerate_after_lockfile_change(shell):
 
     initial_activate_mtime = os.stat(path_to_activate_script).st_mtime
     initial_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
-
-    time.sleep(0.1)
 
     environ.add("mpich")
     environ.concretize()

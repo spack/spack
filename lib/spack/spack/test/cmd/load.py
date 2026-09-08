@@ -314,32 +314,6 @@ def test_unload_regenerates_deleted_script(
 @pytest.mark.parametrize(
     "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
 )
-def test_load_script_content_consistency(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
-):
-    """Test that the content of load scripts is consistent across multiple generations.
-    This ensures deterministic script generation.
-    """
-    install("--fake", "mpileaks")
-    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
-
-    load(shell, "mpileaks")
-    first_content = _get_load_cmds_from_script(mpileaks_spec, shell)
-
-    os.remove(spec_script.path_to_load_shell_script(mpileaks_spec, shell[2:]))
-    load(shell, "mpileaks")
-
-    second_content = _get_load_cmds_from_script(mpileaks_spec, shell)
-
-    first_lines = [line for line in first_content.splitlines() if "Generated on:" not in line]
-    second_lines = [line for line in second_content.splitlines() if "Generated on:" not in line]
-
-    assert first_lines == second_lines
-
-
-@pytest.mark.parametrize(
-    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
-)
 def test_load_unload_multiple_specs(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):

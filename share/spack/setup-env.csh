@@ -85,9 +85,6 @@ end
 # done: unset sentinel variable as we're no longer initializing
 unsetenv _sp_initializing
 
-# Set shell being used
-setenv SPACK_SHELL "csh"
-
 # These are needed for environment modifications in spack load & spack unload
 alias _spack_env_set "source $_spack_share_dir/environment-mods.csh _spack_env_set"
 alias _spack_env_unset "source $_spack_share_dir/environment-mods.csh _spack_env_unset"

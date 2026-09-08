@@ -66,7 +66,7 @@ from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
-from .generate_env_scripts import write_env_activate_script, write_env_deactivate_script
+from .generate_env_scripts import write_env_activate_script, write_env_deactivate_script, regenerate_env_scripts
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = Tuple[Spec, Spec]
@@ -1953,10 +1953,9 @@ class Environment:
             tty.debug("Skip view update, this environment does not maintain a view")
             return
 
-        for view_name, view in self.views.items():
+        for view in self.views.values():
             view.regenerate(self)
-            write_env_activate_script(self, view_name)
-            write_env_deactivate_script(self, view_name)
+        regenerate_env_scripts(self)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
