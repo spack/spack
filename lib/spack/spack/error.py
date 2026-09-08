@@ -31,7 +31,7 @@ class SpackError(Exception):
 
         # for exceptions raised from child build processes, we save the
         # traceback as a string and print it in the parent.
-        self.traceback = None
+        self.traceback: Optional[str] = None
 
         # we allow exceptions to print debug info via print_context()
         # before they are caught at the top level. If they *haven't*
