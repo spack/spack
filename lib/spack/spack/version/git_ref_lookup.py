@@ -235,7 +235,7 @@ def _needs_assignment(node: "spack.spec.Spec") -> bool:
 
 def assign_git_versions(spec: "spack.spec.Spec") -> "spack.spec.Spec":
     """Return a copy of ``spec`` in which every git ref version is assigned a Spack version, or
-    ``self`` when there are no git ref versions to assign."""
+    ``spec`` itself when there are no git ref versions to assign."""
     if not any(_needs_assignment(node) for node in spec.traverse()):
         return spec
     result = spec.copy()
