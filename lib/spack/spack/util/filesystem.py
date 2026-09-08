@@ -1089,7 +1089,7 @@ def force_remove(*paths: str) -> None:
 
 @contextmanager
 @system_path_filter
-def working_dir(dirname: str | Path, *, create: bool = False):
+def working_dir(dirname: Union[str, Path], *, create: bool = False):
     """Context manager to change the current working directory to ``dirname``.
 
     Args:
