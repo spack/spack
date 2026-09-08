@@ -96,6 +96,17 @@ class ConcretizerUI:
         ordering. This is the last event of a solve that is set up but not run.
         """
 
+    def on_solve_progress(
+        self, *, elapsed: float, models: int, best_cost: Optional[List[int]]
+    ) -> None:
+        """A solve that started ``elapsed`` seconds ago is still running, having found ``models``
+        models so far, the most recent of which costs ``best_cost``.
+
+        Emitted at most once a second, and only for solves that run in this process. Clingo
+        preprocesses the program before its search becomes interruptible, so the first event
+        lands well after the first second, and a solve of a few seconds reports none at all.
+        """
+
     def on_solve_finished(
         self,
         result: Optional[Result],
