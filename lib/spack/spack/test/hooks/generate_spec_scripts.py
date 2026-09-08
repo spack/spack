@@ -28,22 +28,15 @@ def test_paths_to_spec_scripts(install_mockery, mock_fetch, mock_archive, mock_p
     """Test that load & unload shell scripts are written to the right location
     when a spec is installed"""
 
-    spec = Spec("mpileaks")
-    spec = spack.concretize.concretize_one(spec.name)
+    spec = spack.concretize.concretize_one("mpileaks")
 
     install("--fake", spec.name)
 
-    shells_avail = ["sh"]  # csh and fish have the same scripts as sh
-
+    shell_extensions = {"sh": ""}  # csh and fish have the same scripts as sh
     if sys.platform == "win32":
-        shells_avail = ["bat", "pwsh"]
-    for shell in shells_avail:
-        extension = ""
-        if shell == "bat":
-            extension = ".bat"
-        elif shell == "pwsh":
-            extension = ".ps1"
+        shell_extensions = {"bat": ".bat", "pwsh": ".ps1"}
 
+    for shell, extension in shell_extensions.items():
         for pkg in spec.traverse():
             if pkg.external:
                 continue
@@ -62,36 +55,13 @@ def test_paths_to_spec_scripts(install_mockery, mock_fetch, mock_archive, mock_p
 @pytest.mark.parametrize(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
-def test_load_unload_scripts_exist(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
-):
-    """Test that load & unload shell scripts are written when a spec is installed"""
-
-    spec = Spec("mpileaks")
-    spec = spack.concretize.concretize_one(spec.name)
-
-    install("--fake", spec.name)
-
-    for pkg in spec.traverse():
-        if not pkg.external:
-            path_to_load_shell = spec_script.path_to_load_shell_script(pkg, shell)
-            path_to_unload_shell = spec_script.path_to_unload_shell_script(pkg, shell)
-
-            assert os.path.isfile(path_to_load_shell)
-            assert os.path.isfile(path_to_unload_shell)
-
-
-@pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
-)
-def test_contents_of_shell_scripts(
+def test_shell_scripts_modify_loaded_hashes(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
     """Test that the load & unload shell scripts contain the correct environment
     modifications for the spec"""
 
-    spec = Spec("mpileaks")
-    spec = spack.concretize.concretize_one(spec.name)
+    spec = spack.concretize.concretize_one("mpileaks")
 
     install("--fake", spec.name)
 
@@ -124,58 +94,12 @@ def test_contents_of_shell_scripts(
         assert f"{remove_var} {pkg.dag_hash()} {separator}" in unload_script.splitlines()
 
 
-@pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
-)
-def test_install_individual_specs_scripts(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
-):
-    """Ensure that the each spec's environment modifications are written to the apporiate
-    load/unload script and aren't put together when multiple specs are installed individually"""
-
-    dyninst_spec = Spec("dyninst")
-    mpich_spec = Spec("mpich")
-
-    dyninst_spec = spack.concretize.concretize_one(dyninst_spec.name)
-    mpich_spec = spack.concretize.concretize_one(mpich_spec.name)
-
-    # Install specs individually
-    install("--fake", dyninst_spec.name)
-    install("--fake", mpich_spec.name)
-
-    # no overlap in load shell script
-    path_to_dyninst = spec_script.path_to_load_shell_script(dyninst_spec, shell)
-    path_to_mpich = spec_script.path_to_load_shell_script(mpich_spec, shell)
-
-    with open(path_to_dyninst, "r", encoding="utf-8") as f:
-        dyninst_load = f.read()
-    with open(path_to_mpich, "r", encoding="utf-8") as f:
-        mpich_load = f.read()
-
-    separator = os.pathsep
-    if shell == "bat":
-        separator = f'"{os.pathsep}"'
-    elif shell == "pwsh":
-        separator = f"'{os.pathsep}'"
-
-    assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', shell)}"
-        f" {dyninst_spec.prefix} {separator}" in dyninst_load
-    )
-    assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', shell)}"
-        f" {mpich_spec.prefix} {separator}" in mpich_load
-    )
-
-    assert mpich_spec.name not in dyninst_load
-    assert dyninst_spec.name not in mpich_load
-
-
+@pytest.mark.parametrize("install_together", (True, False))
 @pytest.mark.parametrize(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_install_multiple_specs_shell_scripts(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+    install_together, shell, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
     """Ensure that the each spec environment modifications are written to the apporiate
     shell script and aren't put together when multiple specs are installed at once"""
@@ -187,7 +111,11 @@ def test_install_multiple_specs_shell_scripts(
     hypre_spec = spack.concretize.concretize_one(hypre_spec.name)
 
     # Install multiple specs
-    install("--fake", dyninst_spec.name, hypre_spec.name)
+    if install_together:
+        install("--fake", dyninst_spec.name, hypre_spec.name)
+    else:
+        install("--fake", dyninst_spec.name)
+        install("--fake", hypre_spec.name)
 
     # No overlap in load shell script
     path_to_dyninst = spec_script.path_to_load_shell_script(dyninst_spec, shell)
@@ -251,8 +179,7 @@ def test_generate_script_creates_directory(
 ):
     """Test that generate_script creates the directory if it doesn't exist"""
 
-    spec = Spec("mpileaks")
-    spec = spack.concretize.concretize_one(spec.name)
+    spec = spack.concretize.concretize_one("mpileaks")
 
     install("--fake", spec.name)
 
