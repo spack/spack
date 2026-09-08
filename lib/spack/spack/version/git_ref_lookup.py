@@ -7,11 +7,12 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
-import spack.caches
+import spack.config
 import spack.fetch_strategy
 import spack.paths
 import spack.repo
 import spack.util.executable
+import spack.util.file_cache
 import spack.util.hash
 import spack.util.spack_json as sjson
 from spack.util.filesystem import mkdirp, working_dir
@@ -36,26 +37,28 @@ SEMVER_REGEX = re.compile(rf"{_SEMVER}$")
 
 
 class GitRefLookup:
-    """An object for cached lookups of git refs. GitRefLookup objects delegate to the MISC_CACHE
+    """An object for cached lookups of git refs. GitRefLookup objects delegate to the misc cache
     for locking."""
 
-    def __init__(self, pkg_name, *, repo=None, misc_cache=None, config=None):
+    def __init__(
+        self,
+        pkg_name: str,
+        *,
+        repo: spack.repo.RepoPath,
+        misc_cache: spack.util.file_cache.FileCache,
+        config: spack.config.Configuration,
+    ) -> None:
         self.pkg_name = pkg_name
-        self._repo = repo
-        self._misc_cache = misc_cache
-        self._config = config
+        self.repo = repo
+        self.misc_cache = misc_cache
+        self.config = config
 
         self.data: Dict[str, Tuple[Optional[str], int]] = {}
 
         self._pkg = None
         self._fetcher = None
         self._cache_key = None
-        self._cache_path = None
 
-    # The following properties are used as part of a lazy reference scheme
-    # to avoid querying the package repository until it is necessary (and
-    # in particular to wait until after the configuration has been
-    # assembled)
     @property
     def cache_key(self):
         if not self._cache_key:
@@ -65,22 +68,10 @@ class GitRefLookup:
         return self._cache_key
 
     @property
-    def misc_cache(self):
-        """Cache holding the ref metadata. Defaults to the process-wide one."""
-        return self._misc_cache if self._misc_cache is not None else spack.caches.MISC_CACHE
-
-    @property
-    def cache_path(self):
-        if not self._cache_path:
-            self._cache_path = self.misc_cache.cache_path(self.cache_key)
-        return self._cache_path
-
-    @property
     def pkg(self):
         if not self._pkg:
             try:
-                repo = self._repo if self._repo is not None else spack.repo.PATH
-                pkg = repo.get_pkg_class(self.pkg_name)
+                pkg = self.repo.get_pkg_class(self.pkg_name)
                 pkg.git
             except (spack.repo.RepoError, AttributeError) as e:
                 raise VersionLookupError(f"Couldn't get the git repo for {self.pkg_name}") from e
@@ -91,7 +82,7 @@ class GitRefLookup:
     def fetcher(self):
         if not self._fetcher:
             # We require the full git repository history
-            fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git, config=self._config)
+            fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git, config=self.config)
             fetcher.get_full_repo = True
             self._fetcher = fetcher
         return self._fetcher
@@ -220,7 +211,12 @@ class GitRefLookup:
 
 
 def assign_git_version(
-    pkg_name: str, version: VersionType, *, repo=None, misc_cache=None, config=None
+    pkg_name: str,
+    version: VersionType,
+    *,
+    repo: spack.repo.RepoPath,
+    misc_cache: spack.util.file_cache.FileCache,
+    config: spack.config.Configuration,
 ) -> VersionType:
     """Return ``version`` with a Spack version assigned, by looking its ref up in the git
     repository of package ``pkg_name``. This may trigger a git clone.
@@ -265,7 +261,11 @@ def _needs_assignment(node: "spack.spec.Spec") -> bool:
 
 
 def assign_git_versions(
-    spec: "spack.spec.Spec", *, repo=None, misc_cache=None, config=None
+    spec: "spack.spec.Spec",
+    *,
+    repo: spack.repo.RepoPath,
+    misc_cache: spack.util.file_cache.FileCache,
+    config: spack.config.Configuration,
 ) -> "spack.spec.Spec":
     """Return a copy of ``spec`` in which every git ref version is assigned a Spack version, or
     ``spec`` itself when there are no git ref versions to assign."""

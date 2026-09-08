@@ -13,8 +13,11 @@ import re
 
 import pytest
 
+import spack.caches
 import spack.concretize
+import spack.config
 import spack.package_base
+import spack.repo
 import spack.spec
 from spack.util.filesystem import working_dir
 from spack.version import (
@@ -30,6 +33,17 @@ from spack.version import (
     ver,
 )
 from spack.version.git_ref_lookup import SEMVER_REGEX, GitRefLookup, assign_git_versions
+
+
+def assign_versions(spec_str: str) -> spack.spec.Spec:
+    """Assign git versions to a spec, reading the repositories, cache and configuration the
+    fixtures of the calling test have set up."""
+    return assign_git_versions(
+        spack.spec.Spec(spec_str),
+        repo=spack.repo.PATH,
+        misc_cache=spack.caches.MISC_CACHE,
+        config=spack.config.CONFIG,
+    )
 
 
 def assert_ver_lt(a, b):
@@ -710,7 +724,7 @@ def test_versions_from_git(git, mock_git_version_info, monkeypatch, mock_package
     )
 
     for commit in commits:
-        spec = assign_git_versions(spack.spec.Spec("git-test-commit@%s" % commit))
+        spec = assign_versions("git-test-commit@%s" % commit)
         version: GitVersion = spec.version
         comparator = [str(v) if not isinstance(v, int) else v for v in version.ref_version]
 
@@ -801,7 +815,7 @@ def test_git_branch_with_slash(monkeypatch):
         return "1.2", 0
 
     monkeypatch.setattr(GitRefLookup, "get", get)
-    spec = assign_git_versions(spack.spec.Spec("git-test-commit@git.feature/bar"))
+    spec = assign_versions("git-test-commit@git.feature/bar")
     assert str(spec.version) == "git.feature/bar=1.2"
     serialized = VersionList([spec.version]).to_dict()
     assert VersionList.from_dict(serialized) == VersionList([spec.version])
@@ -996,7 +1010,7 @@ def test_git_versions_without_explicit_reference(
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
-    spec = assign_git_versions(spack.spec.Spec(spec_str))
+    spec = assign_versions(spec_str)
 
     for test_str, expected in tested_intersects:
         assert spec.intersects(test_str) is expected, test_str
