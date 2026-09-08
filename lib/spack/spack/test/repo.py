@@ -106,6 +106,22 @@ def test_all_package_names_is_cached_correctly(mock_packages: RepoPath):
     assert "mpi" not in mock_packages.all_package_names(include_virtuals=False)
 
 
+def test_all_package_names_is_updated_on_repo_changes(
+    mock_packages: RepoPath, repo_builder: RepoBuilder
+):
+    """Package names are cached, but changing the search path drops the cache."""
+    repo_builder.add_package("pkg-in-extra-repo")
+    extra_repo = spack.repo.from_path(repo_builder.root)
+    repos = RepoPath(*mock_packages.repos)
+    assert "pkg-in-extra-repo" not in repos.all_package_names()
+
+    repos.put_first(extra_repo)
+    assert "pkg-in-extra-repo" in repos.all_package_names()
+
+    repos.remove(extra_repo)
+    assert "pkg-in-extra-repo" not in repos.all_package_names()
+
+
 @pytest.mark.regression("29203")
 def test_use_repositories_doesnt_change_class(mock_packages):
     """Test that we don't create the same package module and class multiple times
