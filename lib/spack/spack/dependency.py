@@ -3,14 +3,29 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Data structures that represent Spack's dependency relationships."""
 
-from typing import TYPE_CHECKING, Dict, List, Type
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import spack.deptypes as dt
 import spack.spec
 
 if TYPE_CHECKING:
-    import spack.package_base
     import spack.patch
+
+
+#: Recipes declare the same requirement over and over, so equal unpatched dependencies are one
+#: object; see :func:`intern_dependency`.
+_DEPENDENCY_CACHE: Dict[Tuple[str, dt.DepFlag], "Dependency"] = {}
+
+
+def intern_dependency(dependency: "Dependency") -> "Dependency":
+    """Return the shared Dependency equal to ``dependency``. Only unpatched dependencies are
+    shared, since patches are attached per dependent package."""
+    key = (str(dependency.spec), dependency.depflag)
+    cached = _DEPENDENCY_CACHE.get(key)
+    if cached is not None:
+        return cached
+    _DEPENDENCY_CACHE[key] = dependency
+    return dependency
 
 
 class Dependency:
@@ -40,27 +55,20 @@ class Dependency:
 
     """
 
-    __slots__ = "pkg", "spec", "patches", "depflag"
+    __slots__ = "spec", "patches", "depflag"
 
-    def __init__(
-        self,
-        pkg: Type["spack.package_base.PackageBase"],
-        spec: spack.spec.Spec,
-        depflag: dt.DepFlag = dt.DEFAULT,
-    ):
+    def __init__(self, spec: spack.spec.Spec, depflag: dt.DepFlag = dt.DEFAULT):
         """Create a new Dependency.
 
         Args:
-            pkg: Package that has this dependency
             spec: Spec indicating dependency requirements
-            type: strings describing dependency relationship
+            depflag: flags describing the dependency relationship
         """
-        self.pkg = pkg
         self.spec = spec
 
-        # This dict maps condition specs to lists of Patch objects, just
-        # as the patches dict on packages does.
-        self.patches: Dict[spack.spec.Spec, List["spack.patch.Patch"]] = {}
+        # Maps condition specs to lists of Patch objects, as the patches dict on packages
+        # does. None until a patch directive attaches one, which few packages do.
+        self.patches: Optional[Dict[spack.spec.Spec, List["spack.patch.Patch"]]] = None
         self.depflag = depflag
 
     @property
@@ -71,6 +79,6 @@ class Dependency:
     def __repr__(self) -> str:
         types = dt.flag_to_chars(self.depflag)
         if self.patches:
-            return f"<Dependency: {self.pkg.name} -> {self.spec} [{types}, {self.patches}]>"
+            return f"<Dependency: {self.spec} [{types}, {self.patches}]>"
         else:
-            return f"<Dependency: {self.pkg.name} -> {self.spec} [{types}]>"
+            return f"<Dependency: {self.spec} [{types}]>"

@@ -109,7 +109,6 @@ import spack.util.tty.color as clr
 import spack.variant as vt
 import spack.version
 import spack.version as vn
-import spack.version.git_ref_lookup
 from spack.util import lang, tty
 
 from .enums import PropagationPolicy
@@ -1141,7 +1140,7 @@ class CompilerFlag(str):
         return CompilerFlag(d["value"], propagate=d.get("propagate", False))
 
 
-_valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags"]
+_valid_compiler_flags = ("cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags")
 
 
 class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
@@ -1942,8 +1941,10 @@ class Spec:
         self.abstract_hash = None
 
         # initial values for all spec hash types
-        for h in ht.HASHES:
-            setattr(self, h.attr, None)
+        self._hash = None
+        self._package_hash = None
+        self._full_hash = None
+        self._build_hash = None
 
         # cache for spec's prefix, computed lazily by prefix property
         self._prefix = None
@@ -1960,7 +1961,10 @@ class Spec:
         # External detection details that can be set by internal Spack calls
         # in the constructor.
         self._external_path = external_path
-        self.external_modules = Spec._format_module_list(external_modules)
+        if external_modules:
+            self.external_modules = list(external_modules)
+        else:
+            self.external_modules = None
 
         # This attribute is used to store custom information for external specs.
         self.extra_attributes: Dict[str, Any] = {}
@@ -1977,24 +1981,6 @@ class Spec:
 
         elif spec_like is not None:
             raise TypeError(f"Can't make spec out of {type(spec_like)}")
-
-    @staticmethod
-    def _format_module_list(modules):
-        """Return a module list that is suitable for YAML serialization
-        and hash computation.
-
-        Given a module list, possibly read from a configuration file,
-        return an object that serializes to a consistent YAML string
-        before/after round-trip serialization to/from a Spec dictionary
-        (stored in JSON format): when read in, the module list may
-        contain YAML formatting that is discarded (non-essential)
-        when stored as a Spec dictionary; we take care in this function
-        to discard such formatting such that the Spec hash does not
-        change before/after storage in JSON.
-        """
-        if modules:
-            modules = list(modules)
-        return modules
 
     @property
     def external_path(self):
@@ -2181,7 +2167,6 @@ class Spec:
                 f"Propagation with '==' is not supported for '{name}'."
             )
 
-        valid_flags = FlagMap.valid_compiler_flags()
         if name == "arch" or name == "architecture":
             assert type(value) is str, "architecture have a string value"
             parts = tuple(value.split("-"))
@@ -2195,7 +2180,7 @@ class Spec:
             self._set_architecture(target=value)
         elif name == "namespace":
             self.namespace = value
-        elif name in valid_flags:
+        elif name in _valid_compiler_flags:
             assert self.compiler_flags is not None
             assert type(value) is str, f"{name} must have a string value"
             flags_and_propagation = spack.compilers.flags.tokenize_flags(value, propagate)
@@ -3115,13 +3100,7 @@ class Spec:
 
         # get the right reader
         reader = specfile_reader_for_version(version)
-        spec = reader.load(data)
-
-        # Handle git versions
-        for s in spec.traverse():
-            s.attach_git_version_lookup()
-
-        return spec
+        return reader.load(data)
 
     @staticmethod
     def from_yaml(stream) -> "Spec":
@@ -3224,15 +3203,15 @@ class Spec:
         if not isinstance(v, vn.GitVersion):
             return
 
-        try:
-            v.ref_version
-        except vn.VersionLookupError:
-            before = self.cformat("{name}{@version}{/hash:7}")
-            v.std_version = vn.StandardVersion.from_string("develop")
-            tty.debug(
-                f"the git sha of {before} could not be resolved to spack version; "
-                f"it has been replaced by {self.cformat('{name}{@version}{/hash:7}')}."
-            )
+        if v.std_version is not None:
+            return
+
+        before = self.cformat("{name}{@version}{/hash:7}")
+        self.versions = vn.VersionList([v.assigned(vn.StandardVersion.from_string("develop"))])
+        tty.debug(
+            f"the git sha of {before} could not be resolved to spack version; "
+            f"it has been replaced by {self.cformat('{name}{@version}{/hash:7}')}."
+        )
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
@@ -5387,14 +5366,6 @@ class Spec:
                     edge.spec._dependents = {}
                 _add_edge_to_map(edge.spec._dependents, edge.parent.name, edge)
 
-    def attach_git_version_lookup(self):
-        # Add a git lookup method for GitVersions
-        if not self.name:
-            return
-        for v in self.versions:
-            if isinstance(v, vn.GitVersion) and v.std_version is None:
-                v.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(self.fullname))
-
     def original_spec_format(self) -> int:
         """Returns the spec format originally used for this spec."""
         return self.annotations.original_spec_format
@@ -5705,7 +5676,6 @@ class SpecfileReaderBase(abc.ABC):
 
         if "version" in node or "versions" in node:
             spec.versions = vn.VersionList.from_dict(node)
-            spec.attach_git_version_lookup()
 
         if "arch" in node:
             spec.architecture = ArchSpec.from_dict(node)
@@ -6190,7 +6160,7 @@ def _inject_patches_variant(root: Spec) -> None:
         edge_patches: List[spack.patch.Patch] = []
         for cond, deps_by_name in pkg_deps.items():
             dependency = deps_by_name.get(dspec.spec.name)
-            if not dependency:
+            if not dependency or not dependency.patches:
                 continue
 
             if not dspec.parent.satisfies(cond):

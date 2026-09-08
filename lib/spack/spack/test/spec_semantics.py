@@ -28,6 +28,7 @@ from spack.variant import (
     MultipleValuesInExclusiveVariantError,
     UnknownVariantError,
 )
+from spack.version.git_ref_lookup import GitRefLookup
 
 
 @pytest.fixture()
@@ -2106,6 +2107,8 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
         ),
         # target=* can be constrained by a specific target
         (Spec, "target=*", "target=haswell", True, "target=haswell"),
+        # A range of a single version is not collapsed to an assignment of it
+        (Spec, "pkg-a@git.main", "pkg-a@develop", True, "pkg-a@git.main=develop:develop"),
     ],
 )
 def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_packages):
@@ -3390,3 +3393,16 @@ def test_copy_keeps_a_redundant_parallel_edge_and_its_subtree(mock_packages):
 
     assert copy == original
     assert copy.to_dict() == original.to_dict()
+
+
+def test_git_ref_spec_operations_are_pure(monkeypatch):
+    """Parsing, printing, copying, hashing and serializing a spec with a git ref version never
+    trigger a repository lookup: the ref stays abstract until concretization."""
+    monkeypatch.setattr(
+        GitRefLookup, "get", lambda self, ref: pytest.fail(f"unexpected git ref lookup of '{ref}'")
+    )
+    for spec_str in ("git-test-commit@git.main", "git-test-commit@git.main=1.0:"):
+        spec = Spec(spec_str)
+        assert str(spec) == spec_str
+        assert spec.copy() == spec == Spec.from_dict(spec.to_dict())
+        assert hash(spec) == hash(Spec(spec_str))

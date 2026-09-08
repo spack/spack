@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import copy
 import re
 from bisect import bisect_left
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union
@@ -20,7 +21,6 @@ from .common import (
     is_git_version,
     iv_min_len,
 )
-from .lookup import AbstractRefLookup
 
 # Valid version characters
 VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$")
@@ -197,6 +197,15 @@ class VersionType(SupportsRichComparison):
     def __hash__(self) -> int:
         raise NotImplementedError
 
+    def __contains__(rhs, lhs) -> bool:
+        # We should probably get rid of `x in y` for versions, since
+        # versions still have a dual interpretation as singleton sets
+        # or elements. x in y should be: is the lhs-element in the
+        # rhs-set. Instead this function also does subset checks.
+        if isinstance(lhs, VersionType):
+            return lhs.satisfies(rhs)
+        raise TypeError(f"'in' not supported for instances of {type(lhs)}")
+
 
 class ConcreteVersion(VersionType):
     """Base type for versions that represents a single (non-range or list) version."""
@@ -351,15 +360,6 @@ class StandardVersion(ConcreteVersion):
         # If this is a final release, do not hash the prerelease part for backward compat.
         return hash(self.version if self.is_prerelease() else self.version[0])
 
-    def __contains__(rhs, lhs) -> bool:
-        # We should probably get rid of `x in y` for versions, since
-        # versions still have a dual interpretation as singleton sets
-        # or elements. x in y should be: is the lhs-element in the
-        # rhs-set. Instead this function also does subset checks.
-        if isinstance(lhs, VersionType):
-            return lhs.satisfies(rhs)
-        raise TypeError(f"'in' not supported for instances of {type(lhs)}")
-
     def intersects(self, other: VersionType) -> bool:
         if isinstance(other, StandardVersion):
             return self == other
@@ -367,10 +367,10 @@ class StandardVersion(ConcreteVersion):
 
     def satisfies(self, other: VersionType) -> bool:
         if isinstance(other, VersionList):
-            return other.intersects(self)
+            return any(self.satisfies(rhs) for rhs in other)
 
         if isinstance(other, ClosedOpenRange):
-            return other.intersects(self)
+            return other.lo <= self < other.hi
 
         if isinstance(other, GitVersion):
             return False
@@ -514,54 +514,32 @@ class StandardVersion(ConcreteVersion):
         return self.up_to(3)
 
 
+#: A git version can be mapped to a specific version, or be constrained by a version range
+GitConstraint = Union[StandardVersion, "ClosedOpenRange"]
+
+
 class GitVersion(ConcreteVersion):
-    """Class to represent versions interpreted from git refs.
+    """Class to represent git refs with an optional version or version range constraint.
 
-    There are two distinct categories of git versions:
+    Git versions are of the form ``git.<ref>[=<version>[:<version>]]``. Examples:
 
-    1) GitVersions instantiated with an associated reference version (e.g. ``git.foo=1.2``)
-    2) GitVersions requiring commit lookups
+    1) ``git.foo=1.2``: the ref is assigned the version 1.2, and is concrete
+    2) ``git.foo``: short for ``git.foo=:`` (unconstrained ref)
+    3) ``git.foo=1.2:1.3``: the ref is constrained to the range 1.2:1.3
 
-    Git ref versions that are not paired with a known version are handled separately from
-    all other version comparisons. When Spack identifies a git ref version, it associates a
-    ``CommitLookup`` object with the version. This object handles caching of information
-    from the git repo. When executing comparisons with a git ref version, Spack queries the
-    ``CommitLookup`` for the most recent version previous to this git ref, as well as the
-    distance between them expressed as a number of commits. If the previous version is
-    ``X.Y.Z`` and the distance is ``D``, the git commit version is represented by the
-    tuple ``(X, Y, Z, '', D)``. The component ``''`` cannot be parsed as part of any valid
-    version, but is a valid component. This allows a git ref version to be less than (older
-    than) every Version newer than its previous version, but still newer than its previous
-    version.
-
-    To find the previous version from a git ref version, Spack queries the git repo for its
-    tags. Any tag that matches a version known to Spack is associated with that version, as
-    is any tag that is a known version prepended with the character ``v`` (i.e., a tag
-    ``v1.0`` is associated with the known version ``1.0``). Additionally, any tag that
-    represents a semver version (X.Y.Z with X, Y, Z all integers) is associated with the
-    version it represents, even if that version is not known to Spack. Each tag is then
-    queried in git to see whether it is an ancestor of the git ref in question, and if so
-    the distance between the two. The previous version is the version that is an ancestor
-    with the least distance from the git ref in question.
-
-    This procedure can be circumvented if the user supplies a known version to associate
-    with the GitVersion (e.g. ``[hash]=develop``).  If the user prescribes the version then
-    there is no need to do a lookup and the standard version comparison operations are
-    sufficient.
+    Git versions of the form ``git.<ref>=<version>`` are concrete and can be compared to other
+    versions. Git versions with a range constraint can be made concrete by calling
+    ``assigned`` with a version that satisfies the constraint.
     """
 
-    __slots__ = ("has_git_prefix", "commit_sha", "ref", "is_commit", "std_version", "_ref_lookup")
+    __slots__ = ("has_git_prefix", "commit_sha", "ref", "is_commit", "constraint")
 
     def __init__(self, string: str):
         # TODO will be required for concrete specs when commit lookup added
         self.commit_sha: Optional[str] = None
-        self.std_version: Optional[StandardVersion] = None
 
-        # optional user supplied git ref
-        self.ref: Optional[str] = None
-
-        # An object that can lookup git refs to compare them to versions
-        self._ref_lookup: Optional[AbstractRefLookup] = None
+        #: The Spack versions this ref is constrained to (``@:`` for unconstrained).
+        self.constraint: GitConstraint
 
         self.has_git_prefix = string.startswith("git.")
 
@@ -569,16 +547,15 @@ class GitVersion(ConcreteVersion):
         normalized_string = string[4:] if self.has_git_prefix else string
 
         if "=" in normalized_string:
-            # Store the git reference, and parse the user provided version.
-            self.ref, spack_version = normalized_string.split("=")
-            self.std_version = StandardVersion(
-                spack_version, *parse_string_components(spack_version)
-            )
+            # Store the git reference, and parse the user provided version or range.
+            self.ref, constraint = normalized_string.split("=")
+            if ":" in constraint:
+                self.constraint = _parse_range(constraint)
+            else:
+                self.constraint = StandardVersion.from_string(constraint)
         else:
-            # The ref_version is lazily attached after parsing, since we don't know what
-            # package it applies to here.
-            self.std_version = None
             self.ref = normalized_string
+            self.constraint = _UNBOUNDED_RANGE
 
         # Used by fetcher
         self.is_commit: bool = is_git_commit_sha(self.ref)
@@ -587,70 +564,90 @@ class GitVersion(ConcreteVersion):
         if self.is_commit:
             self.commit_sha = self.ref
 
+    def _with_constraint(self, constraint: "GitConstraint") -> "GitVersion":
+        """The same ref under another constraint."""
+        result = copy.copy(self)
+        result.constraint = constraint
+        return result
+
+    @property
+    def std_version(self) -> Optional[StandardVersion]:
+        """The Spack version assigned to this ref, or None while it is only constrained."""
+        return self.constraint if isinstance(self.constraint, StandardVersion) else None
+
+    def assigned(self, version: StandardVersion) -> "GitVersion":
+        """Returns a copy of this git ref with the specific version assigned. Raises a
+        ``VersionLookupError`` when the version is outside the constraint on the ref."""
+        if not version.satisfies(self.constraint):
+            raise VersionLookupError(
+                f"git ref '{self.ref}' corresponds to version {version}, "
+                f"which is outside the range {self.constraint} it is constrained to"
+            )
+        return self._with_constraint(version)
+
     @property
     def ref_version(self) -> StandardVersion:
-        # Return cached version if we have it
-        if self.std_version is not None:
-            return self.std_version
+        """The Spack version assigned to this git ref, used for ordering.
 
-        if self.ref_lookup is None:
+        Raises a ``VersionLookupError`` when no version has been assigned yet."""
+        if self.std_version is None:
             raise VersionLookupError(
-                f"git ref '{self.ref}' cannot be looked up: call attach_lookup first"
+                f"git ref '{self.ref}' has no Spack version assigned: "
+                f"use '{self._ref_str}=<version>'"
             )
-
-        version_string, distance = self.ref_lookup.get(self.ref)
-        version_string = version_string or "0"
-
-        # Add a -git.<distance> suffix when we're not exactly on a tag
-        if distance > 0:
-            version_string += f"-git.{distance}"
-        self.std_version = StandardVersion(
-            version_string, *parse_string_components(version_string)
-        )
         return self.std_version
 
+    @property
+    def _ref_str(self) -> str:
+        return f"git.{self.ref}" if self.has_git_prefix else self.ref
+
     def intersects(self, other: VersionType) -> bool:
-        # For concrete things intersects = satisfies = equality
         if isinstance(other, GitVersion):
-            return self == other
+            return self.ref == other.ref and self.constraint.intersects(other.constraint)
         if isinstance(other, StandardVersion):
             return False
         if isinstance(other, ClosedOpenRange):
-            return self.ref_version.intersects(other)
+            return self.constraint.intersects(other)
         if isinstance(other, VersionList):
             return any(self.intersects(rhs) for rhs in other)
         raise TypeError(f"'intersects()' not supported for instances of {type(other)}")
 
     def intersection(self, other: VersionType) -> VersionType:
-        if isinstance(other, ConcreteVersion):
-            return self if self == other else VersionList()
-        return other.intersection(self)
+        if isinstance(other, VersionList):
+            return other.intersection(self)
+        if not self.intersects(other):
+            return VersionList()
+        rhs = other.constraint if isinstance(other, GitVersion) else other
+        constraint = self.constraint.intersection(rhs)
+        assert isinstance(constraint, (StandardVersion, ClosedOpenRange))
+        return self._with_constraint(constraint)
+
+    def union(self, other: VersionType) -> VersionType:
+        result = VersionList([self])
+        result.add(other)
+        return result[0] if len(result) == 1 else result
 
     def satisfies(self, other: VersionType) -> bool:
-        # Concrete versions mean we have to do an equality check
         if isinstance(other, GitVersion):
-            return self == other
+            return self.ref == other.ref and self.constraint.satisfies(other.constraint)
         if isinstance(other, StandardVersion):
             return False
         if isinstance(other, ClosedOpenRange):
-            return self.ref_version.satisfies(other)
+            return self.constraint.satisfies(other)
         if isinstance(other, VersionList):
             return any(self.satisfies(rhs) for rhs in other)
         raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
 
     def __str__(self) -> str:
-        s = ""
-        if self.ref:
-            s += f"git.{self.ref}" if self.has_git_prefix else self.ref
-        # Note: the solver actually depends on str(...) to produce the effective version.
-        # So when a lookup is attached, we require the resolved version to be printed.
-        # But for standalone git versions that don't have a repo attached, it would still
-        # be nice if we could print @<hash>.
-        try:
-            s += f"={self.ref_version}"
-        except VersionLookupError:
-            pass
-        return s
+        if isinstance(self.constraint, StandardVersion):
+            return f"{self._ref_str}={self.constraint}"
+        if self.constraint == _UNBOUNDED_RANGE:
+            return self._ref_str
+        # Never collapse lo:lo to lo, which would read as an assigned version.
+        constraint = str(self.constraint)
+        if ":" not in constraint:
+            constraint = f"{constraint}:{constraint}"
+        return f"{self._ref_str}={constraint}"
 
     def __repr__(self):
         return f'GitVersion("{self}")'
@@ -659,85 +656,47 @@ class GitVersion(ConcreteVersion):
         return True
 
     def __eq__(self, other: object) -> bool:
-        # GitVersion cannot be equal to StandardVersion, otherwise == is not transitive
+        # GitVersion cannot be equal to StandardVersion, otherwise == is not transitive.
         return (
             isinstance(other, GitVersion)
             and self.ref == other.ref
-            # TODO(psakiev) this needs to chamge to commits when we turn on lookups
-            and self.ref_version == other.ref_version
+            and self.constraint == other.constraint
         )
 
     def __ne__(self, other: object) -> bool:
         return not self == other
 
-    def __lt__(self, other: object) -> bool:
+    def _sort_key(self) -> Tuple:
+        """Assigned refs sort by version then ref; refs constrained to a range come after
+        every other version, since we don't know what version they will correspond to."""
+        if self.std_version is None:
+            return (1, self.ref, self.constraint)
+        return (0, self.std_version, self.ref)
+
+    def _order(self, other: object) -> int:
+        """The sign of ``self`` compared to ``other``, defining the storage order of versions."""
         if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) < (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
-            # GitVersion at equal ref version is larger than StandardVersion
-            return self.ref_version < other
-        if isinstance(other, ClosedOpenRange):
-            return self.ref_version < other
-        raise TypeError(f"'<' not supported between instances of {type(self)} and {type(other)}")
+            lhs, rhs = self._sort_key(), other._sort_key()
+            return (lhs > rhs) - (lhs < rhs)
+        if not isinstance(other, (StandardVersion, ClosedOpenRange)):
+            raise TypeError(f"ordering not supported between {type(self)} and {type(other)}")
+        return -1 if self.std_version is not None and self.std_version < other else 1
+
+    def __lt__(self, other: object) -> bool:
+        return self._order(other) < 0
 
     def __le__(self, other: object) -> bool:
-        if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) <= (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
-            # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use < comparison.
-            return self.ref_version < other
-        if isinstance(other, ClosedOpenRange):
-            # Equality is not a thing
-            return self.ref_version < other
-        raise TypeError(f"'<=' not supported between instances of {type(self)} and {type(other)}")
+        return self._order(other) <= 0
 
     def __ge__(self, other: object) -> bool:
-        if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) >= (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
-            # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use >= here.
-            return self.ref_version >= other
-        if isinstance(other, ClosedOpenRange):
-            return self.ref_version > other
-        raise TypeError(f"'>=' not supported between instances of {type(self)} and {type(other)}")
+        return self._order(other) >= 0
 
     def __gt__(self, other: object) -> bool:
-        if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) > (other.ref_version, other.ref)
-        if isinstance(other, StandardVersion):
-            # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use >= here.
-            return self.ref_version >= other
-        if isinstance(other, ClosedOpenRange):
-            return self.ref_version > other
-        raise TypeError(f"'>' not supported between instances of {type(self)} and {type(other)}")
+        return self._order(other) > 0
 
     def __hash__(self):
         # hashing should not cause version lookup
         return hash(self.ref)
-
-    def __contains__(self, other: object) -> bool:
-        raise NotImplementedError
-
-    @property
-    def ref_lookup(self):
-        if self._ref_lookup:
-            # Get operation ensures dict is populated
-            self._ref_lookup.get(self.ref)
-            return self._ref_lookup
-
-    def attach_lookup(self, lookup: AbstractRefLookup):
-        """
-        Use the git fetcher to look up a version for a commit.
-
-        Since we want to optimize the clone and lookup, we do the clone once
-        and store it in the user specified git repository cache. We also need
-        context of the package to get known versions, which could be tags if
-        they are linked to Git Releases. If we are unable to determine the
-        context of the version, we cannot continue. This implementation is
-        alongside the GitFetcher because eventually the git repos cache will
-        be one and the same with the source cache.
-        """
-        self._ref_lookup = lookup
 
     def __iter__(self):
         return self.ref_version.__iter__()
@@ -870,18 +829,13 @@ class ClosedOpenRange(VersionType):
             return (self.lo, self.hi) > (other.lo, other.hi)
         return NotImplemented
 
-    def __contains__(rhs, lhs):
-        if isinstance(lhs, (ConcreteVersion, ClosedOpenRange, VersionList)):
-            return lhs.satisfies(rhs)
-        raise TypeError(f"'in' not supported between instances of {type(rhs)} and {type(lhs)}")
-
     def intersects(self, other: VersionType) -> bool:
         if isinstance(other, StandardVersion):
             return self.lo <= other < self.hi
         if isinstance(other, ClosedOpenRange):
             return (self.lo < other.hi) and (other.lo < self.hi)
         if isinstance(other, GitVersion):
-            return self.lo <= other.ref_version < self.hi
+            return other.intersects(self)
         if isinstance(other, VersionList):
             return any(self.intersects(rhs) for rhs in other)
         raise TypeError(f"'intersects' not supported for instances of {type(other)}")
@@ -910,7 +864,7 @@ class ClosedOpenRange(VersionType):
             return self if self.lo <= other < self.hi else None
 
         if isinstance(other, GitVersion):
-            return self if self.lo <= other.ref_version < self.hi else None
+            return self if other.satisfies(self) else None
 
         raise TypeError(f"'union()' not supported for instances of {type(other)}")
 
@@ -931,10 +885,25 @@ class ClosedOpenRange(VersionType):
             min_hi = min(self.hi, other.hi)
             return ClosedOpenRange(max_lo, min_hi) if max_lo < min_hi else VersionList()
 
-        if isinstance(other, ConcreteVersion):
+        if isinstance(other, GitVersion):
+            return other.intersection(self)
+
+        if isinstance(other, StandardVersion):
             return other if self.intersects(other) else VersionList()
 
+        if isinstance(other, VersionList):
+            return other.intersection(self)
+
         raise TypeError(f"'intersection()' not supported for instances of {type(other)}")
+
+
+def _is_ranged_ref(v: VersionType) -> bool:
+    """Whether ``v`` is a git ref constrained to a range, rather than assigned a version."""
+    return isinstance(v, GitVersion) and v.std_version is None
+
+
+def _element_str(v: VersionType) -> str:
+    return f"={v}" if type(v) is StandardVersion else str(v)
 
 
 class VersionList(VersionType):
@@ -969,9 +938,41 @@ class VersionList(VersionType):
         else:
             raise TypeError(f"Cannot construct VersionList from {type(vlist)}")
 
+    def _ranged_refs_start(self) -> int:
+        """The index where the git refs constrained to a range start: they sort last."""
+        i = len(self.versions)
+        while i > 0 and _is_ranged_ref(self.versions[i - 1]):
+            i -= 1
+        return i
+
+    def _add_ranged_ref(self, item: GitVersion) -> None:
+        """Add a git ref constrained to a range."""
+        # Skip when already covered: by a plain range, or by a wider constraint on the ref.
+        if item.satisfies(self):
+            return
+        # Widen it over the plain ranges it touches, then merge it with the constraints on the
+        # same ref it touches. One pass in list order suffices: plain ranges come first and are
+        # pairwise disjoint, and a constraint on the ref already contains the plain ranges it
+        # touches, so merging it cannot make the result touch anything new.
+        constraint = item.constraint
+        assert isinstance(constraint, ClosedOpenRange)
+        for v in self.versions:
+            if isinstance(v, ClosedOpenRange):
+                union = constraint._union_if_not_disjoint(v)
+            elif isinstance(v, GitVersion) and v.ref == item.ref:
+                union = constraint._union_if_not_disjoint(v.constraint)
+            else:
+                continue
+            if union is not None:
+                constraint = union
+        item = item._with_constraint(constraint)
+        # It covers assigned versions of the ref, and the constraints on it that were merged.
+        self.versions = [v for v in self.versions if not v.satisfies(item)]
+        self.versions.insert(bisect_left(self.versions, item), item)
+
     def add(self, item: VersionType) -> None:
         if isinstance(item, ClosedOpenRange):
-            i = bisect_left(self, item)
+            i = bisect_left(self.versions, item)
 
             # Note: can span multiple concrete versions to the left (as well as to the right).
             # For instance insert 1.2: into [1.2, hash=1.2, 1.3, 1.4:1.5]
@@ -992,16 +993,30 @@ class VersionList(VersionType):
                 del self.versions[i]
 
             self.versions.insert(i, item)
+            # Re-add the constraints on git refs: it may cover or touch them, and they come
+            # after it, not necessarily next to it.
+            if _is_ranged_ref(self.versions[-1]):
+                start = self._ranged_refs_start()
+                refs, self.versions = self.versions[start:], self.versions[:start]
+                for v in refs:
+                    self.add(v)
 
         elif isinstance(item, VersionList):
             for v in item:
                 self.add(v)
 
-        elif isinstance(item, (StandardVersion, GitVersion)):
-            i = bisect_left(self, item)
-            # Only insert when prev and next are not intersected.
-            if (i == 0 or not item.intersects(self[i - 1])) and (
-                i == len(self) or not item.intersects(self[i])
+        elif isinstance(item, GitVersion):
+            if item.std_version is None:
+                self._add_ranged_ref(item)
+            # An assigned ref can be covered by a constraint on the ref anywhere in the list.
+            elif not item.satisfies(self):
+                self.versions.insert(bisect_left(self.versions, item), item)
+
+        elif isinstance(item, StandardVersion):
+            i = bisect_left(self.versions, item)
+            # Only insert when prev and next do not cover it.
+            if (i == 0 or not item.satisfies(self[i - 1])) and (
+                i == len(self) or not item.satisfies(self[i])
             ):
                 self.versions.insert(i, item)
 
@@ -1061,19 +1076,26 @@ class VersionList(VersionType):
         raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
 
     def intersects(self, other: VersionType) -> bool:
-        if isinstance(other, (ClosedOpenRange, StandardVersion)):
+        if isinstance(other, (ClosedOpenRange, ConcreteVersion)):
             return any(v.intersects(other) for v in self)
 
         if isinstance(other, VersionList):
+            # Walk the two lists in lockstep, up to the git refs without an assigned version
+            s_tail, o_tail = self._ranged_refs_start(), other._ranged_refs_start()
             s = o = 0
-            while s < len(self) and o < len(other):
+            while s < s_tail and o < o_tail:
                 if self[s].intersects(other[o]):
                     return True
                 elif self[s] < other[o]:
                     s += 1
                 else:
                     o += 1
-            return False
+            if s_tail == len(self.versions) and o_tail == len(other.versions):
+                return False
+            # Those refs can intersect elements anywhere in the other list: check them one by one
+            return any(v.intersects(other) for v in self.versions[s_tail:]) or any(
+                v.intersects(self) for v in other.versions[o_tail:]
+            )
 
         raise TypeError(f"'intersects()' not supported for instances of {type(other)}")
 
@@ -1081,7 +1103,7 @@ class VersionList(VersionType):
         """Generate human-readable dict for YAML."""
         if self.concrete:
             return {"version": str(self[0])}
-        return {"versions": [str(v) for v in self]}
+        return {"versions": [_element_str(v) for v in self]}
 
     @staticmethod
     def from_dict(dictionary) -> "VersionList":
@@ -1111,12 +1133,19 @@ class VersionList(VersionType):
         result = VersionList()
         if isinstance(other, VersionList):
             for lhs, rhs in ((self, other), (other, self)):
-                for x in lhs:
-                    i = bisect_left(rhs.versions, x)
+                lhs_tail, rhs_tail = lhs._ranged_refs_start(), rhs._ranged_refs_start()
+                # Up to the git refs without an assigned version, an element meets at most its
+                # two neighbors in the other list
+                for x in lhs.versions[:lhs_tail]:
+                    i = bisect_left(rhs.versions, x, 0, rhs_tail)
                     if i > 0:
                         result.add(rhs[i - 1].intersection(x))
-                    if i < len(rhs):
+                    if i < rhs_tail:
                         result.add(rhs[i].intersection(x))
+                # Those refs can meet elements anywhere in the other list: meet them one by one
+                for x in lhs.versions[lhs_tail:]:
+                    for y in rhs.versions:
+                        result.add(x.intersection(y))
             return result
         else:
             return self.intersection(VersionList(other))
@@ -1130,17 +1159,6 @@ class VersionList(VersionType):
         changed = isection.versions != self.versions
         self.versions = isection.versions
         return changed
-
-    # typing this and getitem are a pain in Python 3.6
-    def __contains__(self, other):
-        if isinstance(other, (ClosedOpenRange, StandardVersion)):
-            i = bisect_left(self, other)
-            return (i > 0 and other in self[i - 1]) or (i < len(self) and other in self[i])
-
-        if isinstance(other, VersionList):
-            return all(item in self for item in other)
-
-        return False
 
     def __getitem__(self, index):
         return self.versions[index]
@@ -1194,7 +1212,7 @@ class VersionList(VersionType):
         if not self.versions:
             return ""
 
-        return ",".join(f"={v}" if type(v) is StandardVersion else str(v) for v in self.versions)
+        return ",".join(_element_str(v) for v in self.versions)
 
     def __repr__(self) -> str:
         return str(self.versions)
@@ -1314,6 +1332,14 @@ def VersionRange(lo: Union[str, StandardVersion], hi: Union[str, StandardVersion
     return ClosedOpenRange.from_version_range(lo, hi)
 
 
+def _parse_range(string: str) -> ClosedOpenRange:
+    """Parse ``lo:hi``, ``lo:``, ``:hi`` or ``:`` into a range."""
+    s, e = string.split(":")
+    lo = _STANDARD_VERSION_TYPEMIN if s == "" else StandardVersion.from_string(s)
+    hi = _STANDARD_VERSION_TYPEMAX if e == "" else StandardVersion.from_string(e)
+    return VersionRange(lo, hi)
+
+
 def from_string(string: str) -> VersionType:
     """Converts a string to a version object. This is private. Client code should use ver()."""
     string = string.replace(" ", "")
@@ -1322,20 +1348,18 @@ def from_string(string: str) -> VersionType:
     if "," in string:
         return VersionList([from_string(x) for x in string.split(",")])
 
-    # ClosedOpenRange
-    elif ":" in string:
-        s, e = string.split(":")
-        lo = _STANDARD_VERSION_TYPEMIN if s == "" else StandardVersion.from_string(s)
-        hi = _STANDARD_VERSION_TYPEMAX if e == "" else StandardVersion.from_string(e)
-        return VersionRange(lo, hi)
-
     # StandardVersion
     elif string.startswith("="):
         # @=1.2.3 is an exact version
         return Version(string[1:])
 
+    # GitVersion, possibly constrained to a range
     elif is_git_version(string):
         return GitVersion(string)
+
+    # ClosedOpenRange
+    elif ":" in string:
+        return _parse_range(string)
 
     else:
         # @1.2.3 is short for 1.2.3:1.2.3

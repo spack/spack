@@ -13,6 +13,7 @@ from spack.repo import RepoPath
 from spack.spec import Spec, VariantMap
 from spack.variant import (
     BoolValuedVariant,
+    ConditionalValue,
     DuplicateVariantError,
     InconsistentValidationError,
     InvalidVariantValueError,
@@ -913,3 +914,36 @@ def test_constrain_narrowing():
     s.constrain("+foo")
     assert s.variants["foo"].type == spack.variant.VariantType.BOOL
     assert s.variants["foo"].concrete
+
+
+@pytest.mark.parametrize(
+    "when,expected",
+    [
+        # No constraint: every value that is not statically disabled
+        (None, ("always", "old", "new")),
+        # Constraints selecting one of the two conditional values
+        (Spec("@1.0"), ("always", "old")),
+        (Spec("@2.0"), ("always", "new")),
+        # A constraint that doesn't decide the condition either way
+        (Spec("+foo"), ("always",)),
+    ],
+)
+def test_possible_values_unwraps_conditional_values(when, expected):
+    vdef = Variant(
+        "flavor",
+        default="new",
+        description="",
+        values=(
+            "always",
+            ConditionalValue("old", when=Spec("@:1")),
+            ConditionalValue("new", when=Spec("@2:")),
+            ConditionalValue("never", when=None),
+        ),
+    )
+    assert vdef.possible_values(when=when) == expected
+
+
+def test_possible_values_when_checked_by_a_validator():
+    vdef = Variant("flavor", default="1", description="", values=int)
+    assert vdef.values_defined_by_validator()
+    assert vdef.possible_values() is None

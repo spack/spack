@@ -7,7 +7,9 @@ be used to iterate over tokens in a string."""
 
 import enum
 import re
-from typing import Generator, Match, Optional, Type
+from typing import Generator, Mapping, Match, Optional, Type
+
+from spack.util.lang import PatternStr
 
 
 class TokenBase(enum.Enum):
@@ -53,6 +55,17 @@ class Token:
             and self.value == other.value
             and self.subvalues == other.subvalues
         )
+
+
+def fast_regex(tokens: Mapping[str, str], skip_whitespace: bool = True) -> PatternStr:
+    """Compile named token regexes into a single alternation for use with ``pattern.scanner()``.
+
+    Tokens are tried in dictionary order, so more specific tokens must come first. On a match,
+    ``match.lastgroup`` is the token name. With ``skip_whitespace``, whitespace before a token is
+    consumed by the regex engine itself, so no separate whitespace token is needed.
+    """
+    joined = "|".join(f"(?P<{name}>{regex})" for name, regex in tokens.items())
+    return re.compile(rf"\s*(?:{joined})" if skip_whitespace else joined)
 
 
 def token_match_regex(token: TokenBase):

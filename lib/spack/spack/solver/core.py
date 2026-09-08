@@ -1,13 +1,14 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Low-level wrappers around clingo API and other basic functionality related to ASP"""
+"""Basic data structures used to build Spack's ASP program"""
 
-from typing import Any, NamedTuple, Optional, Tuple
+from typing import Any, Dict, NamedTuple, Optional, Tuple
 
 from spack.util import lang
 
-from .compat import symbol_name, symbol_string
+#: Type used for quoted string cache
+QuotedStrings = Dict[str, str]
 
 
 class AspVar:
@@ -60,27 +61,64 @@ class AspFunction:
         return AspFunction(self.name, args if not self.args else self.args + args)
 
     def __str__(self) -> str:
-        parts = []
-        for arg in self.args:
-            # exact type checks first, ordered by frequency
-            if type(arg) is str:
-                arg = arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"")
-                parts.append(f'"{arg}"')
-            elif type(arg) is AspFunction or type(arg) is int or type(arg) is AspVar:
-                parts.append(str(arg))
-            # subclasses miss the checks above: config values are syaml_str / syaml_int. bool is
-            # an int subclass, but is not a number in ASP, so it is quoted below.
-            elif isinstance(arg, int) and not isinstance(arg, bool):
-                parts.append(str(arg))
-            elif isinstance(arg, str):
-                arg = arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"")
-                parts.append(f'"{arg}"')
-            else:
-                parts.append(f'"{arg}"')
-        return f"{self.name}({','.join(parts)})"
+        return self.to_str({})
+
+    def to_str(self, quoted: QuotedStrings) -> str:
+        """The ASP representation of this function, reusing the literals in ``quoted``."""
+        args = self.args
+        # nearly every function takes one or two arguments; those need neither list nor join
+        if len(args) == 1:
+            return f"{self.name}({asp_argument(args[0], quoted)})"
+        if len(args) == 2:
+            return f"{self.name}({asp_argument(args[0], quoted)},{asp_argument(args[1], quoted)})"
+        return f"{self.name}({','.join([asp_argument(arg, quoted) for arg in args])})"
+
+    def args_str(self, quoted: QuotedStrings) -> str:
+        """The arguments as they appear between the parentheses of this function."""
+        return ",".join([asp_argument(arg, quoted) for arg in self.args])
 
     def __repr__(self) -> str:
         return str(self)
+
+
+def quote(arg: str, quoted: QuotedStrings) -> str:
+    """The ASP literal for the string ``arg``: escaped, in double quotes, and kept for reuse."""
+    return quoted.get(arg) or _quote(arg, quoted)
+
+
+def quote_once(arg: str) -> str:
+    """The ASP literal for a string that is not expected to come up again."""
+    return '"' + arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"") + '"'
+
+
+#: Constant that determines the maximum length of a string that's kept in the quoted cache
+MAX_QUOTED_LENGTH = 32
+
+
+def _quote(arg: str, quoted: QuotedStrings) -> str:
+    """Compute the ASP literal for ``arg``, and keep it if it is short; see :func:`quote`."""
+    result = quote_once(arg)
+    if len(arg) <= MAX_QUOTED_LENGTH:
+        quoted[arg] = result
+    return result
+
+
+def asp_argument(arg: Any, quoted: QuotedStrings) -> str:
+    """The ASP representation of a single argument of a function."""
+    # exact type checks first, ordered by frequency
+    if type(arg) is str:
+        return quoted.get(arg) or _quote(arg, quoted)
+    if type(arg) is AspFunction:
+        return arg.to_str(quoted)
+    if type(arg) is int or type(arg) is AspVar:
+        return str(arg)
+    # subclasses miss the checks above: config values are syaml_str / syaml_int. bool is
+    # an int subclass, but is not a number in ASP, so it is quoted below.
+    if isinstance(arg, int) and not isinstance(arg, bool):
+        return str(arg)
+    if isinstance(arg, str):
+        return quoted.get(arg) or _quote(arg, quoted)
+    return f'"{arg}"'
 
 
 class _AspFunctionBuilder:
@@ -104,49 +142,20 @@ class NodeId(NamedTuple):
     pkg: str
 
 
+def min_dupe_node(*, pkg: str) -> NodeId:
+    """Given a package name, returns the "min_dupe_id" node in the ASP encoding.
+
+    Args:
+        pkg: name of a package
+    """
+    return NodeId(id="0", pkg=pkg)
+
+
 class NodeFlag(NamedTuple):
     flag_type: str
     flag: str
     flag_group: str
     source: str
-
-
-def intermediate_repr(sym):
-    """Returns an intermediate representation of clingo models for Spack's spec builder.
-
-    Currently, transforms symbols from clingo models either to strings or to NodeId objects.
-
-    Returns:
-        This will turn a ``clingo.Symbol`` into a string or NodeId, or a sequence of
-        ``clingo.Symbol`` objects into a tuple of those objects.
-    """
-    if isinstance(sym, (list, tuple)):
-        return tuple(intermediate_repr(a) for a in sym)
-
-    name = symbol_name(sym)
-    if name == "node":
-        return NodeId(
-            id=intermediate_repr(sym.arguments[0]), pkg=intermediate_repr(sym.arguments[1])
-        )
-    if name == "node_flag":
-        return NodeFlag(
-            flag_type=intermediate_repr(sym.arguments[0]),
-            flag=intermediate_repr(sym.arguments[1]),
-            flag_group=intermediate_repr(sym.arguments[2]),
-            source=intermediate_repr(sym.arguments[3]),
-        )
-    return symbol_string(sym)
-
-
-def extract_args(model, predicate_name):
-    """Extract the arguments to predicates with the provided name from a model.
-
-    Pull out all the predicates with name ``predicate_name`` from the model, and
-    return their intermediate representation.
-    """
-    return [
-        intermediate_repr(sym.arguments) for sym in model if symbol_name(sym) == predicate_name
-    ]
 
 
 class SourceContext:
