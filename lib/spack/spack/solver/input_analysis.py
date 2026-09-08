@@ -4,12 +4,11 @@
 """Classes to analyze the input of a solve, and provide information to set up the ASP problem"""
 
 import collections
-from typing import Dict, List, NamedTuple, Set, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, NamedTuple, Set, Tuple, Union
 
 import spack.vendor.archspec.cpu
 
 import spack.binary_distribution
-import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.platforms
@@ -19,6 +18,9 @@ import spack.store
 from spack.error import SpackError
 from spack.spec import EMPTY_SPEC
 from spack.util import lang, tty
+
+if TYPE_CHECKING:
+    import spack.concretize
 
 
 class PossibleGraph(NamedTuple):
@@ -382,7 +384,7 @@ class Counter:
     def __init__(
         self,
         specs: List[spack.spec.Spec],
-        tests: spack.concretize.TestsType,
+        tests: "spack.concretize.TestsType",
         possible_graph: PossibleDependencyGraph,
     ) -> None:
         self.possible_graph = possible_graph
@@ -448,7 +450,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
     def __init__(
         self,
         specs: List[spack.spec.Spec],
-        tests: spack.concretize.TestsType,
+        tests: "spack.concretize.TestsType",
         possible_graph: PossibleDependencyGraph,
     ) -> None:
         super().__init__(specs, tests, possible_graph)
@@ -544,7 +546,7 @@ class FullDuplicatesCounter(MinimalDuplicatesCounter):
 
 def create_counter(
     specs: List[spack.spec.Spec],
-    tests: spack.concretize.TestsType,
+    tests: "spack.concretize.TestsType",
     possible_graph: PossibleDependencyGraph,
 ) -> Counter:
     strategy = spack.config.CONFIG.get("concretizer:duplicates:strategy", "none")
