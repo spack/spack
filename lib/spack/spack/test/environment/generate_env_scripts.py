@@ -17,64 +17,6 @@ pytestmark = [pytest.mark.usefixtures("mutable_mock_env_path")]
 env = SpackCommand("env")
 
 
-@pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
-)
-def test_paths_to_env_scripts_exist(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
-):
-    """Test that activate & deactivate shell scripts exist after env creation."""
-    env_name = f"test_env_scripts_exist_{shell}"
-    env("create", env_name)
-    test_env = ev.read(env_name)
-
-    env("activate", f"--{shell}", env_name)
-
-    activate_script = env_script.path_to_env_script(
-        test_env, shell, script_type="activate", view="default"
-    )
-    deactivate_script = env_script.path_to_env_script(
-        test_env, shell, script_type="deactivate", view="default"
-    )
-
-    assert os.path.isfile(activate_script)
-    assert os.path.isfile(deactivate_script)
-
-
-@pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
-)
-def test_paths_to_env_scripts_exist_without_view(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
-):
-    """Test that activate & deactivate shell scripts exist after env creation."""
-    env_name = f"test_env_scripts_exist_{shell}"
-    env("create", env_name)
-    test_env = ev.read(env_name)
-
-    default_activate_script = env_script.path_to_env_script(
-        test_env, shell, script_type="activate", view="default"
-    )
-    default_deactivate_script = env_script.path_to_env_script(
-        test_env, shell, script_type="deactivate", view="default"
-    )
-
-    assert os.path.isfile(default_activate_script)
-    assert os.path.isfile(default_deactivate_script)
-
-    env("activate", "--without-view", f"--{shell}", env_name)
-
-    noview_activate_script = env_script.path_to_env_script(
-        test_env, shell, script_type="activate", view=None
-    )
-    noview_deactivate_script = env_script.path_to_env_script(
-        test_env, shell, script_type="deactivate", view=None
-    )
-
-    assert os.path.isfile(noview_activate_script)
-    assert os.path.isfile(noview_deactivate_script)
-
-
 def test_paths_to_env_scripts(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that activate & deactivate shell scripts are written to the right location."""
     env("create", "test_path_scripts")

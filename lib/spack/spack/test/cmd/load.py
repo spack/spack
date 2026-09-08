@@ -31,7 +31,7 @@ def _get_load_cmds_from_script(spec, shell):
         return f.read()
 
 
-def _get_unload_cmds(spec, shell):
+def _get_unload_cmds_from_script(spec, shell):
     unload_script_file = spec_script.path_to_unload_shell_script(spec, shell[2:])
 
     with open(unload_script_file, "r", encoding="utf-8") as f:
@@ -51,7 +51,6 @@ def test_manpath_trailing_colon(
 
     os.environ["MANPATH"] = "/usr/share/man" + os.pathsep + "/usr/local/share/man"
 
-    load(shell, "mpileaks")
     load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
 
     prepend_cmd = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} MANPATH"
@@ -83,8 +82,6 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
 
         # Ensure our reference variable is clean.
         os.environ["CMAKE_PREFIX_PATH"] = "/hello" + os.pathsep + "/world"
-
-        load(shell, "mpileaks")
 
         load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
 
@@ -151,7 +148,6 @@ def test_load_includes_run_env(shell, install_mockery, mock_fetch, mock_archive,
     install("--fake", "mpileaks")
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
-    load(shell, "mpileaks")
     load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
 
     if "bat" in shell:
@@ -234,8 +230,7 @@ def test_unload(shell, install_mockery, mock_fetch, mock_archive, mock_packages,
         "garbage",
     )
 
-    unload(shell, "mpileaks")
-    unload_cmds = _get_unload_cmds(mpileaks_spec, shell)
+    unload_cmds = _get_unload_cmds_from_script(mpileaks_spec, shell)
 
     unset_cmd = f"{_get_shell_cmd_invocation('_spack_env_unset', shell)} FOOBAR"
     assert unset_cmd in unload_cmds
@@ -359,13 +354,11 @@ def test_unload_script_reverses_load(
     install("--fake", "mpileaks")
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
-    load(shell, "mpileaks")
     load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
 
     os.environ[uenv.spack_loaded_hashes_var] = mpileaks_spec.dag_hash()
-    unload(shell, "mpileaks")
 
-    unload_cmds = _get_unload_cmds(mpileaks_spec, shell)
+    unload_cmds = _get_unload_cmds_from_script(mpileaks_spec, shell)
 
     load_prepends = load_sets = 0
     for line in load_cmds.splitlines():

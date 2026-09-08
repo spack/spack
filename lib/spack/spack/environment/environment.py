@@ -66,7 +66,11 @@ from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
-from .generate_env_scripts import write_env_activate_script, write_env_deactivate_script, regenerate_env_scripts
+from .generate_env_scripts import (
+    regenerate_env_scripts,
+    write_env_activate_script,
+    write_env_deactivate_script,
+)
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = Tuple[Spec, Spec]
