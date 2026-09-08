@@ -214,6 +214,24 @@ def assign_git_version(pkg_name: str, version: VersionType) -> VersionType:
     """Return ``version`` with a Spack version assigned, by looking its ref up in the git
     repository of package ``pkg_name``. This may trigger a git clone.
 
+    Assignment queries the git repo for the most recent version previous to this git ref, as
+    well as the distance between them expressed as a number of commits. If the previous
+    version is ``X.Y.Z`` and the distance is ``D``, the git commit version is represented by
+    the tuple ``(X, Y, Z, '', D)``. The component ``''`` cannot be parsed as part of any valid
+    version, but is a valid component. This allows a git ref version to be less than (older
+    than) every Version newer than its previous version, but still newer than its previous
+    version.
+
+    To find the previous version from a git ref version, Spack queries the git repo for its
+    tags. Any tag that matches a version known to Spack is associated with that version, as
+    is any tag that is a known version prepended with the character ``v`` (i.e., a tag
+    ``v1.0`` is associated with the known version ``1.0``). Additionally, any tag that
+    represents a semver version (X.Y.Z with X, Y, Z all integers) is associated with the
+    version it represents, even if that version is not known to Spack. Each tag is then
+    queried in git to see whether it is an ancestor of the git ref in question, and if so
+    the distance between the two. The previous version is the version that is an ancestor
+    with the least distance from the git ref in question.
+
     Raises a ``VersionLookupError`` when the package has no ``git`` attribute, the ref is
     unknown, or the version found is outside the range the ref is constrained to.
     """
