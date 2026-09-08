@@ -17,6 +17,7 @@ import spack.repo
 import spack.util.file_cache
 import spack.util.spack_yaml as syaml
 from spack.concretize import concretize_one
+from spack.concretize_ui import TerminalUI
 from spack.config import Configuration
 from spack.main import SpackCommand
 
@@ -553,7 +554,7 @@ def test_warns_on_compiler_constraint_in_all(
     """Compiler constraints under packages:all: are a footgun and should warn."""
     update_packages_config(f"packages:\n  all:\n    {section}:\n    - '%c=gcc'\n", mutable_config)
     with pytest.warns(UserWarning, match="packages: all:"):
-        concretize_one("gmake")
+        concretize_one("gmake", ui=TerminalUI())
 
 
 @pytest.mark.regression("52209")
@@ -626,7 +627,7 @@ packages:
         mutable_config,
     )
     with pytest.warns(UserWarning, match="not-a-real-uarch"):
-        concretize_one("x4")
+        concretize_one("x4", ui=TerminalUI())
 
 
 @pytest.mark.regression("52209")
@@ -641,4 +642,4 @@ packages:
         mutable_config,
     )
     with pytest.warns(UserWarning, match="not-a-real-uarch"):
-        concretize_one("x4")
+        concretize_one("x4", ui=TerminalUI())

@@ -68,12 +68,14 @@ def ensure_compilers_in_configuration() -> None:
     _ = spack.compilers.config.all_compilers()
 
 
-def _solver(*, factory: Optional["SpecFiltersFactory"] = None) -> "Solver":
+def _solver(
+    *, factory: Optional["SpecFiltersFactory"] = None, ui: Optional[ConcretizerUI] = None
+) -> "Solver":
     """Return a solver to concretize with, with the compilers already in the configuration."""
     from spack.solver.asp import Solver
 
     ensure_compilers_in_configuration()
-    return Solver(context=spack.context.default(), specs_factory=factory)
+    return Solver(context=spack.context.default(), specs_factory=factory, ui=ui)
 
 
 def _concretize_specs_together(
@@ -81,6 +83,7 @@ def _concretize_specs_together(
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    ui: ConcretizerUI,
 ) -> List[Spec]:
     """Given a number of specs as input, tries to concretize them together.
 
@@ -89,9 +92,10 @@ def _concretize_specs_together(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
+        ui: frontend to report the solve to
     """
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = _solver(factory=factory).solve(
+    result = _solver(factory=factory, ui=ui).solve(
         abstract_specs, tests=tests, allow_deprecated=allow_deprecated
     )
     return [s.copy() for s in result.specs]
@@ -118,7 +122,7 @@ def _concretize_together(
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
 
     start = time.monotonic()
-    concrete_specs = _concretize_specs_together(to_concretize, tests=tests, factory=factory)
+    concrete_specs = _concretize_specs_together(to_concretize, tests=tests, factory=factory, ui=ui)
     duration = time.monotonic() - start
 
     # A single solve produced all the specs, so they all report the duration of that solve
@@ -166,7 +170,7 @@ def _concretize_together_when_possible(
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     j = 0
     start = time.monotonic()
-    for result in _solver(factory=factory).solve_in_rounds(
+    for result in _solver(factory=factory, ui=ui).solve_in_rounds(
         to_concretize, tests=tests, allow_deprecated=allow_deprecated
     ):
         now = time.monotonic()
@@ -318,12 +322,14 @@ def _concretize_one(
             return spec.copy()
 
         start = time.monotonic()
-        concrete = _solve_one(spec, tests=tests, factory=factory)
+        concrete = _solve_one(spec, tests=tests, factory=factory, ui=ui)
         ui.on_spec_concretized(spec, concrete=concrete, count=1, duration=time.monotonic() - start)
         return concrete
 
 
-def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFactory"]) -> Spec:
+def _solve_one(
+    spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFactory"], ui: ConcretizerUI
+) -> Spec:
     """Run the single solve that concretizes ``spec``, and pick its answer."""
     for node in spec.traverse():
         if not node.name:
@@ -332,7 +338,9 @@ def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFa
             )
 
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = _solver(factory=factory).solve([spec], tests=tests, allow_deprecated=allow_deprecated)
+    result = _solver(factory=factory, ui=ui).solve(
+        [spec], tests=tests, allow_deprecated=allow_deprecated
+    )
 
     # take the best answer
     opt, i, answer = min(result.answers)
