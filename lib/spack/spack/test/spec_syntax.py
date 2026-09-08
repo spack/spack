@@ -19,6 +19,7 @@ import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.util.filesystem as fs
+import spack.version
 from spack.externals import (
     ExternalSpecsParser,
     complete_variants_and_architecture,
@@ -1876,6 +1877,17 @@ def test_git_ref_spec_equivalences(mock_packages, lhs_str, rhs_str, expected):
     assert rhs.intersects(lhs) is intersect
     assert lhs.satisfies(rhs) is lhs_sat_rhs
     assert rhs.satisfies(lhs) is rhs_sat_lhs
+
+
+def test_uppercase_hash_is_not_a_git_version():
+    """A git commit hash can only be written in lowercase. With mixed case it's a version range."""
+    mixed = "894CaF3Ce2AE06Abe360C0FB39EF0dEB5BDD8510"
+    spec = spack.spec.Spec(f"x@{mixed}")
+    assert not isinstance(spec.versions[0], spack.version.GitVersion)
+    assert spack.spec.Spec(str(spec)) == spec
+    with pytest.raises(SpecTokenizationError):
+        spack.spec.Spec(f"x@{mixed}=1.2")
+    assert isinstance(spack.spec.Spec(f"x@{mixed.lower()}").versions[0], spack.version.GitVersion)
 
 
 @pytest.mark.regression("32471")

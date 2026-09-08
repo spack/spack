@@ -36,7 +36,7 @@ Here is the EBNF grammar for a spec::
     version       = vid
 
     git_version   = git.(vid) | git_hash
-    git_hash      = [A-Fa-f0-9]{40}
+    git_hash      = [a-f0-9]{40}
 
     quoted_id     = " id_with_ws " | ' id_with_ws '
     id_with_ws    = [a-zA-Z0-9_][a-zA-Z_0-9-.\\s]*
@@ -83,7 +83,8 @@ Spec: Optional[Type["spack.spec.Spec"]] = None
 #: characters that can be part of a word in any language
 IDENTIFIER = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9\-]*)"
 DOTTED_IDENTIFIER = rf"(?:{IDENTIFIER}(?:\.{IDENTIFIER})+)"
-GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
+#: Git commits are 40-character lowercase hex strings
+GIT_HASH = r"(?:[a-f0-9]{40})"
 #: Git refs include branch names, and can contain ``.`` and ``/``
 GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
 GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
