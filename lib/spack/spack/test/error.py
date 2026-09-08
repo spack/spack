@@ -8,7 +8,7 @@ import pickle
 import pytest
 
 import spack.error
-import spack.solver.asp
+import spack.solver.error
 from spack.spec import Spec
 
 
@@ -28,10 +28,10 @@ def test_error_keeps_its_state_through_a_pipe():
 @pytest.mark.parametrize(
     "factory",
     [
-        lambda: spack.solver.asp.UnsatisfiableSpecError("boom"),
-        lambda: spack.solver.asp.InternalConcretizerError("boom"),
-        lambda: spack.solver.asp.SolverError(Spec("pkg-a")),
-        lambda: spack.solver.asp.OutputDoesNotSatisfyInputError(
+        lambda: spack.solver.error.UnsatisfiableSpecError("boom"),
+        lambda: spack.solver.error.InternalConcretizerError("boom"),
+        lambda: spack.solver.error.SolverError(Spec("pkg-a")),
+        lambda: spack.solver.error.OutputDoesNotSatisfyInputError(
             [(Spec("pkg-a"), Spec("pkg-b")), (Spec("pkg-c"), None)]
         ),
     ],
@@ -52,7 +52,7 @@ def test_errors_with_their_own_constructor_survive_a_pipe(factory):
 def test_output_does_not_satisfy_input_keeps_its_specs():
     """Tests that OutputDoesNotSatisfyInputError keeps its specs over a pickle round-trip."""
     unsolved = [(Spec("pkg-a"), Spec("pkg-b")), (Spec("pkg-c"), None)]
-    error = spack.solver.asp.OutputDoesNotSatisfyInputError(unsolved)
+    error = spack.solver.error.OutputDoesNotSatisfyInputError(unsolved)
 
     replayed = pickle.loads(pickle.dumps(error))
 
