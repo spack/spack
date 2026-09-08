@@ -5894,19 +5894,19 @@ class _UnusableGlobal:
         )
 
 
-#: Process globals a solve must not reach for, by the SpackContext field that replaces each.
-_CONTEXT_GLOBALS = {
-    "config": (spack.config, "CONFIG"),
-    "repo": (spack.repo, "PATH"),
-    "misc_cache": (spack.caches, "MISC_CACHE"),
-    "store": (spack.store, "STORE"),
-    "binary_index": (spack.binary_distribution, "BINARY_INDEX"),
-}
+#: The process globals a SpackContext replaces, as (module, attribute) pairs.
+_CONTEXT_GLOBALS = [
+    (spack.config, "CONFIG"),
+    (spack.repo, "PATH"),
+    (spack.caches, "MISC_CACHE"),
+    (spack.store, "STORE"),
+    (spack.binary_distribution, "BINARY_INDEX"),
+]
 
 
 @pytest.fixture()
 def break_globals(monkeypatch):
-    """Returns a context manager making the named process globals raise on any use.
+    """Returns a context manager making every process global in ``_CONTEXT_GLOBALS`` raise.
 
     It is a context manager rather than a plain fixture so a test can break the globals after
     every other fixture is set up, and restore them before those fixtures are torn down: the
@@ -5914,22 +5914,27 @@ def break_globals(monkeypatch):
     """
 
     @contextlib.contextmanager
-    def _break(*names: str):
+    def _break():
         spack.solver.compat.clingo()
         with monkeypatch.context() as m:
-            for name in names:
-                module, attribute = _CONTEXT_GLOBALS[name]
+            for module, attribute in _CONTEXT_GLOBALS:
                 m.setattr(module, attribute, _UnusableGlobal(f"{module.__name__}.{attribute}"))
             yield
 
     return _break
 
 
+def _context_with_mock_repo(config, mock_packages_repo):
+    """A context reading from the mock repositories. Callers build it once every fixture that
+    pushes a configuration scope has run, so the store points at the right install tree."""
+    config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
+    return spack.context_factory.from_config(config)
+
+
 @pytest.fixture()
 def injected_context(mutable_config, mock_packages_repo):
     """A context whose repositories are the mock ones, built before any global is broken."""
-    mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
-    return spack.context_factory.from_config(mutable_config)
+    return _context_with_mock_repo(mutable_config, mock_packages_repo)
 
 
 @pytest.mark.parametrize(
@@ -5954,6 +5959,17 @@ def injected_context(mutable_config, mock_packages_repo):
         (["mpileaks"], {"concretizer:reuse": True}),
         (["mpileaks"], {"concretizer:static_analysis": True}),
         (["git-test-commit@git.main=1.0"], {}),
+        # Static analysis evaluates ``can_be_installed`` for ``pkg-b``, which, being
+        # non-buildable, falls through to a buildcache query. Concretizing with ``foobar=baz``
+        # keeps pkg-b out of the result, so pruning it does not make the solve unsatisfiable.
+        (
+            ["pkg-a foobar=baz"],
+            {
+                "concretizer:static_analysis": True,
+                "concretizer:reuse": True,
+                "packages:pkg-b:buildable": False,
+            },
+        ),
     ],
     ids=[
         "plain",
@@ -5965,17 +5981,18 @@ def injected_context(mutable_config, mock_packages_repo):
         "reuse",
         "static-analysis",
         "git-version",
+        "static-analysis-buildcache-query",
     ],
 )
-def test_solve_never_reads_the_global_repository(
+def test_solve_reads_no_global(
     break_globals, injected_context, mutable_config, requests, config_settings
 ):
-    """A solve driven by an injected context resolves packages through that context's
-    repositories, so breaking the process-wide ``spack.repo.PATH`` does not affect it."""
+    """A solve driven by an injected context reads everything from it, so breaking every
+    process global a SpackContext replaces does not affect it."""
     for key, value in config_settings.items():
         mutable_config.set(key, value)
 
-    with break_globals("repo"):
+    with break_globals():
         result = spack.solver.asp.Solver(context=injected_context).solve(
             [Spec(x) for x in requests]
         )
@@ -5986,9 +6003,9 @@ def test_solve_never_reads_the_global_repository(
         assert result.unsolved_specs == []
 
 
-def test_solve_in_rounds_never_reads_the_global_repository(break_globals, injected_context):
-    """``solve_in_rounds`` yields between rounds, and must not reach the global either."""
-    with break_globals("repo"):
+def test_solve_in_rounds_reads_no_global(break_globals, injected_context):
+    """``solve_in_rounds`` yields between rounds, and must not reach a global either."""
+    with break_globals():
         solver = spack.solver.asp.Solver(context=injected_context)
         results = list(solver.solve_in_rounds([Spec("mpileaks"), Spec("libelf")]))
 
@@ -5998,13 +6015,12 @@ def test_solve_in_rounds_never_reads_the_global_repository(break_globals, inject
 
 
 @pytest.mark.parametrize("transitive", [True, False])
-def test_explicit_splice_never_reads_the_global_repository(
+def test_explicit_splice_reads_no_global(
     break_globals, mutable_config, database_mutable_config, mock_packages_repo, transitive
 ):
     """Tests that splicing resolves virtuals to decide what matches, and must do so through the
     injected context's repositories.
     """
-    mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
     mpich_spec = database_mutable_config.query("mpich")[0]
     mutable_config.set(
         "concretizer",
@@ -6020,94 +6036,33 @@ def test_explicit_splice_never_reads_the_global_repository(
             }
         },
     )
-    context = spack.context_factory.from_config(mutable_config)
+    context = _context_with_mock_repo(mutable_config, mock_packages_repo)
 
-    with break_globals("repo"):
+    with break_globals():
         result = spack.solver.asp.Solver(context=context).solve([Spec("hdf5 ^zmpi")])
 
         assert result.specs
         assert result.specs[0].satisfies(f"^mpich@{mpich_spec.version}", repo=context.repo)
 
 
-def test_reuse_from_store_never_reads_the_global_repository(
+def test_reuse_from_store_reads_no_global(
     break_globals, mutable_config, database_mutable_config, mock_packages_repo
 ):
     """Tests that filtering reusable specs out of the store matches them against the injected
     repositories, including when the match has to resolve a virtual.
     """
-    mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
     mutable_config.set("concretizer:reuse", True)
-    context = spack.context_factory.from_config(mutable_config)
+    context = _context_with_mock_repo(mutable_config, mock_packages_repo)
 
-    with break_globals("repo"):
+    with break_globals():
         result = spack.solver.asp.Solver(context=context).solve([Spec("mpileaks ^mpi")])
 
         assert result.specs and result.specs[0].concrete
 
 
-@pytest.mark.parametrize(
-    "requests,config_settings",
-    [
-        (["pkg-a"], {}),
-        (["mpileaks"], {}),
-        (["mpileaks"], {"concretizer:reuse": True}),
-        (["mpileaks"], {"packages:all:require": ["~debug"]}),
-    ],
-    ids=["plain", "dependencies", "reuse", "requirement-under-all"],
-)
-def test_solve_never_reads_the_global_config_or_misc_cache(
-    break_globals, injected_context, mutable_config, requests, config_settings
-):
-    """A solve reads its configuration and its caches from the injected context, so breaking
-    the process-wide ``spack.config.CONFIG`` and ``spack.caches.MISC_CACHE`` does not affect
-    it.
-    """
-    for key, value in config_settings.items():
-        mutable_config.set(key, value)
-
-    with break_globals("config", "misc_cache"):
-        result = spack.solver.asp.Solver(context=injected_context).solve(
-            [Spec(x) for x in requests]
-        )
-
-        assert result.specs and all(s.concrete for s in result.specs)
-        assert result.unsolved_specs == []
-
-
-@pytest.mark.parametrize(
-    "request_str,config_settings",
-    [
-        ("mpileaks", {}),
-        # Static analysis evaluates ``can_be_installed`` for ``pkg-b``, which, being
-        # non-buildable, falls through to a buildcache query. Concretizing with ``foobar=baz``
-        # keeps pkg-b out of the result, so pruning it does not make the solve unsatisfiable.
-        (
-            "pkg-a foobar=baz",
-            {
-                "concretizer:static_analysis": True,
-                "concretizer:reuse": True,
-                "packages:pkg-b:buildable": False,
-            },
-        ),
-    ],
-    ids=["plain", "static-analysis"],
-)
-def test_solve_reads_no_context_global_at_all(
-    break_globals, injected_context, mutable_config, request_str, config_settings
-):
-    """Tests that solve does not read any of the global carried by the context."""
-    for key, value in config_settings.items():
-        mutable_config.set(key, value)
-
-    with break_globals(*_CONTEXT_GLOBALS):
-        result = spack.solver.asp.Solver(context=injected_context).solve([Spec(request_str)])
-
-        assert result.specs and result.specs[0].concrete
-
-
-def test_buildcache_query_never_reads_the_global_config(break_globals, injected_context):
+def test_buildcache_query_reads_no_global(break_globals, injected_context):
     """Querying an injected buildcache index reads the injected configuration."""
-    with break_globals(*_CONTEXT_GLOBALS):
+    with break_globals():
         query = spack.binary_distribution.BinaryCacheQuery(
             True, index=injected_context.binary_index, config=injected_context.config
         )
@@ -6115,7 +6070,7 @@ def test_buildcache_query_never_reads_the_global_config(break_globals, injected_
         assert query(Spec("pkg-a")) == []
 
 
-def test_concretization_cache_never_reads_the_global_config(
+def test_concretization_cache_reads_no_global(
     break_globals, mutable_mock_env_path, mutable_config, mock_packages
 ):
     """The concretization cache expands ``$env`` in its configured path, which is the one
@@ -6130,7 +6085,7 @@ def test_concretization_cache_never_reads_the_global_config(
         )
         context = spack.context_factory.from_config(spack.config.CONFIG)
 
-        with break_globals("config", "misc_cache"):
+        with break_globals():
             solver = spack.solver.asp.Solver(context=context)
             first = solver.solve([Spec("pkg-a")])
             second = solver.solve([Spec("pkg-a")])
@@ -6159,7 +6114,7 @@ def test_git_ref_lookup_uses_the_injected_cache_and_config(
         config=injected_context.config,
     )
 
-    with break_globals("config", "misc_cache", "repo"):
+    with break_globals():
         lookup.data = {"deadbeef": ("1.0", 0)}
         lookup.save()
         lookup.data = {}
@@ -6170,7 +6125,7 @@ def test_git_ref_lookup_uses_the_injected_cache_and_config(
     assert fetcher_config is injected_context.config
 
 
-def test_develop_specs_never_read_the_global_config(
+def test_develop_specs_read_no_global(
     break_globals, mutable_mock_env_path, mutable_config, mock_packages, tmp_path
 ):
     """Develop specs are declared in configuration and their paths are expanded against it,
@@ -6185,7 +6140,7 @@ def test_develop_specs_never_read_the_global_config(
         )
         context = spack.context_factory.from_config(spack.config.CONFIG)
 
-        with break_globals("config", "misc_cache"):
+        with break_globals():
             result = spack.solver.asp.Solver(context=context).solve([Spec("develop-test@develop")])
 
         assert result.specs
@@ -6201,6 +6156,6 @@ def test_package_hash_is_assigned_through_the_injected_repository(break_globals,
     would hide both lookups, hence the marker. "patch" is used because it has patches, so the
     patch index is consulted on top of package.py.
     """
-    with break_globals("repo"):
+    with break_globals():
         result = spack.solver.asp.Solver(context=injected_context).solve([Spec("patch")])
         assert result.specs[0].dag_hash()
