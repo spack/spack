@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import difflib
 import os
 import pathlib
 
@@ -1020,15 +1021,29 @@ def test_unknownpkgerror_names_the_package(mock_packages):
     assert exc_info.value.message.startswith("Package 'nosuchpkg' not found")
 
 
-def test_unknownpkgerror_match_fails(mock_packages):
-    """Ensure fails with basic message when get_close_matches fails."""
+def test_similar_package_names(mock_packages):
+    """Ensure a misspelled name is close to the package that was meant."""
+    assert "mpileaks" in spack.repo.similar_package_names("mpileak", mock_packages)
+
+
+def test_similar_package_names_match_fails(mock_packages):
+    """Ensure the suggestions are empty when get_close_matches fails."""
 
     def _get_close_matches(*args, **kwargs):
         raise MemoryError("Too many packages to compare")
 
-    # Confirm that the error indicates there were no matches (default).
-    exception = spack.repo.UnknownPackageError("pkg_a", get_close_matches=_get_close_matches)
-    assert "mean one of the following" not in str(exception)
+    assert (
+        spack.repo.similar_package_names(
+            "mpileak", mock_packages, get_close_matches=_get_close_matches
+        )
+        == []
+    )
+
+
+def test_similar_package_names_includes_virtuals(mock_packages):
+    """A virtual is a valid suggestion, and the names excluding virtuals come from the index."""
+    assert spack.repo.similar_package_names("mpj", mock_packages) == ["mpi"]
+    assert difflib.get_close_matches("mpj", mock_packages.all_package_names()) == []
 
 
 def test_unknownpkgerror_str_repo():

@@ -15,9 +15,10 @@ info = SpackCommand("info")
 
 
 def test_package_suggestion():
+    """The command reports the name it did not find; main() renders the suggestions."""
     with pytest.raises(UnknownPackageError) as exc_info:
         info("vtk")
-    assert "Did you mean one of the following packages?" in str(exc_info.value)
+    assert exc_info.value.name == "vtk"
 
 
 def test_deprecated_option_warns():

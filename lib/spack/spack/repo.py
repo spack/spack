@@ -106,25 +106,6 @@ def namespace_from_fullname(fullname: str) -> str:
     return fullname
 
 
-def name_from_fullname(fullname: str) -> str:
-    """Return the package name for the full module name.
-
-    For instance::
-
-        name_from_fullname("spack.pkg.builtin.hdf5") == "hdf5"
-        name_from_fullname("spack_repo.x.y.z.packages.pkg_name.package") == "pkg_name"
-
-    Args:
-        fullname: full name for the Python module
-    """
-    if fullname.startswith(PKG_MODULE_PREFIX_V1):
-        _, _, pkg_module = fullname.rpartition(".")
-        return pkg_module
-    elif fullname.startswith(PKG_MODULE_PREFIX_V2) and fullname.endswith(".package"):
-        return fullname.rsplit(".", 2)[-2]
-    return fullname
-
-
 class _PrependFileLoader(importlib.machinery.SourceFileLoader):
     def __init__(self, fullname: str, repo: "Repo", package_name: str) -> None:
         self.repo = repo
@@ -236,6 +217,23 @@ class GitExe:
     def __call__(self, *args, **kwargs) -> str:
         with working_dir(self.packages_dir):
             return self._git_cmd(*args, **kwargs, output=str)
+
+
+def similar_package_names(
+    name: str, repo, *, n: int = 3, get_close_matches=difflib.get_close_matches
+) -> List[str]:
+    """Return up to ``n`` package names in ``repo`` close to ``name``.
+
+    Args:
+        name: the name that was not found
+        repo: a ``Repo`` or ``RepoPath`` to take the names from
+    """
+    try:
+        # the default of all_package_names filters out virtuals, which reads the provider index
+        names = repo.all_package_names(include_virtuals=True)
+        return get_close_matches(name, names, n=n)
+    except Exception:
+        return []
 
 
 def list_packages(rev: str, repo: "Repo") -> List[str]:
@@ -2205,49 +2203,17 @@ class UnknownEntityError(RepoError):
 class UnknownPackageError(UnknownEntityError):
     """Raised when we encounter a package spack doesn't have."""
 
-    def __init__(
-        self,
-        name,
-        repo: Optional[Union[Repo, RepoPath, str]] = None,
-        *,
-        get_close_matches=difflib.get_close_matches,
-    ):
-        msg = "Attempting to retrieve anonymous package."
-        long_msg = None
-        if name:
+    def __init__(self, name, repo: Optional[Union[Repo, RepoPath, str]] = None):
+        if not name:
+            msg = "Attempting to retrieve anonymous package."
+        else:
             msg = f"Package '{name}' not found"
-            if repo:
-                if isinstance(repo, Repo):
-                    msg += f" in repository '{repo.root}'"
-                elif isinstance(repo, str):
-                    msg += f" in repository '{repo}'"
+            if isinstance(repo, Repo):
+                msg += f" in repository '{repo.root}'"
+            elif isinstance(repo, str) and repo:
+                msg += f" in repository '{repo}'"
 
-            # Special handling for specs that may have been intended as
-            # filenames: prompt the user to ask whether they intended to write
-            # './<name>'.
-            if name.endswith(".yaml"):
-                long_msg = "Did you mean to specify a filename with './{0}'?"
-                long_msg = long_msg.format(name)
-            else:
-                long_msg = "Use 'spack create' to create a new package."
-
-                if not repo:
-                    repo = ensure_unwrapped(PATH)
-
-                # We need to compare the base package name
-                pkg_name = name_from_fullname(name)
-                similar = []
-                if isinstance(repo, (Repo, RepoPath)):
-                    try:
-                        similar = get_close_matches(pkg_name, repo.all_package_names())
-                    except Exception:
-                        pass
-
-                if 1 <= len(similar) <= 5:
-                    long_msg += "\n\nDid you mean one of the following packages?\n  "
-                    long_msg += "\n  ".join(similar)
-
-        super().__init__(msg, long_msg)
+        super().__init__(msg)
         self.name = name
 
 
@@ -2255,10 +2221,9 @@ class UnknownNamespaceError(UnknownEntityError):
     """Raised when we encounter an unknown namespace"""
 
     def __init__(self, namespace, name=None):
-        msg, long_msg = f"Unknown namespace: {namespace}", None
-        if name == "yaml":
-            long_msg = f"Did you mean to specify a filename with './{namespace}.{name}'?"
-        super().__init__(msg, long_msg)
+        super().__init__(f"Unknown namespace: {namespace}")
+        self.namespace = namespace
+        self.name = name
 
 
 class FailedConstructorError(RepoError):
