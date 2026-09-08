@@ -229,7 +229,9 @@ def similar_package_names(
         repo: a ``Repo`` or ``RepoPath`` to take the names from
     """
     try:
-        # the default of all_package_names filters out virtuals, which reads the provider index
+        # include_virtuals=True is used on purpose, cause knowing whether e.g. mpi is a virtual
+        # requires either importing mpi/package.py module, or worse, creating the full provider
+        # index.
         names = repo.all_package_names(include_virtuals=True)
         return get_close_matches(name, names, n=n)
     except Exception:
@@ -2204,16 +2206,8 @@ class UnknownPackageError(UnknownEntityError):
     def __init__(
         self, name: Optional[str], namespace: Optional[str] = None, repo_root: Optional[str] = None
     ):
-        """Report a package name that is not in a repository.
-
-        The attributes are strings, because `SpackError.__reduce__` pickles them and this error
-        crosses the pipe from a worker process and from a build child.
-
-        Args:
-            name: the package name that was not found
-            namespace: the namespace that was searched, if any
-            repo_root: the path of the repository that was searched, if any
-        """
+        # repo_root is used because it is cheap to pickle; the site that catches this exception
+        # almost always already has a reference to the relevant repo.
         if not name:
             msg = "Attempting to retrieve anonymous package."
         elif repo_root:
