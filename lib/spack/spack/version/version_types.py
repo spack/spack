@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import copy
 import re
 from bisect import bisect_left
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union
@@ -584,11 +585,7 @@ class GitVersion(ConcreteVersion):
 
     def _with_constraint(self, constraint: "GitConstraint") -> "GitVersion":
         """The same ref under another constraint."""
-        result = GitVersion.__new__(GitVersion)
-        result.has_git_prefix = self.has_git_prefix
-        result.commit_sha = self.commit_sha
-        result.ref = self.ref
-        result.is_commit = self.is_commit
+        result = copy.copy(self)
         result.constraint = constraint
         return result
 
