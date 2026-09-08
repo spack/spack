@@ -101,6 +101,13 @@ def ensure_bootstrap_configuration() -> Generator:
         else:
             with _ensure_bootstrap_configuration():
                 yield
+    except Exception as e:
+        # Adjust database upgrade error messages to include -b flag when in bootstrap mode
+        from spack.database import ExplicitDatabaseUpgradeError
+
+        if isinstance(e, ExplicitDatabaseUpgradeError) and e._long_message:
+            e._long_message = e._long_message.replace("spack reindex", "spack -b reindex")
+        raise
     finally:
         _REF_COUNT -= 1
 
