@@ -632,19 +632,14 @@ class GitVersion(ConcreteVersion):
         raise TypeError(f"'intersects()' not supported for instances of {type(other)}")
 
     def intersection(self, other: VersionType) -> VersionType:
-        if isinstance(other, GitVersion):
-            if self.ref != other.ref:
-                return VersionList()
-            constraint = self.constraint.intersection(other.constraint)
-        elif isinstance(other, StandardVersion):
-            return VersionList()
-        elif isinstance(other, ClosedOpenRange):
-            constraint = self.constraint.intersection(other)
-        else:
+        if isinstance(other, VersionList):
             return other.intersection(self)
-        if isinstance(constraint, (StandardVersion, ClosedOpenRange)):
-            return self._with_constraint(constraint)
-        return VersionList()
+        if not self.intersects(other):
+            return VersionList()
+        rhs = other.constraint if isinstance(other, GitVersion) else other
+        constraint = self.constraint.intersection(rhs)
+        assert isinstance(constraint, (StandardVersion, ClosedOpenRange))
+        return self._with_constraint(constraint)
 
     def union(self, other: VersionType) -> VersionType:
         result = VersionList([self])
@@ -690,31 +685,21 @@ class GitVersion(ConcreteVersion):
     def __ne__(self, other: object) -> bool:
         return not self == other
 
+    def _sort_key(self) -> Tuple:
+        """Assigned refs sort by version then ref; refs constrained to a range come after
+        every other version, since we don't know what version they will correspond to."""
+        if self.std_version is None:
+            return (1, self.ref, self.constraint)
+        return (0, self.std_version, self.ref)
+
     def _order(self, other: object) -> int:
-        """The sign of ``self`` compared to ``other``, defining the storage order of versions.
-        A git ref without an assigned version comes after every other version, since we
-        don't know what version it will correspond to.
-        """
+        """The sign of ``self`` compared to ``other``, defining the storage order of versions."""
         if isinstance(other, GitVersion):
-            if self.std_version is None and other.std_version is None:
-                # both constrained to a range, order by ref then constraint
-                lhs_ranged = (self.ref, self.constraint)
-                rhs_ranged = (other.ref, other.constraint)
-                return (lhs_ranged > rhs_ranged) - (lhs_ranged < rhs_ranged)
-            if self.std_version is None:
-                return 1
-            if other.std_version is None:
-                return -1
-            # both assigned, order by assigned version then ref
-            lhs_assigned = (self.std_version, self.ref)
-            rhs_assigned = (other.std_version, other.ref)
-            return (lhs_assigned > rhs_assigned) - (lhs_assigned < rhs_assigned)
+            lhs, rhs = self._sort_key(), other._sort_key()
+            return (lhs > rhs) - (lhs < rhs)
         if not isinstance(other, (StandardVersion, ClosedOpenRange)):
             raise TypeError(f"ordering not supported between {type(self)} and {type(other)}")
-        if self.std_version is None:
-            return 1
-        # otherwise compare by assigned version
-        return -1 if self.std_version < other else 1
+        return -1 if self.std_version is not None and self.std_version < other else 1
 
     def __lt__(self, other: object) -> bool:
         return self._order(other) < 0
@@ -1036,16 +1021,14 @@ class VersionList(VersionType):
             for v in item:
                 self.add(v)
 
-        elif _is_ranged_ref(item):
-            assert isinstance(item, GitVersion)
-            self._add_ranged_ref(item)
+        elif isinstance(item, GitVersion):
+            if item.std_version is None:
+                self._add_ranged_ref(item)
+            # An assigned ref can be covered by a constraint on the ref anywhere in the list.
+            elif not item.satisfies(self):
+                self.versions.insert(bisect_left(self.versions, item), item)
 
-        elif isinstance(item, (StandardVersion, GitVersion)):
-            # Skip when covered by a constraint on the ref, which comes after everything else.
-            if isinstance(item, GitVersion) and any(
-                item.satisfies(v) for v in self.versions[self._ranged_refs_start() :]
-            ):
-                return
+        elif isinstance(item, StandardVersion):
             i = bisect_left(self.versions, item)
             # Only insert when prev and next do not cover it.
             if (i == 0 or not item.satisfies(self[i - 1])) and (
