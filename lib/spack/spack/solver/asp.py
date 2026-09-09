@@ -2235,8 +2235,11 @@ class SpackSolverSetup:
             if spack.repo.PATH.is_virtual(edge.spec.name):
                 possible_deps = self.possible_virtuals
             if edge.spec.name not in possible_deps and not str(edge.when):
+                # name what it was asked of, not just what was asked for
+                parent = edge.parent.name if edge.parent is not None else None
+                of = f"'{parent}'" if parent else "any root spec"
                 raise InvalidDependencyError(
-                    f"'{edge.spec.name}' is not a possible dependency of any root spec"
+                    f"'{edge.spec.name}' is not a possible dependency of {of}"
                 )
 
     def input_spec_version_check(self, specs, allow_deprecated: bool) -> None:

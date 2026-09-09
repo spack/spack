@@ -187,7 +187,7 @@ def assert_actionable_error(exc_info, *required_part: str) -> None:
         # via link/run from multivalue-variant.
         pytest.param(
             "multivalue-variant ^gmake",
-            ["gmake is not a direct 'build' or"],
+            ["'gmake' is not a direct 'build' or 'test' dependency of 'multivalue-variant'"],
             id="literal_not_in_dag",
         ),
         # mvapich2 file_systems uses auto_or_any_combination_of, but "auto" and "lustre"
