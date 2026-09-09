@@ -44,7 +44,7 @@ from spack.store import Store
 
 
 def find_nothing(*args):
-    raise spack.repo.UnknownPackageError("Repo package access is disabled for test")
+    raise spack.repo.UnknownPackageError("repo-access-is-disabled-for-test")
 
 
 def test_install_and_uninstall(temporary_store: Store, install_mockery, mock_fetch, monkeypatch):
