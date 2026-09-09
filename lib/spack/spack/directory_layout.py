@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import spack.config
-import spack.hash_types as ht
 import spack.projections
 import spack.spec
 import spack.util.filesystem as fs
@@ -135,7 +134,7 @@ class DirectoryLayout:
         with open(path, "w", encoding="utf-8") as f:
             # The hash of the projection is the DAG hash which contains
             # the full provenance, so it's available if we want it later
-            spec.to_json(f, hash=ht.dag_hash)
+            spec.to_json(f)
 
     def write_host_environment(self, spec: "spack.spec.Spec") -> None:
         """The host environment is a json file with os, kernel, and spack

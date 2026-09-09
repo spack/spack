@@ -35,7 +35,6 @@ import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.filesystem_view as fsv
-import spack.hash_types as ht
 import spack.installer_dispatch
 import spack.package_base
 import spack.paths
@@ -2332,16 +2331,11 @@ class Environment:
     def _concrete_specs_dict(self):
         concrete_specs = {}
         for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):
-            spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
-            # Assumes no legacy formats, since this was just created.
-            spec_dict[ht.dag_hash.name] = s.dag_hash()
-            concrete_specs[s.dag_hash()] = spec_dict
+            concrete_specs[s.dag_hash()] = s.node_dict_with_hashes()
 
             if s.build_spec is not s:
                 for d in s.build_spec.traverse():
-                    build_spec_dict = d.node_dict_with_hashes(hash=ht.dag_hash)
-                    build_spec_dict[ht.dag_hash.name] = d.dag_hash()
-                    concrete_specs[d.dag_hash()] = build_spec_dict
+                    concrete_specs[d.dag_hash()] = d.node_dict_with_hashes()
 
         return concrete_specs
 
