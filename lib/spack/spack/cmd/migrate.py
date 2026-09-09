@@ -8,11 +8,12 @@ import shutil
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import spack.config
+import spack.paths
 import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
 from spack.util import tty
 
-description = "migrate user config from ~/.spack to ~/.config/spack"
+description = "undo auto-migration of licenses and environments"
 section = "config"
 level = "long"
 
@@ -224,216 +225,168 @@ def process_config_file_paths(
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
+        "action",
+        nargs="?",
+        choices=["undo"],
+        help="action to perform (only 'undo' is supported)",
+    )
+    subparser.add_argument(
         "--dry-run",
         action="store_true",
-        help="show what would be migrated without actually moving files",
+        help="show what would be done without actually doing it",
     )
-    subparser.add_argument(
-        "--clear",
-        action="store_true",
-        help="move entire ~/.spack directory to backup location after migration",
-    )
-    subparser.add_argument(
-        "--restore",
-        action="store_true",
-        help="restore ~/.spack from backup location (reverses --clear)",
-    )
-    subparser.add_argument(
-        "--i-need-old-spack",
-        action="store_true",
-        help="print help about mixing pre-1.2 Spack and Spack >= 1.2",
-    )
-
-
-def i_need_old_spack():
-    """Print information about running old and new Spack versions together."""
-    print("""\
-If you're getting a warning about using resources in ~/.spack, and
-you have pre-1.2 Spack instances that cannot upgrade, you can run
-
-  spack migrate
-
-(without --clear). This will create a copy of the user config for
-1.2+ instances to use; that is usually fine, but pre-1.2 instances
-and 1.2+ instances will have divergent config (unless e.g.
-SPACK_DISABLE_LOCAL_CONFIG is set).
-
-About divergence:
-
-Pre-1.2 instances will use ~/.spack, and 1.2+ instances (including
-those that upgrade to 1.2+) will use ~/.config/spack. This means for
-example that pre-1.2 and 1.2+ instances may have different notions
-of what compilers are available.
-
-You can avoid this divergence issue by forcing new Spack instances
-to also use ~/.spack (which will silence the warning) or by forcing
-old Spack instances to use `~/.config/spack`. For all versions after
-Spack v1.0, this can be done in the `includes` section of the Spack
-config scope in `$spack/etc/spack/include.yaml`.
-""")
 
 
 def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
-    """Migrate user config files from ~/.spack to ~/.config/spack.
+    """Undo auto-migration of licenses and environments.
 
-    This command copies config files (...yaml, ...yml) from ~/.spack/ to
-    ~/.config/spack/ to support the new XDG-compliant directory layout.
+    The `spack migrate undo` command restores the Spack instance to its
+    pre-auto-migration state by copying licenses and environments from
+    $spack/.migration-backup/ back to their original locations, updating
+    the layout scope to point to those old locations, and removing the
+    backup directory.
+
+    IMPORTANT: This does NOT touch any files in shared $HOME directories
+    (e.g., ~/.local/share/spack). Auto-migration copies (not moves) files,
+    so the shared directories remain intact for other Spack instances.
     """
-    if args.i_need_old_spack:
-        i_need_old_spack()
-        return
-
-    old_location = os.path.expanduser("~/.spack")
-    new_config_location = os.path.expanduser("~/.config/spack")
-    backup_loc = backup_location()
-
-    # Handle --restore
-    if args.restore:
-        if not os.path.exists(backup_loc):
-            tty.die(
-                f"Backup location does not exist: {backup_loc}"
-                "\nIf you have moved $state_home (e.g. by setting"
-                "\nSPACK_STATE_HOME) since the time that the backup"
-                "\nwas created, restoring the previous value should"
-                "\nbe enough for this command to succeed."
-            )
-
-        if os.path.exists(old_location):
-            tty.die(
-                f"Cannot restore: {old_location} already exists.\n"
-                f"Please remove or rename it before restoring from backup."
-            )
-
-        if args.dry_run:
-            tty.msg(f"Would move {backup_loc} to {old_location}")
-        else:
-            tty.msg(f"Restoring {backup_loc} to {old_location}...")
-            shutil.move(backup_loc, old_location)
-            tty.msg("Restore complete!")
-        return
-
-    if not os.path.exists(old_location):
-        tty.msg(f"Old configuration location does not exist: {old_location}")
-        tty.msg("Nothing to migrate.")
-        return
-
-    # Check if backup already exists (for --clear)
-    if args.clear and os.path.exists(backup_loc):
-        tty.die(f"Backup location already exists: {backup_loc}")
-
-    # Find config files to migrate (recursively)
-    config_files = []
-    if os.path.isdir(old_location):
-        found = fs.find(old_location, ["*.yaml", "*.yml"], recursive=True)
-        # Exclude package_repos directory (old location for cloned repos, contains repo.yaml)
-        package_repos_dir = os.path.join(old_location, "package_repos")
-        # Convert absolute paths to relative paths from old_location
-        config_files = [
-            os.path.relpath(f, old_location)
-            for f in found
-            if not fs.path_contains_subdirectory(f, package_repos_dir)
-        ]
-
-    if not config_files:
-        tty.msg("No config files found in ~/.spack to migrate.")
-        if args.clear:
-            # Still do the backup if --clear was requested
-            if args.dry_run:
-                tty.msg(f"Would move {old_location} to {backup_loc}")
-            else:
-                tty.msg(f"Moving {old_location} to {backup_loc}...")
-                shutil.move(old_location, backup_loc)
-                tty.msg("Backup complete!")
-        return
-
-    # Check for conflicts in new location
-    conflicts = []
-    if os.path.exists(new_config_location):
-        for config_file in config_files:
-            new_path = os.path.join(new_config_location, config_file)
-            if os.path.exists(new_path):
-                conflicts.append(config_file)
-
-    if conflicts:
+    if args.action != "undo":
         tty.die(
-            f"Migration conflicts detected - these files already exist in {new_config_location}:\n"
-            + "\n".join(f"  - {f}" for f in conflicts)
-            + "\n\nPlease resolve conflicts manually before migrating."
+            "The manual `spack migrate` command has been deprecated.\n"
+            "\n"
+            "Auto-migration now happens automatically when you run Spack.\n"
+            "If you need to undo auto-migration, use:\n"
+            "  spack migrate undo\n"
+            "\n"
+            "For more information, see the Spack documentation."
         )
 
-    # Show what will be migrated
-    if args.dry_run:
-        tty.msg("Would migrate the following:")
-        tty.msg(f"\n  Config files from {old_location}/ to {new_config_location}/:")
+    # Get backup directory path
+    backup_dir = spack.config._migration_backup_path()
 
-        all_path_info: List[Tuple[str, str, str, str]] = []
-        for config_file in config_files:
-            old_path = os.path.join(old_location, config_file)
-            # Check for paths even in dry-run
-            _, path_info = process_config_file_paths(old_path, old_location, new_config_location)
-            if path_info:
-                all_path_info.extend(
-                    (config_file, key_path, value, action) for key_path, value, action in path_info
-                )
-                tty.msg(f"    - {config_file} (contains {len(path_info)} path(s) to process)")
-            else:
-                tty.msg(f"    - {config_file}")
-
-        if all_path_info:
-            tty.msg("\n  Paths that would be processed:")
-            for config_file, key_path, value, action in all_path_info:
-                tty.msg(f"    {config_file}:{key_path} = {value} (would {action})")
-
-        if args.clear:
-            tty.msg(f"\nWould then move {old_location} to {backup_loc}")
+    if not os.path.exists(backup_dir):
+        tty.msg(f"No migration backup found at {backup_dir}")
+        tty.msg("Nothing to undo.")
         return
 
-    # Perform the migration
-    os.makedirs(new_config_location, exist_ok=True)
-    tty.msg(f"Migrating config files from {old_location} to {new_config_location}...")
+    # Get old resource paths
+    old_licenses_dir = spack.paths.old_licenses_path
+    old_envs_dir = spack.paths.old_envs_path
 
-    all_path_info = []
+    # Check what's in the backup
+    backup_licenses = os.path.join(backup_dir, "licenses")
+    backup_envs = os.path.join(backup_dir, "environments")
 
-    for config_file in config_files:
-        old_path = os.path.join(old_location, config_file)
-        new_path = os.path.join(new_config_location, config_file)
+    has_licenses = os.path.exists(backup_licenses) and os.listdir(backup_licenses)
+    has_envs = os.path.exists(backup_envs) and os.listdir(backup_envs)
 
-        # Process the file to handle paths
-        modified_data, path_info = process_config_file_paths(
-            old_path, old_location, new_config_location
-        )
-
-        # Track paths for reporting
-        if path_info:
-            all_path_info.extend(
-                (config_file, key_path, value, action) for key_path, value, action in path_info
-            )
-
-        # Write the file (modified if needed, otherwise copy)
-        # Ensure parent directory exists for nested files
-        os.makedirs(os.path.dirname(new_path), exist_ok=True)
-
-        if modified_data is not None:
-            # Write modified YAML
-            with open(new_path, "w", encoding="utf-8") as f:
-                syaml.dump(modified_data, f)
-            tty.msg(f"  Copied (with modified paths): {config_file}")
+    if not has_licenses and not has_envs:
+        tty.msg(f"Backup directory exists but is empty: {backup_dir}")
+        if args.dry_run:
+            tty.msg(f"Would remove {backup_dir}")
         else:
-            # No modifications needed, just copy
-            shutil.copy2(old_path, new_path)
-            tty.msg(f"  Copied: {config_file}")
+            shutil.rmtree(backup_dir)
+            tty.msg(f"Removed empty backup directory: {backup_dir}")
+        return
 
-    tty.msg("Migration complete!")
+    # Show what will be done
+    if args.dry_run:
+        tty.msg("Would perform the following operations:")
+        if has_licenses:
+            tty.msg(f"  - Restore licenses from {backup_licenses} to {old_licenses_dir}")
+        if has_envs:
+            tty.msg(f"  - Restore environments from {backup_envs} to {old_envs_dir}")
+        tty.msg(f"  - Update layout scope to point to old locations")
+        tty.msg(f"  - Remove backup directory: {backup_dir}")
+        return
 
-    # Report paths that were processed
-    if all_path_info:
-        tty.warn("Processed paths in config files:")
-        for config_file, key_path, value, action in all_path_info:
-            tty.msg(f"  {config_file}:{key_path} = {value} ({action})")
+    # Perform the undo
+    tty.msg("Undoing auto-migration...")
 
-    # Handle --clear: move ~/.spack to backup
-    if args.clear:
-        tty.msg(f"\nMoving {old_location} to {backup_loc}...")
-        shutil.move(old_location, backup_loc)
-        tty.msg(f"Backup complete! Original ~/.spack moved to {backup_loc}")
-        tty.msg("\nYou can restore it with:\n  spack migrate --restore")
+    # Restore licenses
+    if has_licenses:
+        # Check for conflicts
+        if os.path.exists(old_licenses_dir):
+            existing = set(os.listdir(old_licenses_dir))
+            backup_files = set(os.listdir(backup_licenses))
+            conflicts = existing & backup_files
+            if conflicts:
+                tty.die(
+                    f"Cannot restore licenses: conflicts detected in {old_licenses_dir}:\n"
+                    + "\n".join(f"  - {f}" for f in conflicts)
+                    + "\n\nPlease resolve conflicts manually before running undo."
+                )
+        else:
+            fs.mkdirp(old_licenses_dir)
+
+        # Copy from backup to old location
+        for entry in os.listdir(backup_licenses):
+            src = os.path.join(backup_licenses, entry)
+            dst = os.path.join(old_licenses_dir, entry)
+            if os.path.isdir(src):
+                shutil.copytree(src, dst)
+            else:
+                shutil.copy2(src, dst)
+        tty.msg(f"  Restored licenses to {old_licenses_dir}")
+
+    # Restore environments
+    if has_envs:
+        # Check for conflicts
+        if os.path.exists(old_envs_dir):
+            existing = set(os.listdir(old_envs_dir))
+            backup_files = set(os.listdir(backup_envs))
+            conflicts = existing & backup_files
+            if conflicts:
+                tty.die(
+                    f"Cannot restore environments: conflicts detected in {old_envs_dir}:\n"
+                    + "\n".join(f"  - {f}" for f in conflicts)
+                    + "\n\nPlease resolve conflicts manually before running undo."
+                )
+        else:
+            fs.mkdirp(old_envs_dir)
+
+        # Copy from backup to old location
+        for entry in os.listdir(backup_envs):
+            src = os.path.join(backup_envs, entry)
+            dst = os.path.join(old_envs_dir, entry)
+            if os.path.isdir(src):
+                shutil.copytree(src, dst)
+            else:
+                shutil.copy2(src, dst)
+        tty.msg(f"  Restored environments to {old_envs_dir}")
+
+    # Update layout scope to point to old locations
+    layout_scope_path = spack.config._layout_scope_path()
+    config_yaml_path = os.path.join(layout_scope_path, "config.yaml")
+
+    if os.path.exists(config_yaml_path):
+        with open(config_yaml_path, "r", encoding="utf-8") as f:
+            layout_config = syaml.load(f) or {}
+    else:
+        layout_config = {}
+
+    if "config" not in layout_config:
+        layout_config["config"] = {}
+
+    # Point to old locations
+    if has_licenses:
+        layout_config["config"]["licenses_dir"] = old_licenses_dir
+    if has_envs:
+        layout_config["config"]["environments_root"] = old_envs_dir
+
+    # Write updated layout scope
+    fs.mkdirp(layout_scope_path)
+    with open(config_yaml_path, "w", encoding="utf-8") as f:
+        syaml.dump(layout_config, f)
+    tty.msg(f"  Updated layout scope: {config_yaml_path}")
+
+    # Remove backup directory
+    shutil.rmtree(backup_dir)
+    tty.msg(f"  Removed backup directory: {backup_dir}")
+
+    tty.msg("\nUndo complete!")
+    tty.msg(
+        f"\nNOTE: Files in shared directories (e.g., ~/.local/share/spack) were NOT touched.\n"
+        f"Auto-migration copies (not moves) files, so they remain available for other\n"
+        f"Spack instances."
+    )
