@@ -10,6 +10,8 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
+import spack.repo
+import spack.spec
 from spack.old_installer import PackageInstaller
 from spack.solver.asp import UnsatisfiableSpecError
 from spack.solver.error import SolverError
@@ -331,5 +333,6 @@ def test_spliced_spec_keeps_package_hash(install_specs, mutable_config):
     # package hashes from the repo
     recomputed = spliced.copy()
     recomputed._mark_concrete(False)
-    recomputed._finalize_concretization()
+    spack.spec.assign_package_hashes([recomputed], repo=spack.repo.PATH)
+    recomputed._mark_concrete_and_assign_dag_hashes()
     assert recomputed.dag_hash() == spliced.dag_hash()
