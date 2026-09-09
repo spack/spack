@@ -59,7 +59,9 @@ class TestCompilerPropertyDetector:
                 continue
             mock_gcc.extra_attributes["compilers"].pop(key)
 
-        detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
+        detector = spack.compilers.libraries.CompilerPropertyDetector(
+            mock_gcc, repo=spack.repo.PATH
+        )
 
         # Test without flags
         assert detector._compile_dummy_c_source() == without_flag_output
@@ -72,12 +74,16 @@ class TestCompilerPropertyDetector:
 
     def test_compile_dummy_c_source_no_path(self, mock_gcc):
         mock_gcc.extra_attributes["compilers"] = {}
-        detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
+        detector = spack.compilers.libraries.CompilerPropertyDetector(
+            mock_gcc, repo=spack.repo.PATH
+        )
         assert detector._compile_dummy_c_source() is None
 
     def test_compile_dummy_c_source_no_verbose_flags(self, mock_gcc, monkeypatch):
-        monkeypatch.setattr(mock_gcc.package, "verbose_flags", "")
-        detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
+        monkeypatch.setattr(spack.repo.PATH.get_pkg_class(mock_gcc.name), "verbose_flags", "")
+        detector = spack.compilers.libraries.CompilerPropertyDetector(
+            mock_gcc, repo=spack.repo.PATH
+        )
         assert detector._compile_dummy_c_source() is None
 
     @pytest.mark.not_on_windows("Module files are not supported on Windows")
@@ -106,14 +112,18 @@ class TestCompilerPropertyDetector:
         mock_gcc.extra_attributes["environment"] = {"set": {"ENV_SET": "1"}}
         mock_gcc.external_modules = ["turn_on"]
 
-        detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
+        detector = spack.compilers.libraries.CompilerPropertyDetector(
+            mock_gcc, repo=spack.repo.PATH
+        )
         assert detector._compile_dummy_c_source() == without_flag_output
 
     @pytest.mark.not_on_windows("Not supported on Windows")
     def test_implicit_rpaths(self, mock_gcc, dirs_with_libfiles, monkeypatch):
         lib_to_dirs, all_dirs = dirs_with_libfiles
 
-        detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
+        detector = spack.compilers.libraries.CompilerPropertyDetector(
+            mock_gcc, repo=spack.repo.PATH
+        )
         monkeypatch.setattr(
             spack.compilers.libraries.CompilerPropertyDetector,
             "_compile_dummy_c_source",
@@ -127,7 +137,9 @@ class TestCompilerPropertyDetector:
         """Test whether environment modifications are applied in compiler_environment"""
         monkeypatch.delenv("TEST", raising=False)
         mock_gcc.extra_attributes["environment"] = {"set": {"TEST": "yes"}}
-        detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
+        detector = spack.compilers.libraries.CompilerPropertyDetector(
+            mock_gcc, repo=spack.repo.PATH
+        )
         with detector.compiler_environment():
             assert os.environ["TEST"] == "yes"
 
@@ -142,7 +154,9 @@ class TestCompilerPropertyDetector:
         monkeypatch.setattr(spack.util.module_cmd, "load_module", mock_load_module)
 
         mock_gcc.external_modules = ["non_existent"]
-        detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
+        detector = spack.compilers.libraries.CompilerPropertyDetector(
+            mock_gcc, repo=spack.repo.PATH
+        )
 
         with pytest.raises(spack.util.module_cmd.ModuleLoadError):
             with detector.compiler_environment():
@@ -167,8 +181,21 @@ def test_detector_uses_the_cache_it_is_given(mock_packages, mock_gcc, monkeypatc
     )
 
     spack.compilers.libraries.CompilerPropertyDetector(
-        mock_gcc, cache=cache
+        mock_gcc, repo=spack.repo.PATH, cache=cache
     ).compiler_verbose_output()
 
     assert (given / entries).exists()
     assert not (process_wide / entries).exists()
+
+
+def test_detector_reads_the_recipe_from_the_repo_it_is_given(
+    mock_packages, mock_gcc, repo_builder
+):
+    """A detector reads the compiler recipe from the repositories it is given, so one given
+    repositories without the compiler package cannot inspect the compiler.
+    """
+    without_gcc = spack.repo.RepoPath(spack.repo.from_path(repo_builder.root))
+    detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc, repo=without_gcc)
+
+    with pytest.raises(spack.repo.UnknownEntityError):
+        detector._compile_dummy_c_source()

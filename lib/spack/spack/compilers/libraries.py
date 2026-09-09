@@ -10,9 +10,10 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Dict, List, Optional, Set, Tuple, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
 import spack.caches
+import spack.repo
 import spack.schema.environment
 import spack.spec
 import spack.util.executable
@@ -139,15 +140,26 @@ def _parse_link_paths(string):
 class CompilerPropertyDetector:
     """Detects compiler properties of a given compiler spec. Useful for compiler wrappers."""
 
-    def __init__(self, compiler_spec: spack.spec.Spec, *, cache: Optional["CompilerCache"] = None):
+    def __init__(
+        self,
+        compiler_spec: spack.spec.Spec,
+        *,
+        # We can't avoid the optional for the time being, since the compiler-wrapper
+        # constructs an instance without the repo arg.
+        repo: Optional[spack.repo.RepoPath] = None,
+        cache: Optional["CompilerCache"] = None,
+    ):
         """
         Args:
             compiler_spec: concrete spec of the compiler to inspect.
+            repo: package repositories the compiler recipe is read from. Defaults to the
+                process-wide repositories, since package recipes construct detectors without one.
             cache: where the verbose output of the compiler is stored. Defaults to the
                 process-wide cache, since package recipes construct detectors without one.
         """
         assert compiler_spec.concrete, "only concrete compiler specs are allowed"
         self.spec = compiler_spec
+        self.repo = spack.repo.repo_or_default(repo)
         self.cache = cache if cache is not None else COMPILER_CACHE
 
     @contextlib.contextmanager
@@ -184,7 +196,7 @@ class CompilerPropertyDetector:
             os.environ.update(backup_env)
 
     def _compile_dummy_c_source(self) -> Optional[str]:
-        compiler_pkg = self.spec.package
+        compiler_pkg: Any = self.repo.get(self.spec)
         if getattr(compiler_pkg, "cc"):
             cc = compiler_pkg.cc
             ext = "c"
@@ -192,7 +204,7 @@ class CompilerPropertyDetector:
             cc = compiler_pkg.cxx
             ext = "cc"
 
-        if not cc or not self.spec.package.verbose_flags:
+        if not cc or not compiler_pkg.verbose_flags:
             return None
 
         try:
@@ -227,7 +239,7 @@ class CompilerPropertyDetector:
 
     def compiler_verbose_output(self) -> Optional[str]:
         """Get the compiler verbose output from the cache or by compiling a dummy C source."""
-        return self.cache.get(self.spec).c_compiler_output
+        return self.cache.get(self.spec, repo=self.repo).c_compiler_output
 
     def default_dynamic_linker(self) -> Optional[str]:
         """Determine the default dynamic linker path from the compiler verbose output."""
@@ -260,7 +272,8 @@ class CompilerPropertyDetector:
             return []
 
         link_dirs = parse_non_system_link_dirs(output)
-        all_required_libs = list(self.spec.package.implicit_rpath_libs) + [
+        compiler_pkg: Any = self.repo.get(self.spec)
+        all_required_libs = list(compiler_pkg.implicit_rpath_libs) + [
             "libc",
             "libc++",
             "libstdc++",
@@ -311,11 +324,13 @@ class DefaultDynamicLinkerFilter:
         return [p for p in dirs if not self.is_dynamic_loader_default_path(p)]
 
 
-def dynamic_linker_filter_for(node: spack.spec.Spec) -> Optional[DefaultDynamicLinkerFilter]:
+def dynamic_linker_filter_for(
+    node: spack.spec.Spec, *, repo: spack.repo.RepoPath
+) -> Optional[DefaultDynamicLinkerFilter]:
     compiler = compiler_spec(node)
     if compiler is None:
         return None
-    detector = CompilerPropertyDetector(compiler)
+    detector = CompilerPropertyDetector(compiler, repo=repo)
     dynamic_linker = detector.default_dynamic_linker()
     if dynamic_linker is None:
         return None
@@ -371,15 +386,17 @@ class CompilerCacheEntry:
 class CompilerCache:
     """Base class for compiler output cache. Default implementation does not cache anything."""
 
-    def value(self, compiler: spack.spec.Spec) -> Dict[str, Optional[str]]:
+    def value(
+        self, compiler: spack.spec.Spec, *, repo: spack.repo.RepoPath
+    ) -> Dict[str, Optional[str]]:
         return {
             "c_compiler_output": CompilerPropertyDetector(
-                compiler, cache=self
+                compiler, repo=repo, cache=self
             )._compile_dummy_c_source()
         }
 
-    def get(self, compiler: spack.spec.Spec) -> CompilerCacheEntry:
-        return CompilerCacheEntry.from_dict(self.value(compiler))
+    def get(self, compiler: spack.spec.Spec, *, repo: spack.repo.RepoPath) -> CompilerCacheEntry:
+        return CompilerCacheEntry.from_dict(self.value(compiler, repo=repo))
 
 
 class FileCompilerCache(CompilerCache):
@@ -402,7 +419,7 @@ class FileCompilerCache(CompilerCache):
             pass
         return None
 
-    def get(self, compiler: spack.spec.Spec) -> CompilerCacheEntry:
+    def get(self, compiler: spack.spec.Spec, *, repo: spack.repo.RepoPath) -> CompilerCacheEntry:
         # Cache hit
         with self.cache.read_transaction(self.name) as f:
             if f is not None:
@@ -437,7 +454,7 @@ class FileCompilerCache(CompilerCache):
 
             # Finally compute the cache entry
             if entry is None:
-                self._data[key] = self.value(compiler)
+                self._data[key] = self.value(compiler, repo=repo)
                 entry = CompilerCacheEntry.from_dict(self._data[key])
 
             new.write(json.dumps(self._data, separators=(",", ":")))

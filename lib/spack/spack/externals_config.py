@@ -67,7 +67,7 @@ def external_config_with_implicit_externals(context: SpackContext) -> Dict[str, 
     seen = set()
     for compiler in spack.compilers.config.all_compilers_from(configuration, repo=repo):
         libc = spack.compilers.libraries.CompilerPropertyDetector(
-            compiler, cache=cache
+            compiler, repo=repo, cache=cache
         ).default_libc()
         if libc and libc not in seen:
             seen.add(libc)

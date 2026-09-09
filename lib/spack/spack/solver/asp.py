@@ -2612,7 +2612,7 @@ class SpackSolverSetup:
             current_libc = None
             if compiler.external or self.context.store.db.installed(compiler):
                 current_libc = CompilerPropertyDetector(
-                    compiler, cache=self.compiler_cache
+                    compiler, repo=self.context.repo, cache=self.compiler_cache
                 ).default_libc()
             else:
                 try:
@@ -2926,7 +2926,7 @@ def possible_compilers(
     cache = FileCompilerCache(context.misc_cache)
     # Compilers defined in configuration
     for c in spack.compilers.config.all_compilers_from(context.config, repo=context.repo):
-        detector = CompilerPropertyDetector(c, cache=cache)
+        detector = CompilerPropertyDetector(c, repo=context.repo, cache=cache)
         if spack.platforms.using_libc_compatibility() and not c_compiler_runs(detector):
             rejected.add(c)
             try:

@@ -73,6 +73,7 @@ import spack.multimethod
 import spack.package_base
 import spack.paths
 import spack.platforms
+import spack.repo
 import spack.schema.environment
 import spack.spec
 import spack.stage
@@ -560,7 +561,9 @@ def set_wrapper_variables(pkg, env):
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
 
-    default_dynamic_linker_filter = spack.compilers.libraries.dynamic_linker_filter_for(pkg.spec)
+    default_dynamic_linker_filter = spack.compilers.libraries.dynamic_linker_filter_for(
+        pkg.spec, repo=spack.repo.PATH
+    )
     if default_dynamic_linker_filter:
         rpath_dirs = default_dynamic_linker_filter(rpath_dirs)
 

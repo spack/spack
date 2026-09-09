@@ -277,7 +277,7 @@ def all_libcs(context: SpackContext) -> Set[spack.spec.Spec]:
     libcs = set()
     for c in spack.compilers.config.all_compilers_from(context.config, repo=context.repo):
         candidate = spack.compilers.libraries.CompilerPropertyDetector(
-            c, cache=cache
+            c, repo=context.repo, cache=cache
         ).default_libc()
         if candidate is not None:
             libcs.add(candidate)

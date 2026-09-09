@@ -211,7 +211,9 @@ class ClingoBootstrapConcretizer:
         return self._external_spec(result)
 
     def libc_external_spec(self) -> "spack.spec.Spec":
-        detector = spack.compilers.libraries.CompilerPropertyDetector(self.host_compiler)
+        detector = spack.compilers.libraries.CompilerPropertyDetector(
+            self.host_compiler, repo=spack.repo.PATH
+        )
         result = detector.default_libc()
         return self._external_spec(result)
 
