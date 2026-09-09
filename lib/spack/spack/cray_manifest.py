@@ -179,7 +179,6 @@ def spec_from_entry(entry):
         setattr(spec, ht.attr, entry["hash"])
 
     spec._concrete = True
-    spec._hashes_final = True
     spec.external_path = entry["prefix"]
     spec.origin = "external-db"
     spec.namespace = pkg_cls.namespace

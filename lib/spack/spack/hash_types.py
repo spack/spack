@@ -3,23 +3,22 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Definitions that control how Spack creates Spec hashes."""
 
-from typing import TYPE_CHECKING, List
+from typing import List
 
 import spack.deptypes as dt
 
-if TYPE_CHECKING:
-    import spack.spec
-
 
 class SpecHashDescriptor:
-    """This class defines how hashes are generated on Spec objects.
+    """This class describes how a Spec node is serialized for a given hash type.
 
     Spec hashes in Spack are generated from a serialized (e.g., with
     YAML) representation of the Spec graph.  The representation may only
     include certain dependency types, and it may optionally include a
     canonicalized hash of the package.py for each node in the graph.
 
-    We currently use different hashes for different use cases."""
+    Only ``dag_hash`` is computed from that representation. The other descriptors name values
+    that are assigned (``package_hash``) or read from old spec files (``full_hash``,
+    ``build_hash``)."""
 
     __slots__ = "depflag", "package_hash", "name", "attr"
 
@@ -28,10 +27,6 @@ class SpecHashDescriptor:
         self.package_hash = package_hash
         self.name = name
         self.attr = f"_{name}"
-
-    def __call__(self, spec: "spack.spec.Spec") -> str:
-        """Run this hash on the provided spec."""
-        return spec.spec_hash(self)
 
     def __repr__(self) -> str:
         return (

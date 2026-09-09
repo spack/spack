@@ -1226,7 +1226,7 @@ class Database:
             raise NonConcreteSpecAddError("Specs added to DB must be concrete.")
 
         key = spec.dag_hash()
-        spec_pkg_hash = spec._package_hash  # type: ignore[attr-defined]
+        spec_pkg_hash = spec._package_hash
         upstream, record = self.query_by_spec_hash(key)
         if upstream and record and record.installed:
             return
