@@ -1693,6 +1693,10 @@ def test_deepcopy_as_builtin(env_yaml):
     assert type(packages_copy["all"]["compiler"]) is list
     assert type(packages_copy["all"]["compiler"][0]) is str
 
+    line_info = cfg.deepcopy_as_builtin("packages", line_info=True)
+    assert line_info.line_info == f"{env_yaml}:6"
+    assert line_info["all"].line_info == f"{env_yaml}:7"
+
 
 def test_included_optional_include_scopes():
     with pytest.raises(NotImplementedError):

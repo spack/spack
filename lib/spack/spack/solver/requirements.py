@@ -17,17 +17,13 @@ import spack.traverse
 import spack.util.spack_yaml
 from spack.enums import PropagationPolicy
 from spack.util import tty
-from spack.util.spack_yaml import get_mark_from_yaml_data
+from spack.util.spack_yaml import source_location
 
 
 def _mark_str(raw) -> str:
     """Return a 'file:line: ' prefix from the YAML mark on *raw*, or empty string."""
-    mark = get_mark_from_yaml_data(raw)
-    if not mark:
-        return ""
-    if mark.line is None:
-        return f"{mark.name}: "
-    return f"{mark.name}:{mark.line + 1}: "
+    location = source_location(raw)
+    return f"{location}: " if location else ""
 
 
 def _check_unknown_virtuals_on_edges(raw_strs: List[str], specs: List["spack.spec.Spec"]) -> None:
@@ -479,23 +475,20 @@ def parse_spec_from_yaml_string(string: str, *, named: bool = False) -> spack.sp
     try:
         result = spack.spec.Spec(string)
     except spack.error.SpecSyntaxError as e:
-        mark = get_mark_from_yaml_data(string)
-        if mark:
-            msg = f"{mark.name}:{mark.line + 1}: {str(e)}"
-            raise spack.error.SpecSyntaxError(msg) from e
+        prefix = _mark_str(string)
+        if prefix:
+            raise spack.error.SpecSyntaxError(f"{prefix}{e}") from e
         raise e
 
     if named is True and not result.name:
         msg = f"expected a named spec, but got '{string}' instead"
-        mark = get_mark_from_yaml_data(string)
 
         # Add a hint in case it's dependencies
         deps = result.dependencies()
         if len(deps) == 1:
             msg = f"{msg}. Did you mean '{deps[0]}'?"
 
-        if mark:
-            msg = f"{mark.name}:{mark.line + 1}: {msg}"
+        msg = f"{_mark_str(string)}{msg}"
 
         raise spack.error.SpackError(msg)
 
