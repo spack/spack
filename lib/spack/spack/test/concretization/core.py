@@ -47,6 +47,7 @@ import spack.util.hash
 import spack.util.lang
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
+from spack.concretize_ui import SolveKind
 from spack.config import Configuration
 from spack.database import Database
 from spack.externals import ExternalDependencyError
@@ -3540,9 +3541,10 @@ def test_spec_unification(unify, mutable_config: Configuration, mock_packages):
 @pytest.mark.enable_parallelism
 def test_parallel_concretization(mutable_config, mock_packages):
     """Test whether parallel unify-false style concretization works."""
+    mutable_config.set("concretizer:unify", False)
     specs = [(Spec("pkg-a"), None), (Spec("pkg-b"), None)]
-    result = spack.concretize.concretize_separately(specs)
-    assert {s.name for s, _ in result} == {"pkg-a", "pkg-b"}
+    result = spack.concretize.concretize_spec_pairs(specs)
+    assert {s.name for s in result} == {"pkg-a", "pkg-b"}
 
 
 @pytest.mark.usefixtures("mutable_config", "mock_packages")
@@ -5577,16 +5579,18 @@ def test_solve_in_rounds_with_no_specs(mock_packages, config):
 
 
 def test_concretize_separately_reports_progress(mutable_config, mock_packages):
-    """Tests that concretizing separately reports the start of the concretization, and one event
-    per spec, to the injected frontend.
+    """Tests that concretizing separately reports the group of user specs, and one event per
+    spec, to the injected frontend.
     """
+    mutable_config.set("concretizer:unify", False)
     ui = RecordingUI()
-    spack.concretize.concretize_separately([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
 
-    assert ui.started == [(spack.concretize_ui.SolveKind.SEPARATELY, 2, 1)]
+    assert len(ui.groups) == 1
+    group, kind, total, _ = ui.groups[0]
+    assert (group, kind, total) == ("default", SolveKind.SEPARATELY, 2)
     assert [count for _, _, count, _ in ui.concretized] == [1, 2]
     assert {abstract.name for abstract, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
-    assert not ui.groups
 
     for abstract, concrete, _, _ in ui.concretized:
         assert concrete.concrete and concrete.satisfies(abstract)
@@ -5597,12 +5601,13 @@ def test_concretize_together_when_possible_reports_progress(mutable_config, mock
     event per spec. The two specs cannot be unified, so they are solved in different rounds, and
     the count has to keep increasing across rounds.
     """
+    mutable_config.set("concretizer:unify", "when_possible")
     ui = RecordingUI()
-    spack.concretize.concretize_together_when_possible(
+    spack.concretize.concretize_spec_pairs(
         [(Spec("pkg-a@1.0"), None), (Spec("pkg-a@2.0"), None)], ui=ui
     )
 
-    assert ui.started == [(spack.concretize_ui.SolveKind.WHEN_POSSIBLE, 2, 1)]
+    assert ui.groups == [("default", SolveKind.WHEN_POSSIBLE, 2, 1)]
     assert [count for _, _, count, _ in ui.concretized] == [1, 2]
     assert {str(abstract) for abstract, _, _, _ in ui.concretized} == {"pkg-a@1.0", "pkg-a@2.0"}
 
@@ -5614,61 +5619,42 @@ def test_concretize_together_reports_progress(mutable_config, mock_packages):
     """Tests that concretizing together reports the start of the concretization, and one event
     per spec.
     """
+    mutable_config.set("concretizer:unify", True)
     ui = RecordingUI()
-    spack.concretize.concretize_together([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
 
-    assert ui.started == [(spack.concretize_ui.SolveKind.TOGETHER, 2, 1)]
+    assert ui.groups == [("default", SolveKind.TOGETHER, 2, 1)]
     assert [count for _, _, count, _ in ui.concretized] == [1, 2]
     assert {abstract.name for abstract, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
     assert len({duration for _, _, _, duration in ui.concretized}) == 1
-    assert not ui.groups
 
     for abstract, concrete, _, _ in ui.concretized:
         assert concrete.concrete and concrete.satisfies(abstract)
 
 
-@pytest.mark.parametrize(
-    "concretize_fn",
-    [
-        spack.concretize.concretize_together,
-        spack.concretize.concretize_together_when_possible,
-        spack.concretize.concretize_separately,
-    ],
-)
-def test_reported_total_matches_number_of_specs(concretize_fn, mutable_config, mock_packages):
-    """Tests that, whatever the concretization strategy, the total announced when concretization
-    starts is the number of specs that are reported as concretized afterwards, and that the counts
-    reported along the way run from 1 to that total. Frontends rely on this to show a percentage.
+@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+def test_reported_total_matches_number_of_specs(unify, mutable_config, mock_packages):
+    """Tests that, whatever the concretization strategy, the total a group announces is the number
+    of specs reported as concretized afterwards, and that the counts reported along the way run
+    from 1 to that total. Frontends rely on this to show a percentage.
     """
+    mutable_config.set("concretizer:unify", unify)
     ui = RecordingUI()
-    concretize_fn([(Spec("pkg-a"), None), (Spec("pkg-b"), None), (Spec("libelf"), None)], ui=ui)
+    spack.concretize.concretize_spec_pairs(
+        [(Spec("pkg-a"), None), (Spec("pkg-b"), None), (Spec("libelf"), None)], ui=ui
+    )
 
-    assert len(ui.started) == 1
-    _, total, _ = ui.started[0]
+    assert len(ui.groups) == 1
+    total = ui.groups[0][2]
     assert total == len(ui.concretized) == 3
     assert [count for _, _, count, _ in ui.concretized] == list(range(1, total + 1))
-
-
-def test_concretize_separately_reports_start_with_nothing_to_do(mutable_config, mock_packages):
-    """Tests that concretization is announced even when every input spec is already concrete, so
-    that frontends always see a start event.
-    """
-    concrete = spack.concretize.concretize_one(Spec("pkg-a"))
-    ui = RecordingUI()
-    result = spack.concretize.concretize_separately([(Spec("pkg-a"), concrete)], ui=ui)
-
-    assert ui.started == [(spack.concretize_ui.SolveKind.SEPARATELY, 0, 1)]
-    assert not ui.concretized
-    assert [concrete for _, concrete in result] == [concrete]
 
 
 @pytest.mark.parametrize("total,announced", [(2, True), (0, False)])
 def test_terminal_ui_announces_pool_only_when_solving(total, announced, capsys):
     """Tests that the terminal frontend stays silent when there is nothing to concretize."""
     ui = spack.concretize_ui.TerminalUI()
-    ui.on_concretization_started(
-        kind=spack.concretize_ui.SolveKind.SEPARATELY, total=total, processes=1
-    )
+    ui.on_group_started(group="default", kind=SolveKind.SEPARATELY, total=total, processes=1)
 
     assert ("Starting concretization" in capsys.readouterr().out) is announced
 
@@ -5791,3 +5777,107 @@ def test_git_ref_version_is_assigned_once_at_concretization(monkeypatch):
     concrete = spack.concretize.concretize_one("git-test-commit@git.1.x")
     assert str(concrete.version) == "git.1.x=1.2" and calls == ["1.x"]
     assert spack.concretize.concretize_one(concrete) == concrete and calls == ["1.x"]
+
+
+def test_group_is_announced_when_every_spec_is_already_concrete(mutable_config, mock_packages):
+    """Tests that a group is announced even when every input spec is already concrete, so that
+    frontends always see it open and close.
+    """
+    mutable_config.set("concretizer:unify", False)
+    pkg_a = spack.concretize.concretize_one(Spec("pkg-a"))
+    pkg_b = spack.concretize.concretize_one(Spec("pkg-b"))
+    ui = RecordingUI()
+    result = spack.concretize.concretize_spec_pairs(
+        [(Spec("pkg-a"), pkg_a), (Spec("pkg-b"), pkg_b)], ui=ui
+    )
+
+    assert ui.groups == [("default", SolveKind.SEPARATELY, 0, 1)]
+    assert ui.groups_ended == 1
+    assert not ui.concretized
+    assert result == [pkg_a, pkg_b]
+
+
+def test_concretization_reports_when_it_is_over(mutable_config, mock_packages):
+    """Tests that a concretization, and the group inside it report their end exactly once."""
+    ui = RecordingUI()
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+
+    assert (ui.started, ui.ended) == (1, 1)
+    assert (len(ui.groups), ui.groups_ended) == (1, 1)
+    assert len(ui.concretized) == 2
+
+
+def test_every_span_is_closed_when_a_solve_raises(mutable_config, mock_packages):
+    """Tests that a concretization that raises still closes both the concretization and the group,
+    so that a frontend can tear down what it painted before the error is printed. The exception
+    propagates to the caller without being passed to the frontend.
+    """
+    ui = RecordingUI()
+
+    unsatisfiable = Spec("mpileaks ^mpich@3.0.3 ^mpich@3.0.4")
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        spack.concretize.concretize_spec_pairs(
+            [(unsatisfiable, None), (Spec("pkg-b"), None)], ui=ui
+        )
+
+    assert (ui.started, ui.ended) == (1, 1)
+    assert (len(ui.groups), ui.groups_ended) == (1, 1)
+
+
+@pytest.mark.parametrize("total,announced", [(2, True), (0, False)])
+def test_terminal_ui_announces_a_group_only_when_it_has_work(total, announced, capsys):
+    """Tests that the terminal frontend holds the group header back until it knows the group has
+    specs to concretize, so re-concretizing an environment doesn't announce empty groups.
+    """
+    ui = spack.concretize_ui.TerminalUI()
+    ui.on_group_started(group="apps", kind=SolveKind.SEPARATELY, total=total, processes=1)
+
+    assert ("Concretizing the 'apps' group" in capsys.readouterr().out) is announced
+
+
+def test_terminal_ui_never_announces_the_default_group(capsys):
+    """Tests that the group every environment has stays implicit."""
+    ui = spack.concretize_ui.TerminalUI()
+    ui.on_group_started(group="default", kind=SolveKind.SEPARATELY, total=2, processes=1)
+
+    assert "group of specs" not in capsys.readouterr().out
+
+
+def test_single_spec_shortcut_opens_a_group(mutable_config, mock_packages):
+    """Tests that the single spec shortcut in concretize_spec_pairs reports a group of one, so
+    the solve it runs is enclosed like any other.
+    """
+    mutable_config.set("concretizer:unify", False)
+    ui = RecordingUI()
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None)], ui=ui)
+
+    assert ui.groups == [("default", SolveKind.TOGETHER, 1, 1)]
+    assert (ui.started, ui.ended) == (1, 1)
+    assert ui.groups_ended == 1
+
+
+def test_concretize_one_opens_its_own_spans(mutable_config, mock_packages):
+    """Tests that concretize_one, which callers use as an entry point of its own, opens and
+    closes both the concretization and the group around its solve.
+    """
+    ui = RecordingUI()
+    concrete = spack.concretize.concretize_one(Spec("pkg-a"), ui=ui)
+
+    assert concrete.concrete
+    assert ui.groups == [("default", SolveKind.TOGETHER, 1, 1)]
+    assert (ui.started, ui.ended) == (1, 1)
+    assert ui.groups_ended == 1
+    assert [count for _, _, count, _ in ui.concretized] == [1]
+
+
+def test_concretize_one_reports_an_already_concrete_spec_as_no_work(mutable_config, mock_packages):
+    """Tests that concretize_one on an already concrete spec opens a group with nothing in it,
+    rather than reporting a spec it did not solve.
+    """
+    concrete = spack.concretize.concretize_one(Spec("pkg-a"))
+    ui = RecordingUI()
+    spack.concretize.concretize_one(concrete, ui=ui)
+
+    assert ui.groups == [("default", SolveKind.TOGETHER, 0, 1)]
+    assert ui.groups_ended == 1
+    assert not ui.concretized

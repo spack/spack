@@ -3,11 +3,23 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """High-level functions to concretize list of specs"""
 
+import contextlib
 import importlib
 import sys
 import time
 from collections import Counter
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import spack.compilers
 import spack.compilers.config
@@ -18,7 +30,14 @@ import spack.repo
 import spack.solver.core
 import spack.traverse
 import spack.util.parallel
-from spack.concretize_ui import ConcretizerUI, HeadlessUI, SolveKind
+from spack.concretize_ui import (
+    DEFAULT_USER_SPEC_GROUP,
+    ConcretizerUI,
+    HeadlessUI,
+    SolveKind,
+    concretization_span,
+    group_span,
+)
 from spack.spec import Spec
 from spack.util import tty
 
@@ -28,6 +47,13 @@ TestsType = Union[bool, Iterable[str]]
 
 if TYPE_CHECKING:
     from spack.solver.reuse import SpecFiltersFactory
+
+
+def _needs_solving(abstract: Spec, concrete: Optional[Spec]) -> bool:
+    """Return whether a spec pair has to go through a solve. A pair that does not is passed
+    through unchanged, and is not reported to a frontend.
+    """
+    return concrete is None and not abstract.concrete
 
 
 def _concretize_specs_together(
@@ -53,12 +79,12 @@ def _concretize_specs_together(
     return [s.copy() for s in result.specs]
 
 
-def concretize_together(
+def _concretize_together(
     spec_list: Sequence[SpecPairInput],
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
-    ui: Optional[ConcretizerUI] = None,
+    ui: ConcretizerUI,
 ) -> List[SpecPair]:
     """Given a number of specs as input, tries to concretize them together.
 
@@ -68,32 +94,33 @@ def concretize_together(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
-        ui: frontend to report progress to. Defaults to a headless frontend.
+        ui: frontend to report progress to. The group these specs belong to is assumed to be
+            opened by the caller.
     """
-    ui = ui or HeadlessUI()
-
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
-    abstract_specs = [abstract for abstract, _ in spec_list]
 
-    ui.on_concretization_started(kind=SolveKind.TOGETHER, total=len(to_concretize), processes=1)
     start = time.monotonic()
     concrete_specs = _concretize_specs_together(to_concretize, tests=tests, factory=factory)
     duration = time.monotonic() - start
 
     # A single solve produced all the specs, so they all report the duration of that solve
-    result = list(zip(abstract_specs, concrete_specs))
-    for count, (abstract, concrete) in enumerate(result, start=1):
+    result, count = [], 0
+    for (abstract, previous), concrete in zip(spec_list, concrete_specs):
+        result.append((abstract, concrete))
+        if not _needs_solving(abstract, previous):
+            continue
+        count += 1
         ui.on_spec_concretized(abstract, concrete=concrete, count=count, duration=duration)
 
     return result
 
 
-def concretize_together_when_possible(
+def _concretize_together_when_possible(
     spec_list: Sequence[SpecPairInput],
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
-    ui: Optional[ConcretizerUI] = None,
+    ui: ConcretizerUI,
 ) -> List[SpecPair]:
     """Given a number of specs as input, tries to concretize them together to the extent possible.
 
@@ -106,23 +133,21 @@ def concretize_together_when_possible(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
-        ui: frontend to report progress to. Defaults to a headless frontend.
+        ui: frontend to report progress to.
     """
     from spack.solver.asp import Solver
-
-    ui = ui or HeadlessUI()
 
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
     old_concrete_to_abstract = {
         concrete: abstract for (abstract, concrete) in spec_list if concrete
     }
+    to_report = {
+        abstract for abstract, concrete in spec_list if _needs_solving(abstract, concrete)
+    }
 
     result_by_user_spec: Dict[Spec, Spec] = {}
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     j = 0
-    ui.on_concretization_started(
-        kind=SolveKind.WHEN_POSSIBLE, total=len(to_concretize), processes=1
-    )
     start = time.monotonic()
     for result in Solver(specs_factory=factory).solve_in_rounds(
         to_concretize, tests=tests, allow_deprecated=allow_deprecated
@@ -130,6 +155,8 @@ def concretize_together_when_possible(
         now = time.monotonic()
         duration = now - start
         for abstract, concrete in result.specs_by_input.items():
+            if abstract not in to_report:
+                continue
             j += 1
             ui.on_spec_concretized(abstract, concrete=concrete, count=j, duration=duration)
         result_by_user_spec.update(result.specs_by_input)
@@ -143,12 +170,13 @@ def concretize_together_when_possible(
     ]
 
 
-def concretize_separately(
+def _concretize_separately(
     spec_list: Sequence[SpecPairInput],
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
-    ui: Optional[ConcretizerUI] = None,
+    ui: ConcretizerUI,
+    processes: int,
 ) -> List[SpecPair]:
     """Concretizes the input specs separately from each other.
 
@@ -158,7 +186,8 @@ def concretize_separately(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
-        ui: frontend to report progress to. Defaults to a headless frontend.
+        ui: frontend to report progress to.
+        processes: size of the process pool
     """
     from spack.bootstrap import (
         ensure_bootstrap_configuration,
@@ -166,7 +195,6 @@ def concretize_separately(
         ensure_winsdk_external_or_raise,
     )
 
-    ui = ui or HeadlessUI()
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
     args = [
         (i, str(abstract), tests, factory)
@@ -197,25 +225,12 @@ def concretize_separately(
     _ = spack.compilers.config.all_compilers()
 
     # Solve the environment in parallel on Linux. imap_unordered falls back to a serial map when
-    # parallelism is disabled (e.g. Windows)
-    num_procs = 1
-    if args and spack.util.parallel.ENABLE_PARALLELISM:
-        num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
-    ui.on_concretization_started(kind=SolveKind.SEPARATELY, total=len(args), processes=num_procs)
-
-    # Early return if there is nothing to do
-    if len(args) == 0:
-        # Still have to combine the things that were passed in as abstract with the things
-        # that were passed in as pairs
-        return [(abstract, concrete) for abstract, (_, concrete) in zip(to_concretize, ret)] + [
-            (abstract, concrete) for abstract, concrete in spec_list if concrete
-        ]
-
+    # parallelism is disabled (e.g. Windows), and when there is at most one spec to solve
     for j, (i, concrete, duration) in enumerate(
         spack.util.parallel.imap_unordered(
             _concretize_task,
             args,
-            processes=num_procs,
+            processes=processes,
             debug=tty.is_debug(),
             maxtaskperchild=1,
             serialize_env=True,
@@ -225,7 +240,8 @@ def concretize_separately(
         ret.append((i, concrete))
         ui.on_spec_concretized(to_concretize[i], concrete=concrete, count=j, duration=duration)
 
-    # Add specs in original order
+    # Add specs in original order, then combine the ones passed in as abstract with the ones
+    # passed in as pairs
     ret.sort(key=lambda x: x[0])
 
     return [(abstract, concrete) for abstract, (_, concrete) in zip(to_concretize, ret)] + [
@@ -248,21 +264,53 @@ def concretize_one(
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    ui: Optional[ConcretizerUI] = None,
 ) -> Spec:
     """Return a concretized copy of the given spec.
 
     Args:
         tests: if False disregard test dependencies, if a list of names activate them for
             the packages in the list, if True activate test dependencies for all packages.
+        factory: optional factory to produce a list of specs to be reused
+        ui: frontend to report the solve to. Defaults to a headless frontend.
     """
-    from spack.solver.asp import Solver
+    ui = ui or HeadlessUI()
+    with concretization_span(ui):
+        return _concretize_one(spec, tests=tests, factory=factory, ui=ui)
 
+
+def _concretize_one(
+    spec: Union[str, Spec],
+    *,
+    tests: TestsType = False,
+    factory: Optional["SpecFiltersFactory"] = None,
+    ui: ConcretizerUI,
+) -> Spec:
+    """Concretize a single spec, as a group of one, inside a concretization that started."""
     if isinstance(spec, str):
         spec = Spec(spec)
     spec = spack.hash_lookup.lookup_hash(spec)
 
-    if spec.concrete:
-        return spec.copy()
+    # A single spec takes a single solve, whatever "concretizer:unify" prescribes
+    with group_span(
+        ui,
+        group=DEFAULT_USER_SPEC_GROUP,
+        kind=SolveKind.TOGETHER,
+        total=0 if spec.concrete else 1,
+        processes=1,
+    ):
+        if spec.concrete:
+            return spec.copy()
+
+        start = time.monotonic()
+        concrete = _solve_one(spec, tests=tests, factory=factory)
+        ui.on_spec_concretized(spec, concrete=concrete, count=1, duration=time.monotonic() - start)
+        return concrete
+
+
+def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFactory"]) -> Spec:
+    """Run the single solve that concretizes ``spec``, and pick its answer."""
+    from spack.solver.asp import Solver
 
     for node in spec.traverse():
         if not node.name:
@@ -293,10 +341,50 @@ def concretize_one(
 
 
 def solve_kind(unify: Any) -> SolveKind:
-    """Return the kind of solve that a ``concretizer:unify`` value prescribes."""
+    """Return the kind of solve that a ``concretizer:unify`` value prescribes.
+
+    Raises:
+        spack.error.ConfigError: if ``unify`` is not a value the schema allows
+    """
     if unify == "when_possible":
         return SolveKind.WHEN_POSSIBLE
+    if unify not in (True, False):
+        raise spack.error.ConfigError(f"concretization strategy not implemented [{unify}]")
     return SolveKind.TOGETHER if unify else SolveKind.SEPARATELY
+
+
+def _reported_total(spec_list: Sequence[SpecPairInput]) -> int:
+    """Return how many specs a group concretizing ``spec_list`` reports as concretized, which is
+    the ``total`` a frontend counts against. Only the specs that go through a solve are reported,
+    whatever the strategy.
+    """
+    return sum(1 for abstract, concrete in spec_list if _needs_solving(abstract, concrete))
+
+
+def _processes_for(kind: SolveKind, total: int) -> int:
+    """Return the size of the process pool that concretizing ``total`` specs as ``kind``
+    prescribes uses. Only solving separately runs more than one process.
+    """
+    if kind is not SolveKind.SEPARATELY or not total:
+        return 1
+    if not spack.util.parallel.ENABLE_PARALLELISM:
+        return 1
+    return min(total, spack.config.determine_number_of_jobs(parallel=True))
+
+
+@contextlib.contextmanager
+def solve_group(
+    ui: ConcretizerUI, *, group: str, kind: SolveKind, spec_list: Sequence[SpecPairInput]
+) -> Iterator[int]:
+    """Open the group that concretizes ``spec_list`` as ``kind`` prescribes, and yield the size
+    of the process pool it announced, so that the pool that runs is the one a frontend was told
+    about. A group whose specs need no solve announces a total of zero, and a frontend sees it
+    open and close with nothing in between.
+    """
+    total = _reported_total(spec_list)
+    processes = _processes_for(kind, total)
+    with group_span(ui, group=group, kind=kind, total=total, processes=processes):
+        yield processes
 
 
 def concretize_spec_pairs(
@@ -319,51 +407,68 @@ def concretize_spec_pairs(
         ui: frontend to report progress to. Defaults to a headless frontend.
     """
     ui = ui or HeadlessUI()
+    with concretization_span(ui):
+        return _dispatch_concretization(to_concretize, tests=tests, ui=ui)
+
+
+def _dispatch_concretization(
+    to_concretize: List[SpecPairInput], *, tests: TestsType, ui: ConcretizerUI
+) -> List[Spec]:
     kind = solve_kind(spack.config.CONFIG.get("concretizer:unify", False))
 
     # Special case for concretizing a single spec
     if len(to_concretize) == 1:
         abstract, concrete = to_concretize[0]
-        return [concrete or concretize_one(abstract, tests=tests)]
+        if concrete is None:
+            return [_concretize_one(abstract, tests=tests, ui=ui)]
+        # Nothing to solve, so the group reports a total of zero
+        with group_span(ui, group=DEFAULT_USER_SPEC_GROUP, kind=kind, total=0, processes=1):
+            return [concrete]
 
     # Special case if every spec is either concrete or has an abstract hash
     if all(
         concrete or abstract.concrete or abstract.abstract_hash
         for abstract, concrete in to_concretize
     ):
-        # Get all the concrete specs
-        ret = [
-            concrete
-            or (abstract if abstract.concrete else spack.hash_lookup.lookup_hash(abstract))
-            for abstract, concrete in to_concretize
-        ]
+        # No spec is solved, so the group reports a total of zero
+        with group_span(ui, group=DEFAULT_USER_SPEC_GROUP, kind=kind, total=0, processes=1):
+            # Get all the concrete specs
+            ret = [
+                concrete
+                or (abstract if abstract.concrete else spack.hash_lookup.lookup_hash(abstract))
+                for abstract, concrete in to_concretize
+            ]
 
-        # If unify: true, check that specs don't conflict
-        # Since all concrete, "when_possible" is not relevant
-        if kind is SolveKind.TOGETHER:
-            runtimes = spack.repo.PATH.packages_with_tags("runtime")
-            specs_per_name = Counter(
-                spec.name
-                for spec in spack.traverse.traverse_nodes(
-                    ret, deptype=("link", "run"), key=spack.traverse.by_dag_hash
+            # If unify: true, check that specs don't conflict
+            # Since all concrete, "when_possible" is not relevant
+            if kind is SolveKind.TOGETHER:
+                runtimes = spack.repo.PATH.packages_with_tags("runtime")
+                specs_per_name = Counter(
+                    spec.name
+                    for spec in spack.traverse.traverse_nodes(
+                        ret, deptype=("link", "run"), key=spack.traverse.by_dag_hash
+                    )
+                    if spec.name not in runtimes  # runtimes are allowed multiple times
                 )
-                if spec.name not in runtimes  # runtimes are allowed multiple times
-            )
 
-            conflicts = sorted(name for name, count in specs_per_name.items() if count > 1)
-            if conflicts:
-                raise spack.error.SpecError(
-                    "Specs conflict and `concretizer:unify` is configured true.",
-                    f"    specs depend on multiple versions of {', '.join(conflicts)}",
-                )
-        return ret
+                conflicts = sorted(name for name, count in specs_per_name.items() if count > 1)
+                if conflicts:
+                    raise spack.error.SpecError(
+                        "Specs conflict and `concretizer:unify` is configured true.",
+                        f"    specs depend on multiple versions of {', '.join(conflicts)}",
+                    )
+            return ret
 
     # Standard case
-    concretize_method = concretize_separately  # unify: false
-    if kind is SolveKind.TOGETHER:
-        concretize_method = concretize_together
-    elif kind is SolveKind.WHEN_POSSIBLE:
-        concretize_method = concretize_together_when_possible
-
-    concretized = concretize_method(to_concretize, tests=tests, ui=ui)
-    return [concrete for _, concrete in concretized]
+    with solve_group(
+        ui, group=DEFAULT_USER_SPEC_GROUP, kind=kind, spec_list=to_concretize
+    ) as processes:
+        if kind is SolveKind.TOGETHER:
+            concretized = _concretize_together(to_concretize, tests=tests, ui=ui)
+        elif kind is SolveKind.WHEN_POSSIBLE:
+            concretized = _concretize_together_when_possible(to_concretize, tests=tests, ui=ui)
+        else:
+            concretized = _concretize_separately(
+                to_concretize, tests=tests, ui=ui, processes=processes
+            )
+        return [concrete for _, concrete in concretized]

@@ -34,6 +34,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.active_environment import active_environment
 from spack.cmd.env import _env_create
+from spack.concretize_ui import SolveKind
 from spack.config import Configuration, substitute_path_variables
 from spack.environment import depfile
 from spack.main import SpackCommand, SpackCommandError
@@ -3755,7 +3756,7 @@ def test_virtual_spec_concretize_together(mutable_config):
 @pytest.mark.parametrize(
     "unify,method_to_fail",
     [
-        (True, (spack.concretize, "concretize_together")),
+        (True, (spack.concretize, "_concretize_together")),
         ("when_possible", (spack.solver.asp.Solver, "solve_in_rounds")),
         # An earlier failure so that we test the case where the internal state
         # has been changed, but the pointer to the internal variables has not change.
@@ -5093,5 +5094,61 @@ spack:
         e.concretize(ui=ui)
 
     # "default" is concretized first, the groups that don't need each other follow in any order
-    assert ui.groups[0] == ("default", True)
-    assert set(ui.groups[1:]) == {("apps1", False), ("apps2", False)}
+    assert ui.groups[0] == ("default", SolveKind.SEPARATELY, 1, 1)
+    assert set(ui.groups[1:]) == {
+        ("apps1", SolveKind.SEPARATELY, 1, 1),
+        ("apps2", SolveKind.SEPARATELY, 1, 1),
+    }
+    assert ui.groups_ended == 3
+    assert (ui.started, ui.ended) == (1, 1)
+
+
+def test_concretization_reports_a_group_with_nothing_to_do(environment_from_manifest):
+    """Tests that re-concretizing an environment still reports each group, including the ones
+    that are solved already.
+    """
+    e = environment_from_manifest("""
+spack:
+  specs:
+  - libelf
+  - group: apps1
+    specs:
+    - pkg-a
+""")
+    with e:
+        e.concretize()
+        e.write()
+
+        ui = RecordingUI()
+        e.concretize(ui=ui)
+
+    # Nothing is left to solve, but both groups are still opened and closed
+    assert set(ui.groups) == {
+        ("default", SolveKind.SEPARATELY, 0, 1),
+        ("apps1", SolveKind.SEPARATELY, 0, 1),
+    }
+    assert ui.groups_ended == 2
+    assert not ui.concretized
+    assert (ui.started, ui.ended) == (1, 1)
+
+
+@pytest.mark.parametrize("unify", [True, "when_possible", False])
+def test_reported_total_ignores_specs_that_were_kept(unify, mutable_config, mock_packages):
+    """Tests that adding a spec to an already concretized environment announces a total of one,
+    whatever 'concretizer:unify' prescribes. The specs that were kept go through the solve for
+    'unify: true' and 'when_possible', and a frontend counting them would run past 100%.
+    """
+    mutable_config.set("concretizer:unify", unify)
+    e = ev.create("test")
+    e.add("libelf")
+    e.concretize()
+    e.write()
+
+    e.add("mpileaks")
+    ui = RecordingUI()
+    e.concretize(ui=ui)
+
+    total = ui.groups[0][2]
+    assert total == 1
+    assert [count for _, _, count, _ in ui.concretized] == [1]
+    assert [abstract.name for abstract, _, _, _ in ui.concretized] == ["mpileaks"]
