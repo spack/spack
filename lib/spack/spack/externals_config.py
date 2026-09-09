@@ -77,16 +77,16 @@ def external_config_with_implicit_externals(context: SpackContext) -> Dict[str, 
 
 
 def create_external_parser(
-    packages_with_externals: Any, completion_mode: str, *, repo: spack.repo.RepoPath
+    packages_with_externals: Any, *, context: SpackContext
 ) -> ExternalSpecsParser:
     """Get externals from a pre-processed packages.yaml (with implicit externals).
 
     Args:
         packages_with_externals: pre-processed packages.yaml configuration.
-        completion_mode: how nodes are completed (``default_variants`` or ``architecture_only``).
-        repo: package repository to query.
+        context: resources to read the completion mode and the package repositories from.
     """
     external_dicts = extract_dicts_from_configuration(packages_with_externals)
+    completion_mode = context.config.get("concretizer:externals:completion")
     if completion_mode == "default_variants":
         complete_fn = complete_variants_and_architecture
     elif completion_mode == "architecture_only":
@@ -95,4 +95,4 @@ def create_external_parser(
         raise ValueError(
             f"Unknown value for concretizer:externals:completion: {completion_mode!r}"
         )
-    return ExternalSpecsParser(external_dicts, complete_node=complete_fn, repo=repo)
+    return ExternalSpecsParser(external_dicts, complete_node=complete_fn, repo=context.repo)

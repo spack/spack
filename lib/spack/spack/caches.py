@@ -20,7 +20,7 @@ def misc_cache_location(*, config: spack.config.Configuration) -> str:
     providers and for which packages provide which tags.
     """
     path = config.get("config:misc_cache", spack.paths.default_misc_cache_path)
-    return spack.config.canonicalize_path(path)
+    return spack.config.canonicalize_path(path, config=config)
 
 
 def misc_cache(*, config: spack.config.Configuration) -> spack.util.file_cache.FileCache:

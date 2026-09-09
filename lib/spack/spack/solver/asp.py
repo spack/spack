@@ -1734,12 +1734,7 @@ class SpackSolverSetup:
                 )
                 if not spec.name:
                     spec.name = pkg_name
-                spec = spack.version.git_ref_lookup.assign_git_versions(
-                    spec,
-                    repo=self.context.repo,
-                    misc_cache=self.context.misc_cache,
-                    config=self.context.config,
-                )
+                spec = self._assign_git_versions(spec)
 
                 when_spec = spec
                 if virtual and spec.name != pkg_name:
@@ -2355,7 +2350,16 @@ class SpackSolverSetup:
                             f"{start_str} cannot depend on {', '.join(sorted(invalid))}"
                         )
 
-                spack.spec.Spec.ensure_valid_variants(s, repo=self.context.repo)
+                spack.spec.Spec.ensure_valid_variants(s, repo=repo)
+
+    def _assign_git_versions(self, spec: spack.spec.Spec) -> spack.spec.Spec:
+        """Return ``spec`` with every git ref version resolved against this setup's context."""
+        return spack.version.git_ref_lookup.assign_git_versions(
+            spec,
+            repo=self.context.repo,
+            misc_cache=self.context.misc_cache,
+            config=self.context.config,
+        )
 
     def setup(
         self,
@@ -2456,12 +2460,7 @@ class SpackSolverSetup:
         env = active_environment()
         if env:
             dev_specs = tuple(
-                spack.version.git_ref_lookup.assign_git_versions(
-                    spack.spec.Spec(info["spec"]),
-                    repo=self.context.repo,
-                    misc_cache=self.context.misc_cache,
-                    config=self.context.config,
-                ).constrained(
+                self._assign_git_versions(spack.spec.Spec(info["spec"])).constrained(
                     'dev_path="%s"'
                     % spack.config.canonicalize_path(
                         info["path"], default_wd=env.path, config=self.context.config
@@ -2753,12 +2752,7 @@ class SpackSolverSetup:
                 if s.name not in self.pkgs or s.versions == vn.any_version:
                     continue
 
-                s = spack.version.git_ref_lookup.assign_git_versions(
-                    s,
-                    repo=self.context.repo,
-                    misc_cache=self.context.misc_cache,
-                    config=self.context.config,
-                )
+                s = self._assign_git_versions(s)
                 name, versions = s.name, s.versions
                 v = versions.concrete
 
@@ -3496,12 +3490,8 @@ class Solver:
         self.packages_with_externals = (
             spack.externals_config.external_config_with_implicit_externals(self.context)
         )
-        completion_mode = self.context.config.get("concretizer:externals:completion")
         self.selector = ReusableSpecsSelector(
             context=self.context,
-            external_parser=spack.externals_config.create_external_parser(
-                self.packages_with_externals, completion_mode, repo=self.context.repo
-            ),
             factory=specs_factory,
             packages_with_externals=self.packages_with_externals,
         )

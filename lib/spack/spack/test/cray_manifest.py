@@ -29,7 +29,7 @@ import spack.solver.reuse
 import spack.spec
 import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
-from spack.externals_config import create_external_parser, external_config_with_implicit_externals
+from spack.externals_config import external_config_with_implicit_externals
 from spack.solver.reuse import ReusableSpecsSelector
 from spack.store import Store
 
@@ -456,14 +456,8 @@ def test_find_external_nonempty_default_manifest_dir(
 
 def _reusable_hashes(context):
     """Return the dag hashes the concretizer would reuse, for the given context."""
-    packages_with_externals = external_config_with_implicit_externals(context)
-    completion_mode = context.config.get("concretizer:externals:completion")
     selector = ReusableSpecsSelector(
-        context=context,
-        external_parser=create_external_parser(
-            packages_with_externals, completion_mode, repo=context.repo
-        ),
-        packages_with_externals=packages_with_externals,
+        context=context, packages_with_externals=external_config_with_implicit_externals(context)
     )
     return {x.dag_hash() for x in selector.reusable_specs([])}
 

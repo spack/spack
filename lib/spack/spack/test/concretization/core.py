@@ -57,7 +57,6 @@ from spack.concretize_ui import SolveKind
 from spack.config import Configuration
 from spack.database import Database
 from spack.externals import ExternalDependencyError
-from spack.externals_config import create_external_parser
 from spack.old_installer import PackageInstaller
 from spack.repo import RepoPath
 from spack.solver.asp import Result
@@ -3394,16 +3393,11 @@ def test_filtering_reused_specs(
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
     context = spack.context_factory.default()
-    packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
-        context
-    )
-    completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
         context=context,
-        external_parser=create_external_parser(
-            packages_with_externals, completion_mode, repo=context.repo
+        packages_with_externals=spack.externals_config.external_config_with_implicit_externals(
+            context
         ),
-        packages_with_externals=packages_with_externals,
     )
     specs = selector.reusable_specs(roots)
 
@@ -3438,16 +3432,11 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
     context = spack.context_factory.default()
-    packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
-        context
-    )
-    completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
         context=context,
-        external_parser=create_external_parser(
-            packages_with_externals, completion_mode, repo=context.repo
+        packages_with_externals=spack.externals_config.external_config_with_implicit_externals(
+            context
         ),
-        packages_with_externals=packages_with_externals,
     )
     specs = selector.reusable_specs(["mpileaks"])
     assert len(specs) == expected_length

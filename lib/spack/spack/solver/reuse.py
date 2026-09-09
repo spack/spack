@@ -127,15 +127,14 @@ def _is_reusable(
 
 def reusable_external_specs(context: SpackContext) -> List[spack.spec.Spec]:
     """Return the reusable external specs declared in a context's ``packages.yaml``."""
-    configuration, repo = context.config, context.repo
     packages_with_externals = external_config_with_implicit_externals(context)
-    completion_mode = configuration.get("concretizer:externals:completion")
     spec_filter = spec_filter_from_packages_yaml(
-        external_parser=create_external_parser(
-            packages_with_externals, completion_mode, repo=repo
-        ),
+        external_parser=create_external_parser(packages_with_externals, context=context),
         is_reusable=functools.partial(
-            _is_reusable, packages_with_externals=packages_with_externals, local=True, repo=repo
+            _is_reusable,
+            packages_with_externals=packages_with_externals,
+            local=True,
+            repo=context.repo,
         ),
     )
     return spec_filter.selected_specs()
@@ -186,7 +185,6 @@ class ReusableSpecsSelector:
         self,
         *,
         context: SpackContext,
-        external_parser: ExternalSpecsParser,
         packages_with_externals: Any,
         factory: Optional[SpecFiltersFactory] = None,
     ) -> None:
@@ -194,11 +192,10 @@ class ReusableSpecsSelector:
         import spack.environment
 
         configuration, store, repo = context.config, context.store, context.repo
-        # Pre-compute the hashes once, so the per-spec reusability check is O(1) membership
-        # instead of a DB query per spec.
+        external_parser = create_external_parser(packages_with_externals, context=context)
+        # Membership in this set replaces a per-spec query_by_spec_hash on the store
         external_db_hashes = _external_db_hashes(store)
-        # The reusability predicate only depends on the source being local vs. a build cache, so
-        # build the two variants once and share them across all the filters below.
+        # _is_reusable only varies by local vs. build cache, so bind the two variants once
         local_is_reusable = functools.partial(
             _is_reusable,
             packages_with_externals=packages_with_externals,

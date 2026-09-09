@@ -28,9 +28,8 @@ def _matching_external_specs(
         packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
             context
         )
-        completion_mode = context.config.get("concretizer:externals:completion")
         parser = spack.externals_config.create_external_parser(
-            packages_with_externals, completion_mode, repo=context.repo
+            packages_with_externals, context=context
         )
     except spack.error.SpackError:
         return []
