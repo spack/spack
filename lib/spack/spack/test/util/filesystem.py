@@ -1085,6 +1085,16 @@ def test_rename_dest_exists(tmp_path: pathlib.Path):
         shutil.rmtree(str(f_dir))
 
 
+def test_touchp(tmp_path: pathlib.Path):
+    with fs.working_dir(tmp_path):
+        # Check that no base is required
+        fs.touchp("no-parent")
+        fs.touchp("subdir/t")
+
+    assert (tmp_path / "no-parent").is_file()
+    assert (tmp_path / "subdir" / "t").is_file()
+
+
 def test_force_symlink_replaces_existing(tmp_path: pathlib.Path):
     target, other = tmp_path / "target", tmp_path / "other"
     target.write_text("target", encoding="utf-8")

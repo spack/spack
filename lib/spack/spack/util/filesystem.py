@@ -1089,7 +1089,7 @@ def force_remove(*paths: str) -> None:
 
 @contextmanager
 @system_path_filter
-def working_dir(dirname: str, *, create: bool = False):
+def working_dir(dirname: Union[str, Path], *, create: bool = False):
     """Context manager to change the current working directory to ``dirname``.
 
     Args:
@@ -1103,7 +1103,7 @@ def working_dir(dirname: str, *, create: bool = False):
            pass
     """
     if create:
-        mkdirp(dirname)
+        mkdirp(str(dirname))
 
     orig_dir = os.getcwd()
     os.chdir(dirname)
@@ -1258,7 +1258,9 @@ def touch(path):
 @system_path_filter
 def touchp(path):
     """Like ``touch``, but creates any parent directories needed for the file."""
-    mkdirp(os.path.dirname(path))
+    parent = os.path.dirname(path)
+    if parent:
+        mkdirp(parent)
     touch(path)
 
 
