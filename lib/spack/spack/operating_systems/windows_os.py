@@ -196,12 +196,19 @@ class WindowsOs(OperatingSystem):
         """
         _compiler_search_paths = []
         system_arch_family = NATIVE_MSVC_TOOLSET_DIRS.get(HOST_TARGET_FAMILY.name)
-        if system_arch_family is not None:
-            host_dir, target_dir = system_arch_family
-            for p in self.msvc_paths:
-                _compiler_search_paths.extend(
-                    glob.glob(os.path.join(p, "*", "bin", host_dir, target_dir))
-                )
+        if system_arch_family is None:
+            tty.debug(
+                f"No native MSVC toolset mapping for host target family {HOST_TARGET_FAMILY.name}",
+                "only cross-compilers may be available or host arch detection failed",
+                level=2,
+            )
+            return _compiler_search_paths
+
+        host_dir, target_dir = system_arch_family
+        for p in self.msvc_paths:
+            _compiler_search_paths.extend(
+                glob.glob(os.path.join(p, "*", "bin", host_dir, target_dir))
+            )
         oneapi_root = self.oneapi_root
         if oneapi_root:
             _compiler_search_paths.extend(
