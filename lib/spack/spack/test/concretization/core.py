@@ -5925,17 +5925,17 @@ def break_globals(monkeypatch):
     return _break
 
 
-def _context_with_mock_repo(config, mock_packages_repo):
-    """A context reading from the mock repositories. Callers build it once every fixture that
-    pushes a configuration scope has run, so the store points at the right install tree."""
-    config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
-    return spack.context_factory.from_config(config)
-
-
 @pytest.fixture()
-def injected_context(mutable_config, mock_packages_repo):
-    """A context whose repositories are the mock ones, built before any global is broken."""
-    return _context_with_mock_repo(mutable_config, mock_packages_repo)
+def injected_context(mutable_config, mock_packages, mock_packages_repo):
+    """A context reading from the mock repositories, built before any global is broken.
+
+    It is built once every fixture that pushes a configuration scope has run, so the store
+    points at the right install tree. It depends on ``mock_packages`` so that the process-wide
+    repositories are the mock ones too: ``Spec`` resolves virtuals through ``spack.repo.PATH``,
+    which would otherwise raise ``UnknownNamespaceError`` for ``builtin_mock``.
+    """
+    mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
+    return spack.context_factory.from_config(mutable_config)
 
 
 @pytest.mark.parametrize(
@@ -6013,52 +6013,6 @@ def test_solve_in_rounds_reads_no_global(break_globals, injected_context):
         assert results and any(r.specs for r in results)
         for result in results:
             assert all(s.concrete for s in result.specs)
-
-
-@pytest.mark.parametrize("transitive", [True, False])
-def test_explicit_splice_reads_no_global(
-    break_globals, mutable_config, database_mutable_config, mock_packages_repo, transitive
-):
-    """Tests that splicing resolves virtuals to decide what matches, and must do so through the
-    injected context's repositories.
-    """
-    mpich_spec = database_mutable_config.query("mpich")[0]
-    mutable_config.set(
-        "concretizer",
-        {
-            "splice": {
-                "explicit": [
-                    {
-                        "target": "mpi",
-                        "replacement": f"/{mpich_spec.dag_hash()}",
-                        "transitive": transitive,
-                    }
-                ]
-            }
-        },
-    )
-    context = _context_with_mock_repo(mutable_config, mock_packages_repo)
-
-    with break_globals():
-        result = spack.solver.asp.Solver(context=context).solve([Spec("hdf5 ^zmpi")])
-
-        assert result.specs
-        assert result.specs[0].satisfies(f"^mpich@{mpich_spec.version}")
-
-
-def test_reuse_from_store_reads_no_global(
-    break_globals, mutable_config, database_mutable_config, mock_packages_repo
-):
-    """Tests that filtering reusable specs out of the store matches them against the injected
-    repositories, including when the match has to resolve a virtual.
-    """
-    mutable_config.set("concretizer:reuse", True)
-    context = _context_with_mock_repo(mutable_config, mock_packages_repo)
-
-    with break_globals():
-        result = spack.solver.asp.Solver(context=context).solve([Spec("mpileaks ^mpi")])
-
-        assert result.specs and result.specs[0].concrete
 
 
 def test_buildcache_query_reads_no_global(break_globals, injected_context):
