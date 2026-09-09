@@ -6133,7 +6133,7 @@ def test_worker_error_keeps_its_type_and_replays_its_events(mutable_config, mock
     specs = [(Spec("pkg-b"), None), (Spec("pkg-a@99.99.99"), None)]
 
     with pytest.raises(spack.solver.error.InvalidVersionError) as exc_info:
-        spack.concretize.concretize_separately(specs, ui=ui)
+        spack.concretize._concretize_separately(specs, ui=ui, processes=2)
 
     # Tracebacks don't pickle, so the worker records its own for the parent to print
     assert "concretize.py" in exc_info.value.traceback
@@ -6150,8 +6150,8 @@ def test_failed_solve_reports_the_same_way_without_parallelism(mutable_config, m
     ui = RecordingUI()
 
     with pytest.raises(spack.solver.error.InvalidVersionError):
-        spack.concretize.concretize_separately(
-            [(Spec("pkg-b"), None), (Spec("pkg-a@99.99.99"), None)], ui=ui
+        spack.concretize._concretize_separately(
+            [(Spec("pkg-b"), None), (Spec("pkg-a@99.99.99"), None)], ui=ui, processes=2
         )
 
     assert ["pkg-a@99.99.99"] in [[str(x) for x in solve] for solve in ui.solves]
@@ -6167,7 +6167,7 @@ def test_solves_in_workers_are_replayed_to_the_frontend(mutable_config, mock_pac
     ui = RecordingUI()
     specs = [(Spec("pkg-a"), None), (Spec("pkg-b"), None)]
 
-    spack.concretize.concretize_separately(specs, ui=ui)
+    spack.concretize._concretize_separately(specs, ui=ui, processes=2)
 
     assert len(ui.solves) == len(ui.finished) == 2
     assert {str(x[0]) for x in ui.solves} == {"pkg-a", "pkg-b"}
@@ -6240,7 +6240,9 @@ def test_worker_solves_are_replayed_the_same_way_without_parallelism(
     assert not spack.util.parallel.ENABLE_PARALLELISM, "this test wants the serial fallback"
 
     ui = RecordingUI()
-    spack.concretize.concretize_separately([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+    spack.concretize._concretize_separately(
+        [(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui, processes=2
+    )
 
     assert len(ui.solves) == len(ui.finished) == len(ui.programs) == 2
     # Each solve reports its own specs, rather than accumulating the ones before it
