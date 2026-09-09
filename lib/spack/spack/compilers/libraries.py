@@ -423,7 +423,7 @@ class FileCompilerCache(CompilerCache):
                 self._data = {}
 
             # Use cache entry that may have been created by another process in the meantime.
-            entry = self._get_entry(key, allow_empty=True)
+            entry = self._get_entry(key, allow_empty=False)
 
             # Finally compute the cache entry
             if entry is None:
