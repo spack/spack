@@ -1204,6 +1204,43 @@ class OptionalInclude:
             return None
         return os.path.dirname(path) if os.path.isfile(path) else path
 
+    def _include_directory(
+        self, path_or_url: str, parent_scope: Optional[ConfigScope] = None
+    ) -> Optional[str]:
+        """Return the include directory relative to the parent scope.
+
+        For remote includes this is the cache destination directory.
+        For local relative includes this is the working directory from which to resolve the path.
+
+        Args:
+            path_or_url: path or URL of the include
+            parent_scope: including scope
+
+        Returns: ``None`` for a local include without an enclosing parent scope;
+            an appropriate subdirectory of the enclosing (parent) scope's directory.
+        """
+        scope_dir = self._parent_scope_directory(parent_scope)
+
+        def _subdir():
+            # Prefer the provided include name over the git repository name.
+            # If neither, use a hash of the url or path for uniqueness.
+            if self.name:
+                return self.name
+
+            match = re.search(r"/([^/]+?)(\.git)?$", path_or_url)
+            if match:
+                if not os.path.splitext(match.group(1))[1]:
+                    return match.group(1)
+
+            return spack.util.hash.b32_hash(path_or_url)[-7:]
+
+        # For remote includes, prefer a writable subdirectory of the parent scope.
+        assert parent_scope is not None
+        subdir = os.path.join("includes", _subdir())
+        if parent_scope.name.startswith("env:"):
+            subdir = os.path.join(".spack-env", subdir)
+        return os.path.join(scope_dir, subdir)
+
     def base_directory(
         self, path_or_url: str, parent_scope: Optional[ConfigScope] = None
     ) -> Optional[str]:
@@ -1224,26 +1261,9 @@ class OptionalInclude:
         if not self.remote:
             return scope_dir
 
-        def _subdir():
-            # Prefer the provided include name over the git repository name.
-            # If neither, use a hash of the url or path for uniqueness.
-            if self.name:
-                return self.name
-
-            match = re.search(r"/([^/]+?)(\.git)?$", path_or_url)
-            if match:
-                if not os.path.splitext(match.group(1))[1]:
-                    return match.group(1)
-
-            return spack.util.hash.b32_hash(path_or_url)[-7:]
-
         # For remote includes, prefer a writable subdirectory of the parent scope.
         if scope_dir and filesystem.can_write_to_dir(scope_dir):
-            assert parent_scope is not None
-            subdir = os.path.join("includes", _subdir())
-            if parent_scope.name.startswith("env:"):
-                subdir = os.path.join(".spack-env", subdir)
-            return os.path.join(scope_dir, subdir)
+            return self._include_directory(path_or_url, parent_scope)
 
         # Fall back to a stable, unique, temporary directory, logging the reason.
         tmpdir = tempfile.gettempdir()
@@ -1525,7 +1545,7 @@ class GitIncludePaths(OptionalInclude):
         """
 
         if self.persist:
-            self.destination = self.base_directory(self.git, parent_scope)
+            self.destination = self._include_directory(self.git, parent_scope)
             tty.debug(f"Reusing existing repo at {self.destination}")
 
         if self.fetched():
