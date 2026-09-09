@@ -1724,8 +1724,22 @@ class SpackSolverSetup:
 
             self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
             self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
+            # What the requirement actually says, so a failure can quote it. Without this the
+            # only thing reported is "cannot satisfy a requirement for package 'X'".
+            requirement_text = "'" + "' or '".join(str(s) for s in requirement_grp) + "'"
+            location_prefix = ""
+            if rule.location:
+                requirement_text += f" from {rule.location}"
+                location_prefix = f"{rule.location}: "
+            self.gen.fact(
+                fn.requirement_group_spec(pkg_name, requirement_grp_id, requirement_text)
+            )
             if rule.message:
-                self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
+                self.gen.fact(
+                    fn.requirement_message(
+                        pkg_name, requirement_grp_id, f"{location_prefix}{rule.message}"
+                    )
+                )
             self.gen.newline()
 
             for input_spec in requirement_grp:
@@ -1754,7 +1768,9 @@ class SpackSolverSetup:
                     # else: for virtuals we want to emit "node" and
                     # "virtual_node" in imposed specs
 
-                    info_msg = f"{input_spec} is a requirement for package {pkg_name}"
+                    info_msg = (
+                        f"{location_prefix}{input_spec} is a requirement for package {pkg_name}"
+                    )
                     if rule.condition != EMPTY_SPEC:
                         info_msg += f" when {rule.condition}"
                     if rule.message:

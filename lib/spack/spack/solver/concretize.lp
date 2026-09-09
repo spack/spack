@@ -1403,9 +1403,10 @@ requirement_penalty(PackageNode, Language, Group, W) :-
   attr("concrete_build_dependency", PackageNode, CompilerName, CompilerHash),
   attr("virtual_on_build_edge", PackageNode, CompilerName, Language).
 
-error(60000, "cannot satisfy a requirement for package '{0}'.", Package) :-
+error(60000, "cannot satisfy requirement {1} for package '{0}'", Package, Requirement) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
+  requirement_group_spec(Package, X, Requirement),
   not has_requirement_message(Package, X),
   not requirement_group_satisfied(node(ID, Package), X).
 
@@ -1423,6 +1424,7 @@ error(50000, Message) :-
 #defined requirement_group_member/3.
 #defined requirement_has_weight/2.
 #defined requirement_policy/3.
+#defined requirement_group_spec/3.
 
 %-----------------------------------------------------------------------------
 % Variant semantics
