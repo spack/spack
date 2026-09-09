@@ -528,8 +528,7 @@ def test_parse_install_tree(config_settings_fn, expected_fn, mutable_config, tmp
     for config_setting in config_settings:
         mutable_config.set(*config_setting)
 
-    config_dict = mutable_config.get("config")
-    root, unpadded_root, projections = spack.store.parse_install_tree(config_dict)
+    root, unpadded_root, projections = spack.store.parse_install_tree(mutable_config)
     assert root == expected_root
     assert unpadded_root == expected_unpadded_root
     assert projections == expected_proj
@@ -599,8 +598,7 @@ def test_parse_install_tree_padded(config_settings, expected, mutable_config):
     for config_setting in config_settings:
         mutable_config.set(*config_setting)
 
-    config_dict = mutable_config.get("config")
-    root, unpadded_root, projections = spack.store.parse_install_tree(config_dict)
+    root, unpadded_root, projections = spack.store.parse_install_tree(mutable_config)
     assert root == expected_root
     assert unpadded_root == expected_unpadded_root
     assert projections == expected_proj
@@ -1255,7 +1253,7 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
 def test_default_install_tree(monkeypatch, default_config):
     s = spack.spec.Spec("nonexistent@x.y.z arch=foo-bar-baz")
     monkeypatch.setattr(s, "dag_hash", lambda length: "abc123")
-    _, _, projections = spack.store.parse_install_tree(default_config.get("config"))
+    _, _, projections = spack.store.parse_install_tree(default_config)
     assert s.format(projections["all"]) == "foo-baz/nonexistent-x.y.z-abc123"
 
 
@@ -2232,3 +2230,15 @@ spack:
     assert flattened["specs"] == ["mpileaks"]
     assert flattened["view"] is True
     assert flattened["config"] == mutable_config.get("config")
+
+
+def test_install_tree_expands_against_the_configuration_it_is_read_from(mutable_config, tmp_path):
+    """The install tree root expands against the configuration it is read from, so that a store
+    created for an environment that is not the active one does not point into the active one.
+    """
+    mutable_config.set("config:install_tree:root", os.path.join("$env", "opt"))
+    mutable_config.env_path = str(tmp_path / "an-environment")
+
+    root, _, _ = spack.store.parse_install_tree(mutable_config)
+
+    assert root == str(tmp_path / "an-environment" / "opt")

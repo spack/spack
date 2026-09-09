@@ -42,65 +42,29 @@ from spack.util import tty
 DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
 
 
-def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
+def parse_install_tree(config: spack.config.Configuration) -> Tuple[str, str, Dict[str, str]]:
     """Parse config settings and return values relevant to the store object.
 
     Arguments:
-        config_dict: dictionary of config values, as returned from
-            ``spack.config.CONFIG.get("config")``
+        config: configuration to read the ``config`` section from, and to expand the paths
+            in it against
 
     Returns:
         triple of the install tree root, the unpadded install tree
         root (before padding was applied), and the projections for the
         install tree
-
-    Encapsulate backwards compatibility capabilities for install_tree
-    and deprecated values that are now parsed as part of install_tree.
     """
-    # The following two configs are equivalent, the first being the old format
-    # and the second the new format. The new format is also more flexible.
+    install_tree = config.get_config("config").get("install_tree", {})
 
-    # config:
-    #   install_tree: /path/to/root$padding:128
-    #   install_path_scheme: '{name}-{version}'
+    unpadded_root = install_tree.get("root", DEFAULT_INSTALL_TREE_ROOT)
+    unpadded_root = spack.config.canonicalize_path(unpadded_root, config=config)
 
-    # config:
-    #   install_tree:
-    #     root: /path/to/root
-    #     padding: 128
-    #     projections:
-    #       all: '{name}-{version}'
+    padded_length: Union[bool, int] = install_tree.get("padded_length", False)
+    if padded_length is True:
+        padded_length = spack.util.path.get_system_path_max()
+        padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
 
-    install_tree = config_dict.get("install_tree", {})
-
-    padded_length: Union[bool, int] = False
-    if isinstance(install_tree, str):
-        tty.warn("Using deprecated format for configuring install_tree")
-        unpadded_root = install_tree
-        unpadded_root = spack.config.canonicalize_path(unpadded_root)
-        # construct projection from previous values for backwards compatibility
-        all_projection = config_dict.get(
-            "install_path_scheme", spack.directory_layout.default_projections["all"]
-        )
-
-        projections = {"all": all_projection}
-    else:
-        unpadded_root = install_tree.get("root", DEFAULT_INSTALL_TREE_ROOT)
-        unpadded_root = spack.config.canonicalize_path(unpadded_root)
-
-        padded_length = install_tree.get("padded_length", False)
-        if padded_length is True:
-            padded_length = spack.util.path.get_system_path_max()
-            padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
-
-        projections = install_tree.get("projections", spack.directory_layout.default_projections)
-
-        path_scheme = config_dict.get("install_path_scheme", None)
-        if path_scheme:
-            tty.warn(
-                "Deprecated config value 'install_path_scheme' ignored"
-                " when using new install_tree syntax"
-            )
+    projections = install_tree.get("projections", spack.directory_layout.default_projections)
 
     # Handle backwards compatibility for padding
     old_pad = re.search(r"\$padding(:\d+)?|\${padding(:\d+)?}", unpadded_root)
@@ -273,16 +237,15 @@ def create(configuration: spack.config.Configuration) -> Store:
     Args:
         configuration: configuration to create a store.
     """
-    configuration = configuration or spack.config.CONFIG
     config_dict = configuration.get_config("config")
-    root, unpadded_root, projections = parse_install_tree(config_dict)
+    root, unpadded_root, projections = parse_install_tree(configuration)
     hash_length = config_dict.get("install_hash_length")
 
     install_roots = [
         install_properties["install_tree"]
         for install_properties in configuration.get_config("upstreams").values()
     ]
-    upstreams = _construct_upstream_dbs_from_install_roots(install_roots)
+    upstreams = _construct_upstream_dbs_from_install_roots(install_roots, config=configuration)
 
     return Store(
         root=root,
@@ -322,13 +285,13 @@ def restore(token):
 
 
 def _construct_upstream_dbs_from_install_roots(
-    install_roots: List[str],
+    install_roots: List[str], *, config: spack.config.Configuration
 ) -> List[spack.database.Database]:
     accumulated_upstream_dbs: List[spack.database.Database] = []
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
-            spack.config.canonicalize_path(install_root),
+            spack.config.canonicalize_path(install_root, config=config),
             is_upstream=True,
             upstream_dbs=upstream_dbs,
         )
