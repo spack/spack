@@ -22,6 +22,7 @@ from typing import (
     Iterable,
     List,
     Mapping,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -1064,6 +1065,13 @@ def env_subdir_path(manifest_dir: Union[str, pathlib.Path]) -> str:
     return os.path.join(str(manifest_dir), env_subdir_name)
 
 
+class UserSpecId(NamedTuple):
+    """Identity of an input user spec: a root spec and the group it belongs to."""
+
+    group: str
+    spec: Spec
+
+
 class ConcretizedRootInfo:
     """Data on root specs that have been concretized"""
 
@@ -1813,15 +1821,15 @@ class Environment:
 
         to_deconcretize, user_specs = [], self._all_user_specs_with_group()
         for x in self.concretized_roots:
-            if (x.group, x.root) not in user_specs:
+            if UserSpecId(x.group, x.root) not in user_specs:
                 to_deconcretize.append(x)
         for x in to_deconcretize:
             self.deconcretize_by_user_spec(x.root, group=x.group)
 
-    def _all_user_specs_with_group(self) -> Set[Tuple[str, Spec]]:
+    def _all_user_specs_with_group(self) -> Set[UserSpecId]:
         result = set()
         for group in self.manifest.groups():
-            result.update([(group, x) for x in self.user_specs_by(group=group)])
+            result.update([UserSpecId(group, x) for x in self.user_specs_by(group=group)])
         return result
 
     def clear_concretized_specs(self) -> None:
