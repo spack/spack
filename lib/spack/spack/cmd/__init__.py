@@ -164,12 +164,9 @@ def quote_kvp(string: str) -> str:
     argument is the value. This covers the common cases of passing flags, e.g.,
     ``cflags="-O2 -g"`` on the command line.
 
-    An argument is parsed as it is if the tokenizer reads it without unexpected characters
-    and without whitespace between tokens, so ``c=gcc@14`` stays a virtual assignment,
-    ``when=@1.0`` a condition, ``deptypes=build]gcc`` closes the edge attributes the shell
-    split off, and ``x=' a b'`` keeps its quotes. Otherwise the value holds the whitespace,
-    quotes or other characters the shell quoting was needed for, or is empty.
-    """
+    There are many edge cases here, e.g. `when=@1.0` should not be quoted, cause it can be part
+    of a when condition instead of a key-value pair `when='@1.0'`. Therefore, use the parser to
+    decide if the value needs quoting."""
     match = spack.spec_parser.SPLIT_KVP.match(string)
     if not match:
         return string
