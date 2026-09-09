@@ -5895,9 +5895,10 @@ class _UnusableGlobal:
 
 
 #: The process globals a SpackContext replaces, as (module, attribute) pairs.
+#: ``spack.repo.PATH`` is missing: ``Spec`` resolves virtuals and computes package hashes
+#: through it, so a solve still reads it.
 _CONTEXT_GLOBALS = [
     (spack.config, "CONFIG"),
-    (spack.repo, "PATH"),
     (spack.caches, "MISC_CACHE"),
     (spack.store, "STORE"),
     (spack.binary_distribution, "BINARY_INDEX"),
@@ -6042,7 +6043,7 @@ def test_explicit_splice_reads_no_global(
         result = spack.solver.asp.Solver(context=context).solve([Spec("hdf5 ^zmpi")])
 
         assert result.specs
-        assert result.specs[0].satisfies(f"^mpich@{mpich_spec.version}", repo=context.repo)
+        assert result.specs[0].satisfies(f"^mpich@{mpich_spec.version}")
 
 
 def test_reuse_from_store_reads_no_global(

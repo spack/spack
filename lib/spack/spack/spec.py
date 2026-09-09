@@ -1710,11 +1710,7 @@ def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
 
 
 def _satisfying_edges(
-    lhs_node: "Spec",
-    rhs_edge: DependencySpec,
-    *,
-    resolve_virtuals: bool,
-    repo: Optional["spack.repo.RepoPath"],
+    lhs_node: "Spec", rhs_edge: DependencySpec, *, resolve_virtuals: bool
 ) -> Iterator[DependencySpec]:
     """Yield every edge in ``lhs_node`` that satisfies ``rhs_edge`` structurally, ignoring the
     target's own dependencies, in priority order: direct deps of all types, then the historical
@@ -1728,7 +1724,7 @@ def _satisfying_edges(
         for lhs_edge in edges:
             if require_direct and not lhs_edge.direct:
                 continue
-            if _satisfies_edge_attributes(lhs_edge, rhs_edge, resolve_virtuals, repo):
+            if _satisfies_edge_attributes(lhs_edge, rhs_edge, resolve_virtuals):
                 yield lhs_edge
 
     # Include the historical compiler node if available as an ad-hoc edge.
@@ -1741,7 +1737,7 @@ def _satisfying_edges(
             virtuals=("c", "cxx", "fortran"),
             direct=True,
         )
-        if _satisfies_edge_attributes(compiler_edge, rhs_edge, resolve_virtuals, repo):
+        if _satisfies_edge_attributes(compiler_edge, rhs_edge, resolve_virtuals):
             yield compiler_edge
 
     if rhs_edge.direct:
@@ -1764,7 +1760,7 @@ def _satisfying_edges(
 
         # depth 1 was yielded by the loop over direct edges above
         if lhs_edge.parent is not lhs_node and _satisfies_edge_attributes(
-            lhs_edge, rhs_edge, resolve_virtuals, repo
+            lhs_edge, rhs_edge, resolve_virtuals
         ):
             yield lhs_edge
 
@@ -1779,9 +1775,7 @@ def _satisfying_edges(
                 )
 
 
-def _satisfies_dependencies(
-    lhs: "Spec", rhs: "Spec", *, resolve_virtuals: bool, repo: Optional["spack.repo.RepoPath"]
-) -> bool:
+def _satisfies_dependencies(lhs: "Spec", rhs: "Spec", *, resolve_virtuals: bool) -> bool:
     """Whether every dependency edge of ``rhs`` is satisfied by some edge of ``lhs``."""
     # For performance, iterate the _dependencies edge map directly instead of going through
     # edges_to_dependencies.
@@ -1789,17 +1783,15 @@ def _satisfies_dependencies(
         for rhs_edge in rhs_edges:
             # Skip rhs edges whose when condition doesn't apply to the lhs node.
             if rhs_edge.when is not EMPTY_SPEC and not lhs._intersects(
-                rhs_edge.when, resolve_virtuals=resolve_virtuals, repo=repo
+                rhs_edge.when, resolve_virtuals=resolve_virtuals
             ):
                 continue
-            edges = _satisfying_edges(lhs, rhs_edge, resolve_virtuals=resolve_virtuals, repo=repo)
+            edges = _satisfying_edges(lhs, rhs_edge, resolve_virtuals=resolve_virtuals)
             if rhs_edge.spec.concrete or not rhs_edge.spec._dependencies:
                 if next(edges, None) is None:
                     return False
             elif not any(
-                _satisfies_dependencies(
-                    e.spec, rhs_edge.spec, resolve_virtuals=resolve_virtuals, repo=repo
-                )
+                _satisfies_dependencies(e.spec, rhs_edge.spec, resolve_virtuals=resolve_virtuals)
                 for e in edges
             ):
                 return False
@@ -1819,10 +1811,7 @@ def constrains_only_name_and_versions(spec: "Spec") -> bool:
 
 
 def _satisfies_edge_attributes(
-    lhs: "DependencySpec",
-    rhs: "DependencySpec",
-    resolve_virtuals: bool,
-    repo: Optional["spack.repo.RepoPath"],
+    lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtuals: bool
 ) -> bool:
     """Helper function for satisfaction tests, which checks edge attributes and the target node.
     It skips verification of the parent node."""
@@ -1830,7 +1819,7 @@ def _satisfies_edge_attributes(
     if name_mismatch and rhs.spec.name not in lhs.virtuals:
         return False
 
-    if not rhs.when._satisfies(lhs.when, resolve_virtuals=resolve_virtuals, repo=repo):
+    if not rhs.when._satisfies(lhs.when, resolve_virtuals=resolve_virtuals):
         return False
 
     # Subset semantics for virtuals
@@ -1843,7 +1832,7 @@ def _satisfies_edge_attributes(
         return False
 
     if not name_mismatch:
-        return lhs.spec._satisfies_node(rhs.spec, resolve_virtuals=resolve_virtuals, repo=repo)
+        return lhs.spec._satisfies_node(rhs.spec, resolve_virtuals=resolve_virtuals)
 
     # Right-hand side is a virtual provided by the left-hand side. Virtuals currently support only
     # names and versions, so if anything else is set on the rhs we return false, which allows
@@ -1857,7 +1846,7 @@ def _satisfies_edge_attributes(
     if not resolve_virtuals:
         return False
 
-    return lhs.spec._provides_virtual(rhs.spec, repo=repo)
+    return lhs.spec._provides_virtual(rhs.spec)
 
 
 def _same_direct_dep(lhs: DependencySpec, rhs: DependencySpec) -> bool:
@@ -1875,12 +1864,7 @@ def _same_direct_dep(lhs: DependencySpec, rhs: DependencySpec) -> bool:
     )
 
 
-def _satisfies_edge(
-    lhs: DependencySpec,
-    rhs: DependencySpec,
-    resolve_virtuals: bool,
-    repo: Optional["spack.repo.RepoPath"],
-) -> bool:
+def _satisfies_edge(lhs: DependencySpec, rhs: DependencySpec, resolve_virtuals: bool) -> bool:
     """Whether every DAG satisfying ``lhs`` satisfies ``rhs``."""
     # Only a direct dependency can satisfy a direct dependency. _satisfies_edge_attributes does
     # not compare this itself: its other caller, _satisfying_edges, filters on it externally,
@@ -1888,7 +1872,7 @@ def _satisfies_edge(
     # construction.
     if rhs.direct and not lhs.direct:
         return False
-    if not _satisfies_edge_attributes(lhs, rhs, resolve_virtuals, repo):
+    if not _satisfies_edge_attributes(lhs, rhs, resolve_virtuals):
         return False
     # A concrete or leaf rhs child needs no recursion: _satisfies_edge_attributes compared the
     # child node already. A dependency of rhs's child that lhs's child lacks has to be checked:
@@ -1896,16 +1880,11 @@ def _satisfies_edge(
     # nodes, and a single edge requiring both would exclude those DAGs.
     if rhs.spec.concrete or not rhs.spec._dependencies:
         return True
-    return _satisfies_dependencies(
-        lhs.spec, rhs.spec, resolve_virtuals=resolve_virtuals, repo=repo
-    )
+    return _satisfies_dependencies(lhs.spec, rhs.spec, resolve_virtuals=resolve_virtuals)
 
 
 def _edge_is_redundant(
-    edge: DependencySpec,
-    given: DependencySpec,
-    resolve_virtuals: bool,
-    repo: Optional["spack.repo.RepoPath"],
+    edge: DependencySpec, given: DependencySpec, resolve_virtuals: bool
 ) -> bool:
     # %foo and %%foo satisfy each other in both directions; they do not restrict the solution space
     # but only influence optimality. That means that edge redundancy cannot be based on satisfies
@@ -1915,7 +1894,7 @@ def _edge_is_redundant(
     if edge.spec.name != given.spec.name:
         # keep ^mpi@3 next to ^mpi=mpich@3: whether mpich@3 provides mpi@3 is package metadata
         resolve_virtuals = False
-    return _satisfies_edge(given, edge, resolve_virtuals, repo)
+    return _satisfies_edge(given, edge, resolve_virtuals)
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
@@ -1973,9 +1952,8 @@ class Spec:
         # Python __hash__ is handled separately from the cached spec hashes
         self._dunder_hash = None
 
-        # cache of package for this spec, and the repository it was looked up in
+        # cache of package for this spec
         self._package = None
-        self._package_repo = None
 
         # whether the spec is concrete or not; set at the end of concretization
         self._concrete = False
@@ -2303,12 +2281,7 @@ class Spec:
         self._add_or_merge_edge(candidate)
 
     def _add_or_merge_edge(
-        self,
-        candidate: DependencySpec,
-        owned: bool = True,
-        resolve_virtuals: bool = False,
-        *,
-        repo: Optional["spack.repo.RepoPath"] = None,
+        self, candidate: DependencySpec, owned: bool = True, resolve_virtuals: bool = False
     ) -> bool:
         """Add ``candidate`` as a dependency edge.
 
@@ -2350,7 +2323,7 @@ class Spec:
                     break
 
         if merged_edge is None and any(
-            _edge_is_redundant(candidate, edge, resolve_virtuals, repo)
+            _edge_is_redundant(candidate, edge, resolve_virtuals)
             for edges in self._dependencies.values()
             for edge in edges
         ):
@@ -2363,8 +2336,7 @@ class Spec:
             edge
             for edges in self._dependencies.values()
             for edge in edges
-            if edge is not merged_edge
-            and _edge_is_redundant(edge, candidate, resolve_virtuals, repo)
+            if edge is not merged_edge and _edge_is_redundant(edge, candidate, resolve_virtuals)
         ]:
             self._detach_edge(edge)
             changed = True
@@ -2425,13 +2397,8 @@ class Spec:
         assert self.concrete, "{0}: Spec.package can only be called on concrete specs".format(
             self.name
         )
-        return self._package_from(spack.repo.PATH)
-
-    def _package_from(self, repo: "spack.repo.RepoPath") -> "spack.package_base.PackageBase":
-        """Return the package instance for this concrete spec, memoized per repository."""
-        if self._package is None or self._package_repo is not repo:
-            self._package = repo.get(self)
-            self._package_repo = repo
+        if not self._package:
+            self._package = spack.repo.PATH.get(self)
         return self._package
 
     @property
@@ -3269,18 +3236,17 @@ class Spec:
                 f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
             )
 
-    def constrain(self, other, deps=True, *, repo=None) -> bool:
+    def constrain(self, other, deps=True) -> bool:
         """Constrains self with other, and returns True if self changed, False otherwise.
 
         Args:
             other: constraint to be added to self
             deps: if False, constrain only the root node, otherwise constrain dependencies as well
-            repo: repositories used to resolve virtuals. Defaults to the process-wide ones.
 
         Raises:
              spack.error.UnsatisfiableSpecError: when self cannot be constrained
         """
-        return self._constrain(other, deps=deps, resolve_virtuals=True, repo=repo)
+        return self._constrain(other, deps=deps, resolve_virtuals=True)
 
     def _constrain_symbolically(self, other, deps=True) -> bool:
         """Constrains self with other, and returns True if self changed, False otherwise.
@@ -3309,20 +3275,20 @@ class Spec:
             >>> s
             hdf5 ^mpi@4 ^mpi=openmpi
         """
-        return self._constrain(other, deps=deps, resolve_virtuals=False, repo=None)
+        return self._constrain(other, deps=deps, resolve_virtuals=False)
 
-    def _constrain(self, other, deps=True, *, resolve_virtuals: bool, repo):
+    def _constrain(self, other, deps=True, *, resolve_virtuals: bool):
         # If we are trying to constrain a concrete spec, either the spec
         # already satisfies the constraint (and the method returns False)
         # or it raises an exception
         if self.concrete:
-            if self._satisfies(other, resolve_virtuals=resolve_virtuals, repo=repo):
+            if self._satisfies(other, resolve_virtuals=resolve_virtuals):
                 return False
             else:
                 raise spack.error.UnsatisfiableSpecError(self, other, "constrain a concrete spec")
 
         other = self._autospec(other)
-        if other.concrete and other._satisfies(self, resolve_virtuals=resolve_virtuals, repo=repo):
+        if other.concrete and other._satisfies(self, resolve_virtuals=resolve_virtuals):
             # _dup makes self a detached copy without in-edges; self stays a node in its
             # dependents' edge maps, so keep them
             dependents = self._dependents
@@ -3396,15 +3362,11 @@ class Spec:
             changed = True
 
         if deps:
-            changed |= self._constrain_dependencies(
-                other, resolve_virtuals=resolve_virtuals, repo=repo
-            )
+            changed |= self._constrain_dependencies(other, resolve_virtuals=resolve_virtuals)
 
         return changed
 
-    def _constrain_dependencies(
-        self, other: "Spec", resolve_virtuals: bool = True, *, repo
-    ) -> bool:
+    def _constrain_dependencies(self, other: "Spec", resolve_virtuals: bool = True) -> bool:
         """Apply constraints of other spec's dependencies to this spec."""
         if not other._dependencies:
             return False
@@ -3412,7 +3374,7 @@ class Spec:
         # TODO: might want more detail than this, e.g. specific deps
         # in violation. if this becomes a priority get rid of this
         # check and be more specific about what's wrong.
-        if not other._intersects_dependencies(self, resolve_virtuals=resolve_virtuals, repo=repo):
+        if not other._intersects_dependencies(self, resolve_virtuals=resolve_virtuals):
             raise UnsatisfiableDependencySpecError(other, self)
 
         changed = False
@@ -3427,7 +3389,7 @@ class Spec:
                 when=other_edge.when,  # no need to copy; when conditions are immutable
             )
             changed |= self._add_or_merge_edge(
-                candidate, owned=False, resolve_virtuals=resolve_virtuals, repo=repo
+                candidate, owned=False, resolve_virtuals=resolve_virtuals
             )
         return changed
 
@@ -3447,7 +3409,7 @@ class Spec:
             return spec_like
         return Spec(spec_like)
 
-    def intersects(self, other: Union[str, "Spec"], deps: bool = True, *, repo=None) -> bool:
+    def intersects(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if there exists at least one concrete spec that matches both
         self and other, otherwise False.
 
@@ -3457,12 +3419,11 @@ class Spec:
         Args:
             other: spec to be checked for compatibility
             deps: if True check compatibility of dependency nodes too, if False only check root
-            repo: repositories used to resolve virtuals. Defaults to the process-wide ones.
         """
-        return self._intersects(other=other, deps=deps, resolve_virtuals=True, repo=repo)
+        return self._intersects(other=other, deps=deps, resolve_virtuals=True)
 
     def _intersects(
-        self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True, *, repo
+        self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True
     ) -> bool:
         if other is EMPTY_SPEC:
             return True
@@ -3472,10 +3433,10 @@ class Spec:
             return self.dag_hash() == other.dag_hash()
 
         elif self.concrete:
-            return self._satisfies(other, resolve_virtuals=resolve_virtuals, repo=repo)
+            return self._satisfies(other, resolve_virtuals=resolve_virtuals)
 
         elif other.concrete:
-            return other._satisfies(self, resolve_virtuals=resolve_virtuals, repo=repo)
+            return other._satisfies(self, resolve_virtuals=resolve_virtuals)
 
         # From here we know both self and other are not concrete
         self_hash = self.abstract_hash
@@ -3493,14 +3454,13 @@ class Spec:
             if not resolve_virtuals:
                 return False
 
-            repo = spack.repo.repo_or_default(repo)
-            self_virtual = repo.is_virtual(self.name)
-            other_virtual = repo.is_virtual(other.name)
+            self_virtual = spack.repo.PATH.is_virtual(self.name)
+            other_virtual = spack.repo.PATH.is_virtual(other.name)
             if self_virtual and other_virtual:
                 # Two virtual specs intersect only if there are providers for both
-                lhs = repo.providers_for(str(self))
-                rhs = repo.providers_for(str(other))
-                intersection = [s for s in lhs if any(s.intersects(z, repo=repo) for z in rhs)]
+                lhs = spack.repo.PATH.providers_for(str(self))
+                rhs = spack.repo.PATH.providers_for(str(other))
+                intersection = [s for s in lhs if any(s.intersects(z) for z in rhs)]
                 return bool(intersection)
 
             # A provider can satisfy a virtual dependency.
@@ -3508,7 +3468,7 @@ class Spec:
                 virtual_spec, non_virtual_spec = (self, other) if self_virtual else (other, self)
                 try:
                     # Here we might get an abstract spec
-                    pkg_cls = repo.get_pkg_class(non_virtual_spec.fullname)
+                    pkg_cls = spack.repo.PATH.get_pkg_class(non_virtual_spec.fullname)
                     pkg = pkg_cls(non_virtual_spec)
                 except spack.repo.UnknownEntityError:
                     # If we can't get package info on this spec, don't treat
@@ -3517,8 +3477,8 @@ class Spec:
 
                 if pkg.provides(virtual_spec.name):
                     for when_spec, provided in pkg.provided.items():
-                        if non_virtual_spec.intersects(when_spec, deps=False, repo=repo):
-                            if any(vpkg.intersects(virtual_spec, repo=repo) for vpkg in provided):
+                        if non_virtual_spec.intersects(when_spec, deps=False):
+                            if any(vpkg.intersects(virtual_spec) for vpkg in provided):
                                 return True
             return False
 
@@ -3546,13 +3506,11 @@ class Spec:
 
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
-            return self._intersects_dependencies(
-                other, resolve_virtuals=resolve_virtuals, repo=repo
-            )
+            return self._intersects_dependencies(other, resolve_virtuals=resolve_virtuals)
 
         return True
 
-    def _intersects_dependencies(self, other, resolve_virtuals: bool = True, *, repo):
+    def _intersects_dependencies(self, other, resolve_virtuals: bool = True):
         if not other._dependencies or not self._dependencies:
             # one spec *could* eventually satisfy the other
             return True
@@ -3573,7 +3531,7 @@ class Spec:
             concrete = next((e.spec for e in edges if e.spec.concrete), None)
             if concrete is not None:
                 if all(
-                    concrete._satisfies(e.spec, resolve_virtuals=resolve_virtuals, repo=repo)
+                    concrete._satisfies(e.spec, resolve_virtuals=resolve_virtuals)
                     for e in edges
                     if e.spec is not concrete
                 ):
@@ -3582,7 +3540,7 @@ class Spec:
             merged = edges[0].spec.copy(deps=True)
             try:
                 for edge in edges[1:]:
-                    merged._constrain(edge.spec, resolve_virtuals=resolve_virtuals, repo=repo)
+                    merged._constrain(edge.spec, resolve_virtuals=resolve_virtuals)
             except spack.error.SpecError:
                 return False
 
@@ -3590,12 +3548,11 @@ class Spec:
             return True
 
         # For virtual dependencies, we need to dig a little deeper.
-        repo = spack.repo.repo_or_default(repo)
         self_index = spack.provider_index.ProviderIndex(
-            repository=repo, specs=self.traverse(), restrict=True
+            repository=spack.repo.PATH, specs=self.traverse(), restrict=True
         )
         other_index = spack.provider_index.ProviderIndex(
-            repository=repo, specs=other.traverse(), restrict=True
+            repository=spack.repo.PATH, specs=other.traverse(), restrict=True
         )
 
         # These two loops handle cases where there is an overly restrictive
@@ -3603,7 +3560,7 @@ class Spec:
         # compatible with mpich2)
         for spec in self.traverse():
             if (
-                repo.is_virtual(spec.name)
+                spack.repo.PATH.is_virtual(spec.name)
                 and spec.name in other_index
                 and not other_index.providers_for(spec)
             ):
@@ -3611,7 +3568,7 @@ class Spec:
 
         for spec in other.traverse():
             if (
-                repo.is_virtual(spec.name)
+                spack.repo.PATH.is_virtual(spec.name)
                 and spec.name in self_index
                 and not self_index.providers_for(spec)
             ):
@@ -3619,17 +3576,16 @@ class Spec:
 
         return True
 
-    def satisfies(self, other: Union[str, "Spec"], deps: bool = True, *, repo=None) -> bool:
+    def satisfies(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
             other: spec to be satisfied
             deps: if True, descend to dependencies, otherwise only check root node
-            repo: repositories used to resolve virtuals. Defaults to the process-wide ones.
         """
-        return self._satisfies(other=other, deps=deps, resolve_virtuals=True, repo=repo)
+        return self._satisfies(other=other, deps=deps, resolve_virtuals=True)
 
-    def _provides_virtual(self, virtual_spec: "Spec", *, repo) -> bool:
+    def _provides_virtual(self, virtual_spec: "Spec") -> bool:
         """Return True if this spec provides the given virtual spec.
 
         Args:
@@ -3639,15 +3595,14 @@ class Spec:
             return False
 
         # Get the package instance
-        repo = spack.repo.repo_or_default(repo)
         if self.concrete:
             try:
-                pkg = self._package_from(repo)
+                pkg = self.package
             except spack.repo.UnknownPackageError:
                 return False
         else:
             try:
-                pkg_cls = repo.get_pkg_class(self.fullname)
+                pkg_cls = spack.repo.PATH.get_pkg_class(self.fullname)
                 pkg = pkg_cls(self)
             except spack.repo.UnknownEntityError:
                 # If we can't get package info on this spec, don't treat
@@ -3657,7 +3612,7 @@ class Spec:
         for when_spec, provided in pkg.provided.items():
             # Don't use satisfies for virtuals, because an abstract vs. abstract spec may use the
             # repo index
-            if self.satisfies(when_spec, deps=False, repo=repo) and any(
+            if self.satisfies(when_spec, deps=False) and any(
                 provided_virtual.name == virtual_spec.name
                 and provided_virtual.versions.intersects(virtual_spec.versions)
                 for provided_virtual in provided
@@ -3667,7 +3622,7 @@ class Spec:
         return False
 
     def _satisfies(
-        self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True, *, repo
+        self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True
     ) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
@@ -3682,16 +3637,16 @@ class Spec:
 
         other = self._autospec(other)
 
-        if not self._satisfies_node(other, resolve_virtuals=resolve_virtuals, repo=repo):
+        if not self._satisfies_node(other, resolve_virtuals=resolve_virtuals):
             return False
 
         # If there are no dependencies on the rhs, or we don't recurse, they are satisfied.
         if not deps or not other._dependencies:
             return True
 
-        return _satisfies_dependencies(self, other, resolve_virtuals=resolve_virtuals, repo=repo)
+        return _satisfies_dependencies(self, other, resolve_virtuals=resolve_virtuals)
 
-    def _satisfies_node(self, other: "Spec", resolve_virtuals: bool, *, repo) -> bool:
+    def _satisfies_node(self, other: "Spec", resolve_virtuals: bool) -> bool:
         """Compares self and other without looking at dependencies"""
         if other.concrete:
             # The left-hand side must be the same singleton with identical hash. Notice that
@@ -3706,7 +3661,7 @@ class Spec:
             # Name mismatch can still be satisfiable if lhs provides the virtual mentioned by rhs.
             if not resolve_virtuals:
                 return False
-            return self._provides_virtual(other, repo=repo)
+            return self._provides_virtual(other)
 
         # If the right-hand side has an abstract hash, make sure it's a prefix of the
         # left-hand side's (abstract) hash.
@@ -3876,7 +3831,6 @@ class Spec:
                 If deptype, or depflag, copy matching types.
         """
         self._package = None
-        self._package_repo = None
 
         # Local node attributes get copied first.
         self.name = other.name
@@ -4044,20 +3998,16 @@ class Spec:
         entire DAG -- we limit them to the root.
 
         """
-        return self._contains(spec, repo=None)
-
-    def _contains(self, spec, *, repo) -> bool:
-        """``__contains__`` with the repositories to resolve virtuals against."""
         spec = self._autospec(spec)
 
         # if anonymous or same name, we only have to look at the root
         if not spec.name or spec.name == self.name:
-            return self.satisfies(spec, repo=repo)
+            return self.satisfies(spec)
         try:
             dep = self[spec.name]
         except KeyError:
             return False
-        return dep.satisfies(spec, repo=repo)
+        return dep.satisfies(spec)
 
     def eq_dag(self, other, deptypes=True, vs=None, vo=None):
         """True if the full dependency DAGs of specs are equal."""
@@ -4914,14 +4864,11 @@ class Spec:
                         _add_edge_to_map(new_dependencies, edge.spec.name, edge)
             spec._dependencies = new_dependencies
 
-    def _virtuals_provided(self, root, *, repo=None):
+    def _virtuals_provided(self, root):
         """Return set of virtuals provided by self in the context of root"""
         if root is self:
             # Could be using any virtual the package can provide
-            return {
-                v.name
-                for v in self._package_from(spack.repo.repo_or_default(repo)).virtuals_provided
-            }
+            return {v.name for v in self.package.virtuals_provided}
 
         hashes = [s.dag_hash() for s in root.traverse()]
         in_edges = set(
@@ -4929,7 +4876,7 @@ class Spec:
         )
         return set().union(*[edge.virtuals for edge in in_edges])
 
-    def _splice_match(self, other, self_root, other_root, *, repo=None):
+    def _splice_match(self, other, self_root, other_root):
         """Return True if other is a match for self in a splice of other_root into self_root
 
         Other is a splice match for self if it shares a name, or if self is a virtual provider
@@ -4944,9 +4891,8 @@ class Spec:
             return True
 
         return bool(
-            bool(self._virtuals_provided(self_root, repo=repo))
-            and self._virtuals_provided(self_root, repo=repo)
-            <= other._virtuals_provided(other_root, repo=repo)
+            bool(self._virtuals_provided(self_root))
+            and self._virtuals_provided(self_root) <= other._virtuals_provided(other_root)
         )
 
     def _splice_detach_and_add_dependents(self, replacement, context):
@@ -4982,7 +4928,7 @@ class Spec:
             self._dependents[edge.parent.name].remove(edge)
             edge.parent._add_dependency(replacement, depflag=edge.depflag, virtuals=edge.virtuals)
 
-    def _splice_helper(self, replacement, *, repo=None):
+    def _splice_helper(self, replacement):
         """Main loop of a transitive splice.
 
         The while loop around a traversal of self ensures that changes to self from previous
@@ -5008,7 +4954,7 @@ class Spec:
         replacements_by_name = collections.defaultdict(list)
         for node in replacement.traverse():
             replacements_by_name[node.name].append(node)
-            virtuals = node._virtuals_provided(root=replacement, repo=repo)
+            virtuals = node._virtuals_provided(root=replacement)
             for virtual in virtuals:
                 replacements_by_name[virtual].append(node)
 
@@ -5028,13 +4974,11 @@ class Spec:
                 if not analogs:
                     # If we have to check for matching virtuals, then we need to check that it
                     # matches all virtuals. Use `_splice_match` to validate possible matches
-                    for virtual in node._virtuals_provided(root=self, repo=repo):
+                    for virtual in node._virtuals_provided(root=self):
                         analogs += [
                             r
                             for r in replacements_by_name[virtual]
-                            if node._splice_match(
-                                r, self_root=self, other_root=replacement, repo=repo
-                            )
+                            if node._splice_match(r, self_root=self, other_root=replacement)
                         ]
 
                     # No match, keep iterating over self
@@ -5053,7 +4997,7 @@ class Spec:
                 changed = True
                 break
 
-    def splice(self, other: "Spec", transitive: bool = True, *, repo=None) -> "Spec":
+    def splice(self, other: "Spec", transitive: bool = True) -> "Spec":
         """Returns a new, spliced concrete :class:`Spec` with the ``other`` dependency and,
         optionally, its dependencies.
 
@@ -5101,11 +5045,11 @@ class Spec:
         assert self.concrete
         assert other.concrete
 
-        if self._splice_match(other, self_root=self, other_root=other, repo=repo):
+        if self._splice_match(other, self_root=self, other_root=other):
             return other.copy()
 
         if not any(
-            node._splice_match(other, self_root=self, other_root=other, repo=repo)
+            node._splice_match(other, self_root=self, other_root=other)
             for node in self.traverse(root=False, deptype=dt.LINK | dt.RUN)
         ):
             other_str = other.format("{name}/{hash:7}")
@@ -5142,17 +5086,17 @@ class Spec:
 
             # Transitively splice any relevant nodes from new into base
             # This handles all shared dependencies between self and other
-            spec._splice_helper(replacement, repo=repo)
+            spec._splice_helper(replacement)
         else:
             # Do the same thing as the transitive splice, but reversed
             node_pairs = make_node_pairs(other, replacement)
             mask_build_deps(replacement)
-            replacement._splice_helper(spec, repo=repo)
+            replacement._splice_helper(spec)
 
             # Intransitively splice replacement into spec
             # This is very simple now that all shared dependencies have been handled
             for node in spec.traverse(order="topo", deptype=dt.LINK | dt.RUN):
-                if node._splice_match(other, self_root=spec, other_root=other, repo=repo):
+                if node._splice_match(other, self_root=spec, other_root=other):
                     node._splice_detach_and_add_dependents(replacement, context=spec)
 
         # For nodes that were spliced, modify the build spec to ensure build deps are preserved
@@ -5272,7 +5216,6 @@ class Spec:
         state = self.__dict__.copy()
         # The package is lazily loaded upon demand.
         state.pop("_package", None)
-        state.pop("_package_repo", None)
         # As with to_dict, do not include dependents. This avoids serializing more than intended.
         state.pop("_dependents", None)
 
@@ -5297,7 +5240,6 @@ class Spec:
         compiler_flags_data = state.pop("_compiler_flags_data", None)
         self.__dict__.update(state)
         self._package = None
-        self._package_repo = None
 
         # Reconstruct variants and compiler_flags
         self.variants = VariantMap()

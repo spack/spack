@@ -3352,14 +3352,14 @@ def execute_explicit_splices(specs: SpecDict, *, context: SpackContext) -> SpecD
     for key, spec in specs.items():
         current_spec = spec
         for target, replacement, transitive in splice_triples:
-            if current_spec._contains(target, repo=context.repo):
+            if target in current_spec:
                 # matches root or non-root
                 # e.g. mvapich2%gcc
 
                 # The first iteration, we need to replace the abstract hash
                 if not replacement.concrete:
                     spack.hash_lookup.replace_hash(replacement, context=context)
-                current_spec = current_spec.splice(replacement, transitive, repo=context.repo)
+                current_spec = current_spec.splice(replacement, transitive)
         new_key = NodeId(id=key.id, pkg=current_spec.name)
         new_specs[new_key] = current_spec
 

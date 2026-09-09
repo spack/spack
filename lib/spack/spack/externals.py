@@ -138,7 +138,7 @@ def complete_variants_and_architecture(node: spack.spec.Spec, repo: spack.repo.R
         items = list(variants_dict.items())  # copy b/c loop modifies dict
 
         for when, variants_by_name in items:
-            if not node.satisfies(when, repo=repo):
+            if not node.satisfies(when):
                 continue
             variants_dict.pop(when)
             for name, vdef in variants_by_name.items():
@@ -311,7 +311,7 @@ class ExternalSpecsParser:
                     # Infer the deptype if only '%' was used in the spec
                     inferred_virtuals = []
                     for name, current_flag in deptypes_by_package.items():
-                        if not dependency_node.intersects(name, repo=self.repo):
+                        if not dependency_node.intersects(name):
                             continue
                         depflag |= current_flag
                         if self.repo.is_virtual(name):
@@ -451,7 +451,7 @@ class ExternalSpecsParser:
         """Returns the external specs matching a query spec."""
         result = []
         for node in self.nodes:
-            if node.satisfies(query, repo=self.repo):
+            if node.satisfies(query):
                 result.append(node)
         return result
 

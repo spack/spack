@@ -261,10 +261,10 @@ class Result:
                 node = min_dupe_node(pkg=providers[0])
             candidate = answer.get(node)
 
-            if candidate and candidate.satisfies(input_spec, repo=self.repo):
+            if candidate and candidate.satisfies(input_spec):
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
-            elif candidate and candidate.build_spec.satisfies(input_spec, repo=self.repo):
+            elif candidate and candidate.build_spec.satisfies(input_spec):
                 tty.warn(
                     "explicit splice configuration has caused the concretized spec"
                     f" {candidate} not to satisfy the input spec {input_spec}"

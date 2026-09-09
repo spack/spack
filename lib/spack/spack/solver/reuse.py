@@ -26,12 +26,10 @@ if typing.TYPE_CHECKING:
     import spack.environment
 
 
-def spec_filter_from_store(store, *, is_reusable, repo, include=None, exclude=None) -> SpecFilter:
+def spec_filter_from_store(store, *, is_reusable, include=None, exclude=None) -> SpecFilter:
     """Constructs a filter that takes the specs from the store passed as argument."""
     factory = functools.partial(_specs_from_store, store=store)
-    return SpecFilter(
-        factory=factory, is_usable=is_reusable, include=include, exclude=exclude, repo=repo
-    )
+    return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
 
 def spec_filter_from_buildcache(
@@ -41,29 +39,19 @@ def spec_filter_from_buildcache(
     factory = functools.partial(
         _specs_from_mirror, binary_index=context.binary_index, config=context.config
     )
-    return SpecFilter(
-        factory=factory, is_usable=is_reusable, include=include, exclude=exclude, repo=context.repo
-    )
+    return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
 
-def spec_filter_from_environment(
-    *, is_reusable, env, repo, include=None, exclude=None
-) -> SpecFilter:
+def spec_filter_from_environment(*, is_reusable, env, include=None, exclude=None) -> SpecFilter:
     factory = functools.partial(_specs_from_environment, env=env)
-    return SpecFilter(
-        factory=factory, is_usable=is_reusable, include=include, exclude=exclude, repo=repo
-    )
+    return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
 
 def spec_filter_from_packages_yaml(
-    *, external_parser: ExternalSpecsParser, is_reusable, repo, include=None, exclude=None
+    *, external_parser: ExternalSpecsParser, is_reusable, include=None, exclude=None
 ) -> SpecFilter:
     return SpecFilter(
-        external_parser.all_specs,
-        is_usable=is_reusable,
-        include=include,
-        exclude=exclude,
-        repo=repo,
+        external_parser.all_specs, is_usable=is_reusable, include=include, exclude=exclude
     )
 
 
@@ -149,7 +137,6 @@ def reusable_external_specs(context: SpackContext) -> List[spack.spec.Spec]:
         is_reusable=functools.partial(
             _is_reusable, packages_with_externals=packages_with_externals, local=True, repo=repo
         ),
-        repo=repo,
     )
     return spec_filter.selected_specs()
 
@@ -232,7 +219,7 @@ class ReusableSpecsSelector:
         if not isinstance(reuse_yaml, Mapping):
             self.reuse_sources.append(
                 spec_filter_from_packages_yaml(
-                    external_parser=external_parser, is_reusable=local_is_reusable, repo=repo
+                    external_parser=external_parser, is_reusable=local_is_reusable
                 )
             )
             if reuse_yaml is False:
@@ -243,7 +230,7 @@ class ReusableSpecsSelector:
                 self.reuse_strategy = ReuseStrategy.DEPENDENCIES
             self.reuse_sources.extend(
                 [
-                    spec_filter_from_store(store, is_reusable=local_is_reusable, repo=repo),
+                    spec_filter_from_store(store, is_reusable=local_is_reusable),
                     spec_filter_from_buildcache(context=context, is_reusable=mirror_is_reusable),
                 ]
             )
@@ -272,17 +259,12 @@ class ReusableSpecsSelector:
                                 include=include,
                                 exclude=exclude,
                                 env=spack.environment.environment_from_name_or_dir(env_dir),
-                                repo=repo,
                             )
                         )
                 elif source["type"] == "local":
                     self.reuse_sources.append(
                         spec_filter_from_store(
-                            store,
-                            is_reusable=local_is_reusable,
-                            include=include,
-                            exclude=exclude,
-                            repo=repo,
+                            store, is_reusable=local_is_reusable, include=include, exclude=exclude
                         )
                     )
                 elif source["type"] == "buildcache":
@@ -305,7 +287,6 @@ class ReusableSpecsSelector:
                             is_reusable=local_is_reusable,
                             include=include,
                             exclude=exclude,
-                            repo=repo,
                         )
                     )
 
@@ -313,7 +294,7 @@ class ReusableSpecsSelector:
             if not has_external_source:
                 self.reuse_sources.append(
                     spec_filter_from_packages_yaml(
-                        external_parser=external_parser, is_reusable=local_is_reusable, repo=repo
+                        external_parser=external_parser, is_reusable=local_is_reusable
                     )
                 )
 

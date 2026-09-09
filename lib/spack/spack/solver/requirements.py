@@ -390,7 +390,7 @@ class RequirementParser:
         # package rules, so e.g. variants must exist etc. Otherwise, they are rejected.
         try:
             s = spack.spec.Spec(pkg_name)
-            s.constrain(constraint, repo=self.repo)
+            s.constrain(constraint)
             s.validate_or_raise(repo=self.repo)
         except spack.error.SpackError as e:
             tty.debug(

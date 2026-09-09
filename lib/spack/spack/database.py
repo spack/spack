@@ -1689,7 +1689,7 @@ class Database:
             and deferred
             and spack.repo.repo_or_default(repo).is_virtual(query_spec.name)
         ):
-            results = [spec for spec in deferred if spec.satisfies(query_spec, repo=repo)]
+            results = [spec for spec in deferred if spec.satisfies(query_spec)]
 
         return results
 
