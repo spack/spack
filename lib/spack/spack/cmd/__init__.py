@@ -155,19 +155,30 @@ def get_command(cmd_name):
 
 
 def quote_kvp(string: str) -> str:
-    """For strings like ``name=value`` or ``name==value``, quote and escape the value if needed.
+    """For strings like ``name=value`` or ``name==value``, quote the value if needed.
 
     This is a compromise to respect quoting of key-value pairs on the CLI. The shell
     strips quotes from quoted arguments, so we cannot know *exactly* how CLI arguments
-    were quoted. To compensate, we re-add quotes around anything staritng with ``name=``
-    or ``name==``, and we assume the rest of the argument is the value. This covers the
-    common cases of passign flags, e.g., ``cflags="-O2 -g"`` on the command line.
-    """
+    were quoted. To compensate, we re-add quotes around anything starting with ``name=``
+    or ``name==`` whose value cannot be parsed as it is, and we assume the rest of the
+    argument is the value. This covers the common cases of passing flags, e.g.,
+    ``cflags="-O2 -g"`` on the command line.
+
+    There are many edge cases here, e.g. `when=@1.0` should not be quoted, cause it can be part
+    of a when condition instead of a key-value pair `when='@1.0'`. Therefore, use the parser to
+    decide if the value needs quoting."""
     match = spack.spec_parser.SPLIT_KVP.match(string)
     if not match:
         return string
 
     key, delim, value = match.groups()
+    try:
+        tokens = spack.spec_parser.SpecParser(string).tokens()
+    except spack.error.SpecSyntaxError:
+        pass
+    else:
+        if "".join(text for _, text, _ in tokens) == string:
+            return string
     return f"{key}{delim}{spack.spec_parser.quote_if_needed(value)}"
 
 
