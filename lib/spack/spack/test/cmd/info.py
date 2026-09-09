@@ -158,3 +158,14 @@ def test_info_output(by_name, args, in_output, not_in_output, monkeypatch):
         assert re.search(io, output)
     for nio in not_in_output:
         assert not re.search(nio, output)
+
+
+def test_info_lists_directive_deprecated_versions():
+    """Versions deprecated via the deprecated() directive are shown under 'Deprecated versions'."""
+    output = info("deprecated-with-reason")
+    safe_section, sep, deprecated_section = output.partition("Deprecated versions:")
+    assert sep, "expected a 'Deprecated versions:' section"
+    # Both 1.0 and 2.0 are deprecated via the directive only (no deprecated=True on the version).
+    assert "None" in safe_section.split("Safe versions:")[1]
+    assert "1.0" in deprecated_section
+    assert "2.0" in deprecated_section

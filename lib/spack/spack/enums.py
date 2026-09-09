@@ -4,6 +4,7 @@
 """Enumerations used throughout Spack"""
 
 import enum
+from typing import NamedTuple, Optional, Tuple
 
 
 class InstallRecordStatus(enum.Flag):
@@ -63,3 +64,43 @@ class PartStyle(enum.Enum):
     HIGHLIGHT = "highlight"
     DIM = "dim"
     HIDDEN = "hidden"
+
+
+class DeprecationSeverity(enum.IntEnum):
+    NONE = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    CRITICAL = 4
+
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            try:
+                return cls[value.upper()]
+            except KeyError:
+                pass
+        raise ValueError(f"{value!r} is not a valid DeprecationSeverity")
+
+
+class DeprecationReason(enum.Enum):
+    VULN = "vuln"
+    RENAME = "rename"
+    RETIRED = "retired"
+    UNSPECIFIED = "unspecified"
+
+
+# Label attached to the deprecations that come from version(..., deprecated=True), so that they
+# can be selected apart from the ones a recipe declares with reason="unspecified"
+LEGACY_DEPRECATION_LABEL = "version_deprecated"
+
+
+class Deprecation(NamedTuple):
+    """A single deprecated() directive: why a constraint is deprecated, how severe that is, and
+    the advisory labels it refers to.
+    """
+
+    reason: DeprecationReason
+    severity: DeprecationSeverity
+    labels: Tuple[str, ...] = ()
+    msg: Optional[str] = None
