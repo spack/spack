@@ -1486,6 +1486,7 @@ class GitIncludePaths(OptionalInclude):
         self.branch = entry.get("branch", "")
         self.commit = entry.get("commit", "")
         self.tag = entry.get("tag", "")
+        self.persist = entry.get("persist", False)
         self._paths = [substitute_path_variables(path) for path in entry.get("paths", [])]
         self.destination = None
         self.remote = True
@@ -1522,6 +1523,11 @@ class GitIncludePaths(OptionalInclude):
         Raises:
             ConfigError: unable to create or clone the git repo
         """
+
+        if self.persist:
+            self.destination = self.base_directory(self.git, parent_scope)
+            tty.debug(f"Reusing existing repo at {self.destination}")
+
         if self.fetched():
             tty.debug(f"Repository ({self.git}) already cloned to {self.destination}")
             return self.destination

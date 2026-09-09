@@ -94,6 +94,13 @@ properties: Dict[str, Any] = {
                             "configuration files are located",
                         },
                         "name": {"type": "string"},
+                        "persist": {
+                            "type": "boolean",
+                            "description": "If true, don't attempt to re-clone the repository "
+                            "upon environment activation if it already exists; if false "
+                            "(default), repository will be cloned again each time the "
+                            "environment is activated"
+                        },
                         "when": {
                             "type": "string",
                             "description": "Include this config only when the condition (as "
