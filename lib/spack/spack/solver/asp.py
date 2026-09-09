@@ -674,6 +674,31 @@ def _make_cache_key(asp_problem: str, control_file_paths: List[str]) -> str:
     return "\n".join(components)
 
 
+def _excluded_by_provider_requirement(name: str, parser: RequirementParser) -> str:
+    """Explain a rejected `^dep` that a virtual requirement rules out.
+
+    Asking for `^jdk` where packages.yaml says `java: require: openjdk` leaves jdk out of the
+    possible dependencies entirely, and the bare "not a possible dependency" says nothing about
+    the requirement that put it there.
+    """
+    try:
+        pkg_cls = spack.repo.PATH.get_pkg_class(name)
+    except spack.repo.UnknownPackageError:
+        return ""
+    for virtual in pkg_cls.provided_virtual_names():
+        for rule in parser.rules_from_virtual(virtual):
+            if rule.origin != RequirementOrigin.REQUIRE_YAML or rule.condition != EMPTY_SPEC:
+                continue
+            required = {s.name for s in rule.requirements if s.name}
+            if required and name not in required:
+                text = "'" + "' or '".join(str(s) for s in rule.requirements) + "'"
+                return (
+                    f": the '{virtual}' virtual it provides is required to be {text}, "
+                    f"which '{name}' is not"
+                )
+    return ""
+
+
 class PyclingoDriver:
     def __init__(self, conc_cache: Optional[ConcretizationCache] = None) -> None:
         """Driver for the Python clingo interface.
@@ -2238,9 +2263,11 @@ class SpackSolverSetup:
                 # name what it was asked of, not just what was asked for
                 parent = edge.parent.name if edge.parent is not None else None
                 of = f"'{parent}'" if parent else "any root spec"
-                raise InvalidDependencyError(
-                    f"'{edge.spec.name}' is not a possible dependency of {of}"
+                message = f"'{edge.spec.name}' is not a possible dependency of {of}"
+                because = _excluded_by_provider_requirement(
+                    edge.spec.name, self.requirement_parser
                 )
+                raise InvalidDependencyError(f"{message}{because}")
 
     def input_spec_version_check(self, specs, allow_deprecated: bool) -> None:
         """Raise an error early if no versions available in the solve can satisfy the inputs."""
