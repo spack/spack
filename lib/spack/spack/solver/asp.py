@@ -1801,6 +1801,19 @@ class SpackSolverSetup:
             if not data.get("buildable", True):
                 self.gen.h2(f"External package: {pkg_name}")
                 self.gen.fact(fn.buildable_false(pkg_name))
+                # Record what is on offer, so that a failure can name the external that was
+                # rejected instead of only "no externals satisfy the request": the spec as
+                # written, and its versions as written for the version-mismatch message.
+                for entry in data.get("externals", []):
+                    try:
+                        versions = spack.spec.Spec(entry["spec"]).versions
+                    except Exception:  # noqa: BLE001
+                        continue
+                    # packages_with_externals is deepcopy_as_builtin(..., line_info=True), so
+                    # each entry carries its YAML mark as line_info
+                    location = getattr(entry, "line_info", "")
+                    as_written = f"'{entry['spec']}'" + (f" from {location}" if location else "")
+                    self.gen.pkg_fact(pkg_name, fn.external_declared(as_written, str(versions)))
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
