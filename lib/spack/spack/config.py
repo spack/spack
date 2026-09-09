@@ -1978,8 +1978,17 @@ def _migrate_user_config_programmatic() -> bool:
     return True
 
 
-def _move_directory_contents_with_lock(src_dir: str, dst_dir: str, resource_name: str) -> bool:
-    """Move contents with destination locking to prevent concurrent migrations.
+def _migration_backup_path() -> str:
+    """Path to migration backup directory."""
+    return os.path.join(spack.paths.prefix, ".migration-backup")
+
+
+def _copy_directory_contents_with_lock(src_dir: str, dst_dir: str, resource_name: str) -> bool:
+    """Copy contents with destination locking and automatic backup.
+
+    Copies (does not move) directory contents from src to dst. Always creates
+    a backup in $spack/.migration-backup before copying to destination. This allows
+    `spack migrate undo` to restore the original state.
 
     Args:
         src_dir: Source directory
@@ -1987,7 +1996,7 @@ def _move_directory_contents_with_lock(src_dir: str, dst_dir: str, resource_name
         resource_name: Name of resource for logging (e.g., "licenses", "environments")
 
     Returns:
-        True if move was successful, False if skipped due to collision
+        True if copy was successful, False if skipped due to collision
     """
     # Lock the destination parent directory to prevent concurrent migrations
     dst_parent = os.path.dirname(dst_dir)
@@ -1998,25 +2007,34 @@ def _move_directory_contents_with_lock(src_dir: str, dst_dir: str, resource_name
     lock.acquire_write()
     try:
         tty.debug(f"Acquired migration lock for {dst_dir}")
-        return _move_directory_contents(src_dir, dst_dir, resource_name)
+        return _copy_directory_contents(src_dir, dst_dir, resource_name)
     finally:
         lock.release_write()
         tty.debug(f"Released migration lock for {dst_dir}")
 
 
-def _move_directory_contents(src_dir: str, dst_dir: str, resource_name: str) -> bool:
-    """Move contents of src_dir to dst_dir, checking for collisions.
+def _copy_directory_contents(
+    src_dir: str, dst_dir: str, resource_name: str, backup_dir: Optional[str] = None
+) -> bool:
+    """Copy contents of src_dir to dst_dir, checking for collisions.
+
+    IMPORTANT: This COPIES, not moves. Source files remain in place. This allows
+    `spack migrate undo` to restore the Spack instance to pre-migration state
+    without touching shared $HOME directories (which other Spack instances may use).
+
+    Always creates a backup before copying to destination.
 
     Args:
         src_dir: Source directory
         dst_dir: Destination directory
         resource_name: Name of resource for logging (e.g., "licenses", "environments")
+        backup_dir: Backup root directory (default: $spack/.migration-backup, exposed for testing)
 
     Returns:
-        True if move was successful, False if skipped due to collision
+        True if copy was successful, False if skipped due to collision
     """
     if not os.path.exists(src_dir):
-        return True  # Nothing to move
+        return True  # Nothing to copy
 
     try:
         src_entries = set(os.listdir(src_dir))
@@ -2025,32 +2043,52 @@ def _move_directory_contents(src_dir: str, dst_dir: str, resource_name: str) -> 
         return False
 
     if not src_entries:
-        return True  # Empty source, nothing to move
+        return True  # Empty source, nothing to copy
 
-    # Check for collisions
+    # Check for collisions in destination
     if os.path.exists(dst_dir):
         try:
             dst_entries = set(os.listdir(dst_dir))
             collisions = src_entries & dst_entries
             if collisions:
-                tty.debug(
-                    f"Cannot move {resource_name}: collisions detected: {collisions}"
-                )
+                tty.debug(f"Cannot copy {resource_name}: collisions detected: {collisions}")
                 return False
         except OSError:
             tty.warn(f"Cannot read destination {resource_name} directory: {dst_dir}")
             return False
 
-    # No collisions, perform move
+    # Create backup (always, unless backup_dir is explicitly None for testing)
+    if backup_dir is None:
+        backup_dir = _migration_backup_path()
+
+    backup_resource_dir = os.path.join(backup_dir, resource_name)
+    filesystem.mkdirp(backup_resource_dir)
+    for entry in src_entries:
+        src_path = os.path.join(src_dir, entry)
+        backup_path = os.path.join(backup_resource_dir, entry)
+        try:
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, backup_path)
+            else:
+                shutil.copy2(src_path, backup_path)
+            tty.debug(f"Backed up {resource_name}: {entry}")
+        except (OSError, shutil.Error) as e:
+            tty.warn(f"Failed to backup {resource_name} {entry}: {e}")
+            return False
+
+    # Copy to destination (no collisions at this point)
     filesystem.mkdirp(dst_dir)
     for entry in src_entries:
         src_path = os.path.join(src_dir, entry)
         dst_path = os.path.join(dst_dir, entry)
         try:
-            shutil.move(src_path, dst_path)
-            tty.debug(f"Moved {resource_name}: {entry}")
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, dst_path)
+            else:
+                shutil.copy2(src_path, dst_path)
+            tty.debug(f"Copied {resource_name}: {entry}")
         except (OSError, shutil.Error) as e:
-            tty.warn(f"Failed to move {resource_name} {entry}: {e}")
+            tty.warn(f"Failed to copy {resource_name} {entry}: {e}")
             return False
 
     return True
@@ -2135,15 +2173,15 @@ def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[s
                 data_home = substitute_path_variables("$data_home")
                 target_licenses_dir = os.path.join(data_home, "licenses")
 
-            # Attempt to move licenses (with destination locking)
-            if _move_directory_contents_with_lock(old_licenses_dir, target_licenses_dir, "licenses"):
-                # Successfully moved, point config to new location
+            # Attempt to copy licenses (with backup and destination locking)
+            if _copy_directory_contents_with_lock(old_licenses_dir, target_licenses_dir, "licenses"):
+                # Successfully copied, point config to new location
                 if is_isolate_command:
                     if "config" not in layout_config:
                         layout_config["config"] = {}
                     layout_config["config"]["license_dir"] = target_licenses_dir
                 # For non-isolate, new default is used automatically
-                tty.debug(f"Moved licenses from {old_licenses_dir} to {target_licenses_dir}")
+                tty.debug(f"Copied licenses from {old_licenses_dir} to {target_licenses_dir}")
             else:
                 # Move failed, keep in old location
                 if "config" not in layout_config:
@@ -2172,15 +2210,15 @@ def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[s
                 data_home = substitute_path_variables("$data_home")
                 target_envs_dir = os.path.join(data_home, "environments")
 
-            # Attempt to move environments (with destination locking)
-            if _move_directory_contents_with_lock(old_envs_dir, target_envs_dir, "environments"):
-                # Successfully moved, point config to new location
+            # Attempt to copy environments (with backup and destination locking)
+            if _copy_directory_contents_with_lock(old_envs_dir, target_envs_dir, "environments"):
+                # Successfully copied, point config to new location
                 if is_isolate_command:
                     if "config" not in layout_config:
                         layout_config["config"] = {}
                     layout_config["config"]["environments_root"] = target_envs_dir
                 # For non-isolate, new default is used automatically
-                tty.debug(f"Moved environments from {old_envs_dir} to {target_envs_dir}")
+                tty.debug(f"Copied environments from {old_envs_dir} to {target_envs_dir}")
             else:
                 # Move failed, keep in old location
                 if "config" not in layout_config:
