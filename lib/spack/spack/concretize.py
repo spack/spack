@@ -24,6 +24,7 @@ from typing import (
 import spack.compilers
 import spack.compilers.config
 import spack.config
+import spack.context_factory
 import spack.error
 import spack.hash_lookup
 import spack.repo
@@ -72,7 +73,7 @@ def _solver(*, factory: Optional["SpecFiltersFactory"] = None) -> "Solver":
     from spack.solver.asp import Solver
 
     ensure_compilers_in_configuration()
-    return Solver(specs_factory=factory)
+    return Solver(context=spack.context_factory.default(), specs_factory=factory)
 
 
 def _concretize_specs_together(

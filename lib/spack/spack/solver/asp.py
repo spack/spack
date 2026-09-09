@@ -45,7 +45,6 @@ import spack.compilers.config
 import spack.compilers.flags
 import spack.concretize
 import spack.config
-import spack.context_factory
 import spack.deptypes as dt
 import spack.error
 import spack.externals_config
@@ -1112,10 +1111,8 @@ class SpackSolverSetup:
     clauses: "SpecClauseGenerator"
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
-    def __init__(
-        self, tests: spack.concretize.TestsType = False, *, context: Optional[SpackContext] = None
-    ):
-        self.context = context or spack.context_factory.default()
+    def __init__(self, tests: spack.concretize.TestsType = False, *, context: SpackContext):
+        self.context = context
         self.compiler_cache = FileCompilerCache(self.context.misc_cache)
         self.possible_graph = create_graph_analyzer(self.context)
 
@@ -3466,12 +3463,9 @@ class Solver:
     """
 
     def __init__(
-        self,
-        *,
-        context: Optional[SpackContext] = None,
-        specs_factory: Optional[SpecFiltersFactory] = None,
+        self, *, context: SpackContext, specs_factory: Optional[SpecFiltersFactory] = None
     ):
-        self.context = context or spack.context_factory.default()
+        self.context = context
 
         cache_root = self.context.config.get("concretizer:concretization_cache:url", None)
         if cache_root is None:
