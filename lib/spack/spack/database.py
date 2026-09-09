@@ -112,10 +112,6 @@ _DEFAULT_DB_LOCK_TIMEOUT = 120
 #: ensure a failed install is properly tracked).
 _DEFAULT_PKG_LOCK_TIMEOUT = None
 
-#: Types of dependencies tracked by the database
-#: We store by DAG hash, so we track the dependencies that the DAG hash includes.
-_TRACKED_DEPENDENCIES = dt.ALL
-
 #: Default list of fields written for each install record
 DEFAULT_INSTALL_RECORD_FIELDS = (
     "spec",
@@ -1092,7 +1088,7 @@ class Database:
 
         # Finally update the ref counts
         for record in self._data.values():
-            for dep in record.spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
+            for dep in record.spec.dependencies():
                 dep_record = self._data.get(dep.dag_hash())
                 if dep_record:  # dep might be upstream
                     dep_record.ref_count += 1
@@ -1111,7 +1107,7 @@ class Database:
         counts: Dict[str, int] = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
-            for dep in rec.spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
+            for dep in rec.spec.dependencies():
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
@@ -1232,7 +1228,7 @@ class Database:
 
         installation_time = installation_time or _now()
 
-        for edge in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
+        for edge in spec.edges_to_dependencies():
             if edge.spec.dag_hash() in self._data:
                 continue
             self._add(
@@ -1283,7 +1279,7 @@ class Database:
             )
 
             # Connect dependencies from the DB to the new copy.
-            for dep in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
+            for dep in spec.edges_to_dependencies():
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
                 assert record, f"Missing dependency {dep.spec.short_spec} in DB"
@@ -1381,7 +1377,7 @@ class Database:
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
 
-            for dep in spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
+            for dep in spec.dependencies():
                 self._decrement_ref_count(dep)
 
     def _increment_ref_count(self, spec: "spack.spec.Spec") -> None:
@@ -1411,8 +1407,8 @@ class Database:
 
         # Remove any reference to this node from dependencies and
         # decrement the reference count
-        rec.spec.detach(deptype=_TRACKED_DEPENDENCIES)
-        for dep in rec.spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
+        rec.spec.detach()
+        for dep in rec.spec.dependencies():
             self._decrement_ref_count(dep)
 
         if rec.deprecated_for:
@@ -1947,11 +1943,7 @@ class NoUpstreamVisitor:
 
     def neighbors(self, item: tr.EdgeAndDepth):
         # Prune edges from upstream nodes, only follow database tracked dependencies
-        return (
-            []
-            if self.is_upstream(item)
-            else item.edge.spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES)
-        )
+        return [] if self.is_upstream(item) else item.edge.spec.edges_to_dependencies()
 
 
 class UpstreamDatabaseLockingError(SpackError):

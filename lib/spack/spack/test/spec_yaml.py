@@ -204,8 +204,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
     from_yaml_rev = Spec.from_yaml(yaml_string_rev)
     from_json_rev = Spec.from_json(json_string_rev)
 
-    # Strip spec if we stripped the yaml
-    spec = spec.copy(deps=dt.ALL)
+    spec = spec.copy()
 
     # specs and their hashes are equal to the original
     assert (

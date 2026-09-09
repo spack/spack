@@ -9,7 +9,6 @@ import pytest
 import spack.concretize
 import spack.deptypes as dt
 import spack.directives
-import spack.hash_types as ht
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -2997,11 +2996,10 @@ def test_mark_concrete_roundtrip_preserves_hashes(spec_str, config, mock_package
 
     # Un-mark concrete: this clears the cached hashes on every node in the DAG.
     s._mark_concrete(False)
-    assert all(getattr(node, ht.dag_hash.attr) is None for node in s.traverse())
+    assert all(node._hash is None for node in s.traverse())
 
     # Re-finalize the DAG: the cleared hashes must recompute to the original values.
-    spack.spec.assign_package_hashes([s], repo=spack.repo.PATH)
-    s._mark_concrete_and_assign_dag_hashes()
+    spack.spec.finalize_concretization([s], repo=spack.repo.PATH)
     roundtrip = {node.name: node.dag_hash() for node in s.traverse()}
     assert roundtrip == original
 

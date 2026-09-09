@@ -13,7 +13,6 @@ from pathlib import Path
 import pytest
 
 import spack.concretize
-import spack.hash_types
 import spack.paths
 import spack.repo
 import spack.util.file_cache
@@ -115,8 +114,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         # Make sure spec file can be read back in to get the original spec
         spec_from_file = layout.read_spec(spec_path)
 
-        stored_deptypes = spack.hash_types.dag_hash
-        expected = spec.copy(deps=stored_deptypes)
+        expected = spec.copy()
         expected._mark_concrete()
 
         assert expected.concrete
@@ -128,13 +126,10 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         with open(spec_path, encoding="utf-8") as spec_file:
             read_separately = Spec.from_yaml(spec_file.read())
 
-        # TODO: revise this when build deps are in dag_hash
-        norm = read_separately.copy(deps=stored_deptypes)
-        assert norm == spec_from_file
-        assert norm.eq_dag(spec_from_file)
+        assert read_separately == spec_from_file
+        assert read_separately.eq_dag(spec_from_file)
 
-        # TODO: revise this when build deps are in dag_hash
-        conc = spack.concretize.concretize_one(read_separately).copy(deps=stored_deptypes)
+        conc = spack.concretize.concretize_one(read_separately)
         assert conc == spec_from_file
         assert conc.eq_dag(spec_from_file)
 

@@ -130,8 +130,8 @@ def spec_dict_to_json(spec_dict: SpecDict) -> Dict:
                     f"cannot serialize spliced spec {spec.name}; SpecDicts with spliced "
                     "specs are not serializable."
                 )
-            if not spec.concrete:
-                spec._cached_hash(force=True)
+            if not spec.concrete and not spec._hash:
+                spec._hash = spec.spec_hash()
 
         # Traverse every spec reachable from spec_dict's values, deduped by hash, and add them
         # to the serialized entries either a) with their original NodeId, or b) with None if they

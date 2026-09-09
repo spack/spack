@@ -251,9 +251,7 @@ class ExternalSpecsParser:
         # Attach dependencies to externals
         self._create_edges()
         # Mark the specs as concrete
-        spack.spec.assign_package_hashes(self.nodes, repo=spack.repo.PATH)
-        for node in self.nodes:
-            node._mark_concrete_and_assign_dag_hashes()
+        spack.spec.finalize_concretization(self.nodes, repo=spack.repo.PATH)
 
     def _create_edges(self):
         for eid, entry in self.specs_by_external_id.items():
