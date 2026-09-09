@@ -546,7 +546,7 @@ class SpecParser:
                     substitute = None
                     while True:
                         if not self.curr:
-                            self._raise_parsing_error("unexpected token in edge attributes")
+                            self._raise_parsing_error("expected `]` to close the edge attributes")
 
                         kind = self.curr.lastgroup
                         if kind == _KEY_VALUE_PAIR and self.curr.group(_KV_NAME) != "when":
@@ -610,7 +610,7 @@ class SpecParser:
                             break
                         else:
                             # Only key=value pairs can occur between brackets
-                            self._raise_parsing_error("unexpected token in edge attributes")
+                            self._raise_parsing_error("expected an edge attribute or `]`")
 
                     depflag = 0
                     if "deptypes" in attributes:

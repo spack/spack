@@ -1662,7 +1662,7 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x os=debian6 platform=test target=default_target os=redhat6", "two architectures"),
         ("x target=default_target platform=test os=redhat6 os=debian6", "'platform'"),
         # Dependencies
-        ("^[@foo] zlib", "edge attributes"),
+        ("^[@foo] zlib", "expected an edge attribute or `]`"),
         # TODO: Remove this as soon as use variants are added and we can parse custom attributes
         ("^[foo=bar] zlib", "edge attributes"),
         # Propagating reserved names generates a parse error
@@ -1677,8 +1677,8 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         # a when= condition is a spec, which extends up to the closing bracket
         ("foo ^[when=] bar", "expected a spec after when="),
         ("foo ^[when=", "expected a spec after when="),
-        ("foo ^[when=bar baz] qux", "unexpected token in edge attributes"),
-        ("foo ^[when=bar ^baz", "unexpected token in edge attributes"),
+        ("foo ^[when=bar baz] qux", "expected an edge attribute or `]`"),
+        ("foo ^[when=bar ^baz", "expected `]` to close the edge attributes"),
         # a quoted condition is a single spec: neither two specs nor none
         ("foo ^[when='bar baz'] qux", "expected a single spec as the when= condition"),
         ("foo ^[when=''] qux", "expected a single spec as the when= condition"),
