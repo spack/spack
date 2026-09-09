@@ -39,6 +39,7 @@ from typing import (
 import spack.vendor.archspec.cpu
 
 import spack
+import spack.aliases
 import spack.caches
 import spack.compilers.config
 import spack.compilers.flags
@@ -487,6 +488,19 @@ def _spec_with_default_name(spec_str, name):
     if not spec.name:
         spec.name = name
     return spec
+
+
+def _as_requested(edge: spack.spec.DependencySpec) -> str:
+    """Render the spec on an input edge the way the user wrote it.
+
+    The parser turns "%clang@99" into a direct dependency on llvm@99, so an error that names the
+    node alone talks about a package the user never mentioned.
+    """
+    text = str(edge.spec)
+    legacy = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(edge.spec.name)
+    if edge.direct and legacy and text.startswith(edge.spec.name):
+        return f"%{legacy}{text[len(edge.spec.name) :]}"
+    return text
 
 
 class ErrorHandler:
@@ -2244,7 +2258,8 @@ class SpackSolverSetup:
         only_deprecated = []
         impossible = []
 
-        for spec in traverse.traverse_nodes(specs):
+        for edge in traverse.traverse_edges(specs):
+            spec = edge.spec
             if spack.repo.PATH.is_virtual(spec.name):
                 continue
             if spec.name not in self.pkgs:
@@ -2260,7 +2275,7 @@ class SpackSolverSetup:
                 only_deprecated.append(spec)
 
             if not sat_deprecated and not sat_possible:
-                impossible.append(spec)
+                impossible.append(_as_requested(edge))
 
         if not allow_deprecated and only_deprecated:
             raise DeprecatedVersionError(
@@ -2274,7 +2289,7 @@ class SpackSolverSetup:
         if impossible:
             raise InvalidVersionError(
                 "No version exists that satisfies these input specs:",
-                "    " + ", ".join(str(spec) for spec in impossible),
+                "    " + ", ".join(impossible),
             )
 
     def _validate_input_specs(self, specs: Sequence[spack.spec.Spec]) -> None:

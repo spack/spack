@@ -90,6 +90,14 @@ def test_nonexistent_version_error(spec, mock_packages, mutable_config):
         _ = spack.concretize.concretize_one(spec)
 
 
+def test_legacy_compiler_name_is_echoed_back(mock_packages, mutable_config):
+    """`%clang` is rewritten to `llvm` while parsing, so an error about it must still mention
+    the name the user actually typed."""
+    with pytest.raises(spack.solver.asp.InvalidVersionError) as exc_info:
+        spack.concretize.concretize_one("mpileaks %clang@99")
+    assert_actionable_error(exc_info, "%clang@99")
+
+
 @pytest.mark.parametrize(
     "spec",
     [
