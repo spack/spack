@@ -35,7 +35,6 @@ import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.filesystem_view as fsv
-import spack.hash_types as ht
 import spack.installer_dispatch
 import spack.package_base
 import spack.paths
@@ -1727,25 +1726,22 @@ class Environment:
 
         # Manipulate selected specs
         for s, mutator in modify_specs:
-            modified = s.mutate(mutator, rehash=False)
+            modified = s.mutate(mutator)
             if modified:
                 modified_specs.append(s)
 
-        # Identify roots modified and invalidate all dependent hashes
-        modified_roots = []
-        for parent in traverse.traverse_nodes(modified_specs, direction="parents"):
-            # record whether this parent is a root before we modify the hash
-            if parent.dag_hash() in self.specs_by_hash:
-                modified_roots.append((parent, parent.dag_hash()))
-            # modify the parent to invalidate hashes
-            parent._mark_root_concrete(False)
-            parent.clear_caches()
+        # Identify roots modified, before their hashes change
+        modified_roots = [
+            (parent, parent.dag_hash())
+            for parent in traverse.traverse_nodes(modified_specs, direction="parents")
+            if parent.dag_hash() in self.specs_by_hash
+        ]
 
-        # Compute new hashes and update the env list of specs
+        spack.spec.rehash_mutated(modified_specs, repo=spack.repo.PATH)
+
+        # Update the env list of specs
         hash_mutations = {}
         for root, old_hash in modified_roots:
-            # New hash must be computed after we finalize concretization
-            root._finalize_concretization()
             new_hash = root.dag_hash()
             self.specs_by_hash.pop(old_hash)
             self.specs_by_hash[new_hash] = root
@@ -2335,16 +2331,11 @@ class Environment:
     def _concrete_specs_dict(self):
         concrete_specs = {}
         for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):
-            spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
-            # Assumes no legacy formats, since this was just created.
-            spec_dict[ht.dag_hash.name] = s.dag_hash()
-            concrete_specs[s.dag_hash()] = spec_dict
+            concrete_specs[s.dag_hash()] = s.node_dict_with_hashes()
 
             if s.build_spec is not s:
                 for d in s.build_spec.traverse():
-                    build_spec_dict = d.node_dict_with_hashes(hash=ht.dag_hash)
-                    build_spec_dict[ht.dag_hash.name] = d.dag_hash()
-                    concrete_specs[d.dag_hash()] = build_spec_dict
+                    concrete_specs[d.dag_hash()] = d.node_dict_with_hashes()
 
         return concrete_specs
 

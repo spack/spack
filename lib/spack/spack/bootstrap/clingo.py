@@ -197,7 +197,7 @@ class ClingoBootstrapConcretizer:
                 edge.spec = self.host_libc
 
         spack.spec._inject_patches_variant(s)
-        s._finalize_concretization()
+        spack.spec.finalize_concretization([s], repo=spack.repo.PATH)
 
         # Work around the fact that the installer calls Spec.dependents() and
         # we modified edges inconsistently

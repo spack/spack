@@ -89,7 +89,6 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.enums
 import spack.error
-import spack.hash_types as ht
 import spack.patch
 import spack.paths
 import spack.platforms
@@ -177,6 +176,9 @@ DISPLAY_FORMAT = (
 
 #: specfile format version. Must increase monotonically
 SPECFILE_FORMAT_VERSION = 5
+
+#: Keys under which old spec files may store a dependency hash, dag hash first
+_LEGACY_DEP_HASH_KEYS = ("hash", "full_hash", "build_hash")
 
 
 class InstallStatus(enum.Enum):
@@ -1940,11 +1942,9 @@ class Spec:
         self.namespace = None
         self.abstract_hash = None
 
-        # initial values for all spec hash types
-        self._hash = None
-        self._package_hash = None
-        self._full_hash = None
-        self._build_hash = None
+        # cached dag hash, and the package hash assigned by finalize_concretization
+        self._hash: Optional[str] = None
+        self._package_hash: Optional[str] = None
 
         # cache for spec's prefix, computed lazily by prefix property
         self._prefix = None
@@ -2573,17 +2573,9 @@ class Spec:
     def set_prefix(self, value: str) -> None:
         self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
-    def spec_hash(self, hash: ht.SpecHashDescriptor) -> str:
-        """Utility method for computing different types of Spec hashes.
-
-        Arguments:
-            hash: type of hash to generate.
-        """
-        # TODO: currently we strip build dependencies by default.  Rethink
-        # this when we move to using package hashing on all specs.
-        if hash.override is not None:
-            return hash.override(self)
-        node_dict = self.to_node_dict(hash=hash)
+    def spec_hash(self) -> str:
+        """Compute the dag hash of this spec, from the JSON serialization of its node dicts."""
+        node_dict = self.to_node_dict()
         json_text = json.dumps(
             node_dict, ensure_ascii=True, indent=None, separators=(",", ":"), sort_keys=False
         )
@@ -2591,47 +2583,28 @@ class Spec:
         # original hash when splicing so that we can avoid relocation issues
         out = spack.util.hash.b32_hash(json_text)
         if self.build_spec is not self:
-            return out[:-7] + self.build_spec.spec_hash(hash)[-7:]
+            return out[:-7] + self.build_spec.spec_hash()[-7:]
         return out
 
-    def _cached_hash(
-        self, hash: ht.SpecHashDescriptor, length: Optional[int] = None, force: bool = False
-    ) -> str:
-        """Helper function for storing a cached hash on the spec.
-
-        This will run spec_hash() with the deptype and package_hash
-        parameters, and if this spec is concrete, it will store the value
-        in the supplied attribute on this spec.
-
-        Arguments:
-            hash: type of hash to generate.
-            length: length of hash prefix to return (default is full hash string)
-            force: cache the hash even if spec is not concrete (default False)
-        """
-        hash_string = getattr(self, hash.attr, None)
-        if hash_string:
-            return hash_string[:length]
-
-        hash_string = self.spec_hash(hash)
-        if force or self.concrete:
-            setattr(self, hash.attr, hash_string)
-
-        return hash_string[:length]
-
-    def dag_hash(self, length=None):
-        """This is Spack's default hash, used to identify installations.
+    def dag_hash(self, length: Optional[int] = None) -> str:
+        """This is Spack's default hash, used to identify installations. Cached on concrete specs.
 
         NOTE: Versions of Spack prior to 0.18 only included link and run deps.
         NOTE: Versions of Spack prior to 1.0 only did not include test deps.
 
         """
-        return self._cached_hash(ht.dag_hash, length)
+        if self._hash:
+            return self._hash[:length]
+        hash_string = self.spec_hash()
+        if self.concrete:
+            self._hash = hash_string
+        return hash_string[:length]
 
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
 
-    def to_node_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
+    def to_node_dict(self) -> Dict[str, Any]:
         """Create a dictionary representing the state of this Spec.
 
         This method creates the content that is eventually hashed by Spack to create identifiers
@@ -2680,9 +2653,6 @@ class Spec:
 
         See :meth:`to_dict()` for a "complete" spec hash, with hashes for each node and nodes for
         each dependency (instead of just their hashes).
-
-        Arguments:
-            hash: type of hash to generate.
         """
         d: Dict[str, Any] = {"name": self.name}
 
@@ -2746,31 +2716,19 @@ class Spec:
             if hasattr(variant, "_patches_in_order_of_appearance"):
                 d["patches"] = variant._patches_in_order_of_appearance
 
-        if (
-            self._concrete
-            and hash.package_hash
-            and hasattr(self, "_package_hash")
-            and self._package_hash
-        ):
-            # The package hash is assigned at concretization time. We don't want to compute one for
-            # a concrete spec, where a) the package might not exist, or b) the `dag_hash` didn't
-            # include the package hash when the spec was concretized.
-            package_hash = self._package_hash
-
-            # Full hashes are in bytes
-            if not isinstance(package_hash, str) and isinstance(package_hash, bytes):
-                package_hash = package_hash.decode("utf-8")
-            d["package_hash"] = package_hash
+        # Assigned at concretization time; old specs may not have one
+        if self._package_hash:
+            d["package_hash"] = self._package_hash
 
         # Note: Relies on sorting dict by keys later in algorithm.
-        deps = self._dependencies_dict(depflag=hash.depflag)
+        deps = self._dependencies_dict()
         if deps:
             dependencies = []
             for name, edges_for_name in sorted(deps.items()):
                 for dspec in edges_for_name:
                     dep_attrs: Dict[str, Any] = {
                         "name": name,
-                        hash.name: dspec.spec._cached_hash(hash),
+                        "hash": dspec.spec.dag_hash(),
                         "parameters": {
                             "deptypes": dt.flag_to_tuple(dspec.depflag),
                             "virtuals": dspec.virtuals,
@@ -2789,10 +2747,7 @@ class Spec:
 
         # Name is included in case this is replacing a virtual.
         if self._build_spec:
-            d["build_spec"] = {
-                "name": self.build_spec.name,
-                hash.name: self.build_spec._cached_hash(hash),
-            }
+            d["build_spec"] = {"name": self.build_spec.name, "hash": self.build_spec.dag_hash()}
 
         # Annotations
         d["annotations"] = {"original_specfile_version": self.annotations.original_spec_format}
@@ -2801,7 +2756,7 @@ class Spec:
 
         return d
 
-    def to_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         """Create a dictionary suitable for writing this spec to YAML or JSON.
 
         This dictionary is like the one that is ultimately written to a ``spec.json`` file in each
@@ -2864,50 +2819,41 @@ class Spec:
         """
         node_list = []  # Using a list to preserve preorder traversal for hash.
         hash_set = set()
-        for s in self.traverse(order="pre", deptype=hash.depflag):
-            spec_hash = s._cached_hash(hash)
+        for s in self.traverse(order="pre"):
+            spec_hash = s.dag_hash()
 
             if spec_hash not in hash_set:
-                node_list.append(s.node_dict_with_hashes(hash))
+                node_list.append(s.node_dict_with_hashes())
                 hash_set.add(spec_hash)
 
             if s.build_spec is not s:
-                build_spec_list = s.build_spec.to_dict(hash)["spec"]["nodes"]
+                build_spec_list = s.build_spec.to_dict()["spec"]["nodes"]
                 for node in build_spec_list:
-                    node_hash = node[hash.name]
+                    node_hash = node["hash"]
                     if node_hash not in hash_set:
                         node_list.append(node)
                         hash_set.add(node_hash)
 
         return {"spec": {"_meta": {"version": SPECFILE_FORMAT_VERSION}, "nodes": node_list}}
 
-    def node_dict_with_hashes(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
-        """Returns a dict of this spec with the dag hash, and optionally another hash or id.
-
-        Arguments:
-            hash: Optional other hash to include. If this is the dag hash, it's only included once.
-
-        """
-        node = self.to_node_dict(hash)
+    def node_dict_with_hashes(self) -> Dict[str, Any]:
+        """Returns the node dict of this spec with its dag hash."""
+        node = self.to_node_dict()
         # All specs have at least a DAG hash
-        node[ht.dag_hash.name] = self.dag_hash()
+        node["hash"] = self.dag_hash()
 
         if not self.concrete:
             node["concrete"] = False
 
-        # we can also give them other hash types if we want
-        if hash.name != ht.dag_hash.name:
-            node[hash.name] = self._cached_hash(hash)
-
         return node
 
-    def to_yaml(self, stream=None, hash=ht.dag_hash):
-        return syaml.dump(self.to_dict(hash), stream=stream, default_flow_style=False)
+    def to_yaml(self, stream=None):
+        return syaml.dump(self.to_dict(), stream=stream, default_flow_style=False)
 
-    def to_json(self, stream=None, *, hash=ht.dag_hash, pretty=False):
+    def to_json(self, stream=None, *, pretty=False):
         if stream is None:
-            return sjson.dumps(self.to_dict(hash), pretty=pretty)
-        sjson.dump(self.to_dict(hash), stream, pretty=pretty)
+            return sjson.dumps(self.to_dict(), pretty=pretty)
+        sjson.dump(self.to_dict(), stream, pretty=pretty)
         return None
 
     @staticmethod
@@ -3225,52 +3171,6 @@ class Spec:
             if not value:
                 s.clear_caches()
             s._mark_root_concrete(value)
-
-    def _finalize_concretization(self):
-        """Assign hashes to this spec, and mark it concrete.
-
-        There are special semantics to consider for ``package_hash``, because we can't
-        call it on *already* concrete specs, but we need to assign it *at concretization
-        time* to just-concretized specs. So, the concretizer must assign the package
-        hash *before* marking their specs concrete (so that we know which specs were
-        already concrete before this latest concretization).
-
-        ``dag_hash`` is also tricky, since it cannot compute ``package_hash()`` lazily.
-        Because ``package_hash`` needs to be assigned *at concretization time*,
-        ``to_node_dict()`` can't just assume that it can compute ``package_hash`` itself
-        -- it needs to either see or not see a ``_package_hash`` attribute.
-
-        Rules of thumb for ``package_hash``:
-          1. Old-style concrete specs from *before* ``dag_hash`` included ``package_hash``
-             will not have a ``_package_hash`` attribute at all.
-          2. New-style concrete specs will have a ``_package_hash`` assigned at
-             concretization time.
-          3. Abstract specs will not have a ``_package_hash`` attribute at all.
-
-        """
-        for spec in self.traverse():
-            # Already concrete specs either already have a package hash (new dag_hash())
-            # or they never will b/c we can't know it (old dag_hash()). Skip them.
-            #
-            # We only assign package hash to not-yet-concrete specs, for which we know
-            # we can compute the hash.
-            if not spec.concrete:
-                # we need force=True here because package hash assignment has to happen
-                # before we mark concrete, so that we know what was *already* concrete.
-                spec._cached_hash(ht.package_hash, force=True)
-
-                # keep this check here to ensure package hash is saved
-                assert getattr(spec, ht.package_hash.attr)
-
-        # Mark everything in the spec as concrete
-        self._mark_concrete()
-
-        # Assign dag_hash (this *could* be done lazily, but it's assigned anyway in
-        # ensure_no_deprecated, and it's clearer to see explicitly where it happens).
-        # Any specs that were concrete before finalization will already have a cached
-        # DAG hash.
-        for spec in self.traverse():
-            spec._cached_hash(ht.dag_hash)
 
     def index(self, deptype="all"):
         """Return a dictionary that points to all the dependencies in this
@@ -3962,12 +3862,12 @@ class Spec:
 
         if self._concrete:
             self._dunder_hash = other._dunder_hash
-            for h in ht.HASHES:
-                setattr(self, h.attr, getattr(other, h.attr, None))
+            self._hash = other._hash
+            self._package_hash = other._package_hash
         else:
             self._dunder_hash = None
-            for h in ht.HASHES:
-                setattr(self, h.attr, None)
+            self._hash = None
+            self._package_hash = None
 
     def _dup_deps(
         self, other, depflag: dt.DepFlag, propagation: Optional[PropagationPolicy] = None
@@ -4148,9 +4048,7 @@ class Spec:
         yield self.compiler_flags
         yield self.architecture
         yield self.abstract_hash
-
-        # this is not present on older specs
-        yield getattr(self, "_package_hash", None)
+        yield self._package_hash
 
     def eq_node(self, other):
         """Equality with another spec, not including dependencies."""
@@ -5000,7 +4898,7 @@ class Spec:
         for ancestor in ancestors_in_context:
             # Only set it if it hasn't been spliced before
             ancestor._build_spec = ancestor._build_spec or ancestor.copy()
-            ancestor.clear_caches(ignore=(ht.package_hash.attr,))
+            ancestor.clear_caches(keep_package_hash=True)
             for edge in ancestor.edges_to_dependencies(depflag=dt.BUILD):
                 if edge.depflag & ~dt.BUILD:
                     edge.depflag &= ~dt.BUILD
@@ -5200,7 +5098,7 @@ class Spec:
 
         return spec
 
-    def mutate(self, mutator, rehash=True) -> bool:
+    def mutate(self, mutator) -> bool:
         """Mutate concrete spec to match constraints represented by mutator.
 
         Mutation can modify the spec version, variants, compiler flags, and architecture.
@@ -5209,7 +5107,7 @@ class Spec:
         Variant values can be replaced with the literal ``None`` to remove the variant.
         ``None`` as a variant value is represented by ``VariantValue(..., (None,))``.
 
-        If ``rehash``, concrete spec and its dependents have hashes updated.
+        Hashes of this spec and its dependents are stale afterwards; see ``rehash_mutated``.
 
         Returns whether the spec was modified by the mutation"""
         assert self.concrete
@@ -5269,36 +5167,15 @@ class Spec:
                 self.architecture.target = mutator.target
                 changed = True
 
-        if changed and rehash:
-            roots = []
-            for parent in spack.traverse.traverse_nodes([self], direction="parents"):
-                if not parent.dependents():
-                    roots.append(parent)
-                # invalidate hashes
-                parent._mark_root_concrete(False)
-                parent.clear_caches()
-
-            for root in roots:
-                # compute new hashes on full DAGs
-                root._finalize_concretization()
-
         return changed
 
-    def clear_caches(self, ignore: Tuple[str, ...] = ()) -> None:
-        """
-        Clears all cached hashes in a Spec, while preserving other properties.
-        """
-        assert all(
-            attr in ("_dunder_hash", "_prefix") or any(attr == h.attr for h in ht.HASHES)
-            for attr in ignore
-        ), f"unknown attribute in ignore: {ignore}"
-        for h in ht.HASHES:
-            if h.attr not in ignore:
-                if hasattr(self, h.attr):
-                    setattr(self, h.attr, None)
-        for attr in ("_dunder_hash", "_prefix"):
-            if attr not in ignore:
-                setattr(self, attr, None)
+    def clear_caches(self, *, keep_package_hash: bool = False) -> None:
+        """Clear the cached hashes and prefix. Splicing keeps the package hash of copied nodes."""
+        self._hash = None
+        self._dunder_hash = None
+        self._prefix = None
+        if not keep_package_hash:
+            self._package_hash = None
 
     def __hash__(self):
         # If the spec is concrete, we leverage the dag hash and just use a 64-bit prefix of it.
@@ -5655,14 +5532,12 @@ class SpecfileReaderBase(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def read_specfile_dep_specs(
-        cls, deps: Dict, hash_type: str = ht.dag_hash.name
-    ) -> List[DepSpecComponents]: ...
+    def read_specfile_dep_specs(cls, deps: Dict) -> List[DepSpecComponents]: ...
 
     @classmethod
     @abc.abstractmethod
     def extract_build_spec_info_from_node_dict(
-        cls, node, hash_type=ht.dag_hash.name
+        cls, node, hash_type="hash"
     ) -> Tuple[str, str, str]: ...
 
     @classmethod
@@ -5670,8 +5545,8 @@ class SpecfileReaderBase(abc.ABC):
         spec = Spec()
 
         name, node = cls.name_and_data(node)
-        for h in ht.HASHES:
-            setattr(spec, h.attr, node.get(h.name, None))
+        spec._hash = node.get("hash")
+        spec._package_hash = node.get("package_hash")
 
         # old anonymous spec files had name=None, we use name="" now
         spec.name = name if isinstance(name, str) else ""
@@ -5777,7 +5652,7 @@ class SpecfileReaderBase(abc.ABC):
                     break
 
         if not any_deps:  # If we never see a dependency...
-            hash_type = ht.dag_hash.name
+            hash_type = "hash"
         elif not hash_type:  # Seen a dependency, still don't know hash_type
             raise spack.error.SpecError(
                 "Spec dictionary contains malformed dependencies. Old format?"
@@ -5893,7 +5768,7 @@ class SpecfileV1(SpecfileReaderBase):
         return cls.read_specfile_dep_specs(node["dependencies"])
 
     @classmethod
-    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name) -> List[DepSpecComponents]:
+    def read_specfile_dep_specs(cls, deps) -> List[DepSpecComponents]:
         """Read the DependencySpec portion of a YAML-formatted Spec.
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
@@ -5901,10 +5776,8 @@ class SpecfileV1(SpecfileReaderBase):
         dspec_list: List[DepSpecComponents] = []
         for dep_name, elt in deps.items():
             if isinstance(elt, dict):
-                for h in ht.HASHES:
-                    if h.name in elt:
-                        dep_hash, deptypes = elt[h.name], elt["type"]
-                        hash_type = h.name
+                for key in _LEGACY_DEP_HASH_KEYS:
+                    if key in elt:
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
@@ -5914,9 +5787,9 @@ class SpecfileV1(SpecfileReaderBase):
             dspec_list.append(
                 DepSpecComponents(
                     name=dep_name,
-                    hash=dep_hash,
-                    deptypes=list(deptypes),
-                    hash_type=hash_type,
+                    hash=elt[key],
+                    deptypes=list(elt["type"]),
+                    hash_type=key,
                     virtuals=(),
                     direct=True,
                 )
@@ -5926,7 +5799,7 @@ class SpecfileV1(SpecfileReaderBase):
 
     @classmethod
     def extract_build_spec_info_from_node_dict(
-        cls, node, hash_type=ht.dag_hash.name
+        cls, node, hash_type="hash"
     ) -> Tuple[str, str, str]:
         """Not used for SpecfileV1; raises NotImplementedError."""
         raise NotImplementedError
@@ -5951,7 +5824,7 @@ class SpecfileV2(SpecfileReaderBase):
         return cls.read_specfile_dep_specs(node.get("dependencies", []))
 
     @classmethod
-    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name) -> List[DepSpecComponents]:
+    def read_specfile_dep_specs(cls, deps) -> List[DepSpecComponents]:
         """Read the DependencySpec portion of a YAML-formatted Spec.
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
@@ -5963,9 +5836,9 @@ class SpecfileV2(SpecfileReaderBase):
         for elt in deps:
             if isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
-                for h in ht.HASHES:
-                    if h.name in elt:
-                        result.append(cls.extract_info_from_dep(elt, h))
+                for key in _LEGACY_DEP_HASH_KEYS:
+                    if key in elt:
+                        result.append(cls.extract_info_from_dep(elt, key))
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
@@ -5974,18 +5847,18 @@ class SpecfileV2(SpecfileReaderBase):
         return result
 
     @classmethod
-    def extract_info_from_dep(cls, elt, hash) -> DepSpecComponents:
+    def extract_info_from_dep(cls, elt, hash_type: str) -> DepSpecComponents:
         return DepSpecComponents(
             name=elt["name"],
-            hash=elt[hash.name],
+            hash=elt[hash_type],
             deptypes=list(elt["type"]),
-            hash_type=hash.name,
+            hash_type=hash_type,
             virtuals=(),
             direct=True,
         )
 
     @classmethod
-    def extract_build_spec_info_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
+    def extract_build_spec_info_from_node_dict(cls, node, hash_type="hash"):
         build_spec_dict = node["build_spec"]
         return build_spec_dict["name"], build_spec_dict[hash_type], hash_type
 
@@ -6000,12 +5873,12 @@ class SpecfileV4(SpecfileV2):
     SPEC_VERSION = 4
 
     @classmethod
-    def extract_info_from_dep(cls, elt, hash) -> DepSpecComponents:
+    def extract_info_from_dep(cls, elt, hash_type: str) -> DepSpecComponents:
         return DepSpecComponents(
             name=elt["name"],
-            hash=elt[hash.name],
+            hash=elt[hash_type],
             deptypes=list(elt["parameters"]["deptypes"]),
-            hash_type=hash.name,
+            hash_type=hash_type,
             virtuals=tuple(elt["parameters"]["virtuals"]),
             direct=True,
         )
@@ -6028,13 +5901,13 @@ class SpecfileV5(SpecfileV4):
         raise RuntimeError("The 'compiler' option is unexpected in specfiles at v5 or greater")
 
     @classmethod
-    def extract_info_from_dep(cls, elt, hash) -> DepSpecComponents:
+    def extract_info_from_dep(cls, elt, hash_type: str) -> DepSpecComponents:
         parameters = elt["parameters"]
         return DepSpecComponents(
             name=elt["name"],
-            hash=elt[hash.name],
+            hash=elt[hash_type],
             deptypes=list(parameters["deptypes"]),
-            hash_type=hash.name,
+            hash_type=hash_type,
             virtuals=tuple(parameters["virtuals"]),
             direct=parameters.get("direct", False),
             when=parameters.get("when", ""),
@@ -6087,7 +5960,7 @@ def save_dependency_specfiles(root: Spec, output_directory: str, dependencies: L
         json_path = os.path.join(output_directory, f"{spec.name}.json")
 
         with open(json_path, "w", encoding="utf-8") as fd:
-            fd.write(spec.to_json(hash=ht.dag_hash))
+            fd.write(spec.to_json())
 
 
 def get_host_environment_metadata() -> Dict[str, str]:
@@ -6129,6 +6002,29 @@ def eval_conditional(string):
     valid_variables = get_host_environment()
     valid_variables.update({"re": re, "env": os.environ})
     return eval(string, valid_variables)
+
+
+def finalize_concretization(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath") -> None:
+    """Assign package hashes to not-yet-concrete nodes, mark them concrete, and cache dag hashes.
+
+    Nodes that were already concrete keep their hashes: old specs may have no package hash, and
+    we cannot compute one for them."""
+    specs = list(specs)
+    for spec in spack.traverse.traverse_nodes(specs):
+        if not spec.concrete and not spec._package_hash:
+            spec._package_hash = repo.get_pkg_class(spec.fullname)(spec).content_hash()
+    for spec in specs:
+        spec._mark_concrete()
+        spec.dag_hash()  # caches the hash of every node
+
+
+def rehash_mutated(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath") -> None:
+    """Recompute the hashes of mutated specs and their dependents."""
+    parents = list(spack.traverse.traverse_nodes(list(specs), direction="parents"))
+    for parent in parents:
+        parent._mark_root_concrete(False)
+        parent.clear_caches()
+    finalize_concretization(parents, repo=repo)
 
 
 def _inject_patches_variant(root: Spec) -> None:

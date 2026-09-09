@@ -8,7 +8,6 @@ import sys
 import spack
 import spack.binary_distribution
 import spack.cmd
-import spack.hash_types as ht
 import spack.package_base
 import spack.spec
 import spack.store
@@ -111,9 +110,9 @@ def spec(parser, args):
         for spec in concrete_specs:
             if args.format == "yaml":
                 # use write because to_yaml already has a newline.
-                sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
+                sys.stdout.write(spec.to_yaml())
             elif args.format == "json":
-                print(spec.to_json(hash=ht.dag_hash))
+                print(spec.to_json())
             else:
                 print(spec.format(args.format))
         return
