@@ -147,6 +147,29 @@ error(0, "'{0}' requires conflicting variant values 'Spec({1}={2})' and 'Spec({1
      condition_holds(Cause2, node(X, TriggerPkg2)),
      Value1 < Value2. % see[1] in concretize.lp
 
+% A `buildable:false` package that has to be built: name what is on offer. This line is true
+% whatever the mismatch turns out to be -- a variant or a target just as easily as a version.
+error(0, "Cannot build {0}, since it is configured `buildable:false`; the external declared for it is {1}", Package, ExternalSpec)
+  :- buildable_false(Package),
+     attr("node", node(ID, Package)),
+     build(node(ID, Package)),
+     pkg_fact(Package, external_declared(ExternalSpec, _)).
+
+% ... and when its version is the mismatch, say which constraint it failed. The version check is
+% what keeps this from blaming the version for a variant mismatch. ":" is an external declared
+% without a version, which cannot fail on it.
+error(0, "Cannot build {0}, since it is configured `buildable:false` and the external {0}@{1} does not satisfy '{0}@{2}'", Package, ExternalVersion, Constraint, startcauses, Cause, CauseID)
+  :- buildable_false(Package),
+     attr("node", node(ID, Package)),
+     build(node(ID, Package)),
+     pkg_fact(Package, external_declared(_, ExternalVersion)),
+     ExternalVersion != ":",
+     attr("node_version_satisfies", node(ID, Package), Constraint),
+     not pkg_fact(Package, version_satisfies(Constraint, ExternalVersion)),
+     pkg_fact(TriggerPkg, condition_effect(Cause, EffectID)),
+     imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
+     condition_holds(Cause, node(CauseID, TriggerPkg)).
+
 % error message with causes for conflicts
 error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
   :- attr("node", node(ID, Package)),
@@ -209,6 +232,7 @@ pkg_fact(Package, version_satisfies(Constraint, Version)) :-
 #defined external/1.
 #defined trigger_and_effect/3.
 #defined build/1.
+#defined buildable_false/1.
 #defined node_has_variant/3.
 #defined provider/2.
 #defined variant_single_value/2.
