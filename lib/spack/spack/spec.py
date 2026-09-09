@@ -1688,23 +1688,25 @@ def _format_edge(
         deptypes: whether to include the deptypes of the edge
         when: whether to include the condition of the edge
     """
-    # The virtual assignment shorthand substitutes a package name, so an anonymous node keeps its
-    # virtuals in the edge attributes, and is named * where its options could otherwise be read
-    # as a name: %[virtuals=c] * foo=bar, ^*. The when= condition extends up to the closing
-    # bracket, so it comes last.
     anonymous = not edge.spec.name
     attrs = []
     if deptypes and edge.depflag:
         attrs.append(f"deptypes={','.join(dt.flag_to_tuple(edge.depflag))}")
     if anonymous and edge.virtuals:
         attrs.append(f"virtuals={','.join(edge.virtuals)}")
+    # When condition comes last so that it can be parsed back as a spec until the closing bracket.
     if when and edge.when != EMPTY_SPEC:
         attrs.append(f"when={edge.when}")
     attributes = f"[{' '.join(attrs)}] " if attrs else ""
+    # Use virtual assignemnt syntax ^c,cxx=gcc, but not for anonymous nodes (^cxx=* parses as a
+    # variant). For anonymous nodes, use ^[virtuals=c,cxx] * foo=bar.
     virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals and not anonymous else ""
-    star = anonymous and (not dep_format or dep_format[:1].isalnum() or dep_format[:1] == "_")
-    node = " ".join(s for s in ("*" if star else "", dep_format) if s)
-    return f"{sigil}{attributes}{virtuals}{node}"
+    if anonymous and not dep_format:
+        dep_format = "*"
+    elif anonymous and (dep_format[0].isalnum() or dep_format[0] == "_"):
+        # `^foo=bar` is virtual assignment, `^* foo=bar` is an anonymous dep with a variant.
+        dep_format = f"* {dep_format}"
+    return f"{sigil}{attributes}{virtuals}{dep_format}"
 
 
 def _satisfying_edges(
