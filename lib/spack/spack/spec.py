@@ -4898,7 +4898,7 @@ class Spec:
         for ancestor in ancestors_in_context:
             # Only set it if it hasn't been spliced before
             ancestor._build_spec = ancestor._build_spec or ancestor.copy()
-            ancestor.clear_caches(ignore=("_package_hash",))
+            ancestor.clear_caches(keep_package_hash=True)
             for edge in ancestor.edges_to_dependencies(depflag=dt.BUILD):
                 if edge.depflag & ~dt.BUILD:
                     edge.depflag &= ~dt.BUILD
@@ -5169,15 +5169,13 @@ class Spec:
 
         return changed
 
-    def clear_caches(self, ignore: Tuple[str, ...] = ()) -> None:
-        """
-        Clears all cached hashes in a Spec, while preserving other properties.
-        """
-        cached = ("_hash", "_package_hash", "_dunder_hash", "_prefix")
-        assert set(ignore) <= set(cached), f"unknown attribute in ignore: {ignore}"
-        for attr in cached:
-            if attr not in ignore:
-                setattr(self, attr, None)
+    def clear_caches(self, *, keep_package_hash: bool = False) -> None:
+        """Clear the cached hashes and prefix. Splicing keeps the package hash of copied nodes."""
+        self._hash = None
+        self._dunder_hash = None
+        self._prefix = None
+        if not keep_package_hash:
+            self._package_hash = None
 
     def __hash__(self):
         # If the spec is concrete, we leverage the dag hash and just use a 64-bit prefix of it.
@@ -5534,9 +5532,7 @@ class SpecfileReaderBase(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def read_specfile_dep_specs(
-        cls, deps: Dict, hash_type: str = "hash"
-    ) -> List[DepSpecComponents]: ...
+    def read_specfile_dep_specs(cls, deps: Dict) -> List[DepSpecComponents]: ...
 
     @classmethod
     @abc.abstractmethod
@@ -5772,7 +5768,7 @@ class SpecfileV1(SpecfileReaderBase):
         return cls.read_specfile_dep_specs(node["dependencies"])
 
     @classmethod
-    def read_specfile_dep_specs(cls, deps, hash_type="hash") -> List[DepSpecComponents]:
+    def read_specfile_dep_specs(cls, deps) -> List[DepSpecComponents]:
         """Read the DependencySpec portion of a YAML-formatted Spec.
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
@@ -5782,8 +5778,6 @@ class SpecfileV1(SpecfileReaderBase):
             if isinstance(elt, dict):
                 for key in _LEGACY_DEP_HASH_KEYS:
                     if key in elt:
-                        dep_hash, deptypes = elt[key], elt["type"]
-                        hash_type = key
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
@@ -5793,9 +5787,9 @@ class SpecfileV1(SpecfileReaderBase):
             dspec_list.append(
                 DepSpecComponents(
                     name=dep_name,
-                    hash=dep_hash,
-                    deptypes=list(deptypes),
-                    hash_type=hash_type,
+                    hash=elt[key],
+                    deptypes=list(elt["type"]),
+                    hash_type=key,
                     virtuals=(),
                     direct=True,
                 )
@@ -5830,7 +5824,7 @@ class SpecfileV2(SpecfileReaderBase):
         return cls.read_specfile_dep_specs(node.get("dependencies", []))
 
     @classmethod
-    def read_specfile_dep_specs(cls, deps, hash_type="hash") -> List[DepSpecComponents]:
+    def read_specfile_dep_specs(cls, deps) -> List[DepSpecComponents]:
         """Read the DependencySpec portion of a YAML-formatted Spec.
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
