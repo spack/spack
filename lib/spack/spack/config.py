@@ -1978,6 +1978,32 @@ def _migrate_user_config_programmatic() -> bool:
     return True
 
 
+def _move_directory_contents_with_lock(src_dir: str, dst_dir: str, resource_name: str) -> bool:
+    """Move contents with destination locking to prevent concurrent migrations.
+
+    Args:
+        src_dir: Source directory
+        dst_dir: Destination directory
+        resource_name: Name of resource for logging (e.g., "licenses", "environments")
+
+    Returns:
+        True if move was successful, False if skipped due to collision
+    """
+    # Lock the destination parent directory to prevent concurrent migrations
+    dst_parent = os.path.dirname(dst_dir)
+    filesystem.mkdirp(dst_parent)
+    lock_path = os.path.join(dst_parent, f".spack-{resource_name}-migration.lock")
+
+    lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+    lock.acquire_write()
+    try:
+        tty.debug(f"Acquired migration lock for {dst_dir}")
+        return _move_directory_contents(src_dir, dst_dir, resource_name)
+    finally:
+        lock.release_write()
+        tty.debug(f"Released migration lock for {dst_dir}")
+
+
 def _move_directory_contents(src_dir: str, dst_dir: str, resource_name: str) -> bool:
     """Move contents of src_dir to dst_dir, checking for collisions.
 
@@ -2109,8 +2135,8 @@ def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[s
                 data_home = substitute_path_variables("$data_home")
                 target_licenses_dir = os.path.join(data_home, "licenses")
 
-            # Attempt to move licenses
-            if _move_directory_contents(old_licenses_dir, target_licenses_dir, "licenses"):
+            # Attempt to move licenses (with destination locking)
+            if _move_directory_contents_with_lock(old_licenses_dir, target_licenses_dir, "licenses"):
                 # Successfully moved, point config to new location
                 if is_isolate_command:
                     if "config" not in layout_config:
@@ -2146,8 +2172,8 @@ def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[s
                 data_home = substitute_path_variables("$data_home")
                 target_envs_dir = os.path.join(data_home, "environments")
 
-            # Attempt to move environments
-            if _move_directory_contents(old_envs_dir, target_envs_dir, "environments"):
+            # Attempt to move environments (with destination locking)
+            if _move_directory_contents_with_lock(old_envs_dir, target_envs_dir, "environments"):
                 # Successfully moved, point config to new location
                 if is_isolate_command:
                     if "config" not in layout_config:
@@ -2236,23 +2262,9 @@ def create_incremental() -> Generator[Configuration, None, None]:
             DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
         )
 
-    # Check if migration/layout scope setup is needed
-    # This happens AFTER the spack scope is loaded (so we can check if isolate scope
-    # is active). The layout scope itself will be loaded via standard_scopes/include.yaml
-    if not _has_layout_scope():
-        # Use Spack's file locking to prevent concurrent migration
-        lock_dir = os.path.join(spack.paths.var_path, "locks")
-        filesystem.mkdirp(lock_dir)
-        lock_path = os.path.join(lock_dir, "migration.lock")
-
-        migration_lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-        migration_lock.acquire_write()
-        try:
-            # Check again - another instance may have completed while we waited
-            if not _has_layout_scope():
-                _perform_migration_check(cfg)
-        finally:
-            migration_lock.release_write()
+    # NOTE: Migration is now handled in main.py after command parsing, not during
+    # config initialization. See _perform_auto_migration() and main.py for details.
+    # The old migration check code with $spack-global locking has been removed.
 
 
 def create() -> Configuration:
