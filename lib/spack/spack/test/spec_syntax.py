@@ -1705,6 +1705,10 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("zlib %[c=gcc]", "edge attributes"),
         # regression: an unconsumed token used to make the parser loop forever
         ("zlib ]", "unexpected token"),
+        # The same variant cannot be specified twice
+        ("x +foo +foo", "twice"),
+        ("x +foo ~foo", "twice"),
+        ("x foo=bar foo=baz", "twice"),
     ],
 )
 def test_error_conditions(text, match_string):

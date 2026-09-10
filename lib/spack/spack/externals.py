@@ -139,7 +139,7 @@ def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
                     if default is None:
                         continue
                     # Cannot use Spec.constrain, because we lose information on the variant type
-                    node.variants[name] = default
+                    node.variants.set(default)
                 elif (
                     node.variants[name].type != vdef.variant_type
                     and len(node.variants[name].values) == 1
@@ -148,7 +148,7 @@ def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
                     # using the package definition, preserving the user-specified value.
                     existing = node.variants[name]
                     corrected = vdef.make_variant(*existing.values)
-                    node.variants.substitute(corrected)
+                    node.variants.set(corrected)
             changed = True
 
 
