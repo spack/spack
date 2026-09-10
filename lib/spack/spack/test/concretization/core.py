@@ -44,6 +44,7 @@ import spack.solver.result
 import spack.solver.reuse
 import spack.spec
 import spack.spec_filter
+import spack.spec_parser
 import spack.store
 import spack.traverse
 import spack.util.file_cache
@@ -2746,7 +2747,11 @@ packages:
         build_dep = spack.concretize.concretize_one("dttop")
         json_file = tmp_path / "build.json"
         json_file.write_text(build_dep.to_json())
-        s = spack.concretize.concretize_one(f"dtuse ^{str(json_file)}")
+        s = spack.concretize.concretize_one(
+            spack.spec_parser.parse_one_or_raise(
+                f"dtuse ^{json_file}", user_input=spack.spec_parser.UserInput(specfiles=True)
+            )
+        )
         assert s["dttop"].dag_hash() == build_dep.dag_hash()
 
     @pytest.mark.regression("44040")

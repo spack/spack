@@ -13,7 +13,6 @@ import spack.deptypes as dt
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.reporters
-import spack.spec
 import spack.store
 from spack.active_environment import active_environment
 from spack.util import tty
@@ -230,7 +229,7 @@ def _cdash_reporter(namespace):
                 # Ensure CI 'spack test run' can output CDash results
                 packages = args.package
 
-            return [str(spack.spec.Spec(s)) for s in packages]
+            return [str(s) for s in spack.cmd.parse_specs(packages)]
 
         configuration = spack.reporters.CDashConfiguration(
             upload_url=namespace.cdash_upload_url,

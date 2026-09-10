@@ -11,6 +11,7 @@ import spack.concretize
 import spack.error
 import spack.operating_systems
 import spack.platforms
+import spack.spec_parser
 from spack.spec import ArchSpec, Spec
 
 
@@ -60,9 +61,19 @@ def test_user_input_combination(config, target_str, os_str):
     """Test for all the valid user input combinations that both the target and
     the operating system match.
     """
-    spec = Spec(f"libelf os={os_str} target={target_str}")
-    assert spec.architecture.os == str(TEST_PLATFORM.operating_system(os_str))
-    assert spec.architecture.target == TEST_PLATFORM.target(target_str)
+    spec = spack.spec_parser.parse_one_or_raise(
+        f"libelf os={os_str} target={target_str}", user_input=spack.spec_parser.UserInput()
+    )
+    expected_os = TEST_PLATFORM.default_os if os_str == "default_os" else os_str
+    expected_target = TEST_PLATFORM.default if target_str == "default_target" else target_str
+    assert spec.architecture.os == str(TEST_PLATFORM.operating_system(expected_os))
+    assert spec.architecture.target == TEST_PLATFORM.target(expected_target)
+
+
+def test_solver_rejects_host_aliases(config, mock_packages):
+    """Host aliases are resolved in user input only: unresolved ones must not reach the solver."""
+    with pytest.raises(spack.error.SpecError, match="only resolved in user input"):
+        spack.concretize.concretize_one(Spec("libelf target=default_target"))
 
 
 def test_default_os_and_target(config, mock_packages):

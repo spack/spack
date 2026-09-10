@@ -641,28 +641,8 @@ class ArchSpec:
 
     @os.setter
     def os(self, value):
-        # The OS of the architecture spec will update the platform field
-        # if the OS is set to one of the reserved OS types so that the
-        # default OS type can be resolved.  Since the reserved OS
-        # information is only available for the host machine, the platform
-        # will assumed to be the host machine's platform.
-        value = str(value) if value is not None else None
-
-        if value in spack.platforms.Platform.reserved_oss:
-            curr_platform = str(spack.platforms.host())
-            self.platform = self.platform or curr_platform
-
-            if self.platform != curr_platform:
-                raise ValueError(
-                    "Can't set arch spec OS to reserved value '%s' when the "
-                    "arch platform (%s) isn't the current platform (%s)"
-                    % (value, self.platform, curr_platform)
-                )
-
-            spec_platform = spack.platforms.by_name(self.platform)
-            value = str(spec_platform.operating_system(value))
-
-        self._os = value
+        # default_os is kept as is: spack.spec_parser.resolve_host_aliases resolves it
+        self._os = str(value) if value is not None else None
 
     @property
     def target(self):
@@ -671,36 +651,13 @@ class ArchSpec:
 
     @target.setter
     def target(self, value):
-        # The target of the architecture spec will update the platform field
-        # if the target is set to one of the reserved target types so that
-        # the default target type can be resolved.  Since the reserved target
-        # information is only available for the host machine, the platform
-        # will assumed to be the host machine's platform.
-
-        def target_or_none(t):
-            if isinstance(t, spack.vendor.archspec.cpu.Microarchitecture):
-                return t
-            if t and t != "None":
-                return _make_microarchitecture(t)
-            return None
-
-        value = target_or_none(value)
-
-        if str(value) in spack.platforms.Platform.reserved_targets:
-            curr_platform = str(spack.platforms.host())
-            self.platform = self.platform or curr_platform
-
-            if self.platform != curr_platform:
-                raise ValueError(
-                    "Can't set arch spec target to reserved value '%s' when "
-                    "the arch platform (%s) isn't the current platform (%s)"
-                    % (value, self.platform, curr_platform)
-                )
-
-            spec_platform = spack.platforms.by_name(self.platform)
-            value = spec_platform.target(value)
-
-        self._target = value
+        # default_target is kept as is: spack.spec_parser.resolve_host_aliases resolves it
+        if isinstance(value, spack.vendor.archspec.cpu.Microarchitecture):
+            self._target = value
+        elif value and value != "None":
+            self._target = _make_microarchitecture(value)
+        else:
+            self._target = None
 
     def satisfies(self, other: "ArchSpec") -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.

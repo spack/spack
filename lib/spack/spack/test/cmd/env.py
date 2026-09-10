@@ -25,6 +25,7 @@ import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.solver.asp
+import spack.spec_parser
 import spack.stage
 import spack.store
 import spack.util.environment
@@ -735,6 +736,16 @@ def test_remove_before_concretize(mutable_config):
         e.remove("mpileaks")
         e.concretize()
         assert not e.concretized_roots
+
+
+def test_remove_spec_with_host_alias(tmp_path: pathlib.Path):
+    """Manifest entries using default_os/default_target are matched after evaluation, since the
+    spec on the command line is evaluated too."""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text("spack:\n  specs: [mpileaks target=default_target]\n")
+    with ev.Environment(tmp_path):
+        remove("mpileaks", "target=default_target")
+    assert "mpileaks" not in manifest.read_text()
 
 
 def test_remove_command():
@@ -2807,7 +2818,9 @@ spack:
 
             assert before_user == after_user
 
-            mpileaks_spec = Spec("mpileaks target=default_target")
+            mpileaks_spec = spack.spec_parser.parse_one_or_raise(
+                "mpileaks target=default_target", user_input=spack.spec_parser.UserInput()
+            )
             assert mpileaks_spec in {x.root for x in concretized_roots_before}
             assert mpileaks_spec not in {x.root for x in concretized_roots_after}
 

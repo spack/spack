@@ -26,6 +26,7 @@ import spack.archspec
 import spack.deptypes
 import spack.repo
 import spack.spec
+import spack.spec_parser
 import spack.variant as vt
 from spack.error import SpackError
 from spack.util import tty
@@ -70,8 +71,11 @@ def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
         )
 
     result.extra_attributes = extra_attributes
+    spack.spec_parser.resolve_host_aliases(result)
     if "required_target" in external_dict:
-        result.constrain(f"target={external_dict['required_target']}")
+        required = spack.spec.Spec(f"target={external_dict['required_target']}")
+        spack.spec_parser.resolve_host_aliases(required)
+        result.constrain(required)
     return result
 
 

@@ -75,6 +75,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, Union
 
 import spack.deptypes
 import spack.error
+import spack.platforms
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.enums import PropagationPolicy
@@ -82,6 +83,7 @@ from spack.tokenize import fast_regex
 from spack.util.tty import color
 
 if TYPE_CHECKING:
+    import spack.config
     import spack.spec
 
 # Cannot use from spack.spec import Spec due to circularities, so we lazily
@@ -168,21 +170,80 @@ class SpecTokenizationError(spack.error.SpecSyntaxError):
         super().__init__(message)
 
 
-def parse(text: str, *, toolchains: Optional[Dict] = None) -> List["spack.spec.Spec"]:
-    """Parse text into a list of strings
+class UserInput:
+    """How to evaluate specs written by users, unlike the pure specs in package repositories."""
+
+    __slots__ = ("toolchains", "specfiles")
+
+    def __init__(self, *, toolchains: Optional[Dict] = None, specfiles: bool = False) -> None:
+        self.toolchains = toolchains or {}
+        self.specfiles = specfiles
+
+    @staticmethod
+    def from_config(
+        config: "spack.config.Configuration", *, specfiles: bool = False
+    ) -> "UserInput":
+        return UserInput(toolchains=config.get("toolchains"), specfiles=specfiles)
+
+
+def evaluate(
+    spec: "spack.spec.Spec",
+    user_input: UserInput,
+    *,
+    _cache: Optional[Dict[str, "spack.spec.Spec"]] = None,
+) -> None:
+    """Evaluate a parsed user spec in place: substitute toolchains, then resolve host aliases."""
+    if user_input.toolchains:
+        expand_toolchains(spec, user_input.toolchains, _cache=_cache)
+    resolve_host_aliases(spec)
+
+
+def has_host_aliases(arch: "spack.spec.ArchSpec") -> bool:
+    """Whether ``arch`` uses ``os=default_os`` or ``target=default_target``."""
+    return (
+        arch.os in spack.platforms.Platform.reserved_oss
+        or str(arch.target) in spack.platforms.Platform.reserved_targets
+    )
+
+
+def resolve_host_aliases(spec: "spack.spec.Spec") -> None:
+    """Replace ``os=default_os`` and ``target=default_target`` by the host's defaults."""
+    # most specs are a single node: the traversal machinery costs more than the check itself
+    nodes = spec.traverse() if spec._dependencies else (spec,)
+    for node in nodes:
+        arch = node.architecture
+        if arch is None or not has_host_aliases(arch):
+            continue
+        host = spack.platforms.host()  # memoized
+        host_name = str(host)
+        if arch.platform is None:
+            arch.platform = host_name
+        elif arch.platform != host_name:
+            raise spack.error.SpecError(
+                f"cannot use default_os or default_target in '{node}': its platform "
+                f"{arch.platform} is not the current platform {host_name}"
+            )
+        if arch.os in spack.platforms.Platform.reserved_oss:
+            arch.os = str(host.default_operating_system())
+        if str(arch.target) in spack.platforms.Platform.reserved_targets:
+            arch.target = host.default_target()
+
+
+def parse(text: str, *, user_input: Optional[UserInput] = None) -> List["spack.spec.Spec"]:
+    """Parse text into a list of specs
 
     Args:
         text: text to be parsed
-        toolchains: optional toolchain definitions to expand after parsing
+        user_input: if given, the text is user input, and the specs are evaluated accordingly
 
     Return:
         List of specs
     """
-    specs = SpecParser(text).all_specs()
-    if toolchains:
+    specs = SpecParser(text, specfiles=bool(user_input and user_input.specfiles)).all_specs()
+    if user_input is not None:
         cache: Dict[str, "spack.spec.Spec"] = {}
         for spec in specs:
-            expand_toolchains(spec, toolchains, _cache=cache)
+            evaluate(spec, user_input, _cache=cache)
     return specs
 
 
@@ -190,16 +251,16 @@ def parse_one_or_raise(
     text: str,
     initial_spec: Optional["spack.spec.Spec"] = None,
     *,
-    toolchains: Optional[Dict] = None,
+    user_input: Optional[UserInput] = None,
 ) -> "spack.spec.Spec":
     """Parse exactly one spec from text and return it, or raise
 
     Args:
         text: text to be parsed
         initial_spec: buffer where to parse the spec. If None a new one will be created.
-        toolchains: optional toolchain definitions to expand after parsing
+        user_input: if given, the text is user input, and the spec is evaluated accordingly
     """
-    parser = SpecParser(text)
+    parser = SpecParser(text, specfiles=bool(user_input and user_input.specfiles))
     result = parser.next_spec(initial_spec)
 
     if parser.curr:
@@ -217,8 +278,8 @@ def parse_one_or_raise(
     if result is None:
         raise ValueError("expected a single spec, but got none")
 
-    if toolchains:
-        expand_toolchains(result, toolchains)
+    if user_input is not None:
+        evaluate(result, user_input)
 
     return result
 
@@ -452,10 +513,12 @@ class SpecParser:
       where the token cannot appear at the current point in the grammar.
     """
 
-    __slots__ = "literal_str", "scanner", "curr", "next"
+    __slots__ = "literal_str", "scanner", "curr", "next", "specfiles"
 
-    def __init__(self, literal_str: str):
+    def __init__(self, literal_str: str, *, specfiles: bool = False):
         self.literal_str = literal_str.rstrip()
+        #: whether spec files are read, or rejected
+        self.specfiles = specfiles
         self.scanner = FAST_SPEC_REGEX.scanner(self.literal_str)  # type: ignore[attr-defined]
         self.curr = self.scanner.match()
         self.next = self.scanner.match()
@@ -739,6 +802,9 @@ class SpecParser:
                 next = scanner.match() if curr is not None else None
             elif kind == _FILENAME:
                 # A spec file is a complete node: read it and return
+                if not self.specfiles:
+                    self.curr = curr
+                    self._raise_parsing_error("spec files are only accepted on the command line")
                 if not os.path.exists(value):
                     raise spack.error.NoSuchSpecFileError(f"No such spec file: '{value}'")
                 spec._dup(spack.spec.Spec.from_specfile(value))

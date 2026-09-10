@@ -43,6 +43,7 @@ import spack.repo
 import spack.schema.env
 import spack.schema.spec_list
 import spack.spec
+import spack.spec_parser
 import spack.store
 import spack.user_environment as uenv
 import spack.util.environment
@@ -1332,7 +1333,7 @@ class Environment:
 
     def _sync_speclists(self):
         self._spec_lists_parser = SpecListParser(
-            toolchains=spack.config.CONFIG.get("toolchains", {})
+            user_input=spack.spec_parser.UserInput.from_config(spack.config.CONFIG)
         )
         self.spec_lists = {}
         self.spec_lists.update(
@@ -3366,9 +3367,15 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             ValueError: if no equivalent match is found
         """
+        # both sides are user input: evaluate them the same way before comparing
+        user_input = spack.spec_parser.UserInput.from_config(spack.config.CONFIG)
+        wanted = spack.spec_parser.parse_one_or_raise(user_spec, user_input=user_input)
         result = []
         for yaml_spec_str in self.configuration["specs"]:
-            if Spec(yaml_spec_str) == Spec(user_spec):
+            if (
+                spack.spec_parser.parse_one_or_raise(yaml_spec_str, user_input=user_input)
+                == wanted
+            ):
                 result.append(yaml_spec_str)
 
         if not result:
