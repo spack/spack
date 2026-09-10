@@ -2182,27 +2182,30 @@ def _copy_directory_contents(
 
 
 def _do_migrate(
-    is_isolate_command: bool, isolate_target: Optional[str] = None
+    is_isolate_command: bool,
+    isolate_target: Optional[str] = None,
+    config_scope_path: Optional[str] = None,
 ) -> None:
     """Perform auto-migration of Spack data from old to new locations.
-
-    NOTE: This can eventually replace _do_isolate_migration() once we verify
-    the new approach works correctly.
 
     Args:
         is_isolate_command: True if running `spack isolate`, False otherwise
         isolate_target: Path to isolate directory (only used if is_isolate_command=True)
+        config_scope_path: Directory to write config files to (isolate scope or layout scope)
+            If None, uses layout scope path for normal commands
     """
     tty.debug(f"Auto-migration called (is_isolate_command={is_isolate_command})")
 
     # Detect what old resources exist
     old_resources = _detect_old_resources()
 
-    # Create layout scope directory
-    layout_path = _layout_scope_path()
-    filesystem.mkdirp(layout_path)
+    # Determine which config scope to write to
+    if config_scope_path is None:
+        config_scope_path = _layout_scope_path()
+    filesystem.mkdirp(config_scope_path)
 
-    layout_config: Dict[str, Any] = {}
+    # Config to write to scope (isolate scope or layout scope)
+    scope_config: Dict[str, Any] = {}
 
     # 1. Handle installs and modules
     # If installs exist in old location, keep them there
@@ -2210,7 +2213,7 @@ def _do_migrate(
         old_modules_tcl = os.path.join(spack.paths.prefix, "share", "spack", "modules", "tcl")
         old_modules_lmod = os.path.join(spack.paths.prefix, "share", "spack", "modules", "lmod")
 
-        layout_config["modules"] = {
+        scope_config["modules"] = {
             "default": {"roots": {"tcl": old_modules_tcl, "lmod": old_modules_lmod}}
         }
         tty.debug(
@@ -2218,7 +2221,7 @@ def _do_migrate(
         )
     # Otherwise, use new defaults (no config needed for isolate, explicit for non-isolate)
     elif is_isolate_command and isolate_target:
-        layout_config["modules"] = {
+        scope_config["modules"] = {
             "default": {
                 "roots": {
                     "tcl": os.path.join(isolate_target, "modules", "tcl"),
@@ -2232,123 +2235,133 @@ def _do_migrate(
     # If GPG keys exist in old location, keep them there
     old_gpg_dir = os.path.join(spack.paths.prefix, "opt", "spack", "gpg")
     if old_resources["gpg_keys"]:
-        if "config" not in layout_config:
-            layout_config["config"] = {}
-        layout_config["config"]["gpg_path"] = old_gpg_dir
+        if "config" not in scope_config:
+            scope_config["config"] = {}
+        scope_config["config"]["gpg_path"] = old_gpg_dir
         tty.debug(f"Old GPG keys exist, keeping in {old_gpg_dir}")
     # Otherwise, use new defaults (explicit for isolate only)
     elif is_isolate_command and isolate_target:
-        if "config" not in layout_config:
-            layout_config["config"] = {}
-        layout_config["config"]["gpg_path"] = os.path.join(isolate_target, "gpg")
+        if "config" not in scope_config:
+            scope_config["config"] = {}
+        scope_config["config"]["gpg_path"] = os.path.join(isolate_target, "gpg")
         tty.debug(f"No old GPG keys, pointing to {isolate_target}/gpg")
 
     # 3. Handle licenses
-    # Only auto-migrate for non-isolate commands, and only if configured location
-    # equals new default
     old_licenses_dir = os.path.join(spack.paths.prefix, "opt", "spack", "licenses")
     if old_resources["licenses"]:
-        if is_isolate_command:
-            # Don't auto-migrate during isolate - let `spack isolate` command handle it
-            tty.debug("Running isolate command, not auto-migrating licenses")
+        # Determine destination directory based on command type
+        if is_isolate_command and isolate_target:
+            target_licenses_dir = os.path.join(isolate_target, "licenses")
         else:
-            # Normal command: migrate if configured location equals new default
             data_home = substitute_path_variables("$data_home")
-            new_default_licenses = os.path.join(data_home, "licenses")
+            target_licenses_dir = os.path.join(data_home, "licenses")
 
-            # Get current configured location and normalize
+        # For non-isolate: only migrate if configured location equals new default
+        should_attempt_migration = True
+        if not is_isolate_command:
             configured_license_dir = CONFIG.get("config:license_dir")
             configured_license_dir = os.path.normpath(
                 os.path.expanduser(canonicalize_path(configured_license_dir))
             )
-            new_default_licenses_norm = os.path.normpath(os.path.expanduser(new_default_licenses))
+            target_licenses_norm = os.path.normpath(os.path.expanduser(target_licenses_dir))
 
-            if configured_license_dir == new_default_licenses_norm:
-                # Configured location is new default, attempt migration
-                if _copy_directory_contents_with_lock(
-                    old_licenses_dir, new_default_licenses, "licenses"
-                ):
-                    # Successfully copied - new default is used automatically
-                    tty.debug(
-                        f"Copied licenses from {old_licenses_dir} to {new_default_licenses}"
-                    )
-                else:
-                    # Copy failed, keep in old location
-                    if "config" not in layout_config:
-                        layout_config["config"] = {}
-                    layout_config["config"]["license_dir"] = old_licenses_dir
-                    tty.debug(f"Licenses kept in old location: {old_licenses_dir}")
-            else:
+            if configured_license_dir != target_licenses_norm:
                 # User has custom location, don't migrate
                 tty.debug(
                     f"Licenses configured to custom location {configured_license_dir}, "
                     f"not migrating from {old_licenses_dir}"
                 )
+                should_attempt_migration = False
                 # Keep in old location
-                if "config" not in layout_config:
-                    layout_config["config"] = {}
-                layout_config["config"]["license_dir"] = old_licenses_dir
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["license_dir"] = old_licenses_dir
+
+        # Attempt migration if appropriate
+        if should_attempt_migration:
+            if _copy_directory_contents_with_lock(old_licenses_dir, target_licenses_dir, "licenses"):
+                # Successfully copied
+                if is_isolate_command:
+                    # For isolate, always write explicit path
+                    if "config" not in scope_config:
+                        scope_config["config"] = {}
+                    scope_config["config"]["license_dir"] = target_licenses_dir
+                # For non-isolate, new default is used automatically (don't write)
+                tty.debug(f"Copied licenses from {old_licenses_dir} to {target_licenses_dir}")
+            else:
+                # Copy failed (collision), keep in old location
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["license_dir"] = old_licenses_dir
+                tty.debug(f"Licenses kept in old location: {old_licenses_dir}")
 
     # 4. Handle environments
-    # Only auto-migrate for non-isolate commands, and only if configured location
-    # equals new default
     old_envs_dir = spack.paths.old_envs_path
     if old_resources["environments"]:
-        if is_isolate_command:
-            # Don't auto-migrate during isolate - let `spack isolate` command handle it
-            tty.debug("Running isolate command, not auto-migrating environments")
+        # Determine destination directory based on command type
+        if is_isolate_command and isolate_target:
+            target_envs_dir = os.path.join(isolate_target, "environments")
         else:
-            # Normal command: migrate if configured location equals new default
             data_home = substitute_path_variables("$data_home")
-            new_default_envs = os.path.join(data_home, "environments")
+            target_envs_dir = os.path.join(data_home, "environments")
 
-            # Get current configured location and normalize
+        # For non-isolate: only migrate if configured location equals new default
+        should_attempt_migration = True
+        if not is_isolate_command:
             configured_env_root = CONFIG.get("config:environments_root")
             configured_env_root = os.path.normpath(
                 os.path.expanduser(canonicalize_path(configured_env_root))
             )
-            new_default_envs_norm = os.path.normpath(os.path.expanduser(new_default_envs))
+            target_envs_norm = os.path.normpath(os.path.expanduser(target_envs_dir))
 
-            if configured_env_root == new_default_envs_norm:
-                # Configured location is new default, attempt migration
-                if _copy_directory_contents_with_lock(old_envs_dir, new_default_envs, "environments"):
-                    # Successfully copied - new default is used automatically
-                    tty.debug(f"Copied environments from {old_envs_dir} to {new_default_envs}")
-                else:
-                    # Copy failed, keep in old location
-                    if "config" not in layout_config:
-                        layout_config["config"] = {}
-                    layout_config["config"]["environments_root"] = old_envs_dir
-                    tty.debug(f"Environments kept in old location: {old_envs_dir}")
-            else:
+            if configured_env_root != target_envs_norm:
                 # User has custom location, don't migrate
                 tty.debug(
                     f"Environments configured to custom location {configured_env_root}, "
                     f"not migrating from {old_envs_dir}"
                 )
+                should_attempt_migration = False
                 # Keep in old location
-                if "config" not in layout_config:
-                    layout_config["config"] = {}
-                layout_config["config"]["environments_root"] = old_envs_dir
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["environments_root"] = old_envs_dir
+
+        # Attempt migration if appropriate
+        if should_attempt_migration:
+            if _copy_directory_contents_with_lock(old_envs_dir, target_envs_dir, "environments"):
+                # Successfully copied
+                if is_isolate_command:
+                    # For isolate, always write explicit path
+                    if "config" not in scope_config:
+                        scope_config["config"] = {}
+                    scope_config["config"]["environments_root"] = target_envs_dir
+                # For non-isolate, new default is used automatically (don't write)
+                tty.debug(f"Copied environments from {old_envs_dir} to {target_envs_dir}")
+            else:
+                # Copy failed (collision), keep in old location
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["environments_root"] = old_envs_dir
+                tty.debug(f"Environments kept in old location: {old_envs_dir}")
 
     # 5. Copy ~/.spack to ~/.config/spack (unless isolate command)
     if not is_isolate_command:
         _migrate_user_config_programmatic()
 
-    # Write layout scope config files
-    if "config" in layout_config:
-        config_yaml_path = os.path.join(layout_path, "config.yaml")
+    # Write config scope files (isolate scope or layout scope)
+    if "config" in scope_config:
+        config_yaml_path = os.path.join(config_scope_path, "config.yaml")
         with open(config_yaml_path, "w", encoding="utf-8") as f:
-            syaml.dump({"config": layout_config["config"]}, f)
-        tty.debug("Wrote config.yaml to layout scope")
+            syaml.dump({"config": scope_config["config"]}, f)
+        tty.debug(f"Wrote config.yaml to {config_scope_path}")
 
-    if "modules" in layout_config:
-        modules_yaml_path = os.path.join(layout_path, "modules.yaml")
+    if "modules" in scope_config:
+        modules_yaml_path = os.path.join(config_scope_path, "modules.yaml")
         with open(modules_yaml_path, "w", encoding="utf-8") as f:
-            syaml.dump(layout_config["modules"], f)
-        tty.debug("Wrote modules.yaml to layout scope")
+            syaml.dump(scope_config["modules"], f)
+        tty.debug(f"Wrote modules.yaml to {config_scope_path}")
 
-    tty.debug("Created layout scope for auto-migration")
+    tty.debug(f"Created config scope for auto-migration: {config_scope_path}")
 
 
 def _perform_migration_check(cfg: Configuration) -> None:
