@@ -31,20 +31,19 @@ def current_host_platform():
     return current_platform
 
 
-# Valid keywords for os=xxx or target=xxx
-VALID_KEYWORDS = ["fe", "be", "frontend", "backend"]
-
 TEST_PLATFORM = spack.platforms.Test()
 
 
-@pytest.fixture(params=([str(x) for x in TEST_PLATFORM.targets] + VALID_KEYWORDS), scope="module")
+@pytest.fixture(
+    params=([str(x) for x in TEST_PLATFORM.targets] + ["default_target"]), scope="module"
+)
 def target_str(request):
     """All the possible strings that can be used for targets"""
     return request.param
 
 
 @pytest.fixture(
-    params=([str(x) for x in TEST_PLATFORM.operating_sys] + VALID_KEYWORDS), scope="module"
+    params=([str(x) for x in TEST_PLATFORM.operating_sys] + ["default_os"]), scope="module"
 )
 def os_str(request):
     """All the possible strings that can be used for operating systems"""

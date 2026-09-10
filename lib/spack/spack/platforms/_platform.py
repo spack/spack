@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import warnings
 from typing import Optional
 
 import spack.vendor.archspec.cpu
@@ -28,9 +27,8 @@ class Platform:
     default: str
     default_os: str
 
-    reserved_targets = ["default_target", "frontend", "fe", "backend", "be"]
-    reserved_oss = ["default_os", "frontend", "fe", "backend", "be"]
-    deprecated_names = ["frontend", "fe", "backend", "be"]
+    reserved_targets = ["default_target"]
+    reserved_oss = ["default_os"]
 
     def __init__(self, name):
         self.targets = {}
@@ -51,16 +49,13 @@ class Platform:
 
     def target(self, name):
         name = str(name)
-        if name in Platform.deprecated_names:
-            warnings.warn(f"target={name} is deprecated, use target={self.default} instead")
-
         if name in Platform.reserved_targets:
             name = self.default
 
         return self.targets.get(name, None)
 
     def add_operating_system(self, name, os_class):
-        if name in Platform.reserved_oss + Platform.deprecated_names:
+        if name in Platform.reserved_oss:
             msg = f"{name} is a spack reserved alias and cannot be the name of an OS"
             raise ValueError(msg)
         self.operating_sys[name] = os_class
@@ -72,9 +67,6 @@ class Platform:
         return self.operating_system(self.default_os)
 
     def operating_system(self, name):
-        if name in Platform.deprecated_names:
-            warnings.warn(f"os={name} is deprecated, use os={self.default_os} instead")
-
         if name in Platform.reserved_oss:
             name = self.default_os
 
