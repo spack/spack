@@ -197,9 +197,7 @@ def evaluate(spec: "spack.spec.Spec", user_input: UserInput) -> None:
 
 def resolve_host_aliases(spec: "spack.spec.Spec") -> None:
     """Replace ``os=default_os`` and ``target=default_target`` by the host's defaults."""
-    # most specs are a single node: the traversal machinery costs more than the check itself
-    nodes = spec.traverse() if spec._dependencies else (spec,)
-    for node in nodes:
+    for node in spec.traverse():
         arch = node.architecture
         if arch is None:
             continue
@@ -207,14 +205,13 @@ def resolve_host_aliases(spec: "spack.spec.Spec") -> None:
         is_target = str(arch.target) in spack.platforms.Platform.reserved_targets
         if not is_os and not is_target:
             continue
-        host = spack.platforms.host()  # memoized
-        host_name = str(host)
+        host = spack.platforms.host()
         if arch.platform is None:
-            arch.platform = host_name
-        elif arch.platform != host_name:
+            arch.platform = str(host)
+        elif arch.platform != str(host):
             raise spack.error.SpecError(
                 f"cannot use default_os or default_target in '{node}': its platform "
-                f"{arch.platform} is not the current platform {host_name}"
+                f"{arch.platform} is not the current platform {host}"
             )
         if is_os:
             arch.os = str(host.default_operating_system())
