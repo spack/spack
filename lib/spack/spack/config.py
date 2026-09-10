@@ -2364,23 +2364,6 @@ def _do_migrate(
     tty.debug(f"Created config scope for auto-migration: {config_scope_path}")
 
 
-def _perform_migration_check(cfg: Configuration) -> None:
-    """DEPRECATED: Migration now happens in main.py after command is parsed.
-
-    This function is kept as a no-op to avoid breaking the config loading flow,
-    but actual migration logic has been moved to _do_migrate() which
-    is called from main.py.
-
-    See feature-summaries/shared-spack-auto-migrate.md for details.
-    """
-    # Migration is now handled by:
-    # 1. main.py calls _should_auto_migrate() after command parsing
-    # 2. If needed, calls _do_migrate(is_isolate_command=False)
-    # 3. spack isolate command will call _do_migrate with
-    #    (is_isolate_command=True, isolate_target=...)
-    pass
-
-
 def create_incremental() -> Generator[Configuration, None, None]:
     """Singleton Configuration instance.
 
