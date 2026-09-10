@@ -2007,15 +2007,12 @@ class Spec:
 
         # sha256s of this spec's patches in the order the concretizer applies them; the "patches"
         # variant stores the same set, but sorted
-        self._patches_in_order_of_appearance: Optional[List[str]] = None
+        self._patches_in_order_of_appearance: Optional[Tuple[str, ...]] = None
 
         # External detection details that can be set by internal Spack calls
         # in the constructor.
         self._external_path = external_path
-        if external_modules:
-            self.external_modules = list(external_modules)
-        else:
-            self.external_modules = None
+        self.external_modules = external_modules
 
         # This attribute is used to store custom information for external specs.
         self.extra_attributes: Dict[str, Any] = _EMPTY_DICT
@@ -2032,6 +2029,17 @@ class Spec:
 
         elif spec_like is not None:
             raise TypeError(f"Can't make spec out of {type(spec_like)}")
+
+    @property
+    def external_modules(self) -> Optional[Tuple[str, ...]]:
+        return self._external_modules
+
+    @external_modules.setter
+    def external_modules(self, modules) -> None:
+        # a plain tuple of strings: a module list read from a configuration file may contain
+        # YAML formatting that is discarded (non-essential) when stored as a Spec dictionary,
+        # and specs share the modules without copying them
+        self._external_modules = tuple(modules) if modules else None
 
     @property
     def external_path(self):
@@ -2741,7 +2749,7 @@ class Spec:
         if self.external:
             d["external"] = {
                 "path": self.external_path,
-                "module": self.external_modules or None,
+                "module": list(self.external_modules) if self.external_modules else None,
                 "extra_attributes": syaml.sorted_dict(self.extra_attributes),
             }
 
@@ -2749,7 +2757,7 @@ class Spec:
             d["concrete"] = False
 
         if self._patches_in_order_of_appearance:
-            d["patches"] = self._patches_in_order_of_appearance
+            d["patches"] = list(self._patches_in_order_of_appearance)
 
         # Assigned at concretization time; old specs may not have one
         if self._package_hash:
@@ -5673,8 +5681,6 @@ class SpecfileReaderBase(abc.ABC):
             if node["external"]:
                 spec.external_path = node["external"]["path"]
                 spec.external_modules = node["external"]["module"]
-                if spec.external_modules is False:
-                    spec.external_modules = None
                 spec.extra_attributes = node["external"].get("extra_attributes") or _EMPTY_DICT
 
         # specs read in are concrete unless marked abstract
@@ -5686,7 +5692,7 @@ class SpecfileReaderBase(abc.ABC):
             if len(patches) > 0:
                 mvar = spec.variants.get("patches") or vt.MultiValuedVariant("patches", ())
                 spec.variants = spec.variants.with_value(mvar.with_values(tuple(patches)))
-                spec._patches_in_order_of_appearance = patches
+                spec._patches_in_order_of_appearance = tuple(patches)
 
         # Annotate the compiler spec, might be used later
         if "annotations" not in node:
@@ -6178,7 +6184,7 @@ def _inject_patches_variant(root: Spec, *, repo: spack.repo.RepoPath) -> None:
             f"Ordered hashes [{spec.name}]: "
             + ", ".join("/".join(str(e) for e in t) for t in ordered_hashes)
         )
-        spec._patches_in_order_of_appearance = [sha256 for _, _, sha256 in ordered_hashes]
+        spec._patches_in_order_of_appearance = tuple(sha256 for _, _, sha256 in ordered_hashes)
 
 
 class InvalidVariantForSpecError(spack.error.SpecError):

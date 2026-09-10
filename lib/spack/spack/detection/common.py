@@ -42,7 +42,7 @@ def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
     return already_defined_specs
 
 
-ExternalEntryType = Union[str, Dict[str, str]]
+ExternalEntryType = Union[str, List[str], Dict[str, str]]
 
 
 def _pkg_config_dict(
@@ -74,7 +74,7 @@ def _pkg_config_dict(
             ("prefix", pathlib.Path(e.external_path).as_posix()),
         ]
         if e.external_modules:
-            external_items.append(("modules", e.external_modules))
+            external_items.append(("modules", list(e.external_modules)))
 
         if e.extra_attributes:
             external_items.append(
