@@ -1925,11 +1925,33 @@ def _should_auto_migrate() -> bool:
 def _migrate_user_config_programmatic() -> bool:
     """Programmatically migrate ~/.spack to ~/.config/spack.
 
+    Only performs migration if:
+    - A "user" scope exists in the loaded configuration
+    - That scope path is ~/.config/spack
+    - ~/.config/spack does not exist
+    - ~/.spack exists
+
     Returns:
         True if migration was performed, False if skipped
     """
     old_location = os.path.expanduser("~/.spack")
     new_config_location = os.path.expanduser("~/.config/spack")
+
+    # Check if there's a "user" scope in loaded config pointing to ~/.config/spack
+    user_scope = CONFIG.scopes.get("user")
+    if not user_scope:
+        tty.debug("No 'user' scope in loaded config, skipping user config migration")
+        return False
+
+    # Check if the user scope path is ~/.config/spack
+    user_scope_path = os.path.normpath(os.path.expanduser(user_scope.path))
+    expected_path = os.path.normpath(new_config_location)
+    if user_scope_path != expected_path:
+        tty.debug(
+            f"User scope path is {user_scope_path}, not {expected_path}, "
+            f"skipping user config migration"
+        )
+        return False
 
     # Skip if new location already exists
     if os.path.exists(new_config_location):
