@@ -198,7 +198,9 @@ class BuildcacheBootstrapper(Bootstrapper):
 
     def _install_by_hash(self, pkg_hash: str, pkg_sha256: str) -> None:
         # The caller is inside ensure_bootstrap_configuration, which already selects the platform
-        query = spack.binary_distribution.BinaryCacheQuery(all_architectures=True)
+        query = spack.binary_distribution.BinaryCacheQuery(
+            all_architectures=True, config=spack.config.CONFIG
+        )
         for match in spack.store.find([f"/{pkg_hash}"], multiple=False, query_fn=query):
             spack.binary_distribution.install_root_node(
                 # allow_missing is true since when bootstrapping clingo we truncate runtime
@@ -220,7 +222,9 @@ class BuildcacheBootstrapper(Bootstrapper):
             # This index is currently needed to get the compiler used to build some
             # specs that we know by dag hash.
             spack.binary_distribution.BINARY_INDEX.regenerate_spec_cache()
-            index = spack.binary_distribution.update_cache_and_get_specs()
+            index = spack.binary_distribution.update_cache_and_get_specs(
+                config=spack.config.CONFIG
+            )
 
             if not index:
                 raise RuntimeError("The binary index is empty")

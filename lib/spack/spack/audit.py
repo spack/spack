@@ -577,7 +577,9 @@ def _ensure_packages_are_unparseable(pkgs, error_cls):
     errors = []
     for pkg_name in pkgs:
         try:
-            source = ph.canonical_source(spack.spec.Spec(pkg_name), filter_multimethods=False)
+            source = ph.canonical_source(
+                spack.spec.Spec(pkg_name), filter_multimethods=False, repo=spack.repo.PATH
+            )
         except Exception as e:
             error_msg = "Package '{}' failed to unparse".format(pkg_name)
             details = ["{}".format(str(e))]

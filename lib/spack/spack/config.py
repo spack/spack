@@ -2257,7 +2257,7 @@ NOMATCH = object()
 
 
 # Substitutions to perform
-def replacements():
+def replacements(config: Optional["Configuration"] = None):
     arch = architecture()
 
     return {
@@ -2274,12 +2274,12 @@ def replacements():
         "target": lambda: arch.target,
         "target_family": lambda: arch.target.family,
         "date": lambda: __import__("datetime").date.today().strftime("%Y-%m-%d"),
-        "env": lambda: CONFIG.env_path or NOMATCH,
+        "env": lambda: (config if config is not None else CONFIG).env_path or NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
     }
 
 
-def substitute_config_variables(path):
+def substitute_config_variables(path, config: Optional["Configuration"] = None):
     """Substitute placeholders into paths.
 
     Spack allows paths in configs to have some placeholders, as follows:
@@ -2305,7 +2305,7 @@ def substitute_config_variables(path):
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
-    _replacements = replacements()
+    _replacements = replacements(config)
 
     # Look up replacements
     def repl(match):
@@ -2318,15 +2318,17 @@ def substitute_config_variables(path):
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
-def substitute_path_variables(path):
+def substitute_path_variables(path, config: Optional["Configuration"] = None):
     """Substitute config vars, expand environment vars, expand user home."""
-    path = substitute_config_variables(path)
+    path = substitute_config_variables(path, config)
     path = os.path.expandvars(path)
     path = os.path.expanduser(path)
     return path
 
 
-def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
+def canonicalize_path(
+    path: str, default_wd: Optional[str] = None, *, config: Optional["Configuration"] = None
+) -> str:
     """Same as substitute_path_variables, but also take absolute path.
 
     If the string is a yaml object with file annotations, make absolute paths
@@ -2351,7 +2353,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
         filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
         assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
 
-    path = substitute_path_variables(path)
+    path = substitute_path_variables(path, config)
 
     # Ensure properly process a Windows path
     win_path = pathlib.PureWindowsPath(path)

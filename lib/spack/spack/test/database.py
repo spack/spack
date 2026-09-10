@@ -271,7 +271,7 @@ def test_recursive_upstream_dbs(
         db_a.add(spec["x"])
 
         upstream_dbs_from_scratch = spack.store._construct_upstream_dbs_from_install_roots(
-            [roots[1], roots[2]]
+            [roots[1], roots[2]], config=spack.config.CONFIG
         )
         db_a_from_scratch = Database(roots[0], upstream_dbs=upstream_dbs_from_scratch)
 

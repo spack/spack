@@ -24,9 +24,9 @@ datadir = os.path.join(spack.paths.test_path, "data", "unparse")
 
 
 def compare_sans_name(repo, eq, spec1, spec2):
-    content1 = ph.canonical_source(spec1)
+    content1 = ph.canonical_source(spec1, repo=spack.repo.PATH)
     content1 = content1.replace(repo.get_pkg_class(spec1.name).__name__, "TestPackage")
-    content2 = ph.canonical_source(spec2)
+    content2 = ph.canonical_source(spec2, repo=spack.repo.PATH)
     content2 = content2.replace(repo.get_pkg_class(spec2.name).__name__, "TestPackage")
     if eq:
         assert content1 == content2
@@ -35,27 +35,29 @@ def compare_sans_name(repo, eq, spec1, spec2):
 
 
 def compare_hash_sans_name(repo, eq, spec1, spec2):
-    content1 = ph.canonical_source(spec1)
+    content1 = ph.canonical_source(spec1, repo=spack.repo.PATH)
     pkg_cls1 = repo.get_pkg_class(spec1.name)
     content1 = content1.replace(pkg_cls1.__name__, "TestPackage")
-    hash1 = pkg_cls1(spec1).content_hash(content=content1)
+    hash1 = pkg_cls1(spec1).content_hash(content=content1, repo=spack.repo.PATH)
 
-    content2 = ph.canonical_source(spec2)
+    content2 = ph.canonical_source(spec2, repo=spack.repo.PATH)
     pkg_cls2 = repo.get_pkg_class(spec2.name)
     content2 = content2.replace(pkg_cls2.__name__, "TestPackage")
-    hash2 = pkg_cls2(spec2).content_hash(content=content2)
+    hash2 = pkg_cls2(spec2).content_hash(content=content2, repo=spack.repo.PATH)
 
     assert (hash1 == hash2) == eq
 
 
 def test_hash(mock_packages, config):
-    ph.package_hash(Spec("hash-test1@=1.2"))
+    ph.package_hash(Spec("hash-test1@=1.2"), repo=spack.repo.PATH)
 
 
 def test_different_variants(mock_packages, config):
     spec1 = Spec("hash-test1@=1.2 +variantx")
     spec2 = Spec("hash-test1@=1.2 +varianty")
-    assert ph.package_hash(spec1) == ph.package_hash(spec2)
+    assert ph.package_hash(spec1, repo=spack.repo.PATH) == ph.package_hash(
+        spec2, repo=spack.repo.PATH
+    )
 
 
 def test_all_same_but_name(mock_packages: RepoPath, config):
@@ -129,7 +131,9 @@ def test_package_hash_of_shadowed_package(mock_packages: RepoPath, config, repo_
         shadowing = Spec(f"{repo_builder.namespace}.pkg-c")
         shadowed = Spec("builtin_mock.pkg-c")
 
-        assert ph.package_hash(shadowing) != ph.package_hash(shadowed)
+        assert ph.package_hash(shadowing, repo=spack.repo.PATH) != ph.package_hash(
+            shadowed, repo=spack.repo.PATH
+        )
 
 
 def test_content_hash_different_variants(mock_packages: RepoPath, config):
@@ -161,7 +165,7 @@ def test_content_hash_all_same_but_archive_hash(mock_packages: RepoPath, config)
 
 def test_content_hash_parse_dynamic_function_call(mock_packages, config):
     spec = spack.concretize.concretize_one("hash-test4")
-    spec.package.content_hash()
+    spec.package.content_hash(repo=spack.repo.PATH)
 
 
 many_strings = '''\
@@ -388,7 +392,7 @@ def test_package_hash_consistency(package_spec, expected_hash):
     filename = os.path.join(datadir, "%s.txt" % spec.name)
     with open(filename, "rb") as f:
         source = f.read()
-    h = ph.package_hash(spec, source=source)
+    h = ph.package_hash(spec, source=source, repo=spack.repo.PATH)
     assert expected_hash == h
 
 
@@ -468,7 +472,7 @@ class Pkg:
     ],
 )
 def test_multimethod_resolution(spec_str, source, expected, not_expected):
-    filtered = ph.canonical_source(Spec(spec_str), source=source)
+    filtered = ph.canonical_source(Spec(spec_str), source=source, repo=spack.repo.PATH)
     for item in expected:
         assert item in filtered
     for item in not_expected:
