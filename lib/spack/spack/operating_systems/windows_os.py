@@ -7,7 +7,9 @@ import os
 import pathlib
 import platform
 import subprocess
-from typing import List
+from typing import Dict, List, Tuple
+
+from spack.vendor.archspec.cpu import host
 
 from spack.error import SpackError
 from spack.util import lang, tty
@@ -15,6 +17,14 @@ from spack.util import windows_registry as winreg
 from spack.version import Version
 
 from ._operating_system import OperatingSystem
+
+#: Directory holding the native MSVC toolset for each host architecture family.
+#: MSVC lays out its compilers as ``bin/<host>/<target>`` under each toolset version;
+#: only the entry whose host and target both match the machine Spack runs on is native.
+NATIVE_MSVC_TOOLSET_DIRS: Dict[str, Tuple[str, str]] = {
+    "x86_64": ("Hostx64", "x64"),
+    "aarch64": ("Hostarm64", "arm64"),
+}
 
 
 def windows_version():
@@ -65,28 +75,40 @@ class WindowsOs(OperatingSystem):
         root = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles")
         if not root:
             return []
-        try:
-            extra_args = {"encoding": "mbcs", "errors": "strict"}
-            paths = subprocess.check_output(  # type: ignore[call-overload] # novermin
-                [
-                    os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
-                    "-prerelease",
-                    "-requires",
-                    "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
-                    "-property",
-                    "installationPath",
-                    "-products",
-                    "*",
-                ],
-                **extra_args,
-            )
-        except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
-            return []
-        # vswhere prints nothing at all when no instance matches, so drop empty lines
-        # rather than reporting a single empty (i.e. relative) install root.
-        valid_entries = filter(str.strip, paths.splitlines())
-        # return nicely cleaned list of valid vs entries
-        return [line.strip() for line in valid_entries]
+
+        def get_vs_component_paths(component: str) -> List[str]:
+            try:
+                extra_args = {"encoding": "mbcs", "errors": "strict"}
+                paths = subprocess.check_output(  # type: ignore[call-overload] # novermin
+                    [
+                        os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
+                        "-prerelease",
+                        "-requires",
+                        component,
+                        "-property",
+                        "installationPath",
+                        "-products",
+                        "*",
+                    ],
+                    **extra_args,
+                )
+            except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
+                return []
+            # vswhere prints nothing at all when no instance matches, so drop empty lines
+            # rather than reporting a single empty (i.e. relative) install root.
+            valid_entries = filter(str.strip, paths.splitlines())
+            # return nicely cleaned list of valid vs entries
+            return [line.strip() for line in valid_entries]
+
+        components = [
+            "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+            "Microsoft.VisualStudio.Component.VC.Tools.ARM",
+            "Microsoft.VisualStudio.Component.VC.Tools.ARM64",
+        ]
+        vs_install_paths = []
+        for component in components:
+            vs_install_paths.extend(get_vs_component_paths(component))
+        return vs_install_paths
 
     def _registry_install_paths(self) -> List[str]:
         """Visual Studio install roots recorded in the Windows registry.
@@ -173,9 +195,22 @@ class WindowsOs(OperatingSystem):
         ``vs_install_paths`` reports installation roots; the compilers themselves live
         several levels below one, so the roots are never search paths in their own right.
         """
-        _compiler_search_paths = []
+        _compiler_search_paths: List[str] = []
+        host_family = host().family.name
+        system_arch_family = NATIVE_MSVC_TOOLSET_DIRS.get(host_family)
+        if system_arch_family is None:
+            tty.debug(
+                f"No native MSVC toolset mapping for host target family {host_family}",
+                "only cross-compilers may be available or host arch detection failed",
+                level=2,
+            )
+            return _compiler_search_paths
+
+        host_dir, target_dir = system_arch_family
         for p in self.msvc_paths:
-            _compiler_search_paths.extend(glob.glob(os.path.join(p, "*", "bin", "Hostx64", "x64")))
+            _compiler_search_paths.extend(
+                glob.glob(os.path.join(p, "*", "bin", host_dir, target_dir))
+            )
         oneapi_root = self.oneapi_root
         if oneapi_root:
             _compiler_search_paths.extend(
