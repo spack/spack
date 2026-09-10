@@ -1986,8 +1986,8 @@ def _migrate_user_config_programmatic() -> bool:
     lock_path = os.path.join(config_parent, ".spack-user-config-migration.lock")
 
     lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-    lock.acquire_write()
     try:
+        lock.acquire_write()
         tty.debug(f"Acquired migration lock for {new_config_location}")
         return _do_migrate_user_config(
             old_location, new_config_location, config_files, spack.cmd.migrate
@@ -2071,8 +2071,8 @@ def _copy_directory_contents_with_lock(src_dir: str, dst_dir: str, resource_name
     lock_path = os.path.join(dst_parent, f".spack-{resource_name}-migration.lock")
 
     lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-    lock.acquire_write()
     try:
+        lock.acquire_write()
         tty.debug(f"Acquired migration lock for {dst_dir}")
         return _copy_directory_contents(src_dir, dst_dir, resource_name)
     finally:
