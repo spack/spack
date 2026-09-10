@@ -54,14 +54,13 @@ class SpecList:
     def specs(self) -> List[Spec]:
         if self._specs is None:
             specs: List[Spec] = []
-            toolchain_cache: Dict[str, Spec] = {}
             # This could be slightly faster done directly from yaml_list,
             # but this way is easier to maintain.
             for constraint_list in self.specs_as_constraints:
                 spec = constraint_list[0].copy()
                 for const in constraint_list[1:]:
                     spec.constrain(const)
-                evaluate(spec, self._user_input, _cache=toolchain_cache)
+                evaluate(spec, self._user_input)
                 specs.append(spec)
             self._specs = specs
 

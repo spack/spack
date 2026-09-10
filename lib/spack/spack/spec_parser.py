@@ -173,11 +173,13 @@ class SpecTokenizationError(spack.error.SpecSyntaxError):
 class UserInput:
     """How to evaluate specs written by users, unlike the pure specs in package repositories."""
 
-    __slots__ = ("toolchains", "specfiles")
+    __slots__ = ("toolchains", "specfiles", "_toolchain_cache")
 
     def __init__(self, *, toolchains: Optional[Dict] = None, specfiles: bool = False) -> None:
         self.toolchains = toolchains or {}
         self.specfiles = specfiles
+        #: toolchain name -> parsed toolchain spec, filled lazily by expand_toolchains
+        self._toolchain_cache: Dict[str, "spack.spec.Spec"] = {}
 
     @staticmethod
     def from_config(
@@ -186,15 +188,10 @@ class UserInput:
         return UserInput(toolchains=config.get("toolchains"), specfiles=specfiles)
 
 
-def evaluate(
-    spec: "spack.spec.Spec",
-    user_input: UserInput,
-    *,
-    _cache: Optional[Dict[str, "spack.spec.Spec"]] = None,
-) -> None:
+def evaluate(spec: "spack.spec.Spec", user_input: UserInput) -> None:
     """Evaluate a parsed user spec in place: substitute toolchains, then resolve host aliases."""
     if user_input.toolchains:
-        expand_toolchains(spec, user_input.toolchains, _cache=_cache)
+        expand_toolchains(spec, user_input.toolchains, _cache=user_input._toolchain_cache)
     resolve_host_aliases(spec)
 
 
@@ -237,9 +234,8 @@ def parse(text: str, *, user_input: Optional[UserInput] = None) -> List["spack.s
     """
     specs = SpecParser(text, specfiles=bool(user_input and user_input.specfiles)).all_specs()
     if user_input is not None:
-        cache: Dict[str, "spack.spec.Spec"] = {}
         for spec in specs:
-            evaluate(spec, user_input, _cache=cache)
+            evaluate(spec, user_input)
     return specs
 
 

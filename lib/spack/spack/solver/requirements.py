@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
 import warnings
-from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import List, NamedTuple, Optional, Sequence, Tuple, Union
 
 import spack.vendor.archspec.cpu
 
@@ -178,12 +178,11 @@ class RequirementParser:
         self.compiler_pkgs = repo.packages_with_tags("compiler")
         self.preferences_from_input: List[Tuple[spack.spec.Spec, str]] = []
         self.user_input = spack.spec_parser.UserInput.from_config(configuration)
-        self._toolchain_cache: Dict[str, spack.spec.Spec] = {}
         self._warned_compiler_all: set = set()
 
     def _parse_and_expand(self, string: str, *, named: bool = False) -> spack.spec.Spec:
         result = parse_spec_from_yaml_string(string, named=named)
-        spack.spec_parser.evaluate(result, self.user_input, _cache=self._toolchain_cache)
+        spack.spec_parser.evaluate(result, self.user_input)
         return result
 
     def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
