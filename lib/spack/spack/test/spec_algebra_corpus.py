@@ -29,7 +29,7 @@ from typing import Callable, List, Optional, Sequence, Tuple
 import spack.paths
 import spack.repo
 from spack.error import SpecError
-from spack.spec import Spec, meet
+from spack.spec import EMPTY_SPEC, PropagationPolicy, Spec, meet
 
 #: Abstract specs covering every dimension ``constrain`` merges. Every check below runs over the
 #: product of this list with itself, which makes the checks slow and makes them reach combinations
@@ -131,13 +131,18 @@ def _try_constrain(lhs, rhs):
 
 def _narrowing_dimensions(spec: Spec):
     """The state of the dimensions in which leaving a value unset is an absent constraint rather
-    than a constraint satisfied by default, as a comparable snapshot."""
+    than a constraint satisfied by default, as a comparable snapshot. The edges are part of it:
+    an edge the lhs already matches must not be copied in beside the edge matching it."""
     return (
         str(spec.versions),
         {name: str(value) for name, value in spec.variants.items()},
         str(spec.architecture),
         {name: [str(flag) for flag in flags] for name, flags in spec.compiler_flags.items()},
         spec.abstract_hash,
+        sorted(
+            (str(edge.when), edge.direct, edge.depflag, edge.virtuals, str(edge.spec))
+            for edge in spec.edges_to_dependencies()
+        ),
     )
 
 
@@ -287,10 +292,17 @@ def check_satisfies_implies_the_narrowing_dimensions_are_unchanged():
     flags are compared by value, since merging a propagating flag with a plain one of the
     same value demotes it; see
     spec_semantics.py's test_flag_propagation_is_invisible_to_satisfies.
+
+    An rhs edge under a when condition is filled in when the condition does not apply, and a
+    propagated rhs edge merges its policy into a plain one, so pairs whose rhs carries either
+    are skipped.
     """
     for lhs_str, rhs_str, lhs, rhs in _pairs():
-        propagating = any(value.propagate for value in rhs.variants.values())
-        if lhs.satisfies(rhs) and not propagating:
+        skipped = any(value.propagate for value in rhs.variants.values()) or any(
+            edge.when is not EMPTY_SPEC or edge.propagation is not PropagationPolicy.NONE
+            for edge in rhs.edges_to_dependencies()
+        )
+        if lhs.satisfies(rhs) and not skipped:
             before = _narrowing_dimensions(lhs)
             _try_constrain(lhs, rhs)
             assert _narrowing_dimensions(lhs) == before, (

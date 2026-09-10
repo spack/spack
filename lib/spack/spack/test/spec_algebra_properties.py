@@ -209,6 +209,8 @@ DIMENSIONS: Tuple[Dimension, ...] = (
         "direct_dep",
         (
             "",
+            # as in transitive_dep: an anonymous requirement a named edge can absorb
+            "%*@1",
             "%pkg-e",
             "%%pkg-e",
             "%pkg-e@1",
@@ -243,6 +245,10 @@ DIMENSIONS: Tuple[Dimension, ...] = (
         "transitive_dep",
         (
             "",
+            # anonymous requirements next to named edges satisfying them, so the sweep reaches
+            # the pair that absorbs an anonymous edge into a named one
+            "^*@1",
+            "^*+bvv",
             "^pkg-b",
             "^pkg-b@1",
             "^pkg-b@2",
