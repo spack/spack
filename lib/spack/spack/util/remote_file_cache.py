@@ -9,12 +9,15 @@ import shutil
 import tempfile
 import urllib.parse
 import urllib.request
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import spack.util.crypto
 from spack.util import tty
 from spack.util.filesystem import copy, join_path, mkdirp
 from spack.util.url import validate_scheme
+
+if TYPE_CHECKING:
+    import spack.config
 
 
 def raw_github_gitlab_url(url: str) -> str:
@@ -35,12 +38,15 @@ def raw_github_gitlab_url(url: str) -> str:
     return url
 
 
-def fetch_remote_text_file(url: str, dest_dir: str) -> str:
+def _fetch_remote_text_file(
+    url: str, dest_dir: str, *, config: "spack.config.Configuration"
+) -> str:
     """Retrieve the text file from the url into the destination directory.
 
     Arguments:
         url: URL for the remote text file
         dest_dir: destination directory in which to stage the file locally
+        config: configuration to read the fetch method and connection settings from
 
     Returns:
         Path to the fetched file
@@ -56,16 +62,19 @@ def fetch_remote_text_file(url: str, dest_dir: str) -> str:
     raw_url = raw_github_gitlab_url(url)
     tty.debug(f"Fetching file from {raw_url} into {dest_dir}")
 
-    return fetch_url_text(raw_url, dest_dir=dest_dir)
+    return fetch_url_text(raw_url, dest_dir=dest_dir, config=config)
 
 
-def local_path(path: str, sha256: str, dest: Optional[str] = None) -> str:
+def local_path(
+    path: str, sha256: str, dest: Optional[str] = None, *, config: "spack.config.Configuration"
+) -> str:
     """Determine the actual path and, if remote, stage its contents locally.
 
     Args:
         path: the resolved configuration path
         sha256: the expected sha256 if the file is remote
         dest: destination path
+        config: configuration to read the fetch settings from, if the file is remote
 
     Returns: normalized local path
 
@@ -104,7 +113,7 @@ def local_path(path: str, sha256: str, dest: Optional[str] = None) -> str:
             # Stage the remote configuration file
             tmpdir = tempfile.mkdtemp()
             try:
-                staged_path = fetch_remote_text_file(path, tmpdir)
+                staged_path = _fetch_remote_text_file(path, tmpdir, config=config)
 
                 # Ensure the sha256 is expected.
                 checksum = spack.util.crypto.checksum(hashlib.sha256, staged_path)

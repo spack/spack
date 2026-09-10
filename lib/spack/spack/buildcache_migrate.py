@@ -105,7 +105,7 @@ def _migrate_spec(
 
     for meta_url in v2_metadata_urls:
         try:
-            spec_contents = web_util.read_text(meta_url)
+            spec_contents = web_util.read_text(meta_url, config=spack.config.CONFIG)
             v2_spec_url = meta_url
             break
         except (web_util.SpackWebError, OSError):
@@ -205,7 +205,9 @@ def _migrate_spec(
     tty.debug(f"Pushing {local_tarfile_path} to {v3_archive_url}")
 
     try:
-        web_util.push_to_url(local_tarfile_path, v3_archive_url, keep_original=True)
+        web_util.push_to_url(
+            local_tarfile_path, v3_archive_url, keep_original=True, config=spack.config.CONFIG
+        )
     except Exception:
         return MigrateSpecResult(False, f"Failed to push archive for {print_spec}")
 
@@ -213,7 +215,9 @@ def _migrate_spec(
     tty.debug(f"Pushing {spec_json_path} to {v3_spec_url}")
 
     try:
-        web_util.push_to_url(spec_json_path, v3_spec_url, keep_original=True)
+        web_util.push_to_url(
+            spec_json_path, v3_spec_url, keep_original=True, config=spack.config.CONFIG
+        )
     except Exception:
         return MigrateSpecResult(False, f"Failed to push spec metadata for {print_spec}")
 
@@ -239,7 +243,9 @@ def _migrate_spec(
 
     # Push the manifest
     try:
-        web_util.push_to_url(manifest_path, v3_manifest_url, keep_original=True)
+        web_util.push_to_url(
+            manifest_path, v3_manifest_url, keep_original=True, config=spack.config.CONFIG
+        )
     except Exception:
         return MigrateSpecResult(False, f"Failed to push manifest for {print_spec}")
 
@@ -281,7 +287,7 @@ def migrate(
     contents = None
 
     try:
-        contents = web_util.read_text(index_url)
+        contents = web_util.read_text(index_url, config=spack.config.CONFIG)
     except (web_util.SpackWebError, OSError):
         raise MigrationException("Buildcache migration requires a buildcache index")
 
@@ -350,6 +356,6 @@ def migrate(
         if delete_existing:
             delete_prefix = url_util.join(mirror_url, "build_cache")
             tty.msg(f"Recursively deleting {delete_prefix}")
-            web_util.remove_url(delete_prefix, recursive=True)
+            web_util.remove_url(delete_prefix, recursive=True, config=spack.config.CONFIG)
 
     tty.msg("Migration complete")

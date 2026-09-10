@@ -309,7 +309,9 @@ def install_from_buildcache(
     # Skip if no configured mirror accepts this spec (select/exclude filters)
     if not any(
         m.matches_binary(spec, direction="fetch")
-        for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
+        for m in spack.mirrors.mirror.MirrorCollection.from_config(
+            spack.config.CONFIG, binary=True
+        ).values()
     ):
         return False
 
