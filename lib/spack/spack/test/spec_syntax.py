@@ -770,6 +770,38 @@ def specfile_for(config, mock_packages):
             ],
             "pkg-a ^pkg-b %pkg-c ^pkg-b@1",
         ),
+        # Neither depflag is a superset of the other, so the edges stay parallel, as in the
+        # link/build case above. Indirect edges to one name are never one node on deptypes
+        # alone; a shared virtual, or being direct, is what fuses them.
+        (
+            "^[deptypes=link] zlib ^[deptypes=run] zlib",
+            [
+                Token("DEPENDENCY", value="^["),
+                Token("KEY_VALUE_PAIR", value="deptypes=link"),
+                Token("END_EDGE_PROPERTIES", value="]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", value="zlib"),
+                Token("DEPENDENCY", value="^["),
+                Token("KEY_VALUE_PAIR", value="deptypes=run"),
+                Token("END_EDGE_PROPERTIES", value="]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", value="zlib"),
+            ],
+            "^[deptypes=link] zlib ^[deptypes=run] zlib",
+        ),
+        # [build,link] already implies [link], so the second edge is redundant and is discarded.
+        (
+            "^[deptypes=build,link] zlib ^[deptypes=link] zlib",
+            [
+                Token("DEPENDENCY", value="^["),
+                Token("KEY_VALUE_PAIR", value="deptypes=build,link"),
+                Token("END_EDGE_PROPERTIES", value="]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", value="zlib"),
+                Token("DEPENDENCY", value="^["),
+                Token("KEY_VALUE_PAIR", value="deptypes=link"),
+                Token("END_EDGE_PROPERTIES", value="]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", value="zlib"),
+            ],
+            "^[deptypes=build,link] zlib",
+        ),
         (
             "git-test@git.foo/bar",
             [
@@ -2057,7 +2089,7 @@ def test_when_edge_attribute_keeps_commas():
         # a when= value is a spec, which extends to the closing bracket and is printed unquoted
         ("%[when=a=*]", "%[when=a='*'] *"),
         ("""x %[when="a=']'"] gcc""", "x %[when=a=']'] gcc"),
-        ("foo ^[when=bar virtuals=c] baz", "foo ^[when=bar virtuals=c] baz"),
+        ("foo ^[when=+x virtuals=c] baz", "foo ^[when=+x virtuals=c] baz"),
         ("foo when=bar", "foo when=bar"),
         # a quoted when= is a value like any other, so it can precede other edge attributes
         ("foo ^[when='+x' virtuals=c] bar", "foo ^[when=+x] c=bar"),
