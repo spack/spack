@@ -7,6 +7,7 @@ import re
 import sys
 from typing import Dict, Optional, Tuple
 
+import spack.config
 import spack.repo
 import spack.spec
 import spack.stage
@@ -144,7 +145,7 @@ def checksum(parser, args):
         possible_urls = pkg.all_urls_for_version(version)
         if url not in possible_urls:
             for possible_url in possible_urls:
-                if web_util.url_exists(possible_url):
+                if web_util.url_exists(possible_url, config=spack.config.CONFIG):
                     url_dict[version] = possible_url
                     break
             else:

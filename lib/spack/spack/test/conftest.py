@@ -24,7 +24,7 @@ import tempfile
 import textwrap
 import xml.etree.ElementTree
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pytest
 
@@ -1091,6 +1091,20 @@ def mutable_empty_config(tmp_path_factory: pytest.TempPathFactory, configuration
 
     with _use_configuration_and_store(*scopes) as cfg:
         yield cfg
+
+
+@pytest.fixture
+def inactive_config():
+    """Returns a factory of Configuration objects that are never activated as the global
+    ``spack.config.CONFIG``, to test that code uses the configuration it is given.
+    """
+
+    def _factory(data: Dict[str, Any]) -> spack.config.Configuration:
+        config = spack.config.Configuration()
+        config.push_scope(spack.config.InternalConfigScope("inactive", data))
+        return config
+
+    return _factory
 
 
 # From  https://github.com/pytest-dev/pytest/issues/363#issuecomment-1335631998
@@ -2276,7 +2290,7 @@ def mock_curl_configs(mock_config_data, monkeypatch):
     config_data_dir, config_files = mock_config_data
 
     class MockCurl:
-        def __init__(self):
+        def __init__(self, *, config):
             self.returncode = None
 
         def __call__(self, *args, **kwargs):
@@ -2306,7 +2320,7 @@ def mock_fetch_url_text(mock_config_data, monkeypatch):
 
     stage_dir, config_files = mock_config_data
 
-    def _fetch_text_file(url, dest_dir):
+    def _fetch_text_file(url, dest_dir, *, config):
         raw_url = raw_github_gitlab_url(url)
         mkdirp(dest_dir)
         basename = os.path.basename(raw_url)

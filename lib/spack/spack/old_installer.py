@@ -452,7 +452,9 @@ def _try_install_from_binary_cache(
     # Early exit if no binary mirror accepts this spec (select/exclude filters).
     if not any(
         m.matches_binary(pkg.spec, direction="fetch")
-        for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
+        for m in spack.mirrors.mirror.MirrorCollection.from_config(
+            spack.config.CONFIG, binary=True
+        ).values()
     ):
         return False
 

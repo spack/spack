@@ -1149,7 +1149,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         urls = self.all_urls_for_version(version)
 
         for u in urls:
-            if spack.util.web.url_exists(u):
+            if spack.util.web.url_exists(u, config=spack.config.CONFIG):
                 return u
 
         return None
@@ -1164,7 +1164,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             mirror_paths=spack.mirrors.layout.default_mirror_layout(
                 resource.fetcher, os.path.join(self.name, pretty_resource_name)
             ),
-            mirrors=spack.mirrors.mirror.MirrorCollection(source=True).values(),
+            mirrors=spack.mirrors.mirror.MirrorCollection.from_config(
+                spack.config.CONFIG, source=True
+            ).values(),
             path=self.path,
         )
 
@@ -1185,7 +1187,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         stage = stg.Stage(
             fetcher,
             mirror_paths=mirror_paths,
-            mirrors=spack.mirrors.mirror.MirrorCollection(source=True).values(),
+            mirrors=spack.mirrors.mirror.MirrorCollection.from_config(
+                spack.config.CONFIG, source=True
+            ).values(),
             name=stage_name,
             path=self.path,
             search_fn=self._download_search,
@@ -1245,7 +1249,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 fetcher,
                 name=f"{stg.stage_prefix}-{uniqe_part}-patch-{fetch_digest}",
                 mirror_paths=mirror_ref,
-                mirrors=spack.mirrors.mirror.MirrorCollection(source=True).values(),
+                mirrors=spack.mirrors.mirror.MirrorCollection.from_config(
+                    spack.config.CONFIG, source=True
+                ).values(),
             )
 
         if self.spec.concrete:

@@ -447,19 +447,16 @@ class MirrorCollection(Mapping[str, Mirror]):
 
     def __init__(
         self,
-        mirrors: Optional[Mapping[str, Any]] = None,
-        scope: Optional[str] = None,
+        mirrors: Mapping[str, Any],
+        *,
         binary: Optional[bool] = None,
         source: Optional[bool] = None,
         autopush: Optional[bool] = None,
-        *,
-        config: Optional[spack.config.Configuration] = None,
     ):
         """Initialize a mirror collection.
 
         Args:
             mirrors: A name-to-mirror mapping to initialize the collection with.
-            scope: The scope to use when looking up mirrors from the config.
             binary: If True, only include binary mirrors.
                     If False, omit binary mirrors.
                     If None, do not filter on binary mirrors.
@@ -468,17 +465,7 @@ class MirrorCollection(Mapping[str, Mirror]):
                     If None, do not filter on source mirrors.
             autopush: If True, only include mirrors that have autopush enabled.
                       If False, omit mirrors that have autopush enabled.
-                      If None, do not filter on autopush.
-            config: configuration to look up mirrors from when ``mirrors`` is None. If None, the
-                    global ``spack.config.CONFIG`` is used."""
-        if config is None:
-            config = spack.config.CONFIG
-        mirrors_data = (
-            mirrors.items()
-            if mirrors is not None
-            else config.get_config("mirrors", scope=scope).items()
-        )
-        mirrors = (Mirror(data=mirror, name=name) for name, mirror in mirrors_data)
+                      If None, do not filter on autopush."""
 
         def _filter(m: Mirror):
             if source is not None and m.source != source:
@@ -489,7 +476,28 @@ class MirrorCollection(Mapping[str, Mirror]):
                 return False
             return True
 
-        self._mirrors = {m.name: m for m in mirrors if _filter(m)}
+        all_mirrors = (Mirror(data=mirror, name=name) for name, mirror in mirrors.items())
+        self._mirrors = {m.name: m for m in all_mirrors if _filter(m)}
+
+    @staticmethod
+    def from_config(
+        config: spack.config.Configuration,
+        *,
+        scope: Optional[str] = None,
+        binary: Optional[bool] = None,
+        source: Optional[bool] = None,
+        autopush: Optional[bool] = None,
+    ) -> "MirrorCollection":
+        """Returns the mirrors in ``config``, or in one of its scopes if ``scope`` is given.
+
+        The ``binary``, ``source`` and ``autopush`` filters are those of the constructor.
+        """
+        return MirrorCollection(
+            config.get_config("mirrors", scope=scope),
+            binary=binary,
+            source=source,
+            autopush=autopush,
+        )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, MirrorCollection):

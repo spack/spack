@@ -38,8 +38,10 @@ from spack.util.lang import memoized
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 
+
 # this exists purely for testing purposes
-_urlopen = web_util.urlopen
+def _urlopen(request, **kwargs):
+    return web_util.opener_for(cfg.CONFIG)(request, **kwargs)
 
 
 def copy_gzipped(glob_or_path: str, dest: str) -> None:
@@ -592,7 +594,9 @@ class SpackCIConfig:
             {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
         ]
 
-        pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
+        pipeline_mirrors = spack.mirrors.mirror.MirrorCollection.from_config(
+            cfg.CONFIG, binary=True
+        )
         buildcache_destination = pipeline_mirrors["buildcache-destination"]
         update_index_extra_args = []
         if buildcache_destination.push_view:
