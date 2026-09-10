@@ -9,7 +9,6 @@ import platform
 import subprocess
 from typing import Dict, List, Tuple
 
-from spack.archspec import HOST_TARGET_FAMILY
 from spack.error import SpackError
 from spack.util import lang, tty
 from spack.util import windows_registry as winreg
@@ -194,11 +193,14 @@ class WindowsOs(OperatingSystem):
         ``vs_install_paths`` reports installation roots; the compilers themselves live
         several levels below one, so the roots are never search paths in their own right.
         """
-        _compiler_search_paths = []
-        system_arch_family = NATIVE_MSVC_TOOLSET_DIRS.get(HOST_TARGET_FAMILY.name)
+        import spack.archspec # break circular dependency
+
+        _compiler_search_paths: List[str] = []
+        host_family = spack.archspec.HOST_TARGET_FAMILY.name
+        system_arch_family = NATIVE_MSVC_TOOLSET_DIRS.get(host_family)
         if system_arch_family is None:
             tty.debug(
-                f"No native MSVC toolset mapping for host target family {HOST_TARGET_FAMILY.name}",
+                f"No native MSVC toolset mapping for host target family {host_family}",
                 "only cross-compilers may be available or host arch detection failed",
                 level=2,
             )
