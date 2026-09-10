@@ -2515,6 +2515,20 @@ class SpackSolverSetup:
         self.virtual_requirements_and_weights()
         self.external_packages(packages_with_externals)
 
+        # Compilers are never built in a solve, so these are all it can pick from. They are only
+        # used to explain a failure.
+        for c in self.possible_compilers:
+            if c.name not in self.pkgs:
+                continue
+            kind = "external" if c.external else "installed"
+            where = f"{kind} at {c.external_path}" if c.external else kind
+            offer = f"'{c.format('{name}{@version}{/hash:7}')}' ({where})"
+            self.gen.pkg_fact(c.name, fn.compiler_on_offer(offer, str(c.version), kind))
+        for c in self.rejected_compilers:
+            if c.name in self.pkgs:
+                offer = f"'{c.format('{name}{@version}')}' (external at {c.external_path})"
+                self.gen.pkg_fact(c.name, fn.compiler_rejected(offer))
+
         # TODO: make a config option for this undocumented feature
         checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
         self.define_package_versions_and_validate_preferences(

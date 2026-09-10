@@ -170,6 +170,52 @@ error(0, "Cannot build {0}, since it is configured `buildable:false` and the ext
      imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
      condition_holds(Cause, node(CauseID, TriggerPkg)).
 
+% A compiler that would have to be built. Compilers are never built in a solve: whatever provides a
+% language must be external or installed, so this is the compiler twin of `buildable:false`, and
+% the messages name the compilers the solve could have used instead.
+compiler_to_build(node(ID, Package))
+  :- provider(node(ID, Package), node(_, Language)),
+     language(Language),
+     build(node(ID, Package)).
+
+% With `buildable:false`, the rule above already quotes the externals as written in packages.yaml.
+compiler_offer_named(Package, "external") :- buildable_false(Package).
+
+error(0, "Cannot build compiler {0}, only external or installed compilers can be used; available is {1}", Package, Offer)
+  :- compiler_to_build(node(ID, Package)),
+     pkg_fact(Package, compiler_on_offer(Offer, _, Kind)),
+     not compiler_offer_named(Package, Kind).
+
+error(0, "Cannot build compiler {0}, only external or installed compilers can be used, and none are available", Package)
+  :- compiler_to_build(node(ID, Package)),
+     not pkg_fact(Package, compiler_on_offer(_, _, _)).
+
+error(0, "Ignored compiler {1}: it is configured, but failed the sanity checks (run with `spack -d` for details)", Package, Offer)
+  :- compiler_to_build(node(ID, Package)),
+     pkg_fact(Package, compiler_rejected(Offer)).
+
+% ... and when the version is the mismatch, say which constraint it failed and who asked for it.
+% The constraint is imposed on the compiler node itself, or on a direct dependency, which is how
+% `%gcc@11.4.0` is encoded.
+compiler_version_cause(Package, Constraint, Cause, CauseID)
+  :- compiler_to_build(node(_, Package)),
+     pkg_fact(TriggerPkg, condition_effect(Cause, EffectID)),
+     imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
+     condition_holds(Cause, node(CauseID, TriggerPkg)).
+
+compiler_version_cause(Package, Constraint, Cause, CauseID)
+  :- compiler_to_build(node(_, Package)),
+     pkg_fact(TriggerPkg, condition_effect(Cause, EffectID)),
+     imposed_constraint(EffectID, "direct_dependency", _, node_requirement("node_version_satisfies", Package, Constraint)),
+     condition_holds(Cause, node(CauseID, TriggerPkg)).
+
+error(0, "Cannot use compiler {1}, since it does not satisfy '{0}@{2}'", Package, Offer, Constraint, startcauses, Cause, CauseID)
+  :- compiler_to_build(node(ID, Package)),
+     pkg_fact(Package, compiler_on_offer(Offer, Version, _)),
+     attr("node_version_satisfies", node(ID, Package), Constraint),
+     not pkg_fact(Package, version_satisfies(Constraint, Version)),
+     compiler_version_cause(Package, Constraint, Cause, CauseID).
+
 % error message with causes for conflicts
 error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
   :- attr("node", node(ID, Package)),
@@ -233,6 +279,7 @@ pkg_fact(Package, version_satisfies(Constraint, Version)) :-
 #defined trigger_and_effect/3.
 #defined build/1.
 #defined buildable_false/1.
+#defined language/1.
 #defined node_has_variant/3.
 #defined provider/2.
 #defined variant_single_value/2.
