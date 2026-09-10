@@ -222,15 +222,22 @@ def _relative_key(key, prefix):
     return key
 
 
-def _iter_s3_prefix(s3, url, num_entries=1024):
+def _iter_s3_prefix(s3, url, relative: bool = False, num_entries: int = 1024):
     bucket = url.netloc
     stripped_path = url.path.strip("/")
     prefix = f"{stripped_path}/" if stripped_path else ""
     paginator = s3.get_paginator("list_objects_v2")
-    pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
+    pages = paginator.paginate(Bucket=bucket, Prefix=prefix, MaxKeys=num_entries)
 
     for item in pages.search("Contents"):
-        key = _relative_key(item["Key"], prefix)
+        if not item:
+            continue
+
+        if relative:
+            key = _relative_key(item["Key"], prefix)
+        else:
+            key = item["Key"]
+
         if key is not None:
             yield key
 
@@ -246,9 +253,9 @@ def list_objects(s3, url: urllib.parse.ParseResult, recursive: bool = False):
         List of keys under the bucket/prefix.
     """
     if recursive:
-        return list(_iter_s3_prefix(s3, url))
+        return list(_iter_s3_prefix(s3, url, relative=True))
 
-    return list({key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)})
+    return list({key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url, relative=True)})
 
 
 def _debug_print_delete_results(result):
@@ -267,16 +274,9 @@ def delete_objects(s3, url: urllib.parse.ParseResult, recursive: bool = False):
     if recursive:
         # Because list_objects_v2 can only return up to 1000 items
         # at a time, we have to paginate to make sure we get it all
-        prefix = url.path.strip("/")
-        paginator = s3.get_paginator("list_objects_v2")
-        pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
-
         delete_request: Dict[str, List[Dict[str, str]]] = {"Objects": []}
-        for item in pages.search("Contents"):
-            if not item:
-                continue
-
-            delete_request["Objects"].append({"Key": item["Key"]})
+        for key in _iter_s3_prefix(s3, url, relative=False):
+            delete_request["Objects"].append({"Key": key})
 
             # Make sure we do not try to hit S3 with a list of more
             # than 1000 items

@@ -526,7 +526,9 @@ def test_list_s3_url_at_bucket_root(monkeypatch):
 
     listing = spack.util.web.list_url("s3://my-bucket", recursive=True)
 
-    assert client.paginator.paginate_calls == [{"Bucket": "my-bucket", "Prefix": ""}]
+    assert client.paginator.paginate_calls == [
+        {"Bucket": "my-bucket", "Prefix": "", "MaxKeys": 1024}
+    ]
     assert listing == ["some/object.txt"]
 
 
