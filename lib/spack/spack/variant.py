@@ -311,8 +311,10 @@ class VariantValue:
     concrete: bool
     type: VariantType
     _values: ValueType
+    _key: Tuple
 
-    __slots__ = ("name", "propagate", "concrete", "type", "_values")
+    #: ``_key`` is set on interned values only; see :func:`intern_variant_value`
+    __slots__ = ("name", "propagate", "concrete", "type", "_values", "_key")
 
     def __init__(
         self,
@@ -578,11 +580,16 @@ _VARIANT_VALUE_CACHE: Dict[Tuple, VariantValue] = {}
 
 
 def intern_variant_value(value: VariantValue) -> VariantValue:
-    """Return the shared VariantValue equal to ``value``."""
+    """Return the shared VariantValue equal to ``value``.
+
+    The result carries ``_key``, which identifies it exactly, unlike ``__eq__``, which ignores the
+    variant type. Maps of variant values are interned by the keys of the values they hold.
+    """
     key = (value.type, value.name, value.propagate, value.concrete, value._values)
     cached = _VARIANT_VALUE_CACHE.get(key)
     if cached is not None:
         return cached
+    value._key = key
     _VARIANT_VALUE_CACHE[key] = value
     return value
 
