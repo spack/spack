@@ -13,7 +13,6 @@ from typing import Dict, List, NamedTuple
 import spack.repo
 import spack.spec
 import spack.traverse
-from spack.util import tty
 
 from .core import NodeId, min_dupe_node
 from .error import SolverError, SpliceSerializationError
@@ -180,7 +179,9 @@ class Result:
     def __init__(self, specs):
         self.satisfiable = None
         self.optimal = None
-        self.warnings = None
+        # Diagnostics about the answer set. Stored, rather than warned about while building
+        # specs, so that a result served from the concretization cache reports them too.
+        self.warnings: List[str] = []
         self.nmodels = 0
 
         # specs ordered by optimization level
@@ -211,13 +212,17 @@ class Result:
 
         raise SolverError(constraints)
 
+    def ensure_specs(self) -> None:
+        """Turn the answer set into specs, if that has not happened already."""
+        if self._unsolved_specs is None:
+            self._compute_specs_from_answer_set()
+
     @property
     def specs(self):
         """List of concretized specs satisfying the initial
         abstract request.
         """
-        if self._concrete_specs is None:
-            self._compute_specs_from_answer_set()
+        self.ensure_specs()
         return self._concrete_specs
 
     @property
@@ -226,14 +231,12 @@ class Result:
         solved with their associated candidate spec from the solver
         (if the solve completed).
         """
-        if self._unsolved_specs is None:
-            self._compute_specs_from_answer_set()
+        self.ensure_specs()
         return self._unsolved_specs
 
     @property
     def specs_by_input(self) -> Dict[spack.spec.Spec, spack.spec.Spec]:
-        if self._concrete_specs_by_input is None:
-            self._compute_specs_from_answer_set()
+        self.ensure_specs()
         return self._concrete_specs_by_input  # type: ignore
 
     def _compute_specs_from_answer_set(self):
@@ -262,7 +265,7 @@ class Result:
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             elif candidate and candidate.build_spec.satisfies(input_spec):
-                tty.warn(
+                self.warnings.append(
                     "explicit splice configuration has caused the concretized spec"
                     f" {candidate} not to satisfy the input spec {input_spec}"
                 )
@@ -305,7 +308,8 @@ class Result:
         result = Result(specs)
         result.criteria = [OptimizationCriteria(*t) for t in obj["criteria"]]
         result.optimal = obj["optimal"]
-        result.warnings = obj["warnings"]
+        # Entries written before warnings were recorded store None here
+        result.warnings = obj["warnings"] or []
         result.nmodels = obj["nmodels"]
         result.satisfiable = obj["satisfiable"]
         result.answers = [

@@ -7,6 +7,7 @@ import contextlib
 import importlib
 import sys
 import time
+import traceback
 from collections import Counter
 from typing import (
     TYPE_CHECKING,
@@ -15,6 +16,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
@@ -32,6 +34,7 @@ import spack.traverse
 import spack.util.parallel
 from spack.concretize_ui import (
     DEFAULT_USER_SPEC_GROUP,
+    BufferedUI,
     ConcretizerUI,
     HeadlessUI,
     SolveKind,
@@ -40,6 +43,22 @@ from spack.concretize_ui import (
 )
 from spack.spec import Spec
 from spack.util import tty
+
+
+class SolveOutcome(NamedTuple):
+    """What a worker process hands back for one spec, whether the solve worked or not."""
+
+    #: Where the spec was in the input, which the pool does not preserve
+    position: int
+    #: The concretized spec, or None if the solve raised
+    concrete: Optional[Spec]
+    #: Seconds spent in the solve
+    duration: float
+    #: The events of the solve, to replay into the frontend
+    buffered: BufferedUI
+    #: What the solve raised, or None if it succeeded
+    error: Optional[Exception]
+
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
 SpecPair = Tuple[Spec, Spec]
@@ -196,8 +215,16 @@ def _concretize_separately(
     )
 
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
+    # Workers can't call the frontend, so each buffers its events and we replay them here. The
+    # buffer is per task, so the serial fallback doesn't accumulate events across specs.
     args = [
-        (i, str(abstract), tests, factory)
+        (
+            i,
+            str(abstract),
+            tests,
+            factory,
+            BufferedUI(solves=ui.reports_solves, asp_program=ui.reports_asp_program),
+        )
         for i, abstract in enumerate(to_concretize)
         if not abstract.concrete
     ]
@@ -226,19 +253,28 @@ def _concretize_separately(
 
     # Solve the environment in parallel on Linux. imap_unordered falls back to a serial map when
     # parallelism is disabled (e.g. Windows), and when there is at most one spec to solve
-    for j, (i, concrete, duration) in enumerate(
+    for j, outcome in enumerate(
         spack.util.parallel.imap_unordered(
-            _concretize_task,
-            args,
-            processes=processes,
-            debug=tty.is_debug(),
-            maxtaskperchild=1,
-            serialize_env=True,
+            _concretize_task, args, processes=processes, maxtaskperchild=1, serialize_env=True
         ),
         start=1,
     ):
-        ret.append((i, concrete))
-        ui.on_spec_concretized(to_concretize[i], concrete=concrete, count=j, duration=duration)
+        # Replay before raising, so a solve that failed still reports what it had to say
+        outcome.buffered.replay(ui)
+        if outcome.error is not None:
+            raise outcome.error
+        if outcome.concrete is None:
+            raise spack.error.SpackError(
+                f"concretization of {to_concretize[outcome.position]} produced neither a spec nor "
+                f"an error"
+            )
+        ret.append((outcome.position, outcome.concrete))
+        ui.on_spec_concretized(
+            to_concretize[outcome.position],
+            concrete=outcome.concrete,
+            count=j,
+            duration=outcome.duration,
+        )
 
     # Add specs in original order, then combine the ones passed in as abstract with the ones
     # passed in as pairs
@@ -250,13 +286,19 @@ def _concretize_separately(
 
 
 def _concretize_task(
-    packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"]],
-) -> Tuple[int, Spec, float]:
-    index, spec_str, tests, factory = packed_arguments
+    packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"], BufferedUI],
+) -> SolveOutcome:
+    index, spec_str, tests, factory, buffered = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
-        spec = concretize_one(Spec(spec_str), tests=tests, factory=factory)
-        return index, spec, time.time() - start
+        try:
+            spec = concretize_one(Spec(spec_str), tests=tests, factory=factory, ui=buffered)
+        except Exception as e:
+            # Tracebacks don't pickle, so record this one where the parent can print it
+            if isinstance(e, spack.error.SpackError):
+                e.traceback = traceback.format_exc()
+            return SolveOutcome(index, None, time.time() - start, buffered, e)
+        return SolveOutcome(index, spec, time.time() - start, buffered, None)
 
 
 def concretize_one(
@@ -303,12 +345,14 @@ def _concretize_one(
             return spec.copy()
 
         start = time.monotonic()
-        concrete = _solve_one(spec, tests=tests, factory=factory)
+        concrete = _solve_one(spec, tests=tests, factory=factory, ui=ui)
         ui.on_spec_concretized(spec, concrete=concrete, count=1, duration=time.monotonic() - start)
         return concrete
 
 
-def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFactory"]) -> Spec:
+def _solve_one(
+    spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFactory"], ui: ConcretizerUI
+) -> Spec:
     """Run the single solve that concretizes ``spec``, and pick its answer."""
     from spack.solver.asp import Solver
 
@@ -319,7 +363,7 @@ def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFa
             )
 
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = Solver(specs_factory=factory).solve(
+    result = Solver(specs_factory=factory, ui=ui).solve(
         [spec], tests=tests, allow_deprecated=allow_deprecated
     )
 
