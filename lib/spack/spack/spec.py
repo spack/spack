@@ -1969,6 +1969,10 @@ class Spec:
         # whether the spec is concrete or not; set at the end of concretization
         self._concrete = False
 
+        # sha256s of this spec's patches in the order the concretizer applies them; the "patches"
+        # variant stores the same set, but sorted
+        self._patches_in_order_of_appearance: Optional[List[str]] = None
+
         # External detection details that can be set by internal Spack calls
         # in the constructor.
         self._external_path = external_path
@@ -2704,10 +2708,8 @@ class Spec:
         if not self._concrete:
             d["concrete"] = False
 
-        if "patches" in self.variants:
-            variant = self.variants["patches"]
-            if hasattr(variant, "_patches_in_order_of_appearance"):
-                d["patches"] = variant._patches_in_order_of_appearance
+        if self._patches_in_order_of_appearance:
+            d["patches"] = self._patches_in_order_of_appearance
 
         # Assigned at concretization time; old specs may not have one
         if self._package_hash:
@@ -3102,15 +3104,11 @@ class Spec:
 
     def _patches_assigned(self):
         """Whether patches have been assigned to this spec by the concretizer."""
-        # FIXME: _patches_in_order_of_appearance is attached after concretization
-        # FIXME: to store the order of patches.
-        # FIXME: Probably needs to be refactored in a cleaner way.
         if "patches" not in self.variants:
             return False
 
         # ensure that patch state is consistent
-        patch_variant = self.variants["patches"]
-        assert hasattr(patch_variant, "_patches_in_order_of_appearance"), (
+        assert self._patches_in_order_of_appearance is not None, (
             "patches should always be assigned with a patch variant."
         )
 
@@ -3794,7 +3792,7 @@ class Spec:
 
             # translate patch sha256sums to patch objects by consulting the index
             if self._patches_assigned():
-                sha256s = list(self.variants["patches"]._patches_in_order_of_appearance)
+                sha256s = list(self._patches_in_order_of_appearance or [])
                 pkg_cls = repo.get_pkg_class(self.fullname)
                 try:
                     self._patches = repo.get_patches_for_package(sha256s, pkg_cls)
@@ -3837,13 +3835,7 @@ class Spec:
         self._dependents = {}
         self._dependencies = {}
 
-        # FIXME: we manage _patches_in_order_of_appearance specially here
-        # to keep it from leaking out of spec.py, but we should figure
-        # out how to handle it more elegantly in the Variant classes.
-        for k, v in other.variants.items():
-            patches = getattr(v, "_patches_in_order_of_appearance", None)
-            if patches:
-                self.variants[k]._patches_in_order_of_appearance = patches
+        self._patches_in_order_of_appearance = other._patches_in_order_of_appearance
 
         self.external_path = other.external_path
         self.external_modules = other.external_modules
@@ -5548,8 +5540,7 @@ class SpecfileReaderBase(abc.ABC):
             if len(patches) > 0:
                 mvar = spec.variants.setdefault("patches", vt.MultiValuedVariant("patches", ()))
                 mvar.set(*patches)
-                # FIXME: Monkey patches mvar to store patches order
-                mvar._patches_in_order_of_appearance = patches
+                spec._patches_in_order_of_appearance = patches
 
         # Annotate the compiler spec, might be used later
         if "annotations" not in node:
@@ -6029,16 +6020,13 @@ def _inject_patches_variant(root: Spec, *, repo: spack.repo.RepoPath) -> None:
             "patches", vt.MultiValuedVariant("patches", ())
         )
         variant.set(*(p.sha256 for p in patches))
-        # FIXME: Monkey patches variant to store patches order
         ordered_hashes = [(*p.ordering_key, p.sha256) for p in patches if p.ordering_key]
         ordered_hashes.sort()
         tty.debug(
             f"Ordered hashes [{spec.name}]: "
             + ", ".join("/".join(str(e) for e in t) for t in ordered_hashes)
         )
-        setattr(
-            variant, "_patches_in_order_of_appearance", [sha256 for _, _, sha256 in ordered_hashes]
-        )
+        spec._patches_in_order_of_appearance = [sha256 for _, _, sha256 in ordered_hashes]
 
 
 class InvalidVariantForSpecError(spack.error.SpecError):
