@@ -99,52 +99,40 @@ colors = {
 }  # white
 
 
-class Style(str):
-    def __new__(cls, style_code: int):
-        return super().__new__(cls, f"\033[{style_code}m")
-
-
-class Color(str):
-    bright: str
-
-    def __new__(cls, normal_code: int):
-        instance = super().__new__(cls, f"\033[0;{normal_code}m")
-        instance.bright = f"\033[0;{normal_code + 60}m"
-        return instance
-
-
-class NullColor(str):
-    bright: str
-
-    def __new__(cls):
-        instance = super().__new__(cls, "")
-        instance.bright = ""
-        return instance
-
-
 def get_colors(color: Optional[bool] = None):
     active = get_color_when() if color is None else color
     return ColorsActive if active else ColorsInactive
 
 
 class ColorsActive:
-    BLACK = Color(30)
-    RED = Color(31)
-    GREEN = Color(32)
-    YELLOW = Color(33)
-    BLUE = Color(34)
-    MAGENTA = Color(35)
-    CYAN = Color(36)
-    WHITE = Color(37)
+    BLACK =  "\033[0;30m"
+    RED = "\033[0;31m"
+    GREEN = "\033[0;32m"
+    YELLOW = "\033[0;33m"
+    BLUE = "\033[0;34m"
+    MAGENTA = "\033[0;35m"
+    CYAN = "\033[0;36m"
+    WHITE = "\033[0;37m"
 
-    BOLD = Style(1)
-    UNDERLINE = Style(4)
+    BLACK_BRIGHT =  "\033[0;90m"
+    RED_BRIGHT = "\033[0;91m"
+    GREEN_BRIGHT = "\033[0;92m"
+    YELLOW_BRIGHT = "\033[0;93m"
+    BLUE_BRIGHT = "\033[0;94m"
+    MAGENTA_BRIGHT = "\033[0;95m"
+    CYAN_BRIGHT = "\033[0;96m"
+    WHITE_BRIGHT = "\033[0;97m"
+
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
     RESET = "\033[0m"
 
 
 class ColorsInactive:
-    BLACK = RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = NullColor()
+    BLACK = RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = ""
+    BLACK_BRIGHT = RED_BRIGHT = GREEN_BRIGHT = YELLOW_BRIGHT = ""
+    BLUE_BRIGHT = MAGENTA_BRIGHT = CYAN_BRIGHT = WHITE_BRIGHT = ""
     BOLD = UNDERLINE = RESET = ""
 
 
@@ -472,12 +460,10 @@ class ColorStream:
         self._color = color
 
     def write(self, string: str, *, raw: bool = False) -> None:
-        raw_write = getattr(self._stream, "write")
-
         color = self._color
         if self._color is None:
             if raw:
                 color = True
             else:
                 color = get_color_when(self._stream)
-        raw_write(colorize(string, color=color))
+        self._stream.write(colorize(string, color=color))

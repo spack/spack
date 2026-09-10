@@ -663,7 +663,7 @@ class TerminalUI(InstallerUI):
 
         yield f"{color_code}{indicator}{self.color.RESET}"
         yield " "
-        yield f"{self.color.BLACK.bright}{build_info.hash}{self.color.RESET}"
+        yield f"{self.color.BLACK_BRIGHT}{build_info.hash}{self.color.RESET}"
         yield " "
         # Package name in bold if explicit, default otherwise
         name_color = self.color.BOLD if build_info.explicit else ""
@@ -691,4 +691,4 @@ class TerminalUI(InstallerUI):
             else (now - build_info.start_time)
         )
         if elapsed > 0:
-            yield f"{self.color.BLACK.bright} ({pretty_duration(elapsed)}){self.color.RESET}"
+            yield f"{self.color.BLACK_BRIGHT} ({pretty_duration(elapsed)}){self.color.RESET}"
