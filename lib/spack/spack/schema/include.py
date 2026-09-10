@@ -99,7 +99,7 @@ properties: Dict[str, Any] = {
                             "description": "If true, don't attempt to re-clone the repository "
                             "upon environment activation if it already exists; if false "
                             "(default), repository will be cloned again each time the "
-                            "environment is activated"
+                            "environment is activated",
                         },
                         "when": {
                             "type": "string",
