@@ -30,12 +30,15 @@ def misc_cache(*, config: spack.config.Configuration) -> spack.util.file_cache.F
     )
 
 
-def _misc_cache():
+def _create_global_misc_cache() -> spack.util.file_cache.FileCache:
+    """Build the misc cache from the global configuration."""
     return misc_cache(config=spack.config.CONFIG)
 
 
 #: Spack's cache for small data
-MISC_CACHE = cast(spack.util.file_cache.FileCache, spack.util.lang.Singleton(_misc_cache))
+MISC_CACHE = cast(
+    spack.util.file_cache.FileCache, spack.util.lang.Singleton(_create_global_misc_cache)
+)
 
 
 def fetch_cache_location():
