@@ -733,8 +733,8 @@ File filtering functions
 
      .. code-block:: python
 
-        filter_file("CC='cc'", "CC='%s'" % self.compiler.cc, prefix.bin.mpicc)
-        filter_file("CXX='c++'", "CXX='%s'" % self.compiler.cxx, prefix.bin.mpicxx)
+        filter_file("CC='cc'", "CC='%s'" % self["c"].cc, prefix.bin.mpicc)
+        filter_file("CXX='c++'", "CXX='%s'" % self["cxx"].cxx, prefix.bin.mpicxx)
 
 :py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.package.change_sed_delimiter>`
     Some packages, like TAU, have a build system that can't install into directories with, e.g. "@" in the name, because they use hard-coded ``sed`` commands in their build.
