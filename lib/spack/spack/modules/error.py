@@ -23,6 +23,10 @@ class HideCmdFormatNotDefined(AttributeError, ModulesError):
     """Raised if ``hide_cmd_format`` has not been specified in the derived class."""
 
 
+class AliasCmdFormatNotDefined(AttributeError, ModulesError):
+    """Raised if ``alias_cmd_format`` has not been specified in the derived class."""
+
+
 class ModulercHeaderNotDefined(AttributeError, ModulesError):
     """Raised if ``modulerc_header`` has not been specified in the derived class."""
 

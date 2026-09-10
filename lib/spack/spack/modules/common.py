@@ -26,6 +26,7 @@ import warnings
 from typing import (
     IO,
     Any,
+    Callable,
     ClassVar,
     Dict,
     Iterator,
@@ -66,6 +67,7 @@ from spack.util import tty
 from spack.util.lang import Singleton, dedupe
 
 from .error import (
+    AliasCmdFormatNotDefined,
     CoreCompilersNotFoundError,
     DefaultTemplateNotDefined,
     HideCmdFormatNotDefined,
@@ -503,6 +505,11 @@ class BaseConfiguration:
         return self.conf.get("conflict", [])
 
     @property
+    def aliases(self) -> List[str]:
+        """Module aliases to be defined onto this module file"""
+        return self.conf.get("alias", [])
+
+    @property
     def excluded(self) -> bool:
         """Returns True if the module has been excluded, False otherwise."""
 
@@ -743,13 +750,22 @@ class FileLayout:
             None
         )
 
-    @property
-    def modulerc(self) -> str:
-        """Returns the modulerc file for this module file."""
-        dirname = os.path.dirname(self.filename)
+    def _modulerc_path(self, dirname: str) -> str:
+        """Returns the path of the modulerc file contained in ``dirname``."""
         if self.conf.file_extension:
             return os.path.join(dirname, f".modulerc.{self.conf.file_extension}")
         return os.path.join(dirname, ".modulerc")
+
+    @property
+    def modulerc(self) -> str:
+        """Returns the modulerc file sitting next to this module file."""
+        return self._modulerc_path(os.path.dirname(self.filename))
+
+    @property
+    def modulepath_modulerc(self) -> str:
+        """Returns the modulerc file at the root of the modulepath directory holding this
+        module file."""
+        return self._modulerc_path(self.modulepath)
 
     @property
     def spec(self) -> spack.spec.Spec:
@@ -813,6 +829,15 @@ class FileLayout:
 
         # Return the absolute path
         return os.path.join(self.arch_dirname, filename)
+
+    @property
+    def modulepath(self) -> str:
+        """Directory to add to ``MODULEPATH`` for the module system to find this
+        module file, i.e. the module file path stripped of the module name parts."""
+        dirname = self.filename
+        for _ in self.use_name.split(os.sep):
+            dirname = os.path.dirname(dirname)
+        return dirname
 
     def token_to_path(self, name: str, value: spack.spec.Spec) -> str:
         """Transforms a hierarchy token into the corresponding path part.
@@ -1227,6 +1252,7 @@ class ModuleContext(tengine.Context):
 class BaseModuleFileWriter:
     default_template: str
     hide_cmd_format: str
+    alias_cmd_format: str
     modulerc_header: List[str]
 
     configuration_class: ClassVar[Type["BaseConfiguration"]]
@@ -1234,6 +1260,7 @@ class BaseModuleFileWriter:
     _required_attrs = (
         ("default_template", DefaultTemplateNotDefined),
         ("hide_cmd_format", HideCmdFormatNotDefined),
+        ("alias_cmd_format", AliasCmdFormatNotDefined),
         ("modulerc_header", ModulercHeaderNotDefined),
     )
 
@@ -1358,6 +1385,9 @@ class BaseModuleFileWriter:
         # record module hiddenness if implicit
         self.update_module_hiddenness()
 
+        # record module aliases defined onto this module
+        self.update_module_aliases()
+
     def update_module_defaults(self) -> None:
         if any(self.spec.satisfies(default) for default in self.conf.defaults):
             # This spec matches a default, it needs to be symlinked to default
@@ -1376,46 +1406,147 @@ class BaseModuleFileWriter:
             remove (bool): if True, hiddenness information for module is
                 removed from modulerc.
         """
-        modulerc_path = self.layout.modulerc
         hide_module_cmd = self.hide_cmd_format % self.layout.use_name
         hidden = self.conf.hidden and not remove
-        modulerc_exists = os.path.exists(modulerc_path)
-        updated = False
+        self._update_modulerc_entries([hide_module_cmd], present=hidden)
 
+    def _update_modulerc_entries(
+        self,
+        lines: List[str],
+        present: bool,
+        remove_matching: Optional[Callable[[str], bool]] = None,
+        modulerc_path: Optional[str] = None,
+    ) -> None:
+        """Add or remove command lines in a modulerc file of this module.
+
+        Lines owned by other features are preserved. The modulerc file is created when
+        needed and removed when its content boils down to the header.
+
+        Args:
+            lines: modulerc command lines owned by the calling feature
+            present: whether lines should be in modulerc after the update
+            remove_matching: additional lines matching this predicate are removed
+            modulerc_path: modulerc file to update (the modulerc file next to this
+                module file if not set)
+        """
+        if modulerc_path is None:
+            modulerc_path = self.layout.modulerc
+        modulerc_exists = os.path.exists(modulerc_path)
+
+        content = []
         if modulerc_exists:
             with open(modulerc_path, encoding="utf-8") as f:
                 content = f.read().splitlines()
-            already_hidden = hide_module_cmd in content
 
-            # remove hide command if module not hidden
-            if already_hidden and not hidden:
-                content.remove(hide_module_cmd)
-                updated = True
+        def keep(line: str) -> bool:
+            if line in lines:
+                return present
+            return remove_matching is None or not remove_matching(line)
 
-            # add hide command if module is hidden
-            elif not already_hidden and hidden:
-                if not content:
-                    content = self.modulerc_header.copy()
-                content.append(hide_module_cmd)
-                updated = True
-        else:
-            content = self.modulerc_header.copy()
-            if hidden:
-                content.append(hide_module_cmd)
-                updated = True
+        updated_content = [x for x in content if keep(x)]
+        if present:
+            for line in lines:
+                if line not in updated_content:
+                    if not updated_content:
+                        updated_content = self.modulerc_header.copy()
+                    updated_content.append(line)
 
         # no modulerc file change if no content update
-        if updated:
-            is_empty = content == self.modulerc_header or not content
-            # remove existing modulerc if empty
-            if modulerc_exists and is_empty:
+        if updated_content == content:
+            return
+
+        is_empty = updated_content == self.modulerc_header or not updated_content
+        # remove existing modulerc if empty
+        if is_empty:
+            if modulerc_exists:
                 os.remove(modulerc_path)
-            # create or update modulerc
-            elif not is_empty:
-                # ensure file ends with a newline character
-                content.append("")
-                with open(modulerc_path, "w", encoding="utf-8") as f:
-                    f.write("\n".join(content))
+        # create or update modulerc
+        else:
+            # ensure file ends with a newline character
+            updated_content.append("")
+            with open(modulerc_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(updated_content))
+
+    def update_module_aliases(self, remove: bool = False) -> None:
+        """Update the module aliases defined onto this module.
+
+        This writer owns every alias line that targets this module: aliases dropped
+        from the configuration are removed and configured ones are (re)defined. When
+        an alias currently targeting another module is redefined onto this module, the
+        previous definition is replaced and a warning is emitted (the last written
+        module wins).
+
+        Args:
+            remove (bool): if True, all aliases targeting this module are removed from
+                modulerc.
+        """
+        aliases = [] if remove else self.conf.aliases
+        use_name = self.layout.use_name
+
+        # Alias names may resolve projection-like tokens (e.g. '{name}')
+        msg = "some tokens cannot be part of a module alias name"
+        desired = []
+        for item in aliases:
+            _check_tokens_are_valid(item, error_message=msg)
+            desired.append(self.spec.format(item))
+
+        # aliases are defined in the modulerc file at the root of the modulepath
+        # directory, as the module resolution process would not find them if they were
+        # defined in the modulerc file next to their target module
+        modulerc_path = self.layout.modulepath_modulerc
+
+        # regular expression matching any alias line written from alias_cmd_format
+        prefix, sep, suffix = (re.escape(x) for x in self.alias_cmd_format.split("%s"))
+        alias_line_re = re.compile(rf"{prefix}(\S+){sep}(\S+){suffix}")
+
+        already_defined = set()
+        if os.path.exists(modulerc_path):
+            with open(modulerc_path, encoding="utf-8") as f:
+                for line in f.read().splitlines():
+                    m = alias_line_re.fullmatch(line)
+                    if m is None:
+                        continue
+                    alias_name, target = m.groups()
+                    if target == use_name:
+                        already_defined.add(alias_name)
+                    elif alias_name in desired:
+                        warnings.warn(
+                            f"alias '{alias_name}' points at module '{target}' and is "
+                            f"redefined onto module '{use_name}': multiple installed "
+                            "specs may match the alias configuration in modules.yaml"
+                        )
+                    elif alias_name == use_name:
+                        warnings.warn(
+                            f"module '{use_name}' is shadowed by an alias of the same "
+                            f"name pointing at module '{target}'"
+                        )
+
+        for alias_name in desired:
+            if alias_name in already_defined:
+                continue
+            # warn if the alias shadows an existing module file or directory
+            alias_path = os.path.join(self.layout.modulepath, alias_name)
+            if self.conf.file_extension:
+                alias_path = f"{alias_path}.{self.conf.file_extension}"
+            if os.path.exists(alias_path):
+                warnings.warn(
+                    f"alias '{alias_name}' pointing at module '{use_name}' shadows the "
+                    f"existing module file or directory '{alias_path}'"
+                )
+
+        def owned_or_redefined(line: str) -> bool:
+            m = alias_line_re.fullmatch(line)
+            if m is None:
+                return False
+            alias_name, target = m.groups()
+            return target == use_name or alias_name in desired
+
+        self._update_modulerc_entries(
+            [self.alias_cmd_format % (name, use_name) for name in desired],
+            present=True,
+            remove_matching=owned_or_redefined,
+            modulerc_path=modulerc_path,
+        )
 
     def remove(self) -> None:
         """Deletes the module file."""
@@ -1425,6 +1556,7 @@ class BaseModuleFileWriter:
                 os.remove(mod_file)  # Remove the module file
                 self.remove_module_defaults()  # Remove default targeting module file
                 self.update_module_hiddenness(remove=True)  # Remove hide cmd in modulerc
+                self.update_module_aliases(remove=True)  # Remove alias cmds in root modulerc
                 os.removedirs(
                     os.path.dirname(mod_file)
                 )  # Remove all the empty directories from the leaf up

@@ -36,3 +36,5 @@ class LmodModulefileWriter(BaseModuleFileWriter):
     modulerc_header = []
 
     hide_cmd_format = 'hide_version("%s")'
+
+    alias_cmd_format = 'module_alias("%s", "%s")'
