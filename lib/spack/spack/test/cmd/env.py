@@ -177,7 +177,7 @@ def test_env_write_env_scripts(shell):
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_env_env_script_content(shell):
-    """Tests that SPACK_ENV environment command is in sh's activation script"""
+    """Tests that SPACK_ENV environment command is in shell's activation script"""
     env("create", "script_test")
     environ = ev.read("script_test")
 
@@ -254,18 +254,24 @@ def test_env_scripts_regenerate_after_lockfile_change(shell):
 )
 def test_env_missing_deactivate_script(shell):
     """Test that environment deactivation script is recreated if missing"""
-    env("create", "test")
+    env("create", "--without-view", "test")
     environ = ev.read("test")
 
-    env("activate", f"--{shell}", "test")
+    env("activate", "--without-view", f"--{shell}", "test")
 
     path_to_deactivate_script = env_script.path_to_env_script(
-        environ, shell, script_type="deactivate", view="default"
+        environ, shell, script_type="deactivate", view=None
     )
-    os.remove(path_to_deactivate_script)
 
+    deactivate_script_mtime = os.stat(path_to_deactivate_script).st_mtime
+
+    os.remove(path_to_deactivate_script)
     assert not os.path.isfile(path_to_deactivate_script)
-    env("deactivate")
+
+    env("deactivate", f"--{shell}")
+
+    new_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
+    assert new_deactivate_mtime > deactivate_script_mtime
 
 
 @pytest.mark.parametrize(
@@ -465,8 +471,8 @@ def test_env_activate_with_view_name(shell, tmp_path: pathlib.Path):
 def test_env_create_without_view(
     shell, tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
-    # Test creating an environment without a view, then enabling a view later
-    env("create", "--without-view", "test")
+    """Test creating an environment a view, but activating it without a view. The activation script should not contain SPACK_ENV_VIEW."""
+    env("create", "test")
 
     test_env = ev.read("test")
 
@@ -477,13 +483,20 @@ def test_env_create_without_view(
         test_env, shell, script_type="activate", view=None
     )
 
-    assert not os.path.isfile(path_to_default_view_script)
-    assert os.path.isfile(path_to_no_view_script)
+    assert not os.path.isfile(path_to_no_view_script)
+    assert os.path.isfile(path_to_default_view_script)
 
-    with open(path_to_no_view_script, "r", encoding="utf-8") as f:
+    with open(path_to_default_view_script, "r", encoding="utf-8") as f:
         activate_content = f.read()
 
-    assert "SPACK_ENV_VIEW" not in activate_content
+    assert "SPACK_ENV_VIEW" in activate_content
+
+    activate_output = env("activate", f"--{shell}", "--without-view", "test")
+    no_view_activate_content = _get_cmds_from_script(activate_output, shell)
+
+    assert os.path.isfile(path_to_no_view_script)
+    assert os.path.isfile(path_to_default_view_script)
+    assert "SPACK_ENV_VIEW" not in no_view_activate_content
 
 
 @pytest.mark.parametrize(
@@ -492,7 +505,7 @@ def test_env_create_without_view(
 def test_env_activate_without_view(
     shell, tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
-    # Test creating an environment without a view, then enabling a view later
+    """Test creating an environment without a view"""
     env("create", "test")
     activate_output = env("activate", "--without-view", f"--{shell}", "test")
 
@@ -3586,9 +3599,11 @@ spack:
         install("--fake")
 
     test_env = ev.read("test")
-    activate_content = env("activate", "--sh", "test")
 
-    activate_content = _get_cmds_from_script(activate_content, "sh")
+    path_to_activate = env_script.path_to_env_script(test_env, "sh", "activate", "default")
+
+    with open(path_to_activate, encoding="utf-8") as f:
+        activate_content = f.read()
 
     assert "_spack_env_set SPACK_ENVAR_SET_IN_ENV_LOAD True" in activate_content
     assert "_spack_env_set CONFIG_ENVAR_SET_IN_ENV_LOAD True" in activate_content
