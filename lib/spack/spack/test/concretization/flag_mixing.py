@@ -118,8 +118,8 @@ def test_pkg_flags_from_compiler_and_none(concretize_scope, mock_packages):
         spack.concretize._concretize_together([(s1, None), (s2, None)], ui=HeadlessUI())
     )
 
-    assert concrete[s1].compiler_flags["cflags"] == ["-Wall"]
-    assert concrete[s2]["cmake"].compiler_flags["cflags"] == []
+    assert concrete[s1].compiler_flags["cflags"] == ("-Wall",)
+    assert concrete[s2]["cmake"].compiler_flags["cflags"] == ()
 
 
 @pytest.mark.parametrize(
@@ -179,17 +179,17 @@ packages:
     spec = root_spec["y"]
     satisfy_flags = " ".join(x for x in [cmd_flags, req_flags, cmp_flags, expected_dflags] if x)
     assert spec.satisfies(f'cflags="{satisfy_flags}"')
-    assert spec.compiler_flags["cflags"] == expected_order.split()
+    assert spec.compiler_flags["cflags"] == tuple(expected_order.split())
 
 
 def test_two_dependents_flag_mixing(concretize_scope, test_repo):
     root_spec1 = spack.concretize.concretize_one("w~moveflaglater")
     spec1 = root_spec1["y"]
-    assert spec1.compiler_flags["cflags"] == "-d0 -d1 -d2".split()
+    assert spec1.compiler_flags["cflags"] == ("-d0", "-d1", "-d2")
 
     root_spec2 = spack.concretize.concretize_one("w+moveflaglater")
     spec2 = root_spec2["y"]
-    assert spec2.compiler_flags["cflags"] == "-d3 -d1 -d2".split()
+    assert spec2.compiler_flags["cflags"] == ("-d3", "-d1", "-d2")
 
 
 def test_propagate_and_compiler_cfg(concretize_scope, test_repo):
@@ -272,7 +272,7 @@ def test_diamond_dep_flag_mixing(concretize_scope, test_repo):
     root_spec1 = spack.concretize.concretize_one("t")
     spec1 = root_spec1["y"]
     assert spec1.satisfies('cflags="-c1 -c2 -d1 -d2 -e1 -e2"')
-    assert spec1.compiler_flags["cflags"] == "-c1 -c2 -e1 -e2 -d1 -d2".split()
+    assert spec1.compiler_flags["cflags"] == ("-c1", "-c2", "-e1", "-e2", "-d1", "-d2")
 
 
 def test_flag_injection_different_compilers(mock_packages, mutable_config):
@@ -341,4 +341,4 @@ packages:
     assert s["c"].name == "gcc"
     assert s["llvm"].external and s["llvm"].satisfies("@19.1.0")
     # the external llvm's cflags must not be injected into its dependent
-    assert s.compiler_flags["cflags"] == []
+    assert s.compiler_flags["cflags"] == ()
