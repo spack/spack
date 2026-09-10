@@ -373,19 +373,9 @@ def specfile_for(config, mock_packages):
         # version range and list
         ("@1.6,1.2:1.4", [Token("VERSION", value="@1.6,1.2:1.4")], r"@1.2:1.4,1.6"),
         (
-            r"os=fe",  # Various translations associated with the architecture
-            [Token("KEY_VALUE_PAIR", value="os=fe")],
-            "platform=test os=debian6",
-        ),
-        (
-            r"os=default_os",
+            r"os=default_os",  # Various translations associated with the architecture
             [Token("KEY_VALUE_PAIR", value="os=default_os")],
             "platform=test os=debian6",
-        ),
-        (
-            r"target=be",
-            [Token("KEY_VALUE_PAIR", value="target=be")],
-            f"platform=test target={spack.platforms.test.Test.default}",
         ),
         (
             r"target=default_target",

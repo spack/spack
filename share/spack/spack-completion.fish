@@ -480,7 +480,7 @@ complete -c spack -n '__fish_spack_using_command add' -s l -l list-name -r -f -a
 complete -c spack -n '__fish_spack_using_command add' -s l -l list-name -r -d 'name of the list to add specs to'
 
 # spack arch
-set -g __fish_spack_optspecs_spack_arch h/help g/generic-target known-targets family generic p/platform o/operating-system t/target f/frontend b/backend
+set -g __fish_spack_optspecs_spack_arch h/help g/generic-target known-targets family generic p/platform o/operating-system t/target
 complete -c spack -n '__fish_spack_using_command arch' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command arch' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command arch' -s g -l generic-target -f -a generic_target
@@ -497,10 +497,6 @@ complete -c spack -n '__fish_spack_using_command arch' -s o -l operating-system 
 complete -c spack -n '__fish_spack_using_command arch' -s o -l operating-system -d 'print only the operating system'
 complete -c spack -n '__fish_spack_using_command arch' -s t -l target -f -a target
 complete -c spack -n '__fish_spack_using_command arch' -s t -l target -d 'print only the target'
-complete -c spack -n '__fish_spack_using_command arch' -s f -l frontend -f -a frontend
-complete -c spack -n '__fish_spack_using_command arch' -s f -l frontend -d 'print frontend (DEPRECATED)'
-complete -c spack -n '__fish_spack_using_command arch' -s b -l backend -f -a backend
-complete -c spack -n '__fish_spack_using_command arch' -s b -l backend -d 'print backend (DEPRECATED)'
 
 # spack audit
 set -g __fish_spack_optspecs_spack_audit h/help
