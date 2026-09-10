@@ -474,7 +474,7 @@ can denote the same set without satisfying each other, e.g.\ through the
 target incompleteness above, and a spec can denote $\emptyset$ without $\sat$
 detecting it (\S\ref{sec:empty}).  The property harness states this
 restraint explicitly: over its finite universe of maximal specs it asserts
-only the forward direction.\src{spec\_algebra\_properties.py:1001--1011}
+only the forward direction.\src{spec\_algebra\_properties.py:1155--1164}
 
 One asymmetry deserves a note: state equality of abstract specs
 (\code{\_cmp\_node}) reads exactly the seven coordinates of
@@ -552,7 +552,7 @@ edge-level absorption lawful; the residual non-minimality (several conditional
 edges jointly equivalent to one broader edge are not fused, because
 implication is checked pairwise) is a documented simplicity trade-off that
 affects only which representative of a $\ker$-class the merge
-returns.\src{spec\_algebra\_properties.py:639--657}
+returns.\src{spec\_algebra\_properties.py:673--692}
 
 \paragraph{The meet on graphs.}
 \code{constrain} merges roots per Definition~\ref{def:node} and then unions
@@ -584,8 +584,11 @@ On $\Spec_0$, $\sat$ is reflexive and transitive.
 
 \emph{Status.}  Reflexivity and transitivity are checked exhaustively over a
 79-spec corpus (quadratic and cubic sweeps) and by randomized property
-sweeps across nineteen syntactic dimensions with shrinking; the branch tip is
-clean.\src{spec\_algebra\_corpus.py; spec\_algebra\_properties.py}  For the
+sweeps across nineteen syntactic dimensions with shrinking; the tip is
+clean except for the target shapes drawn for the review's findings, red
+until the interval fixes land
+(\S\ref{sec:audit-target}).\src{spec\_algebra\_corpus.py;
+spec\_algebra\_properties.py}  For the
 tree model of Definition~\ref{def:simulation} both properties are proved
 (Lean, the \code{Preorder} instance on \code{Tree}).  The claim for the full implementation is empirical,
 not proved: the checked fragment is the generator's language, and the
@@ -656,7 +659,7 @@ untouched), never mutates the right operand, reports its change flag
 honestly, leaves the narrowing dimensions of an already-satisfying left
 operand untouched (state-level absorption), is invariant under edge storage
 order, and keeps edge maps keyed by the child's current
-name.\src{spec\_algebra\_properties.py:860--1057; spec\_algebra\_corpus.py:%
+name.\src{spec\_algebra\_properties.py:907--976; spec\_algebra\_corpus.py:%
 183--320}
 
 \subsection{Variant propagation: the deliberate breach}\label{sec:propagation}
@@ -703,7 +706,7 @@ This is why $\Spec_0$ excludes \code{++}: the corpus filters propagated
 variants out of the ordered checks, and the sweep excuses their failures via
 an explicit gap predicate that names this
 subsection's reason.\src{spec\_algebra\_corpus.py:149--160;
-spec\_algebra\_properties.py:581--588}  The repair is now decided, not
+spec\_algebra\_properties.py:614--621}  The repair is now decided, not
 sketched.  A variant name owns two independent constraint slots: a node
 slot (\code{+foo}, \code{foo=bar}: existence and value on this node) and a
 propagated slot (\code{++foo}, \code{foo==bar}: every closure node, root
@@ -1245,13 +1248,15 @@ with \code{to\_dict()}, so \code{==} and \code{dag\_hash} incoherences are
 invisible; \code{deps=False}, \code{\_\_contains\_\_},
 \code{validate\_or\_raise} and \code{add\_dependency\_edge} are outside the
 tested surface; each dimension contributes one fragment per operand, so
-duplicate-flag states are never drawn; and specs are only ever produced by
-parse and meet, so states reachable through \code{from\_dict}, forced hash
-caches, or in-place mutation of a node borrowed from an edge are missed.
-Finally, gap predicates deserve the same skepticism as laws: one of them
-(\code{nested\_direct\_edge}) excuses failures with a justification the
-audit refuted.  Each of these is a concrete, bounded extension of the
-harness.
+duplicate-flag states are never drawn; and specs are produced by parse,
+meet, and --- in the substitution laws --- the repo projection, so states
+reachable through \code{from\_dict}, forced hash caches, or in-place
+mutation of a node borrowed from an edge are missed.  Finally, gap
+predicates deserve the same skepticism as laws: one of them
+(\code{nested\_direct\_edge}) excused failures with a justification the
+audit refuted, and its docstring is corrected
+(\S\ref{sec:audit-graph}).  Each of these is a concrete, bounded
+extension of the harness.
 
 %======================================================================
 \section{The Lean development, and bridging proof to implementation}
