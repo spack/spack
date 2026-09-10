@@ -198,21 +198,17 @@ def evaluate(
     resolve_host_aliases(spec)
 
 
-def has_host_aliases(arch: "spack.spec.ArchSpec") -> bool:
-    """Whether ``arch`` uses ``os=default_os`` or ``target=default_target``."""
-    return (
-        arch.os in spack.platforms.Platform.reserved_oss
-        or str(arch.target) in spack.platforms.Platform.reserved_targets
-    )
-
-
 def resolve_host_aliases(spec: "spack.spec.Spec") -> None:
     """Replace ``os=default_os`` and ``target=default_target`` by the host's defaults."""
     # most specs are a single node: the traversal machinery costs more than the check itself
     nodes = spec.traverse() if spec._dependencies else (spec,)
     for node in nodes:
         arch = node.architecture
-        if arch is None or not has_host_aliases(arch):
+        if arch is None:
+            continue
+        is_os = arch.os in spack.platforms.Platform.reserved_oss
+        is_target = str(arch.target) in spack.platforms.Platform.reserved_targets
+        if not is_os and not is_target:
             continue
         host = spack.platforms.host()  # memoized
         host_name = str(host)
@@ -223,9 +219,9 @@ def resolve_host_aliases(spec: "spack.spec.Spec") -> None:
                 f"cannot use default_os or default_target in '{node}': its platform "
                 f"{arch.platform} is not the current platform {host_name}"
             )
-        if arch.os in spack.platforms.Platform.reserved_oss:
+        if is_os:
             arch.os = str(host.default_operating_system())
-        if str(arch.target) in spack.platforms.Platform.reserved_targets:
+        if is_target:
             arch.target = host.default_target()
 
 

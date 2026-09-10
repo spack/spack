@@ -55,7 +55,6 @@ import spack.platforms
 import spack.repo
 import spack.solver.splicing
 import spack.spec
-import spack.spec_parser
 import spack.traverse
 import spack.util.crypto
 import spack.util.filesystem as fs
@@ -2311,13 +2310,6 @@ class SpackSolverSetup:
 
         for root in specs:
             for s in root.traverse():
-                arch = s.architecture
-                if arch and spack.spec_parser.has_host_aliases(arch):
-                    raise spack.error.SpecError(
-                        f"cannot concretize '{root}': default_os and default_target are only "
-                        f"resolved in user input (see spack.spec_parser.UserInput)"
-                    )
-
                 if repo.is_virtual(s.name):
                     # Constraints beyond versions could refer to the virtual or its provider;
                     # the solver supports neither interpretation.
