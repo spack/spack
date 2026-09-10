@@ -124,9 +124,12 @@ def test_all_orders_traverse_the_same_edges(direction, root, deptype, abstract_s
     specs = [abstract_specs_dtuse["dtuse"], abstract_specs_dtuse["dtlink5"]]
     kwargs = {"root": root, "direction": direction, "deptype": deptype, "cover": "edges"}
 
+    def edge_key(edge):
+        return (edge.parent.name if edge.parent is not None else "", edge.spec.name)
+
     def edges(order):
         s = traverse.traverse_edges(specs, order=order, **kwargs)
-        return sorted(list(s))
+        return sorted(s, key=edge_key)
 
     assert edges("pre") == edges("post") == edges("breadth") == edges("topo")
 

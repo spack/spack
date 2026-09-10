@@ -451,7 +451,7 @@ class DotGraphBuilder:
         self.nodes: Set[Tuple[str, str]] = set()
         self.edges: Set[Tuple[str, str, str]] = set()
 
-    def visit(self, edge: spack.spec.DependencySpec):
+    def visit(self, edge: spack.traverse.EdgeType):
         """Visit an edge and builds up entries to render the graph"""
         if edge.parent is None:
             self.nodes.add(self.node_entry(edge.spec))
@@ -510,7 +510,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
         super().__init__(node_label_fmt)
         self.main_unified_space: Set[str] = set()
 
-    def visit(self, edge):
+    def visit(self, edge: spack.traverse.EdgeType):
         if edge.parent is None:
             for node in spack.traverse.traverse_nodes([edge.spec], deptype=dt.LINK | dt.RUN):
                 self.main_unified_space.add(node.dag_hash())
