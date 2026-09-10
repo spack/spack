@@ -1206,7 +1206,7 @@ class OptionalInclude:
 
     def _include_directory(
         self, path_or_url: str, parent_scope: Optional[ConfigScope] = None
-    ) -> Optional[str]:
+    ) -> str:
         """Return the include directory relative to the parent scope.
 
         For remote includes this is the cache destination directory.
@@ -1216,8 +1216,7 @@ class OptionalInclude:
             path_or_url: path or URL of the include
             parent_scope: including scope
 
-        Returns: ``None`` for a local include without an enclosing parent scope;
-            an appropriate subdirectory of the enclosing (parent) scope's directory.
+        Returns: an appropriate subdirectory of the enclosing (parent) scope's directory.
         """
         scope_dir = self._parent_scope_directory(parent_scope)
 
