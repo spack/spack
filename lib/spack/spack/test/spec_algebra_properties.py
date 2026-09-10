@@ -601,9 +601,8 @@ def gap_flag_propagation(specs: Sequence[Spec]) -> bool:
 
 
 def gap_edge_propagation(specs: Sequence[Spec]) -> bool:
-    """Whether an edge propagates is left out of both satisfies and equality, but the merge takes
-    the propagating policy of the two, so a spec is rewritten by a constraint it already
-    satisfies."""
+    """Whether an edge propagates is left out of satisfies, but the merge takes the propagating
+    policy of the two, so a spec is rewritten by a constraint it already satisfies."""
     policies = set()
     for spec in specs:
         for edge in spec.edges_to_dependencies():
