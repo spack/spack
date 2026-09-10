@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import hashlib
 import os
 import pathlib
 
@@ -14,6 +15,7 @@ import spack.environment as ev
 import spack.mirrors.utils
 import spack.package_base
 import spack.spec
+import spack.util.crypto
 import spack.util.git
 import spack.util.url as url_util
 import spack.version
@@ -500,6 +502,23 @@ def test_mirror_name_collision(mutable_config):
 
     with pytest.raises(SpackCommandError):
         mirror("add", "first", "1")
+
+
+def test_mirror_add_archive(mock_archive, mutable_config, tmp_path: pathlib.Path):
+    """An archive is stored content-addressed in the mirror, whether it is
+    passed as a path or as a URL, and re-adding it is a no-op."""
+    mirror_dir = str(tmp_path / "mirror")
+    sha256 = spack.util.crypto.checksum(hashlib.sha256, mock_archive.archive_file)
+    expected = os.path.join(mirror_dir, "_source-cache", "archive", sha256[:2], f"{sha256}.tar.gz")
+
+    # Add by path
+    output = mirror("add-archive", "-d", mirror_dir, mock_archive.archive_file)
+    assert "Added archive" in output
+    assert os.path.isfile(expected)
+
+    # Adding the same archive again (by URL this time) is a no-op
+    output = mirror("add-archive", "-d", mirror_dir, mock_archive.url)
+    assert "already present" in output
 
 
 # Unit tests should not be affected by the user's managed environments
