@@ -101,3 +101,15 @@ def test_rfc_remote_local_path(
             assert os.path.basename(path) == os.path.basename(url)
             # Ensure contents of the file contains expected config element
             assert _has_content(path)
+
+
+def test_rfc_remote_local_path_leaves_no_temporaries(
+    tmp_path: pathlib.Path, mutable_empty_config, mock_fetch_url_text
+):
+    """Cache entries are renamed into place, so nothing else is left behind."""
+    dest_dir = join_path(str(tmp_path), "cache")
+    with mutable_empty_config.override("config:url_fetch_method", "curl"):
+        path = rfc_util.local_path(f"{gitlab_url}/packages.yaml", packages_yaml_sha256, dest_dir)
+
+    entry_dir = os.path.dirname(path)
+    assert sorted(os.listdir(entry_dir)) == ["packages.yaml", "source_url.txt"]

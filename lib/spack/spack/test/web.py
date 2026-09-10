@@ -7,6 +7,7 @@ import os
 import pathlib
 import pickle
 import ssl
+import stat
 import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Tuple
@@ -656,3 +657,35 @@ def test_push_to_url_s3(keep_original, mock_s3_client, tmp_path):
     call = mock_s3_client.upload_file_calls[0]
     assert 3 == len(call[0])
     assert {"ContentType": "text/plain"} == call[1]["ExtraArgs"]
+
+
+@pytest.mark.parametrize("keep_original", [True, False])
+def test_push_to_url_file(keep_original, tmp_path: pathlib.Path):
+    src = tmp_path / "data.txt"
+    src.write_text("hello")
+    dst = tmp_path / "mirror" / "sub" / "data.txt"
+
+    spack.util.web.push_to_url(str(src), url_util.path_to_file_url(str(dst)), keep_original)
+
+    assert dst.read_text() == "hello"
+    assert src.exists() is keep_original
+    assert os.listdir(dst.parent) == ["data.txt"]
+
+
+@pytest.mark.not_on_windows("modes are not fully supported on Windows")
+@pytest.mark.parametrize("keep_original", [True, False])
+def test_push_to_url_file_preserves_mode(keep_original, tmp_path: pathlib.Path):
+    """A mirror entry gets the mode of the file that was pushed, not of the entry it replaces."""
+    src = tmp_path / "data.txt"
+    src.write_text("hello")
+    os.chmod(src, 0o604)
+
+    dst = tmp_path / "mirror" / "data.txt"
+    dst.parent.mkdir()
+    dst.write_text("stale")
+    os.chmod(dst, 0o666)
+
+    spack.util.web.push_to_url(str(src), url_util.path_to_file_url(str(dst)), keep_original)
+
+    assert dst.read_text() == "hello"
+    assert stat.S_IMODE(os.stat(dst).st_mode) == 0o604
