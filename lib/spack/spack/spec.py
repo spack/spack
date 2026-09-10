@@ -3137,8 +3137,9 @@ class Spec:
             edge.direct = not value
         if value:
             self._validate_version()
-            for variant in self.variants.values():
-                variant.concrete = True
+            for variant in list(self.variants.values()):
+                if not variant.concrete:
+                    self.variants.set(variant.as_concrete())
 
     def _validate_version(self):
         # Specs that were concretized with just a git sha as version, without associated
@@ -5117,7 +5118,7 @@ class Spec:
             old_variant = self.variants.pop(name, None)
             if not isinstance(variant, vt.VariantValueRemoval):  # sigil type for removing variant
                 if old_variant:
-                    variant.type = old_variant.type  # coerce variant type to match
+                    variant = variant.as_type(old_variant.type)  # coerce variant type to match
                 self.variants.set(variant)
             changed = True
 
@@ -5226,7 +5227,7 @@ class VariantMap(_VariantMapBase):
 
     def set(self, vspec: vt.VariantValue) -> None:
         """Stores ``vspec`` under its own name, replacing any entry already there."""
-        self[vspec.name] = vspec
+        self[vspec.name] = vt.intern_variant_value(vspec)
 
     def satisfies(self, other: "VariantMap") -> bool:
         for name, variant in other.items():
@@ -5250,16 +5251,19 @@ class VariantMap(_VariantMapBase):
         for name, variant in other.items():
             mine = self.get(name)
             if mine is None:
-                self[name] = variant.copy()
+                self[name] = variant
                 changed = True
             else:
-                changed |= mine.constrain(variant)
+                merged = mine.constrained(variant)
+                if merged is not None:
+                    self[name] = merged
+                    changed = True
         return changed
 
     def copy(self) -> "VariantMap":
         clone = VariantMap()
         for variant in self.values():
-            clone.set(variant.copy())
+            clone.set(variant)
         return clone
 
     def __str__(self):
@@ -5370,13 +5374,12 @@ def substitute_abstract_variants(spec: Spec, *, repo=None):
     # This method needs to be best effort so that it works in matrix exclusion
     # in $spack/lib/spack/spack/spec_list.py
     unknown = []
-    for name, v in spec.variants.items():
+    for name, v in list(spec.variants.items()):
         if v.concrete and v.type == vt.VariantType.MULTI:
             continue
 
         if name in ("dev_path", "commit"):
-            v.type = vt.VariantType.SINGLE
-            v.concrete = True
+            spec.variants.set(v.as_type(vt.VariantType.SINGLE))
             continue
         elif name in vt.RESERVED_NAMES:
             continue
@@ -5584,8 +5587,8 @@ class SpecfileReaderBase(abc.ABC):
         if "patches" in node:
             patches = node["patches"]
             if len(patches) > 0:
-                mvar = spec.variants.setdefault("patches", vt.MultiValuedVariant("patches", ()))
-                mvar.set(*patches)
+                mvar = spec.variants.get("patches") or vt.MultiValuedVariant("patches", ())
+                spec.variants.set(mvar.with_values(tuple(patches)))
                 spec._patches_in_order_of_appearance = patches
 
         # Annotate the compiler spec, might be used later
@@ -6062,10 +6065,8 @@ def _inject_patches_variant(root: Spec, *, repo: spack.repo.RepoPath) -> None:
             continue
 
         patches = list(spec_to_patches[id(spec)])
-        variant: vt.VariantValue = spec.variants.setdefault(
-            "patches", vt.MultiValuedVariant("patches", ())
-        )
-        variant.set(*(p.sha256 for p in patches))
+        variant = spec.variants.get("patches") or vt.MultiValuedVariant("patches", ())
+        spec.variants.set(variant.with_values(tuple(p.sha256 for p in patches)))
         ordered_hashes = [(*p.ordering_key, p.sha256) for p in patches if p.ordering_key]
         ordered_hashes.sort()
         tty.debug(

@@ -4738,7 +4738,7 @@ def test_concretization_cache_reapplies_patches_on_hit(
         for s in root.traverse():
             if s.name == "patch" and not s.concrete and "patches" in s.variants:
                 existing = list(s.variants["patches"].value)
-                s.variants["patches"].set(*existing, EXTRA_SHA256)
+                s.variants.set(s.variants["patches"].with_values((*existing, EXTRA_SHA256)))
                 break
 
     monkeypatch.setattr(spack.spec, "_inject_patches_variant", inject_with_new_patch)
