@@ -27,6 +27,10 @@ class ModulercHeaderNotDefined(AttributeError, ModulesError):
     """Raised if ``modulerc_header`` has not been specified in the derived class."""
 
 
+class DefaultVersionCmdFormatNotDefined(AttributeError, ModulesError):
+    """Raised if ``default_version_cmd_format`` has not been specified in the derived class."""
+
+
 class ModulesTemplateNotFoundError(ModulesError, RuntimeError):
     """Raised if the template for a module file was not found."""
 
