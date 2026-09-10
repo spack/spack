@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 
 import spack.cmd
 import spack.environment as ev
+import spack.modules.cache
 import spack.package_base
 import spack.spec
 import spack.store
@@ -333,4 +334,8 @@ def uninstall(parser, args):
 
     # [None] here handles the --all case by forcing all specs to be returned
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
-    uninstall_specs(args, specs)
+    try:
+        uninstall_specs(args, specs)
+    finally:
+        # Update module cache once, after all module file changes
+        spack.modules.cache.flush()

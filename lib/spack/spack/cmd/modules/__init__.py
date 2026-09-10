@@ -13,6 +13,7 @@ import spack.cmd
 import spack.config
 import spack.error
 import spack.modules
+import spack.modules.cache
 import spack.modules.common
 import spack.modules.error
 import spack.repo
@@ -388,6 +389,12 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
     }
     query_args = constraint_qualifiers.get(args.subparser_name, {})
 
+    # Sub-commands that take no spec constraint have no 'specs' attribute
+    if not hasattr(args, "specs"):
+        callbacks[args.subparser_name](module_type, None, args)
+        spack.modules.cache.flush()
+        return
+
     # Get the specs that match the query from the DB
     specs = args.specs(**query_args)
 
@@ -411,3 +418,6 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
         query = " ".join(str(s) for s in args.constraint_specs)
         msg = f"the constraint '{query}' matches no package."
         tty.die(msg, "In this context exactly *one* match is needed.")
+
+    # Update module cache once, after all module file changes
+    spack.modules.cache.flush()
