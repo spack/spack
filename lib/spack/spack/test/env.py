@@ -2283,12 +2283,16 @@ def test_environment_pickle_preserves_lock_state(
 def test_env_substitution_reaches_the_unwrapped_configuration(
     mutable_mock_env_path, mutable_config, monkeypatch
 ):
-    """``$env`` expands for code holding the Configuration behind the singleton, which is what
-    a SpackContext carries."""
+    """``$env`` expands against the Configuration behind the ``CONFIG`` singleton.
+
+    Test fixtures bind ``CONFIG`` to a plain Configuration, so this test wraps it in a Singleton,
+    as it is in production.
+    """
     env = ev.create("test_env_path_through_singleton")
     monkeypatch.setattr(spack.config, "CONFIG", Singleton(lambda: mutable_config))
 
     with ev.read("test_env_path_through_singleton"):
+        # If the env_path was attached to the singleton wrapper it won't be expanded
         configuration = ensure_unwrapped(spack.config.CONFIG)
         expanded = spack.config.canonicalize_path("$env/concretization", config=configuration)
 
