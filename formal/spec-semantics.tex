@@ -151,7 +151,8 @@ $\sqsubseteq$.  Its \emph{kernel} is $x \ker y \iff x \sqsubseteq y \wedge y
 \sqsubseteq x$.
 \end{definition}
 
-\begin{theorem}[Antisymmetrization; \code{Pre.setoid}, \code{Pre.qle\_antisymm}]
+\begin{theorem}[Antisymmetrization; Mathlib \code{Antisymmetrization} and its
+\code{PartialOrder} instance]
 \label{thm:quotient}
 The kernel of a preorder is an equivalence relation, $\sqsubseteq$ descends to
 the quotient $X/\!\ker$, and the descended relation is a partial order.
@@ -182,7 +183,8 @@ operation $\meet$ with:
       \code{intersects} may only be false when no common refinement exists.
 \end{itemize}
 
-\begin{theorem}[Meet laws up to kernel; \code{Meet.idem/comm/assoc/congr}]
+\begin{theorem}[Meet laws up to kernel; \code{PartialMeet.congr\_def/congr}, the
+equational laws via Theorem~\ref{thm:descent}]
 \label{thm:meetlaws}
 A partial meet is idempotent, commutative and associative up to $\ker$
 (associativity including definedness: if $(x \meet y) \meet z$ is defined then
@@ -191,7 +193,8 @@ $\ker$-congruence: $x \ker x'$, $y \ker y'$ give equal definedness and
 $\ker$-equivalent results.
 \end{theorem}
 
-\begin{theorem}[Descent; \code{Meet.qmeet\_idem/comm/assoc}]
+\begin{theorem}[Descent; \code{PartialMeet.semilatticeInf}, then
+\code{inf\_idem/comm/assoc} imported]
 \label{thm:descent}
 On $X/\!\ker$ the partial meet induces a well-defined partial operation
 satisfying idempotence, commutativity and associativity as \emph{equalities}.
@@ -201,7 +204,7 @@ pairs.
 
 The next theorem is the abstract form of the \code{\%}/\code{\%\%} dispute.
 
-\begin{theorem}[Annotation collapse; \code{Pre.ann}, \code{Pre.annIso}]
+\begin{theorem}[Annotation collapse; \code{Ann}, \code{annIso}]
 \label{thm:annotation}
 Let $(X, \sqsubseteq)$ be a preorder and $\Pi$ a nonempty set of annotations.
 Order $X \times \Pi$ by first components only: $(x,p) \sqsubseteq (y,q) \iff
@@ -214,7 +217,8 @@ quotient, no matter how many states it distinguishes.  Antisymmetry of the
 \emph{state} order is unrecoverable while such a dimension exists; the partial
 order lives on the quotient and is indifferent to the annotation.
 
-\begin{theorem}[Products; \code{Pre.prod}, \code{Meet.prod}]\label{thm:prod}
+\begin{theorem}[Products; Mathlib's \code{Prod} instance,
+\code{PartialMeet.prod}]\label{thm:prod}
 The product of preorders, ordered pointwise, is a preorder; pointwise partial
 meets satisfying (M1)--(M3) give a partial meet on the product, defined
 exactly when every component is defined.
@@ -245,7 +249,7 @@ $\top$.\src{spec.py:1938, 3906--3907}  Two distinct names are disjoint
 providers would make the operations depend on the configured repositories
 (\S\ref{sec:repo}).\src{spec.py:3529--3533}  In the flat domain the kernel is
 trivial ($x \ker y \iff x = y$), so this dimension contributes no quotient
-collapse.  (Lean: \code{flat}, \code{flatMeet}.)
+collapse.  (Lean: \code{Flat}, \code{flatMeet}.)
 
 \subsection{Versions}\label{sec:versions}
 
@@ -331,10 +335,11 @@ annotation (\S\ref{sec:propagation}).
 
 In the multi-valued abstract case the kernel is trivial because $W$ is stored
 as a set.  Had values been stored as a list, the quotient would identify
-reorderings and duplicates --- the Lean development includes this model
-(\code{multi}, \code{multiMeet}: lists ordered by reverse membership, meet =
-concatenation, with $[1,2] \ker [2,1,1]$ proved) both as the general shape of
-set-like dimensions and as a worked example of a nontrivial kernel.
+reorderings and duplicates --- in the Lean development the dimension is the
+order dual of the \code{Finset} lattice, its total meet entering through
+\code{PartialMeet.ofSemilatticeInf}, and the list-to-set collapse is the
+computation \code{List.toFinset}: $[1,2]$ and $[2,1,1]$ decide to one
+\code{Finset}.
 
 \subsection{Compiler flags}\label{sec:flags}
 
@@ -582,7 +587,7 @@ On $\Spec_0$, $\sat$ is reflexive and transitive.
 sweeps across nineteen syntactic dimensions with shrinking; the branch tip is
 clean.\src{spec\_algebra\_corpus.py; spec\_algebra\_properties.py}  For the
 tree model of Definition~\ref{def:simulation} both properties are proved
-(Lean, \code{Tree.pre}).  The claim for the full implementation is empirical,
+(Lean, the \code{Preorder} instance on \code{Tree}).  The claim for the full implementation is empirical,
 not proved: the checked fragment is the generator's language, and the
 excluded features each break a law provably (below).
 
@@ -659,8 +664,8 @@ name.\src{spec\_algebra\_properties.py:860--1057; spec\_algebra\_corpus.py:%
 The syntax \code{++foo} (and \code{foo==bar}, \code{\char`~\char`~foo})
 asserts a variant value \emph{and} requests its propagation through the DAG.
 The intended semantics, and the one the concretizer implements, is a guarded
-implication: \emph{every node (root included) that defines the variant takes
-the value}; formally, for each node $n$ of the solution,
+implication: \emph{every node (root included) that defines the variant and
+admits the value takes it}; formally, for each node $n$ of the solution,
 $\code{foo} \in \mathrm{dom}(n) \Rightarrow n.\code{foo} = v$ --- equivalently
 ``\code{foo=*} implies \code{+foo}'' per node.\src{solver/concretize.lp:%
 1715--1719: \code{variant\_value} is derived only under
@@ -698,13 +703,37 @@ This is why $\Spec_0$ excludes \code{++}: the corpus filters propagated
 variants out of the ordered checks, and the sweep excuses their failures via
 an explicit gap predicate that names this
 subsection's reason.\src{spec\_algebra\_corpus.py:149--160;
-spec\_algebra\_properties.py:581--588}  The repair path is equally explicit:
-store the guarded constraint separately from the node-local value --- i.e.\
-represent \code{++foo} as the pair (propagation request, \emph{conditional}
-local assertion guarded by ``\code{foo} is defined here'') instead of
-(unconditional local assertion, bit).  With the guard in the state, $\sat$
-can evaluate it per node and the subset semantics returns; the three
-conventions in \S\ref{sec:solver} then reduce to two.
+spec\_algebra\_properties.py:581--588}  The repair is now decided, not
+sketched.  A variant name owns two independent constraint slots: a node
+slot (\code{+foo}, \code{foo=bar}: existence and value on this node) and a
+propagated slot (\code{++foo}, \code{foo==bar}: every closure node, root
+included, that has the variant and admits the value takes it).  Neither
+slot satisfies the other --- \code{++foo} asserts no existence here,
+\code{+foo} nothing below --- so \code{++foo +foo} is the canonical
+conjunction and the meet is slot-wise.  Canonicalization evaluates the
+propagated slot against the finished node by the conditional-edge fixpoint:
+\code{key==a key=b} stores node \code{key=a,b} and propagated
+\code{key=a}, and \code{key==a,b} is not implied; \code{++foo \char`~foo}
+denotes $\emptyset$ and is rejected, matching the solver's
+explicit-exclusion error.\src{concretize.lp:1754--1763}  Three
+sub-decisions close the model.  The guard is ``has the variant and admits
+the value'', as in the solver's activation rule, with the admissibility
+half repo-relative and therefore owned by $\pi_R$.  States whose propagated
+slot is satisfiable only vacuously (\code{++foo \char`~\char`~foo}: no
+closure node has \code{foo}) are rejected at parse and meet, as the
+solver's diamond rule already does; that rule's missing
+\code{node\_has\_variant} guard is recorded as a separate solver
+bug.\src{concretize.lp:1731--1740}  Concretization materializes values and
+drops the marks, so a concrete spec satisfies a propagated constraint by a
+closure scan, like the link/run BFS for transitive edges.  With both slots
+in the state, $\sat$ is a subset test per slot and
+Counterexample~\ref{cex:prop} dissolves; the parser must accept one slot of
+each kind per name (\code{++foo +foo}, \code{key==a key=b}) or the
+canonical states cannot round-trip through \code{str}.  The three
+conventions in \S\ref{sec:solver} reduce to two: propagation is state for
+variants, and an annotation candidate only for flags and edges --- the
+solver's propagated flags skip nodes that set the flag themselves, a
+defeasible semantics variants do not have.\src{concretize.lp:1768--1770}
 
 \subsection{The empty denotation}\label{sec:empty}
 
@@ -772,7 +801,10 @@ Definition~\ref{def:variant} and rejecting undeclared names or inadmissible
 values; \code{validate\_or\_raise} checks names, virtuals and
 dependencies.\src{spec.py:5639--5691, 3389--3413}  These are partial
 functions $\pi_R : \Spec \rightharpoonup \Spec$ raising outside their
-domain; they refine states and never relax them.
+domain; they refine states and never relax them.  The domain is decided:
+$\pi_R$ raises exactly on specs whose repo-relative denotation is empty,
+so an undecided conditional declaration leaves the variant free instead of
+raising (Remark~\ref{rem:kernel}).
 \item \emph{Concretization-time freezing.}  Immediately before a spec is
 marked concrete, the versions of every virtual it provides are computed from
 $R$ (as the \emph{intersection} of the ranges of all \code{provides} clauses
@@ -798,9 +830,10 @@ hold, so it is the coarsest lawful algebra over the syntax.  A repository
 does not change the order; it selects the subset of concrete points
 ($\denR{\cdot}$), refines abstract states through the partial projection
 $\pi_R$, and supplies the facts that freezing internalizes.  Whether
-$\pi_R$ enjoys an adjoint-like universal property (the least $R$-valid
-refinement of a free spec) is open; \code{substitute\_abstract\_variants}
-behaves like one on the variant dimension.
+$\pi_R$ enjoys an adjoint-like universal property (the $\sat$-greatest
+$R$-valid state below a free spec --- the \emph{least} refinement) is open;
+\code{substitute\_abstract\_variants} behaves like one on the variant
+dimension.
 
 %======================================================================
 \section{The solver's reading: constraints and preferences}\label{sec:solver}
@@ -1005,10 +1038,19 @@ promote; variants \emph{demote}: $\code{++foo} \meet \code{+foo} =
 edges.\src{variant.py:478--480 vs spec.py:1010--1013, 1165--1170}  Moreover
 the variant bit is visible to \code{satisfies} with the inverted orientation
 ($\code{+foo} \sat \code{++foo}$ but not conversely), which is the
-transitivity engine of Counterexample~\ref{cex:prop}.  Until the guard is
-stored (\S\ref{sec:propagation}), no single annotation rule can be stated
-for the algebra; the flag convention is the one the other two should
-converge to.  [known gap, made line-precise]
+transitivity engine of Counterexample~\ref{cex:prop}.  For variants the
+question is settled the other way (\S\ref{sec:propagation}): propagation is
+order-visible state in a second slot, so the inverted orientation and the
+demotion are both soundness bugs, not convention candidates.  Two more
+witnesses land in the same family: $\code{key==a} \meet \code{key=b} =
+\code{key=a,b}$, which then satisfies \code{key==a,b} --- the merge
+discards the propagated slot and satisfaction accepts the plain value as
+its witness --- and the parser rejects \code{++foo +foo} and
+\code{key==a key=b} as duplicates, so the canonical conjunctions are
+reachable only through \code{constrain}, where the demotion loses them.
+The annotation contract of \S\ref{sec:solver} now governs flags and edges
+alone, each pending its own decision.  [settled for variants; flags/edges
+open]
 
 \subsection{The dependency graph}\label{sec:audit-graph}
 
@@ -1050,20 +1092,30 @@ equality reads annotations, two \code{==}-equal, \code{dag\_hash}-equal
 specs have different meets, and \code{copy()} aliases the annotations
 object, so mutating a copy flips the \emph{original's} \code{satisfies}
 verdict.  [new bugs: congruence of all three equalities, aliasing]
-\item \emph{\code{depflag = 0} has four readings, and one of them makes the
-transitive search dead code.}  An unspecified deptype passes every deptype
-filter in the edge queries, matches no deptype in the traversal seed,
+\item \emph{\code{depflag = 0} has four readings; the conservative one is
+normative.}  An unspecified deptype passes every deptype filter in the edge
+queries, matches no deptype in the traversal seed,
 is a subset lower bound in edge satisfaction, and selects nothing as a query
-argument.\src{spec.py:1337, 1760, 1843, 1321}  Since the parser leaves every
-abstract edge at \code{depflag = 0}, the depth-$\geq 2$ BFS of
-Definition~\ref{def:simulation} never runs for parser-produced specs ---
-\code{pkg-a \^{}pkg-b \%pkg-c} does not satisfy \code{pkg-a \^{}pkg-c}, and
-reaches depth two only when every edge on the path carries explicit
-link/run deptypes.  This refutes the stated justification of the
-\code{nested\_direct\_edge} gap (``satisfies reaches it anyway: its BFS does
-not stop at the first level''): the excuse holds for no spec the parser can
-build, so the gap predicate is a mask, not a documented trade-off.
-[decision needed; gap justification false]
+argument.\src{spec.py:1337, 1760, 1843, 1321}  The seed and the subset test
+are the intended semantics (decided): deptype sets are lower bounds,
+\code{0} guarantees nothing, and \code{\^{}} reaches direct dependencies of
+any deptype but only the link/run closure transitively.
+\code{pkg-a \^{}pkg-b \%pkg-c} not satisfying \code{pkg-a \^{}pkg-c} is
+therefore by design, and the depth-$\geq 2$ BFS of
+Definition~\ref{def:simulation} runs exactly where every edge on the path
+names link or run deptypes explicitly.  Two defects remain.  The query
+filter is the outlier: it selects a \code{0}-flag edge under every filter
+although that edge satisfies no deptype constraint, so
+\code{traverse(deptype=link)} visits the whole \code{\^{}}-closure of a
+parsed spec while the satisfies BFS visits none of it --- a may/must split
+inside one API.  The branch is unreachable during concretization: a fresh
+solve queries nontrivial deptypes only on installed compiler specs, whose
+edges all have flags,\src{asp.py:2994, 3173} so aligning it is
+behavior-preserving there and observable only through direct API use on
+abstract specs.  And the \code{nested\_direct\_edge} gap was justified by
+``satisfies reaches it anyway: its BFS does not stop at the first level'',
+which holds for no spec the parser can build; the docstring now records the
+real reach.  [settled: lower bound; query-filter inconsistency remains]
 \item \emph{Rename bookkeeping crashes on public paths.}  Two routes leave a
 node filed in a parent's edge map under a stale key, and
 \code{\_detach\_edge} then raises \code{KeyError}: constraining a node
@@ -1207,8 +1259,23 @@ harness.
 
 \subsection{What is machine-checked}
 
-\code{formal/SpecSemantics.lean} is self-contained Lean~4 (no Mathlib) and
-compiles with zero errors and warnings under Lean~4.33.0.  Correspondence:
+\code{formal/SpecSemantics.lean} is Lean~4 over Mathlib (toolchain and
+dependency pinned to v4.33.0 in \code{formal/lakefile.toml}; \code{lake
+build} checks it) and compiles with zero errors and warnings.  The
+metatheory the spec algebra shares with textbook order theory is imported,
+not proved: the antisymmetrization quotient, the semilattice equational
+laws, the componentwise product order, the order-dual \code{Finset}
+lattice of the multi-valued dimension.  The spec-specific content with no
+Mathlib counterpart is proved in the file: the partial-meet axioms
+(M1)--(M3), the partial kernel operator of Remark~\ref{rem:kernel}, and
+the simulation order on trees.  Adjoining
+$\bot$ for the undefined meet (\code{WithBot} --- the order-theoretic form
+of the open Bottom question) makes the quotient meet a
+\code{SemilatticeInf}, whose \code{inf\_idem}, \code{inf\_comm},
+\code{inf\_assoc} arrive as imports; \code{PartialMeet.ofSemilatticeInf}
+certifies the converse, that every Mathlib meet-semilattice satisfies
+(M1)--(M3), so the tested axioms are the textbook structure and nothing
+bespoke.  Correspondence:
 
 \begin{center}
 \small
@@ -1216,19 +1283,29 @@ compiles with zero errors and warnings under Lean~4.33.0.  Correspondence:
 \toprule
 This note & Lean & Python law (test site) \\
 \midrule
-Thm~\ref{thm:quotient} quotient poset & \code{Pre.qle\_refl/trans/antisymm} & transitivity checks \\
-Def~\ref{def:meet} (M1)--(M3) & \code{structure Meet} & lower bound, GLB, intersects agrees with constrain \\
-Thm~\ref{thm:meetlaws} laws up to $\ker$ & \code{Meet.idem/comm/assoc/congr} & commutative, associative, congruence \\
-Thm~\ref{thm:descent} semilattice on $/\!\ker$ & \code{Meet.qmeet\_idem/comm/assoc} & (derived, not separately tested) \\
-Thm~\ref{thm:annotation} annotation collapse & \code{Pre.ann}, \code{Pre.annIso} & \code{\%}/\code{\%\%} mutual satisfies \\
-Thm~\ref{thm:prod} products & \code{Pre.prod}, \code{Meet.prod} & pointwise node merge \\
-\S\ref{sec:names} flat domains & \code{flat}, \code{flatMeet} & name, namespace, os cases \\
-\S\ref{sec:variants} set-like domains & \code{multi}, \code{multiMeet} & multi-valued variant cases \\
+Thm~\ref{thm:quotient} quotient poset & \code{Antisymmetrization} (imported) & transitivity checks \\
+Def~\ref{def:meet} (M1)--(M3) & \code{structure PartialMeet} & lower bound, GLB, intersects agrees with constrain \\
+Thm~\ref{thm:meetlaws} laws up to $\ker$ & \code{PartialMeet.congr\_def/congr}, rest via descent & commutative, associative, congruence \\
+Thm~\ref{thm:descent} semilattice on $/\!\ker$ & \code{PartialMeet.semilatticeInf}, \code{inf\_*} (imported) & (derived, not separately tested) \\
+Thm~\ref{thm:annotation} annotation collapse & \code{Ann}, \code{annIso} & \code{\%}/\code{\%\%} mutual satisfies \\
+Thm~\ref{thm:prod} products & \code{Prod} instance (imported), \code{PartialMeet.prod} & pointwise node merge \\
+\S\ref{sec:names} flat domains & \code{Flat}, \code{flatMeet} & name, namespace, os cases \\
+\S\ref{sec:variants} set-like domains & dual \code{Finset} lattice (imported) & multi-valued variant cases \\
 Def~\ref{def:simulation} preorder & \code{Tree.TLe.refl/trans} & reflexive, transitive sweeps \\
 kernel class 1 (\code{\%\%}) & final \code{example} in \code{Tree} & the edge-propagation satisfies test \\
+Rem~\ref{rem:kernel} kernel operator & \code{PartialKernel}, \code{closureOperator} & the \code{pir\_*} laws \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+The kernel-operator section is where harness and proofs interlock:
+\code{PartialKernel} has exactly the four axioms the \code{pir\_*} laws
+test, and \code{meet\_commutes\_forward/backward} derive the fifth law
+from them together with (M1)--(M3), so a commutation failure must localize
+in an axiom (Remark~\ref{rem:kernel}).  Totalized over \code{WithBot} ---
+the same move as the meet --- the kernel is a \code{ClosureOperator} on
+the dual order, and the Galois insertion with the $R$-valid states is
+imported.
 
 The division of labor is deliberate.  The Lean side proves the
 \emph{metatheory}: \emph{any} operation satisfying (M1)--(M3) over
@@ -1316,16 +1393,56 @@ sharpened the stakes: $\pi_R$ strictly shrinks the domain of the meet
 a triviality.
 \end{openq}
 
-\begin{openq}
-\emph{The normative \code{depflag = 0}.}  The audit found four readings of
-an unspecified dependency type (\S\ref{sec:audit-graph}); which is
-normative?  The subset/lower-bound reading of edge satisfaction suggests
-$0$ should behave as the top of the deptype dimension (matched by
-everything, traversed everywhere); the conservative traversal reading
-suggests the opposite.  A decision here determines whether the transitive
-reach of Definition~\ref{def:simulation} is real or vestigial for parsed
-specs.
-\end{openq}
+\begin{remark}\label{rem:kernel}
+The question has a standard packaging.  A \emph{kernel operator} on a
+preorder (the order dual of a closure operator) is a monotone $k$ with
+$k(s) \sat s$ and $k(k(s)) \ker k(s)$; its fixed points are the ``open''
+states, and $k(s)$ is the greatest open state below $s$ --- topological
+interior, with open $=$ $R$-valid.  Equivalently, writing $i$ for the
+inclusion of the $R$-valid states, $k = i \circ \pi_R$ where $i$ is left
+adjoint to $\pi_R$: $v \sat \pi_R(s) \iff v \sat s$ for every $R$-valid
+$v$.  The adjunction law is exactly $\denR{\pi_R(s)} = \denR{s}$ ---
+projection is invisible to every $R$-valid observer, normalization instead
+of solving --- and its components are the (M1)--(M3) pattern again:
+$\pi_R(s)$ is $R$-valid and below $s$ (sound), above every $R$-valid state
+below $s$ (greatest), and defined whenever one exists (total); the raising
+of \code{substitute\_abstract\_variants} outside its domain is an empty
+fiber, not a defect.  If the adjunction holds, three things become
+theorems.  Adjoints are unique, so the substitution algorithm's semantics
+is canonical.  Right adjoints preserve meets, settling the commutation
+half of this question --- with the caveat that the $R$-valid states are
+not closed under the ambient meet (the audit's domain shrink), the
+$R$-valid meet being $\pi_R(a \meet b)$ itself.  And the apparatus is
+delivered: \code{SpecSemantics.lean} defines \code{PartialKernel} with
+exactly the four axioms below, derives the universal property, the
+fixed-point adjunction, and the commutation law from them together with
+(M1)--(M3) (\code{meet\_commutes\_forward/backward}), and totalizes the
+kernel over \code{WithBot} into a \code{ClosureOperator} on the dual
+order, its Galois insertion imported.  The axioms are harness laws, green
+over the conditional-variant mock fragment (\code{pir\_refines},
+\code{pir\_idempotent}, \code{pir\_defined\_upward}, \code{pir\_monotone},
+drawn from \code{PIR\_DIMENSIONS}): the projection refines and is
+idempotent, definedness climbs the order, and monotonicity holds where
+variant declarations are conditional --- the risky case being a
+string-valued variant retyped on one side and not the other.  The fifth
+law, \code{pir\_meet\_commutes} in the re-projected form
+$\pi_R(a \meet b) \ker \pi_R(\pi_R(a) \meet \pi_R(b))$ with definedness
+included, is entailed by the other four and stands as an integration
+check: a failure there must localize in an axiom.  The domain behavior is
+the required one --- a satisfied condition substitutes, an undecided one
+leaves the variant free, a falsified one raises --- and that rule is
+decided as the contract of substitution: raising exactly on an empty
+repo-relative denotation, so an eager raise found later is a regression,
+not behavior.  Like every harness result the axiom claims are empirical,
+over the generated fragment.  Host-resolved \code{os} names are parse-time statefulness
+(\S\ref{sec:audit-state}), not a property of $\pi_R$, and are set aside.
+Freezing is decided to be the second instance: the intersection of the
+provides ranges is the greatest-below construction on its dimension, with
+the same verification obligations.  Concretization is \emph{not} a kernel
+operator --- it chooses a point below $s$ instead of the greatest
+$R$-valid state and collapses the denotation instead of preserving it ---
+and inherits no free theorem.
+\end{remark}
 
 \begin{openq}
 \emph{One state identity.}  \code{==}, \code{to\_dict()} and
@@ -1344,7 +1461,12 @@ confirmed incomplete, with the fix identified
 probed for a global-matching counterexample and none exists at the abstract
 level --- the same pairwise implication that lets one candidate edge witness
 two constraint edges also fuses those constraint edges when they are built
-into one spec, so search and meet are consistent by construction.
+into one spec, so search and meet are consistent by construction.  A third,
+the normative \code{depflag = 0}, was settled by decision instead of audit:
+an unspecified deptype set is a lower bound like any abstract multi-valued
+value --- top as a constraint, bottom as a guarantee --- so the
+conservative traversal stands and the query filter's wildcard branch is the
+deviation (\S\ref{sec:audit-graph}).
 \end{remark}
 
 \appendix
