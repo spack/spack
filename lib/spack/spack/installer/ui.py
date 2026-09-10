@@ -641,8 +641,7 @@ class TerminalUI(InstallerUI):
     def _generate_line_components(
         self, build_info: BuildInfo, static: bool = False, now: float = 0.0
     ) -> Generator[str, None, None]:
-        """Yield formatted line components for a package. Escape sequences are yielded as separate
-        strings so they do not contribute to the line width."""
+        """Yield formatted line components for a package."""
         if build_info.external:
             indicator = "[e]"
         elif build_info.state == "finished":
