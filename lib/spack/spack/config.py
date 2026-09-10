@@ -2083,7 +2083,24 @@ def _copy_directory_contents(
         dst_path = os.path.join(dst_dir, entry)
         try:
             if os.path.isdir(src_path):
-                shutil.copytree(src_path, dst_path)
+                if resource_name == "environments":
+                    # For environments, exclude view directories (symlinks would be invalidated)
+                    # Views are identified by MARKER_FILE
+                    # Import locally to avoid circular dependency with spack.environment
+                    from spack.environment.environment import MARKER_FILE
+
+                    def ignore_views(directory, names):
+                        ignored = []
+                        for name in names:
+                            path = os.path.join(directory, name)
+                            # Exclude if directory contains MARKER_FILE (indicates a view)
+                            if os.path.isdir(path) and os.path.exists(os.path.join(path, MARKER_FILE)):
+                                ignored.append(name)
+                                tty.debug(f"Excluding view directory: {path}")
+                        return ignored
+                    shutil.copytree(src_path, dst_path, ignore=ignore_views)
+                else:
+                    shutil.copytree(src_path, dst_path)
             else:
                 shutil.copy2(src_path, dst_path)
             tty.debug(f"Copied {resource_name}: {entry}")
