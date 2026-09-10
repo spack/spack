@@ -7,7 +7,7 @@ import pytest
 
 import spack.concretize
 import spack.config
-import spack.context_factory
+import spack.context
 import spack.error
 import spack.old_installer
 import spack.package_base
@@ -1178,8 +1178,8 @@ def test_strong_preferences_higher_priority_than_reuse(
 
     # Check that without further configuration adios2 is reused
     with mutable_config.override("concretizer:reuse", True):
-        solver = spack.solver.asp.Solver(context=spack.context_factory.default())
-        setup = spack.solver.asp.SpackSolverSetup(context=spack.context_factory.default())
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
         result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
         ascent = result.specs[0]
     assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent
@@ -1194,8 +1194,8 @@ def test_strong_preferences_higher_priority_than_reuse(
 """
     )
     with mutable_config.override("concretizer:reuse", True):
-        solver = spack.solver.asp.Solver(context=spack.context_factory.default())
-        setup = spack.solver.asp.SpackSolverSetup(context=spack.context_factory.default())
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
         result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
         ascent = result.specs[0]
 
@@ -1204,8 +1204,8 @@ def test_strong_preferences_higher_priority_than_reuse(
 
     # A preference is still preference, so we can override from input
     with mutable_config.override("concretizer:reuse", True):
-        solver = spack.solver.asp.Solver(context=spack.context_factory.default())
-        setup = spack.solver.asp.SpackSolverSetup(context=spack.context_factory.default())
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
         result, _, _ = solver.driver.solve(
             setup, [Spec("ascent+adios2^adios2~bzip2")], reuse=reuse_nodes
         )
@@ -1333,11 +1333,11 @@ def test_requirements_on_compilers_and_reuse(
     reused_nodes = list(reused_spec.traverse())
     update_packages_config(packages_yaml)
     root_specs = [Spec(input_spec)]
-    external_specs = reusable_external_specs(spack.context_factory.default())
+    external_specs = reusable_external_specs(spack.context.default())
 
     with mutable_config.override("concretizer:reuse", True):
-        solver = spack.solver.asp.Solver(context=spack.context_factory.default())
-        setup = spack.solver.asp.SpackSolverSetup(context=spack.context_factory.default())
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
         result, _, _ = solver.driver.solve(setup, root_specs, reuse=reused_nodes + external_specs)
         pkga = result.specs[0]
     is_pkgb_reused = pkga["pkg-b"].dag_hash() == reused_spec.dag_hash()
@@ -1516,12 +1516,12 @@ packages:
     update_packages_config(packages_yaml)
     initial_mpileaks = spack.concretize.concretize_one("mpileaks+debug")
     reused_nodes = list(initial_mpileaks.traverse())
-    external_specs = reusable_external_specs(spack.context_factory.default())
+    external_specs = reusable_external_specs(spack.context.default())
 
     # Ask for just "mpileaks" and check the spec is reused
     with mutable_config.override("concretizer:reuse", True):
-        solver = spack.solver.asp.Solver(context=spack.context_factory.default())
-        setup = spack.solver.asp.SpackSolverSetup(context=spack.context_factory.default())
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
         result, _, _ = solver.driver.solve(
             setup, [Spec("mpileaks")], reuse=reused_nodes + external_specs
         )
@@ -1549,8 +1549,8 @@ packages:
 """
     update_packages_config(packages_yaml)
     with mutable_config.override("concretizer:reuse", True):
-        solver = spack.solver.asp.Solver(context=spack.context_factory.default())
-        setup = spack.solver.asp.SpackSolverSetup(context=spack.context_factory.default())
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
         result, _, _ = solver.driver.solve(
             setup, [Spec("mpileaks")], reuse=reused_nodes + external_specs
         )

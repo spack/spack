@@ -14,7 +14,6 @@ import spack.spec
 import spack.traverse
 import spack.util.path
 from spack.active_environment import active_environment
-from spack.context import SpackContext
 from spack.enums import InstallRecordStatus
 from spack.externals import ExternalSpecsParser
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
@@ -23,6 +22,7 @@ from spack.spec_filter import SpecFilter
 from .runtimes import all_libcs
 
 if typing.TYPE_CHECKING:
+    import spack.context
     import spack.environment
 
 
@@ -33,7 +33,7 @@ def spec_filter_from_store(store, *, is_reusable, include=None, exclude=None) ->
 
 
 def spec_filter_from_buildcache(
-    *, context: SpackContext, is_reusable, include=None, exclude=None
+    *, context: "spack.context.SpackContext", is_reusable, include=None, exclude=None
 ) -> SpecFilter:
     """Constructs a filter that takes the specs from the configured buildcaches."""
     factory = functools.partial(
@@ -125,7 +125,7 @@ def _is_reusable(
     return False
 
 
-def reusable_external_specs(context: SpackContext) -> List[spack.spec.Spec]:
+def reusable_external_specs(context: "spack.context.SpackContext") -> List[spack.spec.Spec]:
     """Return the reusable external specs declared in a context's ``packages.yaml``."""
     packages_with_externals = external_config_with_implicit_externals(context)
     spec_filter = spec_filter_from_packages_yaml(
@@ -184,7 +184,7 @@ class ReusableSpecsSelector:
     def __init__(
         self,
         *,
-        context: SpackContext,
+        context: "spack.context.SpackContext",
         packages_with_externals: Any,
         factory: Optional[SpecFiltersFactory] = None,
     ) -> None:

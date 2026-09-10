@@ -20,7 +20,7 @@ import spack.cmd
 import spack.cmd.external
 import spack.compilers.config
 import spack.concretize
-import spack.context_factory
+import spack.context
 import spack.cray_manifest
 import spack.platforms
 import spack.platforms.test
@@ -471,7 +471,7 @@ def test_reusable_externals_cray_manifest(temporary_store, mutable_config, manif
 
     mutable_config.set("concretizer:reuse", {"from": [{"type": "local"}]})
 
-    assert imported <= _reusable_hashes(spack.context_factory.default())
+    assert imported <= _reusable_hashes(spack.context.default())
 
 
 def test_cray_manifest_externals_from_a_build_cache_are_not_reusable(
@@ -505,6 +505,6 @@ def test_reusable_externals_cray_manifest_from_upstream(mutable_config, tmp_path
     mutable_config.set("upstreams", {"site": {"install_tree": str(upstream_root)}})
     mutable_config.set("concretizer:reuse", {"from": [{"type": "local"}]})
 
-    context = spack.context_factory.default()._replace(store=spack.store.create(mutable_config))
+    context = spack.context.default()._replace(store=spack.store.create(mutable_config))
 
     assert imported <= _reusable_hashes(context)

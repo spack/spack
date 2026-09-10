@@ -68,7 +68,6 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector, FileCompilerCache
-from spack.context import SpackContext
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
 from spack.util.lang import elide_list
@@ -105,6 +104,8 @@ from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder, all_l
 from .versions import Provenance
 
 if TYPE_CHECKING:
+    import spack.context
+
     # Imported lazily to avoid re-introducing a runtime spack.store dependency; type-only.
     import spack.store
 
@@ -1111,7 +1112,9 @@ class SpackSolverSetup:
     clauses: "SpecClauseGenerator"
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
-    def __init__(self, tests: spack.concretize.TestsType = False, *, context: SpackContext):
+    def __init__(
+        self, tests: spack.concretize.TestsType = False, *, context: "spack.context.SpackContext"
+    ):
         self.context = context
         self.compiler_cache = FileCompilerCache(self.context.misc_cache)
         self.possible_graph = create_graph_analyzer(self.context)
@@ -2916,7 +2919,7 @@ class ProblemInstanceBuilder:
 
 
 def possible_compilers(
-    *, context: SpackContext
+    *, context: "spack.context.SpackContext"
 ) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
     result, rejected = set(), set()
 
@@ -3269,7 +3272,9 @@ def post_process_fresh_solve(specs: SpecDict, splices: Optional[SpliceDict]) -> 
         specs.update(new_specs)
 
 
-def post_process_concretization_result(specs: SpecDict, *, context: SpackContext) -> None:
+def post_process_concretization_result(
+    specs: SpecDict, *, context: "spack.context.SpackContext"
+) -> None:
     """Update concretization results after *every* concretization, even cached ones.
 
     These post-steps depend on package information like patches, package hash, etc. They
@@ -3322,7 +3327,9 @@ def post_process_concretization_result(specs: SpecDict, *, context: SpackContext
     specs.update(new_specs)
 
 
-def execute_explicit_splices(specs: SpecDict, *, context: SpackContext) -> SpecDict:
+def execute_explicit_splices(
+    specs: SpecDict, *, context: "spack.context.SpackContext"
+) -> SpecDict:
     splice_config = context.config.get("concretizer:splice:explicit", [])
     splice_triples = []
     for splice_set in splice_config:
@@ -3441,7 +3448,7 @@ def _develop_specs_from_env(spec, env, *, config: spack.config.Configuration):
 
 
 def _resolve_input_specs(
-    specs: Sequence[spack.spec.Spec], *, context: SpackContext
+    specs: Sequence[spack.spec.Spec], *, context: "spack.context.SpackContext"
 ) -> List[spack.spec.Spec]:
     """Replace ``/hash`` references by the specs they refer to, and assign git ref versions."""
     return [
@@ -3463,7 +3470,10 @@ class Solver:
     """
 
     def __init__(
-        self, *, context: SpackContext, specs_factory: Optional[SpecFiltersFactory] = None
+        self,
+        *,
+        context: "spack.context.SpackContext",
+        specs_factory: Optional[SpecFiltersFactory] = None,
     ):
         self.context = context
 

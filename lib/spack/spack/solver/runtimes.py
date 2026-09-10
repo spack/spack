@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from typing import Set, Tuple
+from typing import TYPE_CHECKING, Set, Tuple
 
 import spack.compilers.config
 import spack.compilers.libraries
@@ -9,10 +9,12 @@ import spack.hash_lookup
 import spack.spec
 import spack.util.libc
 import spack.version
-from spack.context import SpackContext
 
 from .core import SourceContext, fn
 from .versions import Provenance
+
+if TYPE_CHECKING:
+    import spack.context
 
 #: Language virtuals wrapped by the compiler wrapper (same ones for which a flag exists)
 COMPILER_WRAPPER_LANGUAGES = ("c", "cxx", "fortran")
@@ -270,7 +272,7 @@ class RuntimePropertyRecorder:
         self._setup.effect_rules()
 
 
-def all_libcs(context: SpackContext) -> Set[spack.spec.Spec]:
+def all_libcs(context: "spack.context.SpackContext") -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
     cache = spack.compilers.libraries.FileCompilerCache(context.misc_cache)

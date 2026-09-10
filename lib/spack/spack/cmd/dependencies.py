@@ -6,7 +6,7 @@ import argparse
 import sys
 
 import spack.cmd
-import spack.context_factory
+import spack.context
 import spack.store
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
@@ -70,7 +70,7 @@ def dependencies(parser, args):
     else:
         spec = specs[0]
         dependencies, virtuals, _ = create_graph_analyzer(
-            spack.context_factory.default()
+            spack.context.default()
         ).possible_dependencies(
             spec,
             transitive=args.transitive,

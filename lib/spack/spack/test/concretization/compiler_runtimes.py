@@ -10,7 +10,7 @@ import pytest
 import spack.vendor.archspec.cpu
 
 import spack.concretize
-import spack.context_factory
+import spack.context
 import spack.database
 import spack.paths
 import spack.repo
@@ -24,8 +24,8 @@ from spack.version import Version
 
 def _concretize_with_reuse(*, root_str, reused_str):
     reused_spec = spack.concretize.concretize_one(reused_str)
-    external_specs = reusable_external_specs(spack.context_factory.default())
-    setup = spack.solver.asp.SpackSolverSetup(tests=False, context=spack.context_factory.default())
+    external_specs = reusable_external_specs(spack.context.default())
+    setup = spack.solver.asp.SpackSolverSetup(tests=False, context=spack.context.default())
     driver = spack.solver.asp.PyclingoDriver()
     result, _, _ = driver.solve(
         setup, [spack.spec.Spec(f"{root_str}")], reuse=[reused_spec] + external_specs

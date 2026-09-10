@@ -4,20 +4,22 @@
 """Helpers to build an ExternalSpecsParser from Spack configuration."""
 
 import itertools
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.platforms
 import spack.repo
 import spack.spec
-from spack.context import SpackContext
 from spack.externals import (
     ExternalSpecsParser,
     complete_architecture,
     complete_variants_and_architecture,
     extract_dicts_from_configuration,
 )
+
+if TYPE_CHECKING:
+    import spack.context
 
 
 def _normalize_packages_yaml(packages_yaml: Dict[str, Any], *, repo: spack.repo.RepoPath) -> None:
@@ -44,7 +46,9 @@ def _normalize_packages_yaml(packages_yaml: Dict[str, Any], *, repo: spack.repo.
             entry.setdefault("externals", []).extend(specs)
 
 
-def external_config_with_implicit_externals(context: SpackContext) -> Dict[str, Any]:
+def external_config_with_implicit_externals(
+    context: "spack.context.SpackContext",
+) -> Dict[str, Any]:
     """Return packages.yaml augmented with implicit libc externals on Linux.
 
     Normalizes the configuration so that virtual-package keys are replaced by
@@ -77,7 +81,7 @@ def external_config_with_implicit_externals(context: SpackContext) -> Dict[str, 
 
 
 def create_external_parser(
-    packages_with_externals: Any, *, context: SpackContext
+    packages_with_externals: Any, *, context: "spack.context.SpackContext"
 ) -> ExternalSpecsParser:
     """Get externals from a pre-processed packages.yaml (with implicit externals).
 

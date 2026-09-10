@@ -12,16 +12,15 @@ from typing import List, Optional
 
 import spack.active_environment
 import spack.binary_distribution
-import spack.context_factory
+import spack.context
 import spack.error
 import spack.externals_config
 import spack.spec
-from spack.context import SpackContext
 from spack.enums import InstallRecordStatus
 
 
 def _matching_external_specs(
-    spec: "spack.spec.Spec", *, context: SpackContext
+    spec: "spack.spec.Spec", *, context: spack.context.SpackContext
 ) -> List["spack.spec.Spec"]:
     """Return configured externals from packages.yaml that match spec by abstract hash."""
     try:
@@ -36,7 +35,9 @@ def _matching_external_specs(
     return parser.query(spec)
 
 
-def _lookup_one(spec: "spack.spec.Spec", *, context: SpackContext) -> "spack.spec.Spec":
+def _lookup_one(
+    spec: "spack.spec.Spec", *, context: spack.context.SpackContext
+) -> "spack.spec.Spec":
     """Return the single concrete spec matching an abstract-hash spec.
 
     Searches in order: active environment, configured externals, installed store, binary cache.
@@ -66,7 +67,7 @@ def _lookup_one(spec: "spack.spec.Spec", *, context: SpackContext) -> "spack.spe
 
 
 def lookup_hash(
-    spec: "spack.spec.Spec", *, context: Optional[SpackContext] = None
+    spec: "spack.spec.Spec", *, context: Optional[spack.context.SpackContext] = None
 ) -> "spack.spec.Spec":
     """Return a copy of spec with all abstract-hash nodes replaced by their concrete counterparts.
 
@@ -76,7 +77,7 @@ def lookup_hash(
     if spec.concrete or not any(node.abstract_hash for node in spec.traverse()):
         return spec
 
-    context = context or spack.context_factory.default()
+    context = context or spack.context.default()
 
     result = spec.copy(deps=False)
     if result.abstract_hash:
@@ -100,7 +101,9 @@ def lookup_hash(
     return result
 
 
-def replace_hash(spec: "spack.spec.Spec", *, context: Optional[SpackContext] = None) -> None:
+def replace_hash(
+    spec: "spack.spec.Spec", *, context: Optional[spack.context.SpackContext] = None
+) -> None:
     """Populate spec in-place by resolving all abstract-hash nodes.
 
     Destructive counterpart to lookup_hash. No-op if spec has no abstract-hash nodes.

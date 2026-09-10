@@ -4,7 +4,7 @@
 """Classes to analyze the input of a solve, and provide information to set up the ASP problem"""
 
 import collections
-from typing import Dict, List, NamedTuple, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import spack.vendor.archspec.cpu
 
@@ -16,10 +16,12 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
-from spack.context import SpackContext
 from spack.error import SpackError
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
+
+if TYPE_CHECKING:
+    import spack.context
 
 
 class PossibleGraph(NamedTuple):
@@ -394,7 +396,7 @@ class StaticAnalysis(NoStaticAnalysis):
         return False
 
 
-def create_graph_analyzer(context: SpackContext) -> PossibleDependencyGraph:
+def create_graph_analyzer(context: "spack.context.SpackContext") -> PossibleDependencyGraph:
     static_analysis = context.config.get("concretizer:static_analysis", False)
     if static_analysis:
         return StaticAnalysis(

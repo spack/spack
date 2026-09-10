@@ -12,7 +12,7 @@ import spack.cmd
 import spack.cmd.spec
 import spack.concretize
 import spack.config
-import spack.context_factory
+import spack.context
 import spack.package_base
 import spack.spec
 from spack.active_environment import active_environment
@@ -183,7 +183,7 @@ def solve(parser, args):
         return
 
     spack.concretize.ensure_compilers_in_configuration()
-    solver = asp.Solver(context=spack.context_factory.default())
+    solver = asp.Solver(context=spack.context.default())
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {"asp"}
     unify = spack.config.CONFIG.get("concretizer:unify")

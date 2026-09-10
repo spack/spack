@@ -42,7 +42,7 @@ import enum
 import sys
 from typing import List, Optional, Set, TextIO, Tuple
 
-import spack.context_factory
+import spack.context
 import spack.deptypes as dt
 import spack.spec
 import spack.tengine
@@ -540,7 +540,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
 
 def _static_edges(specs, depflag):
     for spec in specs:
-        *_, edges = create_graph_analyzer(spack.context_factory.default()).possible_dependencies(
+        *_, edges = create_graph_analyzer(spack.context.default()).possible_dependencies(
             spec.name, expand_virtuals=True, allowed_deps=depflag
         )
 
