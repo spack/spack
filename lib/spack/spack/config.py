@@ -1402,7 +1402,7 @@ class IncludePath(OptionalInclude):
 
         super().__init__(entry)
         path_override_env_var = entry.get("path_override_env_var", "")
-        if path_override_env_var and path_override_env_var in os.environ:
+        if path_override_env_var and os.environ.get(path_override_env_var):
             path = os.environ[path_override_env_var]
         else:
             path = entry.get("path", "")
