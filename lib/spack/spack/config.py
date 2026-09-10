@@ -1980,6 +1980,45 @@ def _migrate_user_config_programmatic() -> bool:
         tty.debug("No config files found in ~/.spack to migrate")
         return False
 
+    # Lock the destination parent directory to prevent concurrent migrations
+    config_parent = os.path.dirname(new_config_location)
+    filesystem.mkdirp(config_parent)
+    lock_path = os.path.join(config_parent, ".spack-user-config-migration.lock")
+
+    lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+    lock.acquire_write()
+    try:
+        tty.debug(f"Acquired migration lock for {new_config_location}")
+        return _do_migrate_user_config(
+            old_location, new_config_location, config_files, spack.cmd.migrate
+        )
+    finally:
+        lock.release_write()
+        tty.debug(f"Released migration lock for {new_config_location}")
+
+
+def _do_migrate_user_config(
+    old_location: str, new_config_location: str, config_files: list, migrate_module
+) -> bool:
+    """Perform the actual user config migration (assumes lock is already held).
+
+    Args:
+        old_location: Path to ~/.spack
+        new_config_location: Path to ~/.config/spack
+        config_files: List of config files to migrate (relative paths)
+        migrate_module: The spack.cmd.migrate module (passed to avoid reimport)
+
+    Returns:
+        True if migration was performed, False if skipped
+    """
+    # Check again if destination exists (might have been created by another process)
+    if os.path.exists(new_config_location):
+        tty.debug(
+            f"{new_config_location} already exists (created while waiting for lock), "
+            f"skipping user config migration"
+        )
+        return False
+
     # Perform migration
     os.makedirs(new_config_location, exist_ok=True)
     tty.debug(f"Migrating config files from {old_location} to {new_config_location}")
@@ -1989,7 +2028,7 @@ def _migrate_user_config_programmatic() -> bool:
         new_path = os.path.join(new_config_location, config_file)
 
         # Process paths using migrate command logic (handles the 4 path rewriting rules)
-        modified_data, _ = spack.cmd.migrate.process_config_file_paths(
+        modified_data, _ = migrate_module.process_config_file_paths(
             old_path, old_location, new_config_location
         )
 
