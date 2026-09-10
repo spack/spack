@@ -26,6 +26,7 @@ import spack.error
 import spack.operating_systems.windows_os as winOs
 import spack.schema
 import spack.spec
+import spack.store
 import spack.util.environment
 import spack.util.spack_yaml
 import spack.util.windows_registry
@@ -40,6 +41,18 @@ def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
         for item in package_configuration.get("externals", []):
             already_defined_specs.add(spack.spec.Spec(item["spec"]))
     return already_defined_specs
+
+
+def _installed_spec_prefixes() -> Set[str]:
+    """Returns the real (symlink-resolved) install prefixes of all specs in the Spack DB."""
+    return {os.path.realpath(spec.prefix) for spec in spack.store.STORE.db.query()}
+
+
+def _is_subdir_of_installed_prefix(path: str, installed_prefixes: Set[str]) -> bool:
+    """Returns True if path (or any of its ancestors) is a Spack install prefix."""
+    real = os.path.realpath(path)
+    p = pathlib.Path(real)
+    return any(str(ancestor) in installed_prefixes for ancestor in (p, *p.parents))
 
 
 ExternalEntryType = Union[str, Dict[str, str]]
@@ -202,9 +215,17 @@ def update_configuration(
         buildable: whether the detected packages are buildable or not
     """
     predefined_external_specs = _externals_in_packages_yaml()
+    installed_prefixes = _installed_spec_prefixes()
     pkg_to_cfg, all_new_specs = {}, []
     for package_name, entries in detected_packages.items():
-        new_entries = [s for s in entries if s not in predefined_external_specs]
+        new_entries = []
+        for s in entries:
+            if s in predefined_external_specs:
+                continue
+            if _is_subdir_of_installed_prefix(s.external_path, installed_prefixes):
+                tty.debug(f"Skipping {s} (Spack-installed package at {s.external_path})")
+                continue
+            new_entries.append(s)
 
         pkg_config = _pkg_config_dict(new_entries)
         external_entries = pkg_config.get("externals", [])
