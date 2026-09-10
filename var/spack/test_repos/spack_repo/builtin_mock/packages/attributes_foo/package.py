@@ -47,9 +47,12 @@ class AttributesFoo(BundlePackage):
     def bar_headers(self):
         return find_headers("bar", root=self.home.include, recursive=True)
 
-    # Library provided by the bar virtual package
+    # Library provided by the bar virtual package. The extra parameters of the query select which
+    # library is returned, like hdf5 and friends do.
     @property
     def bar_libs(self):
+        if "baz" in self.spec.last_query.extra_parameters:
+            return find_libraries("libFooBaz", root=self.baz_home, recursive=True)
         return find_libraries("libFooBar", root=self.home, recursive=True)
 
     # The baz virtual package home

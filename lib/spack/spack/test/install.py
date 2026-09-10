@@ -119,6 +119,18 @@ def test_pkg_attributes(install_mockery, mock_fetch, monkeypatch):
     assert baz_libs.basenames == ["libFooBaz" + lib_suffix]
     assert baz_libs.directories == [spec["baz"].home.lib]
 
+    # The package reads the extra parameters of the query it was reached by
+    assert spec["bar:baz"].libs.basenames == ["libFooBaz" + lib_suffix]
+
+    # A node that was never indexed is queried as itself, and records that query
+    foo_spec = spec[foo]
+    foo_spec.last_query = None
+    assert foo_spec.libs.basenames == foo_libs.basenames
+    assert foo_spec.headers.basenames == foo_headers.basenames
+    assert foo_spec.home == foo_spec.prefix
+    assert foo_spec.last_query.name == foo
+    assert not foo_spec.last_query.isvirtual
+
 
 def mock_remove_prefix(*args):
     raise MockInstallError("Intentional error", "Mock remove_prefix method intentionally fails")

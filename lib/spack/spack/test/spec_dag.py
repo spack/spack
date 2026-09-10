@@ -561,22 +561,20 @@ class TestSpecDag:
         copy_ids = {id(s) for s in copy.traverse()}
         assert not orig_ids.intersection(copy_ids)
 
-    def test_copy_through_spec_build_interface(self):
-        """Check that copying dependencies using id(node) as a fast identifier of the
-        node works when the spec is wrapped in a SpecBuildInterface object.
-        """
+    def test_getitem_returns_the_node(self):
+        """A query returns the node itself, so that copying dependencies using id(node) as a fast
+        identifier of the node keeps working."""
         s = spack.concretize.concretize_one("mpileaks")
 
-        c0 = s.copy()
-        assert c0 == s
+        assert s["mpileaks"] is s
+        assert s["mpileaks"]["mpileaks"] is s
+        assert s["callpath"] is s["callpath"]
 
-        # Single indirection
-        c1 = s["mpileaks"].copy()
-        assert c0 == c1 == s
+        callpath = s["callpath"]
+        assert callpath.edges_to_dependencies()[0].parent is callpath
 
-        # Double indirection
-        c2 = s["mpileaks"]["mpileaks"].copy()
-        assert c0 == c1 == c2 == s
+        assert Spec(callpath).eq_dag(callpath)
+        assert callpath.copy().eq_dag(callpath)
 
     # Here is the graph with deptypes labeled (assume all packages have a 'dt'
     # prefix). Arrows are marked with the deptypes ('b' for 'build', 'l' for
@@ -818,10 +816,14 @@ class TestSpecDag:
         assert "cxx" in query.extra_parameters
         assert "fortran" in query.extra_parameters
         assert query.isvirtual
+        assert query.parent is s
+
+        # Querying the same node again replaces the query it records
+        assert s["mpi"] is a
+        assert a.last_query.extra_parameters == []
 
     def test_getitem_exceptional_paths(self):
         s = spack.concretize.concretize_one("mpileaks")
-        # Needed to get a proxy object
         q = s["mpileaks"]
 
         # Test that the attribute is read-only
