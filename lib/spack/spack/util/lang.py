@@ -425,22 +425,6 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
     return cls
 
 
-K = TypeVar("K")
-V = TypeVar("V")
-
-
-@lazy_lexicographic_ordering
-class HashableMap(Dict[K, V]):
-    """This is a hashable, comparable dictionary.  Hash is performed on
-    a tuple of the values in the dictionary."""
-
-    __slots__ = ()
-
-    def _cmp_iter(self):
-        for _, v in sorted(self.items()):
-            yield v
-
-
 def match_predicate(*args):
     """Utility function for making string matching predicates.
 

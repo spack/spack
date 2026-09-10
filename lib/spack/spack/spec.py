@@ -1145,7 +1145,16 @@ class CompilerFlag(str):
 _valid_compiler_flags = ("cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags")
 
 
-class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
+# typing.Dict bases are slow at runtime on Python 3.6
+if TYPE_CHECKING:
+    _FlagMapBase = Dict[str, List[CompilerFlag]]
+    _VariantMapBase = Dict[str, vt.VariantValue]
+else:
+    _FlagMapBase = _VariantMapBase = dict
+
+
+@lang.lazy_lexicographic_ordering
+class FlagMap(_FlagMapBase):
     __slots__ = ()
 
     def satisfies(self, other):
@@ -5195,10 +5204,15 @@ class Spec:
         return bool(self.dependencies(virtuals=(virtual,)))
 
 
-class VariantMap(lang.HashableMap[str, vt.VariantValue]):
+@lang.lazy_lexicographic_ordering
+class VariantMap(_VariantMapBase):
     """Map of variant instances, keyed by variant name."""
 
     __slots__ = ()
+
+    def _cmp_iter(self):
+        for _, v in sorted(self.items()):
+            yield v
 
     @property
     def dict(self) -> "VariantMap":
