@@ -3,12 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import os
 import sys
 
 import spack.cmd
 import spack.cmd.common
+import spack.hooks.generate_spec_scripts as spec_script
 import spack.store
-import spack.user_environment as uenv
+import spack.util.tty as tty
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 
@@ -76,8 +78,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def load(parser, args):
-    env = active_environment()
-
     if args.list:
         results = spack.cmd.filter_loaded_specs(args.specs())
         if sys.stdout.isatty():
@@ -87,20 +87,43 @@ def load(parser, args):
 
     constraint_specs = spack.cmd.parse_specs(args.constraint)
     specs = [
-        spack.cmd.disambiguate_spec(spec, env, first=args.load_first) for spec in constraint_specs
+        spack.cmd.disambiguate_spec(spec, active_environment(), first=args.load_first)
+        for spec in constraint_specs
     ]
 
-    if not args.shell:
+    shell = args.shell if args.shell else os.environ.get("SPACK_SHELL")
+
+    if not shell:
         specs_str = " ".join(str(s) for s in constraint_specs) or "SPECS"
         spack.cmd.common.shell_init_instructions(
             "spack load", f"    eval `spack load {{sh_arg}} {specs_str}`"
         )
         return 1
 
-    with spack.store.STORE.db.read_transaction():
-        env_mod = uenv.environment_modifications_for_specs(*specs)
-        for spec in specs:
-            env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-        cmds = env_mod.shell_modifications(args.shell)
+    for spec in specs:
+        commands = ""
 
-        sys.stdout.write(cmds)
+        if spec.external:
+            commands, _ = spec_script.get_environment_modifications(spec, shell)
+        else:
+            load_script_path = spec_script.path_to_load_shell_script(spec, shell)
+
+            if not os.path.isfile(load_script_path):
+                spack_dir = spack.store.STORE.layout.metadata_path(spec)
+
+                try:
+                    # Try to get cached repo if it exists
+                    cached_repo = spec_script.make_repo_path(spack_dir)
+                    mods, _ = spec_script.get_environment_modifications(spec, shell, cached_repo)
+                except Exception as err:
+                    tty.die(f"Error generating environment modifications for {spec}:\n{err}")
+                try:
+                    spec_script.write_script(load_script_path, mods, shell)
+                except Exception as err:
+                    tty.debug(f"Error writing to {load_script_path}\n{err}")
+                    sys.stdout.write(mods)
+                    return 1
+
+            commands = spec_script.source_script(load_script_path, shell)
+
+        sys.stdout.write(commands)

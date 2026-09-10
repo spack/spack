@@ -158,13 +158,13 @@ function capture_all
     begin;
         begin;
             eval $argv[1]
-            set $argv[2] $status  # read sets the `status` flag => capture here
+            set -g $argv[2] $status  # read sets the `status` flag => capture here
         end 2>| read -z __err
     end 1>| read -z __out
 
     # output arrays
-    set $argv[3] (echo $__out | string split \n)
-    set $argv[4] (echo $__err | string split \n)
+    set -g $argv[3] (echo $__out | string split \n)
+    set -g $argv[4] (echo $__err | string split \n)
 
     return 0
 end
@@ -184,11 +184,9 @@ function get_sp_flags -d "return leading flags"
     # array: `__sp_remaining_args` containing all unprocessed arguments.
     #
 
-    # initialize argument counter
-    set -l i 1
-
-    # iterate over elements (`elt`) in `argv` array
-    for elt in $argv
+    # enumerate over elements (`elt`) in `argv` array
+    for i in (seq 1 (count $argv))
+        set -l elt $argv[$i]
 
         # match element `elt` of `argv` array to check if it has a leading dash
         if echo $elt | string match -r -q "^-"
@@ -204,10 +202,6 @@ function get_sp_flags -d "return leading flags"
             set __sp_remaining_args (stream_args $argv[$i..-1])
             return
         end
-
-        # increment argument counter: used in place of bash's `shift` command
-        set -l i (math $i+1)
-
     end
 
     # if all elements in `argv` are matched, make sure that `__sp_remaining_args`
@@ -283,9 +277,9 @@ end
 
 
 
-function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, or --fish"
+function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, --fish, or --pwsh"
     #
-    # Check if inputs contain -h/--help, --sh, --csh, or --fish
+    # Check if inputs contain -h/--help, --sh, --csh, --fish, or --pwsh
     #
 
     # combine argument array into single string (space separated), to be passed
@@ -320,6 +314,11 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
             return 0
         end
 
+        # looks for a single `--pwsh`
+        if match_flag $_a "--pwsh"
+            return 0
+        end
+
         # looks for a single `--list`
         if match_flag $_a "--list"
             return 0
@@ -331,9 +330,9 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
 end
 
 
-function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, --csh, or --fish"
+function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, --csh, --fish, or --pwsh"
     #
-    # Check if inputs contain --sh, --csh, or --fish
+    # Check if inputs contain --sh, --csh, --fish, or --pwsh
     #
 
     # combine argument array into single string (space separated), to be passed
@@ -355,6 +354,11 @@ function check_env_deactivate_flags -d "check spack env subcommand flags for --s
 
         # looks for a single `--fish`
         if match_flag $_a "--fish"
+            return 0
+        end
+
+        # looks for a single `--pwsh`
+        if match_flag $_a "--pwsh"
             return 0
         end
 
@@ -480,14 +484,14 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         set -l _a (stream_args $__sp_remaining_args)
 
                         if check_env_activate_flags $_a
-                            # no args or args contain -h/--help, --sh, or --csh: just execute
+                            # no args or args contain -h/--help or shell name: just execute
                             command spack env activate $_a
                             return
                         else
                             # actual call to activate: source the output
                             set -l sp_env_cmd "command spack $sp_flags env activate --fish $__sp_remaining_args"
                             capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
-                            eval $__sp_stdout
+                            eval (printf "%s\n" $__sp_stdout | string collect)
                             if test -n "$__sp_stderr"
                                 echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
                             end
@@ -498,7 +502,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         set -l _a (stream_args $__sp_remaining_args)
 
                         if check_env_deactivate_flags $_a
-                            # just  execute the command if --sh, --csh, or --fish are provided
+                            # just  execute the command if shell name is provided
                             command spack env deactivate $_a
                             return
 
@@ -520,7 +524,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                                 end
                                 return $__sp_stat
                             end
-                            eval $__sp_stdout
+                            eval (printf "%s\n" $__sp_stdout | string collect)
                         end
 
                     case "*"
@@ -548,7 +552,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
             set -l _a (stream_args $__sp_remaining_args)
 
             if check_env_activate_flags $_a
-                # no args or args contain -h/--help, --sh, or --csh: just execute
+                # no args or args contain -h/--help, or shell name: just execute
                 command spack $sp_flags $sp_subcommand $__sp_remaining_args
                 return
             else
@@ -561,7 +565,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                     end
                     return $__sp_stat
                 end
-                eval $__sp_stdout
+                eval (printf "%s\n" $__sp_stdout | string collect)
             end
 
 
@@ -762,6 +766,8 @@ if test $fish_version[1] -gt 3
 
     source $sp_share_dir/spack-completion.fish
 end
+
+source $sp_share_dir/environment-mods.fish
 
 #
 # NOTES
