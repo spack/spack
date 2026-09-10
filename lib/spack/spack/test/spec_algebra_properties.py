@@ -11,9 +11,14 @@ operations set operations::
     a.intersects(b)    a ∩ b ≠ ∅
     a.constrain(b)     a := a ∩ b
 
-Ordered by ⊆ the specs are a meet-semilattice with ∩ as the meet, so satisfaction is a partial
-order and constrain is its greatest lower bound. That is a set of laws, and this module checks
-them on specs it builds instead of on specs somebody listed. A spec is drawn as one choice per
+Ordered by ⊆ the specs are a preorder instead of a partial order: antisymmetry fails, since two
+different states can satisfy each other, ``%foo`` and ``%%foo`` for one. Modulo mutual
+satisfaction, the kernel of the preorder, the specs are a meet-semilattice and ``constrain``
+computes the greatest lower bound, unique only up to the kernel. The laws are stated at that
+level: results are compared with ``denote_the_same_set``, equality in the quotient, and the
+``as_state`` laws pin which representative of its class the merge returns. That is a set of
+laws, and this module checks them on specs it builds instead of on specs somebody listed. A
+spec is drawn as one choice per
 dimension out of a small alphabet ordered weakest first, and a term is either such a draw or the
 meet of two terms. The meets matter: they are how the states only ``constrain`` produces are
 reached, a target range narrowed from both sides or a virtual edge merged into its provider
@@ -1065,8 +1070,9 @@ def law_meet_is_monotonic(specs: List[Spec]) -> Optional[str]:
 
 
 def law_congruence(specs: List[Spec]) -> Optional[str]:
-    """Two specs denoting the same set meet a third one to the same set. This is the law a
-    representation that leaks through the meet breaks."""
+    """Two specs denoting the same set meet a third one to the same set, which is what makes the
+    meet well defined on the quotient. This is the law a representation that leaks through the
+    meet breaks."""
     a, b, c = specs
     if not denote_the_same_set(a, b):
         return None
