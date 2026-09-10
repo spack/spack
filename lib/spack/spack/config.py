@@ -1221,7 +1221,7 @@ class OptionalInclude:
         """
         if not parent_scope:
             return None
-            
+
         scope_dir = self._parent_scope_directory(parent_scope)
 
         if not scope_dir:
