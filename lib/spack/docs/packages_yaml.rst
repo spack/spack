@@ -89,7 +89,7 @@ Automatically find external packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can run the :ref:`spack external find <spack-external-find>` command to search for system-provided packages and add them to ``packages.yaml``.
-After running this command your ``packages.yaml`` may include new entries:
+For example, if you run ``spack external find cmake ninja python`` on your system, your ``packages.yaml`` may include new entries:
 
 .. code-block:: yaml
 
@@ -99,10 +99,16 @@ After running this command your ``packages.yaml`` may include new entries:
        - spec: cmake@3.17.2
          prefix: /usr
 
-Generally this is useful for detecting a small set of commonly-used packages; for now this is generally limited to finding build-only dependencies.
-Specific limitations include:
+Without further arguments, ``spack external find`` searches for compiler packages.
 
-* Packages are not discoverable by default: For a package to be discoverable with ``spack external find``, it needs to add special logic.
+Note that there are certain limitations to be aware of when using ``spack external find``:
+
+* Spack cannot detect whether a system package is partially or fully installed.
+  Linux distributions often provide a separate runtime and development version of a package (e.g. ``python3`` vs ``python3-dev``).
+  The runtime version includes executables, but lacks headers and the linkable library.
+  If only the runtime package is installed, Spack may detect the package and add it to ``packages.yaml``, but will fail to build dependent packages due to missing headers and libraries.
+* Not all Spack packages are discoverable with ``spack external find``.
+  The package has to implement the required logic to be findable.
   See :ref:`here <make-package-findable>` for more details.
 * The logic does not search through module files, it can only detect packages with executables defined in ``PATH``; you can help Spack locate externals which use module files by loading any associated modules for packages that you want Spack to know about before running ``spack external find``.
 * Spack does not overwrite existing entries in the package configuration: If there is an external defined for a spec at any configuration scope, then Spack will not add a new external entry (``spack config blame packages`` can help locate all external entries).
