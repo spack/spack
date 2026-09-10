@@ -105,7 +105,7 @@ def get_colors(color: Optional[bool] = None):
 
 
 class ColorsActive:
-    BLACK =  "\033[0;30m"
+    BLACK = "\033[0;30m"
     RED = "\033[0;31m"
     GREEN = "\033[0;32m"
     YELLOW = "\033[0;33m"
@@ -114,7 +114,7 @@ class ColorsActive:
     CYAN = "\033[0;36m"
     WHITE = "\033[0;37m"
 
-    BLACK_BRIGHT =  "\033[0;90m"
+    BLACK_BRIGHT = "\033[0;90m"
     RED_BRIGHT = "\033[0;91m"
     GREEN_BRIGHT = "\033[0;92m"
     YELLOW_BRIGHT = "\033[0;93m"
