@@ -358,6 +358,16 @@ class TestLmod:
         assert len([x for x in content if x == 'conflict("mpileaks")']) == 1
         assert len([x for x in content if x == 'conflict("intel/14.0.1")']) == 1
 
+    def test_no_conflict_on_name(self, modulefile_content, module_configuration):
+        """Tests that the reflexive conflict on module name is not added for lmod,
+        whose "one name rule" already prevents loading two modules with the same
+        name."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("mpileaks")
+
+        assert not [x for x in content if x.startswith("conflict")]
+
     def test_inconsistent_conflict_in_modules_yaml(self, modulefile_content, module_configuration):
         """Tests inconsistent conflict definition in `modules.yaml`."""
 

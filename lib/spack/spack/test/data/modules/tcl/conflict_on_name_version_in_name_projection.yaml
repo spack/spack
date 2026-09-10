@@ -1,0 +1,7 @@
+enable:
+  - tcl
+tcl:
+  projections:
+    all: '{name}-{version}/{compiler.name}'
+  all:
+    autoload: none

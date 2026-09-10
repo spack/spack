@@ -18,7 +18,7 @@ array_of_strings = {"type": "array", "default": [], "items": {"type": "string"}}
 
 dependency_selection = {"type": "string", "enum": ["none", "run", "direct", "all"]}
 
-module_file_configuration = {
+module_file_configuration: Dict[str, Any] = {
     "type": "object",
     "default": {},
     "description": "Configuration for individual module file behavior and content customization",
@@ -72,7 +72,22 @@ module_file_configuration = {
     },
 }
 
+tcl_module_file_configuration: Dict[str, Any] = {
+    **module_file_configuration,
+    "properties": {
+        **module_file_configuration["properties"],
+        "conflict_on_name": {
+            "type": "boolean",
+            "default": True,
+            "description": "Add a conflict on the module name so that modules generated for "
+            "different versions of the same package cannot be loaded simultaneously",
+        },
+    },
+}
+
 ref_module_file_configuration = {"$ref": "#/definitions/module_file_configuration"}
+
+ref_tcl_module_file_configuration = {"$ref": "#/definitions/tcl_module_file_configuration"}
 
 projections_scheme = {"$ref": "#/definitions/projections"}
 
@@ -159,8 +174,8 @@ tcl_configuration = {
     "description": "Configuration for Tcl module files compatible with Environment Modules and "
     "Lmod",
     "additionalKeysAreSpecs": True,
-    "properties": {**common_props},
-    "additionalProperties": ref_module_file_configuration,
+    "properties": {**common_props, "all": ref_tcl_module_file_configuration},
+    "additionalProperties": ref_tcl_module_file_configuration,
 }
 
 lmod_configuration = {
@@ -258,6 +273,7 @@ schema = {
     "additionalProperties": False,
     "definitions": {
         "module_file_configuration": module_file_configuration,
+        "tcl_module_file_configuration": tcl_module_file_configuration,
         "projections": spack.schema.projections.projections,
         "env_modifications": spack.schema.environment.env_modifications,
     },
