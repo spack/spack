@@ -23,20 +23,21 @@ def _mock_find_versions_of_archive(*args, **kwargs):
 
 
 def test_safe_versions():
-    """Only test the safe versions of a package."""
-    assert versions("--safe", "zlib") == "  1.2.11\n  1.2.8\n  1.2.3\n"
+    """--safe still works but emits a deprecation warning."""
+    out = versions("--safe", "zlib")
+    assert out.startswith("  1.2.11\n  1.2.8\n  1.2.3\n")
+    assert "--safe is deprecated: it is now the default behavior." in out
 
 
-def test_remote_versions(monkeypatch):
-    """Test a package for which remote versions should be available."""
+def test_default_shows_safe_only():
+    """Default behavior: no network access, only safe versions shown."""
+    assert versions("zlib") == "  1.2.11\n  1.2.8\n  1.2.3\n"
+
+
+def test_remote_flag(monkeypatch):
+    """--remote flag shows safe versions and then unchecksummed remote versions."""
     monkeypatch.setattr(spack.url, "find_versions_of_archive", _mock_find_versions_of_archive)
-    assert versions("zlib") == "  1.2.11\n  1.2.8\n  1.2.3\n  1.3.1\n  1.3\n  1.2.13\n"
-
-
-def test_remote_versions_only(monkeypatch):
-    """Test a package for which remote versions should be available."""
-    monkeypatch.setattr(spack.url, "find_versions_of_archive", _mock_find_versions_of_archive)
-    assert versions("--remote", "zlib") == "  1.3.1\n  1.3\n  1.2.13\n"
+    assert versions("--remote", "zlib") == "  1.2.11\n  1.2.8\n  1.2.3\n  1.3.1\n  1.3\n  1.2.13\n"
 
 
 def test_new_versions_only(monkeypatch):
@@ -80,7 +81,7 @@ def test_no_unchecksummed_versions(monkeypatch):
 
     monkeypatch.setattr(spack.url, "find_versions_of_archive", mock_find_versions_of_archive)
 
-    versions("bzip2")
+    versions("--remote", "bzip2")
 
 
 def test_versions_no_url():

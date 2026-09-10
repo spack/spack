@@ -20,10 +20,13 @@ level = "long"
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     output = subparser.add_mutually_exclusive_group()
     output.add_argument(
-        "-s", "--safe", action="store_true", help="only list safe versions of the package"
+        "-s",
+        "--safe",
+        action="store_true",
+        help="only list safe versions of the package (default, deprecated)",
     )
     output.add_argument(
-        "-r", "--remote", action="store_true", help="only list remote versions of the package"
+        "-r", "--remote", action="store_true", help="include remote versions of the package"
     )
     output.add_argument(
         "-n",
@@ -41,7 +44,7 @@ def versions(parser, args):
 
     safe_versions = pkg.versions
 
-    if not (args.remote or args.new):
+    if not args.new:
         if sys.stdout.isatty():
             tty.msg("Safe versions (already checksummed):")
 
@@ -53,6 +56,9 @@ def versions(parser, args):
             colify(sorted(safe_versions, reverse=True), indent=2)
 
         if args.safe:
+            tty.warn("--safe is deprecated: it is now the default behavior.")
+
+        if not args.remote:
             return
 
     fetched_versions = pkg.fetch_remote_versions(args.jobs)
