@@ -2244,80 +2244,92 @@ def _perform_auto_migration(
         tty.debug(f"No old GPG keys, pointing to {isolate_target}/gpg")
 
     # 3. Handle licenses
-    # Attempt to move to destination, or keep in old location if can't
+    # Only auto-migrate for non-isolate commands, and only if configured location
+    # equals new default
     old_licenses_dir = os.path.join(spack.paths.prefix, "opt", "spack", "licenses")
     if old_resources["licenses"]:
-        # Check if user has custom config
-        custom_license_config = CONFIG.get("config:license_dir", None)
-        if custom_license_config:
-            # User configured custom location, don't migrate
-            tty.debug(f"Licenses have custom config: {custom_license_config}, not migrating")
-            if "config" not in layout_config:
-                layout_config["config"] = {}
-            layout_config["config"]["license_dir"] = old_licenses_dir
+        if is_isolate_command:
+            # Don't auto-migrate during isolate - let `spack isolate` command handle it
+            tty.debug("Running isolate command, not auto-migrating licenses")
         else:
-            # Determine destination
-            if is_isolate_command and isolate_target:
-                target_licenses_dir = os.path.join(isolate_target, "licenses")
-            else:
-                # Use new default location
-                data_home = substitute_path_variables("$data_home")
-                target_licenses_dir = os.path.join(data_home, "licenses")
+            # Normal command: migrate if configured location equals new default
+            data_home = substitute_path_variables("$data_home")
+            new_default_licenses = os.path.join(data_home, "licenses")
 
-            # Attempt to copy licenses (with backup and destination locking)
-            if _copy_directory_contents_with_lock(
-                old_licenses_dir, target_licenses_dir, "licenses"
-            ):
-                # Successfully copied, point config to new location
-                if is_isolate_command:
+            # Get current configured location and normalize
+            configured_license_dir = CONFIG.get("config:license_dir")
+            configured_license_dir = os.path.normpath(
+                os.path.expanduser(canonicalize_path(configured_license_dir))
+            )
+            new_default_licenses_norm = os.path.normpath(os.path.expanduser(new_default_licenses))
+
+            if configured_license_dir == new_default_licenses_norm:
+                # Configured location is new default, attempt migration
+                if _copy_directory_contents_with_lock(
+                    old_licenses_dir, new_default_licenses, "licenses"
+                ):
+                    # Successfully copied - new default is used automatically
+                    tty.debug(
+                        f"Copied licenses from {old_licenses_dir} to {new_default_licenses}"
+                    )
+                else:
+                    # Copy failed, keep in old location
                     if "config" not in layout_config:
                         layout_config["config"] = {}
-                    layout_config["config"]["license_dir"] = target_licenses_dir
-                # For non-isolate, new default is used automatically
-                tty.debug(f"Copied licenses from {old_licenses_dir} to {target_licenses_dir}")
+                    layout_config["config"]["license_dir"] = old_licenses_dir
+                    tty.debug(f"Licenses kept in old location: {old_licenses_dir}")
             else:
-                # Move failed, keep in old location
+                # User has custom location, don't migrate
+                tty.debug(
+                    f"Licenses configured to custom location {configured_license_dir}, "
+                    f"not migrating from {old_licenses_dir}"
+                )
+                # Keep in old location
                 if "config" not in layout_config:
                     layout_config["config"] = {}
                 layout_config["config"]["license_dir"] = old_licenses_dir
-                tty.debug(f"Licenses kept in old location: {old_licenses_dir}")
 
     # 4. Handle environments
-    # Attempt to move to destination, or keep in old location if can't
+    # Only auto-migrate for non-isolate commands, and only if configured location
+    # equals new default
     old_envs_dir = spack.paths.old_envs_path
     if old_resources["environments"]:
-        # Check if user has custom config
-        custom_env_config = CONFIG.get("config:environments_root", None)
-        if custom_env_config:
-            # User configured custom location, don't migrate
-            tty.debug(f"Environments have custom config: {custom_env_config}, not migrating")
-            if "config" not in layout_config:
-                layout_config["config"] = {}
-            layout_config["config"]["environments_root"] = old_envs_dir
+        if is_isolate_command:
+            # Don't auto-migrate during isolate - let `spack isolate` command handle it
+            tty.debug("Running isolate command, not auto-migrating environments")
         else:
-            # Determine destination
-            if is_isolate_command and isolate_target:
-                target_envs_dir = os.path.join(isolate_target, "environments")
-            else:
-                # Use new default location
-                data_home = substitute_path_variables("$data_home")
-                target_envs_dir = os.path.join(data_home, "environments")
+            # Normal command: migrate if configured location equals new default
+            data_home = substitute_path_variables("$data_home")
+            new_default_envs = os.path.join(data_home, "environments")
 
-            # Attempt to copy environments (with backup and destination locking)
-            if _copy_directory_contents_with_lock(old_envs_dir, target_envs_dir, "environments"):
-                # Successfully copied, point config to new location
-                if is_isolate_command:
+            # Get current configured location and normalize
+            configured_env_root = CONFIG.get("config:environments_root")
+            configured_env_root = os.path.normpath(
+                os.path.expanduser(canonicalize_path(configured_env_root))
+            )
+            new_default_envs_norm = os.path.normpath(os.path.expanduser(new_default_envs))
+
+            if configured_env_root == new_default_envs_norm:
+                # Configured location is new default, attempt migration
+                if _copy_directory_contents_with_lock(old_envs_dir, new_default_envs, "environments"):
+                    # Successfully copied - new default is used automatically
+                    tty.debug(f"Copied environments from {old_envs_dir} to {new_default_envs}")
+                else:
+                    # Copy failed, keep in old location
                     if "config" not in layout_config:
                         layout_config["config"] = {}
-                    layout_config["config"]["environments_root"] = target_envs_dir
-                # For non-isolate, new default is used automatically
-                tty.debug(f"Copied environments from {old_envs_dir} to {target_envs_dir}")
+                    layout_config["config"]["environments_root"] = old_envs_dir
+                    tty.debug(f"Environments kept in old location: {old_envs_dir}")
             else:
-                # Move failed, keep in old location
+                # User has custom location, don't migrate
+                tty.debug(
+                    f"Environments configured to custom location {configured_env_root}, "
+                    f"not migrating from {old_envs_dir}"
+                )
+                # Keep in old location
                 if "config" not in layout_config:
                     layout_config["config"] = {}
                 layout_config["config"]["environments_root"] = old_envs_dir
-                tty.debug(f"Environments kept in old location: {old_envs_dir}")
 
     # 5. Copy ~/.spack to ~/.config/spack (unless isolate command)
     if not is_isolate_command:
