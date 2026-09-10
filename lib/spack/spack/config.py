@@ -1206,7 +1206,7 @@ class OptionalInclude:
 
     def _include_directory(
         self, path_or_url: str, parent_scope: Optional[ConfigScope] = None
-    ) -> str:
+    ) -> Optional[str]:
         """Return the include directory relative to the parent scope.
 
         For remote includes this is the cache destination directory.
@@ -1216,9 +1216,16 @@ class OptionalInclude:
             path_or_url: path or URL of the include
             parent_scope: including scope
 
-        Returns: an appropriate subdirectory of the enclosing (parent) scope's directory.
+        Returns: ``None`` for a local include without an enclosing parent scope;
+            an appropriate subdirectory of the enclosing (parent) scope's directory.
         """
+        if not parent_scope:
+            return None
+            
         scope_dir = self._parent_scope_directory(parent_scope)
+
+        if not scope_dir:
+            return None
 
         def _subdir():
             # Prefer the provided include name over the git repository name.
@@ -1234,7 +1241,6 @@ class OptionalInclude:
             return spack.util.hash.b32_hash(path_or_url)[-7:]
 
         # For remote includes, prefer a writable subdirectory of the parent scope.
-        assert parent_scope is not None
         subdir = os.path.join("includes", _subdir())
         if parent_scope.name.startswith("env:"):
             subdir = os.path.join(".spack-env", subdir)
