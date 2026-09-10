@@ -116,14 +116,12 @@ class GlobalStateMarshaler:
 
     def restore(self):
         if self.is_forked:
-            # Erase singletons that hold open SSL contexts / boto3 clients, since OpenSSL
-            # and botocore connection pools are not fork-safe.
-            from spack.oci import opener
+            # Erase cached SSL contexts / boto3 clients, since OpenSSL and botocore
+            # connection pools are not fork-safe.
             from spack.util import web
             from spack.util.s3 import s3_client_cache
 
-            web.urlopen._instance = None
-            opener.urlopen._instance = None
+            web.clear_ssl_contexts()
             s3_client_cache.clear()
             return
         spack.config.CONFIG = self.config

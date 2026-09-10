@@ -15,6 +15,7 @@ import spack.binary_distribution
 import spack.cmd
 import spack.cmd.ci
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.main
 import spack.paths
@@ -914,7 +915,9 @@ spack:
             # Validate resulting buildcache (database) index
             layout_version = spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
             mirror_metadata = spack.binary_distribution.MirrorMetadata(mirror_url, layout_version)
-            index_fetcher = spack.binary_distribution.DefaultIndexHandler(mirror_metadata, None)
+            index_fetcher = spack.binary_distribution.DefaultIndexHandler(
+                mirror_metadata, None, urlopen=spack.util.web.opener_for(spack.config.CONFIG)
+            )
             result = index_fetcher.conditional_fetch()
             spack.vendor.jsonschema.validate(json.loads(result.data), db_idx_schema)
 
@@ -2040,7 +2043,7 @@ spack:
 @pytest.fixture
 def fetch_url_exists(monkeypatch):
     """Force URLs to always be valid without attempting to fetch."""
-    monkeypatch.setattr(spack.util.web, "url_exists", lambda url: True)
+    monkeypatch.setattr(spack.util.web, "url_exists", lambda url, *, config: True)
 
 
 @pytest.fixture
