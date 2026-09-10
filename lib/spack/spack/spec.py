@@ -3338,7 +3338,10 @@ class Spec:
             self.namespace = other.namespace
             changed = True
 
-        changed |= self.versions.intersect(other.versions)
+        new_versions = self.versions.intersection(other.versions)
+        if new_versions.versions != self.versions.versions:
+            self.versions = vn.intern_version_list(new_versions)
+            changed = True
         changed |= self._constrain_variants(other)
 
         changed |= self.compiler_flags.constrain(other.compiler_flags)
@@ -3824,7 +3827,7 @@ class Spec:
 
         # Local node attributes get copied first.
         self.name = other.name
-        self.versions = other.versions.copy()
+        self.versions = other.versions
         self.architecture = other.architecture.copy() if other.architecture else None
         self.compiler_flags = other.compiler_flags.copy()
         self.variants = other.variants.copy()
@@ -5385,7 +5388,7 @@ def parse_with_version_concrete(spec_like: Union[str, Spec]):
     s = Spec(spec_like)
     interpreted_version = s.versions.concrete_range_as_version
     if interpreted_version:
-        s.versions = vn.VersionList([interpreted_version])
+        s.versions = vn.intern_version_list(vn.VersionList([interpreted_version]))
     return s
 
 
@@ -5496,7 +5499,7 @@ class SpecfileReaderBase(abc.ABC):
         spec.abstract_hash = node.get("abstract_hash", None)
 
         if "version" in node or "versions" in node:
-            spec.versions = vn.VersionList.from_dict(node)
+            spec.versions = vn.intern_version_list(vn.VersionList.from_dict(node))
 
         if "arch" in node:
             spec.architecture = ArchSpec.from_dict(node)
