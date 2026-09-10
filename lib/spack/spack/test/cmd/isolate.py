@@ -50,7 +50,6 @@ def test_isolate_smoke_test(mock_spack_paths, tmp_path):
 
 def test_isolate_added_config(mock_spack_paths, tmp_path):
     """Test that config added after isolate goes to the isolated path."""
-    import spack.util.spack_yaml as syaml
 
     base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
 
@@ -63,7 +62,10 @@ def test_isolate_added_config(mock_spack_paths, tmp_path):
     standard_scopes_dir = etc_spack / "standard_scopes"
     standard_scopes_dir.mkdir()
     with open(standard_scopes_dir / "include.yaml", "w") as f:
-        f.write('include:\n  - name: "user"\n    path: "~/.config/spack"\n    optional: true\n    prefer_modify: true\n')
+        f.write(
+            'include:\n  - name: "user"\n    path: "~/.config/spack"\n'
+            "    optional: true\n    prefer_modify: true\n"
+        )
 
     # Create isolated user path
     isolated_path = tmp_path / "test-isolation"
@@ -133,7 +135,10 @@ def test_self_isolate(mock_spack_paths, tmp_path):
     standard_scopes_dir = etc_spack / "standard_scopes"
     standard_scopes_dir.mkdir()
     with open(standard_scopes_dir / "include.yaml", "w") as f:
-        f.write('include:\n  - name: "user"\n    path: "~/.config/spack"\n    optional: true\n    prefer_modify: true\n')
+        f.write(
+            'include:\n  - name: "user"\n    path: "~/.config/spack"\n'
+            "    optional: true\n    prefer_modify: true\n"
+        )
 
     sp_isolate("--self")
     assert isolate_scope_path.exists()
@@ -170,7 +175,10 @@ def test_self_isolate_overwrite(mock_spack_paths, tmp_path):
     standard_scopes_dir = etc_spack / "standard_scopes"
     standard_scopes_dir.mkdir()
     with open(standard_scopes_dir / "include.yaml", "w") as f:
-        f.write('include:\n  - name: "user"\n    path: "~/.config/spack"\n    optional: true\n    prefer_modify: true\n')
+        f.write(
+            'include:\n  - name: "user"\n    path: "~/.config/spack"\n'
+            "    optional: true\n    prefer_modify: true\n"
+        )
 
     sp_isolate("--self")
     with pytest.raises(Exception):

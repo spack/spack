@@ -1816,7 +1816,13 @@ def _detect_old_resources() -> Dict[str, bool]:
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
     share_modules = os.path.join(spack.paths.share_path, "spack", "modules")
 
-    result = {"installs": False, "gpg_keys": False, "modules": False, "licenses": False, "environments": False}
+    result = {
+        "installs": False,
+        "gpg_keys": False,
+        "modules": False,
+        "licenses": False,
+        "environments": False,
+    }
 
     # Check for installs
     if os.path.exists(opt_spack):
@@ -2094,10 +2100,13 @@ def _copy_directory_contents(
                         for name in names:
                             path = os.path.join(directory, name)
                             # Exclude if directory contains MARKER_FILE (indicates a view)
-                            if os.path.isdir(path) and os.path.exists(os.path.join(path, MARKER_FILE)):
+                            if os.path.isdir(path) and os.path.exists(
+                                os.path.join(path, MARKER_FILE)
+                            ):
                                 ignored.append(name)
                                 tty.debug(f"Excluding view directory: {path}")
                         return ignored
+
                     shutil.copytree(src_path, dst_path, ignore=ignore_views)
                 else:
                     shutil.copytree(src_path, dst_path)
@@ -2111,7 +2120,9 @@ def _copy_directory_contents(
     return True
 
 
-def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[str] = None) -> None:
+def _perform_auto_migration(
+    is_isolate_command: bool, isolate_target: Optional[str] = None
+) -> None:
     """Perform auto-migration of Spack data from old to new locations.
 
     NOTE: This can eventually replace _do_isolate_migration() once we verify
@@ -2141,7 +2152,9 @@ def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[s
         layout_config["modules"] = {
             "default": {"roots": {"tcl": old_modules_tcl, "lmod": old_modules_lmod}}
         }
-        tty.debug(f"Old installs exist, keeping modules in {spack.paths.prefix}/share/spack/modules")
+        tty.debug(
+            f"Old installs exist, keeping modules in {spack.paths.prefix}/share/spack/modules"
+        )
     # Otherwise, use new defaults (no config needed for isolate, explicit for non-isolate)
     elif is_isolate_command and isolate_target:
         layout_config["modules"] = {
@@ -2191,7 +2204,9 @@ def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[s
                 target_licenses_dir = os.path.join(data_home, "licenses")
 
             # Attempt to copy licenses (with backup and destination locking)
-            if _copy_directory_contents_with_lock(old_licenses_dir, target_licenses_dir, "licenses"):
+            if _copy_directory_contents_with_lock(
+                old_licenses_dir, target_licenses_dir, "licenses"
+            ):
                 # Successfully copied, point config to new location
                 if is_isolate_command:
                     if "config" not in layout_config:
@@ -2252,15 +2267,15 @@ def _perform_auto_migration(is_isolate_command: bool, isolate_target: Optional[s
         config_yaml_path = os.path.join(layout_path, "config.yaml")
         with open(config_yaml_path, "w", encoding="utf-8") as f:
             syaml.dump({"config": layout_config["config"]}, f)
-        tty.debug(f"Wrote config.yaml to layout scope")
+        tty.debug("Wrote config.yaml to layout scope")
 
     if "modules" in layout_config:
         modules_yaml_path = os.path.join(layout_path, "modules.yaml")
         with open(modules_yaml_path, "w", encoding="utf-8") as f:
             syaml.dump(layout_config["modules"], f)
-        tty.debug(f"Wrote modules.yaml to layout scope")
+        tty.debug("Wrote modules.yaml to layout scope")
 
-    tty.debug(f"Created layout scope for auto-migration")
+    tty.debug("Created layout scope for auto-migration")
 
 
 def _perform_migration_check(cfg: Configuration) -> None:
@@ -2275,7 +2290,8 @@ def _perform_migration_check(cfg: Configuration) -> None:
     # Migration is now handled by:
     # 1. main.py calls _should_auto_migrate() after command parsing
     # 2. If needed, calls _perform_auto_migration(is_isolate_command=False)
-    # 3. spack isolate command will call _perform_auto_migration(is_isolate_command=True, isolate_target=...)
+    # 3. spack isolate command will call _perform_auto_migration with
+    #    (is_isolate_command=True, isolate_target=...)
     pass
 
 

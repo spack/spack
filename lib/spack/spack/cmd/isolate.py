@@ -6,7 +6,6 @@ import shutil
 import sys
 import textwrap
 from argparse import ArgumentParser
-from typing import cast
 
 import spack.config
 import spack.paths

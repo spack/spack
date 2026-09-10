@@ -225,15 +225,10 @@ def process_config_file_paths(
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
-        "action",
-        nargs="?",
-        choices=["undo"],
-        help="action to perform (only 'undo' is supported)",
+        "action", nargs="?", choices=["undo"], help="action to perform (only 'undo' is supported)"
     )
     subparser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="show what would be done without actually doing it",
+        "--dry-run", action="store_true", help="show what would be done without actually doing it"
     )
 
 
@@ -296,7 +291,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
             tty.msg(f"  - Restore licenses from {backup_licenses} to {old_licenses_dir}")
         if has_envs:
             tty.msg(f"  - Restore environments from {backup_envs} to {old_envs_dir}")
-        tty.msg(f"  - Update layout scope to point to old locations")
+        tty.msg("  - Update layout scope to point to old locations")
         tty.msg(f"  - Remove backup directory: {backup_dir}")
         return
 
@@ -386,7 +381,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
 
     tty.msg("\nUndo complete!")
     tty.msg(
-        f"\nNOTE: Files in shared directories (e.g., ~/.local/share/spack) were NOT touched.\n"
-        f"Auto-migration copies (not moves) files, so they remain available for other\n"
-        f"Spack instances."
+        "\nNOTE: Files in shared directories (e.g., ~/.local/share/spack) were NOT touched.\n"
+        "Auto-migration copies (not moves) files, so they remain available for other\n"
+        "Spack instances."
     )
