@@ -1221,6 +1221,7 @@ class FlagMap(_FlagMapBase):
         return self.with_flags(flag_type, (*self.get(flag_type, ()), flag))
 
     def _immutable(self, *args, **kwargs) -> NoReturn:
+        """Override of all mutating methods to prevent modification of the map."""
         raise TypeError("FlagMap is immutable, store the result of with_flag() instead")
 
     add_flag = __setitem__ = __delitem__ = pop = popitem = setdefault = update = clear = _immutable
@@ -5322,6 +5323,7 @@ class VariantMap(_VariantMapBase):
         return self.with_values([v.as_concrete() for v in self.values()])
 
     def _immutable(self, *args, **kwargs) -> NoReturn:
+        """Override of all mutating methods to prevent modification of the map."""
         raise TypeError("VariantMap is immutable, store the result of with_value() instead")
 
     set = __setitem__ = __delitem__ = pop = popitem = setdefault = update = clear = _immutable
