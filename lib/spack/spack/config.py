@@ -2181,7 +2181,7 @@ def _copy_directory_contents(
     return True
 
 
-def _perform_auto_migration(
+def _do_migrate(
     is_isolate_command: bool, isolate_target: Optional[str] = None
 ) -> None:
     """Perform auto-migration of Spack data from old to new locations.
@@ -2355,15 +2355,15 @@ def _perform_migration_check(cfg: Configuration) -> None:
     """DEPRECATED: Migration now happens in main.py after command is parsed.
 
     This function is kept as a no-op to avoid breaking the config loading flow,
-    but actual migration logic has been moved to _perform_auto_migration() which
+    but actual migration logic has been moved to _do_migrate() which
     is called from main.py.
 
     See feature-summaries/shared-spack-auto-migrate.md for details.
     """
     # Migration is now handled by:
     # 1. main.py calls _should_auto_migrate() after command parsing
-    # 2. If needed, calls _perform_auto_migration(is_isolate_command=False)
-    # 3. spack isolate command will call _perform_auto_migration with
+    # 2. If needed, calls _do_migrate(is_isolate_command=False)
+    # 3. spack isolate command will call _do_migrate with
     #    (is_isolate_command=True, isolate_target=...)
     pass
 
@@ -2407,7 +2407,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
         )
 
     # NOTE: Migration is now handled in main.py after command parsing, not during
-    # config initialization. See _perform_auto_migration() and main.py for details.
+    # config initialization. See _do_migrate() and main.py for details.
     # The old migration check code with $spack-global locking has been removed.
 
 

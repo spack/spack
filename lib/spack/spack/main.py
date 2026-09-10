@@ -1137,7 +1137,7 @@ def _main(argv=None):
     # Check if auto-migration is needed (before executing command)
     if cmd_name != "isolate":
         if spack.config._should_auto_migrate():
-            spack.config._perform_auto_migration(is_isolate_command=False)
+            spack.config._do_migrate(is_isolate_command=False)
             # Reload config to pick up new layout scope
             spack.config.CONFIG = spack.config.create()
 
