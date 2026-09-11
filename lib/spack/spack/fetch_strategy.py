@@ -1522,18 +1522,19 @@ def check_pkg_attributes(pkg: Type["spack.package_base.PackageBase"]):
 
 
 def _check_version_attributes(
-    fetcher: FetchStrategy, spec: "spack.spec.Spec", version: spack.version.ConcreteVersion
+    fetcher: FetchStrategy,
+    spec: "spack.spec.Spec",
+    version_def: spack.version_def.VersionDefinition,
 ):
     """Ensure that the fetcher for a version is not ambiguous.
 
-    This assumes that we have already determined the fetcher for the
-    specific version using ``for_spec()``
-
-    Helper for ``for_spec()``.
+    Takes version_def as an argument so it works as a helper function for
+    ``for_package()`` on a concretized spec or for auditing on enumerated
+    abstract spec versions.
     """
     all_optionals = set(a for s in all_strategies for a in s.optional_attrs)
 
-    args = spack.repo.PATH.get_pkg_class(spec.fullname).version_def_for_spec(spec).kwargs
+    args = version_def.kwargs
     extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr, "no_cache"])
     extra.intersection_update(all_optionals)
 
@@ -1593,36 +1594,69 @@ def _from_merged_attrs(
     return fetcher(**attrs)
 
 
-# def for_spec(spec: "spack.spec.Spec"):
-#     # TODO: remove this method when we understand why _for_spec modifies packages.
-#     # See 52ac1b09c9ed3eee6489b33665beb1255c893068.
-#     saved_versions = spec.versions
-#     saved_when_versions = spec.when_versions
+def _fetcher_for_version_def(
+    pkg: "spack.package_base.PackageBase",
+    version: spack.version.ConcreteVersion,
+    version_def: spack.version_def.VersionDefinition,
+) -> FetchStrategy:
+    """Build a fetcher from a resolved version definition.
 
-#     try:
-#         return _for_spec(spec)
-#     finally:
-#         spec.versions = saved_versions
-#         spec.when_versions = saved_when_versions
+    Helper for for_package(), which resolves version_def from a concrete spec,
+    and for auditing, which enumerates version definitions from an abstract spec.
+    """
+
+    spec = pkg.spec
+    # Set package args first so version args can override them
+    args = {"fetch_options": pkg.fetch_options}
+    # Grab a dict of args out of the package version dict
+    args.update(version_def.kwargs)
+
+    # If the version specifies a `url_attr` directly, use that.
+    for fetcher in all_strategies:
+        if fetcher.url_attr in args:
+            _check_version_attributes(fetcher, spec, version_def)
+            if fetcher.url_attr == "git" and hasattr(pkg, "submodules"):
+                args.setdefault("submodules", pkg.submodules)
+            return fetcher(**args)
+
+    # if a version's optional attributes imply a particular fetch
+    # strategy, and we have the `url_attr`, then use that strategy.
+    for fetcher in all_strategies:
+        if hasattr(pkg, fetcher.url_attr) or fetcher.url_attr == "url":
+            optionals = fetcher.optional_attrs
+            if optionals and any(a in args for a in optionals):
+                _check_version_attributes(fetcher, spec, version_def)
+                return _from_merged_attrs(fetcher, pkg, version_def)
+
+    # if the optional attributes tell us nothing, then use any `url_attr`
+    # on the package.  This prefers URL vs. VCS, b/c URLFetchStrategy is
+    # defined first in this file.
+    for fetcher in all_strategies:
+        if hasattr(pkg, fetcher.url_attr):
+            _check_version_attributes(fetcher, spec, version_def)
+            return _from_merged_attrs(fetcher, pkg, version_def)
+
+    raise InvalidArgsError(pkg, version, **args)
 
 
-def for_spec(spec: "spack.spec.Spec") -> FetchStrategy:
-    """Determine a fetch strategy from an abstract or concrete spec."""
+def for_package(pkg: "spack.package_base.PackageBase") -> FetchStrategy:
+    """Determine a fetch strategy for a package object.
+
+    Package must be concrete to determine a fetch strategy which fits the
+    version constraints, otherwise multiple when= options could overlap.
+    """
+    assert pkg.spec.concrete
 
     # No-code packages have a custom fetch strategy to work around issues
     # with resource staging.
-    pkg_class = spack.repo.PATH.get_pkg_class(spec.fullname)
-    if not pkg_class.has_code:
+    if not pkg.has_code:
         return BundleFetchStrategy()
 
     # ensure package doesn't have ambiguous attributes
-    check_pkg_attributes(pkg_class)
-
-    # TODO: Having to get a package instance here is awkward, but we need to use
-    # TODO: methods and properties that may be overridden by package authors.
-    pkg = pkg_class(spec)
+    check_pkg_attributes(type(pkg))
 
     # specs must have a concrete version for this to work.
+    spec = pkg.spec
     version = spec.version
 
     # if it's a commit, we must use a GitFetchStrategy
@@ -1682,37 +1716,8 @@ def for_spec(spec: "spack.spec.Spec") -> FetchStrategy:
     if not version_def:
         return _extrapolate(pkg, version)
 
-    # Set package args first so version args can override them
-    args = {"fetch_options": pkg.fetch_options}
-    # Grab a dict of args out of the package version dict
-    args.update(version_def.kwargs)
+    return _fetcher_for_version_def(pkg, version, version_def)
 
-    # If the version specifies a `url_attr` directly, use that.
-    for fetcher in all_strategies:
-        if fetcher.url_attr in args:
-            _check_version_attributes(fetcher, spec, version)
-            if fetcher.url_attr == "git" and hasattr(pkg, "submodules"):
-                args.setdefault("submodules", pkg.submodules)
-            return fetcher(**args)
-
-    # if a version's optional attributes imply a particular fetch
-    # strategy, and we have the `url_attr`, then use that strategy.
-    for fetcher in all_strategies:
-        if hasattr(pkg, fetcher.url_attr) or fetcher.url_attr == "url":
-            optionals = fetcher.optional_attrs
-            if optionals and any(a in args for a in optionals):
-                _check_version_attributes(fetcher, spec, version)
-                return _from_merged_attrs(fetcher, pkg, version_def)
-
-    # if the optional attributes tell us nothing, then use any `url_attr`
-    # on the package.  This prefers URL vs. VCS, b/c URLFetchStrategy is
-    # defined first in this file.
-    for fetcher in all_strategies:
-        if hasattr(pkg, fetcher.url_attr):
-            _check_version_attributes(fetcher, spec, version)
-            return _from_merged_attrs(fetcher, pkg, version_def)
-
-    raise InvalidArgsError(pkg, version, **args)
 
 
 def from_url_scheme(url: str, **kwargs) -> FetchStrategy:
