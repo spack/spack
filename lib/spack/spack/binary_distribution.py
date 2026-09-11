@@ -344,7 +344,11 @@ class BinaryIndexCache:
                 current_list.add(new_entry.strip_view())
 
     def update(
-        self, mirror_metadata: Optional[MirrorMetadata] = None, with_cooldown: bool = False, *, config: spack.config.Configuration
+        self,
+        mirror_metadata: Optional[MirrorMetadata] = None,
+        with_cooldown: bool = False,
+        *,
+        config: spack.config.Configuration,
     ) -> None:
         """Make sure local cache of buildcache index files is up to date.
         If the same mirrors are configured as the last time this was called
@@ -873,7 +877,7 @@ def _url_update_index(
         try:
             # Update the local cached index and spec list
             try:
-                BINARY_INDEX.update(mirror_metadata)
+                BINARY_INDEX.update(mirror_metadata, config=spack.config.CONFIG)
             except (FetchCacheError, ValidationError):
                 warnings.warn("Failed to read the current build cache index.")
 

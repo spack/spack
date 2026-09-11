@@ -1746,7 +1746,7 @@ class _MockBinaryIndex:
         self._handler = handler
         self.update_calls = []
 
-    def update(self, mirror_metadata=None, with_cooldown=False):
+    def update(self, mirror_metadata=None, with_cooldown=False, *, config):
         self.update_calls.append(mirror_metadata)
 
     def get_index_handler(self, mirror_metadata, cache_entry={}):
