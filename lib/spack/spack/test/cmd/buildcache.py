@@ -375,7 +375,7 @@ def _mock_uploader(tmp_path: pathlib.Path):
             )
             self.pushed = []
 
-        def push(self, specs: List[spack.spec.Spec]):
+        def push(self, specs: List[spack.spec.Spec], *, config):
             self.pushed.extend(s.name for s in specs)
             return [], []
 
