@@ -602,6 +602,8 @@ def test_read_lock_on_read_only_filesystem(tmp_path: pathlib.Path, monkeypatch):
 
     with lk.ReadTransaction(lock):
         pass
+    assert isinstance(lock.backend, lk.PosixBackend)
+    assert lock.backend._file_ref is not None
     assert lock.backend._file_ref.fh.mode == "rb"
 
     with pytest.raises(lk.LockROFileError):
