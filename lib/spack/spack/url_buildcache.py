@@ -1095,7 +1095,7 @@ def check_mirror_for_layout(mirror: spack.mirrors.mirror.Mirror):
 
 
 def _entries_from_cache_aws_cli(url: str, component_type: BuildcacheComponent):
-    """Use aws cli to sync all manifests into a local temporary directory.
+    """Use aws cli to list manifests for a component type.
 
     Args:
         url: prefix of the build cache on s3
@@ -1150,8 +1150,8 @@ def _entries_from_cache_aws_cli(url: str, component_type: BuildcacheComponent):
                     match.group(1), "%Y-%m-%d %H:%M:%S"
                 ).timestamp()
     except ProcessError as e:
-        tty.warn("Failed to use aws s3 ls to retrieve spec list, falling back to parallel fetch")
-        raise e
+        msg = "Failed to use aws s3 ls to retrieve spec list, falling back to parallel fetch"
+        raise ListMirrorSpecsError(msg) from e
 
     return filename_to_mtime, read_fn
 
@@ -1193,7 +1193,7 @@ def _entries_from_cache_fallback(url: str, component_type: BuildcacheComponent):
         read_fn = url_read_method
     except OSError as err:
         # Backend-specific errors (e.g. those from S3 and GCS) get normalized to OSError.
-        tty.warn(f"Encountered problem listing packages at {url}: {err}")
+        raise ListMirrorSpecsError(f"Encountered problem listing packages at {url}") from e
 
     return filename_to_mtime, read_fn
 
@@ -1217,15 +1217,18 @@ def get_entries_from_cache(url: str, component_type: BuildcacheComponent):
 
     callbacks.append(_entries_from_cache_fallback)
 
+    last_error = None
     for specs_from_cache_fn in callbacks:
         try:
             file_to_mtime_mapping, read_fn = specs_from_cache_fn(url, component_type)
             if file_to_mtime_mapping:
                 return file_to_mtime_mapping, read_fn
-        except Exception:
+        except ListMirrorSpecsError as e:
+            tty.warn(f"{e}")
+            last_error = e
             continue
 
-    raise ListMirrorSpecsError("Failed to get list of entries from {0}".format(url))
+    raise ListMirrorSpecsError(f"Failed to list specs in url {url}") from last_error
 
 
 def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:

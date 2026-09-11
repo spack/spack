@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import functools
 import os
 import posixpath
 import urllib.error
@@ -187,6 +188,7 @@ def s3_command(method: str):
     """Bind the correct S3 session and capture errors from Boto3."""
 
     def _s3_decorate_command(command):
+        @functools.wraps(command)
         def _s3_command_wrapped(url, *args, **kwargs):
             s3, url = get_s3_session(url, method=method)
             try:
@@ -271,26 +273,27 @@ def _debug_print_delete_results(result):
 def delete_objects(s3, url: urllib.parse.ParseResult, recursive: bool = False):
     # Try to find a mirror for potential connection information
     bucket = url.netloc
-    if recursive:
-        # Because list_objects_v2 can only return up to 1000 items
-        # at a time, we have to paginate to make sure we get it all
-        delete_request: Dict[str, List[Dict[str, str]]] = {"Objects": []}
-        for key in _iter_s3_prefix(s3, url, relative=False):
-            delete_request["Objects"].append({"Key": key})
+    if not recursive:
+        s3.delete_object(Bucket=bucket, Key=url.path.lstrip("/"))
+        return
 
-            # Make sure we do not try to hit S3 with a list of more
-            # than 1000 items
-            if len(delete_request["Objects"]) >= 1000:
-                r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
-                _debug_print_delete_results(r)
-                delete_request = {"Objects": []}
+    # Because list_objects_v2 can only return up to 1000 items
+    # at a time, we have to paginate to make sure we get it all
+    delete_request: Dict[str, List[Dict[str, str]]] = {"Objects": []}
+    for key in _iter_s3_prefix(s3, url, relative=False):
+        delete_request["Objects"].append({"Key": key})
 
-        # Delete any items that remain
-        if len(delete_request["Objects"]):
+        # Make sure we do not try to hit S3 with a list of more
+        # than 1000 items
+        if len(delete_request["Objects"]) >= 1000:
             r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
             _debug_print_delete_results(r)
-    else:
-        s3.delete_object(Bucket=bucket, Key=url.path.lstrip("/"))
+            delete_request = {"Objects": []}
+
+    # Delete any items that remain
+    if len(delete_request["Objects"]):
+        r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
+        _debug_print_delete_results(r)
 
 
 @s3_command("fetch")
