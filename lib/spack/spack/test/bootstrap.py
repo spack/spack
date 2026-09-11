@@ -17,6 +17,7 @@ import spack.bootstrap.status
 import spack.compilers.config
 import spack.concretize
 import spack.config
+import spack.database
 import spack.environment
 import spack.error
 import spack.installer_dispatch
@@ -24,6 +25,7 @@ import spack.paths
 import spack.spec
 import spack.store
 import spack.util.executable
+import spack.version
 from spack.active_environment import active_environment
 
 CLINGO_METADATA = sorted(pathlib.Path(spack.paths.share_path).glob("bootstrap/*/clingo.json"))
@@ -158,11 +160,7 @@ def test_bootstrap_db_upgrade_error_points_at_b_flag(mutable_config, monkeypatch
     because the store being read is the bootstrap store, the migration hint must be
     ``spack -b reindex`` rather than plain ``spack reindex``.
     """
-    import spack.database
-    import spack.version as vn
-    from spack.database import Database, ExplicitDatabaseUpgradeError
-
-    with pytest.raises(ExplicitDatabaseUpgradeError) as exc_info:
+    with pytest.raises(spack.error.ExplicitDatabaseUpgradeError) as exc_info:
         with spack.bootstrap.ensure_bootstrap_configuration():
             db_dir = pathlib.Path(spack.store.STORE.root) / ".spack-db"
             db_dir.mkdir(parents=True, exist_ok=True)
@@ -171,9 +169,9 @@ def test_bootstrap_db_upgrade_error_points_at_b_flag(mutable_config, monkeypatch
                     {"database": {"version": str(spack.database._DB_VERSION), "installs": {}}}
                 )
             )
-            next_version = vn.Version(f"{spack.database._DB_VERSION[0] + 1}")
+            next_version = spack.version.Version(f"{spack.database._DB_VERSION[0] + 1}")
             monkeypatch.setattr(spack.database, "_DB_VERSION", next_version)
-            Database(spack.store.STORE.root)._read()
+            spack.database.Database(spack.store.STORE.root)._read()
 
     long_message = exc_info.value.long_message
     assert "spack -b reindex" in long_message
