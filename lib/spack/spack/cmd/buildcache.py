@@ -86,6 +86,13 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "--key", "-k", metavar="key", type=str, default=None, help="key for signing"
     )
     push.add_argument(
+        "--no-upload-key",
+        action="store_false",
+        default=True,
+        dest="upload_key",
+        help="Don't upload the public part of the signing to to the build cache",
+    )
+    push.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
     )
     push.add_argument(
@@ -577,6 +584,7 @@ def push_fn(args):
         force=args.force,
         update_index=args.update_index,
         signing_key=signing_key,
+        upload_key=args.upload_key,
         base_image=args.base_image,
     ) as uploader:
         skipped, upload_errors = uploader.push(specs=specs)
