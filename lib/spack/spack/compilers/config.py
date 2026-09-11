@@ -251,18 +251,18 @@ _EXTRA_ATTRIBUTES_KEY = "extra_attributes"
 def name_os_target(spec: spack.spec.Spec) -> Tuple[str, str, str]:
     if not spec.architecture:
         host_platform = spack.platforms.host()
-        operating_system = host_platform.operating_system("default_os")
-        target = host_platform.target("default_target")
+        operating_system = host_platform.default_operating_system()
+        target = host_platform.default_target()
     else:
         target = spec.architecture.target
         if not target:
-            target = spack.platforms.host().target("default_target")
+            target = spack.platforms.host().default_target()
         target = target.family
 
         operating_system = spec.os
         if not operating_system:
             host_platform = spack.platforms.host()
-            operating_system = host_platform.operating_system("default_os")
+            operating_system = host_platform.default_operating_system()
 
     return spec.name, str(operating_system), str(target)
 
