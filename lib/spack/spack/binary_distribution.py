@@ -376,7 +376,7 @@ class BinaryIndexCache:
         else:
             supported_mirror_versions = {
                 (m.fetch_url, m.fetch_view): m.supported_layout_versions
-                for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
+                for m in spack.mirrors.mirror.MirrorCollection(binary=True, config=config).values()
             }
 
             # If we have a cached index for a mirror which is no longer configured, remove it
@@ -837,6 +837,7 @@ def _url_update_index(
     filter_fn: Callable[[str], bool] = lambda x: True,
     spec_by_hash: Callable[[str], Optional[spack.spec.Spec]] = lambda x: None,
     *,
+    config: spack.config.Configuration,
     timer=timer.NULL_TIMER,
     retry: Optional[web_util.Retry] = None,
 ):
@@ -877,7 +878,7 @@ def _url_update_index(
         try:
             # Update the local cached index and spec list
             try:
-                BINARY_INDEX.update(mirror_metadata, config=spack.config.CONFIG)
+                BINARY_INDEX.update(mirror_metadata, config=config)
             except (FetchCacheError, ValidationError):
                 warnings.warn("Failed to read the current build cache index.")
 
@@ -1157,8 +1158,10 @@ class Uploader:
         self._executor.__exit__(*args)
         self._tmpdir.__exit__(*args)
 
-    def push_or_raise(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
-        skipped, errors = self.push(specs)
+    def push_or_raise(
+        self, specs: List[spack.spec.Spec], *, config: spack.config.Configuration
+    ) -> List[spack.spec.Spec]:
+        skipped, errors = self.push(specs, config=config)
         if errors:
             raise PushToBuildCacheError(
                 f"Failed to push {len(errors)} specs to {self.mirror.push_url}:\n"
@@ -1169,7 +1172,7 @@ class Uploader:
         return skipped
 
     def push(
-        self, specs: List[spack.spec.Spec]
+        self, specs: List[spack.spec.Spec], *, config: spack.config.Configuration
     ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
         raise NotImplementedError
 
@@ -1191,7 +1194,7 @@ class OCIUploader(Uploader):
         self.base_image = ImageReference.from_string(base_image) if base_image else None
 
     def push(
-        self, specs: List[spack.spec.Spec]
+        self, specs: List[spack.spec.Spec], *, config: spack.config.Configuration
     ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
         skipped, base_images, checksums, upload_errors = _oci_push(
             target_image=self.target_image,
@@ -1242,7 +1245,7 @@ class URLUploader(Uploader):
         self.signing_key = signing_key
 
     def push(
-        self, specs: List[spack.spec.Spec]
+        self, specs: List[spack.spec.Spec], *, config: spack.config.Configuration
     ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
         return _url_push(
             specs,
@@ -1252,6 +1255,7 @@ class URLUploader(Uploader):
             signing_key=self.signing_key,
             tmpdir=self.tmpdir,
             executor=self.executor,
+            config=config,
         )
 
 
@@ -1322,6 +1326,8 @@ def _url_push(
     update_index: bool,
     tmpdir: str,
     executor: concurrent.futures.Executor,
+    *,
+    config: spack.config.Configuration,
 ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
     """Pushes to the provided build cache, and returns a list of skipped specs that were already
     present (when force=False), and a list of errors. Does not raise on error."""
@@ -1400,7 +1406,7 @@ def _url_push(
 
     if update_index:
         index_tmpdir = os.path.join(tmpdir, "index")
-        _url_update_index(MirrorMetadata(out_url), index_tmpdir)
+        _url_update_index(MirrorMetadata(out_url), index_tmpdir, config=config)
 
     return skipped, errors
 

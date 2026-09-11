@@ -623,7 +623,7 @@ def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: b
     mirror = spack.mirrors.mirror.Mirror.from_url(mirror_url)
     try:
         with spack.binary_distribution.make_uploader(mirror, signing_key=signing_key) as uploader:
-            uploader.push_or_raise([spec])
+            uploader.push_or_raise([spec], config=cfg.CONFIG)
         return True
     except spack.binary_distribution.PushToBuildCacheError as e:
         tty.error(f"Problem writing to {mirror_url}: {e}")

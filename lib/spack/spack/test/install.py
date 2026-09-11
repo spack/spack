@@ -602,7 +602,7 @@ def test_install_from_binary_with_missing_patch_succeeds(
     # Push it to a binary cache
     mirror = spack.mirrors.mirror.Mirror.from_local_path(str(tmp_path / "my_build_cache"))
     with binary_distribution.make_uploader(mirror=mirror) as uploader:
-        uploader.push_or_raise([s])
+        uploader.push_or_raise([s], config=mutable_config)
 
     # Now re-install it.
     s.package.do_uninstall()

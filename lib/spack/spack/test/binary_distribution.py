@@ -456,7 +456,9 @@ def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, cap
     test_url = "file:///fake/keys/dir"
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        spack.binary_distribution._url_update_index(MirrorMetadata(test_url), str(tmp_path))
+        spack.binary_distribution._url_update_index(
+            MirrorMetadata(test_url), str(tmp_path), config=spack.config.CONFIG
+        )
 
     assert (
         "Warning: Encountered problem listing packages at "
@@ -476,7 +478,9 @@ def test_generate_indices_exception(monkeypatch, tmp_path: pathlib.Path, capfd):
         spack.binary_distribution.generate_key_index(url, str(tmp_path))
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        spack.binary_distribution._url_update_index(MirrorMetadata(url), str(tmp_path))
+        spack.binary_distribution._url_update_index(
+            MirrorMetadata(url), str(tmp_path), config=spack.config.CONFIG
+        )
 
     assert f"Encountered problem listing packages at {url}" in capfd.readouterr().err
 
@@ -1791,7 +1795,9 @@ def test_url_update_index_retries_on_push_failure(tmp_path, create_mock_index):
 
     mock_index, retry = create_mock_index(_Handler())
     metadata = MirrorMetadata("s3://mybucket/prefix", 3)
-    spack.binary_distribution._url_update_index(metadata, str(tmp_path), retry=retry)
+    spack.binary_distribution._url_update_index(
+        metadata, str(tmp_path), retry=retry, config=spack.config.CONFIG
+    )
 
     assert _Handler.push_count == 3
     # We should call .update on every attempt, so each retry picks up a fresh etag
@@ -1811,7 +1817,9 @@ def test_url_update_index_fails_fast_on_non_retryable(tmp_path, create_mock_inde
     mock_index, retry = create_mock_index(_Handler())
     metadata = MirrorMetadata("s3://mybucket/prefix", 3)
     with pytest.raises(GenerateIndexError):
-        spack.binary_distribution._url_update_index(metadata, str(tmp_path), retry=retry)
+        spack.binary_distribution._url_update_index(
+            metadata, str(tmp_path), retry=retry, config=spack.config.CONFIG
+        )
 
     assert _Handler.push_count == 1
     # We should call .update on every attempt, so each retry picks up a fresh etag
@@ -1837,7 +1845,9 @@ def test_url_update_index_raises_after_retries_exhausted(tmp_path, create_mock_i
     metadata = MirrorMetadata("s3://mybucket/prefix", 3)
     mock_index, retry = create_mock_index(_Handler())
     with pytest.raises(GenerateIndexError):
-        spack.binary_distribution._url_update_index(metadata, str(tmp_path), retry=retry)
+        spack.binary_distribution._url_update_index(
+            metadata, str(tmp_path), retry=retry, config=spack.config.CONFIG
+        )
 
     assert _Handler.push_count == 5
     # We should call .update on every attempt, so each retry picks up a fresh etag
