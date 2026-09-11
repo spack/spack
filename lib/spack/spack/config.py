@@ -59,6 +59,7 @@ import spack.schema.definitions
 import spack.schema.develop
 import spack.schema.env
 import spack.schema.env_vars
+import spack.schema.filter
 import spack.schema.include
 import spack.schema.merged
 import spack.schema.mirrors
@@ -86,6 +87,7 @@ SECTION_SCHEMAS: Dict[str, Any] = {
     "concretizer": spack.schema.concretizer.schema,
     "definitions": spack.schema.definitions.schema,
     "env_vars": spack.schema.env_vars.schema,
+    "filter": spack.schema.filter.schema,
     "include": spack.schema.include.schema,
     "view": spack.schema.view.schema,
     "develop": spack.schema.develop.schema,
