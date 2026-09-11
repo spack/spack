@@ -153,6 +153,33 @@ def test_bootstrap_deactivates_environments(active_mock_environment):
     assert active_environment() == active_mock_environment
 
 
+def test_bootstrap_db_upgrade_error_points_at_b_flag(mutable_config, monkeypatch):
+    """An outdated bootstrap store database must raise ExplicitDatabaseUpgradeError, and,
+    because the store being read is the bootstrap store, the migration hint must be
+    ``spack -b reindex`` rather than plain ``spack reindex``.
+    """
+    import spack.database
+    import spack.version as vn
+    from spack.database import Database, ExplicitDatabaseUpgradeError
+
+    with pytest.raises(ExplicitDatabaseUpgradeError) as exc_info:
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            db_dir = pathlib.Path(spack.store.STORE.root) / ".spack-db"
+            db_dir.mkdir(parents=True, exist_ok=True)
+            (db_dir / "index.json").write_text(
+                json.dumps(
+                    {"database": {"version": str(spack.database._DB_VERSION), "installs": {}}}
+                )
+            )
+            next_version = vn.Version(f"{spack.database._DB_VERSION[0] + 1}")
+            monkeypatch.setattr(spack.database, "_DB_VERSION", next_version)
+            Database(spack.store.STORE.root)._read()
+
+    long_message = exc_info.value.long_message
+    assert "spack -b reindex" in long_message
+    assert "spack reindex" not in long_message
+
+
 @pytest.mark.regression("25805")
 def test_bootstrap_disables_modulefile_generation(mutable_config):
     # Be sure to enable both lmod and tcl in modules.yaml
