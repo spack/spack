@@ -97,7 +97,16 @@ class OpenFileTracker:
             try:
                 fd = os.open(path, os.O_RDWR | os.O_CREAT)
                 mode = "rb+"
-            except PermissionError:
+            except OSError as e:
+                # fall back to read only open if there's no write perms to the file (EACCES/EPERM)
+                # or if the filesystem is read only (EROFS)
+                if e.errno not in (
+                    errno.EACCES,
+                    errno.EPERM,
+                    errno.EROFS,
+                    getattr(errno, "ENOTCAPABLE", errno.EACCES),
+                ):
+                    raise
                 fd = os.open(path, os.O_RDONLY)
                 mode = "rb"
         except OSError as e:
