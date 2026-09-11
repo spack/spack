@@ -32,6 +32,7 @@ from .version_types import (
     _next_version,
     _prev_version,
     from_string,
+    intern_version_list,
     ver,
 )
 
@@ -48,6 +49,7 @@ __all__ = [
     "VersionChecksumError",
     "VersionError",
     "VersionList",
+    "intern_version_list",
     "VersionLookupError",
     "VersionRange",
     "VersionType",

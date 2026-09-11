@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import copy
+import functools
 import re
 from bisect import bisect_left
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union
@@ -27,6 +28,12 @@ VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 # regex for version segments
 SEGMENT_REGEX = re.compile(r"(?:(?P<num>[0-9]+)|(?P<str>[a-zA-Z]+))(?P<sep>[_.-]*)")
+
+#: Version lists interned by their string representation
+_VERSION_LIST_CACHE: Dict[str, "VersionList"] = {}
+
+#: Ranges are interned by their string representation
+_CLOSED_OPEN_RANGE_CACHE: Dict[str, "ClosedOpenRange"] = {}
 
 
 class VersionStrComponent:
@@ -54,6 +61,7 @@ class VersionStrComponent:
         self.data = data
 
     @staticmethod
+    @functools.lru_cache(maxsize=None)
     def from_string(string: str) -> "VersionStrComponent":
         value: Union[int, str] = string
         if len(string) >= iv_min_len:
@@ -253,6 +261,7 @@ class StandardVersion(ConcreteVersion):
         self.separators = separators
 
     @staticmethod
+    @functools.lru_cache(maxsize=None)
     def from_string(string: str) -> "StandardVersion":
         version, separators = parse_string_components(string)
         return StandardVersion(string, version, separators)
@@ -760,6 +769,11 @@ class ClosedOpenRange(VersionType):
     @classmethod
     def from_version_range(cls, lo: StandardVersion, hi: StandardVersion) -> "ClosedOpenRange":
         """Construct ClosedOpenRange from lo:hi range."""
+        string = _str_range(lo, hi)
+        cached = _CLOSED_OPEN_RANGE_CACHE.get(string)
+        if cached is not None:
+            return cached
+
         try:
             r = ClosedOpenRange(lo, _next_version(hi))
         except EmptyRangeError as e:
@@ -767,7 +781,8 @@ class ClosedOpenRange(VersionType):
 
         # Cache hash and string representation
         r._hash = hash((lo, hi))
-        r._string = _str_range(lo, hi)
+        r._string = string
+        _CLOSED_OPEN_RANGE_CACHE[string] = r
         return r
 
     def __str__(self) -> str:
@@ -1114,10 +1129,8 @@ class VersionList(VersionType):
 
     @classmethod
     def any(cls) -> "VersionList":
-        """Return a VersionList that matches any version."""
-        version_list = cls.__new__(cls)
-        version_list.versions = [_UNBOUNDED_RANGE]
-        return version_list
+        """Return the shared VersionList that matches any version."""
+        return _ANY_VERSION_LIST
 
     def update(self, other: "VersionList") -> None:
         self.add(other)
@@ -1381,6 +1394,11 @@ def ver(obj: Union[VersionType, str, list, tuple, int, float]) -> VersionType:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
 
 
+def intern_version_list(version_list: VersionList) -> VersionList:
+    """Return an shared, immutable VersionList with the same string representation."""
+    return _VERSION_LIST_CACHE.setdefault(str(version_list), version_list)
+
+
 _STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))
 
 _STANDARD_VERSION_TYPEMAX = StandardVersion(
@@ -1390,3 +1408,5 @@ _STANDARD_VERSION_TYPEMAX = StandardVersion(
 _UNBOUNDED_RANGE = ClosedOpenRange.from_version_range(
     _STANDARD_VERSION_TYPEMIN, _STANDARD_VERSION_TYPEMAX
 )
+
+_ANY_VERSION_LIST = intern_version_list(VersionList(_UNBOUNDED_RANGE))
