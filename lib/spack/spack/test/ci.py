@@ -32,6 +32,57 @@ def repro_dir(tmp_path: pathlib.Path):
         yield result
 
 
+@pytest.fixture(scope="function")
+def mock_git_repo(git, tmp_path: pathlib.Path):
+    """Create a mock git repo with two commits, the last one creating
+    a .gitlab-ci.yml"""
+
+    repo_path = str(tmp_path / "mockspackrepo")
+    fs.mkdirp(repo_path)
+
+    with fs.working_dir(repo_path):
+        git("init")
+
+        git("config", "--local", "user.email", "testing@spack.io")
+        git("config", "--local", "user.name", "Spack Testing")
+
+        # This path is used to satisfy git root detection and detection of environment changed
+        path_to_env = os.path.sep.join(("no", "such", "env", "path", "spack.yaml"))
+        os.makedirs(os.path.dirname(path_to_env))
+        with open(path_to_env, "w", encoding="utf-8") as f:
+            f.write(
+                """
+spack:
+    specs:
+    - a
+"""
+            )
+
+        git("add", path_to_env)
+
+        with open("README.md", "w", encoding="utf-8") as f:
+            f.write("# Introduction")
+
+        # initial commit with README
+        git("add", "README.md")
+        git("-c", "commit.gpgsign=false", "commit", "-m", "initial commit")
+
+        with open(".gitlab-ci.yml", "w", encoding="utf-8") as f:
+            f.write(
+                """
+testjob:
+    script:
+        - echo "success"
+            """
+            )
+
+        # second commit, adding a .gitlab-ci.yml
+        git("add", ".gitlab-ci.yml")
+        git("-c", "commit.gpgsign=false", "commit", "-m", "add a .gitlab-ci.yml")
+
+        yield repo_path
+
+
 def test_filter_added_checksums_new_checksum(mock_git_package_changes):
     repo, filename, commits = mock_git_package_changes
 
@@ -42,9 +93,9 @@ def test_filter_added_checksums_new_checksum(mock_git_package_changes):
         "86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8": Version("2.0.0"),
     }
 
-    with fs.working_dir(repo.packages_path):
+    with fs.working_dir(repo.root):
         assert ci.filter_added_checksums(
-            checksum_versions.keys(), filename, from_ref=commits[-1], to_ref=commits[-2]
+            checksum_versions.keys(), filename, from_ref=commits[-2], to_ref=commits[-3]
         ) == ["3f6576971397b379d4205ae5451ff5a68edf6c103b2f03c4188ed7075fbb5f04"]
 
 
@@ -59,9 +110,9 @@ def test_filter_added_checksums_new_commit(mock_git_package_changes):
         "86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8": Version("2.0.0"),
     }
 
-    with fs.working_dir(repo.packages_path):
+    with fs.working_dir(repo.root):
         assert ci.filter_added_checksums(
-            checksum_versions, filename, from_ref=commits[-2], to_ref=commits[-3]
+            checksum_versions, filename, from_ref=commits[-3], to_ref=commits[-4]
         ) == ["74253725f884e2424a0dd8ae3f69896d5377f325"]
 
 
@@ -565,3 +616,117 @@ def test_ci_skipped_report(tmp_path: pathlib.Path, config, monkeypatch):
             elif reason in line:
                 have[1] += 1
         assert all(count == 1 for count in have)
+
+
+def test_ci_get_stack_changed_no_env(mock_git_repo, monkeypatch):
+    """Test that we can detect the change to .gitlab-ci.yml in a
+    mock spack git repo."""
+    monkeypatch.setenv("CI_CONFIG_PATH", os.path.join(mock_git_repo, ".gitlab-ci.yml"))
+    monkeypatch.setattr(spack.paths, "prefix", mock_git_repo)
+    fake_env_path = os.path.join(
+        spack.paths.prefix, os.path.sep.join(("no", "such", "env", "path"))
+    )
+    assert ci.stack_changed(fake_env_path) is True
+
+
+def test_ci_stack_changed(git, mock_git_package_changes, monkeypatch):
+    repo, filename, commits = mock_git_package_changes
+
+    stack_env = os.path.join(repo.root, "env", "spack.yaml")
+
+    # The changes to CI and the env are both the first commit
+    # No change should be detected
+    assert not ci.stack_changed(stack_env)
+
+    # Setting the path to the CI config with non-default name should
+    monkeypatch.setenv("CI_CONFIG_PATH", os.path.join(repo.root, ".ci", "pipeline.yml"))
+    assert not ci.stack_changed(stack_env)
+
+    def commit(message, commit_counter=len(commits)):
+        git(
+            "commit",
+            "--no-gpg-sign",
+            "--date",
+            "2020-01-%02d 12:0:00 +0300" % commit_counter,
+            "-am",
+            message,
+        )
+        commit_counter += 1
+
+    # Edit the pipeline.yml
+    with fs.working_dir(repo.root):
+        with open(os.path.join(".ci", "pipeline.yml"), "a", encoding="utf-8") as fd:
+            fd.write("another_job: { script: [echo 'Hello'] }")
+        git("add", os.path.join(".ci", "pipeline.yml"))
+        commit("Update pipeline.yml")
+
+    assert ci.stack_changed(stack_env)
+
+    # Edit the stack env
+    with fs.working_dir(repo.root):
+        git("reset", "--hard", "HEAD~")
+        with open(os.path.join("env", "spack.yaml"), "w", encoding="utf-8") as fd:
+            fd.write("spack: { specs: [ 'zlib'] }")
+
+        git("add", os.path.join("env", "spack.yaml"))
+        commit("Update stack env")
+
+    assert ci.stack_changed(stack_env)
+
+
+@pytest.mark.parametrize(
+    "candidate,changed_path,expected",
+    [
+        ("env", "env/spack.yaml", True),
+        ("env", "env", True),
+        ("env", "environments/spack.yaml", False),
+        (".gitlab-ci.yml", ".gitlab-ci.yml", True),
+        (".gitlab-ci.yml", ".gitlab-ci.yml.bak", False),
+        (".", "anything/at/all", True),
+        ("", "anything/at/all", True),
+    ],
+)
+def test_stack_path_matches(candidate, changed_path, expected):
+    assert ci._stack_path_matches(candidate, changed_path) is expected
+
+
+def test_ci_stack_changed_outside_git_repo(tmp_path):
+    """Verify that stack_changed() returns False (and doesn't raise)
+    when the environment is outside a git repository."""
+    assert ci.stack_changed(str(tmp_path / "spack.yaml")) is False
+
+
+def test_ci_stack_changed_initial_commit(mock_git_repo, git):
+    """Verify that stack_changed() returns False (and doesn't raise)
+    on a repo's initial commit."""
+    with fs.working_dir(mock_git_repo):
+        first_commit = git("rev-list", "--max-parents=0", "HEAD", output=str).strip()
+        git("checkout", first_commit)
+
+    fake_env_path = os.path.join(mock_git_repo, os.path.sep.join(("no", "such", "env", "path")))
+    assert ci.stack_changed(fake_env_path) is False
+
+
+def test_ci_stack_changed_relative_ci_config_path(git, mock_git_package_changes, monkeypatch):
+    """Verify that a relative path to CI_CONFIG_PATH is usable as-is
+    without going through os.path.relpath."""
+    repo, filename, commits = mock_git_package_changes
+    stack_env = os.path.join(repo.root, "env", "spack.yaml")
+
+    monkeypatch.setenv("CI_CONFIG_PATH", os.path.join(".ci", "pipeline.yml"))
+    assert not ci.stack_changed(stack_env)
+
+    with fs.working_dir(repo.root):
+        with open(os.path.join(".ci", "pipeline.yml"), "a", encoding="utf-8") as fd:
+            fd.write("another_job: { script: [echo 'Hello'] }")
+        git("add", os.path.join(".ci", "pipeline.yml"))
+        git(
+            "commit",
+            "--no-gpg-sign",
+            "--date",
+            "2020-01-%02d 12:0:00 +0300" % len(commits),
+            "-am",
+            "Update pipeline.yml",
+        )
+
+    assert ci.stack_changed(stack_env)
