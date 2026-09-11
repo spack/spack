@@ -5,6 +5,7 @@
 """All the logic for OCI fetching and authentication"""
 
 import base64
+import functools
 import json
 import re
 import urllib.error
@@ -12,33 +13,35 @@ import urllib.parse
 import urllib.request
 from enum import Enum, auto
 from http.client import HTTPResponse
-from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from urllib.request import Request
 
 import spack.config
 import spack.mirrors.mirror
 import spack.tokenize
-import spack.util.lang
 import spack.util.web
 
 from .image import ImageReference
 
-
-def _urlopen():
-    opener = create_opener()
-
-    def dispatch_open(fullurl, data=None, timeout=None):
-        timeout = timeout or spack.config.CONFIG.get("config:connect_timeout", 10)
-        return opener.open(fullurl, data, timeout)
-
-    return dispatch_open
+#: Openers returned by :func:`opener_for`
+OpenType = spack.util.web.Opener[HTTPResponse]
 
 
-OpenType = Callable[..., HTTPResponse]
-MaybeOpen = Optional[OpenType]
+def opener_for(config: spack.config.Configuration) -> OpenType:
+    """Returns a function opening URLs with OCI authentication from the mirrors in ``config``.
 
-#: Opener that automatically uses OCI authentication based on mirror config
-urlopen: OpenType = spack.util.lang.Singleton(_urlopen)
+    The function has the signature of ``OpenerDirector.open``. Its ``timeout`` defaults to
+    ``config:connect_timeout``.
+    """
+    opener = _create_opener(config)
+    default_timeout = config.get("config:connect_timeout", 10)
+
+    def urlopen(
+        fullurl: Union[str, Request], data: Optional[bytes] = None, timeout: Optional[float] = None
+    ) -> HTTPResponse:
+        return opener.open(fullurl, data, timeout or default_timeout)
+
+    return urlopen
 
 
 SP = r" "
@@ -238,16 +241,26 @@ def _get_basic_challenge(challenges: List[Challenge]) -> Optional[str]:
     return challenge.get_param("realm")
 
 
+AuthHeaders = Dict[Tuple[str, Optional[UsernamePassword]], str]
+
+#: Authorization headers obtained by the openers of :func:`opener_for`
+_AUTH_HEADERS: AuthHeaders = {}
+
+
 class OCIAuthHandler(urllib.request.BaseHandler):
-    def __init__(self, credentials_provider: Callable[[str], Optional[UsernamePassword]]):
+    def __init__(
+        self,
+        credentials_provider: Callable[[str], Optional[UsernamePassword]],
+        auth_headers: Optional[AuthHeaders] = None,
+    ):
         """
         Args:
             credentials_provider: A function that takes a domain and may return a UsernamePassword.
+            auth_headers: Authorization headers keyed by (domain, credentials), updated on login.
+                A new, empty mapping if not given.
         """
         self.credentials_provider = credentials_provider
-
-        # Cached authorization headers for a given domain.
-        self.cached_auth_headers: Dict[str, str] = {}
+        self.cached_auth_headers: AuthHeaders = {} if auth_headers is None else auth_headers
 
     def https_request(self, req: Request):
         # Eagerly add the bearer token to the request if no
@@ -259,8 +272,8 @@ class OCIAuthHandler(urllib.request.BaseHandler):
         if req.has_header("Authorization"):
             return req
 
-        parsed = urllib.parse.urlparse(req.full_url)
-        auth_header = self.cached_auth_headers.get(parsed.netloc)
+        registry = urllib.parse.urlparse(req.full_url).netloc
+        auth_header = self.cached_auth_headers.get((registry, self.credentials_provider(registry)))
 
         if not auth_header:
             return req
@@ -370,7 +383,7 @@ class OCIAuthHandler(urllib.request.BaseHandler):
                 fp,
             )
 
-        self.cached_auth_headers[registry] = auth_header
+        self.cached_auth_headers[(registry, credentials)] = auth_header
 
         # Add the authorization header to the request
         req.add_unredirected_header("Authorization", auth_header)
@@ -380,12 +393,9 @@ class OCIAuthHandler(urllib.request.BaseHandler):
 
 
 def credentials_from_mirrors(
-    domain: str, *, mirrors: Optional[Iterable[spack.mirrors.mirror.Mirror]] = None
+    domain: str, *, mirrors: Iterable[spack.mirrors.mirror.Mirror]
 ) -> Optional[UsernamePassword]:
     """Filter out OCI registry credentials from a list of mirrors."""
-
-    mirrors = mirrors or spack.mirrors.mirror.MirrorCollection().values()
-
     for mirror in mirrors:
         # Prefer push credentials over fetch. Unlikely that those are different
         # but our config format allows it.
@@ -404,18 +414,21 @@ def credentials_from_mirrors(
     return None
 
 
-def create_opener():
+def _create_opener(config: spack.config.Configuration) -> urllib.request.OpenerDirector:
     """Create an opener that can handle OCI authentication."""
+    mirrors = list(spack.mirrors.mirror.MirrorCollection.from_config(config).values())
     opener = urllib.request.OpenerDirector()
     for handler in [
         urllib.request.ProxyHandler(),
         urllib.request.UnknownHandler(),
         urllib.request.HTTPHandler(),
-        spack.util.web.SpackHTTPSHandler(context=spack.util.web.ssl_create_default_context()),
+        spack.util.web.SpackHTTPSHandler(context=spack.util.web.default_ssl_context(config)),
         spack.util.web.SpackHTTPDefaultErrorHandler(),
         urllib.request.HTTPRedirectHandler(),
         urllib.request.HTTPErrorProcessor(),
-        OCIAuthHandler(credentials_from_mirrors),
+        OCIAuthHandler(
+            functools.partial(credentials_from_mirrors, mirrors=mirrors), _AUTH_HEADERS
+        ),
     ]:
         opener.add_handler(handler)
     return opener

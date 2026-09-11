@@ -27,7 +27,7 @@ from spack.util.filesystem import is_exe, working_dir
 
 @pytest.fixture
 def missing_curl(monkeypatch):
-    def require_curl():
+    def require_curl(*, config):
         raise spack.error.FetchError("curl is required but not found")
 
     monkeypatch.setattr(web_util, "require_curl", require_curl)
@@ -361,16 +361,16 @@ def test_missing_curl(tmp_path: pathlib.Path, missing_curl, mutable_config, monk
             stage.fetch()
 
 
-def test_url_fetch_text_without_url():
+def test_url_fetch_text_without_url(config):
     with pytest.raises(spack.error.FetchError, match="URL is required"):
-        web_util.fetch_url_text(None)
+        web_util.fetch_url_text(None, config=config)
 
 
 def test_url_fetch_text_curl_failures(mutable_config, missing_curl, monkeypatch):
     """Check fetch_url_text if URL's curl is missing."""
     mutable_config.set("config:url_fetch_method", "curl")
     with pytest.raises(spack.error.FetchError, match="curl is required but not found"):
-        web_util.fetch_url_text("https://example.com/")
+        web_util.fetch_url_text("https://example.com/", config=mutable_config)
 
 
 def test_url_check_curl_errors():
@@ -388,7 +388,7 @@ def test_url_missing_curl(mutable_config, missing_curl, monkeypatch):
     """Check url_exists failures if URL's curl is missing."""
     mutable_config.set("config:url_fetch_method", "curl")
     with pytest.raises(spack.error.FetchError, match="curl is required but not found"):
-        web_util.url_exists("https://example.com/")
+        web_util.url_exists("https://example.com/", config=mutable_config)
 
 
 def test_url_fetch_text_urllib_web_error(mutable_config, monkeypatch):
@@ -399,4 +399,16 @@ def test_url_fetch_text_urllib_web_error(mutable_config, monkeypatch):
     mutable_config.set("config:url_fetch_method", "urllib")
 
     with pytest.raises(spack.error.FetchError, match="fetch failed"):
-        web_util.fetch_url_text("https://example.com/")
+        web_util.fetch_url_text("https://example.com/", config=mutable_config)
+
+
+def test_url_exists_uses_given_fetch_method(
+    mutable_config: Configuration, inactive_config, missing_curl
+):
+    """Tests that the fetch method is read from the configuration passed as an argument, and not
+    from the global one."""
+    mutable_config.set("config:url_fetch_method", "urllib")
+    with_curl = inactive_config({"config": {"url_fetch_method": "curl"}})
+
+    with pytest.raises(spack.error.FetchError, match="curl is required but not found"):
+        web_util.url_exists("https://example.com/", config=with_curl)

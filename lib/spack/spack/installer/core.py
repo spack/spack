@@ -211,7 +211,9 @@ class PackageInstaller:
 
         specs = [pkg.spec for pkg in packages]
 
-        self.has_mirrors = bool(spack.mirrors.mirror.MirrorCollection(binary=True))
+        self.has_mirrors = bool(
+            spack.mirrors.mirror.MirrorCollection.from_config(spack.config.CONFIG, binary=True)
+        )
         self.root_policy: InstallPolicy = root_policy
         self.dependencies_policy: InstallPolicy = dependencies_policy
         self.include_build_deps = include_build_deps

@@ -490,3 +490,20 @@ def test_mirror_matches(mock_packages, mutable_config):
     )
     assert m.matches_binary(spec, direction="fetch") is False
     assert m.matches_binary(spec, direction="push") is True
+
+
+def test_mirror_collection_from_config_uses_given_config(
+    mutable_config: Configuration, inactive_config
+):
+    """Tests that mirrors are read from the configuration passed as an argument, and not from
+    the global one."""
+    mutable_config.set("mirrors", {"global-mirror": "file:///global"})
+    other = inactive_config({"mirrors": {"other-mirror": "file:///other"}})
+
+    from_other = spack.mirrors.mirror.MirrorCollection.from_config(other)
+    assert "other-mirror" in from_other
+    assert "global-mirror" not in from_other
+
+    from_global = spack.mirrors.mirror.MirrorCollection.from_config(mutable_config)
+    assert "global-mirror" in from_global
+    assert "other-mirror" not in from_global

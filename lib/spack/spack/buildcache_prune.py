@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Callable, Dict, Iterable, Iterator, List, Optional, Set, Tuple, cast
 
 import spack.binary_distribution
+import spack.config
 import spack.error
 import spack.stage
 import spack.util.parallel
@@ -43,7 +44,7 @@ def _fetch_manifests(
         mirror.fetch_url, spack.binary_distribution.buildcache_relative_blobs_path()
     )
     tty.debug(f"Listing blobs in {url_to_list}")
-    blobs = web_util.list_url(url_to_list, recursive=True) or []
+    blobs = web_util.list_url(url_to_list, recursive=True, config=spack.config.CONFIG) or []
     if not blobs:
         tty.warn(f"Unable to list blobs in {url_to_list}")
     blobs = [
@@ -78,7 +79,7 @@ def _delete_object(url: str, dry_run: bool) -> int:
         if dry_run:
             tty.info(f"Would have removed object {url}")
         else:
-            web_util.remove_url(url=url)
+            web_util.remove_url(url=url, config=spack.config.CONFIG)
             tty.info(f"Removed object {url}")
         return 1
     except Exception as e:
@@ -92,7 +93,7 @@ def _object_has_prunable_mtime(url: str, pruning_started_at: float) -> Tuple[str
     Objects modified after pruning started should not be pruned to avoid
     race conditions with concurrent uploads.
     """
-    stat_result = web_util.stat_url(url)
+    stat_result = web_util.stat_url(url, config=spack.config.CONFIG)
     assert stat_result is not None
     if stat_result[1] > pruning_started_at:
         tty.info(f"Skipping deletion of {url} because it was modified after pruning started")
@@ -384,14 +385,17 @@ def get_buildcache_normalized_time(mirror: Mirror) -> float:
         remote_path = url_util.join(mirror.push_url, touch_file.name)
 
         web_util.push_to_url(
-            local_file_path=str(touch_file), remote_path=remote_path, keep_original=True
+            local_file_path=str(touch_file),
+            remote_path=remote_path,
+            keep_original=True,
+            config=spack.config.CONFIG,
         )
 
-        stat_info = web_util.stat_url(remote_path)
+        stat_info = web_util.stat_url(remote_path, config=spack.config.CONFIG)
         assert stat_info is not None
         start_time = stat_info[1]
 
-        web_util.remove_url(remote_path)
+        web_util.remove_url(remote_path, config=spack.config.CONFIG)
 
         return start_time
 
@@ -409,7 +413,7 @@ def prune_buildcache(mirror: Mirror, keeplist: Optional[str] = None, dry_run: bo
     # If a cache index exists, use that time. Otherwise, use the current time (normalized
     # to the buildcache's time zone).
     cache_index_url = URLBuildcacheEntry.get_index_url(mirror_url=mirror.fetch_url)
-    stat_result = web_util.stat_url(cache_index_url)
+    stat_result = web_util.stat_url(cache_index_url, config=spack.config.CONFIG)
     if stat_result is not None:
         started_at = stat_result[1]
     else:

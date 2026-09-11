@@ -38,10 +38,11 @@ install = SpackCommand("install")
 
 @contextmanager
 def oci_servers(*servers: DummyServer):
-    old_opener = spack.oci.opener.urlopen
-    spack.oci.opener.urlopen = create_opener(*servers).open
-    yield
-    spack.oci.opener.urlopen = old_opener
+    urlopen = create_opener(*servers).open
+    old_opener_for = spack.oci.opener.opener_for
+    spack.oci.opener.opener_for = lambda config: urlopen
+    yield urlopen
+    spack.oci.opener.opener_for = old_opener_for
 
 
 def test_buildcache_push_command(mutable_database: Database):
@@ -76,7 +77,7 @@ def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):
 
     registry = InMemoryOCIRegistry("example.com")
 
-    with oci_servers(registry):
+    with oci_servers(registry) as urlopen:
         mirror("add", "oci-test", "oci://example.com/image")
 
         with ev.read("test"):
@@ -93,7 +94,7 @@ def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):
                 if not x.external
             ]
 
-        manifest, config = get_manifest_and_config(name)
+        manifest, _ = get_manifest_and_config(name, urlopen=urlopen)
 
         # without a base image, we should have one layer per spec
         assert len(manifest["layers"]) == len(specs)
@@ -107,7 +108,7 @@ def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):
             buildcache("push", "--tag", "single_spec", "oci-test", libelf.format("libelf{/hash}"))
 
         name = ImageReference.from_string("example.com/image:single_spec")
-        manifest, config = get_manifest_and_config(name)
+        manifest, _ = get_manifest_and_config(name, urlopen=urlopen)
         assert len(manifest["layers"]) == len(
             [x for x in libelf.traverse(deptype=dt.LINK | dt.RUN) if not x.external]
         )
@@ -123,7 +124,7 @@ def test_buildcache_push_with_base_image_command(mutable_database, tmp_path: pat
 
     base_image = ImageReference.from_string("src.example.com/my-base-image:latest")
 
-    with oci_servers(registry_src, registry_dst):
+    with oci_servers(registry_src, registry_dst) as urlopen:
         mirror("add", "oci-test", "oci://dst.example.com/image")
 
         # TODO: simplify creation of images...
@@ -165,11 +166,11 @@ def test_buildcache_push_with_base_image_command(mutable_database, tmp_path: pat
         manifest["config"]["size"] = config_file.stat().st_size
 
         # Upload the layer and config file
-        upload_blob(base_image, str(tarball), tar_gz_digest)
-        upload_blob(base_image, str(config_file), config_digest)
+        upload_blob(base_image, str(tarball), tar_gz_digest, urlopen=urlopen)
+        upload_blob(base_image, str(config_file), config_digest, urlopen=urlopen)
 
         # Upload the manifest
-        upload_manifest(base_image, manifest)
+        upload_manifest(base_image, manifest, urlopen=urlopen)
 
         # END TODO
 
@@ -182,7 +183,7 @@ def test_buildcache_push_with_base_image_command(mutable_database, tmp_path: pat
 
         # Fetch the manifest and config
         dst_image = ImageReference.from_string(f"dst.example.com/image:{tag}")
-        retrieved_manifest, retrieved_config = get_manifest_and_config(dst_image)
+        retrieved_manifest, retrieved_config = get_manifest_and_config(dst_image, urlopen=urlopen)
 
         # Check that the media type is OCI
         assert retrieved_manifest["mediaType"] == "application/vnd.oci.image.manifest.v1+json"
@@ -206,7 +207,9 @@ def test_buildcache_push_with_base_image_command(mutable_database, tmp_path: pat
 
         # And verify that all layers including the base layer are present
         for layer in retrieved_manifest["layers"]:
-            assert blob_exists(dst_image, digest=Digest.from_string(layer["digest"]))
+            assert blob_exists(
+                dst_image, digest=Digest.from_string(layer["digest"]), urlopen=urlopen
+            )
             assert layer["mediaType"] == "application/vnd.oci.image.layer.v1.tar+gzip"
 
 
@@ -222,7 +225,7 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
 
     base_image = ImageReference.from_string("src.example.com/my-base-image:latest")
 
-    with oci_servers(registry_src, registry_dst):
+    with oci_servers(registry_src, registry_dst) as urlopen:
         mirror("add", "oci-test", "oci://dst.example.com/image")
 
         # Create a dummy base image (blob, config, manifest) in registry A in the Docker Image
@@ -235,7 +238,7 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
             tar.add(rootfs, arcname=".")
         tar_gz_digest = Digest.from_sha256(tar_gz_checksum.hexdigest())
         tar_digest = Digest.from_sha256(tar_checksum.hexdigest())
-        upload_blob(base_image, str(tarball), tar_gz_digest)
+        upload_blob(base_image, str(tarball), tar_gz_digest, urlopen=urlopen)
         config = {
             "created": "2015-10-31T22:22:56.015925234Z",
             "author": "Foo <example@example.com>",
@@ -264,7 +267,7 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
         config_file = tmp_path / "config.json"
         config_file.write_text(json.dumps(config))
         config_digest = Digest.from_sha256(hashlib.sha256(config_file.read_bytes()).hexdigest())
-        upload_blob(base_image, str(config_file), config_digest)
+        upload_blob(base_image, str(config_file), config_digest, urlopen=urlopen)
         manifest = {
             "schemaVersion": 2,
             "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
@@ -281,7 +284,7 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
                 }
             ],
         }
-        upload_manifest(base_image, manifest)
+        upload_manifest(base_image, manifest, urlopen=urlopen)
 
         # Finally upload some package to registry B with registry A's image as base
         buildcache("push", "--base-image", str(base_image), "oci-test", "mpileaks^mpich")
@@ -329,7 +332,7 @@ def test_best_effort_upload(mutable_database: spack.database.Database, monkeypat
     registry = InMemoryOCIRegistry("example.com")
     image = ImageReference.from_string("example.com/image")
 
-    with oci_servers(registry):
+    with oci_servers(registry) as urlopen:
         with pytest.raises(spack.error.SpackError, match="The following 2 errors occurred") as e:
             buildcache("push", "--update-index", "oci-test", "mpileaks^mpich")
 
@@ -345,7 +348,7 @@ def test_best_effort_upload(mutable_database: spack.database.Database, monkeypat
         for name in without_manifest:
             tagged_img = image.with_tag(spack.binary_distribution._oci_default_tag(mpileaks[name]))
             with pytest.raises(urllib.error.HTTPError, match="404"):
-                get_manifest_and_config(tagged_img)
+                get_manifest_and_config(tagged_img, urlopen=urlopen)
 
         # Collect the layer digests of successfully uploaded packages. Every package should refer
         # to its own tarballs and those of its runtime deps that were uploaded.
@@ -360,7 +363,7 @@ def test_best_effort_upload(mutable_database: spack.database.Database, monkeypat
 
             # This should not raise a 404.
             manifest, _ = get_manifest_and_config(
-                image.with_tag(spack.binary_distribution._oci_default_tag(s))
+                image.with_tag(spack.binary_distribution._oci_default_tag(s)), urlopen=urlopen
             )
 
             # Collect layer digests

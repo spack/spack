@@ -258,10 +258,10 @@ def _add_repo(
             raise SpackError("The 'destination' argument is only valid for git repositories")
         elif paths:
             raise SpackError("The --paths flag is only valid for git repositories")
-        entry = spack.config.canonicalize_path(path_or_repo)
+        entry = spack.config.canonicalize_path(path_or_repo, config=config)
 
     descriptor = spack.repo.parse_config_descriptor(
-        name or "<unnamed>", entry, lock=spack.repo.package_repository_lock(spack.config.CONFIG)
+        name or "<unnamed>", entry, lock=spack.repo.package_repository_lock(config)
     )
     descriptor.initialize(git=spack.util.executable.which("git"))
 

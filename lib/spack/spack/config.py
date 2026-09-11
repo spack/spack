@@ -1452,7 +1452,7 @@ class IncludePath(OptionalInclude):
         tty.debug(f"Local base directory for {self.path} is {base}")
 
         canonical_path = canonicalize_path(self.path, base)
-        config_path = rfc_util.local_path(canonical_path, self.sha256, base)
+        config_path = rfc_util.local_path(canonical_path, self.sha256, base, config=CONFIG)
         assert config_path
         self.destination = config_path
 

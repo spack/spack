@@ -105,8 +105,12 @@ class MockS3Client:
 @pytest.fixture
 def mock_s3_client(monkeypatch):
     client = MockS3Client("s3://my-bucket/")
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", lambda url, method="fetch": client)
-    monkeypatch.setattr(spack.util.web, "get_s3_session", lambda url, method="fetch": client)
+    monkeypatch.setattr(
+        spack.util.s3, "get_s3_session", lambda url, method="fetch", *, config: client
+    )
+    monkeypatch.setattr(
+        spack.util.web, "get_s3_session", lambda url, method="fetch", *, config: client
+    )
     return client
 
 
@@ -148,8 +152,8 @@ def mock_s3_client(monkeypatch):
         ),
     ],
 )
-def test_spider(depth, expected_found, expected_not_found, expected_text):
-    pages, links = spack.util.web.spider(root, depth=depth)
+def test_spider(depth, expected_found, expected_not_found, expected_text, config):
+    pages, links = spack.util.web.spider(root, depth=depth, config=config)
 
     for page in expected_found["pages"]:
         assert page in pages
@@ -167,10 +171,14 @@ def test_spider(depth, expected_found, expected_not_found, expected_text):
         assert text in pages[page]
 
 
-def test_spider_no_response(monkeypatch):
+def test_spider_no_response(monkeypatch, config):
     # Mock the absence of a response
-    monkeypatch.setattr(spack.util.web, "read_from_url", lambda x, y: (None, None, None))
-    pages, links, _, _ = spack.util.web._spider(root, collect_nested=False, _visited=set())
+    monkeypatch.setattr(
+        spack.util.web, "read_from_url", lambda x, y, *, urlopen: (None, None, None)
+    )
+    pages, links, _, _ = spack.util.web._spider(
+        root, collect_nested=False, _visited=set(), config=config
+    )
     assert not pages and not links
 
 
@@ -277,7 +285,7 @@ def test_etag_parser():
     assert spack.util.web.parse_etag("abc def") is None
 
 
-def test_list_url(tmp_path: pathlib.Path):
+def test_list_url(tmp_path: pathlib.Path, config):
     testpath = str(tmp_path)
     testpath_url = url_util.path_to_file_url(testpath)
 
@@ -294,7 +302,7 @@ def test_list_url(tmp_path: pathlib.Path):
         pass
 
     list_url = lambda recursive: list(
-        sorted(spack.util.web.list_url(testpath_url, recursive=recursive))
+        sorted(spack.util.web.list_url(testpath_url, recursive=recursive, config=config))
     )
 
     assert list_url(False) == ["file-0.txt", "file-1.txt", "file-2.txt"]
@@ -302,7 +310,7 @@ def test_list_url(tmp_path: pathlib.Path):
     assert list_url(True) == ["dir/another-file.txt", "file-0.txt", "file-1.txt", "file-2.txt"]
 
 
-def test_gather_s3_information(monkeypatch):
+def test_gather_s3_information(monkeypatch, config):
     mirror = spack.mirrors.mirror.Mirror(
         {
             "fetch": {
@@ -320,7 +328,9 @@ def test_gather_s3_information(monkeypatch):
         }
     )
 
-    session_args, client_args = spack.util.s3.get_mirror_s3_connection_info(mirror, "push")
+    session_args, client_args = spack.util.s3.get_mirror_s3_connection_info(
+        mirror, "push", config=config
+    )
 
     # Session args are used to create the S3 Session object
     assert "aws_session_token" in session_args
@@ -337,13 +347,13 @@ def test_gather_s3_information(monkeypatch):
     assert "endpoint_url" in client_args
 
 
-def test_remove_s3_url(mock_s3_client, capfd):
+def test_remove_s3_url(mock_s3_client, capfd, config):
     fake_s3_url = "s3://my-bucket/subdirectory/mirror"
 
     current_debug_level = tty.debug_level()
     tty.set_debug(1)
 
-    spack.util.web.remove_url(fake_s3_url, recursive=True)
+    spack.util.web.remove_url(fake_s3_url, recursive=True, config=config)
     err = capfd.readouterr()[1]
 
     tty.set_debug(current_debug_level)
@@ -353,12 +363,12 @@ def test_remove_s3_url(mock_s3_client, capfd):
     assert "Deleted keytwo" in err
 
 
-def test_s3_url_exists(mock_s3_client):
+def test_s3_url_exists(mock_s3_client, config):
     fake_s3_url_exists = "s3://my-bucket/subdirectory/my-file"
-    assert spack.util.web.url_exists(fake_s3_url_exists)
+    assert spack.util.web.url_exists(fake_s3_url_exists, config=config)
 
     fake_s3_url_does_not_exist = "s3://my-bucket/subdirectory/my-notfound-file"
-    assert not spack.util.web.url_exists(fake_s3_url_does_not_exist)
+    assert not spack.util.web.url_exists(fake_s3_url_does_not_exist, config=config)
 
 
 def test_s3_url_parsing():
@@ -442,7 +452,7 @@ def test_ssl_urllib(
 
         assert mock_cert == mutable_config.get("config:ssl_certs", None)
 
-        ssl_context = spack.util.web.ssl_create_default_context()
+        ssl_context = spack.util.web.default_ssl_context(mutable_config)
         assert ssl_context.verify_mode == ssl.CERT_REQUIRED
 
 
@@ -465,7 +475,7 @@ def test_ssl_curl_cert_file(
         if cert_exists:
             open(mock_cert, "w", encoding="utf-8").close()
             assert os.path.isfile(mock_cert)
-        curl = spack.util.web.require_curl()
+        curl = spack.util.web.require_curl(config=mutable_config)
 
         # arbitrary call to query the run env
         dump_env: Dict[str, str] = {}
@@ -606,7 +616,7 @@ def test_retry_on_transient_error_reuse(mock_sleep):
 
 
 @pytest.mark.parametrize("keep_original", [True, False])
-def test_push_to_url_s3_if_match(keep_original, mock_s3_client, tmp_path):
+def test_push_to_url_s3_if_match(keep_original, mock_s3_client, tmp_path, config):
     """Test that using if_match with s3 calls put_object."""
     local_data = tmp_path / "data.txt"
     local_data.write_text("hello")
@@ -617,6 +627,7 @@ def test_push_to_url_s3_if_match(keep_original, mock_s3_client, tmp_path):
         keep_original=keep_original,
         content_type="text/plain",
         if_match="etag1234",
+        config=config,
     )
 
     assert 1 == len(mock_s3_client.put_object_calls)
@@ -636,7 +647,7 @@ def test_push_to_url_s3_if_match(keep_original, mock_s3_client, tmp_path):
 
 
 @pytest.mark.parametrize("keep_original", [True, False])
-def test_push_to_url_s3(keep_original, mock_s3_client, tmp_path):
+def test_push_to_url_s3(keep_original, mock_s3_client, tmp_path, config):
     """Test that using if_match with s3 calls put_object."""
     local_data = tmp_path / "data.txt"
     local_data.write_text("hello")
@@ -646,6 +657,7 @@ def test_push_to_url_s3(keep_original, mock_s3_client, tmp_path):
         "s3://bucket/and/path/data.txt",
         keep_original=keep_original,
         content_type="text/plain",
+        config=config,
     )
 
     assert 0 == len(mock_s3_client.put_object_calls)
@@ -656,3 +668,52 @@ def test_push_to_url_s3(keep_original, mock_s3_client, tmp_path):
     call = mock_s3_client.upload_file_calls[0]
     assert 3 == len(call[0])
     assert {"ContentType": "text/plain"} == call[1]["ExtraArgs"]
+
+
+def test_base_curl_fetch_args_uses_given_config(mutable_config: Configuration, inactive_config):
+    """Tests that curl arguments come from the configuration passed as an argument, and not
+    from the global one."""
+    mutable_config.set("config:verify_ssl", True)
+    mutable_config.set("config:connect_timeout", 10)
+    unverified = inactive_config({"config": {"verify_ssl": False, "connect_timeout": 42}})
+
+    args = spack.util.web.base_curl_fetch_args("https://example.com", config=unverified)
+    assert "-k" in args
+    assert args[args.index("--connect-timeout") + 1] == "42"
+
+    args = spack.util.web.base_curl_fetch_args("https://example.com", config=mutable_config)
+    assert "-k" not in args
+    assert args[args.index("--connect-timeout") + 1] == "10"
+
+
+def test_s3_connection_info_uses_given_config(mutable_config: Configuration, inactive_config):
+    """Tests that S3 clients are configured from the configuration passed as an argument, and
+    not from the global one."""
+    mutable_config.set("config:verify_ssl", True)
+    unverified = inactive_config({"config": {"verify_ssl": False}})
+
+    _, client_args = spack.util.s3.get_mirror_s3_connection_info(None, "fetch", config=unverified)
+    assert client_args["use_ssl"] is False
+
+    _, client_args = spack.util.s3.get_mirror_s3_connection_info(
+        None, "fetch", config=mutable_config
+    )
+    assert client_args["use_ssl"] is True
+
+
+def test_require_curl_uses_given_config(
+    tmp_path: pathlib.Path, ssl_scrubbed_env, mutable_config: Configuration, inactive_config
+):
+    """Tests that curl gets the custom certificates of the configuration passed as an argument,
+    and not those of the global one."""
+    mock_cert = tmp_path / "mock_cert.crt"
+    mock_cert.write_text("")
+    with_certs = inactive_config({"config": {"ssl_certs": str(mock_cert)}})
+
+    certs_env: Dict[str, str] = {}
+    spack.util.web.require_curl(config=with_certs)("--help", output=str, _dump_env=certs_env)
+    assert certs_env["CURL_CA_BUNDLE"] == str(mock_cert)
+
+    global_env: Dict[str, str] = {}
+    spack.util.web.require_curl(config=mutable_config)("--help", output=str, _dump_env=global_env)
+    assert "CURL_CA_BUNDLE" not in global_env

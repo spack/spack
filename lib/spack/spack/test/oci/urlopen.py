@@ -450,7 +450,7 @@ def test_oci_registry_upload(tmp_path: pathlib.Path, client_single_request, serv
         file=str(blob),
         digest=digest,
         small_file_size=small_file_size,
-        _urlopen=opener.open,
+        urlopen=opener.open,
     )
 
     # Second time should exit as it exists
@@ -459,7 +459,7 @@ def test_oci_registry_upload(tmp_path: pathlib.Path, client_single_request, serv
         file=str(blob),
         digest=digest,
         small_file_size=small_file_size,
-        _urlopen=opener.open,
+        urlopen=opener.open,
     )
 
     # Force upload should upload again
@@ -469,7 +469,7 @@ def test_oci_registry_upload(tmp_path: pathlib.Path, client_single_request, serv
         digest=digest,
         force=True,
         small_file_size=small_file_size,
-        _urlopen=opener.open,
+        urlopen=opener.open,
     )
 
 
@@ -502,14 +502,14 @@ def test_copy_missing_layers(tmp_path: pathlib.Path, config):
 
     digests = [Digest.from_sha256(hashlib.sha256(blob.read_bytes()).hexdigest()) for blob in blobs]
 
-    config = default_config(architecture="amd64", os="linux")
+    image_config = default_config(architecture="amd64", os="linux")
     configfile = tmp_path / "config.json"
-    configfile.write_text(json.dumps(config))
+    configfile.write_text(json.dumps(image_config))
     config_digest = Digest.from_sha256(hashlib.sha256(configfile.read_bytes()).hexdigest())
 
     for blob, digest in zip(blobs, digests):
-        upload_blob(src, str(blob), digest, _urlopen=urlopen)
-    upload_blob(src, str(configfile), config_digest, _urlopen=urlopen)
+        upload_blob(src, str(blob), digest, urlopen=urlopen)
+    upload_blob(src, str(configfile), config_digest, urlopen=urlopen)
 
     # Then create a manifest referencing them
     manifest = default_manifest()
@@ -529,10 +529,10 @@ def test_copy_missing_layers(tmp_path: pathlib.Path, config):
         "size": configfile.stat().st_size,
     }
 
-    upload_manifest(src, manifest, _urlopen=urlopen)
+    upload_manifest(src, manifest, urlopen=urlopen)
 
     # Finally, copy the image from src to dst
-    copy_missing_layers(src, dst, architecture="amd64", _urlopen=urlopen)
+    copy_missing_layers(src, dst, architecture="amd64", urlopen=urlopen)
 
     # Check that all layers (not config) were copied and identical
     assert len(dst_registry.blobs) == len(blobs)
@@ -549,7 +549,7 @@ def test_copy_missing_layers(tmp_path: pathlib.Path, config):
 
     # Check that re-uploading skips existing layers.
     dst_registry.clear_log()
-    copy_missing_layers(src, dst, architecture="amd64", _urlopen=urlopen)
+    copy_missing_layers(src, dst, architecture="amd64", urlopen=urlopen)
 
     # Check that no uploads were initiated, only existence checks were done.
     assert sum(is_upload(method, path) for method, path in dst_registry.requests) == 0
@@ -655,7 +655,7 @@ def test_manifest_index(tmp_path: pathlib.Path):
         config = default_config(architecture=arch, os="linux")
         file.write_text(json.dumps(config))
         config_digest = Digest.from_sha256(hashlib.sha256(file.read_bytes()).hexdigest())
-        assert upload_blob(img, str(file), config_digest, _urlopen=urlopen)
+        assert upload_blob(img, str(file), config_digest, urlopen=urlopen)
         manifest = {
             "schemaVersion": 2,
             "mediaType": "application/vnd.oci.image.manifest.v1+json",
@@ -666,9 +666,7 @@ def test_manifest_index(tmp_path: pathlib.Path):
             },
             "layers": [],
         }
-        manifest_digest, manifest_size = upload_manifest(
-            img, manifest, tag=False, _urlopen=urlopen
-        )
+        manifest_digest, manifest_size = upload_manifest(img, manifest, tag=False, urlopen=urlopen)
 
         manifest_descriptors.append(
             {
@@ -688,18 +686,18 @@ def test_manifest_index(tmp_path: pathlib.Path):
         "manifests": manifest_descriptors,
     }
 
-    upload_manifest(img, index, tag=True, _urlopen=urlopen)
+    upload_manifest(img, index, tag=True, urlopen=urlopen)
 
     # Check that we fetcht the correct manifest and config for each architecture
     for arch in ("amd64", "arm64"):
         assert (
-            get_manifest_and_config(img, architecture=arch, _urlopen=urlopen)
+            get_manifest_and_config(img, architecture=arch, urlopen=urlopen)
             == manifest_and_config[arch]
         )
 
     # Also test max recursion
     with pytest.raises(Exception, match="Maximum recursion depth reached"):
-        get_manifest_and_config(img, architecture="amd64", recurse=0, _urlopen=urlopen)
+        get_manifest_and_config(img, architecture="amd64", recurse=0, urlopen=urlopen)
 
 
 class BrokenServer(DummyServer):
@@ -773,10 +771,10 @@ def test_list_tags():
     _tags_to_create = [to_tag(i) for i in range(N)]
     random.shuffle(_tags_to_create)
     for tag in _tags_to_create:
-        upload_manifest(image.with_tag(tag), default_manifest(), tag=True, _urlopen=urlopen)
+        upload_manifest(image.with_tag(tag), default_manifest(), tag=True, urlopen=urlopen)
 
     # list_tags should return all tags from all pages in order
-    tags = list_tags(image, urlopen)
+    tags = list_tags(image, urlopen=urlopen)
     assert len(tags) == N
     assert [to_tag(i) for i in range(N)] == tags
 
@@ -787,3 +785,32 @@ def test_list_tags():
     assert json.loads(urlopen(image.tags_url() + f"?last={to_tag(N - 3)}").read())["tags"] == [
         to_tag(i) for i in range(N - 2, N)
     ]
+
+
+def test_openers_sharing_auth_headers_log_in_once_per_credentials():
+    """Tests that openers sharing authorization headers reuse a token obtained with the same
+    credentials, and do not reuse it for different ones."""
+    image = ImageReference.from_string("private.example.com/spack-registry:latest")
+    registry = InMemoryOCIRegistryWithBearerAuth(
+        image.domain, token="private_token", realm="https://auth.example.com/login"
+    )
+    auth_server = MockBearerTokenServer("auth.example.com")
+    auth_headers: dict = {}
+
+    def open_with(credentials: UsernamePassword):
+        opener = create_opener(
+            registry,
+            auth_server,
+            credentials_provider=lambda domain: credentials,
+            auth_headers=auth_headers,
+        )
+        assert opener.open(image.endpoint()).status == 200
+
+    open_with(UsernamePassword("user", "pass"))
+    open_with(UsernamePassword("user", "pass"))
+    assert len(auth_server.requests) == 1
+
+    # The token server rejects these credentials, so the login must be attempted
+    with pytest.raises(urllib.error.HTTPError, match="Cannot login to registry"):
+        open_with(UsernamePassword("wrong", "wrong"))
+    assert len(auth_server.requests) == 2
