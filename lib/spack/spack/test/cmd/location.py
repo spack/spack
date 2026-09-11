@@ -13,6 +13,8 @@ import spack.main
 import spack.paths
 import spack.repo
 import spack.stage
+import spack.store
+from spack.environment.environment import env_root_path
 from spack.main import SpackCommand
 from spack.util.filesystem import mkdirp
 
@@ -234,6 +236,18 @@ def test_location_stage_dir(mock_spec):
 def test_location_stages(mock_spec):
     """Tests spack location --stages."""
     assert location("--stages").strip() == spack.stage.get_stage_root()
+
+
+def test_location_roots(mutable_mock_env_path):
+    """Tests spack location --env-root and --install-root."""
+    assert location("--env-root").strip() == env_root_path()
+    assert location("--install-root").strip() == str(spack.store.STORE.root)
+
+    environment = ev.create("example")
+    environment.write()
+    with environment:
+        assert location("--env-root").strip() == env_root_path()
+        assert location("--install-root").strip() == str(spack.store.STORE.root)
 
 
 def test_location_specified_repo():

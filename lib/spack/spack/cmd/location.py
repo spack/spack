@@ -11,8 +11,10 @@ import spack.environment as ev
 import spack.paths
 import spack.repo
 import spack.stage
+import spack.store
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.environment.environment import env_root_path
 from spack.util import tty
 
 description = "print out locations of packages and spack directories"
@@ -57,6 +59,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     directories.add_argument(
         "-S", "--stages", action="store_true", help="top level stage directory"
+    )
+    directories.add_argument(
+        "-E", "--env-root", action="store_true", help="top level environment directory"
+    )
+    directories.add_argument(
+        "-I", "--install-root", action="store_true", help="top level installation directory"
     )
     directories.add_argument(
         "-c",
@@ -153,6 +161,14 @@ def location(parser, args):
 
     if args.stages:
         print(spack.stage.get_stage_root())
+        return
+
+    if args.env_root:
+        print(env_root_path())
+        return
+
+    if args.install_root:
+        print(spack.store.STORE.root)
         return
 
     specs = spack.cmd.parse_specs(args.spec)
