@@ -1761,7 +1761,9 @@ class RepoDescriptor:
     def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
         return None
 
-    def update(self, git: MaybeExecutable = None, remote: str = "origin") -> None:
+    def update(
+        self, git: MaybeExecutable = None, remote: str = "origin", force: bool = False
+    ) -> None:
         return None
 
     def construct(
@@ -1837,6 +1839,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
         update: bool = False,
         remote: str = "origin",
         depth: Optional[int] = None,
+        force: bool = False,
     ) -> None:
         with self.write_transaction:
             try:
@@ -1909,9 +1912,14 @@ class RemoteRepoDescriptor(RepoDescriptor):
                             remote = output.strip()
                         except spack.util.executable.ProcessError:
                             pass
-                        spack.util.git.pull_checkout_branch(
-                            self.branch, remote=remote, depth=depth, git_exe=git
-                        )
+                        if force:
+                            spack.util.git.force_checkout_branch(
+                                self.branch, remote=remote, depth=depth, git_exe=git
+                            )
+                        else:
+                            spack.util.git.pull_checkout_branch(
+                                self.branch, remote=remote, depth=depth, git_exe=git
+                            )
 
             except spack.util.executable.ProcessError:
                 self.error = f"Failed to {'update' if update else 'clone'} repository {self.name}"
@@ -1919,11 +1927,14 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
             self.read_index_file()
 
-    def update(self, git: MaybeExecutable = None, remote: str = "origin") -> None:
+    def update(
+        self, git: MaybeExecutable = None, remote: str = "origin", force: bool = False
+    ) -> None:
+
         if git is None:
             raise RepoError("Git executable not found")
 
-        self._clone_or_pull(git, update=True, remote=remote)
+        self._clone_or_pull(git, update=True, remote=remote, force=force)
 
         if self.error:
             raise RepoError(self.error)
