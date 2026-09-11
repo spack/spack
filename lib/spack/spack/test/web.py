@@ -946,3 +946,16 @@ def test_push_object_rejects_oversized_file_for_if_match(monkeypatch, mock_s3_cl
         spack.util.s3.push_object(
             "s3://bucket/and/path/data.txt", str(local_data), {"IfMatch": "etag1234"}
         )
+
+
+@pytest.mark.parametrize(
+    "exception", [RuntimeError("runtime"), Exception("e"), OSError(1, "dummy")]
+)
+def test_url_exists_no_raise(monkeypatch, exception):
+    """URL Exist check should return False for kind of exception."""
+
+    def _raising(*args, **kwargs):
+        raise exception
+
+    monkeypatch.setattr(spack.util.web, "_url_exists_urllib", _raising)
+    assert not spack.util.web.url_exists("https://not.real.io")

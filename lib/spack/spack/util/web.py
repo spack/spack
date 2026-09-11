@@ -648,7 +648,7 @@ def url_exists(url, curl=None):
     try:
         _url_exists_urllib(url)
         return True
-    except OSError as e:
+    except Exception as e:
         tty.debug(f"Failure reading {url}: {e}")
         return False
 
