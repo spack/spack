@@ -242,6 +242,19 @@ def test_target_not_compatible_with_host_error(mock_packages, mutable_config: Co
     assert "Conflicting target values" not in str(exc_info.value)
 
 
+def test_requirement_error_names_config_location(mock_packages, concretize_scope):
+    """A requirement that cannot be satisfied must say which config file and line it came from,
+    so the user knows what to edit."""
+    pathlib.Path(concretize_scope, "packages.yaml").write_text(
+        "packages:\n  mpileaks:\n    require:\n    - '@2.3'\n", encoding="utf-8"
+    )
+    with pytest.raises(spack.error.SpackError) as exc_info:
+        spack.concretize.concretize_one("mpileaks@2.1")
+    assert_actionable_error(
+        exc_info, "@2.3 is a requirement for package mpileaks", "packages.yaml:4: "
+    )
+
+
 @pytest.mark.parametrize(
     "packages_config,input_spec,expected_parts",
     [
@@ -273,11 +286,12 @@ def test_target_not_compatible_with_host_error(mock_packages, mutable_config: Co
             ["libelf", "must be compiled with clang"],
             id="requirement_unsatisfied_custom_message",
         ),
-        # Generic message must still name the package so the user knows which entry to look at
+        # With no custom message the error must still quote the requirement itself, not just
+        # say that "a requirement" for the package could not be satisfied
         pytest.param(
             {"packages:libelf": {"require": ["%clang"]}},
             "libelf%gcc",
-            ["libelf"],
+            ["libelf", "cannot satisfy requirement '%clang'"],
             id="requirement_unsatisfied_generic",
         ),
         # A `require:` entry names a virtual that does not exist. The error must name the
