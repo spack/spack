@@ -19,7 +19,7 @@ from spack.util import tty
 s3_client_cache: Dict[Tuple[str, str], Any] = dict()
 
 
-def get_s3_session(url, method="fetch"):
+def _get_s3_session(url, method="fetch"):
     # import boto and friends as late as possible.  We don't want to require boto as a
     # dependency unless the user actually wants to access S3 mirrors.
     from boto3 import Session
@@ -155,7 +155,7 @@ class WrapStream(BufferedReader):
 
 
 def _s3_open(url, method="GET"):
-    s3, parsed = get_s3_session(url, method=method)
+    s3, parsed = _get_s3_session(url, method=method)
 
     bucket = parsed.netloc
     key = parsed.path
@@ -190,7 +190,7 @@ def s3_command(method: str):
     def _s3_decorate_command(command):
         @functools.wraps(command)
         def _s3_command_wrapped(url, *args, **kwargs):
-            s3, url = get_s3_session(url, method=method)
+            s3, url = _get_s3_session(url, method=method)
             try:
                 return command(s3, url, *args, **kwargs)
             except s3.ClientError as e:

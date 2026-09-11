@@ -126,7 +126,7 @@ def mock_s3_client(monkeypatch):
             url = urllib.parse.urlparse(url)
         return client, url
 
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+    monkeypatch.setattr(spack.util.s3, "_get_s3_session", get_s3_session)
 
     return client
 
@@ -415,7 +415,7 @@ def test_delete_objects_batches_over_1000_keys(monkeypatch):
             url = urllib.parse.urlparse(url)
         return client, url
 
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+    monkeypatch.setattr(spack.util.s3, "_get_s3_session", get_s3_session)
 
     spack.util.web.remove_url("s3://my-bucket/prefix", recursive=True)
 
@@ -457,7 +457,7 @@ def test_list_s3_url_wraps_client_error(monkeypatch):
             url = urllib.parse.urlparse(url)
         return client, url
 
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+    monkeypatch.setattr(spack.util.s3, "_get_s3_session", get_s3_session)
 
     with pytest.raises(OSError):
         spack.util.web.list_url("s3://my-bucket/prefix/", recursive=True)
@@ -486,7 +486,7 @@ def test_list_s3_url_skips_directory_marker_keys(monkeypatch):
             url = urllib.parse.urlparse(url)
         return client, url
 
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+    monkeypatch.setattr(spack.util.s3, "_get_s3_session", get_s3_session)
 
     listing = spack.util.web.list_url("s3://my-bucket/prefix/", recursive=True)
     assert listing == ["real-key"]
@@ -522,7 +522,7 @@ def test_list_s3_url_at_bucket_root(monkeypatch):
             url = urllib.parse.urlparse(url)
         return client, url
 
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+    monkeypatch.setattr(spack.util.s3, "_get_s3_session", get_s3_session)
 
     listing = spack.util.web.list_url("s3://my-bucket", recursive=True)
 
@@ -610,14 +610,14 @@ def test_get_s3_session_normalizes_method_and_returns_parsed_url(monkeypatch, fa
     is treated as "push"."""
     monkeypatch.setattr(spack.util.s3, "s3_client_cache", {})
 
-    fetch_client, parsed_url = spack.util.s3.get_s3_session("s3://my-bucket/prefix", method="GET")
+    fetch_client, parsed_url = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="GET")
     assert parsed_url.geturl() == "s3://my-bucket/prefix"
     assert (None, "fetch") in spack.util.s3.s3_client_cache
 
-    head_client, _ = spack.util.s3.get_s3_session("s3://my-bucket/prefix", method="head")
+    head_client, _ = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="head")
     assert head_client is fetch_client
 
-    push_client, _ = spack.util.s3.get_s3_session("s3://my-bucket/prefix", method="anything-else")
+    push_client, _ = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="anything-else")
     assert (None, "push") in spack.util.s3.s3_client_cache
     assert push_client is not fetch_client
 

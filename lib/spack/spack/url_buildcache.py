@@ -1191,9 +1191,9 @@ def _entries_from_cache_fallback(url: str, component_type: BuildcacheComponent):
                 if stat_result is not None:
                     filename_to_mtime[entry_url] = stat_result[1]  # mtime is second element
         read_fn = url_read_method
-    except OSError as err:
+    except OSError as e:
         # Backend-specific errors (e.g. those from S3 and GCS) get normalized to OSError.
-        raise ListMirrorSpecsError(f"Encountered problem listing packages at {url}") from e
+        raise ListMirrorSpecsError(f"Encountered problem listing packages at {url}: {e}") from e
 
     return filename_to_mtime, read_fn
 

@@ -45,6 +45,7 @@ from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
     BuildcacheComponent,
     BuildcacheEntryError,
+    ListMirrorSpecsError,
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
     compression_writer,
@@ -1598,7 +1599,7 @@ def test_entries_from_cache_aws_cli_process_error(monkeypatch):
     fake_aws = FakeAwsCli(error=ProcessError("aws s3 ls failed"))
     monkeypatch.setattr(spack.url_buildcache, "which", lambda name: fake_aws)
 
-    with pytest.raises(ProcessError):
+    with pytest.raises(ListMirrorSpecsError):
         spack.url_buildcache._entries_from_cache_aws_cli(
             "s3://my-bucket/mirror", BuildcacheComponent.SPEC
         )
@@ -1610,7 +1611,7 @@ def test_get_entries_from_cache_falls_back_from_aws_cli(monkeypatch):
     fallback_result = ({"the-manifest": 123.0}, lambda x: x)
 
     def broken_aws_cli(url, component_type):
-        raise ProcessError("aws s3 ls failed")
+        raise ListMirrorSpecsError("aws s3 ls failed")
 
     def fake_fallback(url, component_type):
         return fallback_result
