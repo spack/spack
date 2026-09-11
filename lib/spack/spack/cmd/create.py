@@ -23,7 +23,7 @@ from spack.util.editor import editor
 from spack.util.executable import which
 from spack.util.filesystem import mkdirp
 from spack.util.format import get_version_lines
-from spack.util.naming import pkg_name_to_class_name, simplify_name
+from spack.util.naming import is_valid_name, pkg_name_to_class_name, simplify_name
 
 description = "create a new package file"
 section = "packaging"
@@ -896,7 +896,7 @@ def get_name(name, url):
         # Use a user-supplied name if one is present
         result = name
         if len(name.strip()) > 0:
-            tty.msg("Using specified package name: '{0}'".format(result))
+            tty.msg("Found specified package name: '{0}'".format(result))
         else:
             tty.die("A package name must be provided when using the option.")
     elif url is not None:
@@ -915,10 +915,17 @@ def get_name(name, url):
                 "  `spack create --name <name> <url>`",
             )
 
+    if not is_valid_name(result):
+        tty.msg("Input name is malformed, name can only contain a-z, 0-9, and '-'")
+
+    orig = result
     result = simplify_name(result)
 
-    if not re.match(r"^[a-z0-9-]+$", result):
-        tty.die("Package name can only contain a-z, 0-9, and '-'")
+    if not is_valid_name(result):
+        tty.die(f"Failed to deduce a valid package name: {result}")
+
+    if orig != result:
+        tty.msg(f"Simplified name {orig} -> {result}")
 
     return result
 
@@ -1087,6 +1094,7 @@ def get_repository(args: argparse.Namespace, name: str) -> spack.repo.Repo:
 def create(parser, args):
     # Gather information about the package to be created
     name = get_name(args.name, args.url)
+
     url = get_url(args.url)
     versions, guesser = get_versions(args, name)
     build_system = get_build_system(args.template, url, guesser)
