@@ -59,21 +59,69 @@ _spack_shell_wrapper() {
         emulate -L sh
     fi
 
-    # accumulate flags meant for the main spack command
-    # the loop condition is unreadable, but it means:
-    #     while $1 is set (while there are arguments)
-    #       and $1 starts with '-' (and the arguments are flags)
+    # accumulate flags meant for the main spack command, stopping at the
+    # first argument that is not a flag (the subcommand). Flags that take a
+    # required value (e.g. -C DIR, --config-scope DIR) consume the value
+    # too, so it isn't mistaken for the subcommand.
     _sp_flags=""
-    while [ ! -z ${1+x} ] && [ "${1#-}" != "${1}" ]; do
-        _sp_flags="$_sp_flags $1"
-        shift
+    _sp_early_return=""
+    while [ ! -z ${1+x} ]; do
+        case "$1" in
+            --color|--config|--config-scope|--env|--env-dir|--print-shell-vars|--profile-file|--sorted-profile|--lines)
+                # long flags that take a required value
+                _sp_flags="$_sp_flags $1 $2"
+                shift 2
+                ;;
+            --help|--all-help|--version)
+                # long flags that short-circuit to `command spack` below
+                _sp_early_return=true
+                _sp_flags="$_sp_flags $1"
+                shift
+                ;;
+            --*)
+                # all other long flags take no value
+                _sp_flags="$_sp_flags $1"
+                shift
+                ;;
+            -?*)
+                # one or more bundled short flags, e.g. -kc, -Cvalue, -kCvalue
+                _sp_bundle="${1#-}"
+                shift
+                while [ -n "$_sp_bundle" ]; do
+                    _sp_char=$(printf '%s' "$_sp_bundle" | cut -c1)
+                    _sp_bundle=$(printf '%s' "$_sp_bundle" | cut -c2-)
+                    case "$_sp_char" in
+                        c | C | e | D)
+                            # short flags that take a required value: the
+                            # rest of the bundle is the value if there is
+                            # one, otherwise the value is the next argument
+                            if [ -n "$_sp_bundle" ]; then
+                                _sp_flags="$_sp_flags -$_sp_char $_sp_bundle"
+                                _sp_bundle=""
+                            else
+                                _sp_flags="$_sp_flags -$_sp_char $1"
+                                shift
+                            fi
+                            ;;
+                        h | H | V)
+                            _sp_early_return=true
+                            _sp_flags="$_sp_flags -$_sp_char"
+                            ;;
+                        *)
+                            _sp_flags="$_sp_flags -$_sp_char"
+                            ;;
+                    esac
+                done
+                ;;
+            *)
+                # not a flag: this is the subcommand
+                break
+                ;;
+        esac
     done
 
-    # h and V flags don't require further output parsing.
-    if [ -n "$_sp_flags" ] && \
-       [ "${_sp_flags#*h}" != "${_sp_flags}" ] || \
-       [ "${_sp_flags#*V}" != "${_sp_flags}" ];
-    then
+    # -h/-H/-V/--help/--all-help/--version don't require further output parsing.
+    if [ -n "$_sp_early_return" ]; then
         command spack $_sp_flags "$@"
         return
     fi
