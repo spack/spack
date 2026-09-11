@@ -56,13 +56,21 @@ def _url_or_path_to_url(url_or_path: str) -> str:
     """For simplicity we allow mirror URLs in config files to be local, relative paths.
     This helper function takes care of distinguishing between URLs and paths, and
     canonicalizes paths before transforming them into file:// URLs."""
-    # Is it a supported URL already? Then don't do path-related canonicalization.
-    parsed = urllib.parse.urlparse(url_or_path)
-    if parsed.scheme in supported_url_schemes:
-        return url_or_path
+    # Substitute before urlparse. ``file://$spack/../cache`` otherwise keeps
+    # ``$spack`` as the URL host and later resolves as ``/cache`` (#52959).
+    expanded = spack.config.substitute_path_variables(url_or_path)
+    parsed = urllib.parse.urlparse(expanded)
+    if parsed.scheme in supported_url_schemes and parsed.scheme != "file":
+        return expanded
 
-    # Otherwise we interpret it as path, and we should promote it to file:// URL.
-    return url_util.path_to_file_url(spack.config.canonicalize_path(url_or_path))
+    path = expanded
+    if path.lower().startswith("file://"):
+        # After expansion a Windows ``$spack`` is ``F:\...``, so
+        # ``file://F:\.../../cache`` has host ``F:\...`` under urlparse.
+        path = path[7:]
+        if path.startswith("/") and len(path) > 2 and path[2] == ":":
+            path = path[1:]
+    return url_util.path_to_file_url(spack.config.canonicalize_path(path))
 
 
 class Mirror:
