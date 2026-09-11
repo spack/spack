@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import hashlib
+import os
 import sys
 from concurrent.futures import as_completed
 
@@ -10,11 +12,15 @@ import spack.caches
 import spack.cmd
 import spack.concretize
 import spack.config
+import spack.fetch_strategy
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.repo
 import spack.spec
+import spack.stage
+import spack.util.crypto
 import spack.util.parallel
+import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
@@ -85,6 +91,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     arguments.add_common_arguments(create_parser, ["specs"])
     arguments.add_concretizer_args(create_parser)
+
+    # Add-archive
+    add_archive_parser = sp.add_parser("add-archive", help=mirror_add_archive.__doc__)
+    add_archive_parser.add_argument(
+        "-d", "--directory", default=None, help="directory of the mirror to add the archive to"
+    )
+    add_archive_parser.add_argument("url", help="URL or path of the archive to add")
 
     # Destroy
     destroy_parser = sp.add_parser("destroy", help=mirror_destroy.__doc__)
@@ -368,6 +381,34 @@ def mirror_add(args):
     else:
         mirror = spack.mirrors.mirror.Mirror(args.url, name=args.name)
     spack.mirrors.utils.add(mirror, args.scope)
+
+
+def mirror_add_archive(args):
+    """add a single archive, from a URL or path, to a mirror"""
+    url = args.url
+    if os.path.exists(url):
+        url = url_util.path_to_file_url(os.path.abspath(url))
+
+    # When no directory is provided, the source cache is used, like `spack mirror create`
+    mirror_root = args.directory or spack.caches.fetch_cache_location()
+
+    fetcher = spack.fetch_strategy.URLFetchStrategy(url=url)
+    with spack.stage.Stage(fetcher) as stage:
+        stage.fetch()
+
+        # The archive is stored content-addressed, named after its sha256 checksum
+        fetcher.digest = spack.util.crypto.checksum(hashlib.sha256, stage.archive_file)
+        relative_dst = os.path.join("_source-cache", fetcher.mirror_id())
+        ext = url_util.determine_url_file_extension(url).lstrip(".")
+        if ext:
+            relative_dst += f".{ext}"
+
+        mirror_cache = spack.mirrors.utils.get_mirror_cache(mirror_root)
+        if os.path.exists(os.path.join(mirror_cache.root, relative_dst)):
+            tty.msg(f"Archive already present in mirror {mirror_root} at {relative_dst}")
+        else:
+            mirror_cache.store(fetcher, relative_dst)
+            tty.msg(f"Added archive to mirror {mirror_root} at {relative_dst}")
 
 
 def mirror_remove(args):
@@ -747,6 +788,7 @@ def mirror(parser, args):
         "create": mirror_create,
         "destroy": mirror_destroy,
         "add": mirror_add,
+        "add-archive": mirror_add_archive,
         "remove": mirror_remove,
         "rm": mirror_remove,
         "set-url": mirror_set_url,

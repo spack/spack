@@ -98,6 +98,44 @@ colors = {
     "W": 97,
 }  # white
 
+
+def get_colors(color: Optional[bool] = None):
+    active = get_color_when() if color is None else color
+    return ColorsActive if active else ColorsInactive
+
+
+class ColorsActive:
+    BLACK = "\033[0;30m"
+    RED = "\033[0;31m"
+    GREEN = "\033[0;32m"
+    YELLOW = "\033[0;33m"
+    BLUE = "\033[0;34m"
+    MAGENTA = "\033[0;35m"
+    CYAN = "\033[0;36m"
+    WHITE = "\033[0;37m"
+
+    BLACK_BRIGHT = "\033[0;90m"
+    RED_BRIGHT = "\033[0;91m"
+    GREEN_BRIGHT = "\033[0;92m"
+    YELLOW_BRIGHT = "\033[0;93m"
+    BLUE_BRIGHT = "\033[0;94m"
+    MAGENTA_BRIGHT = "\033[0;95m"
+    CYAN_BRIGHT = "\033[0;96m"
+    WHITE_BRIGHT = "\033[0;97m"
+
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+
+    RESET = "\033[0m"
+
+
+class ColorsInactive:
+    BLACK = RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = ""
+    BLACK_BRIGHT = RED_BRIGHT = GREEN_BRIGHT = YELLOW_BRIGHT = ""
+    BLUE_BRIGHT = MAGENTA_BRIGHT = CYAN_BRIGHT = WHITE_BRIGHT = ""
+    BOLD = UNDERLINE = RESET = ""
+
+
 # Regex to be used for color formatting
 COLOR_RE = re.compile(r"@(?:(@)|(\.)|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)")
 
@@ -442,12 +480,10 @@ class ColorStream:
         self._color = color
 
     def write(self, string: str, *, raw: bool = False) -> None:
-        raw_write = getattr(self._stream, "write")
-
         color = self._color
         if self._color is None:
             if raw:
                 color = True
             else:
                 color = get_color_when(self._stream)
-        raw_write(colorize(string, color=color))
+        self._stream.write(colorize(string, color=color))
