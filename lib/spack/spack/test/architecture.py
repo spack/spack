@@ -62,7 +62,7 @@ def test_user_input_combination(config, target_str, os_str):
     the operating system match.
     """
     spec = spack.spec_parser.parse_one_or_raise(
-        f"libelf os={os_str} target={target_str}", user_input=spack.spec_parser.UserInput()
+        f"libelf os={os_str} target={target_str}", context=spack.spec_parser.ParseContext()
     )
     expected_os = TEST_PLATFORM.default_os if os_str == "default_os" else os_str
     expected_target = TEST_PLATFORM.default if target_str == "default_target" else target_str

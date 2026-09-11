@@ -1733,8 +1733,8 @@ spack:
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path):
         # We rely on this behavior when emitting facts for the solver
-        user_input = spack.spec_parser.UserInput.from_config(mutable_config)
-        s = spack.spec_parser.parse("mpileaks %gnu ^callpath %gnu", user_input=user_input)[0]
+        context = spack.spec_parser.ParseContext.from_config(mutable_config)
+        s = spack.spec_parser.parse("mpileaks %gnu ^callpath %gnu", context=context)[0]
         assert id(s["gcc"]) != id(s["callpath"]["gcc"])
 
 

@@ -28,10 +28,10 @@ from spack.externals import (
 from spack.spec_parser import (
     UNIX_FILENAME,
     WINDOWS_FILENAME,
+    ParseContext,
     SpecParser,
     SpecParsingError,
     SpecTokenizationError,
-    UserInput,
     expand_toolchains,
     parse,
     parse_one_or_raise,
@@ -1905,7 +1905,7 @@ def test_specfiles_are_rejected_by_default(specfile_for, tmp_path: pathlib.Path)
     with pytest.raises(SpecParsingError, match="only accepted on the command line"):
         spack.spec.Spec("libdwarf").satisfies(f"libdwarf ^{specfile}")
 
-    assert parse(str(specfile), user_input=UserInput(specfiles=True)) == [s]
+    assert parse(str(specfile), context=ParseContext(specfiles=True)) == [s]
 
 
 def test_resolve_host_aliases(monkeypatch):
@@ -1926,7 +1926,7 @@ def test_resolve_host_aliases(monkeypatch):
     assert spec.architecture.target == host.default_target()
 
     # parsing user input resolves them in dependencies too
-    spec = parse_one_or_raise("x ^y target=default_target", user_input=UserInput())
+    spec = parse_one_or_raise("x ^y target=default_target", context=ParseContext())
     assert spec["y"].architecture.target == host.default_target()
 
     with pytest.raises(spack.error.SpecError, match="not the current platform"):

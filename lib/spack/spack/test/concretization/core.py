@@ -2749,7 +2749,7 @@ packages:
         json_file.write_text(build_dep.to_json())
         s = spack.concretize.concretize_one(
             spack.spec_parser.parse_one_or_raise(
-                f"dtuse ^{json_file}", user_input=spack.spec_parser.UserInput(specfiles=True)
+                f"dtuse ^{json_file}", context=spack.spec_parser.ParseContext(specfiles=True)
             )
         )
         assert s["dttop"].dag_hash() == build_dep.dag_hash()

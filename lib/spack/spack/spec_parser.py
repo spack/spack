@@ -170,8 +170,14 @@ class SpecTokenizationError(spack.error.SpecSyntaxError):
         super().__init__(message)
 
 
-class UserInput:
-    """How to evaluate specs written by users, unlike the pure specs in package repositories."""
+class ParseContext:
+    """Context for parsing user input: the command line, ``spack.yaml``, ``packages.yaml``, ...
+
+    Without a context, parsing is pure and does not depend on the machine, as required for specs
+    in package repositories. With a context, the text is user input: toolchains are expanded,
+    ``default_os`` and ``default_target`` are resolved to the host's defaults, and spec files are
+    read from the filesystem if ``specfiles`` is True.
+    """
 
     __slots__ = ("toolchains", "specfiles", "_toolchain_cache")
 
@@ -184,14 +190,14 @@ class UserInput:
     @staticmethod
     def from_config(
         config: "spack.config.Configuration", *, specfiles: bool = False
-    ) -> "UserInput":
-        return UserInput(toolchains=config.get("toolchains"), specfiles=specfiles)
+    ) -> "ParseContext":
+        return ParseContext(toolchains=config.get("toolchains"), specfiles=specfiles)
 
 
-def evaluate(spec: "spack.spec.Spec", user_input: UserInput) -> None:
+def evaluate(spec: "spack.spec.Spec", context: ParseContext) -> None:
     """Evaluate a parsed user spec in place: substitute toolchains, then resolve host aliases."""
-    if user_input.toolchains:
-        expand_toolchains(spec, user_input.toolchains, _cache=user_input._toolchain_cache)
+    if context.toolchains:
+        expand_toolchains(spec, context.toolchains, _cache=context._toolchain_cache)
     resolve_host_aliases(spec)
 
 
@@ -219,20 +225,20 @@ def resolve_host_aliases(spec: "spack.spec.Spec") -> None:
             arch.target = host.default_target()
 
 
-def parse(text: str, *, user_input: Optional[UserInput] = None) -> List["spack.spec.Spec"]:
+def parse(text: str, *, context: Optional[ParseContext] = None) -> List["spack.spec.Spec"]:
     """Parse text into a list of specs
 
     Args:
         text: text to be parsed
-        user_input: if given, the text is user input, and the specs are evaluated accordingly
+        context: if given, the text is user input, and the specs are evaluated in it
 
     Return:
         List of specs
     """
-    specs = SpecParser(text, specfiles=bool(user_input and user_input.specfiles)).all_specs()
-    if user_input is not None:
+    specs = SpecParser(text, specfiles=bool(context and context.specfiles)).all_specs()
+    if context is not None:
         for spec in specs:
-            evaluate(spec, user_input)
+            evaluate(spec, context)
     return specs
 
 
@@ -240,16 +246,16 @@ def parse_one_or_raise(
     text: str,
     initial_spec: Optional["spack.spec.Spec"] = None,
     *,
-    user_input: Optional[UserInput] = None,
+    context: Optional[ParseContext] = None,
 ) -> "spack.spec.Spec":
     """Parse exactly one spec from text and return it, or raise
 
     Args:
         text: text to be parsed
         initial_spec: buffer where to parse the spec. If None a new one will be created.
-        user_input: if given, the text is user input, and the spec is evaluated accordingly
+        context: if given, the text is user input, and the spec is evaluated in it
     """
-    parser = SpecParser(text, specfiles=bool(user_input and user_input.specfiles))
+    parser = SpecParser(text, specfiles=bool(context and context.specfiles))
     result = parser.next_spec(initial_spec)
 
     if parser.curr:
@@ -267,8 +273,8 @@ def parse_one_or_raise(
     if result is None:
         raise ValueError("expected a single spec, but got none")
 
-    if user_input is not None:
-        evaluate(result, user_input)
+    if context is not None:
+        evaluate(result, context)
 
     return result
 
