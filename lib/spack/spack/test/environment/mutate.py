@@ -66,6 +66,7 @@ def test_mutate_internals(dep, orig_constraint, mutated_constraint, mutable_conf
     mutator = spack.spec.Spec(mutated_constraint)
     env.mutate(selectors=[selector], mutators=[mutator])
     cmake_spec.mutate(mutator)
+    spack.spec.rehash_mutated([cmake_spec], repo=spack.repo.PATH)
 
     for spec in env.all_specs_generator():
         if spec.name == "cmake":

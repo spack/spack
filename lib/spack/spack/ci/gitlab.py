@@ -387,7 +387,11 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             stage_names.append("stage-wait")
             wait_job = spack_ci_ir["jobs"]["noop"]["attributes"]
             wait_job["stage"] = "stage-wait"
+
+            # If this job fails ignore the status and carry on
             wait_job["retry"] = 0
+            wait_job["allow_failure"] = True
+
             wait_job["when"] = "always"
             wait_job["script"] = ["echo 'Open the pod bay doors HAL'"]
             wait_job["dependencies"] = []

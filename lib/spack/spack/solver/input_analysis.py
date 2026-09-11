@@ -4,7 +4,7 @@
 """Classes to analyze the input of a solve, and provide information to set up the ASP problem"""
 
 import collections
-from typing import Dict, List, NamedTuple, Set, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import spack.vendor.archspec.cpu
 
@@ -18,7 +18,10 @@ import spack.spec
 import spack.store
 from spack.error import SpackError
 from spack.spec import EMPTY_SPEC
-from spack.util import lang, tty
+from spack.util import tty
+
+if TYPE_CHECKING:
+    import spack.context
 
 
 class PossibleGraph(NamedTuple):
@@ -30,7 +33,11 @@ class PossibleGraph(NamedTuple):
 class PossibleDependencyGraph:
     """Returns information needed to set up an ASP problem"""
 
-    def unreachable(self, *, pkg_name: str, when_spec: spack.spec.Spec) -> bool:
+    # Configuration and repository the analysis is performed against.
+    configuration: spack.config.Configuration
+    repo: spack.repo.RepoPath
+
+    def unreachable(self, *, pkg_name: str, when_spec: Union[str, spack.spec.Spec]) -> bool:
         """Returns true if the context can determine that the condition cannot ever
         be met on pkg_name.
         """
@@ -71,9 +78,11 @@ class NoStaticAnalysis(PossibleDependencyGraph):
     def __init__(self, *, configuration: spack.config.Configuration, repo: spack.repo.RepoPath):
         self.configuration = configuration
         self.repo = repo
+        self._virtuals: Dict[str, bool] = {}
         self._platform_condition = spack.spec.Spec(
             f"platform={spack.platforms.host()} target={spack.vendor.archspec.cpu.host().family}:"
         )
+        self._allowed_on_platform: Dict[str, bool] = {}
 
         try:
             self.libc_pkgs = [x.name for x in self.providers_for("libc")]
@@ -81,11 +90,18 @@ class NoStaticAnalysis(PossibleDependencyGraph):
             self.libc_pkgs = []
 
     def is_virtual(self, name: str) -> bool:
-        return self.repo.is_virtual(name)
+        result = self._virtuals.get(name)
+        if result is None:
+            result = self._virtuals[name] = self.repo.is_virtual(name)
+        return result
 
-    @lang.memoized
     def is_allowed_on_this_platform(self, *, pkg_name: str) -> bool:
         """Returns true if a package is allowed on the current host"""
+        if pkg_name not in self._allowed_on_platform:
+            self._allowed_on_platform[pkg_name] = self._compute_allowed_on_platform(pkg_name)
+        return self._allowed_on_platform[pkg_name]
+
+    def _compute_allowed_on_platform(self, pkg_name: str) -> bool:
         pkg_cls = self.repo.get_pkg_class(pkg_name)
         for when_spec, conditions in pkg_cls.requirements.items():
             # Restrict analysis to unconditional requirements
@@ -105,7 +121,7 @@ class NoStaticAnalysis(PossibleDependencyGraph):
         """Returns True if a package can be installed, False otherwise."""
         return True
 
-    def unreachable(self, *, pkg_name: str, when_spec: spack.spec.Spec) -> bool:
+    def unreachable(self, *, pkg_name: str, when_spec: Union[str, spack.spec.Spec]) -> bool:
         """Returns true if the context can determine that the condition cannot ever
         be met on pkg_name.
         """
@@ -273,10 +289,20 @@ class StaticAnalysis(NoStaticAnalysis):
     ):
         self.store = store
         self.binary_index = binary_index
+        # Set before super().__init__, which resolves the providers for libc
+        self._providers: Dict[str, List[spack.spec.Spec]] = {}
+        self._buildcache_specs: Optional[List[spack.spec.Spec]] = None
+        self._installable: Dict[str, bool] = {}
+        self._provider_candidates: Dict[Tuple[str, str], bool] = {}
+        self._unreachable: Dict[Tuple[str, Union[str, spack.spec.Spec]], bool] = {}
         super().__init__(configuration=configuration, repo=repo)
 
-    @lang.memoized
     def providers_for(self, virtual_str: str) -> List[spack.spec.Spec]:
+        if virtual_str not in self._providers:
+            self._providers[virtual_str] = self._compute_providers_for(virtual_str)
+        return self._providers[virtual_str]
+
+    def _compute_providers_for(self, virtual_str: str) -> List[spack.spec.Spec]:
         candidates = super().providers_for(virtual_str)
         result = []
         for spec in candidates:
@@ -285,13 +311,19 @@ class StaticAnalysis(NoStaticAnalysis):
             result.append(spec)
         return result
 
-    @lang.memoized
     def buildcache_specs(self) -> List[spack.spec.Spec]:
-        self.binary_index.update()
-        return self.binary_index.get_all_built_specs()
+        if self._buildcache_specs is None:
+            self._buildcache_specs = spack.binary_distribution.update_cache_and_get_specs(
+                self.binary_index, config=self.configuration
+            )
+        return self._buildcache_specs
 
-    @lang.memoized
     def can_be_installed(self, *, pkg_name) -> bool:
+        if pkg_name not in self._installable:
+            self._installable[pkg_name] = self._compute_can_be_installed(pkg_name)
+        return self._installable[pkg_name]
+
+    def _compute_can_be_installed(self, pkg_name: str) -> bool:
         if self.configuration.get(f"packages:{pkg_name}:buildable", True):
             return True
 
@@ -308,8 +340,13 @@ class StaticAnalysis(NoStaticAnalysis):
         tty.debug(f"[{__name__}] {pkg_name} cannot be installed")
         return False
 
-    @lang.memoized
     def _is_provider_candidate(self, *, pkg_name: str, virtual: str) -> bool:
+        key = (pkg_name, virtual)
+        if key not in self._provider_candidates:
+            self._provider_candidates[key] = self._compute_is_provider_candidate(*key)
+        return self._provider_candidates[key]
+
+    def _compute_is_provider_candidate(self, pkg_name: str, virtual: str) -> bool:
         if not self.is_allowed_on_this_platform(pkg_name=pkg_name):
             return False
 
@@ -323,11 +360,16 @@ class StaticAnalysis(NoStaticAnalysis):
 
         return True
 
-    @lang.memoized
-    def unreachable(self, *, pkg_name: str, when_spec: spack.spec.Spec) -> bool:
+    def unreachable(self, *, pkg_name: str, when_spec: Union[str, spack.spec.Spec]) -> bool:
         """Returns true if the context can determine that the condition cannot ever
         be met on pkg_name.
         """
+        key = (pkg_name, when_spec)
+        if key not in self._unreachable:
+            self._unreachable[key] = self._compute_unreachable(pkg_name, when_spec)
+        return self._unreachable[key]
+
+    def _compute_unreachable(self, pkg_name: str, when_spec: Union[str, spack.spec.Spec]) -> bool:
         candidates = self.configuration.get(f"packages:{pkg_name}:require", [])
         if not candidates and pkg_name != "all":
             return self.unreachable(pkg_name="all", when_spec=when_spec)
@@ -354,16 +396,16 @@ class StaticAnalysis(NoStaticAnalysis):
         return False
 
 
-def create_graph_analyzer() -> PossibleDependencyGraph:
-    static_analysis = spack.config.CONFIG.get("concretizer:static_analysis", False)
+def create_graph_analyzer(context: "spack.context.SpackContext") -> PossibleDependencyGraph:
+    static_analysis = context.config.get("concretizer:static_analysis", False)
     if static_analysis:
         return StaticAnalysis(
-            configuration=spack.config.CONFIG,
-            repo=spack.repo.PATH,
-            store=spack.store.STORE,
-            binary_index=spack.binary_distribution.BINARY_INDEX,
+            configuration=context.config,
+            repo=context.repo,
+            store=context.store,
+            binary_index=context.binary_index,
         )
-    return NoStaticAnalysis(configuration=spack.config.CONFIG, repo=spack.repo.PATH)
+    return NoStaticAnalysis(configuration=context.config, repo=context.repo)
 
 
 class Counter:
@@ -391,7 +433,7 @@ class Counter:
 
         self._possible_dependencies: Set[str] = set()
         self._possible_virtuals: Set[str] = {
-            x.name for x in specs if spack.repo.PATH.is_virtual(x.name)
+            x.name for x in specs if possible_graph.repo.is_virtual(x.name)
         }
 
     def possible_dependencies(self) -> Set[str]:
@@ -475,7 +517,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
     def possible_packages_facts(self, gen, fn):
         build_tools = set()
         for current_tag in ("build-tools", "compiler"):
-            build_tools.update(spack.repo.PATH.packages_with_tags(current_tag))
+            build_tools.update(self.possible_graph.repo.packages_with_tags(current_tag))
 
         gen.h2("Packages with at most a single node")
         for package_name in sorted(self.possible_dependencies() - build_tools):
@@ -483,8 +525,9 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         gen.newline()
 
         gen.h2("Packages with multiple possible nodes (build-tools)")
-        default = spack.config.CONFIG.get("concretizer:duplicates:max_dupes:default", 1)
-        duplicates = spack.config.CONFIG.get("concretizer:duplicates:max_dupes", {})
+        configuration = self.possible_graph.configuration
+        default = configuration.get("concretizer:duplicates:max_dupes:default", 1)
+        duplicates = configuration.get("concretizer:duplicates:max_dupes", {})
         for package_name in sorted(self.possible_dependencies() & build_tools):
             max_dupes = duplicates.get(package_name, default)
             gen.fact(fn.max_dupes(package_name, max_dupes))
@@ -518,7 +561,7 @@ class FullDuplicatesCounter(MinimalDuplicatesCounter):
         gen.h2("Build unification sets ")
         build_tools = set()
         for current_tag in ("build-tools", "compiler"):
-            build_tools.update(spack.repo.PATH.packages_with_tags(current_tag))
+            build_tools.update(self.possible_graph.repo.packages_with_tags(current_tag))
 
         for name in sorted(self.possible_dependencies() & build_tools):
             gen.fact(fn.multiple_unification_sets(name))
@@ -543,7 +586,7 @@ def create_counter(
     tests: spack.concretize.TestsType,
     possible_graph: PossibleDependencyGraph,
 ) -> Counter:
-    strategy = spack.config.CONFIG.get("concretizer:duplicates:strategy", "none")
+    strategy = possible_graph.configuration.get("concretizer:duplicates:strategy", "none")
     if strategy == "full":
         return FullDuplicatesCounter(specs, tests=tests, possible_graph=possible_graph)
     if strategy == "minimal":

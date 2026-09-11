@@ -9,13 +9,13 @@ class BundlePackage(PackageBase):
     """General purpose bundle, or no-code, package class."""
 
     build_system_class = "BundlePackage"
-    default_buildsystem = "bundle"
+    default_buildsystem = "mock_bundle"
     has_code = False
 
-    build_system("bundle")
+    build_system("mock_bundle")
 
 
-@register_builder("bundle")
+@register_builder("mock_bundle")
 class BundleBuilder(Builder):
     phases = ("install",)
 

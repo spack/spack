@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import contextlib
 import gzip
 import json
 import os
@@ -17,47 +18,56 @@ import spack.vendor.jinja2
 
 import spack.archspec
 import spack.binary_distribution
+import spack.caches
 import spack.cmd
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.concretize
 import spack.concretize_ui
 import spack.config
+import spack.context
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
 import spack.externals_config
-import spack.hash_types as ht
 import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
+import spack.solver.clauses
+import spack.solver.compat
 import spack.solver.core
 import spack.solver.input_analysis
+import spack.solver.result
 import spack.solver.reuse
 import spack.spec
 import spack.spec_filter
+import spack.store
 import spack.traverse
 import spack.util.file_cache
+import spack.util.filesystem
 import spack.util.hash
 import spack.util.lang
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
+import spack.version.git_ref_lookup
+from spack.concretize_ui import SolveKind
 from spack.config import Configuration
 from spack.database import Database
 from spack.externals import ExternalDependencyError
-from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.old_installer import PackageInstaller
 from spack.repo import RepoPath
 from spack.solver.asp import Result
-from spack.solver.reuse import spec_filter_from_packages_yaml
+from spack.solver.reuse import reusable_external_specs
 from spack.spec import Spec
 from spack.store import Store
 from spack.test.conftest import RepoBuilder
 from spack.test.utilities import RecordingUI
+from spack.util.filesystem import getuid
 from spack.version import Version, VersionList, ver
+from spack.version.git_ref_lookup import GitRefLookup
 
 
 def check_spec(abstract, concrete):
@@ -324,9 +334,9 @@ def gcc11_with_flags(compiler_factory):
 def weights_from_result(result: Result, *, name: str) -> Dict[str, int]:
     weights = {}
     for x in result.criteria:
-        if x.name == name and x.kind == spack.solver.asp.OptimizationKind.CONCRETE:
+        if x.name == name and x.kind == spack.solver.result.OptimizationKind.CONCRETE:
             weights["reused"] = x.value
-        elif x.name == name and x.kind == spack.solver.asp.OptimizationKind.BUILD:
+        elif x.name == name and x.kind == spack.solver.result.OptimizationKind.BUILD:
             weights["built"] = x.value
     return weights
 
@@ -1590,8 +1600,8 @@ spack:
         new_root_without_reuse = spack.concretize.concretize_one("root")
 
         # validate that the graphs are the same with reuse, but not without
-        assert ht.build_hash(root) == ht.build_hash(new_root_with_reuse)
-        assert ht.build_hash(root) != ht.build_hash(new_root_without_reuse)
+        assert root["changing"].variants == new_root_with_reuse["changing"].variants
+        assert root["changing"].variants != new_root_without_reuse["changing"].variants
 
         # DAG hash should be the same with reuse since only the dependency changed
         assert root.dag_hash() == new_root_with_reuse.dag_hash()
@@ -1995,7 +2005,7 @@ spack:
     )
     def test_best_effort_coconcretize(self, specs, checks):
         specs = [Spec(s) for s in specs]
-        solver = spack.solver.asp.Solver()
+        solver = spack.solver.asp.Solver(context=spack.context.default())
         solver.reuse = False
         concrete_specs = set()
         for result in solver.solve_in_rounds(specs):
@@ -2039,7 +2049,7 @@ spack:
     def test_best_effort_coconcretize_preferences(self, specs, expected_spec, occurrences):
         """Test package preferences during coconcretization."""
         specs = [Spec(s) for s in specs]
-        solver = spack.solver.asp.Solver()
+        solver = spack.solver.asp.Solver(context=spack.context.default())
         solver.reuse = False
         concrete_specs = {}
         for result in solver.solve_in_rounds(specs):
@@ -2053,7 +2063,7 @@ spack:
 
     def test_solve_in_rounds_all_unsolved(self, monkeypatch, mock_packages):
         specs = [Spec(x) for x in ["libdwarf%gcc", "libdwarf%clang"]]
-        solver = spack.solver.asp.Solver()
+        solver = spack.solver.asp.Solver(context=spack.context.default())
         solver.reuse = False
 
         simulate_unsolved_property = [(x, None) for x in specs]
@@ -2071,8 +2081,8 @@ spack:
         root_specs = [Spec("mpileaks"), Spec("zmpi")]
 
         with mutable_config.override("concretizer:reuse", True):
-            solver = spack.solver.asp.Solver()
-            setup = spack.solver.asp.SpackSolverSetup()
+            solver = spack.solver.asp.Solver(context=spack.context.default())
+            setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
             result, _, _ = solver.driver.solve(setup, root_specs, reuse=reusable_specs)
 
         for spec in result.specs:
@@ -2089,8 +2099,8 @@ spack:
         root_spec = Spec("non-existing-conditional-dep@2.0")
 
         with mutable_config.override("concretizer:reuse", True):
-            solver = spack.solver.asp.Solver()
-            setup = spack.solver.asp.SpackSolverSetup()
+            solver = spack.solver.asp.Solver(context=spack.context.default())
+            setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
             with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="Cannot satisfy"):
                 solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
 
@@ -2102,17 +2112,10 @@ spack:
         ]
         root_spec = Spec("pkg-a foobar=bar")
 
-        packages_with_externals = external_config_with_implicit_externals(mutable_config)
-        completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = spec_filter_from_packages_yaml(
-            external_parser=create_external_parser(packages_with_externals, completion_mode),
-            packages_with_externals=packages_with_externals,
-            include=[],
-            exclude=[],
-        ).selected_specs()
+        external_specs = reusable_external_specs(spack.context.default())
         with mutable_config.override("concretizer:reuse", True):
-            solver = spack.solver.asp.Solver()
-            setup = spack.solver.asp.SpackSolverSetup()
+            solver = spack.solver.asp.Solver(context=spack.context.default())
+            setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
             result, _, _ = solver.driver.solve(
                 setup, [root_spec], reuse=reusable_specs + external_specs
             )
@@ -2136,14 +2139,7 @@ spack:
     @pytest.mark.regression("51112")
     def test_variant_penalty(self, mutable_config):
         """Test package preferences during concretization."""
-        packages_with_externals = external_config_with_implicit_externals(mutable_config)
-        completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = spec_filter_from_packages_yaml(
-            external_parser=create_external_parser(packages_with_externals, completion_mode),
-            packages_with_externals=packages_with_externals,
-            include=[],
-            exclude=[],
-        ).selected_specs()
+        external_specs = reusable_external_specs(spack.context.default())
 
         # The variant definition is similar to
         #
@@ -2158,8 +2154,8 @@ spack:
         # pkg_fact("trilinos",variant_possible_value(195,"17")).
         # pkg_fact("trilinos",variant_possible_value(195,"20")).
 
-        solver = spack.solver.asp.Solver()
-        setup = spack.solver.asp.SpackSolverSetup()
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
 
         # Ensure that since the default value of 14 cannot be taken, we select "17"
         result, _, _ = solver.driver.solve(setup, [Spec("trilinos")], reuse=external_specs)
@@ -2310,7 +2306,7 @@ spack:
         packages_yaml = syaml.load_config(packages_config)
         mutable_config.set("packages", packages_yaml["packages"])
 
-        setup = spack.solver.asp.SpackSolverSetup()
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
         asp_problem = setup.setup([Spec("mpileaks")], reuse=[], allow_deprecated=False).asp_problem
 
         assert all(x in asp_problem for x in expected)
@@ -2327,8 +2323,8 @@ spack:
         overrides = {"concretizer": {"reuse": True, "os_compatible": {s.os: [mock_os]}}}
         custom_scope = spack.config.InternalConfigScope("concretize_override", overrides)
         with mutable_config.override(custom_scope):
-            solver = spack.solver.asp.Solver()
-            setup = spack.solver.asp.SpackSolverSetup()
+            solver = spack.solver.asp.Solver(context=spack.context.default())
+            setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
             result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
         concrete_spec = result.specs[0]
         assert concrete_spec.satisfies("os={}".format(other_os.architecture.os))
@@ -2502,16 +2498,9 @@ packages:
         know a concretization exists.
         """
         specs = [Spec(s) for s in specs]
-        packages_with_externals = external_config_with_implicit_externals(mutable_config)
-        completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = spec_filter_from_packages_yaml(
-            external_parser=create_external_parser(packages_with_externals, completion_mode),
-            packages_with_externals=packages_with_externals,
-            include=[],
-            exclude=[],
-        ).selected_specs()
-        solver = spack.solver.asp.Solver()
-        setup = spack.solver.asp.SpackSolverSetup()
+        external_specs = reusable_external_specs(spack.context.default())
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
         result, _, _ = solver.driver.solve(setup, specs, reuse=external_specs)
         assert result.specs
 
@@ -2521,8 +2510,8 @@ packages:
         satisfied.
         """
         specs = [Spec("zlib")]
-        solver = spack.solver.asp.Solver()
-        setup = spack.solver.asp.SpackSolverSetup()
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
 
         simulate_unsolved_property = [(x, None) for x in specs]
 
@@ -2796,7 +2785,9 @@ packages:
         # Prepare a mock mirror that returns an old version of dyninst
         request_str = "callpath ^mpich"
         reused = spack.concretize.concretize_one(f"{request_str} ^dyninst@8.1.1")
-        monkeypatch.setattr(spack.solver.reuse, "_specs_from_mirror", lambda: [reused])
+        monkeypatch.setattr(
+            spack.solver.reuse, "_specs_from_mirror", lambda binary_index, config: [reused]
+        )
 
         # Exclude dyninst from reuse, so we expect that the old version is not taken into account
         with mutable_config.override(
@@ -2868,8 +2859,8 @@ packages:
 
         root_specs = [Spec("sombrero")]
         with mutable_config.override("concretizer:reuse", True):
-            solver = spack.solver.asp.Solver()
-            setup = spack.solver.asp.SpackSolverSetup()
+            solver = spack.solver.asp.Solver(context=spack.context.default())
+            setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
             result, _, _ = solver.driver.solve(setup, root_specs, reuse=[external_spec])
 
         assert len(result.specs) == 1
@@ -2892,8 +2883,8 @@ packages:
 
         # The spec b@1 ^glibc@2.30 is "more optimal" than b@0 ^glibc@2.28, but due to glibc
         # incompatibility, it should not be reused.
-        solver = spack.solver.asp.Solver()
-        setup = spack.solver.asp.SpackSolverSetup()
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
         result, _, _ = solver.driver.solve(setup, [Spec("pkg-b")], reuse=[fst, snd])
         assert len(result.specs) == 1
         assert result.specs[0] == snd
@@ -3127,7 +3118,7 @@ class TestConcretizeSeparately:
         hdf5_str = "hdf5@1.0 ^gmake@4.1"
         pinned_str = "pinned-gmake@1.0 ^gmake@3.0"
         input_specs = [Spec(hdf5_str), Spec(pinned_str)]
-        solver = spack.solver.asp.Solver()
+        solver = spack.solver.asp.Solver(context=spack.context.default())
         result = solver.solve(input_specs)
 
         assert any(x.satisfies(hdf5_str) for x in result.specs)
@@ -3138,8 +3129,8 @@ class TestConcretizeSeparately:
         """Tests that we don't reuse dependencies that bring in a different extendee"""
         setuptools = spack.concretize.concretize_one("py-setuptools ^python@3.10")
 
-        solver = spack.solver.asp.Solver()
-        setup = spack.solver.asp.SpackSolverSetup()
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
         result, _, _ = solver.driver.solve(
             setup, [Spec("py-floating ^python@3.11")], reuse=list(setuptools.traverse())
         )
@@ -3273,6 +3264,7 @@ def test_reusable_externals_match(mock_packages, tmp_path: pathlib.Path):
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3291,6 +3283,7 @@ def test_reusable_externals_match_virtual(mock_packages, tmp_path: pathlib.Path)
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3309,6 +3302,7 @@ def test_reusable_externals_different_prefix(mock_packages, tmp_path: pathlib.Pa
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3328,6 +3322,7 @@ def test_reusable_externals_different_modules(mock_packages, tmp_path: pathlib.P
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3339,6 +3334,7 @@ def test_reusable_externals_different_spec(mock_packages, tmp_path: pathlib.Path
         spec,
         {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": str(tmp_path)}]}},
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3396,14 +3392,12 @@ def test_filtering_reused_specs(
     """Tests that we can select which specs are to be reused, using constraints as filters"""
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
-    packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
-        mutable_config
-    )
-    completion_mode = mutable_config.get("concretizer:externals:completion")
+    context = spack.context.default()
     selector = spack.solver.asp.ReusableSpecsSelector(
-        configuration=mutable_config,
-        external_parser=create_external_parser(packages_with_externals, completion_mode),
-        packages_with_externals=packages_with_externals,
+        context=context,
+        packages_with_externals=spack.externals_config.external_config_with_implicit_externals(
+            context
+        ),
     )
     specs = selector.reusable_specs(roots)
 
@@ -3437,14 +3431,12 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     """Tests that we can turn on/off sources of reusable specs"""
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
-    packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
-        mutable_config
-    )
-    completion_mode = mutable_config.get("concretizer:externals:completion")
+    context = spack.context.default()
     selector = spack.solver.asp.ReusableSpecsSelector(
-        configuration=mutable_config,
-        external_parser=create_external_parser(packages_with_externals, completion_mode),
-        packages_with_externals=packages_with_externals,
+        context=context,
+        packages_with_externals=spack.externals_config.external_config_with_implicit_externals(
+            context
+        ),
     )
     specs = selector.reusable_specs(["mpileaks"])
     assert len(specs) == expected_length
@@ -3462,7 +3454,7 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
         (["cmake@3.27.9 %gcc", "foo %gcc"], ["%gcc"], ["cmake"], ["foo %gcc"]),
     ],
 )
-def test_spec_filters(specs, include, exclude, expected):
+def test_spec_filters(specs, include, exclude, expected, mock_packages):
     specs = [Spec(x) for x in specs]
     expected = [Spec(x) for x in expected]
     f = spack.spec_filter.SpecFilter(
@@ -3536,9 +3528,10 @@ def test_spec_unification(unify, mutable_config: Configuration, mock_packages):
 @pytest.mark.enable_parallelism
 def test_parallel_concretization(mutable_config, mock_packages):
     """Test whether parallel unify-false style concretization works."""
+    mutable_config.set("concretizer:unify", False)
     specs = [(Spec("pkg-a"), None), (Spec("pkg-b"), None)]
-    result = spack.concretize.concretize_separately(specs)
-    assert {s.name for s, _ in result} == {"pkg-a", "pkg-b"}
+    result = spack.concretize.concretize_spec_pairs(specs)
+    assert {s.name for s in result} == {"pkg-a", "pkg-b"}
 
 
 @pytest.mark.usefixtures("mutable_config", "mock_packages")
@@ -4508,8 +4501,8 @@ packages:
     root_specs = [Spec("openblas %fortran=gcc")]
 
     with mutable_config.override("concretizer:reuse", True):
-        solver = spack.solver.asp.Solver()
-        setup = spack.solver.asp.SpackSolverSetup()
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
         result, _, _ = solver.driver.solve(setup, root_specs, reuse=reusable_specs)
 
     assert len(result.specs) == 1
@@ -4522,7 +4515,7 @@ packages:
 def test_when_possible_above_all(mutable_config, mock_packages):
     """Tests that the criterion to solve as many specs as possible is above all other criteria."""
     specs = [Spec("pkg-a"), Spec("pkg-b")]
-    solver = spack.solver.asp.Solver()
+    solver = spack.solver.asp.Solver(context=spack.context.default())
 
     for result in solver.solve_in_rounds(specs):
         criteria = sorted(result.criteria, reverse=True)
@@ -4540,9 +4533,9 @@ def test_when_possible_above_all(mutable_config, mock_packages):
 )
 def test_result_roundtrip(mock_packages, config, specs):
     """Test that a solve result can be serialized and brought back."""
-    solver = spack.solver.asp.Solver()
+    solver = spack.solver.asp.Solver(context=spack.context.default())
     result = solver.solve(specs)
-    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict(), specs)
+    roundtrip = spack.solver.result.Result.from_dict(result.to_dict(), specs, repo=result.repo)
 
     # ensure that we didn't duplicate spec objects during the round trip -- specs need
     # to come back as exactly the same graph they were before.
@@ -4568,10 +4561,12 @@ def test_spec_dict_roundtrip(mock_packages, config, spec_str):
     dangling-hash bug in wire_spec_nodes.
     """
     spec = spack.concretize.concretize_one(spec_str)
-    nid = spack.solver.asp.SpecBuilder.make_node(pkg=spec.name)
+    nid = spack.solver.core.min_dupe_node(pkg=spec.name)
     spec_dict = {nid: spec}
 
-    roundtrip = spack.solver.asp.spec_dict_from_json(spack.solver.asp.spec_dict_to_json(spec_dict))
+    roundtrip = spack.solver.result.spec_dict_from_json(
+        spack.solver.result.spec_dict_to_json(spec_dict)
+    )
 
     # SpecDict shape is preserved exactly (no synthetic NodeIds leak into the dict)
     assert list(roundtrip.keys()) == [nid]
@@ -4608,15 +4603,15 @@ def test_concretization_cache_store_skips_spliced_results(mock_packages, use_con
     abstract_dep = Spec("pkg-b")
     root._add_dependency(abstract_dep, depflag=dt.LINK, virtuals=())
     root._add_dependency(spliced, depflag=dt.LINK, virtuals=())
-    nid = spack.solver.asp.SpecBuilder.make_node(pkg=root.name)
+    nid = spack.solver.core.min_dupe_node(pkg=root.name)
 
     # serialization refuses spliced specs, and must clean up any force-cached hashes
     with pytest.raises(spack.solver.asp.SpliceSerializationError):
-        spack.solver.asp.spec_dict_to_json({nid: root})
+        spack.solver.result.spec_dict_to_json({nid: root})
     assert abstract_dep._hash is None
     assert root._hash is None
 
-    result = Result(specs=[Spec("pkg-a")])
+    result = Result(specs=[Spec("pkg-a")], repo=spack.repo.PATH)
     result.answers = [(0, 0, {nid: root})]
 
     cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
@@ -4682,8 +4677,8 @@ def test_concretization_cache_roundtrip(
     # Assert that we're actually hitting the cache
     cache_fetch = spack.solver.asp.ConcretizationCache.fetch
 
-    def _ensure_cache_hits(self, problem: str, specs):
-        result, statistics = cache_fetch(self, problem, specs)
+    def _ensure_cache_hits(self, problem: str, specs, *, repo):
+        result, statistics = cache_fetch(self, problem, specs, repo=repo)
         assert result, "Expected successful concretization cache hit"
         assert statistics, "Expected statistics to be non null on cache hit"
         return result, statistics
@@ -4703,7 +4698,7 @@ def test_concretization_cache_roundtrip(
 def test_concretization_cache_roundtrip_result(use_concretization_cache):
     """Ensure the concretization cache doesn't change Solver Result objects."""
     specs = [Spec("hdf5")]
-    solver = spack.solver.asp.Solver()
+    solver = spack.solver.asp.Solver(context=spack.context.default())
 
     result1 = solver.solve(specs)
     result2 = solver.solve(specs)
@@ -4730,8 +4725,8 @@ def test_concretization_cache_reapplies_patches_on_hit(
     # as if a new patch directive had been added to the package.
     original_inject = spack.spec._inject_patches_variant
 
-    def inject_with_new_patch(root):
-        original_inject(root)
+    def inject_with_new_patch(root, *, repo):
+        original_inject(root, repo=repo)
         for s in root.traverse():
             if s.name == "patch" and not s.concrete and "patches" in s.variants:
                 existing = list(s.variants["patches"].value)
@@ -4806,56 +4801,46 @@ def test_concretization_cache_count_cleanup(
     assert len(after - before) == 1  # one additional hash added by 1001st concretization
 
 
-@pytest.fixture()
-def corrupt_cache_entry(use_concretization_cache):
-    """Yields a cache and path for a fake entry. After the test body writes a corrupt file
-    to the path, the fixture asserts that fetch returns a miss and removes the file."""
+def _gzip_json(obj) -> bytes:
+    return gzip.compress(json.dumps(obj).encode())
+
+
+@pytest.mark.parametrize(
+    "corrupt",
+    [
+        lambda data: data[: len(data) // 2],  # EOFError: truncated deflate stream
+        lambda data: data[:10] + b"\xde\xad\xbe\xef" * 4,  # zlib.error: invalid deflate data
+        lambda data: gzip.compress(b"\xff\xfe\x80\x81"),  # UnicodeDecodeError: not utf-8
+        lambda data: b"not gzip at all",  # BadGzipFile: bad magic number
+        lambda data: gzip.compress(b"not json{{{"),  # JSONDecodeError: invalid json
+        lambda data: _gzip_json({"_meta": {"version": -1}}),  # unsupported entry version
+        lambda data: _gzip_json(  # valid version but malformed spec data
+            {
+                "_meta": {"version": spack.solver.asp.ConcretizationCache.VERSION},
+                "results": {"not": "valid"},
+            }
+        ),
+    ],
+    ids=[
+        "truncated",
+        "bad-deflate",
+        "not-utf8",
+        "bad-magic",
+        "bad-json",
+        "bad-version",
+        "bad-spec-data",
+    ],
+)
+def test_concretization_cache_removes_corrupt_entries(use_concretization_cache, corrupt):
+    """A corrupt concretization cache entry is a cache miss and the entry is deleted."""
     cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
-    problem = "some asp problem"
+    problem = "corrupt entry test"
+    cache.store(problem, Result(specs=[], repo=spack.repo.PATH), statistics=[])
     cache_path = cache._cache_path_from_problem(problem)
-    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_path.write_bytes(corrupt(cache_path.read_bytes()))
 
-    def write_gzip_json(obj):
-        with gzip.open(cache_path, "wb") as f:
-            f.write(json.dumps(obj).encode())
-
-    yield cache, cache_path, write_gzip_json
-
-    assert cache_path.exists(), "test should have written a corrupt file"
-    result, stats = cache.fetch(problem, [])
-    assert result is None
-    assert stats is None
-    assert not cache_path.exists(), "corrupt cache entry should have been removed"
-
-
-def test_concretization_cache_removes_corrupt_gzip(corrupt_cache_entry):
-    """A file that isn't valid gzip is removed on fetch."""
-    _, cache_path, _ = corrupt_cache_entry
-    cache_path.write_bytes(b"this is not gzip")
-
-
-def test_concretization_cache_removes_corrupt_json(corrupt_cache_entry):
-    """A file that is valid gzip but not valid JSON is removed on fetch."""
-    _, cache_path, _ = corrupt_cache_entry
-    with gzip.open(cache_path, "wb") as f:
-        f.write(b"not json{{{")
-
-
-def test_concretization_cache_removes_wrong_version(corrupt_cache_entry):
-    """A cache entry with an unsupported version is removed on fetch."""
-    _, _, write_gzip_json = corrupt_cache_entry
-    write_gzip_json({"_meta": {"version": -1}})
-
-
-def test_concretization_cache_removes_bad_spec_data(corrupt_cache_entry):
-    """A cache entry with valid JSON/version but malformed spec data is removed on fetch."""
-    _, _, write_gzip_json = corrupt_cache_entry
-    write_gzip_json(
-        {
-            "_meta": {"version": spack.solver.asp.ConcretizationCache.VERSION},
-            "results": {"not": "valid"},
-        }
-    )
+    assert cache.fetch(problem, [], repo=spack.repo.PATH) == (None, None)
+    assert not cache_path.exists()
 
 
 def test_concretization_cache_asp_canonicalization():
@@ -5176,7 +5161,7 @@ def test_concrete_specs_skip_prechecks(config: Configuration, mock_packages):
     specs = [spack.spec.Spec("zlib"), spack.spec.Spec("deprecated-versions@=1.1.0")]
 
     with pytest.raises(spack.solver.asp.DeprecatedVersionError):
-        spack.solver.asp.SpackSolverSetup().setup(specs)
+        spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup(specs)
 
     with config.override("config:deprecated", True):
         concrete_spec = spack.concretize.concretize_one(specs[1])
@@ -5184,7 +5169,7 @@ def test_concrete_specs_skip_prechecks(config: Configuration, mock_packages):
     # Try again with the same version but a concrete spec
     specs[1] = concrete_spec
 
-    spack.solver.asp.SpackSolverSetup().setup(specs)
+    spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup(specs)
 
 
 @pytest.mark.regression("51683")
@@ -5231,8 +5216,9 @@ def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
     # +y -> depends on pkg-a with deptype run
     # +y -> depends on pkg-b with deptype run
     pkg = mock_packages.get_pkg_class("trigger-and-effect-deps")
-    setup = spack.solver.asp.SpackSolverSetup()
+    setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
     setup.gen = spack.solver.asp.ProblemInstanceBuilder()
+    setup.clauses = spack.solver.clauses.SpecClauseGenerator(repo=spack.repo.PATH)
     setup.package_dependencies_rules(pkg)
     setup.trigger_rules()
     setup.effect_rules()
@@ -5391,15 +5377,16 @@ packages:
 
 def test_specs_from_mirror_warns_when_index_missing(monkeypatch):
     """Tests that we get a warning when a binary mirror has no index."""
+    binary_index = spack.binary_distribution.BinaryIndexCache(config=spack.config.CONFIG)
 
-    def fake_update_cache():
-        spack.binary_distribution.BINARY_INDEX.mirrors_without_index = {"file:///fake-mirror"}
-        return []
+    def fake_update(*, config):
+        binary_index.mirrors_without_index = {"file:///fake-mirror"}
 
-    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", fake_update_cache)
+    monkeypatch.setattr(binary_index, "update", fake_update)
+    monkeypatch.setattr(binary_index, "get_all_built_specs", lambda: [])
 
     with pytest.warns(UserWarning, match="cannot be used in concretization"):
-        spack.solver.reuse._specs_from_mirror()
+        spack.solver.reuse._specs_from_mirror(binary_index, spack.config.CONFIG)
 
 
 @pytest.mark.parametrize(
@@ -5415,7 +5402,7 @@ def test_specs_from_mirror_warns_when_index_missing(monkeypatch):
 def test_spec_dict_from_json_invalid_data(data):
     """spec_dict_from_json raises ValueError on missing or malformed input."""
     with pytest.raises(ValueError, match="Invalid spec dict data"):
-        spack.solver.asp.spec_dict_from_json(data)
+        spack.solver.result.spec_dict_from_json(data)
 
 
 def test_concretization_cache_remove_entry_oserror(tmp_path):
@@ -5431,24 +5418,88 @@ def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cach
     A failed cache store must not propagate as a concretization failure -- the cache is an
     optimization, and the concretization that produced ``result`` already succeeded.
     """
-    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    cache = spack.solver.asp.ConcretizationCache(root=str(use_concretization_cache))
     problem = "write failure test"
 
-    def failing_replace(src, dst):
-        raise OSError("replace failed")
+    def failing_rename(src, dst):
+        raise OSError("rename failed")
 
-    monkeypatch.setattr(os, "replace", failing_replace)
+    monkeypatch.setattr(spack.util.filesystem, "rename", failing_rename)
 
     # store() must not raise even though os.replace did
-    cache.store(problem, Result(specs=[]), statistics=[])
+    cache.store(problem, Result(specs=[], repo=spack.repo.PATH), statistics=[])
 
     # The final cache path should not exist
     cache_path = cache._cache_path_from_problem(problem)
     assert not cache_path.exists()
 
-    # No leftover temp files
-    temps = list(cache.root.glob(".tmp_*"))
+    # No leftover temp files (in-flight temp files are dot-prefixed)
+    temps = [p for p in cache.root.iterdir() if p.name.startswith(".")]
     assert temps == []
+
+
+def test_concretization_cache_fetch_updates_lru_time(use_concretization_cache):
+    """A cache hit refreshes the entry's mtime, so cleanup() sees it as recently used.
+
+    cleanup() prunes in ascending mtime order; if fetch() stopped touching entries,
+    the most-used entries would be evicted first instead of last.
+    """
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    problem = "lru update test"
+    cache.store(problem, Result(specs=[], repo=spack.repo.PATH), statistics=["stats"])
+    cache_path = cache._cache_path_from_problem(problem)
+
+    # backdate the entry, then check that a hit brings its mtime back to the present
+    old_time = cache_path.stat().st_mtime - 3600
+    os.utime(cache_path, (old_time, old_time))
+
+    result, _ = cache.fetch(problem, [], repo=spack.repo.PATH)
+    assert result is not None
+    assert cache_path.stat().st_mtime > old_time + 1800
+
+
+@pytest.mark.not_on_windows("test manipulates POSIX permissions")
+@pytest.mark.skipif(getuid() == 0, reason="user is root")
+def test_concretization_cache_store_readonly_cache(use_concretization_cache):
+    """store() silently skips caching when the cache directory isn't writable.
+
+    The cache is an optimization: not being able to write to it (e.g. a shared
+    cache owned by a CI user) must not fail the concretization that produced
+    the result.
+    """
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    cache.root.mkdir(parents=True, exist_ok=True)
+    old_mode = cache.root.stat().st_mode
+    os.chmod(cache.root, 0o555)
+    try:
+        # existing but read-only cache root
+        cache.store("read-only store test", Result(specs=[], repo=spack.repo.PATH), statistics=[])
+        assert not cache._cache_path_from_problem("read-only store test").exists()
+
+        # missing cache root that can't be created because its parent is read-only
+        nested = spack.solver.asp.ConcretizationCache(str(cache.root / "sub"))
+        nested.store("read-only mkdir test", Result(specs=[], repo=spack.repo.PATH), statistics=[])
+        assert not nested.root.exists()
+    finally:
+        os.chmod(cache.root, old_mode)
+
+
+@pytest.mark.not_on_windows("test checks POSIX permissions")
+def test_concretization_cache_entries_follow_umask(use_concretization_cache):
+    """Cache directories and entries follow the umask, so a shared read/write
+    cache gets group-usable entries without external fixups."""
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+
+    # typical umask for a setgid, group-writable shared cache
+    old_umask = os.umask(0o007)
+    try:
+        cache.store("umask problem", Result(specs=[], repo=spack.repo.PATH), statistics=[])
+    finally:
+        os.umask(old_umask)
+
+    assert cache.root.stat().st_mode & 0o777 == 0o770
+    entry = cache._cache_path_from_problem("umask problem")
+    assert entry.stat().st_mode & 0o777 == 0o660
 
 
 def test_concretization_cache_skips_automatic_splice(
@@ -5511,21 +5562,23 @@ def test_concretization_cache_skips_automatic_splice(
 @pytest.mark.regression("52832")
 def test_solve_in_rounds_with_no_specs(mock_packages, config):
     """Tests that solving no specs at all yields no result, instead of being unsatisfiable."""
-    solver = spack.solver.asp.Solver()
+    solver = spack.solver.asp.Solver(context=spack.context.default())
     assert list(solver.solve_in_rounds([])) == []
 
 
 def test_concretize_separately_reports_progress(mutable_config, mock_packages):
-    """Tests that concretizing separately reports the start of the concretization, and one event
-    per spec, to the injected frontend.
+    """Tests that concretizing separately reports the group of user specs, and one event per
+    spec, to the injected frontend.
     """
+    mutable_config.set("concretizer:unify", False)
     ui = RecordingUI()
-    spack.concretize.concretize_separately([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
 
-    assert ui.started == [(spack.concretize_ui.SolveKind.SEPARATELY, 2, 1)]
+    assert len(ui.groups) == 1
+    group, kind, total, _ = ui.groups[0]
+    assert (group, kind, total) == ("default", SolveKind.SEPARATELY, 2)
     assert [count for _, _, count, _ in ui.concretized] == [1, 2]
     assert {abstract.name for abstract, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
-    assert not ui.groups
 
     for abstract, concrete, _, _ in ui.concretized:
         assert concrete.concrete and concrete.satisfies(abstract)
@@ -5536,12 +5589,13 @@ def test_concretize_together_when_possible_reports_progress(mutable_config, mock
     event per spec. The two specs cannot be unified, so they are solved in different rounds, and
     the count has to keep increasing across rounds.
     """
+    mutable_config.set("concretizer:unify", "when_possible")
     ui = RecordingUI()
-    spack.concretize.concretize_together_when_possible(
+    spack.concretize.concretize_spec_pairs(
         [(Spec("pkg-a@1.0"), None), (Spec("pkg-a@2.0"), None)], ui=ui
     )
 
-    assert ui.started == [(spack.concretize_ui.SolveKind.WHEN_POSSIBLE, 2, 1)]
+    assert ui.groups == [("default", SolveKind.WHEN_POSSIBLE, 2, 1)]
     assert [count for _, _, count, _ in ui.concretized] == [1, 2]
     assert {str(abstract) for abstract, _, _, _ in ui.concretized} == {"pkg-a@1.0", "pkg-a@2.0"}
 
@@ -5553,61 +5607,42 @@ def test_concretize_together_reports_progress(mutable_config, mock_packages):
     """Tests that concretizing together reports the start of the concretization, and one event
     per spec.
     """
+    mutable_config.set("concretizer:unify", True)
     ui = RecordingUI()
-    spack.concretize.concretize_together([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
 
-    assert ui.started == [(spack.concretize_ui.SolveKind.TOGETHER, 2, 1)]
+    assert ui.groups == [("default", SolveKind.TOGETHER, 2, 1)]
     assert [count for _, _, count, _ in ui.concretized] == [1, 2]
     assert {abstract.name for abstract, _, _, _ in ui.concretized} == {"pkg-a", "pkg-b"}
     assert len({duration for _, _, _, duration in ui.concretized}) == 1
-    assert not ui.groups
 
     for abstract, concrete, _, _ in ui.concretized:
         assert concrete.concrete and concrete.satisfies(abstract)
 
 
-@pytest.mark.parametrize(
-    "concretize_fn",
-    [
-        spack.concretize.concretize_together,
-        spack.concretize.concretize_together_when_possible,
-        spack.concretize.concretize_separately,
-    ],
-)
-def test_reported_total_matches_number_of_specs(concretize_fn, mutable_config, mock_packages):
-    """Tests that, whatever the concretization strategy, the total announced when concretization
-    starts is the number of specs that are reported as concretized afterwards, and that the counts
-    reported along the way run from 1 to that total. Frontends rely on this to show a percentage.
+@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+def test_reported_total_matches_number_of_specs(unify, mutable_config, mock_packages):
+    """Tests that, whatever the concretization strategy, the total a group announces is the number
+    of specs reported as concretized afterwards, and that the counts reported along the way run
+    from 1 to that total. Frontends rely on this to show a percentage.
     """
+    mutable_config.set("concretizer:unify", unify)
     ui = RecordingUI()
-    concretize_fn([(Spec("pkg-a"), None), (Spec("pkg-b"), None), (Spec("libelf"), None)], ui=ui)
+    spack.concretize.concretize_spec_pairs(
+        [(Spec("pkg-a"), None), (Spec("pkg-b"), None), (Spec("libelf"), None)], ui=ui
+    )
 
-    assert len(ui.started) == 1
-    _, total, _ = ui.started[0]
+    assert len(ui.groups) == 1
+    total = ui.groups[0][2]
     assert total == len(ui.concretized) == 3
     assert [count for _, _, count, _ in ui.concretized] == list(range(1, total + 1))
-
-
-def test_concretize_separately_reports_start_with_nothing_to_do(mutable_config, mock_packages):
-    """Tests that concretization is announced even when every input spec is already concrete, so
-    that frontends always see a start event.
-    """
-    concrete = spack.concretize.concretize_one(Spec("pkg-a"))
-    ui = RecordingUI()
-    result = spack.concretize.concretize_separately([(Spec("pkg-a"), concrete)], ui=ui)
-
-    assert ui.started == [(spack.concretize_ui.SolveKind.SEPARATELY, 0, 1)]
-    assert not ui.concretized
-    assert [concrete for _, concrete in result] == [concrete]
 
 
 @pytest.mark.parametrize("total,announced", [(2, True), (0, False)])
 def test_terminal_ui_announces_pool_only_when_solving(total, announced, capsys):
     """Tests that the terminal frontend stays silent when there is nothing to concretize."""
     ui = spack.concretize_ui.TerminalUI()
-    ui.on_concretization_started(
-        kind=spack.concretize_ui.SolveKind.SEPARATELY, total=total, processes=1
-    )
+    ui.on_group_started(group="default", kind=SolveKind.SEPARATELY, total=total, processes=1)
 
     assert ("Starting concretization" in capsys.readouterr().out) is announced
 
@@ -5695,3 +5730,376 @@ def test_asp_facts_with_config_values():
     assert str(fn.max_dupes("cmake", 2)) == 'max_dupes("cmake",2)'
     assert str(fn.os_compatible(syaml.syaml_str('a"b\\c'), "d")) == r'os_compatible("a\"b\\c","d")'
     assert str(fn.variant_value("x", True)) == 'variant_value("x","True")'
+
+
+def test_target_star_concretizes(mock_packages, config):
+    """target=* is not a literal unknown target '*' but rather an unconstrained target"""
+    concrete = spack.concretize.concretize_one("pkg-a target=*")
+    assert concrete.architecture.target_concrete
+
+
+@pytest.mark.parametrize(
+    "unify,expected",
+    [
+        (True, spack.concretize_ui.SolveKind.TOGETHER),
+        (False, spack.concretize_ui.SolveKind.SEPARATELY),
+        ("when_possible", spack.concretize_ui.SolveKind.WHEN_POSSIBLE),
+    ],
+)
+def test_solve_kind_from_unify_configuration(unify, expected):
+    """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
+    assert spack.concretize.solve_kind(unify) is expected
+
+
+@pytest.mark.usefixtures("config", "mock_packages")
+def test_git_ref_version_is_assigned_once_at_concretization(monkeypatch):
+    """A bare git ref gets its Spack version assigned by exactly one lookup when the spec is
+    concretized; concretizing the result again does no lookup."""
+    calls = []
+
+    def get(self, ref):
+        calls.append(ref)
+        return "1.2", 0
+
+    monkeypatch.setattr(GitRefLookup, "get", get)
+    concrete = spack.concretize.concretize_one("git-test-commit@git.1.x")
+    assert str(concrete.version) == "git.1.x=1.2" and calls == ["1.x"]
+    assert spack.concretize.concretize_one(concrete) == concrete and calls == ["1.x"]
+
+
+def test_group_is_announced_when_every_spec_is_already_concrete(mutable_config, mock_packages):
+    """Tests that a group is announced even when every input spec is already concrete, so that
+    frontends always see it open and close.
+    """
+    mutable_config.set("concretizer:unify", False)
+    pkg_a = spack.concretize.concretize_one(Spec("pkg-a"))
+    pkg_b = spack.concretize.concretize_one(Spec("pkg-b"))
+    ui = RecordingUI()
+    result = spack.concretize.concretize_spec_pairs(
+        [(Spec("pkg-a"), pkg_a), (Spec("pkg-b"), pkg_b)], ui=ui
+    )
+
+    assert ui.groups == [("default", SolveKind.SEPARATELY, 0, 1)]
+    assert ui.groups_ended == 1
+    assert not ui.concretized
+    assert result == [pkg_a, pkg_b]
+
+
+def test_concretization_reports_when_it_is_over(mutable_config, mock_packages):
+    """Tests that a concretization, and the group inside it report their end exactly once."""
+    ui = RecordingUI()
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None), (Spec("pkg-b"), None)], ui=ui)
+
+    assert (ui.started, ui.ended) == (1, 1)
+    assert (len(ui.groups), ui.groups_ended) == (1, 1)
+    assert len(ui.concretized) == 2
+
+
+def test_every_span_is_closed_when_a_solve_raises(mutable_config, mock_packages):
+    """Tests that a concretization that raises still closes both the concretization and the group,
+    so that a frontend can tear down what it painted before the error is printed. The exception
+    propagates to the caller without being passed to the frontend.
+    """
+    ui = RecordingUI()
+
+    unsatisfiable = Spec("mpileaks ^mpich@3.0.3 ^mpich@3.0.4")
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        spack.concretize.concretize_spec_pairs(
+            [(unsatisfiable, None), (Spec("pkg-b"), None)], ui=ui
+        )
+
+    assert (ui.started, ui.ended) == (1, 1)
+    assert (len(ui.groups), ui.groups_ended) == (1, 1)
+
+
+@pytest.mark.parametrize("total,announced", [(2, True), (0, False)])
+def test_terminal_ui_announces_a_group_only_when_it_has_work(total, announced, capsys):
+    """Tests that the terminal frontend holds the group header back until it knows the group has
+    specs to concretize, so re-concretizing an environment doesn't announce empty groups.
+    """
+    ui = spack.concretize_ui.TerminalUI()
+    ui.on_group_started(group="apps", kind=SolveKind.SEPARATELY, total=total, processes=1)
+
+    assert ("Concretizing the 'apps' group" in capsys.readouterr().out) is announced
+
+
+def test_terminal_ui_never_announces_the_default_group(capsys):
+    """Tests that the group every environment has stays implicit."""
+    ui = spack.concretize_ui.TerminalUI()
+    ui.on_group_started(group="default", kind=SolveKind.SEPARATELY, total=2, processes=1)
+
+    assert "group of specs" not in capsys.readouterr().out
+
+
+def test_single_spec_shortcut_opens_a_group(mutable_config, mock_packages):
+    """Tests that the single spec shortcut in concretize_spec_pairs reports a group of one, so
+    the solve it runs is enclosed like any other.
+    """
+    mutable_config.set("concretizer:unify", False)
+    ui = RecordingUI()
+    spack.concretize.concretize_spec_pairs([(Spec("pkg-a"), None)], ui=ui)
+
+    assert ui.groups == [("default", SolveKind.TOGETHER, 1, 1)]
+    assert (ui.started, ui.ended) == (1, 1)
+    assert ui.groups_ended == 1
+
+
+def test_concretize_one_opens_its_own_spans(mutable_config, mock_packages):
+    """Tests that concretize_one, which callers use as an entry point of its own, opens and
+    closes both the concretization and the group around its solve.
+    """
+    ui = RecordingUI()
+    concrete = spack.concretize.concretize_one(Spec("pkg-a"), ui=ui)
+
+    assert concrete.concrete
+    assert ui.groups == [("default", SolveKind.TOGETHER, 1, 1)]
+    assert (ui.started, ui.ended) == (1, 1)
+    assert ui.groups_ended == 1
+    assert [count for _, _, count, _ in ui.concretized] == [1]
+
+
+def test_concretize_one_reports_an_already_concrete_spec_as_no_work(mutable_config, mock_packages):
+    """Tests that concretize_one on an already concrete spec opens a group with nothing in it,
+    rather than reporting a spec it did not solve.
+    """
+    concrete = spack.concretize.concretize_one(Spec("pkg-a"))
+    ui = RecordingUI()
+    spack.concretize.concretize_one(concrete, ui=ui)
+
+    assert ui.groups == [("default", SolveKind.TOGETHER, 0, 1)]
+    assert ui.groups_ended == 1
+    assert not ui.concretized
+
+
+class _UnusableGlobal:
+    """Stands in for a process global that the code under test must not reach for."""
+
+    def __init__(self, name: str) -> None:
+        self._name = name
+
+    def __getattr__(self, item):
+        raise AssertionError(
+            f"{self._name} was read instead of the injected context (attribute {item!r})"
+        )
+
+
+#: The process globals a SpackContext replaces, as (module, attribute) pairs.
+#: ``spack.repo.PATH`` is missing: ``Spec`` resolves virtuals and computes package hashes
+#: through it, so a solve still reads it.
+_CONTEXT_GLOBALS = [
+    (spack.config, "CONFIG"),
+    (spack.caches, "MISC_CACHE"),
+    (spack.store, "STORE"),
+    (spack.binary_distribution, "BINARY_INDEX"),
+]
+
+
+@pytest.fixture()
+def break_globals(monkeypatch):
+    """Returns a context manager making every process global in ``_CONTEXT_GLOBALS`` raise.
+
+    It is a context manager rather than a plain fixture so a test can break the globals after
+    every other fixture is set up, and restore them before those fixtures are torn down: the
+    database and mock package fixtures use ``spack.repo.PATH`` while tearing down.
+    """
+
+    @contextlib.contextmanager
+    def _break():
+        spack.solver.compat.clingo()
+        with monkeypatch.context() as m:
+            for module, attribute in _CONTEXT_GLOBALS:
+                m.setattr(module, attribute, _UnusableGlobal(f"{module.__name__}.{attribute}"))
+            yield
+
+    return _break
+
+
+@pytest.fixture()
+def injected_context(mutable_config, mock_packages, mock_packages_repo):
+    """A context reading from the mock repositories, built before any global is broken.
+
+    It is built once every fixture that pushes a configuration scope has run, so the store
+    points at the right install tree. It depends on ``mock_packages`` so that the process-wide
+    repositories are the mock ones too: ``Spec`` resolves virtuals through ``spack.repo.PATH``,
+    which would otherwise raise ``UnknownNamespaceError`` for ``builtin_mock``.
+    """
+    mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
+    return spack.context.from_config(mutable_config)
+
+
+@pytest.mark.parametrize(
+    "requests,config_settings",
+    [
+        (["pkg-a"], {}),
+        (["mpileaks"], {}),
+        (["mpi"], {}),
+        (["mpileaks"], {"packages:all:require": ["~debug"]}),
+        (["mpileaks"], {"packages:all:require": ["+nonexistent-variant"]}),
+        (
+            ["externaltest"],
+            {
+                "packages:externaltool": {
+                    "externals": [
+                        {"spec": "externaltool@1.0", "prefix": "/path/to/external_tool"}
+                    ],
+                    "buildable": False,
+                }
+            },
+        ),
+        (["mpileaks"], {"concretizer:reuse": True}),
+        (["mpileaks"], {"concretizer:static_analysis": True}),
+        (["git-test-commit@git.main=1.0"], {}),
+        # Static analysis evaluates ``can_be_installed`` for ``pkg-b``, which, being
+        # non-buildable, falls through to a buildcache query. Concretizing with ``foobar=baz``
+        # keeps pkg-b out of the result, so pruning it does not make the solve unsatisfiable.
+        (
+            ["pkg-a foobar=baz"],
+            {
+                "concretizer:static_analysis": True,
+                "concretizer:reuse": True,
+                "packages:pkg-b:buildable": False,
+            },
+        ),
+    ],
+    ids=[
+        "plain",
+        "dependencies",
+        "virtual-root",
+        "requirement-under-all",
+        "unsatisfiable-requirement-under-all",
+        "externals",
+        "reuse",
+        "static-analysis",
+        "git-version",
+        "static-analysis-buildcache-query",
+    ],
+)
+def test_solve_reads_no_global(
+    break_globals, injected_context, mutable_config, requests, config_settings
+):
+    """A solve driven by an injected context reads everything from it, so breaking every
+    process global a SpackContext replaces does not affect it."""
+    for key, value in config_settings.items():
+        mutable_config.set(key, value)
+
+    with break_globals():
+        result = spack.solver.asp.Solver(context=injected_context).solve(
+            [Spec(x) for x in requests]
+        )
+
+        # Inspect the lazily computed results to trigger repo lookup
+        assert result.specs and all(s.concrete for s in result.specs)
+        assert result.specs_by_input is not None
+        assert result.unsolved_specs == []
+
+
+def test_solve_in_rounds_reads_no_global(break_globals, injected_context):
+    """``solve_in_rounds`` yields between rounds, and must not reach a global either."""
+    with break_globals():
+        solver = spack.solver.asp.Solver(context=injected_context)
+        results = list(solver.solve_in_rounds([Spec("mpileaks"), Spec("libelf")]))
+
+        assert results and any(r.specs for r in results)
+        for result in results:
+            assert all(s.concrete for s in result.specs)
+
+
+def test_buildcache_query_reads_no_global(break_globals, injected_context):
+    """Querying an injected buildcache index reads the injected configuration."""
+    with break_globals():
+        query = spack.binary_distribution.BinaryCacheQuery(
+            True, index=injected_context.binary_index, config=injected_context.config
+        )
+
+        assert query(Spec("pkg-a")) == []
+
+
+def test_concretization_cache_reads_no_global(
+    break_globals, mutable_mock_env_path, mutable_config, mock_packages
+):
+    """The concretization cache expands ``$env`` in its configured path, which is the one
+    place a solve used to reach for the global configuration to find the active environment.
+    """
+    ev.create("test_conc_cache_globals")
+
+    with ev.read("test_conc_cache_globals") as env:
+        mutable_config.set(
+            "concretizer:concretization_cache",
+            {"enable": True, "url": "$env/concretization", "entry_limit": 10},
+        )
+        context = spack.context.from_config(spack.config.CONFIG)
+
+        with break_globals():
+            solver = spack.solver.asp.Solver(context=context)
+            first = solver.solve([Spec("pkg-a")])
+            second = solver.solve([Spec("pkg-a")])
+
+        assert first.specs and second.specs
+        assert first.specs[0] == second.specs[0]
+        # The cache is configured under "$env", so it is written inside the environment.
+        assert os.path.isdir(os.path.join(env.path, "concretization"))
+        assert not os.path.exists(os.path.join(env.path, "$env"))
+
+
+def test_git_ref_lookup_uses_the_injected_cache_and_config(
+    break_globals, injected_context, monkeypatch, tmp_path
+):
+    """The ref lookup keeps its metadata in a cache and hands its git settings to the fetcher.
+    Both come from the injected context rather than the process-wide singletons.
+    """
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "https://example.com/repo.git", raising=False
+    )
+    cache = spack.util.file_cache.FileCache(str(tmp_path / "git_metadata"))
+    lookup = spack.version.git_ref_lookup.GitRefLookup(
+        "git-test-commit",
+        repo=injected_context.repo,
+        misc_cache=cache,
+        config=injected_context.config,
+    )
+
+    with break_globals():
+        lookup.data = {"deadbeef": ("1.0", 0)}
+        lookup.save()
+        lookup.data = {}
+        lookup.load_data()
+        fetcher_config = lookup.fetcher.config
+
+    assert lookup.data == {"deadbeef": ["1.0", 0]}
+    assert fetcher_config is injected_context.config
+
+
+def test_develop_specs_read_no_global(
+    break_globals, mutable_mock_env_path, mutable_config, mock_packages, tmp_path
+):
+    """Develop specs are declared in configuration and their paths are expanded against it,
+    so a solve has to read both from the injected context."""
+    develop_dir = tmp_path / "build"
+    develop_dir.mkdir()
+    ev.create("test_develop_globals")
+
+    with ev.read("test_develop_globals"):
+        mutable_config.set(
+            "develop", {"develop-test": {"spec": "develop-test@develop", "path": str(develop_dir)}}
+        )
+        context = spack.context.from_config(spack.config.CONFIG)
+
+        with break_globals():
+            result = spack.solver.asp.Solver(context=context).solve([Spec("develop-test@develop")])
+
+        assert result.specs
+        assert str(develop_dir) in result.specs[0].variants["dev_path"]
+
+
+@pytest.mark.use_package_hash
+def test_package_hash_is_assigned_through_the_injected_repository(break_globals, injected_context):
+    """Assigning a package hash reads package.py and resolves the patches applied to a node,
+    so it goes through the injected repositories like the rest of the solve.
+
+    Most tests replace the package hash with a mock that reads no repository at all, which
+    would hide both lookups, hence the marker. "patch" is used because it has patches, so the
+    patch index is consulted on top of package.py.
+    """
+    with break_globals():
+        result = spack.solver.asp.Solver(context=injected_context).solve([Spec("patch")])
+        assert result.specs[0].dag_hash()

@@ -77,7 +77,9 @@ class ClingoBootstrapConcretizer:
 
         candidates = [
             x
-            for x in spack.compilers.config.CompilerFactory.from_packages_yaml(spack.config.CONFIG)
+            for x in spack.compilers.config.CompilerFactory.from_packages_yaml(
+                spack.config.CONFIG, repo=spack.repo.PATH
+            )
             if x.name == compiler_name
         ]
         if not candidates:
@@ -196,8 +198,8 @@ class ClingoBootstrapConcretizer:
             if "libc" in edge.virtuals:
                 edge.spec = self.host_libc
 
-        spack.spec._inject_patches_variant(s)
-        s._finalize_concretization()
+        spack.spec._inject_patches_variant(s, repo=spack.repo.PATH)
+        spack.spec.finalize_concretization([s], repo=spack.repo.PATH)
 
         # Work around the fact that the installer calls Spec.dependents() and
         # we modified edges inconsistently
@@ -209,7 +211,9 @@ class ClingoBootstrapConcretizer:
         return self._external_spec(result)
 
     def libc_external_spec(self) -> "spack.spec.Spec":
-        detector = spack.compilers.libraries.CompilerPropertyDetector(self.host_compiler)
+        detector = spack.compilers.libraries.CompilerPropertyDetector(
+            self.host_compiler, repo=spack.repo.PATH
+        )
         result = detector.default_libc()
         return self._external_spec(result)
 

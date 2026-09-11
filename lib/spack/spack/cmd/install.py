@@ -57,6 +57,7 @@ def install_kwargs_from_args(args):
         "restage": not args.dont_restage,
         "install_source": args.install_source,
         "verbose": args.verbose or args.install_verbose,
+        "show_log_on_error": args.show_log_on_error,
         "fake": args.fake,
         "dirty": args.dirty,
         "root_policy": cache_opt(pkg_use_bc, default),
@@ -337,7 +338,8 @@ def install(parser, args):
         else:
             install_without_active_env(args, install_kwargs, reporter)
     except InstallError as e:
-        if args.show_log_on_error:
+        # The new installer dumps the logs itself; its error has no package attached.
+        if args.show_log_on_error and e.pkg is not None:
             _dump_log_on_error(e)
         raise
 

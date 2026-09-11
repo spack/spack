@@ -16,7 +16,6 @@ import spack.cmd
 import spack.cmd.ci
 import spack.concretize
 import spack.environment as ev
-import spack.hash_types as ht
 import spack.main
 import spack.paths
 import spack.repo
@@ -855,7 +854,7 @@ spack:
             install_cmd("--keep-stage")
 
             concrete_spec = list(current_env.roots())[0]
-            spec_json = concrete_spec.to_json(hash=ht.dag_hash)
+            spec_json = concrete_spec.to_json()
             json_path = str(tmp_path / "spec.json")
             with open(json_path, "w", encoding="utf-8") as ypfd:
                 ypfd.write(spec_json)
@@ -1122,7 +1121,7 @@ spack:
         with ev.read("test"):
             concrete_spec = spack.concretize.concretize_one("callpath")
             with open(tmp_path / "spec.json", "w", encoding="utf-8") as f:
-                f.write(concrete_spec.to_json(hash=ht.dag_hash))
+                f.write(concrete_spec.to_json())
 
             install_cmd("--fake", str(tmp_path / "spec.json"))
             buildcache_cmd("push", "-u", "-f", mirror_url, "callpath")
@@ -1423,7 +1422,7 @@ spack:
 
             job_spec = env.concrete_roots()[0]
             with open(repro_dir / "archivefiles.json", "w", encoding="utf-8") as f:
-                f.write(job_spec.to_json(hash=ht.dag_hash))
+                f.write(job_spec.to_json())
                 artifacts_root = repro_dir / "jobs_scratch_dir"
                 pipeline_path = artifacts_root / "pipeline.yml"
 

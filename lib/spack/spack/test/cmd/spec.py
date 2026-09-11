@@ -446,3 +446,13 @@ def test_spec_json_output_is_jsonl(mutable_config):
 
     assert len(lines) == 2
     assert {spack.spec.Spec.from_dict(json.loads(x)).name for x in lines} == {"libelf", "mpich"}
+
+
+@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+def test_concretizing_single_spec_announces_no_group(unify, mutable_config):
+    """Tests that concretizing a single spec stays silent about groups and pools."""
+    mutable_config.set("concretizer:unify", unify)
+    output = spec("libelf")
+
+    assert "Starting concretization" not in output
+    assert "group of specs" not in output

@@ -4,14 +4,13 @@
 
 import collections
 import functools
-from typing import Any, Callable, Dict, List, Set, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Iterator, List, Set, Tuple, Type, TypeVar, Union
 
 from spack.vendor.typing_extensions import ParamSpec
 
 import spack.error
 import spack.repo
 import spack.spec
-from spack.util.lang import dedupe
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -43,8 +42,9 @@ class DirectiveMeta(type):
     _descriptor_cache: Dict[str, "DirectiveDictDescriptor"] = {}
     #: Set of all known directive dictionary names from `@directive(dicts=...)`
     _directive_dict_names: Set[str] = set()
-    #: Lists of directives to be executed for the class being defined, grouped by directive
-    #: function name (e.g. "depends_on", "version", etc.)
+    #: Directives grouped by directive function name (e.g. "depends_on", "version", etc.). On
+    #: the metaclass this is the staging queue of the class body being executed; on a package
+    #: class it holds only the directives declared in that class's own body.
     _directives_to_be_executed: Dict[str, List[Callable]] = collections.defaultdict(list)
     #: Stack of when constraints from `with when(...)` context managers
     _when_constraints_stack: List[str] = []
@@ -61,23 +61,7 @@ class DirectiveMeta(type):
         cls: Type["DirectiveMeta"], name: str, bases: tuple, attr_dict: dict
     ) -> "DirectiveMeta":
         attr_dict["_patches_dependencies"] = DirectiveMeta._patches_dependencies
-        # Initialize the attribute containing the list of directives to be executed. Here we go
-        # reversed because we want to execute commands in the order they were defined, following
-        # the MRO.
-        merged: Dict[str, List[Callable]] = {}
-        sources = [getattr(b, "_directives_to_be_executed", None) or {} for b in reversed(bases)]
-        for source in sources:
-            for key, directive_list in source.items():
-                merged.setdefault(key, []).extend(directive_list)
-
-        merged = {key: list(dedupe(directive_list)) for key, directive_list in merged.items()}
-
-        # Add current class's directives (no deduplication needed here)
-        for key, directive_list in DirectiveMeta._directives_to_be_executed.items():
-            merged.setdefault(key, []).extend(directive_list)
-
-        attr_dict["_directives_to_be_executed"] = merged
-
+        attr_dict["_directives_to_be_executed"] = dict(DirectiveMeta._directives_to_be_executed)
         DirectiveMeta._directives_to_be_executed.clear()
         DirectiveMeta._patches_dependencies = False
 
@@ -95,7 +79,7 @@ class DirectiveMeta(type):
             # Historically, maintainers was not a directive. They were simply set as class
             # attributes `maintainers = ["alice", "bob"]`. Therefore, we execute these directives
             # eagerly.
-            for directive in cls._directives_to_be_executed.get("maintainers", ()):
+            for directive in DirectiveMeta._queued_directives(cls, "maintainers"):
                 directive(cls)
         super(DirectiveMeta, cls).__init__(name, bases, attr_dict)
 
@@ -105,6 +89,15 @@ class DirectiveMeta(type):
         DirectiveMeta._directive_to_dicts[name] = dicts
         for d in dicts:
             DirectiveMeta._dict_to_directives[d].append(name)
+
+    @staticmethod
+    def _queued_directives(cls: type, name: str) -> Iterator[Callable]:
+        """Directives of the given name queued for cls: base classes first, each class in the
+        MRO once."""
+        for klass in reversed(cls.__mro__):
+            own = klass.__dict__.get("_directives_to_be_executed")
+            if own:
+                yield from own.get(name, ())
 
     @staticmethod
     def _get_descriptor(name: str) -> "DirectiveDictDescriptor":
@@ -140,15 +133,16 @@ class DirectiveMeta(type):
         # example of this is ``depends_on(..., patches=[patch(...), ...])``. In that case, we
         # should not execute those directives as part of the current package, but let the called
         # directive handle them. This function removes such directives from the execution queue.
-        if isinstance(value, (list, tuple)):
+        # directive instances are callable tuples, so exclude them from the descent
+        if isinstance(value, (list, tuple)) and not callable(value):
             for item in value:
                 DirectiveMeta._remove_kwarg_value_directives_from_queue(item)
         elif callable(value):  # directives are always callable
             # Remove directives args from the exec queue
             for lst in DirectiveMeta._directives_to_be_executed.values():
-                for directive in lst:
+                for i, directive in enumerate(lst):
                     if value is directive:
-                        lst.remove(directive)  # iterations ends, so mutation is fine
+                        del lst[i]
                         break
 
     @staticmethod
@@ -195,10 +189,8 @@ class DirectiveDictDescriptor:
 
         # Populate these dictionaries by running all directives that modify them
         for directive_name in self.directives_to_run:
-            directives = objtype._directives_to_be_executed.get(directive_name)
-            if directives:
-                for directive in directives:
-                    directive(objtype)
+            for directive in DirectiveMeta._queued_directives(objtype, directive_name):
+                directive(objtype)
 
         return getattr(objtype, self.private_name)
 

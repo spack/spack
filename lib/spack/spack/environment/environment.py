@@ -31,11 +31,11 @@ from typing import (
 
 import spack
 import spack.active_environment
+import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.filesystem_view as fsv
-import spack.hash_types as ht
 import spack.installer_dispatch
 import spack.package_base
 import spack.paths
@@ -55,7 +55,13 @@ import spack.util.tty.color as clr
 import spack.variant as vt
 from spack import traverse
 from spack.active_environment import active_environment
-from spack.concretize_ui import ConcretizerUI, HeadlessUI
+from spack.concretize_ui import (
+    DEFAULT_USER_SPEC_GROUP,
+    ConcretizerUI,
+    HeadlessUI,
+    SolveKind,
+    concretization_span,
+)
 from spack.config import substitute_path_variables
 from spack.enums import ConfigScopePriority
 from spack.schema.env import TOP_LEVEL_KEY
@@ -69,8 +75,6 @@ from spack.util.link_tree import ConflictingSpecsError
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = Tuple[Spec, Spec]
-
-DEFAULT_USER_SPEC_GROUP = "default"
 
 #: environment variable used to indicate the active environment
 spack_env_var = "SPACK_ENV"
@@ -219,7 +223,9 @@ def validate_env_name(name):
 def set_active_environment(env: Optional["Environment"]) -> None:
     """Set or clear the active environment, keeping the "$env" config substitution in sync."""
     spack.active_environment._active_environment = env
-    spack.config.CONFIG.env_path = env.path if env is not None else None
+    # Write through the singleton: setting the attribute on the wrapper would leave it unset on
+    # the Configuration that code holding an unwrapped reference reads.
+    ensure_unwrapped(spack.config.CONFIG).env_path = env.path if env is not None else None
 
 
 def activate(env, use_env_repo=False):
@@ -527,18 +533,46 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=F
 def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
     """Returns the directory associated with a named environment.
 
+    TODO: this function is probably doing too much. With ``exists_ok=False``, it's
+    really "ensure a new environment can be created". It checks for existence and fails
+    with creation-related errors. Consider splitting this into separate validation and
+    naming functions later.
+
     Args:
         name: name of the environment
-        exists_ok: if False, raise an error if the environment exists already
+        exists_ok: if False, raise an error if the environment exists already, or if
+            creating one at ``name`` would nest environments
 
     Raises:
-        SpackEnvironmentError: if exists_ok is False and the environment exists already
+        SpackEnvironmentError: if exists_ok is False and an environment at ``name``
+            would conflict with an existing environment
+
     """
     if not exists_ok and exists(name):
         raise SpackEnvironmentError(f"'{name}': environment already exists at {root(name)}")
 
     ensure_env_root_path_exists()
     validate_env_name(name)
+
+    if not exists_ok:
+        # environments are leaves in the managed environment directory: refuse to
+        # create one inside an existing environment
+        ancestor = os.path.dirname(name)
+        while ancestor:
+            if exists(ancestor):
+                raise SpackEnvironmentError(
+                    f"cannot create environment '{name}' inside existing environment '{ancestor}'"
+                )
+            ancestor = os.path.dirname(ancestor)
+
+        # also disallow creating an env above an existing one
+        nested = next((n for n in all_environment_names() if n.startswith(name + os.sep)), None)
+        if nested is not None:
+            raise SpackEnvironmentError(
+                f"cannot create environment '{name}': "
+                f"it would contain existing environment '{nested}'"
+            )
+
     return root(name)
 
 
@@ -618,21 +652,39 @@ def all_environment_names():
     env_root = pathlib.Path(env_root_path()).resolve()
 
     def yaml_paths():
+        # track visited inodes so that arbitrary symlink cycles terminate
+        root_stat = env_root.stat()
+        visited = {(root_stat.st_dev, root_stat.st_ino)}
+
         for root, dirs, files in os.walk(env_root, topdown=True, followlinks=True):
-            dirs[:] = [
-                d
-                for d in dirs
-                if not d.startswith(".") and not env_root.samefile(os.path.join(root, d))
-            ]
-            if manifest_name in files:
+            if manifest_name in files and root != str(env_root):
+                # environments are leaves: don't descend into their contents
+                dirs.clear()
                 yield os.path.join(root, manifest_name)
+                continue
+
+            subdirs = []
+            for d in dirs:
+                if d.startswith("."):
+                    continue
+
+                try:
+                    st = os.stat(os.path.join(root, d))
+                except OSError:
+                    continue
+                if (st.st_dev, st.st_ino) in visited:
+                    continue
+
+                visited.add((st.st_dev, st.st_ino))
+                subdirs.append(d)
+            dirs[:] = subdirs
 
     names = []
     for yaml_path in yaml_paths():
         candidate = str(pathlib.Path(yaml_path).relative_to(env_root).parent)
         if valid_env_name(candidate):
             names.append(candidate)
-    return names
+    return sorted(names)
 
 
 def all_environments():
@@ -1316,8 +1368,12 @@ class Environment:
 
     @property
     def dev_specs(self):
+        return self.dev_specs_from(spack.config.CONFIG)
+
+    def dev_specs_from(self, config: spack.config.Configuration):
+        """Return the develop specs declared in ``config``, keyed by package name."""
         dev_specs = {}
-        dev_config = spack.config.CONFIG.get("develop", {})
+        dev_config = config.get("develop", {})
         for name, entry in dev_config.items():
             local_entry = {"spec": str(entry["spec"])}
             # default path is the spec name
@@ -1621,7 +1677,7 @@ class Environment:
                 variant = vt.SingleValuedVariant("dev_path", path)
             else:
                 variant = vt.VariantValueRemoval("dev_path")
-            mutator.variants["dev_path"] = variant
+            mutator.variants.set(variant)
 
             msg = (
                 f"Develop spec '{spec}' conflicts with concrete specs in environment."
@@ -1681,25 +1737,22 @@ class Environment:
 
         # Manipulate selected specs
         for s, mutator in modify_specs:
-            modified = s.mutate(mutator, rehash=False)
+            modified = s.mutate(mutator)
             if modified:
                 modified_specs.append(s)
 
-        # Identify roots modified and invalidate all dependent hashes
-        modified_roots = []
-        for parent in traverse.traverse_nodes(modified_specs, direction="parents"):
-            # record whether this parent is a root before we modify the hash
-            if parent.dag_hash() in self.specs_by_hash:
-                modified_roots.append((parent, parent.dag_hash()))
-            # modify the parent to invalidate hashes
-            parent._mark_root_concrete(False)
-            parent.clear_caches()
+        # Identify roots modified, before their hashes change
+        modified_roots = [
+            (parent, parent.dag_hash())
+            for parent in traverse.traverse_nodes(modified_specs, direction="parents")
+            if parent.dag_hash() in self.specs_by_hash
+        ]
 
-        # Compute new hashes and update the env list of specs
+        spack.spec.rehash_mutated(modified_specs, repo=spack.repo.PATH)
+
+        # Update the env list of specs
         hash_mutations = {}
         for root, old_hash in modified_roots:
-            # New hash must be computed after we finalize concretization
-            root._finalize_concretization()
             new_hash = root.dag_hash()
             self.specs_by_hash.pop(old_hash)
             self.specs_by_hash[new_hash] = root
@@ -2289,16 +2342,11 @@ class Environment:
     def _concrete_specs_dict(self):
         concrete_specs = {}
         for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):
-            spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
-            # Assumes no legacy formats, since this was just created.
-            spec_dict[ht.dag_hash.name] = s.dag_hash()
-            concrete_specs[s.dag_hash()] = spec_dict
+            concrete_specs[s.dag_hash()] = s.node_dict_with_hashes()
 
             if s.build_spec is not s:
                 for d in s.build_spec.traverse():
-                    build_spec_dict = d.node_dict_with_hashes(hash=ht.dag_hash)
-                    build_spec_dict[ht.dag_hash.name] = d.dag_hash()
-                    concrete_specs[d.dag_hash()] = build_spec_dict
+                    concrete_specs[d.dag_hash()] = d.node_dict_with_hashes()
 
         return concrete_specs
 
@@ -2717,50 +2765,56 @@ class EnvironmentConcretizer:
     ) -> List[SpecPair]:
         if force is None:
             force = spack.config.CONFIG.get("concretizer:force")
-        self._prepare_environment_for_concretization(force=force)
 
-        result = []
-        # Sort so that the ordering is deterministic, and "default" specs are first
-        for current_group in self._order_groups():
-            with self.env.config_override_for_group(group=current_group):
-                partial_result = self._concretize_single_group(group=current_group, tests=tests)
-                result.extend(partial_result)
+        with concretization_span(self.ui):
+            self._prepare_environment_for_concretization(force=force)
 
-        # Unify the specs objects, so we get correct references to all parents
-        if result:
-            self.env.unify_specs()
-        return result
+            result = []
+            # Sort so that the ordering is deterministic, and "default" specs are first
+            for group in self._order_groups():
+                with self.env.config_override_for_group(group=group):
+                    result.extend(self._concretize_single_group(group=group, tests=tests))
+
+            # Unify the specs objects, so we get correct references to all parents
+            if result:
+                self.env.unify_specs()
+            return result
 
     def _concretize_single_group(
         self, *, group: str, tests: Union[bool, Sequence[str]]
     ) -> List[SpecPair]:
-        # Exit early if the set of concretized specs is the set of user specs
         new_user_specs, kept_user_specs = self._partition_user_specs(group=group)
-        if not new_user_specs:
-            return []
 
         # Pick the right concretization strategy
-        self.ui.on_group_started(group=group, is_default=group == DEFAULT_USER_SPEC_GROUP)
-        unify = spack.config.CONFIG.get_config("concretizer").get("unify", False)
-        factory = ReusableSpecsFactory(env=self.env, group=group)
-        if unify == "when_possible":
-            partial_result = self._concretize_together_where_possible(
-                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
-            )
+        kind = spack.concretize.solve_kind(
+            spack.config.CONFIG.get_config("concretizer").get("unify", False)
+        )
 
-        elif unify is True:
-            partial_result = self._concretize_together(
-                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
-            )
+        with spack.concretize.solve_group(
+            self.ui, group=group, kind=kind, spec_list=[(x, None) for x in new_user_specs]
+        ) as processes:
+            if not new_user_specs:
+                return []
 
-        elif unify is False:
-            partial_result = self._concretize_separately(
-                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
-            )
-        else:
-            raise SpackEnvironmentError(f"concretization strategy not implemented [{unify}]")
+            factory = ReusableSpecsFactory(env=self.env, group=group)
+            if kind is SolveKind.WHEN_POSSIBLE:
+                return self._concretize_together_where_possible(
+                    new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+                )
 
-        return partial_result
+            if kind is SolveKind.TOGETHER:
+                return self._concretize_together(
+                    new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+                )
+
+            return self._concretize_separately(
+                new_user_specs,
+                kept_user_specs,
+                tests=tests,
+                group=group,
+                factory=factory,
+                processes=processes,
+            )
 
     def _prepare_environment_for_concretization(self, *, force: bool):
         """Reset the environment concrete state and ensure consistency with user specs."""
@@ -2840,10 +2894,8 @@ class EnvironmentConcretizer:
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
-        import spack.concretize
-
         specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
-        result = spack.concretize.concretize_together_when_possible(
+        result = spack.concretize._concretize_together_when_possible(
             specs_to_concretize, tests=tests, factory=factory, ui=self.ui
         )
         result = [x for x in result if x[0] in to_compute]
@@ -2861,11 +2913,9 @@ class EnvironmentConcretizer:
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
-        import spack.concretize
-
         to_concretize = self._user_spec_pairs(to_compute, to_keep)
         try:
-            concrete_pairs = spack.concretize.concretize_together(
+            concrete_pairs = spack.concretize._concretize_together(
                 to_concretize, tests=tests, factory=factory, ui=self.ui
             )
         except spack.error.UnsatisfiableSpecError as e:
@@ -2898,13 +2948,12 @@ class EnvironmentConcretizer:
         group: Optional[str] = None,
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
+        processes: int,
     ) -> List[SpecPair]:
         """Concretization strategy that concretizes separately one user spec after the other"""
-        import spack.concretize
-
         to_concretize = [(x, None) for x in to_compute]
-        concrete_pairs = spack.concretize.concretize_separately(
-            to_concretize, tests=tests, factory=factory, ui=self.ui
+        concrete_pairs = spack.concretize._concretize_separately(
+            to_concretize, tests=tests, factory=factory, ui=self.ui, processes=processes
         )
 
         for abstract, concrete in concrete_pairs:

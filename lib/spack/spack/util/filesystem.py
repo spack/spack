@@ -329,8 +329,11 @@ def filter_file(
     Args:
         regex: The regular expression to search for
         repl: The string to replace matches with
-        *filenames: One or more files to search and replace string: Treat regex as a plain string.
-            Default it False backup: Make backup file(s) suffixed with ``~``. Default is False
+        *filenames: One or more files to search and replace
+        string: Treat regex as a plain string. Default is False
+        backup: Keep the copy of the original that is made before filtering instead of deleting
+            it. The copy is a temporary file next to the original, with a generated name. Default
+            is False
         ignore_absent: Ignore any files that don't exist. Default is False
         start_at: Marker used to start applying the replacements. If a text line matches this
             marker filtering is started at the next line. All contents before the marker and the
@@ -399,7 +402,7 @@ def filter_file(
 
         except BaseException:
             # restore the original file
-            os.rename(temp_path, path)
+            rename(temp_path, path)
             errored = True
             raise
 
@@ -1086,7 +1089,7 @@ def force_remove(*paths: str) -> None:
 
 @contextmanager
 @system_path_filter
-def working_dir(dirname: str, *, create: bool = False):
+def working_dir(dirname: Union[str, Path], *, create: bool = False):
     """Context manager to change the current working directory to ``dirname``.
 
     Args:
@@ -1100,7 +1103,7 @@ def working_dir(dirname: str, *, create: bool = False):
            pass
     """
     if create:
-        mkdirp(dirname)
+        mkdirp(str(dirname))
 
     orig_dir = os.getcwd()
     os.chdir(dirname)
@@ -1222,7 +1225,8 @@ def write_tmp_and_move(
     try:
         with f:
             try:
-                os.chmod(tmp, stat.S_IMODE(os.stat(filename).st_mode))
+                existing_mode = stat.S_IMODE(os.stat(filename).st_mode)
+                os.chmod(f.fileno() if os.chmod in os.supports_fd else tmp, existing_mode)
             except FileNotFoundError:
                 pass
             yield f
@@ -1245,7 +1249,7 @@ def touch(path):
     fd = None
     try:
         fd = os.open(path, perms)
-        os.utime(path, None)
+        os.utime(fd if os.utime in os.supports_fd else path, None)
     finally:
         if fd is not None:
             os.close(fd)
@@ -1254,7 +1258,9 @@ def touch(path):
 @system_path_filter
 def touchp(path):
     """Like ``touch``, but creates any parent directories needed for the file."""
-    mkdirp(os.path.dirname(path))
+    parent = os.path.dirname(path)
+    if parent:
+        mkdirp(parent)
     touch(path)
 
 
@@ -1263,7 +1269,7 @@ def force_symlink(src: str, dest: str) -> None:
     """Create a symlink at ``dest`` pointing to ``src``. Similar to ``ln -sf``."""
     try:
         symlink(src, dest)
-    except OSError:
+    except (FileExistsError, AlreadyExistsError):
         os.remove(dest)
         symlink(src, dest)
 
@@ -3250,7 +3256,7 @@ def _windows_read_hard_link(link: str) -> str:
         raise SymlinkError("Can't read hard link on non-Windows OS.")
     link = os.path.abspath(link)
     fsutil_cmd = ["fsutil", "hardlink", "list", link]
-    proc = subprocess.Popen(fsutil_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    proc = subprocess.Popen(fsutil_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
     if proc.returncode != 0:
         raise SymlinkError(f"An error occurred while reading hard link: {err.decode()}")
@@ -3276,8 +3282,9 @@ def _windows_read_junction(link: str):
     link = os.path.abspath(link)
     link_basename = os.path.basename(link)
     link_parent = os.path.dirname(link)
-    fsutil_cmd = ["dir", "/a:l", link_parent]
-    proc = subprocess.Popen(fsutil_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    # dir is a cmd builtin
+    cmd = ["cmd", "/C", "dir", "/a:l", link_parent]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
     if proc.returncode != 0:
         raise SymlinkError(f"An error occurred while reading junction: {err.decode()}")

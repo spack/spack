@@ -21,7 +21,6 @@ import spack.vendor.jsonschema
 
 import spack.database
 import spack.error
-import spack.hash_types as ht
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
@@ -658,7 +657,7 @@ class URLBuildcacheEntry:
         found.  Thus, any pre-existing files are first removed.
         """
 
-        spec_dict = spec.to_dict(hash=ht.dag_hash)
+        spec_dict = spec.to_dict()
         # TODO: Remove this key once oci buildcache no longer uses it
         spec_dict["buildcache_layout_version"] = 2
         tarball_content_length = os.stat(tarball_path).st_size

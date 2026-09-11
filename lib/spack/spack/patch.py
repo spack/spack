@@ -549,6 +549,8 @@ class PatchCache:
 
         for deps_by_name in pkg_class.dependencies.values():
             for dependency in deps_by_name.values():
+                if not dependency.patches:
+                    continue
                 for patch_list in dependency.patches.values():
                     for patch in patch_list:
                         dspec_cls = repository.get_pkg_class(dependency.spec.name)

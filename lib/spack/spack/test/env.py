@@ -11,6 +11,7 @@ import pickle
 
 import pytest
 
+import spack.config
 import spack.environment as ev
 import spack.package_base
 import spack.platforms
@@ -24,6 +25,7 @@ from spack.environment import SpackEnvironmentConfigError
 from spack.environment.environment import EnvironmentManifestFile
 from spack.environment.list import UndefinedReferenceError
 from spack.traverse import traverse_nodes
+from spack.util.lang import Singleton, ensure_unwrapped
 
 pytestmark = [
     pytest.mark.not_on_windows("Envs are not supported on windows"),
@@ -63,7 +65,7 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
 
     # rewrite the hash
     old_hash, new_hash = env.concretized_roots[0].hash, "abc"
-    env.specs_by_hash[old_hash]._hash = new_hash  # type: ignore[attr-defined]
+    env.specs_by_hash[old_hash]._hash = new_hash
     env.concretized_roots[0].hash = new_hash
     env.specs_by_hash[new_hash] = env.specs_by_hash[old_hash]
     del env.specs_by_hash[old_hash]
@@ -76,7 +78,7 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
     hashes = [x.hash for x in read_in.concretized_roots]
     assert hashes
     assert hashes[0] in read_in.specs_by_hash
-    _hash = read_in.specs_by_hash[hashes[0]]._hash  # type: ignore[attr-defined]
+    _hash = read_in.specs_by_hash[hashes[0]]._hash
     assert _hash == new_hash
 
 
@@ -1020,6 +1022,54 @@ def test_environment_from_name_or_dir(mutable_mock_env_path):
 
     with pytest.raises(ev.SpackEnvironmentError, match="no such environment"):
         _ = ev.environment_from_name_or_dir("fake-env")
+
+
+def test_all_environment_names_ignores_env_contents(mutable_mock_env_path):
+    """Environments are leaves: listing must not descend into their contents."""
+    ev.create("test")
+    ev.create("group/nested")
+
+    # simulate a user keeping a stage directory inside a managed environment
+    stage = mutable_mock_env_path / "test" / "stage" / "spack-stage-foo-1-0-abcdef"
+    stage.mkdir(parents=True)
+    # even a stray manifest below an environment must not be listed as an environment
+    (stage / ev.manifest_name).write_text("spack:\n  specs: []\n")
+
+    assert ev.all_environment_names() == ["group/nested", "test"]
+
+
+def test_all_environment_names_handles_symlink_cycles(mutable_mock_env_path):
+    """Symlink cycles in the environment root must not hang the listing."""
+    ev.create("group/nested")
+    (mutable_mock_env_path / "group" / "loop").symlink_to(mutable_mock_env_path / "group")
+
+    assert ev.all_environment_names() == ["group/nested"]
+
+
+def test_all_environment_names_follows_symlinked_envs(mutable_mock_env_path, tmp_path):
+    """Symlinked environment dirs (e.g. from spack env track) are still listed."""
+    external = tmp_path / "external_env"
+    external.mkdir()
+    (external / ev.manifest_name).write_text("spack:\n  specs: []\n")
+
+    mutable_mock_env_path.mkdir(parents=True, exist_ok=True)
+    (mutable_mock_env_path / "tracked").symlink_to(external)
+
+    assert ev.all_environment_names() == ["tracked"]
+
+
+def test_cannot_create_env_nested_in_another_env(mutable_mock_env_path):
+    """Creating an environment inside an existing environment is an error."""
+    ev.create("outer")
+    with pytest.raises(ev.SpackEnvironmentError, match="inside existing environment 'outer'"):
+        ev.create("outer/inner")
+
+
+def test_cannot_create_env_above_another_env(mutable_mock_env_path):
+    """Creating an environment above an existing environment is an error."""
+    ev.create("group/inner")
+    with pytest.raises(ev.SpackEnvironmentError, match="would contain existing environment"):
+        ev.create("group")
 
 
 def test_env_include_configs(mutable_mock_env_path, mutable_config: Configuration):
@@ -2228,3 +2278,22 @@ def test_environment_pickle_preserves_lock_state(
         restored = pickle.loads(blob)
 
     assert restored.txlock.enabled == original_enabled
+
+
+def test_env_substitution_reaches_the_unwrapped_configuration(
+    mutable_mock_env_path, mutable_config, monkeypatch
+):
+    """``$env`` expands against the Configuration behind the ``CONFIG`` singleton.
+
+    Test fixtures bind ``CONFIG`` to a plain Configuration, so this test wraps it in a Singleton,
+    as it is in production.
+    """
+    env = ev.create("test_env_path_through_singleton")
+    monkeypatch.setattr(spack.config, "CONFIG", Singleton(lambda: mutable_config))
+
+    with ev.read("test_env_path_through_singleton"):
+        # If the env_path was attached to the singleton wrapper it won't be expanded
+        configuration = ensure_unwrapped(spack.config.CONFIG)
+        expanded = spack.config.canonicalize_path("$env/concretization", config=configuration)
+
+    assert expanded == os.path.join(env.path, "concretization")

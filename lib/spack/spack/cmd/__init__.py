@@ -10,7 +10,6 @@ import re
 import subprocess
 import sys
 import textwrap
-from collections import Counter
 from typing import Callable, Container, Generator, List, Optional, Sequence, Union
 
 import spack.concretize
@@ -18,9 +17,7 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
-import spack.hash_lookup
 import spack.paths
-import spack.repo
 import spack.spec
 import spack.spec_parser
 import spack.store
@@ -158,19 +155,30 @@ def get_command(cmd_name):
 
 
 def quote_kvp(string: str) -> str:
-    """For strings like ``name=value`` or ``name==value``, quote and escape the value if needed.
+    """For strings like ``name=value`` or ``name==value``, quote the value if needed.
 
     This is a compromise to respect quoting of key-value pairs on the CLI. The shell
     strips quotes from quoted arguments, so we cannot know *exactly* how CLI arguments
-    were quoted. To compensate, we re-add quotes around anything staritng with ``name=``
-    or ``name==``, and we assume the rest of the argument is the value. This covers the
-    common cases of passign flags, e.g., ``cflags="-O2 -g"`` on the command line.
-    """
+    were quoted. To compensate, we re-add quotes around anything starting with ``name=``
+    or ``name==`` whose value cannot be parsed as it is, and we assume the rest of the
+    argument is the value. This covers the common cases of passing flags, e.g.,
+    ``cflags="-O2 -g"`` on the command line.
+
+    There are many edge cases here, e.g. `when=@1.0` should not be quoted, cause it can be part
+    of a when condition instead of a key-value pair `when='@1.0'`. Therefore, use the parser to
+    decide if the value needs quoting."""
     match = spack.spec_parser.SPLIT_KVP.match(string)
     if not match:
         return string
 
     key, delim, value = match.groups()
+    try:
+        tokens = spack.spec_parser.SpecParser(string).tokens()
+    except spack.error.SpecSyntaxError:
+        pass
+    else:
+        if "".join(text for _, text, _ in tokens) == string:
+            return string
     return f"{key}{delim}{spack.spec_parser.quote_if_needed(value)}"
 
 
@@ -192,69 +200,9 @@ def parse_specs(
         return specs
 
     to_concretize: List[spack.concretize.SpecPairInput] = [(s, None) for s in specs]
-    return _concretize_spec_pairs(to_concretize, tests=tests, ui=ui)
-
-
-def _concretize_spec_pairs(
-    to_concretize: List[spack.concretize.SpecPairInput],
-    tests: spack.concretize.TestsType = False,
-    ui: Optional[ConcretizerUI] = None,
-) -> List[spack.spec.Spec]:
-    """Helper method that concretizes abstract specs from a list of abstract,concrete pairs.
-
-    Any spec with a concrete spec associated with it will concretize to that spec. Any spec
-    with ``None`` for its concrete spec will be newly concretized. This method respects unification
-    rules from config.
-    """
-    ui = ui or TerminalUI()
-    unify = spack.config.CONFIG.get("concretizer:unify", False)
-
-    # Special case for concretizing a single spec
-    if len(to_concretize) == 1:
-        abstract, concrete = to_concretize[0]
-        return [concrete or spack.concretize.concretize_one(abstract, tests=tests)]
-
-    # Special case if every spec is either concrete or has an abstract hash
-    if all(
-        concrete or abstract.concrete or abstract.abstract_hash
-        for abstract, concrete in to_concretize
-    ):
-        # Get all the concrete specs
-        ret = [
-            concrete
-            or (abstract if abstract.concrete else spack.hash_lookup.lookup_hash(abstract))
-            for abstract, concrete in to_concretize
-        ]
-
-        # If unify: true, check that specs don't conflict
-        # Since all concrete, "when_possible" is not relevant
-        if unify is True:  # True, "when_possible", False are possible values
-            runtimes = spack.repo.PATH.packages_with_tags("runtime")
-            specs_per_name = Counter(
-                spec.name
-                for spec in traverse.traverse_nodes(
-                    ret, deptype=("link", "run"), key=traverse.by_dag_hash
-                )
-                if spec.name not in runtimes  # runtimes are allowed multiple times
-            )
-
-            conflicts = sorted(name for name, count in specs_per_name.items() if count > 1)
-            if conflicts:
-                raise spack.error.SpecError(
-                    "Specs conflict and `concretizer:unify` is configured true.",
-                    f"    specs depend on multiple versions of {', '.join(conflicts)}",
-                )
-        return ret
-
-    # Standard case
-    concretize_method = spack.concretize.concretize_separately  # unify: false
-    if unify is True:
-        concretize_method = spack.concretize.concretize_together
-    elif unify == "when_possible":
-        concretize_method = spack.concretize.concretize_together_when_possible
-
-    concretized = concretize_method(to_concretize, tests=tests, ui=ui)
-    return [concrete for _, concrete in concretized]
+    return spack.concretize.concretize_spec_pairs(
+        to_concretize, tests=tests, ui=ui or TerminalUI()
+    )
 
 
 def matching_spec_from_env(spec):
@@ -283,7 +231,9 @@ def matching_specs_from_env(specs):
     additional_concrete_specs = (
         [(concrete, concrete) for _, concrete in env.concretized_specs()] if env else []
     )
-    return _concretize_spec_pairs(spec_pairs + additional_concrete_specs)[: len(spec_pairs)]
+    return spack.concretize.concretize_spec_pairs(
+        spec_pairs + additional_concrete_specs, ui=TerminalUI()
+    )[: len(spec_pairs)]
 
 
 def disambiguate_spec(

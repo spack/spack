@@ -3,11 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import collections
 import io
 import sys
 import warnings
 
-from spack.util.log_parse import make_log_context, parse_log_events
+from spack.util.ctest_log_parser import Severity
+from spack.util.log_parse import scan_log, write_block
 
 description = "filter errors and warnings from build logs"
 section = "developer"
@@ -66,29 +68,32 @@ def log_parse(parser, args):
     if args.jobs is not None:
         warnings.warn("The --jobs option is deprecated and will be removed in Spack v1.3")
 
-    log_errors, log_warnings, tail = parse_log_events(
-        input, args.context, args.profile, tail=args.tail
-    )
-    if args.profile:
-        return
-
     types = [s.strip() for s in args.show.split(",")]
     for e in types:
         if e not in event_types:
             args.subparser.error("invalid event type: %s" % e)
 
-    events = []
+    severities = set()
     if "errors" in types:
-        events.extend(log_errors)
+        severities.add(Severity.ERROR)
     if "warnings" in types:
-        events.extend(log_warnings)
+        severities.add(Severity.WARNING)
 
-    if tail:
-        events.append(tail)
+    blocks = scan_log(input, args.context, args.tail, severities, args.profile)
 
-    print(make_log_context(events), end="")
+    if args.profile:
+        # Consume the scan so the parser gets to print its timings, but show nothing else.
+        for _ in blocks:
+            pass
+        return
+
+    # Write the log as it is scanned, so the counts can only be reported afterwards.
+    counts = collections.Counter()
+    for block in blocks:
+        write_block(sys.stdout, block)
+        counts.update(match.severity for match in block.matches.values())
 
     if "errors" in types:
-        print("%d errors" % len(log_errors))
+        print("%d errors" % counts[Severity.ERROR])
     if "warnings" in types:
-        print("%d warnings" % len(log_warnings))
+        print("%d warnings" % counts[Severity.WARNING])
