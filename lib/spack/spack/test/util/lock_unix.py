@@ -584,6 +584,31 @@ def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
                 pass
 
 
+def test_read_lock_on_read_only_filesystem(tmp_path: pathlib.Path, monkeypatch):
+    """A read lock still succeeds when open() fails with EROFS (read-only filesystem)."""
+    lockfile = tmp_path / "lockfile"
+    touch(str(lockfile))
+
+    real_open = os.open
+
+    def _open(path, flags, *args, **kwargs):
+        if path == str(lockfile) and (flags & os.O_RDWR):
+            raise OSError(errno.EROFS, "Read-only file system")
+        return real_open(path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(os, "open", _open)
+
+    lock = lk.Lock(str(lockfile))
+
+    with lk.ReadTransaction(lock):
+        pass
+    assert lock.backend._file_ref.fh.mode == "rb"
+
+    with pytest.raises(lk.LockROFileError):
+        with lk.WriteTransaction(lock):
+            pass
+
+
 def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
     """read-only directory, writable lockfile."""
     touch(lock_path)
