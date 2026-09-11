@@ -32,11 +32,12 @@ from .version_types import (
     _next_version,
     _prev_version,
     from_string,
+    intern_version_list,
     ver,
 )
 
 #: This version contains all possible versions.
-any_version: VersionList = VersionList([":"])
+any_version: VersionList = VersionList.any()
 
 __all__ = [
     "ClosedOpenRange",
@@ -48,6 +49,7 @@ __all__ = [
     "VersionChecksumError",
     "VersionError",
     "VersionList",
+    "intern_version_list",
     "VersionLookupError",
     "VersionRange",
     "VersionType",

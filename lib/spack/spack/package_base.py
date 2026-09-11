@@ -2667,9 +2667,7 @@ def _for_package_version(pkg, version=None):
         if not isinstance(version, spack.version.StandardVersion):
             version = spack.version.Version(version)
 
-        version_list = spack.version.VersionList()
-        version_list.add(version)
-        pkg.spec.versions = version_list
+        pkg.spec.versions = spack.version.VersionList([version])
     else:
         version = pkg.version
 

@@ -3,9 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import copy
+import functools
 import re
 from bisect import bisect_left
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 
 from spack.util.typing import SupportsRichComparison
 
@@ -27,6 +28,12 @@ VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 # regex for version segments
 SEGMENT_REGEX = re.compile(r"(?:(?P<num>[0-9]+)|(?P<str>[a-zA-Z]+))(?P<sep>[_.-]*)")
+
+#: Version lists interned by their string representation
+_VERSION_LIST_CACHE: Dict[str, "VersionList"] = {}
+
+#: Ranges are interned by their string representation
+_CLOSED_OPEN_RANGE_CACHE: Dict[str, "ClosedOpenRange"] = {}
 
 
 class VersionStrComponent:
@@ -54,6 +61,7 @@ class VersionStrComponent:
         self.data = data
 
     @staticmethod
+    @functools.lru_cache(maxsize=None)
     def from_string(string: str) -> "VersionStrComponent":
         value: Union[int, str] = string
         if len(string) >= iv_min_len:
@@ -253,6 +261,7 @@ class StandardVersion(ConcreteVersion):
         self.separators = separators
 
     @staticmethod
+    @functools.lru_cache(maxsize=None)
     def from_string(string: str) -> "StandardVersion":
         version, separators = parse_string_components(string)
         return StandardVersion(string, version, separators)
@@ -621,9 +630,9 @@ class GitVersion(ConcreteVersion):
         return self._with_constraint(constraint)
 
     def union(self, other: VersionType) -> VersionType:
-        result = VersionList([self])
-        result.add(other)
-        return result[0] if len(result) == 1 else result
+        versions: List[VersionType] = [self]
+        _add(versions, other)
+        return versions[0] if len(versions) == 1 else VersionList._from_sorted(versions)
 
     def satisfies(self, other: VersionType) -> bool:
         if isinstance(other, GitVersion):
@@ -760,6 +769,11 @@ class ClosedOpenRange(VersionType):
     @classmethod
     def from_version_range(cls, lo: StandardVersion, hi: StandardVersion) -> "ClosedOpenRange":
         """Construct ClosedOpenRange from lo:hi range."""
+        string = _str_range(lo, hi)
+        cached = _CLOSED_OPEN_RANGE_CACHE.get(string)
+        if cached is not None:
+            return cached
+
         try:
             r = ClosedOpenRange(lo, _next_version(hi))
         except EmptyRangeError as e:
@@ -767,7 +781,8 @@ class ClosedOpenRange(VersionType):
 
         # Cache hash and string representation
         r._hash = hash((lo, hi))
-        r._string = _str_range(lo, hi)
+        r._string = string
+        _CLOSED_OPEN_RANGE_CACHE[string] = r
         return r
 
     def __str__(self) -> str:
@@ -868,9 +883,7 @@ class ClosedOpenRange(VersionType):
 
     def union(self, other: VersionType) -> VersionType:
         if isinstance(other, VersionList):
-            v = other.copy()
-            v.add(self)
-            return v
+            return other.union(self)
 
         result = self._union_if_not_disjoint(other)
         return result if result is not None else VersionList([self, other])
@@ -904,122 +917,133 @@ def _element_str(v: VersionType) -> str:
     return f"={v}" if type(v) is StandardVersion else str(v)
 
 
-class VersionList(VersionType):
-    """Sorted, non-redundant list of Version and ClosedOpenRange elements."""
+def _ranged_refs_start(versions: Sequence[VersionType]) -> int:
+    """The index where the git refs constrained to a range start: they sort last."""
+    i = len(versions)
+    while i > 0 and _is_ranged_ref(versions[i - 1]):
+        i -= 1
+    return i
 
-    __slots__ = ("versions",)
 
-    versions: List[VersionType]
+def _add_ranged_ref(versions: List[VersionType], item: GitVersion) -> None:
+    """Add a git ref constrained to a range."""
+    # Skip when already covered: by a plain range, or by a wider constraint on the ref.
+    if any(item.satisfies(v) for v in versions):
+        return
+    # Widen it over the plain ranges it touches, then merge it with the constraints on the
+    # same ref it touches. One pass in list order suffices: plain ranges come first and are
+    # pairwise disjoint, and a constraint on the ref already contains the plain ranges it
+    # touches, so merging it cannot make the result touch anything new.
+    constraint = item.constraint
+    assert isinstance(constraint, ClosedOpenRange)
+    for v in versions:
+        if isinstance(v, ClosedOpenRange):
+            union = constraint._union_if_not_disjoint(v)
+        elif isinstance(v, GitVersion) and v.ref == item.ref:
+            union = constraint._union_if_not_disjoint(v.constraint)
+        else:
+            continue
+        if union is not None:
+            constraint = union
+    item = item._with_constraint(constraint)
+    # It covers assigned versions of the ref, and the constraints on it that were merged.
+    versions[:] = [v for v in versions if not v.satisfies(item)]
+    versions.insert(bisect_left(versions, item), item)
 
-    def __init__(self, vlist: Optional[Union[str, VersionType, Iterable]] = None):
+
+def _add(versions: List[VersionType], item: VersionType) -> None:
+    """Insert item into the sorted, non-redundant list, merging as needed."""
+    if isinstance(item, ClosedOpenRange):
+        i = bisect_left(versions, item)
+
+        # Note: can span multiple concrete versions to the left (as well as to the right).
+        # For instance insert 1.2: into [1.2, hash=1.2, 1.3, 1.4:1.5]
+        # would bisect at i = 1 and merge i = 0 too.
+        while i > 0:
+            union = item._union_if_not_disjoint(versions[i - 1])
+            if union is None:  # disjoint
+                break
+            item = union
+            del versions[i - 1]
+            i -= 1
+
+        while i < len(versions):
+            union = item._union_if_not_disjoint(versions[i])
+            if union is None:
+                break
+            item = union
+            del versions[i]
+
+        versions.insert(i, item)
+        # Re-add the constraints on git refs: it may cover or touch them, and they come
+        # after it, not necessarily next to it.
+        if _is_ranged_ref(versions[-1]):
+            start = _ranged_refs_start(versions)
+            refs = versions[start:]
+            del versions[start:]
+            for v in refs:
+                _add(versions, v)
+
+    elif isinstance(item, VersionList):
+        for v in item:
+            _add(versions, v)
+
+    elif isinstance(item, GitVersion):
+        if item.std_version is None:
+            _add_ranged_ref(versions, item)
+        # An assigned ref can be covered by a constraint on the ref anywhere in the list.
+        elif not any(item.satisfies(v) for v in versions):
+            versions.insert(bisect_left(versions, item), item)
+
+    elif isinstance(item, StandardVersion):
+        i = bisect_left(versions, item)
+        # Only insert when prev and next do not cover it.
+        if (i == 0 or not item.satisfies(versions[i - 1])) and (
+            i == len(versions) or not item.satisfies(versions[i])
+        ):
+            versions.insert(i, item)
+
+    else:
+        raise TypeError("Can't add %s to VersionList" % type(item))
+
+
+if TYPE_CHECKING:
+    _VersionListBase = Tuple[VersionType, ...]
+else:
+    _VersionListBase = tuple  # a typing.Tuple base is slow on Python 3.6
+
+
+class VersionList(_VersionListBase, VersionType):
+    """Sorted, non-redundant tuple of Version and ClosedOpenRange elements."""
+
+    __slots__ = ()
+
+    def __new__(cls, vlist: Optional[Union[str, VersionType, Iterable]] = None) -> "VersionList":
+        if vlist is None:
+            return tuple.__new__(cls)
+
         if isinstance(vlist, str):
             vlist = from_string(vlist)
-            if isinstance(vlist, VersionList):
-                self.versions = vlist.versions
-            else:
-                self.versions = [vlist]
 
-        elif vlist is None:
-            self.versions = []
+        if isinstance(vlist, VersionList):
+            return vlist
 
-        elif isinstance(vlist, VersionList):
-            self.versions = vlist[:]
+        # before Iterable: versions iterate over their components
+        if isinstance(vlist, (ConcreteVersion, ClosedOpenRange)):
+            return tuple.__new__(cls, (vlist,))
 
-        elif isinstance(vlist, (ConcreteVersion, ClosedOpenRange)):
-            self.versions = [vlist]
-
-        elif isinstance(vlist, Iterable):
-            self.versions = []
+        if isinstance(vlist, Iterable):
+            versions: List[VersionType] = []
             for v in vlist:
-                self.add(ver(v))
+                _add(versions, ver(v))
+            return tuple.__new__(cls, versions)
 
-        else:
-            raise TypeError(f"Cannot construct VersionList from {type(vlist)}")
+        raise TypeError(f"Cannot construct VersionList from {type(vlist)}")
 
-    def _ranged_refs_start(self) -> int:
-        """The index where the git refs constrained to a range start: they sort last."""
-        i = len(self.versions)
-        while i > 0 and _is_ranged_ref(self.versions[i - 1]):
-            i -= 1
-        return i
-
-    def _add_ranged_ref(self, item: GitVersion) -> None:
-        """Add a git ref constrained to a range."""
-        # Skip when already covered: by a plain range, or by a wider constraint on the ref.
-        if item.satisfies(self):
-            return
-        # Widen it over the plain ranges it touches, then merge it with the constraints on the
-        # same ref it touches. One pass in list order suffices: plain ranges come first and are
-        # pairwise disjoint, and a constraint on the ref already contains the plain ranges it
-        # touches, so merging it cannot make the result touch anything new.
-        constraint = item.constraint
-        assert isinstance(constraint, ClosedOpenRange)
-        for v in self.versions:
-            if isinstance(v, ClosedOpenRange):
-                union = constraint._union_if_not_disjoint(v)
-            elif isinstance(v, GitVersion) and v.ref == item.ref:
-                union = constraint._union_if_not_disjoint(v.constraint)
-            else:
-                continue
-            if union is not None:
-                constraint = union
-        item = item._with_constraint(constraint)
-        # It covers assigned versions of the ref, and the constraints on it that were merged.
-        self.versions = [v for v in self.versions if not v.satisfies(item)]
-        self.versions.insert(bisect_left(self.versions, item), item)
-
-    def add(self, item: VersionType) -> None:
-        if isinstance(item, ClosedOpenRange):
-            i = bisect_left(self.versions, item)
-
-            # Note: can span multiple concrete versions to the left (as well as to the right).
-            # For instance insert 1.2: into [1.2, hash=1.2, 1.3, 1.4:1.5]
-            # would bisect at i = 1 and merge i = 0 too.
-            while i > 0:
-                union = item._union_if_not_disjoint(self[i - 1])
-                if union is None:  # disjoint
-                    break
-                item = union
-                del self.versions[i - 1]
-                i -= 1
-
-            while i < len(self):
-                union = item._union_if_not_disjoint(self[i])
-                if union is None:
-                    break
-                item = union
-                del self.versions[i]
-
-            self.versions.insert(i, item)
-            # Re-add the constraints on git refs: it may cover or touch them, and they come
-            # after it, not necessarily next to it.
-            if _is_ranged_ref(self.versions[-1]):
-                start = self._ranged_refs_start()
-                refs, self.versions = self.versions[start:], self.versions[:start]
-                for v in refs:
-                    self.add(v)
-
-        elif isinstance(item, VersionList):
-            for v in item:
-                self.add(v)
-
-        elif isinstance(item, GitVersion):
-            if item.std_version is None:
-                self._add_ranged_ref(item)
-            # An assigned ref can be covered by a constraint on the ref anywhere in the list.
-            elif not item.satisfies(self):
-                self.versions.insert(bisect_left(self.versions, item), item)
-
-        elif isinstance(item, StandardVersion):
-            i = bisect_left(self.versions, item)
-            # Only insert when prev and next do not cover it.
-            if (i == 0 or not item.satisfies(self[i - 1])) and (
-                i == len(self) or not item.satisfies(self[i])
-            ):
-                self.versions.insert(i, item)
-
-        else:
-            raise TypeError("Can't add %s to VersionList" % type(item))
+    @classmethod
+    def _from_sorted(cls, versions: Iterable[VersionType]) -> "VersionList":
+        """Construct from already sorted, non-redundant entries."""
+        return tuple.__new__(cls, versions)
 
     @property
     def concrete(self) -> Optional[ConcreteVersion]:
@@ -1038,23 +1062,18 @@ class VersionList(VersionType):
             return v.lo
         return None
 
-    def copy(self) -> "VersionList":
-        return VersionList(self)
-
     def lowest(self) -> Optional[StandardVersion]:
         """Get the lowest version in the list."""
-        return next((v for v in self.versions if isinstance(v, StandardVersion)), None)
+        return next((v for v in self if isinstance(v, StandardVersion)), None)
 
     def highest(self) -> Optional[StandardVersion]:
         """Get the highest version in the list."""
-        return next((v for v in reversed(self.versions) if isinstance(v, StandardVersion)), None)
+        return next((v for v in reversed(self) if isinstance(v, StandardVersion)), None)
 
     def highest_numeric(self) -> Optional[StandardVersion]:
         """Get the highest numeric version in the list."""
         numeric = (
-            v
-            for v in reversed(self.versions)
-            if isinstance(v, StandardVersion) and not v.isdevelop()
+            v for v in reversed(self) if isinstance(v, StandardVersion) and not v.isdevelop()
         )
         return next(numeric, None)
 
@@ -1079,7 +1098,7 @@ class VersionList(VersionType):
 
         if isinstance(other, VersionList):
             # Walk the two lists in lockstep, up to the git refs without an assigned version
-            s_tail, o_tail = self._ranged_refs_start(), other._ranged_refs_start()
+            s_tail, o_tail = _ranged_refs_start(self), _ranged_refs_start(other)
             s = o = 0
             while s < s_tail and o < o_tail:
                 if self[s].intersects(other[o]):
@@ -1088,11 +1107,11 @@ class VersionList(VersionType):
                     s += 1
                 else:
                     o += 1
-            if s_tail == len(self.versions) and o_tail == len(other.versions):
+            if s_tail == len(self) and o_tail == len(other):
                 return False
             # Those refs can intersect elements anywhere in the other list: check them one by one
-            return any(v.intersects(other) for v in self.versions[s_tail:]) or any(
-                v.intersects(self) for v in other.versions[o_tail:]
+            return any(v.intersects(other) for v in self[s_tail:]) or any(
+                v.intersects(self) for v in other[o_tail:]
             )
 
         raise TypeError(f"'intersects()' not supported for instances of {type(other)}")
@@ -1114,106 +1133,63 @@ class VersionList(VersionType):
 
     @classmethod
     def any(cls) -> "VersionList":
-        """Return a VersionList that matches any version."""
-        version_list = cls.__new__(cls)
-        version_list.versions = [_UNBOUNDED_RANGE]
-        return version_list
-
-    def update(self, other: "VersionList") -> None:
-        self.add(other)
+        """Return the shared VersionList that matches any version."""
+        return _ANY_VERSION_LIST
 
     def union(self, other: VersionType) -> VersionType:
-        result = self.copy()
-        result.add(other)
-        return result
+        versions = list(self)
+        _add(versions, other)
+        return VersionList._from_sorted(versions)
 
     def intersection(self, other: VersionType) -> "VersionList":
-        result = VersionList()
         if isinstance(other, VersionList):
+            result: List[VersionType] = []
             for lhs, rhs in ((self, other), (other, self)):
-                lhs_tail, rhs_tail = lhs._ranged_refs_start(), rhs._ranged_refs_start()
+                lhs_tail, rhs_tail = _ranged_refs_start(lhs), _ranged_refs_start(rhs)
                 # Up to the git refs without an assigned version, an element meets at most its
                 # two neighbors in the other list
-                for x in lhs.versions[:lhs_tail]:
-                    i = bisect_left(rhs.versions, x, 0, rhs_tail)
+                for x in lhs[:lhs_tail]:
+                    i = bisect_left(rhs, x, 0, rhs_tail)
                     if i > 0:
-                        result.add(rhs[i - 1].intersection(x))
+                        _add(result, rhs[i - 1].intersection(x))
                     if i < rhs_tail:
-                        result.add(rhs[i].intersection(x))
+                        _add(result, rhs[i].intersection(x))
                 # Those refs can meet elements anywhere in the other list: meet them one by one
-                for x in lhs.versions[lhs_tail:]:
-                    for y in rhs.versions:
-                        result.add(x.intersection(y))
-            return result
+                for x in lhs[lhs_tail:]:
+                    for y in rhs:
+                        _add(result, x.intersection(y))
+            return VersionList._from_sorted(result)
         else:
             return self.intersection(VersionList(other))
 
-    def intersect(self, other: VersionType) -> bool:
-        """Intersect this spec's list with other.
-
-        Return True if the spec changed as a result; False otherwise
-        """
-        isection = self.intersection(other)
-        changed = isection.versions != self.versions
-        self.versions = isection.versions
-        return changed
-
-    def __getitem__(self, index):
-        return self.versions[index]
-
-    def __iter__(self) -> Iterator:
-        return iter(self.versions)
-
-    def __reversed__(self) -> Iterator:
-        return reversed(self.versions)
-
-    def __len__(self) -> int:
-        return len(self.versions)
-
-    def __bool__(self) -> bool:
-        return bool(self.versions)
-
-    def __eq__(self, other) -> bool:
-        if isinstance(other, VersionList):
-            return self.versions == other.versions
-        return False
-
-    def __ne__(self, other) -> bool:
-        if isinstance(other, VersionList):
-            return self.versions != other.versions
-        return False
-
     def __lt__(self, other) -> bool:
         if isinstance(other, VersionList):
-            return self.versions < other.versions
+            return tuple.__lt__(self, other)
         return NotImplemented
 
     def __le__(self, other) -> bool:
         if isinstance(other, VersionList):
-            return self.versions <= other.versions
+            return tuple.__le__(self, other)
         return NotImplemented
 
     def __ge__(self, other) -> bool:
         if isinstance(other, VersionList):
-            return self.versions >= other.versions
+            return tuple.__ge__(self, other)
         return NotImplemented
 
     def __gt__(self, other) -> bool:
         if isinstance(other, VersionList):
-            return self.versions > other.versions
+            return tuple.__gt__(self, other)
         return NotImplemented
 
-    def __hash__(self) -> int:
-        return hash(tuple(self.versions))
-
     def __str__(self) -> str:
-        if not self.versions:
-            return ""
-
-        return ",".join(_element_str(v) for v in self.versions)
+        return ",".join(_element_str(v) for v in self)
 
     def __repr__(self) -> str:
-        return str(self.versions)
+        return repr(list(self))
+
+    # membership is by satisfies, not by identity as for tuple
+    __contains__ = VersionType.__contains__
 
 
 def _next_str(s: str) -> str:
@@ -1381,6 +1357,11 @@ def ver(obj: Union[VersionType, str, list, tuple, int, float]) -> VersionType:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
 
 
+def intern_version_list(version_list: VersionList) -> VersionList:
+    """Return the shared VersionList with the same string representation."""
+    return _VERSION_LIST_CACHE.setdefault(str(version_list), version_list)
+
+
 _STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))
 
 _STANDARD_VERSION_TYPEMAX = StandardVersion(
@@ -1390,3 +1371,5 @@ _STANDARD_VERSION_TYPEMAX = StandardVersion(
 _UNBOUNDED_RANGE = ClosedOpenRange.from_version_range(
     _STANDARD_VERSION_TYPEMIN, _STANDARD_VERSION_TYPEMAX
 )
+
+_ANY_VERSION_LIST = intern_version_list(VersionList(_UNBOUNDED_RANGE))
