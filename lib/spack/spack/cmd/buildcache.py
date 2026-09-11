@@ -582,7 +582,7 @@ def push_fn(args):
         signing_key=signing_key,
         base_image=args.base_image,
     ) as uploader:
-        skipped, upload_errors = uploader.push(specs=specs)
+        skipped, upload_errors = uploader.push(specs=specs, config=spack.config.CONFIG)
         failed.extend(upload_errors)
 
         if skipped:
@@ -928,7 +928,9 @@ def update_index(
     url = mirror.push_url
 
     with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
-        spack.binary_distribution._url_update_index(MirrorMetadata(url), tmpdir, timer=timer)
+        spack.binary_distribution._url_update_index(
+            MirrorMetadata(url), tmpdir, timer=timer, config=spack.config.CONFIG
+        )
 
     if update_keys:
         mirror_update_keys(mirror)
@@ -1038,6 +1040,7 @@ def update_view(
             update_mode == ViewUpdateMode.APPEND,
             filter_fn=filter_fn,
             spec_by_hash=_spec_by_hash,
+            config=spack.config.CONFIG,
         )
 
     if update_keys:
