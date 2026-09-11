@@ -282,7 +282,7 @@ def constraint():
 
 @arg
 def package():
-    return Args("package", help="package name")
+    return Args("package", metavar="package", help="package name")
 
 
 @arg
@@ -409,7 +409,7 @@ def tags():
         "--tag",
         action="append",
         dest="tags",
-        metavar="TAG",
+        metavar="tag",
         help="filter a package query by tag (multiple use allowed)",
     )
 
@@ -433,6 +433,7 @@ def jobs():
         action=SetParallelJobs,
         type=int,
         dest="jobs",
+        metavar="N",
         help="explicitly set number of parallel jobs",
     )
 
@@ -445,6 +446,7 @@ def concurrent_packages():
         action=SetConcurrentPackages,
         type=int,
         default=None,
+        metavar="N",
         help="maximum number of packages to build concurrently",
     )
 
