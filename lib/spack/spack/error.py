@@ -233,9 +233,7 @@ class NoSuchSpecFileError(SpecFilenameError):
 class ExplicitDatabaseUpgradeError(SpackError):
     """Raised to request an explicit DB upgrade to the user"""
 
-    def __init__(self, db_version, expected_version, root):
-        import spack
-
+    def __init__(self, db_version, expected_version, root, spack_version):
         self.db_version = db_version
         self.expected_version = expected_version
         self.root = root
@@ -258,6 +256,6 @@ class ExplicitDatabaseUpgradeError(SpackError):
             f"\n`spack config edit config` and set install_tree:root to a new location."
         )
         super().__init__(
-            f"database is v{db_version}, but Spack v{spack.__version__} needs v{expected_version}",
+            f"database is v{db_version}, but Spack v{spack_version} needs v{expected_version}",
             long_message=long_message,
         )

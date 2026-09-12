@@ -946,7 +946,9 @@ class Database:
 
     def raise_explicit_database_upgrade_error(self):
         """Raises an ExplicitDatabaseUpgradeError with version and path info"""
-        raise ExplicitDatabaseUpgradeError(self.db_version, _DB_VERSION, self.root)
+        raise ExplicitDatabaseUpgradeError(
+            self.db_version, _DB_VERSION, self.root, spack.spack_version
+        )
 
     def reindex(self):
         """Build database index from scratch based on a directory layout.
