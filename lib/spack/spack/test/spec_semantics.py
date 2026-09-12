@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pathlib
+import warnings
 
 import pytest
 
@@ -15,6 +16,7 @@ import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.spec_parser
+import spack.traverse
 import spack.util.lang
 import spack.variant
 import spack.version as vn
@@ -514,9 +516,6 @@ class TestSpecSemantics:
             ("foo@4.0%gcc", "@1:3%gcc"),
             ("foo@4.0%gcc@4.5", "@1:3%gcc@4.4:4.6"),
             ("builtin.mock.mpich", "builtin.mpich"),
-            ("mpileaks^mpi@3:", "^mpich2@1.4"),
-            ("mpileaks^mpi@3:", "^mpich2"),
-            ("mpileaks^mpi@3:", "^mpich@1.0"),
             ("mpich~foo", "mpich+foo"),
             ("mpich+foo", "mpich~foo"),
             ("mpich foo=True", "mpich foo=False"),
@@ -529,6 +528,9 @@ class TestSpecSemantics:
             ("libelf+debug~foo", "libelf+debug+foo"),
             ("libelf debug=True", "libelf debug=False"),
             ("namespace=builtin.mock", "namespace=builtin"),
+            # different names, even a virtual and its provider or two virtuals
+            ("mpich", "mpi"),
+            ("mpi", "lapack"),
         ],
     )
     def test_constraining_abstract_specs_with_empty_intersection(self, lhs, rhs):
@@ -709,6 +711,104 @@ class TestSpecSemantics:
 
         assert not concrete.satisfies("%c,mpi=mpich")
 
+    @staticmethod
+    def _old_spec_dict(spec: Spec) -> dict:
+        """The dict form of ``spec`` as written by a Spack older than ``provided_virtuals``."""
+        as_dict = spec.to_dict()
+        for node in as_dict["spec"]["nodes"]:
+            node.pop("provided_virtuals", None)
+        return as_dict
+
+    def test_provided_virtuals_frozen_at_concretization(self):
+        """When several ``provides`` clauses match, the frozen versions are their intersection,
+        as in the solver: mpich2@1.5 matches mpi@:2.0, @1.1: mpi@:2.1 and @1.2: mpi@:2.2."""
+        provider = spack.concretize.concretize_one("mpich2@1.5")
+        assert provider.provided_virtuals["mpi"] == vn.VersionList(":2.0")
+        assert provider.satisfies("mpi@:2.0")
+        assert not provider.satisfies("mpi@2.1:")
+
+    def test_provided_virtuals_serialization_roundtrip(self):
+        """Frozen provided virtuals survive a JSON round-trip and are part of the dag hash."""
+        provider = spack.concretize.concretize_one("mpileaks ^mpich")["mpich"]
+        roundtrip = Spec.from_json(provider.to_json())
+        assert "mpi" in provider.provided_virtuals
+        assert roundtrip.provided_virtuals == provider.provided_virtuals
+        assert roundtrip.dag_hash() == provider.dag_hash()
+        assert "provided_virtuals" in provider.to_node_dict()  # the dag hash preimage
+
+    def test_provided_virtuals_reconstructed_from_old_specfile(self, monkeypatch):
+        """An old spec file is reconstructed from the cached provider index, without loading
+        package classes, and its stored dag hash is used verbatim."""
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
+        as_dict = self._old_spec_dict(concrete)
+        spack.repo.PATH.provider_index  # build the index before class loads are forbidden
+
+        def no_class_loads(self, name):
+            raise AssertionError(
+                f"reading a spec file must not load package classes, asked for {name}"
+            )
+
+        monkeypatch.setattr(spack.repo.RepoPath, "get_pkg_class", no_class_loads)
+
+        old = Spec.from_dict(as_dict)
+        assert old["mpich"].provided_virtuals["mpi"] == vn.VersionList(":3")
+        assert old.dag_hash() == concrete.dag_hash()
+
+    def test_abstract_root_with_concrete_deps_is_reconstructed_per_node(self):
+        """An abstract root with a resolved ``^/hash`` dependency writes both kinds of node;
+        reconstruction covers the concrete ones only."""
+        mpich = spack.concretize.concretize_one("mpich")
+        root = Spec("mpileaks")
+        root._add_dependency(mpich, depflag=dt.BUILD | dt.LINK, virtuals=())
+
+        as_dict = self._old_spec_dict(root)
+        assert as_dict["spec"]["nodes"][0]["concrete"] is False
+
+        reread = Spec.from_dict(as_dict)
+        assert not reread.concrete
+        with pytest.raises(SpecError):
+            reread.provided_virtuals
+        assert reread["mpich"].provided_virtuals["mpi"] == vn.VersionList(":3")
+
+    def test_old_specfile_with_unknown_package_reads_without_warning(self):
+        """A package absent from the configured repos provides nothing, without warnings."""
+        as_dict = self._old_spec_dict(spack.concretize.concretize_one("pkg-a"))
+        as_dict["spec"]["nodes"][0]["name"] = "no-such-package"
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            reread = Spec.from_dict(as_dict)
+
+        assert reread.provided_virtuals == {}
+
+    def test_provided_virtuals_recomputed_on_rehash(self):
+        """Un-marking dependents on rehash clears their provided virtuals; finalization recomputes
+        them while other nodes of the DAG are still concrete."""
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
+        provider = concrete["mpich"]
+        frozen = {name: v.copy() for name, v in provider.provided_virtuals.items()}
+
+        for parent in spack.traverse.traverse_nodes([provider], direction="parents"):
+            parent._mark_root_concrete(False)
+            parent.clear_caches()
+        with pytest.raises(SpecError):
+            provider.provided_virtuals
+
+        spack.spec.finalize_concretization([concrete], repo=spack.repo.PATH)
+        assert provider.provided_virtuals == frozen
+
+    def test_versioned_virtual_queries_on_concrete_specs_are_stateless(self, monkeypatch):
+        """Versioned virtual queries are resolved with the frozen versions, without a repo."""
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
+        provider = concrete["mpich"]  # provides mpi@:3
+        monkeypatch.setattr(spack.repo, "PATH", None)
+
+        assert provider.satisfies("mpi@:3")
+        assert not provider.satisfies("mpi@4:")
+        assert not provider.satisfies("lapack")
+        assert concrete.satisfies("^mpi@:3")
+        assert not concrete.satisfies("^mpi@4:")
+
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
         https://github.com/spack/spack/pull/2386#issuecomment-282147639
@@ -825,9 +925,11 @@ class TestSpecSemantics:
             assert t.satisfies(s)
 
     def test_intersects_virtual(self):
-        assert Spec("mpich").intersects(Spec("mpi"))
-        assert Spec("mpich2").intersects(Spec("mpi"))
-        assert Spec("zmpi").intersects(Spec("mpi"))
+        """Abstract specs with different names do not intersect, even a virtual and a provider:
+        comparison does not consult the repository."""
+        assert not Spec("mpich").intersects(Spec("mpi"))
+        assert not Spec("mpich2").intersects(Spec("mpi"))
+        assert not Spec("zmpi").intersects(Spec("mpi"))
 
     def test_intersects_virtual_providers(self):
         """Tests that we can always intersect virtual providers from abstract specs.
@@ -1982,8 +2084,8 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "cppflags=-foo", "cflags=-foo", (True, False, False)),
         # Versions
         (Spec, "@0.94h", "@:0.94i", (True, True, False)),
-        # Different virtuals intersect if there is at least package providing both
-        (Spec, "mpi", "lapack", (True, False, False)),
+        # Abstract specs with different names (incl. virtuals) do not intersect
+        (Spec, "mpi", "lapack", (False, False, False)),
         (Spec, "mpi", "pkgconfig", (False, False, False)),
         # Intersection among target ranges for different architectures
         (Spec, "target=x86_64:", "target=ppc64le:", (False, False, False)),
@@ -2739,8 +2841,7 @@ def test_long_spec():
         (["@2.0:", "@:5.1", "+bar"], "@2.0:5.1 +bar"),
         # Anonymous specs with dependencies
         (["^mpich@3.2", "^mpich@:4.0+foo"], "^mpich@3.2 ^mpich@:4.0+foo"),
-        # Mix a real package with a virtual one. This test
-        # should fail if we start using the repository
+        # Mix a real package with a virtual one; virtuals are not resolved.
         (["^mpich@3.2", "^mpi+foo"], "^mpich@3.2 ^mpi+foo"),
         # Non direct dependencies + direct dependencies
         (["^mpich", "%mpich"], "%mpich"),
@@ -2748,16 +2849,16 @@ def test_long_spec():
         (["^foo", "%bar %foo"], "%bar%foo"),
     ],
 )
-def test_constrain_symbolically(constraints, expected):
-    """Tests the semantics of constraining a spec when we don't resolve virtuals."""
+def test_constrain_does_not_resolve_virtuals(constraints, expected):
+    """Tests the semantics of constraining a spec: virtuals are never resolved."""
     merged = Spec()
     for c in constraints:
-        merged._constrain_symbolically(c)
+        merged.constrain(c)
     assert merged == Spec(expected)
 
     reverse_order = Spec()
     for c in reversed(constraints):
-        reverse_order._constrain_symbolically(c)
+        reverse_order.constrain(c)
     assert reverse_order == Spec(expected)
 
 

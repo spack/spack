@@ -2957,7 +2957,7 @@ def possible_compilers(
     # Compilers from the local store
     supported_compilers = spack.compilers.config.supported_compilers(repo=context.repo)
     for pkg_name in supported_compilers:
-        result.update(context.store.db.query(pkg_name, repo=context.repo))
+        result.update(context.store.db.query(pkg_name))
 
     return result, rejected
 
