@@ -524,6 +524,16 @@ def binary_index_location():
 BINARY_INDEX = cast(BinaryIndexCache, spack.util.lang.Singleton(BinaryIndexCache))
 
 
+def reinitialize():
+    """Reinitialize the global BINARY_INDEX.
+
+    Call this after reloading CONFIG to ensure BINARY_INDEX uses the current
+    binary index cache location (e.g., after auto-migration creates layout scope).
+    """
+    global BINARY_INDEX
+    BINARY_INDEX = cast(BinaryIndexCache, spack.util.lang.Singleton(BinaryIndexCache))
+
+
 def compute_hash(data):
     if isinstance(data, str):
         data = data.encode("utf-8")

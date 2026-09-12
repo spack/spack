@@ -2122,6 +2122,16 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 PATH = cast(RepoPath, Singleton(lambda: create_and_enable(spack.config.CONFIG)))
 
 
+def reinitialize():
+    """Reinitialize the global repository PATH.
+
+    Call this after reloading CONFIG to ensure PATH reflects the current
+    repos configuration (e.g., after auto-migration creates layout scope).
+    """
+    global PATH
+    PATH = cast(RepoPath, Singleton(lambda: create_and_enable(spack.config.CONFIG)))
+
+
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
 sys.meta_path.append(REPOS_FINDER)

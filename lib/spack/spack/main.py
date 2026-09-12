@@ -1140,6 +1140,8 @@ def _main(argv=None):
             spack.config._do_migrate(is_isolate_command=False)
             # Reload config to pick up new layout scope
             spack.config.CONFIG = spack.config.create()
+            # Reinitialize global singletons that depend on CONFIG
+            spack.config.reinitialize_global_state()
 
     # set up a bootstrap context, if asked.
     # bootstrap context needs to include parsing the command, b/c things

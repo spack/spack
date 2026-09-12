@@ -2419,6 +2419,33 @@ CONFIG = cast(Configuration, lang.Singleton(create_incremental))
 spack.platforms.on_host_changed.append(lambda: CONFIG.clear_caches())
 
 
+def reinitialize_global_state():
+    """Reinitialize all global singletons that depend on CONFIG.
+
+    This should be called after reloading CONFIG (e.g., after auto-migration
+    creates a new layout or isolate scope) to ensure all global state reflects
+    the new configuration.
+
+    Reinitializes:
+    - spack.store.STORE: install tree location and database
+    - spack.caches.MISC_CACHE and FETCH_CACHE: cache directories
+    - spack.repo.PATH: package repositories
+    - spack.binary_distribution.BINARY_INDEX: binary cache index
+
+    Note: This is expensive and should only be called when CONFIG has actually
+    changed in a way that affects these singletons.
+    """
+    import spack.binary_distribution
+    import spack.caches
+    import spack.repo
+    import spack.store
+
+    spack.store.reinitialize()
+    spack.caches.reinitialize()
+    spack.repo.reinitialize()
+    spack.binary_distribution.reinitialize()
+
+
 def writable_scopes() -> List[ConfigScope]:
     """Return list of writable scopes. Higher-priority scopes come first in the list."""
     scopes = [x for x in CONFIG.scopes.values() if x.writable]

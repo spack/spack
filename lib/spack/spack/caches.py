@@ -67,3 +67,15 @@ class MirrorCache(spack.fetch_strategy.FsCacheBase):
 
 #: Spack's local cache for downloaded source archives
 FETCH_CACHE = cast(spack.fetch_strategy.FsCache, spack.util.lang.Singleton(_fetch_cache))
+
+
+def reinitialize():
+    """Reinitialize global cache singletons.
+
+    Call this after reloading CONFIG to ensure cache locations reflect
+    the current configuration (e.g., after auto-migration creates layout scope).
+    """
+    global MISC_CACHE, FETCH_CACHE
+
+    MISC_CACHE = cast(spack.util.file_cache.FileCache, spack.util.lang.Singleton(_misc_cache))
+    FETCH_CACHE = cast(spack.fetch_strategy.FsCache, spack.util.lang.Singleton(_fetch_cache))
