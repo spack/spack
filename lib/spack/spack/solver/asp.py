@@ -1801,6 +1801,19 @@ class SpackSolverSetup:
             if not data.get("buildable", True):
                 self.gen.h2(f"External package: {pkg_name}")
                 self.gen.fact(fn.buildable_false(pkg_name))
+                # Record what is on offer, so that a failure can name the external that was
+                # rejected instead of only "no externals satisfy the request": the spec as
+                # written, and its versions as written for the version-mismatch message.
+                for entry in data.get("externals", []):
+                    try:
+                        versions = spack.spec.Spec(entry["spec"]).versions
+                    except Exception:  # noqa: BLE001
+                        continue
+                    # packages_with_externals is deepcopy_as_builtin(..., line_info=True), so
+                    # each entry carries its YAML mark as line_info
+                    location = getattr(entry, "line_info", "")
+                    as_written = f"'{entry['spec']}'" + (f" from {location}" if location else "")
+                    self.gen.pkg_fact(pkg_name, fn.external_declared(as_written, str(versions)))
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
@@ -2501,6 +2514,20 @@ class SpackSolverSetup:
 
         self.virtual_requirements_and_weights()
         self.external_packages(packages_with_externals)
+
+        # Compilers are never built in a solve, so these are all it can pick from. They are only
+        # used to explain a failure.
+        for c in self.possible_compilers:
+            if c.name not in self.pkgs:
+                continue
+            kind = "external" if c.external else "installed"
+            where = f"{kind} at {c.external_path}" if c.external else kind
+            offer = f"'{c.format('{name}{@version}{/hash:7}')}' ({where})"
+            self.gen.pkg_fact(c.name, fn.compiler_on_offer(offer, str(c.version), kind))
+        for c in self.rejected_compilers:
+            if c.name in self.pkgs:
+                offer = f"'{c.format('{name}{@version}')}' (external at {c.external_path})"
+                self.gen.pkg_fact(c.name, fn.compiler_rejected(offer))
 
         # TODO: make a config option for this undocumented feature
         checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ

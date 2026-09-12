@@ -316,6 +316,67 @@ def test_config_driven_errors(
     assert_actionable_error(exc_info, *expected_parts)
 
 
+def test_buildable_false_names_the_external_and_the_constraint(
+    mock_packages, mutable_config: Configuration
+):
+    """`buildable: false` with an external that is too old must name the external on offer and
+    the constraint it failed, not just "no externals satisfy the request"."""
+    mutable_config.set(
+        "packages:libelf",
+        {"buildable": False, "externals": [{"spec": "libelf@0.8.10", "prefix": "/usr"}]},
+    )
+    with pytest.raises(spack.error.SpackError) as exc_info:
+        spack.concretize.concretize_one("libelf@0.8.13:")
+    assert_actionable_error(exc_info, "libelf@0.8.10", "0.8.13:")
+
+
+def test_buildable_false_names_the_external_on_a_variant_mismatch(
+    mock_packages, mutable_config: Configuration
+):
+    """When the external fails on something other than its version, the message must still name
+    it, and must not claim the version is at fault."""
+    mutable_config.set(
+        "packages:quantum-espresso",
+        {
+            "buildable": False,
+            "externals": [{"spec": "quantum-espresso@1.0~veritas", "prefix": "/u"}],
+        },
+    )
+    with pytest.raises(spack.error.SpackError) as exc_info:
+        spack.concretize.concretize_one("quantum-espresso+veritas")
+    assert_actionable_error(exc_info, "quantum-espresso@1.0~veritas")
+    assert "does not satisfy" not in str(exc_info.value)
+
+
+def test_unavailable_compiler_names_the_compilers_on_offer(mock_packages, config):
+    """Compilers are never built, so asking for a compiler version that is neither external nor
+    installed must name the ones that are, and who asked for the missing one."""
+    with pytest.raises(spack.error.SpackError) as exc_info:
+        spack.concretize.concretize_one("callpath %gcc@12.1.0")
+    assert_actionable_error(
+        exc_info,
+        "Cannot build gcc as the c compiler",
+        "Cannot use compiler 'gcc@10.2.1",
+        "does not satisfy 'gcc@12.1.0'",
+        "required because callpath %gcc@12.1.0 requested explicitly",
+        "available is 'gcc@10.2.1",
+    )
+
+
+def test_unavailable_compiler_with_buildable_false_names_the_external_once(
+    mock_packages, mutable_config: Configuration
+):
+    """With `buildable: false` the external is already quoted as written in packages.yaml, so it
+    must not be listed a second time as available."""
+    mutable_config.set("packages:gcc:buildable", False)
+    with pytest.raises(spack.error.SpackError) as exc_info:
+        spack.concretize.concretize_one("callpath %gcc@12.1.0")
+    assert_actionable_error(
+        exc_info, "the external declared for it is 'gcc@10.2.1", "does not satisfy 'gcc@12.1.0'"
+    )
+    assert "available is" not in str(exc_info.value)
+
+
 @pytest.mark.parametrize(
     "input_spec,expected_handles",
     [

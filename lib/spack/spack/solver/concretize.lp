@@ -1996,10 +1996,10 @@ language("fortran").
 language("hip-lang").
 language_runtime("fortran-rt").
 
-error(10, "Only external, or concrete, compilers are allowed for the {0} language", Language)
-  :- provider(ProviderNode, node(_, Language)),
+error(10, "Cannot build {1} as the {0} compiler: only external or installed compilers can be used", Language, Provider)
+  :- provider(node(ID, Provider), node(_, Language)),
      language(Language),
-     build(ProviderNode).
+     build(node(ID, Provider)).
 
 error(10, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Target, Compiler, Version)
   :- attr("node_target", node(X, Package), Target),

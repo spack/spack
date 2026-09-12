@@ -49,5 +49,7 @@
 #show imposed_nodes/2.
 #show variant_single_value/2.
 #show has_provider/1.
+#show buildable_false/1.
+#show language/1.
 
 % debug
