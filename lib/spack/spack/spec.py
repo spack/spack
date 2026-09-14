@@ -6156,9 +6156,9 @@ class MissingSpecHashError(spack.error.SpecError):
     """Raised when a serialized spec node references a hash not present in a node list."""
 
 
-class _ImmutableSpec(Spec):
+class _CachedSpec(Spec):
     """A Spec that is immutable by convention: it is interned in caches and shared across
-    package classes, so callers copy before mutating. Immutability is not enforced."""
+    package classes. Immutability is not enforced."""
 
     _str_cache: str
 
@@ -6173,4 +6173,4 @@ class _ImmutableSpec(Spec):
 
 
 #: Immutable empty spec, for fast comparisons and reduced memory usage.
-EMPTY_SPEC = _ImmutableSpec()
+EMPTY_SPEC = _CachedSpec()
