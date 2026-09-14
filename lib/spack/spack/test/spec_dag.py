@@ -561,9 +561,9 @@ class TestSpecDag:
         copy_ids = {id(s) for s in copy.traverse()}
         assert not orig_ids.intersection(copy_ids)
 
-    def test_copy_through_spec_build_interface(self):
+    def test_copy_through_getitem(self):
         """Check that copying dependencies using id(node) as a fast identifier of the
-        node works when the spec is wrapped in a SpecBuildInterface object.
+        node works for nodes obtained through Spec.__getitem__.
         """
         s = spack.concretize.concretize_one("mpileaks")
 
@@ -822,7 +822,6 @@ class TestSpecDag:
 
     def test_getitem_exceptional_paths(self):
         s = spack.concretize.concretize_one("mpileaks")
-        # Needed to get a proxy object
         q = s["mpileaks"]
 
         # Test that the attribute is read-only
