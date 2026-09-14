@@ -817,7 +817,11 @@ def _create_filtered_environment_in_dir(
             "cannot combine filtered environment creation with --include-concrete"
         )
 
-    with _filtered_source_environment(init_file) as (source_env, source_path, is_source_dir):
+    with _filtered_source_environment(init_file) as source_info:
+        source_env: "Environment"
+        source_path: pathlib.Path
+        is_source_dir: bool
+        source_env, source_path, is_source_dir = source_info
         filter_configuration = _read_filter_configuration(filter_file)
         filtered_roots: Sequence[Tuple[str, Spec]] = []
         filtered_specs: List[Union[str, Dict[str, Any]]]
