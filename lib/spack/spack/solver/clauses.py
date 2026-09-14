@@ -221,9 +221,7 @@ class SpecClauseGenerator:
             for value in variant.values:
                 clauses.append(f.propagate(name, fn.variant_value(vname, value)))
 
-            # a propagated variant is conditional: it applies only where the variant exists,
-            # so it need not exist on this package; where it does, the source node takes the
-            # values itself
+            # a propagated variant applies where both the variant and the value exist
             if name and not self.is_virtual(name) and self.pkg_class(name).has_variant(vname):
                 self._record_possible_values(name, variant, spec)
                 for value in variant.values:

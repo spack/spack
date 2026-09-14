@@ -503,7 +503,7 @@ e: *id002
         "hdf5~~mpi++shared",
         "hdf5 cflags==-g foo==bar cxxflags==-O3",
         "hdf5 cflags=-g foo==bar cxxflags==-O3",
-        # the same variant name set and propagated
+        # the same variant name, both as a variant and propagated
         "hdf5+mpi++mpi",
         "hdf5 foo=a,b foo==b",
         "hdf5%gcc",
@@ -545,7 +545,7 @@ def test_pickle_roundtrip_for_abstract_specs(spec_str):
         'zlib cflags="-O2 -g"',
         # several dimensions at once
         "zlib ++mpi cflags==-g foo=bar,baz target=x86_64:",
-        # the same variant name set and propagated, abstract and concrete
+        # the same variant name, both as a variant and propagated, abstract and concrete
         "zlib+mpi++mpi",
         "zlib foo=a,b foo==b",
         "zlib foo:=a,b foo==b",

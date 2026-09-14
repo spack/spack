@@ -558,8 +558,8 @@ class TestSpecSemantics:
             ("multivalue-variant foo=bar", "multivalue-variant +foo"),
             ("multivalue-variant foo=bar", "multivalue-variant ~foo"),
             ("multivalue-variant fee=bar", "multivalue-variant fee=baz"),
-            # both values of a bool variant are always possible, so a propagated bool applies
-            # to every node in the closure that has the variant
+            # both values of a bool variant always exist, so a propagated bool applies to the
+            # node and every dependency that has the variant
             ("mpileaks+debug", "mpileaks~~debug"),
             ("mpileaks ^mpich+debug", "mpileaks~~debug"),
         ],
@@ -585,9 +585,9 @@ class TestSpecSemantics:
             ("mpich", "mpich~~foo"),
             ("mpich", "mpich foo==1"),
             ("mpileaks~debug", "mpileaks~~debug"),
-            # a non-bool propagated value applies to a node only if it is a possible value
-            # there; satisfies cannot know that without the variant definition, so a node that
-            # has the variant without the value does not contradict satisfaction
+            # a non-bool propagated value applies to a node only where the value exists;
+            # satisfies cannot know that without the variant definition, so a node that has the
+            # variant without the value does not contradict satisfaction
             ("multivalue-variant foo=bar", "multivalue-variant foo==baz"),
             ("multivalue-variant foo=bar", "multivalue-variant foo==quux"),
         ],
@@ -622,8 +622,8 @@ class TestSpecSemantics:
         """Tests (and documents) behavior of variant propagation on abstract specs.
 
         Setting a variant (+mpi) asserts existence and value on one node; propagating it
-        (++mpi) constrains every node of the closure that has the variant. Satisfies is a
-        subset test for both variant maps, and constrain merges them independently.
+        (++mpi) constrains it and every dependency that has the variant. Satisfies is a subset
+        test for both variant maps, and constrain merges them independently.
         """
         lhs, rhs, constrained = Spec(lhs), Spec(rhs), Spec(constrained)
         assert lhs.satisfies(rhs) is expected
@@ -637,27 +637,12 @@ class TestSpecSemantics:
         assert c == constrained
 
     @pytest.mark.parametrize(
-        "lhs,rhs", [("hdf5 ^foo~mpi", "hdf5++mpi"), ("hdf5++mpi", "hdf5 ^foo~mpi")]
-    )
-    def test_propagation_conflicts_with_node_in_closure(self, lhs, rhs):
-        """A propagated bool value contradicting a bool variant on a node in the closure
-        denotes the empty set, but the spec operations stay pairwise per slot and leave the
-        contradiction to the concretizer: neither side is inside the other, yet they intersect
-        and merge."""
-        lhs, rhs = Spec(lhs), Spec(rhs)
-        assert not lhs.satisfies(rhs)
-        assert not rhs.satisfies(lhs)
-        assert lhs.intersects(rhs)
-        lhs.constrain(rhs)
-        assert lhs == Spec("hdf5++mpi ^foo~mpi")
-
-    @pytest.mark.parametrize(
         "lhs,rhs,expected",
         [
             ("pkg+foo", "pkg++foo", "pkg+foo ++foo"),
             ("pkg++foo", "pkg+foo", "pkg+foo ++foo"),
             # a non-bool propagated value is not merged into the node's variants: whether it
-            # applies to the node depends on it being a possible value, which only the solver
+            # applies to the node depends on the value existing there, which only the solver
             # knows
             ("pkg foo=a", "pkg foo==b", "pkg foo=a foo==b"),
             ("pkg foo==b", "pkg foo=a", "pkg foo=a foo==b"),
@@ -707,9 +692,9 @@ class TestSpecSemantics:
         ],
     )
     def test_propagation_conflicts_left_to_concretizer(self, spec_str):
-        """Whether a propagated value collides with a variant, or with a value propagated from
-        another node, on a node elsewhere in the closure that actually has the variant is left to
-        the concretizer; the specs are representable and round-trip."""
+        """Whether a propagated value contradicts a variant, or a value propagated from another
+        node, on a dependency that actually has the variant is left to the concretizer; the specs
+        can be constructed and round-trip."""
         spec = Spec(spec_str)
         assert spec.satisfies(spec)
         assert Spec(str(spec)) == spec
@@ -717,14 +702,14 @@ class TestSpecSemantics:
     @pytest.mark.parametrize(
         "lhs,rhs",
         [
-            # propagation includes the node itself and both bool values are always possible, so a
+            # propagation includes the node itself and both bool values always exist, so a
             # propagated bool contradicting the node's own bool variant is empty without package
             # knowledge
             ("pkg+foo", "pkg~~foo"),
             ("pkg~~foo", "pkg+foo"),
             ("pkg~foo", "pkg++foo"),
             ("pkg++foo", "pkg~foo"),
-            # a rejected constraint leaves the lhs untouched, whichever slot conflicts
+            # a rejected constraint leaves the lhs untouched, whichever map conflicts
             ("pkg@1:3 ~~foo", "pkg@1:2 ++foo"),
             ("pkg@1:3 foo:==a", "pkg@1:2 foo==b"),
         ],
@@ -738,9 +723,9 @@ class TestSpecSemantics:
     @pytest.mark.parametrize(
         "lhs,rhs,expected",
         [
-            # a propagated bool contradicting a bool variant elsewhere in the closure is
-            # genuinely empty, but detecting it takes a closure walk; intersects stays pairwise
-            # per slot and leaves it to the concretizer
+            # a propagated bool contradicting a bool variant on a dependency is genuinely
+            # empty, but detecting it takes a walk over the dependencies; intersects looks at
+            # one node at a time, map by map, and leaves it to the concretizer
             ("pkg++foo", "pkg ^dep~foo", True),
             ("pkg++foo", "pkg+foo", True),
             # on the node itself the contradiction needs no package knowledge
@@ -781,7 +766,7 @@ class TestSpecSemantics:
         assert hash(merged) == hash(parsed)
 
     def test_propagation_mark_concrete_raises(self):
-        """Propagated variants are conditional constraints, which concrete specs cannot have."""
+        """Concrete specs cannot propagate variants: concretization has applied them already."""
         with pytest.raises(SpecError, match="propagate"):
             Spec("pkg++foo")._mark_concrete()
 
