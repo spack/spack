@@ -612,6 +612,27 @@ def test_env_roots_marked_explicit(
     assert len(explicit) == 2
 
 
+def test_env_root_marked_install_false(
+    installed_environment, temporary_store: Store, tmp_path: pathlib.Path
+):
+    """A root spec with install: false is a root for unification, but can't be installed."""
+    with installed_environment(
+        """\
+spack:
+  specs:
+  - mpileaks
+  - spec: cmake
+    install: false
+"""
+    ) as test:
+        # still a concrete root of the environment, just not an installable one
+        assert {s.name for s in test.concrete_roots()} == {"mpileaks", "cmake"}
+        assert {s.name for s in test.installable_roots()} == {"mpileaks"}
+
+        assert temporary_store.db.query("mpileaks")
+        assert not temporary_store.db.query("cmake")
+
+
 def test_env_modifications_error_on_activate(
     install_mockery, mock_fetch, monkeypatch, capfd, mock_packages: RepoPath
 ):
@@ -1732,6 +1753,16 @@ spack:
 spack:
   specks:
     - libdwarf
+""",
+        ),
+        (
+            spack.config.ConfigFormatError,
+            "is not valid under any of the given schemas",
+            """\
+spack:
+  specs:
+  - spec: mpileaks
+    bad: true
 """,
         ),
     ],
@@ -5094,7 +5125,8 @@ def test_exists_consistent_with_all_environment_names(
 
 def test_concretization_reports_groups(environment_from_manifest):
     """Tests that each group of user specs is reported to the frontend."""
-    e = environment_from_manifest("""
+    e = environment_from_manifest(
+        """
 spack:
   specs:
   - libelf
@@ -5104,7 +5136,8 @@ spack:
   - group: apps2
     specs:
     - pkg-b
-""")
+"""
+    )
     ui = RecordingUI()
     with e:
         e.concretize(ui=ui)
