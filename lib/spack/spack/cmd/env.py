@@ -98,6 +98,7 @@ def env_create_setup_parser(subparser):
     )
     subparser.add_argument(
         "--filter",
+        dest="filter_file",
         metavar="FILTER_FILE",
         help="create a filtered environment using the filter config in FILTER_FILE",
     )
@@ -118,22 +119,14 @@ def env_create(args):
         # the environment should not include a view.
         with_view = None
 
-    include_concrete = None
-    if hasattr(args, "include_concrete"):
-        include_concrete = args.include_concrete
-
-    filter_file = None
-    if hasattr(args, "filter"):
-        filter_file = args.filter
-
     env = _env_create(
         args.env_name,
         init_file=args.envfile,
         dir=args.dir or os.path.sep in args.env_name or args.env_name in (".", ".."),
         with_view=with_view,
         keep_relative=args.keep_relative,
-        include_concrete=include_concrete,
-        filter_file=filter_file,
+        include_concrete=args.include_concrete,
+        filter_file=args.filter_file,
     )
 
     # Generate views, only really useful for environments created from spack.lock files.
