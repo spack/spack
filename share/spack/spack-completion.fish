@@ -1648,7 +1648,7 @@ complete -c spack -n '__fish_spack_using_command env create' -l with-view -r -f 
 complete -c spack -n '__fish_spack_using_command env create' -l with-view -r -d 'maintain view at WITH_VIEW (vs. environment'"'"'s directory)'
 complete -c spack -n '__fish_spack_using_command env create' -l include-concrete -r -f -a include_concrete
 complete -c spack -n '__fish_spack_using_command env create' -l include-concrete -r -d 'copy concrete specs from INCLUDE_CONCRETE'"'"'s environment'
-complete -c spack -n '__fish_spack_using_command env create' -l filter -r -f -a filter
+complete -c spack -n '__fish_spack_using_command env create' -l filter -r -f -a filter_file
 complete -c spack -n '__fish_spack_using_command env create' -l filter -r -d 'create a filtered environment using the filter config in FILTER_FILE'
 
 # spack env remove
