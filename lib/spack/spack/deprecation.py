@@ -73,7 +73,9 @@ class Selector(NamedTuple):
         return True
 
 
-def _default_selectors(packages_yaml: dict, warn_on_legacy: bool = False) -> List[Selector]:
+def _default_selectors(
+    packages_yaml: dict, *, legacy_default: bool, warn_on_legacy: bool = False
+) -> List[Selector]:
     """Return the selectors from ``packages:all:deprecation:allow``.
 
     Falls back to the legacy ``config:deprecated`` flag (which allows any severity) and finally
@@ -81,6 +83,7 @@ def _default_selectors(packages_yaml: dict, warn_on_legacy: bool = False) -> Lis
 
     Args:
         packages_yaml: the ``packages`` configuration.
+        legacy_default: value of the legacy ``config:deprecated`` flag.
         warn_on_legacy: emit a warning when the deprecated ``config:deprecated`` flag is
             what relaxes the policy.
     """
@@ -88,7 +91,7 @@ def _default_selectors(packages_yaml: dict, warn_on_legacy: bool = False) -> Lis
     if value is not None:
         return [Selector.from_config(x) for x in value]
 
-    if spack.config.CONFIG.get("config:deprecated", False):
+    if legacy_default:
         if warn_on_legacy:
             warnings.warn(
                 "config:deprecated is deprecated. Use an entry with 'severity: critical' under "
@@ -105,7 +108,12 @@ class Policy:
     """Deprecation policy resolved from the ``packages`` configuration."""
 
     def __init__(
-        self, packages_yaml: dict, default_selectors: List[Selector], scope: str = "runtime"
+        self,
+        packages_yaml: dict,
+        default_selectors: List[Selector],
+        scope: str = "runtime",
+        *,
+        repo: spack.repo.RepoPath,
     ) -> None:
         """
         Args:
@@ -113,23 +121,37 @@ class Policy:
             default_selectors: selectors from ``packages:all``, used for the packages that
                 declare none of their own.
             scope: check scope from ``packages:all:deprecation:scope`` ("runtime" or "all").
+            repo: the repositories the ``deprecated()`` directives of a spec are read from.
         """
         self.packages_yaml = packages_yaml
+        self.repo = repo
         self.default_selectors = default_selectors
         self.scope = scope
         self._selectors: Dict[str, List[Selector]] = {}
 
     @staticmethod
-    def from_config(warn_on_legacy: bool = False) -> "Policy":
-        """Build a policy from the current ``packages`` config, read once.
+    def from_config(
+        configuration: spack.config.Configuration,
+        *,
+        repo: spack.repo.RepoPath,
+        warn_on_legacy: bool = False,
+    ) -> "Policy":
+        """Build a policy from the ``packages`` config, read once.
 
         Args:
+            configuration: the configuration to read the policy from.
+            repo: the repositories the ``deprecated()`` directives of a spec are read from.
             warn_on_legacy: emit a warning when the deprecated ``config:deprecated`` flag is
                 what relaxes the policy. Set only where the warning should fire once.
         """
-        packages_yaml = spack.config.CONFIG.get_config("packages")
+        packages_yaml = configuration.get_config("packages")
         scope = packages_yaml.get("all", {}).get("deprecation", {}).get("scope", "runtime")
-        return Policy(packages_yaml, _default_selectors(packages_yaml, warn_on_legacy), scope)
+        default_selectors = _default_selectors(
+            packages_yaml,
+            legacy_default=configuration.get("config:deprecated", False),
+            warn_on_legacy=warn_on_legacy,
+        )
+        return Policy(packages_yaml, default_selectors, scope, repo=repo)
 
     @property
     def deptypes(self) -> int:
@@ -161,7 +183,7 @@ class Policy:
             return []
 
         try:
-            pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+            pkg_cls = self.repo.get_pkg_class(spec.name)
         except spack.repo.UnknownPackageError:
             return []
 
@@ -195,7 +217,7 @@ def reusable(
         specs: the reuse candidates.
         policy: the policy to apply; defaults to the configured one.
     """
-    resolved = policy or Policy.from_config()
+    resolved = policy or Policy.from_config(spack.config.CONFIG, repo=spack.repo.PATH)
     deptypes = resolved.deptypes
     candidates = list(specs)
 
@@ -224,7 +246,7 @@ def check_deprecations(
         policy: the policy to apply, together with the closure it checks; defaults to the
             configured one.
     """
-    resolved = policy or Policy.from_config()
+    resolved = policy or Policy.from_config(spack.config.CONFIG, repo=spack.repo.PATH)
 
     violations: List[str] = []
     for node in spack.traverse.traverse_nodes(list(seeds), deptype=resolved.deptypes):

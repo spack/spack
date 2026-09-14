@@ -754,7 +754,7 @@ def test_ensure_allowed_exempts_externals(install_mockery, mutable_config: Confi
         spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
 
     # The spec is blocked by the strict default policy...
-    policy = spack.deprecation.Policy({}, [])
+    policy = spack.deprecation.Policy({}, [], repo=spack.repo.PATH)
     assert policy.disallowed(spec)
     # ...unless it is external, in which case the gate does not raise.
     spec.external_path = "/opt/example"

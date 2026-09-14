@@ -6110,7 +6110,9 @@ def test_concrete_input_specs_skip_the_dependency_precheck(mock_packages, config
 
     # an abstract spec is still checked against the possible dependencies
     with pytest.raises(spack.solver.asp.InvalidDependencyError):
-        spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup([spack.spec.Spec("pkg-a ^pkg-b")])
+        spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup(
+            [spack.spec.Spec("pkg-a ^pkg-b")]
+        )
 
     # the concrete one is not
     spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup([spec])

@@ -1199,7 +1199,7 @@ class SpackSolverSetup:
 
         # deprecation policy resolved once per solve and reused for every package
         self.deprecation_policy = deprecation_policy or spack.deprecation.Policy.from_config(
-            warn_on_legacy=True
+            self.context.config, repo=self.context.repo, warn_on_legacy=True
         )
 
         # list of unique libc specs targeted by compilers (or an educated guess if no compiler)
@@ -3557,7 +3557,9 @@ class Solver:
         specs = _resolve_input_specs(specs, context=self.context)
         # One policy per solve, shared by the reuse filter and the setup, so both read the
         # 'packages' configuration exactly once and cannot disagree
-        policy = spack.deprecation.Policy.from_config(warn_on_legacy=True)
+        policy = spack.deprecation.Policy.from_config(
+            self.context.config, repo=self.context.repo, warn_on_legacy=True
+        )
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs, policy=policy))
         setup = SpackSolverSetup(tests=tests, context=self.context, deprecation_policy=policy)
@@ -3609,7 +3611,9 @@ class Solver:
             return
 
         specs = _resolve_input_specs(specs, context=self.context)
-        policy = spack.deprecation.Policy.from_config(warn_on_legacy=True)
+        policy = spack.deprecation.Policy.from_config(
+            self.context.config, repo=self.context.repo, warn_on_legacy=True
+        )
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs, policy=policy))
         setup = SpackSolverSetup(tests=tests, context=self.context, deprecation_policy=policy)
