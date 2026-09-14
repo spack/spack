@@ -11,15 +11,23 @@ import urllib.response
 from io import BufferedReader, BytesIO, IOBase
 from typing import Any, Dict, List, Optional, Tuple
 
+from spack.vendor.typing_extensions import Literal
+
 import spack.config
 import spack.error
 from spack.util import tty
 
 #: Map (mirror name, method) tuples to s3 client instances.
-s3_client_cache: Dict[Tuple[str, str], Any] = dict()
+s3_client_cache: Dict[Tuple[Optional[str], str], Any] = dict()
+
+#: Allowed HTTP request methods
+S3OpenMethod = Literal["get", "head", "GET", "HEAD"]
+
+#: Allowed mirror direction selection names for S3 Mirrors
+MirrorDirection = Literal["push", "fetch"]
 
 
-def _get_s3_session(url, method="fetch"):
+def _get_s3_session(url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch"):
     # import boto and friends as late as possible.  We don't want to require boto as a
     # dependency unless the user actually wants to access S3 mirrors.
     from boto3 import Session
@@ -53,9 +61,9 @@ def _get_s3_session(url, method="fetch"):
         if url_str.startswith(get_mirror_url(mirror))
     ]
 
-    if not mirrors:
-        name, mirror = None, {}
-    else:
+    name: Optional[str] = None
+    mirror: Any = {}
+    if mirrors:
         # In case we have more than one mirror, we pick the longest matching url.
         # The heuristic being that it's more specific, and you can have different
         # credentials for a sub-bucket (if that is a thing).
@@ -154,7 +162,7 @@ class WrapStream(BufferedReader):
         return getattr(self.raw, key)
 
 
-def _s3_open(url, method="GET"):
+def _s3_open(url, method: S3OpenMethod = "GET"):
     s3, parsed = _get_s3_session(url, method=method)
 
     bucket = parsed.netloc
@@ -168,6 +176,7 @@ def _s3_open(url, method="GET"):
             "Only GET and HEAD verbs are currently supported for the s3:// scheme"
         )
 
+    stream: IOBase
     try:
         if method == "GET":
             obj = s3.get_object(Bucket=bucket, Key=key)
@@ -184,7 +193,7 @@ def _s3_open(url, method="GET"):
     return url, headers, stream
 
 
-def s3_command(method: str):
+def s3_command(method: MirrorDirection):
     """Bind the correct S3 session and capture errors from Boto3."""
 
     def _s3_decorate_command(command):
