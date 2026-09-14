@@ -12,7 +12,7 @@ from typing import IO, Dict, Iterator, Optional, Tuple, Union
 
 from spack.error import SpackError
 from spack.util.filesystem import rename
-from spack.util.lock import Lock
+from spack.util.lock import Lock, LockPermissionError
 
 
 def _maybe_open(path: Union[str, pathlib.Path]) -> Optional[IO[str]]:
@@ -62,13 +62,13 @@ class WriteContextManager:
 
     def __enter__(self) -> Tuple[Optional[IO[str]], IO[str]]:
         """Return (old_file, new_file) file objects, where old_file is optional."""
+        self.old_file = _maybe_open(self.path)
         try:
-            self.old_file = _maybe_open(self.path)
             self.new_file, self.tmp_path = _open_temp(os.path.dirname(self.path))
-        except PermissionError:
+        except OSError as e:
             if self.old_file:
                 self.old_file.close()
-            raise CacheError(f"Insufficient permissions to write to file cache at {self.path}")
+            raise CacheError(f"Cannot write to file cache at {self.path}: {e}") from e
         return self.old_file, self.new_file
 
     def __exit__(self, type, value, traceback):
@@ -192,8 +192,8 @@ class FileCache:
         lock = self._get_lock(key)
         try:
             lock.acquire_write()
-        except PermissionError:
-            raise CacheError(f"Insufficient permissions to write to file cache at {path}")
+        except LockPermissionError as e:
+            raise CacheError(f"Cannot write to file cache at {path}: {e}") from e
         try:
             with WriteContextManager(str(path)) as (old, new):
                 yield old, new
