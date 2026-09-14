@@ -2182,6 +2182,9 @@ class Spec:
             if name in variants:
                 raise vt.DuplicateVariantError(f'Cannot specify variant "{name}" twice')
             variants[name] = vt.VariantValue.from_string_or_bool(name, value, concrete=concrete)
+            reason = _propagated_bool_conflict(self.variants, self.propagated_variants)
+            if reason is not None:
+                raise reason
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
@@ -3320,6 +3323,12 @@ class Spec:
             if not self.variants[v].intersects(other.variants[v]):
                 raise vt.UnsatisfiableVariantSpecError(self.variants[v], other.variants[v])
 
+        reason = _propagated_bool_conflict(
+            self.variants, other.propagated_variants
+        ) or _propagated_bool_conflict(other.variants, self.propagated_variants)
+        if reason is not None:
+            raise reason
+
         sarch, oarch = self.architecture, other.architecture
         if (
             sarch is not None
@@ -3732,10 +3741,14 @@ class Spec:
         )
 
     def _intersects_variants(self, other: "Spec") -> bool:
-        # each map is checked pairwise; a propagated bool contradicting a variant of a node in
-        # the closure is left to the concretizer, as intersects is optimistic
-        return self.variants.intersects(other.variants) and self.propagated_variants.intersects(
-            other.propagated_variants
+        # each map is checked pairwise, plus the bool cross pairs on this node; a propagated bool
+        # contradicting a variant of a node in the closure is left to the concretizer, as
+        # intersects is optimistic
+        return (
+            self.variants.intersects(other.variants)
+            and self.propagated_variants.intersects(other.propagated_variants)
+            and _propagated_bool_conflict(self.variants, other.propagated_variants) is None
+            and _propagated_bool_conflict(other.variants, self.propagated_variants) is None
         )
 
     def _constrain_variants(self, other: "Spec") -> bool:
@@ -5268,6 +5281,21 @@ class VariantMap(_VariantMapBase):
 
     def __str__(self):
         return self.string()
+
+
+def _propagated_bool_conflict(
+    variants: Mapping[str, vt.VariantValue], propagated: Mapping[str, vt.VariantValue]
+) -> Optional[spack.error.SpecError]:
+    """The error for a bool variant and a propagated bool value of the same name that contradict,
+    if any. Propagation includes the node itself and bool values are always possible, so
+    +foo ~~foo is empty without package knowledge; any other pair is left to the concretizer."""
+    for name, value in propagated.items():
+        if value.type != vt.VariantType.BOOL:
+            continue
+        mine = variants.get(name)
+        if mine is not None and mine.type == vt.VariantType.BOOL and not mine.intersects(value):
+            return vt.UnsatisfiableVariantSpecError(mine.string(), value.string(propagated=True))
+    return None
 
 
 def _variant_parts(

@@ -758,13 +758,6 @@ spack:
         with pytest.raises(spack.error.UnsatisfiableSpecError):
             spec = spack.concretize.concretize_one(spec)
 
-    def test_concretize_propagate_variant_contradicts_source_node_fail(self):
-        """A propagated bool value contradicting a bool variant on the source node itself is
-        representable, and rejected at concretization"""
-        spec = Spec("hypre +shared ~~shared")
-        with pytest.raises(spack.error.UnsatisfiableSpecError):
-            spec = spack.concretize.concretize_one(spec)
-
     def test_concretize_propagate_same_variant_from_direct_dep_fail(self):
         """Test that when propagating a variant from the source package and a direct
         dependency also propagates the same variant with a different value. Raises error"""

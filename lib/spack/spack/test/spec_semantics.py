@@ -699,8 +699,6 @@ class TestSpecSemantics:
     @pytest.mark.parametrize(
         "spec_str",
         [
-            "pkg+foo~~foo",
-            "pkg~foo++foo",
             "pkg~~shared ^dep+shared",
             "pkg++shared ^dep~~shared",
             "pkg~~shared ^dep++shared",
@@ -710,8 +708,8 @@ class TestSpecSemantics:
     )
     def test_propagation_conflicts_left_to_concretizer(self, spec_str):
         """Whether a propagated value collides with a variant, or with a value propagated from
-        another node, on a node that actually has the variant is left to the concretizer; the
-        specs are representable and round-trip."""
+        another node, on a node elsewhere in the closure that actually has the variant is left to
+        the concretizer; the specs are representable and round-trip."""
         spec = Spec(spec_str)
         assert spec.satisfies(spec)
         assert Spec(str(spec)) == spec
@@ -723,15 +721,40 @@ class TestSpecSemantics:
         with pytest.raises(spack.spec_parser.SpecParsingError):
             Spec(spec_str)
 
+    @pytest.mark.parametrize("spec_str", ["pkg+foo~~foo", "pkg~foo++foo"])
+    def test_propagation_contradicting_own_variant_rejected_when_parsed(self, spec_str):
+        """Propagation includes the node itself and both bool values are always possible, so a
+        propagated bool contradicting the node's own bool variant is empty without package
+        knowledge"""
+        with pytest.raises(spack.spec_parser.SpecParsingError):
+            Spec(spec_str)
+
+    @pytest.mark.parametrize(
+        "lhs,rhs",
+        [
+            ("pkg+foo", "pkg~~foo"),
+            ("pkg~~foo", "pkg+foo"),
+            ("pkg~foo", "pkg++foo"),
+            ("pkg++foo", "pkg~foo"),
+        ],
+    )
+    def test_propagation_contradicting_own_variant_rejected_when_constrained(self, lhs, rhs):
+        spec = Spec(lhs)
+        assert not spec.intersects(rhs)
+        with pytest.raises(spack.variant.UnsatisfiableVariantSpecError):
+            spec.constrain(rhs)
+        assert spec == Spec(lhs)
+
     @pytest.mark.parametrize(
         "lhs,rhs,expected",
         [
-            # a propagated bool contradicting a bool variant in the closure is genuinely
-            # empty, but detecting it takes a closure walk; intersects stays pairwise per slot
-            # and leaves it to the concretizer
+            # a propagated bool contradicting a bool variant elsewhere in the closure is
+            # genuinely empty, but detecting it takes a closure walk; intersects stays pairwise
+            # per slot and leaves it to the concretizer
             ("pkg++foo", "pkg ^dep~foo", True),
             ("pkg++foo", "pkg+foo", True),
-            ("pkg+foo", "pkg~~foo", True),
+            # on the node itself the contradiction needs no package knowledge
+            ("pkg+foo", "pkg~~foo", False),
             # propagated constraints on the same variant intersect like variants do
             ("pkg++foo", "pkg~~foo", False),
             ("pkg foo==a", "pkg foo==b", True),

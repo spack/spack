@@ -401,6 +401,7 @@ Spack also allows variants to be propagated from a package that does not have th
 
 Setting a variant on the package itself and propagating it are independent constraints, and they can be combined.
 For example, ``mpileaks +debug ++debug`` requires ``debug`` to be enabled on ``mpileaks`` itself, and additionally enables it on every package in the dependency tree that has the variant.
+The two must agree: ``mpileaks +debug ~~debug`` is an error, since propagation applies to ``mpileaks`` itself too.
 
 .. index::
    single: compiler flags; in specs
