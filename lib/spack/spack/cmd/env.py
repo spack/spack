@@ -125,8 +125,8 @@ def env_create(args):
         dir=args.dir or os.path.sep in args.env_name or args.env_name in (".", ".."),
         with_view=with_view,
         keep_relative=args.keep_relative,
-        include_concrete=args.include_concrete,
-        filter_file=args.filter_file,
+        include_concrete=getattr(args, "include_concrete", None),
+        filter_file=getattr(args, "filter_file", None),
     )
 
     # Generate views, only really useful for environments created from spack.lock files.
