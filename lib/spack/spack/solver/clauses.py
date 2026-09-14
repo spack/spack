@@ -281,7 +281,7 @@ class SpecClauseGenerator:
 
     def _concrete_edge_clauses(
         self,
-        dspec: spack.spec.DependencySpec,
+        dspec: spack.spec.Edge,
         *,
         name: str,
         concrete_build_deps: bool,
@@ -336,7 +336,7 @@ class SpecClauseGenerator:
 
     def _dependency_edge_clauses(
         self,
-        dspec: spack.spec.DependencySpec,
+        dspec: spack.spec.Edge,
         dependency_clauses: List[AspFunction],
         *,
         name: str,

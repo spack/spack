@@ -20,7 +20,7 @@ import spack.variant
 import spack.version as vn
 from spack.enums import PropagationPolicy
 from spack.error import SpecError, UnsatisfiableSpecError
-from spack.spec import ArchSpec, DependencySpec, Spec, SpecFormatSigilError, SpecFormatStringError
+from spack.spec import ArchSpec, Edge, Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.util.tty.color import colorize
 from spack.variant import (
     InvalidVariantValueError,
@@ -2331,8 +2331,8 @@ def test_edge_equality_does_not_depend_on_virtual_order():
     the input parameters are equal to each other.
     """
     parent, child = Spec("parent"), Spec("child")
-    edge1 = DependencySpec(parent, child, depflag=0, virtuals=("mpi", "lapack"))
-    edge2 = DependencySpec(parent, child, depflag=0, virtuals=("lapack", "mpi"))
+    edge1 = Edge(parent, child, depflag=0, virtuals=("mpi", "lapack"))
+    edge2 = Edge(parent, child, depflag=0, virtuals=("lapack", "mpi"))
     assert edge1 == edge2
     assert tuple(sorted(edge1.virtuals)) == edge1.virtuals
     assert tuple(sorted(edge2.virtuals)) == edge1.virtuals
@@ -2340,7 +2340,7 @@ def test_edge_equality_does_not_depend_on_virtual_order():
 
 def test_update_virtuals():
     parent, child = Spec("parent"), Spec("child")
-    edge = DependencySpec(parent, child, depflag=0, virtuals=("mpi", "lapack"))
+    edge = Edge(parent, child, depflag=0, virtuals=("mpi", "lapack"))
     assert edge.update_virtuals("blas")
     assert edge.virtuals == ("blas", "lapack", "mpi")
     assert edge.update_virtuals(("c", "fortran", "mpi", "lapack"))
@@ -2721,8 +2721,8 @@ def test_specs_equality(lhs, rhs, expected):
 def test_edge_equality_accounts_for_when_condition():
     """Tests that edges can be distinguished by their 'when' condition."""
     parent, child = Spec("parent"), Spec("child")
-    edge1 = DependencySpec(parent, child, depflag=0, virtuals=(), when=Spec("%c"))
-    edge2 = DependencySpec(parent, child, depflag=0, virtuals=())
+    edge1 = Edge(parent, child, depflag=0, virtuals=(), when=Spec("%c"))
+    edge2 = Edge(parent, child, depflag=0, virtuals=())
     assert edge1 != edge2
 
 
@@ -2791,21 +2791,21 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "callpath",
             {"virtuals": ()},
             "mpileaks ^callpath",
-            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=())",
+            "Edge('mpileaks', 'callpath', depflag=0, virtuals=())",
         ),
         (
             "mpileaks",
             "callpath",
             {"virtuals": ("mpi", "lapack")},
             "mpileaks ^lapack,mpi=callpath",
-            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=('lapack', 'mpi'))",
+            "Edge('mpileaks', 'callpath', depflag=0, virtuals=('lapack', 'mpi'))",
         ),
         (
             "",
             "callpath",
             {"virtuals": ("mpi", "lapack"), "direct": True},
             " %lapack,mpi=callpath",
-            "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True)",
+            "Edge('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True)",
         ),
         (
             "",
@@ -2816,7 +2816,7 @@ def test_copy_does_not_share_flag_instances(mock_packages):
                 "propagation": PropagationPolicy.PREFERENCE,
             },
             " %%lapack,mpi=callpath",
-            "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True,"
+            "Edge('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True,"
             " propagation=PropagationPolicy.PREFERENCE)",
         ),
         (
@@ -2824,7 +2824,7 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "callpath",
             {"virtuals": (), "direct": True, "propagation": PropagationPolicy.PREFERENCE},
             " %%callpath",
-            "DependencySpec('', 'callpath', depflag=0, virtuals=(), direct=True,"
+            "Edge('', 'callpath', depflag=0, virtuals=(), direct=True,"
             " propagation=PropagationPolicy.PREFERENCE)",
         ),
         (
@@ -2832,7 +2832,7 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "callpath+bar",
             {"virtuals": (), "direct": True, "propagation": PropagationPolicy.PREFERENCE},
             "mpileaks+foo %%callpath+bar",
-            "DependencySpec('mpileaks+foo', 'callpath+bar', depflag=0, virtuals=(), direct=True,"
+            "Edge('mpileaks+foo', 'callpath+bar', depflag=0, virtuals=(), direct=True,"
             " propagation=PropagationPolicy.PREFERENCE)",
         ),
         # an anonymous child is named *, so that foo=bar is not read as a virtual assignment
@@ -2841,14 +2841,14 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "foo=bar",
             {"virtuals": ()},
             "mpileaks ^* foo=bar",
-            "DependencySpec('mpileaks', 'foo=bar', depflag=0, virtuals=())",
+            "Edge('mpileaks', 'foo=bar', depflag=0, virtuals=())",
         ),
         (
             "mpileaks",
             "@4.0",
             {"virtuals": ("c",), "direct": True},
             "mpileaks %[virtuals=c] @4.0",
-            "DependencySpec('mpileaks', '@4.0', depflag=0, virtuals=('c',), direct=True)",
+            "Edge('mpileaks', '@4.0', depflag=0, virtuals=('c',), direct=True)",
         ),
     ],
 )
@@ -2856,7 +2856,7 @@ def test_edge_representation(parent_str, child_str, kwargs, expected_str, expect
     """Tests the string representations of edges."""
     parent = Spec(parent_str) or Spec()
     child = Spec(child_str) or Spec()
-    edge = DependencySpec(parent, child, depflag=0, **kwargs)
+    edge = Edge(parent, child, depflag=0, **kwargs)
     assert str(edge) == expected_str
     assert repr(edge) == expected_repr
     # the string is used as a constraint, so it must parse back to the same edge
@@ -2869,8 +2869,8 @@ def test_parallel_edges_sort_with_differing_propagation(mock_packages):
     """Two edges to one package that differ only in propagation are compared on that field, so
     ``PropagationPolicy`` needs ``<`` and not just ``==``."""
     edges = [
-        DependencySpec(Spec("pkg-a"), Spec("pkg-e"), depflag=0, virtuals=(), direct=True),
-        DependencySpec(
+        Edge(Spec("pkg-a"), Spec("pkg-e"), depflag=0, virtuals=(), direct=True),
+        Edge(
             Spec("pkg-a"),
             Spec("pkg-e"),
             depflag=0,
