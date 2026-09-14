@@ -176,8 +176,9 @@ def _do_isolate(args):
             isolate_target=destination,
             config_scope_path=ISOLATE_SCOPE_PATH,
         )
-        # Reload config to pick up new isolate scope config
-        spack.config.CONFIG = spack.config.create()
+        # Note: No need to reload CONFIG here - the isolate scope files are written
+        # to disk and will be loaded automatically on next spack invocation.
+        # This process exits immediately after this point.
 
 
 def _undo_isolate():
