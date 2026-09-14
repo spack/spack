@@ -124,7 +124,7 @@ CONFIG_DEFAULTS = {
         "dirty": False,
         "build_jobs": min(16, cpus_available()),
         "build_stage": "$tempdir/spack-stage",
-        "license_dir": spack.paths.default_license_dir,
+        "license_dir": "$data_home/licenses",
     },
     "concretizer": {"externals": {"completion": "default_variants"}},
 }

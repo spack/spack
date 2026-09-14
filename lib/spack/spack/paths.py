@@ -66,9 +66,6 @@ class SpackPaths:
         self.share_path = os.path.join(self.prefix, "share", "spack")
         self.etc_path = os.path.join(self.prefix, "etc", "spack")
 
-        #: Things in $spack/etc/spack
-        self.default_license_dir = os.path.join(self.etc_path, "licenses")
-
         #: Things in $spack/var/spack
         self.var_path = os.path.join(self.prefix, "var", "spack")
 
@@ -332,7 +329,6 @@ if TYPE_CHECKING:
     opt_path: str
     share_path: str
     etc_path: str
-    default_license_dir: str
     var_path: str
     repos_path: str
     test_repos_path: str

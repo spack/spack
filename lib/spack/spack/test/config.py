@@ -1177,10 +1177,7 @@ def test_override_error_does_not_leak_scope(config: Configuration):
 
 def test_license_dir_config(mutable_config: Configuration, mock_packages: RepoPath, tmp_path):
     """Ensure license directory is customizable"""
-    expected_dir = spack.paths.default_license_dir
-    assert mutable_config.get("config:license_dir") == expected_dir
-    assert spack.package_base.PackageBase.global_license_dir == expected_dir
-    assert mock_packages.get_pkg_class("pkg-a").global_license_dir == expected_dir
+    # layout_logic test module checks default value of license_dir
 
     abs_path = str(tmp_path / "foo" / "bar" / "baz")
     mutable_config.set("config:license_dir", abs_path)
