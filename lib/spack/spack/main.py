@@ -37,6 +37,7 @@ import spack.environment.environment
 import spack.error
 import spack.paths
 import spack.platforms
+import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.util.environment
@@ -1142,6 +1143,12 @@ def main(argv=None):
 
     except spack.solver.asp.OutputDoesNotSatisfyInputError as e:
         _handle_solver_bug(e)
+        return 1
+
+    except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
+        # the command line frontend reports the name, and the names it is close to
+        tty.debug(e)
+        spack.cmd.report_unknown_package(e)
         return 1
 
     except spack.error.SpackError as e:
