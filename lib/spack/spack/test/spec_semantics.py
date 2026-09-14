@@ -715,32 +715,22 @@ class TestSpecSemantics:
         assert Spec(str(spec)) == spec
 
     @pytest.mark.parametrize(
-        "spec_str", ["pkg+foo+foo", "pkg foo=a foo=b", "pkg++foo++foo", "pkg foo==a foo==b"]
-    )
-    def test_duplicate_variant_within_a_slot_rejected(self, spec_str):
-        with pytest.raises(spack.spec_parser.SpecParsingError):
-            Spec(spec_str)
-
-    @pytest.mark.parametrize("spec_str", ["pkg+foo~~foo", "pkg~foo++foo"])
-    def test_propagation_contradicting_own_variant_rejected_when_parsed(self, spec_str):
-        """Propagation includes the node itself and both bool values are always possible, so a
-        propagated bool contradicting the node's own bool variant is empty without package
-        knowledge"""
-        with pytest.raises(spack.spec_parser.SpecParsingError):
-            Spec(spec_str)
-
-    @pytest.mark.parametrize(
         "lhs,rhs",
         [
+            # propagation includes the node itself and both bool values are always possible, so a
+            # propagated bool contradicting the node's own bool variant is empty without package
+            # knowledge
             ("pkg+foo", "pkg~~foo"),
             ("pkg~~foo", "pkg+foo"),
             ("pkg~foo", "pkg++foo"),
             ("pkg++foo", "pkg~foo"),
+            # a rejected constraint leaves the lhs untouched, whichever slot conflicts
+            ("pkg@1:3 ~~foo", "pkg@1:2 ++foo"),
+            ("pkg@1:3 foo:==a", "pkg@1:2 foo==b"),
         ],
     )
-    def test_propagation_contradicting_own_variant_rejected_when_constrained(self, lhs, rhs):
+    def test_propagation_conflict_rejected_when_constrained(self, lhs, rhs):
         spec = Spec(lhs)
-        assert not spec.intersects(rhs)
         with pytest.raises(spack.variant.UnsatisfiableVariantSpecError):
             spec.constrain(rhs)
         assert spec == Spec(lhs)

@@ -1703,6 +1703,9 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x foo=bar foo=baz", "twice"),
         ("x ++foo ~~foo", "twice"),
         ("x foo==bar foo==baz", "twice"),
+        # a propagated bool applies to the node itself, so it cannot contradict its variant
+        ("x +foo ~~foo", "does not satisfy"),
+        ("x ~foo ++foo", "does not satisfy"),
     ],
 )
 def test_error_conditions(text, match_string):
