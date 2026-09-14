@@ -154,30 +154,26 @@ Spack can create a filtered environment from another environment using:
 
 .. code-block:: console
 
-   $ spack env create --filter new-env old-env
+   $ spack env create --filter filter.yaml new-env old-env
 
 The source environment, ``old-env`` in the example above, must be provided explicitly.
-Spack reads the source environment's ``filter:`` section and writes a new environment whose specs and selected configuration have been reduced according to that filter.
+Spack reads the filter configuration from ``filter.yaml`` and writes a new environment whose specs and selected configuration have been reduced according to that filter.
 
-The ``filter:`` section is written under the top-level ``spack:`` key in ``spack.yaml``:
+The filter file contains a top-level ``filter:`` section:
 
 .. code-block:: yaml
 
-   spack:
+   filter:
+     concrete: true
      specs:
-     - mpileaks
-     - hdf5
-     filter:
-       concrete: true
-       specs:
-         allow: [callpath, hdf5]
-         block: []
-       packages: externals_only
-       config:
-         allow: [packages, concretizer]
-         block: [mirrors]
-       projections:
-         all: "{name}@{version}/{hash:7}"
+       allow: [callpath, hdf5]
+       block: []
+     packages: externals_only
+     config:
+       allow: [packages, concretizer]
+       block: [mirrors]
+     projections:
+       all: "{name}@{version}/{hash:7}"
 
 The ``concrete`` option controls whether the filter is applied to the concretized lockfile graph or to the abstract specs in ``spack.yaml``.
 When ``concrete`` is ``true`` (the default), the source must be an environment directory with a ``spack.lock`` file.
@@ -201,11 +197,10 @@ Set ``packages`` to an allow/block object to copy complete package configuration
 
 .. code-block:: yaml
 
-   spack:
-     filter:
-       packages:
-         allow: [all, cmake]
-         block: [libelf]
+   filter:
+     packages:
+       allow: [all, cmake]
+       block: [libelf]
 
 An empty ``packages:allow`` list allows every package configuration entry.
 An empty ``packages:block`` list blocks nothing.
@@ -213,9 +208,8 @@ An empty ``packages:block`` list blocks nothing.
 The ``config`` subsection controls which top-level configuration sections are copied from the source environment.
 ``config:allow`` is a list of section names to copy; an empty list allows all sections.
 ``config:block`` is a list of section names to omit; an empty list blocks nothing.
-By default, the ``filter`` section itself and the lockfile include section are omitted from the generated environment.
-They can be copied by including them explicitly in ``config:allow``.
-If either section is also listed explicitly in ``config:block``, the block entry takes precedence.
+Lockfile includes are omitted from the generated environment; other include entries are retained
+when they pass the configuration filters.
 
 The optional ``projections`` subsection controls how concrete specs are written as abstract roots in the generated ``spack.yaml``.
 Keys are spec constraints and values are spec format strings.
