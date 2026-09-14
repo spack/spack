@@ -175,3 +175,20 @@ def test_report_unknown_package_anonymous(mock_packages):
     out = io.StringIO()
     report_unknown_package(spack.repo.UnknownPackageError(None), repo=mock_packages, out=out)
     assert "Did you mean" not in out.getvalue()
+
+
+def test_parse_specs_rejects_unknown_names(mock_packages):
+    """An unknown name is rejected before concretization."""
+    with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+        parse_specs(["mpileak"], concretize=True)
+    assert exc_info.value.name == "mpileak"
+
+
+def test_parse_specs_keeps_the_filename_hint(mock_packages):
+    """A namespace that is not configured is reported as such, so the hint survives."""
+    with pytest.raises(spack.repo.UnknownNamespaceError) as exc_info:
+        parse_specs(["libelf.yaml"], concretize=True)
+
+    out = io.StringIO()
+    report_unknown_package(exc_info.value, out=out)
+    assert "./libelf.yaml" in out.getvalue()
