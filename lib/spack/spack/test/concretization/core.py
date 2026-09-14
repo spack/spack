@@ -6246,6 +6246,7 @@ def test_reused_spec_keeps_provider_with_another_provider_as_root(
     )
     assert mpileaks.satisfies(f"mpileaks/{installed.dag_hash()}")
 
+
 @pytest.mark.parametrize(
     "spec_str,error_cls,name",
     [
@@ -6263,4 +6264,13 @@ def test_concretize_rejects_unknown_names(spec_str, error_cls, name, config, moc
 
 def test_concretize_accepts_a_virtual_without_a_package(config, mock_packages):
     """'lapack' is a virtual, and the mock repository does not have a package.py for it."""
-    spack.concretize.validate_package_names([Spec("mpileaks ^lapack")])
+    spack.concretize.ensure_existing_package_names([Spec("mpileaks ^lapack")])
+
+
+def test_concretize_separately_rejects_unknown_names(mutable_config, mock_packages):
+    """The check runs in the parent: a worker reports an error as a plain string."""
+    mutable_config.set("concretizer:unify", False)
+    spec_list = [(Spec("mpileaks"), None), (Spec("nosuchpkg"), None)]
+    with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+        spack.concretize.concretize_spec_pairs(spec_list)
+    assert exc_info.value.name == "nosuchpkg"
