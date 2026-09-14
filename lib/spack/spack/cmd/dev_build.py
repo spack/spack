@@ -99,7 +99,7 @@ def dev_build(self, args):
         args.subparser.error("only takes one spec")
 
     spec = specs[0]
-    spack.concretize.validate_package_names([spec])
+    spack.concretize.ensure_existing_package_names([spec])
 
     if not spec.versions.concrete_range_as_version:
         args.subparser.error(
