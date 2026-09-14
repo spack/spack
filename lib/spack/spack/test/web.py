@@ -559,6 +559,12 @@ def test_s3_url_exists(mock_s3_client):
     assert not spack.util.web.url_exists(fake_s3_url_does_not_exist)
 
 
+def test_s3_head_404(mock_s3_client):
+    with pytest.raises(urllib.error.HTTPError) as exc_info:
+        spack.util.s3._s3_open("s3://my-bucket/subdirectory/my-notfound-file", method="HEAD")
+    assert exc_info.value.code == 404
+
+
 def test_s3_url_parsing():
     assert spack.util.s3._parse_s3_endpoint_url("example.com") == "https://example.com"
     assert spack.util.s3._parse_s3_endpoint_url("http://example.com") == "http://example.com"
