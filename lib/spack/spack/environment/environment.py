@@ -494,7 +494,7 @@ def _default_filter_configuration() -> Dict[str, Any]:
         "concrete": True,
         "specs": {"allow": [], "block": []},
         "packages": "all",
-        "config": {"allow": [], "block": ["filter", lockfile_include_key]},
+        "config": {"allow": [], "block": [lockfile_include_key]},
     }
 
 
@@ -710,7 +710,7 @@ def _filtered_configuration(
     filtered: Dict[str, Any] = {}
 
     for key, value in source_configuration.items():
-        if key in ("specs", "filter", lockfile_include_key) or key in blocked_sections:
+        if key in ("specs", lockfile_include_key) or key in blocked_sections:
             continue
         if allowed_sections and key not in allowed_sections:
             continue
