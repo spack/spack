@@ -1,12 +1,14 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import io
 import pathlib
 
 import pytest
 
 import spack.environment as ev
 import spack.error
+import spack.repo
 from spack.cmd import (
     CommandNameError,
     PythonNameError,
@@ -14,6 +16,7 @@ from spack.cmd import (
     matching_specs_from_env,
     parse_specs,
     python_name,
+    report_unknown_package,
     require_cmd_name,
     require_python_name,
 )
@@ -144,3 +147,31 @@ def test_special_cases_concretization_matching_specs_from_env(
         else:
             # assertion error from monkeypatch above if test fails
             matching_specs_from_env(specs)
+
+
+def test_report_unknown_package_suggests(mock_packages):
+    """A misspelled name is reported with the packages it is close to."""
+    out = io.StringIO()
+    report_unknown_package(spack.repo.UnknownPackageError("mpileak"), repo=mock_packages, out=out)
+    assert "Package 'mpileak' not found" in out.getvalue()
+    assert "mpileaks" in out.getvalue()
+
+
+def test_report_unknown_package_hint(mock_packages):
+    """Advice beyond the name comes from the command that caught the error."""
+    error = spack.repo.UnknownPackageError("mpileak")
+
+    out = io.StringIO()
+    report_unknown_package(error, repo=mock_packages, out=out)
+    assert "spack create" not in out.getvalue()
+
+    out = io.StringIO()
+    report_unknown_package(error, hint="Use 'spack create'.", repo=mock_packages, out=out)
+    assert "Use 'spack create'." in out.getvalue()
+
+
+def test_report_unknown_package_anonymous(mock_packages):
+    """An error without a name does not suggest a name."""
+    out = io.StringIO()
+    report_unknown_package(spack.repo.UnknownPackageError(None), repo=mock_packages, out=out)
+    assert "Did you mean" not in out.getvalue()
