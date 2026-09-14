@@ -43,7 +43,6 @@ import spack
 import spack.caches
 import spack.compilers.config
 import spack.compilers.flags
-import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -104,6 +103,7 @@ from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder, all_l
 from .versions import Provenance
 
 if TYPE_CHECKING:
+    import spack.concretize
     import spack.context
 
     # Imported lazily to avoid re-introducing a runtime spack.store dependency; type-only.
@@ -1113,7 +1113,7 @@ class SpackSolverSetup:
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
     def __init__(
-        self, tests: spack.concretize.TestsType = False, *, context: "spack.context.SpackContext"
+        self, tests: "spack.concretize.TestsType" = False, *, context: "spack.context.SpackContext"
     ):
         self.context = context
         self.compiler_cache = FileCompilerCache(self.context.misc_cache)
@@ -3510,7 +3510,7 @@ class Solver:
         out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
-        tests: spack.concretize.TestsType = False,
+        tests: "spack.concretize.TestsType" = False,
         setup_only: bool = False,
         allow_deprecated: bool = False,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
@@ -3559,7 +3559,7 @@ class Solver:
         out: Optional[IO[str]] = None,
         timers: bool = False,
         stats: bool = False,
-        tests: spack.concretize.TestsType = False,
+        tests: "spack.concretize.TestsType" = False,
         allow_deprecated: bool = False,
     ) -> Generator[Result, None, None]:
         """Solve for a stable model of specs in multiple rounds.
