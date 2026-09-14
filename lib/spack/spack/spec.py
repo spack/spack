@@ -5199,10 +5199,6 @@ class Spec:
         # As with to_dict, do not include dependents. This avoids serializing more than intended.
         state.pop("_dependents", None)
 
-        # The query a node was reached by is transient, and holds a reference to the spec that was
-        # indexed.
-        state.pop("last_query", None)
-
         return state
 
     def __setstate__(self, state):
