@@ -1146,7 +1146,6 @@ def main(argv=None):
         return 1
 
     except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
-        # the command line frontend reports the name, and the names it is close to
         tty.debug(e)
         spack.cmd.report_unknown_package(e)
         return 1
