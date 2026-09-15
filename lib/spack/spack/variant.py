@@ -157,6 +157,32 @@ class Variant:
     def values_defined_by_validator(self) -> bool:
         return self.values is None
 
+    def possible_values(
+        self, *, when: Optional["spack.spec.Spec"] = None
+    ) -> Optional["ValueType"]:
+        """Returns the values this variant can take, with conditional values unwrapped.
+
+        Values are returned in the order they are declared in the package. Values that are
+        statically disabled are never returned.
+
+        Args:
+            when: if given, a conditional value is returned only if this spec satisfies the
+                condition attached to it
+
+        Returns:
+            the values, or None if they are checked by a validator instead of being listed
+        """
+        if self.values is None:
+            return None
+
+        result: List[Union[bool, str]] = []
+        for value in self.values:
+            if not isinstance(value, ConditionalValue):
+                result.append(value)
+            elif value.when is not None and (when is None or when.satisfies(value.when)):
+                result.append(value.value)
+        return tuple(result)
+
     def validate_or_raise(self, vspec: "VariantValue", pkg_name: str):
         """Validate a variant spec against this package variant. Raises an
         exception if any error is found.
@@ -487,7 +513,9 @@ class VariantValue:
     def __contains__(self, item: Union[str, bool]) -> bool:
         return item in self.values
 
-    def __str__(self) -> str:
+    def string(self, abbreviate_patches: bool = False) -> str:
+        """The string representation of this variant. With ``abbreviate_patches``, a ``patches``
+        variant is printed as 7-character checksum prefixes without the concreteness marker."""
         # boolean variants are printed +foo or ~foo
         if self.type == VariantType.BOOL:
             sigil = "+" if self.value else "~"
@@ -495,16 +523,22 @@ class VariantValue:
                 sigil *= 2
             return f"{sigil}{self.name}"
 
+        delim = "==" if self.propagate else "="
+
+        if abbreviate_patches and self.name == "patches" and self.values:
+            value_str = ",".join(str(x)[:7] for x in self.values)
+            return f"{self.name}{delim}{spack.spec_parser.quote_if_needed(value_str)}"
+
         # concrete multi-valued foo:=bar,baz
         concrete = ":" if self.type == VariantType.MULTI and self.concrete else ""
-        delim = "==" if self.propagate else "="
         if not self.values:
             value_str = "*"
-        elif self.name == "patches" and self.concrete:
-            value_str = ",".join(str(x)[:7] for x in self.values)
         else:
             value_str = ",".join(str(x) for x in self.values)
         return f"{self.name}{concrete}{delim}{spack.spec_parser.quote_if_needed(value_str)}"
+
+    def __str__(self) -> str:
+        return self.string()
 
     def __repr__(self):
         return (

@@ -127,15 +127,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     for opt, help_comment in options:
         subparser.add_argument(opt, action="store_true", help=help_comment)
 
-    # deprecated for the more generic --by-name, but still here until we can remove it
-    subparser.add_argument(
-        "--variants-by-name",
-        dest="by_name",
-        action=arguments.DeprecatedStoreTrueAction,
-        help=argparse.SUPPRESS,
-        removed_in="a future Spack release",
-        instructions="use --by-name instead",
-    )
     arguments.add_common_arguments(subparser, ["spec"])
 
 
@@ -201,7 +192,7 @@ def print_dependency_suggestion(pkg: PackageBase) -> None:
             # skip if user specified, or already saw a value (e.g. many +mpi and ~mpi)
             if name in spec.variants or name in pkg.spec.variants:
                 continue
-            spec.variants[name] = spack.variant.BoolValuedVariant(name, not val)
+            spec.variants.set(spack.variant.BoolValuedVariant(name, not val))
 
         # if there is new stuff to add beyond the input
         if spec.variants:

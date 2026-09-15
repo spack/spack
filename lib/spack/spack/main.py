@@ -721,6 +721,7 @@ class SpackCommand:
             sys.stderr.flush()
             for fd in fds:
                 os.dup2(tmp_file.fileno(), fd)
+            tty.clear_isatty_cache()
             try:
                 yield self
             finally:
@@ -729,6 +730,7 @@ class SpackCommand:
                 for fd, saved_fd in saved_fds.items():
                     os.dup2(saved_fd, fd)
                     os.close(saved_fd)
+                tty.clear_isatty_cache()
                 tmp_file.seek(0)
                 self.binary_output = tmp_file.read()
 

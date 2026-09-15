@@ -5,14 +5,14 @@
 Spack and run them on-demand.
 
 To register a new class of sanity checks (e.g. sanity checks for
-compilers.yaml), the first action required is to create a new AuditClass
+packages.yaml), the first action required is to create a new AuditClass
 object:
 
 .. code-block:: python
 
-   audit_cfgcmp = AuditClass(
-       tag="CFG-COMPILER",
-       description="Sanity checks on compilers.yaml",
+   audit_cfgpkg = AuditClass(
+       tag="CFG-PACKAGES",
+       description="Sanity checks on packages.yaml",
        kwargs=()
    )
 
@@ -21,8 +21,8 @@ that will perform each a single check:
 
 .. code-block:: python
 
-   @audit_cfgcmp
-   def _search_duplicate_compilers(error_cls):
+   @audit_cfgpkg
+   def _search_duplicate_specs_in_externals(error_cls):
        pass
 
 These functions need to take as argument the keywords declared when
@@ -41,13 +41,12 @@ import collections.abc
 import glob
 import inspect
 import io
-import itertools
 import os
 import pathlib
 import pickle
 import re
 import warnings
-from typing import Iterable, List, Set, Tuple
+from typing import Iterable, List, Optional, Set, Tuple
 from urllib.request import urlopen
 
 import spack.builder
@@ -183,35 +182,6 @@ generic = AuditClass(
     description="Generic checks relying on global variables",
     kwargs=(),
 )
-
-
-#: Sanity checks on compilers.yaml
-config_compiler = AuditClass(
-    group="configs", tag="CFG-COMPILER", description="Sanity checks on compilers.yaml", kwargs=()
-)
-
-
-@config_compiler
-def _search_duplicate_compilers(error_cls):
-    """Report compilers with the same spec and two different definitions"""
-    errors = []
-
-    compilers = list(
-        sorted(spack.config.CONFIG.get("compilers"), key=lambda x: x["compiler"]["spec"])
-    )
-    for spec, group in itertools.groupby(compilers, key=lambda x: x["compiler"]["spec"]):
-        group = list(group)
-        if len(group) == 1:
-            continue
-
-        error_msg = "Compiler defined multiple times: {0}"
-        try:
-            details = [str(x._start_mark).strip() for x in group]
-        except Exception:
-            details = []
-        errors.append(error_cls(summary=error_msg.format(spec), details=details))
-
-    return errors
 
 
 #: Sanity checks on packages.yaml
@@ -577,7 +547,9 @@ def _ensure_packages_are_unparseable(pkgs, error_cls):
     errors = []
     for pkg_name in pkgs:
         try:
-            source = ph.canonical_source(spack.spec.Spec(pkg_name), filter_multimethods=False)
+            source = ph.canonical_source(
+                spack.spec.Spec(pkg_name), filter_multimethods=False, repo=spack.repo.PATH
+            )
         except Exception as e:
             error_msg = "Package '{}' failed to unparse".format(pkg_name)
             details = ["{}".format(str(e))]
@@ -820,6 +792,50 @@ def _uses_deprecated_globals(pkgs, error_cls):
                         for name, line in visitor.references_to_globals
                     ],
                 )
+            )
+
+    return errors
+
+
+#: Decorators registering a phase callback, which accept a ``when=`` argument
+PHASE_CALLBACK_DECORATORS = ("run_before", "run_after")
+
+
+def _decorator_name(node: ast.expr) -> Optional[str]:
+    """Return the name of the callable used as a decorator, or None if it cannot be determined."""
+    if isinstance(node, ast.Call):
+        node = node.func
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    if isinstance(node, ast.Name):
+        return node.id
+    return None
+
+
+@package_properties
+def _ensure_when_is_not_combined_with_phase_callbacks(pkgs, error_cls):
+    """Ensure @when is not used on the same method as @run_before or @run_after."""
+    errors = []
+    for pkg_name in pkgs:
+        file = spack.repo.PATH.filename_for_package_name(pkg_name)
+        tree = ast.parse(open(file, "rb").read())
+        details = []
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef):
+                continue
+            decorators = [_decorator_name(d) for d in node.decorator_list]
+            if "when" not in decorators:
+                continue
+            for name in decorators:
+                if name in PHASE_CALLBACK_DECORATORS:
+                    details.append(
+                        f"{file}:{node.lineno} '{node.name}' is decorated with both @when and "
+                        f"@{name}, pass the condition to @{name}(..., when=...) instead"
+                    )
+
+        if details:
+            errors.append(
+                error_cls(f"Package '{pkg_name}' combines @when with a phase callback", details)
             )
 
     return errors

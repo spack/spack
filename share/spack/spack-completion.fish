@@ -481,7 +481,7 @@ complete -c spack -n '__fish_spack_using_command add' -s l -l list-name -r -f -a
 complete -c spack -n '__fish_spack_using_command add' -s l -l list-name -r -d 'name of the list to add specs to'
 
 # spack arch
-set -g __fish_spack_optspecs_spack_arch h/help g/generic-target known-targets family generic p/platform o/operating-system t/target f/frontend b/backend
+set -g __fish_spack_optspecs_spack_arch h/help g/generic-target known-targets family generic p/platform o/operating-system t/target
 complete -c spack -n '__fish_spack_using_command arch' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command arch' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command arch' -s g -l generic-target -f -a generic_target
@@ -498,10 +498,6 @@ complete -c spack -n '__fish_spack_using_command arch' -s o -l operating-system 
 complete -c spack -n '__fish_spack_using_command arch' -s o -l operating-system -d 'print only the operating system'
 complete -c spack -n '__fish_spack_using_command arch' -s t -l target -f -a target
 complete -c spack -n '__fish_spack_using_command arch' -s t -l target -d 'print only the target'
-complete -c spack -n '__fish_spack_using_command arch' -s f -l frontend -f -a frontend
-complete -c spack -n '__fish_spack_using_command arch' -s f -l frontend -d 'print frontend (DEPRECATED)'
-complete -c spack -n '__fish_spack_using_command arch' -s b -l backend -f -a backend
-complete -c spack -n '__fish_spack_using_command arch' -s b -l backend -d 'print backend (DEPRECATED)'
 
 # spack audit
 set -g __fish_spack_optspecs_spack_audit h/help
@@ -1272,7 +1268,7 @@ complete -c spack -n '__fish_spack_using_command config' -l scope -r -d 'configu
 
 # spack config get
 set -g __fish_spack_optspecs_spack_config_get h/help json group=
-complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config get' -l json -f -a json
@@ -1282,7 +1278,7 @@ complete -c spack -n '__fish_spack_using_command config get' -l group -r -d 'sho
 
 # spack config blame
 set -g __fish_spack_optspecs_spack_config_blame h/help group=
-complete -c spack -n '__fish_spack_using_command_pos 0 config blame' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config blame' -f -a 'bootstrap cdash ci concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config blame' -l group -r -f -a group
@@ -1290,7 +1286,7 @@ complete -c spack -n '__fish_spack_using_command config blame' -l group -r -d 's
 
 # spack config edit
 set -g __fish_spack_optspecs_spack_config_edit h/help print-file
-complete -c spack -n '__fish_spack_using_command_pos 0 config edit' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config edit' -f -a 'bootstrap cdash ci concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config edit' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config edit' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config edit' -l print-file -f -a print_file
@@ -1303,7 +1299,7 @@ complete -c spack -n '__fish_spack_using_command config list' -s h -l help -d 's
 
 # spack config scopes
 set -g __fish_spack_optspecs_spack_config_scopes h/help p/paths t/type= v/verbose
-complete -c spack -n '__fish_spack_using_command_pos 0 config scopes' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config scopes' -f -a 'bootstrap cdash ci concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config scopes' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config scopes' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config scopes' -s p -l paths -f -a paths
@@ -1452,7 +1448,7 @@ complete -c spack -n '__fish_spack_using_command dependents' -s t -l transitive 
 complete -c spack -n '__fish_spack_using_command dependents' -s t -l transitive -d 'show all transitive dependents'
 
 # spack deprecate
-set -g __fish_spack_optspecs_spack_deprecate h/help y/yes-to-all d/dependencies D/no-dependencies i/install-deprecator I/no-install-deprecator l/link-type=
+set -g __fish_spack_optspecs_spack_deprecate h/help y/yes-to-all d/dependencies D/no-dependencies i/install-deprecator I/no-install-deprecator
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 deprecate' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command deprecate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command deprecate' -s h -l help -d 'show this help message and exit'
@@ -1466,8 +1462,6 @@ complete -c spack -n '__fish_spack_using_command deprecate' -s i -l install-depr
 complete -c spack -n '__fish_spack_using_command deprecate' -s i -l install-deprecator -d 'concretize and install deprecator spec'
 complete -c spack -n '__fish_spack_using_command deprecate' -s I -l no-install-deprecator -f -a install
 complete -c spack -n '__fish_spack_using_command deprecate' -s I -l no-install-deprecator -d 'deprecator spec must already be installed (default)'
-complete -c spack -n '__fish_spack_using_command deprecate' -s l -l link-type -r -f -a 'soft hard'
-complete -c spack -n '__fish_spack_using_command deprecate' -s l -l link-type -r -d '(deprecated)'
 
 # spack dev-build
 set -g __fish_spack_optspecs_spack_dev_build h/help j/jobs= n/no-checksum d/source-path= i/ignore-dependencies keep-prefix skip-patch q/quiet drop-in= test= b/before= u/until= clean dirty f/force U/fresh reuse fresh-roots deprecated
@@ -2383,6 +2377,7 @@ complete -c spack -n '__fish_spack_using_command migrate' -l i-need-old-spack -d
 # spack mirror
 set -g __fish_spack_optspecs_spack_mirror h/help n/no-checksum
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a create -d 'create a directory to be used as a spack mirror, and fill it with package archives'
+complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a add-archive -d 'add a single archive, from a URL or path, to a mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a destroy -d 'given a url, recursively delete everything under it'
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a add -d 'add a mirror to Spack'
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a remove -d 'remove a mirror by name'
@@ -2431,6 +2426,14 @@ complete -c spack -n '__fish_spack_using_command mirror create' -l fresh-roots -
 complete -c spack -n '__fish_spack_using_command mirror create' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command mirror create' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command mirror create' -l deprecated -d 'allow concretizer to select deprecated versions'
+
+# spack mirror add-archive
+set -g __fish_spack_optspecs_spack_mirror_add_archive h/help d/directory=
+
+complete -c spack -n '__fish_spack_using_command mirror add-archive' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command mirror add-archive' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command mirror add-archive' -s d -l directory -r -f -a directory
+complete -c spack -n '__fish_spack_using_command mirror add-archive' -s d -l directory -r -d 'directory of the mirror to add the archive to'
 
 # spack mirror destroy
 set -g __fish_spack_optspecs_spack_mirror_destroy h/help m/mirror-name= mirror-url=

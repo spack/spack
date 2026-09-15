@@ -212,10 +212,10 @@ def test_installed_dependency_request_conflicts(install_mockery, mock_fetch, mut
         spack.concretize.concretize_one(dependent)
 
 
-def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
+def test_install_times(install_mockery, mock_fetch, mutable_mock_repo, installer_variant):
     """Test install times added."""
     spec = spack.concretize.concretize_one("dev-build-test-install-phases")
-    PackageInstaller([spec.package], explicit=True).install()
+    spack.installer_dispatch.create_installer([spec.package], explicit=True).install()
 
     # Ensure dependency directory exists after the installation.
     install_times = os.path.join(spec.package.prefix, ".spack", spack_times_log)

@@ -9,7 +9,6 @@ import pytest
 import spack.concretize
 import spack.deptypes as dt
 import spack.directives
-import spack.hash_types as ht
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -28,6 +27,7 @@ from spack.variant import (
     MultipleValuesInExclusiveVariantError,
     UnknownVariantError,
 )
+from spack.version.git_ref_lookup import GitRefLookup
 
 
 @pytest.fixture()
@@ -165,39 +165,34 @@ class TestSpecSemantics:
             ("foo platform=linux", "platform=linux", "foo platform=linux"),
             (
                 "foo platform=test",
-                "platform=test target=frontend",
-                "foo platform=test target=frontend",
+                "platform=test target=default_target",
+                "foo platform=test target=default_target",
             ),
             (
                 "foo platform=test",
-                "platform=test os=frontend target=frontend",
-                "foo platform=test os=frontend target=frontend",
+                "platform=test os=default_os target=default_target",
+                "foo platform=test os=default_os target=default_target",
             ),
             (
-                "foo platform=test os=frontend target=frontend",
+                "foo platform=test os=default_os target=default_target",
                 "platform=test",
-                "foo platform=test os=frontend target=frontend",
+                "foo platform=test os=default_os target=default_target",
             ),
             ("foo arch=test-None-None", "platform=test", "foo platform=test"),
             (
-                "foo arch=test-None-frontend",
-                "platform=test target=frontend",
-                "foo platform=test target=frontend",
+                "foo arch=test-None-default_target",
+                "platform=test target=default_target",
+                "foo platform=test target=default_target",
             ),
             (
-                "foo arch=test-frontend-frontend",
-                "platform=test os=frontend target=frontend",
-                "foo platform=test os=frontend target=frontend",
+                "foo arch=test-default_os-default_target",
+                "platform=test os=default_os target=default_target",
+                "foo platform=test os=default_os target=default_target",
             ),
             (
-                "foo arch=test-frontend-frontend",
+                "foo arch=test-default_os-default_target",
                 "platform=test",
-                "foo platform=test os=frontend target=frontend",
-            ),
-            (
-                "foo platform=test target=backend os=backend",
-                "platform=test target=backend os=backend",
-                "foo platform=test target=backend os=backend",
+                "foo platform=test os=default_os target=default_target",
             ),
             (
                 "libelf target=default_target os=default_os",
@@ -1657,19 +1652,19 @@ class TestSpecSemantics:
             # Ensure the 'when=+debug' is referred to 'callpath', and not to 'mpileaks',
             # and that we can concretize the spec despite 'callpath' has no debug variant
             (
-                "mpileaks+debug ^callpath %[when=+debug virtuals=mpi] zmpi",
+                "mpileaks+debug ^callpath %[virtuals=mpi when=+debug] zmpi",
                 [
                     ("^zmpi", False),
                     ("^mpich", False),
-                    ("mpileaks+debug  %[when=+debug virtuals=mpi] zmpi", False),
+                    ("mpileaks+debug  %[virtuals=mpi when=+debug] zmpi", False),
                 ],
                 [("^zmpi", False), ("^[virtuals=mpi] mpich", True)],
             ),
             # Ensure we don't skip conditional edges when testing because we associate them
             # with the wrong node (e.g. mpileaks instead of mpich)
             (
-                "mpileaks~debug ^mpich+debug %[when=+debug virtuals=c] llvm",
-                [("^mpich+debug %[when=+debug virtuals=c] gcc", False)],
+                "mpileaks~debug ^mpich+debug %[virtuals=c when=+debug] llvm",
+                [("^mpich+debug %[virtuals=c when=+debug] gcc", False)],
                 [("^mpich %[virtuals=c] gcc", False), ("^mpich %[virtuals=c] llvm", True)],
             ),
         ],
@@ -1882,7 +1877,7 @@ def test_spec_trim(mock_packages, config):
 def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
     # create an "old" spec with no package hash
     bottom = spack.concretize.concretize_one("dt-diamond-bottom")
-    delattr(bottom, "_package_hash")
+    bottom._package_hash = None
 
     dummy_hash = "zd4m26eis2wwbvtyfiliar27wkcv3ehk"
     bottom._hash = dummy_hash
@@ -1902,7 +1897,7 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
     assert spec["dt-diamond-bottom"]._hash == dummy_hash
 
     # make sure package hash is NOT recomputed
-    assert not getattr(spec["dt-diamond-bottom"], "_package_hash", None)
+    assert spec["dt-diamond-bottom"]._package_hash is None
 
 
 def test_package_hash_affects_dunder_and_dag_hash(mock_packages, config):
@@ -2106,6 +2101,8 @@ def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, resu
         ),
         # target=* can be constrained by a specific target
         (Spec, "target=*", "target=haswell", True, "target=haswell"),
+        # A range of a single version is not collapsed to an assignment of it
+        (Spec, "pkg-a@git.main", "pkg-a@develop", True, "pkg-a@git.main=develop:develop"),
     ],
 )
 def test_constrain(factory, lhs_str, rhs_str, result, constrained_str, mock_packages):
@@ -2800,14 +2797,14 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "mpileaks",
             "callpath",
             {"virtuals": ("mpi", "lapack")},
-            "mpileaks ^[virtuals=lapack,mpi] callpath",
+            "mpileaks ^lapack,mpi=callpath",
             "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=('lapack', 'mpi'))",
         ),
         (
             "",
             "callpath",
             {"virtuals": ("mpi", "lapack"), "direct": True},
-            " %[virtuals=lapack,mpi] callpath",
+            " %lapack,mpi=callpath",
             "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True)",
         ),
         (
@@ -2818,7 +2815,7 @@ def test_copy_does_not_share_flag_instances(mock_packages):
                 "direct": True,
                 "propagation": PropagationPolicy.PREFERENCE,
             },
-            " %%[virtuals=lapack,mpi] callpath",
+            " %%lapack,mpi=callpath",
             "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True,"
             " propagation=PropagationPolicy.PREFERENCE)",
         ),
@@ -2838,6 +2835,21 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "DependencySpec('mpileaks+foo', 'callpath+bar', depflag=0, virtuals=(), direct=True,"
             " propagation=PropagationPolicy.PREFERENCE)",
         ),
+        # an anonymous child is named *, so that foo=bar is not read as a virtual assignment
+        (
+            "mpileaks",
+            "foo=bar",
+            {"virtuals": ()},
+            "mpileaks ^* foo=bar",
+            "DependencySpec('mpileaks', 'foo=bar', depflag=0, virtuals=())",
+        ),
+        (
+            "mpileaks",
+            "@4.0",
+            {"virtuals": ("c",), "direct": True},
+            "mpileaks %[virtuals=c] @4.0",
+            "DependencySpec('mpileaks', '@4.0', depflag=0, virtuals=('c',), direct=True)",
+        ),
     ],
 )
 def test_edge_representation(parent_str, child_str, kwargs, expected_str, expected_repr):
@@ -2847,6 +2859,10 @@ def test_edge_representation(parent_str, child_str, kwargs, expected_str, expect
     edge = DependencySpec(parent, child, depflag=0, **kwargs)
     assert str(edge) == expected_str
     assert repr(edge) == expected_repr
+    # the string is used as a constraint, so it must parse back to the same edge
+    parsed = Spec(str(edge)).edges_to_dependencies()[0]
+    assert parsed.spec == child and parsed.virtuals == edge.virtuals
+    assert parsed.direct == edge.direct and parsed.propagation == edge.propagation
 
 
 def test_parallel_edges_sort_with_differing_propagation(mock_packages):
@@ -2994,10 +3010,10 @@ def test_mark_concrete_roundtrip_preserves_hashes(spec_str, config, mock_package
 
     # Un-mark concrete: this clears the cached hashes on every node in the DAG.
     s._mark_concrete(False)
-    assert all(getattr(node, ht.dag_hash.attr) is None for node in s.traverse())
+    assert all(node._hash is None for node in s.traverse())
 
     # Re-finalize the DAG: the cleared hashes must recompute to the original values.
-    s._finalize_concretization()
+    spack.spec.finalize_concretization([s], repo=spack.repo.PATH)
     roundtrip = {node.name: node.dag_hash() for node in s.traverse()}
     assert roundtrip == original
 
@@ -3390,3 +3406,16 @@ def test_copy_keeps_a_redundant_parallel_edge_and_its_subtree(mock_packages):
 
     assert copy == original
     assert copy.to_dict() == original.to_dict()
+
+
+def test_git_ref_spec_operations_are_pure(monkeypatch):
+    """Parsing, printing, copying, hashing and serializing a spec with a git ref version never
+    trigger a repository lookup: the ref stays abstract until concretization."""
+    monkeypatch.setattr(
+        GitRefLookup, "get", lambda self, ref: pytest.fail(f"unexpected git ref lookup of '{ref}'")
+    )
+    for spec_str in ("git-test-commit@git.main", "git-test-commit@git.main=1.0:"):
+        spec = Spec(spec_str)
+        assert str(spec) == spec_str
+        assert spec.copy() == spec == Spec.from_dict(spec.to_dict())
+        assert hash(spec) == hash(Spec(spec_str))

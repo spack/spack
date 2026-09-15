@@ -239,17 +239,9 @@ def print_flattened_configuration(*, blame: bool, yaml: bool) -> None:
         blame: if True, shows file provenance for each entry in the configuration.
     """
     env = active_environment()
-    if env is not None:
-        pristine = env.manifest.yaml_content
-        flattened = pristine.copy()
-        flattened[spack.schema.env.TOP_LEVEL_KEY] = pristine[spack.schema.env.TOP_LEVEL_KEY].copy()
-    else:
-        flattened = syaml.syaml_dict()
-        flattened[spack.schema.env.TOP_LEVEL_KEY] = syaml.syaml_dict()
+    manifest = env.manifest.yaml_content if env is not None else None
+    flattened = spack.config.flattened_configuration(manifest)
 
-    for config_section in spack.config.SECTION_SCHEMAS:
-        current = spack.config.CONFIG.get(config_section)
-        flattened[spack.schema.env.TOP_LEVEL_KEY][config_section] = current
     if blame or yaml:
         syaml.dump_config(flattened, stream=sys.stdout, default_flow_style=False, blame=blame)
     else:

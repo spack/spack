@@ -197,6 +197,12 @@ def assert_actionable_error(exc_info, *required_part: str) -> None:
             ["mvapich2", "file_systems", "the value 'auto' is mutually exclusive"],
             id="variant_disjoint_sets",
         ),
+        # The requested platform is not the one Spack runs on. The error must name both.
+        pytest.param(
+            "libelf platform=linux",
+            ["'libelf platform=linux' is not compatible with this machine (platform=test)"],
+            id="platform_mismatch",
+        ),
         # "fortan" is not a known virtual (typo of "fortran"). The error must name the
         # unknown virtual and quote the originating spec, and must not be a generic internal error.
         pytest.param(
@@ -221,6 +227,19 @@ def test_input_spec_driven_errors(
     with pytest.raises(spack.error.SpackError) as exc_info:
         spack.concretize.concretize_one(input_spec)
     assert_actionable_error(exc_info, *expected_parts)
+
+
+def test_target_not_compatible_with_host_error(mock_packages, mutable_config: Configuration):
+    """With host-compatible targets only, requesting a target from another family must name the
+    spec and say the machine cannot build for it, without a generic "conflicting values" message.
+    """
+    mutable_config.set("concretizer:targets:host_compatible", True)
+    with pytest.raises(spack.error.SpackError) as exc_info:
+        spack.concretize.concretize_one("libelf target=ppc64le")
+    assert_actionable_error(
+        exc_info, "'libelf target=ppc64le' is not compatible with this machine"
+    )
+    assert "Conflicting target values" not in str(exc_info.value)
 
 
 @pytest.mark.parametrize(

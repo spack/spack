@@ -59,7 +59,7 @@ def set_dependency(saved_deps, monkeypatch):
             saved_deps[pkg_name] = (pkg_cls, pkg_cls.dependencies.copy())
 
         cond = Spec(pkg_cls.name)
-        dependency = Dependency(pkg_cls, spec)
+        dependency = Dependency(spec)
         monkeypatch.setitem(pkg_cls.dependencies, cond, {spec.name: dependency})
 
     return _mock

@@ -261,7 +261,7 @@ def _add_repo(
         entry = spack.config.canonicalize_path(path_or_repo)
 
     descriptor = spack.repo.parse_config_descriptor(
-        name or "<unnamed>", entry, lock=spack.repo.package_repository_lock()
+        name or "<unnamed>", entry, lock=spack.repo.package_repository_lock(spack.config.CONFIG)
     )
     descriptor.initialize(git=spack.util.executable.which("git"))
 
@@ -328,9 +328,7 @@ def _remove_repo(namespace_or_path, scope):
     else:
         # delete by namespace or path (requires constructing the repo)
         canon_path = spack.config.canonicalize_path(namespace_or_path)
-        descriptors = spack.repo.RepoDescriptors.from_config(
-            spack.repo.package_repository_lock(), spack.config.CONFIG, scope=scope
-        )
+        descriptors = spack.repo.RepoDescriptors.from_config(spack.config.CONFIG, scope=scope)
         for name, descriptor in descriptors.items():
             descriptor.initialize(fetch=False)
 
@@ -358,9 +356,7 @@ def repo_list(args):
     List all package repositories known to Spack. Repositories
     can be local directories or remote git repositories.
     """
-    descriptors = spack.repo.RepoDescriptors.from_config(
-        lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG, scope=args.scope
-    )
+    descriptors = spack.repo.RepoDescriptors.from_config(spack.config.CONFIG, scope=args.scope)
 
     # --names: just print config names
     if args.names:
@@ -443,9 +439,7 @@ def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
     except spack.repo.RepoError:
         pass
 
-    descriptors = spack.repo.RepoDescriptors.from_config(
-        spack.repo.package_repository_lock(), spack.config.CONFIG
-    )
+    descriptors = spack.repo.RepoDescriptors.from_config(spack.config.CONFIG)
 
     repo_path, _ = descriptors.construct(cache=spack.caches.MISC_CACHE, fetch=False)
 
@@ -583,9 +577,7 @@ def _iter_repos_from_descriptors(
 
 def repo_update(args):
     """update one or more package repositories"""
-    descriptors = spack.repo.RepoDescriptors.from_config(
-        spack.repo.package_repository_lock(), spack.config.CONFIG
-    )
+    descriptors = spack.repo.RepoDescriptors.from_config(spack.config.CONFIG)
 
     git_flags = ["commit", "tag", "branch"]
     active_flag = next((attr for attr in git_flags if getattr(args, attr)), None)

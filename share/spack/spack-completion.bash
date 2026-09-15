@@ -410,7 +410,7 @@ _spack_add() {
 }
 
 _spack_arch() {
-    SPACK_COMPREPLY="-h --help -g --generic-target --known-targets --family --generic -p --platform -o --operating-system -t --target -f --frontend -b --backend"
+    SPACK_COMPREPLY="-h --help -g --generic-target --known-targets --family --generic -p --platform -o --operating-system -t --target"
 }
 
 _spack_audit() {
@@ -1004,7 +1004,7 @@ _spack_dependents() {
 _spack_deprecate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -y --yes-to-all -d --dependencies -D --no-dependencies -i --install-deprecator -I --no-install-deprecator -l --link-type"
+        SPACK_COMPREPLY="-h --help -y --yes-to-all -d --dependencies -D --no-dependencies -i --install-deprecator -I --no-install-deprecator"
     else
         _all_packages
     fi
@@ -1475,7 +1475,7 @@ _spack_mirror() {
     then
         SPACK_COMPREPLY="-h --help -n --no-checksum"
     else
-        SPACK_COMPREPLY="create destroy add remove rm set-url set list ls"
+        SPACK_COMPREPLY="create add-archive destroy add remove rm set-url set list ls"
     fi
 }
 
@@ -1485,6 +1485,15 @@ _spack_mirror_create() {
         SPACK_COMPREPLY="-h --help -d --directory -a --all -j --jobs --file --exclude-file --exclude-specs --skip-unstable-versions -D --dependencies -n --versions-per-spec --private -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
+    fi
+}
+
+_spack_mirror_add_archive() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --directory"
+    else
+        SPACK_COMPREPLY=""
     fi
 }
 

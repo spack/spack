@@ -44,7 +44,6 @@ import spack.directives_meta
 import spack.environment as ev
 import spack.error
 import spack.extensions
-import spack.hash_types
 import spack.modules.common
 import spack.package_base
 import spack.paths
@@ -67,6 +66,7 @@ import spack.util.lock
 import spack.util.naming
 import spack.util.parallel
 import spack.util.spack_yaml as syaml
+import spack.util.tty
 import spack.util.tty.color
 import spack.util.url as url_util
 import spack.util.web
@@ -706,7 +706,9 @@ def mock_binary_index(monkeypatch, tmp_path_factory: pytest.TempPathFactory):
     """
     tmpdir = tmp_path_factory.mktemp("mock_binary_index")
     index_path = tmpdir / "binary_index"
-    mock_index = spack.binary_distribution.BinaryIndexCache(str(index_path))
+    mock_index = spack.binary_distribution.BinaryIndexCache(
+        str(index_path), config=spack.config.CONFIG
+    )
     monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
     yield
 
@@ -1017,7 +1019,7 @@ def configuration_dir(request, tmp_path_factory: pytest.TempPathFactory, linux_o
     # Create temporary 'defaults', 'site' and 'user' folders
     (tmp_path / "user").mkdir()
 
-    # Fill out config.yaml, compilers.yaml and modules.yaml templates.
+    # Fill out config.yaml, packages.yaml and modules.yaml templates.
     locks = sys.platform != "win32"
     config = tmp_path / "site" / "config.yaml"
     config_template = test_config / "config.yaml"
@@ -1103,10 +1105,21 @@ def mock_configuration_scopes(configuration_dir):
     yield _create_mock_configuration_scopes(configuration_dir)
 
 
+@contextlib.contextmanager
+def _use_configuration_and_store(*scopes):
+    """Activate config scopes and reset the store so it re-derives from them."""
+    with spack.config.use_configuration(*scopes) as cfg:
+        store_token = spack.store.reinitialize()
+        try:
+            yield cfg
+        finally:
+            spack.store.restore(store_token)
+
+
 @pytest.fixture(scope="function")
 def config(mock_configuration_scopes):
     """This fixture activates/deactivates the mock configuration."""
-    with spack.config.use_configuration(*mock_configuration_scopes) as config:
+    with _use_configuration_and_store(*mock_configuration_scopes) as config:
         yield config
 
 
@@ -1117,7 +1130,7 @@ def mutable_config(tmp_path_factory: pytest.TempPathFactory, configuration_dir):
     shutil.copytree(configuration_dir, mutable_dir)
 
     scopes = _create_mock_configuration_scopes(mutable_dir)
-    with spack.config.use_configuration(*scopes) as cfg:
+    with _use_configuration_and_store(*scopes) as cfg:
         yield cfg
 
 
@@ -1130,7 +1143,7 @@ def mutable_empty_config(tmp_path_factory: pytest.TempPathFactory, configuration
         for name in ["site", "system", "user"]
     ]
 
-    with spack.config.use_configuration(*scopes) as cfg:
+    with _use_configuration_and_store(*scopes) as cfg:
         yield cfg
 
 
@@ -1165,7 +1178,7 @@ def concretize_scope(mutable_config: Configuration, tmp_path: Path):
 
 @pytest.fixture
 def no_packages_yaml(mutable_config):
-    """Creates a temporary configuration without compilers.yaml"""
+    """Creates a temporary configuration without packages.yaml"""
     for local_config in mutable_config.scopes.values():
         if not isinstance(local_config, spack.config.DirectoryConfigScope):
             continue
@@ -2239,14 +2252,14 @@ def inode_cache():
 def brand_new_binary_cache():
     yield
     spack.binary_distribution.BINARY_INDEX = spack.util.lang.Singleton(
-        spack.binary_distribution.BinaryIndexCache
+        spack.binary_distribution._binary_index
     )
 
 
-def _trivial_package_hash(spec: spack.spec.Spec) -> str:
+def _trivial_content_hash(self, content=None, *, repo: spack.repo.RepoPath) -> str:
     """Return a trivial package hash for tests to avoid expensive AST parsing."""
     # Pad package name to consistent length and cap at 32 chars for realistic hash length
-    return base64.b32encode(f"{spec.name:<32}".encode()[:32]).decode().lower()
+    return base64.b32encode(f"{self.spec.name:<32}".encode()[:32]).decode().lower()
 
 
 @pytest.fixture(autouse=True)
@@ -2256,17 +2269,8 @@ def mock_package_hash_for_tests(request, monkeypatch):
     if "use_package_hash" in request.keywords:
         yield
         return
-    pkg_hash = spack.hash_types.package_hash
-    idx = spack.hash_types.HASHES.index(pkg_hash)
-    mock_pkg_hash = spack.hash_types.SpecHashDescriptor(
-        depflag=0, package_hash=True, name="package_hash", override=_trivial_package_hash
-    )
-    monkeypatch.setattr(spack.hash_types, "package_hash", mock_pkg_hash)
-    try:
-        spack.hash_types.HASHES[idx] = mock_pkg_hash
-        yield
-    finally:
-        spack.hash_types.HASHES[idx] = pkg_hash
+    monkeypatch.setattr(spack.package_base.PackageBase, "content_hash", _trivial_content_hash)
+    yield
 
 
 @pytest.fixture()
@@ -2451,6 +2455,10 @@ def nullify_globals(request, monkeypatch):
 
 
 def pytest_runtest_setup(item):
+    # Tests redirect std fds (capfd, dup2) without going through spack code, so cached isatty()
+    # results from a previous test may be stale.
+    spack.util.tty.clear_isatty_cache()
+
     # Skip test marked "not_on_windows" if they're run on Windows
     not_on_windows_marker = item.get_closest_marker(name="not_on_windows")
     if not_on_windows_marker and sys.platform == "win32":

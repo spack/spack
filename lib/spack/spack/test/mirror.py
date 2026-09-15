@@ -322,12 +322,16 @@ def test_update_4():
 @pytest.mark.parametrize("direction", ["fetch", "push"])
 def test_update_connection_params(direction, monkeypatch):
     """Test whether new connection params expand the mirror config to a dict."""
+    monkeypatch.setenv("_SPACK_TEST_PAIR_USERNAME", "expanded_username")
+    monkeypatch.setenv("_SPACK_TEST_PAIR_PASSWORD", "expanded_password")
+    monkeypatch.setenv("_SPACK_TEST_TOKEN", "expanded_token")
+
     m = spack.mirrors.mirror.Mirror("https://example.com", "example")
 
     assert m.update(
         {
             "url": "http://example.org",
-            "access_pair": ["username", "password"],
+            "access_pair": {"id": "username", "secret_variable": "_SPACK_TEST_PAIR_PASSWORD"},
             "access_token": "token",
             "profile": "profile",
             "endpoint_url": "https://example.com",
@@ -339,21 +343,16 @@ def test_update_connection_params(direction, monkeypatch):
         "url": "https://example.com",
         direction: {
             "url": "http://example.org",
-            "access_pair": ["username", "password"],
+            "access_pair": {"id": "username", "secret_variable": "_SPACK_TEST_PAIR_PASSWORD"},
             "access_token": "token",
             "profile": "profile",
             "endpoint_url": "https://example.com",
         },
     }
-    assert m.get_access_pair(direction) == ("username", "password")
+    assert m.get_access_pair(direction) == ("username", "expanded_password")
     assert m.get_access_token(direction) == "token"
     assert m.get_profile(direction) == "profile"
     assert m.get_endpoint_url(direction) == "https://example.com"
-
-    # Expand environment variables
-    os.environ["_SPACK_TEST_PAIR_USERNAME"] = "expanded_username"
-    os.environ["_SPACK_TEST_PAIR_PASSWORD"] = "expanded_password"
-    os.environ["_SPACK_TEST_TOKEN"] = "expanded_token"
 
     assert m.update(
         {

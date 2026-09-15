@@ -10,12 +10,15 @@ import spack
 import spack.binary_distribution
 import spack.cmd
 import spack.cmd.spec
+import spack.concretize
 import spack.config
-import spack.hash_types as ht
+import spack.context
 import spack.package_base
 import spack.spec
 from spack.active_environment import active_environment
 from spack.solver import asp
+from spack.solver.error import format_unsolved
+from spack.solver.result import OptimizationKind
 from spack.util import tty
 from spack.util.tty import color
 
@@ -85,9 +88,9 @@ def _process_result(result, show, required_format, kwargs):
 
             if grey_out:
                 lc = "@K"
-            elif criterion.kind == asp.OptimizationKind.CONCRETE:
+            elif criterion.kind == OptimizationKind.CONCRETE:
                 lc = "@b"
-            elif criterion.kind == asp.OptimizationKind.BUILD:
+            elif criterion.kind == OptimizationKind.BUILD:
                 lc = "@g"
             else:
                 lc = "@y"
@@ -108,9 +111,9 @@ def _process_result(result, show, required_format, kwargs):
                 # With -y, just print YAML to output.
                 if required_format == "yaml":
                     # use write because to_yaml already has a newline.
-                    sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
+                    sys.stdout.write(spec.to_yaml())
                 elif required_format == "json":
-                    print(spec.to_json(hash=ht.dag_hash))
+                    print(spec.to_json())
                 else:
                     print(spec.format(required_format))
         else:
@@ -121,7 +124,7 @@ def _process_result(result, show, required_format, kwargs):
         print()
 
     if result.unsolved_specs and "solutions" in show:
-        tty.msg(asp.Result.format_unsolved(result.unsolved_specs))
+        tty.msg(format_unsolved(result.unsolved_specs))
 
 
 def solve(parser, args):
@@ -179,7 +182,8 @@ def solve(parser, args):
     if not specs:
         return
 
-    solver = asp.Solver()
+    spack.concretize.ensure_compilers_in_configuration()
+    solver = asp.Solver(context=spack.context.default())
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {"asp"}
     unify = spack.config.CONFIG.get("concretizer:unify")

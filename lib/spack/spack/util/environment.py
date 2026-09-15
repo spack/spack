@@ -82,6 +82,18 @@ class ShellCmdString:
         """Returns the command to unset an environment variable."""
         return self._UNSET_STRINGS[self.shell].format(name)
 
+    def alias(self, name: str, code: str) -> List[str]:
+        if self.shell == "csh":
+            return [f'alias {name} "{code}"']
+        elif self.shell == "fish":
+            return [f"function {name}", code, "end"]
+        elif self.shell in ("bat", "pwsh"):
+            # Not implemented in Windows shells
+            return []
+        else:
+            # posix shell
+            return [f"alias {name}='{code}'"]
+
     def join(self, cmds: List[str]) -> str:
         """Joins a list of commands into a single, terminated script."""
         cmds = cmds + [""]

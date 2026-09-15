@@ -262,11 +262,15 @@ def test_nested_directives(mock_packages: RepoPath):
     when_unconditional = package.dependencies[Spec()]
     assert when_unconditional.keys() == {"fake", "libelf"}
     # fake has two unconditional URL patches
-    assert when_unconditional["fake"].patches.keys() == {Spec()}
-    assert len(when_unconditional["fake"].patches[Spec()]) == 2
+    fake_patches = when_unconditional["fake"].patches
+    assert fake_patches is not None
+    assert fake_patches.keys() == {Spec()}
+    assert len(fake_patches[Spec()]) == 2
     # libelf has one unconditional patch
-    assert when_unconditional["libelf"].patches.keys() == {Spec()}
-    assert len(when_unconditional["libelf"].patches[Spec()]) == 1
+    libelf_patches = when_unconditional["libelf"].patches
+    assert libelf_patches is not None
+    assert libelf_patches.keys() == {Spec()}
+    assert len(libelf_patches[Spec()]) == 1
 
     # there are multiple depends_on directives for libelf under the +foo when clause; these must be
     # reduced to a single Dependency object.
@@ -275,16 +279,20 @@ def test_nested_directives(mock_packages: RepoPath):
     assert when_foo["libelf"].spec == Spec("libelf@0.8.10")
     assert when_foo["libelf"].depflag == dt.BUILD | dt.LINK
     # there is one unconditional patch for libelf under the +foo when clause
-    assert len(when_foo["libelf"].patches) == 1
-    assert len(when_foo["libelf"].patches[Spec()]) == 1
+    foo_libelf_patches = when_foo["libelf"].patches
+    assert foo_libelf_patches is not None
+    assert len(foo_libelf_patches) == 1
+    assert len(foo_libelf_patches[Spec()]) == 1
 
     # libdwarf is a dependency when @1.0 with two patches applied from a single depends_on
     # statement, one conditional on the libdwarf version
     when_1_0 = package.dependencies[Spec("@1.0")]
     assert when_1_0.keys() == {"libdwarf"}
-    assert when_1_0["libdwarf"].patches.keys() == {Spec(), Spec("@20111030")}
-    assert len(when_1_0["libdwarf"].patches[Spec()]) == 1
-    assert len(when_1_0["libdwarf"].patches[Spec("@20111030")]) == 1
+    libdwarf_patches = when_1_0["libdwarf"].patches
+    assert libdwarf_patches is not None
+    assert libdwarf_patches.keys() == {Spec(), Spec("@20111030")}
+    assert len(libdwarf_patches[Spec()]) == 1
+    assert len(libdwarf_patches[Spec("@20111030")]) == 1
 
 
 @pytest.mark.not_on_windows("Test requires Autotools")

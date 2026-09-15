@@ -85,10 +85,18 @@ def get_git_commit(spec):
 def get_download_location(spec):
     pkg = spec.package
 
-    try:
-        return str(pkg.url_for_version(spec.version))
-    except spack.error.NoURLError:
-        pass
+    # Versions resolved via a git ref (a plain git version, or a "normal" version pinned
+    # to a commit/tag/branch) don't have a URL that url_for_version() can compute: that
+    # method is only meaningful for versions with a package-supplied url/urls scheme, and
+    # some packages' custom url_for_version() implementations assume purely numeric version
+    # components and raise arbitrary exceptions (not just NoURLError) when handed one of
+    # these. Go straight to the git remote for those instead of calling url_for_version().
+    # See https://github.com/spack/spack/issues/52864.
+    if not pkg.needs_commit(spec.version):
+        try:
+            return str(pkg.url_for_version(spec.version))
+        except spack.error.NoURLError:
+            pass
 
     git_url = pkg.version_or_package_attr("git", spec.version, default=None)
     if git_url and pkg.needs_commit(spec.version):

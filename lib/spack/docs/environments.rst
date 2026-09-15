@@ -662,7 +662,7 @@ This heading pulls in external configuration files and applies them to the envir
    spack:
      include:
      - environment/relative/path/to/config.yaml
-     - path: https://github.com/path/to/raw/config/compilers.yaml
+     - path: https://github.com/path/to/raw/config/mirrors.yaml
        sha256: 26e871804a92cd07bb3d611b31b4156ae93d35b6a6d6e0ef3a67871fcb1d258b
      - /absolute/path/to/packages.yaml
      - path: /path/to/$os/$target/environment

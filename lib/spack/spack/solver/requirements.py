@@ -17,26 +17,24 @@ import spack.traverse
 import spack.util.spack_yaml
 from spack.enums import PropagationPolicy
 from spack.util import tty
-from spack.util.spack_yaml import get_mark_from_yaml_data
+from spack.util.spack_yaml import source_location
 
 
 def _mark_str(raw) -> str:
     """Return a 'file:line: ' prefix from the YAML mark on *raw*, or empty string."""
-    mark = get_mark_from_yaml_data(raw)
-    if not mark:
-        return ""
-    if mark.line is None:
-        return f"{mark.name}: "
-    return f"{mark.name}:{mark.line + 1}: "
+    location = source_location(raw)
+    return f"{location}: " if location else ""
 
 
-def _check_unknown_virtuals_on_edges(raw_strs: List[str], specs: List["spack.spec.Spec"]) -> None:
+def _check_unknown_virtuals_on_edges(
+    raw_strs: List[str], specs: List["spack.spec.Spec"], *, repo: spack.repo.RepoPath
+) -> None:
     """Raise if any edge in *specs* requires a virtual that does not exist in the repository."""
     errors = []
     for raw, spec in zip(raw_strs, specs):
         for edge in spack.traverse.traverse_edges([spec], root=False):
             for virtual in edge.virtuals:
-                if not spack.repo.PATH.is_virtual(virtual):
+                if not repo.is_virtual(virtual):
                     errors.append(
                         f"{_mark_str(raw)}'{virtual}' in '{raw}' is not a known virtual package"
                     )
@@ -169,10 +167,11 @@ def conflict(
 class RequirementParser:
     """Parses requirements from package.py files and configuration, and returns rules."""
 
-    def __init__(self, configuration: spack.config.Configuration):
+    def __init__(self, *, configuration: spack.config.Configuration, repo: spack.repo.RepoPath):
         self.config = configuration
-        self.runtime_pkgs = spack.repo.PATH.packages_with_tags("runtime")
-        self.compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
+        self.repo = repo
+        self.runtime_pkgs = repo.packages_with_tags("runtime")
+        self.compiler_pkgs = repo.packages_with_tags("compiler")
         self.preferences_from_input: List[Tuple[spack.spec.Spec, str]] = []
         self.toolchains = configuration.get_config("toolchains")
         self._warned_compiler_all: set = set()
@@ -341,7 +340,7 @@ class RequirementParser:
                     for constraint in raw_strs
                 ]
                 _check_unknown_targets(raw_strs, constraints)
-                _check_unknown_virtuals_on_edges(raw_strs, constraints)
+                _check_unknown_virtuals_on_edges(raw_strs, constraints, repo=self.repo)
                 when_str = requirement.get("when")
                 when = self._parse_and_expand(when_str) if when_str else spack.spec.EMPTY_SPEC
 
@@ -388,7 +387,7 @@ class RequirementParser:
         try:
             s = spack.spec.Spec(pkg_name)
             s.constrain(constraint)
-            s.validate_or_raise()
+            s.validate_or_raise(repo=self.repo)
         except spack.error.SpackError as e:
             tty.debug(
                 f"[{__name__}] Rejecting the default '{constraint}' requirement "
@@ -479,23 +478,20 @@ def parse_spec_from_yaml_string(string: str, *, named: bool = False) -> spack.sp
     try:
         result = spack.spec.Spec(string)
     except spack.error.SpecSyntaxError as e:
-        mark = get_mark_from_yaml_data(string)
-        if mark:
-            msg = f"{mark.name}:{mark.line + 1}: {str(e)}"
-            raise spack.error.SpecSyntaxError(msg) from e
+        prefix = _mark_str(string)
+        if prefix:
+            raise spack.error.SpecSyntaxError(f"{prefix}{e}") from e
         raise e
 
     if named is True and not result.name:
         msg = f"expected a named spec, but got '{string}' instead"
-        mark = get_mark_from_yaml_data(string)
 
         # Add a hint in case it's dependencies
         deps = result.dependencies()
         if len(deps) == 1:
             msg = f"{msg}. Did you mean '{deps[0]}'?"
 
-        if mark:
-            msg = f"{mark.name}:{mark.line + 1}: {msg}"
+        msg = f"{_mark_str(string)}{msg}"
 
         raise spack.error.SpackError(msg)
 

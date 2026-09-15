@@ -174,7 +174,7 @@ def test_remove_and_add_a_source(mutable_config):
 @pytest.mark.maybeslow
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_bootstrap_mirror_metadata(
-    mutable_config: Configuration, linux_os, monkeypatch, tmp_path: pathlib.Path
+    mutable_config: Configuration, monkeypatch, tmp_path: pathlib.Path
 ):
     """Test that `spack bootstrap mirror` creates a folder that can be ingested by
     `spack bootstrap add`. Here we don't download data, since that would be an
@@ -185,23 +185,7 @@ def test_bootstrap_mirror_metadata(
     monkeypatch.setattr(spack.concretize, "concretize_one", lambda p: spack.spec.Spec(p))
 
     # Create the mirror in a temporary folder
-    compilers = [
-        {
-            "compiler": {
-                "spec": "gcc@12.0.1",
-                "operating_system": "{0.name}{0.version}".format(linux_os),
-                "modules": [],
-                "paths": {
-                    "cc": "/usr/bin",
-                    "cxx": "/usr/bin",
-                    "fc": "/usr/bin",
-                    "f77": "/usr/bin",
-                },
-            }
-        }
-    ]
-    with mutable_config.override("compilers", compilers):
-        _bootstrap("mirror", str(tmp_path))
+    _bootstrap("mirror", str(tmp_path))
 
     # Register the mirror
     metadata_dir = tmp_path / "metadata" / "sources"

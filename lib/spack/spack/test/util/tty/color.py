@@ -120,3 +120,61 @@ def test_color_stream_follows_the_stream_it_wraps(monkeypatch, when, expected):
         color.ColorStream(stream).write("@r{red}")
 
     assert stream.getvalue() == expected
+
+
+class MockFdStream(MockStream):
+    """A stream with a file descriptor number and a counting ``isatty()``."""
+
+    def __init__(self, isatty: bool, fd: int) -> None:
+        super().__init__(isatty)
+        self._fd = fd
+        self.isatty_calls = 0
+
+    def fileno(self) -> int:
+        return self._fd
+
+    def isatty(self) -> bool:
+        self.isatty_calls += 1
+        return self._isatty
+
+
+def test_get_color_when_caches_isatty_of_std_fds():
+    """isatty() of fds 0-2 is queried once and re-queried after invalidation."""
+    stream = MockFdStream(isatty=True, fd=1)
+    try:
+        with color.color_when(None):
+            assert color.get_color_when(stream) is True
+            assert color.get_color_when(stream) is True
+        assert stream.isatty_calls == 1
+
+        color.clear_isatty_cache()
+        with color.color_when(None):
+            assert color.get_color_when(stream) is True
+        assert stream.isatty_calls == 2
+    finally:
+        color.clear_isatty_cache()
+
+
+def test_get_color_when_does_not_cache_high_fds():
+    """Streams on fds above 2 are queried every time and stay out of the cache."""
+    stream = MockFdStream(isatty=True, fd=7)
+    try:
+        with color.color_when(None):
+            assert color.get_color_when(stream) is True
+            assert color.get_color_when(stream) is True
+        assert stream.isatty_calls == 2
+        assert 7 not in color._isatty_cache
+    finally:
+        color.clear_isatty_cache()
+
+
+def test_get_color_when_does_not_cache_fd_less_streams():
+    """Streams without a file descriptor (StringIO) are queried every time, not cached."""
+    stream = MockStream(isatty=True)
+    try:
+        with color.color_when(None):
+            assert color.get_color_when(stream) is True
+            assert color.get_color_when(stream) is True
+        assert not color._isatty_cache
+    finally:
+        color.clear_isatty_cache()

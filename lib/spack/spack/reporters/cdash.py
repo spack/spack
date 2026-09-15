@@ -12,7 +12,7 @@ import socket
 import time
 import warnings
 import xml.sax.saxutils
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode
 from urllib.request import Request
 
@@ -26,8 +26,9 @@ import spack.util.web as web_util
 from spack.error import SpackError
 from spack.util import tty
 from spack.util.crypto import checksum
+from spack.util.ctest_log_parser import Match, Severity
 from spack.util.filesystem import working_dir
-from spack.util.log_parse import parse_log_events
+from spack.util.log_parse import scan_log
 
 from .base import Reporter
 from .extract import extract_test_parts
@@ -58,6 +59,10 @@ MAP_PHASES_TO_CDASH = {
 # Initialize data structures common to each phase's report.
 CDASH_PHASES = set(MAP_PHASES_TO_CDASH.values())
 CDASH_PHASES.add("update")
+
+#: Lines of log context reported around each error and warning
+CDASH_CONTEXT = 6
+
 # CDash request timeout in seconds
 SPACK_CDASH_TIMEOUT = 45
 
@@ -133,6 +138,22 @@ class CDash(Reporter):
             buildname = buildname[:190]
         return buildname
 
+    @staticmethod
+    def clean_log_event(match: Match, loglines: List[str]) -> Dict[str, Any]:
+        """Render a matched log line and its context as the escaped fields the template wants."""
+        index = match.line_no - 1
+        pre_context = loglines[max(0, index - CDASH_CONTEXT) : index]
+        post_context = loglines[index + 1 : index + 1 + CDASH_CONTEXT]
+        escape = xml.sax.saxutils.escape
+        return {
+            "line_no": match.line_no,
+            "text": escape(loglines[index].rstrip()),
+            "pre_context": escape("\n".join(line.rstrip() for line in pre_context)),
+            "post_context": escape("\n".join(line.rstrip() for line in post_context)),
+            "source_file": escape(match.source_file) if match.source_file else "",
+            "source_line_no": match.source_line_no if match.source_file else "",
+        }
+
     def build_report_for_package(self, report_dir, package, duration):
         if "stdout" not in package:
             # Skip reporting on packages that do not generate output.
@@ -203,7 +224,11 @@ class CDash(Reporter):
         for phase in phases_encountered:
             report_data[phase]["endtime"] = self.endtime
             report_data[phase]["log"] = "\n".join(report_data[phase]["loglines"])
-            errors, warnings, _ = parse_log_events(report_data[phase]["loglines"])
+            loglines = report_data[phase]["loglines"]
+            blocks = scan_log(loglines, context=0)
+            matches = [match for block in blocks for match in block.matches.values()]
+            errors = [m for m in matches if m.severity is Severity.ERROR]
+            warnings = [m for m in matches if m.severity is Severity.WARNING]
 
             # Convert errors to warnings if the package reported success.
             if package["result"] == "success":
@@ -221,27 +246,12 @@ class CDash(Reporter):
                     report_data[phase]["status"] = 1
 
             if phase == "build":
-                # Convert log output from ASCII to Unicode and escape for XML.
-                def clean_log_event(event):
-                    event = vars(event)
-                    event["text"] = xml.sax.saxutils.escape(event["text"])
-                    event["pre_context"] = xml.sax.saxutils.escape("\n".join(event["pre_context"]))
-                    event["post_context"] = xml.sax.saxutils.escape(
-                        "\n".join(event["post_context"])
-                    )
-                    if event["source_file"] is None:
-                        event["source_file"] = ""
-                        event["source_line_no"] = ""
-                    else:
-                        event["source_file"] = xml.sax.saxutils.escape(event["source_file"])
-                    return event
-
-                report_data[phase]["errors"] = []
-                report_data[phase]["warnings"] = []
-                for error in errors:
-                    report_data[phase]["errors"].append(clean_log_event(error))
-                for warning in warnings:
-                    report_data[phase]["warnings"].append(clean_log_event(warning))
+                report_data[phase]["errors"] = [
+                    self.clean_log_event(match, loglines) for match in errors
+                ]
+                report_data[phase]["warnings"] = [
+                    self.clean_log_event(match, loglines) for match in warnings
+                ]
 
             if phase == "update":
                 report_data[phase]["revision"] = self.revision
