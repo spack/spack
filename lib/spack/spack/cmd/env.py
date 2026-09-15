@@ -396,7 +396,7 @@ def env_activate(args):
     # Validate that the environment view is accessible.
     spack.environment.shell.validate_view(active_env, view)
 
-    cmds = env_script.get_shell_unique_env_cmds(args.shell, prompt=args.prompt)
+    cmds = env_script.get_shell_unique_env_cmds(active_env, args.shell, prompt=args.prompt)
     sys.stdout.write(cmds)
 
     sys.stdout.write(env_script.source_env_script(env_activate_script, args.shell))

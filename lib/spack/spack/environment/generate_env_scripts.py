@@ -171,7 +171,7 @@ def write_env_deactivate_script(env, view: Optional[str] = None):
     _write_env_script(env, view, activate=False)
 
 
-def get_shell_unique_env_cmds(shell, prompt: Optional[str] = None) -> str:
+def get_shell_unique_env_cmds(env, shell, prompt: Optional[str] = None) -> str:
     """Returns the prompt and despacktivate commands which are unique to each shell.
 
     Args:
@@ -179,7 +179,7 @@ def get_shell_unique_env_cmds(shell, prompt: Optional[str] = None) -> str:
         prompt: name of user's prompt
     """
     despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
-    prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)
+    prompt_cmds = spack.environment.shell.activate_prompt_cmds(env, shell, prompt)
 
     return despactivate_cmd + prompt_cmds
 

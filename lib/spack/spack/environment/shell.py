@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import textwrap
-from typing import Optional
+from typing import List, Optional
 
 import spack.config
 import spack.repo
 import spack.schema.environment
 import spack.store
 from spack.util import tty
-from spack.util.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications, ShellCmdString
 from spack.util.tty.color import colorize
 
 
@@ -80,15 +80,13 @@ def activate_commands(env, view: Optional[str] = None):
     return cmds
 
 
-def activate_prompt_cmds(shell, prompt):
+def activate_prompt_cmds(env, shell, prompt):
     short_name = env.name
     if short_name == env.path:
         short_name = os.path.basename(short_name)
 
     shell_cmd = ShellCmdString(shell)
-    cmds: List[str] = [
-        shell_cmd.set("VIRTUAL_ENV_PROMPT", short_name),
-    ]
+    cmds: List[str] = [shell_cmd.set("VIRTUAL_ENV_PROMPT", short_name)]
 
     if prompt:
         cmds.extend(_make_spack_prompt(shell, f"[{short_name}]"))

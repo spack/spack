@@ -96,6 +96,7 @@ def shell_fn(name: str, shell: str = "sh") -> str:
     """
     return f"%{name}%" if shell == "bat" else name
 
+
 class ShellCmdString:
     """Formats commands to set or unset an environment variable for a given shell."""
 

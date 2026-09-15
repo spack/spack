@@ -198,7 +198,7 @@ def test_shell_modifications_are_properly_escaped(shell):
 
 
 # TODO: Rikki, update this test
-#@pytest.mark.parametrize(
+# @pytest.mark.parametrize(
 #    "shell,set_expected,unset_expected,alias,join_sep",
 #    [
 #        ("sh", "export FOO=bar", "unset FOO", ["alias foo='spack bar'"], ";\n"),
@@ -207,8 +207,8 @@ def test_shell_modifications_are_properly_escaped(shell):
 #        ("bat", 'set "FOO=bar"', 'set "FOO="', [], "\n"),
 #        ("pwsh", "$Env:FOO='bar'", "Set-Item -Path Env:FOO", [], "\n"),
 #    ],
-#)
-#def test_shell_cmd_string(shell, set_expected, unset_expected, alias, join_sep):
+# )
+# def test_shell_cmd_string(shell, set_expected, unset_expected, alias, join_sep):
 #    shell_cmd = envutil.ShellCmdString(shell)
 #    assert shell_cmd.set("FOO", "bar") == set_expected
 #    assert shell_cmd.unset("FOO") == unset_expected
