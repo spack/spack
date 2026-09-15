@@ -2022,7 +2022,11 @@ def _migration_backup_path() -> str:
 
 
 def _copy_directory_contents_with_lock(
-    src_dir: str, dst_dir: str, resource_name: str, require_empty_destination: bool = False
+    src_dir: str,
+    dst_dir: str,
+    resource_name: str,
+    require_empty_destination: bool = False,
+    destination_mode: Optional[int] = None,
 ) -> bool:
     """Copy contents with destination locking and automatic backup.
 
@@ -2036,14 +2040,17 @@ def _copy_directory_contents_with_lock(
         resource_name: Name of resource for logging (e.g., "licenses", "environments")
         require_empty_destination: Reject any non-empty destination rather than
             merging non-conflicting entries.
+        destination_mode: If set, apply this mode to the destination before
+            copying any artifacts.
 
     Returns:
         True if copy was successful, False if skipped due to collision
     """
-    # Lock the destination parent directory to prevent concurrent migrations
-    dst_parent = os.path.dirname(dst_dir)
-    filesystem.mkdirp(dst_parent)
-    lock_path = os.path.join(dst_parent, f".spack-{resource_name}-migration.lock")
+    # Lock the destination itself to prevent concurrent migrations.  The lock
+    # is intentionally resource-local: different destinations can migrate in
+    # parallel without contending on a shared parent-directory lock.
+    filesystem.mkdirp(dst_dir)
+    lock_path = os.path.join(dst_dir, ".lock")
 
     lock = spack.util.lock.Lock(lock_path, default_timeout=120)
     try:
@@ -2054,6 +2061,7 @@ def _copy_directory_contents_with_lock(
             dst_dir,
             resource_name,
             require_empty_destination=require_empty_destination,
+            destination_mode=destination_mode,
         )
     finally:
         lock.release_write()
@@ -2066,6 +2074,7 @@ def _copy_directory_contents(
     resource_name: str,
     backup_dir: Optional[str] = None,
     require_empty_destination: bool = False,
+    destination_mode: Optional[int] = None,
 ) -> bool:
     """Copy contents of src_dir to dst_dir, checking for collisions.
 
@@ -2082,6 +2091,8 @@ def _copy_directory_contents(
         backup_dir: Backup root directory (default: $spack/.migration-backup, exposed for testing)
         require_empty_destination: Reject any non-empty destination rather than
             merging non-conflicting entries.
+        destination_mode: If set, apply this mode to the destination before
+            copying any artifacts.
 
     Returns:
         True if copy was successful, False if skipped due to collision
@@ -2102,7 +2113,7 @@ def _copy_directory_contents(
     # complete database and must never be merged with another keyring.
     if os.path.exists(dst_dir):
         try:
-            dst_entries = set(os.listdir(dst_dir))
+            dst_entries = set(os.listdir(dst_dir)) - {".lock"}
             if require_empty_destination and dst_entries:
                 tty.debug(f"Cannot copy {resource_name}: destination is not empty")
                 return False
@@ -2116,13 +2127,13 @@ def _copy_directory_contents(
 
     # GPG homes are private databases.  Require the destination directory to
     # have private permissions before copying any keyring artifacts.
-    if resource_name == "gpg":
+    if destination_mode is not None:
         try:
             filesystem.mkdirp(dst_dir)
-            os.chmod(dst_dir, 0o700)
+            os.chmod(dst_dir, destination_mode)
         except OSError as e:
             tty.warn(
-                "Could not auto-migrate GPG keys because private permissions "
+                f"Could not migrate {resource_name} because destination permissions "
                 f"could not be set on {dst_dir}: {e}"
             )
             return False
@@ -2294,6 +2305,7 @@ def _do_migrate(
                 target_gpg_dir,
                 "gpg",
                 require_empty_destination=True,
+                destination_mode=0o700,
             ):
                 if "config" not in scope_config:
                     scope_config["config"] = {}
