@@ -626,7 +626,7 @@ Attributes can also be split over several groups of brackets, in any order:
 
    root ^[key=value][other=value] dep
 
-Repeated attributes combine, so ``virtuals`` accumulate, ``deptypes`` are or-ed, and ``when`` conditions are constrained together.
+Repeated attributes combine, so ``virtuals`` and ``deptypes`` are accumulated, and ``when`` conditions are constrained together.
 
 In the following sections we'll discuss the edge attributes that are currently allowed in the spec syntax.
 
