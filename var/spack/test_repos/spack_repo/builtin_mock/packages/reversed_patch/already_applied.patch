@@ -1,0 +1,6 @@
+diff --git a/message.txt b/message.txt
+--- a/message.txt
++++ b/message.txt
+@@ -1 +1 @@
+-broken
++fixed
