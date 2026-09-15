@@ -54,6 +54,23 @@ def test_gc_with_constraints(mutable_database):
 
 
 @pytest.mark.db
+def test_gc_with_externals(mutable_database):
+    s_cmake1 = spack.concretize.concretize_one("simple-inheritance ^cmake@3.4.3")
+    s_cmake2 = spack.concretize.concretize_one("simple-inheritance ^cmake@3.23.1")
+    s_cmake2["cmake"].external_path = "/fake/path"  # fake it being an external
+    PackageInstaller([s_cmake1.package], explicit=True, fake=True).install()
+    PackageInstaller([s_cmake2.package], explicit=True, fake=True).install()
+
+    # Confirm the external is not listed
+    output = gc("-y")
+    assert "Successfully uninstalled cmake@3.4.3" in output  # not external, is gc'd
+    assert "Successfully uninstalled cmake@3.23.1" not in output  # external, not gc'd
+
+    # Confirm it's still not removed when no other specs to remove
+    assert "There are no unused specs." in gc("-y")
+
+
+@pytest.mark.db
 def test_gc_with_environment(mutable_database, mutable_mock_env_path):
     s = spack.concretize.concretize_one("simple-inheritance")
     PackageInstaller([s.package], explicit=True, fake=True).install()
