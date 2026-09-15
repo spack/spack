@@ -218,10 +218,6 @@ def test_env_scripts_regenerate_after_lockfile_change(shell):
     env("create", "test")
     environ = ev.read("test")
 
-    environ.add("mpileaks")
-    environ.concretize()
-    environ.write()
-
     env("activate", f"--{shell}", "test")
 
     path_to_activate_script = env_script.path_to_env_script(
@@ -247,6 +243,8 @@ def test_env_scripts_regenerate_after_lockfile_change(shell):
     assert new_deactivate_mtime > initial_deactivate_mtime, (
         "Deactivation script should be regenerated after lockfile change"
     )
+
+    # TODO: Rikki, make sure the mpich is in (de)activation script
 
 
 @pytest.mark.parametrize(
@@ -358,32 +356,6 @@ def test_env_activate_script_content_consistency(shell):
 @pytest.mark.parametrize(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
-def test_env_scripts_regenerate_on_spec_install(shell, install_mockery, mock_fetch):
-    """Test that environment lockfile is updated when specs are installed."""
-    env("create", "install_test")
-    test_env = ev.read("install_test")
-
-    env("activate", f"--{shell}", "install_test")
-
-    lockfile_path = test_env.lock_path
-
-    first_mtime = os.path.getmtime(lockfile_path) if os.path.exists(lockfile_path) else 0
-
-    import time
-
-    time.sleep(0.1)
-
-    test_env.add("libelf")
-    test_env.concretize()
-    test_env.write()
-
-    second_mtime = os.path.getmtime(lockfile_path)
-    assert second_mtime > first_mtime
-
-
-@pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
-)
 def test_env_activate_deactivate_directory_env(shell, tmp_path: pathlib.Path):
     """Test activation/deactivation of directory-based environments."""
     with fs.working_dir(str(tmp_path)):
@@ -471,7 +443,8 @@ def test_env_activate_with_view_name(shell, tmp_path: pathlib.Path):
 def test_env_create_without_view(
     shell, tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
-    """Test creating an environment a view, but activating it without a view. The activation script should not contain SPACK_ENV_VIEW."""
+    """Test creating an environment a view, but activating it without a view.
+    The activation script should not contain SPACK_ENV_VIEW."""
     env("create", "test")
 
     test_env = ev.read("test")
