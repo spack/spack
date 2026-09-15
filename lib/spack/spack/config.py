@@ -2184,6 +2184,15 @@ def _copy_directory_contents(
     return True
 
 
+def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
+    """Return location settings for data created by an isolated Spack."""
+    return {
+        "data": [isolate_target],
+        "state": [isolate_target],
+        "cache": [isolate_target],
+    }
+
+
 def _do_migrate(
     is_isolate_command: bool,
     config_path: Optional[str] = None,
@@ -2222,13 +2231,7 @@ def _do_migrate(
     if is_isolate_command:
         if isolate_target is None:
             raise ValueError("isolate_target is required for isolate migration")
-        scope_config["config"] = {
-            "locations": {
-                "data": [isolate_target],
-                "state": [isolate_target],
-                "cache": [isolate_target],
-            }
-        }
+        scope_config["config"] = {"locations": _isolate_locations_config(isolate_target)}
 
     # 1. Handle installs and modules.  Existing installs and module trees are
     # always retained in their old locations, including during isolation.

@@ -38,11 +38,7 @@ def _isolate_config_config(new_user_path, config_path):
             "build_stage:": build_stage_dirs,
             "test_stage:": test_stage_dir,
             "misc_cache:": misc_cache_dir,
-            "locations": {
-                "data": [new_user_path],
-                "state": [new_user_path],
-                "cache": [new_user_path],
-            },
+            "locations": spack.config._isolate_locations_config(new_user_path),
         }
     }
     with open(config_path, "w", encoding="utf-8") as f:
@@ -91,7 +87,7 @@ def _isolate_include_config(new_user_path):
         syaml.dump_config(include_data, f)
 
 
-def _setup_isolate_scope(new_user_path, overwrite: bool, target_config_existed: bool):
+def _setup_isolate_scope(new_user_path, overwrite: bool, target_config_existed: bool) -> str:
     # Check if this is --self (isolate scope IS the user path)
     is_self = os.path.exists(ISOLATE_SCOPE_PATH) and os.path.samefile(
         new_user_path, ISOLATE_SCOPE_PATH
@@ -136,6 +132,7 @@ def _setup_isolate_scope(new_user_path, overwrite: bool, target_config_existed: 
     # For --self, this points to user-redirect/
     # For --path, this points to the external path
     _isolate_include_config(final_user_path)
+    return config_path
 
 
 # _get_new_user_scope no longer needed - moved into _isolate_include_config
@@ -176,7 +173,7 @@ def setup_parser(subparser: ArgumentParser):
 def _do_isolate(args):
     target_config_existed = os.path.isfile(os.path.join(args.path, "config.yaml"))
     destination = _ensure_destination_setup(args.path, args.overwrite)
-    _setup_isolate_scope(destination, args.overwrite, target_config_existed)
+    config_path = _setup_isolate_scope(destination, args.overwrite, target_config_existed)
     # No need to modify etc/spack/include.yaml anymore - the isolate scope's
     # include.yaml with include:: override handles the redirection
 
@@ -190,11 +187,7 @@ def _do_isolate(args):
     ):
         spack.config._do_migrate(
             is_isolate_command=True,
-            config_path=os.path.join(
-                spack.config._layout_scope_path(), "config.yaml"
-            )
-            if target_config_existed
-            else os.path.join(destination, "config.yaml"),
+            config_path=config_path,
             isolate_target=destination,
         )
         # No need to reload CONFIG here: this process exits immediately, and
