@@ -2099,7 +2099,9 @@ def test_external_spec_hash_can_be_looked_up(config, mock_packages):
     """Tests that the hash of an external can be successfully looked up."""
     packages_yaml = config.deepcopy_as_builtin("packages")
     externals_dict = extract_dicts_from_configuration(packages_yaml)
-    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    parser = ExternalSpecsParser(
+        externals_dict, repo=mock_packages, complete_node=complete_variants_and_architecture
+    )
     abstract_hashes = [f"{x.name}/{x.dag_hash()[:5]}" for x in parser.all_specs()]
 
     assert all(spack.hash_lookup.lookup_hash(spack.spec.Spec(x)) for x in abstract_hashes)

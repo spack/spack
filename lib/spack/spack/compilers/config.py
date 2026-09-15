@@ -205,7 +205,7 @@ class CompilerRemover:
                     continue
 
                 def _partition_match(external_yaml):
-                    return not external_spec(external_yaml).satisfies(match)
+                    return not external_spec(external_yaml, repo=spack.repo.PATH).satisfies(match)
 
                 to_keep, to_remove = spack.util.lang.stable_partition(
                     externals_config, _partition_match
@@ -220,7 +220,9 @@ class CompilerRemover:
                 continue
 
             self.marked_packages_yaml.append((current_scope, packages_yaml))
-            all_removals.extend([external_spec(x) for x in removed_from_scope])
+            all_removals.extend(
+                [external_spec(x, repo=spack.repo.PATH) for x in removed_from_scope]
+            )
         return all_removals
 
     def flush(self):
