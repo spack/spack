@@ -2219,7 +2219,7 @@ def _do_migrate(
         tty.debug(
             f"Old installs exist, keeping modules in {spack.paths.prefix}/share/spack/modules"
         )
-    # Otherwise, use new defaults (no config needed for isolate, explicit for non-isolate)
+    # Otherwise, use new defaults (non-isolate gets default config, isolate gets redirect)
     elif is_isolate_command and isolate_target:
         scope_config["modules"] = {
             "default": {
@@ -2239,7 +2239,7 @@ def _do_migrate(
             scope_config["config"] = {}
         scope_config["config"]["gpg_path"] = old_gpg_dir
         tty.debug(f"Old GPG keys exist, keeping in {old_gpg_dir}")
-    # Otherwise, use new defaults (explicit for isolate only)
+    # Otherwise, use new defaults (non-isolate gets default config, isolate gets explicit path)
     elif is_isolate_command and isolate_target:
         if "config" not in scope_config:
             scope_config["config"] = {}
