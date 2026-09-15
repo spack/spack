@@ -45,8 +45,8 @@ class TestMultiValuedVariant:
         assert a == c
         assert hash(a) == hash(c)
 
-        # Check the copy
-        d = a.copy()
+        # Check an equal value
+        d = MultiValuedVariant("foo", ("bar", "baz"))
         assert str(a) == str(d)
         assert d.values == ("bar", "baz")
         assert "bar" in d
@@ -106,15 +106,15 @@ class TestMultiValuedVariant:
         a = MultiValuedVariant("foo", ("bar", "baz"))
         b = MultiValuedVariant("foo", ("bar",))
         with pytest.raises(UnsatisfiableVariantSpecError):
-            a.constrain(b)
+            a.constrained(b)
         with pytest.raises(UnsatisfiableVariantSpecError):
-            b.constrain(a)
+            b.constrained(a)
 
         # Try to constrain on the same value
         a = MultiValuedVariant("foo", ("bar", "baz"))
-        b = a.copy()
+        b = MultiValuedVariant("foo", ("bar", "baz"))
 
-        assert not a.constrain(b)
+        assert a.constrained(b) is None
         assert a == b == MultiValuedVariant("foo", ("bar", "baz"))
 
         # Try to constrain on a different name
@@ -122,7 +122,7 @@ class TestMultiValuedVariant:
         b = MultiValuedVariant("fee", ("bar",))
 
         with pytest.raises(UnsatisfiableVariantSpecError):
-            a.constrain(b)
+            a.constrained(b)
 
     def test_yaml_entry(self):
         a = MultiValuedVariant("foo", ("bar", "baz", "barbaz"))
@@ -145,8 +145,8 @@ class TestSingleValuedVariant:
         assert a.value == "bar"
         assert "bar" in a
 
-        # Check the copy
-        b = a.copy()
+        # Check an equal value
+        b = SingleValuedVariant("foo", "bar")
         assert str(a) == str(b)
         assert b.values == ("bar",)
         assert b.value == "bar"
@@ -190,7 +190,7 @@ class TestSingleValuedVariant:
         a = SingleValuedVariant("foo", "bar")
         b = SingleValuedVariant("foo", "bar")
 
-        assert not a.constrain(b)
+        assert a.constrained(b) is None
         assert a == SingleValuedVariant("foo", "bar")
 
         # Try to constrain on a value with a different value
@@ -202,13 +202,13 @@ class TestSingleValuedVariant:
         b = SingleValuedVariant("fee", "bar")
 
         with pytest.raises(UnsatisfiableVariantSpecError):
-            b.constrain(a)
+            b.constrained(a)
 
         # Try to constrain on the same value
         a = SingleValuedVariant("foo", "bar")
-        b = a.copy()
+        b = SingleValuedVariant("foo", "bar")
 
-        assert not a.constrain(b)
+        assert a.constrained(b) is None
         assert a == SingleValuedVariant("foo", "bar")
 
     def test_yaml_entry(self):
@@ -227,8 +227,8 @@ class TestBoolValuedVariant:
         assert a.values == (True,)
         assert True in a
 
-        # Copy - True value
-        b = a.copy()
+        # An equal value - True
+        b = BoolValuedVariant("foo", True)
         assert str(a) == str(b)
         assert b.value is True
         assert b.values == (True,)
@@ -237,9 +237,9 @@ class TestBoolValuedVariant:
         assert a is not b
         assert hash(a) == hash(b)
 
-        # Copy - False value
+        # An equal value - False
         a = BoolValuedVariant("foo", False)
-        b = a.copy()
+        b = BoolValuedVariant("foo", False)
         assert str(a) == str(b)
         assert b.value is False
         assert b.values == (False,)
@@ -307,7 +307,7 @@ class TestBoolValuedVariant:
         a = BoolValuedVariant("foo", True)
         b = BoolValuedVariant("foo", True)
 
-        assert not a.constrain(b)
+        assert a.constrained(b) is None
         assert a == BoolValuedVariant("foo", True)
 
         # Try to constrain on a value with a different value
@@ -315,20 +315,20 @@ class TestBoolValuedVariant:
         b = BoolValuedVariant("foo", False)
 
         with pytest.raises(UnsatisfiableVariantSpecError):
-            b.constrain(a)
+            b.constrained(a)
 
         # Try to constrain on a value with a different value
         a = BoolValuedVariant("foo", True)
         b = BoolValuedVariant("fee", True)
 
         with pytest.raises(UnsatisfiableVariantSpecError):
-            b.constrain(a)
+            b.constrained(a)
 
         # Try to constrain on the same value
         a = BoolValuedVariant("foo", True)
-        b = a.copy()
+        b = BoolValuedVariant("foo", True)
 
-        assert not a.constrain(b)
+        assert a.constrained(b) is None
         assert a == BoolValuedVariant("foo", True)
 
     def test_yaml_entry(self):
@@ -363,7 +363,7 @@ class TestVariant:
 
         # Multiple values are not allowed
         with pytest.raises(MultipleValuesInExclusiveVariantError):
-            vspec.set("bar", "baz")
+            vspec.with_values(("bar", "baz"))
 
         # Inconsistent vspec
         vspec.name = "FOO"
@@ -375,7 +375,7 @@ class TestVariant:
         vspec = a.make_variant("bar", "baz")
         a.validate_or_raise(vspec, "test-package")
         # Add an invalid value
-        vspec.set("bar", "baz", "barbaz")
+        vspec = vspec.with_values(("bar", "baz", "barbaz"))
         with pytest.raises(InvalidVariantValueError):
             a.validate_or_raise(vspec, "test-package")
 
@@ -389,9 +389,9 @@ class TestVariant:
         a = Variant("foo", default="1024", description="", values=validator, multi=False)
         vspec = a.make_default()
         a.validate_or_raise(vspec, "test-package")
-        vspec.set("2056")
+        vspec = vspec.with_values(("2056",))
         a.validate_or_raise(vspec, "test-package")
-        vspec.set("foo")
+        vspec = vspec.with_values(("foo",))
         with pytest.raises(InvalidVariantValueError):
             a.validate_or_raise(vspec, "test-package")
 
@@ -414,32 +414,57 @@ class TestVariant:
 
 
 class TestVariantMapTest:
-    def test_set(self) -> None:
+    def test_with_value(self) -> None:
         # All three types of variants are accepted, keyed by their own name
         a = VariantMap()
 
-        a.set(BoolValuedVariant("foo", True))
-        a.set(SingleValuedVariant("bar", "baz"))
-        a.set(MultiValuedVariant("foobar", ("a", "b", "c", "d", "e")))
+        a = a.with_value(BoolValuedVariant("foo", True))
+        a = a.with_value(SingleValuedVariant("bar", "baz"))
+        a = a.with_value(MultiValuedVariant("foobar", ("a", "b", "c", "d", "e")))
 
         assert list(a) == ["foo", "bar", "foobar"]
 
         # An entry already under that name is replaced
-        a.set(SingleValuedVariant("foo", "bar"))
-        assert a["foo"] == SingleValuedVariant("foo", "bar")
+        b = a.with_value(SingleValuedVariant("foo", "bar"))
+        assert b["foo"] == SingleValuedVariant("foo", "bar")
+
+        # The map it was built from is untouched, and storing the same value again is a no-op
+        assert a["foo"] == BoolValuedVariant("foo", True)
+        assert b.with_value(SingleValuedVariant("foo", "bar")) is b
+
+    def test_map_is_immutable(self) -> None:
+        a = VariantMap().with_value(BoolValuedVariant("foo", True))
+        with pytest.raises(TypeError):
+            a["bar"] = SingleValuedVariant("bar", "baz")
+        with pytest.raises(TypeError):
+            a.pop("foo")
+
+    def test_maps_are_interned(self) -> None:
+        a = VariantMap().with_value(SingleValuedVariant("foo", "bar"))
+        b = VariantMap().with_value(SingleValuedVariant("foo", "bar"))
+        assert a is b
+        assert a.without("foo") is spack.spec.EMPTY_VARIANTS
 
     def test_satisfies_and_constrain(self) -> None:
         # foo=bar foobar=fee feebar=foo
         a = Spec()
-        a.variants["foo"] = MultiValuedVariant("foo", ("bar",))
-        a.variants["foobar"] = SingleValuedVariant("foobar", "fee")
-        a.variants["feebar"] = SingleValuedVariant("feebar", "foo")
+        a.variants = a.variants.with_values(
+            [
+                MultiValuedVariant("foo", ("bar",)),
+                SingleValuedVariant("foobar", "fee"),
+                SingleValuedVariant("feebar", "foo"),
+            ]
+        )
 
         # foo=bar,baz foobar=fee shared=True
         b = Spec()
-        b.variants["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        b.variants["foobar"] = SingleValuedVariant("foobar", "fee")
-        b.variants["shared"] = BoolValuedVariant("shared", True)
+        b.variants = b.variants.with_values(
+            [
+                MultiValuedVariant("foo", ("bar", "baz")),
+                SingleValuedVariant("foobar", "fee"),
+                BoolValuedVariant("shared", True),
+            ]
+        )
 
         # concrete, different values do not intersect / satisfy each other
         assert not a.intersects(b) and not b.intersects(a)
@@ -447,30 +472,28 @@ class TestVariantMapTest:
 
         # foo=bar,baz foobar=fee feebar=foo shared=True
         c = Spec()
-        c.variants["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        c.variants["foobar"] = SingleValuedVariant("foobar", "fee")
-        c.variants["feebar"] = SingleValuedVariant("feebar", "foo")
-        c.variants["shared"] = BoolValuedVariant("shared", True)
+        c.variants = c.variants.with_values(
+            [
+                MultiValuedVariant("foo", ("bar", "baz")),
+                SingleValuedVariant("foobar", "fee"),
+                SingleValuedVariant("feebar", "foo"),
+                BoolValuedVariant("shared", True),
+            ]
+        )
 
         # concrete values cannot be constrained
         with pytest.raises(spack.variant.UnsatisfiableVariantSpecError):
             a._constrain_variants(b)
 
-    def test_copy(self) -> None:
-        a = VariantMap()
-        a["foo"] = BoolValuedVariant("foo", True)
-        a["bar"] = SingleValuedVariant("bar", "baz")
-        a["foobar"] = MultiValuedVariant("foobar", ("a", "b", "c", "d", "e"))
-
-        c = a.copy()
-        assert a == c
-
     def test_str(self) -> None:
-        c = VariantMap()
-        c["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        c["foobar"] = SingleValuedVariant("foobar", "fee")
-        c["feebar"] = SingleValuedVariant("feebar", "foo")
-        c["shared"] = BoolValuedVariant("shared", True)
+        c = VariantMap().with_values(
+            [
+                MultiValuedVariant("foo", ("bar", "baz")),
+                SingleValuedVariant("foobar", "fee"),
+                SingleValuedVariant("feebar", "foo"),
+                BoolValuedVariant("shared", True),
+            ]
+        )
         assert str(c) == "+shared feebar=foo foo:=bar,baz foobar=fee"
 
 

@@ -201,7 +201,9 @@ def print_dependency_suggestion(pkg: PackageBase) -> None:
             # skip if user specified, or already saw a value (e.g. many +mpi and ~mpi)
             if name in spec.variants or name in pkg.spec.variants:
                 continue
-            spec.variants.set(spack.variant.BoolValuedVariant(name, not val))
+            spec.variants = spec.variants.with_value(
+                spack.variant.BoolValuedVariant(name, not val)
+            )
 
         # if there is new stuff to add beyond the input
         if spec.variants:

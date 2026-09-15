@@ -1197,7 +1197,7 @@ def interactive_version_filter(
                 print()
                 continue
             try:
-                version_filter.intersect(VersionList([filter_spec]))
+                version_filter = version_filter.intersection(VersionList([filter_spec]))
             except ValueError:
                 tty.warn(f"Invalid version specifier: {filter_spec}")
                 continue

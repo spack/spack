@@ -758,7 +758,9 @@ class SpecParser:
                     self.curr = curr
                     self._raise_parsing_error("Spec cannot have multiple versions")
 
-                spec.versions = spack.version.VersionList(curr.group(_VERSION_LIST))
+                spec.versions = spack.version.intern_version_list(
+                    spack.version.VersionList(curr.group(_VERSION_LIST))
+                )
                 has_version = True
 
             elif kind == _BOOL_VARIANT:

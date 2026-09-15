@@ -113,7 +113,7 @@ def test_fetch(
     monkeypatch.setitem(s.package.versions, Version("git"), t.args)
 
     if type_of_test == "commit":
-        s.variants["commit"] = SingleValuedVariant("commit", t.args["commit"])
+        s.variants = s.variants.with_value(SingleValuedVariant("commit", t.args["commit"]))
 
     # Enter the stage directory and check some properties
     with s.package.stage:
@@ -280,7 +280,7 @@ def test_get_full_repo(
         git_exe = mock_git_repository.git_exe
         url = mock_git_repository.url
         commit = git_exe("ls-remote", url, t.revision, output=str).strip().split()[0]
-        s.variants["commit"] = SingleValuedVariant("commit", commit)
+        s.variants = s.variants.with_value(SingleValuedVariant("commit", commit))
         if can_use_direct_commit:
             path = mock_git_repository.path
             git_exe("-C", path, "config", "uploadpack.allowReachableSHA1InWant", "true")
@@ -493,7 +493,7 @@ def test_commit_variant_clone(git, config, mutable_mock_repo, mock_git_version_i
     s = spack.concretize.concretize_one("git-test")
     args = {"git": pathlib.Path(repo_path).as_uri()}
     monkeypatch.setitem(s.package.versions, Version("git"), args)
-    s.variants["commit"] = SingleValuedVariant("commit", test_commit)
+    s.variants = s.variants.with_value(SingleValuedVariant("commit", test_commit))
     s.package.do_stage()
     with working_dir(s.package.stage.source_path):
         assert git("rev-parse", "HEAD", output=str, error=str).strip() == test_commit
