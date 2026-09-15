@@ -210,7 +210,7 @@ class Mirror:
         if access_token_variable:
             if access_token_variable not in os.environ:
                 errors.append(
-                    f"environment variable `{access_pair['access_token_variable']}` "
+                    f"environment variable `{access_token_variable}` "
                     "(access_token_variable) not set"
                 )
 
