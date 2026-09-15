@@ -2193,7 +2193,32 @@ class SpackSolverSetup:
         """
         # for determinism, sort by variant ids, not variant def ids (which are object ids)
         def_info = []
-        for pkg_name, variant_def_id, value in sorted(self.clauses.variant_values_from_specs):
+
+        #Improve reporting of issues with inconsistent variant settings
+        try:
+            tmpsorted = sorted(self.clauses.variant_values_from_specs)
+        except TypeError as original_exception:
+            # Loop over values to report on problematic pairs
+            for pair in itertools.combinations(
+                    self.clauses.variant_values_from_specs, 2):
+                #This should fail for some pair of values
+                try:
+                    tmpcmp = pair[0] < pair[1]
+                except TypeError:
+                    # Error should be in 3rd element of tuple only, as that
+                    # should be only one more directly set by configuration
+                    assert pair[0][0] == pair[1][0], f"TypeError in first field of variant_values_from_specs tuple {pair[0]}, {pair[1]}"
+                    assert pair[0][1] == pair[1][1], f"TypeError in second field of variant_values_from_specs tuple {pair[0]}, {pair[1]}"
+                    tmppkg = pair[0][0]
+                    tmpvar1 = pair[0][2]
+                    tmpvar2 = pair[1][2]
+                    sys.stderr.write(f"[ERROR] TypeError in variants for package {tmppkg}: '{tmpvar1}' ({type(tmpvar1)}) vs '{tmpvar2}' ({type(tmpvar2)})\n")
+                #end: try/except (inner)
+            #end: for pair in itertools.combinations(...
+            # Rethrow exception
+            raise original_exception
+        #end: try/except
+        for pkg_name, variant_def_id, value in tmpsorted:
             try:
                 vid = self.variant_ids_by_def_id[variant_def_id]
             except KeyError:
