@@ -301,6 +301,12 @@ class Finder:
                 )
 
             for spec in specs:
+                try:
+                    spack.spec.substitute_abstract_variants(spec, repo=repo_path)
+                except Exception as e:
+                    spack.util.tty.debug(f'Invalid detected spec "{spec}" [{e}]')
+                    continue
+
                 prefix = self.prefix_from_path(path=candidate_path)
                 if not prefix:
                     continue

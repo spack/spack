@@ -10,8 +10,10 @@ import pytest
 import spack.detection
 import spack.detection.common
 import spack.detection.path
+import spack.repo
 import spack.spec
 from spack.config import Configuration
+from spack.test.utilities import UnusableGlobal
 
 
 def test_detection_update_config(mutable_config: Configuration):
@@ -144,3 +146,36 @@ def test_library_prefix_cuts_at_bin_on_windows(tmp_path: pathlib.Path):
     nested_win_bin.mkdir(parents=True)
     expected_win_bin = str(tmp_path / "winbin" / "foo")
     assert spack.detection.common.library_prefix(str(nested_win_bin)) == expected_win_bin
+
+
+def test_detect_specs_validates_variants_with_injected_repo(tmp_path, monkeypatch, mock_packages):
+    """Tests that the variants of the specs returned by determine_spec_details are validated
+    against the repository passed to detect_specs, and that invalid specs are discarded.
+    """
+    prefixes = {"valid": tmp_path / "valid", "invalid": tmp_path / "invalid"}
+    for prefix in prefixes.values():
+        (prefix / "bin").mkdir(parents=True)
+        (prefix / "bin" / "gcc").touch()
+
+    gcc_cls = mock_packages.get_pkg_class("gcc")
+
+    @classmethod
+    def _determine_spec_details(cls, prefix, exes_in_prefix):
+        languages = "c,c++" if prefix == str(prefixes["valid"] / "bin") else "klingon"
+        return spack.spec.Spec.from_detection(
+            f"gcc@9.4.0 languages={languages}", external_path=str(prefix)
+        )
+
+    monkeypatch.setattr(gcc_cls, "determine_spec_details", _determine_spec_details)
+
+    with monkeypatch.context() as m:
+        m.setattr(spack.repo, "PATH", UnusableGlobal("spack.repo.PATH"))
+        detected = spack.detection.path.ExecutablesFinder().detect_specs(
+            pkg=gcc_cls,
+            paths=[str(p / "bin" / "gcc") for p in prefixes.values()],
+            repo_path=mock_packages,
+        )
+
+    assert len(detected) == 1
+    assert detected[0].external_path == str(prefixes["valid"] / "bin")
+    assert detected[0].satisfies("languages=c,c++")

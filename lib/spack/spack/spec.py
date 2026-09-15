@@ -3086,6 +3086,9 @@ class Spec:
         """Construct a spec from a spec string determined during external
         detection and attach extra attributes to it.
 
+        The variants in the returned spec are not checked against the package. Call
+        :func:`substitute_abstract_variants` to set their types and validate their values.
+
         Args:
             spec_str: spec string
             external_path: prefix of the external spec
@@ -3093,11 +3096,7 @@ class Spec:
             extra_attributes: dictionary containing extra attributes
         """
         s = Spec(spec_str, external_path=external_path, external_modules=external_modules)
-        extra_attributes = syaml.sorted_dict(extra_attributes or {})
-        # This is needed to be able to validate multi-valued variants,
-        # otherwise they'll still be abstract in the context of detection.
-        substitute_abstract_variants(s)
-        s.extra_attributes = extra_attributes
+        s.extra_attributes = syaml.sorted_dict(extra_attributes or {})
         return s
 
     def _patches_assigned(self):

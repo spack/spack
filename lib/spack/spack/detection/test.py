@@ -101,12 +101,14 @@ class Runner:
 
     @property
     def expected_specs(self) -> List[spack.spec.Spec]:
-        return [
-            spack.spec.Spec.from_detection(
+        result = []
+        for item in self.test.results:
+            spec = spack.spec.Spec.from_detection(
                 item.spec, external_path=self.tmpdir.name, extra_attributes=item.extra_attributes
             )
-            for item in self.test.results
-        ]
+            spack.spec.substitute_abstract_variants(spec, repo=self.repository)
+            result.append(spec)
+        return result
 
 
 def detection_tests(pkg_name: str, repository: spack.repo.RepoPath) -> List[Runner]:

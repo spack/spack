@@ -9,6 +9,7 @@ import spack.caches
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.config
+import spack.repo
 import spack.spec
 from spack.test.utilities import UnusableGlobal
 
@@ -36,7 +37,6 @@ done
     mock_packages.packages_with_tags("compiler")
 
     with monkeypatch.context() as m:
-        # spack.repo.PATH is not broken: Spec.from_detection reads it to substitute variants
         for module, attribute in [
             (spack.config, "CONFIG"),
             (spack.caches, "MISC_CACHE"),
@@ -44,14 +44,18 @@ done
         ]:
             m.setattr(module, attribute, UnusableGlobal(f"{module.__name__}.{attribute}"))
 
-        new_compilers = spack.compilers.config.find_compilers(
-            [str(prefix)],
-            configuration=mutable_config,
-            repo=mock_packages,
-            scope="site",
-            max_workers=1,
-        )
-        assert [x.format("{name}@{version}") for x in new_compilers] == ["gcc@4.5.3"]
+        # spack.repo.PATH is broken only for detection: CompilerRemover reads it in satisfies
+        with monkeypatch.context() as detection:
+            detection.setattr(spack.repo, "PATH", UnusableGlobal("spack.repo.PATH"))
+
+            new_compilers = spack.compilers.config.find_compilers(
+                [str(prefix)],
+                configuration=mutable_config,
+                repo=mock_packages,
+                scope="site",
+                max_workers=1,
+            )
+            assert [x.format("{name}@{version}") for x in new_compilers] == ["gcc@4.5.3"]
 
         all_compilers = spack.compilers.config.all_compilers(
             mutable_config, repo=mock_packages, init_config=False
