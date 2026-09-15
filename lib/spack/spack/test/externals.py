@@ -11,7 +11,7 @@ import spack.archspec
 import spack.concretize
 import spack.repo
 import spack.traverse
-from spack.compilers.config import CompilerFactory
+from spack.compilers.config import all_compilers_from
 from spack.config import Configuration
 from spack.externals import (
     DuplicateExternalError,
@@ -404,7 +404,7 @@ def test_external_compiler_with_non_compiler_dependency(mutable_config: Configur
         },
     }
     with mutable_config.override("packages", packages_config) as cfg:
-        valid_compilers = CompilerFactory.from_packages_yaml(cfg, repo=spack.repo.PATH)
+        valid_compilers = all_compilers_from(cfg, repo=spack.repo.PATH)
         for c in valid_compilers:
             if c.name == "compiler-with-deps":
                 assert c.external

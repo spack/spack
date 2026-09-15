@@ -31,10 +31,7 @@ def compiler_config_files():
     for scope in configuration.writable_scopes:
         name = scope.name
 
-        from_packages_yaml = CompilerFactory.from_packages_yaml(
-            configuration, scope=name, repo=spack.repo.PATH
-        )
-        if from_packages_yaml:
+        if all_compilers_from(configuration, scope=name, repo=spack.repo.PATH):
             config_files.append(configuration.get_config_filename(name, "packages"))
 
     return config_files
@@ -145,8 +142,25 @@ def all_compilers_from(
             configuration is used.
         repo: package repository used to enumerate compiler packages.
     """
-    compilers = CompilerFactory.from_packages_yaml(configuration, scope=scope, repo=repo)
-    return compilers
+    compiler_package_names = supported_compilers(repo=repo)
+    packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
+
+    init_external_dicts = extract_dicts_from_configuration(packages_yaml)
+    external_parser = ExternalSpecsParser(init_external_dicts, repo=repo)
+    valid_compiler_specs = []
+    for name, external_specs_and_config in external_parser.specs_by_name.items():
+        if name not in compiler_package_names:
+            continue
+        for spec_with_config in external_specs_and_config:
+            if _EXTRA_ATTRIBUTES_KEY not in spec_with_config.config:
+                header = (
+                    f"The external spec '{spec_with_config.config['spec']}'"
+                    " cannot be used as a compiler"
+                )
+                tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
+                continue
+            valid_compiler_specs.append(spec_with_config.spec)
+    return valid_compiler_specs
 
 
 class CompilerRemover:
@@ -244,38 +258,6 @@ def name_os_target(spec: spack.spec.Spec) -> Tuple[str, str, str]:
             operating_system = host_platform.operating_system("default_os")
 
     return spec.name, str(operating_system), str(target)
-
-
-class CompilerFactory:
-    """Class aggregating all ways of constructing a list of compiler specs from config entries."""
-
-    @staticmethod
-    def from_packages_yaml(
-        configuration: spack.config.Configuration,
-        *,
-        scope: Optional[str] = None,
-        repo: spack.repo.RepoPath,
-    ) -> List[spack.spec.Spec]:
-        """Returns the compiler specs defined in the "packages" section of the configuration"""
-        compiler_package_names = supported_compilers(repo=repo)
-        packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
-
-        init_external_dicts = extract_dicts_from_configuration(packages_yaml)
-        external_parser = ExternalSpecsParser(init_external_dicts, repo=repo)
-        valid_compiler_specs = []
-        for name, external_specs_and_config in external_parser.specs_by_name.items():
-            if name not in compiler_package_names:
-                continue
-            for spec_with_config in external_specs_and_config:
-                if _EXTRA_ATTRIBUTES_KEY not in spec_with_config.config:
-                    header = (
-                        f"The external spec '{spec_with_config.config['spec']}'"
-                        " cannot be used as a compiler"
-                    )
-                    tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
-                    continue
-                valid_compiler_specs.append(spec_with_config.spec)
-        return valid_compiler_specs
 
 
 class UnknownCompilerError(spack.error.SpackError):
