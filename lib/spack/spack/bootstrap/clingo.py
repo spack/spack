@@ -12,7 +12,7 @@ JSON file for a similar platform.
 
 import pathlib
 import sys
-from typing import Dict, Optional, Tuple, Type
+from typing import Any, Dict, Optional, Tuple, Type
 
 import spack.vendor.archspec.cpu
 
@@ -42,17 +42,25 @@ def _select_best_version(
     node.versions.versions = [spack.version.from_string(f"={best_version}")]
 
 
-def _add_compilers_if_missing(configuration: spack.config.Configuration) -> None:
+def _add_compilers_if_missing(
+    configuration: spack.config.Configuration, *, repo: spack.repo.RepoPath
+) -> None:
     arch = spack.spec.ArchSpec.default_arch()
-    if not spack.compilers.config.compilers_for_arch(
-        arch, configuration=configuration, repo=spack.repo.PATH
-    ):
-        spack.compilers.config.find_compilers(configuration=configuration, repo=spack.repo.PATH)
+    if not spack.compilers.config.compilers_for_arch(arch, configuration=configuration, repo=repo):
+        spack.compilers.config.find_compilers(configuration=configuration, repo=repo)
 
 
 class ClingoBootstrapConcretizer:
-    def __init__(self, configuration):
-        _add_compilers_if_missing(configuration)
+    def __init__(
+        self,
+        configuration: spack.config.Configuration,
+        *,
+        repo: spack.repo.RepoPath,
+        compiler_cache: spack.compilers.libraries.CompilerCache,
+    ) -> None:
+        self.repo = repo
+        self.compiler_cache = compiler_cache
+        _add_compilers_if_missing(configuration, repo=repo)
         self.host_platform = spack.platforms.host()
         self.host_os = self.host_platform.default_operating_system()
         self.host_target = spack.vendor.archspec.cpu.host().family
@@ -79,9 +87,7 @@ class ClingoBootstrapConcretizer:
 
         candidates = [
             x
-            for x in spack.compilers.config.all_compilers_from(
-                configuration, repo=spack.repo.PATH
-            )
+            for x in spack.compilers.config.all_compilers_from(configuration, repo=self.repo)
             if x.name == compiler_name
         ]
         if not candidates:
@@ -94,7 +100,8 @@ class ClingoBootstrapConcretizer:
         best.namespace = "builtin"
         # If the compiler does not support C++ 14, fail with a legible error message
         try:
-            _ = best.package.standard_flag(language="cxx", standard="14")
+            compiler_pkg: Any = self.repo.get(best)
+            _ = compiler_pkg.standard_flag(language="cxx", standard="14")
         except RuntimeError as e:
             raise RuntimeError(
                 "cannot find a compiler supporting C++ 14 [needed to bootstrap clingo]"
@@ -151,7 +158,7 @@ class ClingoBootstrapConcretizer:
         # their versions to the most preferred, within the valid range, according to the
         # repository we know.
         to_be_updated = {
-            pkg_name: (spack.repo.PATH.get_pkg_class(pkg_name), valid_versions)
+            pkg_name: (self.repo.get_pkg_class(pkg_name), valid_versions)
             for pkg_name, valid_versions in {
                 "ca-certificates-mozilla": ":",
                 "openssl": "3:3",
@@ -166,7 +173,7 @@ class ClingoBootstrapConcretizer:
         # Tweak it to conform to the host architecture + update the version of a few dependencies
         for node in s.traverse():
             # Clear patches, we'll compute them correctly later
-            node.patches.clear()
+            node._patches_from(self.repo).clear()
             if "patches" in node.variants:
                 del node.variants["patches"]
 
@@ -200,8 +207,8 @@ class ClingoBootstrapConcretizer:
             if "libc" in edge.virtuals:
                 edge.spec = self.host_libc
 
-        spack.spec._inject_patches_variant(s, repo=spack.repo.PATH)
-        spack.spec.finalize_concretization([s], repo=spack.repo.PATH)
+        spack.spec._inject_patches_variant(s, repo=self.repo)
+        spack.spec.finalize_concretization([s], repo=self.repo)
 
         # Work around the fact that the installer calls Spec.dependents() and
         # we modified edges inconsistently
@@ -214,9 +221,7 @@ class ClingoBootstrapConcretizer:
 
     def libc_external_spec(self) -> "spack.spec.Spec":
         detector = spack.compilers.libraries.CompilerPropertyDetector(
-            self.host_compiler,
-            repo=spack.repo.PATH,
-            cache=spack.compilers.libraries.COMPILER_CACHE,
+            self.host_compiler, repo=self.repo, cache=self.compiler_cache
         )
         result = detector.default_libc()
         return self._external_spec(result)

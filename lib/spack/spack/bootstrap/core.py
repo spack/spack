@@ -30,6 +30,7 @@ import uuid
 from typing import Any, Callable, Dict, Generic, List, Optional, Sequence, Type, TypeVar
 
 import spack.binary_distribution
+import spack.compilers.libraries
 import spack.concretize
 import spack.config
 import spack.detection
@@ -474,7 +475,11 @@ def _concretize_clingo(abstract_spec: spack.spec.Spec) -> spack.spec.Spec:
     The ``abstract_spec`` argument is discarded, so a change to ``clingo_root_spec()`` has
     no effect on what is built from sources.
     """
-    return ClingoBootstrapConcretizer(configuration=spack.config.CONFIG).concretize()
+    return ClingoBootstrapConcretizer(
+        spack.config.CONFIG,
+        repo=spack.repo.PATH,
+        compiler_cache=spack.compilers.libraries.COMPILER_CACHE,
+    ).concretize()
 
 
 def ensure_clingo_importable_or_raise() -> None:

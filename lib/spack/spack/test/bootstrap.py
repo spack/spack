@@ -199,7 +199,7 @@ def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml, mo
         no_packages_yaml, repo=mock_packages, init_config=False
     )
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.clingo._add_compilers_if_missing(spack.config.CONFIG)
+        spack.bootstrap.clingo._add_compilers_if_missing(spack.config.CONFIG, repo=mock_packages)
         assert spack.compilers.config.all_compilers(
             spack.config.CONFIG, repo=mock_packages, init_config=False
         )
@@ -217,7 +217,7 @@ def test_bootstrap_search_for_compilers_with_environment_active(
         no_packages_yaml, repo=mock_packages, init_config=False
     )
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.clingo._add_compilers_if_missing(spack.config.CONFIG)
+        spack.bootstrap.clingo._add_compilers_if_missing(spack.config.CONFIG, repo=mock_packages)
         assert spack.compilers.config.all_compilers(
             spack.config.CONFIG, repo=mock_packages, init_config=False
         )
