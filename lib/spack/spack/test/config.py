@@ -21,10 +21,10 @@ import spack.error
 import spack.package_base
 import spack.paths
 import spack.platforms
-import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
 import spack.schema.include
+import spack.schema.merged
 import spack.schema.mirrors
 import spack.schema.repos
 import spack.spec
@@ -82,165 +82,110 @@ spack:
     return env_yaml
 
 
-def check_compiler_config(config: Configuration, comps, *compiler_names):
-    """Check that named compilers in comps match Spack's config."""
-    compilers = config.get("compilers")
-    compiler_list = ["cc", "cxx", "f77", "fc"]
-    flag_list = ["cflags", "cxxflags", "fflags", "cppflags", "ldflags", "ldlibs"]
-    param_list = ["modules", "paths", "spec", "operating_system"]
-    for compiler in compilers:
-        conf = compiler["compiler"]
-        if conf["spec"] in compiler_names:
-            comp = next(
-                (c["compiler"] for c in comps if c["compiler"]["spec"] == conf["spec"]), None
+def check_externals_config(config: Configuration, packages, *external_specs):
+    """Check that the named externals in packages match Spack's config."""
+    for pkg_name, pkg_config in config.get("packages").items():
+        for external in pkg_config.get("externals", []):
+            if external["spec"] not in external_specs:
+                continue
+            expected = next(
+                (
+                    x
+                    for x in packages.get(pkg_name, {}).get("externals", [])
+                    if x["spec"] == external["spec"]
+                ),
+                None,
             )
-            if not comp:
+            if not expected:
                 raise ValueError("Bad config spec")
-            for p in param_list:
-                assert conf[p] == comp[p]
-            for f in flag_list:
-                expected = comp.get("flags", {}).get(f, None)
-                actual = conf.get("flags", {}).get(f, None)
-                assert expected == actual
-            for c in compiler_list:
-                expected = comp["paths"][c]
-                actual = conf["paths"][c]
-                assert expected == actual
+            assert external == expected
 
 
 #
-# Some sample compiler config data and tests.
+# Some sample packages config data and tests.
 #
-a_comps = {
-    "compilers": [
-        {
-            "compiler": {
-                "paths": {"cc": "/gcc473", "cxx": "/g++473", "f77": None, "fc": None},
-                "modules": None,
-                "spec": "gcc@4.7.3",
-                "operating_system": "CNL10",
-            }
-        },
-        {
-            "compiler": {
-                "paths": {"cc": "/gcc450", "cxx": "/g++450", "f77": "gfortran", "fc": "gfortran"},
-                "modules": None,
-                "spec": "gcc@4.5.0",
-                "operating_system": "CNL10",
-            }
-        },
-        {
-            "compiler": {
-                "paths": {"cc": "/gcc422", "cxx": "/g++422", "f77": "gfortran", "fc": "gfortran"},
-                "flags": {"cppflags": "-O0 -fpic", "fflags": "-f77"},
-                "modules": None,
-                "spec": "gcc@4.2.2",
-                "operating_system": "CNL10",
-            }
-        },
-        {
-            "compiler": {
-                "paths": {
-                    "cc": "<overwritten>",
-                    "cxx": "<overwritten>",
-                    "f77": "<overwritten>",
-                    "fc": "<overwritten>",
+a_packages = {
+    "packages": {
+        "gcc": {
+            "externals": [
+                {"spec": "gcc@4.7.3", "prefix": "/gcc473"},
+                {"spec": "gcc@4.5.0", "prefix": "/gcc450", "modules": ["gcc/4.5.0"]},
+                {
+                    "spec": "gcc@4.2.2",
+                    "prefix": "/gcc422",
+                    "extra_attributes": {"flags": {"cppflags": "-O0 -fpic", "fflags": "-f77"}},
                 },
-                "modules": None,
-                "spec": "clang@3.3",
-                "operating_system": "CNL10",
-            }
+            ]
         },
-    ]
+        "llvm": {"externals": [{"spec": "llvm@3.3", "prefix": "<overwritten>"}]},
+    }
 }
 
-b_comps = {
-    "compilers": [
-        {
-            "compiler": {
-                "paths": {"cc": "/icc100", "cxx": "/icp100", "f77": None, "fc": None},
-                "modules": None,
-                "spec": "icc@10.0",
-                "operating_system": "CNL10",
-            }
-        },
-        {
-            "compiler": {
-                "paths": {"cc": "/icc111", "cxx": "/icp111", "f77": "ifort", "fc": "ifort"},
-                "modules": None,
-                "spec": "icc@11.1",
-                "operating_system": "CNL10",
-            }
-        },
-        {
-            "compiler": {
-                "paths": {"cc": "/icc123", "cxx": "/icp123", "f77": "ifort", "fc": "ifort"},
-                "flags": {"cppflags": "-O3", "fflags": "-f77rtl"},
-                "modules": None,
-                "spec": "icc@12.3",
-                "operating_system": "CNL10",
-            }
-        },
-        {
-            "compiler": {
-                "paths": {
-                    "cc": "<overwritten>",
-                    "cxx": "<overwritten>",
-                    "f77": "<overwritten>",
-                    "fc": "<overwritten>",
+b_packages = {
+    "packages": {
+        "intel-oneapi-compilers": {
+            "externals": [
+                {"spec": "intel-oneapi-compilers@10.0", "prefix": "/icc100"},
+                {
+                    "spec": "intel-oneapi-compilers@11.1",
+                    "prefix": "/icc111",
+                    "modules": ["intel/11.1"],
                 },
-                "modules": None,
-                "spec": "clang@3.3",
-                "operating_system": "CNL10",
-            }
+                {
+                    "spec": "intel-oneapi-compilers@12.3",
+                    "prefix": "/icc123",
+                    "extra_attributes": {"flags": {"cppflags": "-O3", "fflags": "-f77rtl"}},
+                },
+            ]
         },
-    ]
+        "llvm": {"externals": [{"spec": "llvm@3.3", "prefix": "<overwritten>"}]},
+    }
 }
 
 
 @pytest.fixture()
-def compiler_specs():
-    """Returns a couple of compiler specs needed for the tests"""
-    a = [ac["compiler"]["spec"] for ac in a_comps["compilers"]]
-    b = [bc["compiler"]["spec"] for bc in b_comps["compilers"]]
-    CompilerSpecs = collections.namedtuple("CompilerSpecs", ["a", "b"])
-    return CompilerSpecs(a=a, b=b)
+def external_specs():
+    """Returns the external specs needed for the tests"""
+    a = [x["spec"] for entry in a_packages["packages"].values() for x in entry["externals"]]
+    b = [x["spec"] for entry in b_packages["packages"].values() for x in entry["externals"]]
+    ExternalSpecs = collections.namedtuple("ExternalSpecs", ["a", "b"])
+    return ExternalSpecs(a=a, b=b)
 
 
-def test_write_key_in_memory(mock_low_high_config, compiler_specs):
-    # Write b_comps "on top of" a_comps.
-    mock_low_high_config.set("compilers", a_comps["compilers"], scope="low")
-    mock_low_high_config.set("compilers", b_comps["compilers"], scope="high")
+def test_write_key_in_memory(mock_low_high_config, external_specs):
+    # Write b_packages "on top of" a_packages.
+    mock_low_high_config.set("packages", a_packages["packages"], scope="low")
+    mock_low_high_config.set("packages", b_packages["packages"], scope="high")
 
     # Make sure the config looks how we expect.
-    check_compiler_config(mock_low_high_config, a_comps["compilers"], *compiler_specs.a)
-    check_compiler_config(mock_low_high_config, b_comps["compilers"], *compiler_specs.b)
+    check_externals_config(mock_low_high_config, a_packages["packages"], *external_specs.a)
+    check_externals_config(mock_low_high_config, b_packages["packages"], *external_specs.b)
 
 
-def test_write_key_to_disk(mock_low_high_config, compiler_specs):
-    # Write b_comps "on top of" a_comps.
-    mock_low_high_config.set("compilers", a_comps["compilers"], scope="low")
-    mock_low_high_config.set("compilers", b_comps["compilers"], scope="high")
-
-    # Clear caches so we're forced to read from disk.
-    mock_low_high_config.clear_caches()
-
-    # Same check again, to ensure consistency.
-    check_compiler_config(mock_low_high_config, a_comps["compilers"], *compiler_specs.a)
-    check_compiler_config(mock_low_high_config, b_comps["compilers"], *compiler_specs.b)
-
-
-def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
-    # Write b_comps in the same file as a_comps.
-    mock_low_high_config.set("compilers", a_comps["compilers"], scope="low")
-    mock_low_high_config.set("compilers", b_comps["compilers"], scope="low")
+def test_write_key_to_disk(mock_low_high_config, external_specs):
+    # Write b_packages "on top of" a_packages.
+    mock_low_high_config.set("packages", a_packages["packages"], scope="low")
+    mock_low_high_config.set("packages", b_packages["packages"], scope="high")
 
     # Clear caches so we're forced to read from disk.
     mock_low_high_config.clear_caches()
 
     # Same check again, to ensure consistency.
-    check_compiler_config(mock_low_high_config, a_comps["compilers"], *compiler_specs.a)
-    check_compiler_config(mock_low_high_config, b_comps["compilers"], *compiler_specs.b)
+    check_externals_config(mock_low_high_config, a_packages["packages"], *external_specs.a)
+    check_externals_config(mock_low_high_config, b_packages["packages"], *external_specs.b)
+
+
+def test_write_to_same_priority_file(mock_low_high_config, external_specs):
+    # Write b_packages in the same file as a_packages.
+    mock_low_high_config.set("packages", a_packages["packages"], scope="low")
+    mock_low_high_config.set("packages", b_packages["packages"], scope="low")
+
+    # Clear caches so we're forced to read from disk.
+    mock_low_high_config.clear_caches()
+
+    # Same check again, to ensure consistency.
+    check_externals_config(mock_low_high_config, a_packages["packages"], *external_specs.a)
+    check_externals_config(mock_low_high_config, b_packages["packages"], *external_specs.b)
 
 
 #
@@ -528,8 +473,7 @@ def test_parse_install_tree(config_settings_fn, expected_fn, mutable_config, tmp
     for config_setting in config_settings:
         mutable_config.set(*config_setting)
 
-    config_dict = mutable_config.get("config")
-    root, unpadded_root, projections = spack.store.parse_install_tree(config_dict)
+    root, unpadded_root, projections = spack.store.parse_install_tree(mutable_config)
     assert root == expected_root
     assert unpadded_root == expected_unpadded_root
     assert projections == expected_proj
@@ -599,8 +543,7 @@ def test_parse_install_tree_padded(config_settings, expected, mutable_config):
     for config_setting in config_settings:
         mutable_config.set(*config_setting)
 
-    config_dict = mutable_config.get("config")
-    root, unpadded_root, projections = spack.store.parse_install_tree(config_dict)
+    root, unpadded_root, projections = spack.store.parse_install_tree(mutable_config)
     assert root == expected_root
     assert unpadded_root == expected_unpadded_root
     assert projections == expected_proj
@@ -773,7 +716,7 @@ def test_keys_are_ordered(configuration_dir):
 def test_config_format_error(mutable_config: Configuration):
     """This is raised when we try to write a bad configuration."""
     with pytest.raises(spack.config.ConfigFormatError):
-        mutable_config.set("compilers", {"bad": "data"}, scope="site")
+        mutable_config.set("packages", {"bad": "data"}, scope="site")
 
 
 def get_config_error(filename, schema, yaml_string):
@@ -1005,16 +948,6 @@ spack:
         - ~/my/repo/location
     mirrors:
         remote: /foo/bar/baz
-    compilers:
-        - compiler:
-            spec: cce@2.1
-            operating_system: cnl
-            modules: []
-            paths:
-                cc: /path/to/cc
-                cxx: /path/to/cxx
-                fc: /path/to/fc
-                f77: /path/to/f77
 """,
     )
 
@@ -1074,37 +1007,6 @@ def test_bad_repos_yaml():
             """\
 repos:
     True
-""",
-        )
-
-
-def test_bad_compilers_yaml():
-    with pytest.raises(spack.config.ConfigFormatError):
-        check_schema(
-            spack.schema.compilers.schema,
-            """\
-compilers:
-    key_instead_of_list: 'value'
-""",
-        )
-
-    with pytest.raises(spack.config.ConfigFormatError):
-        check_schema(
-            spack.schema.compilers.schema,
-            """\
-compilers:
-    - shmompiler:
-         environment: /bad/value
-""",
-        )
-
-    with pytest.raises(spack.config.ConfigFormatError):
-        check_schema(
-            spack.schema.compilers.schema,
-            """\
-compilers:
-    - compiler:
-         fenfironfent: /bad/value
 """,
         )
 
@@ -1255,7 +1157,7 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
 def test_default_install_tree(monkeypatch, default_config):
     s = spack.spec.Spec("nonexistent@x.y.z arch=foo-bar-baz")
     monkeypatch.setattr(s, "dag_hash", lambda length: "abc123")
-    _, _, projections = spack.store.parse_install_tree(default_config.get("config"))
+    _, _, projections = spack.store.parse_install_tree(default_config)
     assert s.format(projections["all"]) == "foo-baz/nonexistent-x.y.z-abc123"
 
 
@@ -1692,6 +1594,10 @@ def test_deepcopy_as_builtin(env_yaml):
     assert type(packages_copy["all"]) is DictWithLineInfo
     assert type(packages_copy["all"]["compiler"]) is list
     assert type(packages_copy["all"]["compiler"][0]) is str
+
+    line_info = cfg.deepcopy_as_builtin("packages", line_info=True)
+    assert line_info.line_info == f"{env_yaml}:6"
+    assert line_info["all"].line_info == f"{env_yaml}:7"
 
 
 def test_included_optional_include_scopes():
@@ -2204,3 +2110,56 @@ def test_env_substitution_follows_activation(mutable_mock_env_path, mutable_conf
     # After deactivation "$env" is a no-op again
     assert mutable_config.env_path is None
     assert spack.config.substitute_path_variables("$env/foo/bar") == "$env/foo/bar"
+
+
+def test_flattened_configuration_has_every_section(mutable_config: Configuration):
+    """Tests that flattening the configuration gives the merged content of every section."""
+    flattened = spack.config.flattened_configuration()
+
+    assert list(flattened) == [spack.schema.env.TOP_LEVEL_KEY]
+    sections = flattened[spack.schema.env.TOP_LEVEL_KEY]
+    assert set(sections) == set(spack.config.SECTION_SCHEMAS)
+    for name in spack.config.SECTION_SCHEMAS:
+        assert sections[name] == mutable_config.get(name)
+
+
+def test_flattened_configuration_leaves_the_manifest_alone(mutable_config: Configuration):
+    """Tests that a manifest keeps the keys that are not config sections."""
+    manifest = syaml.load(
+        """\
+spack:
+  specs:
+  - mpileaks
+  view: true
+"""
+    )
+    flattened = spack.config.flattened_configuration(manifest)[spack.schema.env.TOP_LEVEL_KEY]
+
+    assert flattened["specs"] == ["mpileaks"]
+    assert flattened["view"] is True
+    assert flattened["config"] == mutable_config.get("config")
+
+
+def test_install_tree_expands_against_the_configuration_it_is_read_from(mutable_config, tmp_path):
+    """The install tree root expands against the configuration it is read from, so that a store
+    created for an environment that is not the active one does not point into the active one.
+    """
+    mutable_config.set("config:install_tree:root", os.path.join("$env", "opt"))
+    mutable_config.env_path = str(tmp_path / "an-environment")
+
+    root, _, _ = spack.store.parse_install_tree(mutable_config)
+
+    assert root == str(tmp_path / "an-environment" / "opt")
+
+
+@pytest.mark.parametrize(
+    "schema,contents",
+    [
+        (spack.schema.env.schema, "spack:\n  compilers:\n  - compiler:\n      spec: gcc@12\n"),
+        (spack.schema.merged.schema, "compilers:\n- compiler:\n    spec: gcc@12\n"),
+    ],
+)
+def test_compilers_section_is_rejected(schema, contents):
+    """Tests that a 'compilers' section is rejected with a pointer to packages.yaml"""
+    with pytest.raises(spack.config.ConfigFormatError, match="packages.yaml"):
+        check_schema(schema, contents)

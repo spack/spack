@@ -9,7 +9,7 @@ import spack.concretize
 import spack.directives
 import spack.spec
 import spack.version
-from spack.directives import _make_when_spec, depends_on, extends, patch
+from spack.directives import _make_when_spec, conflicts, depends_on, extends, patch
 from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
 from spack.repo import RepoPath
 from spack.spec import Spec
@@ -90,7 +90,7 @@ def test_conditionally_extends_direct_dep(config, mock_packages):
 def test_error_on_anonymous_dependency(config, mock_packages: RepoPath):
     pkg = mock_packages.get_pkg_class("pkg-a")
     with pytest.raises(spack.directives.DependencyError):
-        spack.directives._execute_depends_on(pkg, spack.spec.Spec("@4.5"))
+        spack.directives._DependsOn(spack.spec.Spec("@4.5"))(pkg)
 
 
 @pytest.mark.regression("34879")
@@ -130,7 +130,7 @@ def test_duplicate_exact_range_license():
     )
 
     with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
-        spack.directives._execute_license(package, "MIT", "+foo")
+        spack.directives._License("MIT", "+foo")(package)
 
 
 def test_overlapping_duplicate_licenses():
@@ -144,7 +144,7 @@ def test_overlapping_duplicate_licenses():
     )
 
     with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
-        spack.directives._execute_license(package, "MIT", "+bar")
+        spack.directives._License("MIT", "+bar")(package)
 
 
 def test_version_type_validation():
@@ -157,11 +157,11 @@ def test_version_type_validation():
 
     # Pass a float
     with pytest.raises(spack.version.VersionError, match=msg):
-        spack.directives._execute_version(package(name="python"), ver=3.10, kwargs={})
+        spack.directives._Version(ver=3.10, kwargs={})(package(name="python"))
 
     # Try passing a bogus type; it's just that we want a nice error message
     with pytest.raises(spack.version.VersionError, match=msg):
-        spack.directives._execute_version(package(name="python"), ver={}, kwargs={})
+        spack.directives._Version(ver={}, kwargs={})(package(name="python"))
 
 
 @pytest.mark.parametrize(
@@ -197,11 +197,11 @@ def test_redistribute_override_when():
         disable_redistribute = {}
 
     cls = MockPackage
-    spack.directives._execute_redistribute(cls, source=False, binary=None, when="@1.0")
+    spack.directives._Redistribute(source=False, binary=None, when="@1.0")(cls)
     spec_key = spack.directives._make_when_spec("@1.0")
     assert not cls.disable_redistribute[spec_key].binary
     assert cls.disable_redistribute[spec_key].source
-    spack.directives._execute_redistribute(cls, source=None, binary=False, when="@1.0")
+    spack.directives._Redistribute(source=None, binary=False, when="@1.0")(cls)
     assert cls.disable_redistribute[spec_key].binary
     assert cls.disable_redistribute[spec_key].source
 
@@ -301,3 +301,29 @@ def test_patched_dependencies_sets_class_attribute():
 
     assert DoesNotPatchDependencies._patches_dependencies is False
     assert DoesNotPatchDependencies.patches  # type: ignore
+
+
+def test_diamond_inheritance_runs_shared_directives_once():
+    """A directive of a base class reachable through more than one base runs exactly once, and
+    directives run base classes first, following the MRO."""
+
+    class Base(metaclass=DirectiveMeta):
+        name = "base"
+        conflicts("%gcc")
+
+    class Left(Base):
+        conflicts("%clang")
+
+    class Right(Base):
+        conflicts("%intel")
+
+    class Diamond(Left, Right):
+        conflicts("%nvhpc")
+
+    def conflict_specs(cls):
+        return [str(spec) for spec, _ in cls.conflicts[Spec()]]
+
+    assert conflict_specs(Base) == ["%gcc"]
+    assert conflict_specs(Left) == ["%gcc", "%clang"]
+    assert conflict_specs(Right) == ["%gcc", "%intel"]
+    assert conflict_specs(Diamond) == ["%gcc", "%intel", "%clang", "%nvhpc"]

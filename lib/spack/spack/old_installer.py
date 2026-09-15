@@ -52,7 +52,6 @@ import spack.hooks
 import spack.mirrors.mirror
 import spack.package_base
 import spack.package_prefs as prefs
-import spack.repo
 import spack.report
 import spack.rewiring
 import spack.store
@@ -60,6 +59,7 @@ import spack.util.filesystem as fs
 import spack.util.lock as lk
 import spack.util.path
 from spack import binary_distribution
+from spack.installer.build import _do_fake_install, _write_timer_json, dump_packages
 from spack.url_buildcache import BuildcacheEntryError
 from spack.util import timer, tty
 from spack.util.environment import EnvironmentModifications, dump_environment
@@ -107,16 +107,6 @@ class BuildStatus(enum.Enum):
 
     def __str__(self):
         return f"{self.name.lower()}"
-
-
-def _write_timer_json(pkg, timer, cache):
-    extra_attributes = {"name": pkg.name, "cache": cache, "hash": pkg.spec.dag_hash()}
-    try:
-        with open(pkg.times_log_path, "w", encoding="utf-8") as timelog:
-            timer.write_json(timelog, extra_attributes=extra_attributes)
-    except Exception as e:
-        tty.debug(str(e))
-        return
 
 
 class ExecuteResult(enum.Enum):
@@ -262,41 +252,6 @@ def _handle_external_and_upstream(pkg: "spack.package_base.PackageBase", explici
         return True
 
     return False
-
-
-def _do_fake_install(pkg: "spack.package_base.PackageBase") -> None:
-    """Make a fake install directory with fake executables, headers, and libraries."""
-    command = pkg.name
-    header = pkg.name
-    library = pkg.name
-
-    # Avoid double 'lib' for packages whose names already start with lib
-    if not pkg.name.startswith("lib"):
-        library = "lib" + library
-
-    plat_shared = ".dll" if sys.platform == "win32" else ".so"
-    plat_static = ".lib" if sys.platform == "win32" else ".a"
-    dso_suffix = ".dylib" if sys.platform == "darwin" else plat_shared
-
-    # Install fake command
-    fs.mkdirp(pkg.prefix.bin)
-    executable = lambda path, flags: os.open(path, flags, 0o700)
-    open(os.path.join(pkg.prefix.bin, command), "wb", opener=executable).close()
-
-    # Install fake header file
-    fs.mkdirp(pkg.prefix.include)
-    fs.touch(os.path.join(pkg.prefix.include, header + ".h"))
-
-    # Install fake shared and static libraries
-    fs.mkdirp(pkg.prefix.lib)
-    for suffix in [dso_suffix, plat_static]:
-        fs.touch(os.path.join(pkg.prefix.lib, library + suffix))
-
-    # Install fake man page
-    fs.mkdirp(pkg.prefix.man.man1)
-
-    packages_dir = spack.store.STORE.layout.build_packages_path(pkg.spec)
-    dump_packages(pkg.spec, packages_dir)
 
 
 def _hms(seconds: int) -> str:
@@ -527,65 +482,6 @@ def combine_phase_logs(phase_log_files: List[str], log_path: str) -> None:
         for phase_log_file in phase_log_files:
             with open(phase_log_file, "br") as phase_log:
                 shutil.copyfileobj(phase_log, log_file)
-
-
-def dump_packages(spec: "spack.spec.Spec", path: str) -> None:
-    """
-    Dump all package information for a spec and its dependencies.
-
-    This creates a package repository within path for every namespace in the
-    spec DAG, and fills the repos with package files and patch files for every
-    node in the DAG.
-
-    Args:
-        spec: the Spack spec whose package information is to be dumped
-        path: the path to the build packages directory
-    """
-    fs.mkdirp(path)
-
-    # Copy in package.py files from any dependencies.
-    # Note that we copy them in as they are in the *install* directory
-    # NOT as they are in the repository, because we want a snapshot of
-    # how *this* particular build was done.
-    for node in spec.traverse(deptype="all"):
-        if node is not spec:
-            # Locate the dependency package in the install tree and find
-            # its provenance information.
-            source = spack.store.STORE.layout.build_packages_path(node)
-            source_repo_root = os.path.join(source, node.namespace)
-
-            # If there's no provenance installed for the package, skip it.
-            # If it's external, skip it because it either:
-            # 1) it wasn't built with Spack, so it has no Spack metadata
-            # 2) it was built by another Spack instance, and we do not
-            # (currently) use Spack metadata to associate repos with externals
-            # built by other Spack instances.
-            # Spack can always get something current from the builtin repo.
-            if node.external or not os.path.isdir(source_repo_root):
-                continue
-
-            # Create a source repo and get the pkg directory out of it.
-            try:
-                source_repo = spack.repo.from_path(source_repo_root)
-                source_pkg_dir = source_repo.dirname_for_package_name(node.name)
-            except spack.repo.RepoError as err:
-                tty.debug(f"Failed to create source repo for {node.name}: {str(err)}")
-                source_pkg_dir = None
-                tty.warn(f"Warning: Couldn't copy in provenance for {node.name}")
-
-        # Create a destination repository
-        pkg_api = spack.repo.PATH.get_repo(node.namespace).package_api
-        repo_root = os.path.join(path, node.namespace) if pkg_api < (2, 0) else path
-        repo = spack.repo.create_or_construct(
-            repo_root, namespace=node.namespace, package_api=pkg_api
-        )
-
-        # Get the location of the package in the dest repo.
-        dest_pkg_dir = repo.dirname_for_package_name(node.name)
-        if node is spec:
-            spack.repo.PATH.dump_provenance(node, dest_pkg_dir)
-        elif source_pkg_dir:
-            fs.install_tree(source_pkg_dir, dest_pkg_dir)
 
 
 def get_dependent_ids(spec: "spack.spec.Spec") -> List[str]:

@@ -849,6 +849,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         # to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop("name", None)
+        self._config = forwarded_args.pop("config", None)
         super().__init__(**forwarded_args)
 
         self._git = None
@@ -873,6 +874,11 @@ class GitFetchStrategy(VCSFetchStrategy):
         return spack.version.Version(version_string)
 
     @property
+    def config(self) -> "spack.config.Configuration":
+        """Configuration this fetcher reads its git settings from."""
+        return self._config if self._config is not None else spack.config.CONFIG
+
+    @property
     def git(self):
         if not self._git:
             try:
@@ -888,7 +894,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             # If the user asked for insecure fetching, make that work
             # with git as well.
-            if not spack.config.CONFIG.get("config:verify_ssl"):
+            if not self.config.get("config:verify_ssl"):
                 self._git.add_default_env("GIT_SSL_NO_VERIFY", "true")
 
         return self._git
@@ -949,7 +955,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         tty.debug(f"Cloning git repository: {self._repo_info()}")
 
         git = self.git
-        debug = spack.config.CONFIG.get("config:debug")
+        debug = self.config.get("config:debug")
 
         # We don't need to worry about which commit/branch/tag is checked out
         clone_args = ["clone", "--bare"]

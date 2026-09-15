@@ -11,6 +11,7 @@ from typing import List, Optional, Tuple, cast
 import pytest
 
 import spack.installer.ui as inst
+import spack.util.tty.color
 from spack.installer.base import StdinReader
 from spack.installer.ui import TerminalUI
 
@@ -49,6 +50,7 @@ def create_tui(
     verbose: bool = False,
     filter_padding: bool = False,
     color: Optional[bool] = None,
+    show_log_on_error: bool = False,
 ) -> Tuple[TerminalUI, List[float], SimpleTextIOWrapper]:
     """Helper function to create TerminalUI with mocked dependencies"""
     fake_stdout = SimpleTextIOWrapper(tty=is_tty)
@@ -71,6 +73,7 @@ def create_tui(
         verbose=verbose,
         filter_padding=filter_padding,
         color=color,
+        show_log_on_error=show_log_on_error,
     )
 
     return tui, time_values, fake_stdout
@@ -248,6 +251,56 @@ class TestBasicStateManagement:
 
         tui.on_finished([*build_ids, "unknown"])
         assert get_stderr(tui).getvalue() == "-- lines 1 to 1 --\n> error: nope\n"
+
+    def test_show_log_on_error_writes_whole_log(self, tmp_path):
+        """With show_log_on_error every line of the log is written."""
+        lines = [f"line {i}" for i in range(1, 101)]
+        lines[49] = "error: something went wrong"
+        log_file = tmp_path / "build.log"
+        log_file.write_text("\n".join(lines) + "\n")
+
+        tui, _, _ = create_tui(show_log_on_error=True)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.builds[build_id].log_path = str(log_file)
+        tui.on_state_changed(build_id, "failed")
+        tui.on_finished([build_id])
+
+        err = get_stderr(tui).getvalue()
+        assert "-- lines 1 to 100 --" in err
+        assert "  line 1\n" in err and "  line 100\n" in err
+        assert "> error: something went wrong\n" in err
+
+    def test_without_show_log_on_error_the_log_is_windowed(self, tmp_path):
+        """Without the flag, lines far away from the error and the tail are dropped."""
+        lines = [f"line {i}" for i in range(1, 101)]
+        lines[49] = "error: something went wrong"
+        log_file = tmp_path / "build.log"
+        log_file.write_text("\n".join(lines) + "\n")
+
+        tui, _, _ = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+        tui.builds[build_id].log_path = str(log_file)
+        tui.on_state_changed(build_id, "failed")
+        tui.on_finished([build_id])
+
+        err = get_stderr(tui).getvalue()
+        assert "> error: something went wrong\n" in err
+        assert "  line 1\n" not in err  # far from the error and outside the tail
+        assert "  line 100\n" in err  # in the tail
+
+    def test_show_log_on_error_without_any_match(self, tmp_path):
+        """With show_log_on_error the log is written even when nothing matched."""
+        log_file = tmp_path / "build.log"
+        log_file.write_text("".join(f"line {i}\n" for i in range(1, 101)))
+
+        tui, _, _ = create_tui(show_log_on_error=True)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.builds[build_id].log_path = str(log_file)
+        tui.on_state_changed(build_id, "failed")
+        tui.on_finished([build_id])
+
+        err = get_stderr(tui).getvalue()
+        assert "  line 1\n" in err and "  line 100\n" in err
 
     def test_on_progress(self):
         """Test that on_progress updates percentages"""
@@ -1417,7 +1470,8 @@ class TestTerminalUIColor:
         on_build_added(tui, "pkg")
         tui.on_state_changed("pkg", "finished")
         # green indicator, reset, dark-gray hash
-        assert stdout.getvalue().startswith("\033[32m[+]\033[0m \033[0;90m")
+        expected = spack.util.tty.color.colorize("@g[+]@. @K", color=True)
+        assert stdout.getvalue().startswith(expected)
 
     def test_non_tty_failed_color_true_emits_red(self):
         """color=True in non-TTY mode: failed line has per-component ANSI colors."""
@@ -1425,7 +1479,8 @@ class TestTerminalUIColor:
         on_build_added(tui, "pkg")
         tui.on_state_changed("pkg", "failed")
         # red indicator, reset, dark-gray hash
-        assert stdout.getvalue().startswith("\033[31m[x]\033[0m \033[0;90m")
+        expected = spack.util.tty.color.colorize("@r[x]@. @K", color=True)
+        assert stdout.getvalue().startswith(expected)
 
     def test_non_tty_finished_color_false_no_ansi(self):
         """color=False in non-TTY mode: finished line has no ANSI escape codes."""

@@ -9,7 +9,19 @@ import warnings
 from typing import Callable, List, Optional
 
 import spack.util.spack_yaml
-from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
+from spack.spec_parser import (
+    DOTTED_IDENTIFIER,
+    FILENAME,
+    GIT_VERSION_PATTERN,
+    HASH,
+    IDENTIFIER,
+    NAME,
+    QUOTED_VALUE,
+    STAR,
+    VALUE,
+    VERSION,
+    VERSION_LIST,
+)
 from spack.tokenize import Token, TokenBase, Tokenizer
 from spack.util import tty
 
@@ -24,28 +36,28 @@ class _LegacySpecTokens(TokenBase):
     END_EDGE_PROPERTIES = r"(?:\])"
     DEPENDENCY = r"(?:\^)"
     # Version
-    VERSION_HASH_PAIR = SpecTokens.VERSION_HASH_PAIR.regex
-    GIT_VERSION = SpecTokens.GIT_VERSION.regex
-    VERSION = SpecTokens.VERSION.regex
+    VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
+    GIT_VERSION = rf"@(?:{GIT_VERSION_PATTERN})"
+    VERSION = rf"(?:@\s*(?:{VERSION_LIST}))"
     # Variants
-    PROPAGATED_BOOL_VARIANT = SpecTokens.PROPAGATED_BOOL_VARIANT.regex
-    BOOL_VARIANT = SpecTokens.BOOL_VARIANT.regex
-    PROPAGATED_KEY_VALUE_PAIR = SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex
-    KEY_VALUE_PAIR = SpecTokens.KEY_VALUE_PAIR.regex
+    PROPAGATED_BOOL_VARIANT = rf"(?:(?:\+\+|~~|--)\s*{NAME})"
+    BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
+    PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}:?==(?:{VALUE}|{QUOTED_VALUE}))"
+    KEY_VALUE_PAIR = rf"(?:{NAME}:?=(?:{VALUE}|{QUOTED_VALUE}))"
     # Compilers
     COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
     COMPILER = rf"(?:%\s*(?:{NAME}))"
     # FILENAME
-    FILENAME = SpecTokens.FILENAME.regex
+    FILENAME = rf"(?:{FILENAME})"
     # Package name
-    FULLY_QUALIFIED_PACKAGE_NAME = SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex
-    UNQUALIFIED_PACKAGE_NAME = SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex
+    FULLY_QUALIFIED_PACKAGE_NAME = rf"(?:{DOTTED_IDENTIFIER})"
+    UNQUALIFIED_PACKAGE_NAME = rf"(?:{IDENTIFIER}|{STAR})"
     # DAG hash
-    DAG_HASH = SpecTokens.DAG_HASH.regex
+    DAG_HASH = rf"(?:/(?:{HASH}))"
     # White spaces
-    WS = SpecTokens.WS.regex
+    WS = r"(?:\s+)"
     # Unexpected character(s)
-    UNEXPECTED = SpecTokens.UNEXPECTED.regex
+    UNEXPECTED = r"(?:.[\s]*)"
 
 
 def _spec_str_reorder_compiler(idx: int, blocks: List[List[Token]]) -> None:

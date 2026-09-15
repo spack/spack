@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import contextlib
+import os
 import pathlib
 import sys
 from types import ModuleType
@@ -12,7 +13,7 @@ import pytest
 
 from spack.util.executable import Executable
 from spack.util.filesystem import working_dir
-from spack.util.tty import log
+from spack.util.tty import color, log
 
 termios: Optional[ModuleType] = None
 try:
@@ -198,3 +199,21 @@ def test_nested_logging_contexts(capfd, tmp_path):
             log_captured_out = f.read()
             assert "inner\n" in log_captured_out
             assert "outer\n" not in log_captured_out
+
+
+def test_redirect_stdio_clears_isatty_cache():
+    """Both redirect_stdio and restore_stdio invalidate cached isatty() results."""
+    read_fd, write_fd = os.pipe()
+    try:
+        color._isatty_cache[1] = True
+        saved_fds = log.redirect_stdio(write_fd)
+        try:
+            assert not color._isatty_cache
+            color._isatty_cache[1] = True
+        finally:
+            log.restore_stdio(saved_fds)
+        assert not color._isatty_cache
+    finally:
+        color.clear_isatty_cache()
+        os.close(read_fd)
+        os.close(write_fd)

@@ -1,19 +1,20 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from typing import Set, Tuple
+from typing import TYPE_CHECKING, Set, Tuple
 
 import spack.compilers.config
 import spack.compilers.libraries
-import spack.config
 import spack.hash_lookup
-import spack.repo
 import spack.spec
 import spack.util.libc
 import spack.version
 
 from .core import SourceContext, fn
 from .versions import Provenance
+
+if TYPE_CHECKING:
+    import spack.context
 
 #: Language virtuals wrapped by the compiler wrapper (same ones for which a flag exists)
 COMPILER_WRAPPER_LANGUAGES = ("c", "cxx", "fortran")
@@ -82,12 +83,14 @@ class RuntimePropertyRecorder:
 
         dependency_spec = spack.spec.Spec(dependency_str)
         if dependency_spec.versions != spack.version.any_version:
-            self._setup.version_constraints[dependency_spec.name].add(dependency_spec.versions)
+            self._setup.clauses.record_version_constraint(
+                dependency_spec.name, dependency_spec.versions
+            )
 
         self.injected_dependencies.add(dependency_spec)
         body_str, node_variable = self.rule_body_from(when_spec)
 
-        head_clauses = self._setup.spec_clauses(dependency_spec, body=False)
+        head_clauses = self._setup.clauses.spec_clauses(dependency_spec, body=False)
         runtime_pkg = dependency_spec.name
         is_virtual = head_clauses[0].args[0] == "virtual_node"
         main_rule = (
@@ -137,7 +140,9 @@ class RuntimePropertyRecorder:
         when_substitutions = {}
         for s in when_spec.traverse(root=False):
             when_substitutions[f'"{s.name}"'] = self.node_for(s.name)
-        body_clauses = self._setup.spec_clauses(when_spec, name=node_placeholder, body=True)
+        body_clauses = self._setup.clauses.spec_clauses(
+            when_spec, name=node_placeholder, body=True
+        )
         for clause in body_clauses:
             if clause.args[0] == "virtual_on_incoming_edges":
                 # Substitute: attr("virtual_on_incoming_edges", ProviderNode, Virtual)
@@ -169,7 +174,7 @@ class RuntimePropertyRecorder:
 
         imposed_spec = spack.spec.Spec(f"{self.current_package}{impose}")
         when_spec = spack.spec.Spec(f"{self.current_package}{when}")
-        when_spec = spack.hash_lookup.lookup_hash(when_spec)
+        when_spec = spack.hash_lookup.lookup_hash(when_spec, context=self._setup.context)
 
         assert imposed_spec.versions.concrete, f"{impose} must have a concrete version"
 
@@ -196,10 +201,12 @@ class RuntimePropertyRecorder:
         body_str, node_variable = self.rule_body_from(when_spec)
         constraint_spec = spack.spec.Spec(constraint_str)
 
-        constraint_clauses = self._setup.spec_clauses(constraint_spec, body=False)
+        constraint_clauses = self._setup.clauses.spec_clauses(constraint_spec, body=False)
         for clause in constraint_clauses:
             if clause.args[0] == "node_version_satisfies":
-                self._setup.version_constraints[constraint_spec.name].add(constraint_spec.versions)
+                self._setup.clauses.record_version_constraint(
+                    constraint_spec.name, constraint_spec.versions
+                )
                 args = f'"{constraint_spec.name}", "{constraint_spec.versions}"'
                 head_str = f"propagate({node_variable}, node_version_satisfies({args}))"
                 rule = f"{head_str} :-\n{body_str}."
@@ -218,7 +225,7 @@ class RuntimePropertyRecorder:
         for flag_type, default_values in flags.items():
             root_spec_str = f"{root_spec_str} {flag_type}='{default_values}'"
         root_spec = spack.spec.Spec(root_spec_str)
-        head_clauses = self._setup.spec_clauses(
+        head_clauses = self._setup.clauses.spec_clauses(
             root_spec, body=False, context=SourceContext(source="compiler")
         )
         self.rules.append(f"% Default compiler flags for {spec}\n")
@@ -242,8 +249,9 @@ class RuntimePropertyRecorder:
         facts for the runtimes.
         """
         self._setup.gen.h2("Runtimes: declarations")
+        repo = self._setup.context.repo
         runtime_pkgs = sorted(
-            {x.name for x in self.injected_dependencies if not spack.repo.PATH.is_virtual(x.name)}
+            {x.name for x in self.injected_dependencies if not repo.is_virtual(x.name)}
         )
         for runtime_pkg in runtime_pkgs:
             self._setup.gen.fact(fn.runtime(runtime_pkg))
@@ -264,12 +272,15 @@ class RuntimePropertyRecorder:
         self._setup.effect_rules()
 
 
-def all_libcs() -> Set[spack.spec.Spec]:
+def all_libcs(context: "spack.context.SpackContext") -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
+    cache = spack.compilers.libraries.FileCompilerCache(context.misc_cache)
     libcs = set()
-    for c in spack.compilers.config.all_compilers_from(spack.config.CONFIG):
-        candidate = spack.compilers.libraries.CompilerPropertyDetector(c).default_libc()
+    for c in spack.compilers.config.all_compilers_from(context.config, repo=context.repo):
+        candidate = spack.compilers.libraries.CompilerPropertyDetector(
+            c, repo=context.repo, cache=cache
+        ).default_libc()
         if candidate is not None:
             libcs.add(candidate)
 

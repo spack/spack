@@ -96,6 +96,57 @@ def shell_fn(name: str, shell: str = "sh") -> str:
     """
     return f"%{name}%" if shell == "bat" else name
 
+class ShellCmdString:
+    """Formats commands to set or unset an environment variable for a given shell."""
+
+    _SET_STRINGS = {
+        "sh": "export {0}={1}",
+        "csh": "setenv {0} {1}",
+        "fish": "set -gx {0} {1}",
+        "bat": 'set "{0}={1}"',
+        "pwsh": "$Env:{0}='{1}'",
+    }
+
+    _UNSET_STRINGS = {
+        "sh": "unset {0}",
+        "csh": "unsetenv {0}",
+        "fish": "set -e {0}",
+        "bat": 'set "{0}="',
+        "pwsh": "Set-Item -Path Env:{0}",
+    }
+
+    #: separator used to terminate a statement and join it with the next one
+    _JOIN_STRINGS = {"sh": ";\n", "csh": ";\n", "fish": ";\n", "bat": "\n", "pwsh": "\n"}
+
+    def __init__(self, shell: str):
+        self.shell = shell
+
+    def set(self, name: str, value: str) -> str:
+        """Returns the command to set an environment variable to a value."""
+        return self._SET_STRINGS[self.shell].format(name, value)
+
+    def unset(self, name: str) -> str:
+        """Returns the command to unset an environment variable."""
+        return self._UNSET_STRINGS[self.shell].format(name)
+
+    def alias(self, name: str, code: str) -> List[str]:
+        if self.shell == "csh":
+            return [f'alias {name} "{code}"']
+        elif self.shell == "fish":
+            return [f"function {name}", code, "end"]
+        elif self.shell in ("bat", "pwsh"):
+            # Not implemented in Windows shells
+            return []
+        else:
+            # posix shell
+            return [f"alias {name}='{code}'"]
+
+    def join(self, cmds: List[str]) -> str:
+        """Joins a list of commands into a single, terminated script."""
+        cmds = cmds + [""]
+        sep = self._JOIN_STRINGS[self.shell]
+        return sep.join(cmds)
+
 
 TRACING_ENABLED = False
 

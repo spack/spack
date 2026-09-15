@@ -333,7 +333,6 @@ def env_activate(args):
     elif args.temp:
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
-        short_name = os.path.basename(env_path)
         view = not args.without_view
         ev.create_in_dir(env, with_view=view).write(regenerate=False)
         _tty_info(f"Created and activated temporary environment in {env_path}")
@@ -341,12 +340,10 @@ def env_activate(args):
     # Managed environment
     elif ev.exists(args.env_name) and not args.dir:
         env_path = ev.root(args.env_name)
-        short_name = args.env_name
 
     # Environment directory
     elif ev.is_env_dir(args.env_name):
         env_path = os.path.abspath(args.env_name)
-        short_name = os.path.basename(env_path)
 
     # create if user requested, and then recall recursively
     elif args.create:
@@ -358,8 +355,6 @@ def env_activate(args):
 
     else:
         tty.die("No such environment: '%s'" % args.env_name)
-
-    env_prompt = f"[{short_name}]" if args.prompt else None
 
     # We only support one active environment at a time, so deactivate the current one.
     if active_environment():
@@ -401,7 +396,7 @@ def env_activate(args):
     # Validate that the environment view is accessible.
     spack.environment.shell.validate_view(active_env, view)
 
-    cmds = env_script.get_shell_unique_env_cmds(args.shell, prompt=env_prompt)
+    cmds = env_script.get_shell_unique_env_cmds(args.shell, prompt=args.prompt)
     sys.stdout.write(cmds)
 
     sys.stdout.write(env_script.source_env_script(env_activate_script, args.shell))

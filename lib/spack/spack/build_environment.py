@@ -561,7 +561,9 @@ def set_wrapper_variables(pkg, env):
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
 
-    default_dynamic_linker_filter = spack.compilers.libraries.dynamic_linker_filter_for(pkg.spec)
+    default_dynamic_linker_filter = spack.compilers.libraries.dynamic_linker_filter_for(
+        pkg.spec, repo=spack.repo.PATH
+    )
     if default_dynamic_linker_filter:
         rpath_dirs = default_dynamic_linker_filter(rpath_dirs)
 
@@ -1207,6 +1209,7 @@ def _setup_pkg_and_run(
         if stderr_pipe is not None:
             os.dup2(stderr_pipe.fileno(), sys.stderr.fileno())
             stderr_pipe.close()
+        tty.clear_isatty_cache()
 
         pkg = serialized_pkg.restore()
 

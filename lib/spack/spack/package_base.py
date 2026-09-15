@@ -51,7 +51,6 @@ import spack.util.path
 import spack.util.web
 import spack.variant
 import spack.version
-import spack.version.git_ref_lookup
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
@@ -1024,9 +1023,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         else:
             v_attrs = cls.versions.get(spec.version, {})
             if "commit" in v_attrs:
-                spec.variants["commit"] = spack.variant.SingleValuedVariant(
-                    "commit", v_attrs["commit"]
-                )
+                spec.variants.set(spack.variant.SingleValuedVariant("commit", v_attrs["commit"]))
                 return
             ref = v_attrs.get("tag") or v_attrs.get("branch")
 
@@ -1060,7 +1057,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             sha = spack.util.git.get_commit_sha(url, ref)
 
         if sha:
-            spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
+            spec.variants.set(spack.variant.SingleValuedVariant("commit", sha))
 
     def resolve_binary_provenance(self):
         """
@@ -1814,27 +1811,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             else:
                 fsys.touch(no_patches_file)
 
-    @classmethod
-    def all_patches(cls):
-        """Retrieve all patches associated with the package.
-
-        Retrieves patches on the package itself as well as patches on the
-        dependencies of the package."""
-        patches = []
-        for _, patch_list in cls.patches.items():
-            for patch in patch_list:
-                patches.append(patch)
-
-        pkg_deps = cls.dependencies
-        for dep_name in pkg_deps:
-            for _, dependency in pkg_deps[dep_name].items():
-                for _, patch_list in dependency.patches.items():
-                    for patch in patch_list:
-                        patches.append(patch)
-
-        return patches
-
-    def content_hash(self, content: Optional[bytes] = None) -> str:
+    def content_hash(self, content: Optional[bytes] = None, *, repo: "spack.repo.RepoPath") -> str:
         """Create a hash based on the artifacts and patches used to build this package.
 
         This includes:
@@ -1847,6 +1824,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         happens to be called on a package with an abstract spec, only applicable (i.e.,
         determinable) portions of the hash will be included.
 
+        Args:
+            content: optionally provide the package.py contents to hash, instead of reading
+                them from ``repo``.
+            repo: repositories the package.py and the patches are read from.
         """
         # list of components to make up the hash
         hash_content = []
@@ -1882,11 +1863,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # we have to call package_hash *before* marking specs concrete
         if self.spec._patches_assigned():
             hash_content.extend(
-                ":".join((p.sha256, str(p.level))).encode("utf-8") for p in self.spec.patches
+                ":".join((p.sha256, str(p.level))).encode("utf-8")
+                for p in self.spec._patches_from(repo)
             )
 
         # package.py contents
-        hash_content.append(package_hash(self.spec, source=content).encode("utf-8"))
+        hash_content.append(package_hash(self.spec, source=content, repo=repo).encode("utf-8"))
 
         # put it all together and encode as base32
         b32_hash = base64.b32encode(
@@ -2702,9 +2684,6 @@ def _for_package_version(pkg, version=None):
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
         if isinstance(version, spack.version.GitVersion):
-            # Populate the version with comparisons to other commits
-            version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(pkg.name))
-
             if not commit and version.is_commit:
                 commit = version.ref
             version_meta_data = pkg.versions.get(version.std_version)

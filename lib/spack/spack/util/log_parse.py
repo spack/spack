@@ -16,7 +16,7 @@ _PARSER: Optional[CTestLogParser] = None
 def scan_log(
     stream: Union[str, TextIO, List[str]],
     context: int = 6,
-    tail: int = 0,
+    tail: Optional[int] = 0,
     severities: Container[Severity] = ALL_SEVERITIES,
     profile: bool = False,
 ) -> Iterator[Block]:
@@ -25,7 +25,8 @@ def scan_log(
     Args:
         stream: build log name or file object
         context: lines of context to show around each matched line
-        tail: also show the last this many lines, whether or not anything matched
+        tail: also show the last this many lines, whether or not anything matched; None shows
+            the whole log
         severities: only match lines of these severities
         profile: print out profile information for parsing
 
@@ -62,7 +63,7 @@ def write_block(out: TextIO, block: Block) -> None:
 
 
 def write_log_context(
-    out: TextIO, stream: Union[str, TextIO, List[str]], context: int = 6, tail: int = 0
+    out: TextIO, stream: Union[str, TextIO, List[str]], context: int = 6, tail: Optional[int] = 0
 ) -> None:
     """Write the interesting parts of a build log to a stream."""
     for block in scan_log(stream, context, tail):

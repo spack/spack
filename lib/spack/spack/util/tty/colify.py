@@ -12,7 +12,7 @@ import shutil
 import sys
 from typing import IO, Any, List, Optional
 
-from spack.util.tty.color import cextra, clen
+from spack.util.tty.color import _cached_isatty, cextra, clen
 
 
 class ColumnConfig:
@@ -163,7 +163,7 @@ def colify(
 
     # Use only one column if not a tty, unless cols specified explicitly
     if not cols and not tty:
-        if tty is False or not output.isatty():
+        if tty is False or not _cached_isatty(output):
             cols = 1
 
     # Specify the number of character columns to use.

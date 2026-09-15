@@ -228,3 +228,34 @@ class SpecFilenameError(SpecError):
 
 class NoSuchSpecFileError(SpecFilenameError):
     """Raised when a spec file doesn't exist."""
+
+
+class ExplicitDatabaseUpgradeError(SpackError):
+    """Raised to request an explicit DB upgrade to the user"""
+
+    def __init__(self, db_version, expected_version, root, spack_version):
+        self.db_version = db_version
+        self.expected_version = expected_version
+        self.root = root
+        long_message = (
+            f"You will need to either:"
+            f"\n"
+            f"\n  1. Migrate the database to v{expected_version}, or"
+            f"\n  2. Use a new database by changing config:install_tree:root."
+            f"\n"
+            f"\nTo migrate the database at {root} "
+            f"\nto version {expected_version}, run:"
+            f"\n"
+            f"\n    spack reindex"
+            f"\n"
+            f"\nNOTE that if you do this, older Spack versions will no longer"
+            f"\nbe able to read the database. However, `spack reindex` will create a"
+            f"\nbackup, in case you want to revert."
+            f"\n"
+            f"\nIf you still need your old database, you can instead run"
+            f"\n`spack config edit config` and set install_tree:root to a new location."
+        )
+        super().__init__(
+            f"database is v{db_version}, but Spack v{spack_version} needs v{expected_version}",
+            long_message=long_message,
+        )

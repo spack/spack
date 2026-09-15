@@ -271,7 +271,7 @@ def test_recursive_upstream_dbs(
         db_a.add(spec["x"])
 
         upstream_dbs_from_scratch = spack.store._construct_upstream_dbs_from_install_roots(
-            [roots[1], roots[2]]
+            [roots[1], roots[2]], config=spack.config.CONFIG
         )
         db_a_from_scratch = Database(roots[0], upstream_dbs=upstream_dbs_from_scratch)
 
@@ -1199,6 +1199,22 @@ def test_error_message_when_using_too_new_db(database: Database, monkeypatch):
         spack.database.InvalidDatabaseVersionError, match="you need a newer Spack version"
     ):
         Database(database.root)._read()
+
+
+def test_explicit_upgrade_error_when_using_too_old_db(database: Database, monkeypatch):
+    """When the on-disk database is older than what Spack expects and a reindex is not
+    requested, reading it should raise ExplicitDatabaseUpgradeError telling the user to
+    run `spack reindex`.
+    """
+    next_version = vn.Version(f"{spack.database._DB_VERSION[0] + 1}")
+    monkeypatch.setattr(spack.database, "_DB_VERSION", next_version)
+    with pytest.raises(spack.database.ExplicitDatabaseUpgradeError) as exc_info:
+        Database(database.root)._read()
+
+    err = exc_info.value
+    assert err.expected_version == next_version
+    assert str(err.root) == str(database.root)
+    assert "spack reindex" in err.long_message
 
 
 @pytest.mark.parametrize(
