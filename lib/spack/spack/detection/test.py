@@ -64,7 +64,7 @@ class Runner:
         have been detected.
         """
         with self._mock_layout() as path_hints:
-            entries = by_path([self.test.pkg_name], path_hints=path_hints)
+            entries = by_path([self.test.pkg_name], repo=self.repository, path_hints=path_hints)
             _, unqualified_name = spack.repo.partition_package_name(self.test.pkg_name)
             specs = set(entries[unqualified_name])
         return list(specs)

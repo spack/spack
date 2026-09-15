@@ -20,7 +20,7 @@ def test_detection_update_config(mutable_config: Configuration):
     detected_packages["cmake"] = [spack.spec.Spec("cmake@3.27.5", external_path="/usr/bin")]
 
     # update config for new package
-    spack.detection.common.update_configuration(detected_packages)
+    spack.detection.common.update_configuration(detected_packages, configuration=mutable_config)
     # Check entries in 'packages.yaml'
     packages_yaml = mutable_config.get("packages")
     assert "cmake" in packages_yaml

@@ -43,7 +43,9 @@ def add_compiler_to_config(new_compilers, *, scope=None) -> None:
     for x in new_compilers:
         by_name.setdefault(x.name, []).append(x)
 
-    spack.detection.update_configuration(by_name, buildable=True, scope=scope)
+    spack.detection.update_configuration(
+        by_name, configuration=spack.config.CONFIG, buildable=True, scope=scope
+    )
 
 
 def find_compilers(
@@ -69,11 +71,11 @@ def find_compilers(
     compiler_pkgs = spack.repo.PATH.packages_with_tags(COMPILER_TAG, full=True)
 
     detected_packages = spack.detection.by_path(
-        compiler_pkgs, path_hints=default_paths, max_workers=max_workers
+        compiler_pkgs, repo=spack.repo.PATH, path_hints=default_paths, max_workers=max_workers
     )
 
     new_compilers = spack.detection.update_configuration(
-        detected_packages, buildable=True, scope=scope
+        detected_packages, configuration=spack.config.CONFIG, buildable=True, scope=scope
     )
     return new_compilers
 

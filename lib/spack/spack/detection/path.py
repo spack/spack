@@ -16,6 +16,7 @@ import warnings
 from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
 
 import spack.error
+import spack.repo
 import spack.spec
 import spack.util.elf as elf_utils
 import spack.util.environment
@@ -415,6 +416,7 @@ class LibrariesFinder(Finder):
 def by_path(
     packages_to_search: Iterable[str],
     *,
+    repo: spack.repo.RepoPath,
     path_hints: Optional[List[str]] = None,
     max_workers: Optional[int] = None,
 ) -> Dict[str, List["spack.spec.Spec"]]:
@@ -424,18 +426,17 @@ def by_path(
     Args:
         packages_to_search: list of packages to be detected. Each package can be either unqualified
             of fully qualified
+        repo: repository used to retrieve the package classes
         path_hints: initial list of paths to be searched
         max_workers: maximum number of workers to search for packages in parallel
     """
-    from spack.repo import PATH, partition_package_name
-
     # TODO: Packages should be able to define both .libraries and .executables in the future
     # TODO: determine_spec_details should get all relevant libraries and executables in one call
     executables_finder, libraries_finder = ExecutablesFinder(), LibrariesFinder()
     detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
 
     result = collections.defaultdict(list)
-    repository = spack.util.lang.ensure_unwrapped(PATH)
+    repository = spack.util.lang.ensure_unwrapped(repo)
 
     executor: concurrent.futures.Executor
     if max_workers == 1:
@@ -463,7 +464,7 @@ def by_path(
                 try:
                     detected = future.result(timeout=DETECTION_TIMEOUT)
                     if detected:
-                        _, unqualified_name = partition_package_name(pkg_name)
+                        _, unqualified_name = spack.repo.partition_package_name(pkg_name)
                         result[unqualified_name].extend(detected)
                 except concurrent.futures.TimeoutError:
                     spack.util.tty.debug(
