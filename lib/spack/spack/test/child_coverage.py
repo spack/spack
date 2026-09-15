@@ -7,15 +7,15 @@
 import contextlib
 import multiprocessing.process
 import os
-from multiprocessing import spawn
-from typing import Any, Dict, Iterator
+from typing import Dict, Iterator
 
+_start = multiprocessing.process.BaseProcess.start
 _bootstrap = getattr(multiprocessing.process.BaseProcess, "_bootstrap")
-_get_preparation_data = spawn.get_preparation_data
 
 
 class ChildCoverage:
-    """Starts coverage in children; pickled into spawn and forkserver children to do the same."""
+    """Attached to started processes; unpickled in spawn and forkserver children after sys.path
+    is restored, so that they measure coverage and pass it on to their own children."""
 
     def __init__(self, root: str, config_file: str) -> None:
         self.root = root
@@ -30,6 +30,10 @@ class ChildCoverage:
 
     def enable(self) -> None:
         settings = self
+
+        def start(process) -> None:
+            process._spack_child_coverage = settings
+            _start(process)
 
         def bootstrap(process, *args, **kwargs):
             import coverage  # type: ignore
@@ -51,25 +55,20 @@ class ChildCoverage:
                 cov.stop()
                 cov.save()
 
-        def get_preparation_data(name: str) -> Dict[str, Any]:
-            data = _get_preparation_data(name)
-            data["spack_child_coverage"] = settings
-            return data
-
+        setattr(multiprocessing.process.BaseProcess, "start", start)
         setattr(multiprocessing.process.BaseProcess, "_bootstrap", bootstrap)
-        setattr(spawn, "get_preparation_data", get_preparation_data)
 
 
 def disable() -> None:
+    setattr(multiprocessing.process.BaseProcess, "start", _start)
     setattr(multiprocessing.process.BaseProcess, "_bootstrap", _bootstrap)
-    setattr(spawn, "get_preparation_data", _get_preparation_data)
 
 
 @contextlib.contextmanager
 def enabled(root: str) -> Iterator[None]:
     """Measure coverage in children started in this context, if coverage is running."""
     try:
-        import coverage
+        import coverage  # type: ignore
     except ImportError:
         cov = None
     else:
