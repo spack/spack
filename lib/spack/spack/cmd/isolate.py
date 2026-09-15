@@ -167,18 +167,17 @@ def _do_isolate(args):
     # No need to modify etc/spack/include.yaml anymore - the isolate scope's
     # include.yaml with include:: override handles the redirection
 
-    # Migrate old resources (writes to isolate scope)
-    # - Installs/modules/GPG: keeps in old locations, writes to isolate scope
-    # - Licenses/environments: attempts to migrate to isolate directory
-    if spack.config._should_auto_migrate():
-        spack.config._do_migrate(
-            is_isolate_command=True,
-            isolate_target=destination,
-            config_scope_path=ISOLATE_SCOPE_PATH,
-        )
-        # Note: No need to reload CONFIG here - the isolate scope files are written
-        # to disk and will be loaded automatically on next spack invocation.
-        # This process exits immediately after this point.
+    # Record old resources in the layout scope, but never relocate them while
+    # isolating.  The isolate scope controls new data; the layout scope keeps
+    # existing data reachable from its original locations.
+    if (
+        not spack.config._has_layout_scope()
+        and spack.config._is_spack_writable()
+        and any(spack.config._detect_old_resources().values())
+    ):
+        spack.config._do_migrate(is_isolate_command=True)
+        # No need to reload CONFIG here: this process exits immediately, and
+        # the generated scopes are loaded by the next Spack invocation.
 
 
 def _undo_isolate():

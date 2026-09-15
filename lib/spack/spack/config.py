@@ -2181,35 +2181,37 @@ def _copy_directory_contents(
     return True
 
 
-def _do_migrate(
-    is_isolate_command: bool,
-    isolate_target: Optional[str] = None,
-    config_scope_path: Optional[str] = None,
-) -> None:
+def _do_migrate(is_isolate_command: bool) -> None:
     """Perform auto-migration of Spack data from old to new locations.
 
     Args:
-        is_isolate_command: True if running `spack isolate`, False otherwise
-        isolate_target: Path to isolate directory (only used if is_isolate_command=True)
-        config_scope_path: Directory to write config files to (isolate scope or layout scope)
-            If None, uses layout scope path for normal commands
+        is_isolate_command: True if running `spack isolate`, False otherwise.
+            Isolation records old resources in the layout scope but never relocates them.
     """
     tty.debug(f"Auto-migration called (is_isolate_command={is_isolate_command})")
 
     # Detect what old resources exist
     old_resources = _detect_old_resources()
 
-    # Determine which config scope to write to
-    if config_scope_path is None:
-        config_scope_path = _layout_scope_path()
+    # Both normal migration and isolation record their decisions in the
+    # generated layout scope.  Isolation differs only in that it never moves
+    # or copies existing resources.
+    config_scope_path = _layout_scope_path()
     filesystem.mkdirp(config_scope_path)
 
-    # Config to write to scope (isolate scope or layout scope)
+    # Config to write to the layout scope
     scope_config: Dict[str, Any] = {}
 
-    # 1. Handle installs and modules
-    # If installs exist in old location, keep them there
-    if old_resources["installs"]:
+    # 1. Handle installs and modules.  Existing installs and module trees are
+    # always retained in their old locations, including during isolation.
+    if old_resources["installs"] or old_resources["modules"]:
+        if old_resources["installs"]:
+            if "config" not in scope_config:
+                scope_config["config"] = {}
+            scope_config["config"]["install_tree"] = {
+                "root": os.path.join(spack.paths.prefix, "opt", "spack")
+            }
+
         old_modules_tcl = os.path.join(spack.paths.prefix, "share", "spack", "modules", "tcl")
         old_modules_lmod = os.path.join(spack.paths.prefix, "share", "spack", "modules", "lmod")
 
@@ -2217,19 +2219,8 @@ def _do_migrate(
             "default": {"roots": {"tcl": old_modules_tcl, "lmod": old_modules_lmod}}
         }
         tty.debug(
-            f"Old installs exist, keeping modules in {spack.paths.prefix}/share/spack/modules"
+            f"Keeping existing installs/modules in {spack.paths.prefix}/share/spack"
         )
-    # Otherwise, use new defaults (non-isolate gets default config, isolate gets redirect)
-    elif is_isolate_command and isolate_target:
-        scope_config["modules"] = {
-            "default": {
-                "roots": {
-                    "tcl": os.path.join(isolate_target, "modules", "tcl"),
-                    "lmod": os.path.join(isolate_target, "modules", "lmod"),
-                }
-            }
-        }
-        tty.debug(f"No old installs, pointing modules to {isolate_target}/modules")
 
     # 2. Handle GPG keys
     # If GPG keys exist in old location, keep them there
@@ -2239,26 +2230,22 @@ def _do_migrate(
             scope_config["config"] = {}
         scope_config["config"]["gpg_path"] = old_gpg_dir
         tty.debug(f"Old GPG keys exist, keeping in {old_gpg_dir}")
-    # Otherwise, use new defaults (non-isolate gets default config, isolate gets explicit path)
-    elif is_isolate_command and isolate_target:
-        if "config" not in scope_config:
-            scope_config["config"] = {}
-        scope_config["config"]["gpg_path"] = os.path.join(isolate_target, "gpg")
-        tty.debug(f"No old GPG keys, pointing to {isolate_target}/gpg")
+    # With no old keys, the normal defaults or isolate scope configuration
+    # remain in effect.
 
     # 3. Handle licenses
     old_licenses_dir = os.path.join(spack.paths.prefix, "opt", "spack", "licenses")
     if old_resources["licenses"]:
-        # Determine destination directory based on command type
-        if is_isolate_command and isolate_target:
-            target_licenses_dir = os.path.join(isolate_target, "licenses")
+        # Isolation never relocates existing licenses; record the old path.
+        if is_isolate_command:
+            should_attempt_migration = False
+            if "config" not in scope_config:
+                scope_config["config"] = {}
+            scope_config["config"]["license_dir"] = old_licenses_dir
         else:
             data_home = substitute_path_variables("$data_home")
             target_licenses_dir = os.path.join(data_home, "licenses")
-
-        # For non-isolate: only migrate if configured location equals new default
-        should_attempt_migration = True
-        if not is_isolate_command:
+            should_attempt_migration = True
             configured_license_dir = CONFIG.get("config:license_dir")
             configured_license_dir = os.path.normpath(
                 os.path.expanduser(canonicalize_path(configured_license_dir))
@@ -2279,14 +2266,11 @@ def _do_migrate(
 
         # Attempt migration if appropriate
         if should_attempt_migration:
-            if _copy_directory_contents_with_lock(old_licenses_dir, target_licenses_dir, "licenses"):
+            if _copy_directory_contents_with_lock(
+                old_licenses_dir, target_licenses_dir, "licenses"
+            ):
                 # Successfully copied
-                if is_isolate_command:
-                    # For isolate, always write explicit path
-                    if "config" not in scope_config:
-                        scope_config["config"] = {}
-                    scope_config["config"]["license_dir"] = target_licenses_dir
-                # For non-isolate, new default is used automatically (don't write)
+                # The normal default now points at the copied location.
                 tty.debug(f"Copied licenses from {old_licenses_dir} to {target_licenses_dir}")
             else:
                 # Copy failed (collision), keep in old location
@@ -2298,16 +2282,16 @@ def _do_migrate(
     # 4. Handle environments
     old_envs_dir = spack.paths.old_envs_path
     if old_resources["environments"]:
-        # Determine destination directory based on command type
-        if is_isolate_command and isolate_target:
-            target_envs_dir = os.path.join(isolate_target, "environments")
+        # Isolation never relocates existing environments; record the old path.
+        if is_isolate_command:
+            should_attempt_migration = False
+            if "config" not in scope_config:
+                scope_config["config"] = {}
+            scope_config["config"]["environments_root"] = old_envs_dir
         else:
             data_home = substitute_path_variables("$data_home")
             target_envs_dir = os.path.join(data_home, "environments")
-
-        # For non-isolate: only migrate if configured location equals new default
-        should_attempt_migration = True
-        if not is_isolate_command:
+            should_attempt_migration = True
             configured_env_root = CONFIG.get("config:environments_root")
             configured_env_root = os.path.normpath(
                 os.path.expanduser(canonicalize_path(configured_env_root))
@@ -2330,12 +2314,7 @@ def _do_migrate(
         if should_attempt_migration:
             if _copy_directory_contents_with_lock(old_envs_dir, target_envs_dir, "environments"):
                 # Successfully copied
-                if is_isolate_command:
-                    # For isolate, always write explicit path
-                    if "config" not in scope_config:
-                        scope_config["config"] = {}
-                    scope_config["config"]["environments_root"] = target_envs_dir
-                # For non-isolate, new default is used automatically (don't write)
+                # The normal default now points at the copied location.
                 tty.debug(f"Copied environments from {old_envs_dir} to {target_envs_dir}")
             else:
                 # Copy failed (collision), keep in old location
@@ -2348,7 +2327,7 @@ def _do_migrate(
     if not is_isolate_command:
         _migrate_user_config_programmatic()
 
-    # Write config scope files (isolate scope or layout scope)
+    # Write config scope files to the generated layout scope.
     if "config" in scope_config:
         config_yaml_path = os.path.join(config_scope_path, "config.yaml")
         with open(config_yaml_path, "w", encoding="utf-8") as f:
