@@ -1794,17 +1794,6 @@ def _has_layout_scope() -> bool:
     return os.path.exists(_layout_scope_path())
 
 
-# DEPRECATED: These functions examined config for old isolate vestiges
-# They are no longer needed with the new approach where isolate scope is
-# loaded via standard_scopes/include.yaml
-#
-# def _has_isolate_scope(cfg: Configuration) -> bool:
-#     """REMOVED - was checking if config had isolate scope from old approach"""
-#
-# def _get_isolate_target_path(cfg: Configuration) -> Optional[str]:
-#     """REMOVED - was examining config to find isolate target from old approach"""
-
-
 def _detect_old_resources() -> Dict[str, bool]:
     """Detect presence of old Spack-internal resources.
 
@@ -1875,22 +1864,6 @@ def _detect_old_resources() -> Dict[str, bool]:
             pass
 
     return result
-
-
-def _create_empty_layout_scope() -> None:
-    """Create an empty layout scope directory.
-
-    This is used for P4 (no old resources, no isolate) to indicate that
-    migration has been checked and new XDG defaults should be used.
-    """
-    layout_path = _layout_scope_path()
-    filesystem.mkdirp(layout_path)
-
-    # Create a marker file to indicate this is intentionally empty
-    marker_path = os.path.join(layout_path, ".spack-layout-scope")
-    with open(marker_path, "w", encoding="utf-8") as f:
-        f.write("# This directory was created by Spack's auto-migration logic.\n")
-        f.write("# An empty layout scope means all new XDG-compliant defaults are in use.\n")
 
 
 def _should_auto_migrate() -> bool:
@@ -2230,20 +2203,21 @@ def _do_migrate(
     # Detect what old resources exist
     old_resources = _detect_old_resources()
 
-    # Both normal migration and isolation record their decisions in the
-    # generated layout scope.  Isolation differs only in that it never moves
-    # or copies existing resources.
-    config_scope_path = _layout_scope_path()
+    # Normal migration writes its configuration to the layout scope.  Isolate
+    # writes to the fresh target config unless that target already had a
+    # config.yaml, in which case old-resource overrides go to layout instead.
+    layout_scope_path = _layout_scope_path()
     if config_path is None:
-        config_path = os.path.join(config_scope_path, "config.yaml")
+        config_path = os.path.join(layout_scope_path, "config.yaml")
+    layout_config_path = os.path.join(layout_scope_path, "config.yaml")
     if not (
         is_isolate_command
-        and os.path.normpath(config_path) != os.path.normpath(os.path.join(config_scope_path, "config.yaml"))
+        and os.path.normpath(config_path) != os.path.normpath(layout_config_path)
     ):
-        filesystem.mkdirp(config_scope_path)
+        filesystem.mkdirp(layout_scope_path)
     filesystem.mkdirp(os.path.dirname(config_path))
 
-    # Config to write to the selected scope
+    # Config to write to the selected destination
     scope_config: Dict[str, Any] = {}
     if is_isolate_command:
         if isolate_target is None:
@@ -2415,15 +2389,15 @@ def _do_migrate(
         config_yaml_path = config_path
         with open(config_yaml_path, "w", encoding="utf-8") as f:
             syaml.dump({"config": scope_config["config"]}, f)
-        tty.debug(f"Wrote config.yaml to {config_scope_path}")
+        tty.debug(f"Wrote config.yaml to {config_path}")
 
     if "modules" in scope_config:
-        modules_yaml_path = os.path.join(config_scope_path, "modules.yaml")
+        modules_yaml_path = os.path.join(layout_scope_path, "modules.yaml")
         with open(modules_yaml_path, "w", encoding="utf-8") as f:
             syaml.dump(scope_config["modules"], f)
-        tty.debug(f"Wrote modules.yaml to {config_scope_path}")
+        tty.debug(f"Wrote modules.yaml to {layout_scope_path}")
 
-    tty.debug(f"Created config scope for auto-migration: {config_scope_path}")
+    tty.debug(f"Created config scope for auto-migration: {layout_scope_path}")
 
 
 def create_incremental() -> Generator[Configuration, None, None]:
