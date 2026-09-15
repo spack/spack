@@ -11,7 +11,51 @@ from typing import Any, Dict
 
 import spack.schema.environment
 
-from .compilers import extra_rpaths, flags, implicit_rpaths
+flags: Dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "description": "Flags to pass to the compiler during compilation and linking",
+    "properties": {
+        "cflags": {
+            "anyOf": [{"type": "string"}, {"type": "null"}],
+            "description": "Flags for C compiler, e.g. -std=c11",
+        },
+        "cxxflags": {
+            "anyOf": [{"type": "string"}, {"type": "null"}],
+            "description": "Flags for C++ compiler, e.g. -std=c++14",
+        },
+        "fflags": {
+            "anyOf": [{"type": "string"}, {"type": "null"}],
+            "description": "Flags for Fortran 77 compiler, e.g. -ffixed-line-length-none",
+        },
+        "cppflags": {
+            "anyOf": [{"type": "string"}, {"type": "null"}],
+            "description": "Flags for C preprocessor, e.g. -DFOO=1",
+        },
+        "ldflags": {
+            "anyOf": [{"type": "string"}, {"type": "null"}],
+            "description": "Flags passed to the compiler driver during linking, e.g. "
+            "-Wl,--gc-sections",
+        },
+        "ldlibs": {
+            "anyOf": [{"type": "string"}, {"type": "null"}],
+            "description": "Flags for linker libraries, e.g. -lpthread",
+        },
+    },
+}
+
+
+extra_rpaths: Dict[str, Any] = {
+    "type": "array",
+    "default": [],
+    "items": {"type": "string"},
+    "description": "List of extra rpaths to inject by Spack's compiler wrappers",
+}
+
+implicit_rpaths: Dict[str, Any] = {
+    "anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "boolean"}],
+    "description": "List of non-default link directories to register at runtime as rpaths",
+}
 
 permissions = {
     "type": "object",
