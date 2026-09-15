@@ -283,9 +283,7 @@ def _configure_access_pair(args, id_tok, id_variable_tok, secret_variable_tok, d
         return None
 
     def _default_value(id_):
-        if isinstance(default, list):
-            return default[0] if id_ == "id" else default[1]
-        elif isinstance(default, dict):
+        if isinstance(default, dict):
             return default.get(id_)
         else:
             return None

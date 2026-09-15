@@ -379,7 +379,6 @@ def test_mirror_crud(mutable_config):
             output = mirror(
                 "set", id_arg, "foo_set", secret_arg + "-variable", "bar_set_var", mirror_name
             )
-            assert "support for plain text secrets" not in output
             output = config("blame", "mirrors")
             assert all([x in output for x in ("foo_set", "bar_set_var", mirror_name, mirror_url)])
 

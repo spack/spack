@@ -324,18 +324,19 @@ def test_list_url(tmp_path: pathlib.Path):
 
 
 def test_gather_s3_information(monkeypatch):
+    monkeypatch.setenv("_SPACK_TEST_S3_SECRET", "CK")
     mirror = spack.mirrors.mirror.Mirror(
         {
             "fetch": {
                 "access_token": "AAAAAAA",
                 "profile": "SPacKDeV",
-                "access_pair": ("SPA", "CK"),
+                "access_pair": {"id": "SPA", "secret_variable": "_SPACK_TEST_S3_SECRET"},
                 "endpoint_url": "https://127.0.0.1:8888",
             },
             "push": {
                 "access_token": "AAAAAAA",
                 "profile": "SPacKDeV",
-                "access_pair": ("SPA", "CK"),
+                "access_pair": {"id": "SPA", "secret_variable": "_SPACK_TEST_S3_SECRET"},
                 "endpoint_url": "https://127.0.0.1:8888",
             },
         }
