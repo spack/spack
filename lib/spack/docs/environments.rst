@@ -234,6 +234,18 @@ The activation scripts are automatically regenerated when:
 
 This ensures that the environment variables and setup always reflect the current state of your environment and its views.
 
+If the cached activation/deactivation scripts are deleted, Spack will automatically regenerate them the next time you activate the environment.
+This regeneration happens transparently without any user intervention.
+Similarly, if scripts for your specific shell are missing, Spack will generate them on-demand when you run ``spack env activate``.
+
+You can also manually force regeneration of all environment scripts by regenerating the environment's views:
+
+.. code-block:: console
+
+   $ spack env view regenerate
+
+This will recreate all activation and deactivation scripts for all views in the environment.
+
 Shell Compatibility
 ~~~~~~~~~~~~~~~~~~
 
