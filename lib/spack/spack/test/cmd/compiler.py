@@ -8,7 +8,9 @@ import pytest
 
 import spack.cmd.compiler
 import spack.compilers.config
+import spack.config
 import spack.main
+import spack.platforms
 import spack.repo
 import spack.util.pattern
 import spack.version
@@ -80,6 +82,23 @@ def test_compiler_find_without_paths(no_packages_yaml, working_env, mock_executa
     output = compiler("find", "--scope=site")
 
     assert "gcc" in output
+
+
+@pytest.mark.not_on_windows("Cannot execute bash script on Windows")
+def test_compiler_find_writes_libc_dependency(
+    no_packages_yaml, working_env, mock_executable, monkeypatch
+):
+    """Tests that 'spack compiler find' records the libc a compiler depends on."""
+    monkeypatch.setattr(spack.platforms, "using_libc_compatibility", lambda: True)
+    gcc_path = mock_executable("gcc", output='echo "0.0.0"')
+    os.environ["PATH"] = str(gcc_path.parent)
+    compiler("find", "--scope=site")
+
+    packages = spack.config.CONFIG.get("packages", scope="site")
+    (libc,) = packages["glibc"]["externals"]
+    (gcc,) = packages["gcc"]["externals"]
+    assert gcc["dependencies"] == [{"id": libc["id"], "deptypes": "link", "virtuals": "libc"}]
+    assert libc["prefix"] == "/some/path"
 
 
 @pytest.mark.regression("37996")

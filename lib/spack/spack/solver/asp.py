@@ -47,6 +47,7 @@ import spack.config
 import spack.deprecation
 import spack.deptypes as dt
 import spack.error
+import spack.externals
 import spack.externals_config
 import spack.hash_lookup
 import spack.package_base
@@ -100,7 +101,12 @@ from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .result import Result, SpecDict, build_criteria_names
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory
-from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder, all_libcs
+from .runtimes import (
+    COMPILER_WRAPPER_LANGUAGES,
+    RuntimePropertyRecorder,
+    host_libcs,
+    libc_of_compiler,
+)
 from .versions import Provenance
 
 if TYPE_CHECKING:
@@ -846,6 +852,7 @@ class PyclingoDriver:
         specs: List[spack.spec.Spec],
         reuse: Optional[List[spack.spec.Spec]] = None,
         packages_with_externals=None,
+        external_parser: Optional[spack.externals.ExternalSpecsParser] = None,
         output: Optional[OutputConfiguration] = None,
         control: Optional[Any] = None,  # TODO: figure out how to annotate clingo.Control
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
@@ -887,7 +894,10 @@ class PyclingoDriver:
 
         timer.start("setup")
         problem_builder = setup.setup(
-            specs, reuse=reuse, packages_with_externals=packages_with_externals
+            specs,
+            reuse=reuse,
+            packages_with_externals=packages_with_externals,
+            external_parser=external_parser,
         )
         timer.stop("setup")
 
@@ -2412,6 +2422,7 @@ class SpackSolverSetup:
         *,
         reuse: Optional[List[spack.spec.Spec]] = None,
         packages_with_externals=None,
+        external_parser: Optional[spack.externals.ExternalSpecsParser] = None,
     ) -> "ProblemInstanceBuilder":
         """Generate an ASP program with relevant constraints for specs.
 
@@ -2423,6 +2434,7 @@ class SpackSolverSetup:
             specs: list of Specs to solve
             reuse: list of concrete specs that can be reused
             packages_with_externals: precomputed packages config with implicit externals
+            external_parser: parser of ``packages_with_externals``, if already built
 
         Return:
             A ProblemInstanceBuilder populated with facts and rules for an ASP solve.
@@ -2432,11 +2444,20 @@ class SpackSolverSetup:
             packages_with_externals = (
                 spack.externals_config.external_config_with_implicit_externals(self.context)
             )
+        if external_parser is None:
+            external_parser = spack.externals_config.create_external_parser(
+                packages_with_externals, context=self.context
+            )
         self._validate_input_specs(specs)
         self.gen = ProblemInstanceBuilder()
+        candidate_compilers, self.rejected_compilers = possible_compilers(
+            context=self.context, external_parser=external_parser
+        )
         self.clauses = SpecClauseGenerator(
             repo=self.context.repo,
-            libcs=sorted(all_libcs(self.context)),
+            libcs=host_libcs(
+                candidate_compilers, repo=self.context.repo, cache=self.compiler_cache
+            ),
             explicitly_required_namespaces={
                 node.name: node.namespace
                 for node in traverse.traverse_nodes(specs)
@@ -2449,18 +2470,17 @@ class SpackSolverSetup:
         compilers_from_reuse = {
             x for x in reuse if x.name in supported_compilers and not x.external
         }
-        candidate_compilers, self.rejected_compilers = possible_compilers(context=self.context)
         # Compilers installed by Spack are candidates for the solve, no matter what
-        # "concretizer:reuse" says. Their link and run dependencies are needed to impose a
-        # reused compiler, but they must not become reusable specs on their own: that is up
-        # to "concretizer:reuse", like for any other installed spec.
+        # "concretizer:reuse" says. The link and run dependencies of every compiler (its libc
+        # above all) are needed to impose it, but they must not become reusable specs on their
+        # own: that is up to "concretizer:reuse", like for any other installed spec.
         installed_compilers = [x for x in candidate_compilers if not x.external]
         reused_set = set(reuse)
         reuse += [x for x in installed_compilers if x not in reused_set]
         compiler_dependencies = [
             x
             for x in traverse.traverse_nodes(
-                installed_compilers, deptype=("link", "run"), root=False
+                sorted(candidate_compilers), deptype=("link", "run"), root=False
             )
             if x not in reused_set
         ]
@@ -2661,20 +2681,9 @@ class SpackSolverSetup:
             if not spack.platforms.using_libc_compatibility():
                 continue
 
-            current_libc = None
-            if not compiler.external:
-                # A Spack-built compiler carries the libc it targets as a dependency
-                try:
-                    current_libc = compiler["libc"]
-                except (KeyError, RuntimeError) as e:
-                    tty.debug(f"{compiler} cannot determine libc because: {e}")
-            if current_libc is None and (
-                compiler.external or self.context.store.db.installed(compiler)
-            ):
-                current_libc = CompilerPropertyDetector(
-                    compiler, repo=self.context.repo, cache=self.compiler_cache
-                ).default_libc()
-
+            current_libc = libc_of_compiler(
+                compiler, repo=self.context.repo, cache=self.compiler_cache
+            )
             if current_libc:
                 recorder("*").depends_on(
                     "libc",
@@ -2682,8 +2691,15 @@ class SpackSolverSetup:
                     type="link",
                     description=f"Add libc when using {compiler.name}",
                 )
+                # Packages built with this compiler use its very libc node. A detected libc is
+                # no node: constrain by version only.
+                libc_constraint: Union[str, spack.spec.Spec] = (
+                    current_libc.copy(deps=False)
+                    if current_libc.concrete
+                    else f"{current_libc.name}@={current_libc.version}"
+                )
                 recorder("*").depends_on(
-                    f"{current_libc.name}@={current_libc.version}",
+                    libc_constraint,
                     when=f"%[deptypes=build] {compiler_str}",
                     type="link",
                     description=f"Libc is {current_libc} when using {compiler}",
@@ -2969,13 +2985,15 @@ class ProblemInstanceBuilder:
 
 
 def possible_compilers(
-    *, context: "spack.context.SpackContext"
+    *, context: "spack.context.SpackContext", external_parser: spack.externals.ExternalSpecsParser
 ) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
     result, rejected = set(), set()
 
     cache = FileCompilerCache(context.misc_cache)
-    # Compilers defined in configuration
-    for c in spack.compilers.config.all_compilers_from(context.config, repo=context.repo):
+    # Compilers defined in configuration, with the libc they depend on
+    for c in spack.compilers.config.compilers_from_external_parser(
+        external_parser, repo=context.repo
+    ):
         detector = CompilerPropertyDetector(c, repo=context.repo, cache=cache)
         if spack.platforms.using_libc_compatibility() and not c_compiler_runs(detector):
             rejected.add(c)
@@ -2990,10 +3008,12 @@ def possible_compilers(
 
             continue
 
-        if spack.platforms.using_libc_compatibility() and not detector.default_libc():
+        if spack.platforms.using_libc_compatibility() and not libc_of_compiler(
+            c, repo=context.repo, cache=cache
+        ):
             rejected.add(c)
             warnings.warn(
-                f"cannot detect libc from {c}. The compiler will not be used "
+                f"cannot determine the libc of {c}. The compiler will not be used "
                 f"during concretization."
             )
             continue
@@ -3007,7 +3027,14 @@ def possible_compilers(
     # Compilers from the local store
     supported_compilers = spack.compilers.config.supported_compilers(repo=context.repo)
     for pkg_name in supported_compilers:
-        result.update(context.store.db.query(pkg_name, repo=context.repo))
+        for c in context.store.db.query(pkg_name, repo=context.repo):
+            if spack.platforms.using_libc_compatibility() and not libc_of_compiler(
+                c, repo=context.repo, cache=cache
+            ):
+                rejected.add(c)
+                tty.debug(f"[{__name__}] cannot determine the libc of {c.long_spec}")
+                continue
+            result.add(c)
 
     return result, rejected
 
@@ -3545,10 +3572,15 @@ class Solver:
         self.packages_with_externals = (
             spack.externals_config.external_config_with_implicit_externals(self.context)
         )
+        # The parser mutates the dicts, so it is built once and shared
+        self.external_parser = spack.externals_config.create_external_parser(
+            self.packages_with_externals, context=self.context
+        )
         self.selector = ReusableSpecsSelector(
             context=self.context,
             factory=specs_factory,
             packages_with_externals=self.packages_with_externals,
+            external_parser=self.external_parser,
         )
 
     @staticmethod
@@ -3593,6 +3625,7 @@ class Solver:
             specs,
             reuse=reusable_specs,
             packages_with_externals=self.packages_with_externals,
+            external_parser=self.external_parser,
             output=output,
         )
         return result
@@ -3652,6 +3685,7 @@ class Solver:
                 input_specs,
                 reuse=reusable_specs,
                 packages_with_externals=self.packages_with_externals,
+                external_parser=self.external_parser,
                 output=output,
             )
             yield result

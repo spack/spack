@@ -1,14 +1,15 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from typing import TYPE_CHECKING, Set, Tuple
+from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple, Union
 
-import spack.compilers.config
 import spack.compilers.libraries
 import spack.hash_lookup
+import spack.repo
 import spack.spec
 import spack.util.libc
 import spack.version
+from spack.util import tty
 
 from .core import SourceContext, fn
 from .versions import Provenance
@@ -61,13 +62,16 @@ class RuntimePropertyRecorder:
         """Resets the current state."""
         self.current_package = None
 
-    def depends_on(self, dependency_str: str, *, when: str, type: str, description: str) -> None:
+    def depends_on(
+        self, dependency: Union[str, spack.spec.Spec], *, when: str, type: str, description: str
+    ) -> None:
         """Injects conditional dependencies on packages.
 
-        Conditional dependencies can be either "real" packages or virtual dependencies.
+        Conditional dependencies can be either "real" packages or virtual dependencies. A
+        concrete spec is injected by hash.
 
         Args:
-            dependency_str: the dependency spec to inject
+            dependency: the dependency spec to inject
             when: anonymous condition to be met on a package to have the dependency
             type: dependency type
             description: human-readable description of the rule for adding the dependency
@@ -81,16 +85,24 @@ class RuntimePropertyRecorder:
         when_spec = spack.spec.Spec(when)
         assert not when_spec.name, "only anonymous when specs are accepted"
 
-        dependency_spec = spack.spec.Spec(dependency_str)
-        if dependency_spec.versions != spack.version.any_version:
-            self._setup.clauses.record_version_constraint(
-                dependency_spec.name, dependency_spec.versions
-            )
+        if isinstance(dependency, spack.spec.Spec):
+            assert dependency.concrete, "only concrete specs can be injected by hash"
+            dependency_spec = dependency
+            head_clauses = [
+                fn.attr("node", dependency.name),
+                fn.attr("hash", dependency.name, dependency.dag_hash()),
+            ]
+        else:
+            dependency_spec = spack.spec.Spec(dependency)
+            if dependency_spec.versions != spack.version.any_version:
+                self._setup.clauses.record_version_constraint(
+                    dependency_spec.name, dependency_spec.versions
+                )
+            head_clauses = self._setup.clauses.spec_clauses(dependency_spec, body=False)
 
         self.injected_dependencies.add(dependency_spec)
         body_str, node_variable = self.rule_body_from(when_spec)
 
-        head_clauses = self._setup.clauses.spec_clauses(dependency_spec, body=False)
         runtime_pkg = dependency_spec.name
         is_virtual = head_clauses[0].args[0] == "virtual_node"
         main_rule = (
@@ -272,29 +284,37 @@ class RuntimePropertyRecorder:
         self._setup.effect_rules()
 
 
-def all_libcs(context: "spack.context.SpackContext") -> Set[spack.spec.Spec]:
-    """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
-    libc determined from the current Python process if dynamically linked."""
-    cache = spack.compilers.libraries.FileCompilerCache(context.misc_cache)
+def libc_of_compiler(
+    compiler: spack.spec.Spec,
+    *,
+    repo: spack.repo.RepoPath,
+    cache: "spack.compilers.libraries.CompilerCache",
+) -> Optional[spack.spec.Spec]:
+    """The libc a compiler targets: its libc dependency, else what its dynamic linker says."""
+    for edge in compiler.edges_to_dependencies():
+        if "libc" in edge.virtuals:
+            return edge.spec
+    tty.debug(f"[{__name__}] {compiler} has no libc dependency, inspecting its dynamic linker")
+    return spack.compilers.libraries.CompilerPropertyDetector(
+        compiler, repo=repo, cache=cache
+    ).default_libc()
+
+
+def host_libcs(
+    compilers: Iterable[spack.spec.Spec],
+    *,
+    repo: spack.repo.RepoPath,
+    cache: "spack.compilers.libraries.CompilerCache",
+) -> List[spack.spec.Spec]:
+    """The libcs targeted by ``compilers``. If none, fall back to the libc of the current Python
+    process if dynamically linked."""
     libcs = set()
-    for c in spack.compilers.config.all_compilers_from(context.config, repo=context.repo):
-        candidate = spack.compilers.libraries.CompilerPropertyDetector(
-            c, repo=context.repo, cache=cache
-        ).default_libc()
-        if candidate is not None:
-            libcs.add(candidate)
-
-    # Installed compilers target the libc they depend on
-    for pkg_name in spack.compilers.config.supported_compilers(repo=context.repo):
-        for c in context.store.db.query(pkg_name, repo=context.repo):
-            try:
-                libc = c["libc"]
-            except KeyError:
-                continue
-            libcs.add(spack.spec.Spec(f"{libc.name}@={libc.version}"))
-
+    for c in compilers:
+        libc = libc_of_compiler(c, repo=repo, cache=cache)
+        if libc is not None:
+            libcs.add(libc)
     if libcs:
-        return libcs
+        return sorted(libcs)
 
     libc = spack.util.libc.libc_from_current_python_process()
-    return {libc} if libc else set()
+    return [libc] if libc else []

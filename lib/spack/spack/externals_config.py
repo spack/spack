@@ -3,20 +3,27 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Helpers to build an ExternalSpecsParser from Spack configuration."""
 
+import copy
+import hashlib
 import itertools
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import spack.compilers.config
 import spack.compilers.libraries
+import spack.error
 import spack.platforms
 import spack.repo
 import spack.spec
+import spack.util.path
 from spack.externals import (
+    ExternalDict,
     ExternalSpecsParser,
     complete_architecture,
     complete_variants_and_architecture,
     extract_dicts_from_configuration,
+    move_inline_dependencies,
 )
+from spack.util import tty
 
 if TYPE_CHECKING:
     import spack.context
@@ -68,16 +75,88 @@ def external_config_with_implicit_externals(
         return packages_yaml
 
     cache = spack.compilers.libraries.FileCompilerCache(context.misc_cache)
-    seen = set()
-    for compiler in spack.compilers.config.all_compilers_from(configuration, repo=repo):
-        libc = spack.compilers.libraries.CompilerPropertyDetector(
-            compiler, repo=repo, cache=cache
-        ).default_libc()
-        if libc and libc not in seen:
-            seen.add(libc)
-            entry = {"spec": f"{libc}", "prefix": libc.external_path}
-            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
+    attach_libc_dependencies(packages_yaml, repo=repo, cache=cache)
     return packages_yaml
+
+
+def _has_libc_dependency(entry: ExternalDict, libc_providers: List[str]) -> bool:
+    for dep in entry.get("dependencies", []):
+        if "libc" in dep.get("virtuals", "").split(","):
+            return True
+        if "spec" in dep and spack.spec.Spec(dep["spec"]).name in libc_providers:
+            return True
+    return any(
+        e.spec.name in libc_providers or "libc" in e.virtuals
+        for e in spack.spec.Spec(entry["spec"]).traverse_edges(root=False)
+    )
+
+
+def _find_or_add_libc(packages_yaml: Dict[str, Any], libc: spack.spec.Spec) -> str:
+    """Return the id of the external entry for ``libc``, adding one if needed."""
+    externals = packages_yaml.setdefault(libc.name, {}).setdefault("externals", [])
+    for entry in externals:
+        try:
+            version = spack.spec.parse_with_version_concrete(entry["spec"]).version
+        except spack.error.SpackError:
+            continue
+        prefix = spack.util.path.path_to_os_path(entry.get("prefix"))[0]
+        if version == libc.version and prefix == libc.external_path:
+            return entry.setdefault("id", _libc_id(libc))
+    externals.append({"spec": str(libc), "prefix": libc.external_path, "id": _libc_id(libc)})
+    return externals[-1]["id"]
+
+
+def _libc_id(libc: spack.spec.Spec) -> str:
+    digest = hashlib.sha1(libc.external_path.encode("utf-8")).hexdigest()[:8]
+    return f"{libc.name}-{libc.version}-{digest}"
+
+
+def attach_libc_dependencies(
+    packages_yaml: Dict[str, Any],
+    *,
+    repo: spack.repo.RepoPath,
+    cache: Optional["spack.compilers.libraries.CompilerCache"] = None,
+) -> None:
+    """Give every external compiler in ``packages_yaml`` a dependency on the libc it targets.
+
+    Compilers that already declare a libc dependency are left alone. For the others the libc is
+    detected from the compiler's dynamic linker, and an external entry for it is added unless
+    one with the same version and prefix exists."""
+    try:
+        libc_providers = [x.name for x in repo.providers_for("libc")]
+    except spack.repo.UnknownPackageError:
+        return
+
+    for name in spack.compilers.config.supported_compilers(repo=repo):
+        for entry in packages_yaml.get(name, {}).get("externals", []):
+            if "extra_attributes" not in entry or _has_libc_dependency(entry, libc_providers):
+                continue
+
+            # Detect on the node alone: its dependencies don't matter here
+            alone = copy.deepcopy(entry)
+            alone.pop("dependencies", None)
+            alone["spec"] = str(spack.spec.Spec(alone["spec"]).copy(deps=False))
+            parser = ExternalSpecsParser([alone], repo=repo)
+            if not parser.nodes:
+                continue
+            libc = spack.compilers.libraries.CompilerPropertyDetector(
+                parser.nodes[0], repo=repo, cache=cache
+            ).default_libc()
+            if libc is None:
+                tty.debug(f"[{__name__}] cannot detect the libc of {entry['spec']}")
+                continue
+
+            node = spack.spec.Spec(entry["spec"])
+            if node.dependencies():
+                move_inline_dependencies(node, entry)
+                entry["spec"] = str(node)
+            entry.setdefault("dependencies", []).append(
+                {
+                    "id": _find_or_add_libc(packages_yaml, libc),
+                    "deptypes": "link",
+                    "virtuals": "libc",
+                }
+            )
 
 
 def create_external_parser(
