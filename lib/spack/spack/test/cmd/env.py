@@ -116,6 +116,7 @@ def _get_cmds_from_script(env_output, shell):
             path_to_script = line.split(quote)[1]
 
     if not path_to_script:
+        print(env_output)
         assert False, "No source command found"
 
     with open(path_to_script, "r", encoding="utf-8") as f:
@@ -3695,6 +3696,7 @@ def test_env_activate_csh_script_output():
 
     activate_content = _get_cmds_from_script(activate_output, "csh")
 
+    print(activate_output)
     assert "_spack_env_set SPACK_ENV " not in activate_output
     assert "_spack_env_set SPACK_ENV " in activate_content
     assert "_spack_env_set prompt" in activate_output
@@ -3710,10 +3712,11 @@ def test_env_activate_fish_script_output():
     activate_output = env("activate", "--fish", "test")
     activate_content = _get_cmds_from_script(activate_output, "fish")
 
+    print(activate_output)
     assert "_spack_env_set SPACK_ENV " not in activate_output
     assert "_spack_env_set SPACK_ENV " in activate_content
-    assert "function despacktivate;" in activate_output
-    assert "function despacktivate;" not in activate_content
+    assert "function despacktivate" in activate_output
+    assert "function despacktivate" not in activate_content
 
 
 @pytest.mark.regression("12719")

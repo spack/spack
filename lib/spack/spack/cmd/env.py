@@ -391,13 +391,13 @@ def env_activate(args):
     env_script.write_env_activate_script(active_env, view)
     env_script.write_env_deactivate_script(active_env, view)
 
-    ev.activate(active_env, use_env_repo=True)
-
     # Validate that the environment view is accessible.
     spack.environment.shell.validate_view(active_env, view)
 
-    cmds = env_script.get_shell_unique_env_cmds(active_env, args.shell, prompt=args.prompt)
-    sys.stdout.write(cmds)
+    ev.activate(active_env, use_env_repo=True)
+
+    cmds = env_script.get_despacktivate_and_prompt_cmds(active_env, args.shell, prompt=args.prompt)
+    sys.stdout.write(f"{cmds}\n")
 
     sys.stdout.write(env_script.source_env_script(env_activate_script, args.shell))
 
