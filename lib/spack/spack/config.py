@@ -2203,10 +2203,19 @@ def _do_migrate(
     Args:
         is_isolate_command: True if running `spack isolate`, False otherwise.
             Isolation records old resources but never relocates them.
-        config_path: Optional path for isolate configuration output. Normal
-            migration always writes its generated configuration to the layout scope.
-        isolate_target: Isolation target used for config:locations overrides.
+        config_path: Path for isolate configuration output. It is required for
+            isolation and must be omitted for normal migration.
+        isolate_target: Isolation target used for config:locations overrides. It
+            is required for isolation and must be omitted for normal migration.
     """
+    if is_isolate_command:
+        if config_path is None:
+            raise ValueError("config_path is required for isolate migration")
+        if isolate_target is None:
+            raise ValueError("isolate_target is required for isolate migration")
+    elif config_path is not None or isolate_target is not None:
+        raise ValueError("isolate-only migration arguments used for normal migration")
+
     tty.debug(f"Auto-migration called (is_isolate_command={is_isolate_command})")
 
     # Detect what old resources exist
@@ -2229,8 +2238,6 @@ def _do_migrate(
     # Config to write to the selected destination
     scope_config: Dict[str, Any] = {}
     if is_isolate_command:
-        if isolate_target is None:
-            raise ValueError("isolate_target is required for isolate migration")
         scope_config["config"] = {"locations": _isolate_locations_config(isolate_target)}
 
     # 1. Handle installs and modules.  Existing installs and module trees are
