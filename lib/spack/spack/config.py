@@ -2245,15 +2245,39 @@ def _do_migrate(
         )
 
     # 2. Handle GPG keys
-    # If GPG keys exist in old location, keep them there
     old_gpg_dir = os.path.join(spack.paths.prefix, "opt", "spack", "gpg")
     if old_resources["gpg_keys"]:
-        if "config" not in scope_config:
-            scope_config["config"] = {}
-        scope_config["config"]["gpg_path"] = old_gpg_dir
-        tty.debug(f"Old GPG keys exist, keeping in {old_gpg_dir}")
-    # With no old keys, the normal defaults or isolate scope configuration
-    # remain in effect.
+        configured_gpg_dir = CONFIG.get("config:gpg_path")
+        configured_gpg_dir = os.path.normpath(
+            os.path.expanduser(canonicalize_path(configured_gpg_dir))
+        )
+        old_gpg_norm = os.path.normpath(os.path.expanduser(old_gpg_dir))
+        data_home = substitute_path_variables("$data_home")
+        target_gpg_dir = os.path.join(data_home, "gpg")
+        target_gpg_norm = os.path.normpath(os.path.expanduser(target_gpg_dir))
+        gnupghome = os.getenv("SPACK_GNUPGHOME")
+
+        # An explicit SPACK_GNUPGHOME is authoritative.  Only preserve the
+        # old location in layout when it explicitly selects that location.
+        if gnupghome:
+            gnupghome_norm = os.path.normpath(os.path.expanduser(gnupghome))
+            if gnupghome_norm == old_gpg_norm:
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["gpg_path"] = old_gpg_dir
+        elif is_isolate_command:
+            # Isolation never relocates existing keyrings.
+            if "config" not in scope_config:
+                scope_config["config"] = {}
+            scope_config["config"]["gpg_path"] = old_gpg_dir
+        elif configured_gpg_dir == target_gpg_norm:
+            # With the default configuration, copy the old keyring into the
+            # shared default.  A collision leaves the old location active.
+            if not _copy_directory_contents_with_lock(old_gpg_dir, target_gpg_dir, "gpg"):
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["gpg_path"] = old_gpg_dir
+        # A custom configured location is user-owned and remains untouched.
 
     # 3. Handle licenses
     old_licenses_dir = os.path.join(spack.paths.prefix, "opt", "spack", "licenses")
