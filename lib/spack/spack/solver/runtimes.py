@@ -284,6 +284,15 @@ def all_libcs(context: "spack.context.SpackContext") -> Set[spack.spec.Spec]:
         if candidate is not None:
             libcs.add(candidate)
 
+    # Installed compilers target the libc they depend on
+    for pkg_name in spack.compilers.config.supported_compilers(repo=context.repo):
+        for c in context.store.db.query(pkg_name, repo=context.repo):
+            try:
+                libc = c["libc"]
+            except KeyError:
+                continue
+            libcs.add(spack.spec.Spec(f"{libc.name}@={libc.version}"))
+
     if libcs:
         return libcs
 

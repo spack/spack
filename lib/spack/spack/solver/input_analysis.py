@@ -454,6 +454,11 @@ class Counter:
             return
         self._compute_cache_values()
 
+    def add_link_run_packages(self, names: Set[str]) -> None:
+        """Add packages to the possible link/run dependencies, e.g. from reusable specs"""
+        self.ensure_cache_values()
+        self._possible_dependencies.update(names)
+
     def possible_packages_facts(self, gen: "spack.solver.asp.ProblemInstanceBuilder", fn) -> None:
         """Emit facts associated with the possible packages"""
         raise NotImplementedError("must be implemented by derived classes")
@@ -515,6 +520,10 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         )
         self._possible_virtuals.update(virtuals)
         self._possible_dependencies = set(self._link_run) | set(self._total_build)
+
+    def add_link_run_packages(self, names: Set[str]) -> None:
+        super().add_link_run_packages(names)
+        self._link_run.update(names)
 
     def possible_packages_facts(self, gen, fn):
         build_tools = set()

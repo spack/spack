@@ -2483,6 +2483,20 @@ class SpackSolverSetup:
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
 
+        # Reusable specs may depend on packages the current recipes no longer reach. Their
+        # link/run closure is concrete, so let it in as-is, or their hash cannot be imposed.
+        extra: Set[str] = set()
+        for s in reuse:
+            if s.name in self.pkgs:
+                extra.update(
+                    d.name
+                    for d in s.traverse(deptype=dt.LINK | dt.RUN, root=False)
+                    if d.name not in self.pkgs
+                )
+        if extra:
+            node_counter.add_link_run_packages(extra)
+            self.pkgs = node_counter.possible_dependencies()
+
         self.requirement_parser.parse_rules_from_input_specs(specs)
         self.gen.h1("Generic information")
         if spack.platforms.using_libc_compatibility():
@@ -2648,15 +2662,18 @@ class SpackSolverSetup:
                 continue
 
             current_libc = None
-            if compiler.external or self.context.store.db.installed(compiler):
-                current_libc = CompilerPropertyDetector(
-                    compiler, repo=self.context.repo, cache=self.compiler_cache
-                ).default_libc()
-            else:
+            if not compiler.external:
+                # A Spack-built compiler carries the libc it targets as a dependency
                 try:
                     current_libc = compiler["libc"]
                 except (KeyError, RuntimeError) as e:
                     tty.debug(f"{compiler} cannot determine libc because: {e}")
+            if current_libc is None and (
+                compiler.external or self.context.store.db.installed(compiler)
+            ):
+                current_libc = CompilerPropertyDetector(
+                    compiler, repo=self.context.repo, cache=self.compiler_cache
+                ).default_libc()
 
             if current_libc:
                 recorder("*").depends_on(
