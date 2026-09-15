@@ -2048,7 +2048,9 @@ def _migration_backup_path() -> str:
     return os.path.join(spack.paths.prefix, ".migration-backup")
 
 
-def _copy_directory_contents_with_lock(src_dir: str, dst_dir: str, resource_name: str) -> bool:
+def _copy_directory_contents_with_lock(
+    src_dir: str, dst_dir: str, resource_name: str, require_empty_destination: bool = False
+) -> bool:
     """Copy contents with destination locking and automatic backup.
 
     Copies (does not move) directory contents from src to dst. Always creates
@@ -2059,6 +2061,8 @@ def _copy_directory_contents_with_lock(src_dir: str, dst_dir: str, resource_name
         src_dir: Source directory
         dst_dir: Destination directory
         resource_name: Name of resource for logging (e.g., "licenses", "environments")
+        require_empty_destination: Reject any non-empty destination rather than
+            merging non-conflicting entries.
 
     Returns:
         True if copy was successful, False if skipped due to collision
@@ -2072,14 +2076,23 @@ def _copy_directory_contents_with_lock(src_dir: str, dst_dir: str, resource_name
     try:
         lock.acquire_write()
         tty.debug(f"Acquired migration lock for {dst_dir}")
-        return _copy_directory_contents(src_dir, dst_dir, resource_name)
+        return _copy_directory_contents(
+            src_dir,
+            dst_dir,
+            resource_name,
+            require_empty_destination=require_empty_destination,
+        )
     finally:
         lock.release_write()
         tty.debug(f"Released migration lock for {dst_dir}")
 
 
 def _copy_directory_contents(
-    src_dir: str, dst_dir: str, resource_name: str, backup_dir: Optional[str] = None
+    src_dir: str,
+    dst_dir: str,
+    resource_name: str,
+    backup_dir: Optional[str] = None,
+    require_empty_destination: bool = False,
 ) -> bool:
     """Copy contents of src_dir to dst_dir, checking for collisions.
 
@@ -2094,6 +2107,8 @@ def _copy_directory_contents(
         dst_dir: Destination directory
         resource_name: Name of resource for logging (e.g., "licenses", "environments")
         backup_dir: Backup root directory (default: $spack/.migration-backup, exposed for testing)
+        require_empty_destination: Reject any non-empty destination rather than
+            merging non-conflicting entries.
 
     Returns:
         True if copy was successful, False if skipped due to collision
@@ -2110,16 +2125,33 @@ def _copy_directory_contents(
     if not src_entries:
         return True  # Empty source, nothing to copy
 
-    # Check for collisions in destination
+    # Check for collisions in destination.  GPG homes must be copied as a
+    # complete database and must never be merged with another keyring.
     if os.path.exists(dst_dir):
         try:
             dst_entries = set(os.listdir(dst_dir))
+            if require_empty_destination and dst_entries:
+                tty.debug(f"Cannot copy {resource_name}: destination is not empty")
+                return False
             collisions = src_entries & dst_entries
             if collisions:
                 tty.debug(f"Cannot copy {resource_name}: collisions detected: {collisions}")
                 return False
         except OSError:
             tty.warn(f"Cannot read destination {resource_name} directory: {dst_dir}")
+            return False
+
+    # GPG homes are private databases.  Require the destination directory to
+    # have private permissions before copying any keyring artifacts.
+    if resource_name == "gpg":
+        try:
+            filesystem.mkdirp(dst_dir)
+            os.chmod(dst_dir, 0o700)
+        except OSError as e:
+            tty.warn(
+                "Could not auto-migrate GPG keys because private permissions "
+                f"could not be set on {dst_dir}: {e}"
+            )
             return False
 
     # Create backup (always, unless backup_dir is explicitly None for testing)
@@ -2273,7 +2305,12 @@ def _do_migrate(
         elif configured_gpg_dir == target_gpg_norm:
             # With the default configuration, copy the old keyring into the
             # shared default.  A collision leaves the old location active.
-            if not _copy_directory_contents_with_lock(old_gpg_dir, target_gpg_dir, "gpg"):
+            if not _copy_directory_contents_with_lock(
+                old_gpg_dir,
+                target_gpg_dir,
+                "gpg",
+                require_empty_destination=True,
+            ):
                 if "config" not in scope_config:
                     scope_config["config"] = {}
                 scope_config["config"]["gpg_path"] = old_gpg_dir
