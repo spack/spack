@@ -76,19 +76,12 @@ def setup_parser(sp: argparse.ArgumentParser) -> None:
     )
 
     sp.add_argument(
-        "-l", "--link-type", type=str, default=None, choices=["soft", "hard"], help="(deprecated)"
-    )
-
-    sp.add_argument(
         "specs", nargs=argparse.REMAINDER, help="spec to deprecate and spec to use as deprecator"
     )
 
 
 def deprecate(parser, args):
     """Deprecate one spec in favor of another"""
-    if args.link_type is not None:
-        tty.warn("The --link-type option is deprecated and will be removed in a future release.")
-
     env = active_environment()
     specs = spack.cmd.parse_specs(args.specs)
 

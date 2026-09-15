@@ -1445,7 +1445,7 @@ complete -c spack -n '__fish_spack_using_command dependents' -s t -l transitive 
 complete -c spack -n '__fish_spack_using_command dependents' -s t -l transitive -d 'show all transitive dependents'
 
 # spack deprecate
-set -g __fish_spack_optspecs_spack_deprecate h/help y/yes-to-all d/dependencies D/no-dependencies i/install-deprecator I/no-install-deprecator l/link-type=
+set -g __fish_spack_optspecs_spack_deprecate h/help y/yes-to-all d/dependencies D/no-dependencies i/install-deprecator I/no-install-deprecator
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 deprecate' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command deprecate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command deprecate' -s h -l help -d 'show this help message and exit'
@@ -1459,8 +1459,6 @@ complete -c spack -n '__fish_spack_using_command deprecate' -s i -l install-depr
 complete -c spack -n '__fish_spack_using_command deprecate' -s i -l install-deprecator -d 'concretize and install deprecator spec'
 complete -c spack -n '__fish_spack_using_command deprecate' -s I -l no-install-deprecator -f -a install
 complete -c spack -n '__fish_spack_using_command deprecate' -s I -l no-install-deprecator -d 'deprecator spec must already be installed (default)'
-complete -c spack -n '__fish_spack_using_command deprecate' -s l -l link-type -r -f -a 'soft hard'
-complete -c spack -n '__fish_spack_using_command deprecate' -s l -l link-type -r -d '(deprecated)'
 
 # spack dev-build
 set -g __fish_spack_optspecs_spack_dev_build h/help j/jobs= n/no-checksum d/source-path= i/ignore-dependencies keep-prefix skip-patch q/quiet drop-in= test= b/before= u/until= clean dirty f/force U/fresh reuse fresh-roots deprecated
