@@ -172,7 +172,7 @@ class GCSBlob:
 
         self.client = client or gcs_client()
 
-        self.bucket = GCSBucket(url)
+        self.bucket = GCSBucket(url, client)
 
         self.blob_path = self.url.path.lstrip("/")
 
@@ -221,6 +221,9 @@ class GCSBlob:
             "Content-encoding": blob.content_encoding,
             "Content-language": blob.content_language,
             "MD5Hash": blob.md5_hash,
+            "Content-Length": blob.size,
+            "Last-Modified": blob.time_created,
+            "Created-At": blob.time_created,
         }
 
         return headers
