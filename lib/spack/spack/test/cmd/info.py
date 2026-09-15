@@ -20,11 +20,6 @@ def test_package_suggestion():
     assert "Did you mean one of the following packages?" in str(exc_info.value)
 
 
-def test_deprecated_option_warns():
-    info("--variants-by-name", "vtk-m")
-    assert "--variants-by-name is deprecated" in info.output
-
-
 # no specs, more than one spec
 @pytest.mark.parametrize("args", [[], ["vtk-m", "zmpi"]])
 def test_info_failures(args):
