@@ -186,9 +186,10 @@ def _migrate_spec(
         spec_dict["archive_size"], v3_cache_class.TARBALL_MEDIATYPE, "gzip", algorithm, checksum
     )
 
+    # The spec dict is copied as is, so label it with its own format version
     metadata_blob_record = BlobRecord(
         metadata_size,
-        v3_cache_class.SPEC_MEDIATYPE,
+        f"application/vnd.spack.spec.v{spec_dict['spec']['_meta']['version']}+json",
         "gzip",
         metadata_checksum_algo,
         metadata_checksum,

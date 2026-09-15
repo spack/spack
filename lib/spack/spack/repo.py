@@ -2202,7 +2202,7 @@ def reconstruct_virtuals(
 ) -> None:
     """Reconstruct the virtual data that older spec files did not record: on each concrete node the
     versions of the virtuals it provides, and on each edge the virtuals consumed from its child.
-    The two are guarded independently, since the node data was added without a format bump.
+    Node data is absent before spec format v6, edge data before v4 or when the caller says so.
 
     Node data comes from the cached provider index to avoid package module imports. Callers set
     per-node concreteness first and pass every node, not just roots: the check below reads

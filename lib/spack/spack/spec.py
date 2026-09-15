@@ -180,7 +180,7 @@ DISPLAY_FORMAT = (
 )
 
 #: specfile format version. Must increase monotonically
-SPECFILE_FORMAT_VERSION = 5
+SPECFILE_FORMAT_VERSION = 6
 
 #: Keys under which old spec files may store a dependency hash, dag hash first
 _LEGACY_DEP_HASH_KEYS = ("hash", "full_hash", "build_hash")
@@ -2619,7 +2619,7 @@ class Spec:
                     },
                     ...
                 ],
-                "annotations": {"original_specfile_version": 5},
+                "annotations": {"original_specfile_version": 6},
             }
 
 
@@ -2700,8 +2700,8 @@ class Spec:
         if self._package_hash:
             d["package_hash"] = self._package_hash
 
-        # Always written for concrete nodes, even when empty: an absent key means an old spec file.
-        if self._concrete:
+        # Since v6, an absent key on a concrete node means it provides nothing
+        if self._concrete and self.provided_virtuals:
             d["provided_virtuals"] = [
                 name if versions == vn.any_version else f"{name}@{versions}"
                 for name, versions in sorted(self.provided_virtuals.items())
@@ -2751,7 +2751,7 @@ class Spec:
 
             {
                 "spec": {
-                    "_meta": {"version": 5},
+                    "_meta": {"version": 6},
                     "nodes": [
                         {
                             "name": "sqlite",
@@ -2790,7 +2790,7 @@ class Spec:
                                 },
                                 ...
                             ],
-                            "annotations": {"original_specfile_version": 5},
+                            "annotations": {"original_specfile_version": 6},
                             "hash": "a2ubvvqnula6zdppckwqrjf3zmsdzpoh",
                         },
                         ...
@@ -5333,6 +5333,11 @@ class SpecfileReaderBase(abc.ABC):
     ) -> Tuple[str, str, str]: ...
 
     @classmethod
+    def provided_virtuals_from_node_dict(cls, node) -> Optional[Dict[str, vn.VersionList]]:
+        """None before v6: filled by reconstruct_virtuals once the DAG is wired"""
+        return None
+
+    @classmethod
     def from_node_dict(cls, node):
         spec = Spec()
 
@@ -5397,13 +5402,8 @@ class SpecfileReaderBase(abc.ABC):
 
         # specs read in are concrete unless marked abstract
         if node.get("concrete", True):
-            spec._mark_root_concrete()
-            # None when the key is absent, i.e. an old spec file: the values are reconstructed
-            # once the DAG is wired up.
-            provided = node.get("provided_virtuals")
-            spec._provided_virtuals = (
-                None if provided is None else {s.name: s.versions for s in map(Spec, provided)}
-            )
+            spec._mark_root_concrete()  # defaults provided virtuals to {}, so set them after
+            spec._provided_virtuals = cls.provided_virtuals_from_node_dict(node)
 
         if "patches" in node:
             patches = node["patches"]
@@ -5520,7 +5520,7 @@ def wire_spec_nodes(
                 )
             node_spec._build_spec = build_spec
 
-    # Reconstruct virtual/provider data for spec files older than the `provided_virtuals` key
+    # Readers before v6 leave provided virtuals unset
     spack.repo.reconstruct_virtuals(specs_by_hash.values())
 
     return specs_by_hash
@@ -5725,8 +5725,20 @@ class SpecfileV5(SpecfileV4):
         )
 
 
+@register_reader
+class SpecfileV6(SpecfileV5):
+    """Concrete nodes record the versions of the virtuals they provide, part of the dag hash."""
+
+    SPEC_VERSION = 6
+
+    @classmethod
+    def provided_virtuals_from_node_dict(cls, node) -> Dict[str, vn.VersionList]:
+        provided = (Spec(entry) for entry in node.get("provided_virtuals", ()))
+        return {s.name: s.versions for s in provided}
+
+
 #: Alias to the latest version of specfiles
-SpecfileLatest = SpecfileV5
+SpecfileLatest = SpecfileV6
 
 
 def specfile_reader_for_version(version: int) -> Type[SpecfileReaderBase]:

@@ -36,6 +36,11 @@ from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
 from spack.util.executable import ProcessError, which
 
+#: Versioned Spack media type, e.g. application/vnd.spack.spec.v6+json
+_SPACK_MEDIA_TYPE = re.compile(
+    r"application/vnd\.spack\.(?P<family>\w+)\.v(?P<version>\d+)(?P<suffix>.*)"
+)
+
 #: The build cache layout version that this version of Spack creates.
 #: Version 3: Introduces content-addressable tarballs
 CURRENT_BUILD_CACHE_LAYOUT_VERSION = 3
@@ -143,13 +148,23 @@ class BuildcacheManifest:
         )
 
     def get_blob_records(self, media_type: str) -> List[BlobRecord]:
-        """Return any blob records from the manifest matching the given media type"""
-        matches: List[BlobRecord] = []
+        """Return the blob records of the given media type, or of an older version of it that
+        this Spack can still read"""
+        matches = [r for r in self.data if r.media_type == media_type]
+        if matches:
+            return matches
 
-        for record in self.data:
-            if record.media_type == media_type:
-                matches.append(record)
-
+        wanted = _SPACK_MEDIA_TYPE.fullmatch(media_type)
+        if wanted:
+            for record in self.data:
+                found = _SPACK_MEDIA_TYPE.fullmatch(record.media_type)
+                if (
+                    found
+                    and found["family"] == wanted["family"]
+                    and found["suffix"] == wanted["suffix"]
+                    and int(found["version"]) < int(wanted["version"])
+                ):
+                    matches.append(record)
         if matches:
             return matches
 

@@ -711,6 +711,17 @@ def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config, mock_packa
 
     assert "libdwarf" in output and "libelf" in output
 
+    # Migrated spec files keep their own format version in the media type
+    labels = {
+        f"application/vnd.spack.spec.v{json.loads(f.read_text())['spec']['_meta']['version']}+json"
+        for f in test_mirror_path.glob("build_cache/*.spec.json")
+    }
+    manifests = list(test_mirror_path.glob("v3/manifests/spec/**/*.manifest.json"))
+    assert manifests and labels
+    for manifest in manifests:
+        media_types = {b["mediaType"] for b in json.loads(manifest.read_text())["data"]}
+        assert media_types & labels
+
     output = buildcache("migrate", "--unsigned", "--delete-existing", "--yes-to-all", "my-mirror")
 
     # A second migration of the same mirror indicates neither spec

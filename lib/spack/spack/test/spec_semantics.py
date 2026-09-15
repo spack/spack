@@ -860,8 +860,9 @@ class TestSpecSemantics:
 
     @staticmethod
     def _old_spec_dict(spec: Spec) -> dict:
-        """The dict form of ``spec`` as written by a Spack older than ``provided_virtuals``."""
+        """The dict form of ``spec`` as written by Spack 1.0-1.2 (spec format v5)."""
         as_dict = spec.to_dict()
+        as_dict["spec"]["_meta"]["version"] = 5
         for node in as_dict["spec"]["nodes"]:
             node.pop("provided_virtuals", None)
         return as_dict
@@ -900,6 +901,30 @@ class TestSpecSemantics:
         old = Spec.from_dict(as_dict)
         assert old["mpich"].provided_virtuals["mpi"] == vn.VersionList(":3")
         assert old.dag_hash() == concrete.dag_hash()
+
+    def test_v6_specfile_omits_empty_provided_virtuals(self):
+        """A v6 node without the key provides nothing, and is not reconstructed."""
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
+        assert "provided_virtuals" not in concrete.to_node_dict()
+        assert "provided_virtuals" in concrete["mpich"].to_node_dict()
+
+        as_dict = concrete.to_dict()
+        next(n for n in as_dict["spec"]["nodes"] if n["name"] == "mpich").pop("provided_virtuals")
+        reread = Spec.from_dict(as_dict)
+        assert reread.provided_virtuals == {}
+        assert reread["mpich"].provided_virtuals == {}
+
+    def test_v5_reader_ignores_provided_virtuals(self):
+        """A v5 reader reconstructs the data even when a node carries the key."""
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
+        as_dict = concrete.to_dict()
+        as_dict["spec"]["_meta"]["version"] = 5
+        mpich = next(n for n in as_dict["spec"]["nodes"] if n["name"] == "mpich")
+        mpich["provided_virtuals"] = ["bogus"]
+
+        reread = Spec.from_dict(as_dict)
+        assert reread["mpich"].provided_virtuals == concrete["mpich"].provided_virtuals
+        assert reread.dag_hash() == concrete.dag_hash()
 
     def test_abstract_root_with_concrete_deps_is_reconstructed_per_node(self):
         """An abstract root with a resolved ``^/hash`` dependency writes both kinds of node;

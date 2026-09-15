@@ -43,9 +43,12 @@ from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
+    BlobRecord,
     BuildcacheComponent,
     BuildcacheEntryError,
+    BuildcacheManifest,
     ListMirrorSpecsError,
+    NoSuchBlobException,
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
     compression_writer,
@@ -1827,3 +1830,19 @@ def test_select_signing_key_shows_fingerprints(monkeypatch):
     monkeypatch.setattr(spack.util.gpg, "signing_keys", lambda *a: keys)
     with pytest.raises(spack.binary_distribution.PickKeyException, match="AAAA\n  BBBB"):
         spack.binary_distribution.select_signing_key()
+
+
+@pytest.mark.parametrize(
+    "media_type,older",
+    [
+        (URLBuildcacheEntry.SPEC_MEDIATYPE, "application/vnd.spack.spec.v5+json"),
+        (URLBuildcacheEntry.BUILDCACHE_INDEX_MEDIATYPE, "application/vnd.spack.db.v8+json"),
+    ],
+)
+def test_manifest_reads_older_media_types(media_type, older):
+    """Blobs of earlier formats on existing mirrors are still found."""
+    record = BlobRecord(1, older, "gzip", "sha256", "a")
+    manifest = BuildcacheManifest(layout_version=3, data=[record])
+    assert manifest.get_blob_records(media_type) == manifest.data
+    with pytest.raises(NoSuchBlobException):
+        manifest.get_blob_records("application/vnd.spack.keyindex.v1+json")
