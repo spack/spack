@@ -6,6 +6,7 @@ import pathlib
 import pytest
 
 import spack.concretize
+import spack.concretize_ui
 import spack.config
 import spack.context
 import spack.error
@@ -1677,7 +1678,9 @@ def test_compiler_in_all_from_internal_scope_warns(mock_packages):
     )
     config = spack.config.Configuration()
     config.push_scope(scope)
-    parser = RequirementParser(configuration=config, repo=spack.repo.PATH)
+    parser = RequirementParser(
+        configuration=config, repo=spack.repo.PATH, ui=spack.concretize_ui.TerminalUI()
+    )
 
     require = config.get("packages:all:require")
     # The mark on the requirement string has a name but no line number.
