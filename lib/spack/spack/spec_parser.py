@@ -568,7 +568,8 @@ class SpecParser:
                                 )
                                 self._raise_parsing_error(msg)
                             value = strip_quotes(self.curr.group(_KV_VALUE))
-                            # Repeated attributes combine: virtuals or deptypes accumulate, when specs constrain
+                            # Repeated attributes combine: virtuals or deptypes accumulate
+                            # when specs constrain
                             attributes.setdefault(name, []).extend(
                                 v.strip() for v in value.split(",")
                             )
