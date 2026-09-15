@@ -2215,7 +2215,9 @@ def _do_migrate(
 
     # Config to write to the selected scope
     scope_config: Dict[str, Any] = {}
-    if is_isolate_command and isolate_target:
+    if is_isolate_command:
+        if isolate_target is None:
+            raise ValueError("isolate_target is required for isolate migration")
         scope_config["config"] = {
             "locations": {
                 "data": [isolate_target],
