@@ -32,9 +32,9 @@ import spack.util.windows_registry
 from spack.util import tty
 
 
-def _externals_in_packages_yaml(configuration: spack.config.Configuration) -> Set[spack.spec.Spec]:
+def _externals_in_packages_yaml(config: spack.config.Configuration) -> Set[spack.spec.Spec]:
     """Returns all the specs mentioned as externals in packages.yaml"""
-    packages_yaml = configuration.get("packages")
+    packages_yaml = config.get("packages")
     already_defined_specs = set()
     for pkg_name, package_configuration in packages_yaml.items():
         for item in package_configuration.get("externals", []):
@@ -192,7 +192,7 @@ def library_prefix(library_dir: str) -> str:
 def update_configuration(
     detected_packages: Dict[str, List["spack.spec.Spec"]],
     *,
-    configuration: spack.config.Configuration,
+    config: spack.config.Configuration,
     scope: Optional[str] = None,
     buildable: bool = True,
 ) -> List[spack.spec.Spec]:
@@ -200,11 +200,11 @@ def update_configuration(
 
     Args:
         detected_packages: list of specs to be added
-        configuration: configuration to be updated
+        config: configuration to be updated
         scope: configuration scope where to add the detected packages
         buildable: whether the detected packages are buildable or not
     """
-    predefined_external_specs = _externals_in_packages_yaml(configuration)
+    predefined_external_specs = _externals_in_packages_yaml(config)
     pkg_to_cfg, all_new_specs = {}, []
     for package_name, entries in detected_packages.items():
         new_entries = [s for s in entries if s not in predefined_external_specs]
@@ -218,10 +218,10 @@ def update_configuration(
             pkg_config["buildable"] = False
         pkg_to_cfg[package_name] = pkg_config
 
-    scope = scope or configuration.default_modify_scope()
-    pkgs_cfg = configuration.get("packages", scope=scope)
+    scope = scope or config.default_modify_scope()
+    pkgs_cfg = config.get("packages", scope=scope)
     pkgs_cfg = spack.schema.merge_yaml(pkgs_cfg, pkg_to_cfg)
-    configuration.set("packages", pkgs_cfg, scope=scope)
+    config.set("packages", pkgs_cfg, scope=scope)
 
     return all_new_specs
 

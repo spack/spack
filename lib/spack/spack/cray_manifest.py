@@ -247,13 +247,11 @@ def read(path, apply_updates):
     tty.debug(f"{path}: {str(len(compilers))} compilers read from manifest")
     # Filter out the compilers that already appear in the configuration
     compilers = spack.compilers.config.select_new_compilers(
-        compilers, configuration=spack.config.CONFIG, repo=spack.repo.PATH
+        compilers, config=spack.config.CONFIG, repo=spack.repo.PATH
     )
     if apply_updates and compilers:
         try:
-            spack.compilers.config.add_compiler_to_config(
-                compilers, configuration=spack.config.CONFIG
-            )
+            spack.compilers.config.add_compiler_to_config(compilers, config=spack.config.CONFIG)
         except Exception:
             warnings.warn(
                 f"Could not add compilers from manifest: {path}"

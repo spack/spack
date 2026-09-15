@@ -136,7 +136,7 @@ def external_find(args):
 
     new_specs = spack.detection.update_configuration(
         detected_packages,
-        configuration=spack.config.CONFIG,
+        config=spack.config.CONFIG,
         scope=args.scope,
         buildable=not args.not_buildable,
     )

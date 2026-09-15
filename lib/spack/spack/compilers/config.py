@@ -8,7 +8,6 @@ and configuring Spack to use multiple compilers.
 import sys
 from typing import Any, Dict, List, Optional, Tuple
 
-import spack.config
 import spack.detection
 import spack.error
 import spack.platforms
@@ -16,6 +15,7 @@ import spack.repo
 import spack.spec
 import spack.util.filesystem as fs
 import spack.util.lang
+from spack.config import Configuration
 from spack.externals import ExternalSpecsParser, external_spec, extract_dicts_from_configuration
 from spack.operating_systems import windows_os
 from spack.util import tty
@@ -25,45 +25,38 @@ from spack.util.environment import get_path
 COMPILER_TAG = "compiler"
 
 
-def compiler_config_files(
-    configuration: spack.config.Configuration, *, repo: spack.repo.RepoPath
-) -> List[str]:
+def compiler_config_files(config: Configuration, *, repo: spack.repo.RepoPath) -> List[str]:
     """Returns the writable configuration files that define at least one compiler.
 
     Args:
-        configuration: configuration to be queried
+        config: configuration to be queried
         repo: package repository used to enumerate compiler packages
     """
     config_files = []
-    for scope in configuration.writable_scopes:
+    for scope in config.writable_scopes:
         name = scope.name
 
-        if all_compilers_from(configuration, scope=name, repo=repo):
-            config_files.append(configuration.get_config_filename(name, "packages"))
+        if all_compilers_from(config, scope=name, repo=repo):
+            config_files.append(config.get_config_filename(name, "packages"))
 
     return config_files
 
 
 def add_compiler_to_config(
-    new_compilers: List[spack.spec.Spec],
-    *,
-    configuration: spack.config.Configuration,
-    scope: Optional[str] = None,
+    new_compilers: List[spack.spec.Spec], *, config: Configuration, scope: Optional[str] = None
 ) -> None:
     """Add compiler specs to the configuration, at the required scope."""
     by_name: Dict[str, List[spack.spec.Spec]] = {}
     for x in new_compilers:
         by_name.setdefault(x.name, []).append(x)
 
-    spack.detection.update_configuration(
-        by_name, configuration=configuration, buildable=True, scope=scope
-    )
+    spack.detection.update_configuration(by_name, config=config, buildable=True, scope=scope)
 
 
 def find_compilers(
     path_hints: Optional[List[str]] = None,
     *,
-    configuration: spack.config.Configuration,
+    config: Configuration,
     repo: spack.repo.RepoPath,
     scope: Optional[str] = None,
     max_workers: Optional[int] = None,
@@ -74,7 +67,7 @@ def find_compilers(
     Args:
         path_hints: list of path hints where to look for. A sensible default based on the ``PATH``
             environment variable will be used if the value is None
-        configuration: configuration to be updated with the new compilers
+        config: configuration to be updated with the new compilers
         repo: package repository used to detect compilers
         scope: configuration scope to modify
         max_workers: number of processes used to search for compilers
@@ -91,7 +84,7 @@ def find_compilers(
     )
 
     new_compilers = spack.detection.update_configuration(
-        detected_packages, configuration=configuration, buildable=True, scope=scope
+        detected_packages, config=config, buildable=True, scope=scope
     )
     return new_compilers
 
@@ -99,14 +92,14 @@ def find_compilers(
 def select_new_compilers(
     candidates: List[spack.spec.Spec],
     *,
-    configuration: spack.config.Configuration,
+    config: Configuration,
     repo: spack.repo.RepoPath,
     scope: Optional[str] = None,
 ) -> List[spack.spec.Spec]:
     """Given a list of compilers, remove those that are already defined in
     the configuration.
     """
-    compilers_in_config = all_compilers_from(configuration=configuration, scope=scope, repo=repo)
+    compilers_in_config = all_compilers_from(config, scope=scope, repo=repo)
     return [c for c in candidates if c not in compilers_in_config]
 
 
@@ -120,7 +113,7 @@ def supported_compilers(*, repo: spack.repo.RepoPath) -> List[str]:
 
 
 def all_compilers(
-    configuration: spack.config.Configuration,
+    config: Configuration,
     *,
     repo: spack.repo.RepoPath,
     scope: Optional[str] = None,
@@ -129,25 +122,25 @@ def all_compilers(
     """Returns all the compilers from the given configuration.
 
     Args:
-        configuration: configuration to be queried, and updated if ``init_config`` is True
+        config: configuration to be queried, and updated if ``init_config`` is True
         repo: package repository used to enumerate and detect compiler packages
         scope: configuration scope from which to extract the compilers. If None, the merged
             configuration is used.
         init_config: if True, search for compilers if none is found in configuration.
     """
-    compilers = all_compilers_from(configuration=configuration, scope=scope, repo=repo)
+    compilers = all_compilers_from(config, scope=scope, repo=repo)
 
     if not compilers and init_config:
-        _init_packages_yaml(configuration, repo=repo, scope=scope)
-        compilers = all_compilers_from(configuration=configuration, scope=scope, repo=repo)
+        _init_packages_yaml(config, repo=repo, scope=scope)
+        compilers = all_compilers_from(config, scope=scope, repo=repo)
 
     return compilers
 
 
 def _init_packages_yaml(
-    configuration: spack.config.Configuration, *, repo: spack.repo.RepoPath, scope: Optional[str]
+    config: Configuration, *, repo: spack.repo.RepoPath, scope: Optional[str]
 ) -> None:
-    new_compilers = find_compilers(configuration=configuration, repo=repo, scope=scope)
+    new_compilers = find_compilers(config=config, repo=repo, scope=scope)
     if not new_compilers:
         raise NoAvailableCompilerError(
             "no compiler configured, and Spack cannot find working compilers in PATH"
@@ -156,10 +149,7 @@ def _init_packages_yaml(
 
 
 def all_compilers_from(
-    configuration: spack.config.Configuration,
-    scope: Optional[str] = None,
-    *,
-    repo: spack.repo.RepoPath,
+    configuration: Configuration, scope: Optional[str] = None, *, repo: spack.repo.RepoPath
 ) -> List[spack.spec.Spec]:
     """Returns all the compilers from the given configuration.
 
@@ -193,10 +183,8 @@ def all_compilers_from(
 class CompilerRemover:
     """Removes compiler from configuration."""
 
-    def __init__(
-        self, configuration: spack.config.Configuration, *, repo: spack.repo.RepoPath
-    ) -> None:
-        self.configuration = configuration
+    def __init__(self, config: Configuration, *, repo: spack.repo.RepoPath) -> None:
+        self.configuration = config
         self.repo = repo
         self.marked_packages_yaml: List[Tuple[str, Any]] = []
 
@@ -262,12 +250,12 @@ class CompilerRemover:
 def compilers_for_arch(
     arch_spec: spack.spec.ArchSpec,
     *,
-    configuration: spack.config.Configuration,
+    config: Configuration,
     repo: spack.repo.RepoPath,
     scope: Optional[str] = None,
 ) -> List[spack.spec.Spec]:
     """Returns the compilers that can be used on the input architecture"""
-    compilers = all_compilers_from(configuration, scope=scope, repo=repo)
+    compilers = all_compilers_from(config, scope=scope, repo=repo)
     query = f"platform={arch_spec.platform} target=:{arch_spec.target}"
     return [x for x in compilers if x.satisfies(query)]
 

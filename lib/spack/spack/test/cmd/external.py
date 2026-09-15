@@ -45,7 +45,7 @@ def test_find_external_update_config(mutable_config: Configuration):
 
     scope = mutable_config.default_modify_scope("packages")
     spack.detection.update_configuration(
-        pkg_to_entries, configuration=mutable_config, scope=scope, buildable=True
+        pkg_to_entries, config=mutable_config, scope=scope, buildable=True
     )
 
     pkgs_cfg = mutable_config.get("packages")
@@ -234,7 +234,7 @@ def test_find_external_merge(mutable_config: Configuration):
     pkg_to_entries = {"find-externals1": entries}
     scope = mutable_config.default_modify_scope("packages")
     spack.detection.update_configuration(
-        pkg_to_entries, configuration=mutable_config, scope=scope, buildable=True
+        pkg_to_entries, config=mutable_config, scope=scope, buildable=True
     )
 
     pkgs_cfg = mutable_config.get("packages")

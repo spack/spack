@@ -50,7 +50,7 @@ done
 
             new_compilers = spack.compilers.config.find_compilers(
                 [str(prefix)],
-                configuration=mutable_config,
+                config=mutable_config,
                 repo=mock_packages,
                 scope="site",
                 max_workers=1,
@@ -65,10 +65,10 @@ done
         assert gcc[0].external_path == str(prefix)
 
         assert gcc[0] in spack.compilers.config.compilers_for_arch(
-            arch, configuration=mutable_config, repo=mock_packages
+            arch, config=mutable_config, repo=mock_packages
         )
         assert not spack.compilers.config.select_new_compilers(
-            gcc, configuration=mutable_config, repo=mock_packages
+            gcc, config=mutable_config, repo=mock_packages
         )
         assert mutable_config.get_config_filename(
             "site", "packages"

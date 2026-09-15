@@ -86,7 +86,7 @@ def compiler_find(args):
     paths = args.add_paths or None
     new_compilers = spack.compilers.config.find_compilers(
         path_hints=paths,
-        configuration=spack.config.CONFIG,
+        config=spack.config.CONFIG,
         repo=spack.repo.PATH,
         scope=args.scope,
         max_workers=args.jobs,

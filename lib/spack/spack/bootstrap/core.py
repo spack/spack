@@ -449,13 +449,10 @@ def _add_externals_if_missing() -> None:
     # System git is typically deprecated, so mark as non-buildable to force it as external
     non_buildable_externals = {k: externals.pop(k) for k in ("git",) if k in externals}
     spack.detection.update_configuration(
-        externals, configuration=spack.config.CONFIG, scope="bootstrap", buildable=True
+        externals, config=spack.config.CONFIG, scope="bootstrap", buildable=True
     )
     spack.detection.update_configuration(
-        non_buildable_externals,
-        configuration=spack.config.CONFIG,
-        scope="bootstrap",
-        buildable=False,
+        non_buildable_externals, config=spack.config.CONFIG, scope="bootstrap", buildable=False
     )
 
 
@@ -578,9 +575,7 @@ def ensure_winsdk_external_or_raise() -> None:
     # wgl/sdk are not required for bootstrapping Spack, but
     # are required for building anything non trivial
     # add to user config so they can be used by subsequent Spack ops
-    spack.detection.update_configuration(
-        externals, configuration=spack.config.CONFIG, buildable=False
-    )
+    spack.detection.update_configuration(externals, config=spack.config.CONFIG, buildable=False)
 
 
 def ensure_core_dependencies() -> None:

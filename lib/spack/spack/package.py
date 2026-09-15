@@ -235,7 +235,7 @@ def find_compilers(path_hints: Optional[List[str]] = None) -> List[Spec]:
     import spack.repo
     from spack.compilers.config import find_compilers as _find_compilers
 
-    return _find_compilers(path_hints, configuration=spack.config.CONFIG, repo=spack.repo.PATH)
+    return _find_compilers(path_hints, config=spack.config.CONFIG, repo=spack.repo.PATH)
 
 
 #: Assigning this to :attr:`spack.package_base.PackageBase.flag_handler` means that compiler flags
