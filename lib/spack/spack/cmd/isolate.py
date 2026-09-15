@@ -29,7 +29,7 @@ def _isolate_bootstrap_config(new_user_path):
         syaml.dump(bootstrap_yaml, f)
 
 
-def _isolate_config_config(new_user_path):
+def _isolate_config_config(new_user_path, config_path):
     build_stage_dirs = ["$tempdir/$user/spack-stage", os.path.join(new_user_path, "stage")]
     test_stage_dir = os.path.join(new_user_path, "test-stage")
     misc_cache_dir = os.path.join(new_user_path, "cache")
@@ -38,9 +38,14 @@ def _isolate_config_config(new_user_path):
             "build_stage:": build_stage_dirs,
             "test_stage:": test_stage_dir,
             "misc_cache:": misc_cache_dir,
+            "locations": {
+                "data": [new_user_path],
+                "state": [new_user_path],
+                "cache": [new_user_path],
+            },
         }
     }
-    with open(os.path.join(ISOLATE_SCOPE_PATH, "config.yaml"), "w", encoding="utf-8") as f:
+    with open(config_path, "w", encoding="utf-8") as f:
         syaml.dump(config_yaml, f)
 
 
@@ -86,7 +91,7 @@ def _isolate_include_config(new_user_path):
         syaml.dump_config(include_data, f)
 
 
-def _setup_isolate_scope(new_user_path, overwrite: bool):
+def _setup_isolate_scope(new_user_path, overwrite: bool, target_config_existed: bool):
     # Check if this is --self (isolate scope IS the user path)
     is_self = os.path.exists(ISOLATE_SCOPE_PATH) and os.path.samefile(
         new_user_path, ISOLATE_SCOPE_PATH
@@ -114,10 +119,17 @@ def _setup_isolate_scope(new_user_path, overwrite: bool):
     else:
         final_user_path = new_user_path
 
-    # Write configuration files into isolate scope
-    # These still point to new_user_path for artifact locations
+    # Write configuration files into isolate scope.  Preserve a pre-existing
+    # target config and put generated resource overrides in the layout scope.
     _isolate_bootstrap_config(new_user_path)
-    _isolate_config_config(new_user_path)
+    config_path = (
+        os.path.join(spack.config._layout_scope_path(), "config.yaml")
+        if target_config_existed
+        else os.path.join(new_user_path, "config.yaml")
+    )
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    if not target_config_existed:
+        _isolate_config_config(new_user_path, config_path)
     _isolate_repos_config(new_user_path)
 
     # Write include.yaml with include:: override to redirect user scope
@@ -162,8 +174,9 @@ def setup_parser(subparser: ArgumentParser):
 
 
 def _do_isolate(args):
+    target_config_existed = os.path.isfile(os.path.join(args.path, "config.yaml"))
     destination = _ensure_destination_setup(args.path, args.overwrite)
-    _setup_isolate_scope(destination, args.overwrite)
+    _setup_isolate_scope(destination, args.overwrite, target_config_existed)
     # No need to modify etc/spack/include.yaml anymore - the isolate scope's
     # include.yaml with include:: override handles the redirection
 
@@ -175,7 +188,15 @@ def _do_isolate(args):
         and spack.config._is_spack_writable()
         and any(spack.config._detect_old_resources().values())
     ):
-        spack.config._do_migrate(is_isolate_command=True)
+        spack.config._do_migrate(
+            is_isolate_command=True,
+            config_path=os.path.join(
+                spack.config._layout_scope_path(), "config.yaml"
+            )
+            if target_config_existed
+            else os.path.join(destination, "config.yaml"),
+            isolate_target=destination,
+        )
         # No need to reload CONFIG here: this process exits immediately, and
         # the generated scopes are loaded by the next Spack invocation.
 

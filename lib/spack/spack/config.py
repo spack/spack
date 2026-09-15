@@ -2181,12 +2181,19 @@ def _copy_directory_contents(
     return True
 
 
-def _do_migrate(is_isolate_command: bool) -> None:
+def _do_migrate(
+    is_isolate_command: bool,
+    config_path: Optional[str] = None,
+    isolate_target: Optional[str] = None,
+) -> None:
     """Perform auto-migration of Spack data from old to new locations.
 
     Args:
         is_isolate_command: True if running `spack isolate`, False otherwise.
-            Isolation records old resources in the layout scope but never relocates them.
+            Isolation records old resources but never relocates them.
+        config_path: Optional path for isolate configuration output. Normal
+            migration always writes its generated configuration to the layout scope.
+        isolate_target: Isolation target used for config:locations overrides.
     """
     tty.debug(f"Auto-migration called (is_isolate_command={is_isolate_command})")
 
@@ -2197,10 +2204,25 @@ def _do_migrate(is_isolate_command: bool) -> None:
     # generated layout scope.  Isolation differs only in that it never moves
     # or copies existing resources.
     config_scope_path = _layout_scope_path()
-    filesystem.mkdirp(config_scope_path)
+    if config_path is None:
+        config_path = os.path.join(config_scope_path, "config.yaml")
+    if not (
+        is_isolate_command
+        and os.path.normpath(config_path) != os.path.normpath(os.path.join(config_scope_path, "config.yaml"))
+    ):
+        filesystem.mkdirp(config_scope_path)
+    filesystem.mkdirp(os.path.dirname(config_path))
 
-    # Config to write to the layout scope
+    # Config to write to the selected scope
     scope_config: Dict[str, Any] = {}
+    if is_isolate_command and isolate_target:
+        scope_config["config"] = {
+            "locations": {
+                "data": [isolate_target],
+                "state": [isolate_target],
+                "cache": [isolate_target],
+            }
+        }
 
     # 1. Handle installs and modules.  Existing installs and module trees are
     # always retained in their old locations, including during isolation.
@@ -2327,9 +2349,9 @@ def _do_migrate(is_isolate_command: bool) -> None:
     if not is_isolate_command:
         _migrate_user_config_programmatic()
 
-    # Write config scope files to the generated layout scope.
+    # Write config scope files to the selected configuration scope.
     if "config" in scope_config:
-        config_yaml_path = os.path.join(config_scope_path, "config.yaml")
+        config_yaml_path = config_path
         with open(config_yaml_path, "w", encoding="utf-8") as f:
             syaml.dump({"config": scope_config["config"]}, f)
         tty.debug(f"Wrote config.yaml to {config_scope_path}")
