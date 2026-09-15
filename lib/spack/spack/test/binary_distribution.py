@@ -98,6 +98,30 @@ def dummy_prefix(tmp_path: pathlib.Path):
     return str(p)
 
 
+class MockIndexHandler:
+    fail_to_push: bool = False
+
+    def push_index(self, database):
+        if self.fail_to_push:
+            raise RuntimeError("Failed to push index")
+
+        return
+
+
+@pytest.fixture
+def mock_index_handler(monkeypatch):
+    _mock_index_handler = MockIndexHandler()
+
+    def _get_index_handler(metadata):
+        return _mock_index_handler
+
+    monkeypatch.setattr(
+        spack.binary_distribution.BINARY_INDEX, "get_index_handler", _get_index_handler
+    )
+
+    yield _mock_index_handler
+
+
 @pytest.mark.maybeslow
 def test_buildcache_cmd_smoke_test(tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path):
     """
@@ -516,23 +540,27 @@ def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, cap
     )
 
 
-def test_generate_package_index_push_failure(monkeypatch, tmp_path: pathlib.Path):
+def test_generate_package_index_push_failure(
+    monkeypatch, tmp_path: pathlib.Path, mock_index_handler
+):
+    mock_index_handler.fail_on_push = True
+
+    def broken_read_specs(*args, **kwargs):
+        raise RuntimeError("Failed to read specs")
+
+    monkeypatch.setattr(spack.binary_distribution, "_read_specs", broken_read_specs)
+
     monkeypatch.setattr(
         spack.binary_distribution,
         "get_entries_from_cache",
         lambda url, component_type: ({"some-manifest": 0.0}, lambda x: x),
     )
 
-    def broken_read_specs_and_push_index(*args, **kwargs):
-        raise RuntimeError("Couldn't push the index")
-
-    monkeypatch.setattr(
-        spack.binary_distribution, "_read_specs_and_push_index", broken_read_specs_and_push_index
-    )
-
     test_url = "file:///fake/keys/dir"
     with pytest.raises(GenerateIndexError, match="problem pushing package index"):
-        spack.binary_distribution._url_generate_package_index(test_url, str(tmp_path))
+        spack.binary_distribution._url_update_index(
+            MirrorMetadata(test_url), str(tmp_path), config=spack.config.CONFIG
+        )
 
 
 def test_generate_indices_exception(monkeypatch, tmp_path: pathlib.Path, capfd):
@@ -1935,7 +1963,7 @@ class _MockBinaryIndex:
         return self._handler
 
 
-def _no_entries(url, tmp, component_type):
+def _no_entries(url, component_type):
     return {}, lambda f: None
 
 
