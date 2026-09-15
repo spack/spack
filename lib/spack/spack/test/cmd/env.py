@@ -1097,7 +1097,7 @@ def test_init_from_env_no_spackfile(tmp_path):
 def test_init_from_yaml_relative_includes(tmp_path: pathlib.Path):
     files = [
         "relative_copied/packages.yaml",
-        "./relative_copied/compilers.yaml",
+        "./relative_copied/mirrors.yaml",
         "repos.yaml",
         "./config.yaml",
     ]

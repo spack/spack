@@ -5,14 +5,14 @@
 Spack and run them on-demand.
 
 To register a new class of sanity checks (e.g. sanity checks for
-compilers.yaml), the first action required is to create a new AuditClass
+packages.yaml), the first action required is to create a new AuditClass
 object:
 
 .. code-block:: python
 
-   audit_cfgcmp = AuditClass(
-       tag="CFG-COMPILER",
-       description="Sanity checks on compilers.yaml",
+   audit_cfgpkg = AuditClass(
+       tag="CFG-PACKAGES",
+       description="Sanity checks on packages.yaml",
        kwargs=()
    )
 
@@ -21,8 +21,8 @@ that will perform each a single check:
 
 .. code-block:: python
 
-   @audit_cfgcmp
-   def _search_duplicate_compilers(error_cls):
+   @audit_cfgpkg
+   def _search_duplicate_specs_in_externals(error_cls):
        pass
 
 These functions need to take as argument the keywords declared when
@@ -41,7 +41,6 @@ import collections.abc
 import glob
 import inspect
 import io
-import itertools
 import os
 import pathlib
 import pickle
@@ -183,35 +182,6 @@ generic = AuditClass(
     description="Generic checks relying on global variables",
     kwargs=(),
 )
-
-
-#: Sanity checks on compilers.yaml
-config_compiler = AuditClass(
-    group="configs", tag="CFG-COMPILER", description="Sanity checks on compilers.yaml", kwargs=()
-)
-
-
-@config_compiler
-def _search_duplicate_compilers(error_cls):
-    """Report compilers with the same spec and two different definitions"""
-    errors = []
-
-    compilers = list(
-        sorted(spack.config.CONFIG.get("compilers"), key=lambda x: x["compiler"]["spec"])
-    )
-    for spec, group in itertools.groupby(compilers, key=lambda x: x["compiler"]["spec"]):
-        group = list(group)
-        if len(group) == 1:
-            continue
-
-        error_msg = "Compiler defined multiple times: {0}"
-        try:
-            details = [str(x._start_mark).strip() for x in group]
-        except Exception:
-            details = []
-        errors.append(error_cls(summary=error_msg.format(spec), details=details))
-
-    return errors
 
 
 #: Sanity checks on packages.yaml

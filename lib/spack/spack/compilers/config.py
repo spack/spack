@@ -5,15 +5,11 @@
 and configuring Spack to use multiple compilers.
 """
 
-import os
-import re
 import sys
-import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
 import spack.config
 import spack.detection
-import spack.detection.path
 import spack.error
 import spack.platforms
 import spack.repo
@@ -120,30 +116,13 @@ def all_compilers(
     compilers = all_compilers_from(configuration=configuration, scope=scope, repo=repo)
 
     if not compilers and init_config:
-        _init_packages_yaml(configuration, scope=scope)
+        _init_packages_yaml(scope=scope)
         compilers = all_compilers_from(configuration=configuration, scope=scope, repo=repo)
 
     return compilers
 
 
-def _init_packages_yaml(
-    configuration: spack.config.Configuration, *, scope: Optional[str]
-) -> None:
-    # Try importing from compilers.yaml
-    legacy_compilers = CompilerFactory.from_compilers_yaml(configuration, scope=scope)
-    if legacy_compilers:
-        by_name: Dict[str, List[spack.spec.Spec]] = {}
-        for legacy in legacy_compilers:
-            by_name.setdefault(legacy.name, []).append(legacy)
-        spack.detection.update_configuration(by_name, buildable=True, scope=scope)
-        tty.info(
-            "Compilers have been converted from 'compilers.yaml' and written to "
-            "'packages.yaml'. Use of 'compilers.yaml' is deprecated, and will be "
-            "ignored in future versions of Spack"
-        )
-        return
-
-    # Look for compilers in PATH
+def _init_packages_yaml(*, scope: Optional[str]) -> None:
     new_compilers = find_compilers(scope=scope)
     if not new_compilers:
         raise NoAvailableCompilerError(
@@ -297,52 +276,6 @@ class CompilerFactory:
                     continue
                 valid_compiler_specs.append(spec_with_config.spec)
         return valid_compiler_specs
-
-    @staticmethod
-    def from_legacy_yaml(compiler_dict: Dict[str, Any]) -> List[spack.spec.Spec]:
-        """Returns a list of external specs, corresponding to a compiler entry
-        from compilers.yaml.
-        """
-        result = []
-        candidate_paths = [x for x in compiler_dict["paths"].values() if x is not None]
-        finder = spack.detection.path.ExecutablesFinder()
-
-        for pkg_name in spack.repo.PATH.packages_with_tags("compiler"):
-            pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-            pattern = re.compile(r"|".join(finder.search_patterns(pkg=pkg_cls)))
-            filtered_paths = [x for x in candidate_paths if pattern.search(os.path.basename(x))]
-            try:
-                detected = finder.detect_specs(
-                    pkg=pkg_cls, paths=filtered_paths, repo_path=spack.repo.PATH
-                )
-            except Exception:
-                warnings.warn(
-                    f"[{__name__}] cannot detect {pkg_name} from the "
-                    f"following paths: {', '.join(filtered_paths)}"
-                )
-                continue
-
-            for s in detected:
-                for key in ("flags", "environment", "extra_rpaths"):
-                    if key in compiler_dict:
-                        s.extra_attributes[key] = compiler_dict[key]
-
-                if "modules" in compiler_dict:
-                    s.external_modules = list(compiler_dict["modules"])
-
-            result.extend(detected)
-
-        return result
-
-    @staticmethod
-    def from_compilers_yaml(
-        configuration: spack.config.Configuration, *, scope: Optional[str] = None
-    ) -> List[spack.spec.Spec]:
-        """Returns the compiler specs defined in the "compilers" section of the configuration"""
-        result: List[spack.spec.Spec] = []
-        for item in configuration.get("compilers", scope=scope):
-            result.extend(CompilerFactory.from_legacy_yaml(item["compiler"]))
-        return result
 
 
 class UnknownCompilerError(spack.error.SpackError):

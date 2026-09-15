@@ -965,7 +965,7 @@ def configuration_dir(request, tmp_path_factory: pytest.TempPathFactory, linux_o
     # Create temporary 'defaults', 'site' and 'user' folders
     (tmp_path / "user").mkdir()
 
-    # Fill out config.yaml, compilers.yaml and modules.yaml templates.
+    # Fill out config.yaml, packages.yaml and modules.yaml templates.
     locks = sys.platform != "win32"
     config = tmp_path / "site" / "config.yaml"
     config_template = test_config / "config.yaml"
@@ -1124,7 +1124,7 @@ def concretize_scope(mutable_config: Configuration, tmp_path: Path):
 
 @pytest.fixture
 def no_packages_yaml(mutable_config):
-    """Creates a temporary configuration without compilers.yaml"""
+    """Creates a temporary configuration without packages.yaml"""
     for local_config in mutable_config.scopes.values():
         if not isinstance(local_config, spack.config.DirectoryConfigScope):
             continue
