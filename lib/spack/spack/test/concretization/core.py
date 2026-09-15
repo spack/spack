@@ -3526,6 +3526,7 @@ def test_spec_unification(unify, mutable_config: Configuration, mock_packages):
 
 @pytest.mark.not_on_windows("parallelism unsupported on Windows")
 @pytest.mark.enable_parallelism
+@pytest.mark.child_coverage
 def test_parallel_concretization(mutable_config, mock_packages):
     """Test whether parallel unify-false style concretization works."""
     mutable_config.set("concretizer:unify", False)

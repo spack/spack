@@ -56,6 +56,7 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.tengine
+import spack.test.child_coverage
 import spack.test.concretization_cache_plugin
 import spack.util.executable
 import spack.util.file_cache
@@ -423,6 +424,16 @@ def clean_user_environment():
 def clean_test_environment():
     yield
     ev.deactivate()
+
+
+# Coverage in multiprocessing children is slow, so it is only measured for marked tests.
+@pytest.fixture(autouse=True)
+def child_coverage(request):
+    if request.node.get_closest_marker("child_coverage"):
+        with spack.test.child_coverage.enabled(str(request.config.invocation_params.dir)):
+            yield
+    else:
+        yield
 
 
 # Hooks to add command line options or set other custom behaviors.

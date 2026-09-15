@@ -1283,6 +1283,7 @@ class LockDebugOutput:
         barrier.wait()  # ---------------------------------------- 4
 
 
+@pytest.mark.child_coverage
 def test_lock_debug_output(lock_path):
     test_debug = LockDebugOutput(lock_path)
     q1, q2 = Queue(), Queue()
