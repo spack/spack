@@ -65,7 +65,7 @@ def ensure_compilers_in_configuration() -> None:
     before it, and in the parent process of a parallel concretization: the workers would
     otherwise write the configuration file at the same time.
     """
-    _ = spack.compilers.config.all_compilers()
+    _ = spack.compilers.config.all_compilers(spack.config.CONFIG, repo=spack.repo.PATH)
 
 
 def _solver(*, factory: Optional["SpecFiltersFactory"] = None) -> "Solver":

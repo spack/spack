@@ -195,11 +195,17 @@ def test_bootstrap_disables_modulefile_generation(mutable_config):
 @pytest.mark.regression("25992")
 @pytest.mark.requires_executables("gcc")
 def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml, mock_packages):
-    assert not spack.compilers.config.all_compilers(init_config=False)
+    assert not spack.compilers.config.all_compilers(
+        no_packages_yaml, repo=mock_packages, init_config=False
+    )
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.clingo._add_compilers_if_missing()
-        assert spack.compilers.config.all_compilers(init_config=False)
-    assert not spack.compilers.config.all_compilers(init_config=False)
+        spack.bootstrap.clingo._add_compilers_if_missing(spack.config.CONFIG)
+        assert spack.compilers.config.all_compilers(
+            spack.config.CONFIG, repo=mock_packages, init_config=False
+        )
+    assert not spack.compilers.config.all_compilers(
+        no_packages_yaml, repo=mock_packages, init_config=False
+    )
 
 
 @pytest.mark.regression("25992")
@@ -207,11 +213,17 @@ def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml, mo
 def test_bootstrap_search_for_compilers_with_environment_active(
     no_packages_yaml, active_mock_environment, mock_packages
 ):
-    assert not spack.compilers.config.all_compilers(init_config=False)
+    assert not spack.compilers.config.all_compilers(
+        no_packages_yaml, repo=mock_packages, init_config=False
+    )
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.clingo._add_compilers_if_missing()
-        assert spack.compilers.config.all_compilers(init_config=False)
-    assert not spack.compilers.config.all_compilers(init_config=False)
+        spack.bootstrap.clingo._add_compilers_if_missing(spack.config.CONFIG)
+        assert spack.compilers.config.all_compilers(
+            spack.config.CONFIG, repo=mock_packages, init_config=False
+        )
+    assert not spack.compilers.config.all_compilers(
+        no_packages_yaml, repo=mock_packages, init_config=False
+    )
 
 
 @pytest.mark.regression("26189")

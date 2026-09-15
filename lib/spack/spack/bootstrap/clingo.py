@@ -42,28 +42,30 @@ def _select_best_version(
     node.versions.versions = [spack.version.from_string(f"={best_version}")]
 
 
-def _add_compilers_if_missing() -> None:
+def _add_compilers_if_missing(configuration: spack.config.Configuration) -> None:
     arch = spack.spec.ArchSpec.default_arch()
-    if not spack.compilers.config.compilers_for_arch(arch):
-        spack.compilers.config.find_compilers()
+    if not spack.compilers.config.compilers_for_arch(
+        arch, configuration=configuration, repo=spack.repo.PATH
+    ):
+        spack.compilers.config.find_compilers(configuration=configuration, repo=spack.repo.PATH)
 
 
 class ClingoBootstrapConcretizer:
     def __init__(self, configuration):
-        _add_compilers_if_missing()
+        _add_compilers_if_missing(configuration)
         self.host_platform = spack.platforms.host()
         self.host_os = self.host_platform.default_operating_system()
         self.host_target = spack.vendor.archspec.cpu.host().family
         self.host_architecture = spack.spec.ArchSpec.default_arch()
         self.host_architecture.target = str(self.host_target)
-        self.host_compiler = self._valid_compiler_or_raise()
+        self.host_compiler = self._valid_compiler_or_raise(configuration)
         self.host_python = self.python_external_spec()
         if str(self.host_platform) == "linux":
             self.host_libc = self.libc_external_spec()
 
         self.external_cmake, self.external_bison = self._externals_from_yaml(configuration)
 
-    def _valid_compiler_or_raise(self):
+    def _valid_compiler_or_raise(self, configuration: spack.config.Configuration):
         if str(self.host_platform) == "linux":
             compiler_name = "gcc"
         elif str(self.host_platform) == "darwin":
@@ -78,7 +80,7 @@ class ClingoBootstrapConcretizer:
         candidates = [
             x
             for x in spack.compilers.config.all_compilers_from(
-                spack.config.CONFIG, repo=spack.repo.PATH
+                configuration, repo=spack.repo.PATH
             )
             if x.name == compiler_name
         ]
@@ -212,7 +214,9 @@ class ClingoBootstrapConcretizer:
 
     def libc_external_spec(self) -> "spack.spec.Spec":
         detector = spack.compilers.libraries.CompilerPropertyDetector(
-            self.host_compiler, repo=spack.repo.PATH
+            self.host_compiler,
+            repo=spack.repo.PATH,
+            cache=spack.compilers.libraries.COMPILER_CACHE,
         )
         result = detector.default_libc()
         return self._external_spec(result)

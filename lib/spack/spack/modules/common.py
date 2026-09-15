@@ -48,6 +48,7 @@ import spack.environment
 import spack.error
 import spack.paths
 import spack.projections as proj
+import spack.repo
 import spack.schema
 import spack.schema.environment
 import spack.spec
@@ -604,7 +605,9 @@ class BaseConfiguration:
             compilers.extend(spack.spec.Spec(f"%{c}").dependencies())
 
         if not compilers:
-            all_compilers = spack.compilers.config.all_compilers(init_config=False)
+            all_compilers = spack.compilers.config.all_compilers(
+                spack.config.CONFIG, repo=spack.repo.PATH, init_config=False
+            )
             compilers = [c for c in all_compilers if _has_system_driver(c)]
             if compilers:
                 _store_core_compilers(self.name, self.module_system, compilers)
@@ -701,7 +704,7 @@ class BaseConfiguration:
         # virtual dependencies in spack
 
         # If it is in the list of supported compilers family -> compiler
-        if self.spec.name in spack.compilers.config.supported_compilers():
+        if self.spec.name in spack.compilers.config.supported_compilers(repo=spack.repo.PATH):
             provides["compiler"] = spack.spec.Spec(self.spec.format("{name}{@versions}"))
         elif self.spec.name in BUILTIN_TO_LEGACY_COMPILER:
             # If it is the package for a supported compiler, but of a different name

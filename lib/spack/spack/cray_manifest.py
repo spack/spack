@@ -13,6 +13,7 @@ from spack.vendor.jsonschema import exceptions
 
 import spack.cmd
 import spack.compilers.config
+import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.platforms
@@ -42,7 +43,9 @@ def translated_compiler_name(manifest_compiler_name):
     """
     if manifest_compiler_name in COMPILER_NAME_TRANSLATION:
         return COMPILER_NAME_TRANSLATION[manifest_compiler_name]
-    elif manifest_compiler_name in spack.compilers.config.supported_compilers():
+    elif manifest_compiler_name in spack.compilers.config.supported_compilers(
+        repo=spack.repo.PATH
+    ):
         return manifest_compiler_name
     else:
         raise spack.compilers.config.UnknownCompilerError(
@@ -243,10 +246,14 @@ def read(path, apply_updates):
             compilers.append(candidate)
     tty.debug(f"{path}: {str(len(compilers))} compilers read from manifest")
     # Filter out the compilers that already appear in the configuration
-    compilers = spack.compilers.config.select_new_compilers(compilers)
+    compilers = spack.compilers.config.select_new_compilers(
+        compilers, configuration=spack.config.CONFIG, repo=spack.repo.PATH
+    )
     if apply_updates and compilers:
         try:
-            spack.compilers.config.add_compiler_to_config(compilers)
+            spack.compilers.config.add_compiler_to_config(
+                compilers, configuration=spack.config.CONFIG
+            )
         except Exception:
             warnings.warn(
                 f"Could not add compilers from manifest: {path}"

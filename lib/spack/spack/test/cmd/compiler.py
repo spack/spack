@@ -83,36 +83,40 @@ def test_compiler_find_without_paths(no_packages_yaml, working_env, mock_executa
 
 
 @pytest.mark.regression("37996")
-def test_compiler_remove(mutable_config):
+def test_compiler_remove(mutable_config, mock_packages):
     """Tests that we can remove a compiler from configuration."""
     assert any(
-        compiler.satisfies("gcc@=9.4.0") for compiler in spack.compilers.config.all_compilers()
+        compiler.satisfies("gcc@=9.4.0")
+        for compiler in spack.compilers.config.all_compilers(mutable_config, repo=mock_packages)
     )
     args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@9.4.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
     assert not any(
-        compiler.satisfies("gcc@=9.4.0") for compiler in spack.compilers.config.all_compilers()
+        compiler.satisfies("gcc@=9.4.0")
+        for compiler in spack.compilers.config.all_compilers(mutable_config, repo=mock_packages)
     )
 
 
 @pytest.mark.regression("37996")
-def test_removing_compilers_from_multiple_scopes(mutable_config: Configuration):
+def test_removing_compilers_from_multiple_scopes(mutable_config: Configuration, mock_packages):
     # Duplicate "site" scope into "user" scope
     site_config = mutable_config.get("packages", scope="site")
     mutable_config.set("packages", site_config, scope="user")
 
     assert any(
-        compiler.satisfies("gcc@=9.4.0") for compiler in spack.compilers.config.all_compilers()
+        compiler.satisfies("gcc@=9.4.0")
+        for compiler in spack.compilers.config.all_compilers(mutable_config, repo=mock_packages)
     )
     args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@9.4.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
     assert not any(
-        compiler.satisfies("gcc@=9.4.0") for compiler in spack.compilers.config.all_compilers()
+        compiler.satisfies("gcc@=9.4.0")
+        for compiler in spack.compilers.config.all_compilers(mutable_config, repo=mock_packages)
     )
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
-def test_compiler_add(mutable_config, mock_executable):
+def test_compiler_add(mutable_config, mock_packages, mock_executable):
     """Tests that we can add a compiler to configuration."""
     expected_version = "4.5.3"
     gcc_path = mock_executable(
@@ -128,7 +132,9 @@ done
     bin_dir = gcc_path.parent
     root_dir = bin_dir.parent
 
-    compilers_before_find = set(spack.compilers.config.all_compilers())
+    compilers_before_find = set(
+        spack.compilers.config.all_compilers(mutable_config, repo=mock_packages)
+    )
     args = spack.util.pattern.Bunch(
         all=None,
         compiler_spec=None,
@@ -138,7 +144,9 @@ done
         jobs=1,
     )
     spack.cmd.compiler.compiler_find(args)
-    compilers_after_find = set(spack.compilers.config.all_compilers())
+    compilers_after_find = set(
+        spack.compilers.config.all_compilers(mutable_config, repo=mock_packages)
+    )
 
     compilers_added_by_find = compilers_after_find - compilers_before_find
     assert len(compilers_added_by_find) == 1
@@ -171,7 +179,7 @@ def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
-def test_compiler_find_path_order(no_packages_yaml, working_env, compilers_dir):
+def test_compiler_find_path_order(no_packages_yaml, mock_packages, working_env, compilers_dir):
     """When the same compiler version is found in two PATH directories, only the first
     entry in PATH is kept and a warning is emitted for the duplicate.
     """
@@ -185,7 +193,9 @@ def test_compiler_find_path_order(no_packages_yaml, working_env, compilers_dir):
     with pytest.warns(UserWarning, match="gcc@"):
         compiler("find", "--scope=site")
 
-    compilers = spack.compilers.config.all_compilers(scope="site")
+    compilers = spack.compilers.config.all_compilers(
+        no_packages_yaml, repo=mock_packages, scope="site"
+    )
     gcc = [x for x in compilers if x.satisfies("gcc@8.4")]
 
     # Duplicate is dropped. Only the first entry in PATH is kept
