@@ -1201,6 +1201,22 @@ def test_error_message_when_using_too_new_db(database: Database, monkeypatch):
         Database(database.root)._read()
 
 
+def test_explicit_upgrade_error_when_using_too_old_db(database: Database, monkeypatch):
+    """When the on-disk database is older than what Spack expects and a reindex is not
+    requested, reading it should raise ExplicitDatabaseUpgradeError telling the user to
+    run `spack reindex`.
+    """
+    next_version = vn.Version(f"{spack.database._DB_VERSION[0] + 1}")
+    monkeypatch.setattr(spack.database, "_DB_VERSION", next_version)
+    with pytest.raises(spack.database.ExplicitDatabaseUpgradeError) as exc_info:
+        Database(database.root)._read()
+
+    err = exc_info.value
+    assert err.expected_version == next_version
+    assert str(err.root) == str(database.root)
+    assert "spack reindex" in err.long_message
+
+
 @pytest.mark.parametrize(
     "lock_cfg",
     [spack.database.NO_LOCK, spack.database.NO_TIMEOUT, spack.database.DEFAULT_LOCK_CFG, None],
