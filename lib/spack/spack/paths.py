@@ -179,34 +179,6 @@ class SpackPaths:
         return os.path.join(data_home, "cache")
 
 
-
-def detect_old_spack_layout(paths):
-    """Detect if the old Spack layout is present.
-
-    Args:
-        paths: SpackPaths instance to check
-
-    Returns:
-        True if old layout data is detected, False otherwise
-    """
-    checks = [
-        # Regarding excluding gpg here: it's important if this
-        # directory is occupied but we have a separate check for
-        # that, so exclude that directory here
-        (paths.old_install_path, ["gpg", ".spack-db"]),
-        (paths.old_envs_path, []),
-        (paths.old_fetch_cache_path, []),
-        (paths.old_gpg_path, []),
-        (paths.old_gpg_keys_path, ["README.md"]),
-        (paths.old_licenses_path, []),
-    ]
-    for x, y in checks:
-        if dir_is_occupied(x, except_for=set(y)):
-            return True
-    return False
-
-
-
 # Module-level singleton instance
 locations = SpackPaths()
 
@@ -335,7 +307,6 @@ class _PathsModule(types.ModuleType):
         if name in (
             "locations",
             "SpackPaths",
-            "detect_old_spack_layout",
             "dir_is_occupied",
             "set_working_dir",
             "get_legacy_package_repo_path",
