@@ -2249,7 +2249,7 @@ class Environment:
 
     def _concrete_roots_dict(self):
         hash_spec_list = zip(self.concretized_order, self.concretized_user_specs)
-        return [{"hash": h, "spec": str(s)} for h, s in hash_spec_list]
+        return [{"hash": h, "spec": s.long_spec} for h, s in hash_spec_list]
 
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""

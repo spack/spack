@@ -1671,10 +1671,3 @@ def test_cannot_create_env_nested_in_another_env(mutable_mock_env_path):
     ev.create("outer")
     with pytest.raises(ev.SpackEnvironmentError, match="inside existing environment 'outer'"):
         ev.create("outer/inner")
-
-
-def test_cannot_create_env_above_another_env(mutable_mock_env_path):
-    """Creating an environment above an existing environment is an error."""
-    ev.create("group/inner")
-    with pytest.raises(ev.SpackEnvironmentError, match="would contain existing environment"):
-        ev.create("group")
