@@ -38,11 +38,48 @@ def _restore_user_scope_path() -> None:
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
-        "action", nargs="?", choices=["undo"], help="action to perform (only 'undo' is supported)"
+        "action", nargs="?", choices=["undo", "cleanup-old"], help="migration action to perform"
     )
     subparser.add_argument(
         "--dry-run", action="store_true", help="show what would be done without actually doing it"
     )
+
+
+def _under_old_dotspack(path: str) -> bool:
+    old_path = os.path.realpath(os.path.expanduser("~/.spack"))
+    try:
+        return os.path.commonpath([old_path, os.path.realpath(os.path.expanduser(path))]) == old_path
+    except ValueError:
+        return False
+
+
+def _cleanup_old() -> None:
+    old_path = os.path.expanduser("~/.spack")
+    if not os.path.isdir(old_path):
+        tty.msg(f"No old user directory found at {old_path}")
+        return
+
+    references = []
+    user_scope = spack.config.CONFIG.scopes.get("user")
+    if user_scope is not None and hasattr(user_scope, "path") and _under_old_dotspack(user_scope.path):
+        references.append(f"user scope ({user_scope.path})")
+
+    if _under_old_dotspack(spack.paths.user_cache_path):
+        references.append(f"user cache ({spack.paths.user_cache_path})")
+
+    for config_var in ("config:license_dir", "config:gpg_path", "config:environments_root"):
+        value = spack.config.CONFIG.get(config_var, None)
+        if value and _under_old_dotspack(value):
+            references.append(f"{config_var} ({value})")
+
+    if references:
+        tty.die(
+            "Cannot remove ~/.spack because the active configuration still refers to it:\n"
+            + "\n".join(f"  - {reference}" for reference in references)
+        )
+
+    shutil.rmtree(old_path)
+    tty.msg(f"Removed old user directory: {old_path}")
 
 
 def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
@@ -58,6 +95,10 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     into the backup after copying them, so the shared destinations remain intact
     for other Spack instances.
     """
+    if args.action == "cleanup-old":
+        _cleanup_old()
+        return
+
     if args.action != "undo":
         tty.die(
             "The manual `spack migrate` command has been deprecated.\n"
@@ -186,6 +227,10 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         layout_config["config"]["environments_root"] = old_envs_dir
     if has_gpg:
         layout_config["config"]["gpg_path"] = old_gpg_dir
+
+    layout_config["config"].setdefault("locations", {})["state"] = [
+        os.path.expanduser("~/.spack")
+    ]
 
     # Write updated layout scope
     fs.mkdirp(layout_scope_path)
