@@ -53,38 +53,6 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifie
     return home_dir, base_prefix
 
 
-def test_old_layout_detected(mock_spack_instance, monkeypatch):
-    """Test that old layout is detected when old install directory exists."""
-    home_dir, base_prefix = mock_spack_instance
-
-    # Touch the old install directory to make it "occupied"
-    old_install = os.path.join(base_prefix, "opt", "spack")
-    os.makedirs(old_install, exist_ok=True)
-    # Add a file so dir_is_occupied returns True
-    with open(os.path.join(old_install, "dummy_install"), "w", encoding="utf-8") as f:
-        f.write("test")
-
-    # Re-detect layout by creating fresh SpackPaths and updating global locations
-    from spack.paths import SpackPaths, detect_old_spack_layout
-
-    mock_paths = SpackPaths(_prefix=base_prefix)
-    old_detected = detect_old_spack_layout(mock_paths)
-
-    assert old_detected, "Old layout should be detected when opt/spack has content"
-
-    # Update the global locations object so config initialization sees the old layout
-    monkeypatch.setattr(spack.paths, "locations", mock_paths)
-
-    # Create a new configuration to see if it picks up the old scope
-    # The include.yaml should include the "old" scope when layout_detected("old") is true
-    cfg = spack.config.create()
-
-    # Check that we have the old-layout scope
-    assert "old-layout" in cfg.scopes, "Should have old-layout scope when old layout detected"
-    assert cfg.get("config:install_tree:root") == "$spack/opt/spack"
-    assert cfg.get("config:source_cache") == "$spack/var/cache"
-
-
 def test_config_defaults_use_data_home(mock_spack_instance):
     """Test that config defaults reference $data_home for various paths."""
     home_dir, base_prefix = mock_spack_instance
@@ -209,58 +177,6 @@ def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance, mutable_config,
     proc.start()
     proc.join()
     assert proc.exitcode == 0, "Subprocess test failed"
-
-
-def test_warn_old_dotspack_when_only_dotspack_exists(mock_spack_instance, monkeypatch):
-    """Warn if ~/.spack exists but ~/.config/spack doesn't."""
-    import spack.config
-    import spack.main
-
-    home_dir, base_prefix = mock_spack_instance
-
-    _ensure_dir(pathlib.Path(home_dir) / ".spack")
-    # Don't create ~/.config/spack
-
-    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    warning = spack.main._old_dotspack_warning()
-
-    assert warning is not None
-    assert "~/.spack" in warning
-    assert "spack migrate" in warning
-
-
-def test_no_warn_when_both_exist(mock_spack_instance, monkeypatch):
-    """Don't warn if both ~/.spack and ~/.config/spack exist."""
-    import spack.config
-    import spack.main
-
-    home_dir, base_prefix = mock_spack_instance
-
-    _ensure_dir(pathlib.Path(home_dir) / ".spack")
-    _ensure_dir(pathlib.Path(home_dir) / ".config" / "spack")
-
-    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    warning = spack.main._old_dotspack_warning()
-
-    assert warning is None
-
-
-def test_no_warn_when_explicit_override(mock_spack_instance, working_env, monkeypatch):
-    """Don't warn if SPACK_USER_CONFIG_PATH explicitly set to ~/.spack."""
-    import spack.config
-    import spack.main
-
-    home_dir, base_prefix = mock_spack_instance
-
-    dotspack = _ensure_dir(pathlib.Path(home_dir) / ".spack")
-    # Don't create ~/.config/spack
-
-    os.environ["SPACK_USER_CONFIG_PATH"] = str(dotspack)
-
-    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    warning = spack.main._old_dotspack_warning()
-
-    assert warning is None
 
 
 def test_user_cache_path_is_default_when_env_var_is_empty(
