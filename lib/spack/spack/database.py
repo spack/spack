@@ -1167,9 +1167,8 @@ class Database:
                 except BaseException:
                     pass
             if (current_verifier != self.last_seen_verifier) or (current_verifier == ""):
-                self.last_seen_verifier = current_verifier
-                # Read from file if a database exists
                 self._read_from_stream(f)
+                self.last_seen_verifier = current_verifier
             elif self._state_is_inconsistent:
                 self._read_from_stream(f)
                 self._state_is_inconsistent = False
