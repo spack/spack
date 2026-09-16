@@ -5403,3 +5403,14 @@ def test_concretization_cache_skips_automatic_splice(
     spec2 = spack.concretize.concretize_one(goal)
     assert fetches and all(outcome == (None, None) for outcome in fetches)
     assert spec1 == spec2
+
+
+@pytest.mark.regression("51829")
+def test_asp_facts_with_config_values():
+    """Config values are syaml_str / syaml_int subclasses of str / int, and have to be emitted
+    as ASP strings and numbers. Booleans are strings."""
+    fn = spack.solver.core.fn
+    assert str(fn.max_dupes("cmake", syaml.syaml_int(2))) == 'max_dupes("cmake",2)'
+    assert str(fn.max_dupes("cmake", 2)) == 'max_dupes("cmake",2)'
+    assert str(fn.os_compatible(syaml.syaml_str('a"b\\c'), "d")) == r'os_compatible("a\"b\\c","d")'
+    assert str(fn.variant_value("x", True)) == 'variant_value("x","True")'

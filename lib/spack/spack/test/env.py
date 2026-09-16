@@ -818,6 +818,43 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, unif
     assert len(all_root_hashes) == 2
 
 
+def test_concretize_is_noop_for_concretized_namespaced_root(mutable_mock_env_path):
+    """Tests that a root spec with an explicit namespace is not reconcretized by a
+    repeated concretization.
+
+    The lockfile used to store roots in their default string format, which omits the
+    namespace. On re-read, the stored root no longer compared equal to the namespaced
+    user spec, so the spec was considered new and was reconcretized every time.
+    """
+    mutable_mock_env_path.mkdir()
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        """spack:
+      specs:
+      - builtin_mock.pkg-a
+    """
+    )
+    env = ev.Environment(mutable_mock_env_path)
+    with env:
+        env.concretize()
+        env.write()
+    original_hashes = {x.hash for x in env.concretized_roots}
+
+    # Re-read the environment from the lockfile and concretize again
+    reread = ev.Environment(mutable_mock_env_path)
+    with reread:
+        newly_concretized = reread.concretize()
+
+    # The root was already concretized, so repeated concretization is a no-op
+    assert newly_concretized == []
+    assert len(reread.concretized_roots) == 1
+    assert not any(x.new for x in reread.concretized_roots)
+    assert {x.hash for x in reread.concretized_roots} == original_hashes
+
+    # The abstract root read from the lockfile retains its namespace
+    assert reread.concretized_roots[0].root == spack.spec.Spec("builtin_mock.pkg-a")
+
+
 @pytest.mark.regression("44216")
 def test_root_version_weights_for_old_versions(mutable_mock_env_path):
     """Tests that, when we select two old versions of root specs that have the same version
@@ -2187,3 +2224,51 @@ def test_environment_pickle_preserves_lock_state(enable_locks, tmp_path: pathlib
         restored = pickle.loads(blob)
 
     assert restored.txlock.enabled == original_enabled
+
+
+def test_all_environment_names_ignores_env_contents(mutable_mock_env_path):
+    """Environments are leaves: listing must not descend into their contents."""
+    ev.create("test")
+    ev.create("group/nested")
+
+    # simulate a user keeping a stage directory inside a managed environment
+    stage = mutable_mock_env_path / "test" / "stage" / "spack-stage-foo-1-0-abcdef"
+    stage.mkdir(parents=True)
+    # even a stray manifest below an environment must not be listed as an environment
+    (stage / ev.manifest_name).write_text("spack:\n  specs: []\n")
+
+    assert ev.all_environment_names() == ["group/nested", "test"]
+
+
+def test_all_environment_names_handles_symlink_cycles(mutable_mock_env_path):
+    """Symlink cycles in the environment root must not hang the listing."""
+    ev.create("group/nested")
+    (mutable_mock_env_path / "group" / "loop").symlink_to(mutable_mock_env_path / "group")
+
+    assert ev.all_environment_names() == ["group/nested"]
+
+
+def test_all_environment_names_follows_symlinked_envs(mutable_mock_env_path, tmp_path):
+    """Symlinked environment dirs (e.g. from spack env track) are still listed."""
+    external = tmp_path / "external_env"
+    external.mkdir()
+    (external / ev.manifest_name).write_text("spack:\n  specs: []\n")
+
+    mutable_mock_env_path.mkdir(parents=True, exist_ok=True)
+    (mutable_mock_env_path / "tracked").symlink_to(external)
+
+    assert ev.all_environment_names() == ["tracked"]
+
+
+def test_cannot_create_env_nested_in_another_env(mutable_mock_env_path):
+    """Creating an environment inside an existing environment is an error."""
+    ev.create("outer")
+    with pytest.raises(ev.SpackEnvironmentError, match="inside existing environment 'outer'"):
+        ev.create("outer/inner")
+
+
+def test_cannot_create_env_above_another_env(mutable_mock_env_path):
+    """Creating an environment above an existing environment is an error."""
+    ev.create("group/inner")
+    with pytest.raises(ev.SpackEnvironmentError, match="would contain existing environment"):
+        ev.create("group")

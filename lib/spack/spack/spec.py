@@ -172,7 +172,15 @@ DEFAULT_FORMAT = (
     "{name}{@versions}{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}"
     "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
-    "{/abstract_hash}"
+    "{ /abstract_hash}"
+)
+
+#: Full format for Spec.format(). This format can be round-tripped without losing
+#: namespace information
+FULL_FORMAT = (
+    "{fullname}{@versions}{compiler_flags}{variants}"
+    "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
+    "{ /abstract_hash}"
 )
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
@@ -180,7 +188,7 @@ DISPLAY_FORMAT = (
     "{name}{@version}{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}"
     "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
-    "{/abstract_hash}"
+    "{ /abstract_hash}"
     "{compilers}"
 )
 
@@ -1025,15 +1033,11 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
 
         result = ""
         for flag_type, flags in sorted_items:
-            normal = [f for f in flags if not f.propagate]
-            if normal:
-                value = spack.spec_parser.quote_if_needed(" ".join(normal))
-                result += f" {flag_type}={value}"
-
-            propagated = [f for f in flags if f.propagate]
-            if propagated:
-                value = spack.spec_parser.quote_if_needed(" ".join(propagated))
-                result += f" {flag_type}=={value}"
+            # Do not sort by propagation yes/no, but group by it, which preserves the order.
+            for propagate, group in itertools.groupby(flags, key=lambda flag: flag.propagate):
+                sigil = "==" if propagate else "="
+                value = spack.spec_parser.quote_if_needed(" ".join(group))
+                result += f" {flag_type}{sigil}{value}"
 
         # TODO: somehow add this space only if something follows in Spec.format()
         if sorted_items:
@@ -4054,8 +4058,10 @@ class Spec:
             if self.architecture.target:
                 parts.append(f" target={self.architecture.target}")
 
+        # The blank is required for round-tripping: ``key=value /abc`` parses as variant and
+        # abstract hash, whereas ``key=value/abc`` is parsed as a variant with value ``value/abc``.
         if self.abstract_hash:
-            parts.append(f"/{self.abstract_hash}")
+            parts.append(f" /{self.abstract_hash}")
 
         return "".join(parts).strip()
 
@@ -4450,11 +4456,16 @@ class Spec:
 
         return " ".join(parts).strip()
 
-    def _long_spec(self, color: Optional[bool] = False) -> str:
+    def _long_spec(self, format=None, color: Optional[bool] = False) -> str:
         """Helper for :attr:`long_spec` and :attr:`clong_spec`."""
+        if format is None:
+            format = DISPLAY_FORMAT if self.concrete else DEFAULT_FORMAT
         if self.concrete:
-            return self.tree(format=DISPLAY_FORMAT, color=color)
-        return f"{self.format(color=color)} {self._format_dependencies(color=color)}".strip()
+            return self.tree(format=format, color=color)
+
+        node_format = self.format(format_string=format, color=color)
+        dep_format = self._format_dependencies(format_string=format, color=color)
+        return f"{node_format} {dep_format}".strip()
 
     def _short_spec(self, color: Optional[bool] = False) -> str:
         """Helper for :attr:`short_spec` and :attr:`cshort_spec`."""
@@ -4482,12 +4493,12 @@ class Spec:
     @property
     def long_spec(self):
         """Long string of the spec, including dependencies."""
-        return self._long_spec(color=False)
+        return self._long_spec(format=FULL_FORMAT, color=False)
 
     @property
     def clong_spec(self):
         """Returns an auto-colorized version of :attr:`long_spec`."""
-        return self._long_spec(color=None)
+        return self._long_spec(format=FULL_FORMAT, color=None)
 
     @property
     def short_spec(self):

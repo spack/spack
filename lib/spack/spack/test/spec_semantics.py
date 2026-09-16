@@ -2107,6 +2107,20 @@ def test_abstract_hash_intersects_and_satisfies(default_mock_concretization):
     assert_disjoint(abstract_none, abstract_5)
 
 
+def test_a_blank_sets_the_abstract_hash_off_from_any_value(mock_packages):
+    """str() prints a blank before the abstract hash, so a value that can absorb a slash, a
+    namespace, variant, flag or target, does not swallow it and the hash survives reparsing."""
+    for spec_str in (
+        "namespace=builtin_mock /abcdef",
+        "foo=bar /abcdef",
+        "pkg-a cflags=-O2 /abcdef",
+        "pkg-a target=haswell /abcdef",
+    ):
+        spec = Spec(spec_str)
+        round_tripped = Spec(str(spec))
+        assert round_tripped.abstract_hash == spec.abstract_hash, spec_str
+
+
 def test_edge_equality_does_not_depend_on_virtual_order():
     """Tests that two edges that are constructed with just a different order of the virtuals in
     the input parameters are equal to each other.
@@ -2590,3 +2604,17 @@ def test_highlighting_spec_parts(spec_str, expected_fmt, default_mock_concretiza
         highlight_variant_fn=spack.package_base.non_default_variant,
     )
     assert expected in colorized_str
+
+
+def test_flag_order_survives_formatting(mock_packages):
+    """Compiler flags are printed in the order they are stored, grouped into runs that agree on
+    whether they propagate. Flag order is significant to the build, so losing it changes the
+    hash."""
+    spec = Spec("pkg-a cflags==-O2").copy()
+    spec.constrain(Spec("pkg-a cflags=-g"))
+    assert [str(flag) for flag in spec.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert str(spec) == "pkg-a cflags==-O2 cflags=-g"
+
+    round_tripped = Spec(str(spec))
+    assert [str(flag) for flag in round_tripped.compiler_flags["cflags"]] == ["-O2", "-g"]
+    assert round_tripped.dag_hash() == spec.dag_hash()
