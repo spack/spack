@@ -1893,6 +1893,136 @@ def _should_auto_migrate() -> bool:
     return any(old_resources.values())
 
 
+class Index:
+    """Represents a list index in a YAML path."""
+
+    def __init__(self, idx: int):
+        self.idx = idx
+
+    def __repr__(self):
+        return f"Index({self.idx})"
+
+
+def walk_yaml_for_paths(
+    data: Any,
+    config_file_dir: str,
+    key_path: Optional[List[Union[str, Index]]] = None,
+    in_include: bool = False,
+) -> List[Tuple[List[Union[str, Index]], str, str, bool]]:
+    """Walk YAML data and find string values that exist as filesystem paths."""
+    if key_path is None:
+        key_path = []
+
+    results = []
+
+    if isinstance(data, dict):
+        for key, value in data.items():
+            is_include_section = key == "include"
+            child_in_include = in_include or is_include_section
+
+            if isinstance(value, (dict, list)):
+                nested = walk_yaml_for_paths(
+                    value, config_file_dir, key_path + [key], child_in_include
+                )
+                results.extend(nested)
+            elif isinstance(value, str):
+                abs_path = resolve_and_check_path(value, config_file_dir)
+                if abs_path:
+                    results.append((key_path + [key], value, abs_path, child_in_include))
+
+    elif isinstance(data, list):
+        for idx, item in enumerate(data):
+            if isinstance(item, (dict, list)):
+                nested = walk_yaml_for_paths(
+                    item, config_file_dir, key_path + [Index(idx)], in_include
+                )
+                results.extend(nested)
+            elif isinstance(item, str):
+                abs_path = resolve_and_check_path(item, config_file_dir)
+                if abs_path:
+                    results.append((key_path + [Index(idx)], item, abs_path, in_include))
+
+    return results
+
+
+def resolve_and_check_path(value: str, config_file_dir: str) -> str:
+    """Resolve a potential path and return it if it exists."""
+    if not value or value.startswith("$"):
+        return ""
+
+    if os.path.isabs(value):
+        return value if os.path.exists(value) else ""
+
+    candidate = os.path.normpath(os.path.join(config_file_dir, value))
+    return candidate if os.path.exists(candidate) else ""
+
+
+def absolutize_path_in_yaml(
+    data: Any, key_path_parts: List[Union[str, Index]], new_value: str
+) -> None:
+    """Replace a value at a path in a YAML data structure."""
+    current = data
+
+    for key in key_path_parts[:-1]:
+        if isinstance(key, Index):
+            current = current[key.idx]
+        else:
+            current = current[key]
+
+    final_key = key_path_parts[-1]
+    if isinstance(final_key, Index):
+        current[final_key.idx] = new_value
+    else:
+        current[final_key] = new_value
+
+
+def process_config_file_paths(
+    file_path: str, old_location: str, new_config_location: str
+) -> Tuple[Optional[Dict[str, Any]], List[Tuple[str, str, str]]]:
+    """Absolutize config paths and rewrite paths under an old include root."""
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = syaml.load(f)
+
+    if not data:
+        return None, []
+
+    config_dir = os.path.dirname(file_path)
+    found_paths = walk_yaml_for_paths(data, config_dir)
+    path_info = []
+    modified = False
+
+    old_location_norm = os.path.normpath(os.path.abspath(old_location))
+    new_config_location_norm = os.path.normpath(os.path.abspath(new_config_location))
+
+    for key_path, original_value, abs_path, in_include in found_paths:
+        path_parts = []
+        for part in key_path:
+            path_parts.append(f"[{part.idx}]" if isinstance(part, Index) else part)
+        key_path_str = ".".join(path_parts)
+
+        if os.path.isabs(original_value):
+            if in_include:
+                abs_path_norm = os.path.normpath(os.path.abspath(original_value))
+                try:
+                    rel_path = os.path.relpath(abs_path_norm, old_location_norm)
+                    if not os.path.normpath(rel_path).startswith(".."):
+                        new_path = os.path.join(new_config_location_norm, rel_path)
+                        absolutize_path_in_yaml(data, key_path, new_path)
+                        path_info.append((key_path_str, original_value, "rewritten"))
+                        modified = True
+                except ValueError:
+                    pass
+        else:
+            path_info.append(
+                (key_path_str, original_value, "kept-relative" if in_include else "absolutized")
+            )
+            if not in_include:
+                absolutize_path_in_yaml(data, key_path, abs_path)
+                modified = True
+
+    return data if modified else None, path_info
+
+
 def _migrate_user_config_programmatic() -> bool:
     """Programmatically migrate ~/.spack to ~/.config/spack.
 
@@ -1936,11 +2066,8 @@ def _migrate_user_config_programmatic() -> bool:
         tty.debug("No ~/.spack to migrate")
         return False
 
-    # Import here to avoid circular dependency at module load time
-    import spack.cmd.migrate
-
     # Find config files to migrate
-    config_files = []
+    config_files: List[str] = []
     if os.path.isdir(old_location):
         found = filesystem.find(old_location, ["*.yaml", "*.yml"], recursive=True)
         package_repos_dir = os.path.join(old_location, "package_repos")
@@ -1963,16 +2090,14 @@ def _migrate_user_config_programmatic() -> bool:
     try:
         lock.acquire_write()
         tty.debug(f"Acquired migration lock for {new_config_location}")
-        return _do_migrate_user_config(
-            old_location, new_config_location, config_files, spack.cmd.migrate
-        )
+        return _do_migrate_user_config(old_location, new_config_location, config_files)
     finally:
         lock.release_write()
         tty.debug(f"Released migration lock for {new_config_location}")
 
 
 def _do_migrate_user_config(
-    old_location: str, new_config_location: str, config_files: list, migrate_module
+    old_location: str, new_config_location: str, config_files: List[str]
 ) -> bool:
     """Perform the actual user config migration (assumes lock is already held).
 
@@ -1980,7 +2105,6 @@ def _do_migrate_user_config(
         old_location: Path to ~/.spack
         new_config_location: Path to ~/.config/spack
         config_files: List of config files to migrate (relative paths)
-        migrate_module: The spack.cmd.migrate module (passed to avoid reimport)
 
     Returns:
         True if migration was performed, False if skipped
@@ -2002,7 +2126,7 @@ def _do_migrate_user_config(
         new_path = os.path.join(new_config_location, config_file)
 
         # Process paths using migrate command logic (handles the 4 path rewriting rules)
-        modified_data, _ = migrate_module.process_config_file_paths(
+        modified_data, _ = process_config_file_paths(
             old_path, old_location, new_config_location
         )
 
