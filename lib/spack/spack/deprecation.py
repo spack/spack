@@ -8,7 +8,8 @@ directive, with a reason, a severity, and the advisory labels it refers to.
 
 Which deprecations are tolerated is defined by ``packages:<name>:deprecation:allow``, a list of
 selectors falling back to ``packages:all`` and finally to the legacy ``config:deprecated`` flag.
-A directive is skipped when at least one selector matches it.
+A directive without labels is skipped when at least one selector matches it, and a directive
+with labels when each of its labels is matched by at least one selector.
 
 This module centralizes that policy so the concretization-time gate and the install-time gate
 cannot drift.
@@ -32,9 +33,8 @@ class Violation(NamedTuple):
     """A single disallowed deprecation on a spec"""
 
     constraint: "spack.spec.Spec"
-    reason: DeprecationReason
-    severity: DeprecationSeverity
-    msg: Optional[str] = None
+    #: The deprecation, with only the labels the policy does not allow
+    deprecation: Deprecation
 
 
 class Selector(NamedTuple):
@@ -47,8 +47,7 @@ class Selector(NamedTuple):
     reasons: FrozenSet[DeprecationReason] = frozenset()
     #: Maximum severity this entry selects
     severity: Optional[DeprecationSeverity] = None
-    #: Labels the user assessed. A deprecation is selected only if it declares labels, and all
-    #: of them are listed here.
+    #: Labels the user assessed. A label of a deprecation is selected if it is listed here.
     labels: FrozenSet[str] = frozenset()
 
     @staticmethod
@@ -63,12 +62,15 @@ class Selector(NamedTuple):
             labels=frozenset(data.get("labels", ())),
         )
 
-    def matches(self, entry: Deprecation) -> bool:
+    def matches(self, entry: Deprecation, label: Optional[str] = None) -> bool:
+        """Return True if this selector matches a deprecation, considering only one of its
+        labels, or none of them if ``label`` is None.
+        """
         if self.reasons and entry.reason not in self.reasons:
             return False
         if self.severity is not None and entry.severity > self.severity:
             return False
-        if self.labels and not (entry.labels and self.labels.issuperset(entry.labels)):
+        if self.labels and label not in self.labels:
             return False
         return True
 
@@ -171,9 +173,21 @@ class Policy:
             )
         return self._selectors[pkg_name]
 
-    def allows(self, pkg_name: str, entry: Deprecation) -> bool:
-        """Return True if a deprecation is allowed on a package, hence skipped."""
-        return any(x.matches(entry) for x in self.selectors(pkg_name))
+    def refused(self, pkg_name: str, entry: Deprecation) -> Optional[Deprecation]:
+        """Return the part of a deprecation on a package that is not allowed, or None if it is
+        allowed, hence skipped.
+
+        A deprecation with labels is allowed when each label is matched by some selector, and
+        the part returned lists only the labels that are not.
+        """
+        selectors = self.selectors(pkg_name)
+        if not entry.labels:
+            return None if any(x.matches(entry) for x in selectors) else entry
+
+        labels = tuple(
+            label for label in entry.labels if not any(x.matches(entry, label) for x in selectors)
+        )
+        return entry._replace(labels=labels) if labels else None
 
     def disallowed(self, spec: "spack.spec.Spec") -> List[Violation]:
         """Returns the list of deprecation-policy violations for a spec. External specs are
@@ -187,13 +201,15 @@ class Policy:
         except spack.repo.UnknownPackageError:
             return []
 
-        return [
-            Violation(constraint, entry.reason, entry.severity, entry.msg)
-            for constraint, entries in pkg_cls.deprecations.items()
-            if spec.satisfies(constraint)
-            for entry in entries
-            if not self.allows(spec.name, entry)
-        ]
+        violations = []
+        for constraint, entries in pkg_cls.deprecations.items():
+            if not spec.satisfies(constraint):
+                continue
+            for entry in entries:
+                refused = self.refused(spec.name, entry)
+                if refused is not None:
+                    violations.append(Violation(constraint, refused))
+        return violations
 
 
 def deprecated_spec_str(pkg_name: str, constraint: "spack.spec.Spec") -> str:
@@ -202,6 +218,13 @@ def deprecated_spec_str(pkg_name: str, constraint: "spack.spec.Spec") -> str:
     if not constraint_str:
         return pkg_name
     return constraint_str if constraint.name else f"{pkg_name}{constraint_str}"
+
+
+def deprecation_attributes_str(reason: str, severity: str, labels: Iterable[str]) -> str:
+    """Format the attributes of a refused deprecation, as they are written in a selector."""
+    result = f"reason: {reason}, severity: {severity}"
+    labels_str = ", ".join(labels)
+    return f"{result}, labels: {labels_str}" if labels_str else result
 
 
 def reusable(
@@ -265,13 +288,15 @@ def check_deprecations(
 
 def _format_violations(spec: "spack.spec.Spec", violations: List[Violation]) -> str:
     lines = [f"    {spec.cshort_spec}"]
-    for constraint, reason, severity, msg in violations:
+    for constraint, entry in violations:
         spec_str = deprecated_spec_str(spec.name, constraint)
+        attributes = deprecation_attributes_str(
+            entry.reason.value, entry.severity.name.lower(), entry.labels
+        )
         lines.append(
-            f"        {spec_str} is deprecated (reason: {reason.value}, "
-            f"severity: {severity.name.lower()}); not allowed by "
+            f"        {spec_str} is deprecated ({attributes}); not allowed by "
             f"'packages:{spec.name}:deprecation:allow'"
         )
-        if msg:
-            lines.append(f"            {msg}")
+        if entry.msg:
+            lines.append(f"            {entry.msg}")
     return "\n".join(lines)

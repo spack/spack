@@ -730,7 +730,7 @@ Which deprecations are allowed is set with ``allow:``, a list of selectors:
        deprecation:
          allow: []
 
-A ``deprecated()`` directive is skipped when at least one selector matches it.
+A ``deprecated()`` directive is skipped when at least one selector matches it, or, for a directive with labels, when each of its labels is matched by a selector.
 The default is an empty list, which allows none of them, so Spack will not select a deprecated version unless the configuration says so.
 
 In this example, deprecations of severity ``low`` on any package are allowed silently, while ``medium`` and above remain errors.
@@ -820,8 +820,9 @@ Individual advisories can be allowed without allowing a whole severity, by listi
          allow:
          - labels: [GHSA-xxxx-yyyy-zzzz]
 
-Such a selector matches a deprecation only if it declares ``labels`` (see :ref:`deprecate`) and *every* one of them is listed.
-A directive that cites two advisories therefore stays an error until both appear in the same selector, and a directive with no labels is never matched by one.
+A deprecation that declares ``labels`` (see :ref:`deprecate`) is skipped when each of its labels is listed in a selector whose other attributes match the deprecation too.
+The labels do not need to be in the same selector, nor in the same configuration scope: a directive citing two advisories is skipped when a site scope allows one and a user scope allows the other.
+A deprecation with no labels is never matched by a selector that lists some.
 A selector that constrains only the labels matches whatever the severity, which is what lets a site accept one advisory it assessed without accepting anything else.
 
 Spack attaches the reserved label ``version_deprecated`` to the deprecations that come from the legacy ``version(..., deprecated=True)`` keyword, which is how they can be allowed on their own:

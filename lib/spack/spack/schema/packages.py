@@ -131,8 +131,8 @@ reason_value = {"type": "string", "enum": [x.value for x in DeprecationReason]}
 deprecation_selector = {
     "type": "object",
     "description": "Selects the deprecations to allow. 'severity' is a maximum, so 'medium' "
-    "also selects 'low'. A deprecation is selected by 'labels' only if it declares labels and "
-    "every one of them is listed here.",
+    "also selects 'low'. A deprecation that declares labels is selected label by label, and a "
+    "label is selected if it is listed here.",
     "additionalProperties": False,
     "minProperties": 1,
     "properties": {
@@ -147,8 +147,8 @@ deprecation_selector = {
 deprecation_allow = {
     "type": "array",
     "description": "Deprecations to allow. A deprecated() directive matched by at least one "
-    "entry is skipped, and any other one is a concretization error. The default is to allow "
-    "none of them.",
+    "entry is skipped, or, if it declares labels, one whose labels are each matched by an entry. "
+    "Any other one is a concretization error. The default is to allow none of them.",
     "default": [],
     "items": deprecation_selector,
 }

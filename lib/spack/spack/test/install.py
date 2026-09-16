@@ -984,3 +984,38 @@ def test_install_gate_reports_the_directive_message(
 
     with pytest.raises(spack.error.InstallError, match="use @2.0, which is maintained"):
         spack.deprecation.check_deprecations([spec])
+
+
+def test_install_gate_allows_labels_from_different_selectors(
+    install_mockery, mutable_config: Configuration
+):
+    """Tests that the install-time gate skips a deprecation citing two labels when each label is
+    allowed by a different selector, like the concretizer does.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-with-labels@2.0")
+
+    with mutable_config.override(
+        "packages:all:deprecation:allow",
+        [{"labels": ["CVE-2026-0002"]}, {"labels": ["GHSA-aaaa-bbbb-cccc"]}],
+    ):
+        spack.deprecation.check_deprecations([spec])  # must not raise
+
+
+def test_install_gate_reports_only_the_labels_not_allowed(
+    install_mockery, mutable_config: Configuration
+):
+    """Tests that the install-time error lists the labels that are still refused, and omits the
+    ones the configuration allows.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-with-labels@2.0")
+
+    with mutable_config.override(
+        "packages:all:deprecation:allow", [{"labels": ["CVE-2026-0002"]}]
+    ), pytest.raises(spack.error.InstallError) as exc_info:
+        spack.deprecation.check_deprecations([spec])
+
+    message = str(exc_info.value)
+    assert "GHSA-aaaa-bbbb-cccc" in message
+    assert "CVE-2026-0002" not in message

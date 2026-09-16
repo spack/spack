@@ -178,7 +178,7 @@ packages:
 def test_partially_listed_labels_do_not_skip_deprecation(
     mock_packages, concretize_scope, packages_yaml_write
 ):
-    """Tests that a deprecation citing two labels stays an error until a selector lists both."""
+    """Tests that a deprecation citing two labels stays an error until both are allowed."""
     packages_yaml_write("""
 packages:
   all:
@@ -195,6 +195,17 @@ packages:
     deprecation:
       allow:
       - labels: [CVE-2026-0002, GHSA-aaaa-bbbb-cccc]
+""")
+    assert concretize_one("deprecated-with-labels@2.0").satisfies("@2.0")
+
+    # Labels can be allowed on different entries
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allow:
+      - labels: [CVE-2026-0002]
+      - labels: [GHSA-aaaa-bbbb-cccc]
 """)
     assert concretize_one("deprecated-with-labels@2.0").satisfies("@2.0")
 
@@ -577,3 +588,45 @@ packages:
     # deprecated-with-labels@1.0 is unspecified/critical too, but has no labels
     with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
         concretize_one("deprecated-with-labels@1.0")
+
+
+def test_each_label_needs_a_selector_matching_every_attribute(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that a label is allowed only by a selector whose other attributes also match the
+    deprecation.
+    """
+    #  deprecated-with-labels@2.0 is critical, so the selector naming GHSA-aaaa-bbbb-cccc
+    #  with a lower severity does not allow that label.
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allow:
+      - labels: [CVE-2026-0002]
+      - labels: [GHSA-aaaa-bbbb-cccc]
+        severity: high
+""")
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        concretize_one("deprecated-with-labels@2.0")
+
+
+def test_refusal_reports_only_the_labels_not_allowed(
+    mock_packages, concretize_scope, packages_yaml_write
+):
+    """Tests that the concretization error lists the labels that are still refused, and omits
+    the ones the configuration allows.
+    """
+    packages_yaml_write("""
+packages:
+  all:
+    deprecation:
+      allow:
+      - labels: [CVE-2026-0002]
+""")
+    with pytest.raises(UnsatisfiableSpecError) as exc_info:
+        concretize_one("deprecated-with-labels@2.0")
+
+    message = str(exc_info.value)
+    assert "GHSA-aaaa-bbbb-cccc" in message
+    assert "CVE-2026-0002" not in message

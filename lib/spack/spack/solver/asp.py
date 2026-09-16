@@ -506,10 +506,12 @@ class DeprecationKey(NamedTuple):
 
 class DeprecationDetails(NamedTuple):
     """Additional information that the directives behind one error term add to it: the spec
-    they deprecate, and the guidance their recipe attached with msg=.
+    they deprecate, the labels the policy does not allow, and the guidance their recipe attached
+    with msg=.
     """
 
     spec_str: str
+    labels: List[str]
     messages: List[str]
 
 
@@ -535,9 +537,11 @@ class ErrorHandler:
         key = DeprecationKey(str(pkg), int(cond_id), str(reason), int(severity))
         details = self.deprecation_details.get(key)
         spec_str = details.spec_str if details is not None else str(pkg)
+        attributes = spack.deprecation.deprecation_attributes_str(
+            reason, _severity_to_str(severity), details.labels if details is not None else ()
+        )
         text = (
-            f"'{spec_str}': deprecated spec (reason: {reason}, "
-            f"severity: {_severity_to_str(severity)}) is not allowed by "
+            f"'{spec_str}': deprecated spec ({attributes}) is not allowed by "
             f"'packages:{pkg}:deprecation:allow'"
         )
         return "; ".join([text, *(details.messages if details is not None else [])])
@@ -1262,7 +1266,8 @@ class SpackSolverSetup:
     def deprecation_rules(self, pkg):
         """Emit facts for the deprecated() directives on pkg that the policy does not allow."""
         for constraint_spec, all_entries in pkg.deprecations.items():
-            entries = [x for x in all_entries if not self.deprecation_policy.allows(pkg.name, x)]
+            refused = (self.deprecation_policy.refused(pkg.name, x) for x in all_entries)
+            entries = [x for x in refused if x is not None]
             if not entries:
                 continue
 
@@ -1272,13 +1277,13 @@ class SpackSolverSetup:
             spec_str = spack.deprecation.deprecated_spec_str(pkg.name, constraint_spec)
             for entry in entries:
                 # Directives that agree on reason and severity share one error term, so their
-                # messages accumulate under a single key
+                # labels and messages accumulate under a single key
                 key = DeprecationKey(
                     pkg.name, condition_id, entry.reason.value, entry.severity.value
                 )
                 details = self.deprecation_details.get(key)
                 if details is None:
-                    details = DeprecationDetails(spec_str, [])
+                    details = DeprecationDetails(spec_str, [], [])
                     self.deprecation_details[key] = details
                     self.gen.pkg_fact(
                         pkg.name,
@@ -1286,6 +1291,7 @@ class SpackSolverSetup:
                             condition_id, entry.reason.value, entry.severity.value
                         ),
                     )
+                details.labels.extend(x for x in entry.labels if x not in details.labels)
                 if entry.msg:
                     details.messages.append(entry.msg)
             self.gen.newline()

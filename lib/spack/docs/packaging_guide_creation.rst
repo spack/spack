@@ -840,8 +840,8 @@ Any identifier works, so a GHSA or PYSEC id is as good as a CVE one:
 
    deprecated("@1.1.1t", reason="vuln", severity="high", labels=["CVE-2023-0286"])
 
-Write one ``deprecated()`` per advisory, or per group of advisories that users would skip together.
-A deprecation can only be skipped as a whole, so grouping two advisories in one directive means a user cannot accept one without accepting the other.
+A directive can list several advisories, and users allow each of them separately.
+The advisories listed together share the reason and severity of the directive, so advisories with different severities go in separate directives.
 See :ref:`package-deprecations-config` for how users allow them.
 
 Whether a deprecated version can be selected depends on the user's configuration.
