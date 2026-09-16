@@ -189,7 +189,10 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "--branch", "-b", nargs="?", default=None, help="name of a branch to change to"
     )
     update_parser.add_argument(
-        "--force", "-f", action="store_true", help="force an update of a divergent branch"
+        "--force-discard",
+        "-f",
+        action="store_true",
+        help="force an update of a divergent branch by discarding local changes",
     )
     refspec = update_parser.add_mutually_exclusive_group(required=False)
     refspec.add_argument("--tag", "-t", nargs="?", default=None, help="name of a tag to change to")
@@ -632,7 +635,7 @@ def repo_update(args):
         git = spack.util.git.git(required=True)
 
         previous_commit = descriptor.get_commit(git=git)
-        descriptor.update(git=git, remote=args.remote, force=args.force)
+        descriptor.update(git=git, remote=args.remote, force_discard=args.force_discard)
         new_commit = descriptor.get_commit(git=git)
 
         if previous_commit == new_commit:
