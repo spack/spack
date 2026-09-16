@@ -62,7 +62,7 @@ def make_bool(value_class, name, value):
     return value_class(VariantType.BOOL, name, (value,))
 
 
-class TestMultiValuedVariant:
+class TestMultiValuedOption:
     def test_initialization(self, value_class):
         # Basic properties
         a = make_multi(value_class, "foo", ("bar", "baz"))
