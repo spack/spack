@@ -221,7 +221,7 @@ _spack_env_prune_duplicates() {
 
     _separator_exists "$sep" || return
 
-    eval "remaining=\"\${${varname}}\""
+    eval "remaining=\"\${${varname}:-}\""
     accumulator=""
     seen="$sep"
 

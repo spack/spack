@@ -108,7 +108,7 @@ class ShellCmdString:
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
 
-        return f"{cmd} {name} {value} {sep}"
+        return f"{cmd} {name} {value} {sep}\n"
 
     def prepend(self, name: str, value: str) -> str:
         """Returns the command to prepend a value to an environment variable."""
@@ -116,14 +116,14 @@ class ShellCmdString:
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
 
-        return f"{cmd} {name} {value} {sep}"
+        return f"{cmd} {name} {value} {sep}\n"
 
     def prune_duplicates(self, name: str) -> str:
         """Returns the command to prune duplicate values from an environment variable."""
         cmd = self.shell_fn("_spack_env_prune_duplicates", self.shell)
         sep = self.shell_quote(self.separator, self.shell)
 
-        return f"{cmd} {name} {sep}"
+        return f"{cmd} {name} {sep}\n"
 
     def remove_first(self, name: str, value: str) -> str:
         """Returns the command to remove the first occurrence of a value
@@ -132,7 +132,7 @@ class ShellCmdString:
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
 
-        return f"{cmd} {name} {value} {sep}"
+        return f"{cmd} {name} {value} {sep}\n"
 
     def remove_last(self, name: str, value: str) -> str:
         """Returns the command to remove the last occurrence of a value
@@ -141,7 +141,7 @@ class ShellCmdString:
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
 
-        return f"{cmd} {name} {value} {sep}"
+        return f"{cmd} {name} {value} {sep}\n"
 
     def remove_value(self, name: str, value: str) -> str:
         """Returns the command to remove a value from an environment variable."""
@@ -149,20 +149,20 @@ class ShellCmdString:
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
 
-        return f"{cmd} {name} {value} {sep}"
+        return f"{cmd} {name} {value} {sep}\n"
 
     def set(self, name: str, value: str) -> str:
         """Returns the command to set an environment variable to a value."""
         cmd = self.shell_fn("_spack_env_set", self.shell)
         value = self.shell_quote(value, self.shell)
 
-        return f"{cmd} {name} {value}"
+        return f"{cmd} {name} {value}\n"
 
     def unset(self, name: str) -> str:
         """Returns the command to unset an environment variable."""
         cmd = self.shell_fn("_spack_env_unset", self.shell)
 
-        return f"{cmd} {name}"
+        return f"{cmd} {name}\n"
 
     def alias(self, name: str, code: str) -> str:
         if self.shell == "csh":
@@ -957,7 +957,7 @@ class EnvironmentModifications:
             cache_commands = ""
             for _, actions in sorted(modifications.items()):
                 for modifier in actions:
-                    cache_commands += f"{modifier.cache_command(shell)}\n"
+                    cache_commands += modifier.cache_command(shell)
 
             if "MANPATH" in modifications:
                 fn = shell_cmd.shell_fn("_spack_env_append", shell)
