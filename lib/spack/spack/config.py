@@ -2021,60 +2021,11 @@ def _migration_backup_path() -> str:
     return os.path.join(spack.paths.prefix, ".migration-backup")
 
 
-def _copy_directory_contents_with_lock(
-    src_dir: str,
-    dst_dir: str,
-    resource_name: str,
-    require_empty_destination: bool = False,
-    destination_mode: Optional[int] = None,
-) -> bool:
-    """Copy contents with destination locking and automatic backup.
-
-    Copies (does not move) directory contents from src to dst. Always creates
-    a backup in $spack/.migration-backup before copying to destination. This allows
-    `spack migrate undo` to restore the original state.
-
-    Args:
-        src_dir: Source directory
-        dst_dir: Destination directory
-        resource_name: Name of resource for logging (e.g., "licenses", "environments")
-        require_empty_destination: Reject any non-empty destination rather than
-            merging non-conflicting entries.
-        destination_mode: If set, apply this mode to the destination before
-            copying any artifacts.
-
-    Returns:
-        True if copy was successful, False if skipped due to collision
-    """
-    # Lock the destination itself to prevent concurrent migrations.  The lock
-    # is intentionally resource-local: different destinations can migrate in
-    # parallel without contending on a shared parent-directory lock.
-    filesystem.mkdirp(dst_dir)
-    lock_path = os.path.join(dst_dir, ".lock")
-
-    lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-    try:
-        lock.acquire_write()
-        tty.debug(f"Acquired migration lock for {dst_dir}")
-        return _copy_directory_contents(
-            src_dir,
-            dst_dir,
-            resource_name,
-            require_empty_destination=require_empty_destination,
-            destination_mode=destination_mode,
-        )
-    finally:
-        lock.release_write()
-        tty.debug(f"Released migration lock for {dst_dir}")
-
-
 def _copy_directory_contents(
     src_dir: str,
     dst_dir: str,
     resource_name: str,
     backup_dir: Optional[str] = None,
-    require_empty_destination: bool = False,
-    destination_mode: Optional[int] = None,
 ) -> bool:
     """Copy contents of src_dir to dst_dir, checking for collisions.
 
@@ -2089,10 +2040,6 @@ def _copy_directory_contents(
         dst_dir: Destination directory
         resource_name: Name of resource for logging (e.g., "licenses", "environments")
         backup_dir: Backup root directory (default: $spack/.migration-backup, exposed for testing)
-        require_empty_destination: Reject any non-empty destination rather than
-            merging non-conflicting entries.
-        destination_mode: If set, apply this mode to the destination before
-            copying any artifacts.
 
     Returns:
         True if copy was successful, False if skipped due to collision
@@ -2109,33 +2056,16 @@ def _copy_directory_contents(
     if not src_entries:
         return True  # Empty source, nothing to copy
 
-    # Check for collisions in destination.  GPG homes must be copied as a
-    # complete database and must never be merged with another keyring.
+    # Check for collisions in the destination before creating any backups.
     if os.path.exists(dst_dir):
         try:
             dst_entries = set(os.listdir(dst_dir)) - {".lock"}
-            if require_empty_destination and dst_entries:
-                tty.debug(f"Cannot copy {resource_name}: destination is not empty")
-                return False
             collisions = src_entries & dst_entries
             if collisions:
                 tty.debug(f"Cannot copy {resource_name}: collisions detected: {collisions}")
                 return False
         except OSError:
             tty.warn(f"Cannot read destination {resource_name} directory: {dst_dir}")
-            return False
-
-    # GPG homes are private databases.  Require the destination directory to
-    # have private permissions before copying any keyring artifacts.
-    if destination_mode is not None:
-        try:
-            filesystem.mkdirp(dst_dir)
-            os.chmod(dst_dir, destination_mode)
-        except OSError as e:
-            tty.warn(
-                f"Could not migrate {resource_name} because destination permissions "
-                f"could not be set on {dst_dir}: {e}"
-            )
             return False
 
     # Create backup (always, unless backup_dir is explicitly None for testing)
@@ -2192,6 +2122,105 @@ def _copy_directory_contents(
             tty.warn(f"Failed to copy {resource_name} {entry}: {e}")
             return False
 
+    return True
+
+
+def _migrate_gpg_home(src_dir: str, dst_dir: str) -> bool:
+    """Copy a GPG home atomically into a new, private destination."""
+    if not os.path.exists(src_dir):
+        return True
+
+    parent_dir = os.path.dirname(dst_dir)
+    filesystem.mkdirp(parent_dir)
+    lock = spack.util.lock.Lock(os.path.join(parent_dir, ".lock"), default_timeout=120)
+    staging_dir = None
+    try:
+        lock.acquire_write()
+        if os.path.exists(dst_dir):
+            tty.debug(f"Cannot copy gpg: destination already exists: {dst_dir}")
+            return False
+        staging_dir = tempfile.mkdtemp(prefix=".spack-gpg-migration-", dir=parent_dir)
+        os.chmod(staging_dir, 0o700)
+        if not _copy_directory_contents(src_dir, staging_dir, "gpg"):
+            return False
+        os.replace(staging_dir, dst_dir)
+        staging_dir = None
+        return True
+    except (OSError, shutil.Error) as e:
+        tty.warn(f"Failed to atomically migrate GPG keys to {dst_dir}: {e}")
+        return False
+    finally:
+        if staging_dir is not None:
+            shutil.rmtree(staging_dir, ignore_errors=True)
+        lock.release_write()
+
+
+def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
+    """Copy environments under one lock, removing partial results on failure."""
+    if not os.path.exists(src_dir):
+        return True
+
+    filesystem.mkdirp(dst_dir)
+    lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
+    created = []
+    try:
+        lock.acquire_write()
+        for entry in os.listdir(src_dir):
+            src_path = os.path.join(src_dir, entry)
+            dst_path = os.path.join(dst_dir, entry)
+            if entry == ".lock":
+                continue
+            if not os.path.isdir(src_path):
+                continue
+            destination_existed = os.path.exists(dst_path)
+            if not _copy_directory_contents(src_path, dst_path, "environments"):
+                if not destination_existed:
+                    shutil.rmtree(dst_path, ignore_errors=True)
+                for created_path in reversed(created):
+                    shutil.rmtree(created_path, ignore_errors=True)
+                return False
+            if not destination_existed:
+                created.append(dst_path)
+        return True
+    finally:
+        lock.release_write()
+
+
+def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
+    """Copy licenses individually without claiming to lock out manual edits."""
+    if not os.path.exists(src_dir):
+        return True
+
+    src_entries = os.listdir(src_dir)
+    if not src_entries:
+        return True
+    filesystem.mkdirp(dst_dir)
+    backup_dir = os.path.join(_migration_backup_path(), "licenses")
+    filesystem.mkdirp(backup_dir)
+    copied = []
+    for entry in src_entries:
+        src_path = os.path.join(src_dir, entry)
+        dst_path = os.path.join(dst_dir, entry)
+        backup_path = os.path.join(backup_dir, entry)
+        try:
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, backup_path)
+            else:
+                shutil.copy2(src_path, backup_path)
+            if os.path.exists(dst_path):
+                raise FileExistsError(dst_path)
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, dst_path)
+            else:
+                shutil.copy2(src_path, dst_path)
+            copied.append(entry)
+        except (OSError, shutil.Error) as e:
+            tty.warn(
+                f"License migration stopped at {entry}: {e}. Copied licenses: "
+                f"{', '.join(copied) if copied else 'none'}. The old license directory "
+                f"will remain configured; copied files may remain in {dst_dir}."
+            )
+            return False
     return True
 
 
@@ -2300,13 +2329,7 @@ def _do_migrate(
         elif configured_gpg_dir == target_gpg_norm:
             # With the default configuration, copy the old keyring into the
             # shared default.  A collision leaves the old location active.
-            if not _copy_directory_contents_with_lock(
-                old_gpg_dir,
-                target_gpg_dir,
-                "gpg",
-                require_empty_destination=True,
-                destination_mode=0o700,
-            ):
+            if not _migrate_gpg_home(old_gpg_dir, target_gpg_dir):
                 if "config" not in scope_config:
                     scope_config["config"] = {}
                 scope_config["config"]["gpg_path"] = old_gpg_dir
@@ -2345,9 +2368,7 @@ def _do_migrate(
 
         # Attempt migration if appropriate
         if should_attempt_migration:
-            if _copy_directory_contents_with_lock(
-                old_licenses_dir, target_licenses_dir, "licenses"
-            ):
+            if _migrate_licenses(old_licenses_dir, target_licenses_dir):
                 # Successfully copied
                 # The normal default now points at the copied location.
                 tty.debug(f"Copied licenses from {old_licenses_dir} to {target_licenses_dir}")
@@ -2391,7 +2412,7 @@ def _do_migrate(
 
         # Attempt migration if appropriate
         if should_attempt_migration:
-            if _copy_directory_contents_with_lock(old_envs_dir, target_envs_dir, "environments"):
+            if _migrate_environments(old_envs_dir, target_envs_dir):
                 # Successfully copied
                 # The normal default now points at the copied location.
                 tty.debug(f"Copied environments from {old_envs_dir} to {target_envs_dir}")
