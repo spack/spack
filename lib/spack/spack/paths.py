@@ -106,9 +106,6 @@ class SpackPaths:
         #: not be shared between those instances.
         self.spack_instance_id = hash.b32_hash(self.spack_root)[:7]
 
-        # Detect old layout
-        self.old_layout_detected = detect_old_spack_layout(self)
-
         self.default_state_home = os.path.join(expanded_home, ".local", "state", "spack")
 
     @property
@@ -182,13 +179,6 @@ class SpackPaths:
         return os.path.join(data_home, "cache")
 
 
-ignore_old_layout = False
-
-
-def set_ignore_layout(value):
-    global ignore_old_layout
-    ignore_old_layout = value
-
 
 def detect_old_spack_layout(paths):
     """Detect if the old Spack layout is present.
@@ -215,36 +205,6 @@ def detect_old_spack_layout(paths):
             return True
     return False
 
-
-def detect_layout(scheme):
-    """True if ``scheme`` is the active layout (``"old"`` or new).
-
-    Used by ``etc/spack/defaults/include.yaml`` to choose which scheme
-    yaml to include. Honors "unilateral override": if the user has set
-    any new-style location env var (SPACK_DATA_HOME, SPACK_STATE_HOME,
-    SPACK_CACHE_HOME), new layout is selected even when legacy
-    $spack-local data is present.
-
-    Cannot call ``config.get(...)`` here: this runs during config
-    initialization (an include's ``when:`` is evaluated before the scope
-    is pushed), so reading config would recurse into the singleton init.
-    Env-var + filesystem probes only.
-    """
-    if scheme != "old":
-        raise ValueError(f"unknown layout scheme: {scheme!r} (expected 'old')")
-
-    if ignore_old_layout:
-        return False
-
-    # Check if user explicitly set new-layout environment variables
-    new_layout_env_vars = ["SPACK_DATA_HOME", "SPACK_STATE_HOME", "SPACK_CACHE_HOME"]
-    if any(v in os.environ for v in new_layout_env_vars):
-        return False
-
-    # Detect if old layout data exists
-    # Access via sys.modules to respect monkeypatching in tests
-    locations_obj = sys.modules[__name__].locations
-    return locations_obj.old_layout_detected
 
 
 # Module-level singleton instance
@@ -345,7 +305,6 @@ if TYPE_CHECKING:
     user_config_path: str
     system_config_path: str
     spack_instance_id: str
-    old_layout_detected: bool
     user_cache_path: str
     default_fetch_cache_path: str
     gpg_keys_path: str
@@ -377,18 +336,16 @@ class _PathsModule(types.ModuleType):
             "locations",
             "SpackPaths",
             "detect_old_spack_layout",
-            "detect_layout",
             "dir_is_occupied",
             "set_working_dir",
             "get_legacy_package_repo_path",
-            "set_ignore_layout",
         ):
             if name in module_dict:
                 return module_dict[name]
             raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
 
         # spack_working_dir is mutable - look it up in the original module
-        if name in ["ignore_old_layout", "spack_working_dir"]:
+        if name in ["spack_working_dir"]:
             original_module = module_dict.get("_original_module")
             if original_module is not None:
                 return original_module.__dict__.get(name)

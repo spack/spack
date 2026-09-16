@@ -5944,7 +5944,6 @@ def get_host_environment() -> Dict[str, Any]:
 def eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
     # Import here to avoid circular dependencies
-    import spack.paths
 
     def exists(path):
         """Check if a path exists, expanding ~ and environment variables."""
@@ -5956,7 +5955,6 @@ def eval_conditional(string):
         {
             "re": re,
             "env": os.environ,
-            "layout_detected": spack.paths.detect_layout,
             "exists": exists,
         }
     )

@@ -2153,17 +2153,13 @@ def _copy_directory_contents(
 ) -> bool:
     """Copy contents of src_dir to dst_dir, checking for collisions.
 
-    Successful entries are moved into the migration backup after being copied
-    to the destination. This leaves the old location empty and makes the backup
-    the authoritative location if migration is undone.
-
-    The source remains in place until its destination copy succeeds.
+    The source remains in place after copying. Callers move the complete
+    resource unit into the migration backup only after copying succeeds.
 
     Args:
         src_dir: Source directory
         dst_dir: Destination directory
         resource_name: Name of resource for logging (e.g., "licenses", "environments")
-        backup_dir: Backup root directory (default: $spack/.migration-backup, exposed for testing)
 
     Returns:
         True if migration was successful, False if skipped or failed
