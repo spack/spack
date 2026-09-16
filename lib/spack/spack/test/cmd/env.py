@@ -5,6 +5,7 @@ import contextlib
 import filecmp
 import glob
 import io
+import json
 import os
 import pathlib
 import shutil
@@ -25,6 +26,7 @@ import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.solver.asp
+import spack.spec
 import spack.stage
 import spack.store
 import spack.util.environment
@@ -2333,6 +2335,13 @@ def test_concretize_include_concrete_env():
     """
     test1, _, combined = setup_combined_multiple_env()
 
+    # Nothing changed, so writing the combined environment leaves its lockfile alone
+    with open(combined.lock_path, "rb") as f:
+        lockfile_before = f.read()
+    combined.write()
+    with open(combined.lock_path, "rb") as f:
+        assert f.read() == lockfile_before
+
     # Update test1 environment
     with test1:
         add("mpileaks")
@@ -2349,6 +2358,8 @@ def test_concretize_include_concrete_env():
     combined.concretize()
     combined.write()
     assert Spec("mpileaks") in {x.root for x in combined.included_concretized_roots[test1.path]}
+    with open(combined.lock_path, "rb") as f:
+        assert f.read() != lockfile_before
 
 
 def test_concretize_nested_include_concrete_envs():
@@ -4128,6 +4139,11 @@ def test_read_legacy_lockfile_and_reconcretize(
     env("create", "test", str(legacy_lockfile_path))
     test = ev.read("test")
     assert len(test.specs_by_hash) == 1
+
+    # Legacy lockfiles are keyed by other hashes, so they are rewritten in the current format
+    test.write()
+    with open(test.lock_path, encoding="utf-8") as f:
+        assert json.load(f)["_meta"]["specfile-version"] == spack.spec.SPECFILE_FORMAT_VERSION
 
     single_root = next(iter(test.specs_by_hash.values()))
 
