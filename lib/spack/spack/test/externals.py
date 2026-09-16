@@ -9,7 +9,6 @@ from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
 import spack.concretize
-import spack.repo
 import spack.traverse
 from spack.compilers.config import all_compilers_from
 from spack.config import Configuration
@@ -61,9 +60,9 @@ pytestmark = pytest.mark.usefixtures("mock_packages")
         ),
     ],
 )
-def test_basic_parsing(config, externals_dict, expected_length, expected_queries):
+def test_basic_parsing(config, mock_packages, externals_dict, expected_length, expected_queries):
     """Tests parsing external specs, in some basic cases"""
-    parser = ExternalSpecsParser(externals_dict)
+    parser = ExternalSpecsParser(externals_dict, repo=mock_packages)
 
     assert len(parser.all_specs()) == expected_length
     assert len(parser.specs_by_external_id) == expected_length
@@ -93,11 +92,11 @@ def test_basic_parsing(config, externals_dict, expected_length, expected_queries
     ],
 )
 def test_external_specs_architecture_completion(
-    config, externals_dict: List[ExternalDict], expected_triplet, monkeypatch
+    config, mock_packages, externals_dict: List[ExternalDict], expected_triplet, monkeypatch
 ):
     """Tests the completion of external specs architectures when using the default behavior"""
     monkeypatch.setattr(spack.archspec, "HOST_TARGET_FAMILY", TARGETS["aarch64"])
-    parser = ExternalSpecsParser(externals_dict)
+    parser = ExternalSpecsParser(externals_dict, repo=mock_packages)
 
     expected_platform, expected_os, expected_target = expected_triplet
 
@@ -108,7 +107,7 @@ def test_external_specs_architecture_completion(
         assert node.target == expected_target
 
 
-def test_external_specs_parser_with_missing_packages(config):
+def test_external_specs_parser_with_missing_packages(config, mock_packages):
     """Tests the parsing of external specs when some packages are missing"""
     externals_dict: List[ExternalDict] = [
         {"spec": "gmake@1.0", "prefix": "/path/to/gmake1"},
@@ -118,16 +117,18 @@ def test_external_specs_parser_with_missing_packages(config):
         {"spec": "baz@1.0", "prefix": "/path/to/baz"},
     ]
 
-    external_specs = ExternalSpecsParser(externals_dict, allow_nonexisting=True).all_specs()
+    external_specs = ExternalSpecsParser(
+        externals_dict, repo=mock_packages, allow_nonexisting=True
+    ).all_specs()
     assert len(external_specs) == 3
     assert len([x for x in external_specs if x.satisfies("gmake")]) == 2
     assert len([x for x in external_specs if x.satisfies("gcc")]) == 1
 
     with pytest.raises(ExternalSpecError, match="Package 'baz' does not exist"):
-        ExternalSpecsParser(externals_dict, allow_nonexisting=False)
+        ExternalSpecsParser(externals_dict, repo=mock_packages, allow_nonexisting=False)
 
 
-def test_externals_with_duplicate_id(config):
+def test_externals_with_duplicate_id(config, mock_packages):
     """Tests the parsing of external specs when some specs have the same id"""
     externals_dict: List[ExternalDict] = [
         {"spec": "gmake@1.0", "prefix": "/path/to/gmake1", "id": "gmake"},
@@ -136,7 +137,7 @@ def test_externals_with_duplicate_id(config):
     ]
 
     with pytest.raises(DuplicateExternalError, match="cannot have the same external id"):
-        ExternalSpecsParser(externals_dict)
+        ExternalSpecsParser(externals_dict, repo=mock_packages)
 
 
 @pytest.mark.parametrize(
@@ -269,10 +270,10 @@ def test_externals_with_duplicate_id(config):
     ],
 )
 def test_externals_with_dependencies(
-    config, externals_dicts: List[ExternalDict], expected, not_expected
+    config, mock_packages, externals_dicts: List[ExternalDict], expected, not_expected
 ):
     """Tests constructing externals with dependencies"""
-    parser = ExternalSpecsParser(externals_dicts)
+    parser = ExternalSpecsParser(externals_dicts, repo=mock_packages)
 
     for query_spec, expected_list in expected.items():
         result = parser.query(query_spec)
@@ -297,10 +298,10 @@ def test_externals_with_dependencies(
     ],
 )
 def test_externals_without_concrete_version(
-    config, externals_dicts: List[ExternalDict], expected_length, not_expected
+    config, mock_packages, externals_dicts: List[ExternalDict], expected_length, not_expected
 ):
     """Tests parsing externals, when some dicts are malformed and don't have a concrete version"""
-    parser = ExternalSpecsParser(externals_dicts)
+    parser = ExternalSpecsParser(externals_dicts, repo=mock_packages)
     result = parser.all_specs()
 
     assert len(result) == expected_length
@@ -326,10 +327,15 @@ def test_externals_without_concrete_version(
     ],
 )
 def test_external_node_completion(
-    config, externals_dict: List[ExternalDict], completion_fn, expected, not_expected
+    config,
+    mock_packages,
+    externals_dict: List[ExternalDict],
+    completion_fn,
+    expected,
+    not_expected,
 ):
     """Tests the completion of external specs with different node completion"""
-    parser = ExternalSpecsParser(externals_dict, complete_node=completion_fn)
+    parser = ExternalSpecsParser(externals_dict, repo=mock_packages, complete_node=completion_fn)
 
     for query_spec, expected_list in expected.items():
         result = parser.query(query_spec)
@@ -349,12 +355,14 @@ def test_external_node_completion(
 
 
 @pytest.mark.regression("52179")
-def test_external_spec_single_valued_variant_type_is_corrected(config):
+def test_external_spec_single_valued_variant_type_is_corrected(config, mock_packages):
     """Tests that an external spec string including a single-valued variant is parsed correctly."""
     externals_dict = [
         {"spec": "dual-cmake-autotools@1.0 build_system=mock_autotools", "prefix": "/usr/dual"}
     ]
-    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    parser = ExternalSpecsParser(
+        externals_dict, repo=mock_packages, complete_node=complete_variants_and_architecture
+    )
     specs = parser.all_specs()
     assert len(specs) == 1
     spec = specs[0]
@@ -368,20 +376,24 @@ def test_external_spec_single_valued_variant_type_is_corrected(config):
 
 
 @pytest.mark.regression("52179")
-def test_external_spec_multi_valued_variant_is_not_changed(config):
+def test_external_spec_multi_valued_variant_is_not_changed(config, mock_packages):
     """Tests that multi-valued variants in external specs are preserved as they are, even if the
     definition in package.py says otherwise.
     """
     # Package.py prescribes a single-valued variant in this case
     externals_dict = [{"spec": "variant-values@1.0 v=foo,bar", "prefix": "/usr/variant-values"}]
-    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    parser = ExternalSpecsParser(
+        externals_dict, repo=mock_packages, complete_node=complete_variants_and_architecture
+    )
     specs = parser.all_specs()
     assert len(specs) == 1
     assert specs[0].variants["v"].value == ("bar", "foo")
 
 
 @pytest.mark.regression("52643")
-def test_external_compiler_with_non_compiler_dependency(mutable_config: Configuration):
+def test_external_compiler_with_non_compiler_dependency(
+    mutable_config: Configuration, mock_packages
+):
     packages_config = {
         "compiler-with-deps": {
             "externals": [
@@ -404,7 +416,7 @@ def test_external_compiler_with_non_compiler_dependency(mutable_config: Configur
         },
     }
     with mutable_config.override("packages", packages_config) as cfg:
-        valid_compilers = all_compilers_from(cfg, repo=spack.repo.PATH)
+        valid_compilers = all_compilers_from(cfg, repo=mock_packages)
         for c in valid_compilers:
             if c.name == "compiler-with-deps":
                 assert c.external
@@ -436,13 +448,15 @@ def test_external_compiler_with_non_compiler_dependency(mutable_config: Configur
     ],
 )
 def test_external_completion_skips_unavailable_default_values(
-    config, external_spec, expected, not_expected
+    config, mock_packages, external_spec, expected, not_expected
 ):
     """Tests that completing an external spec doesn't use variant values that are conditional on
     a version the external doesn't have.
     """
     externals_dict: List[ExternalDict] = [{"spec": external_spec, "prefix": "/usr"}]
-    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    parser = ExternalSpecsParser(
+        externals_dict, repo=mock_packages, complete_node=complete_variants_and_architecture
+    )
 
     specs = parser.all_specs()
     assert len(specs) == 1

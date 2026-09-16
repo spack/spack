@@ -64,7 +64,7 @@ from spack.solver.reuse import reusable_external_specs
 from spack.spec import Spec
 from spack.store import Store
 from spack.test.conftest import RepoBuilder
-from spack.test.utilities import RecordingUI
+from spack.test.utilities import RecordingUI, UnusableGlobal
 from spack.util.filesystem import getuid
 from spack.version import Version, VersionList, ver
 from spack.version.git_ref_lookup import GitRefLookup
@@ -2700,13 +2700,15 @@ packages:
             assert s[name].concrete
             assert s[name].namespace == namespace
 
-    def test_reuse_specs_from_non_available_compilers(self, mutable_config, mutable_database):
+    def test_reuse_specs_from_non_available_compilers(
+        self, mutable_config, mock_packages, mutable_database
+    ):
         """Tests that we can reuse specs with compilers that are not configured locally."""
         # All the specs in the mutable DB have been compiled with %gcc@10.2.1
         mpileaks = [s for s in mutable_database.query_local() if s.name == "mpileaks"]
 
         # Remove gcc@10.2.1
-        remover = spack.compilers.config.CompilerRemover(mutable_config)
+        remover = spack.compilers.config.CompilerRemover(mutable_config, repo=mock_packages)
         remover.mark_compilers(match="gcc@=10.2.1")
         remover.flush()
         mutable_config.set("concretizer:reuse", True)
@@ -5871,18 +5873,6 @@ def test_concretize_one_reports_an_already_concrete_spec_as_no_work(mutable_conf
     assert not ui.concretized
 
 
-class _UnusableGlobal:
-    """Stands in for a process global that the code under test must not reach for."""
-
-    def __init__(self, name: str) -> None:
-        self._name = name
-
-    def __getattr__(self, item):
-        raise AssertionError(
-            f"{self._name} was read instead of the injected context (attribute {item!r})"
-        )
-
-
 #: The process globals a SpackContext replaces, as (module, attribute) pairs.
 #: ``spack.repo.PATH`` is missing: ``Spec`` resolves virtuals and computes package hashes
 #: through it, so a solve still reads it.
@@ -5908,7 +5898,7 @@ def break_globals(monkeypatch):
         spack.solver.compat.clingo()
         with monkeypatch.context() as m:
             for module, attribute in _CONTEXT_GLOBALS:
-                m.setattr(module, attribute, _UnusableGlobal(f"{module.__name__}.{attribute}"))
+                m.setattr(module, attribute, UnusableGlobal(f"{module.__name__}.{attribute}"))
             yield
 
     return _break

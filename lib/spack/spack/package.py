@@ -32,7 +32,6 @@ from spack.builder import (
     execute_install_time_tests,
     register_builder,
 )
-from spack.compilers.config import find_compilers
 from spack.compilers.libraries import CompilerPropertyDetector, compiler_spec
 from spack.config import determine_number_of_jobs, get_user
 from spack.deptypes import ALL_TYPES as all_deptypes
@@ -221,6 +220,22 @@ def filter_system_paths(paths: Iterable[str]) -> List[str]:
         "spack.package.filter_system_paths is deprecated", category=SpackAPIWarning, stacklevel=2
     )
     return _filter_system_paths(paths)
+
+
+def find_compilers(path_hints: Optional[List[str]] = None) -> List[Spec]:
+    """Searches for compilers in the paths given as argument, and adds the new ones to the
+    configuration. Returns the list of new compilers.
+
+    Args:
+        path_hints: list of path hints where to look for. A sensible default based on the ``PATH``
+            environment variable will be used if the value is None
+    """
+    # Local imports to avoid polluting the package API
+    import spack.config
+    import spack.repo
+    from spack.compilers.config import find_compilers as _find_compilers
+
+    return _find_compilers(path_hints, config=spack.config.CONFIG, repo=spack.repo.PATH)
 
 
 #: Assigning this to :attr:`spack.package_base.PackageBase.flag_handler` means that compiler flags

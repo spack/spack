@@ -30,12 +30,14 @@ import uuid
 from typing import Any, Callable, Dict, Generic, List, Optional, Sequence, Type, TypeVar
 
 import spack.binary_distribution
+import spack.compilers.libraries
 import spack.concretize
 import spack.config
 import spack.detection
 import spack.error
 import spack.installer_dispatch
 import spack.mirrors.mirror
+import spack.repo
 import spack.spec
 import spack.store
 import spack.user_environment
@@ -443,12 +445,14 @@ def _add_externals_if_missing() -> None:
     ]
     if IS_WINDOWS:
         search_list.append("winbison")
-    externals = spack.detection.by_path(search_list)
+    externals = spack.detection.by_path(search_list, repo=spack.repo.PATH)
     # System git is typically deprecated, so mark as non-buildable to force it as external
     non_buildable_externals = {k: externals.pop(k) for k in ("git",) if k in externals}
-    spack.detection.update_configuration(externals, scope="bootstrap", buildable=True)
     spack.detection.update_configuration(
-        non_buildable_externals, scope="bootstrap", buildable=False
+        externals, config=spack.config.CONFIG, scope="bootstrap", buildable=True
+    )
+    spack.detection.update_configuration(
+        non_buildable_externals, config=spack.config.CONFIG, scope="bootstrap", buildable=False
     )
 
 
@@ -468,7 +472,11 @@ def _concretize_clingo(abstract_spec: spack.spec.Spec) -> spack.spec.Spec:
     The ``abstract_spec`` argument is discarded, so a change to ``clingo_root_spec()`` has
     no effect on what is built from sources.
     """
-    return ClingoBootstrapConcretizer(configuration=spack.config.CONFIG).concretize()
+    return ClingoBootstrapConcretizer(
+        spack.config.CONFIG,
+        repo=spack.repo.PATH,
+        compiler_cache=spack.compilers.libraries.COMPILER_CACHE,
+    ).concretize()
 
 
 def ensure_clingo_importable_or_raise() -> None:
@@ -551,7 +559,7 @@ def ensure_winsdk_external_or_raise() -> None:
         return
     tty.debug("Detecting Windows SDK and WGL installations")
     # find the externals sequentially to avoid subprocesses being spawned
-    externals = spack.detection.by_path(["win-sdk", "wgl"], max_workers=1)
+    externals = spack.detection.by_path(["win-sdk", "wgl"], repo=spack.repo.PATH, max_workers=1)
     if not set(["win-sdk", "wgl"]) == externals.keys():
         missing_packages_lst = []
         if "wgl" not in externals:
@@ -567,7 +575,7 @@ def ensure_winsdk_external_or_raise() -> None:
     # wgl/sdk are not required for bootstrapping Spack, but
     # are required for building anything non trivial
     # add to user config so they can be used by subsequent Spack ops
-    spack.detection.update_configuration(externals, buildable=False)
+    spack.detection.update_configuration(externals, config=spack.config.CONFIG, buildable=False)
 
 
 def ensure_core_dependencies() -> None:

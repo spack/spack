@@ -562,7 +562,7 @@ def set_wrapper_variables(pkg, env):
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
 
     default_dynamic_linker_filter = spack.compilers.libraries.dynamic_linker_filter_for(
-        pkg.spec, repo=spack.repo.PATH
+        pkg.spec, repo=spack.repo.PATH, cache=spack.compilers.libraries.COMPILER_CACHE
     )
     if default_dynamic_linker_filter:
         rpath_dirs = default_dynamic_linker_filter(rpath_dirs)

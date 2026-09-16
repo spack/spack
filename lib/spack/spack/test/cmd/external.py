@@ -44,7 +44,9 @@ def test_find_external_update_config(mutable_config: Configuration):
     pkg_to_entries = {"cmake": entries}
 
     scope = mutable_config.default_modify_scope("packages")
-    spack.detection.update_configuration(pkg_to_entries, scope=scope, buildable=True)
+    spack.detection.update_configuration(
+        pkg_to_entries, config=mutable_config, scope=scope, buildable=True
+    )
 
     pkgs_cfg = mutable_config.get("packages")
     cmake_cfg = pkgs_cfg["cmake"]
@@ -231,7 +233,9 @@ def test_find_external_merge(mutable_config: Configuration):
     ]
     pkg_to_entries = {"find-externals1": entries}
     scope = mutable_config.default_modify_scope("packages")
-    spack.detection.update_configuration(pkg_to_entries, scope=scope, buildable=True)
+    spack.detection.update_configuration(
+        pkg_to_entries, config=mutable_config, scope=scope, buildable=True
+    )
 
     pkgs_cfg = mutable_config.get("packages")
     pkg_cfg = pkgs_cfg["find-externals1"]
