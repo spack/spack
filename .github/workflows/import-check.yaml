@@ -9,10 +9,10 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     steps:
-    - uses: julia-actions/setup-julia@v2
+    - uses: julia-actions/setup-julia@4c0cb0fce8556fdb04a90347310e5db8b1f98fb9 # v2.7
       with:
         version: '1.10'
-    - uses: julia-actions/cache@v2
+    - uses: julia-actions/cache@d10a6fd8f31b12404a54613ebad242900567f2b9 # v2.1
 
     # PR: use the base of the PR as the old commit
     - name: Checkout PR base commit

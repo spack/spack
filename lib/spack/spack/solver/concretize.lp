@@ -101,7 +101,7 @@ attr("namespace", node(ID, Package), Namespace)
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
 
-error(1, "Cannot have multiple nodes for {0} in the same unification set {1}", PackageName, SetID)
+error(100000, "Cannot have multiple nodes for {0} in the same unification set {1}", PackageName, SetID)
   :- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
 
 unification_set("root", PackageNode) :- attr("root", PackageNode).
@@ -502,6 +502,12 @@ satisfied(trigger(PackageNode), condition_requirement("closure", A1, A2, A3)) :-
   attr("closure", node(X, A1), node(_, A2), A3),
   generic_condition_requirement("closure", A1, A2, A3),
   condition_nodes(PackageNode, node(X, A1)).
+
+satisfied(trigger(PackageNode), condition_requirement("virtual_on_edge", A1, A2, A3)) :-
+  attr("virtual_on_edge", node(X, A1), node(Y, A2), A3),
+  generic_condition_requirement("virtual_on_edge", A1, A2, A3),
+  condition_nodes(PackageNode, node(X, A1)),
+  condition_nodes(PackageNode, node(Y, A2)).
 
 %%%%
 % Conditions verified on pure build deps of reused nodes
@@ -905,9 +911,8 @@ edge_needed(ParentNode, node(X, Child)) :-
    attr("dependency_holds", ParentNode, Child, _).
 
 virtual_edge_needed(ParentNode, ChildNode, node(X, Virtual)) :-
-   depends_on(ParentNode, ChildNode),
    build(ParentNode),
-   node_depends_on_virtual(ParentNode, Virtual),
+   attr("virtual_on_edge", ParentNode, ChildNode, Virtual),
    provider(ChildNode, node(X, Virtual)).
 
 virtual_edge_needed(ParentNode, ChildNode, node(X, Virtual)) :-
@@ -1008,13 +1013,12 @@ node_depends_on_virtual(PackageNode, Virtual, Type)
 
 node_depends_on_virtual(PackageNode, Virtual) :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
-1 { attr("depends_on", PackageNode, ProviderNode, Type) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
+1 { attr("virtual_on_edge", PackageNode, ProviderNode, Virtual) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
   :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
-attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
-  :- attr("dependency_holds", PackageNode, Virtual, Type),
-     attr("depends_on", PackageNode, ProviderNode, Type),
-     provider(ProviderNode, node(_, Virtual)).
+attr("depends_on", PackageNode, ProviderNode, Type)
+  :- attr("virtual_on_edge", PackageNode, ProviderNode, Virtual),
+     node_depends_on_virtual(PackageNode, Virtual, Type).
 
 % If a virtual node is in the answer set, it must be either a virtual root,
 % or used somewhere
@@ -1751,8 +1755,9 @@ unification_set_compiler("root", node(CompilerHash, Compiler), Language) :-
 #defined allow_mixing/1.
 
 % You can't have >1 compiler for a given language if mixing is disabled
-error(100, "Compiler mixing is disabled") :-
-    #count { CompilerNode : unification_set_compiler("root", CompilerNode, Language) } > 1.
+error(100, "Compiler mixing is disabled for the {0} language", Language) :-
+    language(Language),
+	  #count { CompilerNode : unification_set_compiler("root", CompilerNode, Language) } > 1.
 
 %-----------------------------------------------------------------------------
 % Runtimes
