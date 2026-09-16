@@ -1374,7 +1374,7 @@ _spack_install() {
 }
 
 _spack_isolate() {
-    SPACK_COMPREPLY="-h --help --path --self --undo --overwrite"
+    SPACK_COMPREPLY="-h --help --path --self --undo --overwrite --reuse-old"
 }
 
 _spack_license() {
@@ -1467,7 +1467,12 @@ _spack_mark() {
 }
 
 _spack_migrate() {
-    SPACK_COMPREPLY="-h --help --dry-run --clear --restore --i-need-old-spack"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --dry-run"
+    else
+        SPACK_COMPREPLY="undo"
+    fi
 }
 
 _spack_mirror() {

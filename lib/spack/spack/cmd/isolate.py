@@ -89,7 +89,9 @@ def _isolate_include_config(new_user_path):
         syaml.dump_config(include_data, f)
 
 
-def _setup_isolate_scope(new_user_path, overwrite: bool, target_config_existed: bool) -> str:
+def _setup_isolate_scope(
+    new_user_path, overwrite: bool, target_config_existed: bool, reuse_old: bool
+) -> str:
     # Check if this is --self (isolate scope IS the user path)
     is_self = os.path.exists(ISOLATE_SCOPE_PATH) and os.path.samefile(
         new_user_path, ISOLATE_SCOPE_PATH
@@ -102,7 +104,7 @@ def _setup_isolate_scope(new_user_path, overwrite: bool, target_config_existed: 
         elif overwrite:
             shutil.rmtree(ISOLATE_SCOPE_PATH)
             os.makedirs(ISOLATE_SCOPE_PATH)
-        else:
+        elif not reuse_old:
             raise Exception("An isolation already exists for this Spack instance")
     else:
         os.makedirs(ISOLATE_SCOPE_PATH, exist_ok=True)
@@ -118,14 +120,15 @@ def _setup_isolate_scope(new_user_path, overwrite: bool, target_config_existed: 
         final_user_path = new_user_path
 
     # Write configuration into the target when it does not already have a
-    # config.yaml. Existing target configuration is preserved.
+    # config.yaml. Existing target configuration is preserved only when the
+    # caller explicitly requests reuse of an old isolation target.
     config_path = (
         os.path.join(spack.config._layout_scope_path(), "config.yaml")
-        if target_config_existed
+        if target_config_existed and reuse_old
         else os.path.join(new_user_path, "config.yaml")
     )
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    if not target_config_existed:
+    if not (target_config_existed and reuse_old):
         _isolate_config_config(new_user_path, config_path)
     # Write include.yaml with include:: override to redirect user scope
     # For --self, this points to user-redirect/
@@ -167,12 +170,31 @@ def setup_parser(subparser: ArgumentParser):
     subparser.add_argument(
         "--overwrite", action="store_true", help="overwrite existing isolation if necessary"
     )
+    subparser.add_argument(
+        "--reuse-old",
+        action="store_true",
+        help="reuse an existing isolation target without overwriting its configuration",
+    )
 
 
 def _do_isolate(args):
+    if args.overwrite and args.reuse_old:
+        tty.die("Cannot combine --overwrite and --reuse-old")
+
     target_config_existed = os.path.isfile(os.path.join(args.path, "config.yaml"))
-    destination = _ensure_destination_setup(args.path, args.overwrite)
-    config_path = _setup_isolate_scope(destination, args.overwrite, target_config_existed)
+    if os.path.exists(args.path):
+        if args.overwrite:
+            destination = _ensure_destination_setup(args.path, overwrite=True)
+        elif args.reuse_old:
+            destination = os.path.abspath(args.path)
+        else:
+            raise Exception(f"Isolation destination: {args.path} already exists")
+    else:
+        destination = _ensure_destination_setup(args.path, overwrite=False)
+
+    config_path = _setup_isolate_scope(
+        destination, args.overwrite, target_config_existed, args.reuse_old
+    )
     # No need to modify etc/spack/include.yaml anymore - the isolate scope's
     # include.yaml with include:: override handles the redirection
 
