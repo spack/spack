@@ -93,14 +93,6 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
 
     if not has_licenses and not has_envs and not has_gpg:
         tty.msg(f"Backup directory exists but is empty: {backup_dir}")
-        if args.dry_run:
-            tty.msg("Would update standard scopes to use ~/.spack for the user scope")
-            tty.msg(f"Would remove {backup_dir}")
-        else:
-            _restore_user_scope_path()
-            shutil.rmtree(backup_dir)
-            tty.msg(f"Removed empty backup directory: {backup_dir}")
-        return
 
     # Show what will be done
     if args.dry_run:
@@ -172,7 +164,9 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         shutil.move(backup_gpg, old_gpg_dir)
         tty.msg(f"  Restored GPG data to {old_gpg_dir}")
 
-    # Update layout scope to point to old locations
+    # Update layout scope to point to old locations. Even an empty backup can
+    # still require the user scope to be restored below, so keep this in the
+    # common undo path.
     layout_scope_path = spack.config._layout_scope_path()
     config_yaml_path = os.path.join(layout_scope_path, "config.yaml")
 
