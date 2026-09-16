@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import multiprocessing
 from typing import TYPE_CHECKING, List, Optional, Set, Union
 
 from spack.vendor.typing_extensions import Literal
@@ -13,6 +14,17 @@ if TYPE_CHECKING:
     import spack.installer
     import spack.old_installer
     import spack.package_base
+
+
+def prestart_build_processes() -> None:
+    """Start the forkserver ahead of time, so that starting it and preloading Spack in it overlap
+    with work in the main process instead of stalling the first build."""
+    if multiprocessing.get_start_method(allow_none=True) != "forkserver":
+        return
+
+    from multiprocessing import forkserver
+
+    forkserver.ensure_running()
 
 
 def create_installer(

@@ -309,6 +309,9 @@ def _die_require_env(parser):
 
 
 def install(parser, args):
+    # Overlap this with config parsing and concretization.
+    spack.installer_dispatch.prestart_build_processes()
+
     # TODO: unify args.verbose?
     tty.set_verbose(args.verbose or args.install_verbose)
 
