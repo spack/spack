@@ -70,9 +70,17 @@ def _isolate_include_config(new_user_path):
         "when": '"SPACK_DISABLE_LOCAL_CONFIG" not in env',
     }
 
-    # Create the include list with just the user scope
-    # (site and system will still come from the default include.yaml)
-    include_list = [user_scope_dict]
+    # The override replaces the standard_scopes include list. Keep the layout
+    # scope visible because it contains old-resource redirects and may be
+    # updated later by commands such as `spack migrate undo`.
+    include_list = [
+        user_scope_dict,
+        {
+            "name": "layout",
+            "path": "$spack/etc/spack/layout",
+            "optional": True,
+        },
+    ]
 
     # Create a syaml_str with override marker for the key
     include_key = syaml.syaml_str("include")

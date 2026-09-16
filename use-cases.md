@@ -165,7 +165,30 @@ Expected behavior:
 - A custom path for one resource does not prevent safe migration of another resource whose path still uses the new default.
 - Configuration written by an active environment takes precedence over generated layout decisions where the configuration model gives it higher priority.
 
-## 10. Concurrency and Partial Failure
+## 10. Undoing Auto-Migration
+
+A user runs:
+
+```console
+spack migrate --undo
+```
+
+(or the supported `spack migrate undo` form, depending on command-line parsing).
+
+Expected behavior:
+
+- The Spack instance is made to use its old resource locations again by writing redirected configuration into the layout scope.
+- The undo operation discovers what was auto-migrated by inspecting `$spack/.migration-backup/`.
+- Backed-up licenses and environments are restored to their old in-Spack locations, subject to conflict checks.
+- GPG data that was auto-migrated is restored from its migration backup when such a backup exists; GPG restoration must not merge keyrings or overwrite an unrelated destination.
+- Existing installs and modules were never relocated, so they need no restore operation; layout configuration points back to their old locations.
+- The shared destination is not removed automatically because it may be used by other Spack instances.
+- The migration backup is removed only after restoration and layout updates succeed.
+- If restoration cannot be completed safely, the operation reports the conflict and preserves the backup so the user can resolve it and retry.
+
+The layout scope is stored under the Spack prefix, independently of the isolate target. However, because the isolate scope uses an `include::` override, the isolate scope must explicitly include the layout scope if isolated commands are expected to consume layout settings. Isolation intentionally does not re-include site and system scopes, but it must retain the layout scope in its replacement include list. Once included, the layout scope can be updated by `spack migrate undo` as long as the Spack configuration area is writable. If isolation was performed on a writable instance with old resources, isolation creates the layout scope while recording those resources. If a fresh isolated instance had no old resources, no layout scope is needed; undo has no old-resource migration to reverse until a later normal migration creates one.
+
+## 11. Concurrency and Partial Failure
 
 Migration must account for multiple Spack instances sharing destinations.
 
