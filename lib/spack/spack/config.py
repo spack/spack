@@ -1915,6 +1915,9 @@ def _migrate_user_config_programmatic() -> bool:
         return False
 
     # Check if the user scope path is ~/.config/spack
+    if not isinstance(user_scope, (DirectoryConfigScope, SingleFileScope)):
+        tty.debug("The 'user' scope is not filesystem-backed, skipping user config migration")
+        return False
     user_scope_path = os.path.normpath(os.path.expanduser(user_scope.path))
     expected_path = os.path.normpath(new_config_location)
     if user_scope_path != expected_path:
@@ -2159,7 +2162,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
 
     filesystem.mkdirp(dst_dir)
     lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
-    created = []
+    created: List[str] = []
     try:
         lock.acquire_write()
         for entry in os.listdir(src_dir):
@@ -2271,6 +2274,7 @@ def _do_migrate(
     # Config to write to the selected destination
     scope_config: Dict[str, Any] = {}
     if is_isolate_command:
+        assert isolate_target is not None
         scope_config["config"] = {"locations": _isolate_locations_config(isolate_target)}
 
     # 1. Handle installs and modules.  Existing installs and module trees are
