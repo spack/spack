@@ -202,13 +202,22 @@ def _do_isolate(args):
     # isolating.  The isolate scope controls new data; the layout scope keeps
     # existing data reachable from its original locations.
     if (
-        not spack.config._has_layout_scope()
-        and spack.config._is_spack_writable()
-        and any(spack.config._detect_old_resources().values())
+        spack.config._is_spack_writable()
+        and (
+            args.reuse_old
+            or (
+                not spack.config._has_layout_scope()
+                and any(spack.config._detect_old_resources().values())
+            )
+        )
     ):
         spack.config._do_migrate(
             is_isolate_command=True,
-            config_path=config_path,
+            config_path=(
+                os.path.join(spack.config._layout_scope_path(), "config.yaml")
+                if args.reuse_old
+                else config_path
+            ),
             isolate_target=destination,
         )
         # No need to reload CONFIG here: this process exits immediately, and

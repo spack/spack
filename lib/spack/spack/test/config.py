@@ -1318,6 +1318,9 @@ def test_override_included_config(working_env, tmp_path, include_config_factory)
     override_scope.mkdir()
 
     include_yaml = override_scope / "include.yaml"
+    (override_scope / "config.yaml").write_text(
+        "config:\n  build_jobs: 77\n", encoding="utf-8"
+    )
     subdir = override_scope / "subdir"
     subdir.mkdir()
     anotherdir = override_scope / "anotherdir"
@@ -1384,6 +1387,10 @@ def test_override_included_config(working_env, tmp_path, include_config_factory)
     assert "override" in cfg.scopes
     assert "subdir" in cfg.scopes
     assert "anotherdir" in cfg.scopes
+
+    # The scope defining include:: remains active, so its own files contribute
+    # configuration even though inherited includes are replaced.
+    assert cfg.get("config:build_jobs") == 77
 
     active_names = [s.name for s in cfg.active_scopes]
     assert "defaults" in active_names

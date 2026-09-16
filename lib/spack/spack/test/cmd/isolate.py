@@ -183,6 +183,11 @@ def test_isolate_reuse_old_target(mock_spack_paths, tmp_path):
 def test_isolate_reuse_old_self_target(mock_spack_paths, tmp_path, args):
     """Reuse an existing self target through either supported spelling."""
     base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
+    (etc_spack / "include.yaml").write_text(
+        'include:\n  - path: "isolate"\n    optional: true\n  - path: "standard_scopes"\n',
+        encoding="utf-8",
+    )
+    (etc_spack / "standard_scopes").mkdir()
     isolate_scope_path.mkdir(parents=True)
     existing_files = {
         "config.yaml": "config:\n  build_jobs: 3\n",
@@ -191,6 +196,13 @@ def test_isolate_reuse_old_self_target(mock_spack_paths, tmp_path, args):
     }
     for name, contents in existing_files.items():
         (isolate_scope_path / name).write_text(contents, encoding="utf-8")
+
+    # An old install makes the migration/resource-recording path generate the
+    # layout scope, where the new isolation locations are supplied without
+    # modifying the preserved target config.yaml.
+    old_install = base_prefix / "opt" / "spack" / "bin"
+    old_install.mkdir(parents=True)
+    (old_install / "spack").write_text("old install", encoding="utf-8")
 
     command_args = ["--reuse-old"] + args
     if args == ["--path", "isolate"]:
@@ -203,6 +215,12 @@ def test_isolate_reuse_old_self_target(mock_spack_paths, tmp_path, args):
     assert "user-redirect" in include_text
     assert "layout" in include_text
     assert (isolate_scope_path / "user-redirect").is_dir()
+
+    cfg = spack.config.create()
+    assert cfg.get("config:build_jobs") == 3
+    assert cfg.get("config:locations:data")[0] == str(isolate_scope_path)
+    assert cfg.highest_precedence_scope().name == "user"
+    assert cfg.highest_precedence_scope().path == str(isolate_scope_path / "user-redirect")
 
 
 def test_isolate_path_self_target_requires_reuse(mock_spack_paths):
