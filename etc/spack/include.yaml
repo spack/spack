@@ -1,4 +1,5 @@
 include:
   - path: "isolate"
     optional: true
+    when: '"SPACK_DISABLE_ISOLATION" not in env'
   - path: "standard_scopes"
