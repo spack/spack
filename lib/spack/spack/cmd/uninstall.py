@@ -209,6 +209,12 @@ def _remove_from_env(spec, env):
 
 
 def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
+    if not specs:
+        return
+
+    # Fail before removing anything if the database cannot be modified.
+    spack.store.STORE.db.ensure_upgraded()
+
     # TODO: get rid of the call-sites that use this function,
     # so that we don't have to do a dance of list -> set -> list -> set
     hashes_to_remove = {s.dag_hash() for s in specs}

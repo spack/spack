@@ -629,6 +629,9 @@ def install_fn(args):
         all_architectures=args.otherarch, config=spack.config.CONFIG
     )
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
+    if matches:
+        # Fail before extracting anything if the database cannot be modified.
+        spack.store.STORE.db.ensure_upgraded()
     for match in matches:
         spack.binary_distribution.install_single_spec(
             match, unsigned=args.unsigned, force=args.force

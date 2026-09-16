@@ -650,7 +650,9 @@ class Database:
 
     def write_transaction(self):
         """Get a write lock context manager for use in a ``with`` block."""
-        return self._write_transaction_impl(self.lock, acquire=self._read, release=self._write)
+        return self._write_transaction_impl(
+            self.lock, acquire=self._read_for_write, release=self._write
+        )
 
     def read_transaction(self):
         """Get a read lock context manager for use in a ``with`` block."""
@@ -661,7 +663,7 @@ class Database:
         the write lock was acquired (the database is re-read from disk on entry and written back on
         exit, unless an exception occurred), or False if acquiring the lock would block, in which
         case the body must skip its work."""
-        return lk.TryWriteTransaction(self.lock, acquire=self._read, release=self._write)
+        return lk.TryWriteTransaction(self.lock, acquire=self._read_for_write, release=self._write)
 
     def try_read_transaction(self) -> lk.TryReadTransaction:
         """Non-blocking variant of :meth:`read_transaction`: the context manager yields True if the
@@ -930,13 +932,12 @@ class Database:
         return installs
 
     def _handle_old_db_versions_read(self, check, db, *, reindex: bool):
-        if reindex is False and not self.is_upstream:
-            self.raise_explicit_database_upgrade_error()
-
         if not self.is_readable():
-            raise DatabaseNotReadableError(
-                f"cannot read database v{self.db_version} at {self.root}"
-            )
+            if reindex or self.is_upstream:
+                raise DatabaseNotReadableError(
+                    f"cannot read database v{self.db_version} at {self.root}"
+                )
+            self.raise_explicit_database_upgrade_error()
 
         return self._handle_current_version_read(check, db)
 
@@ -949,6 +950,15 @@ class Database:
         raise ExplicitDatabaseUpgradeError(
             self.db_version, _DB_VERSION, self.root, spack.spack_version
         )
+
+    def _raise_if_upgrade_needed(self) -> None:
+        if self._db_version is not None and self._db_version < _DB_VERSION:
+            self.raise_explicit_database_upgrade_error()
+
+    def ensure_upgraded(self) -> None:
+        """Raise if the index on disk needs ``spack reindex`` before it can be modified."""
+        with self.read_transaction():
+            self._raise_if_upgrade_needed()
 
     def reindex(self):
         """Build database index from scratch based on a directory layout.
@@ -1136,6 +1146,7 @@ class Database:
             with open(temp_file, "w", encoding="utf-8") as f:
                 self._write_to_file(f)
             fs.rename(temp_file, str(self._index_path))
+            self._db_version = _DB_VERSION
 
             if _use_uuid:
                 with self._verifier_path.open("w", encoding="utf-8") as f:
@@ -1148,6 +1159,11 @@ class Database:
             if os.path.exists(temp_file):
                 os.remove(temp_file)
             raise
+
+    def _read_for_write(self) -> None:
+        """Like :meth:`_read`, but refuses an older index so it is never written back."""
+        self._read()
+        self._raise_if_upgrade_needed()
 
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""

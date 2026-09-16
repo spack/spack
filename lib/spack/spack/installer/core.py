@@ -244,6 +244,10 @@ class PackageInstaller:
             self.has_mirrors,
         )
 
+        # Fail before building anything if the database cannot be modified.
+        if any(h not in self.build_graph.pruned for h in self.build_graph.nodes):
+            self.store.db.ensure_upgraded()
+
         #: Per-spec buildcache mirrors; populated in install() from the binary index.
         self.binary_cache_for_spec: Dict[str, List[spack.url_buildcache.MirrorMetadata]] = {}
         self.unsigned = unsigned

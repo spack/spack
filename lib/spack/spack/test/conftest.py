@@ -1389,6 +1389,23 @@ def temporary_mirror(mutable_config, tmp_path_factory):
     yield str(mirror_dir)
 
 
+@pytest.fixture
+def bumped_db_version(
+    monkeypatch,
+) -> Tuple[spack.version.ConcreteVersion, spack.version.ConcreteVersion]:
+    """Pretend the DB format was bumped and the current index is readable without reindex.
+    Yields the (on disk, expected) versions."""
+    current = spack.database._DB_VERSION
+    next_version = spack.version.Version(f"{current[0] + 1}")
+    monkeypatch.setattr(spack.database, "_DB_VERSION", next_version)
+    monkeypatch.setattr(
+        spack.database,
+        "_REINDEX_NOT_NEEDED_ON_READ",
+        [*spack.database._REINDEX_NOT_NEEDED_ON_READ, (current, next_version)],
+    )
+    return current, next_version
+
+
 @pytest.fixture(scope="function")
 def temporary_store(tmp_path: Path, request):
     """Hooks a temporary empty store for the test function."""
