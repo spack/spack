@@ -63,7 +63,7 @@ def set_up_package(name, repository, url_attr, monkeypatch):
 
 
 def check_mirror(mutable_config: Configuration):
-    with spack.stage.Stage("spack-mirror-test") as stage:
+    with spack.stage.stage_from_config("spack-mirror-test", config=mutable_config) as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
         # register mirror with spack config
         mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_root)}
@@ -199,7 +199,7 @@ def test_mirror_with_url_patches(mock_packages, monkeypatch, mutable_config: Con
     def successful_make_alias(*args, **kwargs):
         pass
 
-    with spack.stage.Stage("spack-mirror-test") as stage:
+    with spack.stage.stage_from_config("spack-mirror-test", config=mutable_config) as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
 
         monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, "fetch", successful_fetch)

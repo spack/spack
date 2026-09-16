@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Callable, Dict, Iterable, Iterator, List, Optional, Set, Tuple, cast
 
 import spack.binary_distribution
+import spack.config
 import spack.error
 import spack.stage
 import spack.util.parallel
@@ -367,7 +368,7 @@ def get_buildcache_normalized_time(mirror: Mirror) -> float:
     on it, and then deletes it. This guarantees that the time used for the beginning
     of the pruning is consistent across all buildcache implementations.
     """
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as f:
+    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as f:
         tmpdir = Path(f)
         touch_file = tmpdir / f".spack-prune-marker-{uuid.uuid4()}"
         touch_file.touch()

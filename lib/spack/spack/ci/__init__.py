@@ -1271,7 +1271,7 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
     """Given a url to write to and the details of the failed job, write an entry
     in the broken specs list.
     """
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(cfg.CONFIG)) as tmpdir:
         file_path = os.path.join(tmpdir, "broken.txt")
 
         broken_spec_details = {

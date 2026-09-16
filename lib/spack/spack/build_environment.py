@@ -570,7 +570,7 @@ def set_wrapper_variables(pkg, env):
     # Spack managed directories include the stage, store and upstream stores. We extend this with
     # their real paths to make it more robust (e.g. /tmp vs /private/tmp on macOS).
     spack_managed_dirs: Set[str] = {
-        spack.stage.get_stage_root(),
+        spack.stage.stage_root(spack.config.CONFIG),
         spack.store.STORE.db.root,
         *(db.root for db in spack.store.STORE.db.upstream_dbs),
     }

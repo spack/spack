@@ -10,7 +10,7 @@ import pytest
 import spack.util.url as url_util
 from spack.config import Configuration
 from spack.fetch_strategy import CacheURLFetchStrategy, NoCacheError
-from spack.stage import Stage
+from spack.stage import stage_from_config
 from spack.util.filesystem import mkdirp
 
 
@@ -22,7 +22,7 @@ def test_fetch_missing_cache(mutable_config: Configuration, tmp_path: pathlib.Pa
     with mutable_config.override("config:url_fetch_method", _fetch_method):
         url = url_util.path_to_file_url(non_existing)
         fetcher = CacheURLFetchStrategy(url=url)
-        with Stage(fetcher, path=testpath):
+        with stage_from_config(fetcher, path=testpath, config=mutable_config):
             with pytest.raises(NoCacheError, match=r"No cache"):
                 fetcher.fetch()
 
@@ -39,7 +39,7 @@ def test_fetch(mutable_config: Configuration, tmp_path: pathlib.Path, _fetch_met
     url = url_util.path_to_file_url(str(cache))
     with mutable_config.override("config:url_fetch_method", _fetch_method):
         fetcher = CacheURLFetchStrategy(url=url)
-        with Stage(fetcher, path=str(stage_dir)) as stage:
+        with stage_from_config(fetcher, path=str(stage_dir), config=mutable_config) as stage:
             source_path = stage.source_path
             mkdirp(source_path)
             fetcher.fetch()
