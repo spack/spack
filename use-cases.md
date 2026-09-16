@@ -119,7 +119,12 @@ Expected behavior:
 
 ## 6. Pulling After a Previous Isolation
 
-A Spack instance was isolated in the past. The user then updates the checkout and may restore the tracked `etc/spack/include.yaml` with `git checkout etc/spack/include.yaml` to undo older SCM-monitored isolation changes. The user immediately runs `spack isolate` again.
+A Spack instance was isolated in the past. Before pulling a new Spack checkout, the user must resolve the old isolation’s modification of the SCM-tracked `etc/spack/include.yaml`, because the new checkout changes that file. There are two choices:
+
+- Run the old `spack isolate --undo` before pulling. This removes the old isolation, including the old self-isolation target and its configuration.
+- Run `git checkout etc/spack/include.yaml` before pulling (or otherwise restore the tracked file without removing the old isolate target). This preserves the old target and its configuration so the new `spack isolate --reuse-old` workflow can reuse it after the pull.
+
+**Important for `--self`:** Users who want to reuse the old self-isolation target must restore `include.yaml` without running the old `spack isolate --undo`. With old `--self`, `$spack/etc/spack/isolate/` is both the isolate scope and the isolation target; undoing it before the pull removes the data that `--reuse-old` would need. After the pull, the new `spack isolate --reuse-old` can replace the old include behavior while preserving the target contents.
 
 Expected behavior:
 
