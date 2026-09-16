@@ -7,7 +7,7 @@ import json
 import os
 import shutil
 import sys
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from urllib.parse import urlparse, urlunparse
 
 import spack.binary_distribution
@@ -32,8 +32,12 @@ import spack.util.web as web_util
 from spack.cmd import buildcache
 from spack.util import timer, tty
 from spack.version import StandardVersion
+from spack.version_def import VersionDefinition
 
 from . import doc_dedented, doc_first_line
+
+# (version, when) type alias for handling when= branch of a version
+VersionWhenKey = Tuple[StandardVersion, spack.spec.Spec]
 
 description = "manage continuous integration pipelines"
 section = "build"
@@ -734,35 +738,44 @@ def validate_standard_versions(
       versions: list of package versions to validate
     Returns: True if all versions are valid, False if any version is invalid.
     """
-    url_dict: Dict[StandardVersion, str] = {}
+    version_defs: Dict[VersionWhenKey, VersionDefinition] = {}
+    when_grouped: Dict[spack.spec.Spec, Dict[StandardVersion, str]] = {}
 
     valid_checksums = True
-
     for version in versions:
-        url = pkg.find_valid_url_for_version(version)
-        if url is None:
+        found_url = False
+        for when, version_def in pkg.version_definitions(version):
+            try:
+                fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+            except spack.fetch_strategy.InvalidArgsError:
+                continue
+            if not isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy):
+                continue
+            if not web_util.url_exists(fetcher.url):
+                continue
+            when_grouped.setdefault(when, {})[version] = fetcher.url
+            version_defs[(version, when)] = version_def
+            found_url = True
+        if not found_url:
             tty.error(f"No valid URLs found for {pkg.name}@{version}")
-            all_urls = pkg.all_urls_for_version(version)
-            for url in all_urls:
-                tty.error(f"    [Failed] {url}")
             valid_checksums = False
-        else:
-            url_dict[version] = url
 
-    version_hashes = spack.stage.get_checksums_for_versions(
-        url_dict, pkg.name, fetch_options=pkg.fetch_options, config=cfg.CONFIG
-    )
+    for when, url_dict in when_grouped.items():
+        version_hashes = spack.stage.get_checksums_for_versions(
+            url_dict, pkg.name, fetch_options=pkg.fetch_options,  config=cfg.CONFIG
+        )
 
-    for version, sha in version_hashes.items():
-        if sha != pkg.versions[version]["sha256"]:
-            tty.error(
-                f"Invalid checksum found {pkg.name}@{version}\n"
-                f"    [package.py] {pkg.versions[version]['sha256']}\n"
-                f"    [Downloaded] {sha}"
-            )
-            valid_checksums = False
-        else:
-            tty.info(f"Validated {pkg.name}@{version} --> {sha}")
+        for version, sha in version_hashes.items():
+            key = (version, when)
+            if sha != version_defs[key].kwargs["sha256"]:
+                tty.error(
+                    f"Invalid checksum found {pkg.name}@{version}\n"
+                    f"    [package.py] {version_defs[key].kwargs['sha256']}\n"
+                    f"    [Downloaded] {sha}"
+                )
+                valid_checksums = False
+            else:
+                tty.info(f"Validated {pkg.name}@{version} --> {sha}")
 
     return valid_checksums
 
@@ -778,28 +791,32 @@ def validate_git_versions(
     """
     valid_commit = True
     for version in versions:
-        spec_cp = pkg.spec.copy()
-        spec_cp.versions = spack.version.VersionList([version])
-        fetcher = spack.fetch_strategy.for_spec(spec_cp)
-        assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-        with spack.stage.stage_from_config(fetcher, config=cfg.CONFIG) as stage:
-            known_commit = pkg.versions[version]["commit"]
-            try:
-                stage.fetch()
-            except spack.error.FetchError:
-                tty.error(
-                    f"Invalid commit for {pkg.name}@{version}\n"
-                    f"    {known_commit} could not be checked out in the git repository."
-                )
-                valid_commit = False
-                continue
+        valid_per_version = True
+        found_branch = False
+        known_commit = None
+        for _, version_def in pkg.version_definitions(version):
+            found_branch = True
+            fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+            assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+            with spack.stage.stage_from_config(fetcher, config=cfg.CONFIG) as stage:
+                known_commit = version_def.kwargs["commit"]
+                try:
+                    stage.fetch()
+                except spack.error.FetchError:
+                    tty.error(
+                        f"Invalid commit for {pkg.name}@{version}\n"
+                        f"    {known_commit} could not be checked out in the git repository."
+                    )
+                    valid_commit = False
+                    valid_per_version = False
+                    continue
 
             # Test if the specified tag matches the commit in the package.py
             # We retrieve the commit associated with a tag and compare it to the
             # commit that is located in the package.py file.
-            if "tag" in pkg.versions[version]:
-                tag = pkg.versions[version]["tag"]
-                url = pkg.version_or_package_attr("git", version)
+            if "tag" in version_def.kwargs:
+                tag = version_def.kwargs["tag"]
+                url = version_def.kwargs["git"]
                 found_commit = spack.util.git.get_commit_sha(url, tag)
                 if not found_commit:
                     tty.error(
@@ -807,6 +824,7 @@ def validate_git_versions(
                         f"    {tag} could not be found in the git repository."
                     )
                     valid_commit = False
+                    valid_per_version = False
                     continue
 
                 if found_commit != known_commit:
@@ -816,11 +834,16 @@ def validate_git_versions(
                         f"    [Downloaded] {found_commit}"
                     )
                     valid_commit = False
+                    valid_per_version = False
                     continue
 
-            # If we have downloaded the repository, found the commit, and compared
-            # the tag (if specified) we can conclude that the version is pointing
-            # at what we would expect.
+        # If we have downloaded the repository, found the commit, and compared
+        # the tag (if specified) we can conclude that the version is pointing
+        # at what we would expect.
+        if not found_branch:
+            tty.error(f"No git version definitions found for {pkg.name}@{version}")
+            valid_commit = False
+        if valid_per_version:
             tty.info(f"Validated {pkg.name}@{version} --> {known_commit}")
 
     return valid_commit
@@ -851,27 +874,30 @@ def ci_verify_versions(args):
             continue
 
         # Store versions checksums / commits for future loop
-        url_version_to_checksum: Dict[StandardVersion, str] = {}
-        git_version_to_checksum: Dict[StandardVersion, str] = {}
+        url_version_to_checksum: Dict[VersionWhenKey, str] = {}
+        git_version_to_checksum: Dict[VersionWhenKey, str] = {}
         for version in pkg.versions:
-            # If the package version defines a sha256 we'll use that as the high entropy
-            # string to detect which versions have been added between from_ref and to_ref
-            if "sha256" in pkg.versions[version]:
-                url_version_to_checksum[version] = pkg.versions[version]["sha256"]
+            for when, version_def in pkg.version_definitions(version):
+                # If the package version defines a sha256 we'll use that as the high entropy
+                # string to detect which versions have been added between from_ref and to_ref
+                key = (version, when)
+                if "sha256" in version_def.kwargs:
+                    url_version_to_checksum[key] = version_def.kwargs["sha256"]
 
-            # If a package version instead defines a commit we'll use that as a
-            # high entropy string to detect new versions.
-            elif "commit" in pkg.versions[version]:
-                git_version_to_checksum[version] = pkg.versions[version]["commit"]
+                # If a package version instead defines a commit we'll use that as a
+                # high entropy string to detect new versions.
+                elif "commit" in version_def.kwargs:
+                    git_version_to_checksum[key] = version_def.kwargs["commit"]
 
-            # TODO: enforce every version have a commit or a sha256 defined if not
-            # an infinite version (there are a lot of packages where this doesn't work yet.)
+                # TODO: enforce every version have a commit or a sha256 defined if not
+                # an infinite version (there are a lot of packages where this doesn't work yet.)
 
-        def filter_added_versions(versions: Dict[StandardVersion, str]) -> List[StandardVersion]:
+        def filter_added_versions(versions: Dict[VersionWhenKey, str]) -> List[StandardVersion]:
             added_checksums = spack_ci.filter_added_checksums(
                 versions.values(), path, from_ref=args.from_ref, to_ref=args.to_ref
             )
-            return [v for v, c in versions.items() if c in added_checksums]
+
+            return list({v for (v, when), c in versions.items() if c in added_checksums})
 
         with fs.working_dir(os.path.dirname(path)):
             new_url_versions = filter_added_versions(url_version_to_checksum)
