@@ -2377,6 +2377,9 @@ def _do_migrate(
 
     # Config to write to the selected destination
     scope_config: Dict[str, Any] = {}
+    migrated_resources: List[str] = []
+    retained_resources: List[str] = []
+    user_config_migrated = False
     if is_isolate_command:
         assert isolate_target is not None
         scope_config["config"] = {"locations": _isolate_locations_config(isolate_target)}
@@ -2385,6 +2388,7 @@ def _do_migrate(
     # always retained in their old locations, including during isolation.
     if old_resources["installs"] or old_resources["modules"]:
         if old_resources["installs"]:
+            retained_resources.append("existing installs and modules")
             if "config" not in scope_config:
                 scope_config["config"] = {}
             scope_config["config"]["install_tree"] = {
@@ -2420,6 +2424,7 @@ def _do_migrate(
                 if "config" not in scope_config:
                     scope_config["config"] = {}
                 scope_config["config"]["gpg_path"] = old_gpg_dir
+                retained_resources.append("GPG data (kept in its old location)")
         elif is_isolate_command:
             # Isolation never relocates existing keyrings.
             if "config" not in scope_config:
@@ -2428,10 +2433,13 @@ def _do_migrate(
         elif configured_gpg_dir == target_gpg_norm:
             # With the default configuration, copy the old keyring into the
             # shared default.  A collision leaves the old location active.
-            if not _migrate_gpg_home(old_gpg_dir, target_gpg_dir):
+            if _migrate_gpg_home(old_gpg_dir, target_gpg_dir):
+                migrated_resources.append("GPG data")
+            else:
                 if "config" not in scope_config:
                     scope_config["config"] = {}
                 scope_config["config"]["gpg_path"] = old_gpg_dir
+                retained_resources.append("GPG data (kept in its old location)")
         # A custom configured location is user-owned and remains untouched.
 
     # 3. Handle licenses
@@ -2468,14 +2476,14 @@ def _do_migrate(
         # Attempt migration if appropriate
         if should_attempt_migration:
             if _migrate_licenses(old_licenses_dir, target_licenses_dir):
-                # Successfully copied
-                # The normal default now points at the copied location.
+                migrated_resources.append("licenses")
                 tty.debug(f"Copied licenses from {old_licenses_dir} to {target_licenses_dir}")
             else:
                 # Copy failed (collision), keep in old location
                 if "config" not in scope_config:
                     scope_config["config"] = {}
                 scope_config["config"]["license_dir"] = old_licenses_dir
+                retained_resources.append("licenses (kept in the old location)")
                 tty.debug(f"Licenses kept in old location: {old_licenses_dir}")
 
     # 4. Handle environments
@@ -2512,19 +2520,19 @@ def _do_migrate(
         # Attempt migration if appropriate
         if should_attempt_migration:
             if _migrate_environments(old_envs_dir, target_envs_dir):
-                # Successfully copied
-                # The normal default now points at the copied location.
+                migrated_resources.append("environments")
                 tty.debug(f"Copied environments from {old_envs_dir} to {target_envs_dir}")
             else:
                 # Copy failed (collision), keep in old location
                 if "config" not in scope_config:
                     scope_config["config"] = {}
                 scope_config["config"]["environments_root"] = old_envs_dir
+                retained_resources.append("environments (kept in the old location)")
                 tty.debug(f"Environments kept in old location: {old_envs_dir}")
 
     # 5. Copy ~/.spack to ~/.config/spack (unless isolate command)
     if not is_isolate_command:
-        _migrate_user_config_programmatic()
+        user_config_migrated = _migrate_user_config_programmatic()
 
     # Write config scope files to the selected configuration scope.
     if "config" in scope_config:
@@ -2540,6 +2548,24 @@ def _do_migrate(
         tty.debug(f"Wrote modules.yaml to {layout_scope_path}")
 
     tty.debug(f"Created config scope for auto-migration: {layout_scope_path}")
+
+    if not is_isolate_command:
+        migration_summary = ["Spack automatically migrated old resources."]
+        if user_config_migrated:
+            migration_summary.append("  - Copied user configuration from ~/.spack to ~/.config/spack.")
+        if migrated_resources:
+            migration_summary.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
+        if retained_resources:
+            migration_summary.append("  - Retained: " + ", ".join(retained_resources) + ".")
+        migration_summary.extend(
+            [
+                "  - Existing installs and shared artifacts were not removed.",
+                "  - ~/.spack was retained because older Spack instances may still use it.",
+                "",
+                "To undo this migration, run `spack migrate undo`.",
+            ]
+        )
+        tty.warn("\\n".join(migration_summary))
 
 
 def create_incremental() -> Generator[Configuration, None, None]:
