@@ -2022,10 +2022,7 @@ def _migration_backup_path() -> str:
 
 
 def _copy_directory_contents(
-    src_dir: str,
-    dst_dir: str,
-    resource_name: str,
-    backup_dir: Optional[str] = None,
+    src_dir: str, dst_dir: str, resource_name: str, backup_dir: Optional[str] = None
 ) -> bool:
     """Copy contents of src_dir to dst_dir, checking for collisions.
 
@@ -2226,11 +2223,7 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
 
 def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
     """Return location settings for data created by an isolated Spack."""
-    return {
-        "data": [isolate_target],
-        "state": [isolate_target],
-        "cache": [isolate_target],
-    }
+    return {"data": [isolate_target], "state": [isolate_target], "cache": [isolate_target]}
 
 
 def _do_migrate(
@@ -2296,9 +2289,7 @@ def _do_migrate(
         scope_config["modules"] = {
             "default": {"roots": {"tcl": old_modules_tcl, "lmod": old_modules_lmod}}
         }
-        tty.debug(
-            f"Keeping existing installs/modules in {spack.paths.prefix}/share/spack"
-        )
+        tty.debug(f"Keeping existing installs/modules in {spack.paths.prefix}/share/spack")
 
     # 2. Handle GPG keys
     old_gpg_dir = os.path.join(spack.paths.prefix, "opt", "spack", "gpg")

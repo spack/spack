@@ -69,11 +69,7 @@ def _isolate_include_config(new_user_path):
     # updated later by commands such as `spack migrate undo`.
     include_list = [
         user_scope_dict,
-        {
-            "name": "layout",
-            "path": "$spack/etc/spack/layout",
-            "optional": True,
-        },
+        {"name": "layout", "path": "$spack/etc/spack/layout", "optional": True},
     ]
 
     # Create a syaml_str with override marker for the key
@@ -201,14 +197,11 @@ def _do_isolate(args):
     # Record old resources in the layout scope, but never relocate them while
     # isolating.  The isolate scope controls new data; the layout scope keeps
     # existing data reachable from its original locations.
-    if (
-        spack.config._is_spack_writable()
-        and (
-            args.reuse_old
-            or (
-                not spack.config._has_layout_scope()
-                and any(spack.config._detect_old_resources().values())
-            )
+    if spack.config._is_spack_writable() and (
+        args.reuse_old
+        or (
+            not spack.config._has_layout_scope()
+            and any(spack.config._detect_old_resources().values())
         )
     ):
         spack.config._do_migrate(

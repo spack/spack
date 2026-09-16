@@ -1318,9 +1318,7 @@ def test_override_included_config(working_env, tmp_path, include_config_factory)
     override_scope.mkdir()
 
     include_yaml = override_scope / "include.yaml"
-    (override_scope / "config.yaml").write_text(
-        "config:\n  build_jobs: 77\n", encoding="utf-8"
-    )
+    (override_scope / "config.yaml").write_text("config:\n  build_jobs: 77\n", encoding="utf-8")
     subdir = override_scope / "subdir"
     subdir.mkdir()
     anotherdir = override_scope / "anotherdir"
