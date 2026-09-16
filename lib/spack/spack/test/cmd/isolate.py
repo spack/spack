@@ -179,6 +179,46 @@ def test_isolate_reuse_old_target(mock_spack_paths, tmp_path):
     assert "layout" in include_text
 
 
+@pytest.mark.parametrize("args", [["--self"], ["--path", "isolate"]])
+def test_isolate_reuse_old_self_target(mock_spack_paths, tmp_path, args):
+    """Reuse an existing self target through either supported spelling."""
+    base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
+    isolate_scope_path.mkdir(parents=True)
+    existing_files = {
+        "config.yaml": "config:\n  build_jobs: 3\n",
+        "repos.yaml": "repos:\n  builtin:\n    destination: /shared/builtin\n",
+        "bootstrap.yaml": "bootstrap:\n  root: /shared/bootstrap\n",
+    }
+    for name, contents in existing_files.items():
+        (isolate_scope_path / name).write_text(contents, encoding="utf-8")
+
+    command_args = ["--reuse-old"] + args
+    if args == ["--path", "isolate"]:
+        command_args[2] = str(isolate_scope_path)
+    sp_isolate(*command_args)
+
+    for name, contents in existing_files.items():
+        assert (isolate_scope_path / name).read_text(encoding="utf-8") == contents
+    include_text = (isolate_scope_path / "include.yaml").read_text(encoding="utf-8")
+    assert "user-redirect" in include_text
+    assert "layout" in include_text
+    assert (isolate_scope_path / "user-redirect").is_dir()
+
+
+def test_isolate_path_self_target_requires_reuse(mock_spack_paths):
+    """An existing self target is not reused implicitly through --path."""
+    base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
+    isolate_scope_path.mkdir(parents=True)
+    with pytest.raises(Exception):
+        sp_isolate("--path", str(isolate_scope_path))
+
+
+def test_isolate_rejects_reuse_and_overwrite_together(mock_spack_paths):
+    """Reuse and overwrite express contradictory target handling."""
+    with pytest.raises(spack.main.SpackCommandError):
+        sp_isolate("--self", "--reuse-old", "--overwrite")
+
+
 def test_isolate_overwrite_same_dir(mock_spack_paths, tmp_path):
     """Test that --overwrite works when isolating to the same directory."""
     base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
