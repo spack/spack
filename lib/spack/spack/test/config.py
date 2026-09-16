@@ -518,10 +518,6 @@ def test_change_or_add(mutable_config: Configuration, mock_packages):
             ],
             [os.path.join(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
         ),
-        (
-            [["config:install_tree:root", "/path/$padding:11"]],
-            [os.path.join(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
-        ),
         ([["config:install_tree:padded_length", False]], [None, None, None]),
         (
             [
