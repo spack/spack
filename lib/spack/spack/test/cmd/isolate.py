@@ -37,6 +37,11 @@ def mock_spack_paths(monkeypatch, tmp_path):
 def test_isolate_smoke_test(mock_spack_paths, tmp_path):
     """Basic smoke test for isolate command."""
     base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
+    (etc_spack / "include.yaml").write_text(
+        'include:\n  - path: "isolate"\n    optional: true\n  - path: "standard_scopes"\n',
+        encoding="utf-8",
+    )
+    (etc_spack / "standard_scopes").mkdir()
 
     isolated_path = tmp_path / "test-isolation"
     sp_isolate("--path", str(isolated_path))
@@ -47,6 +52,11 @@ def test_isolate_smoke_test(mock_spack_paths, tmp_path):
     assert not (isolate_scope_path / "config.yaml").exists()
     assert (isolate_scope_path / "include.yaml").exists()
     assert (isolated_path / "config.yaml").exists()
+
+    cfg = spack.config.create()
+    for location in ("data", "state", "cache"):
+        assert cfg.get(f"config:locations:{location}")[0] == str(isolated_path)
+
     with open(isolate_scope_path / "include.yaml", encoding="utf-8") as f:
         include_text = f.read()
     assert "layout" in include_text
