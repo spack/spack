@@ -17,6 +17,25 @@ section = "config"
 level = "long"
 
 
+def _restore_user_scope_path() -> None:
+    """Point the standard user scope back at the legacy ~/.spack location."""
+    include_path = os.path.join(spack.paths.etc_path, "standard_scopes", "include.yaml")
+    with open(include_path, "r", encoding="utf-8") as f:
+        include_config = syaml.load(f) or {}
+
+    includes = include_config.get("include", [])
+    for entry in includes:
+        if isinstance(entry, dict) and entry.get("name") == "user":
+            entry["path"] = "~/.spack"
+            break
+    else:
+        tty.die(f"Cannot restore user scope: no user entry in {include_path}")
+
+    with open(include_path, "w", encoding="utf-8") as f:
+        syaml.dump(include_config, f)
+    tty.msg(f"  Updated user scope: {include_path}")
+
+
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "action", nargs="?", choices=["undo"], help="action to perform (only 'undo' is supported)"
@@ -30,14 +49,14 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     """Undo auto-migration of licenses and environments.
 
     The `spack migrate undo` command restores the Spack instance to its
-    pre-auto-migration state by copying licenses and environments from
-    $spack/.migration-backup/ back to their original locations, updating
-    the layout scope to point to those old locations, and removing the
-    backup directory.
+    pre-auto-migration state by moving licenses, environments, and GPG data
+    from $spack/.migration-backup/ back to their original locations, updating
+    the layout and standard scopes, and removing the backup directory.
 
     IMPORTANT: This does NOT touch any files in shared $HOME directories
-    (e.g., ~/.local/share/spack). Auto-migration copies (not moves) files,
-    so the shared directories remain intact for other Spack instances.
+    (e.g., ~/.local/share/spack). Auto-migration moves the original resources
+    into the backup after copying them, so the shared destinations remain intact
+    for other Spack instances.
     """
     if args.action != "undo":
         tty.die(
@@ -75,8 +94,10 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if not has_licenses and not has_envs and not has_gpg:
         tty.msg(f"Backup directory exists but is empty: {backup_dir}")
         if args.dry_run:
+            tty.msg("Would update standard scopes to use ~/.spack for the user scope")
             tty.msg(f"Would remove {backup_dir}")
         else:
+            _restore_user_scope_path()
             shutil.rmtree(backup_dir)
             tty.msg(f"Removed empty backup directory: {backup_dir}")
         return
@@ -91,6 +112,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         if has_gpg:
             tty.msg(f"  - Restore GPG data from {backup_gpg} to {old_gpg_dir}")
         tty.msg("  - Update layout scope to point to old locations")
+        tty.msg("  - Update standard scopes to use ~/.spack for the user scope")
         tty.msg(f"  - Remove backup directory: {backup_dir}")
         return
 
@@ -176,6 +198,11 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     with open(config_yaml_path, "w", encoding="utf-8") as f:
         syaml.dump(layout_config, f)
     tty.msg(f"  Updated layout scope: {config_yaml_path}")
+
+    # Restore the legacy user-scope default at the scope that defines it. This
+    # must be above layout in precedence and therefore cannot be represented in
+    # the layout scope itself.
+    _restore_user_scope_path()
 
     # Remove backup directory
     shutil.rmtree(backup_dir)
