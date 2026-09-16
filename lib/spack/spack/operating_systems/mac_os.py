@@ -143,6 +143,7 @@ class MacOs(OperatingSystem):
             "14": "sonoma",
             "15": "sequoia",
             "26": "tahoe",
+            "27": "goldengate",
         }
 
         version = macos_version()
