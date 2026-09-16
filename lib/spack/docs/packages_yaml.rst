@@ -755,7 +755,7 @@ The four reasons are:
    A known vulnerability affects the spec.
 
 ``rename``
-   The spec was renamed, and users should move to the new name.
+   The package was renamed, and users should move to the new name.
 
 ``retired``
    The spec is going away, because the release reached its end of life or upstream removed it.
