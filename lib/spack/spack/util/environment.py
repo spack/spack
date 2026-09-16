@@ -126,7 +126,8 @@ class ShellCmdString:
         return f"{cmd} {name} {sep}\n"
 
     def remove_first(self, name: str, value: str) -> str:
-        """Returns the command to remove the first occurrence of a value from an environment variable."""
+        """Returns the command to remove the first occurrence of a value
+        from an environment variable."""
         cmd = self.shell_fn("_spack_env_remove_first", self.shell)
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
@@ -134,7 +135,8 @@ class ShellCmdString:
         return f"{cmd} {name} {value} {sep}\n"
 
     def remove_last(self, name: str, value: str) -> str:
-        """Returns the command to remove the last occurrence of a value from an environment variable."""
+        """Returns the command to remove the last occurrence of a value
+        from an environment variable."""
         cmd = self.shell_fn("_spack_env_remove_last", self.shell)
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
@@ -437,6 +439,7 @@ class SetEnv(NameValueModifier):
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell)
         return shell_cmd.set(self.name, str(self.value))
+
 
 class AppendFlagsEnv(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
