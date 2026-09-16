@@ -54,6 +54,7 @@ class ShellCmdString:
 
     def __init__(self, shell: str):
         self.shell = shell
+        self.separator = ":" if shell not in ("bat", "pwsh") else ";"
 
     def shell_quote(self, value: str, shell: str = "sh") -> str:
         """Quote a string for safe use in a shell script.
@@ -101,15 +102,65 @@ class ShellCmdString:
         """
         return f"%{name}%" if shell == "bat" else name
 
+    def append(self, name: str, value: str) -> str:
+        """Returns the command to append a value to an environment variable."""
+        cmd = self.shell_fn("_spack_env_append", self.shell)
+        value = self.shell_quote(value, self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+
+        return f"{cmd} {name} {value} {sep}\n"
+
+    def prepend(self, name: str, value: str) -> str:
+        """Returns the command to prepend a value to an environment variable."""
+        cmd = self.shell_fn("_spack_env_prepend", self.shell)
+        value = self.shell_quote(value, self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+
+        return f"{cmd} {name} {value} {sep}\n"
+
+    def prune_duplicates(self, name: str) -> str:
+        """Returns the command to prune duplicate values from an environment variable."""
+        cmd = self.shell_fn("_spack_env_prune_duplicates", self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+
+        return f"{cmd} {name} {sep}\n"
+
+    def remove_first(self, name: str, value: str) -> str:
+        """Returns the command to remove the first occurrence of a value from an environment variable."""
+        cmd = self.shell_fn("_spack_env_remove_first", self.shell)
+        value = self.shell_quote(value, self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+
+        return f"{cmd} {name} {value} {sep}\n"
+
+    def remove_last(self, name: str, value: str) -> str:
+        """Returns the command to remove the last occurrence of a value from an environment variable."""
+        cmd = self.shell_fn("_spack_env_remove_last", self.shell)
+        value = self.shell_quote(value, self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+
+        return f"{cmd} {name} {value} {sep}\n"
+
+    def remove_value(self, name: str, value: str) -> str:
+        """Returns the command to remove a value from an environment variable."""
+        cmd = self.shell_fn("_spack_env_remove_value", self.shell)
+        value = self.shell_quote(value, self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+
+        return f"{cmd} {name} {value} {sep}\n"
+
     def set(self, name: str, value: str) -> str:
         """Returns the command to set an environment variable to a value."""
         cmd = self.shell_fn("_spack_env_set", self.shell)
         value = self.shell_quote(value, self.shell)
+
         return f"{cmd} {name} {value}\n"
 
     def unset(self, name: str) -> str:
         """Returns the command to unset an environment variable."""
-        return f"{self.shell_fn('_spack_env_unset', self.shell)} {name}\n"
+        cmd = self.shell_fn("_spack_env_unset", self.shell)
+
+        return f"{cmd} {name}\n"
 
     def alias(self, name: str, code: str) -> str:
         if self.shell == "csh":
@@ -385,9 +436,7 @@ class SetEnv(NameValueModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell)
-        fn = shell_cmd.shell_fn("_spack_env_set", shell)
-        return f"{fn} {self.name} {shell_cmd.shell_quote(str(self.value), shell)}"
-
+        return shell_cmd.set(self.name, str(self.value))
 
 class AppendFlagsEnv(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
@@ -399,10 +448,7 @@ class AppendFlagsEnv(NameValueModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell)
-        quoted_value = shell_cmd.shell_quote(str(self.value), shell)
-        quoted_sep = shell_cmd.shell_quote(self.separator, shell)
-        fn = shell_cmd.shell_fn("_spack_env_append", shell)
-        return f"{fn} {self.name} {quoted_value} {quoted_sep}"
+        return shell_cmd.append(self.name, str(self.value))
 
 
 class UnsetEnv(NameModifier):
@@ -413,9 +459,7 @@ class UnsetEnv(NameModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell)
-        # Variable names don't need quoting, but we'll keep the signature consistent
-        fn = shell_cmd.shell_fn("_spack_env_unset", shell)
-        return f"{fn} {self.name}"
+        return shell_cmd.unset(self.name)
 
 
 class RemoveFlagsEnv(NameValueModifier):
@@ -428,10 +472,7 @@ class RemoveFlagsEnv(NameValueModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell)
-        quoted_value = shell_cmd.shell_quote(str(self.value), shell)
-        quoted_sep = shell_cmd.shell_quote(self.separator, shell)
-        fn = shell_cmd.shell_fn("_spack_env_remove_value", shell)
-        return f"{fn} {self.name} {quoted_value} {quoted_sep}"
+        return shell_cmd.remove_value(self.name, str(self.value))
 
 
 class SetPath(NameValueModifier):
@@ -453,9 +494,7 @@ class SetPath(NameValueModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell)
-        quoted_value = shell_cmd.shell_quote(str(self.value), shell)
-        fn = shell_cmd.shell_fn("_spack_env_set", shell)
-        return f"{fn} {self.name} {quoted_value}"
+        return shell_cmd.set(self.name, str(self.value))
 
 
 class AppendPath(NamePathModifier):
@@ -467,12 +506,9 @@ class AppendPath(NamePathModifier):
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        value = path_to_os_path(os.path.normpath(self.value)).pop()
         shell_cmd = ShellCmdString(shell)
-        quoted_value = shell_cmd.shell_quote(value, shell)
-        quoted_sep = shell_cmd.shell_quote(self.separator, shell)
-        fn = shell_cmd.shell_fn("_spack_env_append", shell)
-        return f"{fn} {self.name} {quoted_value} {quoted_sep}"
+        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        return shell_cmd.append(self.name, value)
 
 
 class PrependPath(NamePathModifier):
@@ -486,10 +522,8 @@ class PrependPath(NamePathModifier):
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell)
         value = path_to_os_path(os.path.normpath(self.value)).pop()
-        quoted_value = shell_cmd.shell_quote(value, shell)
-        quoted_sep = shell_cmd.shell_quote(self.separator, shell)
-        fn = shell_cmd.shell_fn("_spack_env_prepend", shell)
-        return f"{fn} {self.name} {quoted_value} {quoted_sep}"
+
+        return shell_cmd.prepend(self.name, value)
 
 
 class RemoveFirstPath(NamePathModifier):
@@ -505,10 +539,7 @@ class RemoveFirstPath(NamePathModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell)
-        quoted_value = shell_cmd.shell_quote(str(self.value), shell)
-        quoted_sep = shell_cmd.shell_quote(self.separator, shell)
-        fn = shell_cmd.shell_fn("_spack_env_remove_first", shell)
-        return f"{fn} {self.name} {quoted_value} {quoted_sep}"
+        return shell_cmd.remove_first(self.name, str(self.value))
 
 
 class RemoveLastPath(NamePathModifier):
@@ -524,10 +555,7 @@ class RemoveLastPath(NamePathModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell)
-        quoted_value = shell_cmd.shell_quote(str(self.value), shell)
-        quoted_sep = shell_cmd.shell_quote(self.separator, shell)
-        fn = shell_cmd.shell_fn("_spack_env_remove_last", shell)
-        return f"{fn} {self.name} {quoted_value} {quoted_sep}"
+        return shell_cmd.remove_last(self.name, str(self.value))
 
 
 class RemovePath(NamePathModifier):
@@ -545,10 +573,7 @@ class RemovePath(NamePathModifier):
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell)
         value = path_to_os_path(os.path.normpath(self.value)).pop()
-        quoted_value = shell_cmd.shell_quote(value, shell)
-        quoted_sep = shell_cmd.shell_quote(self.separator, shell)
-        fn = shell_cmd.shell_fn("_spack_env_remove_value", shell)
-        return f"{fn} {self.name} {quoted_value} {quoted_sep}"
+        return shell_cmd.remove_value(self.name, value)
 
 
 class PruneDuplicatePaths(NameModifier):
@@ -563,8 +588,7 @@ class PruneDuplicatePaths(NameModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell)
-        fn = shell_cmd.shell_fn("_spack_env_prune_duplicates", shell)
-        return f"{fn} {self.name} {shell_cmd.shell_quote(self.separator, shell)}"
+        return shell_cmd.prune_duplicates(self.name)
 
 
 def _validate_path_value(name: str, value: Any) -> Union[str, pathlib.PurePath]:
