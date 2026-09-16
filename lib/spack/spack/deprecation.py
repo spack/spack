@@ -23,7 +23,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.repo
 import spack.traverse
-from spack.enums import Deprecation, DeprecationReason, DeprecationSeverity
+from spack.enums import ConfigScopePriority, Deprecation, DeprecationReason, DeprecationSeverity
 
 if TYPE_CHECKING:
     import spack.spec
@@ -104,6 +104,32 @@ def _default_selectors(
         return [Selector(severity=DeprecationSeverity.CRITICAL)]
 
     return []
+
+
+def allow_every_deprecation(configuration: spack.config.Configuration) -> None:
+    """Push a configuration scope that allows every deprecation.
+
+    The scope appends a selector allowing any severity to ``packages:all:deprecation:allow``, and
+    to each per-package ``allow`` list in the configuration at the time of the call. Lists added
+    by scopes pushed later are not affected.
+
+    Args:
+        configuration: the configuration to push the scope onto.
+    """
+    packages_yaml = configuration.get_config("packages")
+    names = ["all"] + [
+        name
+        for name, data in packages_yaml.items()
+        if name != "all" and data.get("deprecation", {}).get("allow") is not None
+    ]
+    severity = DeprecationSeverity.CRITICAL.name.lower()
+    data = {
+        "packages": {name: {"deprecation": {"allow": [{"severity": severity}]}} for name in names}
+    }
+    configuration.push_scope(
+        spack.config.InternalConfigScope("command_line_deprecated", data),
+        priority=ConfigScopePriority.COMMAND_LINE,
+    )
 
 
 class Policy:

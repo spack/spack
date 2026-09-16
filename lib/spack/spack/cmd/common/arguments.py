@@ -9,6 +9,7 @@ from typing import Any, Optional
 
 import spack.cmd
 import spack.config
+import spack.deprecation
 import spack.deptypes as dt
 import spack.mirrors.mirror
 import spack.mirrors.utils
@@ -630,13 +631,27 @@ class ConfigSetAction(argparse.Action):
         spack.config.CONFIG.set(self.config_path, self.const, scope="command_line")
 
 
+class AllowDeprecatedAction(argparse.Action):
+    """Allows every deprecation for the current command, including the deprecations of packages
+    with an ``allow`` list of their own.
+    """
+
+    def __init__(self, option_strings, dest, default=None, help=None):
+        super().__init__(
+            option_strings=option_strings, dest=dest, nargs=0, default=default, help=help
+        )
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        spack.deprecation.allow_every_deprecation(spack.config.CONFIG)
+        setattr(namespace, self.dest, True)
+
+
 def add_concretizer_args(subparser):
     """Add a subgroup of arguments for controlling concretization.
 
     These will appear in a separate group called 'concretizer arguments'.
-    There's no need to handle them in your command logic -- they all use
-    ``ConfigSetAction``, which automatically handles setting configuration
-    options.
+    There's no need to handle them in your command logic -- they all set
+    configuration options when the arguments are parsed.
 
     If you *do* need to access a value passed on the command line, you can
     get at, e.g., the ``concretizer:reuse`` via ``args.concretizer_reuse``.
@@ -681,9 +696,8 @@ def add_concretizer_args(subparser):
     )
     subgroup.add_argument(
         "--deprecated",
-        action=ConfigSetAction,
-        dest="packages:all:deprecation:allow",
-        const=[{"severity": "critical"}],
+        action=AllowDeprecatedAction,
+        dest="deprecated",
         default=None,
         help="allow the concretizer to select deprecated versions of any severity",
     )

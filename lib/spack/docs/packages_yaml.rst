@@ -783,9 +783,8 @@ Because selectors are matched independently, a list can hold some reasons to a s
 Here a ``low``-severity rename, retirement or unspecified deprecation is allowed, while a vulnerability is allowed only if it was assessed to have no consequence.
 A reason that appears in no selector is refused whatever its severity, so a reason added in a later Spack version stays refused until the configuration names it.
 
-For a single command, the ``--deprecated`` flag adds a selector allowing any severity under ``all:``.
-It is applied on the command line, so it is in force whatever the configuration files say.
-A package with an ``allow:`` list of its own is unaffected, since that list replaces the one under ``all:``.
+For a single command, the ``--deprecated`` flag allows every deprecation, whatever the configuration files say.
+It adds a selector allowing any severity under ``all:``, and to the ``allow:`` list of every package that has one.
 
 Since ``allow:`` is a list, configuration scopes merge it by concatenation, like every other list in ``packages.yaml``.
 Two scopes that both set it therefore allow the union of what each one allows.
