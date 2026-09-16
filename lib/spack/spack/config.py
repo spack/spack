@@ -2126,9 +2126,7 @@ def _do_migrate_user_config(
         new_path = os.path.join(new_config_location, config_file)
 
         # Process paths using migrate command logic (handles the 4 path rewriting rules)
-        modified_data, _ = process_config_file_paths(
-            old_path, old_location, new_config_location
-        )
+        modified_data, _ = process_config_file_paths(old_path, old_location, new_config_location)
 
         # Ensure parent directory exists
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
@@ -2148,9 +2146,7 @@ def _migration_backup_path() -> str:
     return os.path.join(spack.paths.prefix, ".migration-backup")
 
 
-def _copy_directory_contents(
-    src_dir: str, dst_dir: str, resource_name: str
-) -> bool:
+def _copy_directory_contents(src_dir: str, dst_dir: str, resource_name: str) -> bool:
     """Copy contents of src_dir to dst_dir, checking for collisions.
 
     The source remains in place after copying. Callers move the complete
