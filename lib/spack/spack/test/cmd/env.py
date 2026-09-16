@@ -213,14 +213,14 @@ def test_env_update_activate_script(shell):
 @pytest.mark.parametrize(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
-def test_env_scripts_regenerate_after_lockfile_change(shell):
+def test_env_scripts_regenerate_after_spec_install(shell):
     """Test that environment activation and deactivation scripts are regenerated
-    when the lockfile is modified"""
+    when the spec is installed"""
 
     env("create", "test")
-    environ = ev.read("test")
+    install = SpackCommand("install")
 
-    env("activate", f"--{shell}", "test")
+    environ = ev.read("test")
 
     path_to_activate_script = env_script.path_to_env_script(
         environ, shell, script_type="activate", view="default"
@@ -228,17 +228,14 @@ def test_env_scripts_regenerate_after_lockfile_change(shell):
     path_to_deactivate_script = env_script.path_to_env_script(
         environ, shell, script_type="deactivate", view="default"
     )
-
     initial_activate_mtime = os.stat(path_to_activate_script).st_mtime
     initial_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
 
-    environ.add("mpich")
-    environ.concretize()
-    environ.write()
+    with environ:
+        install("--add", "view-file", "--fake")
 
     new_activate_mtime = os.stat(path_to_activate_script).st_mtime
     new_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
-
     assert new_activate_mtime > initial_activate_mtime, (
         "Activation script should be regenerated after lockfile change"
     )
@@ -246,7 +243,11 @@ def test_env_scripts_regenerate_after_lockfile_change(shell):
         "Deactivation script should be regenerated after lockfile change"
     )
 
-    # TODO: Rikki, make sure the mpich is in (de)activation script
+    activate_output = env("activate", f"--{shell}", "test")
+    activate_content = _get_cmds_from_script(activate_output, shell)
+
+    view_file_bin_path = f"_spack_env_prepend PATH {os.path.join(environ.path, '.spack-env/view/bin')}"
+    assert view_file_bin_path in activate_content
 
 
 @pytest.mark.parametrize(
