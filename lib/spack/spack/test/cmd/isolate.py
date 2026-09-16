@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pytest
 
+import spack
 import spack.cmd.isolate
 import spack.config
 import spack.main

@@ -9,7 +9,6 @@ from argparse import ArgumentParser
 
 import spack.config
 import spack.paths
-import spack.schema.include
 import spack.util.spack_yaml as syaml
 from spack.util import tty
 
