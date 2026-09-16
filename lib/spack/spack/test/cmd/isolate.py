@@ -70,13 +70,13 @@ def test_isolate_added_config(mock_spack_paths, tmp_path):
 
     # Create include.yaml that references isolate scope
     include_yaml = etc_spack / "include.yaml"
-    with open(include_yaml, "w") as f:
+    with open(include_yaml, "w", encoding="utf-8") as f:
         f.write('include:\n  - path: "isolate"\n    optional: true\n  - path: "standard_scopes"\n')
 
     # Create standard_scopes/include.yaml
     standard_scopes_dir = etc_spack / "standard_scopes"
     standard_scopes_dir.mkdir()
-    with open(standard_scopes_dir / "include.yaml", "w") as f:
+    with open(standard_scopes_dir / "include.yaml", "w", encoding="utf-8") as f:
         f.write(
             'include:\n  - name: "user"\n    path: "~/.config/spack"\n'
             "    optional: true\n    prefer_modify: true\n"
@@ -101,7 +101,7 @@ def test_isolate_added_config(mock_spack_paths, tmp_path):
     config_file = isolated_path / "config.yaml"
     assert config_file.exists()
 
-    with open(config_file) as f:
+    with open(config_file, encoding="utf-8") as f:
         text = f.read().strip()
     assert "build_jobs: 42" in text
     assert "locations:" in text
@@ -278,13 +278,13 @@ def test_self_isolate(mock_spack_paths, tmp_path):
     base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
 
     # Create include.yaml
-    with open(etc_spack / "include.yaml", "w") as f:
+    with open(etc_spack / "include.yaml", "w", encoding="utf-8") as f:
         f.write('include:\n  - path: "isolate"\n    optional: true\n  - path: "standard_scopes"\n')
 
     # Create standard_scopes
     standard_scopes_dir = etc_spack / "standard_scopes"
     standard_scopes_dir.mkdir()
-    with open(standard_scopes_dir / "include.yaml", "w") as f:
+    with open(standard_scopes_dir / "include.yaml", "w", encoding="utf-8") as f:
         f.write(
             'include:\n  - name: "user"\n    path: "~/.config/spack"\n'
             "    optional: true\n    prefer_modify: true\n"
@@ -304,7 +304,7 @@ def test_self_isolate(mock_spack_paths, tmp_path):
     # Config goes to user-redirect subdirectory
     new_config_path = isolate_scope_path / "user-redirect" / "packages.yaml"
     assert new_config_path.exists()
-    with open(new_config_path) as f:
+    with open(new_config_path, encoding="utf-8") as f:
         text = f.read().strip()
     expected_text = """\
 packages:
@@ -318,13 +318,13 @@ def test_self_isolate_overwrite(mock_spack_paths, tmp_path):
     base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
 
     # Create include.yaml
-    with open(etc_spack / "include.yaml", "w") as f:
+    with open(etc_spack / "include.yaml", "w", encoding="utf-8") as f:
         f.write('include:\n  - path: "isolate"\n    optional: true\n  - path: "standard_scopes"\n')
 
     # Create standard_scopes
     standard_scopes_dir = etc_spack / "standard_scopes"
     standard_scopes_dir.mkdir()
-    with open(standard_scopes_dir / "include.yaml", "w") as f:
+    with open(standard_scopes_dir / "include.yaml", "w", encoding="utf-8") as f:
         f.write(
             'include:\n  - name: "user"\n    path: "~/.config/spack"\n'
             "    optional: true\n    prefer_modify: true\n"
@@ -342,7 +342,7 @@ def test_self_isolate_overwrite(mock_spack_paths, tmp_path):
     spack.config.CONFIG = spack.config.create()
     sp_config("add", "concretizer:reuse:false")
     assert new_concr_config_path.exists()
-    with open(new_concr_config_path) as f:
+    with open(new_concr_config_path, encoding="utf-8") as f:
         text = f.read().strip()
     expected_text = """\
 concretizer:
