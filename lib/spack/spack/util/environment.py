@@ -168,7 +168,7 @@ class ShellCmdString:
         if self.shell == "csh":
             return f'alias {name} "{code}"\n'
         elif self.shell == "fish":
-            return f"function {name}\n{code}\nend"
+            return f"function {name}\n{code}\nend\n"
         elif self.shell in ("bat", "pwsh"):
             # Not implemented in Windows shells
             return ""

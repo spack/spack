@@ -91,7 +91,7 @@ def load(parser, args):
         for spec in constraint_specs
     ]
 
-    shell = args.shell if args.shell else os.environ.get("SPACK_SHELL")
+    shell = args.shell
 
     if not shell:
         specs_str = " ".join(str(s) for s in constraint_specs) or "SPECS"

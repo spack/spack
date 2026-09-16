@@ -200,11 +200,11 @@ def test_shell_modifications_are_properly_escaped(shell):
 @pytest.mark.parametrize(
     "shell, append_expected",
     [
-        ("sh", "_spack_env_append FOO path/to/bar :"),
-        ("csh", "_spack_env_append FOO path/to/bar :"),
-        ("fish", "_spack_env_append FOO path/to/bar :"),
-        ("pwsh", "_spack_env_append FOO path/to/bar ';'"),
-        ("bat", '%_spack_env_append% FOO "path/to/bar" ";"'),
+        ("sh", "_spack_env_append FOO path/to/bar :\n"),
+        ("csh", "_spack_env_append FOO path/to/bar :\n"),
+        ("fish", "_spack_env_append FOO path/to/bar :\n"),
+        ("pwsh", "_spack_env_append FOO path/to/bar ';'\n"),
+        ("bat", '%_spack_env_append% FOO "path/to/bar" ";"\n'),
     ],
 )
 def test_append_shell_cmd_string(shell, append_expected):
@@ -215,11 +215,11 @@ def test_append_shell_cmd_string(shell, append_expected):
 @pytest.mark.parametrize(
     "shell, prepend_expected",
     [
-        ("sh", "_spack_env_prepend FOO path/to/bar :"),
-        ("csh", "_spack_env_prepend FOO path/to/bar :"),
-        ("fish", "_spack_env_prepend FOO path/to/bar :"),
-        ("pwsh", "_spack_env_prepend FOO path/to/bar ';'"),
-        ("bat", '%_spack_env_prepend% FOO "path/to/bar" ";"'),
+        ("sh", "_spack_env_prepend FOO path/to/bar :\n"),
+        ("csh", "_spack_env_prepend FOO path/to/bar :\n"),
+        ("fish", "_spack_env_prepend FOO path/to/bar :\n"),
+        ("pwsh", "_spack_env_prepend FOO path/to/bar ';'\n"),
+        ("bat", '%_spack_env_prepend% FOO "path/to/bar" ";"\n'),
     ],
 )
 def test_prepend_shell_cmd_string(shell, prepend_expected):
@@ -230,11 +230,11 @@ def test_prepend_shell_cmd_string(shell, prepend_expected):
 @pytest.mark.parametrize(
     "shell, prune_dups_expected",
     [
-        ("sh", "_spack_env_prune_duplicates FOO :"),
-        ("csh", "_spack_env_prune_duplicates FOO :"),
-        ("fish", "_spack_env_prune_duplicates FOO :"),
-        ("pwsh", "_spack_env_prune_duplicates FOO ';'"),
-        ("bat", '%_spack_env_prune_duplicates% FOO ";"'),
+        ("sh", "_spack_env_prune_duplicates FOO :\n"),
+        ("csh", "_spack_env_prune_duplicates FOO :\n"),
+        ("fish", "_spack_env_prune_duplicates FOO :\n"),
+        ("pwsh", "_spack_env_prune_duplicates FOO ';'\n"),
+        ("bat", '%_spack_env_prune_duplicates% FOO ";"\n'),
     ],
 )
 def test_prune_dups_shell_cmd_string(shell, prune_dups_expected):
@@ -245,11 +245,11 @@ def test_prune_dups_shell_cmd_string(shell, prune_dups_expected):
 @pytest.mark.parametrize(
     "shell, remove_expected",
     [
-        ("sh", "_spack_env_remove_first FOO path/to/bar :"),
-        ("csh", "_spack_env_remove_first FOO path/to/bar :"),
-        ("fish", "_spack_env_remove_first FOO path/to/bar :"),
-        ("pwsh", "_spack_env_remove_first FOO path/to/bar ';'"),
-        ("bat", '%_spack_env_remove_first% FOO "path/to/bar" ";"'),
+        ("sh", "_spack_env_remove_first FOO path/to/bar :\n"),
+        ("csh", "_spack_env_remove_first FOO path/to/bar :\n"),
+        ("fish", "_spack_env_remove_first FOO path/to/bar :\n"),
+        ("pwsh", "_spack_env_remove_first FOO path/to/bar ';'\n"),
+        ("bat", '%_spack_env_remove_first% FOO "path/to/bar" ";"\n'),
     ],
 )
 def test_remove_first_shell_cmd_string(shell, remove_expected):
@@ -260,11 +260,11 @@ def test_remove_first_shell_cmd_string(shell, remove_expected):
 @pytest.mark.parametrize(
     "shell, remove_expected",
     [
-        ("sh", "_spack_env_remove_last FOO path/to/bar :"),
-        ("csh", "_spack_env_remove_last FOO path/to/bar :"),
-        ("fish", "_spack_env_remove_last FOO path/to/bar :"),
-        ("pwsh", "_spack_env_remove_last FOO path/to/bar ';'"),
-        ("bat", '%_spack_env_remove_last% FOO "path/to/bar" ";"'),
+        ("sh", "_spack_env_remove_last FOO path/to/bar :\n"),
+        ("csh", "_spack_env_remove_last FOO path/to/bar :\n"),
+        ("fish", "_spack_env_remove_last FOO path/to/bar :\n"),
+        ("pwsh", "_spack_env_remove_last FOO path/to/bar ';'\n"),
+        ("bat", '%_spack_env_remove_last% FOO "path/to/bar" ";"\n'),
     ],
 )
 def test_remove_last_shell_cmd_string(shell, remove_expected):
@@ -275,11 +275,11 @@ def test_remove_last_shell_cmd_string(shell, remove_expected):
 @pytest.mark.parametrize(
     "shell, remove_expected",
     [
-        ("sh", "_spack_env_remove_value FOO path/to/bar :"),
-        ("csh", "_spack_env_remove_value FOO path/to/bar :"),
-        ("fish", "_spack_env_remove_value FOO path/to/bar :"),
-        ("pwsh", "_spack_env_remove_value FOO path/to/bar ';'"),
-        ("bat", '%_spack_env_remove_value% FOO "path/to/bar" ";"'),
+        ("sh", "_spack_env_remove_value FOO path/to/bar :\n"),
+        ("csh", "_spack_env_remove_value FOO path/to/bar :\n"),
+        ("fish", "_spack_env_remove_value FOO path/to/bar :\n"),
+        ("pwsh", "_spack_env_remove_value FOO path/to/bar ';'\n"),
+        ("bat", '%_spack_env_remove_value% FOO "path/to/bar" ";"\n'),
     ],
 )
 def test_remove_value_shell_cmd_string(shell, remove_expected):
@@ -322,7 +322,7 @@ def test_unset_shell_cmd_string(shell, unset_expected):
     [
         ("sh", "alias foo='spack bar'\n"),
         ("csh", 'alias foo "spack bar"\n'),
-        ("fish", "function foo\nspack bar\nend"),
+        ("fish", "function foo\nspack bar\nend\n"),
     ],
 )
 def test_alias_shell_cmd_string(shell, alias):
@@ -335,28 +335,28 @@ def test_alias_shell_cmd_string(shell, alias):
     [
         (
             "sh",
-            "_spack_env_append FOO 'path/with/$dollarsign' :",
-            "_spack_env_append FOO 'path/with/ space' :",
+            "_spack_env_append FOO 'path/with/$dollarsign' :\n",
+            "_spack_env_append FOO 'path/with/ space' :\n",
         ),
         (
             "csh",
-            "_spack_env_append FOO 'path/with/$dollarsign' :",
-            "_spack_env_append FOO 'path/with/ space' :",
+            "_spack_env_append FOO 'path/with/$dollarsign' :\n",
+            "_spack_env_append FOO 'path/with/ space' :\n",
         ),
         (
             "fish",
-            "_spack_env_append FOO 'path/with/$dollarsign' :",
-            "_spack_env_append FOO 'path/with/ space' :",
+            "_spack_env_append FOO 'path/with/$dollarsign' :\n",
+            "_spack_env_append FOO 'path/with/ space' :\n",
         ),
         (
             "pwsh",
-            "_spack_env_append FOO 'path/with/$dollarsign' ';'",
-            "_spack_env_append FOO 'path/with/ space' ';'",
+            "_spack_env_append FOO 'path/with/$dollarsign' ';'\n",
+            "_spack_env_append FOO 'path/with/ space' ';'\n",
         ),
         (
             "bat",
-            '%_spack_env_append% FOO "path/with/$dollarsign" ";"',
-            '%_spack_env_append% FOO "path/with/ space" ";"',
+            '%_spack_env_append% FOO "path/with/$dollarsign" ";"\n',
+            '%_spack_env_append% FOO "path/with/ space" ";"\n',
         ),
     ],
 )
