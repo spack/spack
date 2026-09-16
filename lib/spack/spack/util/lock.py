@@ -861,7 +861,12 @@ class LockTransaction:
 
     def __enter__(self):
         if self._enter() and self._acquire_fn:
-            return self._acquire_fn()
+            try:
+                return self._acquire_fn()
+            except BaseException:
+                # Release the lock without running the release function.
+                self._exit(None)
+                raise
 
     def __exit__(
         self,
@@ -961,7 +966,11 @@ class TryReadTransaction(ReadTransaction):
             return False
         self._acquired = True
         if outermost and self._acquire_fn:
-            self._acquire_fn()
+            try:
+                self._acquire_fn()
+            except BaseException:
+                self._exit(None)
+                raise
         return True
 
     def __exit__(
@@ -1002,7 +1011,11 @@ class TryWriteTransaction(WriteTransaction):
             return False
         self._acquired = True
         if outermost and self._acquire_fn:
-            self._acquire_fn()
+            try:
+                self._acquire_fn()
+            except BaseException:
+                self._exit(None)
+                raise
         return True
 
     def __exit__(

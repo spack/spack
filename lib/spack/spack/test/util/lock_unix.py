@@ -1186,6 +1186,43 @@ def test_try_transaction_with_exception(lock_path):
     assert lock._reads == 0 and lock._writes == 0
 
 
+@pytest.mark.parametrize(
+    "transaction",
+    [lk.ReadTransaction, lk.WriteTransaction, lk.TryReadTransaction, lk.TryWriteTransaction],
+)
+def test_transaction_acquire_fn_raises(lock_path, transaction):
+    """An exception in the acquire function releases the lock without running the release
+    function, and the lock can be used again afterwards."""
+    # counters for acquire and release
+    num_acquired, num_released = 0, 0
+
+    def acquire_raise_on_first_call():
+        nonlocal num_acquired
+        num_acquired += 1
+        if num_acquired == 1:
+            raise ValueError()
+
+    def release(t, v, tb):
+        nonlocal num_released
+        num_released += 1
+
+    lock = lk.Lock(lock_path)
+
+    with pytest.raises(ValueError):
+        with transaction(lock, acquire=acquire_raise_on_first_call, release=release):
+            pass
+
+    assert num_released == 0
+    assert lock._reads == 0 and lock._writes == 0
+
+    with transaction(lock, acquire=acquire_raise_on_first_call, release=release):
+        pass
+
+    assert num_acquired == 2
+    assert num_released == 1
+    assert lock._reads == 0 and lock._writes == 0
+
+
 def test_try_transaction_nested(lock_path):
     """Nested try-transactions acquire, but do not re-run the acquire function, and the release
     function only runs when the outermost write lock is released."""
