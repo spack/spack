@@ -61,15 +61,18 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     # Get old resource paths
     old_licenses_dir = spack.paths.old_licenses_path
     old_envs_dir = spack.paths.old_envs_path
+    old_gpg_dir = spack.paths.old_gpg_path
 
     # Check what's in the backup
     backup_licenses = os.path.join(backup_dir, "licenses")
     backup_envs = os.path.join(backup_dir, "environments")
+    backup_gpg = os.path.join(backup_dir, "gpg")
 
-    has_licenses = os.path.exists(backup_licenses) and os.listdir(backup_licenses)
-    has_envs = os.path.exists(backup_envs) and os.listdir(backup_envs)
+    has_licenses = bool(os.path.exists(backup_licenses) and os.listdir(backup_licenses))
+    has_envs = bool(os.path.exists(backup_envs) and os.listdir(backup_envs))
+    has_gpg = bool(os.path.exists(backup_gpg) and os.listdir(backup_gpg))
 
-    if not has_licenses and not has_envs:
+    if not has_licenses and not has_envs and not has_gpg:
         tty.msg(f"Backup directory exists but is empty: {backup_dir}")
         if args.dry_run:
             tty.msg(f"Would remove {backup_dir}")
@@ -85,6 +88,8 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
             tty.msg(f"  - Restore licenses from {backup_licenses} to {old_licenses_dir}")
         if has_envs:
             tty.msg(f"  - Restore environments from {backup_envs} to {old_envs_dir}")
+        if has_gpg:
+            tty.msg(f"  - Restore GPG data from {backup_gpg} to {old_gpg_dir}")
         tty.msg("  - Update layout scope to point to old locations")
         tty.msg(f"  - Remove backup directory: {backup_dir}")
         return
@@ -144,6 +149,17 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
                 shutil.copy2(src, dst)
         tty.msg(f"  Restored environments to {old_envs_dir}")
 
+    # Restore GPG data. Keyrings must not be merged with an existing destination.
+    if has_gpg:
+        if os.path.exists(old_gpg_dir):
+            tty.die(
+                f"Cannot restore GPG data: destination already exists at {old_gpg_dir}. "
+                "Remove it or resolve the conflict manually before running undo."
+            )
+        fs.mkdirp(os.path.dirname(old_gpg_dir))
+        shutil.move(backup_gpg, old_gpg_dir)
+        tty.msg(f"  Restored GPG data to {old_gpg_dir}")
+
     # Update layout scope to point to old locations
     layout_scope_path = spack.config._layout_scope_path()
     config_yaml_path = os.path.join(layout_scope_path, "config.yaml")
@@ -159,9 +175,11 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
 
     # Point to old locations
     if has_licenses:
-        layout_config["config"]["licenses_dir"] = old_licenses_dir
+        layout_config["config"]["license_dir"] = old_licenses_dir
     if has_envs:
         layout_config["config"]["environments_root"] = old_envs_dir
+    if has_gpg:
+        layout_config["config"]["gpg_path"] = old_gpg_dir
 
     # Write updated layout scope
     fs.mkdirp(layout_scope_path)
