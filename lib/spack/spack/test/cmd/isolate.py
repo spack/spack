@@ -61,6 +61,7 @@ def test_isolate_smoke_test(mock_spack_paths, tmp_path):
     with open(isolate_scope_path / "include.yaml", encoding="utf-8") as f:
         include_text = f.read()
     assert "layout" in include_text
+    assert "SPACK_DISABLE_LOCAL_CONFIG" not in include_text
 
 
 def test_isolate_added_config(mock_spack_paths, tmp_path):

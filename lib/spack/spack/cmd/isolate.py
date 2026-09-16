@@ -4,7 +4,6 @@
 import os
 import shutil
 import sys
-import textwrap
 from argparse import ArgumentParser
 
 import spack.config
@@ -60,7 +59,6 @@ def _isolate_include_config(new_user_path):
         "path": new_user_path,
         "optional": True,
         "prefer_modify": True,
-        "when": '"SPACK_DISABLE_LOCAL_CONFIG" not in env',
     }
 
     # The override replaces the standard_scopes include list. Keep the layout
@@ -236,24 +234,3 @@ def isolate(parser, args):
     elif args.path is None:
         tty.die("Must provide one of --path, --self, or --undo")
     _do_isolate(args)
-    tty.warn(
-        "\n".join(
-            textwrap.wrap(
-                "Due to current limitations in Spack's configuration, adding repos without an"
-                " explicit destination will default to $SPACK_USER_CACHE_PATH or ~/.spack."
-                " This behavior will be fixed with shared spack in v1.3."
-            )
-        )
-    )
-    if "SPACK_DISABLE_LOCAL_CONFIG" in os.environ:
-        tty.warn(
-            "\n".join(
-                textwrap.wrap(
-                    "SPACK_DISABLE_LOCAL_CONFIG is present in the current shell environment,"
-                    " which disables the user scope. spack isolate uses this scope for"
-                    " isolation. In order for future configuration changes to be added"
-                    " to the isolated scope, you will need to unset SPACK_DISABLE_LOCAL_CONFIG."
-                )
-            )
-        )
-        pass
