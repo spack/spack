@@ -246,7 +246,9 @@ def test_env_scripts_regenerate_after_spec_install(shell):
     activate_output = env("activate", f"--{shell}", "test")
     activate_content = _get_cmds_from_script(activate_output, shell)
 
-    view_file_bin_path = f"_spack_env_prepend PATH {os.path.join(environ.path, '.spack-env/view/bin')}"
+    view_file_bin_path = (
+        f"_spack_env_prepend PATH {os.path.join(environ.path, '.spack-env/view/bin')}"
+    )
     assert view_file_bin_path in activate_content
 
 
