@@ -238,7 +238,7 @@ def force_checkout_branch(
 ):
     """Fetch and checkout --force branch."""
     git_exe = git_exe or git(required=True)
-    fetch_args = ["--progress"]
+    fetch_args = ["--quiet"]
     if depth:
         if depth <= 0:
             raise ValueError("depth must be a positive integer")

@@ -307,7 +307,7 @@ class MockDescriptor(spack.repo.RepoDescriptor):
         self,
         git: Optional[Executable] = None,
         remote: Optional[str] = "origin",
-        force: bool = False,
+        force_discard: bool = False,
     ) -> None:
         pass
 
