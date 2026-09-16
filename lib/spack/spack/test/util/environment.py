@@ -172,7 +172,7 @@ def test_shell_modifications_are_properly_escaped(shell):
         changes.append_path("VAR", "$ANOTHER_PATH")
         changes.set("RM_RF", "$(rm -rf /)")
 
-    script = changes.shell_modifications(shell)
+    shell_mods = changes.shell_modifications(shell)
 
     append_cmd = "_spack_env_append"
     set_cmd = "_spack_env_set"
@@ -183,39 +183,184 @@ def test_shell_modifications_are_properly_escaped(shell):
         set_cmd = f"%{set_cmd}%"
         separator = f'"{os.pathsep}"'
         # bat uses double quotes for quoting and %% to escape % signs
-        assert f'{set_cmd} VAR "%%PATH%%"' in script
-        assert f'{append_cmd} VAR "%%ANOTHER_PATH%%" {separator}' in script
-        assert f'{set_cmd} RM_RF "$(rm -rf /)"' in script
+        assert f'{set_cmd} VAR "%%PATH%%"' in shell_mods
+        assert f'{append_cmd} VAR "%%ANOTHER_PATH%%" {separator}' in shell_mods
+        assert f'{set_cmd} RM_RF "$(rm -rf /)"' in shell_mods
     elif shell == "pwsh":
         separator = f"'{os.pathsep}'"
-        assert f"{set_cmd} VAR '$PATH'" in script
-        assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in script
-        assert f"{set_cmd} RM_RF '$(rm -rf /)'" in script
+        assert f"{set_cmd} VAR '$PATH'" in shell_mods
+        assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in shell_mods
+        assert f"{set_cmd} RM_RF '$(rm -rf /)'" in shell_mods
     else:
-        assert f"{set_cmd} VAR '$PATH'" in script
-        assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in script
-        assert f"{set_cmd} RM_RF '$(rm -rf /)'" in script
+        assert f"{set_cmd} VAR '$PATH'" in shell_mods
+        assert f"{append_cmd} VAR '$ANOTHER_PATH' {separator}" in shell_mods
+        assert f"{set_cmd} RM_RF '$(rm -rf /)'" in shell_mods
 
 
-# TODO: Rikki, update this test
-# @pytest.mark.parametrize(
-#    "shell,set_expected,unset_expected,alias,join_sep",
-#    [
-#        ("sh", "export FOO=bar", "unset FOO", ["alias foo='spack bar'"], ";\n"),
-#        ("csh", "setenv FOO bar", "unsetenv FOO", ['alias foo "spack bar"'], ";\n"),
-#        ("fish", "set -gx FOO bar", "set -e FOO", ["function foo", "spack bar", "end"], ";\n"),
-#        ("bat", 'set "FOO=bar"', 'set "FOO="', [], "\n"),
-#        ("pwsh", "$Env:FOO='bar'", "Set-Item -Path Env:FOO", [], "\n"),
-#    ],
-# )
-# def test_shell_cmd_string(shell, set_expected, unset_expected, alias, join_sep):
-#    shell_cmd = envutil.ShellCmdString(shell)
-#    assert shell_cmd.set("FOO", "bar") == set_expected
-#    assert shell_cmd.unset("FOO") == unset_expected
-#    assert shell_cmd.alias("foo", "spack bar") == alias
-#    assert shell_cmd.join([]) == ""
-#    assert shell_cmd.join([set_expected]) == set_expected + join_sep
-#    assert (
-#        shell_cmd.join([set_expected, unset_expected])
-#        == set_expected + join_sep + unset_expected + join_sep
-#    )
+@pytest.mark.parametrize(
+    "shell, append_expected",
+    [
+        ("sh", "_spack_env_append FOO path/to/bar :"),
+        ("csh", "_spack_env_append FOO path/to/bar :"),
+        ("fish", "_spack_env_append FOO path/to/bar :"),
+        ("pwsh", "_spack_env_append FOO path/to/bar ';'"),
+        ("bat", '%_spack_env_append% FOO "path/to/bar" ";"'),
+    ],
+)
+def test_append_shell_cmd_string(shell, append_expected):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.append("FOO", "path/to/bar") == append_expected
+
+
+@pytest.mark.parametrize(
+    "shell, prepend_expected",
+    [
+        ("sh", "_spack_env_prepend FOO path/to/bar :"),
+        ("csh", "_spack_env_prepend FOO path/to/bar :"),
+        ("fish", "_spack_env_prepend FOO path/to/bar :"),
+        ("pwsh", "_spack_env_prepend FOO path/to/bar ';'"),
+        ("bat", '%_spack_env_prepend% FOO "path/to/bar" ";"'),
+    ],
+)
+def test_prepend_shell_cmd_string(shell, prepend_expected):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.prepend("FOO", "path/to/bar") == prepend_expected
+
+
+@pytest.mark.parametrize(
+    "shell, prune_dups_expected",
+    [
+        ("sh", "_spack_env_prune_duplicates FOO :"),
+        ("csh", "_spack_env_prune_duplicates FOO :"),
+        ("fish", "_spack_env_prune_duplicates FOO :"),
+        ("pwsh", "_spack_env_prune_duplicates FOO ';'"),
+        ("bat", '%_spack_env_prune_duplicates% FOO ";"'),
+    ],
+)
+def test_prune_dups_shell_cmd_string(shell, prune_dups_expected):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.prune_duplicates("FOO") == prune_dups_expected
+
+
+@pytest.mark.parametrize(
+    "shell, remove_expected",
+    [
+        ("sh", "_spack_env_remove_first FOO path/to/bar :"),
+        ("csh", "_spack_env_remove_first FOO path/to/bar :"),
+        ("fish", "_spack_env_remove_first FOO path/to/bar :"),
+        ("pwsh", "_spack_env_remove_first FOO path/to/bar ';'"),
+        ("bat", '%_spack_env_remove_first% FOO "path/to/bar" ";"'),
+    ],
+)
+def test_remove_first_shell_cmd_string(shell, remove_expected):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.remove_first("FOO", "path/to/bar") == remove_expected
+
+
+@pytest.mark.parametrize(
+    "shell, remove_expected",
+    [
+        ("sh", "_spack_env_remove_last FOO path/to/bar :"),
+        ("csh", "_spack_env_remove_last FOO path/to/bar :"),
+        ("fish", "_spack_env_remove_last FOO path/to/bar :"),
+        ("pwsh", "_spack_env_remove_last FOO path/to/bar ';'"),
+        ("bat", '%_spack_env_remove_last% FOO "path/to/bar" ";"'),
+    ],
+)
+def test_remove_last_shell_cmd_string(shell, remove_expected):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.remove_last("FOO", "path/to/bar") == remove_expected
+
+
+@pytest.mark.parametrize(
+    "shell, remove_expected",
+    [
+        ("sh", "_spack_env_remove_value FOO path/to/bar :"),
+        ("csh", "_spack_env_remove_value FOO path/to/bar :"),
+        ("fish", "_spack_env_remove_value FOO path/to/bar :"),
+        ("pwsh", "_spack_env_remove_value FOO path/to/bar ';'"),
+        ("bat", '%_spack_env_remove_value% FOO "path/to/bar" ";"'),
+    ],
+)
+def test_remove_value_shell_cmd_string(shell, remove_expected):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.remove_value("FOO", "path/to/bar") == remove_expected
+
+
+@pytest.mark.parametrize(
+    "shell, set_expected",
+    [
+        ("sh", "_spack_env_set FOO path/to/bar"),
+        ("csh", "_spack_env_set FOO path/to/bar"),
+        ("fish", "_spack_env_set FOO path/to/bar"),
+        ("pwsh", "_spack_env_set FOO path/to/bar"),
+        ("bat", '%_spack_env_set% FOO "path/to/bar"'),
+    ],
+)
+def test_set_shell_cmd_string(shell, set_expected):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.set("FOO", "path/to/bar") == set_expected
+
+
+@pytest.mark.parametrize(
+    "shell, unset_expected",
+    [
+        ("sh", "_spack_env_unset FOO"),
+        ("csh", "_spack_env_unset FOO"),
+        ("fish", "_spack_env_unset FOO"),
+        ("pwsh", "_spack_env_unset FOO"),
+        ("bat", "%_spack_env_unset% FOO"),
+    ],
+)
+def test_unset_shell_cmd_string(shell, unset_expected):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.unset("FOO") == unset_expected
+
+
+@pytest.mark.parametrize(
+    "shell,alias",
+    [
+        ("sh", "alias foo='spack bar'\n"),
+        ("csh", 'alias foo "spack bar"\n'),
+        ("fish", "function foo\nspack bar\nend"),
+    ],
+)
+def test_alias_shell_cmd_string(shell, alias):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.alias("foo", "spack bar") == alias
+
+
+@pytest.mark.parametrize(
+    "shell, dollarsign_expected, spacing_expected",
+    [
+        (
+            "sh",
+            "_spack_env_append FOO 'path/with/$dollarsign' :",
+            "_spack_env_append FOO 'path/with/ space' :",
+        ),
+        (
+            "csh",
+            "_spack_env_append FOO 'path/with/$dollarsign' :",
+            "_spack_env_append FOO 'path/with/ space' :",
+        ),
+        (
+            "fish",
+            "_spack_env_append FOO 'path/with/$dollarsign' :",
+            "_spack_env_append FOO 'path/with/ space' :",
+        ),
+        (
+            "pwsh",
+            "_spack_env_append FOO 'path/with/$dollarsign' ';'",
+            "_spack_env_append FOO 'path/with/ space' ';'",
+        ),
+        (
+            "bat",
+            '%_spack_env_append% FOO "path/with/$dollarsign" ";"',
+            '%_spack_env_append% FOO "path/with/ space" ";"',
+        ),
+    ],
+)
+def test_quoting_shell_cmd_string(shell, dollarsign_expected, spacing_expected):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.append("FOO", "path/with/$dollarsign") == dollarsign_expected
+    assert shell_cmd.append("FOO", "path/with/ space") == spacing_expected

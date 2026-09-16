@@ -99,9 +99,9 @@ def deactivate_commands(shell):
 
     if shell == "csh":
         cmds += (
-            "if ( $?SPACK_OLD_PROMPT ) "
-            '    eval \'set prompt="$SPACK_OLD_PROMPT" &&'
-            "          unsetenv SPACK_OLD_PROMPT'"
+            "if ( $?SPACK_OLD_PROMPT ) \n"
+            '    eval \'set prompt="$SPACK_OLD_PROMPT" &&\n'
+            "          unsetenv SPACK_OLD_PROMPT'\n"
         )
         cmds += "unalias despacktivate"
     elif shell == "fish":
