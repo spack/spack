@@ -50,13 +50,14 @@ A normal startup finds old resources under the Spack prefix.
 
 ### Environments
 
-- If `config:environments_root` is the new default, Spack attempts to copy old managed environments to the shared default.
+- If the user explicitly configured `config:environments_root` to any custom path, Spack respects that configuration and does not relocate environments found in the old Spack location. Those old environments are treated as potentially abandoned rather than implicitly adopted.
+- Only when `config:environments_root` is the new default does Spack attempt to copy old managed environments to the shared default.
 - Environment migration uses a lock in the environments root shared with managed environment creation.
 - Views are excluded because they can contain generated or linked content that should not be copied as part of environment relocation.
 - Environments are copied individually.
 - If migration fails after creating destination environments, Spack removes only environments created by that migration attempt while holding the lock. Pre-existing destination environments are never removed.
 - If migration is abandoned, the old environments root remains configured.
-- If the user configured a custom environments root, Spack respects it and does not auto-migrate from the old location.
+- If the user configured a custom environments root, Spack respects it and does not auto-migrate from the old location. The old environments are not automatically added to the configured root or copied there.
 
 ### GPG keys
 
