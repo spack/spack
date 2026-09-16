@@ -303,7 +303,7 @@ class Usage(Option):
         usage.type = self.variant_type
         return usage
 
-    def make_variant(self, *value: Union[str, bool]) -> "UsageValue":
+    def make_usage(self, *value: Union[str, bool]) -> "UsageValue":
         """Factory that creates a usage holding the value(s) passed."""
         return UsageValue(self.variant_type, self.name, value)
 

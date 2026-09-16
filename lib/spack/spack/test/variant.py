@@ -393,8 +393,9 @@ class TestVariant:
         a = option_class(
             "foo", default="", description="", values=("bar", "baz", "foobar"), multi=False
         )
+        make_option = a.make_variant if option_class is Variant else a.make_usage
         # Valid vspec, shouldn't raise
-        vspec = a.make_variant("bar")
+        vspec = make_option("bar")
         a.validate_or_raise(vspec, "test-package")
 
         # Multiple values are not allowed
@@ -408,7 +409,7 @@ class TestVariant:
 
         # Valid multi-value vspec
         a.multi = True
-        vspec = a.make_variant("bar", "baz")
+        vspec = make_option("bar", "baz")
         a.validate_or_raise(vspec, "test-package")
         # Add an invalid value
         vspec.set("bar", "baz", "barbaz")
@@ -602,10 +603,12 @@ def test_wild_card_valued_variants_equivalent_to_str(option_class):
 
     several_arbitrary_values = ("doe", "re", "mi")
     # "*" case
-    wild_output = wild_var.make_variant(*several_arbitrary_values)
+    wild_make_option = wild_var.make_variant if option_class is Variant else wild_var.make_usage
+    wild_output = wild_make_option(*several_arbitrary_values)
     wild_var.validate_or_raise(wild_output, "test-package")
     # str case
-    str_output = str_var.make_variant(*several_arbitrary_values)
+    str_make_option = str_var.make_variant if option_class is Variant else str_var.make_usage
+    str_output = str_make_option(*several_arbitrary_values)
     str_var.validate_or_raise(str_output, "test-package")
     # equivalence each instance already validated
     assert str_output.value == wild_output.value
