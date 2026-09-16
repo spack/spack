@@ -84,5 +84,7 @@ def reinitialize():
     """
     global MISC_CACHE, FETCH_CACHE
 
-    MISC_CACHE = cast(spack.util.file_cache.FileCache, spack.util.lang.Singleton(_misc_cache))
+    MISC_CACHE = cast(
+        spack.util.file_cache.FileCache, spack.util.lang.Singleton(_create_global_misc_cache)
+    )
     FETCH_CACHE = cast(spack.fetch_strategy.FsCache, spack.util.lang.Singleton(_fetch_cache))
