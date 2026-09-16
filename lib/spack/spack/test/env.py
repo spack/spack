@@ -2297,3 +2297,57 @@ def test_env_substitution_reaches_the_unwrapped_configuration(
         expanded = spack.config.canonicalize_path("$env/concretization", config=configuration)
 
     assert expanded == os.path.join(env.path, "concretization")
+
+
+@pytest.mark.usefixtures("mutable_config")
+class TestLockfileWrites:
+    """The lockfile is only written when its content changes"""
+
+    @pytest.fixture
+    def lockfile(self, tmp_path: pathlib.Path) -> pathlib.Path:
+        (tmp_path / "spack.yaml").write_text("spack:\n  specs:\n  - mpileaks\n")
+        with ev.Environment(tmp_path) as e:
+            e.concretize()
+            e.write()
+        return tmp_path / ev.lockfile_name
+
+    def test_unchanged_lockfile_is_not_rewritten(self, lockfile, monkeypatch):
+        def fail(*args, **kwargs):
+            raise AssertionError("the lockfile was rewritten")
+
+        monkeypatch.setattr(ev.environment.sjson, "dump", fail)
+        with ev.Environment(lockfile.parent) as e:
+            e.write()
+
+    def test_older_lockfile_keeps_its_version_until_reconcretized(self, lockfile):
+        data = json.loads(lockfile.read_text())
+        current = data["_meta"]["lockfile-version"]
+        data["_meta"]["lockfile-version"] = current - 1
+        lockfile.write_text(json.dumps(data))
+        before = lockfile.read_bytes()
+
+        with ev.Environment(lockfile.parent) as e:
+            e.write()
+        assert lockfile.read_bytes() == before
+
+        with ev.Environment(lockfile.parent) as e:
+            e.concretize(force=True)
+            e.write()
+        assert json.loads(lockfile.read_text())["_meta"]["lockfile-version"] == current
+
+    def test_lockfile_written_when_roots_change(self, lockfile):
+        def roots():
+            return {r["spec"] for r in json.loads(lockfile.read_text())["roots"]}
+
+        with ev.Environment(lockfile.parent) as e:
+            e.add("libelf")
+            e.concretize()
+            e.write()
+        assert roots() == {"mpileaks", "libelf"}
+
+        # Removing a root changes the lockfile without concretizing anything new
+        with ev.Environment(lockfile.parent) as e:
+            e.remove("libelf")
+            e.concretize()
+            e.write()
+        assert roots() == {"mpileaks"}
