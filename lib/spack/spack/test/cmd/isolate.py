@@ -43,9 +43,13 @@ def test_isolate_smoke_test(mock_spack_paths, tmp_path):
 
     assert isolate_scope_path.exists()
     assert isolated_path.exists()
-    assert (isolate_scope_path / "bootstrap.yaml").exists()
-    assert (isolate_scope_path / "config.yaml").exists()
+    assert not (isolate_scope_path / "bootstrap.yaml").exists()
+    assert not (isolate_scope_path / "config.yaml").exists()
     assert (isolate_scope_path / "include.yaml").exists()
+    assert (isolated_path / "config.yaml").exists()
+    with open(isolate_scope_path / "include.yaml", encoding="utf-8") as f:
+        include_text = f.read()
+    assert "layout" in include_text
 
 
 def test_isolate_added_config(mock_spack_paths, tmp_path):
@@ -88,10 +92,29 @@ def test_isolate_added_config(mock_spack_paths, tmp_path):
 
     with open(config_file) as f:
         text = f.read().strip()
-    expected_text = """\
-config:
-  build_jobs: 42"""
-    assert text == expected_text
+    assert "build_jobs: 42" in text
+    assert "locations:" in text
+    assert "data:" in text
+    assert "state:" in text
+    assert "cache:" in text
+
+
+def test_isolate_replaces_old_isolate_config(mock_spack_paths, tmp_path):
+    """An old isolate scope is replaced by the current include override."""
+    base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
+    isolate_scope_path.mkdir(parents=True)
+    (isolate_scope_path / "include.yaml").write_text(
+        "include:\n  - name: user\n    path: old-target\n", encoding="utf-8"
+    )
+    (isolate_scope_path / "bootstrap.yaml").write_text("bootstrap: {}\n", encoding="utf-8")
+    old_target = tmp_path / "old-target"
+    old_target.mkdir()
+    new_target = tmp_path / "new-target"
+    sp_isolate("--overwrite", "--path", str(new_target))
+    include_text = (isolate_scope_path / "include.yaml").read_text(encoding="utf-8")
+    assert "new-target" in include_text
+    assert "layout" in include_text
+    assert not (isolate_scope_path / "bootstrap.yaml").exists()
 
 
 def test_isolate_overwrite_same_dir(mock_spack_paths, tmp_path):
@@ -115,12 +138,8 @@ def test_isolate_overwrite_different_dir(mock_spack_paths, tmp_path):
     with pytest.raises(Exception):
         sp_isolate("--path", str(isolated_path1))
     sp_isolate("--overwrite", "--path", str(isolated_path2))
-    with open(isolate_scope_path / "bootstrap.yaml", "r", encoding="utf-8") as f:
-        text = f.read().strip()
-    expected_text = f"""\
-bootstrap:
-  root: {isolated_path2 / "bootstrap"}"""
-    assert text == expected_text
+    assert not (isolate_scope_path / "bootstrap.yaml").exists()
+    assert (isolated_path2 / "config.yaml").exists()
 
 
 def test_self_isolate(mock_spack_paths, tmp_path):
@@ -142,7 +161,7 @@ def test_self_isolate(mock_spack_paths, tmp_path):
 
     sp_isolate("--self")
     assert isolate_scope_path.exists()
-    assert (isolate_scope_path / "bootstrap.yaml").exists()
+    assert not (isolate_scope_path / "bootstrap.yaml").exists()
     assert (isolate_scope_path / "config.yaml").exists()
     assert (isolate_scope_path / "include.yaml").exists()
     assert (isolate_scope_path / "user-redirect").exists()

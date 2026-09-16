@@ -23,12 +23,6 @@ ISOLATE_SCOPE_PATH = os.path.join(spack.paths.etc_path, "isolate")
 # _get_scope_indices no longer needed - we don't modify etc/spack/include.yaml
 
 
-def _isolate_bootstrap_config(new_user_path):
-    bootstrap_yaml = {"bootstrap": {"root": os.path.join(new_user_path, "bootstrap")}}
-    with open(os.path.join(ISOLATE_SCOPE_PATH, "bootstrap.yaml"), "w", encoding="utf-8") as f:
-        syaml.dump(bootstrap_yaml, f)
-
-
 def _isolate_config_config(new_user_path, config_path):
     build_stage_dirs = ["$tempdir/$user/spack-stage", os.path.join(new_user_path, "stage")]
     test_stage_dir = os.path.join(new_user_path, "test-stage")
@@ -123,9 +117,8 @@ def _setup_isolate_scope(new_user_path, overwrite: bool, target_config_existed: 
     else:
         final_user_path = new_user_path
 
-    # Write configuration files into isolate scope.  Preserve a pre-existing
-    # target config and put generated resource overrides in the layout scope.
-    _isolate_bootstrap_config(new_user_path)
+    # Write configuration into the target when it does not already have a
+    # config.yaml. Existing target configuration is preserved.
     config_path = (
         os.path.join(spack.config._layout_scope_path(), "config.yaml")
         if target_config_existed
@@ -134,8 +127,6 @@ def _setup_isolate_scope(new_user_path, overwrite: bool, target_config_existed: 
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
     if not target_config_existed:
         _isolate_config_config(new_user_path, config_path)
-    _isolate_repos_config(new_user_path)
-
     # Write include.yaml with include:: override to redirect user scope
     # For --self, this points to user-redirect/
     # For --path, this points to the external path
