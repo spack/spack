@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import contextlib
 import copy
 import os
 import re
@@ -80,12 +79,6 @@ def setup_parser(subparser: ArgumentParser) -> None:
         action="store_true",
         default=False,
         help="regenerate spack's tab completion scripts",
-    )
-    subparser.add_argument(
-        "--layout-specific-scopes",
-        action="store_true",
-        default=False,
-        help="process scopes based on detected layout",
     )
 
     subparser.add_argument(
@@ -876,24 +869,6 @@ def update_completion(parser: ArgumentParser, args: Namespace) -> None:
         _commands(parser, args)
 
 
-@contextlib.contextmanager
-def scope_layout_context(ignore_old=False):
-    """Disable conditionally activated scopes related to enforcing
-    old installation layout and the user configuration scope in ~/.spack.
-    """
-    saved_config = spack.config.CONFIG
-    saved_ignore_user_fallback = spack.config.ignore_user_fallback
-    try:
-        if ignore_old:
-            spack.config.ignore_user_fallback = True
-            spack.config.CONFIG = spack.config.create()
-        yield
-    finally:
-        if ignore_old:
-            spack.config.ignore_user_fallback = saved_ignore_user_fallback
-            spack.config.CONFIG = saved_config
-
-
 def commands(parser: ArgumentParser, args: Namespace) -> None:
     """Main function that calls formatter functions.
 
@@ -905,11 +880,9 @@ def commands(parser: ArgumentParser, args: Namespace) -> None:
         if args.format != "names" or any([args.aliases, args.update, args.header]):
             args.subparser.error("--update-completion can only be specified alone")
 
-        with scope_layout_context(not args.layout_specific_scopes):
-            # this runs the command multiple times with different arguments
-            update_completion(parser, args)
+        # This runs the command multiple times with different arguments.
+        update_completion(parser, args)
 
     else:
-        # run commands normally
-        with scope_layout_context(not args.layout_specific_scopes):
-            _commands(parser, args)
+        # Run commands normally.
+        _commands(parser, args)
