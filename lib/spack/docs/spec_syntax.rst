@@ -620,13 +620,24 @@ Edge attributes are always specified as key-value pairs:
 
    root ^[key=value] dep
 
-Attributes can also be split over several groups of brackets, in any order:
+To specify multiple attributes, put each attribute in its own enclosing brackets.
 
 .. code-block:: spec
 
    root ^[key=value][other=value] dep
 
 Repeated attributes combine, so ``virtuals`` and ``deptypes`` are accumulated, and ``when`` conditions are constrained together.
+For instance:
+
+.. code-block:: spec
+
+   root ^[virtuals=c][deptypes=build][virtuals=cxx][when=+foo][deptypes=run][when=target=x86_64] dep
+
+is equivalent to:
+
+.. code-block:: spec
+
+   root ^[virtuals=c,cxx][deptypes=build,run][when=+foo target=x86_64] dep
 
 In the following sections we'll discuss the edge attributes that are currently allowed in the spec syntax.
 
