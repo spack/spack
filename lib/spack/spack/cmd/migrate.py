@@ -97,6 +97,15 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     # Perform the undo
     tty.msg("Undoing auto-migration...")
 
+    # Check that all backup resources can be returned before changing any paths.
+    for backup_path, old_path in (
+        (backup_licenses, old_licenses_dir),
+        (backup_envs, old_envs_dir),
+        (backup_gpg, old_gpg_dir),
+    ):
+        if os.path.exists(backup_path) and os.path.isdir(old_path) and os.listdir(old_path):
+            tty.die(f"Cannot undo migration: destination contains files at {old_path}")
+
     # Restore licenses
     if has_licenses:
         # Check for conflicts
@@ -113,14 +122,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         else:
             fs.mkdirp(old_licenses_dir)
 
-        # Copy from backup to old location
-        for entry in os.listdir(backup_licenses):
-            src = os.path.join(backup_licenses, entry)
-            dst = os.path.join(old_licenses_dir, entry)
-            if os.path.isdir(src):
-                shutil.copytree(src, dst)
-            else:
-                shutil.copy2(src, dst)
+        shutil.move(backup_licenses, old_licenses_dir)
         tty.msg(f"  Restored licenses to {old_licenses_dir}")
 
     # Restore environments
@@ -139,23 +141,11 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         else:
             fs.mkdirp(old_envs_dir)
 
-        # Copy from backup to old location
-        for entry in os.listdir(backup_envs):
-            src = os.path.join(backup_envs, entry)
-            dst = os.path.join(old_envs_dir, entry)
-            if os.path.isdir(src):
-                shutil.copytree(src, dst)
-            else:
-                shutil.copy2(src, dst)
+        shutil.move(backup_envs, old_envs_dir)
         tty.msg(f"  Restored environments to {old_envs_dir}")
 
     # Restore GPG data. Keyrings must not be merged with an existing destination.
     if has_gpg:
-        if os.path.exists(old_gpg_dir):
-            tty.die(
-                f"Cannot restore GPG data: destination already exists at {old_gpg_dir}. "
-                "Remove it or resolve the conflict manually before running undo."
-            )
         fs.mkdirp(os.path.dirname(old_gpg_dir))
         shutil.move(backup_gpg, old_gpg_dir)
         tty.msg(f"  Restored GPG data to {old_gpg_dir}")
@@ -193,7 +183,6 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
 
     tty.msg("\nUndo complete!")
     tty.msg(
-        "\nNOTE: Files in shared directories (e.g., ~/.local/share/spack) were NOT touched.\n"
-        "Auto-migration copies (not moves) files, so they remain available for other\n"
-        "Spack instances."
+        "\nNOTE: Auto-migrated resources are moved into the migration backup and restored\n"
+        "to their original locations. Shared destinations were not modified."
     )

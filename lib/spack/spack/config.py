@@ -2149,15 +2149,15 @@ def _migration_backup_path() -> str:
 
 
 def _copy_directory_contents(
-    src_dir: str, dst_dir: str, resource_name: str, backup_dir: Optional[str] = None
+    src_dir: str, dst_dir: str, resource_name: str
 ) -> bool:
     """Copy contents of src_dir to dst_dir, checking for collisions.
 
-    IMPORTANT: This COPIES, not moves. Source files remain in place. This allows
-    `spack migrate undo` to restore the Spack instance to pre-migration state
-    without touching shared $HOME directories (which other Spack instances may use).
+    Successful entries are moved into the migration backup after being copied
+    to the destination. This leaves the old location empty and makes the backup
+    the authoritative location if migration is undone.
 
-    Always creates a backup before copying to destination.
+    The source remains in place until its destination copy succeeds.
 
     Args:
         src_dir: Source directory
@@ -2166,7 +2166,7 @@ def _copy_directory_contents(
         backup_dir: Backup root directory (default: $spack/.migration-backup, exposed for testing)
 
     Returns:
-        True if copy was successful, False if skipped due to collision
+        True if migration was successful, False if skipped or failed
     """
     if not os.path.exists(src_dir):
         return True  # Nothing to copy
@@ -2192,26 +2192,9 @@ def _copy_directory_contents(
             tty.warn(f"Cannot read destination {resource_name} directory: {dst_dir}")
             return False
 
-    # Create backup (always, unless backup_dir is explicitly None for testing)
-    if backup_dir is None:
-        backup_dir = _migration_backup_path()
+    # Copy to destination while leaving the source untouched.
+    # This ensures a failed destination copy leaves the old resource usable.
 
-    backup_resource_dir = os.path.join(backup_dir, resource_name)
-    filesystem.mkdirp(backup_resource_dir)
-    for entry in src_entries:
-        src_path = os.path.join(src_dir, entry)
-        backup_path = os.path.join(backup_resource_dir, entry)
-        try:
-            if os.path.isdir(src_path):
-                shutil.copytree(src_path, backup_path)
-            else:
-                shutil.copy2(src_path, backup_path)
-            tty.debug(f"Backed up {resource_name}: {entry}")
-        except (OSError, shutil.Error) as e:
-            tty.warn(f"Failed to backup {resource_name} {entry}: {e}")
-            return False
-
-    # Copy to destination (no collisions at this point)
     filesystem.mkdirp(dst_dir)
     for entry in src_entries:
         src_path = os.path.join(src_dir, entry)
@@ -2241,6 +2224,7 @@ def _copy_directory_contents(
                     shutil.copytree(src_path, dst_path)
             else:
                 shutil.copy2(src_path, dst_path)
+
             tty.debug(f"Copied {resource_name}: {entry}")
         except (OSError, shutil.Error) as e:
             tty.warn(f"Failed to copy {resource_name} {entry}: {e}")
@@ -2250,7 +2234,7 @@ def _copy_directory_contents(
 
 
 def _migrate_gpg_home(src_dir: str, dst_dir: str) -> bool:
-    """Copy a GPG home atomically into a new, private destination."""
+    """Copy a GPG home atomically to a new destination and back up the original."""
     if not os.path.exists(src_dir):
         return True
 
@@ -2269,6 +2253,10 @@ def _migrate_gpg_home(src_dir: str, dst_dir: str) -> bool:
             return False
         os.replace(staging_dir, dst_dir)
         staging_dir = None
+
+        backup_dir = os.path.join(_migration_backup_path(), "gpg")
+        filesystem.mkdirp(os.path.dirname(backup_dir))
+        shutil.move(src_dir, backup_dir)
         return True
     except (OSError, shutil.Error) as e:
         tty.warn(f"Failed to atomically migrate GPG keys to {dst_dir}: {e}")
@@ -2305,6 +2293,9 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                 return False
             if not destination_existed:
                 created.append(dst_path)
+            backup_dir = os.path.join(_migration_backup_path(), "environments")
+            filesystem.mkdirp(backup_dir)
+            shutil.move(src_path, os.path.join(backup_dir, entry))
         return True
     finally:
         lock.release_write()
@@ -2327,16 +2318,13 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
         dst_path = os.path.join(dst_dir, entry)
         backup_path = os.path.join(backup_dir, entry)
         try:
-            if os.path.isdir(src_path):
-                shutil.copytree(src_path, backup_path)
-            else:
-                shutil.copy2(src_path, backup_path)
             if os.path.exists(dst_path):
                 raise FileExistsError(dst_path)
             if os.path.isdir(src_path):
                 shutil.copytree(src_path, dst_path)
             else:
                 shutil.copy2(src_path, dst_path)
+            shutil.move(src_path, backup_path)
             copied.append(entry)
         except (OSError, shutil.Error) as e:
             tty.warn(
