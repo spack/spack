@@ -2363,7 +2363,7 @@ complete -c spack -n '__fish_spack_using_command mark' -s i -l implicit -d 'mark
 
 # spack migrate
 set -g __fish_spack_optspecs_spack_migrate h/help dry-run
-complete -c spack -n '__fish_spack_using_command_pos 0 migrate' -f -a undo
+complete -c spack -n '__fish_spack_using_command_pos 0 migrate' -f -a 'undo cleanup-old'
 complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command migrate' -l dry-run -f -a dry_run

@@ -1471,7 +1471,7 @@ _spack_migrate() {
     then
         SPACK_COMPREPLY="-h --help --dry-run"
     else
-        SPACK_COMPREPLY="undo"
+        SPACK_COMPREPLY="cleanup-old undo"
     fi
 }
 
