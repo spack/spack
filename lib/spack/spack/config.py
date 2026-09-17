@@ -1842,7 +1842,7 @@ def _detect_old_resources() -> Dict[str, bool]:
             pass
 
     # Check for licenses
-    licenses_dir = os.path.join(opt_spack, "licenses")
+    licenses_dir = spack.paths.old_licenses_path
     if os.path.exists(licenses_dir):
         try:
             if os.listdir(licenses_dir):  # Non-empty

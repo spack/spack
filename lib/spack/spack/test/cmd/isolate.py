@@ -58,6 +58,17 @@ def test_isolate_smoke_test(mock_spack_paths, tmp_path):
     for location in ("data", "state", "cache"):
         assert cfg.get(f"config:locations:{location}")[0] == str(isolated_path)
 
+    # Default module roots use $data_home, so newly generated modules belong
+    # to the fresh isolation target rather than the Spack checkout.
+    assert cfg.get("modules:default:roots:tcl") == "$data_home/modules"
+    assert cfg.get("modules:default:roots:lmod") == "$data_home/lmod"
+    assert spack.config.canonicalize_path(cfg.get("modules:default:roots:tcl")) == str(
+        isolated_path / "modules"
+    )
+    assert spack.config.canonicalize_path(cfg.get("modules:default:roots:lmod")) == str(
+        isolated_path / "lmod"
+    )
+
     with open(isolate_scope_path / "include.yaml", encoding="utf-8") as f:
         include_text = f.read()
     assert "layout" in include_text
@@ -127,6 +138,30 @@ def test_isolate_replaces_old_isolate_config(mock_spack_paths, tmp_path):
     assert "new-target" in include_text
     assert "layout" in include_text
     assert not (isolate_scope_path / "bootstrap.yaml").exists()
+
+
+def test_isolate_keeps_existing_resources_in_place(mock_spack_paths, tmp_path):
+    """Isolation redirects new data without moving legacy resources.
+
+    In particular, artifacts already inside ``$spack`` must remain in place.
+    """
+    base_prefix, etc_spack, isolate_scope_path = mock_spack_paths
+    old_licenses = etc_spack / "licenses"
+    old_licenses.mkdir()
+    (old_licenses / "license.dat").write_text("license", encoding="utf-8")
+    old_install = base_prefix / "opt" / "spack" / "pkg"
+    old_install.mkdir(parents=True)
+    (old_install / "metadata").write_text("installed", encoding="utf-8")
+
+    target = tmp_path / "new-isolation"
+    sp_isolate("--path", str(target))
+
+    assert (old_licenses / "license.dat").read_text(encoding="utf-8") == "license"
+    assert (old_install / "metadata").read_text(encoding="utf-8") == "installed"
+    assert not (base_prefix / ".migration-backup").exists()
+    cfg = spack.config.create()
+    assert cfg.get("config:license_dir") == str(old_licenses)
+    assert cfg.get("config:locations:data")[0] == str(target)
 
 
 def test_isolate_reuse_old_target(mock_spack_paths, tmp_path):

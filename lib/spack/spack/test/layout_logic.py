@@ -15,48 +15,6 @@ import spack.config
 import spack.paths
 
 
-def _ensure_dir(pathlike):
-    """Create directory and return as string."""
-    pathlike = pathlib.Path(pathlike)
-    pathlike.mkdir(parents=True, exist_ok=True)
-    return str(pathlike)
-
-
-@pytest.fixture
-def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths):
-    """Create a mock Spack instance with simulated home and base prefix.
-
-    Returns:
-        tuple: (home_dir, base_prefix)
-    """
-    # Create simulated directories
-    home_dir = _ensure_dir(tmp_path / "home")
-    base_prefix = _ensure_dir(tmp_path / "spack-root")
-
-    # Copy real etc/spack into the simulated base prefix (includes defaults and include.yaml)
-    real_etc_spack = os.path.join(spack.paths.prefix, "etc", "spack")
-    sim_etc_spack = os.path.join(base_prefix, "etc", "spack")
-    os.makedirs(os.path.dirname(sim_etc_spack), exist_ok=True)
-    # Generated isolate and layout scopes are instance state, not SCM-owned
-    # configuration. Do not copy them into the simulated checkout.
-    shutil.copytree(
-        real_etc_spack, sim_etc_spack, ignore=shutil.ignore_patterns("isolate", "layout")
-    )
-
-    # Set up environment using set_home fixture (handles both Windows and Linux)
-    set_home(home_dir)
-
-    # Create a new SpackPaths instance pointing to the mock base
-    from spack.paths import SpackPaths
-
-    mock_paths = SpackPaths(_prefix=base_prefix)
-
-    # Replace the global locations object
-    monkeypatch.setattr(spack.paths, "locations", mock_paths)
-
-    return home_dir, base_prefix
-
-
 def test_config_defaults_use_data_home(mock_spack_instance):
     """Test that config defaults reference $data_home for various paths."""
     home_dir, base_prefix = mock_spack_instance
@@ -261,3 +219,75 @@ def test_auto_migration_gpg_failure_records_old_path(mock_spack_instance, monkey
     assert (old_gpg / "private-keys-v1.d" / "key.key").exists()
     assert (destination / "existing-key").exists()
     assert "GPG data (kept in its old location)" in capsys.readouterr().err
+
+
+def test_auto_migration_moves_licenses_and_environments_to_shared_data(
+    mock_spack_instance, monkeypatch, capsys
+):
+    """Successful migration copies resources before backing up their sources."""
+    home_dir, base_prefix = mock_spack_instance
+    old_licenses = pathlib.Path(base_prefix) / "etc" / "spack" / "licenses"
+    old_licenses.mkdir(parents=True)
+    (old_licenses / "license.dat").write_text("license", encoding="utf-8")
+    old_env = pathlib.Path(base_prefix) / "var" / "spack" / "environments" / "demo"
+    old_env.mkdir(parents=True)
+    (old_env / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    spack.config._do_migrate(is_isolate_command=False)
+
+    data_home = pathlib.Path(home_dir) / ".local" / "share" / "spack"
+    assert (data_home / "licenses" / "license.dat").read_text(encoding="utf-8") == "license"
+    assert (data_home / "environments" / "demo" / "spack.yaml").exists()
+    backup = pathlib.Path(base_prefix) / ".migration-backup"
+    assert (backup / "licenses" / "license.dat").exists()
+    assert (backup / "environments" / "demo" / "spack.yaml").exists()
+    assert not (old_licenses / "license.dat").exists()
+    assert not old_env.exists()
+    assert "spack migrate undo" in capsys.readouterr().err
+
+
+def test_auto_migration_collision_preserves_source_and_destination(
+    mock_spack_instance, monkeypatch
+):
+    """A license collision leaves the old resource usable and records its path."""
+    home_dir, base_prefix = mock_spack_instance
+    old_licenses = pathlib.Path(base_prefix) / "etc" / "spack" / "licenses"
+    old_licenses.mkdir(parents=True)
+    (old_licenses / "license.dat").write_text("old", encoding="utf-8")
+    data_home = pathlib.Path(home_dir) / ".local" / "share" / "spack"
+    destination = data_home / "licenses"
+    destination.mkdir(parents=True)
+    (destination / "license.dat").write_text("new", encoding="utf-8")
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    spack.config._do_migrate(is_isolate_command=False)
+
+    assert (old_licenses / "license.dat").read_text(encoding="utf-8") == "old"
+    assert (destination / "license.dat").read_text(encoding="utf-8") == "new"
+    layout = pathlib.Path(spack.config._layout_scope_path()) / "config.yaml"
+    assert str(old_licenses) in layout.read_text(encoding="utf-8")
+    assert not (pathlib.Path(base_prefix) / ".migration-backup" / "licenses" / "license.dat").exists()
+
+
+def test_auto_migration_is_not_repeated_after_layout_scope(
+    mock_spack_instance, monkeypatch
+):
+    """A completed layout scope prevents a later startup from migrating again.
+
+    Fresh instances do not need a generated layout scope: auto-migration is
+    bypassed when no old resources are detected.
+    """
+    home_dir, base_prefix = mock_spack_instance
+    old_licenses = pathlib.Path(base_prefix) / "etc" / "spack" / "licenses"
+    old_licenses.mkdir(parents=True)
+    (old_licenses / "license.dat").write_text("license", encoding="utf-8")
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    spack.config._do_migrate(is_isolate_command=False)
+    assert not spack.config._should_auto_migrate()
+    backup = pathlib.Path(base_prefix) / ".migration-backup" / "licenses" / "license.dat"
+    backup_mtime = backup.stat().st_mtime_ns
+
+    spack.config._do_migrate(is_isolate_command=False)
+    assert backup.stat().st_mtime_ns == backup_mtime
