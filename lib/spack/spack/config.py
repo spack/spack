@@ -2565,7 +2565,7 @@ def _do_migrate(
                 "To undo this migration, run `spack migrate undo`.",
             ]
         )
-        tty.warn("\\n".join(migration_summary))
+        tty.warn("\n".join(migration_summary))
 
 
 def create_incremental() -> Generator[Configuration, None, None]:

@@ -37,7 +37,13 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifie
     real_etc_spack = os.path.join(spack.paths.prefix, "etc", "spack")
     sim_etc_spack = os.path.join(base_prefix, "etc", "spack")
     os.makedirs(os.path.dirname(sim_etc_spack), exist_ok=True)
-    shutil.copytree(real_etc_spack, sim_etc_spack)
+    # Generated isolate and layout scopes are instance state, not SCM-owned
+    # configuration. Do not copy them into the simulated checkout.
+    shutil.copytree(
+        real_etc_spack,
+        sim_etc_spack,
+        ignore=shutil.ignore_patterns("isolate", "layout"),
+    )
 
     # Set up environment using set_home fixture (handles both Windows and Linux)
     set_home(home_dir)
@@ -220,3 +226,40 @@ def test_substitute_user_cache(mock_spack_instance):
     assert os.path.join(spack.paths.user_cache_path, "baz") == spack.config.canonicalize_path(
         os.path.join("$user_cache_path", "baz")
     )
+
+
+def test_auto_migration_copies_user_config(mock_spack_instance, monkeypatch):
+    """Auto-migration copies configuration from ~/.spack to ~/.config/spack."""
+    home_dir, base_prefix = mock_spack_instance
+    old_config = pathlib.Path(home_dir) / ".spack"
+    old_config.mkdir()
+    (old_config / "config.yaml").write_text("config:\n  build_jobs: 3\n", encoding="utf-8")
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    spack.config._do_migrate(is_isolate_command=False)
+
+    new_config = pathlib.Path(home_dir) / ".config" / "spack" / "config.yaml"
+    assert new_config.read_text(encoding="utf-8") == "config:\n  build_jobs: 3\n"
+
+
+def test_auto_migration_gpg_failure_records_old_path(mock_spack_instance, monkeypatch, capsys):
+    """A GPG destination collision keeps the old path in generated config."""
+    home_dir, base_prefix = mock_spack_instance
+    old_gpg = pathlib.Path(base_prefix) / "opt" / "spack" / "gpg"
+    old_gpg.mkdir(parents=True)
+    (old_gpg / "private-keys-v1.d").mkdir()
+    (old_gpg / "private-keys-v1.d" / "key.key").write_text("key", encoding="utf-8")
+
+    data_home = pathlib.Path(home_dir) / ".local" / "share" / "spack"
+    destination = data_home / "gpg"
+    destination.mkdir(parents=True)
+    (destination / "existing-key").write_text("existing", encoding="utf-8")
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    spack.config._do_migrate(is_isolate_command=False)
+
+    layout_config = pathlib.Path(spack.config._layout_scope_path()) / "config.yaml"
+    assert str(old_gpg) in layout_config.read_text(encoding="utf-8")
+    assert (old_gpg / "private-keys-v1.d" / "key.key").exists()
+    assert (destination / "existing-key").exists()
+    assert "GPG data (kept in its old location)" in capsys.readouterr().err
