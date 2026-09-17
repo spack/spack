@@ -6,7 +6,6 @@
 
 import os
 import pathlib
-import shutil
 from pathlib import Path
 
 import pytest
@@ -320,12 +319,12 @@ def test_auto_migration_collision_preserves_source_and_destination(
     assert (destination / "license.dat").read_text(encoding="utf-8") == "new"
     layout = pathlib.Path(spack.config._layout_scope_path()) / "config.yaml"
     assert str(old_licenses) in layout.read_text(encoding="utf-8")
-    assert not (pathlib.Path(base_prefix) / ".migration-backup" / "licenses" / "license.dat").exists()
+    assert not (
+        pathlib.Path(base_prefix) / ".migration-backup" / "licenses" / "license.dat"
+    ).exists()
 
 
-def test_auto_migration_is_not_repeated_after_layout_scope(
-    mock_spack_instance, monkeypatch
-):
+def test_auto_migration_is_not_repeated_after_layout_scope(mock_spack_instance, monkeypatch):
     """A completed layout scope prevents a later startup from migrating again.
 
     Fresh instances do not need a generated layout scope: auto-migration is

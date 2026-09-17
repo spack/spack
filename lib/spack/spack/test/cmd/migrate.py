@@ -79,7 +79,9 @@ def test_migrate_undo_does_not_overwrite_existing_resource(mock_spack_instance, 
     assert (backup / "licenses" / "license.dat").read_text(encoding="utf-8") == "migrated"
 
 
-def test_migrate_cleanup_old_removes_unreferenced_legacy_directory(mock_spack_instance, monkeypatch):
+def test_migrate_cleanup_old_removes_unreferenced_legacy_directory(
+    mock_spack_instance, monkeypatch
+):
     """cleanup-old removes ~/.spack only when active configuration no longer uses it."""
     home_dir, base_prefix = mock_spack_instance
     old_user = Path(home_dir) / ".spack"
