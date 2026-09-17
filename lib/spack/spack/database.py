@@ -23,7 +23,6 @@ import os
 import pathlib
 import sys
 import time
-import traceback
 from json import JSONDecoder
 from typing import (
     IO,
@@ -595,41 +594,6 @@ class Database:
         self._verifier_path = self.database_directory / _INDEX_VERIFIER_FILE
         self._lock_path = self.database_directory / _LOCK_FILE
 
-        # During the CI unit-test run, reject an empty index when constructing
-        # a database for the real bootstrap store. Other stores, including
-        # temporary stores used by database tests, are intentionally excluded.
-        bootstrap_index = os.environ.get("SPACK_BOOTSTRAP_DB_INDEX")
-        bootstrap_db_dir = (
-            pathlib.Path(bootstrap_index).parent.resolve(strict=False) if bootstrap_index else None
-        )
-        if (
-            os.environ.get("SPACK_BOOTSTRAP_DB_CHECK") == "1"
-            and bootstrap_db_dir is not None
-            and self._index_path.parent.resolve(strict=False) == bootstrap_db_dir
-        ):
-            try:
-                with self._index_path.open("r", encoding="utf-8") as index_file:
-                    index_data, _ = JSONDecoder().raw_decode(index_file.read())
-                installs = index_data.get("database", {}).get("installs", {})
-            except Exception as error:
-                raise RuntimeError(
-                    "Bootstrap database index is missing or unreadable during Database "
-                    "construction:\n"
-                    f"  index: {self._index_path}\n"
-                    f"  process: {os.getpid()}\n"
-                    f"  pytest worker: {os.environ.get('PYTEST_XDIST_WORKER', 'unknown')}\n"
-                    f"  error: {type(error).__name__}: {error}\n"
-                    "  caller:\n" + "".join(traceback.format_stack())
-                ) from error
-            if not installs:
-                raise RuntimeError(
-                    "Bootstrap database index is empty during Database construction:\n"
-                    f"  index: {self._index_path}\n"
-                    f"  process: {os.getpid()}\n"
-                    f"  pytest worker: {os.environ.get('PYTEST_XDIST_WORKER', 'unknown')}\n"
-                    "  caller:\n" + "".join(traceback.format_stack())
-                )
-
         self.is_upstream = is_upstream
         self.last_seen_verifier = ""
         # Failed write transactions (interrupted by exceptions) will alert
@@ -717,29 +681,6 @@ class Database:
 
         # map from per-spec hash code to installation record.
         installs = {k: v.to_dict(include_fields=self.record_fields) for k, v in self._data.items()}
-
-        # During the CI unit-test run, never write an empty database index
-        # at the known bootstrap-store location.
-        bootstrap_index = os.environ.get("SPACK_BOOTSTRAP_DB_INDEX")
-        bootstrap_db_dir = (
-            pathlib.Path(bootstrap_index).parent.resolve(strict=False) if bootstrap_index else None
-        )
-        if (
-            os.environ.get("SPACK_BOOTSTRAP_DB_CHECK") == "1"
-            and bootstrap_db_dir is not None
-            and self._index_path.parent.resolve(strict=False) == bootstrap_db_dir
-            and not installs
-        ):
-            worker = os.environ.get("PYTEST_XDIST_WORKER", "unknown")
-            raise RuntimeError(
-                "Attempted to write an empty bootstrap database index:\n"
-                f"  index: {self._index_path}\n"
-                f"  store: {self.root}\n"
-                f"  process: {os.getpid()}\n"
-                f"  pytest worker: {worker}\n"
-                f"  database records: {list(self._data)!r}\n"
-                "  caller:\n" + "".join(traceback.format_stack())
-            )
 
         # database includes installation list and version.
 
