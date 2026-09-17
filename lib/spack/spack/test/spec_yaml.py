@@ -693,7 +693,7 @@ def test_wire_spec_nodes_missing_build_spec_hash():
 
 def test_specfile_version_does_not_change_dag_hash(config, mock_packages):
     """Tests that concrete specs with a different specfile version in their annotations have
-    the same DAG hash, and that the version is still written to and read from the specfile.
+    the same DAG hash.
     """
     current = spack.concretize.concretize_one("mpileaks")
 
@@ -703,13 +703,21 @@ def test_specfile_version_does_not_change_dag_hash(config, mock_packages):
     for node in newer.traverse():
         node.annotations.with_spec_format(newer_version)
     for node in newer.traverse():
+        # Package hash is kept, since it's only assigned at concretization time
         node.clear_caches(keep_package_hash=True)
 
     assert current.dag_hash() == newer.dag_hash()
 
-    data = newer.to_dict()
-    assert all(
-        node["annotations"]["original_specfile_version"] == newer_version
-        for node in data["spec"]["nodes"]
-    )
-    assert all(x.original_spec_format() == newer_version for x in Spec.from_dict(data).traverse())
+
+def test_specfile_version_roundtrips(config, mock_packages):
+    """Tests that the specfile version in the annotations of a concrete spec is written to the
+    specfile, and read back from it.
+    """
+    spec = spack.concretize.concretize_one("mpileaks")
+    newer_version = spack.spec.SPECFILE_FORMAT_VERSION + 1
+    for node in spec.traverse():
+        node.annotations.with_spec_format(newer_version)
+
+    roundtripped = Spec.from_dict(spec.to_dict())
+
+    assert all(x.original_spec_format() == newer_version for x in roundtripped.traverse())
