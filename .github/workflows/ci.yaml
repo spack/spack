@@ -9,6 +9,7 @@ on:
     branches:
       - develop
       - releases/**
+      - features/usages  # TODO: remove this before merging back to develop
   merge_group:
 
 concurrency:
