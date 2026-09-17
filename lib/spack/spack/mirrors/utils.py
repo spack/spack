@@ -29,15 +29,18 @@ def get_all_versions(specs):
     version_specs = []
     for spec in specs:
         pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+        versions = pkg_cls.all_versions()
         # Skip any package that has no known versions.
-        if not pkg_cls.versions:
+        if not versions:
             tty.msg("No safe (checksummed) versions for package %s" % pkg_cls.name)
             continue
 
-        for version in pkg_cls.versions:
-            version_spec = spack.spec.Spec(pkg_cls.name)
-            version_spec.versions = spack.version.VersionList([version])
-            version_specs.append(version_spec)
+        for version in versions:
+            for when, _ in pkg_cls.version_definitions(version):
+                version_spec = spack.spec.Spec(pkg_cls.name)
+                version_spec.versions = spack.version.VersionList([version])
+                version_spec.constrain(when)
+                version_specs.append(version_spec)
 
     return version_specs
 
@@ -51,15 +54,17 @@ def get_matching_versions(specs, num_versions=1):
     matching = []
     for spec in specs:
         pkg = spec.package
+        versions = pkg.all_versions()
 
         # Skip any package that has no known versions.
-        if not pkg.versions:
+        if not versions:
             tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
             continue
 
         pkg_versions = num_versions
+        host = spack.spec.ArchSpec.default_arch()
 
-        version_order = list(reversed(sorted(pkg.versions)))
+        version_order = list(reversed(sorted(versions)))
         matching_spec = []
         if spec.concrete:
             matching_spec.append(spec)
@@ -74,6 +79,13 @@ def get_matching_versions(specs, num_versions=1):
 
             # Generate only versions that satisfy the spec.
             if spec.concrete or v.intersects(spec.versions):
+                satisfies_host = any(
+                    spack.spec.Spec(architecture=host).satisfies(when)
+                    for when, _ in pkg.version_definitions(v)
+                )
+                if not satisfies_host:
+                    continue
+
                 s = spack.spec.Spec(pkg.name)
                 s.versions = spack.version.VersionList([v])
                 s.variants = spec.variants.copy()
