@@ -2443,7 +2443,7 @@ def _do_migrate(
         # A custom configured location is user-owned and remains untouched.
 
     # 3. Handle licenses
-    old_licenses_dir = os.path.join(spack.paths.prefix, "opt", "spack", "licenses")
+    old_licenses_dir = spack.paths.old_licenses_path
     if old_resources["licenses"]:
         # Isolation never relocates existing licenses; record the old path.
         if is_isolate_command:
