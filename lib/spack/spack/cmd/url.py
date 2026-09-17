@@ -339,15 +339,16 @@ def url_stats(args):
     for pkg_cls in spack.repo.PATH.all_package_classes():
         npkgs += 1
 
-        for v in list(pkg_cls.versions):
-            try:
-                pkg = pkg_cls(spack.spec.Spec(pkg_cls.name))
-                spec_cp = pkg.spec.copy()
-                spec_cp.versions = spack.version.VersionList([v])
-                fetcher = fs.for_spec(spec_cp)
-            except (fs.InvalidArgsError, fs.FetcherConflict):
-                continue
-            version_stats.add(pkg_cls.name, fetcher)
+        for v in pkg_cls.all_versions():
+            spec = spack.spec.Spec(pkg_cls.name)
+            spec.versions = spack.version.VersionList([v])
+            pkg = pkg_cls(spec)
+            for _, version_def in pkg.version_definitions(v):
+                try:
+                    fetcher = fs._fetcher_for_version_def(pkg, v, version_def)
+                except (fs.InvalidArgsError, fs.FetcherConflict):
+                    continue
+                version_stats.add(pkg_cls.name, fetcher)
 
         for _, resources in pkg_cls.resources.items():
             for resource in resources:
