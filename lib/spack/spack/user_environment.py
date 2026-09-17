@@ -70,7 +70,7 @@ def project_env_mods(
     prefix_to_prefix = {
         str(s.prefix): view.get_projection_for_spec(s)
         for s in specs
-        if not s.external and (s in view if hasattr(view, "__contains__") else True)
+        if not s.external and s in view
     }
     # Avoid empty regex if all external
     if not prefix_to_prefix:
