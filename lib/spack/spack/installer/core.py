@@ -261,6 +261,10 @@ class PackageInstaller:
             parent for parent, children in self.build_graph.parent_to_child.items() if not children
         ]
 
+        # Fail before building anything if the database cannot be modified.
+        if self.pending_builds:
+            self.store.db.ensure_latest_db_version()
+
         #: specs awaiting build-dep expansion (deferred until DB read lock is available)
         self.pending_expansions: List[str] = []
 

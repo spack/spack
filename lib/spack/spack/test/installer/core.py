@@ -74,6 +74,17 @@ class TestPackageInstallerConstructor:
         assert installer.root_policy == "cache_only"
         assert installer.dependencies_policy == "cache_only"
 
+    def test_older_readable_db_fails_before_building(self, mutable_database, bumped_db_version):
+        """Nothing is built when the database needs an explicit reindex to be modified, but
+        an installer with nothing to do does not complain."""
+        installed = mutable_database.query_local("libelf")[0]
+        PackageInstaller([installed.package])
+
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        with pytest.raises(spack.error.ExplicitDatabaseUpgradeError):
+            PackageInstaller([spec.package])
+
 
 @pytest.mark.disable_clean_stage_check  # failed builds keep their log file in the stage root
 def test_build_failure_reported_through_event_loop(temporary_store, mock_packages):

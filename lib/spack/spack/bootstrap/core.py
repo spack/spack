@@ -340,6 +340,9 @@ def _bootstrap_or_raise(
     if result:
         return result
 
+    # Fail before extracting the tarball if the database cannot be modified.
+    spack.store.STORE.db.ensure_latest_db_version()
+
     if sources is None:
         sources = enabled_bootstrapping_sources()
 
