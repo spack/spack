@@ -290,11 +290,11 @@ def test_remove_value_shell_cmd_string(shell, remove_expected):
 @pytest.mark.parametrize(
     "shell, set_expected",
     [
-        ("sh", "_spack_env_set FOO path/to/bar"),
-        ("csh", "_spack_env_set FOO path/to/bar"),
-        ("fish", "_spack_env_set FOO path/to/bar"),
-        ("pwsh", "_spack_env_set FOO path/to/bar"),
-        ("bat", '%_spack_env_set% FOO "path/to/bar"'),
+        ("sh", "_spack_env_set FOO path/to/bar\n"),
+        ("csh", "_spack_env_set FOO path/to/bar\n"),
+        ("fish", "_spack_env_set FOO path/to/bar\n"),
+        ("pwsh", "_spack_env_set FOO path/to/bar\n"),
+        ("bat", '%_spack_env_set% FOO "path/to/bar"\n'),
     ],
 )
 def test_set_shell_cmd_string(shell, set_expected):
@@ -305,11 +305,11 @@ def test_set_shell_cmd_string(shell, set_expected):
 @pytest.mark.parametrize(
     "shell, unset_expected",
     [
-        ("sh", "_spack_env_unset FOO"),
-        ("csh", "_spack_env_unset FOO"),
-        ("fish", "_spack_env_unset FOO"),
-        ("pwsh", "_spack_env_unset FOO"),
-        ("bat", "%_spack_env_unset% FOO"),
+        ("sh", "_spack_env_unset FOO\n"),
+        ("csh", "_spack_env_unset FOO\n"),
+        ("fish", "_spack_env_unset FOO\n"),
+        ("pwsh", "_spack_env_unset FOO\n"),
+        ("bat", "%_spack_env_unset% FOO\n"),
     ],
 )
 def test_unset_shell_cmd_string(shell, unset_expected):
