@@ -13,6 +13,7 @@ import pytest
 
 import spack.config
 import spack.paths
+import spack.util.spack_yaml as syaml
 
 
 def test_config_defaults_use_data_home(mock_spack_instance):
@@ -196,6 +197,58 @@ def test_auto_migration_copies_user_config(mock_spack_instance, monkeypatch):
 
     new_config = pathlib.Path(home_dir) / ".config" / "spack" / "config.yaml"
     assert new_config.read_text(encoding="utf-8") == "config:\n  build_jobs: 3\n"
+
+
+def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
+    """Config migration applies the four path-handling scenarios.
+
+    Absolute paths outside ``include:`` remain unchanged, absolute paths inside
+    ``include:`` are rewritten, relative paths outside ``include:`` become
+    absolute, and relative paths inside ``include:`` remain relative.
+    """
+    old_config_dir = tmp_path / ".spack"
+    new_config_dir = tmp_path / ".config" / "spack"
+    old_config_dir.mkdir(parents=True)
+
+    absolute_included = old_config_dir / "included-absolute"
+    absolute_included.mkdir()
+    relative_included = old_config_dir / "included-relative.yaml"
+    relative_included.write_text("packages: {}\n", encoding="utf-8")
+    absolute_external = tmp_path / "external"
+    absolute_external.mkdir()
+    relative_local = old_config_dir / "local.yaml"
+    relative_local.write_text("config: {}\n", encoding="utf-8")
+
+    config_path = old_config_dir / "config.yaml"
+    config_path.write_text(
+        syaml.dump(
+            {
+                "config": {
+                    # Absolute paths outside include sections are unchanged.
+                    "source_cache": str(absolute_external),
+                    # Relative paths outside include sections become absolute.
+                    "repos": "local.yaml",
+                },
+                "include": [
+                    # Absolute paths under the old config root are rewritten.
+                    {"path": str(absolute_included)},
+                    # Relative include paths remain relative.
+                    {"path": "included-relative.yaml"},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    migrated, _ = spack.config.process_config_file_paths(
+        str(config_path), str(old_config_dir), str(new_config_dir)
+    )
+
+    assert migrated is not None
+    assert migrated["config"]["source_cache"] == str(absolute_external)
+    assert migrated["config"]["repos"] == str(relative_local)
+    assert migrated["include"][0]["path"] == str(new_config_dir / "included-absolute")
+    assert migrated["include"][1]["path"] == "included-relative.yaml"
 
 
 def test_auto_migration_gpg_failure_records_old_path(mock_spack_instance, monkeypatch, capsys):
