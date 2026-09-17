@@ -345,8 +345,8 @@ class OptionValue:
     at least the values specified, but may take more when concretized. Concrete means that the
     option takes exactly the values specified."""
 
-    #: Name of this kind of option, for messages: "variant" or "usage"
-    kind: ClassVar[str] = "option"
+    #: Name of this kind of option. For messages, "variant" or "usage"
+    kind: ClassVar[str]
 
     name: str
     concrete: bool
