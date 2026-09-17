@@ -135,10 +135,6 @@ class SpackPaths:
         return os.path.join(self.user_cache_path, "package_repos")
 
     @property
-    def default_user_bootstrap_path(self):
-        return os.path.join(self.user_cache_path, "bootstrap")
-
-    @property
     def default_misc_cache_path(self):
         return os.path.join(self.user_cache_path, self.spack_instance_id, "cache")
 
@@ -286,7 +282,8 @@ if TYPE_CHECKING:
     default_monitor_path: str
     user_repos_cache_path: str
     package_repos_path: str
-    default_user_bootstrap_path: str
+    # TODO: Verify whether default_misc_cache_path is still used, or whether
+    # TODO: the misc cache should use the configuration-derived cache location.
     default_misc_cache_path: str
 
 
