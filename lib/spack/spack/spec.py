@@ -89,7 +89,6 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.enums
 import spack.error
-import spack.patch
 import spack.paths
 import spack.platforms
 import spack.provider_index
@@ -111,6 +110,9 @@ import spack.version as vn
 from spack.util import lang, tty
 
 from .enums import PropagationPolicy
+
+if TYPE_CHECKING:
+    import spack.patch
 
 SPEC_FORMAT_RE = re.compile(
     r"(?:"  # this is one big or, with matches ordered by priority
@@ -6020,7 +6022,7 @@ def rehash_mutated(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath") -> Non
 def _inject_patches_variant(root: Spec, *, repo: spack.repo.RepoPath) -> None:
     # This dictionary will store object IDs rather than Specs as keys
     # since the Spec __hash__ will change as patches are added to them
-    spec_to_patches: Dict[int, Set[spack.patch.Patch]] = {}
+    spec_to_patches: Dict[int, Set["spack.patch.Patch"]] = {}
     for s in root.traverse():
         assert s.namespace is not None, (
             f"internal error: {s.name} has no namespace after concretization. "
@@ -6047,7 +6049,7 @@ def _inject_patches_variant(root: Spec, *, repo: spack.repo.RepoPath) -> None:
 
         pkg_deps = repo.get_pkg_class(dspec.parent.fullname).dependencies
 
-        edge_patches: List[spack.patch.Patch] = []
+        edge_patches: List["spack.patch.Patch"] = []
         for cond, deps_by_name in pkg_deps.items():
             dependency = deps_by_name.get(dspec.spec.name)
             if not dependency or not dependency.patches:
