@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import concurrent.futures
 import email.message
 import errno
 import functools
@@ -32,7 +33,6 @@ import spack
 import spack.config
 import spack.error
 import spack.util.executable
-import spack.util.parallel
 import spack.util.url
 import spack.util.url as url_util
 from spack.util import lang, tty
@@ -734,7 +734,7 @@ def stat_url(url: str) -> Optional[Tuple[int, float]]:
 
 
 def spider(
-    root_urls: Union[str, Iterable[str]], depth: int = 0, concurrency: Optional[int] = None
+    root_urls: Union[str, Iterable[str]], depth: int = 0, *, executor: concurrent.futures.Executor
 ):
     """Get web pages from root URLs.
 
@@ -744,7 +744,7 @@ def spider(
     Args:
         root_urls: root urls used as a starting point for spidering
         depth: level of recursion into links
-        concurrency: number of simultaneous requests that can be sent
+        executor: executor the requests are submitted to
 
     Returns:
         A dict of pages visited (URL) mapped to their full text and the set of visited links.
@@ -761,23 +761,20 @@ def spider(
         root = urllib.parse.urlparse(root_str)
         spider_args.append((root, go_deeper, _visited))
 
-    with spack.util.parallel.make_concurrent_executor(concurrency) as tp:
-        while current_depth <= depth:
-            tty.debug(
-                f"SPIDER: [depth={current_depth}, max_depth={depth}, urls={len(spider_args)}]"
-            )
-            results = [tp.submit(_spider, *one_search_args) for one_search_args in spider_args]
-            spider_args = []
-            go_deeper = current_depth < depth
-            for future in results:
-                sub_pages, sub_links, sub_spider_args, sub_visited = future.result()
-                _visited.update(sub_visited)
-                sub_spider_args = [(x, go_deeper, _visited) for x in sub_spider_args]
-                pages.update(sub_pages)
-                links.update(sub_links)
-                spider_args.extend(sub_spider_args)
+    while current_depth <= depth:
+        tty.debug(f"SPIDER: [depth={current_depth}, max_depth={depth}, urls={len(spider_args)}]")
+        results = [executor.submit(_spider, *one_search_args) for one_search_args in spider_args]
+        spider_args = []
+        go_deeper = current_depth < depth
+        for future in results:
+            sub_pages, sub_links, sub_spider_args, sub_visited = future.result()
+            _visited.update(sub_visited)
+            sub_spider_args = [(x, go_deeper, _visited) for x in sub_spider_args]
+            pages.update(sub_pages)
+            links.update(sub_links)
+            spider_args.extend(sub_spider_args)
 
-            current_depth += 1
+        current_depth += 1
 
     return pages, links
 
