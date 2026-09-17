@@ -611,16 +611,6 @@ def shrink(terms: List[Term], law: "Law", dimensions: Sequence[Dimension], unive
 # and could be closed here without touching a spec.
 
 
-def gap_propagation(specs: Sequence[Spec]) -> bool:
-    """A propagating variant constrains transitive dependencies, which satisfies cannot check
-    structurally, so it falls back to non-contradiction and the subset laws do not apply."""
-    for spec in specs:
-        for value in spec.variants.values():
-            if value.propagate:
-                return True
-    return False
-
-
 def gap_flag_propagation(specs: Sequence[Spec]) -> bool:
     """Whether a flag propagates is invisible to satisfies, and merging a propagating flag with a
     plain one of the same value demotes it, so a spec can be rewritten by a constraint it already
@@ -772,7 +762,6 @@ def gap_flag_order(specs: Sequence[Spec]) -> bool:
 
 GAPS: Dict[str, Callable[[Sequence[Spec]], bool]] = {
     # What a spec means: behaviours, closable only by changing what a spec is.
-    "propagation": gap_propagation,
     "flag_propagation": gap_flag_propagation,
     "edge_propagation": gap_edge_propagation,
     "nested_direct_edge": gap_nested_direct_edge,
@@ -1266,15 +1255,15 @@ def law_dimensions(law: Law) -> Tuple[Dimension, ...]:
 
 
 LAWS: Tuple[Law, ...] = (
-    Law("reflexive", 1, law_reflexive, gaps=("propagation", "forced_second_provider")),
+    Law("reflexive", 1, law_reflexive, gaps=("forced_second_provider",)),
     Law("self_meet", 1, law_self_meet, gaps=("forced_second_provider",)),
     Law(
         "str_round_trip",
         1,
         law_str_round_trip,
-        gaps=("dependency_of_a_direct_dependency", "nested_direct_edge", "propagation"),
+        gaps=("dependency_of_a_direct_dependency", "nested_direct_edge"),
     ),
-    Law("dict_round_trip", 1, law_dict_round_trip, gaps=("propagation",)),
+    Law("dict_round_trip", 1, law_dict_round_trip, gaps=()),
     Law(
         "satisfies_implies_intersects",
         2,
@@ -1284,14 +1273,13 @@ LAWS: Tuple[Law, ...] = (
     ),
     Law("intersects_is_symmetric", 2, law_intersects_is_symmetric),
     Law("intersects_agrees_with_constrain", 2, law_intersects_agrees_with_constrain),
-    Law("meet_is_a_lower_bound", 2, law_meet_is_a_lower_bound, gaps=("propagation",)),
-    Law("meet_is_commutative", 2, law_meet_is_commutative, gaps=("propagation", "flag_order")),
+    Law("meet_is_a_lower_bound", 2, law_meet_is_a_lower_bound, gaps=()),
+    Law("meet_is_commutative", 2, law_meet_is_commutative, gaps=("flag_order",)),
     Law(
         "meet_is_commutative_as_state",
         2,
         law_meet_is_commutative_as_state,
         gaps=(
-            "propagation",
             "flag_propagation",
             "edge_propagation",
             "flag_order",
@@ -1299,14 +1287,13 @@ LAWS: Tuple[Law, ...] = (
             "split_conditional_edges",
         ),
     ),
-    Law("edge_order_invariance", 2, law_edge_order_invariance, gaps=("propagation",)),
+    Law("edge_order_invariance", 2, law_edge_order_invariance, gaps=()),
     Law("edge_maps_keyed_by_name", 2, law_edge_maps_keyed_by_name),
     Law(
         "absorption_as_state",
         2,
         law_absorption_as_state,
         gaps=(
-            "propagation",
             "flag_propagation",
             "edge_propagation",
             "namespace",
@@ -1321,41 +1308,24 @@ LAWS: Tuple[Law, ...] = (
         "absorption",
         2,
         law_absorption,
-        gaps=("propagation", "split_conditional_edges", "forced_second_provider"),
+        gaps=("split_conditional_edges", "forced_second_provider"),
         chain=2,
     ),
     Law(
         "satisfies_leaves_narrowing_dimensions_alone",
         2,
         law_satisfies_leaves_narrowing_dimensions_alone,
-        gaps=("propagation",),
+        gaps=(),
         chain=2,
     ),
-    Law(
-        "meet_absorbs_itself",
-        2,
-        law_meet_absorbs_itself,
-        gaps=("propagation", "forced_second_provider"),
-    ),
+    Law("meet_absorbs_itself", 2, law_meet_absorbs_itself, gaps=("forced_second_provider",)),
     Law("rhs_is_never_mutated", 2, law_rhs_is_never_mutated),
     Law("lhs_is_unchanged_when_constrain_raises", 2, law_lhs_is_unchanged_when_constrain_raises),
     Law("changed_flag_is_honest", 2, law_changed_flag_is_honest),
-    Law(
-        "satisfies_is_transitive",
-        3,
-        law_satisfies_is_transitive,
-        gaps=("propagation", "namespace"),
-        chain=3,
-    ),
-    Law("meet_is_associative", 3, law_meet_is_associative, gaps=("propagation", "flag_order")),
-    Law(
-        "meet_is_monotonic",
-        3,
-        law_meet_is_monotonic,
-        gaps=("propagation", "namespace", "flag_order"),
-        chain=2,
-    ),
-    Law("congruence", 3, law_congruence, gaps=("propagation", "namespace", "flag_order"), chain=2),
+    Law("satisfies_is_transitive", 3, law_satisfies_is_transitive, gaps=("namespace",), chain=3),
+    Law("meet_is_associative", 3, law_meet_is_associative, gaps=("flag_order",)),
+    Law("meet_is_monotonic", 3, law_meet_is_monotonic, gaps=("namespace", "flag_order"), chain=2),
+    Law("congruence", 3, law_congruence, gaps=("namespace", "flag_order"), chain=2),
     Law("exact_glb", 2, law_exact_glb, modelled=True),
     Law(
         "intersection_is_witnessed",

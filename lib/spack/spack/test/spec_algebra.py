@@ -237,17 +237,18 @@ def test_constrain_is_monotonic(a_str, b_str, c_str, mock_packages):
     assert meet_ac.satisfies(meet_bc)
 
 
+def test_a_propagated_variant_is_compared_like_a_plain_one(mock_packages):
+    """A propagating variant lives in a map of its own, so satisfies compares it structurally like
+    any other dimension instead of falling back to non-contradiction: a spec with no opinion on
+    the variant does not satisfy the propagation."""
+    assert Spec("pkg-a~foo").satisfies("pkg-a")
+    assert not Spec("pkg-a").satisfies("pkg-a++foo")
+    assert not Spec("pkg-a~foo").satisfies("pkg-a++foo")
+    assert Spec("pkg-a++foo").satisfies("pkg-a++foo")
+
+
 # Where the laws above do not hold. Some cases are what a spec means and say so; the rest are
 # defects that should start failing the day they are fixed.
-
-
-def test_a_propagated_variant_follows_non_contradiction(mock_packages):
-    """A propagating variant constrains every transitive dependency that has it, which satisfies
-    cannot check structurally. It falls back to non-contradiction: a spec with no opinion on the
-    variant satisfies the propagation, which breaks transitivity."""
-    assert Spec("pkg-a~foo").satisfies("pkg-a")
-    assert Spec("pkg-a").satisfies("pkg-a++foo")
-    assert not Spec("pkg-a~foo").satisfies("pkg-a++foo")
 
 
 def test_a_propagated_flag_is_invisible_to_satisfies(mock_packages):

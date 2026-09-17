@@ -136,6 +136,7 @@ def _narrowing_dimensions(spec: Spec):
     return (
         str(spec.versions),
         {name: str(value) for name, value in spec.variants.items()},
+        {name: str(value) for name, value in spec.propagated_variants.items()},
         str(spec.architecture),
         {name: [str(flag) for flag in flags] for name, flags in spec.compiler_flags.items()},
         spec.abstract_hash,
@@ -147,17 +148,11 @@ def _narrowing_dimensions(spec: Spec):
 
 
 def _ordered_corpus():
-    """The corpus entries the laws below are checked over, which is all of them but the specs
-    propagating a variant: those follow non-contradiction instead of subset semantics, and a law
-    provably fails on them for the reason pinned in spec_algebra.py's
-    test_a_propagated_variant_follows_non_contradiction.
+    """The corpus entries the laws below are checked over, which is all of them: propagated
+    variants live in a map of their own and are compared with the same subset semantics as plain
+    ones, so no entry has to be held out.
     """
-    result = []
-    for spec_str in CORPUS:
-        spec = Spec(spec_str)
-        if not any(value.propagate for value in spec.variants.values()):
-            result.append(spec_str)
-    return result
+    return list(CORPUS)
 
 
 def _denote_the_same_set(lhs: Optional[Spec], rhs: Optional[Spec]) -> bool:
@@ -284,12 +279,10 @@ def check_satisfies_implies_the_narrowing_dimensions_are_unchanged():
     The dimensions asserted are the ones in which an unset value on the lhs is an absent
     constraint. Names, namespaces and edges whose when condition does not apply are
     read as satisfied when the lhs leaves them unset, so constrain legitimately fills those
-    in without narrowing the set the lhs denotes. Propagated variants follow a
-    non-contradiction rule instead of subset semantics: a spec without such a variant
-    satisfies one that propagates it, and still acquires it when constrained; see
-    spec_algebra.py's test_a_propagated_variant_follows_non_contradiction. Compiler
-    flags are compared by value, since merging a propagating flag with a plain one of the
-    same value demotes it; see
+    in without narrowing the set the lhs denotes. Propagated variants are part of the snapshot:
+    they are their own map and satisfies compares them like plain ones, so an lhs that satisfies
+    the rhs already carries them. Compiler flags are compared by value, since merging a
+    propagating flag with a plain one of the same value demotes it; see
     spec_semantics.py's test_flag_propagation_is_invisible_to_satisfies.
 
     An rhs edge under a when condition is filled in when the condition does not apply, and a
@@ -297,7 +290,7 @@ def check_satisfies_implies_the_narrowing_dimensions_are_unchanged():
     are skipped.
     """
     for lhs_str, rhs_str, lhs, rhs in _pairs():
-        skipped = any(value.propagate for value in rhs.variants.values()) or any(
+        skipped = any(
             edge.when is not EMPTY_SPEC or edge.propagation is not PropagationPolicy.NONE
             for edge in rhs.edges_to_dependencies()
         )
