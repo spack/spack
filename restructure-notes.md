@@ -51,4 +51,21 @@ Status notes for `hs/test/property-based-tests` / `hs/test/spec-algebra-fuzz` (P
   develop, and the intersects asymmetry it listed does not reproduce on the branch (#52852
   applied the prefix rule to intersects before the audit) and is dropped.
 
+## Rebase onto develop, 2026-09-17
+
+- Both branches are rebased onto develop at `f30783afb4`. The split-constrain commit
+  conflicted in `spec.py` on three upstream commits: #52963 (propagated variants as a
+  separate attribute), #53010 (`ImmutableSpec` -> `CachedSpec`) and #52938 (mutability
+  checks removed).
+- #52963 closed the variant propagation gap. `_disjoint_node_attributes_reason` calls
+  `_disjoint_variants_reason`, which reads both maps, instead of the inline loop over
+  `variants` the commit was written against, and `_merge_variants` merges
+  `propagated_variants` alongside `variants`. `Spec("pkg-a").satisfies("pkg-a++foo")` is
+  now False, so the gap leaves `GAPS`, the corpus stops holding out propagating specs,
+  and the hand-picked case records the law.
+- `formal/spec-semantics.tex` is out of date on this point: its §propagation section, the
+  abstract, the introduction and the dimension table still state that propagated variants
+  follow non-contradiction and break transitivity. The Lean development carries the same
+  claim. Neither is updated here.
+
 See `bug-ledger.md` for the bug counts per PR.
