@@ -1232,7 +1232,7 @@ def test_older_readable_db_is_read_in_place_and_refuses_writes(
     assert db.query_local()
 
     with pytest.raises(spack.database.ExplicitDatabaseUpgradeError):
-        db.ensure_upgraded()
+        db.ensure_latest_db_version()
 
     with pytest.raises(spack.database.ExplicitDatabaseUpgradeError):
         with db.write_transaction():
@@ -1243,7 +1243,7 @@ def test_older_readable_db_is_read_in_place_and_refuses_writes(
     db.reindex()
     assert version_on_disk() == str(next_version)
 
-    db.ensure_upgraded()
+    db.ensure_latest_db_version()
     with db.write_transaction():
         pass
 

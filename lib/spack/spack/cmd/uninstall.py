@@ -213,7 +213,7 @@ def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
         return
 
     # Fail before removing anything if the database cannot be modified.
-    spack.store.STORE.db.ensure_upgraded()
+    spack.store.STORE.db.ensure_latest_db_version()
 
     # TODO: get rid of the call-sites that use this function,
     # so that we don't have to do a dance of list -> set -> list -> set

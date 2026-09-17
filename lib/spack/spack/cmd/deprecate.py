@@ -140,7 +140,7 @@ def deprecate(parser, args):
             tty.die("Will not deprecate any packages.")
 
     # Fail before touching the store if the database cannot be modified.
-    spack.store.STORE.db.ensure_upgraded()
+    spack.store.STORE.db.ensure_latest_db_version()
 
     for dcate, dcator in zip(all_deprecate, all_deprecators):
         spack.old_installer.deprecate(dcate, dcator, symlink)

@@ -204,8 +204,6 @@ class BuildcacheBootstrapper(Bootstrapper):
             all_architectures=True, config=spack.config.CONFIG
         )
         for match in spack.store.find([f"/{pkg_hash}"], multiple=False, query_fn=query):
-            # Fail before extracting the tarball if the database cannot be modified.
-            spack.store.STORE.db.ensure_upgraded()
             spack.binary_distribution.install_root_node(
                 # allow_missing is true since when bootstrapping clingo we truncate runtime
                 # deps such as gcc-runtime, since we link libstdc++ statically, and the other
@@ -341,6 +339,9 @@ def _bootstrap_or_raise(
     result = request.probe(request.abstract_spec)
     if result:
         return result
+
+    # Fail before extracting the tarball if the database cannot be modified.
+    spack.store.STORE.db.ensure_latest_db_version()
 
     if sources is None:
         sources = enabled_bootstrapping_sources()

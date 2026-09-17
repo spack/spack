@@ -955,7 +955,7 @@ class Database:
         if self._db_version is not None and self._db_version < _DB_VERSION:
             self.raise_explicit_database_upgrade_error()
 
-    def ensure_upgraded(self) -> None:
+    def ensure_latest_db_version(self) -> None:
         """Raise if the index on disk needs ``spack reindex`` before it can be modified."""
         with self.read_transaction():
             self._raise_if_upgrade_needed()
