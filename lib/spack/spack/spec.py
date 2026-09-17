@@ -2572,7 +2572,7 @@ class Spec:
     def spec_hash(self) -> str:
         """Compute the dag hash of this spec, from the JSON serialization of its node dicts."""
         node_dict = self.to_node_dict()
-        # Annotations record provenance information, not what is built
+        # Leave out annotations, since they don't record what is built
         del node_dict["annotations"]
         json_text = json.dumps(
             node_dict, ensure_ascii=True, indent=None, separators=(",", ":"), sort_keys=False
