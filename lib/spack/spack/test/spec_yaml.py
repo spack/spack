@@ -689,3 +689,27 @@ def test_wire_spec_nodes_missing_build_spec_hash():
     nodes = [{"name": "root", "hash": "r" * 32, "build_spec": {"name": "ghost", "hash": "g" * 32}}]
     with pytest.raises(spack.spec.MissingSpecHashError, match=r"missing build_spec hash ghost/g+"):
         spack.spec.wire_spec_nodes(nodes, "hash", spack.spec.SpecfileLatest)
+
+
+def test_specfile_version_does_not_change_dag_hash(config, mock_packages):
+    """Tests that concrete specs with a different specfile version in their annotations have
+    the same DAG hash, and that the version is still written to and read from the specfile.
+    """
+    current = spack.concretize.concretize_one("mpileaks")
+
+    # Newer is the same except for the specfile format
+    newer = Spec.from_dict(current.to_dict())
+    newer_version = spack.spec.SPECFILE_FORMAT_VERSION + 1
+    for node in newer.traverse():
+        node.annotations.with_spec_format(newer_version)
+    for node in newer.traverse():
+        node.clear_caches(keep_package_hash=True)
+
+    assert current.dag_hash() == newer.dag_hash()
+
+    data = newer.to_dict()
+    assert all(
+        node["annotations"]["original_specfile_version"] == newer_version
+        for node in data["spec"]["nodes"]
+    )
+    assert all(x.original_spec_format() == newer_version for x in Spec.from_dict(data).traverse())
