@@ -32,6 +32,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec, save_dependency_specfiles
 from spack.test.conftest import RepoBuilder
+from spack.test.utilities import rehash
 from spack.util.spack_yaml import SpackYAMLError, syaml_dict
 
 
@@ -702,9 +703,7 @@ def test_specfile_version_does_not_change_dag_hash(config, mock_packages):
     newer_version = spack.spec.SPECFILE_FORMAT_VERSION + 1
     for node in newer.traverse():
         node.annotations.with_spec_format(newer_version)
-    for node in newer.traverse():
-        # Package hash is kept, since it's only assigned at concretization time
-        node.clear_caches(keep_package_hash=True)
+    rehash(newer)
 
     assert current.dag_hash() == newer.dag_hash()
 

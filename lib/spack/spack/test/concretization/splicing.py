@@ -11,10 +11,10 @@ import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.repo
-import spack.spec
 from spack.old_installer import PackageInstaller
 from spack.solver.asp import UnsatisfiableSpecError
 from spack.solver.error import SolverError
+from spack.test.utilities import rehash
 
 
 def _make_specs_non_buildable(specs: List[str]):
@@ -332,6 +332,5 @@ def test_spliced_spec_keeps_package_hash(install_specs, mutable_config):
     # the dag hash must match a from-scratch recomputation that re-derives
     # package hashes from the repo
     recomputed = spliced.copy()
-    recomputed._mark_concrete(False)
-    spack.spec.finalize_concretization([recomputed], repo=spack.repo.PATH)
+    rehash(recomputed, repo=spack.repo.PATH)
     assert recomputed.dag_hash() == spliced.dag_hash()
