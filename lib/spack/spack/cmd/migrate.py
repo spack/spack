@@ -158,57 +158,33 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     # Perform the undo
     tty.msg("Undoing auto-migration...")
 
-    # Check that all backup resources can be returned before changing any paths.
-    for backup_path, old_path in (
-        (backup_licenses, old_licenses_dir),
-        (backup_envs, old_envs_dir),
-        (backup_gpg, old_gpg_dir),
-    ):
-        if os.path.exists(backup_path) and os.path.isdir(old_path) and os.listdir(old_path):
-            tty.die(f"Cannot undo migration: destination contains files at {old_path}")
+    def restore_resource(backup_path: str, old_path: str, resource_name: str) -> None:
+        """Move a complete backed-up resource back to its legacy location."""
+        try:
+            # Create only the parent: the destination itself must not exist.
+            # Rename the complete directory rather than shutil.move: move()
+            # treats an existing directory as a container and nests the backup.
+            fs.mkdirp(os.path.dirname(old_path))
+            os.rename(backup_path, old_path)
+        except (OSError, shutil.Error) as e:
+            tty.die(
+                f"Cannot restore {resource_name} to {old_path}: {e}. "
+                "The destination may have been modified manually."
+            )
 
-    # Restore licenses
+    # The backup directories are complete resource units. Move each one into
+    # place directly; an existing destination or any other filesystem change is
+    # reported as an undo failure rather than merged or overwritten.
     if has_licenses:
-        # Check for conflicts
-        if os.path.exists(old_licenses_dir):
-            existing = set(os.listdir(old_licenses_dir))
-            backup_files = set(os.listdir(backup_licenses))
-            conflicts = existing & backup_files
-            if conflicts:
-                tty.die(
-                    f"Cannot restore licenses: conflicts detected in {old_licenses_dir}:\n"
-                    + "\n".join(f"  - {f}" for f in conflicts)
-                    + "\n\nPlease resolve conflicts manually before running undo."
-                )
-        else:
-            fs.mkdirp(old_licenses_dir)
-
-        shutil.move(backup_licenses, old_licenses_dir)
+        restore_resource(backup_licenses, old_licenses_dir, "licenses")
         tty.msg(f"  Restored licenses to {old_licenses_dir}")
 
-    # Restore environments
     if has_envs:
-        # Check for conflicts
-        if os.path.exists(old_envs_dir):
-            existing = set(os.listdir(old_envs_dir))
-            backup_files = set(os.listdir(backup_envs))
-            conflicts = existing & backup_files
-            if conflicts:
-                tty.die(
-                    f"Cannot restore environments: conflicts detected in {old_envs_dir}:\n"
-                    + "\n".join(f"  - {f}" for f in conflicts)
-                    + "\n\nPlease resolve conflicts manually before running undo."
-                )
-        else:
-            fs.mkdirp(old_envs_dir)
-
-        shutil.move(backup_envs, old_envs_dir)
+        restore_resource(backup_envs, old_envs_dir, "environments")
         tty.msg(f"  Restored environments to {old_envs_dir}")
 
-    # Restore GPG data. Keyrings must not be merged with an existing destination.
     if has_gpg:
-        fs.mkdirp(os.path.dirname(old_gpg_dir))
-        shutil.move(backup_gpg, old_gpg_dir)
+        restore_resource(backup_gpg, old_gpg_dir, "GPG data")
         tty.msg(f"  Restored GPG data to {old_gpg_dir}")
 
     # Update layout scope to point to old locations. Even an empty backup can
