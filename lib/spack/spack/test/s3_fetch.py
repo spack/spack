@@ -8,7 +8,7 @@ import spack.fetch_strategy as spack_fs
 import spack.stage as spack_stage
 
 
-def test_s3fetchstrategy_downloaded(tmp_path: pathlib.Path):
+def test_s3fetchstrategy_downloaded(tmp_path: pathlib.Path, config):
     """Ensure fetch with archive file already downloaded is a noop."""
     archive = tmp_path / "s3.tar.gz"
 
@@ -18,5 +18,5 @@ def test_s3fetchstrategy_downloaded(tmp_path: pathlib.Path):
             return archive
 
     fetcher = Archived_S3FS(url="s3://example/s3.tar.gz")
-    with spack_stage.Stage(fetcher, path=str(tmp_path)):
+    with spack_stage.stage_from_config(fetcher, path=str(tmp_path), config=config):
         fetcher.fetch()

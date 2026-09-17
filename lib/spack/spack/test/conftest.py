@@ -558,10 +558,23 @@ def onerror(func, path, error_info):
     func(path)
 
 
+class MockStageRoot:
+    """Stand-in for ``spack.stage.stage_root`` returning a fixed directory.
+
+    Defined at module level so that it can be pickled into spawned build processes.
+    """
+
+    def __init__(self, path: str) -> None:
+        self.path = path
+
+    def __call__(self, config) -> str:
+        return self.path
+
+
 @pytest.fixture(scope="function", autouse=True)
 def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
     """Establish the temporary build_stage for the mock archive."""
-    # The approach with this autouse fixture is to set the stage root
+    # The approach with this autouse fixture is to replace the stage root
     # instead of using spack.config.CONFIG.override() to avoid configuration
     # conflicts with dozens of tests that rely on other configuration
     # fixtures, such as config.
@@ -578,7 +591,7 @@ def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
     source_path = new_stage / spack.stage._source_path_subdir
     source_path.mkdir(parents=True, exist_ok=True)
 
-    monkeypatch.setattr(spack.stage, "_stage_root", str(new_stage))
+    monkeypatch.setattr(spack.stage, "stage_root", MockStageRoot(str(new_stage)))
 
     yield str(new_stage)
 
@@ -597,7 +610,7 @@ def mock_stage_for_database(tmp_path_factory: pytest.TempPathFactory, monkeypatc
     source_path = new_stage / spack.stage._source_path_subdir
     source_path.mkdir(parents=True, exist_ok=True)
 
-    monkeypatch_session.setattr(spack.stage, "_stage_root", str(new_stage))
+    monkeypatch_session.setattr(spack.stage, "stage_root", MockStageRoot(str(new_stage)))
 
     yield str(new_stage)
 
@@ -691,12 +704,17 @@ class MockCacheFetcher:
         return "[mock fetch cache]"
 
 
+def mock_fetch_cache_for(config) -> MockCache:
+    """Stand-in for ``spack.caches.fetch_cache``, at module level so that it can be pickled."""
+    return MockCache()
+
+
 @pytest.fixture(autouse=True)
 def mock_fetch_cache(monkeypatch):
-    """Substitutes spack.paths.FETCH_CACHE with a mock object that does nothing
+    """Substitutes spack.caches.fetch_cache with one returning a mock object that does nothing
     and raises on fetch.
     """
-    monkeypatch.setattr(spack.caches, "FETCH_CACHE", MockCache())
+    monkeypatch.setattr(spack.caches, "fetch_cache", mock_fetch_cache_for)
 
 
 @pytest.fixture()
@@ -1441,6 +1459,23 @@ def temporary_mirror(mutable_config, tmp_path_factory):
     mirror_dir = tmp_path_factory.mktemp("mirror")
     mirror_cmd("add", "test-mirror-func", mirror_dir.as_uri())
     yield str(mirror_dir)
+
+
+@pytest.fixture
+def bumped_db_version(
+    monkeypatch,
+) -> Tuple[spack.version.ConcreteVersion, spack.version.ConcreteVersion]:
+    """Pretend the DB format was bumped and the current index is readable without reindex.
+    Yields the (on disk, expected) versions."""
+    current = spack.database._DB_VERSION
+    next_version = spack.version.Version(f"{current[0] + 1}")
+    monkeypatch.setattr(spack.database, "_DB_VERSION", next_version)
+    monkeypatch.setattr(
+        spack.database,
+        "_REINDEX_NOT_NEEDED_ON_READ",
+        [*spack.database._REINDEX_NOT_NEEDED_ON_READ, (current, next_version)],
+    )
+    return current, next_version
 
 
 @pytest.fixture(scope="function")
@@ -2449,7 +2484,6 @@ def nullify_globals(request, monkeypatch):
     ensure_configuration_fixture_run_before(request)
     monkeypatch.setattr(spack.config, "CONFIG", None)
     monkeypatch.setattr(spack.caches, "MISC_CACHE", None)
-    monkeypatch.setattr(spack.caches, "FETCH_CACHE", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)
 

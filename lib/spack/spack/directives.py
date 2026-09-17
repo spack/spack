@@ -63,6 +63,12 @@ import spack.util.tty.color
 import spack.variant
 from spack.dependency import Dependency, intern_dependency
 from spack.directives_meta import DirectiveError, directive, get_spec
+from spack.enums import (
+    LEGACY_DEPRECATION_LABEL,
+    Deprecation,
+    DeprecationReason,
+    DeprecationSeverity,
+)
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
 from spack.version import StandardVersion, VersionChecksumError, VersionError
@@ -73,6 +79,7 @@ __all__ = [
     "conditional",
     "conflicts",
     "depends_on",
+    "deprecated",
     "extends",
     "maintainers",
     "license",
@@ -166,7 +173,7 @@ _WHEN_STACK_CACHE: Dict[Tuple[str, ...], spack.spec.Spec] = {}
 SubmoduleCallback = Callable[[spack.package_base.PackageBase], Union[str, List[str], bool]]
 
 
-@directive("versions", supports_when=False)
+@directive(("versions", "deprecations"), supports_when=False)
 def version(
     ver: Union[str, int],
     # this positional argument is deprecated, use sha256=... instead
@@ -278,6 +285,11 @@ class _Version(NamedTuple):
         # Store kwargs for the package to later with a fetch_strategy.
         pkg.versions[version] = kwargs
 
+        if kwargs.get("deprecated", False):
+            _Deprecated(
+                f"@={version}", "unspecified", "critical", labels=(LEGACY_DEPRECATION_LABEL,)
+            )(pkg)
+
 
 @directive("conflicts")
 def conflicts(conflict_spec: SpecType, when: WhenType = None, msg: Optional[str] = None):
@@ -316,6 +328,76 @@ class _Conflicts(NamedTuple):
         conflict_spec_list = pkg.conflicts.setdefault(when_spec, [])
         msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
         conflict_spec_list.append((get_spec(conflict_spec), msg_with_name))
+
+
+@directive("deprecations", supports_when=False)
+def deprecated(
+    spec: Optional[SpecType] = None,
+    *,
+    reason: str,
+    severity: str = "low",
+    msg: Optional[str] = None,
+    labels: Optional[Sequence[str]] = None,
+):
+    """Mark a spec constraint as deprecated.
+
+    Args:
+        spec: optional spec constraint (e.g. ``"@1.0"``); if omitted, the whole package
+            is deprecated.
+        reason: why this spec is deprecated.  One of ``"vuln"``, ``"rename"``, ``"retired"``,
+            or ``"unspecified"`` when none of them applies.
+        severity: how severe the deprecation is.  One of ``"low"`` (default), ``"medium"``,
+            ``"high"``, ``"critical"``.
+        msg: optional guidance shown when the deprecation is refused, e.g. what to use instead.
+            It is required when ``reason`` is ``"unspecified"``.
+        labels: optional advisory identifiers (e.g. CVE, GHSA or PYSEC ids) this deprecation
+            refers to. Users can skip the deprecation by allowing all of them.
+    """
+    if isinstance(labels, (list, tuple)) and LEGACY_DEPRECATION_LABEL in labels:
+        raise DirectiveError(
+            f"label '{LEGACY_DEPRECATION_LABEL}' is reserved: Spack records it for versions "
+            "declared with 'deprecated=True', so that they can be selected apart."
+        )
+    if reason == DeprecationReason.UNSPECIFIED.value and not msg:
+        raise DirectiveError(
+            f"reason '{reason}' requires a 'msg' argument: say why this spec is deprecated, "
+            "and what to use instead."
+        )
+    return _Deprecated(spec, reason, severity, msg, labels)
+
+
+class _Deprecated(NamedTuple):
+    spec: Optional[SpecType]
+    reason: str
+    severity: str
+    msg: Optional[str] = None
+    labels: Optional[Sequence[str]] = None
+
+    def __call__(self, pkg: PackageType) -> None:
+        spec, reason, severity, msg, labels = self
+        if isinstance(labels, str):
+            raise DirectiveError(f"{pkg.name}: 'labels' must be a list of strings, not a string")
+
+        try:
+            sev = DeprecationSeverity(severity)  # type: ignore[arg-type]
+        except ValueError:
+            valid = ", ".join(x.name.lower() for x in DeprecationSeverity)
+            raise DirectiveError(
+                f"{pkg.name}: '{severity}' is not a valid severity, use one of {valid}"
+            ) from None
+
+        try:
+            rsn = DeprecationReason(reason)
+        except ValueError:
+            valid = ", ".join(x.value for x in DeprecationReason)
+            raise DirectiveError(
+                f"{pkg.name}: '{reason}' is not a valid reason, use one of {valid}"
+            ) from None
+
+        constraint = get_spec(spec) if spec is not None else EMPTY_SPEC
+        pkg.deprecations.setdefault(constraint, []).append(
+            Deprecation(rsn, sev, tuple(labels or ()), msg)
+        )
 
 
 @directive("dependencies", can_patch_dependencies=True)

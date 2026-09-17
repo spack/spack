@@ -7,6 +7,7 @@ import os
 import tempfile
 
 import spack.binary_distribution
+import spack.config
 import spack.mirrors.mirror
 import spack.paths
 import spack.stage
@@ -205,7 +206,7 @@ def gpg_publish(args):
     elif args.mirror_url:
         mirror = spack.mirrors.mirror.Mirror(args.mirror_url, args.mirror_url)
 
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
         spack.binary_distribution._url_push_keys(
             mirror, keys=args.keys, tmpdir=tmpdir, update_index=args.update_index
         )

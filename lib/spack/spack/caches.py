@@ -41,22 +41,21 @@ MISC_CACHE = cast(
 )
 
 
-def fetch_cache_location():
+def fetch_cache_location(*, config: spack.config.Configuration) -> str:
     """Filesystem cache of downloaded archives.
 
     This prevents Spack from repeatedly fetch the same files when
     building the same package different ways or multiple times.
     """
-    path = spack.config.CONFIG.get("config:source_cache")
+    path = config.get("config:source_cache")
     if not path:
         path = spack.paths.default_fetch_cache_path
-    path = spack.config.canonicalize_path(path)
-    return path
+    return spack.config.canonicalize_path(path, config=config)
 
 
-def _fetch_cache():
-    path = fetch_cache_location()
-    return spack.fetch_strategy.FsCache(path)
+def fetch_cache(config: spack.config.Configuration) -> spack.fetch_strategy.FsCache:
+    """Returns Spack's local cache for downloaded source archives, as configured in ``config``."""
+    return spack.fetch_strategy.FsCache(fetch_cache_location(config=config))
 
 
 class MirrorCache(spack.fetch_strategy.FsCacheBase):
@@ -72,19 +71,14 @@ class MirrorCache(spack.fetch_strategy.FsCacheBase):
         super().store(fetcher, relative_dest)
 
 
-#: Spack's local cache for downloaded source archives
-FETCH_CACHE = cast(spack.fetch_strategy.FsCache, spack.util.lang.Singleton(_fetch_cache))
-
-
 def reinitialize():
     """Reinitialize global cache singletons.
 
     Call this after reloading CONFIG to ensure cache locations reflect
     the current configuration (e.g., after auto-migration creates layout scope).
     """
-    global MISC_CACHE, FETCH_CACHE
+    global MISC_CACHE
 
     MISC_CACHE = cast(
         spack.util.file_cache.FileCache, spack.util.lang.Singleton(_create_global_misc_cache)
     )
-    FETCH_CACHE = cast(spack.fetch_strategy.FsCache, spack.util.lang.Singleton(_fetch_cache))

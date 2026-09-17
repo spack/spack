@@ -1697,10 +1697,15 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("zlib %[c=gcc]", "edge attributes"),
         # regression: an unconsumed token used to make the parser loop forever
         ("zlib ]", "unexpected token"),
-        # The same variant cannot be specified twice
+        # The same variant cannot be specified twice, set or propagated
         ("x +foo +foo", "twice"),
         ("x +foo ~foo", "twice"),
         ("x foo=bar foo=baz", "twice"),
+        ("x ++foo ~~foo", "twice"),
+        ("x foo==bar foo==baz", "twice"),
+        # a propagated bool applies to the node itself, so it cannot contradict its variant
+        ("x +foo ~~foo", "does not satisfy"),
+        ("x ~foo ++foo", "does not satisfy"),
     ],
 )
 def test_error_conditions(text, match_string):
@@ -2099,7 +2104,9 @@ def test_external_spec_hash_can_be_looked_up(config, mock_packages):
     """Tests that the hash of an external can be successfully looked up."""
     packages_yaml = config.deepcopy_as_builtin("packages")
     externals_dict = extract_dicts_from_configuration(packages_yaml)
-    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    parser = ExternalSpecsParser(
+        externals_dict, repo=mock_packages, complete_node=complete_variants_and_architecture
+    )
     abstract_hashes = [f"{x.name}/{x.dag_hash()[:5]}" for x in parser.all_specs()]
 
     assert all(spack.hash_lookup.lookup_hash(spack.spec.Spec(x)) for x in abstract_hashes)

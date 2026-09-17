@@ -20,6 +20,7 @@ import spack.error
 import spack.mirrors.mirror
 import spack.paths
 import spack.url
+import spack.util.parallel
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
@@ -170,7 +171,8 @@ def mock_s3_client(monkeypatch):
     ],
 )
 def test_spider(depth, expected_found, expected_not_found, expected_text):
-    pages, links = spack.util.web.spider(root, depth=depth)
+    with spack.util.parallel.make_concurrent_executor() as executor:
+        pages, links = spack.util.web.spider(root, depth=depth, executor=executor)
 
     for page in expected_found["pages"]:
         assert page in pages

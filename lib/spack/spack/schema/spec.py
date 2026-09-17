@@ -177,7 +177,19 @@ spec_node = {
         "propagate": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "List of variants to propagate (for abstract specs)",
+            "description": "List of compiler flag types to propagate (for abstract specs); "
+            "before the split into propagated_parameters it also listed variants",
+        },
+        "propagated_parameters": {
+            "type": "object",
+            "additionalProperties": True,
+            "description": "Propagated variants, i.e. ++foo or foo==bar (for abstract specs)",
+        },
+        "propagated_abstract": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "List of propagated multi-valued variants that are abstract, i.e. "
+            "foo==bar,baz instead of foo:==bar,baz (for abstract specs)",
         },
         "abstract": {
             "type": "array",

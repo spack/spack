@@ -18,6 +18,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import spack.vendor.jsonschema
 
+import spack.config
 import spack.database
 import spack.error
 import spack.mirrors.mirror
@@ -238,7 +239,7 @@ class URLBuildcacheEntry:
 
         layout_contents = {"signing": "gpg"}
 
-        with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             local_layout_path = os.path.join(tmpdir, "layout.json")
             with open(local_layout_path, "w", encoding="utf-8") as fd:
                 json.dump(layout_contents, fd)
@@ -386,7 +387,7 @@ class URLBuildcacheEntry:
         """
         if record not in self.stages:
             blob_url = self.get_blob_url(self.mirror_url, record)
-            blob_stage = spack.stage.Stage(blob_url)
+            blob_stage = spack.stage.stage_from_config(blob_url, config=spack.config.CONFIG)
 
             # Fetch the blob, or else cleanup and exit early
             try:
@@ -443,7 +444,7 @@ class URLBuildcacheEntry:
         if spack.util.gpg.is_clearsig(manifest_contents):
             if verify:
                 # Try to verify and raise if we fail
-                with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+                with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
                     manifest_path = os.path.join(tmpdir, "manifest.json.sig")
                     with open(manifest_path, "w", encoding="utf-8") as fd:
                         fd.write(manifest_contents)
@@ -616,7 +617,7 @@ class URLBuildcacheEntry:
         checksum_algo = "sha256"
         blob_to_push = local_file_path
 
-        with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             blob_to_push = os.path.join(tmpdir, os.path.basename(local_file_path))
 
             with compression_writer(blob_to_push, compression, checksum_algo) as (
@@ -890,7 +891,9 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
                 f"Mirror {self.mirror_url} does not have signed metadata for spec"
             )
 
-        self.spec_stage = spack.stage.Stage(self.remote_spec_url)
+        self.spec_stage = spack.stage.stage_from_config(
+            self.remote_spec_url, config=spack.config.CONFIG
+        )
 
         # Fetch the spec file, or else cleanup and exit early
         try:
@@ -949,7 +952,9 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
             self.spec_stage.destroy()
             self.spec_stage = None
 
-        self.archive_stage = spack.stage.Stage(self.remote_archive_url)
+        self.archive_stage = spack.stage.stage_from_config(
+            self.remote_archive_url, config=spack.config.CONFIG
+        )
 
         # Fetch the archive file, or else cleanup and exit early
         try:
