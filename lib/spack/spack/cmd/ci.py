@@ -816,7 +816,7 @@ def validate_git_versions(
             # commit that is located in the package.py file.
             if "tag" in version_def.kwargs:
                 tag = version_def.kwargs["tag"]
-                url = version_def.kwargs["git"]
+                url = pkg.version_or_package_attr("git", version)
                 found_commit = spack.util.git.get_commit_sha(url, tag)
                 if not found_commit:
                     tty.error(

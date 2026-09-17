@@ -34,6 +34,7 @@ from spack.error import SpackError
 from spack.schema.database_index import schema as db_idx_schema
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
 from spack.util.filesystem import mkdirp, working_dir
+import spack.version_def
 
 config_cmd = spack.main.SpackCommand("config")
 ci_cmd = spack.main.SpackCommand("ci")
@@ -2153,8 +2154,18 @@ def test_ci_validate_git_versions_valid(
         spack.version.Version(v): {"tag": f"v{v}", "commit": commits[c]} for v, c in versions
     }
 
+    # when_versions needs to be manually populated for version_definitions() to read it.
+    # Keeping version_commit_dict for backwards compatability.
+    when_versions_dict = {
+        spack.spec.EMPTY_SPEC: {
+            v: spack.version_def.VersionDefinition(v, precedence=i, kwargs=kwargs)
+            for i, (v, kwargs) in enumerate(version_commit_dict.items())
+        }
+    }
+
     monkeypatch.setattr(pkg_class, "git", repo_path)
     monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
+    monkeypatch.setattr(pkg_class, "when_versions", when_versions_dict)
 
     assert spack.cmd.ci.validate_git_versions(pkg, version_list)
 
@@ -2177,8 +2188,17 @@ def test_ci_validate_git_versions_bad_tag(
         spack.version.Version(v): {"tag": f"v{v}", "commit": commits[c]} for v, c in versions
     }
 
+    # when_versions must be populated manually for version_definitions() to read it.
+    when_versions_dict = {
+        spack.spec.EMPTY_SPEC: {
+            v: spack.version_def.VersionDefinition(v, precedence=i, kwargs=kwargs)
+            for i, (v, kwargs) in enumerate(version_commit_dict.items())
+        }
+    }
+
     monkeypatch.setattr(pkg_class, "git", repo_path)
     monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
+    monkeypatch.setattr(pkg_class, "when_versions", when_versions_dict)
 
     assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False
 
@@ -2204,9 +2224,17 @@ def test_ci_validate_git_versions_invalid(
         }
         for v, c in versions
     }
+    # when_versions must be populated manually for version_definitions() to read it.
+    when_versions_dict = {
+        spack.spec.EMPTY_SPEC: {
+            v: spack.version_def.VersionDefinition(v, precedence=i, kwargs=kwargs)
+            for i, (v, kwargs) in enumerate(version_commit_dict.items())
+        }
+    }
 
     monkeypatch.setattr(pkg_class, "git", repo_path)
     monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
+    monkeypatch.setattr(pkg_class, "when_versions", when_versions_dict)
 
     assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False
 
