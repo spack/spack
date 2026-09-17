@@ -6,11 +6,15 @@ import pathlib
 
 import pytest
 
+import spack.bootstrap.config
+import spack.bootstrap.core
 import spack.builder
 import spack.concretize
+import spack.config
 import spack.error
 import spack.paths
 import spack.repo
+import spack.store
 from spack.util.filesystem import touch
 
 
@@ -81,7 +85,97 @@ def test_callbacks_and_installation_procedure(
     spec_str, expected_values, working_env, temporary_store
 ):
     """Test the correct execution of callbacks and installation procedures for packages."""
-    s = spack.concretize.concretize_one(spec_str)
+    print("Visible configuration scopes:", flush=True)
+    for scope in spack.config.CONFIG.scopes.values():
+        print(f"  {scope.name}: {getattr(scope, 'path', None)}", flush=True)
+    print(f"Store root: {spack.store.STORE.root}", flush=True)
+    print(f"Store database root: {spack.store.STORE.db.root}", flush=True)
+    print(f"Bootstrap root: {spack.bootstrap.config.root_path()}", flush=True)
+    print(f"Bootstrap store: {spack.bootstrap.config.store_path()}", flush=True)
+
+    try:
+        s = spack.concretize.concretize_one(spec_str)
+    except Exception as e:
+        diagnostics = [
+            f"worker exception: {type(e).__name__}: {e}",
+            f"store root: {spack.store.STORE.root}",
+            f"store database root: {spack.store.STORE.db.root}",
+            f"bootstrap root config: {spack.config.CONFIG.get('bootstrap:root')}",
+            f"bootstrap root: {spack.bootstrap.config.root_path()}",
+            f"bootstrap store: {spack.bootstrap.config.store_path()}",
+            f"bootstrap config: {spack.bootstrap.config._config_path()}",
+            f"bootstrap settings: {spack.config.CONFIG.get('bootstrap')!r}",
+            f"repositories config: {spack.config.CONFIG.get('repos')!r}",
+            "visible configuration scopes:",
+        ]
+        diagnostics.extend(
+            f"  {scope.name}: {getattr(scope, 'path', None)}"
+            for scope in spack.config.CONFIG.scopes.values()
+        )
+        diagnostics.append(
+            "active repositories: "
+            + repr([(repo.namespace, repo.root) for repo in spack.repo.PATH.repos])
+        )
+        try:
+            with spack.bootstrap.config.ensure_bootstrap_configuration():
+                request = spack.bootstrap.core.BootstrapRequest.for_module(
+                    "clingo",
+                    spack.bootstrap.core.clingo_root_spec(),
+                    concretize=spack.bootstrap.core._concretize_clingo,
+                )
+                database = spack.store.STORE.db
+                index_path = database._index_path
+                index_contents = (
+                    index_path.read_text(encoding="utf-8") if index_path.exists() else None
+                )
+                exact_matches = database.query(request.abstract_spec, installed=True)
+                name_matches = database.query("clingo-bootstrap", installed=True)
+                bootstrap_root = pathlib.Path(spack.store.STORE.root)
+                clingo_paths = sorted(
+                    str(path) for path in bootstrap_root.rglob("*") if "clingo" in path.name
+                )
+                spec_paths = sorted(str(path) for path in bootstrap_root.rglob("spec.json"))
+                diagnostics.extend(
+                    [
+                        f"bootstrap clingo paths: {clingo_paths!r}",
+                        f"bootstrap spec files: {spec_paths!r}",
+                        f"bootstrap-context store object: {id(spack.store.STORE)}",
+                        f"bootstrap-context database object: {id(database)}",
+                        f"bootstrap-context store root: {spack.store.STORE.root}",
+                        f"bootstrap-context database root: {database.root}",
+                        f"bootstrap store layout: {vars(spack.store.STORE.layout)!r}",
+                        f"bootstrap database upstreams: {database.upstream_dbs!r}",
+                        f"bootstrap database version: {database._db_version!r}",
+                        f"bootstrap database installed prefixes: {database._installed_prefixes!r}",
+                        f"bootstrap database directory: {database.database_directory}",
+                        f"bootstrap database index: {index_path}",
+                        f"bootstrap database index exists: {index_path.exists()}",
+                        f"bootstrap database index size: "
+                        f"{index_path.stat().st_size if index_path.exists() else None}",
+                        f"bootstrap database index contents: {index_contents!r}",
+                        f"bootstrap database files: "
+                        f"{sorted(str(path) for path in database.database_directory.glob('*'))!r}",
+                        f"clingo bootstrap request: {request.abstract_spec}",
+                        f"clingo exact database matches: {exact_matches!r}",
+                        f"clingo name database matches: {name_matches!r}",
+                        f"clingo probe result: {request.probe(request.abstract_spec)!r}",
+                        f"bootstrap database records: {list(database._data)!r}",
+                    ]
+                )
+                for candidate in name_matches:
+                    diagnostics.extend(
+                        [
+                            f"clingo candidate prefix: {candidate.prefix}",
+                            f"clingo candidate dependencies: {candidate.dependencies()!r}",
+                            f"clingo candidate prefix exists: "
+                            f"{pathlib.Path(candidate.prefix).exists()}",
+                        ]
+                    )
+        except Exception as probe_error:
+            diagnostics.append(
+                f"bootstrap diagnostics failed: {type(probe_error).__name__}: {probe_error}"
+            )
+        raise RuntimeError("Concretization diagnostics:\n" + "\n".join(diagnostics)) from e
     builder = spack.builder.create(s.package)
     for phase_fn in builder:
         phase_fn.execute()

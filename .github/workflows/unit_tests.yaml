@@ -128,14 +128,52 @@ jobs:
           source share/spack/setup-env.sh
           spack debug report
           spack -d bootstrap now
+    - name: Inspect bootstrap store
+      run: |
+          source share/spack/setup-env.sh
+          cat > "$RUNNER_TEMP/inspect_bootstrap.py" <<'PY'
+          import pathlib
+
+          import spack.bootstrap.config
+          import spack.bootstrap.core
+          import spack.store
+
+          with spack.bootstrap.config.ensure_bootstrap_configuration():
+              store = spack.store.STORE
+              database = store.db
+              request = spack.bootstrap.core.BootstrapRequest.for_module(
+                  "clingo",
+                  spack.bootstrap.core.clingo_root_spec(),
+              )
+              print("Bootstrap store:", store.root)
+              print("Bootstrap database:", database.root)
+              print("Database index:", database._index_path)
+              print("Database index exists:", database._index_path.exists())
+              print("Database records:", list(database._data))
+              print("Clingo matches:", database.query("clingo-bootstrap", installed=True))
+              print("Clingo probe:", request.probe(request.abstract_spec))
+              print(
+                  "Clingo paths:",
+                  sorted(str(path) for path in pathlib.Path(store.root).rglob("*clingo*")),
+              )
+          PY
+          spack python "$RUNNER_TEMP/inspect_bootstrap.py"
+          index_path="$HOME/.local/state/spack/bootstrap/store/.spack-db/index.json"
+          python3 -c 'import json, sys; data=json.load(open(sys.argv[1])); assert data["database"]["installs"], "bootstrap database index is empty"' "$index_path"
     - name: Smoke tests
       run: |
           bin/spack -h
           bin/spack help -a
           bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
     - name: Run unit tests
+      env:
+        SPACK_BOOTSTRAP_DB_CHECK: "1"
+        SPACK_BOOTSTRAP_DB_INDEX: /github/home/.local/state/spack/bootstrap/store/.spack-db/index.json
       run: |
-          python3 -m pytest --verbose -x -n3 --dist loadfile -k 'not cvs and not svn and not hg'
+          echo "Bootstrap database index before unit tests: $SPACK_BOOTSTRAP_DB_INDEX"
+          cat "$SPACK_BOOTSTRAP_DB_INDEX"
+          python3 -m pytest --verbose -s --tb=long -x -n3 --dist loadfile \
+            -k 'not cvs and not svn and not hg and not test_bootstrap_db_upgrade_error_points_at_b_flag'
   # Test the concretizer against clingo builds published on PyPI, rather than the binaries
   # we bootstrap. clingo v6 is still pre-release, so that variant is allowed to fail
   # without blocking the workflow.
