@@ -9,6 +9,7 @@ import tempfile
 from typing import NamedTuple
 
 import spack.binary_distribution
+import spack.config
 import spack.database as spack_db
 import spack.error
 import spack.mirrors.mirror
@@ -152,7 +153,9 @@ def _migrate_spec(
     # need to download the archive locally, and then push it back to the target
     # location
     archive_stage_path = os.path.join(tmpdir, f"archive_stage_{s.name}_{s.dag_hash()}")
-    archive_stage = spack.stage.Stage(v2_archive_url, path=archive_stage_path)
+    archive_stage = spack.stage.stage_from_config(
+        v2_archive_url, path=archive_stage_path, config=spack.config.CONFIG
+    )
 
     try:
         archive_stage.create()
@@ -282,7 +285,7 @@ def migrate(
     except (web_util.SpackWebError, OSError):
         raise MigrationException("Buildcache migration requires a buildcache index")
 
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
         index_path = os.path.join(tmpdir, "_tmp_index.json")
         with open(index_path, "w", encoding="utf-8") as fd:
             fd.write(contents)

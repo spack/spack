@@ -1159,10 +1159,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def _make_resource_stage(self, root_stage, resource):
         pretty_resource_name = fsys.polite_filename(f"{resource.name}-{self.version}")
-        return stg.ResourceStage(
+        return stg.resource_stage_from_config(
             resource.fetcher,
             root=root_stage,
             resource=resource,
+            config=spack.config.CONFIG,
             name=self._resource_stage(resource),
             mirror_paths=spack.mirrors.layout.default_mirror_layout(
                 resource.fetcher, os.path.join(self.name, pretty_resource_name)
@@ -1184,9 +1185,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         )
         # Construct a path where the stage should build..
         s = self.spec
-        stage_name = stg.compute_stage_name(s)
-        stage = stg.Stage(
+        stage_name = stg.compute_stage_name(s, config=spack.config.CONFIG)
+        stage = stg.stage_from_config(
             fetcher,
+            config=spack.config.CONFIG,
             mirror_paths=mirror_paths,
             mirrors=spack.mirrors.mirror.MirrorCollection(source=True).values(),
             name=stage_name,
@@ -1219,8 +1221,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 stage_link = None
             else:
                 stage_link = self.spec.format_path(link_format)
-            source_stage = stg.DevelopStage(
-                stg.compute_stage_name(self.spec), dev_path, stage_link
+            source_stage = stg.develop_stage_from_config(
+                stg.compute_stage_name(self.spec, config=spack.config.CONFIG),
+                dev_path,
+                stage_link,
+                config=spack.config.CONFIG,
             )
         else:
             source_stage = self._make_root_stage(self.fetcher)
@@ -1244,8 +1249,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             per_package_ref = os.path.join(patch.owner.split(".")[-1], name)
             mirror_ref = spack.mirrors.layout.default_mirror_layout(fetcher, per_package_ref)
 
-            return stg.Stage(
+            return stg.stage_from_config(
                 fetcher,
+                config=spack.config.CONFIG,
                 name=f"{stg.stage_prefix}-{uniqe_part}-patch-{fetch_digest}",
                 mirror_paths=mirror_ref,
                 mirrors=spack.mirrors.mirror.MirrorCollection(source=True).values(),

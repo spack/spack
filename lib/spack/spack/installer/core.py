@@ -756,7 +756,7 @@ class PackageInstaller:
                     f"spack-stage-{spec.name}-{spec.version}-{spec.dag_hash()}-"
                 )
                 log_fd, log_path = tempfile.mkstemp(
-                    prefix=prefix, suffix=".log", dir=spack.stage.get_stage_root()
+                    prefix=prefix, suffix=".log", dir=spack.stage.stage_root(spack.config.CONFIG)
                 )
                 os.close(log_fd)
                 self.log_paths[dag_hash] = log_path
