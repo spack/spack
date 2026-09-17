@@ -64,7 +64,7 @@ class Runner:
         have been detected.
         """
         with self._mock_layout() as path_hints:
-            entries = by_path([self.test.pkg_name], path_hints=path_hints)
+            entries = by_path([self.test.pkg_name], repo=self.repository, path_hints=path_hints)
             _, unqualified_name = spack.repo.partition_package_name(self.test.pkg_name)
             specs = set(entries[unqualified_name])
         return list(specs)
@@ -101,12 +101,14 @@ class Runner:
 
     @property
     def expected_specs(self) -> List[spack.spec.Spec]:
-        return [
-            spack.spec.Spec.from_detection(
+        result = []
+        for item in self.test.results:
+            spec = spack.spec.Spec.from_detection(
                 item.spec, external_path=self.tmpdir.name, extra_attributes=item.extra_attributes
             )
-            for item in self.test.results
-        ]
+            spack.spec.substitute_abstract_variants(spec, repo=self.repository)
+            result.append(spec)
+        return result
 
 
 def detection_tests(pkg_name: str, repository: spack.repo.RepoPath) -> List[Runner]:

@@ -20,7 +20,7 @@ from spack.fetch_strategy import GitFetchStrategy
 from spack.package_base import PackageBase
 from spack.repo import RepoPath
 from spack.spec import Spec
-from spack.stage import Stage
+from spack.stage import stage_from_config
 from spack.util.filesystem import mkdirp, touch, working_dir
 from spack.variant import SingleValuedVariant
 from spack.version import Version
@@ -68,13 +68,13 @@ def mock_bad_git(mock_util_executable):
     registered_respones["--version"] = "1.7.1"
 
 
-def test_bad_git(tmp_path: pathlib.Path, mock_bad_git):
+def test_bad_git(tmp_path: pathlib.Path, mock_bad_git, config):
     """Trigger a SpackError when attempt a fetch with a bad git."""
     testpath = str(tmp_path)
 
     with pytest.raises(spack.error.SpackError):
         fetcher = GitFetchStrategy(git="file:///not-a-real-git-repo")
-        with Stage(fetcher, path=testpath):
+        with stage_from_config(fetcher, path=testpath, config=config):
             fetcher.fetch()
 
 
@@ -224,12 +224,12 @@ def test_debug_fetch(
             assert os.path.isdir(s.package.stage.source_path)
 
 
-def test_git_extra_fetch(git, tmp_path: pathlib.Path):
+def test_git_extra_fetch(git, tmp_path: pathlib.Path, config):
     """Ensure a fetch after 'expanding' is effectively a no-op."""
     testpath = str(tmp_path)
 
     fetcher = GitFetchStrategy(git="file:///not-a-real-git-repo")
-    with Stage(fetcher, path=testpath) as stage:
+    with stage_from_config(fetcher, path=testpath, config=config) as stage:
         mkdirp(stage.source_path)
         fetcher.fetch()  # Use fetcher to fetch for code coverage
         shutil.rmtree(stage.source_path)

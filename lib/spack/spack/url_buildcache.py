@@ -13,12 +13,12 @@ import shutil
 import urllib.parse
 from contextlib import closing, contextmanager
 from datetime import datetime
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import spack.vendor.jsonschema
 
+import spack.config
 import spack.database
 import spack.error
 import spack.mirrors.mirror
@@ -35,7 +35,7 @@ from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_s
 from spack.util import tty
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
-from spack.util.executable import which
+from spack.util.executable import ProcessError, which
 
 #: The build cache layout version that this version of Spack creates.
 #: Version 3: Introduces content-addressable tarballs
@@ -239,7 +239,7 @@ class URLBuildcacheEntry:
 
         layout_contents = {"signing": "gpg"}
 
-        with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             local_layout_path = os.path.join(tmpdir, "layout.json")
             with open(local_layout_path, "w", encoding="utf-8") as fd:
                 json.dump(layout_contents, fd)
@@ -387,7 +387,7 @@ class URLBuildcacheEntry:
         """
         if record not in self.stages:
             blob_url = self.get_blob_url(self.mirror_url, record)
-            blob_stage = spack.stage.Stage(blob_url)
+            blob_stage = spack.stage.stage_from_config(blob_url, config=spack.config.CONFIG)
 
             # Fetch the blob, or else cleanup and exit early
             try:
@@ -444,7 +444,7 @@ class URLBuildcacheEntry:
         if spack.util.gpg.is_clearsig(manifest_contents):
             if verify:
                 # Try to verify and raise if we fail
-                with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+                with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
                     manifest_path = os.path.join(tmpdir, "manifest.json.sig")
                     with open(manifest_path, "w", encoding="utf-8") as fd:
                         fd.write(manifest_contents)
@@ -617,7 +617,7 @@ class URLBuildcacheEntry:
         checksum_algo = "sha256"
         blob_to_push = local_file_path
 
-        with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             blob_to_push = os.path.join(tmpdir, os.path.basename(local_file_path))
 
             with compression_writer(blob_to_push, compression, checksum_algo) as (
@@ -891,7 +891,9 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
                 f"Mirror {self.mirror_url} does not have signed metadata for spec"
             )
 
-        self.spec_stage = spack.stage.Stage(self.remote_spec_url)
+        self.spec_stage = spack.stage.stage_from_config(
+            self.remote_spec_url, config=spack.config.CONFIG
+        )
 
         # Fetch the spec file, or else cleanup and exit early
         try:
@@ -950,7 +952,9 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
             self.spec_stage.destroy()
             self.spec_stage = None
 
-        self.archive_stage = spack.stage.Stage(self.remote_archive_url)
+        self.archive_stage = spack.stage.stage_from_config(
+            self.remote_archive_url, config=spack.config.CONFIG
+        )
 
         # Fetch the archive file, or else cleanup and exit early
         try:
@@ -1095,12 +1099,11 @@ def check_mirror_for_layout(mirror: spack.mirrors.mirror.Mirror):
         tty.warn(msg)
 
 
-def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str, component_type: BuildcacheComponent):
-    """Use aws cli to sync all manifests into a local temporary directory.
+def _entries_from_cache_aws_cli(url: str, component_type: BuildcacheComponent):
+    """Use aws cli to list manifests for a component type.
 
     Args:
         url: prefix of the build cache on s3
-        tmpspecsdir: path to temporary directory to use for writing files
         component_type: type of buildcache component to sync (spec, index, key, etc.)
 
     Return:
@@ -1115,7 +1118,7 @@ def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str, component_type: Buil
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     if not aws:
-        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
+        tty.warn("Failed to use aws CLI to retrieve specs, falling back to parallel fetch")
         return file_list, read_fn
 
     def file_read_method(manifest_path: str) -> URLBuildcacheEntry:
@@ -1123,65 +1126,46 @@ def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str, component_type: Buil
         cache_entry.read_manifest(manifest_url=manifest_path)
         return cache_entry
 
-    include_pattern = cache_class.get_buildcache_component_include_pattern(component_type)
-    component_prefix = cache_class.get_relative_path_components(component_type)
-
-    component_url = url_util.join(url, *component_prefix)
-
-    sync_command_args = [
-        "s3",
-        "sync",
-        "--exclude",
-        "*",
-        "--include",
-        include_pattern,
-        component_url,
-        tmpspecsdir,
-    ]
-
     # Use aws s3 ls to get mtimes of manifests
-    ls_command_args = ["s3", "ls", "--recursive", component_url]
+    include_pattern = re.compile(
+        fnmatch.translate(cache_class.get_buildcache_component_include_pattern(component_type))
+    )
+    component_prefix = cache_class.get_relative_path_components(component_type)
+    ls_command_args = ["s3", "ls", "--recursive", url_util.join(url, *component_prefix)]
+    # 2022-08-15 17:54:40    3717621 aws/s3/prefix/to/the/object.json.txt.tar.gz
     s3_ls_regex = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+\d+\s+(.+)$")
 
     filename_to_mtime: Dict[str, float] = {}
 
-    tty.debug(f"Using aws s3 sync to download manifests from {component_url} to {tmpspecsdir}")
-
     try:
-        aws(*sync_command_args, output=os.devnull, error=os.devnull)
-        file_list = fsys.find(tmpspecsdir, [include_pattern])
+        parsed_url = urllib.parse.urlparse(url)
         read_fn = file_read_method
 
-        # Use `aws s3 ls` to get mtimes of manifests
+        # Use `aws s3 ls` to get mtimes of manifests as it is tends to be faster than
+        # list_objects_v2
         for line in aws(*ls_command_args, output=str, error=os.devnull).splitlines():
             match = s3_ls_regex.match(line)
             if match:
-                # Parse the url and use the S3 path of the file to derive the
-                # local path of the file (i.e. where `aws s3 sync` put it).
-                parsed_url = urllib.parse.urlparse(url)
-                s3_path = parsed_url.path.lstrip("/")
                 filename = match.group(2)
-                if s3_path and filename.startswith(s3_path):
-                    filename = filename[len(s3_path) :].lstrip("/")
-                local_path = url_util.join(tmpspecsdir, filename)
+                if not include_pattern.fullmatch(filename):
+                    continue
 
-                if Path(local_path).exists():
-                    filename_to_mtime[url_util.path_to_file_url(local_path)] = datetime.strptime(
-                        match.group(1), "%Y-%m-%d %H:%M:%S"
-                    ).timestamp()
-    except Exception as e:
-        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
-        raise e
+                filename = urllib.parse.urlunparse(parsed_url._replace(path=filename))
+                filename_to_mtime[filename] = datetime.strptime(
+                    match.group(1), "%Y-%m-%d %H:%M:%S"
+                ).timestamp()
+    except ProcessError as e:
+        msg = "Failed to use aws s3 ls to retrieve spec list, falling back to parallel fetch"
+        raise ListMirrorSpecsError(msg) from e
 
     return filename_to_mtime, read_fn
 
 
-def _entries_from_cache_fallback(url: str, tmpspecsdir: str, component_type: BuildcacheComponent):
+def _entries_from_cache_fallback(url: str, component_type: BuildcacheComponent):
     """Use spack.util.web module to get a list of all the manifests at the remote url.
 
     Args:
         url: Base url of mirror (location of manifest files)
-        tmpspecsdir: path to temporary directory to use for writing files
         component_type: type of buildcache component to sync (spec, index, key, etc.)
 
     Return:
@@ -1212,20 +1196,18 @@ def _entries_from_cache_fallback(url: str, tmpspecsdir: str, component_type: Bui
                 if stat_result is not None:
                     filename_to_mtime[entry_url] = stat_result[1]  # mtime is second element
         read_fn = url_read_method
-    except Exception as err:
-        # If we got some kind of S3 (access denied or other connection error), the first non
-        # boto-specific class in the exception is Exception.  Just print a warning and return
-        tty.warn(f"Encountered problem listing packages at {url}: {err}")
+    except OSError as e:
+        # Backend-specific errors (e.g. those from S3 and GCS) get normalized to OSError.
+        raise ListMirrorSpecsError(f"Encountered problem listing packages at {url}: {e}") from e
 
     return filename_to_mtime, read_fn
 
 
-def get_entries_from_cache(url: str, tmpspecsdir: str, component_type: BuildcacheComponent):
+def get_entries_from_cache(url: str, component_type: BuildcacheComponent):
     """Get a list of all the manifests in the mirror and a function to read them.
 
     Args:
         url: Base url of mirror (location of spec files)
-        tmpspecsdir: Temporary location for writing files
         component_type: type of buildcache component to sync (spec, index, key, etc.)
 
     Return:
@@ -1240,12 +1222,18 @@ def get_entries_from_cache(url: str, tmpspecsdir: str, component_type: Buildcach
 
     callbacks.append(_entries_from_cache_fallback)
 
+    last_error = None
     for specs_from_cache_fn in callbacks:
-        file_to_mtime_mapping, read_fn = specs_from_cache_fn(url, tmpspecsdir, component_type)
-        if file_to_mtime_mapping:
-            return file_to_mtime_mapping, read_fn
+        try:
+            file_to_mtime_mapping, read_fn = specs_from_cache_fn(url, component_type)
+            if file_to_mtime_mapping:
+                return file_to_mtime_mapping, read_fn
+        except ListMirrorSpecsError as e:
+            tty.warn(f"{e}")
+            last_error = e
+            continue
 
-    raise ListMirrorSpecsError("Failed to get list of entries from {0}".format(url))
+    raise ListMirrorSpecsError(f"Failed to list specs in url {url}") from last_error
 
 
 def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:

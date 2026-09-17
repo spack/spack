@@ -1152,6 +1152,8 @@ class Environment:
         #: Previously active environment
         self._previous_active = None
         self._dev_specs = None
+        #: Fingerprint of the lockfile on disk, None if there is none
+        self._lockfile_fingerprint_on_disk: Optional[Tuple[Any, ...]] = None
 
         # Load the manifest file contents into memory
         self._load_manifest_file()
@@ -1214,6 +1216,10 @@ class Environment:
         if os.path.exists(self.lock_path):
             with open(self.lock_path, encoding="utf-8") as f:
                 read_lock_version = self._read_lockfile(f)["_meta"]["lockfile-version"]
+
+            # Lockfiles are keyed by DAG hash from v4 on; older ones are always rewritten
+            if read_lock_version >= 4:
+                self._lockfile_fingerprint_on_disk = self._lockfile_fingerprint()
 
             if read_lock_version == 1:
                 tty.debug(f"Storing backup of {self.lock_path} at {self._lock_backup_v1_path}")
@@ -1410,6 +1416,7 @@ class Environment:
         self._dev_specs = {}
         self.concretized_roots = []
         self.specs_by_hash = {}  # concretized specs by hash
+        self._lockfile_fingerprint_on_disk = None
 
         self.included_concrete_spec_data = {}  # concretized specs from lockfile of included envs
         self.included_concretized_roots = {}  # root specs of the included envs, keyed by env path
@@ -2050,7 +2057,8 @@ class Environment:
         Arguments:
             spec: user spec that resulted in the concrete spec
             concrete: spec concretized within this environment
-            new: whether to write this spec's package to the env repo on write()
+            new: concretized in this session: write() copies its package to the env repo and
+                rewrites the lockfile
         """
         assert concrete.concrete
         h = concrete.dag_hash()
@@ -2350,6 +2358,11 @@ class Environment:
 
         return concrete_specs
 
+    def _lockfile_fingerprint(self) -> Tuple[Any, ...]:
+        """Roots and included data, which determine the lockfile content up to version metadata"""
+        roots = tuple((str(x.root), x.hash, x.group) for x in self.concretized_roots)
+        return roots, self.included_concrete_spec_data
+
     def _concrete_roots_dict(self):
         if not self.has_groups():
             return [{"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots]
@@ -2562,15 +2575,13 @@ class Environment:
             self.ensure_env_directory_exists(dot_env=True)
             self.update_environment_repository()
             self.manifest.flush()
-            # Write the lock file last. This is useful for Makefiles
-            # with `spack.lock: spack.yaml` rules, where the target
-            # should be newer than the prerequisite to avoid
-            # redundant re-concretization.
+            # Write the lock file last, so `spack.lock: spack.yaml` Makefile rules see it as newer
             self.update_lockfile()
         else:
             self.ensure_env_directory_exists(dot_env=False)
             with fs.safe_remove(self.lock_path):
                 self.manifest.flush()
+            self._lockfile_fingerprint_on_disk = None
 
         if regenerate:
             self.regenerate_views()
@@ -2579,8 +2590,16 @@ class Environment:
             x.new = False
 
     def update_lockfile(self) -> None:
+        """Write the lockfile, unless nothing changed since it was read or last written"""
+        fingerprint = self._lockfile_fingerprint()
+        if fingerprint == self._lockfile_fingerprint_on_disk and not any(
+            x.new for x in self.concretized_roots
+        ):
+            return
+
         with fs.write_tmp_and_move(self.lock_path, encoding="utf-8") as f:
             sjson.dump(self._to_lockfile_dict(), stream=f)
+        self._lockfile_fingerprint_on_disk = fingerprint
 
     def ensure_env_directory_exists(self, dot_env: bool = False) -> None:
         """Ensure that the root directory of the environment exists

@@ -86,7 +86,7 @@ from spack.oci.oci import (
 )
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
-from spack.stage import Stage
+from spack.stage import stage_from_config
 from spack.util import file_cache, timer, tty
 from spack.util.executable import which
 from spack.util.filesystem import mkdirp
@@ -266,7 +266,9 @@ class BinaryIndexCache:
                 self._specs_already_associated.add(cached_index_hash)
 
     def _associate_built_specs_with_mirror(self, cache_key, mirror_metadata: MirrorMetadata):
-        with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        with tempfile.TemporaryDirectory(
+            dir=spack.stage.stage_root(spack.config.CONFIG)
+        ) as tmpdir:
             db = BuildCacheDatabase(tmpdir)
 
             with self._index_file_cache.read_transaction(cache_key) as f:
@@ -750,37 +752,27 @@ def _url_generate_package_index(
     Return:
         None
     """
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        try:
-            with timer.measure("list"):
-                filename_to_mtime_mapping, read_fn = get_entries_from_cache(
-                    url, tmpspecsdir, component_type=BuildcacheComponent.SPEC
-                )
-            file_list = list(filename_to_mtime_mapping.keys())
-        except ListMirrorSpecsError as e:
-            raise GenerateIndexError(f"Unable to generate package index: {e}") from e
-
-        tty.debug(f"Retrieving spec descriptor files from {url} to build index")
-
-        if not db:
-            db = BuildCacheDatabase(tmpdir)
-            db._write()
-
-        try:
-            _read_specs_and_push_index(
-                file_list,
-                read_fn,
-                name,
-                filter_fn,
-                url,
-                db,
-                str(db.database_directory),
-                timer=timer,
+    try:
+        with timer.measure("list"):
+            filename_to_mtime_mapping, read_fn = get_entries_from_cache(
+                url, component_type=BuildcacheComponent.SPEC
             )
-        except Exception as e:
-            raise GenerateIndexError(
-                f"Encountered problem pushing package index to {url}: {e}"
-            ) from e
+        file_list = list(filename_to_mtime_mapping.keys())
+    except ListMirrorSpecsError as e:
+        raise GenerateIndexError(f"Unable to generate package index: {e}") from e
+
+    tty.debug(f"Retrieving spec descriptor files from {url} to build index")
+
+    if not db:
+        db = BuildCacheDatabase(tmpdir)
+        db._write()
+
+    try:
+        _read_specs_and_push_index(
+            file_list, read_fn, name, filter_fn, url, db, str(db.database_directory), timer=timer
+        )
+    except Exception as e:
+        raise GenerateIndexError(f"Encountered problem pushing package index to {url}: {e}") from e
 
 
 def generate_key_index(mirror_url: str, tmpdir: str) -> None:
@@ -1009,7 +1001,7 @@ class Uploader:
         self.mirror.ensure_mirror_usable("push")
 
     def __enter__(self):
-        self._tmpdir = tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root())
+        self._tmpdir = tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG))
         self._executor = spack.util.parallel.make_concurrent_executor()
 
         self.tmpdir = self._tmpdir.__enter__()
@@ -2381,7 +2373,9 @@ def _trust_keys_v2(mirror_url, yes_to_all=False, install=False, trust=False, for
     for fingerprint, key_attributes in json_index["keys"].items():
         link = os.path.join(keys_url, fingerprint + ".pub")
 
-        with Stage(link, name="build_cache", keep=True) as stage:
+        with stage_from_config(
+            link, name="build_cache", keep=True, config=spack.config.CONFIG
+        ) as stage:
             if os.path.exists(stage.save_filename) and force:
                 os.remove(stage.save_filename)
             if not os.path.exists(stage.save_filename):

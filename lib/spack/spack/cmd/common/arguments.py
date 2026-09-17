@@ -5,10 +5,10 @@
 import argparse
 import os
 import textwrap
-from typing import Any, Optional
 
 import spack.cmd
 import spack.config
+import spack.deprecation
 import spack.deptypes as dt
 import spack.mirrors.mirror
 import spack.mirrors.utils
@@ -16,7 +16,6 @@ import spack.reporters
 import spack.spec
 import spack.store
 from spack.active_environment import active_environment
-from spack.util import tty
 from spack.util.lang import stable_partition
 from spack.util.pattern import Args
 
@@ -130,40 +129,6 @@ class SetConcurrentPackages(argparse.Action):
         )
 
         setattr(namespace, "concurrent_packages", concurrent_packages)
-
-
-class DeprecatedStoreTrueAction(argparse.Action):
-    """Like the builtin store_true, but prints a deprecation warning."""
-
-    def __init__(
-        self,
-        option_strings,
-        dest: str,
-        default: Optional[Any] = False,
-        required: bool = False,
-        help: Optional[str] = None,
-        removed_in: Optional[str] = None,
-        instructions: Optional[str] = None,
-    ):
-        super().__init__(
-            option_strings=option_strings,
-            dest=dest,
-            nargs=0,
-            const=True,
-            required=required,
-            help=help,
-            default=default,
-        )
-        self.removed_in = removed_in
-        self.instructions = instructions
-
-    def __call__(self, parser, namespace, value, option_string=None):
-        instructions = [] if not self.instructions else [self.instructions]
-        tty.warn(
-            f"{option_string} is deprecated and will be removed in {self.removed_in}.",
-            *instructions,
-        )
-        setattr(namespace, self.dest, self.const)
 
 
 class DeptypeAction(argparse.Action):
@@ -632,13 +597,27 @@ class ConfigSetAction(argparse.Action):
         spack.config.CONFIG.set(self.config_path, self.const, scope="command_line")
 
 
+class AllowDeprecatedAction(argparse.Action):
+    """Allows every deprecation for the current command, including the deprecations of packages
+    with an ``allow`` list of their own.
+    """
+
+    def __init__(self, option_strings, dest, default=None, help=None):
+        super().__init__(
+            option_strings=option_strings, dest=dest, nargs=0, default=default, help=help
+        )
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        spack.deprecation.allow_every_deprecation(spack.config.CONFIG)
+        setattr(namespace, self.dest, True)
+
+
 def add_concretizer_args(subparser):
     """Add a subgroup of arguments for controlling concretization.
 
     These will appear in a separate group called 'concretizer arguments'.
-    There's no need to handle them in your command logic -- they all use
-    ``ConfigSetAction``, which automatically handles setting configuration
-    options.
+    There's no need to handle them in your command logic -- they all set
+    configuration options when the arguments are parsed.
 
     If you *do* need to access a value passed on the command line, you can
     get at, e.g., the ``concretizer:reuse`` via ``args.concretizer_reuse``.
@@ -683,11 +662,10 @@ def add_concretizer_args(subparser):
     )
     subgroup.add_argument(
         "--deprecated",
-        action=ConfigSetAction,
-        dest="config:deprecated",
-        const=True,
+        action=AllowDeprecatedAction,
+        dest="deprecated",
         default=None,
-        help="allow concretizer to select deprecated versions",
+        help="allow the concretizer to select deprecated versions of any severity",
     )
 
 
