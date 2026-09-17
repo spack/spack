@@ -48,7 +48,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def _under_old_dotspack(path: str) -> bool:
     old_path = os.path.realpath(os.path.expanduser("~/.spack"))
     try:
-        return os.path.commonpath([old_path, os.path.realpath(os.path.expanduser(path))]) == old_path
+        return (
+            os.path.commonpath([old_path, os.path.realpath(os.path.expanduser(path))]) == old_path
+        )
     except ValueError:
         return False
 
@@ -61,7 +63,11 @@ def _cleanup_old() -> None:
 
     references = []
     user_scope = spack.config.CONFIG.scopes.get("user")
-    if user_scope is not None and hasattr(user_scope, "path") and _under_old_dotspack(user_scope.path):
+    if (
+        user_scope is not None
+        and hasattr(user_scope, "path")
+        and _under_old_dotspack(user_scope.path)
+    ):
         references.append(f"user scope ({user_scope.path})")
 
     if _under_old_dotspack(spack.paths.user_cache_path):
@@ -228,9 +234,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if has_gpg:
         layout_config["config"]["gpg_path"] = old_gpg_dir
 
-    layout_config["config"].setdefault("locations", {})["state"] = [
-        os.path.expanduser("~/.spack")
-    ]
+    layout_config["config"].setdefault("locations", {})["state"] = [os.path.expanduser("~/.spack")]
 
     # Write updated layout scope
     fs.mkdirp(layout_scope_path)

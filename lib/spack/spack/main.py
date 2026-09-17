@@ -24,7 +24,6 @@ import textwrap
 import traceback
 import warnings
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Any, List, Optional, Set, Tuple
 
 import spack.vendor.archspec.cpu

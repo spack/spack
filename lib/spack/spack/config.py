@@ -2552,7 +2552,9 @@ def _do_migrate(
     if not is_isolate_command:
         migration_summary = ["Spack automatically migrated old resources."]
         if user_config_migrated:
-            migration_summary.append("  - Copied user configuration from ~/.spack to ~/.config/spack.")
+            migration_summary.append(
+                "  - Copied user configuration from ~/.spack to ~/.config/spack."
+            )
         if migrated_resources:
             migration_summary.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
         if retained_resources:

@@ -40,9 +40,7 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifie
     # Generated isolate and layout scopes are instance state, not SCM-owned
     # configuration. Do not copy them into the simulated checkout.
     shutil.copytree(
-        real_etc_spack,
-        sim_etc_spack,
-        ignore=shutil.ignore_patterns("isolate", "layout"),
+        real_etc_spack, sim_etc_spack, ignore=shutil.ignore_patterns("isolate", "layout")
     )
 
     # Set up environment using set_home fixture (handles both Windows and Linux)
