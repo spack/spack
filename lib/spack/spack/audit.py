@@ -577,12 +577,13 @@ def _ensure_all_versions_can_produce_a_fetcher(
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
         versions = pkg_cls.all_versions()
-        spec = spack.spec.Spec(pkg_name)
         try:
             spack.package_base.check_pkg_attributes(pkg_cls)
             for version in versions:
-                for _, version_def in pkg_cls.version_definitions(version):
-                    pkg = pkg_cls(spack.spec.Spec(pkg_name))
+                spec = spack.spec.Spec(pkg_name)
+                spec.versions = spack.version.VersionList([version])
+                pkg = pkg_cls(spec)
+                for _, version_def in pkg.version_definitions(version):
                     assert spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
         except Exception as e:
             error_msg = "The package '{}' cannot produce a fetcher for some of its versions"
