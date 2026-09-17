@@ -12,7 +12,8 @@ Here is the EBNF grammar for a spec::
     node          = [name] { node_option } | filename
     node_option   = @version_list | variant | hash
 
-    edge_properties = [ { key_value | when=quoted_spec } [ when=spec ] ]
+    edge_properties = edge_group { edge_group }
+    edge_group      = [ { key_value | when=quoted_spec } [ when=spec ] ]
     quoted_spec     = " spec " | ' spec '
 
     virtual_assignment = id { , id } = (id | namespace id)
@@ -55,10 +56,12 @@ value is a package name, is a virtual assignment ``%c,cxx=gcc`` rather than a va
 anonymous dependency (write ``%* foo=bar`` for the latter). ``*`` is the name of an anonymous
 node.
 
-The ``when=`` edge property is a condition on the edge, and its value is a spec that extends up
-to the closing bracket, so it must be the last edge property: ``^[virtuals=mpi when=+mpi] mpich``.
-A quoted condition, ``^[when='+mpi' virtuals=mpi] mpich``, is a value like any other and can
-precede other edge properties.
+The ``when=`` edge property is a condition on the edge, and its unquoted value is a spec that
+extends up to the closing bracket: in ``^[virtuals=mpi when=+mpi] mpich`` the condition is
+``+mpi``, while in ``^[when=+mpi virtuals=mpi] mpich`` the ``virtuals=mpi`` pair is part of the
+condition. Edge properties following an unquoted condition go in a separate bracket group,
+``^[when=+mpi][virtuals=mpi] mpich``, or the condition can be quoted,
+``^[when='+mpi' virtuals=mpi] mpich``, making it a value like any other.
 
 There is one ambiguity: since ``-`` is allowed in an id, you need to put
 whitespace space before ``-variant`` for it to be tokenized properly.  You can
@@ -361,6 +364,7 @@ _EDGE_VIRTUALS = "edge_virtuals"
 _EDGE_SUBSTITUTE = "edge_substitute"
 _END_EDGE_VIRTUALS = "end_edge_virtuals"
 _END_EDGE_SUBSTITUTE = "end_edge_substitute"
+_EDGE_REOPEN = "edge_reopen"
 _VERSION_LIST = "version_list"
 _BV_PREFIX = "bv_prefix"
 _BV_NAME = "bv_name"
@@ -385,11 +389,15 @@ _MISPLACED_VIRTUAL_ASSIGNMENT = re.compile(rf"{_VIRTUALS_LIST}={_SUBSTITUTE}")
 #: Token kind -> regex. FAST_SPEC_REGEX is the ``|``-alternation of these in order: tokens are
 #: tried top to bottom, so more specific tokens come first (e.g. FILENAME before package names).
 SPEC_TOKENS: Dict[str, str] = {
-    # ``]`` closing edge properties, optionally fused with a virtual assignment, e.g.
+    # ``]`` closing edge properties, optionally fused with a ``[`` opening another group of
+    # edge properties, e.g. ``^[when=+mpi][virtuals=mpi]``, or with a virtual assignment, e.g.
     # ``^[deptypes=link] mpi=openmpi``
     _END_EDGE_PROPERTIES: (
         r"\]"
-        rf"(?:\s*(?P<{_END_EDGE_VIRTUALS}>{_VIRTUALS_LIST})=(?P<{_END_EDGE_SUBSTITUTE}>{_SUBSTITUTE}))?"
+        r"(?:"
+        rf"(?P<{_EDGE_REOPEN}>\s*\[)"
+        rf"|(?:\s*(?P<{_END_EDGE_VIRTUALS}>{_VIRTUALS_LIST})=(?P<{_END_EDGE_SUBSTITUTE}>{_SUBSTITUTE}))?"
+        r")"
     ),
     # ``^`` (transitive), ``%`` (direct) or ``%%`` (direct, propagated) dependency
     _DEPENDENCY: (
@@ -554,12 +562,17 @@ class SpecParser:
                             if name not in ("deptypes", "virtuals"):
                                 msg = (
                                     "the only edge attributes that are currently accepted are "
-                                    '"deptypes", "virtuals", and a "when=<spec>" condition, '
-                                    "which must be the last unless quoted"
+                                    '"deptypes", "virtuals", and a "when=<spec>" condition; an '
+                                    "unquoted condition extends to the closing bracket, so put "
+                                    "attributes after it in a separate bracket group"
                                 )
                                 self._raise_parsing_error(msg)
                             value = strip_quotes(self.curr.group(_KV_VALUE))
-                            attributes[name] = [v.strip() for v in value.split(",")]
+                            # Repeated attributes combine: virtuals or deptypes accumulate
+                            # when specs constrain
+                            attributes.setdefault(name, []).extend(
+                                v.strip() for v in value.split(",")
+                            )
                             self.curr, self.next = self.next, self.scanner.match()
 
                         elif kind == _KEY_VALUE_PAIR or kind == _WHEN:
@@ -586,14 +599,19 @@ class SpecParser:
                                 parsed = self.next_spec()
                                 assert parsed is not None  # there is a token, so there is a spec
                                 condition = parsed
-                            # Repeated attributes combine: conditions are constrained, like
-                            # virtuals accumulate and deptypes are or-ed
+                            # Repeated conditions combine too, by constraining
                             if conditions is None:
                                 conditions = condition
                             else:
                                 conditions.constrain(condition)
 
                         elif kind == _END_EDGE_PROPERTIES:
+                            # ][ opens another group of edge properties, as in
+                            # ^[when=+mpi][virtuals=mpi]: keep collecting attributes
+                            if self.curr.group(_EDGE_REOPEN):
+                                self.curr, self.next = self.next, self.scanner.match()
+                                continue
+
                             # Closing ], optionally fused with a virtual assignment, as in
                             # ^[deptypes=link] mpi=openmpi
                             virtuals_str = self.curr.group(_END_EDGE_VIRTUALS)

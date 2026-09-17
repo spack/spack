@@ -12,6 +12,7 @@ import pytest
 import spack.binary_distribution
 import spack.cmd
 import spack.concretize
+import spack.deptypes
 import spack.error
 import spack.hash_lookup
 import spack.platforms.test
@@ -1093,6 +1094,79 @@ def specfile_for(config, mock_packages):
             ],
             "foo ^[when=%c] c,cxx=builtin.gcc@14+bar",
         ),
+        # Multiple groups of edge properties: an unquoted when= extends to its closing bracket,
+        # and other edge properties can follow in a new group
+        (
+            "foo %[when=+a][virtuals=c]gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%[", edge_bracket="["),
+                Token("KEY_VALUE_PAIR", "when=+a", kv_name="when", kv_sep="=", kv_value="+a"),
+                Token("END_EDGE_PROPERTIES", "][", edge_reopen="["),
+                Token(
+                    "KEY_VALUE_PAIR", "virtuals=c", kv_name="virtuals", kv_sep="=", kv_value="c"
+                ),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "foo %[when=+a] c=gcc",
+        ),
+        (
+            "foo %[when=%baz target=x86_64][virtuals=c]gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "when=%baz"),
+                Token("KEY_VALUE_PAIR", "target=x86_64"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "virtuals=c"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "foo %[when=%baz target=x86_64] c=gcc",
+        ),
+        # the same edge properties in the opposite group order
+        (
+            "foo %[virtuals=c][when=%baz target=x86_64]gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "virtuals=c"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "when=%baz"),
+                Token("KEY_VALUE_PAIR", "target=x86_64"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "foo %[when=%baz target=x86_64] c=gcc",
+        ),
+        # whitespace between groups of edge properties
+        (
+            "foo ^[deptypes=link] [when=+mpi] mpich",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "^["),
+                Token("KEY_VALUE_PAIR", "deptypes=link"),
+                Token("END_EDGE_PROPERTIES", "] ["),
+                Token("KEY_VALUE_PAIR", "when=+mpi"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "mpich"),
+            ],
+            "foo ^[deptypes=link when=+mpi] mpich",
+        ),
+        # a second group of edge properties closed by a fused virtual assignment
+        (
+            "foo %[when=+a][deptypes=link] c=gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "when=+a"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "deptypes=link"),
+                Token("END_EDGE_PROPERTIES", "] c=gcc"),
+            ],
+            "foo %[deptypes=link when=+a] c=gcc",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_package):
@@ -1669,6 +1743,10 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         # a when= condition is a spec, which extends up to the closing bracket
         ("foo ^[when=] bar", "expected a spec after when="),
         ("foo ^[when=", "expected a spec after when="),
+        ("foo ^[when=][virtuals=c] bar", "expected a spec after when="),
+        # a reopened group of edge properties must be closed too
+        ("foo ^[when=+a][virtuals=c bar", "expected an edge attribute or `]`"),
+        ("foo ^[when=+a][virtuals=c", "expected `]` to close the edge attributes"),
         ("foo ^[when=bar baz] qux", "expected an edge attribute or `]`"),
         ("foo ^[when=bar ^baz", "expected `]` to close the edge attributes"),
         # a quoted condition is a single spec: neither two specs nor none
@@ -2035,6 +2113,28 @@ def test_when_edge_attribute_keeps_commas():
     comma-separated deptypes and virtuals lists."""
     edge = spack.spec.Spec("foo ^[when='@1,2'] bar").edges_to_dependencies(name="bar")[0]
     assert edge.when == spack.spec.Spec("@1,2")
+
+
+def test_repeated_edge_attributes_combine():
+    """An attribute repeated over groups of edge properties combines with the earlier value,
+    instead of replacing it: virtuals accumulate, deptypes are or-ed and conditions constrained."""
+    spec = spack.spec.Spec(
+        "foo ^[virtuals=mpi][deptypes=build][when=+a][virtuals=scalapack][deptypes=link]"
+        "[when=+b] mpich"
+    )
+    edge = spec.edges_to_dependencies(name="mpich")[0]
+    assert edge.virtuals == ("mpi", "scalapack")
+    assert edge.depflag == spack.deptypes.canonicalize(["build", "link"])
+    assert edge.when == spack.spec.Spec("+a+b")
+
+
+def test_edge_property_groups_in_when_condition():
+    """A when condition is a spec, so it can carry groups of edge properties of its own: the
+    closing bracket of the condition is the one that is not reopened."""
+    spec = spack.spec.Spec("foo %[when=^[virtuals=mpi][deptypes=link]mpich][virtuals=c]gcc")
+    edge = spec.edges_to_dependencies(name="gcc")[0]
+    assert edge.virtuals == ("c",)
+    assert edge.when == spack.spec.Spec("^[virtuals=mpi deptypes=link] mpich")
 
 
 @pytest.mark.parametrize(
