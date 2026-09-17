@@ -78,8 +78,8 @@ class VariantType(enum.IntEnum):
 class Option:
     """Base class for :class:`Variant` and :class:`Usage`."""
 
-    #: Name of this kind of option, for messages: "variant" or "usage"
-    kind: ClassVar[str] = "option"
+    #: Name of this kind of option, for messages, "variant" or "usage"
+    kind: ClassVar[str]
 
     name: str
     default: Union[bool, str]
@@ -910,9 +910,7 @@ def prevalidate_variant_value(
         raise errors[0]
 
     # otherwise combine all the errors and raise them together
-    raise InvalidOptionValueError(
-        "multiple variant issues:", "\n".join(e.message for e in errors)
-    )
+    raise InvalidOptionValueError("multiple variant issues:", "\n".join(e.message for e in errors))
 
 
 class ConditionalVariantValues(lang.TypedMutableSequence):
