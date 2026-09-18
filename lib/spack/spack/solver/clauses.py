@@ -301,9 +301,9 @@ class SpecClauseGenerator:
         # GCC runtime is solved again by clingo, even on concrete specs, to give
         # the possibility to reuse specs built against a different runtime.
         if dep.name == "gcc-runtime":
-            clauses.append(fn.attr("compatible_runtime", name, dep.name, f"{dep.version}:"))
-            constraint_spec = spack.spec.Spec(f"{dep.name}@{dep.version}")
-            self.spec_versions(constraint_spec)
+            runtime_versions = spack.spec.Spec(f"{dep.name}@{dep.version}:").versions
+            clauses.append(fn.attr("compatible_runtime", name, dep.name, runtime_versions))
+            self.record_version_constraint(dep.name, runtime_versions)
             if not include_runtimes:
                 return clauses, False
 

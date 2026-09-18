@@ -17,10 +17,12 @@ import spack.util.path
 from spack.active_environment import active_environment
 from spack.enums import InstallRecordStatus
 from spack.externals import ExternalSpecsParser
-from spack.externals_config import create_external_parser, external_config_with_implicit_externals
+from spack.externals_config import (
+    all_libcs,
+    create_external_parser,
+    external_config_with_implicit_externals,
+)
 from spack.spec_filter import SpecFilter
-
-from .runtimes import all_libcs
 
 if typing.TYPE_CHECKING:
     import spack.context
