@@ -397,6 +397,15 @@ The table below lists the default inspections:
 
 On Linux, ``LD_LIBRARY_PATH`` is omitted: Spack packages embed RPATHs, making it unnecessary, and setting it globally affects system executables.
 
+.. note::
+
+   On macOS, the dynamic linker clears ``DYLD_*`` variables (including ``DYLD_FALLBACK_LIBRARY_PATH``)
+   from the environment of every new process it starts, as part of System Integrity Protection.
+   This makes the variable behave in a way that looks broken: after ``export DYLD_FALLBACK_LIBRARY_PATH=...``,
+   ``echo $DYLD_FALLBACK_LIBRARY_PATH`` still shows the value in the current shell, but a child process,
+   e.g. ``env | grep DYLD``, will not have it. This is expected macOS behavior, not a bug in the generated
+   module file or in the module tool.
+
 To suppress a variable from all module files, use ``exclude_env_vars``:
 
 .. code-block:: yaml
