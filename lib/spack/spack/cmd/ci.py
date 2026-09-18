@@ -337,7 +337,8 @@ def ci_rebuild(args):
     cdash_config = cfg.CONFIG.get("cdash")
     cdash_handler = None
     if "build-group" in cdash_config:
-        cdash_handler = spack_ci.CDashHandler(cdash_config)
+        client = web_util.NetworkClient.from_config(cfg.CONFIG)
+        cdash_handler = spack_ci.CDashHandler(cdash_config, urlopen=client.urlopen)
         tty.debug("cdash url = {0}".format(cdash_handler.url))
         tty.debug("cdash project = {0}".format(cdash_handler.project))
         tty.debug("cdash project_enc = {0}".format(cdash_handler.project_enc))
