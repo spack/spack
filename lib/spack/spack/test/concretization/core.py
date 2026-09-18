@@ -5701,15 +5701,16 @@ def test_compiler_dependencies_can_be_excluded_from_reuse(
 
 
 @pytest.mark.regression("50809")
-def test_compiler_can_be_reused_as_root(temporary_store, mock_packages):
+def test_compiler_can_be_reused_as_root(temporary_store, mock_packages, mutable_config):
     """Tests that an installed compiler can be reused as a root node"""
-    installed = spack.concretize.concretize_one("llvm")
+    installed = spack.concretize.concretize_one("llvm@18")
     PackageInstaller([installed.package], fake=True, explicit=True).install()
 
-    solver = spack.solver.asp.Solver(context=spack.context.default())
-    result = solver.solve([spack.spec.Spec(f"llvm/{installed.dag_hash()}")])
-
-    assert result.specs[0].dag_hash() == installed.dag_hash(), result.specs[0].tree()
+    mutable_config.set("concretizer:unify", True)
+    llvm, _ = spack.concretize.concretize_spec_pairs(
+        [(Spec(f"llvm/{installed.dag_hash()}"), None), (Spec("pkg-a"), None)]
+    )
+    assert llvm.dag_hash() == installed.dag_hash(), llvm.tree()
 
 
 def test_parallel_edges_in_a_literal_reach_the_solver(mock_packages, config):
