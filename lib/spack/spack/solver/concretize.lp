@@ -1824,20 +1824,19 @@ attr("node_version_satisfies", node(X, Runtime), VersionRange) :-
    attr("compatible_runtime", PackageNode, Runtime, VersionRange),
    concrete(PackageNode).
 
-% If a compiler package is depended on with type link, it's used as a library
-compiler_used_as_a_library(node(X, Child), Hash) :-
+% A compiler must impose its link dependencies when it is used as a library (i.e. it is
+% depended on with type link), or when it is a root (i.e. it is being installed itself rather
+% than being used as a toolchain).
+compiler_imposes_link_deps(Child, Hash) :-
   concrete(node(X, Child)),
   attr("hash", node(X, Child), Hash),
   compiler_package(Child), % Used to restrict grounding for this rule
   attr("depends_on", _, node(X, Child), "link").
 
-% A compiler must impose its link dependencies when it is used as a library, or when it is a
-% root (i.e. it is being installed itself rather than being used as a toolchain).
-compiler_imposes_link_deps(PkgName, Hash) :- compiler_used_as_a_library(node(_, PkgName), Hash).
-compiler_imposes_link_deps(PkgName, Hash) :-
-  attr("root", node(X, PkgName)),
-  attr("hash", node(X, PkgName), Hash),
-  compiler_package(PkgName).
+compiler_imposes_link_deps(Child, Hash) :-
+  attr("root", node(X, Child)),
+  attr("hash", node(X, Child), Hash),
+  compiler_package(Child).
 
 % If a compiler is used for C on a package, it must provide C++ too, if need be, and vice-versa
 :-  attr("virtual_on_edge", PackageNode, CompilerNode1, "c"),

@@ -5706,7 +5706,7 @@ def test_compiler_root_by_hash_keeps_its_link_dependencies(temporary_store, mock
     its hash imposes, instead of having them dropped as if it were a toolchain.
     """
     # llvm has a pure link dependency on its "c" provider, and as a root it has no incoming
-    # link edge, so compiler_used_as_a_library cannot hold for it.
+    # link edge, so it is not used as a library.
     installed = spack.concretize.concretize_one("llvm@18 +clang")
     PackageInstaller([installed.package], fake=True, explicit=True).install()
 
