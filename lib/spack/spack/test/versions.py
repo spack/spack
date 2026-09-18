@@ -938,6 +938,13 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
     assert v_equivalent == v.ref_version
 
 
+def test_version_lists_are_shared_between_specs():
+    """Specs that name the same versions share one list."""
+    assert spack.spec.Spec("foo@1.2.3").versions is spack.spec.Spec("bar@1.2.3").versions
+    foo, bar = spack.spec.Spec("foo@git.develop"), spack.spec.Spec("bar@git.develop")
+    assert foo.versions is bar.versions
+
+
 @pytest.mark.parametrize(
     "lhs_str,rhs_str,expected",
     [

@@ -80,8 +80,8 @@ def test_spec_parse_cflags_quoting():
     output = spec("--yaml", 'gcc cflags="-Os -pipe" cxxflags="-flto -Os"')
     gh_flagged = spack.spec.Spec.from_yaml(output)
 
-    assert ["-Os", "-pipe"] == gh_flagged.compiler_flags["cflags"]
-    assert ["-flto", "-Os"] == gh_flagged.compiler_flags["cxxflags"]
+    assert ("-Os", "-pipe") == gh_flagged.compiler_flags["cflags"]
+    assert ("-flto", "-Os") == gh_flagged.compiler_flags["cxxflags"]
 
 
 def test_spec_yaml():
