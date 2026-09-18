@@ -8,6 +8,7 @@ import warnings
 import spack.cmd
 import spack.environment
 import spack.spec
+import spack.variant
 from spack.cmd.common import arguments
 
 description = "change an existing spec in an environment"
@@ -48,6 +49,15 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=False,
         help="change only concrete specs in the environment",
     )
+    subparser.add_argument(
+        "--remove-variant",
+        dest="remove_variants",
+        action="append",
+        default=[],
+        metavar="VARIANT",
+        help="remove a variant from matching concrete specs"
+        " (requires '--concrete' or '--concrete-only', may be used multiple times)",
+    )
     arguments.add_common_arguments(subparser, ["specs"])
 
 
@@ -56,6 +66,10 @@ def change(parser, args):
         warnings.warn("'spack change --all' argument is ignored with '--concrete-only'")
     if args.list_name != "specs" and args.concrete_only:
         warnings.warn("'spack change --list-name' argument is ignored with '--concrete-only'")
+    if args.remove_variants and not (args.concrete or args.concrete_only):
+        raise ValueError(
+            "'spack change --remove-variant' requires '--concrete' or '--concrete-only'"
+        )
 
     env = spack.cmd.require_active_env(args.subparser)
 
@@ -80,9 +94,23 @@ def change(parser, args):
                 raise ValueError(msg) from e
 
         if args.concrete or args.concrete_only:
+            if args.remove_variants and not specs:
+                if not match_spec:
+                    raise ValueError(
+                        "'spack change --remove-variant' without a spec requires '--match-spec'"
+                    )
+                specs = [spack.spec.Spec()]
+
             selectors = []
             mutators = []
             for spec in specs:
+                for variant_name in args.remove_variants:
+                    if variant_name in spec.variants:
+                        raise ValueError(
+                            f"Cannot remove variant '{variant_name}' that is also set"
+                            f" by the change spec '{spec}'"
+                        )
+                    spec.variants[variant_name] = spack.variant.VariantValueRemoval(variant_name)
                 selectors.append(match_spec or spack.spec.Spec(spec.name))
                 mutators.append(spec)
 
