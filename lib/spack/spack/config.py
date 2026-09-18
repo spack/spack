@@ -2543,6 +2543,7 @@ def _do_migrate(
         tty.debug(f"Wrote config.yaml to {config_path}")
 
     if "modules" in scope_config:
+        filesystem.mkdirp(layout_scope_path)
         modules_yaml_path = os.path.join(layout_scope_path, "modules.yaml")
         with open(modules_yaml_path, "w", encoding="utf-8") as f:
             syaml.dump(scope_config["modules"], f)

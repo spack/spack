@@ -55,6 +55,7 @@ def test_isolate_smoke_test(mock_spack_paths, tmp_path):
     assert (isolated_path / "config.yaml").exists()
 
     cfg = spack.config.create()
+    spack.config.CONFIG = cfg
     for location in ("data", "state", "cache"):
         assert cfg.get(f"config:locations:{location}")[0] == str(isolated_path)
 
@@ -62,12 +63,12 @@ def test_isolate_smoke_test(mock_spack_paths, tmp_path):
     # to the fresh isolation target rather than the Spack checkout.
     assert cfg.get("modules:default:roots:tcl") == "$data_home/modules"
     assert cfg.get("modules:default:roots:lmod") == "$data_home/lmod"
-    assert spack.config.canonicalize_path(cfg.get("modules:default:roots:tcl")) == str(
-        isolated_path / "modules"
-    )
-    assert spack.config.canonicalize_path(cfg.get("modules:default:roots:lmod")) == str(
-        isolated_path / "lmod"
-    )
+    assert spack.config.canonicalize_path(
+        cfg.get("modules:default:roots:tcl"), config=cfg
+    ) == str(isolated_path / "modules")
+    assert spack.config.canonicalize_path(
+        cfg.get("modules:default:roots:lmod"), config=cfg
+    ) == str(isolated_path / "lmod")
 
     with open(isolate_scope_path / "include.yaml", encoding="utf-8") as f:
         include_text = f.read()
@@ -152,6 +153,9 @@ def test_isolate_keeps_existing_resources_in_place(mock_spack_paths, tmp_path):
     old_install = base_prefix / "opt" / "spack" / "pkg"
     old_install.mkdir(parents=True)
     (old_install / "metadata").write_text("installed", encoding="utf-8")
+    (etc_spack / "include.yaml").write_text(
+        'include:\n  - path: "isolate"\n    optional: true\n', encoding="utf-8"
+    )
 
     target = tmp_path / "new-isolation"
     sp_isolate("--path", str(target))
@@ -160,6 +164,7 @@ def test_isolate_keeps_existing_resources_in_place(mock_spack_paths, tmp_path):
     assert (old_install / "metadata").read_text(encoding="utf-8") == "installed"
     assert not (base_prefix / ".migration-backup").exists()
     cfg = spack.config.create()
+    spack.config.CONFIG = cfg
     assert cfg.get("config:license_dir") == str(old_licenses)
     assert cfg.get("config:locations:data")[0] == str(target)
 
