@@ -1338,7 +1338,7 @@ class Environment:
 
     def _sync_speclists(self):
         self._spec_lists_parser = SpecListParser(
-            toolchains=spack.config.CONFIG.get("toolchains", {})
+            context=spack.spec.ParseContext.from_config(spack.config.CONFIG)
         )
         self.spec_lists = {}
         self.spec_lists.update(
@@ -3385,10 +3385,14 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             ValueError: if no equivalent match is found
         """
-        result = []
-        for yaml_spec_str in self.configuration["specs"]:
-            if Spec(yaml_spec_str) == Spec(user_spec):
-                result.append(yaml_spec_str)
+        # both sides are user input: evaluate them the same way before comparing
+        context = spack.spec.ParseContext.from_config(spack.config.CONFIG)
+        wanted = spack.spec.parse_one_or_raise(user_spec, context=context)
+        result = [
+            yaml_spec_str
+            for yaml_spec_str in self.configuration["specs"]
+            if spack.spec.parse_one_or_raise(yaml_spec_str, context=context) == wanted
+        ]
 
         if not result:
             raise ValueError(f"cannot find a spec equivalent to {user_spec}")
