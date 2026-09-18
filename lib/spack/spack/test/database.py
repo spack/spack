@@ -1371,7 +1371,7 @@ def test_query_with_predicate_fn(database):
 
 
 @pytest.mark.regression("49964")
-def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
+def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path, mock_packages):
     """Tests that we can query a reindexed database from before compilers as dependencies,
     and get appropriate results for %<compiler> and similar selections.
     """
@@ -1384,7 +1384,13 @@ def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
     index_json.parent.mkdir(parents=True)
     index_json.write_text(json.dumps(data))
 
-    db = Database(str(tmp_path))
+    # A v8 index is read in place as an upstream, a local store must be reindexed explicitly
+    with pytest.raises(spack.database.ExplicitDatabaseUpgradeError):
+        Database(str(tmp_path)).query("%gcc")
+
+    upstream = Database(str(tmp_path), is_upstream=True)
+    upstream._read()
+    db = Database(str(tmp_path / "downstream"), upstream_dbs=[upstream])
 
     specs = db.query("%gcc")
 

@@ -593,6 +593,37 @@ corresponding group.
       }
     }
 
+Version 8
+---------
+
+Version 8 does not change the lockfile itself, but uses spec format v6, in which a concrete node
+records the virtuals it provides, as specs such as ``mpi@3:``, under ``provided_virtuals``. This
+data is part of the DAG hash, since ``provides`` directives are no longer part of the package hash.
+
+.. code-block:: json
+
+    {
+      "_meta": {
+        "file-type": "spack-lockfile",
+        "lockfile-version": 8,
+        "specfile-version": 6
+      },
+      "spack": {
+        "version": "1.3.0.dev0",
+        "type": "git",
+        "commit": "94b055476f874f424f20e3c0f33b0f22de29220a"
+      },
+      "roots": [
+        {
+          "hash": "o72mlpqvb5xijyqg4iyubpnvd5bfcomb",
+          "spec": "hdf5",
+          "group": "default"
+        }
+      ],
+      "concrete_specs": {
+      }
+    }
+
 """
 
 from .environment import (

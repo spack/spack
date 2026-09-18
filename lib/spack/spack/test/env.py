@@ -22,7 +22,7 @@ import spack.util.filesystem as fs
 from spack.config import Configuration
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
-from spack.environment.environment import EnvironmentManifestFile
+from spack.environment.environment import CURRENT_LOCKFILE_VERSION, EnvironmentManifestFile
 from spack.environment.list import UndefinedReferenceError
 from spack.traverse import traverse_nodes
 from spack.util.lang import Singleton, ensure_unwrapped
@@ -1886,7 +1886,7 @@ spack:
             spack.spec.Spec("mpich"),
         ]
 
-    def test_environment_without_groups_use_lockfile_v6(self, create_temporary_manifest):
+    def test_environment_without_groups_has_no_group_attribute(self, create_temporary_manifest):
         manifest = create_temporary_manifest(
             """
 spack:
@@ -1898,7 +1898,7 @@ spack:
         with ev.Environment(manifest.manifest_dir) as e:
             e.concretize()
             lockfile_data = e._to_lockfile_dict()
-            assert lockfile_data["_meta"]["lockfile-version"] == 6
+            assert lockfile_data["_meta"]["lockfile-version"] == CURRENT_LOCKFILE_VERSION
             assert all("group" not in x for x in lockfile_data["roots"])
 
     def test_independent_groups_concretization(self, create_temporary_manifest):

@@ -645,7 +645,7 @@ Such a file would live in the versioned spec manifests directory of a binary mir
        },
        {
          "contentLength": 1000,
-         "mediaType": "application/vnd.spack.spec.v5+json",
+         "mediaType": "application/vnd.spack.spec.v6+json",
          "compression": "gzip",
          "checksumAlgorithm": "sha256",
          "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
@@ -705,7 +705,7 @@ While an example spec manifest (i.e., a manifest for a binary package) is shown 
      "data": [
        {
          "contentLength": 6411,
-         "mediaType": "application/vnd.spack.db.v8+json",
+         "mediaType": "application/vnd.spack.db.v9+json",
          "compression": "none",
          "checksumAlgorithm": "sha256",
          "checksum": "225a3e9da24d201fdf9d8247d66217f5b3f4d0fc160db1498afd998bfd115234"
@@ -713,7 +713,7 @@ While an example spec manifest (i.e., a manifest for a binary package) is shown 
      ]
    }
 
-Some things to note about this manifest are that it points to a blob that is not compressed (``compression: "none"``) and that the ``mediaType`` is one we have not seen yet, ``application/vnd.spack.db.v8+json``.
+Some things to note about this manifest are that it points to a blob that is not compressed (``compression: "none"``) and that the ``mediaType`` is one we have not seen yet, ``application/vnd.spack.db.v9+json``.
 The decision not to compress build cache indices stems from the fact that Spack does not yet sign build cache index manifests.
 Once that changes, you may start to see these indices stored as compressed blobs.
 
