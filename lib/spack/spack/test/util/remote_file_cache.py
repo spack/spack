@@ -44,7 +44,10 @@ def test_rfc_local_file_unix():
 
 @pytest.mark.only_windows("Windows path")
 def test_rfc_local_file_windows():
-    assert rfc_util.local_path(r"C:\Files (x86)\Windows\10", "") == r"C:\Files (x86)\Windows\10"
+    assert (
+        rfc_util.local_path(r"C:\Files (x86)\Windows\10", "", config=spack.config.CONFIG)
+        == r"C:\Files (x86)\Windows\10"
+    )
     assert (
         rfc_util.local_path(r"D:/spack stage", "", config=spack.config.CONFIG) == r"D:\spack stage"
     )
