@@ -46,7 +46,7 @@ import pathlib
 import pickle
 import re
 import warnings
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 from urllib.request import urlopen
 
 import spack.builder
@@ -63,10 +63,10 @@ import spack.variant
 from spack.util.string import plural
 
 #: Map an audit tag to a list of callables implementing checks
-CALLBACKS = {}
+CALLBACKS: Dict[str, "AuditClass"] = {}
 
 #: Map a group of checks to the list of related audit tags
-GROUPS = collections.defaultdict(list)
+GROUPS: Dict[str, List[str]] = collections.defaultdict(list)
 
 
 class Error:

@@ -6,9 +6,11 @@
 using a common pipeline graph definition.
 """
 
+from typing import Callable, Dict
+
 import spack.error
 
-_generators = {}
+_generators: Dict[str, Callable] = {}
 
 
 def generator(name):
