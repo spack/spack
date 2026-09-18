@@ -112,6 +112,7 @@ from spack.util import lang, tty
 from .enums import PropagationPolicy
 
 if TYPE_CHECKING:
+    import spack.package_base
     import spack.patch
 
 SPEC_FORMAT_RE = re.compile(
@@ -1928,7 +1929,13 @@ class Spec:
         s.architecture = ArchSpec.default_arch()
         return s
 
-    def __init__(self, spec_like=None, *, external_path=None, external_modules=None):
+    def __init__(
+        self,
+        spec_like: Optional[Union[str, "Spec"]] = None,
+        *,
+        external_path: Optional[str] = None,
+        external_modules: Optional[Iterable[str]] = None,
+    ) -> None:
         """Create a new Spec.
 
         Arguments:
@@ -1949,25 +1956,25 @@ class Spec:
         self.versions = vn.VersionList.any()
         self.variants = VariantMap()
         self.propagated_variants = VariantMap()
-        self.architecture = None
+        self.architecture: Optional[ArchSpec] = None
         self.compiler_flags = FlagMap()
-        self._dependents = {}
-        self._dependencies = {}
-        self.namespace = None
-        self.abstract_hash = None
+        self._dependents: EdgeMap = {}
+        self._dependencies: EdgeMap = {}
+        self.namespace: Optional[str] = None
+        self.abstract_hash: Optional[str] = None
 
         # cached dag hash, and the package hash assigned by finalize_concretization
         self._hash: Optional[str] = None
         self._package_hash: Optional[str] = None
 
         # cache for spec's prefix, computed lazily by prefix property
-        self._prefix = None
+        self._prefix: Optional[spack.util.prefix.Prefix] = None
 
         # Python __hash__ is handled separately from the cached spec hashes
-        self._dunder_hash = None
+        self._dunder_hash: Optional[int] = None
 
         # cache of package for this spec
-        self._package = None
+        self._package: Optional["spack.package_base.PackageBase"] = None
 
         # whether the spec is concrete or not; set at the end of concretization
         self._concrete = False
@@ -1975,10 +1982,9 @@ class Spec:
         # External detection details that can be set by internal Spack calls
         # in the constructor.
         self._external_path = external_path
-        if external_modules:
-            self.external_modules = list(external_modules)
-        else:
-            self.external_modules = None
+        self.external_modules: Optional[List[str]] = (
+            list(external_modules) if external_modules else None
+        )
 
         # This attribute is used to store custom information for external specs.
         self.extra_attributes: Dict[str, Any] = {}
@@ -1987,7 +1993,7 @@ class Spec:
         # deployed differently than it was built. None signals that the spec
         # is deployed "as built."
         # Build spec should be the actual build spec unless marked dirty.
-        self._build_spec = None
+        self._build_spec: Optional[Spec] = None
         self.annotations = SpecAnnotations()
 
         if isinstance(spec_like, str):
@@ -2171,6 +2177,7 @@ class Spec:
         elif name == "target":
             self._set_architecture(target=value)
         elif name == "namespace":
+            assert isinstance(value, str)  # checked above, for mypy
             self.namespace = value
         elif name in _valid_compiler_flags:
             assert self.compiler_flags is not None
@@ -3320,11 +3327,7 @@ class Spec:
             raise reason
 
         sarch, oarch = self.architecture, other.architecture
-        if (
-            sarch is not None
-            and oarch is not None
-            and not self.architecture.intersects(other.architecture)
-        ):
+        if sarch is not None and oarch is not None and not sarch.intersects(oarch):
             raise UnsatisfiableArchitectureSpecError(sarch, oarch)
 
         changed = False
@@ -3361,7 +3364,7 @@ class Spec:
 
         sarch, oarch = self.architecture, other.architecture
         if sarch is not None and oarch is not None:
-            changed |= self.architecture.constrain(other.architecture)
+            changed |= sarch.constrain(oarch)
         elif oarch is not None:
             # copy, so that a later constrain on self does not write through into other
             self.architecture = oarch.copy()
@@ -5135,6 +5138,7 @@ class Spec:
             changed = True
 
         if mutator.architecture:
+            assert self.architecture is not None
             if mutator.platform and mutator.platform != self.architecture.platform:
                 self.architecture.platform = mutator.platform
                 changed = True

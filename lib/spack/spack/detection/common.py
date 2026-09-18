@@ -42,7 +42,7 @@ def _externals_in_packages_yaml(config: spack.config.Configuration) -> Set[spack
     return already_defined_specs
 
 
-ExternalEntryType = Union[str, Dict[str, str]]
+ExternalEntryType = Union[str, List[str], Dict[str, str]]
 
 
 def _pkg_config_dict(
