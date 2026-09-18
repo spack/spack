@@ -64,11 +64,6 @@ spack_compiler = spack.main.SpackCommand("compiler")
 PushResult = namedtuple("PushResult", "success url")
 
 
-def urlopen(request, **kwargs):  # module-level for mocking in tests
-    client = web_util.NetworkClient.from_config(cfg.CONFIG)
-    return client.urlopen(request, **kwargs)
-
-
 def get_git_root(path: str) -> Optional[str]:
     git = spack.util.git.git(required=True)
     try:
@@ -378,7 +373,8 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
 
     cdash_config = cfg.CONFIG.get("cdash")
     if "build-group" in cdash_config:
-        options.cdash_handler = CDashHandler(cdash_config)
+        client = web_util.NetworkClient.from_config(cfg.CONFIG)
+        options.cdash_handler = CDashHandler(cdash_config, urlopen=client.urlopen)
 
     dependent_depth = os.environ.get("SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH", None)
     if dependent_depth is not None:
@@ -542,7 +538,8 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         if broken and not rebuild_everything:
             raise SpackCIError("spack ci generate failed broken specs check")
 
-    spack_ci_config = SpackCIConfig(ci_config)
+    client = web_util.NetworkClient.from_config(cfg.CONFIG)
+    spack_ci_config = SpackCIConfig(ci_config, urlopen=client.urlopen)
     spack_ci_config.init_pipeline_jobs(pipeline)
 
     # Format the pipeline using the formatter specified in the configs
@@ -695,13 +692,14 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     )
 
 
-def download_and_extract_artifacts(url: str, work_dir: str) -> str:
+def download_and_extract_artifacts(url: str, work_dir: str, *, urlopen: web_util.OpenType) -> str:
     """Look for gitlab artifacts.zip at the given url, and attempt to download
     and extract the contents into the given work_dir
 
     Arguments:
         url: Complete url to artifacts.zip file
         work_dir: Path to destination where artifacts should be extracted
+        urlopen: function to open the url with
 
     Returns:
         Artifacts root path relative to the archive root
@@ -876,14 +874,13 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
         raise SpackError(f"Cannot run reproducer in non-empty working dir:\n  {work_dir}")
 
     platform_script_ext = "ps1" if IS_WINDOWS else "sh"
-    artifact_root = download_and_extract_artifacts(url, work_dir)
+    client = web_util.NetworkClient.from_config(cfg.CONFIG)
+    artifact_root = download_and_extract_artifacts(url, work_dir, urlopen=client.urlopen)
 
     gpg_path = None
     if gpg_url:
         gpg_path = web_util.fetch_url_text(
-            gpg_url,
-            dest_dir=os.path.join(work_dir, "_pgp"),
-            client=web_util.NetworkClient.from_config(cfg.CONFIG),
+            gpg_url, dest_dir=os.path.join(work_dir, "_pgp"), client=client
         )
         rel_gpg_path = gpg_path.replace(work_dir, "").lstrip(os.path.sep)
 

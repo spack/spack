@@ -17,7 +17,6 @@ from urllib.parse import urlencode
 from urllib.request import Request
 
 import spack
-import spack.config
 import spack.paths
 import spack.platforms
 import spack.spec
@@ -90,9 +89,10 @@ class CDash(Reporter):
     CDash instance hosted at ``https://example.com/cdash``.
     """
 
-    def __init__(self, configuration: CDashConfiguration):
+    def __init__(self, configuration: CDashConfiguration, *, urlopen: web_util.OpenType):
         #: Set to False if any error occurs when building the CDash report
         self.success = True
+        self._urlopen = urlopen
 
         # Jinja2 expects `/` path separators
         self.template_dir = "reports/cdash"
@@ -460,9 +460,8 @@ class CDash(Reporter):
             request.add_header("Content-Length", os.path.getsize(filename))
             if self.authtoken:
                 request.add_header("Authorization", "Bearer {0}".format(self.authtoken))
-            client = web_util.NetworkClient.from_config(spack.config.CONFIG)
             try:
-                with client.urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+                with self._urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
                     if self.current_package_name not in self.buildIds:
                         resp_value = io.TextIOWrapper(response, encoding="utf-8").read()
                         match = self.buildid_regexp.search(resp_value)
