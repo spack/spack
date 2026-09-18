@@ -76,6 +76,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
     overload,
 )
@@ -1150,9 +1151,11 @@ _valid_compiler_flags = ("cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "c
 # typing.Dict bases are slow at runtime on Python 3.6
 if TYPE_CHECKING:
     _FlagMapBase = Dict[str, List[CompilerFlag]]
-    _VariantMapBase = Dict[str, vt.VariantValue]
+    _OptionMapBase = Dict[str, vt.OptionValue]
 else:
-    _FlagMapBase = _VariantMapBase = dict
+    _FlagMapBase = _OptionMapBase = dict
+
+OptionMapT = TypeVar("OptionMapT", bound="OptionMap")
 
 
 @lang.lazy_lexicographic_ordering
@@ -2146,7 +2149,7 @@ class Spec:
     ) -> None:
         """Called by the parser to add a known flag"""
 
-        if propagate and name in vt.RESERVED_NAMES:
+        if propagate and name in vt.RESERVED_VARIANT_NAMES:
             raise UnsupportedPropagationError(
                 f"Propagation with '==' is not supported for '{name}'."
             )
@@ -2182,7 +2185,7 @@ class Spec:
         else:
             variants = self.propagated_variants if propagate else self.variants
             if name in variants:
-                raise vt.DuplicateVariantError(f'Cannot specify variant "{name}" twice')
+                raise vt.DuplicateOptionError(f'Cannot specify variant "{name}" twice')
             variants[name] = vt.VariantValue.from_string_or_bool(name, value, concrete=concrete)
             # the value just added can only conflict with the same name in the other map
             if name in (self.variants if propagate else self.propagated_variants):
@@ -3231,7 +3234,7 @@ class Spec:
         # reserved names are variants that may be set on any package
         # but are not necessarily recorded by the package's class
         not_existing = set(spec.variants)
-        not_existing.difference_update(pkg_variants, vt.RESERVED_NAMES)
+        not_existing.difference_update(pkg_variants, vt.RESERVED_VARIANT_NAMES)
 
         if not_existing:
             raise vt.UnknownVariantError(
@@ -3727,12 +3730,12 @@ class Spec:
         ``^~foo`` are tolerated) to avoid quadratic time complexity; the solver will check it."""
         pair = self.variants.conflict(other.variants)
         if pair is not None:
-            return vt.UnsatisfiableVariantSpecError(*pair)
+            return vt.UnsatisfiableOptionSpecError(*pair)
         if not self.propagated_variants and not other.propagated_variants:
             return None
         pair = self.propagated_variants.conflict(other.propagated_variants)
         if pair is not None:
-            return vt.UnsatisfiableVariantSpecError(
+            return vt.UnsatisfiableOptionSpecError(
                 pair[0].string(propagated=True), pair[1].string(propagated=True)
             )
         return _propagated_bool_conflict(
@@ -5217,8 +5220,9 @@ class Spec:
 
 
 @lang.lazy_lexicographic_ordering
-class VariantMap(_VariantMapBase):
-    """Map of variant instances, keyed by variant name."""
+class OptionMap(_OptionMapBase):
+    """Base class for :class:`VariantMap` and :class:`UsageMap`: a map of option values, keyed
+    by option name."""
 
     __slots__ = ()
 
@@ -5226,51 +5230,65 @@ class VariantMap(_VariantMapBase):
         for _, v in sorted(self.items()):
             yield v
 
+    def set(self, ospec: vt.OptionValue) -> None:
+        """Stores ``ospec`` under its own name, replacing any entry already there."""
+        self[ospec.name] = ospec
+
+    def satisfies(self: OptionMapT, other: OptionMapT) -> bool:
+        for name, option in other.items():
+            mine = self.get(name)
+            if mine is None or not mine.satisfies(option):
+                return False
+        return True
+
+    def conflict(
+        self: OptionMapT, other: OptionMapT
+    ) -> Optional[Tuple[vt.OptionValue, vt.OptionValue]]:
+        """The first pair of values of the same name that do not intersect, if any."""
+        for name, option in other.items():
+            mine = self.get(name)
+            if mine is not None and not mine.intersects(option):
+                return mine, option
+        return None
+
+    def constrain(self: OptionMapT, other: OptionMapT) -> bool:
+        """Add the options of other that self lacks, and constrain those it has. Returns whether
+        self changed; raises if a pair of values does not intersect."""
+        changed = False
+        for name, option in other.items():
+            mine = self.get(name)
+            if mine is None:
+                self[name] = option.copy()
+                changed = True
+            else:
+                changed |= mine.constrain(option)
+        return changed
+
+    def copy(self: OptionMapT) -> OptionMapT:
+        clone = type(self)()
+        for option in self.values():
+            clone.set(option.copy())
+        return clone
+
+    def __str__(self):
+        return _variants_string(self, {})
+
+
+class VariantMap(OptionMap):
+    """Map of variant instances, keyed by variant name."""
+
+    __slots__ = ()
+
     @property
     def dict(self) -> "VariantMap":
         # compat with boost's package.py, which uses this former private attribute; to be removed
         return self
 
-    def set(self, vspec: vt.VariantValue) -> None:
-        """Stores ``vspec`` under its own name, replacing any entry already there."""
-        self[vspec.name] = vspec
 
-    def satisfies(self, other: "VariantMap") -> bool:
-        for name, variant in other.items():
-            mine = self.get(name)
-            if mine is None or not mine.satisfies(variant):
-                return False
-        return True
+class UsageMap(OptionMap):
+    """Map of usage instances, keyed by usage name."""
 
-    def conflict(self, other: "VariantMap") -> Optional[Tuple[vt.VariantValue, vt.VariantValue]]:
-        """The first pair of values of the same name that do not intersect, if any."""
-        for name, variant in other.items():
-            mine = self.get(name)
-            if mine is not None and not mine.intersects(variant):
-                return mine, variant
-        return None
-
-    def constrain(self, other: "VariantMap") -> bool:
-        """Add the variants of other that self lacks, and constrain those it has. Returns whether
-        self changed; raises if a pair of values does not intersect."""
-        changed = False
-        for name, variant in other.items():
-            mine = self.get(name)
-            if mine is None:
-                self[name] = variant.copy()
-                changed = True
-            else:
-                changed |= mine.constrain(variant)
-        return changed
-
-    def copy(self) -> "VariantMap":
-        clone = VariantMap()
-        for variant in self.values():
-            clone.set(variant.copy())
-        return clone
-
-    def __str__(self):
-        return _variants_string(self, {})
+    __slots__ = ()
 
 
 def _propagated_bool_conflict(
@@ -5285,7 +5303,7 @@ def _propagated_bool_conflict(
             continue
         mine = variants.get(name)
         if mine is not None and mine.type == vt.VariantType.BOOL and not mine.intersects(value):
-            return vt.UnsatisfiableVariantSpecError(mine.string(), value.string(propagated=True))
+            return vt.UnsatisfiableOptionSpecError(mine.string(), value.string(propagated=True))
     return None
 
 
@@ -5306,18 +5324,20 @@ def _variant_parts(
 
 
 def _variants_string(
-    variants: Mapping[str, vt.VariantValue],
-    propagated_variants: Mapping[str, vt.VariantValue],
+    variants: Mapping[str, vt.OptionValue],
+    propagated_variants: Mapping[str, vt.OptionValue],
     abbreviate_patches: bool = False,
 ) -> str:
-    """The variants of a node as a string, in the order of :func:`_variant_parts`."""
+    """The variants of a node as a string, in the order of :func:`_variant_parts`.
+    ``abbreviate_patches`` only applies to :class:`~spack.variant.VariantValue`."""
+    kwargs: Dict[str, bool] = {"abbreviate_patches": True} if abbreviate_patches else {}
     bools = key_values = ""
     for propagated, mapping in ((False, variants), (True, propagated_variants)):
         for _, value in sorted(mapping.items()):
             if value.type == vt.VariantType.BOOL:
-                bools += value.string(abbreviate_patches, propagated)
+                bools += value.string(propagated=propagated, **kwargs)
             else:
-                key_values += " " + value.string(abbreviate_patches, propagated)
+                key_values += " " + value.string(propagated=propagated, **kwargs)
     return bools + key_values
 
 
@@ -5385,7 +5405,7 @@ def substitute_abstract_variants(spec: Spec, *, repo=None):
             v.type = vt.VariantType.SINGLE
             v.concrete = True
             continue
-        elif name in vt.RESERVED_NAMES:
+        elif name in vt.RESERVED_VARIANT_NAMES:
             continue
 
         variant_defs = repo.get_pkg_class(spec.fullname).variant_definitions(name)
