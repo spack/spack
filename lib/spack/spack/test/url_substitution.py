@@ -33,18 +33,23 @@ import spack.url
             "2.1.3",
             "https://github.com/hpc/mpileaks/releases/download/v2.1.3/mpileaks-2.1.3.tar.gz",
         ),
-        # Test now with a partial prefix earlier in the URL
-        # This is hard to figure out so Spack only substitutes
-        # the last instance of the version
+        # Test with a partial prefix earlier in the URL
+        # The version prefix in path directories (e.g. v2.1 -> v2.2) should be substituted
         (
             "https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.0.tar.bz2",
             "2.2.0",
-            "https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.2.0.tar.bz2",
+            "https://www.open-mpi.org/software/ompi/v2.2/downloads/openmpi-2.2.0.tar.bz2",
         ),
         (
             "https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.0.tar.bz2",
             "2.2",
-            "https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.2.tar.bz2",
+            "https://www.open-mpi.org/software/ompi/v2.2/downloads/openmpi-2.2.tar.bz2",
+        ),
+        # Test Xfce component URLs where major.minor version directory is present in the path
+        (
+            "https://archive.xfce.org/xfce/4.16/src/thunar-4.16.0.tar.bz2",
+            "4.18.0",
+            "https://archive.xfce.org/xfce/4.18/src/thunar-4.18.0.tar.bz2",
         ),
         # No separator between the name and version of the package
         (
