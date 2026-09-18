@@ -1152,7 +1152,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         urls = self.all_urls_for_version(version)
 
         for u in urls:
-            if spack.util.web.url_exists(u, config=spack.config.CONFIG):
+            client = spack.util.web.NetworkClient.from_config(spack.config.CONFIG)
+            if spack.util.web.url_exists(u, client=client):
                 return u
 
         return None

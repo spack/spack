@@ -41,7 +41,8 @@ SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 
 # this exists purely for testing purposes
 def _urlopen(request, **kwargs):
-    return web_util.opener_for(cfg.CONFIG)(request, **kwargs)
+    client = web_util.NetworkClient.from_config(cfg.CONFIG)
+    return client.urlopen(request, **kwargs)
 
 
 def copy_gzipped(glob_or_path: str, dest: str) -> None:

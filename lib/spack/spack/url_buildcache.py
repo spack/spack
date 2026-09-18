@@ -227,7 +227,8 @@ class URLBuildcacheEntry:
         layout_json_url = url_util.join(
             mirror_url, *cls.get_relative_path_components(BuildcacheComponent.LAYOUT_JSON)
         )
-        return web_util.url_exists(layout_json_url, config=spack.config.CONFIG)
+        client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+        return web_util.url_exists(layout_json_url, client=client)
 
     @classmethod
     def maybe_push_layout_json(cls, mirror_url: str) -> None:
@@ -249,7 +250,7 @@ class URLBuildcacheEntry:
                 local_layout_path,
                 remote_layout_url,
                 keep_original=False,
-                config=spack.config.CONFIG,
+                client=web_util.NetworkClient.from_config(spack.config.CONFIG),
             )
 
     @classmethod
@@ -366,7 +367,8 @@ class URLBuildcacheEntry:
     def check_blob_exists(self, record: BlobRecord) -> bool:
         """Return True if the blob given by record exists on the mirror, False otherwise"""
         blob_url = self.get_blob_url(self.mirror_url, record)
-        return web_util.url_exists(blob_url, config=spack.config.CONFIG)
+        client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+        return web_util.url_exists(blob_url, client=client)
 
     @classmethod
     def get_blob_path_components(cls, record: BlobRecord) -> List[str]:
@@ -486,7 +488,8 @@ class URLBuildcacheEntry:
         manifest_contents = ""
 
         try:
-            manifest_contents = web_util.read_text(manifest_url, config=spack.config.CONFIG)
+            client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+            manifest_contents = web_util.read_text(manifest_url, client=client)
         except (web_util.SpackWebError, OSError) as e:
             raise BuildcacheEntryError(f"Error reading manifest at {manifest_url}") from e
 
@@ -536,9 +539,10 @@ class URLBuildcacheEntry:
     def remove(self):
         """Remove a binary package (spec file and tarball) and the associated
         manifest from the mirror."""
+        client = web_util.NetworkClient.from_config(spack.config.CONFIG)
         if self.manifest:
             try:
-                web_util.remove_url(self.remote_manifest_url, config=spack.config.CONFIG)
+                web_util.remove_url(self.remote_manifest_url, client=client)
             except Exception as e:
                 tty.debug(f"Failed to remove previous manfifest: {e}")
 
@@ -547,7 +551,7 @@ class URLBuildcacheEntry:
                     self.get_blob_url(
                         self.mirror_url, self.get_blob_record(BuildcacheComponent.TARBALL)
                     ),
-                    config=spack.config.CONFIG,
+                    client=client,
                 )
             except Exception as e:
                 tty.debug(f"Failed to remove previous archive: {e}")
@@ -557,7 +561,7 @@ class URLBuildcacheEntry:
                     self.get_blob_url(
                         self.mirror_url, self.get_blob_record(BuildcacheComponent.SPEC)
                     ),
-                    config=spack.config.CONFIG,
+                    client=client,
                 )
             except Exception as e:
                 tty.debug(f"Failed to remove previous metadata: {e}")
@@ -569,9 +573,8 @@ class URLBuildcacheEntry:
         """Push the blob_path file to mirror as a blob represented by the given
         record"""
         blob_destination_url = cls.get_blob_url(mirror_url, record)
-        web_util.push_to_url(
-            blob_path, blob_destination_url, keep_original=False, config=spack.config.CONFIG
-        )
+        client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+        web_util.push_to_url(blob_path, blob_destination_url, keep_original=False, client=client)
 
     @classmethod
     def push_manifest(
@@ -610,7 +613,7 @@ class URLBuildcacheEntry:
             manifest_path,
             manifest_destination_url,
             keep_original=False,
-            config=spack.config.CONFIG,
+            client=web_util.NetworkClient.from_config(spack.config.CONFIG),
         )
 
     @classmethod
@@ -670,6 +673,7 @@ class URLBuildcacheEntry:
         found.  Thus, any pre-existing files are first removed.
         """
 
+        client = web_util.NetworkClient.from_config(spack.config.CONFIG)
         spec_dict = spec.to_dict()
         # TODO: Remove this key once oci buildcache no longer uses it
         spec_dict["buildcache_layout_version"] = 2
@@ -692,9 +696,7 @@ class URLBuildcacheEntry:
         )
 
         # push the archive/tarball blob to the remote
-        web_util.push_to_url(
-            tarball_path, remote_archive_url, keep_original=False, config=spack.config.CONFIG
-        )
+        web_util.push_to_url(tarball_path, remote_archive_url, keep_original=False, client=client)
 
         # Clear out the previous data, then add a record for the new blob
         blobs: List[BlobRecord] = []
@@ -724,9 +726,7 @@ class URLBuildcacheEntry:
         )
 
         # push the metadata/spec blob to the remote
-        web_util.push_to_url(
-            specfile, remote_spec_url, keep_original=False, config=spack.config.CONFIG
-        )
+        web_util.push_to_url(specfile, remote_spec_url, keep_original=False, client=client)
 
         blobs.append(
             BlobRecord(
@@ -761,10 +761,7 @@ class URLBuildcacheEntry:
         # a given concrete spec is fixed, so we don't have to recompute it,
         # even if we deleted the pre-existing one.
         web_util.push_to_url(
-            manifest_path,
-            self.remote_manifest_url,
-            keep_original=False,
-            config=spack.config.CONFIG,
+            manifest_path, self.remote_manifest_url, keep_original=False, client=client
         )
 
     def destroy(self):
@@ -860,19 +857,20 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         )
 
     def _check_metadata_exists(self):
+        client = web_util.NetworkClient.from_config(spack.config.CONFIG)
         if not self.spec:
             return
 
         if not self._checked_signed:
             signed_url = self._get_spec_url(self.spec, self.mirror_url, ext=".spec.json.sig")
-            if web_util.url_exists(signed_url, config=spack.config.CONFIG):
+            if web_util.url_exists(signed_url, client=client):
                 self.remote_spec_url = signed_url
                 self.has_signed = True
             self._checked_signed = True
 
         if not self.has_signed and not self._checked_unsigned:
             unsigned_url = self._get_spec_url(self.spec, self.mirror_url, ext=".spec.json")
-            if web_util.url_exists(unsigned_url, config=spack.config.CONFIG):
+            if web_util.url_exists(unsigned_url, client=client):
                 self.remote_spec_url = unsigned_url
                 self.has_unsigned = True
             self._checked_unsigned = True
@@ -893,7 +891,8 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
             return False
 
         if not web_util.url_exists(
-            self._get_tarball_url(self.spec, self.mirror_url), config=spack.config.CONFIG
+            self._get_tarball_url(self.spec, self.mirror_url),
+            client=web_util.NetworkClient.from_config(spack.config.CONFIG),
         ):
             return False
 
@@ -1198,6 +1197,7 @@ def _entries_from_cache_fallback(url: str, component_type: BuildcacheComponent):
         and the second item is a function taking a url or file path of a manifest and
         returning a :class:`URLBuildcacheEntry` for that manifest.
     """
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
     read_fn = None
     filename_to_mtime = None
 
@@ -1213,12 +1213,10 @@ def _entries_from_cache_fallback(url: str, component_type: BuildcacheComponent):
         component_path_parts = cache_class.get_relative_path_components(component_type)
         component_prefix: str = url_util.join(url, *component_path_parts)
         component_pattern = cache_class.get_buildcache_component_include_pattern(component_type)
-        for entry in web_util.list_url(
-            component_prefix, recursive=True, config=spack.config.CONFIG
-        ):
+        for entry in web_util.list_url(component_prefix, recursive=True, client=client):
             if fnmatch.fnmatch(entry, component_pattern):
                 entry_url = url_util.join(component_prefix, entry)
-                stat_result = web_util.stat_url(entry_url, config=spack.config.CONFIG)
+                stat_result = web_util.stat_url(entry_url, client=client)
                 if stat_result is not None:
                     filename_to_mtime[entry_url] = stat_result[1]  # mtime is second element
         read_fn = url_read_method

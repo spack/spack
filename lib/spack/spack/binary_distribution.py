@@ -412,6 +412,7 @@ class BinaryIndexCache:
         """
         now = time.time()
         ttl = config.get_config("config").get("binary_index_ttl", 600)
+        client = web_util.NetworkClient.from_config(config)
         for version in versions:
             meta = MirrorMetadata(url, version, view)
             cache_entry = self._local_index_cache.get(str(meta))
@@ -432,7 +433,7 @@ class BinaryIndexCache:
 
             try:
                 regenerate = self._fetch_and_cache_index(
-                    meta, cache_entry=cache_entry or {}, config=config
+                    meta, cache_entry=cache_entry or {}, client=client
                 )
                 self._last_fetch_times[meta] = _LastFetch(time=now, succeeded=True)
                 return _MirrorIndexResult(
@@ -480,11 +481,7 @@ class BinaryIndexCache:
         return clear, regenerate
 
     def _fetch_and_cache_index(
-        self,
-        mirror_metadata: MirrorMetadata,
-        cache_entry={},
-        *,
-        config: spack.config.Configuration,
+        self, mirror_metadata: MirrorMetadata, cache_entry={}, *, client: web_util.NetworkClient
     ):
         """Fetch a buildcache index file from a remote mirror and cache it.
 
@@ -495,7 +492,7 @@ class BinaryIndexCache:
             mirror_metadata: Contains mirror base url and target binary cache layout version
             cache_entry (dict): Old cache metadata with keys ``index_hash``, ``index_path``,
                 ``etag``
-            config: configuration to read the connection settings from
+            client: client to fetch the index with
 
         Returns:
             True if the local index.json was updated.
@@ -514,11 +511,11 @@ class BinaryIndexCache:
         if scheme != "oci":
             cache_class = get_url_buildcache_class(layout_version=layout_version)
             index_url = cache_class.get_index_url(mirror_url, mirror_view)
-            if not web_util.url_exists(index_url, config=config):
+            if not web_util.url_exists(index_url, client=client):
                 raise BuildcacheIndexNotExists(f"Index not found in cache {index_url}")
 
         fetcher: IndexHandler = _get_index_fetcher(
-            scheme, mirror_metadata, cache_entry, config=config
+            scheme, mirror_metadata, cache_entry, client=client
         )
         result = fetcher.conditional_fetch()
 
@@ -802,7 +799,11 @@ def generate_key_index(mirror_url: str, tmpdir: str) -> None:
     try:
         fingerprints = (
             entry[:-18]
-            for entry in web_util.list_url(key_prefix, recursive=False, config=spack.config.CONFIG)
+            for entry in web_util.list_url(
+                key_prefix,
+                recursive=False,
+                client=web_util.NetworkClient.from_config(spack.config.CONFIG),
+            )
             if entry.endswith(".key.manifest.json")
         )
     except Exception as e:
@@ -1287,7 +1288,10 @@ def _oci_get_blob_info(image_ref: ImageReference) -> Optional[spack.oci.oci.Blob
     """Get the spack tarball layer digests and size if it exists"""
     try:
         manifest, config = get_manifest_and_config_with_retry(
-            image_ref, urlopen=spack.oci.opener.opener_for(spack.config.CONFIG)
+            image_ref,
+            urlopen=spack.oci.opener.opener_for(
+                web_util.NetworkClient.from_config(spack.config.CONFIG)
+            ),
         )
 
         return spack.oci.oci.Blob(
@@ -1320,7 +1324,9 @@ def _oci_push_pkg_blob(
         image_ref,
         file=filename,
         digest=blob.compressed_digest,
-        urlopen=spack.oci.opener.opener_for(spack.config.CONFIG),
+        urlopen=spack.oci.opener.opener_for(
+            web_util.NetworkClient.from_config(spack.config.CONFIG)
+        ),
     )
     elapsed = time.time() - start
 
@@ -1418,7 +1424,7 @@ def _oci_put_manifest(
     )
 
     # Upload the config file
-    urlopen = spack.oci.opener.opener_for(spack.config.CONFIG)
+    urlopen = spack.oci.opener.opener_for(web_util.NetworkClient.from_config(spack.config.CONFIG))
     upload_blob_with_retry(
         image_ref, file=config_file, digest=config_file_checksum, urlopen=urlopen
     )
@@ -1482,7 +1488,9 @@ def _oci_update_base_images(
             base_image,
             target_image,
             architecture,
-            urlopen=spack.oci.opener.opener_for(spack.config.CONFIG),
+            urlopen=spack.oci.opener.opener_for(
+                web_util.NetworkClient.from_config(spack.config.CONFIG)
+            ),
         )
 
 
@@ -1637,7 +1645,9 @@ def _oci_config_from_tag(image_ref_and_tag: Tuple[ImageReference, str]) -> Optio
         image_ref.with_tag(tag),
         tag,
         recurse=0,
-        urlopen=spack.oci.opener.opener_for(spack.config.CONFIG),
+        urlopen=spack.oci.opener.opener_for(
+            web_util.NetworkClient.from_config(spack.config.CONFIG)
+        ),
     )
 
     # Do very basic validation: if "spec" is a key in the config, it
@@ -1652,7 +1662,7 @@ def _oci_update_index(
     *,
     timer=timer.NULL_TIMER,
 ) -> None:
-    urlopen = spack.oci.opener.opener_for(spack.config.CONFIG)
+    urlopen = spack.oci.opener.opener_for(web_util.NetworkClient.from_config(spack.config.CONFIG))
     with timer.measure("list"):
         tags = list_tags(image_ref, urlopen=urlopen)
 
@@ -1799,7 +1809,9 @@ def download_tarball(
         if spack.oci.image.is_oci_url(fetch_url):
             ref = ImageReference.from_url(fetch_url).with_tag(_oci_default_tag(spec))
 
-            urlopen = spack.oci.opener.opener_for(spack.config.CONFIG)
+            urlopen = spack.oci.opener.opener_for(
+                web_util.NetworkClient.from_config(spack.config.CONFIG)
+            )
 
             # Fetch the manifest
             try:
@@ -2395,6 +2407,7 @@ def _trust_keys(
 
 
 def _trust_keys_v2(mirror_url, yes_to_all=False, install=False, trust=False, force=False) -> None:
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
     cache_class = get_url_buildcache_class(layout_version=2)
 
     keys_url = url_util.join(
@@ -2405,10 +2418,10 @@ def _trust_keys_v2(mirror_url, yes_to_all=False, install=False, trust=False, for
     tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
 
     try:
-        json_index = web_util.read_json(keys_index, config=spack.config.CONFIG)
+        json_index = web_util.read_json(keys_index, client=client)
     except (web_util.SpackWebError, OSError, ValueError) as url_err:
         # TODO: avoid repeated request
-        if web_util.url_exists(keys_index, config=spack.config.CONFIG):
+        if web_util.url_exists(keys_index, client=client):
             tty.error(
                 f"Unable to find public keys in {url_util.format(mirror_url)},"
                 f" caught exception attempting to read from {url_util.format(keys_index)}."
@@ -2963,26 +2976,25 @@ def _get_index_fetcher(
     mirror_metadata: MirrorMetadata,
     cache_entry: Dict[str, str],
     *,
-    config: spack.config.Configuration,
+    client: web_util.NetworkClient,
 ) -> IndexHandler:
     if scheme == "oci":
         # TODO: Actually etag and OCI are not mutually exclusive...
         return OCIIndexHandler(
             mirror_metadata,
             cache_entry.get("index_hash", None),
-            urlopen=spack.oci.opener.opener_for(config),
+            urlopen=spack.oci.opener.opener_for(client),
         )
 
-    urlopen = web_util.opener_for(config)
     is_v2 = mirror_metadata.version < 3
 
     if cache_entry.get("etag"):
         etag_handler = EtagIndexHandlerV2 if is_v2 else EtagIndexHandler
-        return etag_handler(mirror_metadata, cache_entry["etag"], urlopen=urlopen)
+        return etag_handler(mirror_metadata, cache_entry["etag"], urlopen=client.urlopen)
 
     default_handler = DefaultIndexHandlerV2 if is_v2 else DefaultIndexHandler
     return default_handler(
-        mirror_metadata, local_hash=cache_entry.get("index_hash", None), urlopen=urlopen
+        mirror_metadata, local_hash=cache_entry.get("index_hash", None), urlopen=client.urlopen
     )
 
 
