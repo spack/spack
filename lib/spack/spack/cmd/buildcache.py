@@ -647,7 +647,20 @@ def list_fn(args):
 
     if not args.allarch:
         arch = spack.spec.Spec.default_arch()
-        specs = [s for s in specs if s.intersects(arch)]
+
+        def _is_compatible(s):
+            if s.intersects(arch):
+                return True
+            try:
+                return (
+                    s.architecture.platform == arch.architecture.platform
+                    and s.architecture.os == arch.architecture.os
+                    and s.architecture.target in arch.architecture.target.ancestors
+                )
+            except AttributeError:
+                return False
+
+        specs = [s for s in specs if _is_compatible(s)]
 
     if args.specs:
         constraints = set(args.specs)
