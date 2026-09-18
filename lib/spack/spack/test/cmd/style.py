@@ -26,10 +26,6 @@ style_data = os.path.join(spack.paths.test_path, "data", "style")
 
 style = spack.main.SpackCommand("style")
 
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32", reason="CI uses cross drive paths that raise errors with relpath"
-)
-
 RUFF = which("ruff")
 MYPY = which("mypy")
 
@@ -43,23 +39,23 @@ def has_develop_branch(git):
 
 
 @pytest.fixture(scope="function")
-def ruff_package(tmp_path: pathlib.Path):
+def ruff_package():
     """Style only checks files that have been modified. This fixture makes a small
     change to the ``ruff`` mock package, yields the filename, then undoes the
     change on cleanup.
     """
     repo = spack.repo.from_path(spack.paths.mock_packages_path)
     filename = repo.filename_for_package_name("ruff")
-    rel_path = os.path.dirname(os.path.relpath(filename, spack.paths.prefix))
-    tmp = tmp_path / rel_path / "ruff-ci-package.py"
-    tmp.parent.mkdir(parents=True, exist_ok=True)
-    tmp.touch()
-    tmp = str(tmp)
+    # Place the copy next to the original so it shares the same drive on Windows,
+    # avoiding cross-drive relpath failures when comparing against spack.paths.prefix.
+    tmp = os.path.join(os.path.dirname(filename), "ruff-ci-package.py")
 
     shutil.copy(filename, tmp)
     package = FileFilter(tmp)
     package.filter("state = 'unmodified'", "state = 'modified'", string=True)
     yield tmp
+    if os.path.exists(tmp):
+        os.remove(tmp)
 
 
 @pytest.fixture
@@ -80,6 +76,8 @@ def ruff_package_with_errors(scope="function"):
         "from spack.package import *", "from spack.package import *\nimport os", string=True
     )
     yield tmp
+    if os.path.exists(tmp):
+        os.remove(tmp)
 
 
 def test_changed_files_from_git_rev_base(git, tmp_path: pathlib.Path):
@@ -241,12 +239,13 @@ def test_external_root(external_style_root):
 
 
 @pytest.mark.skipif(not RUFF, reason="ruff is not installed.")
-def test_style(ruff_package, tmp_path: pathlib.Path):
+def test_style(ruff_package):
     root_relative = os.path.relpath(ruff_package, spack.paths.prefix)
 
-    # use a working directory to test cwd-relative paths, as tests run in
-    # the spack prefix by default
-    with working_dir(str(tmp_path)):
+    # Use the spack prefix parent as a working directory to test cwd-relative path output.
+    # Must stay on the same drive as ruff_package to avoid cross-drive relpath errors on Windows.
+    parent_dir = str(pathlib.Path(spack.paths.prefix).parent)
+    with working_dir(parent_dir):
         relative = os.path.relpath(ruff_package)
 
         # one specific arg
