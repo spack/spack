@@ -16,7 +16,6 @@ from http.client import HTTPResponse
 from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from urllib.request import Request
 
-import spack.config
 import spack.mirrors.mirror
 import spack.tokenize
 import spack.util.web
@@ -27,14 +26,14 @@ from .image import ImageReference
 OpenType = spack.util.web.Opener[HTTPResponse]
 
 
-def opener_for(config: spack.config.Configuration) -> OpenType:
-    """Returns a function opening URLs with OCI authentication from the mirrors in ``config``.
+def opener_for(client: spack.util.web.NetworkClient) -> OpenType:
+    """Returns a function opening URLs with OCI authentication from the mirrors of ``client``.
 
     The function has the signature of ``OpenerDirector.open``. Its ``timeout`` defaults to
-    ``config:connect_timeout``.
+    the connection timeout of ``client``.
     """
-    opener = _create_opener(config)
-    default_timeout = config.get("config:connect_timeout", 10)
+    opener = _create_opener(client)
+    default_timeout = client.connect_timeout
 
     def urlopen(
         fullurl: Union[str, Request], data: Optional[bytes] = None, timeout: Optional[float] = None
@@ -414,15 +413,15 @@ def credentials_from_mirrors(
     return None
 
 
-def _create_opener(config: spack.config.Configuration) -> urllib.request.OpenerDirector:
+def _create_opener(client: spack.util.web.NetworkClient) -> urllib.request.OpenerDirector:
     """Create an opener that can handle OCI authentication."""
-    mirrors = list(spack.mirrors.mirror.MirrorCollection.from_config(config).values())
+    mirrors = client.mirrors
     opener = urllib.request.OpenerDirector()
     for handler in [
         urllib.request.ProxyHandler(),
         urllib.request.UnknownHandler(),
         urllib.request.HTTPHandler(),
-        spack.util.web.SpackHTTPSHandler(context=spack.util.web.default_ssl_context(config)),
+        spack.util.web.SpackHTTPSHandler(context=spack.util.web.default_ssl_context(client)),
         spack.util.web.SpackHTTPDefaultErrorHandler(),
         urllib.request.HTTPRedirectHandler(),
         urllib.request.HTTPErrorProcessor(),

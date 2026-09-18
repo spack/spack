@@ -460,9 +460,9 @@ class CDash(Reporter):
             request.add_header("Content-Length", os.path.getsize(filename))
             if self.authtoken:
                 request.add_header("Authorization", "Bearer {0}".format(self.authtoken))
-            urlopen = web_util.opener_for(spack.config.CONFIG)
+            client = web_util.NetworkClient.from_config(spack.config.CONFIG)
             try:
-                with urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+                with client.urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
                     if self.current_package_name not in self.buildIds:
                         resp_value = io.TextIOWrapper(response, encoding="utf-8").read()
                         match = self.buildid_regexp.search(resp_value)

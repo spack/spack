@@ -54,7 +54,7 @@ def _fetch_remote_text_file(
     Raises:
         ValueError: if there are missing required arguments
     """
-    from spack.util.web import fetch_url_text  # circular import
+    from spack.util.web import NetworkClient, fetch_url_text  # circular import
 
     if not url:
         raise ValueError("Cannot retrieve the remote file without the URL")
@@ -62,7 +62,7 @@ def _fetch_remote_text_file(
     raw_url = raw_github_gitlab_url(url)
     tty.debug(f"Fetching file from {raw_url} into {dest_dir}")
 
-    return fetch_url_text(raw_url, dest_dir=dest_dir, config=config)
+    return fetch_url_text(raw_url, dest_dir=dest_dir, client=NetworkClient.from_config(config))
 
 
 def local_path(

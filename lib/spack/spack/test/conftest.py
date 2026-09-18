@@ -2325,7 +2325,7 @@ def mock_curl_configs(mock_config_data, monkeypatch):
     config_data_dir, config_files = mock_config_data
 
     class MockCurl:
-        def __init__(self, *, config):
+        def __init__(self, *, client):
             self.returncode = None
 
         def __call__(self, *args, **kwargs):
@@ -2355,7 +2355,7 @@ def mock_fetch_url_text(mock_config_data, monkeypatch):
 
     stage_dir, config_files = mock_config_data
 
-    def _fetch_text_file(url, dest_dir, *, config):
+    def _fetch_text_file(url, dest_dir, *, client):
         raw_url = raw_github_gitlab_url(url)
         mkdirp(dest_dir)
         basename = os.path.basename(raw_url)

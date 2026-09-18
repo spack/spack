@@ -40,7 +40,7 @@ install = SpackCommand("install")
 def oci_servers(*servers: DummyServer):
     urlopen = create_opener(*servers).open
     old_opener_for = spack.oci.opener.opener_for
-    spack.oci.opener.opener_for = lambda config: urlopen
+    spack.oci.opener.opener_for = lambda client: urlopen
     yield urlopen
     spack.oci.opener.opener_for = old_opener_for
 

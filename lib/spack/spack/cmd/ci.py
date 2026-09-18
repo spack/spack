@@ -612,10 +612,11 @@ def ci_rebuild(args):
             broken_specs_url = ci_config["broken-specs-url"]
             just_built_hash = job_spec.dag_hash()
             broken_spec_path = url_util.join(broken_specs_url, just_built_hash)
-            if web_util.url_exists(broken_spec_path, config=cfg.CONFIG):
+            client = web_util.NetworkClient.from_config(cfg.CONFIG)
+            if web_util.url_exists(broken_spec_path, client=client):
                 tty.msg("Removing {0} from the list of broken specs".format(broken_spec_path))
                 try:
-                    web_util.remove_url(broken_spec_path, config=cfg.CONFIG)
+                    web_util.remove_url(broken_spec_path, client=client)
                 except Exception as err:
                     # If there is an S3 error (e.g., access denied or connection
                     # error), the first non boto-specific class in the exception

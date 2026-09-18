@@ -782,7 +782,8 @@ def mirror_destroy(args):
     elif args.mirror_url:
         mirror_url = args.mirror_url
 
-    web_util.remove_url(mirror_url, recursive=True, config=spack.config.CONFIG)
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+    web_util.remove_url(mirror_url, recursive=True, client=client)
 
 
 def mirror(parser, args):
