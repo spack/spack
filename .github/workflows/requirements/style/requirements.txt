@@ -7,5 +7,5 @@ vermin==1.8.0
 pylint==4.0.5
 docutils==0.23
 ruamel.yaml==0.19.1
-slotscheck==0.19.1
+slotscheck==0.21.0
 ruff==0.16.7
