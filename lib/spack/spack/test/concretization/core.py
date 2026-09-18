@@ -5700,6 +5700,24 @@ def test_compiler_dependencies_can_be_excluded_from_reuse(
     assert s["zlib"].satisfies("@1.2.11"), s.tree()
 
 
+@pytest.mark.regression("50809")
+def test_compiler_root_by_hash_keeps_its_link_dependencies(temporary_store, mock_packages):
+    """Tests that a compiler package requested as a root by hash keeps the link dependencies
+    its hash imposes, instead of having them dropped as if it were a toolchain.
+    """
+    # llvm has a pure link dependency on its "c" provider, and as a root it has no incoming
+    # link edge, so compiler_used_as_a_library cannot hold for it.
+    installed = spack.concretize.concretize_one("llvm@18 +clang")
+    PackageInstaller([installed.package], fake=True, explicit=True).install()
+
+    # Go through the solver directly: concretize_one() resolves an abstract hash against the
+    # store without running the solver, which is not what `spack solve` and environments do.
+    solver = spack.solver.asp.Solver(context=spack.context.default())
+    result = solver.solve([spack.spec.Spec(f"llvm/{installed.dag_hash()}")])
+
+    assert result.specs[0].dag_hash() == installed.dag_hash(), result.specs[0].tree()
+
+
 def test_parallel_edges_in_a_literal_reach_the_solver(mock_packages, config):
     """A duplicate ^dep clause parses as parallel edges rather than one merged node. The solver
     still builds one node per name from a literal: compatible constraints are merged onto that
