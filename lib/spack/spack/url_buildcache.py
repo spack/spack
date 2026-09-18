@@ -1175,7 +1175,7 @@ def _entries_from_cache_fallback(url: str, component_type: BuildcacheComponent):
         returning a :class:`URLBuildcacheEntry` for that manifest.
     """
     read_fn = None
-    filename_to_mtime = None
+    filename_to_mtime: Dict[str, float] = {}
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
 
@@ -1185,7 +1185,6 @@ def _entries_from_cache_fallback(url: str, component_type: BuildcacheComponent):
         return cache_entry
 
     try:
-        filename_to_mtime = {}
         component_path_parts = cache_class.get_relative_path_components(component_type)
         component_prefix: str = url_util.join(url, *component_path_parts)
         component_pattern = cache_class.get_buildcache_component_include_pattern(component_type)

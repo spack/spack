@@ -10,7 +10,7 @@ import os
 import re
 import sys
 from html import escape
-from typing import Optional, Type
+from typing import Callable, Dict, Optional, Type
 
 import spack.deptypes as dt
 import spack.package_base
@@ -26,7 +26,7 @@ section = "query"
 level = "short"
 
 
-formatters = {}
+formatters: Dict[str, Callable] = {}
 
 
 def formatter(func):

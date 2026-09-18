@@ -4377,7 +4377,7 @@ class Spec:
                 raise SpecFormatStringError(f"Missing close brace: '{format_string}'")
 
             current_node = self if dep is None else self[dep]
-            current = current_node
+            current: Any = current_node
 
             # Hash attributes can return early.
             # NOTE: we currently treat abstract_hash like an attribute and ignore

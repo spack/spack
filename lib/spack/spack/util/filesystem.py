@@ -1948,14 +1948,13 @@ def _find_max_depth(
     regex = re.compile(fnmatch_translate_multiple(filename_only_patterns))
     # Ordered dictionary that keeps track of what pattern found which files
     matched_paths: Dict[str, List[str]] = {f"pattern_{i}": [] for i, _ in enumerate(globs)}
-    # Ensure returned paths are always absolute
-    roots = [os.path.abspath(r) for r in roots]
     # Breadth-first search queue. Each element is a tuple of (depth, dir)
     dir_queue: Deque[Tuple[int, str]] = collections.deque()
     # Set of visited directories. Each element is a tuple of (inode, device)
     visited_dirs: Set[Tuple[int, int]] = set()
 
-    for root in roots:
+    # Ensure returned paths are always absolute
+    for root in (os.path.abspath(r) for r in roots):
         try:
             stat_root = os.stat(root)
         except OSError as e:
