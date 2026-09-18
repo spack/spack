@@ -1,13 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import io
 import os
 import pathlib
 
 import pytest
 
-import spack.error
 import spack.reporters.extract
 import spack.util.filesystem as fs
 import spack.util.web

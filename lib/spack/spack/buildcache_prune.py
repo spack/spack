@@ -64,10 +64,11 @@ def _delete_entries_from_cache(
     urls_to_delete = blobs_to_delete.union(manifests_to_delete)
     pruned_objects = 0
     futures: List[Future] = []
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
 
     with spack.util.parallel.make_concurrent_executor() as executor:
         for url in urls_to_delete:
-            futures.append(executor.submit(_delete_object, url, dry_run))
+            futures.append(executor.submit(_delete_object, url, dry_run, client))
 
         for manifest_or_blob_future in as_completed(futures):
             pruned_objects += manifest_or_blob_future.result()
@@ -75,12 +76,11 @@ def _delete_entries_from_cache(
     return pruned_objects
 
 
-def _delete_object(url: str, dry_run: bool) -> int:
+def _delete_object(url: str, dry_run: bool, client: web_util.NetworkClient) -> int:
     try:
         if dry_run:
             tty.info(f"Would have removed object {url}")
         else:
-            client = web_util.NetworkClient.from_config(spack.config.CONFIG)
             web_util.remove_url(url=url, client=client)
             tty.info(f"Removed object {url}")
         return 1
@@ -89,13 +89,14 @@ def _delete_object(url: str, dry_run: bool) -> int:
         return 0
 
 
-def _object_has_prunable_mtime(url: str, pruning_started_at: float) -> Tuple[str, bool]:
+def _object_has_prunable_mtime(
+    url: str, pruning_started_at: float, client: web_util.NetworkClient
+) -> Tuple[str, bool]:
     """Check if an object's modification time makes it eligible for pruning.
 
     Objects modified after pruning started should not be pruned to avoid
     race conditions with concurrent uploads.
     """
-    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
     stat_result = web_util.stat_url(url, client=client)
     assert stat_result is not None
     if stat_result[1] > pruning_started_at:
@@ -110,10 +111,13 @@ def _filter_new_specs(urls: Iterable[str], pruning_started_at: float) -> Iterato
     Runs parallel modification time checks on all URLs and yields only
     those that are old enough to be safely pruned.
     """
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
     with spack.util.parallel.make_concurrent_executor() as executor:
         futures = []
         for url in urls:
-            futures.append(executor.submit(_object_has_prunable_mtime, url, pruning_started_at))
+            futures.append(
+                executor.submit(_object_has_prunable_mtime, url, pruning_started_at, client)
+            )
 
         for manifest_or_blob_future in as_completed(futures):
             url, has_prunable_mtime = manifest_or_blob_future.result()

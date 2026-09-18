@@ -194,7 +194,7 @@ def test_spider(depth, expected_found, expected_not_found, expected_text, config
 def test_spider_no_response(monkeypatch, config):
     # Mock the absence of a response
     monkeypatch.setattr(
-        spack.util.web, "read_from_url", lambda x, y, *, urlopen: (None, None, None)
+        spack.util.web, "read_from_url", lambda x, y, *, client: (None, None, None)
     )
     pages, links, _, _ = spack.util.web._spider(
         root,

@@ -13,7 +13,7 @@ import urllib.parse
 import urllib.request
 from enum import Enum, auto
 from http.client import HTTPResponse
-from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
+from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple
 from urllib.request import Request
 
 import spack.mirrors.mirror
@@ -32,15 +32,7 @@ def opener_for(client: spack.util.web.NetworkClient) -> OpenType:
     The function has the signature of ``OpenerDirector.open``. Its ``timeout`` defaults to
     the connection timeout of ``client``.
     """
-    opener = _create_opener(client)
-    default_timeout = client.connect_timeout
-
-    def urlopen(
-        fullurl: Union[str, Request], data: Optional[bytes] = None, timeout: Optional[float] = None
-    ) -> HTTPResponse:
-        return opener.open(fullurl, data, timeout or default_timeout)
-
-    return urlopen
+    return spack.util.web.with_default_timeout(_create_opener(client), client.connect_timeout)
 
 
 SP = r" "
