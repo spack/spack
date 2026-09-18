@@ -3226,6 +3226,10 @@ class Spec:
         if spec.concrete:
             return
 
+        # anonymous specs have no package class or package variants to validate
+        if not spec.name:
+            return
+
         pkg_cls = repo.get_pkg_class(spec.fullname)
         pkg_variants = pkg_cls.variant_names()
         # reserved names are variants that may be set on any package

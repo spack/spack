@@ -1009,6 +1009,8 @@ class RepoPath:
 
     def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
         """Find a class for the spec's package and return the class object."""
+        if not pkg_name:
+            raise UnknownPackageError(pkg_name, self)
         return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
 
     @autospec
@@ -1550,6 +1552,8 @@ class Repo:
         package. Then extracts the package class from the module
         according to Spack's naming convention.
         """
+        if not pkg_name:
+            raise UnknownPackageError(pkg_name, self)
         _, pkg_name = self.partition_package_name(pkg_name)
         cls = self._pkg_classes.get(pkg_name)
         if cls is None:
