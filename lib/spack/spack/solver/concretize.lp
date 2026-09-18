@@ -1824,15 +1824,14 @@ attr("node_version_satisfies", node(X, Runtime), VersionRange) :-
    attr("compatible_runtime", PackageNode, Runtime, VersionRange),
    concrete(PackageNode).
 
-% A compiler must impose its link dependencies when it is used as a library (i.e. it is
-% depended on with type link), or when it is a root (i.e. it is being installed itself rather
-% than being used as a toolchain).
+% If a compiler package is depended on with type link, it imposes its link dependencies
 compiler_imposes_link_deps(Child, Hash) :-
   concrete(node(X, Child)),
   attr("hash", node(X, Child), Hash),
   compiler_package(Child), % Used to restrict grounding for this rule
   attr("depends_on", _, node(X, Child), "link").
 
+% If a compiler package is a root, it imposes its link dependencies
 compiler_imposes_link_deps(Child, Hash) :-
   attr("root", node(X, Child)),
   attr("hash", node(X, Child), Hash),
