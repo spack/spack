@@ -24,21 +24,15 @@ import warnings
 from html.parser import HTMLParser
 from http.client import HTTPResponse, IncompleteRead
 from pathlib import Path, PurePosixPath
-from typing import (
-    IO,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Union
 from urllib.error import HTTPError, URLError
-from urllib.request import HTTPDefaultErrorHandler, HTTPSHandler, Request, build_opener
+from urllib.request import (
+    HTTPDefaultErrorHandler,
+    HTTPSHandler,
+    OpenerDirector,
+    Request,
+    build_opener,
+)
 
 from spack.vendor.typing_extensions import ParamSpec, Protocol
 
@@ -233,9 +227,20 @@ class Opener(Protocol[_Response]):
     ) -> _Response: ...
 
 
-#: Openers returned by :func:`opener_for`. HTTP(S) responses are ``HTTPResponse``, while file,
-#: S3 and GCS responses are ``addinfourl``.
+#: Openers returned by :attr:`NetworkClient.urlopen`. HTTP(S) responses are ``HTTPResponse``,
+#: while file, S3 and GCS responses are ``addinfourl``.
 OpenType = Opener[Union[HTTPResponse, urllib.response.addinfourl]]
+
+
+def with_default_timeout(opener: OpenerDirector, default_timeout: float) -> Opener[Any]:
+    """Returns ``opener.open``, with ``timeout`` defaulting to ``default_timeout``."""
+
+    def urlopen(
+        fullurl: Union[str, Request], data: Optional[bytes] = None, timeout: Optional[float] = None
+    ) -> Any:
+        return opener.open(fullurl, data, timeout or default_timeout)
+
+    return urlopen
 
 
 def _custom_ssl_certs(config: spack.config.Configuration) -> Optional[Tuple[bool, str]]:
@@ -313,14 +318,7 @@ def _build_opener(client: "NetworkClient") -> OpenType:
         SpackHTTPSHandler(context=context),
         SpackHTTPDefaultErrorHandler(),
     )
-    default_timeout = client.connect_timeout
-
-    def urlopen(
-        fullurl: Union[str, Request], data: Optional[bytes] = None, timeout: Optional[float] = None
-    ) -> Union[HTTPResponse, urllib.response.addinfourl]:
-        return opener.open(fullurl, data, timeout or default_timeout)
-
-    return urlopen
+    return with_default_timeout(opener, client.connect_timeout)
 
 
 class NetworkClient:
@@ -336,7 +334,7 @@ class NetworkClient:
         connect_timeout: int,
         ssl_certs: Optional[Tuple[bool, str]],
         fetch_method: str,
-        mirrors: Sequence[spack.mirrors.mirror.Mirror],
+        mirrors: Iterable[spack.mirrors.mirror.Mirror],
     ) -> None:
         """
         Args:
@@ -362,14 +360,14 @@ class NetworkClient:
             connect_timeout=config.get("config:connect_timeout", 10),
             ssl_certs=_custom_ssl_certs(config),
             fetch_method=config.get("config:url_fetch_method") or "urllib",
-            mirrors=list(spack.mirrors.mirror.MirrorCollection.from_config(config).values()),
+            mirrors=spack.mirrors.mirror.MirrorCollection.from_config(config).values(),
         )
 
     @property
     def urlopen(self) -> OpenType:
         """Function with the signature of ``OpenerDirector.open``, whose ``timeout`` defaults to
         ``connect_timeout``."""
-        # A client inherited through fork must not reuse the SSL context of its parent
+        # Forked children rebuild the opener after restore() clears the parent's SSL contexts
         if self._urlopen is None or self._urlopen_pid != os.getpid():
             self._urlopen = _build_opener(self)
             self._urlopen_pid = os.getpid()
@@ -440,7 +438,7 @@ class ExtractMetadataParser(HTMLParser):
                     self.base_url = val
 
 
-def read_from_url(url, accept_content_type=None, *, urlopen: OpenType):
+def read_from_url(url, accept_content_type=None, *, client: NetworkClient):
     if isinstance(url, str):
         url = urllib.parse.urlparse(url)
 
@@ -448,7 +446,7 @@ def read_from_url(url, accept_content_type=None, *, urlopen: OpenType):
     request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
 
     try:
-        response = urlopen(request)
+        response = client.urlopen(request)
     except OSError as e:
         raise SpackWebError(f"Download of {url.geturl()} failed: {e.__class__.__name__}: {e}")
 
@@ -904,10 +902,9 @@ def _spider(
     pages: Dict[str, str] = {}  # dict from page URL -> text content.
     links: Set[str] = set()  # set of all links seen on visited pages.
     subcalls: List[str] = []
-    urlopen = client.urlopen
 
     try:
-        response_url, _, response = read_from_url(url, "text/html", urlopen=urlopen)
+        response_url, _, response = read_from_url(url, "text/html", client=client)
         if not response_url or not response:
             return pages, links, subcalls, _visited
 
@@ -932,7 +929,7 @@ def _spider(
             try:
                 # This seems to be text/html, though text/fragment+html is also used
                 fragment_response_url, _, fragment_response = read_from_url(
-                    abs_link, "text/html", urlopen=urlopen
+                    abs_link, "text/html", client=client
                 )
             except Exception as e:
                 msg = f"Error reading fragment: {(type(e), str(e))}:{traceback.format_exc()}"

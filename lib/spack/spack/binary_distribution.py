@@ -1798,6 +1798,7 @@ def download_tarball(
         if mirror.matches_binary(spec, direction="fetch")
     ]
 
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
     for mirror, layout_version in mirrors:
         # Override mirror's default if
         currently_unsigned = unsigned if unsigned is not None else not mirror.signed
@@ -1809,9 +1810,7 @@ def download_tarball(
         if spack.oci.image.is_oci_url(fetch_url):
             ref = ImageReference.from_url(fetch_url).with_tag(_oci_default_tag(spec))
 
-            urlopen = spack.oci.opener.opener_for(
-                web_util.NetworkClient.from_config(spack.config.CONFIG)
-            )
+            urlopen = spack.oci.opener.opener_for(client)
 
             # Fetch the manifest
             try:

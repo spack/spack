@@ -1150,9 +1150,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             version: The version for which a URL is sought.
         """
         urls = self.all_urls_for_version(version)
+        client = spack.util.web.NetworkClient.from_config(spack.config.CONFIG)
 
         for u in urls:
-            client = spack.util.web.NetworkClient.from_config(spack.config.CONFIG)
             if spack.util.web.url_exists(u, client=client):
                 return u
 
