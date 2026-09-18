@@ -22,13 +22,14 @@ class SpecList:
         # We cache results and invalidate when self.yaml_list changes
         self.specs_as_yaml_list = expanded_list or []
         self._constraints = None
+        self._install_flags: Optional[List[bool]] = None
         self._specs: Optional[List[Spec]] = None
         self._toolchains = toolchains
 
     @property
     def is_matrix(self):
         for item in self.specs_as_yaml_list:
-            if isinstance(item, dict):
+            if isinstance(item, dict) and "matrix" in item:
                 return True
         return False
 
@@ -36,14 +37,30 @@ class SpecList:
     def specs_as_constraints(self):
         if self._constraints is None:
             constraints = []
+            install_flags = []
             for item in self.specs_as_yaml_list:
-                if isinstance(item, dict):  # matrix of specs
-                    constraints.extend(_expand_matrix_constraints(item))
+                if isinstance(item, dict) and "matrix" in item:  # matrix of specs
+                    rows = _expand_matrix_constraints(item)
+                    constraints.extend(rows)
+                    install_flags.extend([item.get("install", True)] * len(rows))
+                elif isinstance(item, dict):  # single spec with options
+                    constraints.append([Spec(item["spec"])])
+                    install_flags.append(item.get("install", True))
                 else:  # individual spec
                     constraints.append([Spec(item)])
+                    install_flags.append(True)
             self._constraints = constraints
+            self._install_flags = install_flags
 
         return self._constraints
+
+    @property
+    def install_flags(self) -> List[bool]:
+        """Whether each spec in ``self.specs`` (by position) should be installed."""
+        if self._constraints is None:
+            self.specs_as_constraints
+        assert self._install_flags is not None
+        return self._install_flags
 
     @property
     def specs(self) -> List[Spec]:
@@ -72,6 +89,7 @@ class SpecList:
 
         # Invalidate cache variables when we change the list
         self._constraints = None
+        self._install_flags = None
         self._specs = None
 
     def remove(self, spec):
@@ -94,12 +112,14 @@ class SpecList:
 
         # invalidate cache variables when we change the list
         self._constraints = None
+        self._install_flags = None
         self._specs = None
 
     def extend(self, other: "SpecList", copy_reference=True) -> None:
         self.yaml_list.extend(other.yaml_list)
         self.specs_as_yaml_list.extend(other.specs_as_yaml_list)
         self._constraints = None
+        self._install_flags = None
         self._specs = None
 
     def __len__(self):
@@ -250,7 +270,7 @@ class SpecListParser:
                 continue
 
             value = item
-            if isinstance(item, dict):
+            if isinstance(item, dict) and "spec" not in item:
                 value = self._expand_yaml_matrix(item)
             result.append(value)
         return result

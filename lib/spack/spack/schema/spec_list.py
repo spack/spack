@@ -20,6 +20,22 @@ spec_list_properties = {
     },
 }
 
+spec_with_options_schema = {
+    "type": "object",
+    "description": "Single spec with install-time options",
+    "additionalProperties": False,
+    "properties": {
+        "spec": {"type": "string", "description": "Spec string"},
+        "install": {
+            "type": "boolean",
+            "default": True,
+            "description": "When false, this spec still participates in the environment's "
+            "unified concretization as a root, but is not installed",
+        },
+    },
+    "required": ["spec"],
+}
+
 spec_list_schema = {
     "type": "array",
     "description": "List of specs to include in the environment, supporting both simple specs and "
@@ -36,6 +52,7 @@ spec_list_schema = {
             },
             {"type": "string", "description": "Simple spec string"},
             {"type": "null"},
+            spec_with_options_schema,
         ]
     },
 }

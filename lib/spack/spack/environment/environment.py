@@ -1073,15 +1073,22 @@ def env_subdir_path(manifest_dir: Union[str, pathlib.Path]) -> str:
 class ConcretizedRootInfo:
     """Data on root specs that have been concretized"""
 
-    __slots__ = ("root", "hash", "new", "group")
+    __slots__ = ("root", "hash", "new", "group", "install")
 
     def __init__(
-        self, *, root_spec: spack.spec.Spec, root_hash: str, new: bool = False, group: str
+        self,
+        *,
+        root_spec: spack.spec.Spec,
+        root_hash: str,
+        new: bool = False,
+        group: str,
+        install: bool = True,
     ):
         self.root = root_spec
         self.hash = root_hash
         self.new = new
         self.group = group
+        self.install = install
 
     def __str__(self):
         return f"{self.root} -> {self.hash} [new={self.new}]"
@@ -1093,19 +1100,22 @@ class ConcretizedRootInfo:
             and self.hash == other.hash
             and self.new == other.new
             and self.group == other.group
+            and self.install == other.install
         )
 
     def __hash__(self) -> int:
-        return hash((self.root, self.hash, self.new, self.group))
+        return hash((self.root, self.hash, self.new, self.group, self.install))
 
     @staticmethod
-    def from_info_dict(info_dict: Dict[str, str]) -> "ConcretizedRootInfo":
+    def from_info_dict(info_dict: Dict[str, Any]) -> "ConcretizedRootInfo":
         # Lockfile versions < 7 don't have the "group" attribute
+        # Lockfiles without disabled roots don't have the "install" attribute
         return ConcretizedRootInfo(
             root_spec=Spec(info_dict["spec"]),
             root_hash=info_dict["hash"],
             new=False,
             group=info_dict.get("group", DEFAULT_USER_SPEC_GROUP),
+            install=info_dict.get("install", True),
         )
 
 
@@ -2049,6 +2059,7 @@ class Environment:
         *,
         new: bool = True,
         group: Optional[str] = None,
+        install: bool = True,
     ):
         """Called when a new concretized spec is added to the environment.
 
@@ -2059,12 +2070,14 @@ class Environment:
             concrete: spec concretized within this environment
             new: concretized in this session: write() copies its package to the env repo and
                 rewrites the lockfile
+            install: whether this root should be installed, or only concretized as part of
+                the environment's unification
         """
         assert concrete.concrete
         h = concrete.dag_hash()
         group = group or DEFAULT_USER_SPEC_GROUP
         self.concretized_roots.append(
-            ConcretizedRootInfo(root_spec=spec, root_hash=h, new=new, group=group)
+            ConcretizedRootInfo(root_spec=spec, root_hash=h, new=new, group=group, install=install)
         )
         self.specs_by_hash[h] = concrete
 
@@ -2123,7 +2136,7 @@ class Environment:
         self.install_specs(None, **install_args)
 
     def install_specs(self, specs: Optional[List[Spec]] = None, **install_args):
-        roots = self.concrete_roots()
+        roots = self.installable_roots()
         specs = specs if specs is not None else roots
 
         # Extract reporter arguments
@@ -2223,6 +2236,18 @@ class Environment:
         """Same as concretized_specs, except it returns the list of concrete
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
+
+    def installable_roots(self) -> List[Spec]:
+        """Same as concrete_roots(), but excludes roots marked install: false. Roots from
+        included environments are always installable.
+        """
+        result = [self.specs_by_hash[x.hash] for x in self.concretized_roots if x.install]
+        result.extend(
+            concrete
+            for included_env in self.included_concretized_roots
+            for _, concrete in self.concretized_specs_from_included_environment(included_env)
+        )
+        return result
 
     def concretized_specs_by(self, *, group: str) -> Iterable[Tuple[Spec, Spec]]:
         """Generates all the (abstract, concrete) spec pairs for a given group"""
@@ -2364,21 +2389,35 @@ class Environment:
         return roots, self.included_concrete_spec_data
 
     def _concrete_roots_dict(self):
-        if not self.has_groups():
+        include_group = self.has_groups()
+        include_install = self.has_disabled_roots()
+        if not include_group and not include_install:
             return [{"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots]
 
-        return [
-            {"hash": x.hash, "spec": str(x.root), "group": x.group} for x in self.concretized_roots
-        ]
+        result = []
+        for x in self.concretized_roots:
+            entry = {"hash": x.hash, "spec": str(x.root)}
+            if include_group:
+                entry["group"] = x.group
+            if include_install:
+                entry["install"] = x.install
+            result.append(entry)
+        return result
 
     def has_groups(self) -> bool:
         groups = self.manifest.groups()
         # True if groups != {DEFAULT_USER_SPEC_GROUP}
         return len(groups) != 1 or DEFAULT_USER_SPEC_GROUP not in groups
 
+    def has_disabled_roots(self) -> bool:
+        """True if any concretized root is marked install: false"""
+        return any(not x.install for x in self.concretized_roots)
+
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""
-        lockfile_version = CURRENT_LOCKFILE_VERSION if self.has_groups() else 6
+        lockfile_version = (
+            CURRENT_LOCKFILE_VERSION if self.has_groups() or self.has_disabled_roots() else 6
+        )
         concrete_specs = self._concrete_specs_dict()
         root_specs = self._concrete_roots_dict()
 
@@ -2804,6 +2843,9 @@ class EnvironmentConcretizer:
     ) -> List[SpecPair]:
         new_user_specs, kept_user_specs = self._partition_user_specs(group=group)
 
+        speclist = self.env.user_specs_by(group=group)
+        install_by_spec = dict(zip(speclist.specs, speclist.install_flags))
+
         # Pick the right concretization strategy
         kind = spack.concretize.solve_kind(
             spack.config.CONFIG.get_config("concretizer").get("unify", False)
@@ -2818,12 +2860,22 @@ class EnvironmentConcretizer:
             factory = ReusableSpecsFactory(env=self.env, group=group)
             if kind is SolveKind.WHEN_POSSIBLE:
                 return self._concretize_together_where_possible(
-                    new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+                    new_user_specs,
+                    kept_user_specs,
+                    tests=tests,
+                    group=group,
+                    factory=factory,
+                    install_by_spec=install_by_spec,
                 )
 
             if kind is SolveKind.TOGETHER:
                 return self._concretize_together(
-                    new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+                    new_user_specs,
+                    kept_user_specs,
+                    tests=tests,
+                    group=group,
+                    factory=factory,
+                    install_by_spec=install_by_spec,
                 )
 
             return self._concretize_separately(
@@ -2833,6 +2885,7 @@ class EnvironmentConcretizer:
                 group=group,
                 factory=factory,
                 processes=processes,
+                install_by_spec=install_by_spec,
             )
 
     def _prepare_environment_for_concretization(self, *, force: bool):
@@ -2912,6 +2965,7 @@ class EnvironmentConcretizer:
         group: Optional[str] = None,
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
+        install_by_spec: Dict[Spec, bool],
     ) -> List[SpecPair]:
         specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
         result = spack.concretize._concretize_together_when_possible(
@@ -2919,7 +2973,13 @@ class EnvironmentConcretizer:
         )
         result = [x for x in result if x[0] in to_compute]
         for abstract, concrete in result:
-            self.env.add_concrete_spec(abstract, concrete, new=True, group=group)
+            self.env.add_concrete_spec(
+                abstract,
+                concrete,
+                new=True,
+                group=group,
+                install=install_by_spec.get(abstract, True),
+            )
 
         return result
 
@@ -2931,6 +2991,7 @@ class EnvironmentConcretizer:
         group: Optional[str] = None,
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
+        install_by_spec: Dict[Spec, bool],
     ) -> List[SpecPair]:
         to_concretize = self._user_spec_pairs(to_compute, to_keep)
         try:
@@ -2956,7 +3017,13 @@ class EnvironmentConcretizer:
         # Return the portion of the return value that is new
         result = concrete_pairs[: len(to_compute)]
         for abstract, concrete in result:
-            self.env.add_concrete_spec(abstract, concrete, new=True, group=group)
+            self.env.add_concrete_spec(
+                abstract,
+                concrete,
+                new=True,
+                group=group,
+                install=install_by_spec.get(abstract, True),
+            )
         return result
 
     def _concretize_separately(
@@ -2968,6 +3035,7 @@ class EnvironmentConcretizer:
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
         processes: int,
+        install_by_spec: Dict[Spec, bool],
     ) -> List[SpecPair]:
         """Concretization strategy that concretizes separately one user spec after the other"""
         to_concretize = [(x, None) for x in to_compute]
@@ -2976,7 +3044,13 @@ class EnvironmentConcretizer:
         )
 
         for abstract, concrete in concrete_pairs:
-            self.env.add_concrete_spec(abstract, concrete, new=True, group=group)
+            self.env.add_concrete_spec(
+                abstract,
+                concrete,
+                new=True,
+                group=group,
+                install=install_by_spec.get(abstract, True),
+            )
 
         return concrete_pairs
 
@@ -3037,7 +3111,7 @@ def display_specs(
         format=spack.spec.DISPLAY_FORMAT,
         hashes=True,
         hashlen=7,
-        status_fn=status_fn if status_fn is not None else spack.store.STORE.db.install_status,
+        status_fn=(status_fn if status_fn is not None else spack.store.STORE.db.install_status),
         version_style_fn=(
             spack.package_base.non_preferred_version if highlight_non_defaults else None
         ),
@@ -3368,6 +3442,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     )
                 elif "specs" in item:
                     self._user_specs[group].extend(item["specs"])
+                elif "spec" in item:
+                    self._user_specs[group].append(
+                        {key: item[key] for key in ("spec", "install") if key in item}
+                    )
 
     def _clear_user_specs(self) -> None:
         self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
