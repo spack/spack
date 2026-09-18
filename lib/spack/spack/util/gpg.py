@@ -22,6 +22,9 @@ import spack.version
 from spack.util import tty
 from spack.util.executable import Executable
 
+if sys.platform == "win32":
+    import spack.util.win_acl as wacl
+
 GPG_NAMES = ("gpg", "gpg2")
 GPGCONF_NAMES = ("gpgconf", "gpg2conf", "gpgconf2")
 
@@ -481,11 +484,7 @@ class Gpg:
     """Wrapper for GPG"""
 
     def __init__(self, gnupghome: Optional[str] = None):
-        if sys.platform == "win32":
-            self.home = Gpg._init_gnupghome_dir(gnupghome)
-        else:
-            self.home = Gpg._init_gnupghome_posix(gnupghome)
-
+        self.home = Gpg._init_gnupghome_permissions(gnupghome)
         self._gpg: Optional[Executable] = None
         self._gpgconf: Optional[Executable] = None
         self._version: Optional[spack.version.VersionType] = None
@@ -511,14 +510,16 @@ class Gpg:
         return pathlib.Path(gnupghome)
 
     @staticmethod
-    def _init_gnupghome_posix(gnupghome: Optional[str] = None) -> pathlib.Path:
+    def _init_gnupghome_permissions(gnupghome: Optional[str] = None) -> pathlib.Path:
         """Init gnupg home and check permissions."""
         gnupghome = Gpg._init_gnupghome_dir(gnupghome)
-
-        # Ensure safe permissions on posix systems
-        st = gnupghome.stat()
-        if st.st_mode != (st.st_mode & 0o040700):
-            os.chmod(gnupghome, 0o700)
+        if sys.platform == "win32":
+            wacl.set_exclusive_owner_control(str(gnupghome))
+        else:
+            # Ensure safe permissions on posix systems
+            st = gnupghome.stat()
+            if st.st_mode != (st.st_mode & 0o040700):
+                os.chmod(gnupghome, 0o700)
 
         return gnupghome
 
