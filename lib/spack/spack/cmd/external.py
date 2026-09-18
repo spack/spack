@@ -17,6 +17,7 @@ import spack.package_base
 import spack.repo
 import spack.spec
 from spack import cray_manifest
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.util import tty
 from spack.util.tty import colify
@@ -51,14 +52,18 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="configuration scope to modify",
     )
     find_parser.add_argument(
-        "--all", action="store_true", help="search for all packages that Spack knows about"
+        "--all",
+        action="store_true",
+        help="search for all packages (if in a concretized environment, search for packages "
+        "in the environment's concretization; otherwise search for all detectable packages)",
     )
     arguments.add_common_arguments(find_parser, ["tags", "jobs"])
     find_parser.add_argument("packages", nargs=argparse.REMAINDER)
     find_parser.epilog = (
         'The search is by default on packages tagged with the "build-tools" or '
-        '"core-packages" tags. Use the --all option to search for every possible '
-        "package Spack knows how to find."
+        '"core-packages" tags. Use the --all option to search for all relevant packages. '
+        "When a concretized environment is active, --all searches for packages in the "
+        "environment's concretization; otherwise it searches for all detectable packages."
     )
 
     sp.add_parser("list", aliases=["ls"], help="list detectable packages, by repository and name")
@@ -118,6 +123,34 @@ def external_find(args):
 
     # Outside the Cray manifest, the search is done by tag for performance reasons,
     # since tags are cached.
+
+    # When --all is used with a concretized environment, limit search to packages
+    # in the environment (similar to spack mirror create behavior)
+    env = active_environment()
+    if args.all and env:
+        concrete_specs = env.all_specs()
+        if concrete_specs:
+            args.packages = list({spec.name for spec in concrete_specs})
+            tty.debug(f"Searching for packages from environment: {', '.join(args.packages)}")
+
+            # Exclude environment view paths to avoid detecting Spack-installed
+            # packages as externals
+            if not args.path:
+                from spack.util import environment as env_util
+                from spack.util.filesystem import path_contains_subdirectory
+
+                view_roots = [os.path.realpath(view.root) for view in env.views.values()]
+
+                def under_view(path_dir):
+                    real_path = os.path.realpath(path_dir)
+                    if any(path_contains_subdirectory(real_path, root) for root in view_roots):
+                        tty.debug(f"Excluding view path from search: {path_dir}")
+                        return True
+                    return False
+
+                filtered_paths = [p for p in env_util.get_path("PATH") if not under_view(p)]
+                if filtered_paths:
+                    args.path = filtered_paths
 
     # If the user specified both --all and --tag, then --all has precedence
     if args.all or args.packages:
