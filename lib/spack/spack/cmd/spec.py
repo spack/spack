@@ -72,6 +72,7 @@ for further documentation regarding the spec syntax, see:
     subparser.add_argument(
         "-t", "--types", action="store_true", default=False, help="show dependency types"
     )
+    arguments.add_common_arguments(subparser, ["deptype"])
     arguments.add_common_arguments(subparser, ["specs"])
     arguments.add_concretizer_args(subparser)
 
@@ -124,6 +125,7 @@ def spec(parser, args):
                 cover=args.cover,
                 format=fmt,
                 hashlen=None if args.very_long else 7,
+                deptypes=args.deptype,
                 show_types=args.types,
                 status_fn=status_fn,
                 hashes=args.long or args.very_long,
