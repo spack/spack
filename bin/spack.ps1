@@ -54,10 +54,10 @@ function Set-SpackEnv {
 
 function Invoke-SpackCD {
     if (Compare-CommonArgs $SpackSubCommandArgs) {
-        python "$Env:SPACK_ROOT/bin/spack" cd -h
+        & $script:SpackPython "$Env:SPACK_ROOT/bin/spack" cd -h
     }
     else {
-        $LOC = $(python "$Env:SPACK_ROOT/bin/spack" location $SpackSubCommandArgs)
+        $LOC = $(& $script:SpackPython "$Env:SPACK_ROOT/bin/spack" location $SpackSubCommandArgs)
         if (($NULL -ne $LOC)){
             if ( Test-Path -Path $LOC){
                 Set-Location $LOC
@@ -74,7 +74,7 @@ function Invoke-SpackCD {
 
 function Invoke-SpackEnv {
     if (Compare-CommonArgs $SpackSubCommandArgs[0]) {
-        python "$Env:SPACK_ROOT/bin/spack" env -h
+        & $script:SpackPython "$Env:SPACK_ROOT/bin/spack" env -h
     }
     else {
         $SubCommandSubCommand = $SpackSubCommandArgs[0]
@@ -82,45 +82,45 @@ function Invoke-SpackEnv {
         switch ($SubCommandSubCommand) {
             "activate" {
                 if (Compare-CommonArgs $SubCommandSubCommandArgs) {
-                    python "$Env:SPACK_ROOT/bin/spack" env activate $SubCommandSubCommandArgs
+                    & $script:SpackPython "$Env:SPACK_ROOT/bin/spack" env activate $SubCommandSubCommandArgs
                 }
                 elseif ([bool]($SubCommandSubCommandArgs.Where({$_ -eq "--pwsh"}))) {
-                    python "$Env:SPACK_ROOT/bin/spack" env activate $SubCommandSubCommandArgs
+                    & $script:SpackPython "$Env:SPACK_ROOT/bin/spack" env activate $SubCommandSubCommandArgs
                 }
                 elseif (!$SubCommandSubCommandArgs) {
-                    python "$Env:SPACK_ROOT/bin/spack" env activate $SubCommandSubCommandArgs
+                    & $script:SpackPython "$Env:SPACK_ROOT/bin/spack" env activate $SubCommandSubCommandArgs
                 }
                 else {
-                    $SpackEnv = $(python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params env activate "--pwsh" $SubCommandSubCommandArgs)
+                    $SpackEnv = $(& $script:SpackPython "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params env activate "--pwsh" $SubCommandSubCommandArgs)
                     Set-SpackEnv $SpackEnv
                 }
             }
             "deactivate" {
                 if ([bool]($SubCommandSubCommandArgs.Where({$_ -eq "--pwsh"}))) {
-                    python"$Env:SPACK_ROOT/bin/spack" env deactivate $SubCommandSubCommandArgs
+                    & $script:SpackPython "$Env:SPACK_ROOT/bin/spack" env deactivate $SubCommandSubCommandArgs
                 }
                 elseif($SubCommandSubCommandArgs) {
-                    python "$Env:SPACK_ROOT/bin/spack" env deactivate -h
+                    & $script:SpackPython "$Env:SPACK_ROOT/bin/spack" env deactivate -h
                 }
                 else {
-                    $SpackEnv = $(python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params env deactivate "--pwsh")
+                    $SpackEnv = $(& $script:SpackPython "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params env deactivate "--pwsh")
                     Set-SpackEnv $SpackEnv
                 }
             }
-            default {python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs}
+            default {& $script:SpackPython "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs}
         }
     }
 }
 
 function Invoke-SpackLoad {
     if (Compare-CommonArgs $SpackSubCommandArgs) {
-        python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
+        & $script:SpackPython "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
     }
     elseif ([bool]($SpackSubCommandArgs.Where({($_ -eq "--pwsh") -or ($_ -eq "--list")}))) {
-        python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
+        & $script:SpackPython "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
     }
     else {
-        $SpackEnv = $(python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand "--pwsh" $SpackSubCommandArgs)
+        $SpackEnv = $(& $script:SpackPython "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand "--pwsh" $SpackSubCommandArgs)
         Set-SpackEnv $SpackEnv
     }
 }
@@ -133,13 +133,26 @@ function Set-SpackRoot {
     }
 }
 
+function Resolve-SpackPython {
+    if (![string]::IsNullOrEmpty($Env:SPACK_PYTHON)) {
+        return $Env:SPACK_PYTHON
+    }
+
+    $python = & python -c "import sys; print(sys.executable)"
+    if (($LASTEXITCODE -ne 0) -or [string]::IsNullOrWhiteSpace($python)) {
+        throw "Unable to resolve the Python runtime used to launch Spack."
+    }
+    return $python
+}
+
 Set-SpackRoot
+$script:SpackPython = Resolve-SpackPython
 
 $SpackCMD_params, $SpackSubCommand, $SpackSubCommandArgs = Read-SpackArgs $args
 
 
 if (Compare-CommonArgs $SpackCMD_params) {
-    python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
+    & $script:SpackPython "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
     exit $LASTEXITCODE
 }
 
@@ -151,7 +164,7 @@ switch($SpackSubCommand)
     "env"    {Invoke-SpackEnv}
     "load"   {Invoke-SpackLoad}
     "unload" {Invoke-SpackLoad}
-    default  {python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs}
+    default  {& $script:SpackPython "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs}
 }
 
 exit $LASTEXITCODE
