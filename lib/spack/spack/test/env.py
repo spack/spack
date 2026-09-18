@@ -17,7 +17,6 @@ import spack.package_base
 import spack.platforms
 import spack.solver.asp
 import spack.spec
-import spack.spec_parser
 import spack.util.filesystem as fs
 from spack.config import Configuration
 from spack.enums import ConfigScopePriority
@@ -1734,7 +1733,7 @@ spack:
     with ev.Environment(tmp_path):
         # We rely on this behavior when emitting facts for the solver
         toolchains = mutable_config.get("toolchains", {})
-        s = spack.spec_parser.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
+        s = spack.spec.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
         assert id(s["gcc"]) != id(s["callpath"]["gcc"])
 
 
