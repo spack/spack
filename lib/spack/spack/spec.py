@@ -2574,6 +2574,8 @@ class Spec:
     def spec_hash(self) -> str:
         """Compute the dag hash of this spec, from the JSON serialization of its node dicts."""
         node_dict = self.to_node_dict()
+        # Leave out annotations, since they don't record what is built
+        del node_dict["annotations"]
         json_text = json.dumps(
             node_dict, ensure_ascii=True, indent=None, separators=(",", ":"), sort_keys=False
         )
@@ -2606,8 +2608,8 @@ class Spec:
         """Create a dictionary representing the state of this Spec.
 
         This method creates the content that is eventually hashed by Spack to create identifiers
-        like the DAG hash (see :meth:`dag_hash()`). Example result of this function for the
-        ``sqlite`` package::
+        like the DAG hash (see :meth:`dag_hash()`). The ``annotations`` entry is serialized, but
+        excluded from the hash. Example result of this function for the ``sqlite`` package::
 
             {
                 "name": "sqlite",
