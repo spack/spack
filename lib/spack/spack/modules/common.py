@@ -198,8 +198,9 @@ def merge_config_rules(configuration: dict, spec: spack.spec.Spec) -> dict:
         dep_request = spec_configuration.get(key, default)
         spec_configuration[key] = dependencies(spec, request=dep_request)
 
-    for key, default in (("hash_length", 7), ("verbose", False), ("defaults", [])):
-        spec_configuration[key] = configuration.get(key, default)
+    spec_configuration["hash_length"] = configuration.get("hash_length", 7)
+    spec_configuration["verbose"] = configuration.get("verbose", False)
+    spec_configuration["defaults"] = configuration.get("defaults", [])
 
     return spec_configuration
 

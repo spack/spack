@@ -5,6 +5,7 @@
 import argparse
 import os
 import textwrap
+from typing import Callable, Dict
 
 import spack.cmd
 import spack.config
@@ -22,7 +23,7 @@ from spack.util.pattern import Args
 __all__ = ["add_common_arguments"]
 
 #: dictionary of argument-generating functions, keyed by name
-_arguments = {}
+_arguments: Dict[str, Callable] = {}
 
 
 def arg(fn):

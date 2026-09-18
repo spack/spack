@@ -139,7 +139,7 @@ class WindowsRPath:
 
 #: Registers which are the detectable packages, by repo and package name
 #: Need a pass of package repositories to be filled.
-detectable_packages = collections.defaultdict(list)
+detectable_packages: Dict[str, List[str]] = collections.defaultdict(list)
 
 
 class DetectablePackageMeta(type):
