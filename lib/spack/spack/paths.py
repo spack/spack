@@ -135,10 +135,6 @@ class SpackPaths:
         return os.path.join(self.user_cache_path, "package_repos")
 
     @property
-    def default_misc_cache_path(self):
-        return os.path.join(self.user_cache_path, self.spack_instance_id, "cache")
-
-    @property
     def gpg_path(self):
         """GPG home directory - reads from config."""
         import spack.config
@@ -282,9 +278,6 @@ if TYPE_CHECKING:
     default_monitor_path: str
     user_repos_cache_path: str
     package_repos_path: str
-    # TODO: Verify whether default_misc_cache_path is still used, or whether
-    # TODO: the misc cache should use the configuration-derived cache location.
-    default_misc_cache_path: str
 
 
 # Module shim: lets callers keep using `spack.paths.X` for any attribute on
