@@ -196,6 +196,7 @@ def test_install_output_on_python_error(mock_packages, mock_archive, mock_fetch,
 
 
 @pytest.mark.disable_clean_stage_check
+@pytest.mark.child_coverage
 def test_install_with_source(
     mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
 ):
@@ -230,6 +231,7 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mock
 
 
 @pytest.mark.disable_clean_stage_check
+@pytest.mark.child_coverage
 def test_show_log_on_error_new_installer(
     mock_packages, mock_archive, mock_fetch, install_mockery, mutable_config
 ):
@@ -546,6 +548,7 @@ def test_install_mix_cli_and_files(spec_format, clispecs, filespecs, tmp_path: p
     assert install.returncode == 0
 
 
+@pytest.mark.child_coverage
 def test_extra_files_are_archived(
     mock_packages,
     mock_archive,
@@ -723,6 +726,7 @@ def test_build_error_output(capfd, mock_fetch, install_mockery):
 
 
 @pytest.mark.disable_clean_stage_check
+@pytest.mark.child_coverage
 def test_build_warning_output(mock_fetch, install_mockery):
     with pytest.raises(spack.build_environment.ChildError) as e:
         install("build-warnings")
@@ -733,6 +737,7 @@ def test_build_warning_output(mock_fetch, install_mockery):
 
 
 @pytest.mark.disable_clean_stage_check  # new installer keeps a log for build cache installs
+@pytest.mark.child_coverage
 def test_cache_only_fails(mock_fetch, temporary_store: Store, install_mockery, installer_variant):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
@@ -790,6 +795,7 @@ def test_install_deps_then_package(mock_fetch, install_mockery, installer_varian
 # Unit tests should not be affected by the user's managed environments
 @pytest.mark.not_on_windows("Environment views not supported on windows. Revisit after #34701")
 @pytest.mark.regression("12002")
+@pytest.mark.child_coverage
 def test_install_only_dependencies_in_env(
     mutable_mock_env_path, mock_fetch, install_mockery, installer_variant
 ):
@@ -1161,6 +1167,7 @@ def test_install_use_buildcache(
 @pytest.mark.not_on_windows("Windows logger I/O operation on closed file when install fails")
 @pytest.mark.regression("34006")
 @pytest.mark.disable_clean_stage_check
+@pytest.mark.child_coverage
 def test_padded_install_runtests_root(install_mockery, mock_fetch, mutable_config: Configuration):
     mutable_config.set("config:install_tree:padded_length", 255)
     output = install(
