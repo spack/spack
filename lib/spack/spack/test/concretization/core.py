@@ -5710,7 +5710,7 @@ def test_compiler_can_be_reused_as_root(temporary_store, mock_packages, mutable_
     llvm, _ = spack.concretize.concretize_spec_pairs(
         [(Spec(f"llvm/{installed.dag_hash()}"), None), (Spec("pkg-a"), None)]
     )
-    assert llvm.dag_hash() == installed.dag_hash(), llvm.tree()
+    assert llvm == installed
 
 
 def test_parallel_edges_in_a_literal_reach_the_solver(mock_packages, config):
