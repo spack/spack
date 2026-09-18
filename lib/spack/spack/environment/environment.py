@@ -3387,7 +3387,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         """
         result = []
         for yaml_spec_str in self.configuration["specs"]:
-            if Spec(yaml_spec_str) == Spec(user_spec):
+            if isinstance(yaml_spec_str, str) and Spec(yaml_spec_str) == Spec(user_spec):
                 result.append(yaml_spec_str)
 
         if not result:
