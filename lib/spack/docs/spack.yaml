@@ -13,19 +13,29 @@
 #
 spack:
   specs:
-  # Sphinx
-  - "py-sphinx@3.4:4.1.1,4.1.3:"
-  - py-sphinxcontrib-programoutput
-  - py-docutils@:0.16
-  - py-sphinx-design
-  - py-sphinx-rtd-theme
-  - py-pygments@:2.12
+  # Sphinx and the HTML theme
+  - py-sphinx
+  - py-furo
 
-  # VCS
+  # Sphinx extensions enabled in conf.py
+  - py-sphinx-copybutton
+  - py-sphinx-last-updated-by-git
+  - py-sphinx-sitemap
+  - py-sphinxcontrib-programoutput
+  - py-sphinxcontrib-svg2pdfconverter
+
+  # Supporting libraries
+  - py-docutils
+  - py-pygments
+
+  # git is required by sphinx-last-updated-by-git
   - git
-  - mercurial
-  - subversion
-  # Plotting
+  # graphviz provides `dot` for sphinx.ext.graphviz
   - graphviz
+  # librsvg provides the rsvg-convert binary used by
+  # sphinxcontrib.rsvgconverter to convert SVG -> PDF for the PDF build.
+  # rsvg renders the docs' SVGs faithfully; cairosvg mis-renders fonts
+  # (e.g. it drops the monospace/bold styling in the spec-syntax figure).
+  - librsvg
   concretizer:
     unify: true
