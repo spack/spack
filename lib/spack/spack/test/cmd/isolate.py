@@ -63,9 +63,9 @@ def test_isolate_smoke_test(mock_spack_paths, tmp_path):
     # to the fresh isolation target rather than the Spack checkout.
     assert cfg.get("modules:default:roots:tcl") == "$data_home/modules"
     assert cfg.get("modules:default:roots:lmod") == "$data_home/lmod"
-    assert spack.config.canonicalize_path(
-        cfg.get("modules:default:roots:tcl"), config=cfg
-    ) == str(isolated_path / "modules")
+    assert spack.config.canonicalize_path(cfg.get("modules:default:roots:tcl"), config=cfg) == str(
+        isolated_path / "modules"
+    )
     assert spack.config.canonicalize_path(
         cfg.get("modules:default:roots:lmod"), config=cfg
     ) == str(isolated_path / "lmod")
