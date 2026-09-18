@@ -50,6 +50,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.solver.compat
 import spack.solver.reuse
 import spack.spec
 import spack.stage
@@ -706,6 +707,15 @@ def _use_test_platform(test_platform):
     # a default during tests.
     with spack.platforms.use_platform(test_platform):
         yield
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _load_clingo():
+    """Bootstrap clingo before tests monkeypatch the host target."""
+    try:
+        spack.solver.compat.clingo()
+    except ImportError:
+        pass
 
 
 #
