@@ -90,7 +90,7 @@ def complete_architecture(node: spack.spec.Spec, repo: spack.repo.RepoPath) -> N
             node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
         node.architecture.complete_with_defaults()
     else:
-        node.constrain(spack.spec.Spec.default_arch())
+        node.architecture = spack.spec.ArchSpec.default_arch()
         node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
 
     node.namespace = repo.repo_for_pkg(node.name).namespace

@@ -62,7 +62,13 @@ from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
 from spack.util.string import comma_and, quote
 from spack.util.typing import SupportsRichComparison
-from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
+from spack.version import (
+    ConcreteVersion,
+    GitVersion,
+    StandardVersion,
+    VersionError,
+    is_git_version,
+)
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -2811,10 +2817,8 @@ def non_default_variant(node: spack.spec.Spec, variant_name: str) -> spack.enums
 
 
 def sort_by_pkg_preference(
-    versions: Iterable[Union[GitVersion, StandardVersion]],
-    *,
-    pkg: Union[PackageBase, Type[PackageBase]],
-) -> List[Union[GitVersion, StandardVersion]]:
+    versions: Iterable[ConcreteVersion], *, pkg: Union[PackageBase, Type[PackageBase]]
+) -> List[ConcreteVersion]:
     """Sorts the list of versions passed in input according to the preferences in the package. The
     return value does not contain duplicate versions. Most preferred versions first.
     """
@@ -2823,8 +2827,8 @@ def sort_by_pkg_preference(
 
 
 def concretization_version_order(
-    version_info: Tuple[Union[GitVersion, StandardVersion], dict],
-) -> Tuple[bool, bool, bool, bool, Union[GitVersion, StandardVersion]]:
+    version_info: Tuple[ConcreteVersion, dict],
+) -> Tuple[bool, bool, bool, bool, ConcreteVersion]:
     """Version order key for concretization, where preferred > not preferred,
     finite > any infinite component; only if all are the same, do we use default version
     ordering.
