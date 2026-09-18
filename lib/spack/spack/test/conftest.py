@@ -123,10 +123,10 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifie
     base_prefix.mkdir()
 
     real_etc_spack = Path(spack.paths.prefix) / "etc" / "spack"
-    sim_etc_spack = base_prefix / "etc" / "spack"
-    sim_etc_spack.parent.mkdir(parents=True, exist_ok=True)
+    simulated_etc = base_prefix / "etc" / "spack"
+    simulated_etc.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(
-        real_etc_spack, sim_etc_spack, ignore=shutil.ignore_patterns("isolate", "layout")
+        real_etc_spack, simulated_etc, ignore=shutil.ignore_patterns("isolate", "layout")
     )
 
     set_home(str(home_dir))
