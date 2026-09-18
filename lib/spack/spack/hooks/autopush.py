@@ -27,6 +27,9 @@ def post_install(spec, explicit):
             )
             continue
 
+        # Non-redistributable packages may only be pushed to private mirrors
+        if not mirror.private and not pkg.redistribute_binary:
+            continue
         signing_key = spack.binary_distribution.select_signing_key() if mirror.signed else None
         with spack.binary_distribution.make_uploader(
             mirror=mirror, force=True, signing_key=signing_key
