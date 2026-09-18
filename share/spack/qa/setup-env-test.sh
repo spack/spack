@@ -96,6 +96,8 @@ title 'Testing `spack cd`'
 contains "usage: spack cd " spack cd -h
 contains "usage: spack cd " spack cd --help
 contains "cd $b_install" spack cd -i shell-b
+contains "cd $b_install" spack -C "$SHARE_DIR" cd -i shell-b
+contains "cd $b_install" spack -kc config:ccache:true -cconfig:ccache:false --color always cd -i shell-b
 
 title 'Testing `spack module`'
 contains "usage: spack module " spack -m module -h
