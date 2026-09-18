@@ -19,6 +19,9 @@ if TYPE_CHECKING:
 #: Language virtuals wrapped by the compiler wrapper (same ones for which a flag exists)
 COMPILER_WRAPPER_LANGUAGES = ("c", "cxx", "fortran")
 
+#: Dependency types of the edges on which a compiler is used to compile the dependent
+COMPILER_EDGE_DEPTYPES = ("build", "test")
+
 
 class RuntimePropertyRecorder:
     """An object of this class is injected in callbacks to compilers, to let them declare
@@ -231,16 +234,17 @@ class RuntimePropertyRecorder:
         self.rules.append(f"% Default compiler flags for {spec}\n")
 
         # Inject the flags only when the compiler is actually used to compile the dependent,
-        # i.e. the build edge provides one of the language virtuals.
+        # i.e. the build or test edge provides one of the language virtuals.
         for language in COMPILER_WRAPPER_LANGUAGES:
-            when_spec = spack.spec.Spec(f"%[deptypes=build virtuals={language}] {spec}")
-            body_str, node_variable = self.rule_body_from(when_spec)
-            for clause in head_clauses:
-                if clause.args[0] == "node":
-                    continue
-                head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
-                rule = f"{head_str} :-\n{body_str}."
-                self.rules.append(rule)
+            for deptype in COMPILER_EDGE_DEPTYPES:
+                when_spec = spack.spec.Spec(f"%[deptypes={deptype} virtuals={language}] {spec}")
+                body_str, node_variable = self.rule_body_from(when_spec)
+                for clause in head_clauses:
+                    if clause.args[0] == "node":
+                        continue
+                    head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
+                    rule = f"{head_str} :-\n{body_str}."
+                    self.rules.append(rule)
 
         self.reset()
 
