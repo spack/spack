@@ -8,7 +8,7 @@ import spack.spec
 import spack.util.spack_yaml
 import spack.variant
 from spack.error import SpackError
-from spack.spec import ParseContext, Spec, evaluate, parse_one_or_raise
+from spack.spec import ParseContext, Spec, evaluate
 
 
 class SpecList:
@@ -86,7 +86,7 @@ class SpecList:
             for s in self.yaml_list
             if isinstance(s, str)
             and not s.startswith("$")
-            and parse_one_or_raise(s, context=self._context) == to_remove
+            and Spec(s, context=self._context) == to_remove
         ]
         if not remove:
             msg = f"Cannot remove {spec} from SpecList {self.name}.\n"

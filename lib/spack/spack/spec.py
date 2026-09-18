@@ -1886,7 +1886,7 @@ class Spec:
         s.architecture = ArchSpec.default_arch()
         return s
 
-    def __init__(self, spec_like=None, *, external_path=None, external_modules=None):
+    def __init__(self, spec_like=None, *, external_path=None, external_modules=None, context=None):
         """Create a new Spec.
 
         Arguments:
@@ -1896,6 +1896,7 @@ class Spec:
         Keyword arguments:
             external_path: prefix, if this is a spec for an external package
             external_modules: list of external modules, for an external package using modules
+            context: if given, the string is user input, and the spec is evaluated in it
         """
         # Copy if spec_like is a Spec.
         if isinstance(spec_like, Spec):
@@ -1949,7 +1950,10 @@ class Spec:
         self.annotations = SpecAnnotations()
 
         if isinstance(spec_like, str):
-            spack.spec_parser.parse_one_or_raise(spec_like, Spec, self)
+            specfiles = bool(context and context.specfiles)
+            spack.spec_parser.parse_one_or_raise(spec_like, Spec, self, specfiles=specfiles)
+            if context is not None:
+                evaluate(self, context)
 
         elif spec_like is not None:
             raise TypeError(f"Can't make spec out of {type(spec_like)}")
@@ -5448,20 +5452,6 @@ def parse(text: str, *, context: Optional[ParseContext] = None) -> List[Spec]:
         for spec in specs:
             evaluate(spec, context)
     return specs
-
-
-def parse_one_or_raise(text: str, *, context: Optional[ParseContext] = None) -> Spec:
-    """Parse exactly one spec from text and return it, or raise
-
-    Args:
-        text: text to be parsed
-        context: if given, the text is user input, and the spec is evaluated in it
-    """
-    specfiles = bool(context and context.specfiles)
-    result = spack.spec_parser.parse_one_or_raise(text, Spec, specfiles=specfiles)
-    if context is not None:
-        evaluate(result, context)
-    return result
 
 
 def _parse_toolchain_config(toolchain_config: Union[str, List[Dict]]) -> Spec:

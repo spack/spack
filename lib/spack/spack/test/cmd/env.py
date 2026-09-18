@@ -2828,7 +2828,7 @@ spack:
 
             assert before_user == after_user
 
-            mpileaks_spec = spack.spec.parse_one_or_raise(
+            mpileaks_spec = spack.spec.Spec(
                 "mpileaks target=default_target", context=spack.spec.ParseContext()
             )
             assert mpileaks_spec in {x.root for x in concretized_roots_before}
