@@ -45,4 +45,5 @@ def factory(request, mock_modules_root):
 def mock_module_filename(monkeypatch, tmp_path: pathlib.Path):
     filename = tmp_path / "module"
     monkeypatch.setattr(spack.modules.common.FileLayout, "filename", str(filename))
+    monkeypatch.setattr(spack.modules.common.FileLayout, "modulepath", str(tmp_path))
     yield str(filename)
