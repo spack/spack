@@ -5701,17 +5701,11 @@ def test_compiler_dependencies_can_be_excluded_from_reuse(
 
 
 @pytest.mark.regression("50809")
-def test_compiler_root_by_hash_keeps_its_link_dependencies(temporary_store, mock_packages):
-    """Tests that a compiler package requested as a root by hash keeps the link dependencies
-    its hash imposes, instead of having them dropped as if it were a toolchain.
-    """
-    # llvm has a pure link dependency on its "c" provider, and as a root it has no incoming
-    # link edge, so it is not used as a library.
-    installed = spack.concretize.concretize_one("llvm@18 +clang")
+def test_compiler_can_be_reused_as_root(temporary_store, mock_packages):
+    """Tests that an installed compiler can be reused as a root node"""
+    installed = spack.concretize.concretize_one("llvm")
     PackageInstaller([installed.package], fake=True, explicit=True).install()
 
-    # Go through the solver directly: concretize_one() resolves an abstract hash against the
-    # store without running the solver, which is not what `spack solve` and environments do.
     solver = spack.solver.asp.Solver(context=spack.context.default())
     result = solver.solve([spack.spec.Spec(f"llvm/{installed.dag_hash()}")])
 
