@@ -243,6 +243,9 @@ def test_unload_fails_no_shell(
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
     os.environ[uenv.spack_loaded_hashes_var] = mpileaks_spec.dag_hash()
 
+    # Ensure SPACK_SHELL is not set to test the no-shell error path
+    os.environ.pop("SPACK_SHELL", None)
+
     out = unload("mpileaks", fail_on_error=False)
     assert "To set up shell support" in out
 
