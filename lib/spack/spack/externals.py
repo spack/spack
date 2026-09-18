@@ -215,6 +215,19 @@ def _required_target(entry) -> str:
     return ""
 
 
+def move_inline_dependencies(node: spack.spec.Spec, external_dict: ExternalDict) -> None:
+    """Move the dependency edges of ``node`` (e.g. from ``mpich %gcc``) into the
+    ``dependencies`` list of its external dict."""
+    for edge in node.edges_to_dependencies():
+        entry: DependencyDict = {"spec": str(edge.spec)}
+        if edge.depflag != 0:
+            entry["deptypes"] = spack.deptypes.flag_to_tuple(edge.depflag)
+        if edge.virtuals:
+            entry["virtuals"] = ",".join(edge.virtuals)
+        external_dict.setdefault("dependencies", []).append(entry)
+    node.clear_edges()
+
+
 class ExternalSpecAndConfig(NamedTuple):
     spec: spack.spec.Spec
     config: ExternalDict
@@ -335,18 +348,7 @@ class ExternalSpecsParser:
                 )
 
             # Transform inline entries like 'mpich %gcc' to a canonical form using 'dependencies'
-            for edge in current_node.edges_to_dependencies():
-                entry: DependencyDict = {"spec": str(edge.spec)}
-
-                # Handle entries with more options specified
-                if edge.depflag != 0:
-                    entry["deptypes"] = spack.deptypes.flag_to_tuple(edge.depflag)
-
-                if edge.virtuals:
-                    entry["virtuals"] = ",".join(edge.virtuals)
-
-                current_dict.setdefault("dependencies", []).append(entry)
-            current_node.clear_edges()
+            move_inline_dependencies(current_node, current_dict)
 
             # Map a spec: to id:
             for dependency_dict in current_dict.get("dependencies", []):

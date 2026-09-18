@@ -192,6 +192,7 @@ This ensures that:
 - Build-time dependencies are accurately represented.
 
 This comprehensive view, in turn, enables Spack to more reliably build software that depends on these externals.
+Spack itself uses it to record :ref:`the libc a compiler targets <compilers-and-libc>`.
 
 Spack provides two methods for configuring dependency relationships among externals, each offering different trade-offs between conciseness and explicit control:
 

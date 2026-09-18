@@ -20,8 +20,6 @@ from spack.externals import ExternalSpecsParser
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.spec_filter import SpecFilter
 
-from .runtimes import all_libcs
-
 if typing.TYPE_CHECKING:
     import spack.context
     import spack.environment
@@ -188,12 +186,14 @@ class ReusableSpecsSelector:
         context: "spack.context.SpackContext",
         packages_with_externals: Any,
         factory: Optional[SpecFiltersFactory] = None,
+        external_parser: Optional[ExternalSpecsParser] = None,
     ) -> None:
         # Local import to break circular dependencies
         import spack.environment
 
         configuration, store, repo = context.config, context.store, context.repo
-        external_parser = create_external_parser(packages_with_externals, context=context)
+        if external_parser is None:
+            external_parser = create_external_parser(packages_with_externals, context=context)
         # Membership in this set replaces a per-spec query_by_spec_hash on the store
         external_db_hashes = _external_db_hashes(store)
         # _is_reusable only varies by local vs. build cache, so bind the two variants once
@@ -276,9 +276,6 @@ class ReusableSpecsSelector:
                     )
                 elif source["type"] == "external":
                     has_external_source = True
-                    if include:
-                        # Since libcs are implicit externals, we need to implicitly include them
-                        include = include + sorted(all_libcs(context))
                     self.reuse_sources.append(
                         spec_filter_from_packages_yaml(
                             external_parser=external_parser,
