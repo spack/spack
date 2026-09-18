@@ -4,7 +4,7 @@ This document organizes the intended behavior of the shared-storage changes in t
 
 ## Terminology
 
-- **Generated artifacts** are resources Spack creates or manages, including installs, modules, environments, licenses, GPG data, bootstrap data, repositories, state, and caches.
+- **Generated artifacts** are resources Spack creates or manages, including installs, modules, environments, licenses, GPG data, bootstrap data, repositories, state, and caches. As of this PR, Spack does not maintain a default module root; module roots must be configured explicitly.
 - **Old resources** are artifacts created by an older Spack layout under the Spack prefix, such as `$spack/opt/spack`, `$spack/var/spack/environments`, `$spack/opt/spack/gpg`, and `$spack/opt/spack/licenses`.
 - **Layout scope** is `$spack/etc/spack/layout/`. Its existence records that old-resource evaluation or migration has completed for that Spack instance.
 - **Isolate scope** is `$spack/etc/spack/isolate/`. It redirects newly created configuration and generated artifacts to an isolation target.
@@ -110,6 +110,7 @@ If packages were previously installed under `$spack/opt/spack`:
 - Modules associated with the old install tree remain at their original locations.
 - The layout scope records the old install and module paths as needed.
 - New installs use the new defaults unless an explicit install-tree configuration says otherwise.
+- Spack does not maintain a default module root as of this PR. Module roots must be configured explicitly before generating new module files.
 
 If the old install tree was configured explicitly at a custom location, that configuration is respected rather than treated as an old default to migrate.
 
@@ -227,6 +228,7 @@ A particularly important case is:
 In this case:
 
 - isolation must not move, copy, or delete old installs, modules, environments, licenses, or GPG data;
+- isolation does not establish or maintain a default module root; new module roots must be configured explicitly;
 - old resources remain at their original locations;
 - the layout scope records old-resource paths and completes resource evaluation;
 - the isolate target receives the new data/state/cache defaults;

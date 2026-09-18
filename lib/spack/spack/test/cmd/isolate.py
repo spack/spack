@@ -59,16 +59,10 @@ def test_isolate_smoke_test(mock_spack_paths, tmp_path):
     for location in ("data", "state", "cache"):
         assert cfg.get(f"config:locations:{location}")[0] == str(isolated_path)
 
-    # Default module roots use $data_home, so newly generated modules belong
-    # to the fresh isolation target rather than the Spack checkout.
-    assert cfg.get("modules:default:roots:tcl") == "$data_home/modules"
-    assert cfg.get("modules:default:roots:lmod") == "$data_home/lmod"
-    assert spack.config.canonicalize_path(cfg.get("modules:default:roots:tcl"), config=cfg) == str(
-        isolated_path / "modules"
-    )
-    assert spack.config.canonicalize_path(
-        cfg.get("modules:default:roots:lmod"), config=cfg
-    ) == str(isolated_path / "lmod")
+    # Isolation does not invent module roots. New module output requires an
+    # explicit module-root configuration, while old module trees are retained.
+    assert cfg.get("modules:default:roots:tcl") is None
+    assert cfg.get("modules:default:roots:lmod") is None
 
     with open(isolate_scope_path / "include.yaml", encoding="utf-8") as f:
         include_text = f.read()

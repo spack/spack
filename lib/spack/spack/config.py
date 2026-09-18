@@ -1799,18 +1799,10 @@ def _detect_old_resources() -> Dict[str, bool]:
     """Detect presence of old Spack-internal resources.
 
     Returns:
-        Dictionary with keys: 'installs', 'gpg_keys', 'modules', 'licenses', 'environments'
+        Dictionary with keys: 'installs', 'gpg_keys', 'licenses', 'environments'
     """
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
-    share_modules = os.path.join(spack.paths.share_path, "spack", "modules")
-
-    result = {
-        "installs": False,
-        "gpg_keys": False,
-        "modules": False,
-        "licenses": False,
-        "environments": False,
-    }
+    result = {"installs": False, "gpg_keys": False, "licenses": False, "environments": False}
 
     # Check for installs
     if os.path.exists(opt_spack):
@@ -1831,14 +1823,6 @@ def _detect_old_resources() -> Dict[str, bool]:
         try:
             if os.listdir(gpg_dir):  # Non-empty
                 result["gpg_keys"] = True
-        except OSError:
-            pass
-
-    # Check for modules
-    if os.path.exists(share_modules):
-        try:
-            if os.listdir(share_modules):  # Non-empty
-                result["modules"] = True
         except OSError:
             pass
 
@@ -2385,24 +2369,17 @@ def _do_migrate(
         assert isolate_target is not None
         scope_config["config"] = {"locations": _isolate_locations_config(isolate_target)}
 
-    # 1. Handle installs and modules.  Existing installs and module trees are
-    # always retained in their old locations, including during isolation.
-    if old_resources["installs"] or old_resources["modules"]:
-        if old_resources["installs"]:
-            retained_resources.append("existing installs and modules")
-            if "config" not in scope_config:
-                scope_config["config"] = {}
-            scope_config["config"]["install_tree"] = {
-                "root": os.path.join(spack.paths.prefix, "opt", "spack")
-            }
-
-        old_modules_tcl = os.path.join(spack.paths.prefix, "share", "spack", "modules", "tcl")
-        old_modules_lmod = os.path.join(spack.paths.prefix, "share", "spack", "modules", "lmod")
-
-        scope_config["modules"] = {
-            "default": {"roots": {"tcl": old_modules_tcl, "lmod": old_modules_lmod}}
+    # 1. Handle installs.  Existing installs are always retained in their old
+    # location, including during isolation.  Module trees are not migrated or
+    # carried into the new configuration.
+    if old_resources["installs"]:
+        retained_resources.append("existing installs")
+        if "config" not in scope_config:
+            scope_config["config"] = {}
+        scope_config["config"]["install_tree"] = {
+            "root": os.path.join(spack.paths.prefix, "opt", "spack")
         }
-        tty.debug(f"Keeping existing installs/modules in {spack.paths.prefix}/share/spack")
+        tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
 
     # 2. Handle GPG keys
     old_gpg_dir = os.path.join(spack.paths.prefix, "opt", "spack", "gpg")
