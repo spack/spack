@@ -212,3 +212,4 @@ pkg_fact(Package, version_satisfies(Constraint, Version)) :-
 #defined node_has_variant/3.
 #defined provider/2.
 #defined variant_single_value/2.
+#defined has_provider/1.

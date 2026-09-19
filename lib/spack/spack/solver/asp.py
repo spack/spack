@@ -527,11 +527,21 @@ class ErrorHandler:
         self.full_model = None
         self.deprecation_details = deprecation_details or {}
 
-    def multiple_values_error(self, attribute, pkg):
-        return f'Cannot select a single "{attribute}" for package "{pkg}"'
+    #: User-facing names for attributes that must have a single value
+    _single_value_attribute_names = {
+        "node_platform": "platform",
+        "node_os": "os",
+        "node_target": "target",
+    }
+
+    def multiple_values_error(self, attribute, pkg, *values):
+        name = self._single_value_attribute_names.get(attribute, attribute)
+        listed = " and ".join(f"'{v}'" for v in values)
+        return f"Conflicting {name} values are required for package '{pkg}': {listed}"
 
     def no_value_error(self, attribute, pkg):
-        return f'Cannot select a single "{attribute}" for package "{pkg}"'
+        name = self._single_value_attribute_names.get(attribute, attribute)
+        return f"No {name} value could be selected for package '{pkg}'"
 
     def deprecated_error(self, pkg, cond_id, reason: str, severity: str) -> str:
         key = DeprecationKey(str(pkg), int(cond_id), str(reason), int(severity))
