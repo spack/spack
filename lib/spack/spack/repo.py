@@ -1860,6 +1860,23 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
                     # setup the repository if it does not exist
                     if not fetched:
+                        # Check if this repo exists in old ~/.spack/package_repos location
+                        legacy_path = spack.paths.get_legacy_package_repo_path(self.destination)
+                        if legacy_path:
+                            # Copy from old location instead of cloning
+                            tty.debug(
+                                f"Migrating package repo from {legacy_path} to {self.destination}"
+                            )
+                            for item in os.listdir(legacy_path):
+                                src = os.path.join(legacy_path, item)
+                                dst = os.path.join(self.destination, item)
+                                if os.path.isdir(src):
+                                    shutil.copytree(src, dst)
+                                else:
+                                    shutil.copy2(src, dst)
+                            self.read_index_file()
+                            return
+
                         spack.util.git.init_git_repo(self.repository, remote=remote, git_exe=git)
 
                         # determine the default branch from ls-remote
@@ -2149,6 +2166,16 @@ def create_and_enable(
 
 #: Global package repository instance.
 PATH = cast(RepoPath, Singleton(lambda: create_and_enable(spack.config.CONFIG)))
+
+
+def reinitialize():
+    """Reinitialize the global repository PATH.
+
+    Call this after reloading CONFIG to ensure PATH reflects the current
+    repos configuration (e.g., after auto-migration creates layout scope).
+    """
+    global PATH
+    PATH = cast(RepoPath, Singleton(lambda: create_and_enable(spack.config.CONFIG)))
 
 
 # Add the finder to sys.meta_path

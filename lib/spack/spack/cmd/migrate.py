@@ -1,0 +1,234 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import argparse
+import os
+import shutil
+
+import spack.config
+import spack.paths
+import spack.util.filesystem as fs
+import spack.util.spack_yaml as syaml
+from spack.util import tty
+
+description = "undo auto-migration of licenses and environments"
+section = "config"
+level = "long"
+
+
+def _restore_user_scope_path() -> None:
+    """Point the standard user scope back at the legacy ~/.spack location."""
+    include_path = os.path.join(spack.paths.etc_path, "standard_scopes", "include.yaml")
+    with open(include_path, "r", encoding="utf-8") as f:
+        include_config = syaml.load(f) or {}
+
+    includes = include_config.get("include", [])
+    for entry in includes:
+        if isinstance(entry, dict) and entry.get("name") == "user":
+            entry["path"] = "~/.spack"
+            break
+    else:
+        tty.die(f"Cannot restore user scope: no user entry in {include_path}")
+
+    with open(include_path, "w", encoding="utf-8") as f:
+        syaml.dump(include_config, f)
+    tty.msg(f"  Updated user scope: {include_path}")
+
+
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
+    subparser.add_argument(
+        "action", nargs="?", choices=["undo", "cleanup-old"], help="migration action to perform"
+    )
+    subparser.add_argument(
+        "--dry-run", action="store_true", help="show what would be done without actually doing it"
+    )
+
+
+def _under_old_dotspack(path: str) -> bool:
+    old_path = os.path.realpath(os.path.expanduser("~/.spack"))
+    try:
+        return (
+            os.path.commonpath([old_path, os.path.realpath(os.path.expanduser(path))]) == old_path
+        )
+    except ValueError:
+        return False
+
+
+def _cleanup_old() -> None:
+    old_path = os.path.expanduser("~/.spack")
+    if not os.path.isdir(old_path):
+        tty.msg(f"No old user directory found at {old_path}")
+        return
+
+    references = []
+    user_scope = spack.config.CONFIG.scopes.get("user")
+    if (
+        user_scope is not None
+        and hasattr(user_scope, "path")
+        and _under_old_dotspack(user_scope.path)
+    ):
+        references.append(f"user scope ({user_scope.path})")
+
+    if _under_old_dotspack(spack.paths.user_cache_path):
+        references.append(f"user cache ({spack.paths.user_cache_path})")
+
+    for config_var in ("config:license_dir", "config:gpg_path", "config:environments_root"):
+        value = spack.config.CONFIG.get(config_var, None)
+        if value and _under_old_dotspack(value):
+            references.append(f"{config_var} ({value})")
+
+    if references:
+        tty.die(
+            "Cannot remove ~/.spack because the active configuration still refers to it:\n"
+            + "\n".join(f"  - {reference}" for reference in references)
+        )
+
+    shutil.rmtree(old_path)
+    tty.msg(f"Removed old user directory: {old_path}")
+
+
+def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    """Undo auto-migration of licenses and environments.
+
+    The `spack migrate undo` command restores the Spack instance to its
+    pre-auto-migration state by moving licenses, environments, and GPG data
+    from $spack/.migration-backup/ back to their original locations, updating
+    the layout and standard scopes, and removing the backup directory.
+
+    IMPORTANT: This does NOT touch any files in shared $HOME directories
+    (e.g., ~/.local/share/spack). Auto-migration moves the original resources
+    into the backup after copying them, so the shared destinations remain intact
+    for other Spack instances.
+    """
+    if args.action == "cleanup-old":
+        _cleanup_old()
+        return
+
+    if args.action != "undo":
+        tty.die(
+            "The manual `spack migrate` command has been deprecated.\n"
+            "\n"
+            "Auto-migration now happens automatically when you run Spack.\n"
+            "If you need to undo auto-migration, use:\n"
+            "  spack migrate undo\n"
+            "\n"
+            "For more information, see the Spack documentation."
+        )
+
+    # Get backup directory path
+    backup_dir = spack.config._migration_backup_path()
+
+    if not os.path.exists(backup_dir):
+        tty.msg(f"No migration backup found at {backup_dir}")
+        tty.msg("Nothing to undo.")
+        return
+
+    # Get old resource paths
+    old_licenses_dir = spack.paths.old_licenses_path
+    old_envs_dir = spack.paths.old_envs_path
+    old_gpg_dir = spack.paths.old_gpg_path
+
+    # Check what's in the backup
+    backup_licenses = os.path.join(backup_dir, "licenses")
+    backup_envs = os.path.join(backup_dir, "environments")
+    backup_gpg = os.path.join(backup_dir, "gpg")
+
+    has_licenses = bool(os.path.exists(backup_licenses) and os.listdir(backup_licenses))
+    has_envs = bool(os.path.exists(backup_envs) and os.listdir(backup_envs))
+    has_gpg = bool(os.path.exists(backup_gpg) and os.listdir(backup_gpg))
+
+    if not has_licenses and not has_envs and not has_gpg:
+        tty.msg(f"Backup directory exists but is empty: {backup_dir}")
+
+    # Show what will be done
+    if args.dry_run:
+        tty.msg("Would perform the following operations:")
+        if has_licenses:
+            tty.msg(f"  - Restore licenses from {backup_licenses} to {old_licenses_dir}")
+        if has_envs:
+            tty.msg(f"  - Restore environments from {backup_envs} to {old_envs_dir}")
+        if has_gpg:
+            tty.msg(f"  - Restore GPG data from {backup_gpg} to {old_gpg_dir}")
+        tty.msg("  - Update layout scope to point to old locations")
+        tty.msg("  - Update standard scopes to use ~/.spack for the user scope")
+        tty.msg(f"  - Remove backup directory: {backup_dir}")
+        return
+
+    # Perform the undo
+    tty.msg("Undoing auto-migration...")
+
+    def restore_resource(backup_path: str, old_path: str, resource_name: str) -> None:
+        """Move a complete backed-up resource back to its legacy location."""
+        try:
+            # Create only the parent: the destination itself must not exist.
+            # Rename the complete directory rather than shutil.move: move()
+            # treats an existing directory as a container and nests the backup.
+            fs.mkdirp(os.path.dirname(old_path))
+            os.rename(backup_path, old_path)
+        except (OSError, shutil.Error) as e:
+            tty.die(
+                f"Cannot restore {resource_name} to {old_path}: {e}. "
+                "The destination may have been modified manually."
+            )
+
+    # The backup directories are complete resource units. Move each one into
+    # place directly; an existing destination or any other filesystem change is
+    # reported as an undo failure rather than merged or overwritten.
+    if has_licenses:
+        restore_resource(backup_licenses, old_licenses_dir, "licenses")
+        tty.msg(f"  Restored licenses to {old_licenses_dir}")
+
+    if has_envs:
+        restore_resource(backup_envs, old_envs_dir, "environments")
+        tty.msg(f"  Restored environments to {old_envs_dir}")
+
+    if has_gpg:
+        restore_resource(backup_gpg, old_gpg_dir, "GPG data")
+        tty.msg(f"  Restored GPG data to {old_gpg_dir}")
+
+    # Update layout scope to point to old locations. Even an empty backup can
+    # still require the user scope to be restored below, so keep this in the
+    # common undo path.
+    layout_scope_path = spack.config._layout_scope_path()
+    config_yaml_path = os.path.join(layout_scope_path, "config.yaml")
+
+    if os.path.exists(config_yaml_path):
+        with open(config_yaml_path, "r", encoding="utf-8") as f:
+            layout_config = syaml.load(f) or {}
+    else:
+        layout_config = {}
+
+    if "config" not in layout_config:
+        layout_config["config"] = {}
+
+    # Point to old locations
+    if has_licenses:
+        layout_config["config"]["license_dir"] = old_licenses_dir
+    if has_envs:
+        layout_config["config"]["environments_root"] = old_envs_dir
+    if has_gpg:
+        layout_config["config"]["gpg_path"] = old_gpg_dir
+
+    layout_config["config"].setdefault("locations", {})["state"] = [os.path.expanduser("~/.spack")]
+
+    # Write updated layout scope
+    fs.mkdirp(layout_scope_path)
+    with open(config_yaml_path, "w", encoding="utf-8") as f:
+        syaml.dump(layout_config, f)
+    tty.msg(f"  Updated layout scope: {config_yaml_path}")
+
+    # Restore the legacy user-scope default at the scope that defines it. This
+    # must be above layout in precedence and therefore cannot be represented in
+    # the layout scope itself.
+    _restore_user_scope_path()
+
+    # Remove backup directory
+    shutil.rmtree(backup_dir)
+    tty.msg(f"  Removed backup directory: {backup_dir}")
+
+    tty.msg("\nUndo complete!")
+    tty.msg(
+        "\nNOTE: Auto-migrated resources are moved into the migration backup and restored\n"
+        "to their original locations. Shared destinations were not modified."
+    )

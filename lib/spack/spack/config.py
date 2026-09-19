@@ -70,6 +70,7 @@ import spack.schema.view
 import spack.util.executable
 import spack.util.git
 import spack.util.hash
+import spack.util.lock
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -121,7 +122,8 @@ CONFIG_DEFAULTS = {
         "dirty": False,
         "build_jobs": min(16, cpus_available()),
         "build_stage": "$tempdir/spack-stage",
-        "license_dir": spack.paths.default_license_dir,
+        "license_dir": "$data_home/licenses",
+        "misc_cache": "$state_home/$spack_instance_id/cache",
     },
     "concretizer": {"externals": {"completion": "default_variants"}},
 }
@@ -142,14 +144,64 @@ MAX_RECURSIVE_INCLUDES = 100
 # placeholder object for unspecified default for get methods
 default_sigil = object()
 
+#: configurable config vars -- these cannot be used by include paths
+#: nor by other paths that can affect config values
+CONFIGURABLE_VARS = ("state_home", "cache_home", "data_home", "user_cache_path")
+_CVARS_RE = "|".join(CONFIGURABLE_VARS)
+CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
+
+#: Global flag to ignore user-fallback scope during config processing
+ignore_user_fallback = False
+
+#: Saved debug messages to be printed after debug level is set
+saved_debug_msgs: List[str] = []
+
+
+def substitute_include_path(path, context):
+    """Substitute path variables in include paths, with validation.
+
+    Args:
+        path: path string that may contain variables
+        context: context string for error messages
+
+    Returns:
+        Substituted path string
+
+    Raises:
+        ValueError: if path contains prohibited configurable variables
+    """
+    banned_var = re.match(CONFIGURABLE_VARS_REGEX, path)
+    if banned_var:
+        msg = (
+            "Included scope is defined in terms of prohibited config variable."
+            f" ({banned_var.group(0)}): {path}"
+            f"\n    Context: {context}"
+            "\n\n    Include config paths may not refer to configurable config variables."
+        )
+        raise ValueError(msg)
+
+    return substitute_path_variables(path)
+
+
+def clear_accumulated_debug_msgs():
+    """tty.debug messages will be dropped at module definition time for main.py
+    Functions can save debugging output to be printed later (if the user has
+    enabled -d).
+    """
+    global saved_debug_msgs
+    for msg in saved_debug_msgs:
+        tty.debug(msg)
+    saved_debug_msgs = []
+
 
 class ConfigScope:
-    def __init__(self, name: str, included: bool = False) -> None:
+    def __init__(self, name: str, included: bool = False, when: str = "") -> None:
         self.name = name
         self.writable = False
         self.sections = syaml.syaml_dict()
         self.prefer_modify = False
         self.included = included
+        self.when = when
 
         #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -167,8 +219,37 @@ class ConfigScope:
 
                 # Do not include duplicate scopes
                 for included_scope in included_scopes:
-                    if any([included_scope.name == scope.name for scope in self._included_scopes]):
-                        warnings.warn(f"Ignoring duplicate included scope: {included_scope.name}")
+                    prior_matches = [
+                        x for x in self._included_scopes if included_scope.name == x.name
+                    ]
+                    if prior_matches:
+                        prior_match = prior_matches[0]
+                        if hasattr(prior_match, "path"):
+                            at = f" at {prior_match.path}"
+                        else:
+                            at = ""
+                        if (
+                            hasattr(included_scope, "path")
+                            and pathlib.Path(included_scope.path).resolve()
+                            == pathlib.Path(os.path.expanduser("~/.config/spack")).resolve()
+                        ):
+                            # Spack's default configs include two mutually exclusive instances
+                            # of user config: a legacy one in ~/.spack, and a preferred one in
+                            # ~/.config/spack, if a higher priority "user" scope is activated
+                            # we don't warn when this default one is omitted.
+                            msg = (
+                                f"Dropping config scope '{included_scope.name}'"
+                                f" at {included_scope.path}"
+                                f" for higher-precedence scope with same name{at}"
+                            )
+                            if tty._debug:
+                                tty.debug(msg)
+                            else:
+                                saved_debug_msgs.append(msg)
+                        else:
+                            warnings.warn(
+                                f"Ignoring duplicate included scope: {included_scope.name}"
+                            )
                         continue
 
                     if included_scope not in self._included_scopes:
@@ -228,8 +309,9 @@ class DirectoryConfigScope(ConfigScope):
         writable: bool = True,
         prefer_modify: bool = True,
         included: bool = False,
+        when: str = "",
     ) -> None:
-        super().__init__(name, included)
+        super().__init__(name, included, when)
         self.path = path
         self.writable = writable
         self.prefer_modify = prefer_modify
@@ -291,6 +373,7 @@ class SingleFileScope(ConfigScope):
         writable: bool = True,
         prefer_modify: bool = True,
         included: bool = False,
+        when: str = "",
     ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -309,7 +392,7 @@ class SingleFileScope(ConfigScope):
                        config:
                          install_tree: $spack/opt/spack
         """
-        super().__init__(name, included)
+        super().__init__(name, included, when)
         self._raw_data: Optional[YamlConfigDict] = None
         self.schema = schema
         self.path = path
@@ -618,13 +701,22 @@ class Configuration:
         scope = next(s for s in self.scopes.reversed_values() if s.writable)
 
         # if a scope prefers that we edit another, respect that.
-        while scope:
-            preferred = scope
-            scope = next(
-                (s for s in scope.included_scopes if s.writable and s.prefer_modify), None
-            )
+        # Search recursively through the tree to find prefer_modify scopes
+        def find_preferred(s: ConfigScope) -> Optional[ConfigScope]:
+            for included in s.included_scopes:
+                if included.writable and included.prefer_modify:
+                    # This scope is marked prefer_modify, but check if it delegates further
+                    deeper = find_preferred(included)
+                    return deeper if deeper else included
+                elif included.writable:
+                    # Not prefer_modify itself, but might have prefer_modify descendants
+                    deeper = find_preferred(included)
+                    if deeper:
+                        return deeper
+            return None
 
-        return preferred
+        preferred = find_preferred(scope)
+        return preferred if preferred else scope
 
     def matching_scopes(self, reg_expr) -> List[ConfigScope]:
         """
@@ -1328,7 +1420,11 @@ class OptionalInclude:
             # directories are treated as regular ConfigScopes
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
             return DirectoryConfigScope(
-                config_name, config_path, prefer_modify=self.prefer_modify, included=True
+                config_name,
+                config_path,
+                prefer_modify=self.prefer_modify,
+                included=True,
+                when=self.when,
             )
         elif ext == ".yaml" or ext == ".yml":
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
@@ -1338,6 +1434,7 @@ class OptionalInclude:
                 spack.schema.merged.schema,
                 prefer_modify=self.prefer_modify,
                 included=True,
+                when=self.when,
             )
         elif exists:
             raise ValueError(
@@ -1404,7 +1501,10 @@ class IncludePath(OptionalInclude):
             path = os.environ[path_override_env_var]
         else:
             path = entry.get("path", "")
-        self.path = substitute_path_variables(path)
+
+        context_prefix = f"({self.name}) " if self.name else ""
+        context = f"{context_prefix}{path}"
+        self.path = substitute_include_path(path, context)
 
         self.sha256 = entry.get("sha256", "")
         self.remote = "sha256" in entry
@@ -1674,6 +1774,781 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
     return config_paths
 
 
+def _layout_scope_path() -> str:
+    """Path to the layout scope directory."""
+    return os.path.join(spack.paths.etc_path, "layout")
+
+
+def _isolate_scope_path() -> str:
+    """Path to the isolate scope directory."""
+    return os.path.join(spack.paths.etc_path, "isolate")
+
+
+def _is_spack_writable() -> bool:
+    """Check if $spack/etc/spack is writable."""
+    etc_spack = spack.paths.etc_path
+    return os.access(etc_spack, os.W_OK)
+
+
+def _has_layout_scope() -> bool:
+    """Check if layout scope exists."""
+    return os.path.exists(_layout_scope_path())
+
+
+def _detect_old_resources() -> Dict[str, bool]:
+    """Detect presence of old Spack-internal resources.
+
+    Returns:
+        Dictionary with keys: 'installs', 'gpg_keys', 'licenses', 'environments'
+    """
+    opt_spack = os.path.join(spack.paths.opt_path, "spack")
+    result = {"installs": False, "gpg_keys": False, "licenses": False, "environments": False}
+
+    # Check for installs
+    if os.path.exists(opt_spack):
+        # Check if there are any actual package installs (not just empty directories)
+        try:
+            # Quick check: any directories in opt/spack besides gpg and licenses?
+            for entry in os.listdir(opt_spack):
+                entry_path = os.path.join(opt_spack, entry)
+                if os.path.isdir(entry_path) and entry not in ["gpg", "licenses"]:
+                    result["installs"] = True
+                    break
+        except OSError:
+            pass
+
+    # Check for GPG keys
+    gpg_dir = os.path.join(opt_spack, "gpg")
+    if os.path.exists(gpg_dir):
+        try:
+            if os.listdir(gpg_dir):  # Non-empty
+                result["gpg_keys"] = True
+        except OSError:
+            pass
+
+    # Check for licenses
+    licenses_dir = spack.paths.old_licenses_path
+    if os.path.exists(licenses_dir):
+        try:
+            if os.listdir(licenses_dir):  # Non-empty
+                result["licenses"] = True
+        except OSError:
+            pass
+
+    # Check for environments
+    old_envs_dir = spack.paths.old_envs_path
+    if os.path.exists(old_envs_dir):
+        try:
+            # Check for any directories (environments)
+            for entry in os.listdir(old_envs_dir):
+                entry_path = os.path.join(old_envs_dir, entry)
+                if os.path.isdir(entry_path):
+                    result["environments"] = True
+                    break
+        except OSError:
+            pass
+
+    return result
+
+
+def _should_auto_migrate() -> bool:
+    """Check if auto-migration should be performed.
+
+    Returns False if:
+    - New-style isolate scope exists (etc/spack/isolate/include.yaml)
+    - Layout scope already exists (migration already done)
+    - No old resources to migrate
+    - Spack instance is not writable
+    """
+    # If new-style isolate exists, don't auto-migrate
+    isolate_include = os.path.join(_isolate_scope_path(), "include.yaml")
+    if os.path.exists(isolate_include):
+        return False
+
+    # If layout scope already exists, already migrated
+    if _has_layout_scope():
+        return False
+
+    # Check if Spack instance is writable
+    if not _is_spack_writable():
+        return False
+
+    # If old resources exist, we should migrate
+    old_resources = _detect_old_resources()
+    return any(old_resources.values())
+
+
+class Index:
+    """Represents a list index in a YAML path."""
+
+    def __init__(self, idx: int):
+        self.idx = idx
+
+    def __repr__(self):
+        return f"Index({self.idx})"
+
+
+def walk_yaml_for_paths(
+    data: Any,
+    config_file_dir: str,
+    key_path: Optional[List[Union[str, Index]]] = None,
+    in_include: bool = False,
+) -> List[Tuple[List[Union[str, Index]], str, str, bool]]:
+    """Walk YAML data and find string values that exist as filesystem paths."""
+    if key_path is None:
+        key_path = []
+
+    results = []
+
+    if isinstance(data, dict):
+        for key, value in data.items():
+            is_include_section = key == "include"
+            child_in_include = in_include or is_include_section
+
+            if isinstance(value, (dict, list)):
+                nested = walk_yaml_for_paths(
+                    value, config_file_dir, key_path + [key], child_in_include
+                )
+                results.extend(nested)
+            elif isinstance(value, str):
+                abs_path = resolve_and_check_path(value, config_file_dir)
+                if abs_path:
+                    results.append((key_path + [key], value, abs_path, child_in_include))
+
+    elif isinstance(data, list):
+        for idx, item in enumerate(data):
+            if isinstance(item, (dict, list)):
+                nested = walk_yaml_for_paths(
+                    item, config_file_dir, key_path + [Index(idx)], in_include
+                )
+                results.extend(nested)
+            elif isinstance(item, str):
+                abs_path = resolve_and_check_path(item, config_file_dir)
+                if abs_path:
+                    results.append((key_path + [Index(idx)], item, abs_path, in_include))
+
+    return results
+
+
+def resolve_and_check_path(value: str, config_file_dir: str) -> str:
+    """Resolve a potential path and return it if it exists."""
+    if not value or value.startswith("$"):
+        return ""
+
+    if os.path.isabs(value):
+        return value if os.path.exists(value) else ""
+
+    candidate = os.path.normpath(os.path.join(config_file_dir, value))
+    return candidate if os.path.exists(candidate) else ""
+
+
+def absolutize_path_in_yaml(
+    data: Any, key_path_parts: List[Union[str, Index]], new_value: str
+) -> None:
+    """Replace a value at a path in a YAML data structure."""
+    current = data
+
+    for key in key_path_parts[:-1]:
+        if isinstance(key, Index):
+            current = current[key.idx]
+        else:
+            current = current[key]
+
+    final_key = key_path_parts[-1]
+    if isinstance(final_key, Index):
+        current[final_key.idx] = new_value
+    else:
+        current[final_key] = new_value
+
+
+def process_config_file_paths(
+    file_path: str, old_location: str, new_config_location: str
+) -> Tuple[Optional[Dict[str, Any]], List[Tuple[str, str, str]]]:
+    """Absolutize config paths and rewrite paths under an old include root."""
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = syaml.load(f)
+
+    if not data:
+        return None, []
+
+    config_dir = os.path.dirname(file_path)
+    found_paths = walk_yaml_for_paths(data, config_dir)
+    path_info = []
+    modified = False
+
+    old_location_norm = os.path.normpath(os.path.abspath(old_location))
+    new_config_location_norm = os.path.normpath(os.path.abspath(new_config_location))
+
+    for key_path, original_value, abs_path, in_include in found_paths:
+        path_parts = []
+        for part in key_path:
+            path_parts.append(f"[{part.idx}]" if isinstance(part, Index) else part)
+        key_path_str = ".".join(path_parts)
+
+        if os.path.isabs(original_value):
+            if in_include:
+                abs_path_norm = os.path.normpath(os.path.abspath(original_value))
+                try:
+                    rel_path = os.path.relpath(abs_path_norm, old_location_norm)
+                    if not os.path.normpath(rel_path).startswith(".."):
+                        new_path = os.path.join(new_config_location_norm, rel_path)
+                        absolutize_path_in_yaml(data, key_path, new_path)
+                        path_info.append((key_path_str, original_value, "rewritten"))
+                        modified = True
+                except ValueError:
+                    pass
+        else:
+            path_info.append(
+                (key_path_str, original_value, "kept-relative" if in_include else "absolutized")
+            )
+            if not in_include:
+                absolutize_path_in_yaml(data, key_path, abs_path)
+                modified = True
+
+    return data if modified else None, path_info
+
+
+def _migrate_user_config_programmatic() -> bool:
+    """Programmatically migrate ~/.spack to ~/.config/spack.
+
+    Only performs migration if:
+    - A "user" scope exists in the loaded configuration
+    - That scope path is ~/.config/spack
+    - ~/.config/spack does not exist
+    - ~/.spack exists
+
+    Returns:
+        True if migration was performed, False if skipped
+    """
+    old_location = os.path.expanduser("~/.spack")
+    new_config_location = os.path.expanduser("~/.config/spack")
+
+    # Check if there's a "user" scope in loaded config pointing to ~/.config/spack
+    user_scope = CONFIG.scopes.get("user")
+    if not user_scope:
+        tty.debug("No 'user' scope in loaded config, skipping user config migration")
+        return False
+
+    # Check if the user scope path is ~/.config/spack
+    if not isinstance(user_scope, (DirectoryConfigScope, SingleFileScope)):
+        tty.debug("The 'user' scope is not filesystem-backed, skipping user config migration")
+        return False
+    user_scope_path = os.path.normpath(os.path.expanduser(user_scope.path))
+    expected_path = os.path.normpath(new_config_location)
+    if user_scope_path != expected_path:
+        tty.debug(
+            f"User scope path is {user_scope_path}, not {expected_path}, "
+            f"skipping user config migration"
+        )
+        return False
+
+    # Skip if new location already exists
+    if os.path.exists(new_config_location):
+        tty.debug(f"{new_config_location} already exists, skipping user config migration")
+        return False
+
+    if not os.path.exists(old_location):
+        tty.debug("No ~/.spack to migrate")
+        return False
+
+    # Find config files to migrate
+    config_files: List[str] = []
+    if os.path.isdir(old_location):
+        found = filesystem.find(old_location, ["*.yaml", "*.yml"], recursive=True)
+        package_repos_dir = os.path.join(old_location, "package_repos")
+        config_files = [
+            os.path.relpath(f, old_location)
+            for f in found
+            if not filesystem.path_contains_subdirectory(f, package_repos_dir)
+        ]
+
+    if not config_files:
+        tty.debug("No config files found in ~/.spack to migrate")
+        return False
+
+    # Lock the destination parent directory to prevent concurrent migrations
+    config_parent = os.path.dirname(new_config_location)
+    filesystem.mkdirp(config_parent)
+    lock_path = os.path.join(config_parent, ".spack-user-config-migration.lock")
+
+    lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+    try:
+        lock.acquire_write()
+        tty.debug(f"Acquired migration lock for {new_config_location}")
+        return _do_migrate_user_config(old_location, new_config_location, config_files)
+    finally:
+        lock.release_write()
+        tty.debug(f"Released migration lock for {new_config_location}")
+
+
+def _do_migrate_user_config(
+    old_location: str, new_config_location: str, config_files: List[str]
+) -> bool:
+    """Perform the actual user config migration (assumes lock is already held).
+
+    Args:
+        old_location: Path to ~/.spack
+        new_config_location: Path to ~/.config/spack
+        config_files: List of config files to migrate (relative paths)
+
+    Returns:
+        True if migration was performed, False if skipped
+    """
+    # Check again if destination exists (might have been created by another process)
+    if os.path.exists(new_config_location):
+        tty.debug(
+            f"{new_config_location} already exists (created while waiting for lock), "
+            f"skipping user config migration"
+        )
+        return False
+
+    # Perform migration
+    os.makedirs(new_config_location, exist_ok=True)
+    tty.debug(f"Migrating config files from {old_location} to {new_config_location}")
+
+    for config_file in config_files:
+        old_path = os.path.join(old_location, config_file)
+        new_path = os.path.join(new_config_location, config_file)
+
+        # Process paths using migrate command logic (handles the 4 path rewriting rules)
+        modified_data, _ = process_config_file_paths(old_path, old_location, new_config_location)
+
+        # Ensure parent directory exists
+        os.makedirs(os.path.dirname(new_path), exist_ok=True)
+
+        if modified_data is not None:
+            with open(new_path, "w", encoding="utf-8") as f:
+                syaml.dump(modified_data, f)
+        else:
+            shutil.copy2(old_path, new_path)
+
+    tty.debug(f"User config migrated from {old_location} to {new_config_location}")
+    return True
+
+
+def _migration_backup_path() -> str:
+    """Path to migration backup directory."""
+    return os.path.join(spack.paths.prefix, ".migration-backup")
+
+
+def _copy_directory_contents(src_dir: str, dst_dir: str, resource_name: str) -> bool:
+    """Copy contents of src_dir to dst_dir, checking for collisions.
+
+    The source remains in place after copying. Callers move the complete
+    resource unit into the migration backup only after copying succeeds.
+
+    Args:
+        src_dir: Source directory
+        dst_dir: Destination directory
+        resource_name: Name of resource for logging (e.g., "licenses", "environments")
+
+    Returns:
+        True if migration was successful, False if skipped or failed
+    """
+    if not os.path.exists(src_dir):
+        return True  # Nothing to copy
+
+    try:
+        src_entries = set(os.listdir(src_dir))
+    except OSError:
+        tty.warn(f"Cannot read {resource_name} directory: {src_dir}")
+        return False
+
+    if not src_entries:
+        return True  # Empty source, nothing to copy
+
+    # Check for collisions in the destination before creating any backups.
+    if os.path.exists(dst_dir):
+        try:
+            dst_entries = set(os.listdir(dst_dir)) - {".lock"}
+            collisions = src_entries & dst_entries
+            if collisions:
+                tty.debug(f"Cannot copy {resource_name}: collisions detected: {collisions}")
+                return False
+        except OSError:
+            tty.warn(f"Cannot read destination {resource_name} directory: {dst_dir}")
+            return False
+
+    # Copy to destination while leaving the source untouched.
+    # This ensures a failed destination copy leaves the old resource usable.
+
+    filesystem.mkdirp(dst_dir)
+    for entry in src_entries:
+        src_path = os.path.join(src_dir, entry)
+        dst_path = os.path.join(dst_dir, entry)
+        try:
+            if os.path.isdir(src_path):
+                if resource_name == "environments":
+                    # For environments, exclude view directories (symlinks would be invalidated)
+                    # Views are identified by MARKER_FILE
+                    # Import locally to avoid circular dependency with spack.environment
+                    from spack.environment.environment import MARKER_FILE
+
+                    def ignore_views(directory, names):
+                        ignored = []
+                        for name in names:
+                            path = os.path.join(directory, name)
+                            # Exclude if directory contains MARKER_FILE (indicates a view)
+                            if os.path.isdir(path) and os.path.exists(
+                                os.path.join(path, MARKER_FILE)
+                            ):
+                                ignored.append(name)
+                                tty.debug(f"Excluding view directory: {path}")
+                        return ignored
+
+                    shutil.copytree(src_path, dst_path, ignore=ignore_views)
+                else:
+                    shutil.copytree(src_path, dst_path)
+            else:
+                shutil.copy2(src_path, dst_path)
+
+            tty.debug(f"Copied {resource_name}: {entry}")
+        except (OSError, shutil.Error) as e:
+            tty.warn(f"Failed to copy {resource_name} {entry}: {e}")
+            return False
+
+    return True
+
+
+def _migrate_gpg_home(src_dir: str, dst_dir: str) -> bool:
+    """Copy a GPG home atomically to a new destination and back up the original."""
+    if not os.path.exists(src_dir):
+        return True
+
+    parent_dir = os.path.dirname(dst_dir)
+    filesystem.mkdirp(parent_dir)
+    lock = spack.util.lock.Lock(os.path.join(parent_dir, ".lock"), default_timeout=120)
+    staging_dir = None
+    try:
+        lock.acquire_write()
+        if os.path.exists(dst_dir):
+            tty.debug(f"Cannot copy gpg: destination already exists: {dst_dir}")
+            return False
+        staging_dir = tempfile.mkdtemp(prefix=".spack-gpg-migration-", dir=parent_dir)
+        os.chmod(staging_dir, 0o700)
+        if not _copy_directory_contents(src_dir, staging_dir, "gpg"):
+            return False
+        os.replace(staging_dir, dst_dir)
+        staging_dir = None
+
+        backup_dir = os.path.join(_migration_backup_path(), "gpg")
+        filesystem.mkdirp(os.path.dirname(backup_dir))
+        shutil.move(src_dir, backup_dir)
+        return True
+    except (OSError, shutil.Error) as e:
+        tty.warn(f"Failed to atomically migrate GPG keys to {dst_dir}: {e}")
+        return False
+    finally:
+        if staging_dir is not None:
+            shutil.rmtree(staging_dir, ignore_errors=True)
+        lock.release_write()
+
+
+def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
+    """Copy environments under one lock, removing partial results on failure."""
+    if not os.path.exists(src_dir):
+        return True
+
+    filesystem.mkdirp(dst_dir)
+    lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
+    created: List[str] = []
+    try:
+        lock.acquire_write()
+        for entry in os.listdir(src_dir):
+            src_path = os.path.join(src_dir, entry)
+            dst_path = os.path.join(dst_dir, entry)
+            if entry == ".lock":
+                continue
+            if not os.path.isdir(src_path):
+                continue
+            destination_existed = os.path.exists(dst_path)
+            if not _copy_directory_contents(src_path, dst_path, "environments"):
+                if not destination_existed:
+                    shutil.rmtree(dst_path, ignore_errors=True)
+                for created_path in reversed(created):
+                    shutil.rmtree(created_path, ignore_errors=True)
+                return False
+            if not destination_existed:
+                created.append(dst_path)
+            backup_dir = os.path.join(_migration_backup_path(), "environments")
+            filesystem.mkdirp(backup_dir)
+            shutil.move(src_path, os.path.join(backup_dir, entry))
+        return True
+    finally:
+        lock.release_write()
+
+
+def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
+    """Copy licenses individually without claiming to lock out manual edits."""
+    if not os.path.exists(src_dir):
+        return True
+
+    src_entries = os.listdir(src_dir)
+    if not src_entries:
+        return True
+    filesystem.mkdirp(dst_dir)
+    backup_dir = os.path.join(_migration_backup_path(), "licenses")
+    filesystem.mkdirp(backup_dir)
+    copied = []
+    for entry in src_entries:
+        src_path = os.path.join(src_dir, entry)
+        dst_path = os.path.join(dst_dir, entry)
+        backup_path = os.path.join(backup_dir, entry)
+        try:
+            if os.path.exists(dst_path):
+                raise FileExistsError(dst_path)
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, dst_path)
+            else:
+                shutil.copy2(src_path, dst_path)
+            shutil.move(src_path, backup_path)
+            copied.append(entry)
+        except (OSError, shutil.Error) as e:
+            tty.warn(
+                f"License migration stopped at {entry}: {e}. Copied licenses: "
+                f"{', '.join(copied) if copied else 'none'}. The old license directory "
+                f"will remain configured; copied files may remain in {dst_dir}."
+            )
+            return False
+    return True
+
+
+def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
+    """Return location settings for data created by an isolated Spack."""
+    return {"data": [isolate_target], "state": [isolate_target], "cache": [isolate_target]}
+
+
+def _do_migrate(
+    is_isolate_command: bool,
+    config_path: Optional[str] = None,
+    isolate_target: Optional[str] = None,
+) -> None:
+    """Perform auto-migration of Spack data from old to new locations.
+
+    Args:
+        is_isolate_command: True if running `spack isolate`, False otherwise.
+            Isolation records old resources but never relocates them.
+        config_path: Path for isolate configuration output. It is required for
+            isolation and must be omitted for normal migration.
+        isolate_target: Isolation target used for config:locations overrides. It
+            is required for isolation and must be omitted for normal migration.
+    """
+    if is_isolate_command:
+        if config_path is None:
+            raise ValueError("config_path is required for isolate migration")
+        if isolate_target is None:
+            raise ValueError("isolate_target is required for isolate migration")
+    elif config_path is not None or isolate_target is not None:
+        raise ValueError("isolate-only migration arguments used for normal migration")
+
+    tty.debug(f"Auto-migration called (is_isolate_command={is_isolate_command})")
+
+    # Detect what old resources exist
+    old_resources = _detect_old_resources()
+
+    # Normal migration writes its configuration to the layout scope.  Isolate
+    # writes to the fresh target config unless that target already had a
+    # config.yaml, in which case old-resource overrides go to layout instead.
+    layout_scope_path = _layout_scope_path()
+    if config_path is None:
+        config_path = os.path.join(layout_scope_path, "config.yaml")
+    layout_config_path = os.path.join(layout_scope_path, "config.yaml")
+    if not (
+        is_isolate_command
+        and os.path.normpath(config_path) != os.path.normpath(layout_config_path)
+    ):
+        filesystem.mkdirp(layout_scope_path)
+    filesystem.mkdirp(os.path.dirname(config_path))
+
+    # Config to write to the selected destination
+    scope_config: Dict[str, Any] = {}
+    migrated_resources: List[str] = []
+    retained_resources: List[str] = []
+    user_config_migrated = False
+    if is_isolate_command:
+        assert isolate_target is not None
+        scope_config["config"] = {"locations": _isolate_locations_config(isolate_target)}
+
+    # 1. Handle installs.  Existing installs are always retained in their old
+    # location, including during isolation.  Module trees are not migrated or
+    # carried into the new configuration.
+    if old_resources["installs"]:
+        retained_resources.append("existing installs")
+        if "config" not in scope_config:
+            scope_config["config"] = {}
+        scope_config["config"]["install_tree"] = {
+            "root": os.path.join(spack.paths.prefix, "opt", "spack")
+        }
+        tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
+
+    # 2. Handle GPG keys
+    old_gpg_dir = os.path.join(spack.paths.prefix, "opt", "spack", "gpg")
+    if old_resources["gpg_keys"]:
+        configured_gpg_dir = CONFIG.get("config:gpg_path")
+        configured_gpg_dir = os.path.normpath(
+            os.path.expanduser(canonicalize_path(configured_gpg_dir))
+        )
+        old_gpg_norm = os.path.normpath(os.path.expanduser(old_gpg_dir))
+        data_home = substitute_path_variables("$data_home")
+        target_gpg_dir = os.path.join(data_home, "gpg")
+        target_gpg_norm = os.path.normpath(os.path.expanduser(target_gpg_dir))
+        gnupghome = os.getenv("SPACK_GNUPGHOME")
+
+        # An explicit SPACK_GNUPGHOME is authoritative.  Only preserve the
+        # old location in layout when it explicitly selects that location.
+        if gnupghome:
+            gnupghome_norm = os.path.normpath(os.path.expanduser(gnupghome))
+            if gnupghome_norm == old_gpg_norm:
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["gpg_path"] = old_gpg_dir
+                retained_resources.append("GPG data (kept in its old location)")
+        elif is_isolate_command:
+            # Isolation never relocates existing keyrings.
+            if "config" not in scope_config:
+                scope_config["config"] = {}
+            scope_config["config"]["gpg_path"] = old_gpg_dir
+        elif configured_gpg_dir == target_gpg_norm:
+            # With the default configuration, copy the old keyring into the
+            # shared default.  A collision leaves the old location active.
+            if _migrate_gpg_home(old_gpg_dir, target_gpg_dir):
+                migrated_resources.append("GPG data")
+            else:
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["gpg_path"] = old_gpg_dir
+                retained_resources.append("GPG data (kept in its old location)")
+        # A custom configured location is user-owned and remains untouched.
+
+    # 3. Handle licenses
+    old_licenses_dir = spack.paths.old_licenses_path
+    if old_resources["licenses"]:
+        # Isolation never relocates existing licenses; record the old path.
+        if is_isolate_command:
+            should_attempt_migration = False
+            if "config" not in scope_config:
+                scope_config["config"] = {}
+            scope_config["config"]["license_dir"] = old_licenses_dir
+        else:
+            data_home = substitute_path_variables("$data_home")
+            target_licenses_dir = os.path.join(data_home, "licenses")
+            should_attempt_migration = True
+            configured_license_dir = CONFIG.get("config:license_dir")
+            configured_license_dir = os.path.normpath(
+                os.path.expanduser(canonicalize_path(configured_license_dir))
+            )
+            target_licenses_norm = os.path.normpath(os.path.expanduser(target_licenses_dir))
+
+            if configured_license_dir != target_licenses_norm:
+                # User has custom location, don't migrate
+                tty.debug(
+                    f"Licenses configured to custom location {configured_license_dir}, "
+                    f"not migrating from {old_licenses_dir}"
+                )
+                should_attempt_migration = False
+                # Keep in old location
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["license_dir"] = old_licenses_dir
+
+        # Attempt migration if appropriate
+        if should_attempt_migration:
+            if _migrate_licenses(old_licenses_dir, target_licenses_dir):
+                migrated_resources.append("licenses")
+                tty.debug(f"Copied licenses from {old_licenses_dir} to {target_licenses_dir}")
+            else:
+                # Copy failed (collision), keep in old location
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["license_dir"] = old_licenses_dir
+                retained_resources.append("licenses (kept in the old location)")
+                tty.debug(f"Licenses kept in old location: {old_licenses_dir}")
+
+    # 4. Handle environments
+    old_envs_dir = spack.paths.old_envs_path
+    if old_resources["environments"]:
+        # Isolation never relocates existing environments; record the old path.
+        if is_isolate_command:
+            should_attempt_migration = False
+            if "config" not in scope_config:
+                scope_config["config"] = {}
+            scope_config["config"]["environments_root"] = old_envs_dir
+        else:
+            data_home = substitute_path_variables("$data_home")
+            target_envs_dir = os.path.join(data_home, "environments")
+            should_attempt_migration = True
+            configured_env_root = CONFIG.get("config:environments_root")
+            configured_env_root = os.path.normpath(
+                os.path.expanduser(canonicalize_path(configured_env_root))
+            )
+            target_envs_norm = os.path.normpath(os.path.expanduser(target_envs_dir))
+
+            if configured_env_root != target_envs_norm:
+                # User has custom location, don't migrate
+                tty.debug(
+                    f"Environments configured to custom location {configured_env_root}, "
+                    f"not migrating from {old_envs_dir}"
+                )
+                should_attempt_migration = False
+                # Keep in old location
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["environments_root"] = old_envs_dir
+
+        # Attempt migration if appropriate
+        if should_attempt_migration:
+            if _migrate_environments(old_envs_dir, target_envs_dir):
+                migrated_resources.append("environments")
+                tty.debug(f"Copied environments from {old_envs_dir} to {target_envs_dir}")
+            else:
+                # Copy failed (collision), keep in old location
+                if "config" not in scope_config:
+                    scope_config["config"] = {}
+                scope_config["config"]["environments_root"] = old_envs_dir
+                retained_resources.append("environments (kept in the old location)")
+                tty.debug(f"Environments kept in old location: {old_envs_dir}")
+
+    # 5. Copy ~/.spack to ~/.config/spack (unless isolate command)
+    if not is_isolate_command:
+        user_config_migrated = _migrate_user_config_programmatic()
+
+    # Write config scope files to the selected configuration scope.
+    if "config" in scope_config:
+        config_yaml_path = config_path
+        with open(config_yaml_path, "w", encoding="utf-8") as f:
+            syaml.dump({"config": scope_config["config"]}, f)
+        tty.debug(f"Wrote config.yaml to {config_path}")
+
+    if "modules" in scope_config:
+        filesystem.mkdirp(layout_scope_path)
+        modules_yaml_path = os.path.join(layout_scope_path, "modules.yaml")
+        with open(modules_yaml_path, "w", encoding="utf-8") as f:
+            syaml.dump(scope_config["modules"], f)
+        tty.debug(f"Wrote modules.yaml to {layout_scope_path}")
+
+    tty.debug(f"Created config scope for auto-migration: {layout_scope_path}")
+
+    if not is_isolate_command:
+        migration_summary = ["Spack automatically migrated old resources."]
+        if user_config_migrated:
+            migration_summary.append(
+                "  - Copied user configuration from ~/.spack to ~/.config/spack."
+            )
+        if migrated_resources:
+            migration_summary.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
+        if retained_resources:
+            migration_summary.append("  - Retained: " + ", ".join(retained_resources) + ".")
+        migration_summary.extend(
+            [
+                "  - Existing installs and shared artifacts were not removed.",
+                "  - ~/.spack was retained because older Spack instances may still use it.",
+                "",
+                "To undo this migration, run `spack migrate undo`.",
+            ]
+        )
+        tty.warn("\n".join(migration_summary))
+
+
 def create_incremental() -> Generator[Configuration, None, None]:
     """Singleton Configuration instance.
 
@@ -1712,6 +2587,10 @@ def create_incremental() -> Generator[Configuration, None, None]:
             DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
         )
 
+    # NOTE: Migration is now handled in main.py after command parsing, not during
+    # config initialization. See _do_migrate() and main.py for details.
+    # The old migration check code with $spack-global locking has been removed.
+
 
 def create() -> Configuration:
     """Create a configuration using create_incremental(), return the last yielded result."""
@@ -1723,6 +2602,33 @@ CONFIG = cast(Configuration, lang.Singleton(create_incremental))
 
 #: Many cached config values depend on the current platform, so drop them when it changes.
 spack.platforms.on_host_changed.append(lambda: CONFIG.clear_caches())
+
+
+def reinitialize_global_state():
+    """Reinitialize all global singletons that depend on CONFIG.
+
+    This should be called after reloading CONFIG (e.g., after auto-migration
+    creates a new layout or isolate scope) to ensure all global state reflects
+    the new configuration.
+
+    Reinitializes:
+    - spack.store.STORE: install tree location and database
+    - spack.caches.MISC_CACHE and FETCH_CACHE: cache directories
+    - spack.repo.PATH: package repositories
+    - spack.binary_distribution.BINARY_INDEX: binary cache index
+
+    Note: This is expensive and should only be called when CONFIG has actually
+    changed in a way that affects these singletons.
+    """
+    import spack.binary_distribution
+    import spack.caches
+    import spack.repo
+    import spack.store
+
+    spack.store.reinitialize()
+    spack.caches.reinitialize()
+    spack.repo.reinitialize()
+    spack.binary_distribution.reinitialize()
 
 
 def writable_scopes() -> List[ConfigScope]:
@@ -2254,6 +3160,76 @@ def get_user():
 NOMATCH = object()
 
 
+_frozen_home = {}
+
+
+def freeze(home_vars):
+    global _frozen_home
+
+    _frozen_home = home_vars
+
+
+def is_frozen():
+    """Indicates that config-based variables have been set in place in
+    such a way that applying new configuration to them would be ignored."""
+    return bool(_frozen_home)
+
+
+def collect():
+    return {
+        "data": _resolve_location_var("data"),
+        "state": _resolve_location_var("state"),
+        "cache": _resolve_location_var("cache"),
+    }
+
+
+def _resolve_location_var(location_key):
+    """Resolve a config:locations entry to a concrete path.
+
+    Args:
+        location_key: one of 'data', 'cache', or 'state'
+
+    Returns:
+        A resolved path string or None
+    """
+    if _frozen_home and location_key in _frozen_home:
+        return _frozen_home[location_key]
+
+    location_list = CONFIG.get(f"config:locations:{location_key}", default=[])
+
+    if isinstance(location_list, str):
+        # Schema allows specifying a single item as a string in place of list
+        location_list = [location_list]
+
+    for item in location_list:
+        # Attempt to resolve all variables in the entry
+        try:
+            candidate = os.path.normpath(substitute_path_variables(item))
+        except RecursionError:
+            # Catch recursion error in case someone tries `data: $data_home` or
+            # a cycle among the three
+            tty.warn(f"Skipping recursive definition in locations config: {item}.")
+        # Look for unresolved env var or config vars in candidate
+        var_pattern = r"\$\{?([a-zA-Z_][a-zA-Z0-9_]*)\}?"
+        unresolved_vars = re.search(var_pattern, candidate)
+
+        if unresolved_vars:
+            continue
+        return candidate
+
+    # Fallback to XDG defaults if nothing in config matched (e.g. if a user set
+    # config::)
+    expanded_home = os.path.expanduser("~")
+    if location_key == "data":
+        return os.path.join(expanded_home, ".local", "share", "spack")
+    elif location_key == "state":
+        return os.path.join(expanded_home, ".local", "state", "spack")
+    elif location_key == "cache":
+        return os.path.join(expanded_home, ".cache", "spack")
+    else:
+        raise ValueError(f"Unexpected request: {location_key}")
+
+
 # Substitutions to perform
 def replacements(config: Optional["Configuration"] = None):
     arch = architecture()
@@ -2274,6 +3250,9 @@ def replacements(config: Optional["Configuration"] = None):
         "date": lambda: __import__("datetime").date.today().strftime("%Y-%m-%d"),
         "env": lambda: (config if config is not None else CONFIG).env_path or NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
+        "data_home": lambda: _resolve_location_var("data"),
+        "cache_home": lambda: _resolve_location_var("cache"),
+        "state_home": lambda: _resolve_location_var("state"),
     }
 
 

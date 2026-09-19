@@ -561,6 +561,7 @@ def setup_main_options(args):
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
+    spack.config.clear_accumulated_debug_msgs()
     tty.set_stacktrace(args.stacktrace)
 
     # debug must be set first so that it can even affect behavior of
@@ -1036,6 +1037,15 @@ def _main(argv=None):
     cmd_name = args.command[0]
     cmd_name, args.command = resolve_alias(cmd_name, args.command)
 
+    # Check if auto-migration is needed (before executing command)
+    if cmd_name != "isolate":
+        if spack.config._should_auto_migrate():
+            spack.config._do_migrate(is_isolate_command=False)
+            # Reload config to pick up new layout scope
+            spack.config.CONFIG = spack.config.create()
+            # Reinitialize global singletons that depend on CONFIG
+            spack.config.reinitialize_global_state()
+
     # set up a bootstrap context, if asked.
     # bootstrap context needs to include parsing the command, b/c things
     # like `ConstraintAction` and `ConfigSetAction` happen at parse time.
@@ -1046,7 +1056,8 @@ def _main(argv=None):
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
     with bootstrap_context:
-        return finish_parse_and_run(parser, cmd_name, args, env_format_error)
+        result = finish_parse_and_run(parser, cmd_name, args, env_format_error)
+        return result
 
 
 def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
