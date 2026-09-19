@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 import pytest
 
@@ -68,7 +69,8 @@ class TestTcl:
         content = modulefile_content(mpileaks_spec_string)
 
         assert (
-            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
         )
         assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
         assert len([x for x in content if "        module load {*}$args" in x]) == 1
@@ -83,7 +85,8 @@ class TestTcl:
         content = modulefile_content("dtbuild1")
 
         assert (
-            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
         )
         assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
         assert len([x for x in content if "        module load {*}$args" in x]) == 1
@@ -101,7 +104,8 @@ class TestTcl:
         content = modulefile_content(mpileaks_spec_string)
 
         assert (
-            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
         )
         assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
         assert len([x for x in content if "        module load {*}$args" in x]) == 1
@@ -116,7 +120,8 @@ class TestTcl:
         content = modulefile_content("dtbuild1")
 
         assert (
-            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
         )
         assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
         assert len([x for x in content if "        module load {*}$args" in x]) == 1
@@ -524,7 +529,8 @@ class TestTcl:
         # Test the mpileaks that should NOT have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich")
         assert (
-            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 0
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 0
         )
         assert len([x for x in content if "    proc depends-on {args} {" in x]) == 0
         assert len([x for x in content if "        module load {*}$args" in x]) == 0
@@ -842,3 +848,195 @@ class TestTcl:
         writer, _ = factory("mpich@3.0.4")
         assert "namematch" in writer.layout.use_name
         assert "depmatch" not in writer.layout.use_name
+
+    def test_variants_none(self, modulefile_content, module_configuration):
+        """Tests variant definitions when variants mode is disabled."""
+
+        # module variants implicitly disabled
+        module_configuration("autoload_direct")
+
+        # test module file of package without variants
+        content = modulefile_content("module-long-help target=core2")
+        assert len([x for x in content if "variant " in x]) == 0
+
+        # test module file of package with variants
+        content = modulefile_content("mpileaks +debug -shared")
+        assert len([x for x in content if "variant " in x]) == 0
+
+        # module variants explicitly disabled
+        module_configuration("variants_none")
+
+        # test module file of package without variants
+        content = modulefile_content("module-long-help target=core2")
+        assert len([x for x in content if "variant " in x]) == 0
+
+        # test module file of package with variants
+        content = modulefile_content("mpileaks +debug -shared")
+        assert len([x for x in content if "variant " in x]) == 0
+
+        # test dependent module designation (no variant specifications)
+        # depends-on command defined once and used 3 times
+        assert len([x for x in content if "depends-on " in x]) == 4
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "depends-on callpath/1.0-gcc-10.2.1-\\w{7} build_system=generic", x
+                    )
+                ]
+            )
+            == 0
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic ~debug", x
+                    )
+                ]
+            )
+            == 0
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "depends-on gcc-runtime/10.2.1-none-none-\\w{7} build_system=generic", x
+                    )
+                ]
+            )
+            == 0
+        )
+
+    def test_variants_all(self, modulefile_content, module_configuration):
+        """Tests variant definitions when variants mode is ``"all"``."""
+
+        # module variants enabled
+        module_configuration("variants_all")
+
+        # test module file of package without variants
+        content = modulefile_content("module-long-help target=core2")
+        # Spack automatically defines a build_system variant
+        assert len([x for x in content if "variant " in x]) == 2
+        assert len([x for x in content if "getvariant " in x]) == 1
+
+        # test module file of package with boolean variants
+        content = modulefile_content("mpileaks +debug -shared")
+        assert len([x for x in content if "variant " in x]) == 7
+        assert len([x for x in content if "getvariant " in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True debug" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False opt" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 1
+        assert (
+            len([x for x in content if "variant --default generic build_system generic" in x]) == 1
+        )
+
+        # test variant set module check code
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "    {build_system=generic +debug ~fortran ~opt ~shared +static} " in x
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "foreach avail_spec [array names ::avail_installation] {" in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if 'append err_msg "* \\"$avail_spec\\"\\n' in x]) == 1
+        assert len([x for x in content if "reportError $err_msg" in x]) == 1
+
+        # test dependent module designation (containing variants specifications)
+        # depends-on command defined once and used 3 times
+        assert len([x for x in content if "depends-on " in x]) == 4
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "depends-on callpath/1.0-gcc-10.2.1-\\w{7} build_system=generic", x
+                    )
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic ~debug", x
+                    )
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "depends-on gcc-runtime/10.2.1-none-none-\\w{7} build_system=generic", x
+                    )
+                ]
+            )
+            == 1
+        )
+
+        # test module file of package with valued variants
+        content = modulefile_content("multivalue-variant-multi-defaults myvariant=bar")
+        assert len([x for x in content if "variant " in x]) == 4
+        assert len([x for x in content if "getvariant " in x]) == 1
+        assert len([x for x in content if "variant_set_spec myvariant 0" in x]) == 1
+        assert len([x for x in content if "variant --default bar myvariant bar" in x]) == 1
+        assert (
+            len([x for x in content if "variant --default generic build_system generic" in x]) == 1
+        )
+        assert len([x for x in content if "variant --boolean " in x]) == 0
+
+        # test variant set module check code
+        assert len([x for x in content if "    {build_system=generic myvariant=bar} " in x]) == 1
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "foreach avail_spec [array names ::avail_installation] {" in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if 'append err_msg "* \\"$avail_spec\\"\\n' in x]) == 1
+        assert len([x for x in content if "reportError $err_msg" in x]) == 1
+
+        # test module file of package with multi-valued variants
+        content = modulefile_content("multivalue-variant-multi-defaults")
+        assert len([x for x in content if "variant " in x]) == 4
+        assert len([x for x in content if "getvariant " in x]) == 1
+        assert len([x for x in content if "variant_set_spec myvariant 0" in x]) == 1
+        assert len([x for x in content if "variant --default bar_baz myvariant bar_baz" in x]) == 1
+        assert (
+            len([x for x in content if "variant --default generic build_system generic" in x]) == 1
+        )
+        content = modulefile_content("multivalue-variant-multi-defaults myvariant=baz,bar")
+        assert len([x for x in content if "variant --default bar_baz myvariant bar_baz" in x]) == 1
