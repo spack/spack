@@ -17,6 +17,7 @@ import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.patch
+import spack.paths
 import spack.stage
 import spack.util.url as url_util
 from spack.cmd.common.arguments import mirror_name_or_url
@@ -283,6 +284,26 @@ def test_get_all_versions(specs, expected_specs):
     output_list = [str(x) for x in output_list]
     # Compare sets since order is not important
     assert set(output_list) == set(expected_specs)
+
+
+def test_file_url_expands_spack_variable():
+    """``file://$spack/../cache`` must expand $spack, not resolve as ``/cache``.
+
+    urlparse treats the placeholder as a host, so skipping substitution left
+    ``file://$spack/../spack-cache`` as a push to ``/spack-cache`` (#52959).
+    """
+    expected = url_util.path_to_file_url(
+        os.path.normpath(os.path.join(spack.paths.prefix, os.pardir, "spack-cache"))
+    )
+    m = spack.mirrors.mirror.Mirror("file://$spack/../spack-cache")
+    assert m.fetch_url == expected
+    assert m.push_url == expected
+    assert "$spack" not in m.fetch_url
+
+    opt = url_util.path_to_file_url(os.path.normpath(os.path.join(spack.paths.prefix, "opt")))
+    assert spack.mirrors.mirror.Mirror("file://$spack/opt").fetch_url == opt
+    assert spack.mirrors.mirror.Mirror("$spack/opt").fetch_url == opt
+    assert spack.mirrors.mirror.Mirror("https://example.com/m").fetch_url == "https://example.com/m"
 
 
 def test_update_1():
