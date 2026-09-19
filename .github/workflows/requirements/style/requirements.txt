@@ -4,7 +4,7 @@ flake8==7.3.0
 isort==7.0.0
 mypy==1.20.1
 vermin==1.8.0
-pylint==4.0.5
+pylint==4.0.8
 docutils==0.23
 ruamel.yaml==0.19.1
 slotscheck==0.21.0
