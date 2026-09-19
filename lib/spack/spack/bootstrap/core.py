@@ -223,9 +223,14 @@ class BuildcacheBootstrapper(Bootstrapper):
         with spack.config.CONFIG.override(self.mirror_scope):
             # This index is currently needed to get the compiler used to build some
             # specs that we know by dag hash.
-            spack.binary_distribution.BINARY_INDEX.regenerate_spec_cache()
-            index = spack.binary_distribution.update_cache_and_get_specs(
+            # Use a local BinaryIndexCache to avoid mutating or permanently binding 
+            # the global user BINARY_INDEX singleton to the bootstrap configuration.
+            bootstrap_index = spack.binary_distribution.BinaryIndexCache(
                 config=spack.config.CONFIG
+            )
+            bootstrap_index.regenerate_spec_cache()
+            index = spack.binary_distribution.update_cache_and_get_specs(
+                index=bootstrap_index, config=spack.config.CONFIG
             )
 
             if not index:
