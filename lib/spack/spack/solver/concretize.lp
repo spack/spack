@@ -1554,16 +1554,35 @@ attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID) :-
   node_has_variant(PackageNode, Variant, VariantID),
   variant_type(VariantID, VariantType).
 
-% a variant cannot be set if it is not a variant on the package
+variant_set_but_missing(PackageNode, Variant)
+  :- attr("variant_set", PackageNode, Variant),
+     not pkg_has_variant(PackageNode, Variant),
+     build(PackageNode).
+
+variant_has_condition(Package, Variant) :- pkg_fact(Package, variant_condition(Variant, _, _)).
+
+% error when a variant has to be set, but its when condition cannot hold
+% "Cannot set variant 'java' for 'hdf5@1.8.19': Package hdf5 has variant 'java' when @1.10:"
+error(100, "Cannot set variant '{0}' for '{1}@{2}': {3}", Variant, Package, Version, Reason)
+  :- variant_set_but_missing(node(ID, Package), Variant),
+     attr("version", node(ID, Package), Version),
+     pkg_fact(Package, variant_condition(Variant, _, ConditionID)),
+     condition_reason(ConditionID, Reason).
+
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
-  :- attr("variant_set", node(ID, Package), Variant),
-     not pkg_has_variant(node(ID, Package), Variant),
-     build(node(ID, Package)).
+  :- variant_set_but_missing(node(ID, Package), Variant),
+     not variant_has_condition(Package, Variant).
+
+% together with the errors above, this ensures every variant that is set has a value
+:- attr("variant_set", PackageNode, Variant, Value),
+   not attr("variant_value", PackageNode, Variant, Value),
+   not variant_set_but_missing(PackageNode, Variant).
 
 % a variant cannot take on a value if it is not a variant of the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- attr("variant_value", node(ID, Package), Variant, _),
      not pkg_has_variant(node(ID, Package), Variant),
+     not attr("variant_set", node(ID, Package), Variant),
      build(node(ID, Package)).
 
 % at most one variant value for single-valued variants.
@@ -1625,9 +1644,6 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
      variant_value_from_disjoint_sets(node(ID, Package), Variant, Value2, Set2),
      Set1 < Set2, % see[1]
      build(node(ID, Package)).
-
-:- attr("variant_set", node(ID, Package), Variant, Value),
-   not attr("variant_value", node(ID, Package), Variant, Value).
 
 % In a case with `variant("foo", when="+bar")` and a user request for +foo or ~foo,
 % force +bar to be set too. This gives no penalty if `+bar` is not the default value, and
