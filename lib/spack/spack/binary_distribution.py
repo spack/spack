@@ -2004,38 +2004,41 @@ def relocate_package(spec: spack.spec.Spec) -> None:
             os.unlink(install_manifest)
 
 
-def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
-    """Yield all members of tarfile that start with given prefix, and strip that prefix (including
-    symlinks)"""
-    # Including trailing /, otherwise we end up with absolute paths.
-    regex = re.compile(re.escape(prefix) + "/*")
-
-    # Only yield members in the package prefix.
-    # Note: when a tarfile is created, relative in-prefix symlinks are
-    # expanded to matching member names of tarfile entries. So, we have
-    # to ensure that those are updated too.
-    # Absolute symlinks are copied verbatim -- relocation should take care of
-    # them.
-    for m in tar.getmembers():
-        result = regex.match(m.name)
-        if not result:
-            continue
-        m.name = m.name[result.end() :]
-        if m.linkname:
-            result = regex.match(m.linkname)
-            if result:
-                m.linkname = m.linkname[result.end() :]
-        yield m
+def _check_member_path(member: tarfile.TarInfo) -> None:
+    """Reject members that could escape the extraction directory."""
+    paths = [member.name, member.linkname] if member.islnk() else [member.name]
+    for path in paths:
+        if path.startswith("/") or ".." in path.split("/"):
+            raise ValueError(f"Tarball contains unsafe path {path}")
 
 
 def extract_buildcache_tarball(tarfile_path: str, destination: str) -> None:
-    with closing(tarfile.open(tarfile_path, "r")) as tar:
-        # For consistent behavior across all supported Python versions
-        tar.extraction_filter = lambda member, path: member
-        # Remove common prefix from tarball entries and directly extract them to the install dir.
-        tar.extractall(
-            path=destination, members=_tar_strip_component(tar, prefix=_ensure_common_prefix(tar))
-        )
+    """Extract the package prefix contained in a buildcache tarball into ``destination``.
+
+    The tarball is read in streaming mode, so it is decompressed only once. Members are extracted
+    into a temporary directory inside ``destination``, validated, and then moved into place."""
+    fsys.mkdirp(destination)
+    with tempfile.TemporaryDirectory(dir=destination, prefix=".spack-extract-") as tmpdir:
+        with closing(tarfile.open(tarfile_path, "r|*")) as tar:
+            # For consistent behavior across all supported Python versions
+            tar.extraction_filter = lambda member, path: member
+            for member in tar:
+                _check_member_path(member)
+                # Directory attributes are applied after the move: read-only dirs can't be renamed.
+                tar.extract(member, path=tmpdir, set_attrs=not member.isdir())
+
+            pkg_prefix = _ensure_common_prefix(tar)
+            pkg_dir = os.path.join(tmpdir, pkg_prefix)
+            for entry in os.listdir(pkg_dir):
+                fsys.rename(os.path.join(pkg_dir, entry), os.path.join(destination, entry))
+
+            prefix_slash = pkg_prefix + "/"
+            dirs = [m for m in tar.getmembers() if m.isdir() and m.name.startswith(prefix_slash)]
+            for member in sorted(dirs, key=lambda m: m.name, reverse=True):
+                path = os.path.join(destination, member.name[len(prefix_slash) :])
+                tar.chown(member, path, numeric_owner=False)
+                tar.chmod(member, path)
+                tar.utime(member, path)
 
 
 def extract_tarball(spec, tarball_stage: spack.stage.Stage, force=False, timer=timer.NULL_TIMER):

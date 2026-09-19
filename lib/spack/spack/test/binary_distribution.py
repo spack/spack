@@ -1015,19 +1015,11 @@ def test_tarball_common_prefix(dummy_prefix, tmp_path: pathlib.Path):
         with tarfile.open("example.tar", mode="w") as tar:
             tar.add(name=dummy_prefix)
 
-        # Open, verify common prefix, and extract it.
+        # Verify common prefix, then extract into prefix2.
         with tarfile.open("example.tar", mode="r") as tar:
-            common_prefix = spack.binary_distribution._ensure_common_prefix(tar)
-            assert common_prefix == expected_prefix
+            assert spack.binary_distribution._ensure_common_prefix(tar) == expected_prefix
 
-            # For consistent behavior across all supported Python versions
-            tar.extraction_filter = lambda member, path: member
-
-            # Extract into prefix2
-            tar.extractall(
-                path="prefix2",
-                members=spack.binary_distribution._tar_strip_component(tar, common_prefix),
-            )
+        spack.binary_distribution.extract_buildcache_tarball("example.tar", "prefix2")
 
         # Verify files are all there at the correct level.
         assert set(os.listdir("prefix2")) == {"bin", "share", ".spack"}
@@ -1087,6 +1079,19 @@ def test_tarfile_with_files_outside_common_prefix(tmp_path: pathlib.Path, dummy_
             ValueError, match="Tarball contains file /etc/config_file outside of prefix"
         ):
             spack.binary_distribution._ensure_common_prefix(tarfile.open("broken.tar", mode="r"))
+
+
+def test_extract_rejects_paths_escaping_prefix(tmp_path: pathlib.Path, dummy_prefix):
+    """Members with .. components must be rejected before anything is written."""
+    with working_dir(str(tmp_path)):
+        with tarfile.open("escape.tar", mode="w") as tar:
+            tar.addfile(tarfile.TarInfo(name="prefix/../escape"), fileobj=io.BytesIO(b"hello"))
+            tar.add(name=dummy_prefix)
+
+        with pytest.raises(ValueError, match="unsafe path prefix/../escape"):
+            spack.binary_distribution.extract_buildcache_tarball("escape.tar", "prefix2")
+
+        assert not os.path.exists("escape")
 
 
 def test_tarfile_of_spec_prefix(tmp_path: pathlib.Path):
