@@ -1040,3 +1040,32 @@ class TestTcl:
         )
         content = modulefile_content("multivalue-variant-multi-defaults myvariant=baz,bar")
         assert len([x for x in content if "variant --default bar_baz myvariant bar_baz" in x]) == 1
+
+    def test_variants_all_reserved(self, modulefile_content, module_configuration):
+        """Tests that variants reserved by Spack are not defined in module file."""
+
+        module_configuration("variants_all")
+
+        # patches variant is set on concretized spec of package with patches
+        content = modulefile_content("patch@2.0")
+        assert len([x for x in content if "variant " in x]) == 2
+        assert len([x for x in content if "variant" in x and "patches" in x]) == 0
+        assert (
+            len([x for x in content if "variant --default generic build_system generic" in x]) == 1
+        )
+        assert len([x for x in content if "    {build_system=generic} " in x]) == 1
+
+        # dev_path variant set on spec
+        content = modulefile_content("mpileaks dev_path=/some/path")
+        assert len([x for x in content if "variant " in x]) == 7
+        assert len([x for x in content if "variant" in x and "dev_path" in x]) == 0
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "    {build_system=generic ~debug ~fortran ~opt +shared +static} " in x
+                ]
+            )
+            == 1
+        )
