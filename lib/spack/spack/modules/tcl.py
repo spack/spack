@@ -6,7 +6,7 @@
 
 from typing import Any, Dict, Tuple
 
-from spack.variant import VariantType, VariantValue
+from spack.variant import RESERVED_NAMES, VariantType, VariantValue
 
 from .common import BaseConfiguration, BaseModuleFileWriter
 
@@ -54,9 +54,12 @@ class TclConfiguration(BaseConfiguration):
         if self.variants_mode == "none":
             return {}
 
+        # Variants reserved by Spack (like patches or dev_path) describe how the
+        # package was built rather than what it provides, they are not defined
         return {
             v.name: self._variant_to_str_dict(v)
             for v in sorted(self.spec.variants.values(), key=lambda x: x.name)
+            if v.name not in RESERVED_NAMES
         }
 
     @property
