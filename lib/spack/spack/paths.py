@@ -13,7 +13,7 @@ import os
 import pathlib
 import sys
 import types
-from pathlib import Path, PurePath
+from pathlib import PurePath
 from typing import TYPE_CHECKING
 
 import spack.util.filesystem
@@ -135,6 +135,11 @@ class SpackPaths:
         return os.path.join(self.user_cache_path, "package_repos")
 
     @property
+    def old_package_repos_path(self):
+        """Legacy default location for cached package repositories."""
+        return os.path.join(self.old_default_dot_spack, "package_repos")
+
+    @property
     def gpg_path(self):
         """GPG home directory - reads from config."""
         import spack.config
@@ -188,49 +193,6 @@ def set_working_dir():
         spack_working_dir = locations.prefix
 
 
-def get_legacy_package_repo_path(destination):
-    """Check if the repo that would be placed in ``destination`` also exists in the
-    old package repository location; if so, and if the ``destination`` is in the new
-    default location for package repos, then return the old location.
-
-    This function returning a path indicates that it is a good idea to copy the
-    resource available in that path. If the user set SPACK_USER_CACHE_PATH, we assume
-    they may want to isolate (and so copying the old repo would not be desired).
-
-    Args:
-        destination: The destination path where the repo would be cloned in the new location
-                    (e.g., ~/.local/state/spack/package_repos/abc1234)
-
-    Returns:
-        Path to old repo if it exists and new repo would be placed in default location,
-        None otherwise.
-    """
-    locations_obj = sys.modules[__name__].locations
-
-    if not Path(locations_obj.old_default_dot_spack).exists():
-        return None
-
-    if (
-        Path(locations_obj.user_cache_path).absolute()
-        != Path(locations_obj.default_state_home).absolute()
-    ):
-        # Only prompt copying of package repositories if we are moving from
-        # an old default to a new default. If the user explicitly sets
-        # SPACK_USER_CACHE_PATH to some other location, don't retrieve old
-        # state because that would contradict prior behavior
-        return None
-
-    # Extract the directory name (e.g., "abc1234" from the destination path)
-    repo_dir_name = Path(destination).name
-
-    # Check if this exists in the old location
-    old_repo = Path(locations_obj.old_default_dot_spack) / "package_repos" / repo_dir_name
-
-    if old_repo.is_dir():
-        return str(old_repo)
-    return None
-
-
 # Type hints for mypy - these module-level attributes are dynamically resolved at runtime
 # via the module shim below. Declared here so mypy can see them when checking imports.
 if TYPE_CHECKING:
@@ -278,6 +240,7 @@ if TYPE_CHECKING:
     default_monitor_path: str
     user_repos_cache_path: str
     package_repos_path: str
+    old_package_repos_path: str
 
 
 # Module shim: lets callers keep using `spack.paths.X` for any attribute on
@@ -294,13 +257,7 @@ class _PathsModule(types.ModuleType):
         module_dict = object.__getattribute__(self, "__dict__")
 
         # If it's a known module-level attribute (not from locations), return it
-        if name in (
-            "locations",
-            "SpackPaths",
-            "dir_is_occupied",
-            "set_working_dir",
-            "get_legacy_package_repo_path",
-        ):
+        if name in ("locations", "SpackPaths", "dir_is_occupied", "set_working_dir"):
             if name in module_dict:
                 return module_dict[name]
             raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")

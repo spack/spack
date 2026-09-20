@@ -2126,6 +2126,56 @@ def _do_migrate_user_config(
     return True
 
 
+def _migrate_package_repositories() -> bool:
+    """Copy legacy package repositories to the new default state location.
+
+    The legacy tree is copied to a sibling staging directory and renamed into
+    place only after the copy completes. The source is never modified.
+    """
+    old_path = spack.paths.old_package_repos_path
+    new_path = spack.paths.package_repos_path
+
+    if not os.path.isdir(old_path) or os.path.exists(new_path):
+        return False
+
+    if os.path.normpath(os.path.abspath(spack.paths.user_cache_path)) != os.path.normpath(
+        os.path.abspath(spack.paths.default_state_home)
+    ):
+        return False
+
+    try:
+        if not os.listdir(old_path):
+            return False
+    except OSError:
+        return False
+
+    parent = os.path.dirname(new_path)
+    staging_path = os.path.join(parent, ".package-repos-migration")
+    lock_path = os.path.join(parent, ".spack-package-repos-migration-lock")
+    filesystem.mkdirp(parent)
+    lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+
+    try:
+        # A user-facing timeout message could be added if migration contention
+        # becomes observable in practice.
+        lock.acquire_write()
+        if os.path.exists(new_path) or not os.path.isdir(old_path):
+            return False
+        if os.path.exists(staging_path):
+            shutil.rmtree(staging_path)
+        shutil.copytree(old_path, staging_path, symlinks=True)
+        os.rename(staging_path, new_path)
+        tty.debug(f"Copied package repositories from {old_path} to {new_path}")
+        return True
+    except (OSError, shutil.Error) as e:
+        tty.warn(f"Failed to migrate package repositories: {e}")
+        if os.path.exists(staging_path):
+            shutil.rmtree(staging_path, ignore_errors=True)
+        return False
+    finally:
+        lock.release_write()
+
+
 def _migration_backup_path() -> str:
     """Path to migration backup directory."""
     return os.path.join(spack.paths.prefix, ".migration-backup")
@@ -2365,6 +2415,7 @@ def _do_migrate(
     migrated_resources: List[str] = []
     retained_resources: List[str] = []
     user_config_migrated = False
+    package_repos_migrated = False
     if is_isolate_command:
         assert isolate_target is not None
         scope_config["config"] = {"locations": _isolate_locations_config(isolate_target)}
@@ -2511,6 +2562,7 @@ def _do_migrate(
     # 5. Copy ~/.spack to ~/.config/spack (unless isolate command)
     if not is_isolate_command:
         user_config_migrated = _migrate_user_config_programmatic()
+        package_repos_migrated = _migrate_package_repositories()
 
     # Write config scope files to the selected configuration scope.
     if "config" in scope_config:
@@ -2533,6 +2585,10 @@ def _do_migrate(
         if user_config_migrated:
             migration_summary.append(
                 "  - Copied user configuration from ~/.spack to ~/.config/spack."
+            )
+        if package_repos_migrated:
+            migration_summary.append(
+                "  - Copied package repositories from ~/.spack to the shared state location."
             )
         if migrated_resources:
             migration_summary.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
