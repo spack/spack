@@ -1056,8 +1056,7 @@ def _main(argv=None):
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
     with bootstrap_context:
-        result = finish_parse_and_run(parser, cmd_name, args, env_format_error)
-        return result
+        return finish_parse_and_run(parser, cmd_name, args, env_format_error)
 
 
 def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
