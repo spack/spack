@@ -250,6 +250,74 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
     assert migrated["include"][1]["path"] == "included-relative.yaml"
 
 
+def test_auto_migration_copies_package_repositories(mock_spack_instance, monkeypatch):
+    """Automatic migration recursively copies the legacy package repository tree."""
+    home_dir, _ = mock_spack_instance
+    old_repos = pathlib.Path(home_dir) / ".spack" / "package_repos"
+    (old_repos / "first" / "nested").mkdir(parents=True)
+    (old_repos / "first" / "root.txt").write_text("first root", encoding="utf-8")
+    (old_repos / "first" / "nested" / "nested.txt").write_text("nested", encoding="utf-8")
+    (old_repos / "second").mkdir()
+    (old_repos / "second" / "root.txt").write_text("second root", encoding="utf-8")
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    spack.config._do_migrate(is_isolate_command=False)
+
+    new_repos = pathlib.Path(spack.paths.package_repos_path)
+    assert (new_repos / "first" / "root.txt").read_text(encoding="utf-8") == "first root"
+    assert (new_repos / "first" / "nested" / "nested.txt").read_text(encoding="utf-8") == (
+        "nested"
+    )
+    assert (new_repos / "second" / "root.txt").read_text(encoding="utf-8") == "second root"
+    assert (old_repos / "first" / "root.txt").exists()
+    assert (old_repos / "second" / "root.txt").exists()
+    assert (new_repos.parent / ".spack-package-repos-migration-lock").exists()
+    assert not (new_repos.parent / ".package-repos-migration").exists()
+
+
+def test_auto_migration_skips_existing_package_repository_destination(
+    mock_spack_instance, monkeypatch
+):
+    """An existing package repository destination is never overwritten."""
+    home_dir, _ = mock_spack_instance
+    old_repo = pathlib.Path(home_dir) / ".spack" / "package_repos" / "abc1234"
+    old_repo.mkdir(parents=True)
+    (old_repo / "source").write_text("old", encoding="utf-8")
+
+    (old_repo.parent / "second").mkdir()
+
+    new_repos = pathlib.Path(spack.paths.package_repos_path)
+    new_repo = new_repos / "abc1234"
+    new_repo.mkdir(parents=True)
+    (new_repo / "source").write_text("new", encoding="utf-8")
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    spack.config._do_migrate(is_isolate_command=False)
+
+    assert (new_repo / "source").read_text(encoding="utf-8") == "new"
+    assert not (new_repos / "second").exists()
+    assert (old_repo / "source").read_text(encoding="utf-8") == "old"
+
+
+def test_auto_migration_skips_package_repositories_for_isolation(mock_spack_instance, monkeypatch):
+    """Isolation leaves legacy package repositories in place."""
+    home_dir, base_prefix = mock_spack_instance
+    old_repos = pathlib.Path(home_dir) / ".spack" / "package_repos"
+    old_repos.mkdir(parents=True)
+    (old_repos / "abc1234" / "repo.yaml").parent.mkdir()
+    (old_repos / "abc1234" / "repo.yaml").write_text("repo", encoding="utf-8")
+    target = pathlib.Path(home_dir) / "isolated"
+    config_path = target / "config.yaml"
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    spack.config._do_migrate(
+        is_isolate_command=True, config_path=str(config_path), isolate_target=str(target)
+    )
+
+    assert (old_repos / "abc1234" / "repo.yaml").exists()
+    assert not (target / "package_repos").exists()
+
+
 def test_auto_migration_gpg_failure_records_old_path(mock_spack_instance, monkeypatch, capsys):
     """A GPG destination collision keeps the old path in generated config."""
     home_dir, base_prefix = mock_spack_instance
