@@ -293,7 +293,7 @@ The behavior is controlled by the ``variants`` configuration option under the ``
 The ``variants`` key accepts the values:
 
 * ``none`` (default): do not define variants in module files
-* ``all``: define all variants from the installed spec in the module file
+* ``all``: define all variants from the installed spec in the module file, except those reserved by Spack such as ``patches`` or ``dev_path``
 
 The default value of each module variant is the value of the corresponding variant in the installed spec, so a plain ``module load`` command loads the module as before.
 Users may also state the variant values they expect when loading the module, using the variant syntax of Environment Modules: ``+name`` and ``~name`` (or ``-name``) for boolean variants, and ``name=value`` for the others.
