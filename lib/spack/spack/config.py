@@ -153,9 +153,6 @@ CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")
 #: Global flag to ignore user-fallback scope during config processing
 ignore_user_fallback = False
 
-#: Saved debug messages to be printed after debug level is set
-saved_debug_msgs: List[str] = []
-
 
 def substitute_include_path(path, context):
     """Substitute path variables in include paths, with validation.
@@ -181,17 +178,6 @@ def substitute_include_path(path, context):
         raise ValueError(msg)
 
     return substitute_path_variables(path)
-
-
-def clear_accumulated_debug_msgs():
-    """tty.debug messages will be dropped at module definition time for main.py
-    Functions can save debugging output to be printed later (if the user has
-    enabled -d).
-    """
-    global saved_debug_msgs
-    for msg in saved_debug_msgs:
-        tty.debug(msg)
-    saved_debug_msgs = []
 
 
 class ConfigScope:
