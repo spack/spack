@@ -21,12 +21,13 @@ from spack.spec import EMPTY_SPEC
 from .core import AspFunction, SourceContext, fn
 
 
-def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> bool:
-    return (
-        lhs.name == rhs.name
-        and lhs.external_path == rhs.external_path
-        and lhs.version >= rhs.version
-    )
+def libc_is_compatible(host: spack.spec.Spec, needed: spack.spec.Spec) -> bool:
+    """Whether binaries built against ``needed`` can run with ``host`` libc."""
+    if host.name != needed.name or host.version < needed.version:
+        return False
+    if host.external and needed.external:
+        return host.external_path == needed.external_path
+    return host.dag_hash() == needed.dag_hash()
 
 
 class _Head:

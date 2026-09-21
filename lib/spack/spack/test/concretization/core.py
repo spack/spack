@@ -5161,6 +5161,50 @@ packages:
     mpileaks = spack.concretize.concretize_one("mpileaks %c=gcc@12")
 
     assert mpileaks.satisfies("%c=gcc@12")
+    # Every node built with gcc uses the very libc node of that gcc
+    for node in mpileaks.traverse():
+        if node.name in ("glibc", "gcc") or "gcc" not in node:
+            continue
+        assert node["glibc"].dag_hash() == node["gcc"]["libc"].dag_hash()
+        assert node["glibc"].external_path == node["gcc"]["libc"].external_path
+
+
+def test_libc_of_the_compiler_is_injected(monkeypatch, mutable_config, mock_packages):
+    """Packages built with a compiler depend on the libc node that compiler depends on, not on
+    any libc of the same version."""
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@12.3.0 languages='c,c++' os=debian6"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+    - spec: "gcc@12.3.0 languages='c,c++' os=redhat6"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    def _mock_libc(self):
+        prefix = "/a" if self.spec.satisfies("os=debian6") else "/b"
+        return spack.spec.Spec("glibc@=2.31", external_path=prefix)
+
+    monkeypatch.setattr(
+        spack.compilers.libraries.CompilerPropertyDetector, "default_libc", _mock_libc
+    )
+
+    for os_name, prefix in (("debian6", "/a"), ("redhat6", "/b")):
+        pkg_b = spack.concretize.concretize_one(f"pkg-b %gcc os={os_name}")
+        assert pkg_b["glibc"].external_path == prefix
+        assert pkg_b["glibc"].dag_hash() == pkg_b["gcc"]["libc"].dag_hash()
 
 
 @pytest.mark.regression("51683")

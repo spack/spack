@@ -231,6 +231,47 @@ This is useful for forcing certain compilers to RPATH their own runtime librarie
            - /path/to/some/compiler/runtime/directory
            - /path/to/some/other/compiler/runtime/directory
 
+.. _compilers-and-libc:
+
+The libc a compiler targets
+---------------------------
+
+On Linux, every compiler depends on the C library it targets, ``glibc`` or ``musl``, through the virtual ``libc``.
+Packages built with a compiler depend on that very libc node, so a compiler built by Spack against a Spack-installed glibc gives its dependents that glibc, while a system compiler gives them the system glibc.
+
+``spack compiler find`` records the libc of the compilers it detects, as an external of its own with an ``id`` and as a dependency of the compiler:
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@13.3.0 languages='c,c++,fortran'
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/gcc
+             cxx: /usr/bin/g++
+             fortran: /usr/bin/gfortran
+         dependencies:
+         - id: glibc-2.39-5c0e77c4
+           deptypes: link
+           virtuals: libc
+     glibc:
+       externals:
+       - spec: glibc@=2.39
+         prefix: /usr
+         id: glibc-2.39-5c0e77c4
+
+A compiler configured without such a dependency gets the same treatment whenever Spack reads the configuration: the libc is detected by asking the compiler for its dynamic linker, and the entries above are added in memory.
+The dependency is therefore only needed by hand when the libc cannot be detected, or when the compiler targets a libc that is not the one its dynamic linker points to, e.g. in a sysroot.
+See :ref:`sec-external-packages` for the general syntax of dependencies among externals.
+
+.. note::
+
+   The libc is recorded when a compiler is added to the configuration, like its version.
+   After upgrading the system libc, run ``spack compiler find`` again, or edit the entry.
+
 .. _compilers-requiring-modules:
 
 Compilers Requiring Modules
