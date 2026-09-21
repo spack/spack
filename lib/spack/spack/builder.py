@@ -229,7 +229,7 @@ def buildsystem_name(pkg: spack.package_base.PackageBase) -> str:
     """Given a package object with an associated concrete spec,
     return the name of its build system."""
     try:
-        return pkg.spec.variants["build_system"].value
+        return str(pkg.spec.variants["build_system"].value)
     except KeyError as e:
         # We are reading an old spec without the build_system variant
         if hasattr(pkg, "default_buildsystem"):

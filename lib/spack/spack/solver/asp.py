@@ -110,7 +110,6 @@ if TYPE_CHECKING:
     # Imported lazily to avoid re-introducing a runtime spack.store dependency; type-only.
     import spack.store
 
-GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
 
 TransformFunction = Callable[[str, spack.spec.Spec, List[AspFunction]], List[AspFunction]]
 
@@ -477,7 +476,7 @@ def _is_checksummed_git_version(v):
     return isinstance(v, vn.GitVersion) and v.is_commit
 
 
-def _is_checksummed_version(version_info: Tuple[GitOrStandardVersion, dict]):
+def _is_checksummed_version(version_info: Tuple[vn.ConcreteVersion, dict]):
     """Returns true iff the version is not a moving target"""
     version, info = version_info
     if isinstance(version, vn.StandardVersion):
@@ -1148,7 +1147,7 @@ class SpackSolverSetup:
 
     gen: "ProblemInstanceBuilder"
     clauses: "SpecClauseGenerator"
-    possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
+    possible_versions: Dict[str, Dict[vn.ConcreteVersion, List[Provenance]]]
 
     def __init__(
         self,
@@ -1169,8 +1168,8 @@ class SpackSolverSetup:
 
         # pkg_name -> version -> list of possible origins (package.py, installed, etc.)
         self.possible_versions = collections.defaultdict(lambda: collections.defaultdict(list))
-        self.versions_from_yaml: Dict[str, List[GitOrStandardVersion]] = {}
-        self.git_commit_versions: Dict[str, Dict[GitOrStandardVersion, str]] = (
+        self.versions_from_yaml: Dict[str, List[vn.ConcreteVersion]] = {}
+        self.git_commit_versions: Dict[str, Dict[vn.ConcreteVersion, str]] = (
             collections.defaultdict(dict)
         )
         self.possible_compilers: List[spack.spec.Spec] = []
@@ -1947,7 +1946,7 @@ class SpackSolverSetup:
 
             # TODO(psakiev) Need facts about versions
             # - requires_commit (associated with tag or branch)
-            from_packages_yaml: List[GitOrStandardVersion] = []
+            from_packages_yaml: List[vn.ConcreteVersion] = []
 
             for vstr in packages_yaml[pkg_name]["version"]:
                 cfg_ver = spack.version.git_ref_lookup.assign_git_version(

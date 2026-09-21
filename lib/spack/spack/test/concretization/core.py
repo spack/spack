@@ -657,7 +657,7 @@ spack:
             for s in spec.traverse(root=False, deptype=("link", "run")):
                 if s.external:
                     continue
-                assert s.architecture.target == spec.architecture.target
+                assert s.target == spec.target
 
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('pkg-a cflags="-O -foo-flag foo-val" platform=test %gcc')
@@ -1682,7 +1682,7 @@ spack:
         mutable_config.set("packages", external_mvapich2)
 
         s = spack.concretize.concretize_one("mvapich2")
-        assert set(s.variants["file_systems"].value) == set(["ufs", "nfs"])
+        assert set(s.variants["file_systems"].values) == set(["ufs", "nfs"])
 
     @pytest.mark.regression("22596")
     def test_external_with_non_default_variant_as_dependency(self):
@@ -2323,7 +2323,7 @@ spack:
         other_os = s.copy()
         mock_os = "ubuntu2204"
         other_os.architecture = spack.spec.ArchSpec(
-            "test-{os}-{target}".format(os=mock_os, target=str(s.architecture.target))
+            "test-{os}-{target}".format(os=mock_os, target=str(s.target))
         )
         reusable_specs = [other_os]
         overrides = {"concretizer": {"reuse": True, "os_compatible": {s.os: [mock_os]}}}

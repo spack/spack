@@ -122,6 +122,7 @@ class SpecClauseGenerator:
     ) -> List[AspFunction]:
         name = spec.name or name
         assert name, "Internal Error: spec with no name occurred. Please file an issue."
+        assert spec.architecture is not None
         target = spec.architecture.target
 
         # target is unconstrained

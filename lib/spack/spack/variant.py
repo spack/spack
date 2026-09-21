@@ -312,8 +312,9 @@ class VariantValue:
     concrete: bool
     type: VariantType
     _values: ValueType
+    # attached to the "patches" variant after concretization
+    _patches_in_order_of_appearance: List[str]
 
-    # _patches_in_order_of_appearance is attached to the "patches" variant after concretization
     __slots__ = ("name", "concrete", "type", "_values", "_patches_in_order_of_appearance")
 
     def __init__(
