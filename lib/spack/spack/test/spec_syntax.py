@@ -1154,6 +1154,84 @@ def specfile_for(config, mock_packages):
             ],
             "foo ^[deptypes=link when=+mpi] mpich",
         ),
+        # usages= is a spec-valued edge property like when=: the modifiers a dependent asks
+        # the dependency to enact on their shared edge. They are parsed and validated, but not
+        # stored on the edge yet, so they do not appear in the round-tripped string.
+        (
+            "zlib-ng %[usages=+sarif] gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "zlib-ng"),
+                Token("DEPENDENCY", "%[", edge_bracket="["),
+                Token(
+                    "KEY_VALUE_PAIR",
+                    "usages=+sarif",
+                    kv_name="usages",
+                    kv_sep="=",
+                    kv_value="+sarif",
+                ),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "zlib-ng %gcc",
+        ),
+        # a quoted usages value is a value like any other, so other properties can follow it
+        (
+            "zlib-ng %[usages='+sarif' virtuals=c] gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "zlib-ng"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "usages='+sarif'"),
+                Token("KEY_VALUE_PAIR", "virtuals=c"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "zlib-ng %c=gcc",
+        ),
+        # usages= on a transitive edge, next to a plain edge property
+        (
+            "foo ^[deptypes=link usages=+sarif] mpich",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "^["),
+                Token("KEY_VALUE_PAIR", "deptypes=link"),
+                Token("KEY_VALUE_PAIR", "usages=+sarif"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "mpich"),
+            ],
+            "foo ^[deptypes=link] mpich",
+        ),
+        # three groups of edge properties, one per attribute kind
+        (
+            "foo %[when=%baz target=x86_64][virtuals=c][usages=+sarif sanitizers=asan]gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "when=%baz"),
+                Token("KEY_VALUE_PAIR", "target=x86_64"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "virtuals=c"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "usages=+sarif"),
+                Token("KEY_VALUE_PAIR", "sanitizers=asan"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "foo %[when=%baz target=x86_64] c=gcc",
+        ),
+        # repeated usages= groups accumulate, like repeated when= conditions
+        (
+            "foo %[usages=+sarif][usages=~debug]gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "usages=+sarif"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "usages=~debug"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "foo %gcc",
+        ),
         # a second group of edge properties closed by a fused virtual assignment
         (
             "foo %[when=+a][deptypes=link] c=gcc",
@@ -1174,6 +1252,46 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
     has_detailed_tokens = any(t[2] for t in tokens)
     assert tokens == parser.tokens(with_subgroups=has_detailed_tokens)
     assert expected_roundtrip == str(parser.next_spec())
+
+
+@pytest.mark.parametrize(
+    "groups",
+    itertools.permutations(
+        ["[when=%baz target=x86_64]", "[virtuals=c]", "[usages=+sarif sanitizers=asan]"]
+    ),
+)
+def test_edge_property_groups_parse_in_any_order(groups):
+    """Groups of edge properties denote the same edge whatever order they are written in.
+
+    TODO (usages RFD): assert the modifiers on the edge once DependencySpec stores them.
+    """
+    spec = Spec(f"foo %{''.join(groups)}gcc")
+    assert str(spec) == "foo %[when=%baz target=x86_64] c=gcc"
+
+    edge = spec.edges_to_dependencies(name="gcc")[0]
+    assert edge.virtuals == ("c",)
+    assert edge.when == Spec("%baz target=x86_64")
+
+
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        "zlib-ng %[usages=+sarif] gcc",
+        "zlib-ng %[usages='+sarif' virtuals=c] gcc",
+        "foo ^[deptypes=link usages=+sarif] mpich",
+        "foo %[virtuals=c][usages=+sarif sanitizers=asan][when=%baz target=x86_64]gcc",
+        # a repeated request for the same modifier is not a conflict
+        "foo %[usages=+sarif][usages=+sarif] gcc",
+        "foo %[usages=~debug+sarif] gcc",
+    ],
+)
+def test_usages_parse_but_are_not_stored(spec_str):
+    """Usages parse cleanly, but are dropped until the edge can hold them.
+
+    TODO (usages RFD): replace with round-trip assertions once DependencySpec stores them.
+    """
+    spec = Spec(spec_str)
+    assert "sarif" not in str(spec)
 
 
 @pytest.mark.parametrize(
@@ -1754,6 +1872,20 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         # a quoted condition is a single spec: neither two specs nor none
         ("foo ^[when='bar baz'] qux", "expected a single spec as the when= condition"),
         ("foo ^[when=''] qux", "expected a single spec as the when= condition"),
+        # usages= is spec-valued like when=, but its spec may only hold variants
+        ("foo %[usages=] gcc", "expected a spec after usages="),
+        ("foo %[usages=", "expected a spec after usages="),
+        ("foo %[usages=][virtuals=c] gcc", "expected a spec after usages="),
+        ("foo %[usages='+a bar'] gcc", "expected a single spec as the usages= value"),
+        ("foo %[usages=''] gcc", "expected a single spec as the usages= value"),
+        ("foo %[usages=clang] gcc", "usages= accepts only variants"),
+        ("foo %[usages=@1.2] gcc", "usages= accepts only variants"),
+        ("foo %[usages=target=x86_64] gcc", "usages= accepts only variants"),
+        ("foo %[usages=%bar] gcc", "usages= accepts only variants"),
+        ("foo %[usages=cflags=-O3] gcc", "usages= accepts only variants"),
+        # propagation of usages is not supported yet
+        ("foo %[usages=++sarif] gcc", "propagated variants are not supported in usages="),
+        ("foo %[usages=sanitizers==asan] gcc", "propagated variants are not supported in usages="),
         # the parts of an architecture and the namespace print unquoted, so they must be values
         # that parse without quotes, and a namespace a dotted identifier
         ("x os='a b'", "invalid value"),
