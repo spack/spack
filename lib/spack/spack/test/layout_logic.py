@@ -256,7 +256,10 @@ class MigrationResources:
 
     def __init__(self, home_dir, base_prefix):
         self.base_prefix = pathlib.Path(base_prefix)
-        self.data_home = pathlib.Path(spack.config.canonicalize_path("$data_home"))
+        # Calculate expected data_home directly from test paths (XDG default)
+        # rather than using config which may still have old singleton state
+        home_dir_path = pathlib.Path(home_dir)
+        self.data_home = home_dir_path / ".local" / "share" / "spack"
         self.old_gpg = pathlib.Path(spack.paths.old_gpg_path)
         self.old_licenses = pathlib.Path(spack.paths.old_licenses_path)
         self.old_envs = pathlib.Path(spack.paths.old_envs_path)
@@ -277,7 +280,10 @@ class MigrationResources:
 
     @staticmethod
     def contains_text(root, text):
+        """Check if text exists in root (file or directory of files)."""
         root = pathlib.Path(root)
+        if root.is_file():
+            return text in root.read_text(encoding="utf-8")
         return any(
             text in path.read_text(encoding="utf-8")
             for path in root.rglob("*")
@@ -311,12 +317,11 @@ class MigrationResources:
         expected_migrations.difference_update(
             resource[1:] for resource in overrides if resource.startswith("-")
         )
-        data_home = pathlib.Path(spack.config.canonicalize_path("$data_home"))
         backup = self.base_prefix / ".migration-backup"
         for resource in ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2"):
             migrated = resource in expected_migrations
             if resource == "gpg":
-                destination = data_home / "gpg"
+                destination = self.data_home / "gpg"
                 source = self.old_gpg
                 backup_path = backup / "gpg"
                 marker = destination / "private-keys-v1.d" / "key"
@@ -330,6 +335,7 @@ class MigrationResources:
                 name = resource.split("/", 1)[1]
                 destination = self.data_home / "licenses" / name
                 source = self.old_licenses / name
+                # License backup: individual file in backup directory
                 backup_path = backup / "licenses" / name
                 marker = destination
 
@@ -337,7 +343,12 @@ class MigrationResources:
                 assert destination.exists()
                 assert marker.read_text(encoding="utf-8") == "old"
                 assert backup_path.exists()
-                assert self.contains_text(backup_path, "old")
+                # For licenses, backup is a file - read directly
+                # For GPG/envs, backup is a directory - check it contains "old"
+                if resource.startswith("licenses/"):
+                    assert backup_path.read_text(encoding="utf-8") == "old"
+                else:
+                    assert self.contains_text(backup_path, "old")
                 assert not source.exists()
                 if resource == "envs/env-1":
                     assert not (destination / "view").exists()
@@ -406,10 +417,19 @@ def test_auto_migration_old_spack_internal_resources(
     """Migration handles GPG, environments, licenses, conflicts, and views."""
     resources = migration_resources
     resources.add_conflicts(conflicts)
+
+    # Create fresh config after mock_spack_instance has set up test paths
+    test_config = spack.config.create()
     for path, value in config_vars:
-        mutable_config.set(path, value)
-    monkeypatch.setattr(spack.config, "CONFIG", mutable_config)
+        test_config.set(path, value)
+    monkeypatch.setattr(spack.config, "CONFIG", test_config)
+
+    # Run migration which creates layout scope
     spack.config._do_migrate(is_isolate_command=False)
+
+    # Reinitialize config to pick up newly created layout scope
+    test_config = spack.config.create()
+    monkeypatch.setattr(spack.config, "CONFIG", test_config)
 
     resources.assert_migrations(expected_migrations, conflicts)
 
