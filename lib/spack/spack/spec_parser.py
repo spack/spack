@@ -13,7 +13,8 @@ Here is the EBNF grammar for a spec::
     node_option   = @version_list | variant | hash
 
     edge_properties = edge_group { edge_group }
-    edge_group      = [ { key_value | when=quoted_spec } [ when=spec ] ]
+    edge_group      = [ { key_value | edge_spec=quoted_spec } [ edge_spec=spec ] ]
+    edge_spec       = when | usages
     quoted_spec     = " spec " | ' spec '
 
     virtual_assignment = id { , id } = (id | namespace id)
@@ -56,12 +57,18 @@ value is a package name, is a virtual assignment ``%c,cxx=gcc`` rather than a va
 anonymous dependency (write ``%* foo=bar`` for the latter). ``*`` is the name of an anonymous
 node.
 
-The ``when=`` edge property is a condition on the edge, and its unquoted value is a spec that
-extends up to the closing bracket: in ``^[virtuals=mpi when=+mpi] mpich`` the condition is
-``+mpi``, while in ``^[when=+mpi virtuals=mpi] mpich`` the ``virtuals=mpi`` pair is part of the
-condition. Edge properties following an unquoted condition go in a separate bracket group,
-``^[when=+mpi][virtuals=mpi] mpich``, or the condition can be quoted,
-``^[when='+mpi' virtuals=mpi] mpich``, making it a value like any other.
+The ``when=`` and ``usages=`` edge properties take a spec as their value. The ``when=`` spec is a
+condition on the edge; the ``usages=`` spec is a set of variants that the dependent requests of
+the dependency for this edge only, e.g. ``zlib-ng %[usages=+sarif] gcc``. Usages are parsed and
+validated, but not yet stored on the edge, so they do not appear in the parsed spec.
+
+An unquoted spec value extends up to the closing bracket: in ``^[virtuals=mpi when=+mpi] mpich``
+the condition is ``+mpi``, while in ``^[when=+mpi virtuals=mpi] mpich`` the ``virtuals=mpi`` pair
+is part of the condition. Edge properties following an unquoted spec go in a separate bracket
+group, ``^[when=+mpi][virtuals=mpi] mpich``, or the spec can be quoted,
+``^[when='+mpi' virtuals=mpi] mpich``, making it a value like any other. Bracket groups come in
+any order, so ``%[when=%baz target=x86_64][virtuals=c][usages=+sarif sanitizers=asan] gcc`` and
+any permutation of its three groups denote the same edge.
 
 There is one ambiguity: since ``-`` is allowed in an id, you need to put
 whitespace space before ``-variant`` for it to be tokenized properly.  You can
@@ -245,6 +252,7 @@ _VERSION = "VERSION"
 _BOOL_VARIANT = "BOOL_VARIANT"
 _KEY_VALUE_PAIR = "KEY_VALUE_PAIR"
 _WHEN = "WHEN"
+_USAGES = "USAGES"
 _FILENAME = "FILENAME"
 _FULLY_QUALIFIED_PACKAGE_NAME = "FULLY_QUALIFIED_PACKAGE_NAME"
 _UNQUALIFIED_PACKAGE_NAME = "UNQUALIFIED_PACKAGE_NAME"
@@ -318,6 +326,8 @@ SPEC_TOKENS: Dict[str, str] = {
     # ``when=`` of edge properties whose spec is not a value, e.g. ``^[when=@1.2] dep``; otherwise
     # ``when=+foo`` is a key-value pair like any other, and ``when`` a variant name elsewhere
     _WHEN: r"when=",
+    # ``usages=`` likewise, for the modifiers a dependent requests on the edge
+    _USAGES: r"usages=",
     # path to a spec file, e.g. ``./foo/bar.json``
     _FILENAME: FILENAME,
     # package name with namespace, e.g. ``builtin.mpich``
@@ -332,6 +342,14 @@ SPEC_TOKENS: Dict[str, str] = {
 
 #: Single regex matching any spec token (and its subgroups) after optional whitespace
 FAST_SPEC_REGEX = fast_regex(SPEC_TOKENS)
+
+#: Edge attributes whose value is a spec rather than a plain value, mapped to how they are
+#: described in error messages. Unquoted, such a spec extends to the closing bracket, so at
+#: most one of them fits in a bracket group.
+_SPEC_VALUED_EDGE_ATTRIBUTES = {"when": "condition", "usages": "value"}
+
+#: Edge attributes whose value is a comma-separated list of names
+_LIST_VALUED_EDGE_ATTRIBUTES = frozenset({"deptypes", "virtuals"})
 
 
 class SpecParser:
@@ -446,20 +464,33 @@ class SpecParser:
                     # Collect edge attributes (key=value pairs) up to the closing bracket
                     attributes: Dict[str, List[str]] = {}
                     conditions: Optional["spack.spec.Spec"] = None
+                    usages: Optional["spack.spec.Spec"] = None
                     substitute = None
                     while True:
                         if not self.curr:
                             self._raise_parsing_error("expected `]` to close the edge attributes")
 
                         kind = self.curr.lastgroup
-                        if kind == _KEY_VALUE_PAIR and self.curr.group(_KV_NAME) != "when":
+                        # ``when`` and ``usages`` are spec-valued, whether they come as a bare
+                        # WHEN / USAGES token or as a key-value pair with a value that happens
+                        # to tokenize, as in ``when=+mpi``.
+                        if kind == _WHEN:
+                            name = "when"
+                        elif kind == _USAGES:
+                            name = "usages"
+                        elif kind == _KEY_VALUE_PAIR:
                             name = self.curr.group(_KV_NAME)
-                            if name not in ("deptypes", "virtuals"):
+                        else:
+                            name = ""
+
+                        if kind == _KEY_VALUE_PAIR and name not in _SPEC_VALUED_EDGE_ATTRIBUTES:
+                            if name not in _LIST_VALUED_EDGE_ATTRIBUTES:
                                 msg = (
                                     "the only edge attributes that are currently accepted are "
-                                    '"deptypes", "virtuals", and a "when=<spec>" condition; an '
-                                    "unquoted condition extends to the closing bracket, so put "
-                                    "attributes after it in a separate bracket group"
+                                    '"deptypes", "virtuals", "usages=<spec>", and a '
+                                    '"when=<spec>" condition; an unquoted spec extends to the '
+                                    "closing bracket, so put attributes after it in a separate "
+                                    "bracket group"
                                 )
                                 self._raise_parsing_error(msg)
                             value = strip_quotes(self.curr.group(_KV_VALUE))
@@ -470,37 +501,47 @@ class SpecParser:
                             )
                             self.curr, self.next = self.next, self.scanner.match()
 
-                        elif kind == _KEY_VALUE_PAIR or kind == _WHEN:
-                            # The condition is a spec. Quoted, it is a value like any other pair.
+                        elif name in _SPEC_VALUED_EDGE_ATTRIBUTES:
+                            # The value is a spec. Quoted, it is a value like any other pair.
                             # Unquoted, it extends up to the closing bracket: the tokenizer is
                             # context free, so restart the scanner at the value, which is either
-                            # that of the pair or what follows a bare WHEN token (when=@1.2).
+                            # that of the pair or what follows a bare WHEN / USAGES token
+                            # (when=@1.2).
                             value = self.curr.group(_KV_VALUE) if kind == _KEY_VALUE_PAIR else ""
                             if value[:1] in ("'", '"'):
                                 try:
                                     condition = parse_one_or_raise(
+                                    edge_spec = parse_one_or_raise(
                                         strip_quotes(value), self.spec_cls
                                     )
                                 except ValueError:
-                                    msg = "expected a single spec as the when= condition"
+                                    noun = _SPEC_VALUED_EDGE_ATTRIBUTES[name]
+                                    msg = f"expected a single spec as the {name}= {noun}"
                                     self._raise_parsing_error(msg)
                                 self.curr, self.next = self.next, self.scanner.match()
                             else:
                                 if not value and (
                                     not self.next or self.next.lastgroup == _END_EDGE_PROPERTIES
                                 ):
-                                    self._raise_parsing_error("expected a spec after when=")
+                                    self._raise_parsing_error(f"expected a spec after {name}=")
                                 self._rescan(
                                     self.curr.start(_KV_VALUE) if value else self.curr.end()
                                 )
                                 parsed = self.next_spec()
                                 assert parsed is not None  # there is a token, so there is a spec
-                                condition = parsed
-                            # Repeated conditions combine too, by constraining
-                            if conditions is None:
-                                conditions = condition
+                                edge_spec = parsed
+                            # Repeated attributes combine too, by constraining
+                            if name == "when":
+                                if conditions is None:
+                                    conditions = edge_spec
+                                else:
+                                    conditions.constrain(edge_spec)
                             else:
-                                conditions.constrain(condition)
+                                self._validate_usages(edge_spec)
+                                if usages is None:
+                                    usages = edge_spec
+                                else:
+                                    usages.constrain(edge_spec)
 
                         elif kind == _END_EDGE_PROPERTIES:
                             # ][ opens another group of edge properties, as in
@@ -535,6 +576,9 @@ class SpecParser:
 
                     dep_spec = self._parse_node(initial_name=substitute)
 
+                    # Usages are parsed and validated above, but not attached to the edge: a
+                    # spec string that requests them parses without error and drops them.
+                    # TODO (usages RFD): pass ``usages`` on once DependencySpec stores it.
                     edge_kwargs = {
                         "direct": is_direct,
                         "depflag": depflag,
@@ -594,6 +638,29 @@ class SpecParser:
             self._raise_parsing_error("unexpected token")
 
         return root_spec
+
+    def _validate_usages(self, usages: "spack.spec.Spec") -> None:
+        """Check that a ``usages=`` value is a bare set of variants.
+
+        Usages are build modifiers that a dependent requests of a dependency on their shared
+        edge, so anything that would constrain *which* node the edge points to -- a name, a
+        version, an architecture, flags, a hash, or dependencies of its own -- is rejected.
+        Propagation (``++sarif``) is not supported yet either.
+        """
+        if usages.propagated_variants:
+            self._raise_parsing_error("propagated variants are not supported in usages= yet")
+        if (
+            usages.name
+            or usages.namespace
+            or usages.abstract_hash
+            or usages.architecture
+            or usages.compiler_flags
+            or usages.edges_to_dependencies()
+            or usages.versions != spack.version.VersionList.any()
+        ):
+            self._raise_parsing_error(
+                "usages= accepts only variants, e.g. usages='+sarif sanitizers=asan'"
+            )
 
     def _rescan(self, pos: int) -> None:
         """Restart the scanner at ``pos`` in the input, the value of an unquoted when= condition"""
