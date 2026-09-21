@@ -2266,7 +2266,6 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
 
     filesystem.mkdirp(dst_dir)
     lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
-    created: List[str] = []
     try:
         lock.acquire_write()
         # Check for conflicts up front before copying anything
@@ -2291,12 +2290,10 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
             src_path = os.path.join(src_dir, entry)
             dst_path = os.path.join(dst_dir, entry)
             if not _copy_directory_contents(src_path, dst_path, "environments"):
-                # Copy failed. Clean up only environments we successfully created earlier.
-                # Don't touch dst_path - we don't know if we own what's there after failure.
-                for created_path in reversed(created):
-                    shutil.rmtree(created_path, ignore_errors=True)
+                # Copy failed despite holding lock and passing upfront checks.
+                # Something is fundamentally wrong (lock not respected, filesystem issue, etc.).
+                # Leave everything as-is for investigation rather than potentially making it worse.
                 return False
-            created.append(dst_path)
             backup_dir = os.path.join(_migration_backup_path(), "environments")
             filesystem.mkdirp(backup_dir)
             shutil.move(src_path, os.path.join(backup_dir, entry))
