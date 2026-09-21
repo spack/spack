@@ -2213,37 +2213,78 @@ def _copy_directory_contents(src_dir: str, dst_dir: str, resource_name: str) -> 
     return True
 
 
-def _migrate_gpg_home(src_dir: str, dst_dir: str) -> bool:
-    """Copy a GPG home atomically to a new destination and back up the original."""
-    if not os.path.exists(src_dir):
+def _migrate_gpg(
+    old_gpg_home: str, target_gpg_home: str, old_gpg_keys: str, target_gpg_keys: str
+) -> bool:
+    """Migrate both GPG home (keyring) and GPG keys directories.
+
+    Returns True only if both migrations succeed. If either fails, both should
+    be configured to their old locations.
+    """
+    # Check if sources exist - if neither exists, nothing to migrate
+    gpg_home_exists = os.path.exists(old_gpg_home)
+    gpg_keys_exists = os.path.exists(old_gpg_keys)
+
+    if not gpg_home_exists and not gpg_keys_exists:
         return True
 
-    parent_dir = os.path.dirname(dst_dir)
+    # Check for destination conflicts before attempting any migration
+    if gpg_home_exists and os.path.exists(target_gpg_home):
+        tty.debug(f"Cannot migrate GPG home: destination already exists: {target_gpg_home}")
+        return False
+    if gpg_keys_exists and os.path.exists(target_gpg_keys):
+        tty.debug(f"Cannot migrate GPG keys: destination already exists: {target_gpg_keys}")
+        return False
+
+    # Prepare parent directories
+    parent_dir = os.path.dirname(target_gpg_home)
     filesystem.mkdirp(parent_dir)
     lock = spack.util.lock.Lock(os.path.join(parent_dir, ".lock"), default_timeout=120)
-    staging_dir = None
+    staging_home = None
+    staging_keys = None
+
     try:
         lock.acquire_write()
-        if os.path.exists(dst_dir):
-            tty.debug(f"Cannot copy gpg: destination already exists: {dst_dir}")
-            return False
-        staging_dir = tempfile.mkdtemp(prefix=".spack-gpg-migration-", dir=parent_dir)
-        os.chmod(staging_dir, 0o700)
-        if not _copy_directory_contents(src_dir, staging_dir, "gpg"):
-            return False
-        os.replace(staging_dir, dst_dir)
-        staging_dir = None
 
-        backup_dir = os.path.join(_migration_backup_path(), "gpg")
-        filesystem.mkdirp(os.path.dirname(backup_dir))
-        shutil.move(src_dir, backup_dir)
+        # Migrate GPG home (keyring)
+        if gpg_home_exists:
+            staging_home = tempfile.mkdtemp(prefix=".spack-gpg-migration-", dir=parent_dir)
+            os.chmod(staging_home, 0o700)
+            if not _copy_directory_contents(old_gpg_home, staging_home, "gpg home"):
+                return False
+            os.replace(staging_home, target_gpg_home)
+            staging_home = None
+
+        # Migrate GPG keys directory
+        if gpg_keys_exists:
+            staging_keys = tempfile.mkdtemp(prefix=".spack-gpg-keys-migration-", dir=parent_dir)
+            if not _copy_directory_contents(old_gpg_keys, staging_keys, "gpg keys"):
+                # GPG home already migrated, but keys failed - this is a partial failure
+                # The caller should handle pointing both back to old locations
+                return False
+            os.replace(staging_keys, target_gpg_keys)
+            staging_keys = None
+
+        # Both succeeded, now back up the sources
+        backup_root = _migration_backup_path()
+        if gpg_home_exists:
+            backup_gpg_home = os.path.join(backup_root, "gpg")
+            filesystem.mkdirp(os.path.dirname(backup_gpg_home))
+            shutil.move(old_gpg_home, backup_gpg_home)
+        if gpg_keys_exists:
+            backup_gpg_keys = os.path.join(backup_root, "gpg-keys")
+            filesystem.mkdirp(os.path.dirname(backup_gpg_keys))
+            shutil.move(old_gpg_keys, backup_gpg_keys)
+
         return True
     except (OSError, shutil.Error) as e:
-        tty.warn(f"Failed to atomically migrate GPG keys to {dst_dir}: {e}")
+        tty.warn(f"Failed to migrate GPG directories: {e}")
         return False
     finally:
-        if staging_dir is not None:
-            shutil.rmtree(staging_dir, ignore_errors=True)
+        if staging_home is not None:
+            shutil.rmtree(staging_home, ignore_errors=True)
+        if staging_keys is not None:
+            shutil.rmtree(staging_keys, ignore_errors=True)
         lock.release_write()
 
 
@@ -2394,17 +2435,24 @@ def _do_migrate(
         }
         tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
 
-    # 2. Handle GPG keys
-    old_gpg_dir = os.path.join(spack.paths.prefix, "opt", "spack", "gpg")
+    # 2. Handle GPG (both keyring and keys directory)
+    old_gpg_home = spack.paths.old_gpg_path
+    old_gpg_keys = spack.paths.old_gpg_keys_path
     if old_resources["gpg_keys"]:
-        configured_gpg_dir = CONFIG.get("config:gpg_path")
-        old_gpg_norm = os.path.normpath(os.path.expanduser(old_gpg_dir))
+        configured_gpg_home = CONFIG.get("config:gpg_path")
+        configured_gpg_keys = CONFIG.get("config:gpg_keys_path")
+        old_gpg_norm = os.path.normpath(os.path.expanduser(old_gpg_home))
         data_home = substitute_path_variables("$data_home")
-        target_gpg_dir = os.path.join(data_home, "gpg")
-        target_gpg_norm = os.path.normpath(os.path.expanduser(target_gpg_dir))
-        if configured_gpg_dir is None:
-            configured_gpg_dir = target_gpg_dir
-        configured_gpg_dir = canonicalize_path(configured_gpg_dir)
+        target_gpg_home = os.path.join(data_home, "gpg")
+        target_gpg_keys = os.path.join(data_home, "gpg-keys")
+        target_gpg_home_norm = os.path.normpath(os.path.expanduser(target_gpg_home))
+        target_gpg_keys_norm = os.path.normpath(os.path.expanduser(target_gpg_keys))
+        if configured_gpg_home is None:
+            configured_gpg_home = target_gpg_home
+        if configured_gpg_keys is None:
+            configured_gpg_keys = target_gpg_keys
+        configured_gpg_home = canonicalize_path(configured_gpg_home)
+        configured_gpg_keys = canonicalize_path(configured_gpg_keys)
         gnupghome = os.getenv("SPACK_GNUPGHOME")
 
         # An explicit SPACK_GNUPGHOME is authoritative.  Only preserve the
@@ -2414,22 +2462,28 @@ def _do_migrate(
             if gnupghome_norm == old_gpg_norm:
                 if "config" not in scope_config:
                     scope_config["config"] = {}
-                scope_config["config"]["gpg_path"] = old_gpg_dir
+                scope_config["config"]["gpg_path"] = old_gpg_home
+                scope_config["config"]["gpg_keys_path"] = old_gpg_keys
                 retained_resources.append("GPG data (kept in its old location)")
         elif is_isolate_command:
-            # Isolation never relocates existing keyrings.
+            # Isolation never relocates existing GPG directories.
             if "config" not in scope_config:
                 scope_config["config"] = {}
-            scope_config["config"]["gpg_path"] = old_gpg_dir
-        elif configured_gpg_dir == target_gpg_norm:
-            # With the default configuration, copy the old keyring into the
-            # shared default.  A collision leaves the old location active.
-            if _migrate_gpg_home(old_gpg_dir, target_gpg_dir):
+            scope_config["config"]["gpg_path"] = old_gpg_home
+            scope_config["config"]["gpg_keys_path"] = old_gpg_keys
+        elif (
+            configured_gpg_home == target_gpg_home_norm
+            and configured_gpg_keys == target_gpg_keys_norm
+        ):
+            # With the default configuration, copy both GPG directories.
+            # If either fails, both stay in old locations.
+            if _migrate_gpg(old_gpg_home, target_gpg_home, old_gpg_keys, target_gpg_keys):
                 migrated_resources.append("GPG data")
             else:
                 if "config" not in scope_config:
                     scope_config["config"] = {}
-                scope_config["config"]["gpg_path"] = old_gpg_dir
+                scope_config["config"]["gpg_path"] = old_gpg_home
+                scope_config["config"]["gpg_keys_path"] = old_gpg_keys
                 retained_resources.append("GPG data (kept in its old location)")
         # A custom configured location is user-owned and remains untouched.
 
