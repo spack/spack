@@ -143,12 +143,12 @@ class BuildcacheManifest:
             data=[BlobRecord.from_dict(blob_json) for blob_json in manifest_json["data"]],
         )
 
-    def get_blob_records(self, media_type: str) -> List[BlobRecord]:
+    def get_blob_records(self, media_type: List[str]) -> List[BlobRecord]:
         """Return any blob records from the manifest matching the given media type"""
         matches: List[BlobRecord] = []
 
         for record in self.data:
-            if record.media_type == media_type:
+            if record.media_type in media_type:
                 matches.append(record)
 
         if matches:
@@ -189,11 +189,23 @@ class URLBuildcacheEntry:
 
     SPEC_URL_REGEX = re.compile(r"(.+)/v([\d]+)/manifests/.+")
     LAYOUT_VERSION = 3
-    BUILDCACHE_INDEX_MEDIATYPE = f"application/vnd.spack.db.v{spack.database._DB_VERSION}+json"
-    SPEC_MEDIATYPE = f"application/vnd.spack.spec.v{spack.spec.SPECFILE_FORMAT_VERSION}+json"
-    TARBALL_MEDIATYPE = f"application/vnd.spack.install.v{BINARY_MEDIA_TYPE_VERSION}.tar+gzip"
-    PUBLIC_KEY_MEDIATYPE = "application/pgp-keys"
-    PUBLIC_KEY_INDEX_MEDIATYPE = "application/vnd.spack.keyindex.v1+json"
+
+    MEDIA_TYPES = {
+        BuildcacheComponent.INDEX: [
+            f"application/vnd.spack.db.v{i}+json"
+            for i in range(8, int(str(spack.database._DB_VERSION)) + 1)
+        ],
+        BuildcacheComponent.SPEC: [
+            f"application/vnd.spack.spec.v{i}+json"
+            for i in range(5, spack.spec.SPECFILE_FORMAT_VERSION + 1)
+        ],
+        BuildcacheComponent.KEY: ["application/pgp-keys"],
+        BuildcacheComponent.KEY_INDEX: ["application/vnd.spack.keyindex.v1+json"],
+        BuildcacheComponent.TARBALL: [
+            f"application/vnd.spack.install.v{i}.tar+gzip"
+            for i in range(2, BINARY_MEDIA_TYPE_VERSION + 1)
+        ],
+    }
     BUILDCACHE_INDEX_FILE = "index.manifest.json"
     COMPONENT_PATHS = {
         BuildcacheComponent.MANIFEST: [f"v{LAYOUT_VERSION}", "manifests"],
@@ -323,18 +335,15 @@ class URLBuildcacheEntry:
         raise BuildcacheEntryError(f"Not a manifest component: {buildcache_component}")
 
     @classmethod
-    def component_to_media_type(cls, component: BuildcacheComponent) -> str:
+    def component_to_media_type(
+        cls, component: BuildcacheComponent, current: bool = False
+    ) -> List[str]:
         """Mapping from buildcache component to media type"""
-        if component == BuildcacheComponent.SPEC:
-            return cls.SPEC_MEDIATYPE
-        elif component == BuildcacheComponent.TARBALL:
-            return cls.TARBALL_MEDIATYPE
-        elif component == BuildcacheComponent.INDEX:
-            return cls.BUILDCACHE_INDEX_MEDIATYPE
-        elif component == BuildcacheComponent.KEY:
-            return cls.PUBLIC_KEY_MEDIATYPE
-        elif component == BuildcacheComponent.KEY_INDEX:
-            return cls.PUBLIC_KEY_INDEX_MEDIATYPE
+        if component in cls.MEDIA_TYPES:
+            if current:
+                return [cls.MEDIA_TYPES[component][-1]]
+            else:
+                return cls.MEDIA_TYPES[component]
 
         raise BuildcacheEntryError(f"Not a blob component: {component}")
 
@@ -628,7 +637,7 @@ class URLBuildcacheEntry:
 
             record = BlobRecord(
                 checker.length,
-                cache_class.component_to_media_type(component_type),
+                cache_class.component_to_media_type(component_type, current=True)[0],
                 compression,
                 checksum_algo,
                 checker.hexdigest(),
@@ -686,7 +695,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 tarball_content_length,
-                self.TARBALL_MEDIATYPE,
+                self.component_to_media_type(BuildcacheComponent.TARBALL, current=True)[0],
                 compression,
                 checksum_algorithm,
                 tarball_checksum,
@@ -714,7 +723,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 metadata_size,
-                self.SPEC_MEDIATYPE,
+                self.component_to_media_type(BuildcacheComponent.SPEC, current=True)[0],
                 compression,
                 checksum_algorithm,
                 metadata_checksum,

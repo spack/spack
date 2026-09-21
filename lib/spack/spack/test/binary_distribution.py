@@ -1287,7 +1287,7 @@ def mock_index(tmp_path: pathlib.Path, monkeypatch) -> IndexInformation:
 
     index_blob_record = spack.binary_distribution.BlobRecord(
         os.stat(index_blob_path).st_size,
-        cache_class.BUILDCACHE_INDEX_MEDIATYPE,
+        cache_class.component_to_media_type(BuildcacheComponent.INDEX, current=True)[0],
         "none",
         "sha256",
         index_json_hash,

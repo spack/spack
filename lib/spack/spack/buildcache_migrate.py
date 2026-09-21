@@ -186,12 +186,16 @@ def _migrate_spec(
     )
 
     tarball_blob_record = BlobRecord(
-        spec_dict["archive_size"], v3_cache_class.TARBALL_MEDIATYPE, "gzip", algorithm, checksum
+        spec_dict["archive_size"],
+        v3_cache_class.component_to_media_type(BuildcacheComponent.TARBALL, current=True)[0],
+        "gzip",
+        algorithm,
+        checksum,
     )
 
     metadata_blob_record = BlobRecord(
         metadata_size,
-        v3_cache_class.SPEC_MEDIATYPE,
+        v3_cache_class.component_to_media_type(BuildcacheComponent.SPEC, current=True)[0],
         "gzip",
         metadata_checksum_algo,
         metadata_checksum,
