@@ -2269,22 +2269,34 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
     created: List[str] = []
     try:
         lock.acquire_write()
-        for entry in os.listdir(src_dir):
-            src_path = os.path.join(src_dir, entry)
-            dst_path = os.path.join(dst_dir, entry)
+        # Check for conflicts up front before copying anything
+        entries_to_copy = []
+        for entry in sorted(os.listdir(src_dir)):
             if entry == ".lock":
                 continue
+            src_path = os.path.join(src_dir, entry)
             if not os.path.isdir(src_path):
                 continue
-            destination_existed = os.path.exists(dst_path)
+            dst_path = os.path.join(dst_dir, entry)
+            if os.path.exists(dst_path):
+                tty.warn(
+                    f"Environment migration stopped: destination exists: {dst_path}. "
+                    f"The old environments directory will remain configured."
+                )
+                return False
+            entries_to_copy.append(entry)
+
+        # All checks passed, now copy
+        for entry in entries_to_copy:
+            src_path = os.path.join(src_dir, entry)
+            dst_path = os.path.join(dst_dir, entry)
             if not _copy_directory_contents(src_path, dst_path, "environments"):
-                if not destination_existed:
-                    shutil.rmtree(dst_path, ignore_errors=True)
+                # Copy failed. Clean up only environments we successfully created earlier.
+                # Don't touch dst_path - we don't know if we own what's there after failure.
                 for created_path in reversed(created):
                     shutil.rmtree(created_path, ignore_errors=True)
                 return False
-            if not destination_existed:
-                created.append(dst_path)
+            created.append(dst_path)
             backup_dir = os.path.join(_migration_backup_path(), "environments")
             filesystem.mkdirp(backup_dir)
             shutil.move(src_path, os.path.join(backup_dir, entry))
@@ -2298,7 +2310,7 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
     if not os.path.exists(src_dir):
         return True
 
-    src_entries = os.listdir(src_dir)
+    src_entries = sorted(os.listdir(src_dir))
     if not src_entries:
         return True
     filesystem.mkdirp(dst_dir)

@@ -314,14 +314,23 @@ class MigrationResources:
         conflicts = set(conflicts)
         overrides = set(expected_migrations)
         expected_migrations = {resource for resource in all_resources if resource not in conflicts}
+
+        # Environments: check all conflicts upfront, so ANY env conflict means NO envs migrate
         if any(resource.startswith("envs/") for resource in conflicts):
             expected_migrations.difference_update(
                 resource for resource in all_resources if resource.startswith("envs/")
             )
-        if any(resource.startswith("licenses/") for resource in conflicts):
-            expected_migrations.difference_update(
-                resource for resource in all_resources if resource.startswith("licenses/")
-            )
+
+        # Licenses: processed in sorted order, stops at first conflict
+        # So licenses lexically before the first conflict will migrate
+        license_conflicts = sorted(r for r in conflicts if r.startswith("licenses/"))
+        if license_conflicts:
+            # First conflict in sorted order
+            first_conflict = license_conflicts[0]
+            # Remove all licenses from first conflict onwards (including and after)
+            for resource in all_resources:
+                if resource.startswith("licenses/") and resource >= first_conflict:
+                    expected_migrations.discard(resource)
         expected_migrations.update(
             resource[1:] for resource in overrides if resource.startswith("+")
         )
@@ -402,17 +411,17 @@ class MigrationResources:
         for resource in conflicts:
             if resource == "gpg":
                 destination = self.data_home / "gpg"
-                destination.mkdir(parents=True)
+                destination.mkdir(parents=True, exist_ok=True)
                 (destination / "existing").write_text("new", encoding="utf-8")
             elif resource.startswith("envs/"):
                 name = resource.split("/", 1)[1]
                 destination = self.data_home / "environments" / name
-                destination.mkdir(parents=True)
+                destination.mkdir(parents=True, exist_ok=True)
                 (destination / "spack.yaml").write_text("new", encoding="utf-8")
             elif resource.startswith("licenses/"):
                 name = resource.split("/", 1)[1]
                 destination = self.data_home / "licenses"
-                destination.mkdir(parents=True)
+                destination.mkdir(parents=True, exist_ok=True)
                 (destination / name).write_text("new", encoding="utf-8")
 
 
