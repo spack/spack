@@ -374,7 +374,9 @@ class MigrationResources:
                     elif resource == "licenses/license-1":
                         config = spack.config.CONFIG
                         license_dir = config.get("config:license_dir")
-                        assert str(self.old_licenses) == spack.config.canonicalize_path(license_dir)
+                        assert str(self.old_licenses) == spack.config.canonicalize_path(
+                            license_dir
+                        )
 
             if resource in conflicts:
                 assert destination.exists()
