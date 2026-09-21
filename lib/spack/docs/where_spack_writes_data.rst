@@ -35,9 +35,9 @@ Path substitutions
 
 Config values can reference these in any string field:
 
-* ``$data_home``        — typically ``~/.local/share/spack`` (new) or ``$spack`` (old)
-* ``$state_home``       — typically ``~/.local/state/spack`` (new) or ``~/.spack`` (old, if it exists)
-* ``$cache_home``       — typically ``~/.cache/spack``
+* ``$data_home``        — ``config:locations:data``, defaults to ``~/.local/share/spack``.
+* ``$state_home``       — ``config:locations:state``, defaults to ``~/.local/state/spack``.
+* ``$cache_home``       — ``config:locations:cache``, defaults to ``~/.cache/spack``
 * ``$user_cache_path``  — alias for ``$state_home`` (legacy)
 * ``$spack``            — the Spack instance's prefix
 * ``$spack_instance_id`` — hash distinguishing co-installed Spack instances
