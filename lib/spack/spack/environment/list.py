@@ -8,13 +8,18 @@ import spack.spec
 import spack.util.spack_yaml
 import spack.variant
 from spack.error import SpackError
-from spack.spec import Spec, expand_toolchains
+from spack.spec import ParseContext, Spec, evaluate, parse_one_or_raise
 
 
 class SpecList:
     def __init__(
-        self, *, name: str = "specs", yaml_list=None, expanded_list=None, toolchains=None
-    ):
+        self,
+        *,
+        name: str = "specs",
+        yaml_list: Optional[List[Union[str, Dict[str, Any]]]] = None,
+        expanded_list: Optional[List[Union[str, Dict[str, Any]]]] = None,
+        context: Optional[ParseContext] = None,
+    ) -> None:
         self.name = name
         self.yaml_list = yaml_list[:] if yaml_list is not None else []
         # Expansions can be expensive to compute and difficult to keep updated
@@ -22,7 +27,7 @@ class SpecList:
         self.specs_as_yaml_list = expanded_list or []
         self._constraints = None
         self._specs: Optional[List[Spec]] = None
-        self._toolchains = toolchains
+        self._context = context or ParseContext()
 
     @property
     def is_matrix(self):
@@ -54,8 +59,7 @@ class SpecList:
                 spec = constraint_list[0].copy()
                 for const in constraint_list[1:]:
                     spec.constrain(const)
-                if self._toolchains:
-                    expand_toolchains(spec, self._toolchains)
+                evaluate(spec, self._context)
                 specs.append(spec)
             self._specs = specs
 
@@ -73,12 +77,16 @@ class SpecList:
         self._constraints = None
         self._specs = None
 
-    def remove(self, spec):
-        # Get spec to remove from list
+    def remove(self, spec: Spec) -> None:
+        # Get spec to remove from list: the yaml entries are user input, so evaluate them
+        # like the incoming spec has been
+        to_remove = Spec(spec)
         remove = [
             s
             for s in self.yaml_list
-            if (isinstance(s, str) and not s.startswith("$")) and Spec(s) == Spec(spec)
+            if isinstance(s, str)
+            and not s.startswith("$")
+            and parse_one_or_raise(s, context=self._context) == to_remove
         ]
         if not remove:
             msg = f"Cannot remove {spec} from SpecList {self.name}.\n"
@@ -186,9 +194,9 @@ class Definition(NamedTuple):
 class SpecListParser:
     """Parse definitions and user specs from data in environments"""
 
-    def __init__(self, *, toolchains=None):
+    def __init__(self, *, context: Optional[ParseContext] = None) -> None:
         self.definitions: Dict[str, SpecList] = {}
-        self._toolchains = toolchains
+        self._context = context or ParseContext()
 
     def parse_definitions(self, *, data: List[Dict[str, Any]]) -> Dict[str, SpecList]:
         definitions_from_yaml: Dict[str, List[Definition]] = {}
@@ -238,7 +246,7 @@ class SpecListParser:
             name=name,
             yaml_list=combined_yaml_list,
             expanded_list=expanded_list,
-            toolchains=self._toolchains,
+            context=self._context,
         )
 
     def _expand_yaml_list(self, raw_yaml_list):

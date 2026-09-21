@@ -739,6 +739,16 @@ def test_remove_before_concretize(mutable_config):
         assert not e.concretized_roots
 
 
+def test_remove_spec_with_host_alias(tmp_path: pathlib.Path):
+    """Manifest entries using default_os/default_target are matched after evaluation, since the
+    spec on the command line is evaluated too."""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text("spack:\n  specs: [mpileaks target=default_target]\n")
+    with ev.Environment(tmp_path):
+        remove("mpileaks", "target=default_target")
+    assert "mpileaks" not in manifest.read_text()
+
+
 def test_remove_command():
     env("create", "test")
     assert "test" in env("list")
@@ -2818,7 +2828,9 @@ spack:
 
             assert before_user == after_user
 
-            mpileaks_spec = Spec("mpileaks target=default_target")
+            mpileaks_spec = spack.spec.parse_one_or_raise(
+                "mpileaks target=default_target", context=spack.spec.ParseContext()
+            )
             assert mpileaks_spec in {x.root for x in concretized_roots_before}
             assert mpileaks_spec not in {x.root for x in concretized_roots_after}
 
