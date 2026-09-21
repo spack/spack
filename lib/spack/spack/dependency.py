@@ -31,9 +31,9 @@ def intern_dependency(dependency: "Dependency") -> "Dependency":
 class Dependency:
     """Class representing metadata for a dependency on a package.
 
-    This class differs from ``spack.spec.DependencySpec`` because it
+    This class differs from ``spack.spec.Edge`` because it
     represents metadata at the ``Package`` level.
-    ``spack.spec.DependencySpec`` is a descriptor for an actual package
+    ``spack.spec.Edge`` is a descriptor for an actual package
     configuration, while ``Dependency`` is a descriptor for a package's
     dependency *requirements*.
 
