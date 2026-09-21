@@ -9,7 +9,7 @@ import pathlib
 import shutil
 import urllib.parse
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pytest
 
@@ -1047,34 +1047,35 @@ def test_buildcache_prune_new_specs_race_condition(
     assert web_util.url_exists(manifest_url)
 
 
-def create_env_from_concrete_spec(spec: spack.spec.Spec):
+def create_env_from_concrete_spec(spec: Optional[spack.spec.Spec]):
     """Build cache index view source is current active environment"""
     # Create a unique environment for this spec only
-    env_name = f"specenv-{spec.dag_hash()}"
+    env_name = f"specenv-{spec.dag_hash()}" if spec else "nospec-env"
     if not ev.exists(env_name):
         env("create", "--without-view", env_name)
 
     e = ev.environment_from_name_or_dir(env_name)
-    with e:
-        add(f"{spec.name}/{spec.dag_hash()}")
-        # This should handle updating the environment to mark all packages as installed
-        install()
+    if spec:
+        with e:
+            add(f"{spec.name}/{spec.dag_hash()}")
+            # This should handle updating the environment to mark all packages as installed
+            install()
     return e
 
 
-def args_for_active_env(spec: spack.spec.Spec):
+def args_for_active_env(spec: Optional[spack.spec.Spec]):
     """Build cache index view source is an active environment"""
     env = create_env_from_concrete_spec(spec)
     return [env, []]
 
 
-def args_for_env_by_path(spec: spack.spec.Spec):
+def args_for_env_by_path(spec: Optional[spack.spec.Spec]):
     """Build cache index view source is an environment path"""
     env = create_env_from_concrete_spec(spec)
     return [nullcontext(), [env.path]]
 
 
-def args_for_env_by_name(spec: spack.spec.Spec):
+def args_for_env_by_name(spec: Optional[spack.spec.Spec]):
     """Build cache index view source is a managed environment name"""
     env = create_env_from_concrete_spec(spec)
     return [nullcontext(), [env.name]]
@@ -1221,6 +1222,40 @@ def test_buildcache_create_view_append(
 
     # Test append to empty index view
     context, extra_args = source_args(mpileaks_specs[0])
+    with context:
+        command_args = [
+            "update-index",
+            "-y",
+            "--append",
+            "--name",
+            "test_view",
+            "my-mirror",
+        ] + extra_args
+        buildcache(*command_args)
+
+    hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
+    # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
+    assert hashes_in_view == mpileaks_0_hashes
+
+    # Test duplicate append (no new specs)
+    context, extra_args = source_args(mpileaks_specs[0])
+    with context:
+        command_args = [
+            "update-index",
+            "-y",
+            "--append",
+            "--name",
+            "test_view",
+            "my-mirror",
+        ] + extra_args
+        buildcache(*command_args)
+
+    hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
+    # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
+    assert hashes_in_view == mpileaks_0_hashes
+
+    # Test empty env append
+    context, extra_args = source_args(None)
     with context:
         command_args = [
             "update-index",
