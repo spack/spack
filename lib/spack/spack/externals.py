@@ -75,7 +75,7 @@ def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
     spack.spec.resolve_host_aliases(result)
     if "required_target" in external_dict:
         required = f"target={external_dict['required_target']}"
-        result.constrain(spack.spec.parse_one_or_raise(required, context=spack.spec.ParseContext()))
+        result.constrain(spack.spec.Spec(required, context=spack.spec.ParseContext()))
     return result
 
 

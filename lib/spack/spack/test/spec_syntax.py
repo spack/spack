@@ -2024,7 +2024,7 @@ def test_resolve_host_aliases(monkeypatch):
     assert spec.architecture.target == host.default_target()
 
     # parsing user input resolves them in dependencies too
-    spec = spack.spec.parse_one_or_raise("x ^y target=default_target", context=ParseContext())
+    spec = Spec("x ^y target=default_target", context=ParseContext())
     assert spec["y"].architecture.target == host.default_target()
 
     with pytest.raises(spack.error.SpecError, match="not the current platform"):

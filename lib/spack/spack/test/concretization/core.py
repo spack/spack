@@ -2755,9 +2755,7 @@ packages:
         json_file = tmp_path / "build.json"
         json_file.write_text(build_dep.to_json())
         s = spack.concretize.concretize_one(
-            spack.spec.parse_one_or_raise(
-                f"dtuse ^{json_file}", context=spack.spec.ParseContext(specfiles=True)
-            )
+            spack.spec.Spec(f"dtuse ^{json_file}", context=spack.spec.ParseContext(specfiles=True))
         )
         assert s["dttop"].dag_hash() == build_dep.dag_hash()
 

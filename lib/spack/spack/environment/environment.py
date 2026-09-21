@@ -3388,11 +3388,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         """
         # both sides are user input: evaluate them the same way before comparing
         context = spack.spec.ParseContext.from_config(spack.config.CONFIG)
-        wanted = spack.spec.parse_one_or_raise(user_spec, context=context)
+        wanted = Spec(user_spec, context=context)
         result = [
             yaml_spec_str
             for yaml_spec_str in self.configuration["specs"]
-            if spack.spec.parse_one_or_raise(yaml_spec_str, context=context) == wanted
+            if Spec(yaml_spec_str, context=context) == wanted
         ]
 
         if not result:
