@@ -1965,7 +1965,7 @@ def process_config_file_paths(
     return data if modified else None, path_info
 
 
-def _migrate_user_config_programmatic() -> bool:
+def _migrate_user_config() -> bool:
     """Programmatically migrate ~/.spack to ~/.config/spack.
 
     Only performs migration if:
@@ -1978,7 +1978,7 @@ def _migrate_user_config_programmatic() -> bool:
         True if migration was performed, False if skipped
     """
     old_location = os.path.expanduser("~/.spack")
-    new_config_location = os.path.expanduser("~/.config/spack")
+    new_default_cfg_location = os.path.expanduser("~/.config/spack")
 
     # Check if there's a "user" scope in loaded config pointing to ~/.config/spack
     user_scope = CONFIG.scopes.get("user")
@@ -1991,7 +1991,7 @@ def _migrate_user_config_programmatic() -> bool:
         tty.debug("The 'user' scope is not filesystem-backed, skipping user config migration")
         return False
     user_scope_path = os.path.normpath(os.path.expanduser(user_scope.path))
-    expected_path = os.path.normpath(new_config_location)
+    expected_path = os.path.normpath(new_default_cfg_location)
     if user_scope_path != expected_path:
         tty.debug(
             f"User scope path is {user_scope_path}, not {expected_path}, "
@@ -2000,8 +2000,8 @@ def _migrate_user_config_programmatic() -> bool:
         return False
 
     # Skip if new location already exists
-    if os.path.exists(new_config_location):
-        tty.debug(f"{new_config_location} already exists, skipping user config migration")
+    if os.path.exists(new_default_cfg_location):
+        tty.debug(f"{new_default_cfg_location} already exists, skipping user config migration")
         return False
 
     if not os.path.exists(old_location):
@@ -2024,33 +2024,21 @@ def _migrate_user_config_programmatic() -> bool:
         return False
 
     # Lock the destination parent directory to prevent concurrent migrations
-    config_parent = os.path.dirname(new_config_location)
+    config_parent = os.path.dirname(new_default_cfg_location)
     filesystem.mkdirp(config_parent)
     lock_path = os.path.join(config_parent, ".spack-user-config-migration.lock")
 
     lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-    try:
-        lock.acquire_write()
-        tty.debug(f"Acquired migration lock for {new_config_location}")
-        return _do_migrate_user_config(old_location, new_config_location, config_files)
-    finally:
-        lock.release_write()
-        tty.debug(f"Released migration lock for {new_config_location}")
+    with spack.util.lock.WriteTransaction(lock):
+        return _do_migrate_user_config(old_location, new_default_cfg_location, config_files)
 
 
 def _do_migrate_user_config(
     old_location: str, new_config_location: str, config_files: List[str]
 ) -> bool:
-    """Perform the actual user config migration (assumes lock is already held).
+    # Helper for _migrate_user_config: does the actual work of relocating config
+    # files
 
-    Args:
-        old_location: Path to ~/.spack
-        new_config_location: Path to ~/.config/spack
-        config_files: List of config files to migrate (relative paths)
-
-    Returns:
-        True if migration was performed, False if skipped
-    """
     # Check again if destination exists (might have been created by another process)
     if os.path.exists(new_config_location):
         tty.debug(
@@ -2535,7 +2523,7 @@ def _do_migrate(
 
     # 5. Copy ~/.spack to ~/.config/spack (unless isolate command)
     if not is_isolate_command:
-        user_config_migrated = _migrate_user_config_programmatic()
+        user_config_migrated = _migrate_user_config()
         package_repos_migrated = _migrate_package_repositories()
 
     # Write config scope files to the selected configuration scope.
