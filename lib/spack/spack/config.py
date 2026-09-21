@@ -1962,7 +1962,7 @@ def process_config_file_paths(
                 absolutize_path_in_yaml(data, key_path, abs_path)
                 modified = True
 
-    return data if modified else None, path_info
+    return (data if modified else None, path_info)
 
 
 def _migrate_user_config() -> bool:
@@ -2030,7 +2030,8 @@ def _migrate_user_config() -> bool:
 
     lock = spack.util.lock.Lock(lock_path, default_timeout=120)
     with spack.util.lock.WriteTransaction(lock):
-        return _do_migrate_user_config(old_location, new_default_cfg_location, config_files)
+        result = _do_migrate_user_config(old_location, new_default_cfg_location, config_files)
+    return result
 
 
 def _do_migrate_user_config(
