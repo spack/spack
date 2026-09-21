@@ -1265,12 +1265,12 @@ def test_edge_property_groups_parse_in_any_order(groups):
 
     TODO (usages RFD): assert the modifiers on the edge once DependencySpec stores them.
     """
-    spec = Spec(f"foo %{''.join(groups)}gcc")
+    spec = spack.spec.Spec(f"foo %{''.join(groups)}gcc")
     assert str(spec) == "foo %[when=%baz target=x86_64] c=gcc"
 
     edge = spec.edges_to_dependencies(name="gcc")[0]
     assert edge.virtuals == ("c",)
-    assert edge.when == Spec("%baz target=x86_64")
+    assert edge.when == spack.spec.Spec("%baz target=x86_64")
 
 
 @pytest.mark.parametrize(
@@ -1290,7 +1290,7 @@ def test_usages_parse_but_are_not_stored(spec_str):
 
     TODO (usages RFD): replace with round-trip assertions once DependencySpec stores them.
     """
-    spec = Spec(spec_str)
+    spec = spack.spec.Spec(spec_str)
     assert "sarif" not in str(spec)
 
 
