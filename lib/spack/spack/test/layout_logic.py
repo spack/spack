@@ -359,6 +359,23 @@ class MigrationResources:
                 assert self.contains_text(source, "old")
                 assert not backup_path.exists()
 
+                # When not migrated due to conflicts (not custom config),
+                # config should explicitly point to old location.
+                # Check this only once per resource type to avoid redundant checks.
+                if resource in conflicts:
+                    if resource == "gpg":
+                        config = spack.config.CONFIG
+                        gpg_path = config.get("config:gpg_path")
+                        assert str(self.old_gpg) == spack.config.canonicalize_path(gpg_path)
+                    elif resource == "envs/env-1":
+                        config = spack.config.CONFIG
+                        envs_root = config.get("config:environments_root")
+                        assert str(self.old_envs) == spack.config.canonicalize_path(envs_root)
+                    elif resource == "licenses/license-1":
+                        config = spack.config.CONFIG
+                        license_dir = config.get("config:license_dir")
+                        assert str(self.old_licenses) == spack.config.canonicalize_path(license_dir)
+
             if resource in conflicts:
                 assert destination.exists()
                 assert self.contains_text(destination, "new")
