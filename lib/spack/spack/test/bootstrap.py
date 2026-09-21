@@ -394,10 +394,7 @@ def test_exactly_one_clingo_binary_matches_an_interpreter(metadata_file: pathlib
     """A host must select a single clingo binary."""
     data = json.loads(metadata_file.read_text(encoding="utf-8"))
     entries = [spack.spec.Spec(x["spec"]) for x in data["verified"]]
-    combinations = {
-        (str(x.architecture.platform), str(x.architecture.target), str(x["python"].versions))
-        for x in entries
-    }
+    combinations = {(str(x.platform), str(x.target), str(x["python"].versions)) for x in entries}
 
     for platform, target, python_version in sorted(combinations):
         root_spec = spack.bootstrap.core.clingo_root_spec(platform=platform, target=target)

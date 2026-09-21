@@ -2629,7 +2629,8 @@ class Environment:
 
     def _add_to_environment_repository(self, spec_node: Spec) -> None:
         """Add the root node of the spec to the environment repository"""
-        namespace: str = spec_node.namespace
+        namespace = spec_node.namespace
+        assert namespace is not None
         repository = spack.repo.create_or_construct(
             root=os.path.join(self.repos_path, namespace),
             namespace=namespace,
