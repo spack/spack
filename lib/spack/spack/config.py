@@ -2191,6 +2191,11 @@ def _copy_directory_contents(src_dir: str, dst_dir: str, resource_name: str) -> 
                     # Import locally to avoid circular dependency with spack.environment
                     from spack.environment.environment import MARKER_FILE
 
+                    # Skip the entry entirely if it's a view directory
+                    if os.path.exists(os.path.join(src_path, MARKER_FILE)):
+                        tty.debug(f"Skipping view directory during migration: {src_path}")
+                        continue
+
                     def ignore_views(directory, names):
                         ignored = []
                         for name in names:
