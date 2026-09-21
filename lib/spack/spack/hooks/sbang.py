@@ -14,24 +14,20 @@ import spack.store
 from spack.util import tty
 
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
-#: Different Linux distributions have different limits, but 127 is the
-#: smallest among all modern versions.
+#: Linux 5.1 and later set BINPRM_BUF_SIZE to 256, before that, it was 128.
+system_shebang_limit: int
+
 if sys.platform == "darwin":
     system_shebang_limit = 511
+elif sys.platform == "linux":
+    try:
+        release = os.uname().release
+        major, minor = (int(x) for x in release.split(".")[:2])
+        system_shebang_limit = 255 if (major, minor) >= (5, 1) else 127
+    except Exception:
+        system_shebang_limit = 127
 else:
     system_shebang_limit = 127
-    try:
-        # searching for line '#define BINPRM_BUF_SIZE 256' in /usr/include/linux/binfmts.h
-        # the nbr-1 is the sbang limit on the linux platform
-        sbang_limit_re = re.compile("#define BINPRM_BUF_SIZE ([0-9]+)")
-        with open("/usr/include/linux/binfmts.h", "r", encoding="utf-8") as f:
-            for line in f:
-                m = sbang_limit_re.match(line)
-                if m:
-                    system_shebang_limit = int(m.group(1)) - 1
-    except Exception:
-        # ignore any error a sane default is set already
-        pass
 
 #: Spack itself also limits the shebang line to at most 4KB, which should be plenty.
 spack_shebang_limit = 4096
