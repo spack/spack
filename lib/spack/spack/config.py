@@ -219,37 +219,10 @@ class ConfigScope:
 
                 # Do not include duplicate scopes
                 for included_scope in included_scopes:
-                    prior_matches = [
-                        x for x in self._included_scopes if included_scope.name == x.name
-                    ]
-                    if prior_matches:
-                        prior_match = prior_matches[0]
-                        if hasattr(prior_match, "path"):
-                            at = f" at {prior_match.path}"
-                        else:
-                            at = ""
-                        if (
-                            hasattr(included_scope, "path")
-                            and pathlib.Path(included_scope.path).resolve()
-                            == pathlib.Path(os.path.expanduser("~/.config/spack")).resolve()
-                        ):
-                            # Spack's default configs include two mutually exclusive instances
-                            # of user config: a legacy one in ~/.spack, and a preferred one in
-                            # ~/.config/spack, if a higher priority "user" scope is activated
-                            # we don't warn when this default one is omitted.
-                            msg = (
-                                f"Dropping config scope '{included_scope.name}'"
-                                f" at {included_scope.path}"
-                                f" for higher-precedence scope with same name{at}"
-                            )
-                            if tty._debug:
-                                tty.debug(msg)
-                            else:
-                                saved_debug_msgs.append(msg)
-                        else:
-                            warnings.warn(
-                                f"Ignoring duplicate included scope: {included_scope.name}"
-                            )
+                    if any(
+                        included_scope.name == scope.name for scope in self._included_scopes
+                    ):
+                        warnings.warn(f"Ignoring duplicate included scope: {included_scope.name}")
                         continue
 
                     if included_scope not in self._included_scopes:
