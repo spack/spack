@@ -299,6 +299,7 @@ def migration_resources(mock_spack_instance):
     return MigrationResources(*mock_spack_instance)
 
 
+# Another parameterization varible should be config vars
 @pytest.mark.parametrize(
     "conflicts, expected_migrations",
     [
@@ -317,9 +318,15 @@ def test_auto_migration_handles_all_resource_types(
 
     expected_migrations = set(expected_migrations)
     backup = resources.base_prefix / ".migration-backup"
+    # Overall, the "was-it-migrated" logic can live in the migration_resources object
+    # (in tandem with the point below about using an "official" reference to the base
+    # paths, that object's verification method can take the destination as a parameter)
     for resource in ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2"):
         migrated = resource in expected_migrations
         if resource == "gpg":
+            # Our test should be examining the base prefix directly: both migration_resources and
+            # this test should be getting the same mocked SpackPaths, vs. us retrieving it here
+            # for verification purposes through `resources`
             assert (resources.data_home / "gpg").exists()
             assert (backup / "gpg").exists() is migrated
             assert resources.old_gpg.exists() is not migrated
@@ -337,6 +344,11 @@ def test_auto_migration_handles_all_resource_types(
             name = resource.split("/", 1)[1]
             assert (backup / "licenses" / name).exists() is migrated
             assert (resources.old_licenses / name).exists() is not migrated
+        # For things that conflict, we want to make sure that the old contents
+        # do not appear in the new destination, it occurs to me if there's a
+        # common string like "new" in any file in the source dir, we can
+        # simply recursively read through and make sure it isn't in the dst
+        # dir
 
 
 def test_auto_migration_copies_package_repositories(mock_spack_instance, monkeypatch):
