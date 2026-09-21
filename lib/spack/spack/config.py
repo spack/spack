@@ -2407,9 +2407,7 @@ def _do_migrate(
         target_gpg_norm = os.path.normpath(os.path.expanduser(target_gpg_dir))
         if configured_gpg_dir is None:
             configured_gpg_dir = target_gpg_dir
-        configured_gpg_dir = os.path.normpath(
-            os.path.expanduser(canonicalize_path(configured_gpg_dir))
-        )
+        configured_gpg_dir = canonicalize_path(configured_gpg_dir)
         gnupghome = os.getenv("SPACK_GNUPGHOME")
 
         # An explicit SPACK_GNUPGHOME is authoritative.  Only preserve the
@@ -2455,9 +2453,7 @@ def _do_migrate(
             target_licenses_norm = os.path.normpath(os.path.expanduser(target_licenses_dir))
             if configured_license_dir is None:
                 configured_license_dir = target_licenses_dir
-            configured_license_dir = os.path.normpath(
-                os.path.expanduser(canonicalize_path(configured_license_dir))
-            )
+            configured_license_dir = canonicalize_path(configured_license_dir)
 
             if configured_license_dir != target_licenses_norm:
                 # User has custom location, don't migrate
@@ -2501,9 +2497,7 @@ def _do_migrate(
             target_envs_norm = os.path.normpath(os.path.expanduser(target_envs_dir))
             if configured_env_root is None:
                 configured_env_root = target_envs_dir
-            configured_env_root = os.path.normpath(
-                os.path.expanduser(canonicalize_path(configured_env_root))
-            )
+            configured_env_root = canonicalize_path(configured_env_root)
 
             if configured_env_root != target_envs_norm:
                 # User has custom location, don't migrate
