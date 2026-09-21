@@ -109,6 +109,13 @@
       },
       "os_package_manager": "apt"
     },
+    "ubuntu:26.04": {
+      "bootstrap": {
+        "template": "container/ubuntu_2604.dockerfile"
+      },
+      "os_package_manager": "apt",
+      "build": "spack/ubuntu-resolute"
+    },
     "ubuntu:24.04": {
       "bootstrap": {
         "template": "container/ubuntu_2404.dockerfile"
