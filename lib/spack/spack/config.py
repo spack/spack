@@ -2528,13 +2528,6 @@ def _do_migrate(
             syaml.dump({"config": scope_config["config"]}, f)
         tty.debug(f"Wrote config.yaml to {config_path}")
 
-    if "modules" in scope_config:
-        filesystem.mkdirp(layout_scope_path)
-        modules_yaml_path = os.path.join(layout_scope_path, "modules.yaml")
-        with open(modules_yaml_path, "w", encoding="utf-8") as f:
-            syaml.dump(scope_config["modules"], f)
-        tty.debug(f"Wrote modules.yaml to {layout_scope_path}")
-
     tty.debug(f"Created config scope for auto-migration: {layout_scope_path}")
 
     if not is_isolate_command:
