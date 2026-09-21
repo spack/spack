@@ -10,7 +10,6 @@ dependencies.
 """
 
 import os
-import pathlib
 import sys
 import types
 from pathlib import PurePath
@@ -18,18 +17,6 @@ from typing import TYPE_CHECKING
 
 import spack.util.filesystem
 from spack.util import hash
-
-
-def dir_is_occupied(x, except_for=None):
-    """Check if a directory exists and contains files (excluding specified names)."""
-    x = pathlib.Path(x)
-    except_for = except_for or set()
-    if not x.is_dir():
-        return False
-    for path in x.iterdir():
-        if path.parts[-1] not in except_for:
-            return True
-    return False
 
 
 class SpackPaths:
@@ -258,7 +245,7 @@ class _PathsModule(types.ModuleType):
         module_dict = object.__getattribute__(self, "__dict__")
 
         # If it's a known module-level attribute (not from locations), return it
-        if name in ("locations", "SpackPaths", "dir_is_occupied", "set_working_dir"):
+        if name in ("locations", "SpackPaths", "set_working_dir"):
             if name in module_dict:
                 return module_dict[name]
             raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
