@@ -228,6 +228,7 @@ if TYPE_CHECKING:
     old_gpg_keys_path: str
     old_licenses_path: str
     old_default_dot_spack: str
+    default_state_home: str
     user_config_path: str
     system_config_path: str
     spack_instance_id: str
