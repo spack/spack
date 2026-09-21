@@ -561,7 +561,7 @@ def test_auto_migration_collision_preserves_source_and_destination(
     old_licenses.mkdir(parents=True)
     (old_licenses / "license.dat").write_text("old", encoding="utf-8")
     data_home = pathlib.Path(home_dir) / ".local" / "share" / "spack"
-    destination = self.data_home / "licenses"
+    destination = data_home / "licenses"
     destination.mkdir(parents=True)
     (destination / "license.dat").write_text("new", encoding="utf-8")
 
