@@ -1991,7 +1991,7 @@ class Spec:
         self.annotations = SpecAnnotations()
 
         if isinstance(spec_like, str):
-            spack.spec_parser.parse_one_or_raise(spec_like, self)
+            spack.spec_parser.parse_one_or_raise(spec_like, Spec, self)
 
         elif spec_like is not None:
             raise TypeError(f"Can't make spec out of {type(spec_like)}")
@@ -5417,6 +5417,91 @@ def substitute_abstract_variants(spec: Spec, *, repo=None):
             f"{spec.name} has no such {variants}",
             unknown_variants=unknown,
         )
+
+
+def parse(text: str, *, toolchains: Optional[Dict] = None) -> List[Spec]:
+    """Parse text into a list of specs
+
+    Args:
+        text: text to be parsed
+        toolchains: optional toolchain definitions to expand after parsing
+
+    Return:
+        List of specs
+    """
+    specs = spack.spec_parser.SpecParser(text, Spec).all_specs()
+    if toolchains:
+        cache: Dict[str, Spec] = {}
+        for spec in specs:
+            expand_toolchains(spec, toolchains, _cache=cache)
+    return specs
+
+
+def _parse_toolchain_config(toolchain_config: Union[str, List[Dict]]) -> Spec:
+    """Parse a toolchain config entry (string or list) into a Spec."""
+    if isinstance(toolchain_config, str):
+        toolchain = Spec(toolchain_config)
+        _ensure_all_direct_edges(toolchain)
+    else:
+        toolchain = Spec()
+        for entry in toolchain_config:
+            toolchain_part = Spec(entry["spec"])
+            when = entry.get("when", "")
+            _ensure_all_direct_edges(toolchain_part)
+
+            if when:
+                when_spec = Spec(when)
+                for edge in toolchain_part.traverse_edges():
+                    if edge.when is EMPTY_SPEC:
+                        edge.when = when_spec.copy()
+                    else:
+                        edge.when.constrain(when_spec)
+            toolchain.constrain(toolchain_part)
+    return toolchain
+
+
+def _ensure_all_direct_edges(constraint: Spec) -> None:
+    """Validate that a toolchain spec only has direct (%) edges."""
+    for edge in constraint.traverse_edges(root=False):
+        if not edge.direct:
+            raise spack.error.SpecError(
+                f"cannot use '^' in toolchain definitions, and the current "
+                f"toolchain contains '{edge.format()}'"
+            )
+
+
+def expand_toolchains(
+    spec: Spec, toolchains: Dict, *, _cache: Optional[Dict[str, Spec]] = None
+) -> None:
+    """Replace toolchain placeholder deps with expanded toolchain constraints.
+
+    Walks every node in the spec DAG. For each node, finds direct dependency
+    edges whose child name is a key in ``toolchains``. Removes the placeholder
+    edge, parses the toolchain config, copies with the edge's propagation
+    policy, and constrains the node.
+    """
+    if _cache is None:
+        _cache = {}
+
+    for node in list(spec.traverse()):
+        for edge in node.edges_to_dependencies():
+            if not edge.direct:
+                continue
+            name = edge.spec.name
+            if name not in toolchains:
+                continue
+
+            node._detach_edge(edge)
+
+            # Parse and cache toolchain
+            if name not in _cache:
+                _cache[name] = _parse_toolchain_config(toolchains[name])
+
+            propagation = edge.propagation
+            propagation_arg = None if propagation != PropagationPolicy.PREFERENCE else propagation
+            # Copy so each usage gets a distinct object (solver depends on this)
+            toolchain = _cache[name].copy(propagation=propagation_arg)
+            node.constrain(toolchain)
 
 
 def parse_with_version_concrete(spec_like: Union[str, Spec]):

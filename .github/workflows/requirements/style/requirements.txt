@@ -1,11 +1,11 @@
 black==26.3.1
-clingo==5.8.0
+clingo==5.8.2
 flake8==7.3.0
-isort==7.0.0
+isort==9.0.1
 mypy==1.20.1
 vermin==1.8.0
-pylint==4.0.5
-docutils==0.22.4
+pylint==4.0.8
+docutils==0.23
 ruamel.yaml==0.19.1
-slotscheck==0.19.1
-ruff==0.15.14
+slotscheck==0.21.0
+ruff==0.16.7
