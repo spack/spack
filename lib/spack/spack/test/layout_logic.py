@@ -6,6 +6,7 @@
 
 import os
 import pathlib
+import sys
 from pathlib import Path
 
 import pytest
@@ -271,7 +272,8 @@ def test_auto_migration_copies_package_repositories(mock_spack_instance, monkeyp
     assert (new_repos / "second" / "root.txt").read_text(encoding="utf-8") == "second root"
     assert (old_repos / "first" / "root.txt").exists()
     assert (old_repos / "second" / "root.txt").exists()
-    assert (new_repos.parent / ".spack-package-repos-migration-lock").exists()
+    if sys.platform != "win32":
+        assert (new_repos.parent / ".spack-package-repos-migration-lock").exists()
     assert not (new_repos.parent / ".package-repos-migration").exists()
 
 

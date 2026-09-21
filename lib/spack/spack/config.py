@@ -205,9 +205,7 @@ class ConfigScope:
 
                 # Do not include duplicate scopes
                 for included_scope in included_scopes:
-                    if any(
-                        included_scope.name == scope.name for scope in self._included_scopes
-                    ):
+                    if any(included_scope.name == scope.name for scope in self._included_scopes):
                         warnings.warn(f"Ignoring duplicate included scope: {included_scope.name}")
                         continue
 
