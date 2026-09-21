@@ -560,7 +560,7 @@ def test_auto_migration_is_not_repeated_after_layout_scope(mock_spack_instance, 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     spack.config._do_migrate(is_isolate_command=False)
-    assert not spack.config._should_auto_migrate()
+    assert not spack.config.should_auto_migrate()
     backup = pathlib.Path(base_prefix) / ".migration-backup" / "licenses" / "license.dat"
     backup_mtime = backup.stat().st_mtime_ns
 

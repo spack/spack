@@ -1808,7 +1808,7 @@ def _detect_old_resources() -> Dict[str, bool]:
     return result
 
 
-def _should_auto_migrate() -> bool:
+def should_auto_migrate() -> bool:
     """Check if auto-migration should be performed.
 
     Returns False if:
