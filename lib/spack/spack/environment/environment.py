@@ -1536,10 +1536,8 @@ class Environment:
         if list_name == USER_SPECS_KEY:
             if spec.anonymous:
                 raise SpackEnvironmentError("cannot add anonymous specs to an environment")
-            elif not spack.repo.PATH.exists(spec.name) and not spec.abstract_hash:
-                virtuals = spack.repo.PATH.provider_index.providers.keys()
-                if spec.name not in virtuals:
-                    raise SpackEnvironmentError(f"no such package: {spec.name}")
+            elif not spec.abstract_hash:
+                spack.concretize.ensure_existing_package_names([spec])
 
         list_to_change = self.spec_lists[list_name]
         existing = str(spec) in list_to_change.yaml_list
