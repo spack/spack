@@ -10,7 +10,6 @@ import itertools
 import json
 import os
 import pathlib
-import pprint
 import random
 import re
 import sys
@@ -18,7 +17,6 @@ import time
 import warnings
 import zlib
 from typing import (
-    IO,
     TYPE_CHECKING,
     Any,
     Callable,
@@ -68,6 +66,7 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector, FileCompilerCache
+from spack.concretize_ui import ConcretizerUI, HeadlessUI
 from spack.enums import DeprecationSeverity
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
@@ -113,25 +112,6 @@ if TYPE_CHECKING:
 GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
 
 TransformFunction = Callable[[str, spack.spec.Spec, List[AspFunction]], List[AspFunction]]
-
-
-class OutputConfiguration(NamedTuple):
-    """Data class that contains configuration on what a clingo solve should output."""
-
-    #: Print out coarse timers for different solve phases
-    timers: bool
-    #: Whether to output Clingo's internal solver statistics
-    stats: bool
-    #: Optional output stream for the generated ASP program
-    out: Optional[IO[str]]
-    #: If True, stop after setup and don't solve
-    setup_only: bool
-
-
-#: Default output configuration for a solve
-DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
-    timers=False, stats=False, out=None, setup_only=False
-)
 
 
 SpliceDict = Dict[spack.spec.Spec, List[spack.solver.splicing.Splice]]
@@ -748,6 +728,7 @@ class PyclingoDriver:
         problem_str: str,
         control_file_paths: List[str],
         timer: spack.util.timer.Timer,
+        ui: ConcretizerUI,
     ) -> Result:
         """Actually run clingo and generate a result.
 
@@ -778,7 +759,8 @@ class PyclingoDriver:
         timer.start("solve")
         # A timeout of 0 means no timeout
         time_limit = setup.context.config.get("concretizer:timeout", 0)
-        timeout_end = time.monotonic() + time_limit if time_limit > 0 else float("inf")
+        solve_start = time.monotonic()
+        timeout_end = solve_start + time_limit if time_limit > 0 else float("inf")
         error_on_timeout = setup.context.config.get("concretizer:error_on_timeout", True)
         with self.control.solve(on_model=on_model, async_=True) as handle:
             # Allow handling of interrupts every second.
@@ -789,14 +771,23 @@ class PyclingoDriver:
             # `.wait()` call exits the control of pyclingo.
             finished = False
             while not finished and time.monotonic() < timeout_end:
-                finished = handle.wait(1.0)
+                finished = handle.wait(0.1)
+                if not finished:
+                    # on_model runs in clingo's thread, so report progress from this one
+                    current = models[-1][0] if models else None
+                    ui.on_solve_progress(
+                        elapsed=time.monotonic() - solve_start,
+                        models=len(models),
+                        best_cost=current,
+                    )
 
             if not finished:
                 specs_str = ", ".join(spack.util.lang.elide_list([str(s) for s in specs], 4))
                 header = f"Spack is taking more than {time_limit} seconds to solve for {specs_str}"
                 if error_on_timeout:
                     raise UnsatisfiableSpecError(f"{header}, stopping concretization")
-                warnings.warn(f"{header}, using the best configuration found so far")
+                # No key: each solve that runs out of time is its own fact
+                ui.on_warning(f"{header}, using the best configuration found so far")
                 handle.cancel()
 
             solve_result = handle.get()
@@ -846,7 +837,8 @@ class PyclingoDriver:
         specs: List[spack.spec.Spec],
         reuse: Optional[List[spack.spec.Spec]] = None,
         packages_with_externals=None,
-        output: Optional[OutputConfiguration] = None,
+        ui: Optional[ConcretizerUI] = None,
+        setup_only: bool = False,
         control: Optional[Any] = None,  # TODO: figure out how to annotate clingo.Control
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
         """Set up the input and solve for dependencies of ``specs``.
@@ -855,16 +847,52 @@ class PyclingoDriver:
             setup: An object to set up the ASP problem.
             specs: List of ``Spec`` objects to solve for.
             reuse: list of concrete specs that can be reused
-            output: configuration object to set the output of this solve.
+            ui: frontend to report the start of this solve, its ASP program, and its result,
+                timings and statistics to. Defaults to a headless frontend.
+            setup_only: if True, stop after setup and don't solve
             control: configuration for the solver. If None, default values will be used
 
         Return:
             A tuple of the solve result, the timer for the different phases of the
             solve, and the internal statistics from clingo.
         """
-        output = output or DEFAULT_OUTPUT_CONFIGURATION
+        ui = ui or HeadlessUI()
+        ui.on_solve_started(specs)
         timer = spack.util.timer.Timer()
+        try:
+            result, statistics, cached = self._solve(
+                setup,
+                specs,
+                reuse=reuse,
+                packages_with_externals=packages_with_externals,
+                ui=ui,
+                timer=timer,
+                setup_only=setup_only,
+                control=control,
+            )
+        except BaseException:
+            ui.on_solve_finished(None, timer=timer, statistics=None, cached=False)
+            raise
 
+        reported = None if setup_only else result
+        ui.on_solve_finished(reported, timer=timer, statistics=statistics, cached=cached)
+        return result, timer, statistics
+
+    def _solve(
+        self,
+        setup: "SpackSolverSetup",
+        specs: List[spack.spec.Spec],
+        *,
+        reuse: Optional[List[spack.spec.Spec]],
+        packages_with_externals,
+        ui: ConcretizerUI,
+        timer: spack.util.timer.Timer,
+        setup_only: bool,
+        control: Optional[Any],
+    ) -> Tuple[Result, Optional[Dict], bool]:
+        """Body of solve(), returning the result, the statistics, and whether the result came
+        from the concretization cache.
+        """
         # ensure core deps are present on Windows
         # needs to modify active config scope, so cannot be run within
         # bootstrap config scope
@@ -892,13 +920,12 @@ class PyclingoDriver:
         timer.stop("setup")
 
         timer.start("ordering")
-        # print the original ASP program if requested
+        # report the original ASP program, before it is stripped and ordered
         problem = problem_builder.asp_problem
-        if output.out is not None:
-            output.out.write("\n".join(problem))
+        ui.on_asp_program_generated(problem)
 
-        if output.setup_only:
-            return Result(specs, repo=setup.context.repo), None, None
+        if setup_only:
+            return Result(specs, repo=setup.context.repo), None, False
 
         # strip and order the ASP problem for caching and deterministic solves
         problem = _strip_asp_problem(problem)
@@ -926,10 +953,11 @@ class PyclingoDriver:
         timer.stop("cache-check")
 
         # run the solver, delay import of clingo until after cache miss
+        cached = result is not None
         if result is None:
             self.control = control or default_clingo_control()
             tty.debug("Starting concretizer")
-            result = self._run_clingo(specs, setup, problem_str, control_file_paths, timer)
+            result = self._run_clingo(specs, setup, problem_str, control_file_paths, timer, ui)
             result.raise_if_unsat()
             concretization_stats = self.control.statistics
 
@@ -939,20 +967,22 @@ class PyclingoDriver:
 
         # apply post-concretization transformations
         for _, _, spec_dict in result.answers:
-            post_process_concretization_result(spec_dict, context=setup.context)
+            post_process_concretization_result(spec_dict, context=setup.context, ui=ui)
+
+        # Building the specs is what finds the diagnostics that are not about the model itself.
+        # It has to run after post-processing and after the cache store, since a cache hit
+        # rebuilds them from the answers anyway.
+        result.ensure_specs()
+
+        # Emitted here, so that a cached result reports the same diagnostics as a fresh solve.
+        # Keyed by the message, so specs sharing a diagnostic report it once between them.
+        for message in result.warnings:
+            ui.on_warning(message, key=message)
 
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
 
-        if output.timers:
-            timer.write_tty()
-            print()
-
-        if output.stats:
-            print("Statistics:")
-            pprint.pprint(concretization_stats)
-
-        return result, timer, concretization_stats
+        return result, concretization_stats, cached
 
 
 class ConcreteSpecsByHash(collections.abc.Mapping):
@@ -1156,14 +1186,16 @@ class SpackSolverSetup:
         *,
         context: "spack.context.SpackContext",
         deprecation_policy: Optional[spack.deprecation.Policy] = None,
+        ui: Optional[ConcretizerUI] = None,
     ):
         self.context = context
+        self.ui = ui or HeadlessUI()
         self.compiler_cache = FileCompilerCache(self.context.misc_cache)
         self.possible_graph = create_graph_analyzer(self.context)
 
         # these are all initialized in setup()
         self.requirement_parser = RequirementParser(
-            configuration=self.context.config, repo=self.context.repo
+            configuration=self.context.config, repo=self.context.repo, ui=self.ui
         )
         self.possible_virtuals: Set[str] = set()
 
@@ -2449,7 +2481,9 @@ class SpackSolverSetup:
         compilers_from_reuse = {
             x for x in reuse if x.name in supported_compilers and not x.external
         }
-        candidate_compilers, self.rejected_compilers = possible_compilers(context=self.context)
+        candidate_compilers, self.rejected_compilers = possible_compilers(
+            context=self.context, ui=self.ui
+        )
         # Compilers installed by Spack are candidates for the solve, no matter what
         # "concretizer:reuse" says. Their link and run dependencies are needed to impose a
         # reused compiler, but they must not become reusable specs on their own: that is up
@@ -2952,7 +2986,7 @@ class ProblemInstanceBuilder:
 
 
 def possible_compilers(
-    *, context: "spack.context.SpackContext"
+    *, context: "spack.context.SpackContext", ui: ConcretizerUI
 ) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
     result, rejected = set(), set()
 
@@ -2975,9 +3009,10 @@ def possible_compilers(
 
         if spack.platforms.using_libc_compatibility() and not detector.default_libc():
             rejected.add(c)
-            warnings.warn(
+            ui.on_warning(
                 f"cannot detect libc from {c}. The compiler will not be used "
-                f"during concretization."
+                f"during concretization.",
+                key=("no-libc", str(c)),
             )
             continue
 
@@ -3307,7 +3342,7 @@ def post_process_fresh_solve(specs: SpecDict, splices: Optional[SpliceDict]) -> 
 
 
 def post_process_concretization_result(
-    specs: SpecDict, *, context: "spack.context.SpackContext"
+    specs: SpecDict, *, context: "spack.context.SpackContext", ui: ConcretizerUI
 ) -> None:
     """Update concretization results after *every* concretization, even cached ones.
 
@@ -3340,7 +3375,7 @@ def post_process_concretization_result(
         _develop_specs_from_env(s, active_environment(), config=context.config)
 
         # check for commits must happen after all version adaptations are complete
-        _specs_with_commits(s, repo=context.repo)
+        _specs_with_commits(s, repo=context.repo, ui=ui)
 
     # mark concrete and assign hashes to all specs in the solve
     spack.spec.finalize_concretization(roots.values(), repo=context.repo)
@@ -3398,7 +3433,7 @@ def execute_explicit_splices(
     return new_specs
 
 
-def _specs_with_commits(spec, *, repo: spack.repo.RepoPath):
+def _specs_with_commits(spec, *, repo: spack.repo.RepoPath, ui: ConcretizerUI):
     pkg_class = repo.get_pkg_class(spec.fullname)
     if not pkg_class.needs_commit(spec.version):
         return
@@ -3411,9 +3446,10 @@ def _specs_with_commits(spec, *, repo: spack.repo.RepoPath):
 
     if "commit" not in spec.variants:
         if not spec.is_develop:
-            tty.warn(
+            ui.on_warning(
                 f"Unable to resolve the git commit for {spec.name}. "
-                "An installation of this binary won't have complete binary provenance."
+                "An installation of this binary won't have complete binary provenance.",
+                key=("git-commit", spec.name),
             )
         return
 
@@ -3508,8 +3544,10 @@ class Solver:
         *,
         context: "spack.context.SpackContext",
         specs_factory: Optional[SpecFiltersFactory] = None,
+        ui: Optional[ConcretizerUI] = None,
     ):
         self.context = context
+        self.ui = ui or HeadlessUI()
 
         cache_root = self.context.config.get("concretizer:concretization_cache:url", None)
         if cache_root is None:
@@ -3541,9 +3579,6 @@ class Solver:
     def solve_with_stats(
         self,
         specs: Sequence[spack.spec.Spec],
-        out: Optional[IO[str]] = None,
-        timers: bool = False,
-        stats: bool = False,
         tests: "spack.concretize.TestsType" = False,
         setup_only: bool = False,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
@@ -3552,9 +3587,6 @@ class Solver:
 
         Arguments:
           specs: List of ``Spec`` objects to solve for.
-          out: Optionally write the generate ASP program to a file-like object.
-          timers: Print out coarse timers for different solve phases.
-          stats: Print out detailed stats from clingo.
           tests: If True, concretize test dependencies for all packages.
             If a tuple of package names, concretize test dependencies for named
             packages (defaults to False: do not concretize test dependencies).
@@ -3568,15 +3600,17 @@ class Solver:
         )
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs, policy=policy))
-        setup = SpackSolverSetup(tests=tests, context=self.context, deprecation_policy=policy)
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
+        setup = SpackSolverSetup(
+            tests=tests, context=self.context, deprecation_policy=policy, ui=self.ui
+        )
 
         result = self.driver.solve(
             setup,
             specs,
             reuse=reusable_specs,
             packages_with_externals=self.packages_with_externals,
-            output=output,
+            ui=self.ui,
+            setup_only=setup_only,
         )
         return result
 
@@ -3590,12 +3624,7 @@ class Solver:
         return result
 
     def solve_in_rounds(
-        self,
-        specs: Sequence[spack.spec.Spec],
-        out: Optional[IO[str]] = None,
-        timers: bool = False,
-        stats: bool = False,
-        tests: "spack.concretize.TestsType" = False,
+        self, specs: Sequence[spack.spec.Spec], tests: "spack.concretize.TestsType" = False
     ) -> Generator[Result, None, None]:
         """Solve for a stable model of specs in multiple rounds.
 
@@ -3607,9 +3636,6 @@ class Solver:
 
         Arguments:
             specs (list): list of Specs to solve.
-            out: Optionally write the generate ASP program to a file-like object.
-            timers (bool): print timing if set to True
-            stats (bool): print internal statistics if set to True
             tests (bool): add test dependencies to the solve
         """
         # "when_possible" requires at least one literal to be solved, so an empty input is unsat
@@ -3622,20 +3648,21 @@ class Solver:
         )
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs, policy=policy))
-        setup = SpackSolverSetup(tests=tests, context=self.context, deprecation_policy=policy)
+        setup = SpackSolverSetup(
+            tests=tests, context=self.context, deprecation_policy=policy, ui=self.ui
+        )
 
         # Tell clingo that we don't have to solve all the inputs at once
         setup.concretize_everything = False
 
         input_specs = specs
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
         while True:
             result, _, _ = self.driver.solve(
                 setup,
                 input_specs,
                 reuse=reusable_specs,
                 packages_with_externals=self.packages_with_externals,
-                output=output,
+                ui=self.ui,
             )
             yield result
 
