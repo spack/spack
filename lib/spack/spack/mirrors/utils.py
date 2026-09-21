@@ -76,7 +76,7 @@ def get_matching_versions(specs, num_versions=1):
             if spec.concrete or v.intersects(spec.versions):
                 s = spack.spec.Spec(pkg.name)
                 s.versions = spack.version.VersionList([v])
-                s.variants = spec.variants.copy()
+                s.variants = spec.variants
                 matching_spec.append(s)
                 pkg_versions -= 1
 

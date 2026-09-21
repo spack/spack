@@ -157,12 +157,12 @@ def path_from_modules(modules):
     path at which the library supported by said module can be found.
 
     Args:
-        modules (list): module files to be loaded to get an external package
+        modules: module files to be loaded to get an external package
 
     Returns:
         Guess of the prefix path where the package
     """
-    assert isinstance(modules, list), 'the "modules" argument must be a list'
+    assert isinstance(modules, (list, tuple)), 'the "modules" argument must be a sequence'
 
     best_choice = None
     for module_name in modules:
