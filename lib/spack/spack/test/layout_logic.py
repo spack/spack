@@ -258,7 +258,7 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
         encoding="utf-8",
     )
 
-    migrated, _ = spack.config.process_config_file_paths(
+    migrated = spack.config.process_config_file_paths(
         str(config_path), str(old_config_dir), str(new_config_dir)
     )
 

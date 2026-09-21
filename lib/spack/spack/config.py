@@ -1920,28 +1920,25 @@ def absolutize_path_in_yaml(
 
 def process_config_file_paths(
     file_path: str, old_location: str, new_config_location: str
-) -> Tuple[Optional[Dict[str, Any]], List[Tuple[str, str, str]]]:
-    """Absolutize config paths and rewrite paths under an old include root."""
+) -> Optional[Dict[str, Any]]:
+    """Absolutize config paths and rewrite paths under an old include root.
+
+    Returns the modified data if any paths were changed, None otherwise.
+    """
     with open(file_path, "r", encoding="utf-8") as f:
         data = syaml.load(f)
 
     if not data:
-        return None, []
+        return None
 
     config_dir = os.path.dirname(file_path)
     found_paths = walk_yaml_for_paths(data, config_dir)
-    path_info = []
     modified = False
 
     old_location_norm = os.path.normpath(os.path.abspath(old_location))
     new_config_location_norm = os.path.normpath(os.path.abspath(new_config_location))
 
     for key_path, original_value, abs_path, in_include in found_paths:
-        path_parts = []
-        for part in key_path:
-            path_parts.append(f"[{part.idx}]" if isinstance(part, Index) else part)
-        key_path_str = ".".join(path_parts)
-
         if os.path.isabs(original_value):
             if in_include:
                 abs_path_norm = os.path.normpath(os.path.abspath(original_value))
@@ -1950,19 +1947,15 @@ def process_config_file_paths(
                     if not os.path.normpath(rel_path).startswith(".."):
                         new_path = os.path.join(new_config_location_norm, rel_path)
                         absolutize_path_in_yaml(data, key_path, new_path)
-                        path_info.append((key_path_str, original_value, "rewritten"))
                         modified = True
                 except ValueError:
                     pass
         else:
-            path_info.append(
-                (key_path_str, original_value, "kept-relative" if in_include else "absolutized")
-            )
             if not in_include:
                 absolutize_path_in_yaml(data, key_path, abs_path)
                 modified = True
 
-    return (data if modified else None, path_info)
+    return data if modified else None
 
 
 def _migrate_user_config() -> bool:
@@ -2057,7 +2050,7 @@ def _do_migrate_user_config(
         new_path = os.path.join(new_config_location, config_file)
 
         # Process paths using migrate command logic (handles the 4 path rewriting rules)
-        modified_data, _ = process_config_file_paths(old_path, old_location, new_config_location)
+        modified_data = process_config_file_paths(old_path, old_location, new_config_location)
 
         # Ensure parent directory exists
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
