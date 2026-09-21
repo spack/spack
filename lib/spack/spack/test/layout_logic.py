@@ -256,41 +256,108 @@ class MigrationResources:
 
     def __init__(self, home_dir, base_prefix):
         self.base_prefix = pathlib.Path(base_prefix)
-        self.data_home = pathlib.Path(home_dir) / ".local" / "share" / "spack"
-        self.old_gpg = self.base_prefix / "opt" / "spack" / "gpg"
-        self.old_licenses = self.base_prefix / "etc" / "spack" / "licenses"
-        self.old_envs = self.base_prefix / "var" / "spack" / "environments"
+        self.data_home = pathlib.Path(spack.config.canonicalize_path("$data_home"))
+        self.old_gpg = pathlib.Path(spack.paths.old_gpg_path)
+        self.old_licenses = pathlib.Path(spack.paths.old_licenses_path)
+        self.old_envs = pathlib.Path(spack.paths.old_envs_path)
 
         (self.old_gpg / "private-keys-v1.d").mkdir(parents=True)
-        (self.old_gpg / "private-keys-v1.d" / "key").write_text("old gpg", encoding="utf-8")
+        (self.old_gpg / "private-keys-v1.d" / "key").write_text("old", encoding="utf-8")
         self.old_licenses.mkdir(parents=True)
         for name in ("license-1", "license-2"):
-            (self.old_licenses / name).write_text(f"old {name}", encoding="utf-8")
+            (self.old_licenses / name).write_text("old", encoding="utf-8")
         for name in ("env-1", "env-2"):
             env = self.old_envs / name
             env.mkdir(parents=True)
-            (env / "spack.yaml").write_text(f"old {name}", encoding="utf-8")
+            (env / "spack.yaml").write_text("old", encoding="utf-8")
         view = self.old_envs / "env-1" / "view"
         view.mkdir()
         (view / ".spack-view").write_text("view", encoding="utf-8")
         (view / "should-not-copy").write_text("view", encoding="utf-8")
+
+    @staticmethod
+    def contains_text(root, text):
+        root = pathlib.Path(root)
+        return any(
+            text in path.read_text(encoding="utf-8")
+            for path in root.rglob("*")
+            if path.is_file()
+        )
+
+    def assert_migrations(self, expected_migrations, conflicts):
+        all_resources = {
+            "gpg",
+            "envs/env-1",
+            "envs/env-2",
+            "licenses/license-1",
+            "licenses/license-2",
+        }
+        conflicts = set(conflicts)
+        overrides = set(expected_migrations)
+        expected_migrations = {
+            resource for resource in all_resources if resource not in conflicts
+        }
+        expected_migrations.update(
+            resource[1:] for resource in overrides if resource.startswith("+")
+        )
+        expected_migrations.difference_update(
+            resource[1:] for resource in overrides if resource.startswith("-")
+        )
+        backup = self.base_prefix / ".migration-backup"
+        for resource in ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2"):
+            migrated = resource in expected_migrations
+            if resource == "gpg":
+                destination = self.data_home / "gpg"
+                source = self.old_gpg
+                backup_path = backup / "gpg"
+                marker = destination / "private-keys-v1.d" / "key"
+            elif resource.startswith("envs/"):
+                name = resource.split("/", 1)[1]
+                destination = self.data_home / "environments" / name
+                source = self.old_envs / name
+                backup_path = backup / "environments" / name
+                marker = destination / "spack.yaml"
+            else:
+                name = resource.split("/", 1)[1]
+                destination = self.data_home / "licenses" / name
+                source = self.old_licenses / name
+                backup_path = backup / "licenses" / name
+                marker = destination
+
+            if migrated:
+                assert destination.exists()
+                assert marker.read_text(encoding="utf-8") == "old"
+                assert backup_path.exists()
+                assert self.contains_text(backup_path, "old")
+                assert not source.exists()
+                if resource == "envs/env-1":
+                    assert not (destination / "view").exists()
+            else:
+                assert source.exists()
+                assert self.contains_text(source, "old")
+                assert not backup_path.exists()
+
+            if resource in conflicts:
+                assert destination.exists()
+                assert self.contains_text(destination, "new")
+                assert not self.contains_text(destination, "old")
 
     def add_conflicts(self, conflicts):
         for resource in conflicts:
             if resource == "gpg":
                 destination = self.data_home / "gpg"
                 destination.mkdir(parents=True)
-                (destination / "existing").write_text("new gpg", encoding="utf-8")
+                (destination / "existing").write_text("new", encoding="utf-8")
             elif resource.startswith("envs/"):
                 name = resource.split("/", 1)[1]
                 destination = self.data_home / "environments" / name
                 destination.mkdir(parents=True)
-                (destination / "spack.yaml").write_text("new env", encoding="utf-8")
+                (destination / "spack.yaml").write_text("new", encoding="utf-8")
             elif resource.startswith("licenses/"):
                 name = resource.split("/", 1)[1]
                 destination = self.data_home / "licenses"
                 destination.mkdir(parents=True)
-                (destination / name).write_text("new license", encoding="utf-8")
+                (destination / name).write_text("new", encoding="utf-8")
 
 
 @pytest.fixture
@@ -299,56 +366,43 @@ def migration_resources(mock_spack_instance):
     return MigrationResources(*mock_spack_instance)
 
 
-# Another parameterization varible should be config vars
 @pytest.mark.parametrize(
-    "conflicts, expected_migrations",
+    "config_vars, conflicts, expected_migrations",
     [
-        ((), ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2")),
-        (("gpg", "envs/env-1", "licenses/license-1"), ("envs/env-2", "licenses/license-2")),
+        (
+            (),
+            (),
+            ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2"),
+        ),
+        (
+            (),
+            ("gpg", "envs/env-1", "licenses/license-1"),
+            ("-gpg", "-envs/env-1", "-licenses/license-1"),
+        ),
+        (
+            (("config:gpg_path", "$spack/opt/spack/gpg"),),
+            (),
+            ("-gpg",),
+        ),
+        (
+            (("config:license_dir", "$spack/opt/licenses"),),
+            (),
+            ("-licenses/license-1", "-licenses/license-2"),
+        ),
     ],
 )
-def test_auto_migration_handles_all_resource_types(
-    migration_resources, conflicts, expected_migrations, monkeypatch
+def test_auto_migration_old_spack_internal_resources(
+    migration_resources, config_vars, conflicts, expected_migrations, mutable_config, monkeypatch
 ):
     """Migration handles GPG, environments, licenses, conflicts, and views."""
     resources = migration_resources
     resources.add_conflicts(conflicts)
-    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    for path, value in config_vars:
+        mutable_config.set(path, value)
+    monkeypatch.setattr(spack.config, "CONFIG", mutable_config)
     spack.config._do_migrate(is_isolate_command=False)
 
-    expected_migrations = set(expected_migrations)
-    backup = resources.base_prefix / ".migration-backup"
-    # Overall, the "was-it-migrated" logic can live in the migration_resources object
-    # (in tandem with the point below about using an "official" reference to the base
-    # paths, that object's verification method can take the destination as a parameter)
-    for resource in ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2"):
-        migrated = resource in expected_migrations
-        if resource == "gpg":
-            # Our test should be examining the base prefix directly: both migration_resources and
-            # this test should be getting the same mocked SpackPaths, vs. us retrieving it here
-            # for verification purposes through `resources`
-            assert (resources.data_home / "gpg").exists()
-            assert (backup / "gpg").exists() is migrated
-            assert resources.old_gpg.exists() is not migrated
-            if "gpg" in conflicts:
-                assert (resources.data_home / "gpg" / "existing").read_text(encoding="utf-8") == "new gpg"
-        elif resource.startswith("envs/"):
-            name = resource.split("/", 1)[1]
-            destination = resources.data_home / "environments" / name
-            assert destination.exists()
-            assert (backup / "environments" / name).exists() is migrated
-            assert (resources.old_envs / name).exists() is not migrated
-            if migrated and name == "env-1":
-                assert not (destination / "view").exists()
-        else:
-            name = resource.split("/", 1)[1]
-            assert (backup / "licenses" / name).exists() is migrated
-            assert (resources.old_licenses / name).exists() is not migrated
-        # For things that conflict, we want to make sure that the old contents
-        # do not appear in the new destination, it occurs to me if there's a
-        # common string like "new" in any file in the source dir, we can
-        # simply recursively read through and make sure it isn't in the dst
-        # dir
+    resources.assert_migrations(expected_migrations, conflicts)
 
 
 def test_auto_migration_copies_package_repositories(mock_spack_instance, monkeypatch):
