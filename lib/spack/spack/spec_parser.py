@@ -511,9 +511,7 @@ class SpecParser:
                             if value[:1] in ("'", '"'):
                                 try:
                                     condition = parse_one_or_raise(
-                                    edge_spec = parse_one_or_raise(
-                                        strip_quotes(value), self.spec_cls
-                                    )
+                                    edge_spec = parse_one_or_raise(strip_quotes(value))
                                 except ValueError:
                                     noun = _SPEC_VALUED_EDGE_ATTRIBUTES[name]
                                     msg = f"expected a single spec as the {name}= {noun}"
