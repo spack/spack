@@ -626,9 +626,7 @@ def test_ci_get_stack_changed_no_env(mock_git_repo, monkeypatch, modifies_spackp
     new_paths = spack.paths.SpackPaths(mock_git_repo)
     monkeypatch.setattr(spack.paths, "locations", new_paths)
 
-    fake_env_path = os.path.join(
-        new_paths.prefix, os.path.sep.join(("no", "such", "env", "path"))
-    )
+    fake_env_path = os.path.join(new_paths.prefix, os.path.sep.join(("no", "such", "env", "path")))
     assert ci.stack_changed(fake_env_path) is True
 
 
