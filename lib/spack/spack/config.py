@@ -2267,7 +2267,6 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
     filesystem.mkdirp(dst_dir)
     lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
     created: List[str] = []
-    had_failure = False
     try:
         lock.acquire_write()
         for entry in os.listdir(src_dir):

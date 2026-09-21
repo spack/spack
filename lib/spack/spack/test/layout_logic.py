@@ -285,9 +285,7 @@ class MigrationResources:
         if root.is_file():
             return text in root.read_text(encoding="utf-8")
         return any(
-            text in path.read_text(encoding="utf-8")
-            for path in root.rglob("*")
-            if path.is_file()
+            text in path.read_text(encoding="utf-8") for path in root.rglob("*") if path.is_file()
         )
 
     def assert_migrations(self, expected_migrations, conflicts):
@@ -300,9 +298,7 @@ class MigrationResources:
         }
         conflicts = set(conflicts)
         overrides = set(expected_migrations)
-        expected_migrations = {
-            resource for resource in all_resources if resource not in conflicts
-        }
+        expected_migrations = {resource for resource in all_resources if resource not in conflicts}
         if any(resource.startswith("envs/") for resource in conflicts):
             expected_migrations.difference_update(
                 resource for resource in all_resources if resource.startswith("envs/")
@@ -318,7 +314,13 @@ class MigrationResources:
             resource[1:] for resource in overrides if resource.startswith("-")
         )
         backup = self.base_prefix / ".migration-backup"
-        for resource in ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2"):
+        for resource in (
+            "gpg",
+            "envs/env-1",
+            "envs/env-2",
+            "licenses/license-1",
+            "licenses/license-2",
+        ):
             migrated = resource in expected_migrations
             if resource == "gpg":
                 destination = self.data_home / "gpg"
@@ -389,21 +391,13 @@ def migration_resources(mock_spack_instance):
 @pytest.mark.parametrize(
     "config_vars, conflicts, expected_migrations",
     [
-        (
-            (),
-            (),
-            ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2"),
-        ),
+        ((), (), ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2")),
         (
             (),
             ("gpg", "envs/env-1", "licenses/license-1"),
             ("-gpg", "-envs/env-1", "-licenses/license-1"),
         ),
-        (
-            (("config:gpg_path", "$spack/opt/spack/gpg"),),
-            (),
-            ("-gpg",),
-        ),
+        ((("config:gpg_path", "$spack/opt/spack/gpg"),), (), ("-gpg",)),
         (
             (("config:license_dir", "$spack/opt/licenses"),),
             (),
