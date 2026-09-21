@@ -2203,6 +2203,9 @@ def _copy_directory_contents(src_dir: str, dst_dir: str, resource_name: str) -> 
                                 tty.debug(f"Excluding view directory: {path}")
                         return ignored
 
+                    # The ignore callback runs before copytree descends into
+                    # each directory, so returning a view directory's name
+                    # excludes that entire directory tree.
                     shutil.copytree(src_path, dst_path, ignore=ignore_views)
                 else:
                     shutil.copytree(src_path, dst_path)
@@ -2259,6 +2262,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
     filesystem.mkdirp(dst_dir)
     lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
     created: List[str] = []
+    had_failure = False
     try:
         lock.acquire_write()
         for entry in os.listdir(src_dir):
@@ -2393,13 +2397,15 @@ def _do_migrate(
     old_gpg_dir = os.path.join(spack.paths.prefix, "opt", "spack", "gpg")
     if old_resources["gpg_keys"]:
         configured_gpg_dir = CONFIG.get("config:gpg_path")
-        configured_gpg_dir = os.path.normpath(
-            os.path.expanduser(canonicalize_path(configured_gpg_dir))
-        )
         old_gpg_norm = os.path.normpath(os.path.expanduser(old_gpg_dir))
         data_home = substitute_path_variables("$data_home")
         target_gpg_dir = os.path.join(data_home, "gpg")
         target_gpg_norm = os.path.normpath(os.path.expanduser(target_gpg_dir))
+        if configured_gpg_dir is None:
+            configured_gpg_dir = target_gpg_dir
+        configured_gpg_dir = os.path.normpath(
+            os.path.expanduser(canonicalize_path(configured_gpg_dir))
+        )
         gnupghome = os.getenv("SPACK_GNUPGHOME")
 
         # An explicit SPACK_GNUPGHOME is authoritative.  Only preserve the
@@ -2442,10 +2448,12 @@ def _do_migrate(
             target_licenses_dir = os.path.join(data_home, "licenses")
             should_attempt_migration = True
             configured_license_dir = CONFIG.get("config:license_dir")
+            target_licenses_norm = os.path.normpath(os.path.expanduser(target_licenses_dir))
+            if configured_license_dir is None:
+                configured_license_dir = target_licenses_dir
             configured_license_dir = os.path.normpath(
                 os.path.expanduser(canonicalize_path(configured_license_dir))
             )
-            target_licenses_norm = os.path.normpath(os.path.expanduser(target_licenses_dir))
 
             if configured_license_dir != target_licenses_norm:
                 # User has custom location, don't migrate
@@ -2486,10 +2494,12 @@ def _do_migrate(
             target_envs_dir = os.path.join(data_home, "environments")
             should_attempt_migration = True
             configured_env_root = CONFIG.get("config:environments_root")
+            target_envs_norm = os.path.normpath(os.path.expanduser(target_envs_dir))
+            if configured_env_root is None:
+                configured_env_root = target_envs_dir
             configured_env_root = os.path.normpath(
                 os.path.expanduser(canonicalize_path(configured_env_root))
             )
-            target_envs_norm = os.path.normpath(os.path.expanduser(target_envs_dir))
 
             if configured_env_root != target_envs_norm:
                 # User has custom location, don't migrate

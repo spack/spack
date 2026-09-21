@@ -297,17 +297,26 @@ class MigrationResources:
         expected_migrations = {
             resource for resource in all_resources if resource not in conflicts
         }
+        if any(resource.startswith("envs/") for resource in conflicts):
+            expected_migrations.difference_update(
+                resource for resource in all_resources if resource.startswith("envs/")
+            )
+        if any(resource.startswith("licenses/") for resource in conflicts):
+            expected_migrations.difference_update(
+                resource for resource in all_resources if resource.startswith("licenses/")
+            )
         expected_migrations.update(
             resource[1:] for resource in overrides if resource.startswith("+")
         )
         expected_migrations.difference_update(
             resource[1:] for resource in overrides if resource.startswith("-")
         )
+        data_home = pathlib.Path(spack.config.canonicalize_path("$data_home"))
         backup = self.base_prefix / ".migration-backup"
         for resource in ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2"):
             migrated = resource in expected_migrations
             if resource == "gpg":
-                destination = self.data_home / "gpg"
+                destination = data_home / "gpg"
                 source = self.old_gpg
                 backup_path = backup / "gpg"
                 marker = destination / "private-keys-v1.d" / "key"
@@ -532,7 +541,7 @@ def test_auto_migration_collision_preserves_source_and_destination(
     old_licenses.mkdir(parents=True)
     (old_licenses / "license.dat").write_text("old", encoding="utf-8")
     data_home = pathlib.Path(home_dir) / ".local" / "share" / "spack"
-    destination = data_home / "licenses"
+    destination = self.data_home / "licenses"
     destination.mkdir(parents=True)
     (destination / "license.dat").write_text("new", encoding="utf-8")
 
