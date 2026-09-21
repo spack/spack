@@ -52,6 +52,24 @@ def test_config_defaults_use_data_home(mock_spack_instance):
     )
 
 
+def test_data_home_resolves_to_mock_home(mock_spack_instance, monkeypatch):
+    """Test that $data_home resolves to the correct directory under mock home."""
+    home_dir, base_prefix = mock_spack_instance
+
+    # Create fresh config after mock_spack_instance sets up paths
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    # Resolve $data_home - should point to mock home, not real home
+    resolved_data_home = spack.config.canonicalize_path("$data_home")
+    expected_data_home = os.path.join(home_dir, ".local", "share", "spack")
+
+    assert resolved_data_home == expected_data_home, (
+        f"$data_home should resolve to subdirectory of mock home.\n"
+        f"Expected: {expected_data_home}\n"
+        f"Got: {resolved_data_home}"
+    )
+
+
 def test_locations_config_exists(mock_spack_instance):
     """Test that config:locations section exists with data, state, and cache keys."""
     home_dir, base_prefix = mock_spack_instance
@@ -256,10 +274,7 @@ class MigrationResources:
 
     def __init__(self, home_dir, base_prefix):
         self.base_prefix = pathlib.Path(base_prefix)
-        # Calculate expected data_home directly from test paths (XDG default)
-        # rather than using config which may still have old singleton state
-        home_dir_path = pathlib.Path(home_dir)
-        self.data_home = home_dir_path / ".local" / "share" / "spack"
+        self.data_home = pathlib.Path(spack.config.canonicalize_path("$data_home"))
         self.old_gpg = pathlib.Path(spack.paths.old_gpg_path)
         self.old_licenses = pathlib.Path(spack.paths.old_licenses_path)
         self.old_envs = pathlib.Path(spack.paths.old_envs_path)
@@ -402,8 +417,15 @@ class MigrationResources:
 
 
 @pytest.fixture
-def migration_resources(mock_spack_instance):
-    """Provide simulated old GPG, environment, and license resources."""
+def migration_resources(mock_spack_instance, mutable_config, monkeypatch):
+    """Provide simulated old GPG, environment, and license resources.
+
+    Requires mutable_config to ensure CONFIG is properly initialized after
+    mock_spack_instance sets up the test paths.
+    """
+    # Reinitialize config after mock_spack_instance sets up paths
+    # so that $data_home resolves correctly
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
     return MigrationResources(*mock_spack_instance)
 
 
