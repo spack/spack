@@ -18,7 +18,7 @@ from spack.util import tty
 
 if TYPE_CHECKING:
     import spack.mirrors.mirror
-    from spack.util.web import NetworkClient
+    import spack.util.web
 
 #: Session and client arguments an s3 client is created with, each sorted by name.
 S3ClientKey = Tuple[Tuple[Tuple[str, Any], ...], Tuple[Tuple[str, Any], ...]]
@@ -34,7 +34,10 @@ MirrorDirection = Literal["push", "fetch"]
 
 
 def _get_s3_session(
-    url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch", *, client: "NetworkClient"
+    url,
+    method: Literal[S3OpenMethod, MirrorDirection] = "fetch",
+    *,
+    client: "spack.util.web.NetworkClient",
 ):
     # import boto and friends as late as possible.  We don't want to require boto as a
     # dependency unless the user actually wants to access S3 mirrors.
@@ -155,7 +158,7 @@ class WrapStream(BufferedReader):
         return getattr(self.raw, key)
 
 
-def _s3_open(url, method: S3OpenMethod = "GET", *, client: "NetworkClient"):
+def _s3_open(url, method: S3OpenMethod = "GET", *, client: "spack.util.web.NetworkClient"):
     s3, parsed = _get_s3_session(url, method=method, client=client)
 
     bucket = parsed.netloc
@@ -191,7 +194,7 @@ def s3_command(method: MirrorDirection):
 
     def _s3_decorate_command(command):
         @functools.wraps(command)
-        def _s3_command_wrapped(url, *args, client: "NetworkClient", **kwargs):
+        def _s3_command_wrapped(url, *args, client: "spack.util.web.NetworkClient", **kwargs):
             s3, url = _get_s3_session(url, method=method, client=client)
             try:
                 return command(s3, url, *args, **kwargs)
@@ -204,7 +207,7 @@ def s3_command(method: MirrorDirection):
 
 
 class UrllibS3Handler(urllib.request.BaseHandler):
-    def __init__(self, client: "NetworkClient") -> None:
+    def __init__(self, client: "spack.util.web.NetworkClient") -> None:
         self.client = client
 
     def s3_open(self, req):
