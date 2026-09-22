@@ -13,16 +13,18 @@ The module also contains other functions that might be useful across different
 detection mechanisms.
 """
 
+import collections
 import glob
 import itertools
 import os
 import pathlib
 import re
 import sys
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import spack.config
 import spack.error
+import spack.externals
 import spack.operating_systems.windows_os as winOs
 import spack.schema
 import spack.spec
@@ -45,8 +47,29 @@ def _externals_in_packages_yaml(config: spack.config.Configuration) -> Set[spack
 ExternalEntryType = Union[str, List[str], Dict[str, str]]
 
 
+def _derived_id(entry: Any) -> Optional[str]:
+    """Returns the id the externals parser derives for an entry, or None if it cannot parse it."""
+    try:
+        return spack.externals.derived_external_id(spack.externals.node_from_dict(entry))
+    except spack.error.SpackError:
+        return None
+
+
+def _external_ids_in_packages_yaml(packages_yaml) -> Set[str]:
+    """Returns the explicit ids of the externals in packages.yaml, and the derived ids of those
+    without one.
+    """
+    result = set()
+    for package_configuration in packages_yaml.values():
+        for item in package_configuration.get("externals", []):
+            eid = item["id"] if "id" in item else _derived_id(item)
+            if eid is not None:
+                result.add(eid)
+    return result
+
+
 def _pkg_config_dict(
-    external_pkg_entries: List["spack.spec.Spec"],
+    external_pkg_entries: List["spack.spec.Spec"], *, used_ids: Set[str]
 ) -> Dict[str, Union[bool, List[Dict[str, ExternalEntryType]]]]:
     """Generate a package specific config dict according to the packages.yaml schema.
 
@@ -56,15 +79,20 @@ def _pkg_config_dict(
         {
             'externals': [{
                 'spec': 'cmake@3.17.1',
-                'prefix': '/opt/cmake-3.17.1/'
+                'prefix': '/opt/cmake-3.17.1',
+                'id': 'cmake-3.17.1-43abed8'
             }, {
                 'spec': 'cmake@3.16.5',
-                'prefix': '/opt/cmake-3.16.5/'
+                'prefix': '/opt/cmake-3.16.5',
+                'id': 'cmake-3.16.5-bfce1a9'
             }]
        }
+
+    Each entry gets the id the externals parser would derive for it, unless the id is in
+    ``used_ids`` or is derived by another entry. Those entries get no id, since an explicit id
+    would duplicate an explicit id, or take precedence over a derived id, already in use.
     """
-    pkg_dict = spack.util.spack_yaml.syaml_dict()
-    pkg_dict["externals"] = []
+    entries = []
     for e in external_pkg_entries:
         if not _spec_is_valid(e):
             continue
@@ -75,13 +103,20 @@ def _pkg_config_dict(
         ]
         if e.external_modules:
             external_items.append(("modules", e.external_modules))
+        derived_id = _derived_id(spack.util.spack_yaml.syaml_dict(external_items))
+        entries.append((e, external_items, derived_id))
+
+    counts = collections.Counter(derived_id for _, _, derived_id in entries)
+    pkg_dict = spack.util.spack_yaml.syaml_dict()
+    pkg_dict["externals"] = []
+    for e, external_items, derived_id in entries:
+        if derived_id is not None and counts[derived_id] == 1 and derived_id not in used_ids:
+            external_items.append(("id", derived_id))
 
         if e.extra_attributes:
             external_items.append(
                 ("extra_attributes", spack.util.spack_yaml.syaml_dict(e.extra_attributes.items()))
             )
-
-        # external_items.extend(e.spec.extra_attributes.items())
         pkg_dict["externals"].append(spack.util.spack_yaml.syaml_dict(external_items))
 
     return pkg_dict
@@ -205,11 +240,12 @@ def update_configuration(
         buildable: whether the detected packages are buildable or not
     """
     predefined_external_specs = _externals_in_packages_yaml(config)
+    used_ids = _external_ids_in_packages_yaml(config.get("packages"))
     pkg_to_cfg, all_new_specs = {}, []
     for package_name, entries in detected_packages.items():
         new_entries = [s for s in entries if s not in predefined_external_specs]
 
-        pkg_config = _pkg_config_dict(new_entries)
+        pkg_config = _pkg_config_dict(new_entries, used_ids=used_ids)
         external_entries = pkg_config.get("externals", [])
         assert not isinstance(external_entries, bool), "unexpected value for external entry"
 

@@ -816,3 +816,51 @@ def test_detect_with_dependencies(tmp_path, case, mock_packages, config):
         assert [(x.parent.name, x.owners) for x in result.missing] == [
             ("sonames-consumer", ["sonames-owner"])
         ]
+
+
+@pytest.mark.parametrize(
+    "configured,detected,expected_ids",
+    [
+        # Each new entry gets the id the parser derives for it
+        (
+            [],
+            ["cmake@3.27.5 /usr", "cmake@3.28.1 /usr"],
+            ["cmake-3.27.5-894d731", "cmake-3.28.1-894d731"],
+        ),
+        # An entry of another version or prefix leaves the id free
+        (
+            [{"spec": "cmake@3.27.5", "prefix": "/opt/cmake"}],
+            ["cmake@3.28.1 /opt/cmake", "cmake@3.26.0 /usr"],
+            ["cmake-3.28.1-df72813", "cmake-3.26.0-894d731"],
+        ),
+        # The id is derived by an entry without an id
+        ([{"spec": "cmake@=3.27.5", "prefix": "/usr/"}], ["cmake@3.27.5 /usr"], [None]),
+        # The id is the explicit id of an entry
+        (
+            [{"spec": "cmake@3.28.1", "prefix": "/opt/cmake", "id": "cmake-3.27.5-894d731"}],
+            ["cmake@3.27.5 /usr"],
+            [None],
+        ),
+        # Two new entries derive the same id
+        ([], ["cmake@3.27.5 /usr", "cmake@3.27.5+ownlibs /usr"], [None, None]),
+    ],
+)
+def test_update_configuration_writes_derived_ids(
+    configured, detected, expected_ids, mutable_config: Configuration
+):
+    """Tests that new entries get the id the parser derives for them, unless it is already in use
+    or derived by another new entry.
+    """
+    mutable_config.set("packages", {"cmake": {"externals": configured}})
+    detected_specs = []
+    for item in detected:
+        spec_str, prefix = item.rsplit(" ", 1)
+        detected_specs.append(spack.spec.Spec(spec_str, external_path=prefix))
+
+    spack.detection.common.update_configuration({"cmake": detected_specs}, config=mutable_config)
+
+    ids = {
+        f"{x['spec']} {x['prefix']}": x.get("id")
+        for x in mutable_config.get("packages")["cmake"]["externals"]
+    }
+    assert [ids[x] for x in detected] == expected_ids

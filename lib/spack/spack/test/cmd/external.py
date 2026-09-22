@@ -52,8 +52,16 @@ def test_find_external_update_config(mutable_config: Configuration):
     cmake_cfg = pkgs_cfg["cmake"]
     cmake_externals = cmake_cfg["externals"]
 
-    assert {"spec": "cmake@1.foo", "prefix": "/x/y1"} in cmake_externals
-    assert {"spec": "cmake@3.17.2", "prefix": "/x/y2"} in cmake_externals
+    assert {
+        "spec": "cmake@1.foo",
+        "prefix": "/x/y1",
+        "id": "cmake-1.foo-91f2afe",
+    } in cmake_externals
+    assert {
+        "spec": "cmake@3.17.2",
+        "prefix": "/x/y2",
+        "id": "cmake-3.17.2-f3ebccf",
+    } in cmake_externals
 
 
 def test_get_executables(working_env, mock_executable):
@@ -251,7 +259,11 @@ def test_find_external_merge(mutable_config: Configuration):
     pkg_externals = pkg_cfg["externals"]
 
     assert {"spec": "find-externals1@1.1", "prefix": "/preexisting-prefix"} in pkg_externals
-    assert {"spec": "find-externals1@1.2", "prefix": "/x/y2"} in pkg_externals
+    assert {
+        "spec": "find-externals1@1.2",
+        "prefix": "/x/y2",
+        "id": "find-externals1-1.2-f3ebccf",
+    } in pkg_externals
 
 
 def test_list_detectable_packages(mutable_config):
