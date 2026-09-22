@@ -3,23 +3,31 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
 import errno
+import functools
 import os
 import re
 import sys
 import warnings
-from typing import List, Optional, Set
+from typing import Dict, List, NamedTuple, Optional, Set
 
 import spack
 import spack.cmd
 import spack.config
 import spack.context
 import spack.detection
+import spack.detection.common
+import spack.detection.dependencies
+import spack.detection.elf_closure
+import spack.detection.ownership
+import spack.detection.path
 import spack.error
 import spack.externals
 import spack.externals_config
 import spack.package_base
 import spack.repo
 import spack.spec
+import spack.util.environment
+import spack.util.ld_so_conf
 from spack import cray_manifest
 from spack.cmd.common import arguments
 from spack.util import tty
@@ -42,6 +50,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="packages with detected externals won't be built with Spack",
     )
     find_parser.add_argument("--exclude", action="append", help="packages to exclude from search")
+    find_parser.add_argument(
+        "--dependencies",
+        action="store_true",
+        default=False,
+        help="detect the dependencies of the packages found from the libraries they load, and "
+        "the packages that own those libraries",
+    )
     find_parser.add_argument(
         "-p",
         "--path",
@@ -142,16 +157,20 @@ def external_find(args):
     candidate_packages = packages_to_search_for(
         names=args.packages, tags=args.tags, exclude=args.exclude
     )
-    detected_packages = spack.detection.by_path(
-        candidate_packages, repo=spack.repo.PATH, path_hints=args.path, max_workers=args.jobs
-    )
-
-    new_specs = spack.detection.update_configuration(
-        detected_packages,
-        config=spack.config.CONFIG,
-        scope=args.scope,
-        buildable=not args.not_buildable,
-    )
+    found: Optional[FoundWithDependencies] = None
+    if args.dependencies:
+        found = _find_with_dependencies(args, candidate_packages)
+        new_specs = found.new_specs
+    else:
+        detected_packages = spack.detection.by_path(
+            candidate_packages, repo=spack.repo.PATH, path_hints=args.path, max_workers=args.jobs
+        )
+        new_specs = spack.detection.update_configuration(
+            detected_packages,
+            config=spack.config.CONFIG,
+            scope=args.scope,
+            buildable=not args.not_buildable,
+        )
 
     # If the user runs `spack external find --not-buildable mpich` we also mark `mpi` non-buildable
     # to avoid that the concretizer picks a different mpi provider.
@@ -165,12 +184,89 @@ def external_find(args):
         new_virtuals = spack.detection.set_virtuals_nonbuildable(virtuals, scope=args.scope)
         new_specs.extend(spack.spec.Spec(name) for name in new_virtuals)
 
+    path = spack.config.CONFIG.get_config_filename(args.scope, "packages")
     if new_specs:
-        path = spack.config.CONFIG.get_config_filename(args.scope, "packages")
         tty.msg(f"The following specs have been detected on this system and added to {path}")
         spack.cmd.display_specs(new_specs)
     else:
         tty.msg("No new external packages detected")
+
+    if found is None:
+        return
+
+    if found.dependency_specs:
+        tty.msg(f"The following dependencies have been detected and added to {path}")
+        spack.cmd.display_specs(found.dependency_specs)
+    if found.edges:
+        tty.msg(f"The following dependencies between externals have been added to {path}")
+        for edge in found.edges:
+            print(f"    {edge.parent} -> {edge.child}")
+    if found.missing:
+        tty.msg("No external was found for the following libraries")
+        for item in found.missing:
+            print(
+                f"    {item.library} [loaded by {item.parent}, owned by {', '.join(item.owners)}]"
+            )
+
+
+class FoundWithDependencies(NamedTuple):
+    #: new specs of the packages that were searched for
+    new_specs: List[spack.spec.Spec]
+    #: new specs of the packages detected as dependencies
+    dependency_specs: List[spack.spec.Spec]
+    #: dependencies added to packages.yaml
+    edges: List[spack.detection.dependencies.ExternalEdge]
+    #: libraries whose owners have no external
+    missing: List[spack.detection.dependencies.MissingExternal]
+
+
+def _find_with_dependencies(args, packages: List[str]) -> FoundWithDependencies:
+    """Detects packages, the dependencies between them, and the packages that own the libraries
+    they load, and adds them to packages.yaml.
+    """
+    context = spack.context.default()
+    detect = functools.partial(
+        spack.detection.path.by_path_detailed, repo=context.repo, max_workers=args.jobs
+    )
+    detected = detect(packages, path_hints=args.path)
+    configured = spack.externals.ExternalSpecsParser(
+        spack.externals.extract_dicts_from_configuration(
+            spack.externals_config.normalized_external_config(context)
+        ),
+        repo=context.repo,
+        complete_node=spack.externals.complete_architecture,
+        nodes_only=True,
+    )
+    loader = spack.detection.elf_closure.DynamicLoader(
+        ld_library_path=spack.util.environment.get_path("LD_LIBRARY_PATH"),
+        default_dirs=spack.util.ld_so_conf.host_dynamic_linker_search_paths(),
+    )
+    result = spack.detection.dependencies.detect_with_dependencies(
+        detected,
+        detect=detect,
+        configured=configured.all_specs(),
+        index=spack.detection.ownership.ownership_index(context.repo),
+        loader=loader,
+        repo=context.repo,
+        exclude=args.exclude or (),
+    )
+
+    searched: Dict[str, List[spack.spec.Spec]] = {}
+    dependencies: Dict[str, List[spack.spec.Spec]] = {}
+    for name, entries in result.detected.items():
+        target = searched if name in detected else dependencies
+        target[name] = [x.spec for x in entries]
+    new_specs = spack.detection.update_configuration(
+        searched, config=context.config, scope=args.scope, buildable=not args.not_buildable
+    )
+    dependency_specs = spack.detection.update_configuration(
+        dependencies, config=context.config, scope=args.scope
+    )
+    edges = spack.detection.common.add_dependencies(
+        result.edges, config=context.config, repo=context.repo, scope=args.scope
+    )
+
+    return FoundWithDependencies(new_specs, dependency_specs, edges, result.missing)
 
 
 def packages_to_search_for(

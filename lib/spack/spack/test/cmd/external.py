@@ -11,6 +11,7 @@ import spack.cmd.external
 import spack.cray_manifest
 import spack.detection
 import spack.detection.path
+import spack.util.elf
 from spack.config import Configuration
 from spack.main import SpackCommand
 from spack.spec import Spec
@@ -458,3 +459,57 @@ def test_external_show(mutable_config: Configuration):
     lines = SpackCommand("external")("show", "cmake").splitlines()
     assert len(lines) == 2
     assert all("cmake@" in x and "cmake-client" not in x for x in lines)
+
+
+def _write_host_elf(path: pathlib.Path, **kwargs) -> None:
+    """Writes an executable ELF file for the host, without code."""
+    is_64_bit, is_little_endian, e_machine = spack.util.elf.get_elf_compat(sys.executable)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(
+        spack.util.elf.minimal_elf(
+            is_64_bit=is_64_bit, is_little_endian=is_little_endian, e_machine=e_machine, **kwargs
+        )
+    )
+    path.chmod(0o755)
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize("exclude", [False, True])
+def test_find_external_with_dependencies(
+    exclude, tmp_path: pathlib.Path, mutable_config: Configuration, monkeypatch
+):
+    """Tests that --dependencies detects the owner of a library that a searched package loads,
+    records the dependency, and makes only the searched package non-buildable.
+    """
+    monkeypatch.delenv("LD_LIBRARY_PATH", raising=False)
+    owner_lib = tmp_path / "owner" / "lib"
+    _write_host_elf(owner_lib / "libsonames-owner.so.1", soname="libsonames-owner.so.1")
+    _write_host_elf(tmp_path / "owner" / "bin" / "sonames-owner")
+    _write_host_elf(
+        tmp_path / "consumer" / "bin" / "sonames-consumer",
+        needed=["libsonames-owner.so.1"],
+        runpath=str(owner_lib),
+    )
+    args = ["find", "--dependencies", "--not-buildable", "--path", str(tmp_path / "consumer")]
+    if exclude:
+        args.extend(["--exclude", "sonames-owner"])
+
+    output = SpackCommand("external")(*args, "sonames-consumer")
+
+    packages = mutable_config.get("packages")
+    consumer = packages["sonames-consumer"]
+    assert consumer["buildable"] is False
+    assert [x["prefix"] for x in consumer["externals"]] == [str(tmp_path / "consumer")]
+    if exclude:
+        assert "sonames-owner" not in packages
+        assert "dependencies" not in consumer["externals"][0]
+        assert str(owner_lib / "libsonames-owner.so.1") in output
+        return
+
+    owner = packages["sonames-owner"]
+    assert "buildable" not in owner
+    assert [x["prefix"] for x in owner["externals"]] == [str(tmp_path / "owner")]
+    assert consumer["externals"][0]["dependencies"] == [
+        {"id": owner["externals"][0]["id"], "deptypes": ["link"]}
+    ]
+    assert "sonames-consumer@1.0 -> sonames-owner@1.0" in output
