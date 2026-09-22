@@ -2298,18 +2298,19 @@ def _do_migrate(
     # Detect what old resources exist
     old_resources = _detect_old_resources()
 
-    # Normal migration writes its configuration to the layout scope.  Isolate
-    # writes to the fresh target config unless that target already had a
-    # config.yaml, in which case old-resource overrides go to layout instead.
+    # For normal migration, config_path is None and we write to layout scope.
+    # For isolate, config_path is provided by the caller: either the fresh
+    # target config or (when reusing an existing config) the layout scope.
     layout_scope_path = _layout_scope_path()
-    if config_path is None:
-        config_path = os.path.join(layout_scope_path, "config.yaml")
     layout_config_path = os.path.join(layout_scope_path, "config.yaml")
-    if not (
-        is_isolate_command
-        and os.path.normpath(config_path) != os.path.normpath(layout_config_path)
-    ):
+
+    if config_path is None:
+        config_path = layout_config_path
+
+    # Create layout scope unless isolating to a non-layout destination
+    if not is_isolate_command or os.path.normpath(config_path) == os.path.normpath(layout_config_path):
         filesystem.mkdirp(layout_scope_path)
+
     filesystem.mkdirp(os.path.dirname(config_path))
 
     # Config to write to the selected destination
