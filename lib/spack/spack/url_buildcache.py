@@ -601,21 +601,15 @@ class URLBuildcacheEntry:
         web_util.push_to_url(manifest_path, manifest_destination_url, keep_original=False)
 
     @classmethod
-    def push_local_file_as_blob(
+    def push_blob_from_file(
         cls,
         local_file_path: str,
         mirror_url: str,
-        manifest_name: str,
         component_type: BuildcacheComponent,
         compression: str = "none",
-    ) -> None:
-        """Convenience method to push a local file to a mirror as a blob.  Both manifest
-        and blob are pushed as a component of the given component_type.  If ``compression``
-        is ``"gzip"`` the blob will be compressed before pushing, otherwise it will be pushed
-        uncompressed."""
-        cache_class = get_url_buildcache_class()
+    ) -> BlobRecord:
+        """Push a local file as a blob of the given component type and return its record"""
         checksum_algo = "sha256"
-        blob_to_push = local_file_path
 
         with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             blob_to_push = os.path.join(tmpdir, os.path.basename(local_file_path))
@@ -628,15 +622,30 @@ class URLBuildcacheEntry:
 
             record = BlobRecord(
                 checker.length,
-                cache_class.component_to_media_type(component_type),
+                cls.component_to_media_type(component_type),
                 compression,
                 checksum_algo,
                 checker.hexdigest(),
             )
-            manifest = BuildcacheManifest(
-                layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION, data=[record]
-            )
             cls.push_blob(mirror_url, blob_to_push, record)
+
+        return record
+
+    @classmethod
+    def push_local_file_as_blob(
+        cls,
+        local_file_path: str,
+        mirror_url: str,
+        manifest_name: str,
+        component_type: BuildcacheComponent,
+        compression: str = "none",
+    ) -> None:
+        """Push a local file as a blob and a manifest with just that blob"""
+        record = cls.push_blob_from_file(local_file_path, mirror_url, component_type, compression)
+        manifest = BuildcacheManifest(
+            layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION, data=[record]
+        )
+        with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             cls.push_manifest(
                 mirror_url, manifest_name, manifest, tmpdir, component_type=component_type
             )
