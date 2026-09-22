@@ -1395,7 +1395,7 @@ def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path, mock_pac
 
 def test_database_v8_reconstructs_provided_virtuals(database, tmp_path: pathlib.Path):
     """A v8 database does not record provided virtuals, so they are reconstructed on read."""
-    data = json.loads(pathlib.Path(database._index_path).read_text())
+    data = json.loads(pathlib.Path(database._index_path).read_text(encoding="utf-8"))
     data["database"]["version"] = "8"
     for record in data["database"]["installs"].values():
         record["spec"].pop("provided_virtuals", None)
