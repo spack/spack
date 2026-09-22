@@ -29,9 +29,11 @@ def library_patterns(pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
 
 
 class LibraryOwner(NamedTuple):
+    """A package that owns a library or an executable."""
+
     name: str
-    #: version that the recipe detects for the library, when the package owns libraries through
-    #: its ``libraries`` attribute
+    #: version that the recipe detects for the file, when the ownership is confirmed by the
+    #: recipe's ``determine_version``
     version: Optional[str]
 
 
@@ -47,6 +49,8 @@ class OwnershipIndex:
         #: Packages that own libraries through their ``libraries`` attribute. These patterns
         #: select candidate files for detection, and are often prefixes such as ``libz``.
         self._detected_by_libraries: Dict[str, Type["spack.package_base.PackageBase"]] = {}
+        #: Packages that own executables, by name
+        self._detected_by_executables: Dict[str, Type["spack.package_base.PackageBase"]] = {}
         finder = ExecutablesFinder()
         for pkg in pkgs:
             if getattr(pkg, "sonames", None) is None and hasattr(pkg, "libraries"):
@@ -57,9 +61,11 @@ class OwnershipIndex:
             executables = [re.compile(x) for x in finder.search_patterns(pkg=pkg)]
             if executables:
                 self._executables.append((pkg.name, executables))
+                self._detected_by_executables[pkg.name] = pkg
         self._library_owners: Dict[str, List[str]] = {}
         self._confirmed_library_owners: Dict[str, List[LibraryOwner]] = {}
         self._executable_owners: Dict[str, List[str]] = {}
+        self._confirmed_executable_owners: Dict[str, List[LibraryOwner]] = {}
 
     def library_owners(self, name: str) -> List[str]:
         """Returns the packages that may own a library loaded under ``name``, sorted by name."""
@@ -94,6 +100,26 @@ class OwnershipIndex:
         if name not in self._executable_owners:
             self._executable_owners[name] = _owners(name, self._executables)
         return self._executable_owners[name]
+
+    def confirmed_executable_owners(self, path: str) -> List[LibraryOwner]:
+        """Returns the packages that own the executable at ``path``, sorted by name.
+
+        A package owns the executable if its ``executables`` patterns match the name of the file,
+        and its ``determine_version`` returns a version for it. Packages without
+        ``determine_version`` own it on the patterns alone.
+        """
+        if path not in self._confirmed_executable_owners:
+            result = []
+            for name in self.executable_owners(os.path.basename(path)):
+                pkg = self._detected_by_executables[name]
+                if not hasattr(pkg, "determine_version"):
+                    result.append(LibraryOwner(name=name, version=None))
+                    continue
+                version = _detected_version(pkg, path)
+                if version:
+                    result.append(LibraryOwner(name=name, version=version))
+            self._confirmed_executable_owners[path] = result
+        return self._confirmed_executable_owners[path]
 
 
 def _detected_version(pkg: Type["spack.package_base.PackageBase"], *paths: str) -> Optional[str]:

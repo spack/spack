@@ -202,11 +202,9 @@ def external_find(args):
         for edge in found.edges:
             print(f"    {edge.parent} -> {edge.child}")
     if found.missing:
-        tty.msg("No external was found for the following libraries")
+        tty.msg("No external was found for the following files")
         for item in found.missing:
-            print(
-                f"    {item.library} [loaded by {item.parent}, owned by {', '.join(item.owners)}]"
-            )
+            print(f"    {item.library} [used by {item.parent}, owned by {', '.join(item.owners)}]")
 
 
 class FoundWithDependencies(NamedTuple):
@@ -216,7 +214,7 @@ class FoundWithDependencies(NamedTuple):
     dependency_specs: List[spack.spec.Spec]
     #: dependencies added to packages.yaml
     edges: List[spack.detection.dependencies.ExternalEdge]
-    #: libraries whose owners have no external
+    #: files whose owners have no external
     missing: List[spack.detection.dependencies.MissingExternal]
 
 

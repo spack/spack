@@ -14,7 +14,7 @@ import spack.externals
 import spack.repo
 import spack.spec
 
-from .common import library_prefix
+from .common import executable_prefix, library_prefix
 from .elf_closure import DynamicLoader, LoadedObject
 from .ownership import LibraryOwner, OwnershipIndex
 from .path import DetectedExternal
@@ -35,18 +35,38 @@ class ExternalEdge(NamedTuple):
     child: spack.spec.Spec
     depflag: dt.DepFlag
     virtuals: Tuple[str, ...]
-    #: real path of the library of the child that a file of the parent loads
+    #: real path of a library of the child that the parent loads, or of an executable of the
+    #: child that the parent runs
     library: str
 
 
 class MissingExternal(NamedTuple):
-    """A library that a detected external loads, owned by packages with no matching external."""
+    """A file that a detected external uses, owned by packages with no matching external."""
 
     parent: spack.spec.Spec
-    #: real path of the library
+    #: real path of the file
     library: str
-    #: packages whose patterns match the library
+    #: packages that own the file
     owners: List[str]
+    #: prefix of the installation the file belongs to, guessed from its directory
+    prefix: str
+
+
+class _Evidence(NamedTuple):
+    """A file of another package that a detected external uses."""
+
+    #: real path of the file
+    key: str
+    #: path the file was found at
+    path: str
+    owners: List[LibraryOwner]
+    #: ``LINK`` for a library the external loads, ``RUN`` for an executable it runs
+    depflag: dt.DepFlag
+
+    def prefix_of(self, directory: str) -> str:
+        if self.depflag == dt.LINK:
+            return library_prefix(directory)
+        return executable_prefix(directory)
 
 
 class DetectedDependencies(NamedTuple):
@@ -85,17 +105,35 @@ def _libraries_of_other_packages(
     return result
 
 
-def _is_in_prefix(library: LoadedObject, key: str, spec: spack.spec.Spec) -> bool:
-    """Returns whether a library is under the prefix of an external, before or after resolving
-    symlinks in the path the library was found at.
+def _is_in_prefix(evidence: _Evidence, spec: spack.spec.Spec) -> bool:
+    """Returns whether a file is under the prefix of an external, before or after resolving
+    symlinks in the path the file was found at.
     """
     if not spec.external_path:
         return False
     prefixes = {
-        os.path.realpath(library_prefix(os.path.dirname(library.path))),
-        library_prefix(os.path.dirname(key)),
+        os.path.realpath(evidence.prefix_of(os.path.dirname(evidence.path))),
+        evidence.prefix_of(os.path.dirname(evidence.key)),
     }
     return os.path.realpath(spec.external_path) in prefixes
+
+
+def _files_of_other_packages(
+    dependency_files: List[str], name: str, index: OwnershipIndex
+) -> List[_Evidence]:
+    """Returns the files among ``dependency_files`` that are owned by packages other than
+    ``name``, as libraries or as executables.
+    """
+    result = []
+    for path in dependency_files:
+        key = os.path.realpath(path)
+        for owners, depflag in (
+            (index.confirmed_library_owners(path, key), dt.LINK),
+            (index.confirmed_executable_owners(path), dt.RUN),
+        ):
+            if owners and all(x.name != name for x in owners):
+                result.append(_Evidence(key=key, path=path, owners=owners, depflag=depflag))
+    return result
 
 
 def _libraries_by_owners(
@@ -134,13 +172,15 @@ def detect_dependencies(
     loader: DynamicLoader,
     repo: spack.repo.RepoPath,
 ) -> DetectedDependencies:
-    """Returns the link dependencies of detected externals on other externals.
+    """Returns the link and run dependencies of detected externals on other externals.
 
-    A library loaded by the files of a detected external is attributed to the externals of its
-    owners, among ``externals``, whose prefix contains it and whose version matches the one the
-    owner detects for it, if any. An edge is recorded when exactly one such external exists, and
-    the recipe of the parent has a link dependency on it that applies to the parent. Libraries
-    whose owners have no such external are returned as missing.
+    The evidence of a dependency is a library loaded by the files of a detected external, or by
+    its dependency files, and a dependency file itself when another package owns it as a library
+    (link) or as an executable (run). Each file is attributed to the externals of its owners,
+    among ``externals``, whose prefix contains it and whose version matches the one the owner
+    detects for it, if any. An edge is recorded when exactly one such external exists, with the
+    types of the recipe's dependency on it that are shown by the evidence. Files whose owners have
+    no such external are returned as missing.
 
     When ``loader`` searches ``LD_LIBRARY_PATH``, libraries are also resolved without it, and a
     warning is emitted if that finds libraries of the same owners at other paths.
@@ -162,11 +202,11 @@ def detect_dependencies(
 
     edges: List[ExternalEdge] = []
     missing: List[MissingExternal] = []
-    for parent, files in detected:
+    for parent, files, dependency_files in detected:
         libraries: Dict[str, List[LibraryOwner]] = {}
         default_libraries: Dict[str, List[LibraryOwner]] = {}
         loaded: Dict[str, LoadedObject] = {}
-        for root in files:
+        for root in [*files, *dependency_files]:
             loaded_by_root = loader.load(root)
             for key, owners in _libraries_of_other_packages(
                 loaded_by_root, root, parent.name, index
@@ -188,43 +228,61 @@ def detect_dependencies(
         spack.externals.complete_variants_and_architecture(completed, repo)
         types_by_name = spack.externals.dependency_types(completed, repo)
 
-        children: List[spack.spec.Spec] = []
-        for key, owners in libraries.items():
+        evidence = [
+            _Evidence(key=key, path=loaded[key].path, owners=owners, depflag=dt.LINK)
+            for key, owners in libraries.items()
+        ]
+        evidence.extend(_files_of_other_packages(dependency_files, parent.name, index))
+
+        # Children, with the types of evidence found for them and the first file found
+        children: List[Tuple[spack.spec.Spec, dt.DepFlag, str]] = []
+        for item in evidence:
             candidates = [
                 spec
-                for owner in owners
+                for owner in item.owners
                 for spec in externals_by_name.get(owner.name, [])
-                if _is_in_prefix(loaded[key], key, spec)
+                if _is_in_prefix(item, spec)
                 and (owner.version is None or spec.intersects(f"@={owner.version}"))
             ]
             if not candidates:
-                owner_names = [x.name for x in owners]
-                missing.append(MissingExternal(parent=parent, library=key, owners=owner_names))
+                missing.append(
+                    MissingExternal(
+                        parent=parent,
+                        library=item.key,
+                        owners=[x.name for x in item.owners],
+                        prefix=item.prefix_of(os.path.dirname(item.key)),
+                    )
+                )
                 continue
 
             if len(candidates) > 1:
                 candidates_str = ", ".join(str(x) for x in candidates)
                 warnings.warn(
-                    f"{parent} loads {key}, which may belong to any of {candidates_str}. "
+                    f"{parent} uses {item.key}, which may belong to any of {candidates_str}. "
                     f"No dependency is recorded for it."
                 )
                 continue
 
             child = candidates[0]
-            if any(child is x for x in children):
-                continue
+            for i, (other, flag, key) in enumerate(children):
+                if other is child:
+                    children[i] = (other, flag | item.depflag, key)
+                    break
+            else:
+                children.append((child, item.depflag, item.key))
 
+        for child, evidence_flag, key in children:
             depflag, virtuals = spack.externals.infer_dependency(child, types_by_name, repo)
-            depflag &= dt.LINK
+            depflag &= evidence_flag
             if not depflag:
+                types_str = " or ".join(dt.flag_to_tuple(evidence_flag))
                 warnings.warn(
-                    f"{parent} loads {key} from {child}, but the recipe of {parent.name} has no "
-                    f"link dependency on {child.name} that applies to it. No dependency is "
-                    f"recorded for it."
+                    f"{parent} uses {key} from {child}, but the recipe of {parent.name} has no "
+                    f"{types_str} dependency on {child.name} that applies to it. No dependency "
+                    f"is recorded for it."
                 )
                 continue
 
-            children.append(child)
             edges.append(
                 ExternalEdge(
                     parent=parent, child=child, depflag=depflag, virtuals=virtuals, library=key
@@ -257,9 +315,11 @@ def detect_with_dependencies(
     exclude: Iterable[str] = (),
 ) -> DetectedWithDependencies:
     """Detects the dependencies of detected externals, detecting the packages that own the
-    libraries they load when those have no external.
+    files they use when those have no external.
 
-    An owner is searched for in the prefix of the library and in its directory, once per prefix.
+    The ``determine_dependency_files`` method of the recipe of each external, if defined, is
+    called once with its spec, and the files it returns are used as evidence of dependencies.
+    An owner is searched for in the prefix of the file and in its directory, once per prefix.
     Externals detected this way are searched for dependencies in turn, until no new external is
     found. Packages in ``exclude`` are never searched for.
 
@@ -285,6 +345,7 @@ def detect_with_dependencies(
             if key in known:
                 continue
             known.add(key)
+            entry = entry._replace(dependency_files=_dependency_files(entry.spec, repo))
             result[name].append(entry)
             all_detected.append(entry)
             added.append(entry)
@@ -310,14 +371,13 @@ def detect_with_dependencies(
         owners_by_prefix: Dict[str, Set[str]] = collections.defaultdict(set)
         hints_by_prefix: Dict[str, Set[str]] = collections.defaultdict(set)
         for item in partial.missing:
-            library_dir = os.path.dirname(item.library)
-            prefix = library_prefix(library_dir)
+            prefix = item.prefix
             for owner in item.owners:
                 if owner in excluded or (owner, prefix) in searched:
                     continue
                 searched.add((owner, prefix))
                 owners_by_prefix[prefix].add(owner)
-                hints_by_prefix[prefix].add(library_dir)
+                hints_by_prefix[prefix].add(os.path.dirname(item.library))
 
         pending = []
         for prefix in sorted(owners_by_prefix):
@@ -334,3 +394,26 @@ def detect_with_dependencies(
         repo=repo,
     )
     return DetectedWithDependencies(detected=result, edges=final.edges, missing=final.missing)
+
+
+def _dependency_files(spec: spack.spec.Spec, repo: spack.repo.RepoPath) -> List[str]:
+    """Returns the absolute paths that ``determine_dependency_files`` returns for a spec, or an
+    empty list if the recipe does not define it. Errors in the method are turned into warnings.
+    """
+    method = getattr(repo.get_pkg_class(spec.name), "determine_dependency_files", None)
+    if method is None:
+        return []
+
+    try:
+        paths = list(method(spec) or [])
+    except Exception as e:
+        warnings.warn(f"Cannot get the dependency files of {spec} [{type(e).__name__}: {e}]")
+        return []
+
+    result = [x for x in paths if isinstance(x, str) and os.path.isabs(x)]
+    if len(result) != len(paths):
+        warnings.warn(
+            f"The dependency files of {spec} must be absolute paths, the other values are "
+            f"ignored [{', '.join(repr(x) for x in paths if x not in result)}]"
+        )
+    return result

@@ -124,12 +124,13 @@ With the ``--dependencies`` option, Spack also detects the link dependencies of 
    $ spack external find --dependencies curl
 
 On Linux, Spack reads the shared libraries loaded by the files each external was detected from, and searches them as the dynamic loader does, including in ``LD_LIBRARY_PATH``.
-Each library is attributed to the packages that own it (see :ref:`library-ownership`), and a dependency is recorded when exactly one external of an owner has the library in its prefix, and the recipe of the dependent has a link dependency on that owner.
+Recipes can also point to files that the external uses in other ways, such as the linker a compiler runs (see :ref:`dependency-files`).
+Each file is attributed to the packages that own it (see :ref:`library-ownership`), and a dependency is recorded when exactly one external of an owner has the file in its prefix, and the recipe of the dependent has a dependency on that owner of the type shown by the file: ``link`` for a library, ``run`` for an executable.
 Libraries of libc and of compiler runtimes never produce a dependency.
 When an owner has no external, Spack searches for it in the prefix of the library, and adds the externals it finds to ``packages.yaml`` too.
 These externals are buildable even with ``--not-buildable``, which applies only to the packages that were searched for, and packages given to ``--exclude`` are never searched for.
 
-Dependencies are written with their ids, and with ``link`` as their only dependency type:
+Dependencies are written with their ids, and with the dependency types shown by the files:
 
 .. code-block:: yaml
 

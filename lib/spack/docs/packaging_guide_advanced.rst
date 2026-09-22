@@ -387,6 +387,30 @@ Anchor the patterns and match the whole name: a pattern like ``libz`` also match
 
 A package detected by its ``libraries`` attribute owns the libraries matching those patterns, but only those for which its ``determine_version`` returns a version.
 Setting ``sonames`` replaces this rule with a plain match on the patterns in ``sonames``.
+Executables are owned by the packages whose ``executables`` patterns match them, and whose ``determine_version`` returns a version for them.
+
+.. _dependency-files:
+
+Dependencies that libraries do not show
+"""""""""""""""""""""""""""""""""""""""
+
+Some dependencies of an external cannot be found from the libraries it loads, for instance the linker that a compiler runs.
+A package can return the files of such dependencies from the optional ``determine_dependency_files`` method:
+
+.. code-block:: python
+
+   @classmethod
+   def determine_dependency_files(cls, spec):
+       """Return the absolute paths of files of other packages that the detected external
+       ``spec`` uses.
+       """
+       ld = which("ld", path=os.path.dirname(spec.extra_attributes["compilers"]["c"]))
+       return [ld.path] if ld else []
+
+The method is called by ``spack external find --dependencies`` once for each external of the package, with the detected spec.
+Each file is attributed like the libraries an external loads: a file owned as a library by another package is evidence of a ``link`` dependency, and a file owned as an executable is evidence of a ``run`` dependency.
+Libraries that the returned files load are evidence of ``link`` dependencies too.
+Errors raised by the method, and values that are not absolute paths, are reported as warnings.
 
 .. _determine_spec_details:
 

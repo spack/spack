@@ -569,6 +569,7 @@ def test_detect_dependencies_without_external_in_prefix(tmp_path, mock_packages,
             parent=consumer,
             library=os.path.realpath(tmp_path / "owner" / "lib" / "libsonames-owner.so.1"),
             owners=["sonames-owner"],
+            prefix=os.path.realpath(tmp_path / "owner"),
         )
     ]
 
@@ -1110,3 +1111,100 @@ def test_audit_detection_tests_with_dependencies(
 
     details = [x.split(" [test_id")[0] for error in errors for x in error.details]
     assert details == expected_details
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize(
+    "listed,expected_edges,warning",
+    [
+        # An executable of another package, run by the external
+        (["tool/bin/dependency-files-tool"], [("dependency-files-tool", "run")], None),
+        # An executable matching the patterns of a package whose recipe does not confirm it
+        (["fake/bin/dependency-files-tool"], [], None),
+        # A library of another package, loaded by the external
+        (["owner/lib/libsonames-owner.so.1"], [("sonames-owner", "link")], None),
+        (
+            ["tool/bin/dependency-files-tool", "owner/lib/libsonames-owner.so.1"],
+            [("dependency-files-tool", "run"), ("sonames-owner", "link")],
+            None,
+        ),
+        # The method raises
+        (None, [], "Cannot get the dependency files of dependency-files-user@1.0"),
+        # The method returns a relative path
+        (["bin/dependency-files-tool"], [], "must be absolute paths"),
+    ],
+)
+def test_detect_with_dependencies_from_dependency_files(
+    listed, expected_edges, warning, tmp_path, mock_executable, mock_packages, config
+):
+    """Tests that the files returned by determine_dependency_files are evidence of run
+    dependencies when another package owns them as executables, and of link dependencies when it
+    owns them as libraries.
+    """
+    mock_executable("dependency-files-user", output="echo", subdir=("user", "bin"))
+    mock_executable(
+        "dependency-files-tool", output="echo dependency-files-tool 2.0", subdir=("tool", "bin")
+    )
+    mock_executable("dependency-files-tool", output="echo other-tool 2.0", subdir=("fake", "bin"))
+    mock_executable("sonames-owner", output="echo", subdir=("owner", "bin"))
+    _write_host_elf(
+        tmp_path / "owner" / "lib" / "libsonames-owner.so.1", soname="libsonames-owner.so.1"
+    )
+    if listed is not None:
+        share = tmp_path / "user" / "share"
+        share.mkdir()
+        entries = [x if x.startswith("bin/") else str(tmp_path / x) for x in listed]
+        (share / "dependency-files").write_text("\n".join(entries))
+    detect = functools.partial(spack.detection.path.by_path_detailed, repo=mock_packages)
+
+    with warnings.catch_warnings(record=True) as recorded:
+        warnings.simplefilter("always")
+        result = spack.detection.dependencies.detect_with_dependencies(
+            detect(["dependency-files-user"], path_hints=[str(tmp_path / "user")]),
+            detect=detect,
+            configured=[],
+            index=spack.detection.ownership.ownership_index(mock_packages),
+            loader=spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[]),
+            repo=mock_packages,
+        )
+
+    edges = sorted(
+        (x.child.name, spack.deptypes.flag_to_string(x.depflag))
+        for x in result.edges
+        if x.parent.name == "dependency-files-user"
+    )
+    assert edges == expected_edges
+    assert result.missing == []
+    messages = [str(x.message) for x in recorded]
+    if warning is None:
+        assert messages == []
+    else:
+        assert len(messages) == 1 and warning in messages[0]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_detect_dependencies_requires_run_dependency_in_recipe(
+    tmp_path, mock_executable, mock_packages, config
+):
+    """Tests that an executable run by an external gives no dependency when the recipe has only
+    a build dependency on its package.
+    """
+    tool_exe = mock_executable(
+        "dependency-files-tool", output="echo dependency-files-tool 2.0", subdir=("tool", "bin")
+    )
+    user = spack.spec.Spec.from_detection(
+        "dependency-files-user@1.0~tool", external_path=str(tmp_path / "user")
+    )
+    tool = spack.spec.Spec.from_detection(
+        "dependency-files-tool@2.0", external_path=str(tmp_path / "tool")
+    )
+    detected = [
+        spack.detection.path.DetectedExternal(
+            spec=user, files=[], dependency_files=[str(tool_exe)]
+        )
+    ]
+
+    with pytest.warns(UserWarning, match="has no run dependency on dependency-files-tool"):
+        result = _detect_dependencies(detected, [user, tool], mock_packages)
+
+    assert result.edges == []

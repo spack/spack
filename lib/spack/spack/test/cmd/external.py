@@ -112,6 +112,8 @@ def test_find_external_cmd_not_buildable(
             [],
             [
                 "builtin_mock.cmake",
+                "builtin_mock.dependency-files-tool",
+                "builtin_mock.dependency-files-user",
                 "builtin_mock.find-externals1",
                 "builtin_mock.gcc",
                 "builtin_mock.intel-oneapi-compilers",
@@ -129,6 +131,8 @@ def test_find_external_cmd_not_buildable(
             ["builtin_mock.find-externals1"],
             [
                 "builtin_mock.cmake",
+                "builtin_mock.dependency-files-tool",
+                "builtin_mock.dependency-files-user",
                 "builtin_mock.gcc",
                 "builtin_mock.intel-oneapi-compilers",
                 "builtin_mock.libraries-owner",
@@ -144,6 +148,8 @@ def test_find_external_cmd_not_buildable(
             ["find-externals1"],
             [
                 "builtin_mock.cmake",
+                "builtin_mock.dependency-files-tool",
+                "builtin_mock.dependency-files-user",
                 "builtin_mock.gcc",
                 "builtin_mock.intel-oneapi-compilers",
                 "builtin_mock.libraries-owner",

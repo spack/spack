@@ -227,6 +227,8 @@ class DetectedExternal(NamedTuple):
     spec: "spack.spec.Spec"
     #: files matching the search patterns of the package that belong to the spec
     files: List[str]
+    #: files that the recipe's ``determine_dependency_files`` returns for the spec
+    dependency_files: List[str] = []
 
 
 def _files_of_specs(
