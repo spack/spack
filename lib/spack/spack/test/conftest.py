@@ -63,6 +63,7 @@ import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
 import spack.util.lang
+import spack.util.libc
 import spack.util.lock
 import spack.util.naming
 import spack.util.parallel
@@ -2503,7 +2504,7 @@ def _true(x):
     return True
 
 
-def _libc_from_python(self):
+def _libc_from_python(*args):
     return spack.spec.Spec("glibc@=2.28", external_path="/some/path")
 
 
@@ -2518,9 +2519,12 @@ def _c_compiler_always_exists():
     spack.solver.asp.c_compiler_runs = _true
     mthd = spack.compilers.libraries.CompilerPropertyDetector.default_libc
     spack.compilers.libraries.CompilerPropertyDetector.default_libc = _libc_from_python
+    host_libc = spack.util.libc.libc_from_current_python_process
+    spack.util.libc.libc_from_current_python_process = _libc_from_python
     yield
     spack.solver.asp.c_compiler_runs = fn
     spack.compilers.libraries.CompilerPropertyDetector.default_libc = mthd
+    spack.util.libc.libc_from_current_python_process = host_libc
 
 
 @pytest.fixture(scope="session")

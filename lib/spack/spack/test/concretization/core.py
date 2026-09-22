@@ -50,7 +50,6 @@ import spack.util.file_cache
 import spack.util.filesystem
 import spack.util.hash
 import spack.util.lang
-import spack.util.libc
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 import spack.version.git_ref_lookup
@@ -6119,10 +6118,6 @@ def test_concrete_input_specs_skip_the_dependency_precheck(mock_packages, config
 _init_packages_yaml = spack.compilers.config._init_packages_yaml
 
 
-def _mock_host_libc():
-    return spack.spec.Spec("glibc@=2.28", external_path="/some/path")
-
-
 @pytest.fixture
 def remove_all_compilers(mutable_config, mock_packages, monkeypatch, tmp_path):
     """Returns a function that removes all compilers from the configuration, and leaves no
@@ -6131,9 +6126,9 @@ def remove_all_compilers(mutable_config, mock_packages, monkeypatch, tmp_path):
 
     def _remove():
         monkeypatch.setattr(spack.compilers.config, "_init_packages_yaml", _init_packages_yaml)
-        monkeypatch.setattr(spack.util.libc, "libc_from_current_python_process", _mock_host_libc)
-        for compiler in ("gcc", "llvm"):
-            mutable_config.set(f"packages::{compiler}", {"buildable": True})
+        compilers = spack.compilers.config.all_compilers_from(mutable_config, repo=mock_packages)
+        for name in {c.name for c in compilers}:
+            mutable_config.set(f"packages:{name}::", {"buildable": True})
         monkeypatch.setenv("PATH", str(tmp_path))
 
     return _remove
