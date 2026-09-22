@@ -6112,3 +6112,56 @@ def test_concrete_input_specs_skip_the_dependency_precheck(mock_packages, config
 
     # the concrete one is not
     spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup([spec])
+
+
+#: conftest.py disables compiler detection for every test, the tests below need the real one
+_init_packages_yaml = spack.compilers.config._init_packages_yaml
+
+
+@pytest.fixture
+def remove_all_compilers(mutable_config, mock_packages, monkeypatch, tmp_path):
+    """Returns a function that removes all compilers from the configuration, and leaves no
+    compiler in PATH. The host libc is the same as the one targeted by mock compilers.
+    """
+
+    def _remove():
+        monkeypatch.setattr(spack.compilers.config, "_init_packages_yaml", _init_packages_yaml)
+        compilers = spack.compilers.config.all_compilers_from(mutable_config, repo=mock_packages)
+        for name in {c.name for c in compilers}:
+            mutable_config.set(f"packages:{name}::", {"buildable": True})
+        monkeypatch.setenv("PATH", str(tmp_path))
+
+    return _remove
+
+
+def test_concretize_without_compilers_when_none_is_needed(remove_all_compilers):
+    """Tests that a spec with no compiler in its DAG can be concretized when no compiler is
+    available.
+    """
+    remove_all_compilers()
+    spec = spack.concretize.concretize_one("brillig")
+    assert spec.concrete
+    assert not spec.dependencies()
+
+
+def test_concretize_with_reused_compiler_and_no_configured_compilers(remove_all_compilers):
+    """Tests that a concrete compiler from a reuse source, e.g. a buildcache or an included
+    environment, can be used when no compiler is configured, or available in PATH.
+    """
+    reused_gcc = spack.concretize.concretize_one("gcc@14.0.1 languages=c,c++ %gcc@10.2.1")
+    remove_all_compilers()
+
+    def factory(is_usable, configuration):
+        return [spack.spec_filter.SpecFilter(lambda: [reused_gcc], is_usable=is_usable)]
+
+    spec = spack.concretize.concretize_one("pkg-b %gcc@14.0.1", factory=factory)
+    assert spec["c"].dag_hash() == reused_gcc.dag_hash()
+
+
+def test_no_available_compiler_error(remove_all_compilers):
+    """Tests that concretizing a spec that needs a compiler fails with a clear error, when no
+    compiler is configured, or available in PATH, or reusable.
+    """
+    remove_all_compilers()
+    with pytest.raises(spack.compilers.config.NoAvailableCompilerError, match="in PATH"):
+        spack.concretize.concretize_one("pkg-b")

@@ -100,7 +100,7 @@ from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .result import Result, SpecDict, build_criteria_names
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory
-from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder, all_libcs
+from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder
 from .versions import Provenance
 
 if TYPE_CHECKING:
@@ -697,6 +697,15 @@ class ErrorHandler:
         raise error
 
 
+def _raise_if_no_compiler_is_available(setup: "SpackSolverSetup") -> None:
+    needs_compiler = any(x in setup.possible_virtuals for x in ("c", "cxx", "fortran"))
+    if needs_compiler and not setup.possible_compilers:
+        raise spack.compilers.config.NoAvailableCompilerError(
+            "no compiler configured, and Spack cannot find working compilers in PATH, in the "
+            "store, or among the specs that can be reused"
+        )
+
+
 def _strip_asp_problem(asp_problem: Iterable[str]) -> List[str]:
     """Remove empty lines from an ASP program."""
     return [stmt for stmt in asp_problem if stmt]
@@ -804,15 +813,18 @@ class PyclingoDriver:
         # once done, construct the solve result
         result = Result(specs, repo=setup.context.repo)
         result.satisfiable = solve_result.satisfiable
+        best = min(models) if result.satisfiable else None
+        if best is None or extract_args(best[1], "error"):
+            _raise_if_no_compiler_is_available(setup)
+
         if not result.satisfiable:
             return result
 
         timer.start("construct_specs")
-        # get the best model
         builder = SpecBuilder(
             specs, repo=setup.context.repo, hash_lookup=setup.reusable_and_possible
         )
-        min_cost, best_model = min(models)
+        min_cost, best_model = best
 
         # first check for errors
         error_handler = ErrorHandler(best_model, specs, setup.deprecation_details)
@@ -2435,7 +2447,7 @@ class SpackSolverSetup:
         self.gen = ProblemInstanceBuilder()
         self.clauses = SpecClauseGenerator(
             repo=self.context.repo,
-            libcs=sorted(all_libcs(self.context)),
+            libcs=sorted(spack.externals_config.all_libcs(self.context)),
             explicitly_required_namespaces={
                 node.name: node.namespace
                 for node in traverse.traverse_nodes(specs)
