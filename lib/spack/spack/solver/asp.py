@@ -2693,7 +2693,9 @@ class SpackSolverSetup:
                 effect_id = next(self._id_counter)
                 context = SourceContext()
                 context.source = "literal"
-                requirements = self.clauses.spec_clauses(spec, context=context)
+                requirements = self.clauses.spec_clauses(
+                    spec, expand_hashes=True, context=context
+                )
             root_name = spec.name
             for clause in requirements:
                 clause_name = clause.args[0]
