@@ -69,6 +69,12 @@ jobs:
     uses: ./.github/workflows/unit_tests.yaml
     secrets: inherit
 
+  integration-tests:
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
+    needs: [ prechecks, changes ]
+    uses: ./.github/workflows/integration.yml
+    secrets: inherit
+
   prechecks:
     needs: [ changes ]
     uses: ./.github/workflows/prechecks.yml
@@ -100,7 +106,7 @@ jobs:
     secrets: inherit
 
   all:
-    needs: [ unit-tests, coverage, bootstrap ]
+    needs: [ unit-tests, coverage, bootstrap, integration-tests ]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     # See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#needs-context
