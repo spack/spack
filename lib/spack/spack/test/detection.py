@@ -693,3 +693,53 @@ def test_detect_dependencies_through_symlinks(tmp_path, layout, mock_packages, c
     result = _detect_dependencies(detected, [consumer, owner], mock_packages)
 
     assert [(x.child, x.library) for x in result.edges] == [(owner, os.path.realpath(real))]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize("in_default_dirs,warns", [(True, True), (False, False)])
+def test_detect_dependencies_through_ld_library_path(
+    tmp_path, in_default_dirs, warns, mock_packages, config, recwarn
+):
+    """Tests that dependencies are detected from the libraries found through LD_LIBRARY_PATH,
+    with a warning when the default directories would give another library of the same package.
+    """
+    env_lib = _write_elf(
+        tmp_path / "module" / "lib" / "libsonames-owner.so.1", soname="libsonames-owner.so.1"
+    )
+    if in_default_dirs:
+        _write_elf(
+            tmp_path / "usr" / "lib" / "libsonames-owner.so.1", soname="libsonames-owner.so.1"
+        )
+    exe = _write_elf(
+        tmp_path / "consumer" / "bin" / "sonames-consumer",
+        needed=["libsonames-owner.so.1"],
+        interpreter=INTERPRETER,
+    )
+    consumer = spack.spec.Spec.from_detection(
+        "sonames-consumer@1.0", external_path=str(tmp_path / "consumer")
+    )
+    owners = [
+        spack.spec.Spec.from_detection(
+            "sonames-owner@1.0", external_path=str(tmp_path / "module")
+        ),
+        spack.spec.Spec.from_detection("sonames-owner@2.0", external_path=str(tmp_path / "usr")),
+    ]
+    detected = [spack.detection.path.DetectedExternal(spec=consumer, files=[exe])]
+
+    result = spack.detection.dependencies.detect_dependencies(
+        detected,
+        externals=[consumer, *owners],
+        index=spack.detection.ownership.ownership_index(mock_packages),
+        loader=spack.detection.elf_closure.DynamicLoader(
+            ld_library_path=[str(tmp_path / "module" / "lib")],
+            default_dirs=[str(tmp_path / "usr" / "lib")],
+        ),
+        repo=mock_packages,
+    )
+
+    assert [(x.child, x.library) for x in result.edges] == [(owners[0], os.path.realpath(env_lib))]
+    messages = [str(x.message) for x in recwarn.list]
+    if warns:
+        assert len(messages) == 1 and "through LD_LIBRARY_PATH" in messages[0]
+    else:
+        assert messages == []

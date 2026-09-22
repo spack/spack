@@ -7,7 +7,7 @@ import collections
 import os
 import re
 import warnings
-from typing import Dict, Iterable, List, NamedTuple, Tuple
+from typing import Dict, Iterable, List, NamedTuple, Set, Tuple
 
 import spack.deptypes as dt
 import spack.externals
@@ -98,6 +98,34 @@ def _is_in_prefix(library: LoadedObject, key: str, spec: spack.spec.Spec) -> boo
     return os.path.realpath(spec.external_path) in prefixes
 
 
+def _libraries_by_owners(
+    libraries: Dict[str, List[LibraryOwner]],
+) -> Dict[Tuple[str, ...], Set[str]]:
+    result: Dict[Tuple[str, ...], Set[str]] = collections.defaultdict(set)
+    for key, owners in libraries.items():
+        result[tuple(x.name for x in owners)].add(key)
+    return result
+
+
+def _warn_on_environment_differences(
+    parent: spack.spec.Spec,
+    with_environment: Dict[str, List[LibraryOwner]],
+    without_environment: Dict[str, List[LibraryOwner]],
+) -> None:
+    """Warns when libraries of the same owners are found at other paths without
+    ``LD_LIBRARY_PATH``.
+    """
+    default = _libraries_by_owners(without_environment)
+    for owners, keys in _libraries_by_owners(with_environment).items():
+        other = default.get(owners)
+        if other and other != keys:
+            warnings.warn(
+                f"{parent} loads {', '.join(sorted(keys))} through LD_LIBRARY_PATH, and "
+                f"{', '.join(sorted(other))} without it. Dependencies are detected from the "
+                f"libraries found through LD_LIBRARY_PATH."
+            )
+
+
 def detect_dependencies(
     detected: Iterable[DetectedExternal],
     *,
@@ -114,6 +142,9 @@ def detect_dependencies(
     the recipe of the parent has a link dependency on it that applies to the parent. Libraries
     whose owners have no such external are returned as missing.
 
+    When ``loader`` searches ``LD_LIBRARY_PATH``, libraries are also resolved without it, and a
+    warning is emitted if that finds libraries of the same owners at other paths.
+
     Arguments:
         detected: detected externals, with the files they were detected from
         externals: candidate dependencies, from this detection and from configuration
@@ -125,10 +156,15 @@ def detect_dependencies(
     for spec in externals:
         externals_by_name[spec.name].append(spec)
 
+    without_environment = None
+    if loader.ld_library_path:
+        without_environment = DynamicLoader(ld_library_path=[], default_dirs=loader.default_dirs)
+
     edges: List[ExternalEdge] = []
     missing: List[MissingExternal] = []
     for parent, files in detected:
         libraries: Dict[str, List[LibraryOwner]] = {}
+        default_libraries: Dict[str, List[LibraryOwner]] = {}
         loaded: Dict[str, LoadedObject] = {}
         for root in files:
             loaded_by_root = loader.load(root)
@@ -137,6 +173,15 @@ def detect_dependencies(
             ).items():
                 libraries.setdefault(key, owners)
                 loaded.setdefault(key, loaded_by_root[key])
+            if without_environment is not None:
+                default_libraries.update(
+                    _libraries_of_other_packages(
+                        without_environment.load(root), root, parent.name, index
+                    )
+                )
+
+        if without_environment is not None:
+            _warn_on_environment_differences(parent, libraries, default_libraries)
 
         # The parser completes an external read from configuration in the same way
         completed = parent.copy()
