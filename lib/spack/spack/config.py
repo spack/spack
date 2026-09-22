@@ -2304,12 +2304,8 @@ def _do_migrate(
     layout_scope_path = _layout_scope_path()
     layout_config_path = os.path.join(layout_scope_path, "config.yaml")
 
-    if config_path is None:
+    if not is_isolate_command:
         config_path = layout_config_path
-
-    # Create layout scope unless isolating to a non-layout destination
-    if not is_isolate_command or os.path.normpath(config_path) == os.path.normpath(layout_config_path):
-        filesystem.mkdirp(layout_scope_path)
 
     filesystem.mkdirp(os.path.dirname(config_path))
 
