@@ -4,11 +4,12 @@
 
 """Non-fixture utilities for test code. Must be imported."""
 
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from spack.concretize_ui import ConcretizerUI, SolveKind
 from spack.main import make_argument_parser
-from spack.spec import Spec
+from spack.repo import RepoPath
+from spack.spec import Spec, finalize_concretization
 
 
 class SpackCommandArgs:
@@ -88,3 +89,22 @@ class UnusableGlobal:
         raise AssertionError(
             f"{self._name} was read instead of the injected context (attribute {item!r})"
         )
+
+
+def rehash(spec: Spec, *, repo: Optional[RepoPath] = None) -> None:
+    """Recompute the DAG hash of every node of a concrete spec.
+
+    If a repo is given, package hashes are recomputed from it, otherwise the stored ones are kept.
+    Stored DAG hashes are overwritten, so only use this on specs concretized by the current Spack.
+    """
+    if not spec.concrete:
+        raise ValueError(f"cannot rehash the abstract spec '{spec}'")
+
+    if repo is not None:
+        spec._mark_concrete(False)
+        finalize_concretization([spec], repo=repo)
+        return
+
+    for node in spec.traverse():
+        node.clear_caches(keep_package_hash=True)
+    spec.dag_hash()
