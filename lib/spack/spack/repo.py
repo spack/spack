@@ -2201,7 +2201,7 @@ def freeze_provided_virtuals(specs: Iterable["spack.spec.Spec"], *, repo: RepoPa
 def reconstruct_virtuals(
     specs: Iterable["spack.spec.Spec"], *, repo: RepoPath, edges_lack_virtuals: bool = False
 ) -> None:
-    """Fill in the virtual data that spec files do not record, from the cached
+    """Fill in the virtual data that spec formats before v6 do not record, from the cached
     provider index and without package imports: the provided virtuals of every concrete node,
     and the virtuals on edges of nodes before v4 (or all edges, with ``edges_lack_virtuals``).
     Callers pass every node of the batch with its concreteness set."""

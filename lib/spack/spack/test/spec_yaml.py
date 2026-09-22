@@ -656,6 +656,7 @@ def test_edge_virtuals_reconstructed_for_specfile_v3(config, mock_packages):
     as_dict = spack.concretize.concretize_one("mpileaks ^mpich").to_dict()
     as_dict["spec"]["_meta"]["version"] = 3
     for node in as_dict["spec"]["nodes"]:
+        node.pop("provided_virtuals", None)
         node.pop("annotations")
         for dep in node.get("dependencies", ()):
             dep["type"] = list(dep.pop("parameters")["deptypes"])

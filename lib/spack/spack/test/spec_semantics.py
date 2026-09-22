@@ -857,6 +857,16 @@ class TestSpecSemantics:
 
         assert not concrete.satisfies("%c,mpi=mpich")
 
+    @staticmethod
+    def _old_spec_dict(spec: Spec) -> dict:
+        """The dict form of ``spec`` as written by Spack 1.0-1.2 (spec format v5)."""
+        as_dict = spec.to_dict()
+        as_dict["spec"]["_meta"]["version"] = 5
+        for node in as_dict["spec"]["nodes"]:
+            node.pop("provided_virtuals", None)
+            node["annotations"]["original_specfile_version"] = 5
+        return as_dict
+
     def test_provided_virtuals_frozen_at_concretization(self):
         """When several ``provides`` clauses match, the frozen versions are their intersection,
         as in the solver: mpich2@1.5 matches mpi@:2.0, @1.1: mpi@:2.1 and @1.2: mpi@:2.2."""
@@ -865,11 +875,20 @@ class TestSpecSemantics:
         assert provider.satisfies("mpi@:2.0")
         assert not provider.satisfies("mpi@2.1:")
 
+    def test_provided_virtuals_serialization_roundtrip(self):
+        """Frozen provided virtuals survive a JSON round-trip and are part of the dag hash."""
+        provider = spack.concretize.concretize_one("mpileaks ^mpich")["mpich"]
+        roundtrip = Spec.from_json(provider.to_json())
+        assert provider.provided_virtuals == (Spec("mpi@:3"),)
+        assert roundtrip.provided_virtuals == provider.provided_virtuals
+        assert roundtrip.dag_hash() == provider.dag_hash()
+        assert provider.to_node_dict()["provided_virtuals"] == ["mpi@:3"]  # the dag hash preimage
+
     def test_provided_virtuals_reconstructed_from_old_specfile(self, monkeypatch):
-        """A spec file is reconstructed from the cached provider index, without loading
+        """An old spec file is reconstructed from the cached provider index, without loading
         package classes, and its stored dag hash is used verbatim."""
         concrete = spack.concretize.concretize_one("mpileaks ^mpich")
-        as_dict = concrete.to_dict()
+        as_dict = self._old_spec_dict(concrete)
         spack.repo.PATH.provider_index  # build the index before class loads are forbidden
 
         def no_class_loads(self, name):
@@ -880,8 +899,21 @@ class TestSpecSemantics:
         monkeypatch.setattr(spack.repo.RepoPath, "get_pkg_class", no_class_loads)
 
         old = Spec.from_dict(as_dict)
+        assert old.original_spec_format() == 5
         assert old["mpich"].provided_virtuals == (Spec("mpi@:3"),)
         assert old.dag_hash() == concrete.dag_hash()
+
+    def test_v6_specfile_omits_empty_provided_virtuals(self):
+        """A v6 node without the key provides nothing, and is not reconstructed."""
+        concrete = spack.concretize.concretize_one("mpileaks ^mpich")
+        assert "provided_virtuals" not in concrete.to_node_dict()
+        assert "provided_virtuals" in concrete["mpich"].to_node_dict()
+
+        as_dict = concrete.to_dict()
+        next(n for n in as_dict["spec"]["nodes"] if n["name"] == "mpich").pop("provided_virtuals")
+        reread = Spec.from_dict(as_dict)
+        assert reread.provided_virtuals == ()
+        assert reread["mpich"].provided_virtuals == ()
 
     def test_abstract_root_with_concrete_deps_is_reconstructed_per_node(self):
         """An abstract root with a resolved ``^/hash`` dependency writes both kinds of node;
@@ -890,7 +922,7 @@ class TestSpecSemantics:
         root = Spec("mpileaks")
         root._add_dependency(mpich, depflag=dt.BUILD | dt.LINK, virtuals=())
 
-        as_dict = root.to_dict()
+        as_dict = self._old_spec_dict(root)
         assert as_dict["spec"]["nodes"][0]["concrete"] is False
 
         reread = Spec.from_dict(as_dict)
@@ -901,7 +933,7 @@ class TestSpecSemantics:
 
     def test_old_specfile_with_unknown_package_provides_nothing(self):
         """A package absent from the configured repos provides nothing."""
-        as_dict = spack.concretize.concretize_one("pkg-a").to_dict()
+        as_dict = self._old_spec_dict(spack.concretize.concretize_one("pkg-a"))
         as_dict["spec"]["nodes"][0]["name"] = "no-such-package"
 
         assert Spec.from_dict(as_dict).provided_virtuals == ()

@@ -593,6 +593,12 @@ corresponding group.
       }
     }
 
+Version 8
+---------
+
+Version 8 uses spec format v6, in which concrete nodes record the virtuals they provide under
+``provided_virtuals``. The lockfile itself is unchanged.
+
 """
 
 from .environment import (

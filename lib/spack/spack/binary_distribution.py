@@ -2613,7 +2613,7 @@ class IndexHandler:
             cache_class.verify_and_extract_manifest(result, verify=False)
         )
         blob_record = manifest.get_blob_records(
-            cache_class.component_to_media_type(BuildcacheComponent.INDEX)
+            cache_class.component_to_media_types(BuildcacheComponent.INDEX)
         )[0]
         return blob_record
 

@@ -183,7 +183,7 @@ DISPLAY_FORMAT = (
 )
 
 #: specfile format version. Must increase monotonically
-SPECFILE_FORMAT_VERSION = 5
+SPECFILE_FORMAT_VERSION = 6
 
 #: Keys under which old spec files may store a dependency hash, dag hash first
 _LEGACY_DEP_HASH_KEYS = ("hash", "full_hash", "build_hash")
@@ -2627,7 +2627,7 @@ class Spec:
                     },
                     ...
                 ],
-                "annotations": {"original_specfile_version": 5},
+                "annotations": {"original_specfile_version": 6},
             }
 
 
@@ -2708,6 +2708,10 @@ class Spec:
         if self._package_hash:
             d["package_hash"] = self._package_hash
 
+        # Omitted when nothing is provided
+        if self._concrete and self.provided_virtuals:
+            d["provided_virtuals"] = [str(s) for s in self.provided_virtuals]
+
         # Note: Relies on sorting dict by keys later in algorithm.
         deps = self._dependencies_dict()
         if deps:
@@ -2752,7 +2756,7 @@ class Spec:
 
             {
                 "spec": {
-                    "_meta": {"version": 5},
+                    "_meta": {"version": 6},
                     "nodes": [
                         {
                             "name": "sqlite",
@@ -2791,7 +2795,7 @@ class Spec:
                                 },
                                 ...
                             ],
-                            "annotations": {"original_specfile_version": 5},
+                            "annotations": {"original_specfile_version": 6},
                             "hash": "a2ubvvqnula6zdppckwqrjf3zmsdzpoh",
                         },
                         ...
@@ -5593,8 +5597,8 @@ def wire_spec_nodes(
                 )
             node_spec._build_spec = build_spec
 
-    # Spec files do not record virtual data, reconstruct it from the provider index
-    spack.repo.reconstruct_virtuals(specs_by_hash.values(), repo=spack.repo.PATH)
+    if reader.SPEC_VERSION < 6:
+        spack.repo.reconstruct_virtuals(specs_by_hash.values(), repo=spack.repo.PATH)
 
     return specs_by_hash
 
@@ -5790,8 +5794,22 @@ class SpecfileV5(SpecfileV4):
         )
 
 
+@register_reader
+class SpecfileV6(SpecfileV5):
+    """Concrete nodes record the versions of the virtuals they provide, part of the dag hash."""
+
+    SPEC_VERSION = 6
+
+    @classmethod
+    def from_node_dict(cls, node):
+        spec = super().from_node_dict(node)
+        if spec._concrete:
+            spec._provided_virtuals = tuple(Spec(v) for v in node.get("provided_virtuals", ()))
+        return spec
+
+
 #: Alias to the latest version of specfiles
-SpecfileLatest = SpecfileV5
+SpecfileLatest = SpecfileV6
 
 
 def specfile_reader_for_version(version: int) -> Type[SpecfileReaderBase]:

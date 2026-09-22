@@ -81,7 +81,7 @@ _DB_DIRNAME = ".spack-db"
 #: DB version.  This is stuck in the DB file to track changes in format.
 #: Increment by one when the database format changes.
 #: Versions before 5 were not integers.
-_DB_VERSION = vn.Version("8")
+_DB_VERSION = vn.Version("9")
 
 #: For any version combinations here, skip reindex when upgrading.
 #: Reindexing can take considerable time and is not always necessary.
@@ -96,6 +96,9 @@ _REINDEX_NOT_NEEDED_ON_READ = [
     (vn.Version("6"), vn.Version("7")),
     (vn.Version("6"), vn.Version("8")),
     (vn.Version("7"), vn.Version("8")),
+    (vn.Version("6"), vn.Version("9")),
+    (vn.Version("7"), vn.Version("9")),
+    (vn.Version("8"), vn.Version("9")),
 ]
 
 #: Default timeout for spack database locks in seconds or None (no timeout).
@@ -139,6 +142,7 @@ def reader(version: vn.StandardVersion) -> Type["spack.spec.SpecfileReaderBase"]
         vn.StandardVersion.from_string("6"): spack.spec.SpecfileV3,
         vn.StandardVersion.from_string("7"): spack.spec.SpecfileV4,
         vn.StandardVersion.from_string("8"): spack.spec.SpecfileV5,
+        vn.StandardVersion.from_string("9"): spack.spec.SpecfileV6,
     }
     return reader_cls[version]
 
@@ -690,8 +694,6 @@ class Database:
         # TODO: fix this before we support multiple install locations.
         database = {
             "database": {
-                # TODO: move this to a top-level _meta section if we ever
-                # TODO: bump the DB version to 7
                 "version": str(_DB_VERSION),
                 # dictionary of installation records, keyed by DAG hash
                 "installs": installs,
@@ -923,8 +925,11 @@ class Database:
         for hash_key, rec in data.items():
             rec.spec._mark_root_concrete()
 
-        # Pass 4: reconstruct the virtual data that the database does not record
-        spack.repo.reconstruct_virtuals([rec.spec for rec in data.values()], repo=spack.repo.PATH)
+        # Pass 4: reconstruct the virtual data that spec formats before v6 omit
+        if spec_reader.SPEC_VERSION < 6:
+            spack.repo.reconstruct_virtuals(
+                [rec.spec for rec in data.values()], repo=spack.repo.PATH
+            )
 
         self._data = data
         self._installed_prefixes = installed_prefixes

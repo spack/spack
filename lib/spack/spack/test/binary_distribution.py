@@ -43,8 +43,10 @@ from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
+    BlobRecord,
     BuildcacheComponent,
     BuildcacheEntryError,
+    BuildcacheManifest,
     ListMirrorSpecsError,
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
@@ -1332,7 +1334,7 @@ def mock_index(tmp_path: pathlib.Path, monkeypatch) -> IndexInformation:
 
     index_blob_record = spack.binary_distribution.BlobRecord(
         os.stat(index_blob_path).st_size,
-        cache_class.BUILDCACHE_INDEX_MEDIATYPE,
+        cache_class.component_to_media_type(BuildcacheComponent.INDEX),
         "none",
         "sha256",
         index_json_hash,
@@ -1872,3 +1874,21 @@ def test_select_signing_key_shows_fingerprints(monkeypatch):
     monkeypatch.setattr(spack.util.gpg, "signing_keys", lambda *a: keys)
     with pytest.raises(spack.binary_distribution.PickKeyException, match="AAAA\n  BBBB"):
         spack.binary_distribution.select_signing_key()
+
+
+@pytest.mark.parametrize(
+    "component,oldest",
+    [
+        (BuildcacheComponent.SPEC, "application/vnd.spack.spec.v5+json"),
+        (BuildcacheComponent.INDEX, "application/vnd.spack.db.v8+json"),
+    ],
+)
+def test_manifest_reads_older_media_types(component, oldest):
+    """Blobs of the formats layout v3 started with are still read, after the current ones."""
+    current = URLBuildcacheEntry.component_to_media_type(component)
+    media_types = URLBuildcacheEntry.component_to_media_types(component)
+    assert media_types[0] == current and media_types[-1] == oldest
+
+    records = [BlobRecord(1, t, "gzip", "sha256", t) for t in (oldest, current)]
+    manifest = BuildcacheManifest(layout_version=3, data=records)
+    assert [r.checksum for r in manifest.get_blob_records(media_types)] == [current, oldest]
