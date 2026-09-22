@@ -5,10 +5,12 @@
 recipes.
 """
 
+import os
 import re
-from typing import TYPE_CHECKING, Dict, Iterable, List, Pattern, Tuple, Type
+from typing import TYPE_CHECKING, Dict, Iterable, List, NamedTuple, Optional, Pattern, Tuple, Type
 
 import spack.package_base
+import spack.util.tty
 
 from .path import ExecutablesFinder
 
@@ -26,6 +28,13 @@ def library_patterns(pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
     return list(getattr(pkg, "libraries", []))
 
 
+class LibraryOwner(NamedTuple):
+    name: str
+    #: version that the recipe detects for the library, when the package owns libraries through
+    #: its ``libraries`` attribute
+    version: Optional[str]
+
+
 class OwnershipIndex:
     """Maps the names of libraries and executables to the packages whose patterns match them.
 
@@ -35,8 +44,13 @@ class OwnershipIndex:
     def __init__(self, pkgs: Iterable[Type["spack.package_base.PackageBase"]]) -> None:
         self._libraries: List[Tuple[str, List[Pattern]]] = []
         self._executables: List[Tuple[str, List[Pattern]]] = []
+        #: Packages that own libraries through their ``libraries`` attribute. These patterns
+        #: select candidate files for detection, and are often prefixes such as ``libz``.
+        self._detected_by_libraries: Dict[str, Type["spack.package_base.PackageBase"]] = {}
         finder = ExecutablesFinder()
         for pkg in pkgs:
+            if getattr(pkg, "sonames", None) is None and hasattr(pkg, "libraries"):
+                self._detected_by_libraries[pkg.name] = pkg
             libraries = [re.compile(x) for x in library_patterns(pkg)]
             if libraries:
                 self._libraries.append((pkg.name, libraries))
@@ -44,6 +58,7 @@ class OwnershipIndex:
             if executables:
                 self._executables.append((pkg.name, executables))
         self._library_owners: Dict[str, List[str]] = {}
+        self._confirmed_library_owners: Dict[str, List[LibraryOwner]] = {}
         self._executable_owners: Dict[str, List[str]] = {}
 
     def library_owners(self, name: str) -> List[str]:
@@ -52,11 +67,46 @@ class OwnershipIndex:
             self._library_owners[name] = _owners(name, self._libraries)
         return self._library_owners[name]
 
+    def confirmed_library_owners(self, path: str, real_path: str) -> List[LibraryOwner]:
+        """Returns the packages that own the library found at ``path``, sorted by name.
+
+        A package that owns libraries through its ``libraries`` attribute owns the library only
+        if its ``determine_version`` returns a version for it, as detection requires.
+
+        Arguments:
+            path: path the library was found at, whose base name is the name it was loaded under
+            real_path: path of the library with symlinks resolved
+        """
+        if real_path not in self._confirmed_library_owners:
+            result = []
+            for name in self.library_owners(os.path.basename(path)):
+                if name not in self._detected_by_libraries:
+                    result.append(LibraryOwner(name=name, version=None))
+                    continue
+                version = _detected_version(self._detected_by_libraries[name], real_path, path)
+                if version:
+                    result.append(LibraryOwner(name=name, version=version))
+            self._confirmed_library_owners[real_path] = result
+        return self._confirmed_library_owners[real_path]
+
     def executable_owners(self, name: str) -> List[str]:
         """Returns the packages that may own an executable named ``name``, sorted by name."""
         if name not in self._executable_owners:
             self._executable_owners[name] = _owners(name, self._executables)
         return self._executable_owners[name]
+
+
+def _detected_version(pkg: Type["spack.package_base.PackageBase"], *paths: str) -> Optional[str]:
+    """Returns the version ``determine_version`` returns for the first path it accepts."""
+    for path in paths:
+        try:
+            version = getattr(pkg, "determine_version")(path)
+        except Exception as e:
+            spack.util.tty.debug(f"Cannot detect the version of '{path}' [{e}]")
+            continue
+        if version:
+            return version
+    return None
 
 
 def _owners(name: str, patterns: List[Tuple[str, List[Pattern]]]) -> List[str]:

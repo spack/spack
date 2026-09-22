@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack_repo.builtin_mock.build_systems.generic import Package
+import re
 
 from spack.package import *
 
@@ -13,10 +13,12 @@ class LibrariesOwner(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/libraries-owner-1.0.tar.gz"
 
-    libraries = [r"^liblibraries-owner\.so"]
+    # A prefix, as in many recipes: the version detection selects the files
+    libraries = [r"^liblibraries-owner"]
 
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     @classmethod
     def determine_version(cls, lib):
-        return "1.0"
+        match = re.search(r"liblibraries-owner\.so\.(\d+\.\d+)$", lib)
+        return match.group(1) if match else None

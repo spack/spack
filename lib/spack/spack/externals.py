@@ -231,6 +231,42 @@ def derived_external_id(spec: spack.spec.Spec) -> str:
     return f"{spec.name}-{spec.version}-{digest}"
 
 
+def dependency_types(
+    node: spack.spec.Spec, repo: spack.repo.RepoPath
+) -> Dict[str, spack.deptypes.DepFlag]:
+    """Returns the dependency types of each package or virtual a node depends on, from the
+    ``depends_on`` directives whose condition the node satisfies.
+    """
+    result: Dict[str, spack.deptypes.DepFlag] = {}
+    for when, by_name in repo.get_pkg_class(node.name).dependencies.items():
+        if not node.satisfies(when):
+            continue
+        for name, dep in by_name.items():
+            result[name] = result.get(name, spack.deptypes.NONE) | dep.depflag
+    return result
+
+
+def infer_dependency(
+    dependency: spack.spec.Spec,
+    types_by_name: Dict[str, spack.deptypes.DepFlag],
+    repo: spack.repo.RepoPath,
+) -> Tuple[spack.deptypes.DepFlag, Tuple[str, ...]]:
+    """Returns the dependency types and virtuals of an edge to ``dependency``, given the output of
+    ``dependency_types`` for the dependent node.
+    """
+    depflag, virtuals = spack.deptypes.NONE, []
+    for name, current_flag in types_by_name.items():
+        # An abstract node matches a virtual only through its providers
+        is_virtual = repo.is_virtual(name)
+        candidates = repo.providers_for(name) if is_virtual else (name,)
+        if not any(dependency.intersects(c) for c in candidates):
+            continue
+        depflag |= current_flag
+        if is_virtual:
+            virtuals.append(name)
+    return depflag, tuple(virtuals)
+
+
 class ExternalSpecAndConfig(NamedTuple):
     spec: spack.spec.Spec
     config: ExternalDict
@@ -307,15 +343,7 @@ class ExternalSpecsParser:
             line_info = _line_info(current_dict)
             spec_str = current_dict["spec"]
 
-            # Compute the dependency types for this spec
-            pkg_class, deptypes_by_package = self.repo.get_pkg_class(current_node.name), {}
-            for when, by_name in pkg_class.dependencies.items():
-                if not current_node.satisfies(when):
-                    continue
-                for name, dep in by_name.items():
-                    if name not in deptypes_by_package:
-                        deptypes_by_package[name] = dep.depflag
-                    deptypes_by_package[name] |= dep.depflag
+            deptypes_by_package = dependency_types(current_node, self.repo)
 
             for dependency_dict in current_dict.get("dependencies", []):
                 dependency_id = dependency_dict.get("id")
@@ -361,17 +389,9 @@ class ExternalSpecsParser:
                 # Infer dependency types and virtuals if the user didn't specify them
                 if depflag == spack.deptypes.NONE and not virtuals:
                     # Infer the deptype if only '%' was used in the spec
-                    inferred_virtuals = []
-                    for name, current_flag in deptypes_by_package.items():
-                        # An abstract node matches a virtual only through its providers
-                        is_virtual = self.repo.is_virtual(name)
-                        candidates = self.repo.providers_for(name) if is_virtual else (name,)
-                        if not any(dependency_node.intersects(c) for c in candidates):
-                            continue
-                        depflag |= current_flag
-                        if is_virtual:
-                            inferred_virtuals.append(name)
-                    virtuals = tuple(inferred_virtuals)
+                    depflag, virtuals = infer_dependency(
+                        dependency_node, deptypes_by_package, self.repo
+                    )
                 elif depflag == spack.deptypes.NONE:
                     depflag = spack.deptypes.DEFAULT
 
