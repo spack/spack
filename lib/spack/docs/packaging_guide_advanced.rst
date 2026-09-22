@@ -368,6 +368,26 @@ or like this:
            )
            raise InvalidSpecDetected(msg)
 
+.. _library-ownership:
+
+Libraries owned by a package
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``spack external find --dependencies`` attributes each shared library loaded by an external to the packages that own it (see :ref:`cmd-spack-external-find-dependencies`).
+A package declares the libraries it owns with the ``sonames`` attribute, a list of regular expressions matched against the name under which a library is loaded, which is usually its soname:
+
+.. code-block:: python
+
+   class Openssl(Package):
+       executables = ["openssl"]
+       sonames = [r"^libssl\.so\.\d+$", r"^libcrypto\.so\.\d+$"]
+
+The ``sonames`` attribute counts only for packages that can be detected, and does not make a package detectable by itself.
+Anchor the patterns and match the whole name: a pattern like ``libz`` also matches ``libzstd.so.1``.
+
+A package detected by its ``libraries`` attribute owns the libraries matching those patterns, but only those for which its ``determine_version`` returns a version.
+Setting ``sonames`` replaces this rule with a plain match on the patterns in ``sonames``.
+
 .. _determine_spec_details:
 
 Custom detection workflow
@@ -477,6 +497,18 @@ The exact details on how to specify both the ``layout`` and the ``results`` are 
      - Mock logic for the executable
      - Any valid shell script
      - Yes
+   * - ``layout:[0]:needed``
+     - Libraries the mock executables load, as ``DT_NEEDED`` entries
+     - List of strings
+     - No
+   * - ``layout:[0]:rpath``, ``layout:[0]:runpath``
+     - ``DT_RPATH`` or ``DT_RUNPATH`` of the mock executables
+     - Colon separated list of directories, which may use ``$ORIGIN``
+     - No
+   * - ``layout:[0]:libraries``
+     - Mock shared libraries, used instead of ``executables`` and ``script``
+     - List of objects with a relative ``path``, and optional ``soname``, ``needed``, ``rpath`` and ``runpath``
+     - No
    * - ``results``
      - List of expected results
      - List of objects (empty if no result is expected)
@@ -489,6 +521,35 @@ The exact details on how to specify both the ``layout`` and the ``results`` are 
      - Extra attributes expected on the associated Spec
      - Nested dictionary with string as keys, and regular expressions as leaf values
      - No
+   * - ``results:[0]:dependencies``
+     - Specs satisfied by the detected dependencies, one per dependency
+     - List of specs (empty if no dependency is expected)
+     - No
+
+Tests can also check the dependencies detected by ``spack external find --dependencies``.
+Mock executables are shell scripts, so the libraries they load are declared with ``needed``, while mock libraries are written as ELF files:
+
+.. code-block:: yaml
+
+   paths:
+   - layout:
+     - executables:
+       - "bin/curl"
+       script: "echo curl 8.5.0"
+       needed: ["libssl.so.3"]
+     - executables:
+       - "bin/openssl"
+       script: "echo OpenSSL 3.0.13 30 Jan 2024"
+     - libraries:
+       - path: "lib/libssl.so.3"
+         soname: "libssl.so.3"
+     results:
+     - spec: "curl@8.5.0"
+       dependencies: ["openssl@3.0.13"]
+
+Libraries are searched only in the directories of the mock libraries, and in the ``rpath`` and ``runpath`` of the files that load them.
+The packages that own the libraries are detected from the same layout, with their own detection logic.
+Dependencies are detected only for tests whose results list ``dependencies``.
 
 Reuse tests from other packages
 """""""""""""""""""""""""""""""

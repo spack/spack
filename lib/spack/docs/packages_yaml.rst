@@ -98,6 +98,9 @@ After running this command your ``packages.yaml`` may include new entries:
        externals:
        - spec: cmake@3.17.2
          prefix: /usr
+         id: cmake-3.17.2-894d731
+
+Each new entry gets the id that Spack would derive for it (see :ref:`below <external-dependencies-yaml>`), unless another external already uses that id.
 
 Generally this is useful for detecting a small set of commonly-used packages; for now this is generally limited to finding build-only dependencies.
 Specific limitations include:
@@ -106,6 +109,48 @@ Specific limitations include:
   See :ref:`here <make-package-findable>` for more details.
 * The logic does not search through module files, it can only detect packages with executables defined in ``PATH``; you can help Spack locate externals which use module files by loading any associated modules for packages that you want Spack to know about before running ``spack external find``.
 * Spack does not overwrite existing entries in the package configuration: If there is an external defined for a spec at any configuration scope, then Spack will not add a new external entry (``spack config blame packages`` can help locate all external entries).
+
+.. _cmd-spack-external-find-dependencies:
+
+Detect dependencies between externals
+"""""""""""""""""""""""""""""""""""""
+
+By default, each external found by ``spack external find`` is recorded without dependencies.
+Spack may then pair it with dependencies that differ from the libraries it loads at runtime, for instance with an ``hwloc`` built from sources for an external ``openmpi`` that loads the system ``libhwloc``.
+With the ``--dependencies`` option, Spack also detects the link dependencies of the externals it finds:
+
+.. code-block:: console
+
+   $ spack external find --dependencies curl
+
+On Linux, Spack reads the shared libraries loaded by the files each external was detected from, and searches them as the dynamic loader does, including in ``LD_LIBRARY_PATH``.
+Each library is attributed to the packages that own it (see :ref:`library-ownership`), and a dependency is recorded when exactly one external of an owner has the library in its prefix, and the recipe of the dependent has a link dependency on that owner.
+Libraries of libc and of compiler runtimes never produce a dependency.
+When an owner has no external, Spack searches for it in the prefix of the library, and adds the externals it finds to ``packages.yaml`` too.
+These externals are buildable even with ``--not-buildable``, which applies only to the packages that were searched for, and packages given to ``--exclude`` are never searched for.
+
+Dependencies are written with their ids, and with ``link`` as their only dependency type:
+
+.. code-block:: yaml
+
+   packages:
+     curl:
+       externals:
+       - spec: curl@8.5.0+gssapi+ldap+nghttp2
+         prefix: /usr
+         id: curl-8.5.0-894d731
+         dependencies:
+         - id: openssl-3.0.13-894d731
+           deptypes:
+           - link
+     openssl:
+       externals:
+       - spec: openssl@3.0.13
+         prefix: /usr
+         id: openssl-3.0.13-894d731
+
+Spack adds ``dependencies`` only to entries in the configuration scope it modifies, and only to entries that have none.
+A warning is emitted for each dependency that is detected but not recorded, and for each external that loads the libraries of another package from different files with and without ``LD_LIBRARY_PATH``.
 
 Prevent packages from being built from sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -301,6 +346,8 @@ The example in the previous section, written using the YAML configuration, becom
        externals:
        - spec: "mpich@3.0.4"
          prefix: /user/path
+
+.. _external-dependencies-yaml:
 
 Each dependency can be specified either by:
 

@@ -1809,7 +1809,7 @@ complete -c spack -n '__fish_spack_using_command external' -s h -l help -f -a he
 complete -c spack -n '__fish_spack_using_command external' -s h -l help -d 'show this help message and exit'
 
 # spack external find
-set -g __fish_spack_optspecs_spack_external_find h/help not-buildable exclude= p/path= scope= all t/tag= j/jobs=
+set -g __fish_spack_optspecs_spack_external_find h/help not-buildable exclude= dependencies p/path= scope= all t/tag= j/jobs=
 
 complete -c spack -n '__fish_spack_using_command external find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external find' -s h -l help -d 'show this help message and exit'
@@ -1817,6 +1817,8 @@ complete -c spack -n '__fish_spack_using_command external find' -l not-buildable
 complete -c spack -n '__fish_spack_using_command external find' -l not-buildable -d 'packages with detected externals won'"'"'t be built with Spack'
 complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -f -a exclude
 complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -d 'packages to exclude from search'
+complete -c spack -n '__fish_spack_using_command external find' -l dependencies -f -a dependencies
+complete -c spack -n '__fish_spack_using_command external find' -l dependencies -d 'detect the dependencies of the packages found from the libraries they load, and the packages that own those libraries'
 complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -f -a path
 complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -d 'one or more alternative search paths for finding externals'
 complete -c spack -n '__fish_spack_using_command external find' -l scope -r -f -a '_builtin defaults:base defaults system site user spack command_line'
