@@ -11,6 +11,7 @@ import pytest
 import spack.detection
 import spack.detection.common
 import spack.detection.elf_closure
+import spack.detection.ownership
 import spack.detection.path
 import spack.repo
 import spack.spec
@@ -446,3 +447,19 @@ def test_detect_leaves_out_files_rejected_by_the_package(mock_executable, mock_p
     )
 
     assert [x.files for x in detected] == [[str(clang), str(clangxx)]]
+
+
+def test_ownership_index_of_detectable_packages(mock_packages):
+    """Tests that libraries are attributed through ``sonames``, falling back to ``libraries``,
+    and executables through ``executables``, only for packages that can be detected.
+    """
+    index = spack.detection.ownership.ownership_index(mock_packages)
+
+    # sonames-not-detectable sets the same sonames, but cannot be detected
+    assert index.library_owners("libsonames-owner.so.1") == ["sonames-owner"]
+    assert index.library_owners("liblibraries-owner.so.2") == ["libraries-owner"]
+    assert index.library_owners("libunknown.so.1") == []
+
+    assert index.executable_owners("sonames-owner") == ["sonames-owner"]
+    assert index.executable_owners("mpichversion") == ["mpich"]
+    assert index.executable_owners("libsonames-owner.so.1") == []

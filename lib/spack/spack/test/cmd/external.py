@@ -106,8 +106,10 @@ def test_find_external_cmd_not_buildable(
                 "builtin_mock.find-externals1",
                 "builtin_mock.gcc",
                 "builtin_mock.intel-oneapi-compilers",
+                "builtin_mock.libraries-owner",
                 "builtin_mock.llvm",
                 "builtin_mock.mpich",
+                "builtin_mock.sonames-owner",
             ],
         ),
         # find --all --exclude find-externals1
@@ -119,8 +121,10 @@ def test_find_external_cmd_not_buildable(
                 "builtin_mock.cmake",
                 "builtin_mock.gcc",
                 "builtin_mock.intel-oneapi-compilers",
+                "builtin_mock.libraries-owner",
                 "builtin_mock.llvm",
                 "builtin_mock.mpich",
+                "builtin_mock.sonames-owner",
             ],
         ),
         (
@@ -131,8 +135,10 @@ def test_find_external_cmd_not_buildable(
                 "builtin_mock.cmake",
                 "builtin_mock.gcc",
                 "builtin_mock.intel-oneapi-compilers",
+                "builtin_mock.libraries-owner",
                 "builtin_mock.llvm",
                 "builtin_mock.mpich",
+                "builtin_mock.sonames-owner",
             ],
         ),
         # find hwloc (and mock hwloc is not detectable)
