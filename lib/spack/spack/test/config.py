@@ -1890,7 +1890,8 @@ def test_included_path_git_temp_dest(mock_low_high_config):
 
 
 def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
-    spack.config.CONFIG.set("config:locations:state", str(tmp_path))
+    # Note for review: redirecting user_cache_path became unnecessary for this test
+    # before this PR, and is awkward to handle in this PR
 
     paths = ["concretizer.yaml"]
     entry = {
