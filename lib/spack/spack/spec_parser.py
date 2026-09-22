@@ -510,13 +510,14 @@ class SpecParser:
                             value = self.curr.group(_KV_VALUE) if kind == _KEY_VALUE_PAIR else ""
                             if value[:1] in ("'", '"'):
                                 try:
-                                    condition = parse_one_or_raise(
-                                    edge_spec = parse_one_or_raise(strip_quotes(value))
+                                    edge_spec = parse_one_or_raise(
+                                        strip_quotes(value), self.spec_cls
+                                    )
                                 except ValueError:
                                     noun = _SPEC_VALUED_EDGE_ATTRIBUTES[name]
                                     msg = f"expected a single spec as the {name}= {noun}"
                                     self._raise_parsing_error(msg)
-                                self.curr, self.next = self.next, self.scanner.match()
+                                    self.curr, self.next = self.next, self.scanner.match()
                             else:
                                 if not value and (
                                     not self.next or self.next.lastgroup == _END_EDGE_PROPERTIES
