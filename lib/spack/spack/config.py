@@ -1758,54 +1758,28 @@ def _detect_old_resources() -> Dict[str, bool]:
     Returns:
         Dictionary with keys: 'installs', 'gpg_keys', 'licenses', 'environments'
     """
+
+    def _has_entries(path: str, ignore: Optional[List[str]] = None) -> bool:
+        """Check if directory exists and has entries."""
+        if not os.path.exists(path):
+            return False
+        try:
+            for entry in os.listdir(path):
+                if ignore and entry in ignore:
+                    continue
+                return True
+            return False
+        except OSError:
+            return False
+
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
-    result = {"installs": False, "gpg_keys": False, "licenses": False, "environments": False}
 
-    # Check for installs
-    if os.path.exists(opt_spack):
-        # Check if there are any actual package installs (not just empty directories)
-        try:
-            # Quick check: any directories in opt/spack besides gpg and licenses?
-            for entry in os.listdir(opt_spack):
-                entry_path = os.path.join(opt_spack, entry)
-                if os.path.isdir(entry_path) and entry not in ["gpg", "licenses"]:
-                    result["installs"] = True
-                    break
-        except OSError:
-            pass
-
-    # Check for GPG keys
-    gpg_dir = os.path.join(opt_spack, "gpg")
-    if os.path.exists(gpg_dir):
-        try:
-            if os.listdir(gpg_dir):  # Non-empty
-                result["gpg_keys"] = True
-        except OSError:
-            pass
-
-    # Check for licenses
-    licenses_dir = spack.paths.old_licenses_path
-    if os.path.exists(licenses_dir):
-        try:
-            if os.listdir(licenses_dir):  # Non-empty
-                result["licenses"] = True
-        except OSError:
-            pass
-
-    # Check for environments
-    old_envs_dir = spack.paths.old_envs_path
-    if os.path.exists(old_envs_dir):
-        try:
-            # Check for any directories (environments)
-            for entry in os.listdir(old_envs_dir):
-                entry_path = os.path.join(old_envs_dir, entry)
-                if os.path.isdir(entry_path):
-                    result["environments"] = True
-                    break
-        except OSError:
-            pass
-
-    return result
+    return {
+        "installs": _has_entries(opt_spack, ignore=["gpg"]),
+        "gpg_keys": _has_entries(os.path.join(opt_spack, "gpg")),
+        "licenses": _has_entries(spack.paths.old_licenses_path),
+        "environments": _has_entries(spack.paths.old_envs_path),
+    }
 
 
 def should_auto_migrate() -> bool:
