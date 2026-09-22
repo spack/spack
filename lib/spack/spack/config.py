@@ -2018,9 +2018,10 @@ class ConfigPath:
 
         return path_elements
 
-    @lang.memoized
+    # Many methods repeatedly parse the same config values: cache results from few of them
+    @functools.lru_cache(16)
     @staticmethod
-    def _process(path):
+    def _process(path: str) -> tuple[str]:
         """Memoized low-level method to parse and validate a config path.
         """
         result = []
