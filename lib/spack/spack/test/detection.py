@@ -6,6 +6,7 @@ import functools
 import os
 import pathlib
 import sys
+import warnings
 
 import pytest
 
@@ -16,6 +17,7 @@ import spack.detection.dependencies
 import spack.detection.elf_closure
 import spack.detection.ownership
 import spack.detection.path
+import spack.externals
 import spack.repo
 import spack.spec
 import spack.util.elf
@@ -864,3 +866,174 @@ def test_update_configuration_writes_derived_ids(
         for x in mutable_config.get("packages")["cmake"]["externals"]
     }
     assert [ids[x] for x in detected] == expected_ids
+
+
+def _external_edge(parent: str, child: str, *, virtuals=()):
+    """Returns an edge between two detected externals, written as ``<spec> <prefix>``."""
+    parent_str, parent_prefix = parent.rsplit(" ", 1)
+    child_str, child_prefix = child.rsplit(" ", 1)
+    return spack.detection.dependencies.ExternalEdge(
+        parent=spack.spec.Spec(parent_str, external_path=parent_prefix),
+        child=spack.spec.Spec(child_str, external_path=child_prefix),
+        depflag=spack.deptypes.LINK,
+        virtuals=virtuals,
+        library=os.path.join(child_prefix, "lib", "libchild.so"),
+    )
+
+
+def _derived_id(spec: str, prefix: str) -> str:
+    node = spack.externals.node_from_dict({"spec": spec, "prefix": prefix})
+    return spack.externals.derived_external_id(node)
+
+
+def _parsed_externals(config: Configuration, repo) -> spack.externals.ExternalSpecsParser:
+    packages_yaml = config.deepcopy_as_builtin("packages")
+    return spack.externals.ExternalSpecsParser(
+        spack.externals.extract_dicts_from_configuration(packages_yaml), repo=repo
+    )
+
+
+@pytest.mark.parametrize(
+    "edge,expected_virtuals",
+    [
+        # The recipe declares a build and link dependency, the edge is only a link dependency
+        (_external_edge("sonames-consumer@1.0 /opt/consumer", "sonames-owner@1.0 /opt/owner"), ()),
+        (
+            _external_edge(
+                "mpileaks@2.3 /opt/mpileaks", "mpich@3.0.4 /opt/mpich", virtuals=("mpi",)
+            ),
+            ("mpi",),
+        ),
+    ],
+)
+def test_add_dependencies_of_new_entries(
+    edge, expected_virtuals, mutable_empty_config: Configuration, mock_packages
+):
+    """Tests that edges between detected externals are written to packages.yaml with their
+    dependency types and virtuals, and that parsing configuration restores them.
+    """
+    spack.detection.common.update_configuration(
+        {edge.parent.name: [edge.parent], edge.child.name: [edge.child]},
+        config=mutable_empty_config,
+        scope="user",
+    )
+
+    added = spack.detection.common.add_dependencies(
+        [edge], config=mutable_empty_config, repo=mock_packages, scope="user"
+    )
+
+    assert added == [edge]
+    parent_entry = mutable_empty_config.get("packages")[edge.parent.name]["externals"][0]
+    expected = {"id": _derived_id(str(edge.child), edge.child.external_path), "deptypes": ["link"]}
+    if expected_virtuals:
+        expected["virtuals"] = ",".join(expected_virtuals)
+    assert parent_entry["dependencies"] == [expected]
+
+    parser = _parsed_externals(mutable_empty_config, mock_packages)
+    parent = parser.get_specs_for_package(edge.parent.name)[0]
+    edges = parent.edges_to_dependencies()
+    assert [(x.spec.name, x.depflag, x.virtuals) for x in edges] == [
+        (edge.child.name, spack.deptypes.LINK, expected_virtuals)
+    ]
+
+
+_CONSUMER = {"spec": "sonames-consumer@1.0", "prefix": "/opt/consumer"}
+_OWNER = {"spec": "sonames-owner@1.0", "prefix": "/opt/owner"}
+_OWNER_ID = _derived_id("sonames-owner@1.0", "/opt/owner")
+
+
+@pytest.mark.parametrize(
+    "packages_by_scope,warning",
+    [
+        # The entry of the parent already lists other dependencies
+        (
+            {
+                "user": {
+                    "sonames-consumer": {
+                        "externals": [{**_CONSUMER, "dependencies": [{"id": "other"}]}]
+                    },
+                    "sonames-owner": {"externals": [_OWNER]},
+                }
+            },
+            "its entry lists other dependencies",
+        ),
+        # The entry of the parent is in another scope
+        (
+            {
+                "site": {"sonames-consumer": {"externals": [_CONSUMER]}},
+                "user": {"sonames-owner": {"externals": [_OWNER]}},
+            },
+            "its entry is not in the 'user' scope",
+        ),
+        # The child matches two entries
+        (
+            {
+                "user": {
+                    "sonames-consumer": {"externals": [_CONSUMER]},
+                    "sonames-owner": {
+                        "externals": [_OWNER, {**_OWNER, "spec": "sonames-owner@=1.0"}]
+                    },
+                }
+            },
+            "2 entries match",
+        ),
+        # The child matches no entry
+        ({"user": {"sonames-consumer": {"externals": [_CONSUMER]}}}, "0 entries match"),
+        # The id of the child is the explicit id of another entry
+        (
+            {
+                "user": {
+                    "sonames-consumer": {"externals": [_CONSUMER]},
+                    "sonames-owner": {
+                        "externals": [
+                            _OWNER,
+                            {"spec": "sonames-owner@1.0", "prefix": "/usr", "id": _OWNER_ID},
+                        ]
+                    },
+                }
+            },
+            f"the id {_OWNER_ID} of .* cannot be referenced",
+        ),
+    ],
+)
+def test_add_dependencies_leaves_entries_unchanged(
+    packages_by_scope, warning, mutable_empty_config: Configuration, mock_packages
+):
+    """Tests that dependencies are not written when the entry of the parent cannot be modified,
+    or the entry of the child cannot be referenced, and that a warning says why.
+    """
+    for scope, packages in packages_by_scope.items():
+        mutable_empty_config.set("packages", packages, scope=scope)
+    expected = mutable_empty_config.deepcopy_as_builtin("packages")
+    edge = _external_edge("sonames-consumer@1.0 /opt/consumer", "sonames-owner@1.0 /opt/owner")
+
+    with pytest.warns(UserWarning, match=warning):
+        added = spack.detection.common.add_dependencies(
+            [edge], config=mutable_empty_config, repo=mock_packages, scope="user"
+        )
+
+    assert added == []
+    assert mutable_empty_config.deepcopy_as_builtin("packages") == expected
+
+
+def test_add_dependencies_twice(mutable_empty_config: Configuration, mock_packages):
+    """Tests that adding the same dependencies again changes nothing, and emits no warning."""
+    edge = _external_edge("sonames-consumer@1.0 /opt/consumer", "sonames-owner@1.0 /opt/owner")
+    mutable_empty_config.set(
+        "packages",
+        {"sonames-consumer": {"externals": [_CONSUMER]}, "sonames-owner": {"externals": [_OWNER]}},
+        scope="user",
+    )
+    spack.detection.common.add_dependencies(
+        [edge], config=mutable_empty_config, repo=mock_packages, scope="user"
+    )
+    expected = mutable_empty_config.deepcopy_as_builtin("packages")
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        added = spack.detection.common.add_dependencies(
+            [edge], config=mutable_empty_config, repo=mock_packages, scope="user"
+        )
+
+    assert added == []
+    assert mutable_empty_config.deepcopy_as_builtin("packages") == expected
