@@ -52,7 +52,7 @@ def test_diff_environments_reports_an_input_it_cannot_explain(
 
     concrete = env_b.concrete_roots()[0]
     for node in concrete.traverse():
-        node.clear_caches(ignore=("_package_hash",))
+        node.clear_caches(keep_package_hash=True)
     concrete["callpath"]._package_hash = "0" * 32
 
     # Every difference a comparable environment can carry is accounted for by now, so this bucket
