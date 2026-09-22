@@ -6082,13 +6082,8 @@ def eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
     # Import here to avoid circular dependencies
 
-    def exists(path):
-        """Check if a path exists, expanding ~ and environment variables."""
-        expanded = os.path.expanduser(os.path.expandvars(path))
-        return os.path.exists(expanded)
-
     valid_variables = get_host_environment()
-    valid_variables.update({"re": re, "env": os.environ, "exists": exists})
+    valid_variables.update({"re": re, "env": os.environ})
     return eval(string, valid_variables)
 
 
