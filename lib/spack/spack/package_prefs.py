@@ -9,7 +9,6 @@ import spack.repo
 import spack.spec
 from spack.error import ConfigError
 from spack.version import Version
-from spack.util import lang
 
 _lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": Version}
 
@@ -180,7 +179,6 @@ def get_package_dir_permissions(spec):
     return perms
 
 
-@lang.memoized
 def get_package_permissions(spec):
     """Return the permissions configured for the spec.
 
