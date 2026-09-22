@@ -10,6 +10,7 @@ import warnings
 
 import pytest
 
+import spack.audit
 import spack.deptypes
 import spack.detection
 import spack.detection.common
@@ -17,6 +18,7 @@ import spack.detection.dependencies
 import spack.detection.elf_closure
 import spack.detection.ownership
 import spack.detection.path
+import spack.detection.test
 import spack.externals
 import spack.repo
 import spack.spec
@@ -1037,3 +1039,74 @@ def test_add_dependencies_twice(mutable_empty_config: Configuration, mock_packag
 
     assert added == []
     assert mutable_empty_config.deepcopy_as_builtin("packages") == expected
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_detection_tests_with_dependencies(mock_packages):
+    """Tests that detection tests create mock libraries, and detect the dependencies of the
+    package under test only from the mock layout.
+    """
+    outcomes = [
+        x.run() for x in spack.detection.detection_tests("sonames-consumer", mock_packages)
+    ]
+
+    assert [[str(x) for x in outcome.specs] for outcome in outcomes] == [
+        ["sonames-consumer@1.0"],
+        ["sonames-consumer@1.0"],
+    ]
+    assert [[(str(p), str(c)) for p, c in outcome.dependencies] for outcome in outcomes] == [
+        [("sonames-consumer@1.0", "sonames-owner@1.0")],
+        [],
+    ]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize(
+    "dependencies,expected_details",
+    [
+        (["sonames-owner@1.0"], []),
+        (None, []),
+        ([], ['"sonames-owner@1.0" was detected as a dependency, but was not expected']),
+        (
+            ["sonames-owner@2.0"],
+            [
+                'a dependency satisfying "sonames-owner@2.0" was not detected',
+                '"sonames-owner@1.0" was detected as a dependency, but was not expected',
+            ],
+        ),
+    ],
+)
+def test_audit_detection_tests_with_dependencies(
+    dependencies, expected_details, mock_packages, monkeypatch
+):
+    """Tests that the externals audit reports dependencies that differ from those expected."""
+    test = spack.detection.test.DetectionTest(
+        pkg_name="sonames-consumer",
+        layout=[
+            spack.detection.test.MockExecutables(
+                executables=["bin/sonames-consumer"],
+                script="echo 1.0",
+                needed=["libsonames-owner.so.1"],
+            ),
+            spack.detection.test.MockExecutables(executables=["bin/sonames-owner"], script=""),
+        ],
+        results=[
+            spack.detection.test.ExpectedTestResult(
+                spec="sonames-consumer@1.0", extra_attributes={}, dependencies=dependencies
+            )
+        ],
+        libraries=[spack.detection.test.MockLibrary(path="lib/libsonames-owner.so.1")],
+    )
+    monkeypatch.setattr(
+        spack.detection,
+        "detection_tests",
+        lambda pkg_name, repo: [spack.detection.test.Runner(test=test, repository=repo)],
+    )
+
+    # Detection tests are selected by the name of the package directory
+    errors = spack.audit.run_check(
+        "PKG-EXTERNALS", pkgs=["sonames_consumer"], debug_log=lambda x: None
+    )
+
+    details = [x.split(" [test_id")[0] for error in errors for x in error.details]
+    assert details == expected_details
