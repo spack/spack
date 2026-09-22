@@ -2307,6 +2307,7 @@ def _do_migrate(
     if not is_isolate_command:
         config_path = layout_config_path
 
+    assert config_path is not None  # Guaranteed by validation and assignment above
     filesystem.mkdirp(os.path.dirname(config_path))
 
     # Config to write to the selected destination
