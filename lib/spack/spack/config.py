@@ -2167,35 +2167,7 @@ def _copy_directory_contents(src_dir: str, dst_dir: str, resource_name: str) -> 
         dst_path = os.path.join(dst_dir, entry)
         try:
             if os.path.isdir(src_path):
-                if resource_name == "environments":
-                    # For environments, exclude view directories (symlinks would be invalidated)
-                    # Views are identified by MARKER_FILE
-                    # Import locally to avoid circular dependency with spack.environment
-                    from spack.environment.environment import MARKER_FILE
-
-                    # Skip the entry entirely if it's a view directory
-                    if os.path.exists(os.path.join(src_path, MARKER_FILE)):
-                        tty.debug(f"Skipping view directory during migration: {src_path}")
-                        continue
-
-                    def ignore_views(directory, names):
-                        ignored = []
-                        for name in names:
-                            path = os.path.join(directory, name)
-                            # Exclude if directory contains MARKER_FILE (indicates a view)
-                            if os.path.isdir(path) and os.path.exists(
-                                os.path.join(path, MARKER_FILE)
-                            ):
-                                ignored.append(name)
-                                tty.debug(f"Excluding view directory: {path}")
-                        return ignored
-
-                    # The ignore callback runs before copytree descends into
-                    # each directory, so returning a view directory's name
-                    # excludes that entire directory tree.
-                    shutil.copytree(src_path, dst_path, ignore=ignore_views)
-                else:
-                    shutil.copytree(src_path, dst_path)
+                shutil.copytree(src_path, dst_path)
             else:
                 shutil.copy2(src_path, dst_path)
 
@@ -2308,11 +2280,27 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                 return False
             entries_to_copy.append(entry)
 
+        # Define view exclusion callback for environment copies
+        from spack.environment.environment import MARKER_FILE
+
+        def ignore_views(directory, names):
+            """Exclude view directories (identified by MARKER_FILE) during environment copy."""
+            ignored = []
+            for name in names:
+                path = os.path.join(directory, name)
+                if os.path.isdir(path) and os.path.exists(os.path.join(path, MARKER_FILE)):
+                    ignored.append(name)
+                    tty.debug(f"Excluding view directory: {path}")
+            return ignored
+
         # All checks passed, now copy
         for entry in entries_to_copy:
             src_path = os.path.join(src_dir, entry)
             dst_path = os.path.join(dst_dir, entry)
-            if not _copy_directory_contents(src_path, dst_path, "environments"):
+            try:
+                shutil.copytree(src_path, dst_path, ignore=ignore_views)
+            except (OSError, shutil.Error) as e:
+                tty.warn(f"Failed to copy environment {entry}: {e}")
                 # Copy failed despite holding lock and passing upfront checks.
                 # Something is fundamentally wrong (lock not respected, filesystem issue, etc.).
                 # Leave everything as-is for investigation rather than potentially making it worse.
