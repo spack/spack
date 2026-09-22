@@ -69,14 +69,20 @@ def test_write_env_activate_script(
     script_path = env_script.path_to_env_script(
         test_env, shell, script_type="activate", view="default"
     )
+
+    test_env_path = test_env.path
+    cmd_name = "_spack_env_set"
+    if shell == "bat":
+        test_env_path = f'"{test_env_path}"'
+        cmd_name = f"%{cmd_name}%"
     assert os.path.exists(script_path)
 
     # Verify content
     with open(script_path, "r", encoding="utf-8") as f:
         activation_content = f.read()
-
+    print(activation_content)
     assert len(activation_content) > 0
-    assert f"_spack_env_set SPACK_ENV {test_env.path}" in activation_content
+    assert f"{cmd_name} SPACK_ENV {test_env_path}" in activation_content
 
 
 @pytest.mark.parametrize(
@@ -95,6 +101,12 @@ def test_write_env_deactivate_script(
     script_path = env_script.path_to_env_script(
         test_env, shell, script_type="deactivate", view="default"
     )
+
+    # batch "commands" are actually variables
+    cmd_name = "_spack_env_unset"
+    if shell == "bat":
+        cmd_name = f"%{cmd_name}%"
+
     assert os.path.exists(script_path)
 
     # Verify content
@@ -102,7 +114,7 @@ def test_write_env_deactivate_script(
         deactivation_content = f.read()
 
     assert len(deactivation_content) > 0
-    assert "_spack_env_unset SPACK_ENV" in deactivation_content
+    assert f"{cmd_name} SPACK_ENV" in deactivation_content
 
 
 @pytest.mark.parametrize(
@@ -138,14 +150,28 @@ def test_create_individual_env_scripts(
         env_2, shell, script_type="activate", view="default"
     )
 
+    # batch "commands" are actually variables wrapping a
+    # 'call' operation, which in turn invokes another batch script
+    # containing the goto which implements the "command" functionality
+    # as such they need to be dereferenced
+    env1_path = env_1.path
+    env2_path = env_2.path
+    set_cmd_name = "_spack_env_set"
+    unset_cmd_name = "_spack_env_unset"
+    if shell == "bat":
+        env1_path = f'"{env1_path}"'
+        env2_path = f'"{env2_path}"'
+        set_cmd_name = f"%{set_cmd_name}%"
+        unset_cmd_name = f"%{unset_cmd_name}%"
+
     with open(activate_path_1, "r", encoding="utf-8") as f:
         activate_content_1 = f.read()
     with open(activate_path_2, "r", encoding="utf-8") as f:
         activate_content_2 = f.read()
 
     # Each script should reference its own environment path
-    assert f"_spack_env_set SPACK_ENV {env_1.path}" in activate_content_1
-    assert f"_spack_env_set SPACK_ENV {env_2.path}" in activate_content_2
+    assert f"{set_cmd_name} SPACK_ENV {env1_path}" in activate_content_1
+    assert f"{set_cmd_name} SPACK_ENV {env2_path}" in activate_content_2
 
     # But not the other environment's path
     assert env_2.path not in activate_content_1
@@ -165,8 +191,8 @@ def test_create_individual_env_scripts(
         deactivate_content_2 = f.read()
 
     # Both should have the deactivation command
-    assert "_spack_env_unset SPACK_ENV" in deactivate_content_1
-    assert "_spack_env_unset SPACK_ENV" in deactivate_content_2
+    assert f"{unset_cmd_name} SPACK_ENV" in deactivate_content_1
+    assert f"{unset_cmd_name} SPACK_ENV" in deactivate_content_2
 
     # Environment names shouldn't appear in the other's scripts
     assert env_name_2 not in activate_content_1
