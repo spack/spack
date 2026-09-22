@@ -2183,8 +2183,6 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         # Check for conflicts up front before copying anything
         entries_to_copy = []
         for entry in sorted(os.listdir(src_dir)):
-            if entry == ".lock":
-                continue
             src_path = os.path.join(src_dir, entry)
             if not os.path.isdir(src_path):
                 continue
