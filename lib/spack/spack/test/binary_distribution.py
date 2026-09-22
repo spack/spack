@@ -321,6 +321,51 @@ def test_generate_index_missing(
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+@pytest.mark.parametrize("view", ["", "test_view"])
+def test_push_index_keeps_records_of_other_formats(tmp_path: pathlib.Path, view: str):
+    """Pushing an index replaces only the record of the format it writes"""
+    mirror_dir = tmp_path / "mirror"
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
+    install_cmd("--fake", "--no-cache", "libdwarf")
+    buildcache_cmd("push", "-u", str(mirror_dir), "libdwarf")
+
+    manifest_path = pathlib.Path(URLBuildcacheEntry.get_index_url(str(mirror_dir), view))
+    current_type = URLBuildcacheEntry.component_to_media_type(BuildcacheComponent.INDEX)
+
+    def update_index():
+        spack.binary_distribution._url_generate_package_index(mirror_url, str(tmp_path), name=view)
+
+    def records():
+        return json.loads(manifest_path.read_text(encoding="utf-8"))["data"]
+
+    # No index yet
+    update_index()
+    (current,) = records()
+    assert current["mediaType"] == current_type
+
+    # As if another Spack wrote the index
+    old = {**current, "mediaType": "application/vnd.spack.db.v1+json"}
+    manifest_path.write_text(json.dumps({"version": 3, "data": [old]}), encoding="utf-8")
+
+    for _ in range(2):  # merging twice gives the same result
+        update_index()
+        new, kept = records()
+        assert new["mediaType"] == current_type and kept == old
+
+    # This Spack reads the record of the current format
+    metadata = spack.url_buildcache.MirrorMetadata(
+        mirror_url, spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION, view
+    )
+    result = spack.binary_distribution.DefaultIndexHandler(metadata, None).conditional_fetch()
+    assert result.hash == new["checksum"]
+
+    # An unreadable manifest is replaced
+    manifest_path.write_text("not json", encoding="utf-8")
+    update_index()
+    assert [r["mediaType"] for r in records()] == [current_type]
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
 def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config: Configuration):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.

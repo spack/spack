@@ -672,12 +672,22 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str, name: 
         db._write_to_file(f)
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_class.push_local_file_as_blob(
-        index_json_path,
-        cache_prefix,
-        url_util.join(name, "index") if name else "index",
-        BuildcacheComponent.INDEX,
-        compression="none",
+    manifest_name = url_util.join(name, "index") if name else "index"
+    manifest_url = cache_class.get_index_url(cache_prefix, name)
+    try:
+        old = cache_class(cache_prefix, allow_unsigned=True).read_manifest(manifest_url).data
+    except Exception as e:  # missing or unreadable: start from scratch
+        tty.debug(f"No usable index manifest at {manifest_url}: {e}")
+        old = []
+
+    record = cache_class.push_blob_from_file(
+        index_json_path, cache_prefix, BuildcacheComponent.INDEX
+    )
+    # Keep records of other formats so other Spack versions keep their snapshot
+    kept = [r for r in old if r.media_type != record.media_type]
+    manifest = BuildcacheManifest(CURRENT_BUILD_CACHE_LAYOUT_VERSION, [record, *kept])
+    cache_class.push_manifest(
+        cache_prefix, manifest_name, manifest, temp_dir, component_type=BuildcacheComponent.INDEX
     )
     cache_class.maybe_push_layout_json(cache_prefix)
 
