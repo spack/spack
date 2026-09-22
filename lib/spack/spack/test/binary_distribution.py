@@ -332,7 +332,7 @@ def test_push_index_keeps_records_of_other_formats(tmp_path: pathlib.Path, view:
     buildcache_cmd("push", "-u", str(mirror_dir), "libdwarf")
 
     manifest_path = pathlib.Path(URLBuildcacheEntry.get_index_url(str(mirror_dir), view))
-    current_type = URLBuildcacheEntry.component_to_media_type(BuildcacheComponent.INDEX)
+    current_type = URLBuildcacheEntry.current_component_to_media_type(BuildcacheComponent.INDEX)
 
     def update_index():
         spack.binary_distribution._url_generate_package_index(mirror_url, str(tmp_path), name=view)
@@ -1334,7 +1334,7 @@ def mock_index(tmp_path: pathlib.Path, monkeypatch) -> IndexInformation:
 
     index_blob_record = spack.binary_distribution.BlobRecord(
         os.stat(index_blob_path).st_size,
-        cache_class.component_to_media_type(BuildcacheComponent.INDEX),
+        cache_class.current_component_to_media_type(BuildcacheComponent.INDEX),
         "none",
         "sha256",
         index_json_hash,
@@ -1885,9 +1885,10 @@ def test_select_signing_key_shows_fingerprints(monkeypatch):
 )
 def test_manifest_reads_older_media_types(component, oldest):
     """Blobs of the formats layout v3 started with are still read, after the current ones."""
-    current = URLBuildcacheEntry.component_to_media_type(component)
+    current = URLBuildcacheEntry.current_component_to_media_type(component)
     media_types = URLBuildcacheEntry.component_to_media_types(component)
-    assert media_types[0] == current and media_types[-1] == oldest
+    assert media_types[0] == current
+    assert URLBuildcacheEntry.oldest_component_to_media_type(component) == oldest
 
     records = [BlobRecord(1, t, "gzip", "sha256", t) for t in (oldest, current)]
     manifest = BuildcacheManifest(layout_version=3, data=records)

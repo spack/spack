@@ -337,9 +337,14 @@ class URLBuildcacheEntry:
         raise BuildcacheEntryError(f"Not a blob component: {component}")
 
     @classmethod
-    def component_to_media_type(cls, component: BuildcacheComponent) -> str:
+    def current_component_to_media_type(cls, component: BuildcacheComponent) -> str:
         """Media type of a buildcache component that is written"""
         return cls.component_to_media_types(component)[0]
+
+    @classmethod
+    def oldest_component_to_media_type(cls, component: BuildcacheComponent) -> str:
+        """Oldest media type of a buildcache component that is read"""
+        return cls.component_to_media_types(component)[-1]
 
     def get_local_spec_path(self) -> str:
         """Convenience method to return the local path of a fetched spec file"""
@@ -625,7 +630,7 @@ class URLBuildcacheEntry:
 
             record = BlobRecord(
                 checker.length,
-                cls.component_to_media_type(component_type),
+                cls.current_component_to_media_type(component_type),
                 compression,
                 checksum_algo,
                 checker.hexdigest(),
@@ -698,7 +703,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 tarball_content_length,
-                self.component_to_media_type(BuildcacheComponent.TARBALL),
+                self.current_component_to_media_type(BuildcacheComponent.TARBALL),
                 compression,
                 checksum_algorithm,
                 tarball_checksum,
@@ -726,7 +731,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 metadata_size,
-                self.component_to_media_type(BuildcacheComponent.SPEC),
+                self.current_component_to_media_type(BuildcacheComponent.SPEC),
                 compression,
                 checksum_algorithm,
                 metadata_checksum,

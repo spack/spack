@@ -185,18 +185,18 @@ def _migrate_spec(
         spec_json_path, spec_dict, metadata_checksum_algo
     )
 
+    # Copied as is, so labeled with the oldest formats layout v3 reads
     tarball_blob_record = BlobRecord(
         spec_dict["archive_size"],
-        v3_cache_class.component_to_media_type(BuildcacheComponent.TARBALL),
+        v3_cache_class.oldest_component_to_media_type(BuildcacheComponent.TARBALL),
         "gzip",
         algorithm,
         checksum,
     )
 
-    # Copied as is, so not labeled as the current format: layout v2 spec files are v5 at most
     metadata_blob_record = BlobRecord(
         metadata_size,
-        v3_cache_class.component_to_media_types(BuildcacheComponent.SPEC)[-1],
+        v3_cache_class.oldest_component_to_media_type(BuildcacheComponent.SPEC),
         "gzip",
         metadata_checksum_algo,
         metadata_checksum,
