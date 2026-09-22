@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import os
 import pathlib
 import sys
 
@@ -9,9 +10,12 @@ import pytest
 
 import spack.detection
 import spack.detection.common
+import spack.detection.elf_closure
 import spack.detection.path
 import spack.repo
 import spack.spec
+import spack.util.elf
+import spack.util.filesystem
 from spack.config import Configuration
 from spack.test.utilities import UnusableGlobal
 
@@ -179,3 +183,233 @@ def test_detect_specs_validates_variants_with_injected_repo(tmp_path, monkeypatc
     assert len(detected) == 1
     assert detected[0].external_path == str(prefixes["valid"] / "bin")
     assert detected[0].satisfies("languages=c,c++")
+
+
+def _write_elf(path: pathlib.Path, **kwargs) -> str:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(spack.util.elf.minimal_elf(**kwargs))
+    return str(path)
+
+
+def _resolved(loaded, path: str):
+    """Returns the real paths the DT_NEEDED entries of ``path`` resolve to."""
+    return loaded[os.path.realpath(path)].needed
+
+
+INTERPRETER = "/lib64/ld-linux-x86-64.so.2"
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize(
+    "search_path,ld_library_path,expected",
+    [
+        # RPATH comes before LD_LIBRARY_PATH
+        ({"rpath": "{tmp}/rpath"}, True, "rpath"),
+        # LD_LIBRARY_PATH comes before RUNPATH
+        ({"runpath": "{tmp}/runpath"}, True, "env"),
+        ({"runpath": "{tmp}/runpath"}, False, "runpath"),
+        # Default directories come last
+        ({}, True, "env"),
+        ({}, False, "default"),
+    ],
+)
+def test_dynamic_loader_search_order(tmp_path, search_path, ld_library_path, expected):
+    for directory in ("rpath", "env", "runpath", "default"):
+        _write_elf(tmp_path / directory / "libz.so.1", soname="libz.so.1")
+    kwargs = {k: v.format(tmp=tmp_path) for k, v in search_path.items()}
+    exe = _write_elf(
+        tmp_path / "bin" / "exe", needed=["libz.so.1"], interpreter=INTERPRETER, **kwargs
+    )
+
+    loader = spack.detection.elf_closure.DynamicLoader(
+        ld_library_path=[str(tmp_path / "env")] if ld_library_path else [],
+        default_dirs=[str(tmp_path / "default")],
+    )
+    loaded = loader.load(exe)
+
+    assert _resolved(loaded, exe) == [os.path.realpath(tmp_path / expected / "libz.so.1")]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize(
+    "exe_search_path,lib_search_path,finds_libb",
+    [
+        # The RPATH of the loading file is searched for the libraries of what it loads
+        ({"rpath": "{tmp}/lib"}, {}, True),
+        # RUNPATH is used only for the DT_NEEDED entries of the file that has it
+        ({"runpath": "{tmp}/lib"}, {}, False),
+        # A file with a RUNPATH does not search the RPATH of the file that loaded it
+        ({"rpath": "{tmp}/lib"}, {"runpath": "{tmp}/other"}, False),
+    ],
+)
+def test_dynamic_loader_rpath_of_loading_files(
+    tmp_path, exe_search_path, lib_search_path, finds_libb
+):
+    lib = tmp_path / "lib"
+    _write_elf(
+        lib / "liba.so",
+        soname="liba.so",
+        needed=["libb.so"],
+        **{k: v.format(tmp=tmp_path) for k, v in lib_search_path.items()},
+    )
+    _write_elf(lib / "libb.so", soname="libb.so")
+    exe = _write_elf(
+        tmp_path / "bin" / "exe",
+        needed=["liba.so"],
+        interpreter=INTERPRETER,
+        **{k: v.format(tmp=tmp_path) for k, v in exe_search_path.items()},
+    )
+
+    loader = spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[])
+    loaded = loader.load(exe)
+
+    liba = loaded[os.path.realpath(lib / "liba.so")]
+    if finds_libb:
+        assert liba.needed == [os.path.realpath(lib / "libb.so")] and liba.missing == []
+    else:
+        assert liba.needed == [] and liba.missing == ["libb.so"]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_expands_origin(tmp_path):
+    """Tests that $ORIGIN of an executable is its directory after resolving symlinks, and that
+    $ORIGIN of a library is the directory it was found in, without resolving symlinks.
+    """
+    prefix = tmp_path / "prefix"
+    store = tmp_path / "store"
+    _write_elf(store / "liba.so", soname="liba.so", needed=["libb.so"], runpath="$ORIGIN/b")
+    (prefix / "lib").mkdir(parents=True)
+    (prefix / "lib" / "liba.so").symlink_to(store / "liba.so")
+    _write_elf(prefix / "lib" / "b" / "libb.so", soname="libb.so")
+    exe = _write_elf(
+        prefix / "bin" / "exe",
+        needed=["liba.so"],
+        interpreter=INTERPRETER,
+        runpath="${ORIGIN}/../lib",
+    )
+    link = tmp_path / "view" / "bin" / "exe"
+    link.parent.mkdir(parents=True)
+    link.symlink_to(exe)
+
+    loader = spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[])
+    loaded = loader.load(str(link))
+
+    assert set(loaded) == {
+        os.path.realpath(exe),
+        os.path.realpath(store / "liba.so"),
+        os.path.realpath(prefix / "lib" / "b" / "libb.so"),
+    }
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_does_not_search_loaded_sonames(tmp_path):
+    """Tests that a DT_NEEDED entry matching the soname of a loaded library resolves to that
+    library, even when the requesting file would find another one.
+    """
+    _write_elf(tmp_path / "default" / "libz.so", soname="libz.so.1")
+    _write_elf(tmp_path / "private" / "libz.so.1", soname="libz.so.1")
+    _write_elf(
+        tmp_path / "default" / "liba.so",
+        soname="liba.so",
+        needed=["libz.so.1"],
+        runpath=str(tmp_path / "private"),
+    )
+    exe = _write_elf(
+        tmp_path / "bin" / "exe", needed=["libz.so", "liba.so"], interpreter=INTERPRETER
+    )
+
+    loader = spack.detection.elf_closure.DynamicLoader(
+        ld_library_path=[], default_dirs=[str(tmp_path / "default")]
+    )
+    loaded = loader.load(exe)
+
+    default_libz = os.path.realpath(tmp_path / "default" / "libz.so")
+    assert _resolved(loaded, str(tmp_path / "default" / "liba.so")) == [default_libz]
+    assert os.path.realpath(tmp_path / "private" / "libz.so.1") not in loaded
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_skips_incompatible_libraries(tmp_path):
+    _write_elf(tmp_path / "lib32" / "libz.so.1", soname="libz.so.1", is_64_bit=False)
+    (tmp_path / "script").mkdir()
+    (tmp_path / "script" / "libz.so.1").write_text("INPUT(libz.so.1)")
+    _write_elf(tmp_path / "lib64" / "libz.so.1", soname="libz.so.1")
+    exe = _write_elf(tmp_path / "bin" / "exe", needed=["libz.so.1"], interpreter=INTERPRETER)
+
+    loader = spack.detection.elf_closure.DynamicLoader(
+        ld_library_path=[],
+        default_dirs=[str(tmp_path / "lib32"), str(tmp_path / "script"), str(tmp_path / "lib64")],
+    )
+    loaded = loader.load(exe)
+
+    assert _resolved(loaded, exe) == [os.path.realpath(tmp_path / "lib64" / "libz.so.1")]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_closure_with_cycle_and_missing_library(tmp_path):
+    lib = tmp_path / "lib"
+    _write_elf(lib / "liba.so", soname="liba.so", needed=["libb.so", "libmissing.so"])
+    _write_elf(lib / "libb.so", soname="libb.so", needed=["liba.so"])
+
+    loader = spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[str(lib)])
+    loaded = loader.load(str(lib / "liba.so"))
+
+    liba, libb = os.path.realpath(lib / "liba.so"), os.path.realpath(lib / "libb.so")
+    assert set(loaded) == {liba, libb}
+    assert loaded[liba].needed == [libb] and loaded[liba].missing == ["libmissing.so"]
+    assert loaded[libb].needed == [liba] and loaded[libb].missing == []
+
+
+def test_dynamic_loader_root_not_elf(tmp_path):
+    script = tmp_path / "script"
+    script.write_text("#!/bin/sh\n")
+    loader = spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[])
+    assert loader.load(str(script)) == {}
+    assert loader.load(str(tmp_path / "does-not-exist")) == {}
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_used_for_several_roots(tmp_path):
+    """Tests that libraries resolved for one root do not affect the resolution for another."""
+    for directory in ("first", "second"):
+        _write_elf(tmp_path / directory / "libz.so.1", soname="libz.so.1")
+    first = _write_elf(
+        tmp_path / "bin" / "first",
+        needed=["libz.so.1"],
+        interpreter=INTERPRETER,
+        rpath=str(tmp_path / "first"),
+    )
+    second = _write_elf(
+        tmp_path / "bin" / "second",
+        needed=["libz.so.1"],
+        interpreter=INTERPRETER,
+        rpath=str(tmp_path / "second"),
+    )
+
+    loader = spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[])
+
+    assert _resolved(loader.load(first), first) == [
+        os.path.realpath(tmp_path / "first" / "libz.so.1")
+    ]
+    assert _resolved(loader.load(second), second) == [
+        os.path.realpath(tmp_path / "second" / "libz.so.1")
+    ]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_ignores_relative_ld_library_path_entries(tmp_path):
+    """Tests that empty and relative entries in LD_LIBRARY_PATH, as in the split of an unset
+    variable, do not resolve against the current working directory.
+    """
+    _write_elf(tmp_path / "cwd" / "libz.so.1", soname="libz.so.1")
+    _write_elf(tmp_path / "cwd" / "lib" / "libz.so.1", soname="libz.so.1")
+    _write_elf(tmp_path / "default" / "libz.so.1", soname="libz.so.1")
+    exe = _write_elf(tmp_path / "bin" / "exe", needed=["libz.so.1"], interpreter=INTERPRETER)
+    loader = spack.detection.elf_closure.DynamicLoader(
+        ld_library_path=["", "lib"], default_dirs=[str(tmp_path / "default")]
+    )
+
+    with spack.util.filesystem.working_dir(tmp_path / "cwd"):
+        loaded = loader.load(exe)
+
+    assert _resolved(loaded, exe) == [os.path.realpath(tmp_path / "default" / "libz.so.1")]
