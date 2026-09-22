@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import functools
 import os
 import pathlib
 import sys
@@ -743,3 +744,75 @@ def test_detect_dependencies_through_ld_library_path(
         assert len(messages) == 1 and "through LD_LIBRARY_PATH" in messages[0]
     else:
         assert messages == []
+
+
+def _write_host_elf(path: pathlib.Path, **kwargs) -> str:
+    """Writes an ELF file that detection accepts on the host, and makes it executable."""
+    is_64_bit, is_little_endian, e_machine = spack.util.elf.get_elf_compat(sys.executable)
+    result = _write_elf(
+        path, is_64_bit=is_64_bit, is_little_endian=is_little_endian, e_machine=e_machine, **kwargs
+    )
+    path.chmod(0o755)
+    return result
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize("case", ["closure", "excluded", "not-found"])
+def test_detect_with_dependencies(tmp_path, case, mock_packages, config):
+    """Tests that the owners of loaded libraries are detected in the prefix of the libraries,
+    and searched for dependencies in turn, unless excluded.
+    """
+    # sonames-consumer -> sonames-owner -> libraries-owner, each in its own prefix. The library
+    # of libraries-owner is in a multiarch directory, as on Debian.
+    libs = tmp_path / "libs" / "lib" / "x86_64-linux-gnu"
+    real = _write_host_elf(libs / "liblibraries-owner.so.1.0", soname="liblibraries-owner.so.1")
+    (libs / "liblibraries-owner.so.1").symlink_to(real)
+    _write_host_elf(
+        tmp_path / "owner" / "lib" / "libsonames-owner.so.1", soname="libsonames-owner.so.1"
+    )
+    if case != "not-found":
+        _write_host_elf(
+            tmp_path / "owner" / "bin" / "sonames-owner",
+            needed=["liblibraries-owner.so.1"],
+            interpreter=INTERPRETER,
+            runpath=str(libs),
+        )
+    _write_host_elf(
+        tmp_path / "consumer" / "bin" / "sonames-consumer",
+        needed=["libsonames-owner.so.1"],
+        interpreter=INTERPRETER,
+        runpath=str(tmp_path / "owner" / "lib"),
+    )
+    detect = functools.partial(spack.detection.path.by_path_detailed, repo=mock_packages)
+
+    result = spack.detection.dependencies.detect_with_dependencies(
+        detect(["sonames-consumer"], path_hints=[str(tmp_path / "consumer")]),
+        detect=detect,
+        configured=[],
+        index=spack.detection.ownership.ownership_index(mock_packages),
+        loader=spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[]),
+        repo=mock_packages,
+        exclude=["sonames-owner"] if case == "excluded" else [],
+    )
+
+    prefixes = {
+        name: [x.spec.external_path for x in entries] for name, entries in result.detected.items()
+    }
+    edges = [(x.parent.name, x.child.name) for x in result.edges]
+    if case == "closure":
+        assert prefixes == {
+            "sonames-consumer": [str(tmp_path / "consumer")],
+            "sonames-owner": [str(tmp_path / "owner")],
+            "libraries-owner": [str(tmp_path / "libs")],
+        }
+        assert edges == [
+            ("sonames-consumer", "sonames-owner"),
+            ("sonames-owner", "libraries-owner"),
+        ]
+        assert result.missing == []
+    else:
+        assert prefixes == {"sonames-consumer": [str(tmp_path / "consumer")]}
+        assert edges == []
+        assert [(x.parent.name, x.owners) for x in result.missing] == [
+            ("sonames-consumer", ["sonames-owner"])
+        ]

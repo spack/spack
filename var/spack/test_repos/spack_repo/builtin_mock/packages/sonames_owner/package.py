@@ -18,6 +18,8 @@ class SonamesOwner(Package):
 
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
+    depends_on("libraries-owner", type="link")
+
     @classmethod
     def determine_version(cls, exe):
         return "1.0"

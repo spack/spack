@@ -7,7 +7,7 @@ import collections
 import os
 import re
 import warnings
-from typing import Dict, Iterable, List, NamedTuple, Set, Tuple
+from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple
 
 import spack.deptypes as dt
 import spack.externals
@@ -232,3 +232,105 @@ def detect_dependencies(
             )
 
     return DetectedDependencies(edges=edges, missing=missing)
+
+
+#: Detects externals of the packages in the first argument, searching the ``path_hints`` keyword
+#: argument, as ``spack.detection.path.by_path_detailed`` does
+DetectFn = Callable[..., Dict[str, List[DetectedExternal]]]
+
+
+class DetectedWithDependencies(NamedTuple):
+    #: detected externals by package name, including the packages detected as dependencies
+    detected: Dict[str, List[DetectedExternal]]
+    edges: List[ExternalEdge]
+    missing: List[MissingExternal]
+
+
+def detect_with_dependencies(
+    detected: Dict[str, List[DetectedExternal]],
+    *,
+    detect: DetectFn,
+    configured: Iterable[spack.spec.Spec],
+    index: OwnershipIndex,
+    loader: DynamicLoader,
+    repo: spack.repo.RepoPath,
+    exclude: Iterable[str] = (),
+) -> DetectedWithDependencies:
+    """Detects the dependencies of detected externals, detecting the packages that own the
+    libraries they load when those have no external.
+
+    An owner is searched for in the prefix of the library and in its directory, once per prefix.
+    Externals detected this way are searched for dependencies in turn, until no new external is
+    found. Packages in ``exclude`` are never searched for.
+
+    Arguments:
+        detected: detected externals by package name
+        detect: function detecting the externals of a list of packages
+        configured: externals in configuration, which are candidate dependencies
+        index: owners of libraries
+        loader: resolves the libraries that a file loads
+        repo: repository of the recipes
+        exclude: names of packages that are not searched for
+    """
+    excluded = set(exclude)
+    configured = list(configured)
+    result: Dict[str, List[DetectedExternal]] = collections.defaultdict(list)
+    all_detected: List[DetectedExternal] = []
+    known: Set[Tuple[str, Optional[str]]] = set()
+
+    def add(name: str, entries: List[DetectedExternal]) -> List[DetectedExternal]:
+        added = []
+        for entry in entries:
+            key = (str(entry.spec), entry.spec.external_path)
+            if key in known:
+                continue
+            known.add(key)
+            result[name].append(entry)
+            all_detected.append(entry)
+            added.append(entry)
+        return added
+
+    pending: List[DetectedExternal] = []
+    for name, entries in detected.items():
+        pending.extend(add(name, entries))
+
+    searched: Set[Tuple[str, str]] = set()
+    while pending:
+        # Warnings are emitted once, by the final pass below
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            partial = detect_dependencies(
+                pending,
+                externals=[x.spec for x in all_detected] + configured,
+                index=index,
+                loader=loader,
+                repo=repo,
+            )
+
+        owners_by_prefix: Dict[str, Set[str]] = collections.defaultdict(set)
+        hints_by_prefix: Dict[str, Set[str]] = collections.defaultdict(set)
+        for item in partial.missing:
+            library_dir = os.path.dirname(item.library)
+            prefix = library_prefix(library_dir)
+            for owner in item.owners:
+                if owner in excluded or (owner, prefix) in searched:
+                    continue
+                searched.add((owner, prefix))
+                owners_by_prefix[prefix].add(owner)
+                hints_by_prefix[prefix].add(library_dir)
+
+        pending = []
+        for prefix in sorted(owners_by_prefix):
+            hints = [prefix, *sorted(hints_by_prefix[prefix])]
+            found = detect(sorted(owners_by_prefix[prefix]), path_hints=hints)
+            for name, entries in found.items():
+                pending.extend(add(name, entries))
+
+    final = detect_dependencies(
+        all_detected,
+        externals=[x.spec for x in all_detected] + configured,
+        index=index,
+        loader=loader,
+        repo=repo,
+    )
+    return DetectedWithDependencies(detected=result, edges=final.edges, missing=final.missing)
