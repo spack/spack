@@ -309,6 +309,19 @@ Each dependency can be specified either by:
 
 Using the ``id`` provides an unambiguous reference to a specific external package, which is essential for differentiating between externals that have similar specs but differ, for example, only by their installation prefix.
 
+An external without an explicit ``id`` has one derived from its name, version, and prefix (or modules, if it has no prefix).
+The derived id has the form ``<name>-<version>-<digest>``, where the 7 characters of the digest are a hash of the prefix only: externals with the same prefix, such as ``gcc-13.3.0-894d731`` and ``glibc-2.39-894d731`` in ``/usr``, share the same digest.
+This allows referencing an external in a configuration scope you cannot modify, for instance one defined by a system administrator.
+Variants are not part of the derived id, so two externals that differ only by their variants derive the same id, and neither can be referenced by it: give one of them an explicit ``id`` instead.
+To see the id of each external, and whether it can be referenced, use ``spack external show``:
+
+.. code-block:: console
+
+   $ spack external show mpileaks callpath mpich
+   callpath_id           callpath@1.0            /user/path  [/home/user/.spack/packages.yaml:23]
+   mpich-3.0.4-d1a113f   mpich@3.0.4             /user/path  [/home/user/.spack/packages.yaml:34]
+   mpileaks-2.3-d1a113f  mpileaks@2.3~debug+opt  /user/path  [/home/user/.spack/packages.yaml:11]
+
 The dependency types can be specified in the optional ``deptypes`` field, while virtuals can be specified in the optional ``virtuals`` field.
 As before, when the dependency types are not specified, Spack will infer them from the package recipe.
 

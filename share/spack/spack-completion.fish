@@ -1803,6 +1803,7 @@ set -g __fish_spack_optspecs_spack_external h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a find -d 'add external packages to packages.yaml'
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a list -d 'list detectable packages, by repository and name'
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a ls -d 'list detectable packages, by repository and name'
+complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a show -d 'show the externals in configuration, with the ids dependencies can use'
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a read-cray-manifest -d 'consume a Spack-compatible description of externally-installed packages, including dependency relationships'
 complete -c spack -n '__fish_spack_using_command external' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external' -s h -l help -d 'show this help message and exit'
@@ -1836,6 +1837,12 @@ complete -c spack -n '__fish_spack_using_command external list' -s h -l help -d 
 set -g __fish_spack_optspecs_spack_external_ls h/help
 complete -c spack -n '__fish_spack_using_command external ls' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external ls' -s h -l help -d 'show this help message and exit'
+
+# spack external show
+set -g __fish_spack_optspecs_spack_external_show h/help
+
+complete -c spack -n '__fish_spack_using_command external show' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command external show' -s h -l help -d 'show this help message and exit'
 
 # spack external read-cray-manifest
 set -g __fish_spack_optspecs_spack_external_read_cray_manifest h/help file= directory= ignore-default-dir dry-run fail-on-error

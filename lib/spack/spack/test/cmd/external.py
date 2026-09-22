@@ -393,3 +393,47 @@ def test_detect_virtuals(mock_executable, mutable_config, monkeypatch, mock_pack
 
     # Check that the mpi:buildable entry was not overwritten
     assert mutable_config.get("packages:mpi:buildable") is True
+
+
+def test_external_show(mutable_config: Configuration):
+    """Tests that 'spack external show' prints the id of each external, flags the ids that cannot
+    be referenced, and works when a reference in configuration is broken.
+    """
+    mutable_config.set(
+        "packages",
+        {
+            "cmake-client": {
+                "externals": [
+                    {
+                        "spec": "cmake-client@1.0",
+                        "prefix": "/user/path",
+                        "dependencies": [{"id": "wrong"}],
+                    }
+                ]
+            },
+            "cmake": {
+                "externals": [
+                    {"spec": "cmake@3.23.1", "prefix": "/user/path"},
+                    {"spec": "cmake@3.4.3", "prefix": "/other/path", "id": "old-cmake"},
+                ]
+            },
+            "libelf": {
+                "externals": [
+                    {"spec": "libelf@0.8.13", "prefix": "/user/path"},
+                    {"spec": "libelf@=0.8.13", "prefix": "/user/path/"},
+                ]
+            },
+        },
+    )
+    lines = SpackCommand("external")("show").splitlines()
+
+    assert any(line.startswith("cmake-client-1.0-d1a113f ") for line in lines)
+    assert any(line.startswith("cmake-3.23.1-d1a113f ") for line in lines)
+    assert any(line.startswith("old-cmake ") and "/other/path" in line for line in lines)
+    libelf_lines = [x for x in lines if x.startswith("libelf-0.8.13-d1a113f ")]
+    assert len(libelf_lines) == 2
+    assert all("cannot be referenced" in x for x in libelf_lines)
+
+    lines = SpackCommand("external")("show", "cmake").splitlines()
+    assert len(lines) == 2
+    assert all("cmake@" in x and "cmake-client" not in x for x in lines)

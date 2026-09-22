@@ -1205,7 +1205,7 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find list ls read-cray-manifest"
+        SPACK_COMPREPLY="find list ls show read-cray-manifest"
     fi
 }
 
@@ -1224,6 +1224,15 @@ _spack_external_list() {
 
 _spack_external_ls() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_external_show() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        _all_packages
+    fi
 }
 
 _spack_external_read_cray_manifest() {

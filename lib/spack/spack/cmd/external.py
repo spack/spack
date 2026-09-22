@@ -6,13 +6,17 @@ import errno
 import os
 import re
 import sys
+import warnings
 from typing import List, Optional, Set
 
 import spack
 import spack.cmd
 import spack.config
+import spack.context
 import spack.detection
 import spack.error
+import spack.externals
+import spack.externals_config
 import spack.package_base
 import spack.repo
 import spack.spec
@@ -20,6 +24,7 @@ from spack import cray_manifest
 from spack.cmd.common import arguments
 from spack.util import tty
 from spack.util.tty import colify
+from spack.util.tty.color import clen
 
 description = "manage external packages in Spack configuration"
 section = "config"
@@ -62,6 +67,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
     sp.add_parser("list", aliases=["ls"], help="list detectable packages, by repository and name")
+
+    show_parser = sp.add_parser(
+        "show", help="show the externals in configuration, with the ids dependencies can use"
+    )
+    show_parser.add_argument(
+        "packages", nargs="*", help="only show externals of these packages or virtuals"
+    )
 
     read_cray_manifest = sp.add_parser(
         "read-cray-manifest",
@@ -257,11 +269,56 @@ def external_list(args):
         colify.colify(pkgs, indent=4, output=sys.stdout)
 
 
+def external_show(args):
+    context = spack.context.default()
+    packages_yaml = spack.externals_config.normalized_external_config(context)
+    try:
+        spack.externals_config.add_implicit_libc_externals(packages_yaml, context=context)
+    except spack.error.SpackError as e:
+        warnings.warn(f"implicit libc externals from compilers are not shown [{e}]")
+    parser = spack.externals.ExternalSpecsParser(
+        spack.externals.extract_dicts_from_configuration(packages_yaml),
+        repo=context.repo,
+        complete_node=spack.externals.complete_architecture,
+        nodes_only=True,
+    )
+
+    rows = []
+    for name in sorted(parser.specs_by_name):
+        for entry in parser.specs_by_name[name]:
+            if args.packages and not any(entry.spec.intersects(x) for x in args.packages):
+                continue
+            external_id = parser.external_id(entry)
+            location = entry.config.get("prefix") or ",".join(entry.config.get("modules", []))
+            source = getattr(entry.config, "line_info", "")
+            note = ""
+            if external_id.conflict:
+                note = f"(cannot be referenced: {external_id.conflict})"
+            rows.append(
+                (
+                    external_id.id,
+                    spack.spec.Spec(entry.config["spec"]).colored_str,
+                    location,
+                    f"[{source}]" if source else "",
+                    note,
+                )
+            )
+
+    if not rows:
+        tty.msg("No external packages found")
+        return
+
+    widths = [max(clen(row[i]) for row in rows) for i in range(len(rows[0]))]
+    for row in rows:
+        print("  ".join(x + " " * (w - clen(x)) for x, w in zip(row, widths)).rstrip())
+
+
 def external(parser, args):
     action = {
         "find": external_find,
         "list": external_list,
         "ls": external_list,
+        "show": external_show,
         "read-cray-manifest": external_read_cray_manifest,
     }
     action[args.external_command](args)
