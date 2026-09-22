@@ -188,8 +188,6 @@ def _do_isolate(args):
     config_path = _setup_isolate_scope(
         destination, args.overwrite, target_config_existed, args.reuse_old
     )
-    # No need to modify etc/spack/include.yaml anymore - the isolate scope's
-    # include.yaml with include:: override handles the redirection
 
     # Record old resources in the layout scope, but never relocate them while
     # isolating.  The isolate scope controls new data; the layout scope keeps
@@ -203,11 +201,7 @@ def _do_isolate(args):
     ):
         spack.config._do_migrate(
             is_isolate_command=True,
-            config_path=(
-                os.path.join(spack.config._layout_scope_path(), "config.yaml")
-                if args.reuse_old
-                else config_path
-            ),
+            config_path=config_path,
             isolate_target=destination,
         )
         # No need to reload CONFIG here: this process exits immediately, and
