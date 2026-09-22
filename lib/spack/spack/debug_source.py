@@ -119,6 +119,25 @@ def _has_any_debug_binary(prefix: str) -> bool:
     return False
 
 
+def _spec_requested_debug_build(spec) -> bool:
+    """True if this spec's own concretized variants/flags indicate the user
+    deliberately requested a debug-capable build (Debug/RelWithDebInfo build
+    type, or -g-family compiler flags), as opposed to incidentally carrying
+    debug sections for unrelated reasons (e.g. an autotools package whose
+    upstream configure script defaults to -g)."""
+    DEBUG_BUILD_TYPES = {"debug", "relwithdebinfo"}
+    DEBUG_FLAG_MARKERS = ("-g", "-ggdb", "-g1", "-g2", "-g3")
+    
+    if "build_type" in spec.variants:
+        build_type_value = spec.variants["build_type"].value
+        if str(build_type_value).lower() in DEBUG_BUILD_TYPES:
+            return True
+    for flag_name in ("cflags", "cxxflags"):
+        flags = spec.compiler_flags.get(flag_name, [])
+        if any(any(marker in f for marker in DEBUG_FLAG_MARKERS) for f in flags):
+            return True
+    return False
+
 def _parse_dwarf_comp_unit_paths(readelf_output: str, pairs: Set[Tuple[str, str]]) -> None:
     """Parse readelf --debug-dump=info output into (comp_dir, name) pairs.
 

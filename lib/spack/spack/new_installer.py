@@ -797,8 +797,10 @@ def _install(
             if stop_at is not None and phase.name == stop_at:
                 send_state(f"stopped after {stop_at}", state_stream)
                 raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
-            
-        if debug_source or debug_symbols:
+
+        _is_debug_target = explicit and spack.debug_source._spec_requested_debug_build(spec)
+        
+        if (debug_source or debug_symbols) and _is_debug_target:
             if spack.debug_source._has_any_debug_binary(str(spec.prefix)):                
                 if debug_source:
                     spack.debug_source.install_debug_artifacts(pkg)
@@ -814,6 +816,9 @@ def _install(
                 )
             else:
                 spack.llnl.util.tty.msg(f"{spec.name}: no debug sections found, skipping debug capture")
+        elif debug_source or debug_symbols:
+            reason = "not explicitly requested" if not explicit else "no debug build_type/flags requested"
+            spack.llnl.util.tty.debug(f"{spec.name}: {reason}, skipping debug capture")
         else:
             spack.llnl.util.tty.debug(f"{spec.name}: debug-source/symbols not requested, skipping")
 
