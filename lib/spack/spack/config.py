@@ -2384,93 +2384,77 @@ def _do_migrate(
                 retained_resources.append("GPG data (kept in its old location)")
         # A custom configured location is user-owned and remains untouched.
 
-    # 3. Handle licenses
-    old_licenses_dir = spack.paths.old_licenses_path
-    if old_resources["licenses"]:
-        # Isolation never relocates existing licenses; record the old path.
+    def _handle_portable_resource(
+        resource_name: str,
+        config_key: str,
+        old_path: str,
+        target_subdir: str,
+        migrate_fn: Callable[[str, str], bool],
+    ) -> None:
+        """Handle migration of a portable resource (licenses or environments).
+
+        Args:
+            resource_name: Display name (e.g., "licenses", "environments")
+            config_key: Config key (e.g., "license_dir", "environments_root")
+            old_path: Old location path
+            target_subdir: Subdirectory under $data_home for target
+            migrate_fn: Function to perform the migration (returns True on success)
+        """
+        # Isolation never relocates; record old path
         if is_isolate_command:
-            should_attempt_migration = False
             if "config" not in scope_config:
                 scope_config["config"] = {}
-            scope_config["config"]["license_dir"] = old_licenses_dir
+            scope_config["config"][config_key] = old_path
+            return
+
+        # Check if user has custom configuration
+        data_home = substitute_path_variables("$data_home")
+        target_path = os.path.join(data_home, target_subdir)
+        configured = CONFIG.get(f"config:{config_key}")
+        target_norm = os.path.normpath(os.path.expanduser(target_path))
+
+        if configured is None:
+            configured = target_path
+        configured = canonicalize_path(configured)
+
+        if configured != target_norm:
+            # Custom location - don't migrate, keep in old location
+            tty.debug(
+                f"{resource_name.capitalize()} configured to custom location {configured}, "
+                f"not migrating from {old_path}"
+            )
+            if "config" not in scope_config:
+                scope_config["config"] = {}
+            scope_config["config"][config_key] = old_path
+            return
+
+        # Attempt migration with default config
+        if migrate_fn(old_path, target_path):
+            migrated_resources.append(resource_name)
+            tty.debug(f"Copied {resource_name} from {old_path} to {target_path}")
         else:
-            data_home = substitute_path_variables("$data_home")
-            target_licenses_dir = os.path.join(data_home, "licenses")
-            should_attempt_migration = True
-            configured_license_dir = CONFIG.get("config:license_dir")
-            target_licenses_norm = os.path.normpath(os.path.expanduser(target_licenses_dir))
-            if configured_license_dir is None:
-                configured_license_dir = target_licenses_dir
-            configured_license_dir = canonicalize_path(configured_license_dir)
+            # Migration failed - keep in old location
+            if "config" not in scope_config:
+                scope_config["config"] = {}
+            scope_config["config"][config_key] = old_path
+            retained_resources.append(f"{resource_name} (kept in the old location)")
+            tty.debug(f"{resource_name.capitalize()} kept in old location: {old_path}")
 
-            if configured_license_dir != target_licenses_norm:
-                # User has custom location, don't migrate
-                tty.debug(
-                    f"Licenses configured to custom location {configured_license_dir}, "
-                    f"not migrating from {old_licenses_dir}"
-                )
-                should_attempt_migration = False
-                # Keep in old location
-                if "config" not in scope_config:
-                    scope_config["config"] = {}
-                scope_config["config"]["license_dir"] = old_licenses_dir
-
-        # Attempt migration if appropriate
-        if should_attempt_migration:
-            if _migrate_licenses(old_licenses_dir, target_licenses_dir):
-                migrated_resources.append("licenses")
-                tty.debug(f"Copied licenses from {old_licenses_dir} to {target_licenses_dir}")
-            else:
-                # Copy failed (collision), keep in old location
-                if "config" not in scope_config:
-                    scope_config["config"] = {}
-                scope_config["config"]["license_dir"] = old_licenses_dir
-                retained_resources.append("licenses (kept in the old location)")
-                tty.debug(f"Licenses kept in old location: {old_licenses_dir}")
+    # 3. Handle licenses
+    if old_resources["licenses"]:
+        _handle_portable_resource(
+            "licenses", "license_dir", spack.paths.old_licenses_path, "licenses", _migrate_licenses
+        )
 
     # 4. Handle environments
-    old_envs_dir = spack.paths.old_envs_path
     if old_resources["environments"]:
-        # Isolation never relocates existing environments; record the old path.
-        if is_isolate_command:
-            should_attempt_migration = False
-            if "config" not in scope_config:
-                scope_config["config"] = {}
-            scope_config["config"]["environments_root"] = old_envs_dir
-        else:
-            data_home = substitute_path_variables("$data_home")
-            target_envs_dir = os.path.join(data_home, "environments")
-            should_attempt_migration = True
-            configured_env_root = CONFIG.get("config:environments_root")
-            target_envs_norm = os.path.normpath(os.path.expanduser(target_envs_dir))
-            if configured_env_root is None:
-                configured_env_root = target_envs_dir
-            configured_env_root = canonicalize_path(configured_env_root)
-
-            if configured_env_root != target_envs_norm:
-                # User has custom location, don't migrate
-                tty.debug(
-                    f"Environments configured to custom location {configured_env_root}, "
-                    f"not migrating from {old_envs_dir}"
-                )
-                should_attempt_migration = False
-                # Keep in old location
-                if "config" not in scope_config:
-                    scope_config["config"] = {}
-                scope_config["config"]["environments_root"] = old_envs_dir
-
-        # Attempt migration if appropriate
-        if should_attempt_migration:
-            if _migrate_environments(old_envs_dir, target_envs_dir):
-                migrated_resources.append("environments")
-                tty.debug(f"Copied environments from {old_envs_dir} to {target_envs_dir}")
-            else:
-                # Copy failed (collision), keep in old location
-                if "config" not in scope_config:
-                    scope_config["config"] = {}
-                scope_config["config"]["environments_root"] = old_envs_dir
-                retained_resources.append("environments (kept in the old location)")
-                tty.debug(f"Environments kept in old location: {old_envs_dir}")
+        _handle_portable_resource(
+            "environments",
+            "environments_root",
+            spack.paths.old_envs_path,
+            "environments",
+            _migrate_environments,
+        )
 
     # 5. Copy ~/.spack to ~/.config/spack (unless isolate command)
     if not is_isolate_command:
