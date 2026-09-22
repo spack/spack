@@ -2120,65 +2120,6 @@ def _migration_backup_path() -> str:
     return os.path.join(spack.paths.prefix, ".migration-backup")
 
 
-def _copy_directory_contents(src_dir: str, dst_dir: str, resource_name: str) -> bool:
-    """Copy contents of src_dir to dst_dir, checking for collisions.
-
-    The source remains in place after copying. Callers move the complete
-    resource unit into the migration backup only after copying succeeds.
-
-    Args:
-        src_dir: Source directory
-        dst_dir: Destination directory
-        resource_name: Name of resource for logging (e.g., "licenses", "environments")
-
-    Returns:
-        True if migration was successful, False if skipped or failed
-    """
-    if not os.path.exists(src_dir):
-        return True  # Nothing to copy
-
-    try:
-        src_entries = set(os.listdir(src_dir))
-    except OSError:
-        tty.warn(f"Cannot read {resource_name} directory: {src_dir}")
-        return False
-
-    if not src_entries:
-        return True  # Empty source, nothing to copy
-
-    # Check for collisions in the destination before creating any backups.
-    if os.path.exists(dst_dir):
-        try:
-            dst_entries = set(os.listdir(dst_dir)) - {".lock"}
-            collisions = src_entries & dst_entries
-            if collisions:
-                tty.debug(f"Cannot copy {resource_name}: collisions detected: {collisions}")
-                return False
-        except OSError:
-            tty.warn(f"Cannot read destination {resource_name} directory: {dst_dir}")
-            return False
-
-    # Copy to destination while leaving the source untouched.
-    # This ensures a failed destination copy leaves the old resource usable.
-
-    filesystem.mkdirp(dst_dir)
-    for entry in src_entries:
-        src_path = os.path.join(src_dir, entry)
-        dst_path = os.path.join(dst_dir, entry)
-        try:
-            if os.path.isdir(src_path):
-                shutil.copytree(src_path, dst_path)
-            else:
-                shutil.copy2(src_path, dst_path)
-
-            tty.debug(f"Copied {resource_name}: {entry}")
-        except (OSError, shutil.Error) as e:
-            tty.warn(f"Failed to copy {resource_name} {entry}: {e}")
-            return False
-
-    return True
-
-
 def _migrate_gpg(
     old_gpg_home: str, target_gpg_home: str, old_gpg_keys: str, target_gpg_keys: str
 ) -> bool:
@@ -2214,20 +2155,22 @@ def _migrate_gpg(
 
         # Migrate GPG home (keyring)
         if gpg_home_exists:
-            staging_home = tempfile.mkdtemp(prefix=".spack-gpg-migration-", dir=parent_dir)
+            staging_home = os.path.join(parent_dir, ".spack-gpg-home-staging")
+            # Clean up any stale staging directory from a previous failed attempt
+            if os.path.exists(staging_home):
+                shutil.rmtree(staging_home, ignore_errors=True)
+            shutil.copytree(old_gpg_home, staging_home)
             os.chmod(staging_home, 0o700)
-            if not _copy_directory_contents(old_gpg_home, staging_home, "gpg home"):
-                return False
             os.replace(staging_home, target_gpg_home)
             staging_home = None
 
         # Migrate GPG keys directory
         if gpg_keys_exists:
-            staging_keys = tempfile.mkdtemp(prefix=".spack-gpg-keys-migration-", dir=parent_dir)
-            if not _copy_directory_contents(old_gpg_keys, staging_keys, "gpg keys"):
-                # GPG home already migrated, but keys failed - this is a partial failure
-                # The caller should handle pointing both back to old locations
-                return False
+            staging_keys = os.path.join(parent_dir, ".spack-gpg-keys-staging")
+            # Clean up any stale staging directory from a previous failed attempt
+            if os.path.exists(staging_keys):
+                shutil.rmtree(staging_keys, ignore_errors=True)
+            shutil.copytree(old_gpg_keys, staging_keys)
             os.replace(staging_keys, target_gpg_keys)
             staging_keys = None
 
