@@ -12,7 +12,6 @@ import spack.error
 import spack.package_base
 import spack.repo
 import spack.spec
-import spack.spec_parser
 import spack.traverse
 import spack.util.spack_yaml
 from spack.enums import PropagationPolicy
@@ -179,7 +178,7 @@ class RequirementParser:
     def _parse_and_expand(self, string: str, *, named: bool = False) -> spack.spec.Spec:
         result = parse_spec_from_yaml_string(string, named=named)
         if self.toolchains:
-            spack.spec_parser.expand_toolchains(result, self.toolchains)
+            spack.spec.expand_toolchains(result, self.toolchains)
         return result
 
     def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:

@@ -717,6 +717,11 @@ Some things to note about this manifest are that it points to a blob that is not
 The decision not to compress build cache indices stems from the fact that Spack does not yet sign build cache index manifests.
 Once that changes, you may start to see these indices stored as compressed blobs.
 
+The media type ``application/vnd.spack.db.v8+json`` refers to the database format.
+A build cache index manifest can contain multiple indices under different media types, which ensures that different versions of Spack can use the same build cache.
+Spack fetches the build cache index that corresponds to the latest media type it supports, and similarly pushes using the latest media type.
+If you upgrade Spack and push to an existing build cache, older versions of Spack will continue to be able to use the build cache, but won't be able to reuse the specs pushed by the newest version of Spack.
+
 For completeness, here are examples of manifests for the other two types of entities you might find in a Spack build cache.
 First, a public key manifest:
 

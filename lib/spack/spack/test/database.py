@@ -1201,6 +1201,53 @@ def test_error_message_when_using_too_new_db(database: Database, monkeypatch):
         Database(database.root)._read()
 
 
+def test_explicit_upgrade_error_when_using_too_old_db(database: Database, monkeypatch):
+    """When the on-disk database is older than what Spack expects and a reindex is not
+    requested, reading it should raise ExplicitDatabaseUpgradeError telling the user to
+    run `spack reindex`.
+    """
+    next_version = vn.Version(f"{spack.database._DB_VERSION[0] + 1}")
+    monkeypatch.setattr(spack.database, "_DB_VERSION", next_version)
+    with pytest.raises(spack.database.ExplicitDatabaseUpgradeError) as exc_info:
+        Database(database.root)._read()
+
+    err = exc_info.value
+    assert err.expected_version == next_version
+    assert str(err.root) == str(database.root)
+    assert "spack reindex" in err.long_message
+
+
+def test_older_readable_db_is_read_in_place_and_refuses_writes(
+    mutable_database: Database, bumped_db_version
+):
+    """An older index that is readable as is can be queried, but is only written after an
+    explicit reindex."""
+    current, next_version = bumped_db_version
+
+    def version_on_disk() -> str:
+        with open(mutable_database._index_path, encoding="utf-8") as f:
+            return json.load(f)["database"]["version"]
+
+    db = Database(mutable_database.root, layout=mutable_database.layout)
+    assert db.query_local()
+
+    with pytest.raises(spack.database.ExplicitDatabaseUpgradeError):
+        db.ensure_latest_db_version()
+
+    with pytest.raises(spack.database.ExplicitDatabaseUpgradeError):
+        with db.write_transaction():
+            pass
+
+    assert version_on_disk() == str(current)
+
+    db.reindex()
+    assert version_on_disk() == str(next_version)
+
+    db.ensure_latest_db_version()
+    with db.write_transaction():
+        pass
+
+
 @pytest.mark.parametrize(
     "lock_cfg",
     [spack.database.NO_LOCK, spack.database.NO_TIMEOUT, spack.database.DEFAULT_LOCK_CFG, None],

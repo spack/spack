@@ -86,7 +86,7 @@ from spack.oci.oci import (
 )
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
-from spack.stage import Stage
+from spack.stage import stage_from_config
 from spack.util import file_cache, timer, tty
 from spack.util.executable import which
 from spack.util.filesystem import mkdirp
@@ -266,7 +266,9 @@ class BinaryIndexCache:
                 self._specs_already_associated.add(cached_index_hash)
 
     def _associate_built_specs_with_mirror(self, cache_key, mirror_metadata: MirrorMetadata):
-        with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        with tempfile.TemporaryDirectory(
+            dir=spack.stage.stage_root(spack.config.CONFIG)
+        ) as tmpdir:
             db = BuildCacheDatabase(tmpdir)
 
             with self._index_file_cache.read_transaction(cache_key) as f:
@@ -670,12 +672,22 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str, name: 
         db._write_to_file(f)
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_class.push_local_file_as_blob(
-        index_json_path,
-        cache_prefix,
-        url_util.join(name, "index") if name else "index",
-        BuildcacheComponent.INDEX,
-        compression="none",
+    manifest_name = url_util.join(name, "index") if name else "index"
+    manifest_url = cache_class.get_index_url(cache_prefix, name)
+    try:
+        old = cache_class(cache_prefix, allow_unsigned=True).read_manifest(manifest_url).data
+    except Exception as e:  # missing or unreadable: start from scratch
+        tty.debug(f"No usable index manifest at {manifest_url}: {e}")
+        old = []
+
+    record = cache_class.push_blob_from_file(
+        index_json_path, cache_prefix, BuildcacheComponent.INDEX
+    )
+    # Keep records of other formats so other Spack versions keep their snapshot
+    kept = [r for r in old if r.media_type != record.media_type]
+    manifest = BuildcacheManifest(CURRENT_BUILD_CACHE_LAYOUT_VERSION, [record, *kept])
+    cache_class.push_manifest(
+        cache_prefix, manifest_name, manifest, temp_dir, component_type=BuildcacheComponent.INDEX
     )
     cache_class.maybe_push_layout_json(cache_prefix)
 
@@ -750,37 +762,27 @@ def _url_generate_package_index(
     Return:
         None
     """
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        try:
-            with timer.measure("list"):
-                filename_to_mtime_mapping, read_fn = get_entries_from_cache(
-                    url, tmpspecsdir, component_type=BuildcacheComponent.SPEC
-                )
-            file_list = list(filename_to_mtime_mapping.keys())
-        except ListMirrorSpecsError as e:
-            raise GenerateIndexError(f"Unable to generate package index: {e}") from e
-
-        tty.debug(f"Retrieving spec descriptor files from {url} to build index")
-
-        if not db:
-            db = BuildCacheDatabase(tmpdir)
-            db._write()
-
-        try:
-            _read_specs_and_push_index(
-                file_list,
-                read_fn,
-                name,
-                filter_fn,
-                url,
-                db,
-                str(db.database_directory),
-                timer=timer,
+    try:
+        with timer.measure("list"):
+            filename_to_mtime_mapping, read_fn = get_entries_from_cache(
+                url, component_type=BuildcacheComponent.SPEC
             )
-        except Exception as e:
-            raise GenerateIndexError(
-                f"Encountered problem pushing package index to {url}: {e}"
-            ) from e
+        file_list = list(filename_to_mtime_mapping.keys())
+    except ListMirrorSpecsError as e:
+        raise GenerateIndexError(f"Unable to generate package index: {e}") from e
+
+    tty.debug(f"Retrieving spec descriptor files from {url} to build index")
+
+    if not db:
+        db = BuildCacheDatabase(tmpdir)
+        db._write()
+
+    try:
+        _read_specs_and_push_index(
+            file_list, read_fn, name, filter_fn, url, db, str(db.database_directory), timer=timer
+        )
+    except Exception as e:
+        raise GenerateIndexError(f"Encountered problem pushing package index to {url}: {e}") from e
 
 
 def generate_key_index(mirror_url: str, tmpdir: str) -> None:
@@ -1009,7 +1011,7 @@ class Uploader:
         self.mirror.ensure_mirror_usable("push")
 
     def __enter__(self):
-        self._tmpdir = tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root())
+        self._tmpdir = tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG))
         self._executor = spack.util.parallel.make_concurrent_executor()
 
         self.tmpdir = self._tmpdir.__enter__()
@@ -2381,7 +2383,9 @@ def _trust_keys_v2(mirror_url, yes_to_all=False, install=False, trust=False, for
     for fingerprint, key_attributes in json_index["keys"].items():
         link = os.path.join(keys_url, fingerprint + ".pub")
 
-        with Stage(link, name="build_cache", keep=True) as stage:
+        with stage_from_config(
+            link, name="build_cache", keep=True, config=spack.config.CONFIG
+        ) as stage:
             if os.path.exists(stage.save_filename) and force:
                 os.remove(stage.save_filename)
             if not os.path.exists(stage.save_filename):

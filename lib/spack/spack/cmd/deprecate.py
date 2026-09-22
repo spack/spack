@@ -76,19 +76,12 @@ def setup_parser(sp: argparse.ArgumentParser) -> None:
     )
 
     sp.add_argument(
-        "-l", "--link-type", type=str, default=None, choices=["soft", "hard"], help="(deprecated)"
-    )
-
-    sp.add_argument(
         "specs", nargs=argparse.REMAINDER, help="spec to deprecate and spec to use as deprecator"
     )
 
 
 def deprecate(parser, args):
     """Deprecate one spec in favor of another"""
-    if args.link_type is not None:
-        tty.warn("The --link-type option is deprecated and will be removed in a future release.")
-
     env = active_environment()
     specs = spack.cmd.parse_specs(args.specs)
 
@@ -145,6 +138,9 @@ def deprecate(parser, args):
         answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
         if not answer:
             tty.die("Will not deprecate any packages.")
+
+    # Fail before touching the store if the database cannot be modified.
+    spack.store.STORE.db.ensure_latest_db_version()
 
     for dcate, dcator in zip(all_deprecate, all_deprecators):
         spack.old_installer.deprecate(dcate, dcator, symlink)

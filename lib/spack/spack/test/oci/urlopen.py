@@ -595,48 +595,67 @@ def test_image_reference_invalid(image):
         ImageReference.from_string(image)
 
 
-def test_default_credentials_provider():
+def test_default_credentials_provider(monkeypatch):
     """The default credentials provider uses a collection of configured
     mirrors."""
+
+    monkeypatch.setenv("_SPACK_TEST_PASSWORD", "pass")
 
     mirrors = [
         # OCI mirror with push credentials
         spack.mirrors.mirror.Mirror(
-            {"url": "oci://a.example.com/image", "push": {"access_pair": ["user.a", "pass.a"]}}
+            {
+                "url": "oci://a.example.com/image",
+                "push": {
+                    "access_pair": {"id": "user.a", "secret_variable": "_SPACK_TEST_PASSWORD"}
+                },
+            }
         ),
         # Not an OCI mirror
         spack.mirrors.mirror.Mirror(
-            {"url": "https://b.example.com/image", "access_pair": ["user.b", "pass.b"]}
+            {
+                "url": "https://b.example.com/image",
+                "access_pair": {"id": "user.b", "secret_variable": "_SPACK_TEST_PASSWORD"},
+            }
         ),
         # No credentials
         spack.mirrors.mirror.Mirror("oci://c.example.com/image"),
         # Top-level credentials
         spack.mirrors.mirror.Mirror(
-            {"url": "oci://d.example.com/image", "access_pair": ["user.d", "pass.d"]}
+            {
+                "url": "oci://d.example.com/image",
+                "access_pair": {"id": "user.d", "secret_variable": "_SPACK_TEST_PASSWORD"},
+            }
         ),
         # Dockerhub short reference
         spack.mirrors.mirror.Mirror(
-            {"url": "oci://user/image", "access_pair": ["dockerhub_user", "dockerhub_pass"]}
+            {
+                "url": "oci://user/image",
+                "access_pair": {"id": "dockerhub_user", "secret_variable": "_SPACK_TEST_PASSWORD"},
+            }
         ),
         # Localhost (not a dockerhub short reference)
         spack.mirrors.mirror.Mirror(
-            {"url": "oci://localhost/image", "access_pair": ["user.localhost", "pass.localhost"]}
+            {
+                "url": "oci://localhost/image",
+                "access_pair": {"id": "user.localhost", "secret_variable": "_SPACK_TEST_PASSWORD"},
+            }
         ),
     ]
 
     assert credentials_from_mirrors("a.example.com", mirrors=mirrors) == UsernamePassword(
-        "user.a", "pass.a"
+        "user.a", "pass"
     )
     assert credentials_from_mirrors("b.example.com", mirrors=mirrors) is None
     assert credentials_from_mirrors("c.example.com", mirrors=mirrors) is None
     assert credentials_from_mirrors("d.example.com", mirrors=mirrors) == UsernamePassword(
-        "user.d", "pass.d"
+        "user.d", "pass"
     )
     assert credentials_from_mirrors("index.docker.io", mirrors=mirrors) == UsernamePassword(
-        "dockerhub_user", "dockerhub_pass"
+        "dockerhub_user", "pass"
     )
     assert credentials_from_mirrors("localhost", mirrors=mirrors) == UsernamePassword(
-        "user.localhost", "pass.localhost"
+        "user.localhost", "pass"
     )
 
 

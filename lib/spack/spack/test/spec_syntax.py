@@ -12,6 +12,7 @@ import pytest
 import spack.binary_distribution
 import spack.cmd
 import spack.concretize
+import spack.deptypes
 import spack.error
 import spack.hash_lookup
 import spack.platforms.test
@@ -25,13 +26,13 @@ from spack.externals import (
     complete_variants_and_architecture,
     extract_dicts_from_configuration,
 )
+from spack.spec import EMPTY_SPEC, Spec, expand_toolchains
 from spack.spec_parser import (
     UNIX_FILENAME,
     WINDOWS_FILENAME,
     SpecParser,
     SpecParsingError,
     SpecTokenizationError,
-    expand_toolchains,
     parse_one_or_raise,
 )
 
@@ -1093,10 +1094,83 @@ def specfile_for(config, mock_packages):
             ],
             "foo ^[when=%c] c,cxx=builtin.gcc@14+bar",
         ),
+        # Multiple groups of edge properties: an unquoted when= extends to its closing bracket,
+        # and other edge properties can follow in a new group
+        (
+            "foo %[when=+a][virtuals=c]gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%[", edge_bracket="["),
+                Token("KEY_VALUE_PAIR", "when=+a", kv_name="when", kv_sep="=", kv_value="+a"),
+                Token("END_EDGE_PROPERTIES", "][", edge_reopen="["),
+                Token(
+                    "KEY_VALUE_PAIR", "virtuals=c", kv_name="virtuals", kv_sep="=", kv_value="c"
+                ),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "foo %[when=+a] c=gcc",
+        ),
+        (
+            "foo %[when=%baz target=x86_64][virtuals=c]gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "when=%baz"),
+                Token("KEY_VALUE_PAIR", "target=x86_64"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "virtuals=c"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "foo %[when=%baz target=x86_64] c=gcc",
+        ),
+        # the same edge properties in the opposite group order
+        (
+            "foo %[virtuals=c][when=%baz target=x86_64]gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "virtuals=c"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "when=%baz"),
+                Token("KEY_VALUE_PAIR", "target=x86_64"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "foo %[when=%baz target=x86_64] c=gcc",
+        ),
+        # whitespace between groups of edge properties
+        (
+            "foo ^[deptypes=link] [when=+mpi] mpich",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "^["),
+                Token("KEY_VALUE_PAIR", "deptypes=link"),
+                Token("END_EDGE_PROPERTIES", "] ["),
+                Token("KEY_VALUE_PAIR", "when=+mpi"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "mpich"),
+            ],
+            "foo ^[deptypes=link when=+mpi] mpich",
+        ),
+        # a second group of edge properties closed by a fused virtual assignment
+        (
+            "foo %[when=+a][deptypes=link] c=gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "when=+a"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "deptypes=link"),
+                Token("END_EDGE_PROPERTIES", "] c=gcc"),
+            ],
+            "foo %[deptypes=link when=+a] c=gcc",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_package):
-    parser = SpecParser(spec_str)
+    parser = SpecParser(spec_str, Spec)
     has_detailed_tokens = any(t[2] for t in tokens)
     assert tokens == parser.tokens(with_subgroups=has_detailed_tokens)
     assert expected_roundtrip == str(parser.next_spec())
@@ -1184,11 +1258,11 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
     ],
 )
 def test_parse_multiple_specs(text, tokens, expected_specs):
-    total_parser = SpecParser(text)
+    total_parser = SpecParser(text, Spec)
     assert total_parser.tokens() == tokens
 
     for single_spec_text in expected_specs:
-        single_spec_parser = SpecParser(single_spec_text)
+        single_spec_parser = SpecParser(single_spec_text, Spec)
         assert str(total_parser.next_spec()) == str(single_spec_parser.next_spec())
 
 
@@ -1376,7 +1450,7 @@ def test_cli_spec_roundtrip(args, expected):
 )
 def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config, mock_packages):
     """Tests that toolchains are expanded correctly"""
-    parser = SpecParser(spec_str)
+    parser = SpecParser(spec_str, Spec)
     for expected in expected_roundtrip:
         result = parser.next_spec()
         expand_toolchains(result, toolchain)
@@ -1401,7 +1475,7 @@ def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config
     ],
 )
 def test_error_reporting(text, expected_in_error):
-    parser = SpecParser(text)
+    parser = SpecParser(text, Spec)
     with pytest.raises(SpecTokenizationError) as exc:
         parser.tokens()
 
@@ -1427,7 +1501,7 @@ def test_error_reporting(text, expected_in_error):
     ],
 )
 def test_spec_by_hash_tokens(text, tokens):
-    parser = SpecParser(text)
+    parser = SpecParser(text, Spec)
     assert parser.tokens() == tokens
 
 
@@ -1440,22 +1514,22 @@ def test_spec_by_hash(database, monkeypatch, config):
     )
 
     hash_str = f"/{mpileaks.dag_hash()}"
-    parsed_spec = SpecParser(hash_str).next_spec()
+    parsed_spec = SpecParser(hash_str, Spec).next_spec()
     spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     short_hash_str = f"/{mpileaks.dag_hash()[:5]}"
-    parsed_spec = SpecParser(short_hash_str).next_spec()
+    parsed_spec = SpecParser(short_hash_str, Spec).next_spec()
     spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     name_version_and_hash = f"{mpileaks.name}@{mpileaks.version} /{mpileaks.dag_hash()[:5]}"
-    parsed_spec = SpecParser(name_version_and_hash).next_spec()
+    parsed_spec = SpecParser(name_version_and_hash, Spec).next_spec()
     spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     b_hash = f"/{b.dag_hash()}"
-    parsed_spec = SpecParser(b_hash).next_spec()
+    parsed_spec = SpecParser(b_hash, Spec).next_spec()
     spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == b
 
@@ -1469,20 +1543,20 @@ def test_dep_spec_by_hash(database, config):
     assert "fake" in mpileaks_zmpi
     assert "zmpi" in mpileaks_zmpi
 
-    mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()} ^zmpi").next_spec()
+    mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()} ^zmpi", Spec).next_spec()
     spack.hash_lookup.replace_hash(mpileaks_hash_fake)
     assert "fake" in mpileaks_hash_fake
     assert mpileaks_hash_fake["fake"] == fake
     assert "zmpi" in mpileaks_hash_fake
     assert mpileaks_hash_fake["zmpi"] == spack.spec.Spec("zmpi")
 
-    mpileaks_hash_zmpi = SpecParser(f"mpileaks ^ /{zmpi.dag_hash()}").next_spec()
+    mpileaks_hash_zmpi = SpecParser(f"mpileaks ^ /{zmpi.dag_hash()}", Spec).next_spec()
     spack.hash_lookup.replace_hash(mpileaks_hash_zmpi)
     assert "zmpi" in mpileaks_hash_zmpi
     assert mpileaks_hash_zmpi["zmpi"] == zmpi
 
     mpileaks_hash_fake_and_zmpi = SpecParser(
-        f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}"
+        f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}", Spec
     ).next_spec()
     spack.hash_lookup.replace_hash(mpileaks_hash_fake_and_zmpi)
     assert "zmpi" in mpileaks_hash_fake_and_zmpi
@@ -1499,27 +1573,29 @@ def test_multiple_specs_with_hash(database, config):
 
     # name + hash + separate hash
     specs = SpecParser(
-        f"mpileaks /{mpileaks_zmpi.dag_hash()} /{callpath_mpich2.dag_hash()}"
+        f"mpileaks /{mpileaks_zmpi.dag_hash()} /{callpath_mpich2.dag_hash()}", Spec
     ).all_specs()
     assert len(specs) == 2
 
     # 2 separate hashes
-    specs = SpecParser(f"/{mpileaks_zmpi.dag_hash()} /{callpath_mpich2.dag_hash()}").all_specs()
+    specs = SpecParser(
+        f"/{mpileaks_zmpi.dag_hash()} /{callpath_mpich2.dag_hash()}", Spec
+    ).all_specs()
     assert len(specs) == 2
 
     # 2 separate hashes + name
     specs = SpecParser(
-        f"/{mpileaks_zmpi.dag_hash()} /{callpath_mpich2.dag_hash()} callpath"
+        f"/{mpileaks_zmpi.dag_hash()} /{callpath_mpich2.dag_hash()} callpath", Spec
     ).all_specs()
     assert len(specs) == 3
 
     # hash + 2 names
-    specs = SpecParser(f"/{mpileaks_zmpi.dag_hash()} callpath callpath").all_specs()
+    specs = SpecParser(f"/{mpileaks_zmpi.dag_hash()} callpath callpath", Spec).all_specs()
     assert len(specs) == 3
 
     # hash + name + hash
     specs = SpecParser(
-        f"/{mpileaks_zmpi.dag_hash()} callpath /{callpath_mpich2.dag_hash()}"
+        f"/{mpileaks_zmpi.dag_hash()} callpath /{callpath_mpich2.dag_hash()}", Spec
     ).all_specs()
     assert len(specs) == 2
 
@@ -1541,12 +1617,12 @@ def test_ambiguous_hash(mutable_database):
     mutable_database.add(x2)
 
     # ambiguity in first hash character
-    s1 = SpecParser("/xxx").next_spec()
+    s1 = SpecParser("/xxx", Spec).next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
         spack.hash_lookup.lookup_hash(s1)
 
     # ambiguity in first hash character AND spec name
-    s2 = SpecParser("pkg-a/xxx").next_spec()
+    s2 = SpecParser("pkg-a/xxx", Spec).next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
         spack.hash_lookup.lookup_hash(s2)
 
@@ -1558,15 +1634,15 @@ def test_invalid_hash(database, config):
 
     # name + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
-        parsed_spec = SpecParser(f"zmpi /{mpich.dag_hash()}").next_spec()
+        parsed_spec = SpecParser(f"zmpi /{mpich.dag_hash()}", Spec).next_spec()
         spack.hash_lookup.replace_hash(parsed_spec)
     with pytest.raises(spack.spec.InvalidHashError):
-        parsed_spec = SpecParser(f"mpich /{zmpi.dag_hash()}").next_spec()
+        parsed_spec = SpecParser(f"mpich /{zmpi.dag_hash()}", Spec).next_spec()
         spack.hash_lookup.replace_hash(parsed_spec)
 
     # name + dep + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
-        parsed_spec = SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}").next_spec()
+        parsed_spec = SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}", Spec).next_spec()
         spack.hash_lookup.replace_hash(parsed_spec)
 
 
@@ -1589,7 +1665,7 @@ def test_nonexistent_hash(database, config):
     assert no_such_hash not in [h[: len(no_such_hash)] for h in hashes]
 
     with pytest.raises(spack.spec.InvalidHashError):
-        parsed_spec = SpecParser(f"/{no_such_hash}").next_spec()
+        parsed_spec = SpecParser(f"/{no_such_hash}", Spec).next_spec()
         spack.hash_lookup.replace_hash(parsed_spec)
 
 
@@ -1669,6 +1745,10 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         # a when= condition is a spec, which extends up to the closing bracket
         ("foo ^[when=] bar", "expected a spec after when="),
         ("foo ^[when=", "expected a spec after when="),
+        ("foo ^[when=][virtuals=c] bar", "expected a spec after when="),
+        # a reopened group of edge properties must be closed too
+        ("foo ^[when=+a][virtuals=c bar", "expected an edge attribute or `]`"),
+        ("foo ^[when=+a][virtuals=c", "expected `]` to close the edge attributes"),
         ("foo ^[when=bar baz] qux", "expected an edge attribute or `]`"),
         ("foo ^[when=bar ^baz", "expected `]` to close the edge attributes"),
         # a quoted condition is a single spec: neither two specs nor none
@@ -1697,15 +1777,20 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("zlib %[c=gcc]", "edge attributes"),
         # regression: an unconsumed token used to make the parser loop forever
         ("zlib ]", "unexpected token"),
-        # The same variant cannot be specified twice
+        # The same variant cannot be specified twice, set or propagated
         ("x +foo +foo", "twice"),
         ("x +foo ~foo", "twice"),
         ("x foo=bar foo=baz", "twice"),
+        ("x ++foo ~~foo", "twice"),
+        ("x foo==bar foo==baz", "twice"),
+        # a propagated bool applies to the node itself, so it cannot contradict its variant
+        ("x +foo ~~foo", "does not satisfy"),
+        ("x ~foo ++foo", "does not satisfy"),
     ],
 )
 def test_error_conditions(text, match_string):
     with pytest.raises(SpecParsingError, match=match_string):
-        SpecParser(text).all_specs()
+        SpecParser(text, Spec).all_specs()
 
 
 @pytest.mark.parametrize(
@@ -1770,7 +1855,7 @@ def test_error_conditions(text, match_string):
 )
 def test_specfile_error_conditions_windows(text, exc_cls):
     with pytest.raises(exc_cls):
-        SpecParser(text).all_specs()
+        SpecParser(text, Spec).all_specs()
 
 
 @pytest.mark.parametrize(
@@ -1794,11 +1879,11 @@ def test_parse_specfile_simple(specfile_for, tmp_path: pathlib.Path):
     specfile = tmp_path / "libdwarf.json"
     s = specfile_for("libdwarf", specfile)
 
-    spec = SpecParser(str(specfile)).next_spec()
+    spec = SpecParser(str(specfile), Spec).next_spec()
     assert spec == s
 
     # Check we can mix literal and spec-file in text
-    specs = SpecParser(f"mvapich_foo {str(specfile)}").all_specs()
+    specs = SpecParser(f"mvapich_foo {str(specfile)}", Spec).all_specs()
     assert len(specs) == 2
 
 
@@ -1810,7 +1895,7 @@ def test_parse_filename_missing_slash_as_spec(specfile_for, tmp_path: pathlib.Pa
 
     # Move to where the specfile is located so that libelf.yaml is there
     with fs.working_dir(str(tmp_path)):
-        specs = SpecParser("libelf.yaml").all_specs()
+        specs = SpecParser("libelf.yaml", Spec).all_specs()
     assert len(specs) == 1
 
     spec = specs[0]
@@ -1845,17 +1930,17 @@ def test_parse_specfile_dependency(config, mock_packages, tmp_path: pathlib.Path
 
     # Make sure we can use yaml path as dependency, e.g.:
     #     "spack spec libdwarf ^ /path/to/libelf.json"
-    spec = SpecParser(f"libdwarf ^ {str(specfile)}").next_spec()
+    spec = SpecParser(f"libdwarf ^ {str(specfile)}", Spec).next_spec()
     assert spec and spec["libelf"] == s["libelf"]
 
     with fs.working_dir(str(tmp_path)):
         # Make sure this also works: "spack spec ./libelf.yaml"
-        spec = SpecParser(f"libdwarf^.{os.path.sep}{specfile.name}").next_spec()
+        spec = SpecParser(f"libdwarf^.{os.path.sep}{specfile.name}", Spec).next_spec()
         assert spec and spec["libelf"] == s["libelf"]
 
         # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
         spec = SpecParser(
-            f"libdwarf^..{os.path.sep}{specfile.parent.name}{os.path.sep}{specfile.name}"
+            f"libdwarf^..{os.path.sep}{specfile.parent.name}{os.path.sep}{specfile.name}", Spec
         ).next_spec()
         assert spec and spec["libelf"] == s["libelf"]
 
@@ -1869,17 +1954,19 @@ def test_parse_specfile_relative_paths(specfile_for, tmp_path: pathlib.Path):
 
     with fs.working_dir(str(parent_dir)):
         # Make sure this also works: "spack spec ./libelf.yaml"
-        spec = SpecParser(f".{os.path.sep}{basename}").next_spec()
+        spec = SpecParser(f".{os.path.sep}{basename}", Spec).next_spec()
         assert spec == s
 
         # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
-        spec = SpecParser(f"..{os.path.sep}{parent_dir.name}{os.path.sep}{basename}").next_spec()
+        spec = SpecParser(
+            f"..{os.path.sep}{parent_dir.name}{os.path.sep}{basename}", Spec
+        ).next_spec()
         assert spec == s
 
         # Should also handle mixed clispecs and relative paths, e.g.:
         #     "spack spec mvapich_foo ../<cur-dir>/libelf.yaml"
         specs = SpecParser(
-            f"mvapich_foo ..{os.path.sep}{parent_dir.name}{os.path.sep}{basename}"
+            f"mvapich_foo ..{os.path.sep}{parent_dir.name}{os.path.sep}{basename}", Spec
         ).all_specs()
         assert len(specs) == 2
         assert specs[1] == s
@@ -1892,7 +1979,7 @@ def test_parse_specfile_relative_subdir_path(specfile_for, tmp_path: pathlib.Pat
     s = specfile_for("libdwarf", specfile)
 
     with fs.working_dir(str(tmp_path)):
-        spec = SpecParser(f"subdir{os.path.sep}{specfile.name}").next_spec()
+        spec = SpecParser(f"subdir{os.path.sep}{specfile.name}", Spec).next_spec()
         assert spec == s
 
 
@@ -1913,7 +2000,7 @@ def test_compare_abstract_specs():
         "foo.foo@foo+foo arch=foo-foo-foo %foo",
         "foo.foo@foo+foo arch=foo-foo-foo cflags=foo %foo",
     ]
-    specs = [SpecParser(s).next_spec() for s in constraints]
+    specs = [SpecParser(s, Spec).next_spec() for s in constraints]
 
     for a, b in itertools.product(specs, repeat=2):
         # Check that we can compare without raising an error
@@ -1950,8 +2037,8 @@ def test_compare_abstract_specs():
     ],
 )
 def test_git_ref_spec_equivalences(mock_packages, lhs_str, rhs_str, expected):
-    lhs = SpecParser(lhs_str).next_spec()
-    rhs = SpecParser(rhs_str).next_spec()
+    lhs = SpecParser(lhs_str, Spec).next_spec()
+    rhs = SpecParser(rhs_str, Spec).next_spec()
     intersect, lhs_sat_rhs, rhs_sat_lhs = expected
 
     assert lhs.intersects(rhs) is intersect
@@ -1974,13 +2061,13 @@ def test_uppercase_hash_is_not_a_git_version():
 @pytest.mark.regression("32471")
 @pytest.mark.parametrize("spec_str", ["target=x86_64", "os=redhat6", "target=x86_64:"])
 def test_platform_is_none_if_not_present(spec_str):
-    s = SpecParser(spec_str).next_spec()
+    s = SpecParser(spec_str, Spec).next_spec()
     assert s.architecture.platform is None, s
 
 
 def test_parse_one_or_raise_error_message():
     with pytest.raises(ValueError) as exc:
-        parse_one_or_raise("  x y   z")
+        parse_one_or_raise("  x y   z", Spec)
 
     msg = """\
 expected a single spec, but got more:
@@ -1991,7 +2078,7 @@ expected a single spec, but got more:
     assert str(exc.value) == msg
 
     with pytest.raises(ValueError, match="expected a single spec, but got none"):
-        parse_one_or_raise("    ")
+        parse_one_or_raise("    ", Spec)
 
 
 @pytest.mark.parametrize(
@@ -2030,6 +2117,28 @@ def test_when_edge_attribute_keeps_commas():
     comma-separated deptypes and virtuals lists."""
     edge = spack.spec.Spec("foo ^[when='@1,2'] bar").edges_to_dependencies(name="bar")[0]
     assert edge.when == spack.spec.Spec("@1,2")
+
+
+def test_repeated_edge_attributes_combine():
+    """An attribute repeated over groups of edge properties combines with the earlier value,
+    instead of replacing it: virtuals accumulate, deptypes are or-ed and conditions constrained."""
+    spec = spack.spec.Spec(
+        "foo ^[virtuals=mpi][deptypes=build][when=+a][virtuals=scalapack][deptypes=link]"
+        "[when=+b] mpich"
+    )
+    edge = spec.edges_to_dependencies(name="mpich")[0]
+    assert edge.virtuals == ("mpi", "scalapack")
+    assert edge.depflag == spack.deptypes.canonicalize(["build", "link"])
+    assert edge.when == spack.spec.Spec("+a+b")
+
+
+def test_edge_property_groups_in_when_condition():
+    """A when condition is a spec, so it can carry groups of edge properties of its own: the
+    closing bracket of the condition is the one that is not reopened."""
+    spec = spack.spec.Spec("foo %[when=^[virtuals=mpi][deptypes=link]mpich][virtuals=c]gcc")
+    edge = spec.edges_to_dependencies(name="gcc")[0]
+    assert edge.virtuals == ("c",)
+    assert edge.when == spack.spec.Spec("^[virtuals=mpi deptypes=link] mpich")
 
 
 @pytest.mark.parametrize(
@@ -2099,7 +2208,19 @@ def test_external_spec_hash_can_be_looked_up(config, mock_packages):
     """Tests that the hash of an external can be successfully looked up."""
     packages_yaml = config.deepcopy_as_builtin("packages")
     externals_dict = extract_dicts_from_configuration(packages_yaml)
-    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    parser = ExternalSpecsParser(
+        externals_dict, repo=mock_packages, complete_node=complete_variants_and_architecture
+    )
     abstract_hashes = [f"{x.name}/{x.dag_hash()[:5]}" for x in parser.all_specs()]
 
     assert all(spack.hash_lookup.lookup_hash(spack.spec.Spec(x)) for x in abstract_hashes)
+
+
+def test_parser_constructs_nodes_of_given_class():
+    class SpecSubclass(Spec):
+        pass
+
+    spec = SpecParser("a ^b %[when=+x] c %[when='@1'] d", SpecSubclass).next_spec()
+    edges = list(spec.traverse_edges(root=False))
+    assert [type(e.spec) for e in edges] == [SpecSubclass] * 3
+    assert [type(e.when) for e in edges if e.when is not EMPTY_SPEC] == [SpecSubclass] * 2

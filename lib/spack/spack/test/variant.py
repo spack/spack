@@ -417,11 +417,9 @@ class TestVariantMapTest:
     def test_set(self) -> None:
         # All three types of variants are accepted, keyed by their own name
         a = VariantMap()
-
         a.set(BoolValuedVariant("foo", True))
         a.set(SingleValuedVariant("bar", "baz"))
         a.set(MultiValuedVariant("foobar", ("a", "b", "c", "d", "e")))
-
         assert list(a) == ["foo", "bar", "foobar"]
 
         # An entry already under that name is replaced

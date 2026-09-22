@@ -29,7 +29,6 @@ tutorial_key = os.path.join(spack.paths.share_path, "keys", "tutorial.pub")
 
 # configs to remove
 rm_configs = [
-    "~/.spack/linux/compilers.yaml",
     "~/.spack/packages.yaml",
     "~/.spack/mirrors.yaml",
     "~/.spack/modules.yaml",

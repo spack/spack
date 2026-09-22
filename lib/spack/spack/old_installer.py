@@ -46,6 +46,7 @@ import spack.build_environment
 import spack.builder
 import spack.config
 import spack.database
+import spack.deprecation
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
@@ -2343,6 +2344,11 @@ class PackageInstaller:
 
         return None
 
+    def _check_deprecations(self) -> None:
+        """Refuse to deploy specs with a disallowed deprecation in their DAG."""
+        roots = [request.pkg.spec for request in self.build_requests]
+        spack.deprecation.check_deprecations(roots)
+
     def install(self) -> None:
         """Install the requested package(s) and/or associated dependencies."""
         # ensure that build processes do not permanently bork terminal settings
@@ -2357,8 +2363,9 @@ class PackageInstaller:
 
         """
 
-        spack.store.STORE.install_sbang()
+        self._check_deprecations()
         self._init_queue()
+        spack.store.STORE.install_sbang()
         failed_build_requests = []
         install_status = InstallStatus(len(self.build_pq))
         active_tasks: List[Task] = []

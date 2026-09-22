@@ -64,7 +64,7 @@ from spack.solver.reuse import reusable_external_specs
 from spack.spec import Spec
 from spack.store import Store
 from spack.test.conftest import RepoBuilder
-from spack.test.utilities import RecordingUI
+from spack.test.utilities import RecordingUI, UnusableGlobal
 from spack.util.filesystem import getuid
 from spack.version import Version, VersionList, ver
 from spack.version.git_ref_lookup import GitRefLookup
@@ -657,7 +657,7 @@ spack:
             for s in spec.traverse(root=False, deptype=("link", "run")):
                 if s.external:
                     continue
-                assert s.architecture.target == spec.architecture.target
+                assert s.target == spec.target
 
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('pkg-a cflags="-O -foo-flag foo-val" platform=test %gcc')
@@ -744,6 +744,12 @@ spack:
 
         for dep in spec.traverse(root=False):
             assert "invino" not in dep.variants.keys()
+
+    def test_concretize_propagate_validator_accepted_value(self):
+        """A propagated value that is accepted by a variant's validator, without being listed
+        in the package, is a possible value on the source node"""
+        spec = spack.concretize.concretize_one("raiser exc_type==ValueError")
+        assert spec.satisfies("exc_type=ValueError")
 
     def test_concretize_propagate_variant_exclude_dependency_fail(self):
         """Tests that a propagating variant cannot be allowed to be excluded by any of
@@ -1676,7 +1682,7 @@ spack:
         mutable_config.set("packages", external_mvapich2)
 
         s = spack.concretize.concretize_one("mvapich2")
-        assert set(s.variants["file_systems"].value) == set(["ufs", "nfs"])
+        assert set(s.variants["file_systems"].values) == set(["ufs", "nfs"])
 
     @pytest.mark.regression("22596")
     def test_external_with_non_default_variant_as_dependency(self):
@@ -1729,7 +1735,7 @@ spack:
     def test_deprecated_versions_not_selected(
         self, spec_str, expected, mutable_config: Configuration
     ):
-        with mutable_config.override("config:deprecated", True):
+        with mutable_config.override("packages:all:deprecation:allow", [{"severity": "critical"}]):
             s = spack.concretize.concretize_one(spec_str)
             s.satisfies(expected)
 
@@ -2130,7 +2136,7 @@ spack:
             # pkg_fact("pkg-b", version_origin("0.9", "package_py")).
 
             weights = weights_from_result(result, name="version badness (non roots)")
-            assert weights["reused"] == 3 and weights["built"] == 0
+            assert weights["reused"] == 4 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")
@@ -2307,7 +2313,7 @@ spack:
         mutable_config.set("packages", packages_yaml["packages"])
 
         setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
-        asp_problem = setup.setup([Spec("mpileaks")], reuse=[], allow_deprecated=False).asp_problem
+        asp_problem = setup.setup([Spec("mpileaks")], reuse=[]).asp_problem
 
         assert all(x in asp_problem for x in expected)
 
@@ -2317,7 +2323,7 @@ spack:
         other_os = s.copy()
         mock_os = "ubuntu2204"
         other_os.architecture = spack.spec.ArchSpec(
-            "test-{os}-{target}".format(os=mock_os, target=str(s.architecture.target))
+            "test-{os}-{target}".format(os=mock_os, target=str(s.target))
         )
         reusable_specs = [other_os]
         overrides = {"concretizer": {"reuse": True, "os_compatible": {s.os: [mock_os]}}}
@@ -2700,13 +2706,15 @@ packages:
             assert s[name].concrete
             assert s[name].namespace == namespace
 
-    def test_reuse_specs_from_non_available_compilers(self, mutable_config, mutable_database):
+    def test_reuse_specs_from_non_available_compilers(
+        self, mutable_config, mock_packages, mutable_database
+    ):
         """Tests that we can reuse specs with compilers that are not configured locally."""
         # All the specs in the mutable DB have been compiled with %gcc@10.2.1
         mpileaks = [s for s in mutable_database.query_local() if s.name == "mpileaks"]
 
         # Remove gcc@10.2.1
-        remover = spack.compilers.config.CompilerRemover(mutable_config)
+        remover = spack.compilers.config.CompilerRemover(mutable_config, repo=mock_packages)
         remover.mark_compilers(match="gcc@=10.2.1")
         remover.flush()
         mutable_config.set("concretizer:reuse", True)
@@ -5155,23 +5163,6 @@ packages:
     assert mpileaks.satisfies("%c=gcc@12")
 
 
-def test_concrete_specs_skip_prechecks(config: Configuration, mock_packages):
-    """Test that concrete specs are not checked for unknown versions and dependencies."""
-
-    specs = [spack.spec.Spec("zlib"), spack.spec.Spec("deprecated-versions@=1.1.0")]
-
-    with pytest.raises(spack.solver.asp.DeprecatedVersionError):
-        spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup(specs)
-
-    with config.override("config:deprecated", True):
-        concrete_spec = spack.concretize.concretize_one(specs[1])
-
-    # Try again with the same version but a concrete spec
-    specs[1] = concrete_spec
-
-    spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup(specs)
-
-
 @pytest.mark.regression("51683")
 def test_activating_variant_for_conditional_language_dependency(config, mock_packages):
     """Tests that a dependency on a conditional language can be concretized, and that the solver
@@ -5871,18 +5862,6 @@ def test_concretize_one_reports_an_already_concrete_spec_as_no_work(mutable_conf
     assert not ui.concretized
 
 
-class _UnusableGlobal:
-    """Stands in for a process global that the code under test must not reach for."""
-
-    def __init__(self, name: str) -> None:
-        self._name = name
-
-    def __getattr__(self, item):
-        raise AssertionError(
-            f"{self._name} was read instead of the injected context (attribute {item!r})"
-        )
-
-
 #: The process globals a SpackContext replaces, as (module, attribute) pairs.
 #: ``spack.repo.PATH`` is missing: ``Spec`` resolves virtuals and computes package hashes
 #: through it, so a solve still reads it.
@@ -5908,7 +5887,7 @@ def break_globals(monkeypatch):
         spack.solver.compat.clingo()
         with monkeypatch.context() as m:
             for module, attribute in _CONTEXT_GLOBALS:
-                m.setattr(module, attribute, _UnusableGlobal(f"{module.__name__}.{attribute}"))
+                m.setattr(module, attribute, UnusableGlobal(f"{module.__name__}.{attribute}"))
             yield
 
     return _break
@@ -6103,3 +6082,86 @@ def test_package_hash_is_assigned_through_the_injected_repository(break_globals,
     with break_globals():
         result = spack.solver.asp.Solver(context=injected_context).solve([Spec("patch")])
         assert result.specs[0].dag_hash()
+
+
+@pytest.mark.regression("51964")
+def test_concrete_input_specs_skip_the_dependency_precheck(mock_packages, config, monkeypatch):
+    """Concrete input specs represent the rest of an environment under unify:true, and may have
+    been concretized against an older recipe, so they are not checked against the possible
+    dependencies of the roots.
+    """
+    spec = spack.concretize.concretize_one("pkg-a@1.0 foobar=bar")
+    assert "pkg-b" in spec
+
+    # the recipe stops declaring the dependency after the spec was concretized
+    pkg_cls = spack.repo.PATH.get_pkg_class("pkg-a")
+    monkeypatch.setattr(
+        pkg_cls,
+        "dependencies",
+        {
+            when: {name: dep for name, dep in deps.items() if name != "pkg-b"}
+            for when, deps in pkg_cls.dependencies.items()
+        },
+    )
+
+    # an abstract spec is still checked against the possible dependencies
+    with pytest.raises(spack.solver.asp.InvalidDependencyError):
+        spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup(
+            [spack.spec.Spec("pkg-a ^pkg-b")]
+        )
+
+    # the concrete one is not
+    spack.solver.asp.SpackSolverSetup(context=spack.context.default()).setup([spec])
+
+
+#: conftest.py disables compiler detection for every test, the tests below need the real one
+_init_packages_yaml = spack.compilers.config._init_packages_yaml
+
+
+@pytest.fixture
+def remove_all_compilers(mutable_config, mock_packages, monkeypatch, tmp_path):
+    """Returns a function that removes all compilers from the configuration, and leaves no
+    compiler in PATH. The host libc is the same as the one targeted by mock compilers.
+    """
+
+    def _remove():
+        monkeypatch.setattr(spack.compilers.config, "_init_packages_yaml", _init_packages_yaml)
+        compilers = spack.compilers.config.all_compilers_from(mutable_config, repo=mock_packages)
+        for name in {c.name for c in compilers}:
+            mutable_config.set(f"packages:{name}::", {"buildable": True})
+        monkeypatch.setenv("PATH", str(tmp_path))
+
+    return _remove
+
+
+def test_concretize_without_compilers_when_none_is_needed(remove_all_compilers):
+    """Tests that a spec with no compiler in its DAG can be concretized when no compiler is
+    available.
+    """
+    remove_all_compilers()
+    spec = spack.concretize.concretize_one("brillig")
+    assert spec.concrete
+    assert not spec.dependencies()
+
+
+def test_concretize_with_reused_compiler_and_no_configured_compilers(remove_all_compilers):
+    """Tests that a concrete compiler from a reuse source, e.g. a buildcache or an included
+    environment, can be used when no compiler is configured, or available in PATH.
+    """
+    reused_gcc = spack.concretize.concretize_one("gcc@14.0.1 languages=c,c++ %gcc@10.2.1")
+    remove_all_compilers()
+
+    def factory(is_usable, configuration):
+        return [spack.spec_filter.SpecFilter(lambda: [reused_gcc], is_usable=is_usable)]
+
+    spec = spack.concretize.concretize_one("pkg-b %gcc@14.0.1", factory=factory)
+    assert spec["c"].dag_hash() == reused_gcc.dag_hash()
+
+
+def test_no_available_compiler_error(remove_all_compilers):
+    """Tests that concretizing a spec that needs a compiler fails with a clear error, when no
+    compiler is configured, or available in PATH, or reusable.
+    """
+    remove_all_compilers()
+    with pytest.raises(spack.compilers.config.NoAvailableCompilerError, match="in PATH"):
+        spack.concretize.concretize_one("pkg-b")

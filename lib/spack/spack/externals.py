@@ -90,7 +90,7 @@ def complete_architecture(node: spack.spec.Spec, repo: spack.repo.RepoPath) -> N
             node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
         node.architecture.complete_with_defaults()
     else:
-        node.constrain(spack.spec.Spec.default_arch())
+        node.architecture = spack.spec.ArchSpec.default_arch()
         node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
 
     node.namespace = repo.repo_for_pkg(node.name).namespace
@@ -230,24 +230,24 @@ class ExternalSpecsParser:
         self,
         external_dicts: List[ExternalDict],
         *,
+        repo: spack.repo.RepoPath,
         complete_node: CompleteNodeFn = complete_variants_and_architecture,
         allow_nonexisting: bool = True,
-        repo: Optional[spack.repo.RepoPath] = None,
     ):
         """Initializes a class to manage and process external specifications in ``packages.yaml``.
 
         Args:
             external_dicts: list of ExternalDict objects to provide external specifications.
+            repo: package repository to query
             complete_node: a callable ``(node, repo)`` that completes a node with missing variants,
                 targets, etc. It is invoked with this parser's ``repo``.
             allow_nonexisting: whether to allow non-existing packages. Defaults to True.
-            repo: package repository to query. If None, the global ``spack.repo.PATH`` is used.
 
         Raises:
             spack.repo.UnknownPackageError: if a package does not exist,
                 and allow_nonexisting is False.
         """
-        self.repo = spack.repo.repo_or_default(repo)
+        self.repo = repo
         self.external_dicts = external_dicts
         self.specs_by_external_id: Dict[str, ExternalSpecAndConfig] = {}
         self.specs_by_name: Dict[str, List[ExternalSpecAndConfig]] = {}
@@ -456,9 +456,9 @@ class ExternalSpecsParser:
         return result
 
 
-def external_spec(config: ExternalDict) -> spack.spec.Spec:
+def external_spec(config: ExternalDict, *, repo: spack.repo.RepoPath) -> spack.spec.Spec:
     """Returns an external spec from a dictionary representation."""
-    return ExternalSpecsParser([config]).all_specs()[0]
+    return ExternalSpecsParser([config], repo=repo).all_specs()[0]
 
 
 class DuplicateExternalError(SpackError):

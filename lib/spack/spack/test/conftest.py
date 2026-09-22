@@ -50,6 +50,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.solver.compat
 import spack.solver.reuse
 import spack.spec
 import spack.stage
@@ -62,9 +63,11 @@ import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
 import spack.util.lang
+import spack.util.libc
 import spack.util.lock
 import spack.util.naming
 import spack.util.parallel
+import spack.util.path
 import spack.util.spack_yaml as syaml
 import spack.util.tty
 import spack.util.tty.color
@@ -295,17 +298,35 @@ def _mock_git_package_changes_template(git, tmp_path_factory: pytest.TempPathFac
         )
         commit_counter += 1
 
-    with working_dir(repo.packages_path):
+    def latest_commit():
+        return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
+
+    commits = []
+
+    # Create an environment and Gitlab CI config to mimic spack-packages, living
+    # alongside the packages subdirectory in the same git repo.
+    with working_dir(repo.root):
         git("init")
 
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
 
-        commits = []
+        env_dir = "env"
+        os.makedirs(env_dir)
+        with open(os.path.join(env_dir, "spack.yaml"), "w", encoding="utf-8") as fd:
+            fd.write("spack: {}")
 
-        def latest_commit():
-            return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
+        ci_dir = ".ci"
+        os.makedirs(ci_dir)
+        with open(os.path.join(ci_dir, "pipeline.yml"), "w", encoding="utf-8") as fd:
+            fd.write("some_job: { script: [echo 'Hello'] }")
 
+        git("add", "env/spack.yaml")
+        git("add", ".ci/pipeline.yml")
+        commit("ci: add stack")
+        commits.append(latest_commit())
+
+    with working_dir(repo.packages_path):
         os.makedirs(os.path.dirname(filename))
 
         # add diff-test as a new package to the repository
@@ -335,6 +356,12 @@ def _mock_git_package_changes_template(git, tmp_path_factory: pytest.TempPathFac
         # The commits are ordered with the last commit first in the list
         commits = list(reversed(commits))
 
+    # Make filename relative to the git repo root (repo.root) and use POSIX path
+    # separators since that's what git reports.
+    filename = spack.util.path.convert_to_posix_path(
+        os.path.relpath(os.path.join(repo.packages_path, filename), repo.root)
+    )
+
     return root, repo_path, filename, commits
 
 
@@ -353,8 +380,12 @@ def mock_git_package_changes(
        o diff-test: add v2.1.5 (from source tarball)
        |
        o diff-test: new package (testing multiple added versions)
+       |
+       o ci: add stack
 
-    The repo consists of a single package.py file for DiffTest.
+    The repo consists of a single package.py file for DiffTest, plus an
+    ``env/spack.yaml`` environment and a ``.ci/pipeline.yml`` to mimic the
+    structure of spack-packages for testing ``stack_changed``.
 
     Important attributes of the repo for test coverage are: multiple package
     versions are added with some coming from a tarball and some from git refs.
@@ -504,10 +535,23 @@ def onerror(func, path, error_info):
     func(path)
 
 
+class MockStageRoot:
+    """Stand-in for ``spack.stage.stage_root`` returning a fixed directory.
+
+    Defined at module level so that it can be pickled into spawned build processes.
+    """
+
+    def __init__(self, path: str) -> None:
+        self.path = path
+
+    def __call__(self, config) -> str:
+        return self.path
+
+
 @pytest.fixture(scope="function", autouse=True)
 def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
     """Establish the temporary build_stage for the mock archive."""
-    # The approach with this autouse fixture is to set the stage root
+    # The approach with this autouse fixture is to replace the stage root
     # instead of using spack.config.CONFIG.override() to avoid configuration
     # conflicts with dozens of tests that rely on other configuration
     # fixtures, such as config.
@@ -524,7 +568,7 @@ def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
     source_path = new_stage / spack.stage._source_path_subdir
     source_path.mkdir(parents=True, exist_ok=True)
 
-    monkeypatch.setattr(spack.stage, "_stage_root", str(new_stage))
+    monkeypatch.setattr(spack.stage, "stage_root", MockStageRoot(str(new_stage)))
 
     yield str(new_stage)
 
@@ -543,7 +587,7 @@ def mock_stage_for_database(tmp_path_factory: pytest.TempPathFactory, monkeypatc
     source_path = new_stage / spack.stage._source_path_subdir
     source_path.mkdir(parents=True, exist_ok=True)
 
-    monkeypatch_session.setattr(spack.stage, "_stage_root", str(new_stage))
+    monkeypatch_session.setattr(spack.stage, "stage_root", MockStageRoot(str(new_stage)))
 
     yield str(new_stage)
 
@@ -637,12 +681,17 @@ class MockCacheFetcher:
         return "[mock fetch cache]"
 
 
+def mock_fetch_cache_for(config) -> MockCache:
+    """Stand-in for ``spack.caches.fetch_cache``, at module level so that it can be pickled."""
+    return MockCache()
+
+
 @pytest.fixture(autouse=True)
 def mock_fetch_cache(monkeypatch):
-    """Substitutes spack.paths.FETCH_CACHE with a mock object that does nothing
+    """Substitutes spack.caches.fetch_cache with one returning a mock object that does nothing
     and raises on fetch.
     """
-    monkeypatch.setattr(spack.caches, "FETCH_CACHE", MockCache())
+    monkeypatch.setattr(spack.caches, "fetch_cache", mock_fetch_cache_for)
 
 
 @pytest.fixture()
@@ -688,6 +737,15 @@ def _use_test_platform(test_platform):
     # a default during tests.
     with spack.platforms.use_platform(test_platform):
         yield
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _load_clingo():
+    """Bootstrap clingo before tests monkeypatch the host target."""
+    try:
+        spack.solver.compat.clingo()
+    except ImportError:
+        pass
 
 
 #
@@ -965,7 +1023,7 @@ def configuration_dir(request, tmp_path_factory: pytest.TempPathFactory, linux_o
     # Create temporary 'defaults', 'site' and 'user' folders
     (tmp_path / "user").mkdir()
 
-    # Fill out config.yaml, compilers.yaml and modules.yaml templates.
+    # Fill out config.yaml, packages.yaml and modules.yaml templates.
     locks = sys.platform != "win32"
     config = tmp_path / "site" / "config.yaml"
     config_template = test_config / "config.yaml"
@@ -1124,7 +1182,7 @@ def concretize_scope(mutable_config: Configuration, tmp_path: Path):
 
 @pytest.fixture
 def no_packages_yaml(mutable_config):
-    """Creates a temporary configuration without compilers.yaml"""
+    """Creates a temporary configuration without packages.yaml"""
     for local_config in mutable_config.scopes.values():
         if not isinstance(local_config, spack.config.DirectoryConfigScope):
             continue
@@ -1387,6 +1445,23 @@ def temporary_mirror(mutable_config, tmp_path_factory):
     mirror_dir = tmp_path_factory.mktemp("mirror")
     mirror_cmd("add", "test-mirror-func", mirror_dir.as_uri())
     yield str(mirror_dir)
+
+
+@pytest.fixture
+def bumped_db_version(
+    monkeypatch,
+) -> Tuple[spack.version.ConcreteVersion, spack.version.ConcreteVersion]:
+    """Pretend the DB format was bumped and the current index is readable without reindex.
+    Yields the (on disk, expected) versions."""
+    current = spack.database._DB_VERSION
+    next_version = spack.version.Version(f"{current[0] + 1}")
+    monkeypatch.setattr(spack.database, "_DB_VERSION", next_version)
+    monkeypatch.setattr(
+        spack.database,
+        "_REINDEX_NOT_NEEDED_ON_READ",
+        [*spack.database._REINDEX_NOT_NEEDED_ON_READ, (current, next_version)],
+    )
+    return current, next_version
 
 
 @pytest.fixture(scope="function")
@@ -2395,7 +2470,6 @@ def nullify_globals(request, monkeypatch):
     ensure_configuration_fixture_run_before(request)
     monkeypatch.setattr(spack.config, "CONFIG", None)
     monkeypatch.setattr(spack.caches, "MISC_CACHE", None)
-    monkeypatch.setattr(spack.caches, "FETCH_CACHE", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)
 
@@ -2459,7 +2533,7 @@ def _true(x):
     return True
 
 
-def _libc_from_python(self):
+def _libc_from_python(*args):
     return spack.spec.Spec("glibc@=2.28", external_path="/some/path")
 
 
@@ -2474,9 +2548,12 @@ def _c_compiler_always_exists():
     spack.solver.asp.c_compiler_runs = _true
     mthd = spack.compilers.libraries.CompilerPropertyDetector.default_libc
     spack.compilers.libraries.CompilerPropertyDetector.default_libc = _libc_from_python
+    host_libc = spack.util.libc.libc_from_current_python_process
+    spack.util.libc.libc_from_current_python_process = _libc_from_python
     yield
     spack.solver.asp.c_compiler_runs = fn
     spack.compilers.libraries.CompilerPropertyDetector.default_libc = mthd
+    spack.util.libc.libc_from_current_python_process = host_libc
 
 
 @pytest.fixture(scope="session")

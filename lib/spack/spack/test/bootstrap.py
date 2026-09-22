@@ -17,6 +17,7 @@ import spack.bootstrap.status
 import spack.compilers.config
 import spack.concretize
 import spack.config
+import spack.database
 import spack.environment
 import spack.error
 import spack.installer_dispatch
@@ -24,6 +25,7 @@ import spack.paths
 import spack.spec
 import spack.store
 import spack.util.executable
+import spack.version
 from spack.active_environment import active_environment
 
 CLINGO_METADATA = sorted(pathlib.Path(spack.paths.share_path).glob("bootstrap/*/clingo.json"))
@@ -153,6 +155,29 @@ def test_bootstrap_deactivates_environments(active_mock_environment):
     assert active_environment() == active_mock_environment
 
 
+def test_bootstrap_db_upgrade_error_points_at_b_flag(mutable_config, monkeypatch):
+    """An outdated bootstrap store database must raise ExplicitDatabaseUpgradeError, and,
+    because the store being read is the bootstrap store, the migration hint must be
+    ``spack -b reindex`` rather than plain ``spack reindex``.
+    """
+    with pytest.raises(spack.error.ExplicitDatabaseUpgradeError) as exc_info:
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            db_dir = pathlib.Path(spack.store.STORE.root) / ".spack-db"
+            db_dir.mkdir(parents=True, exist_ok=True)
+            (db_dir / "index.json").write_text(
+                json.dumps(
+                    {"database": {"version": str(spack.database._DB_VERSION), "installs": {}}}
+                )
+            )
+            next_version = spack.version.Version(f"{spack.database._DB_VERSION[0] + 1}")
+            monkeypatch.setattr(spack.database, "_DB_VERSION", next_version)
+            spack.database.Database(spack.store.STORE.root)._read()
+
+    long_message = exc_info.value.long_message
+    assert "spack -b reindex" in long_message
+    assert "spack reindex" not in long_message
+
+
 @pytest.mark.regression("25805")
 def test_bootstrap_disables_modulefile_generation(mutable_config):
     # Be sure to enable both lmod and tcl in modules.yaml
@@ -170,11 +195,17 @@ def test_bootstrap_disables_modulefile_generation(mutable_config):
 @pytest.mark.regression("25992")
 @pytest.mark.requires_executables("gcc")
 def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml, mock_packages):
-    assert not spack.compilers.config.all_compilers(init_config=False)
+    assert not spack.compilers.config.all_compilers(
+        no_packages_yaml, repo=mock_packages, init_config=False
+    )
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.clingo._add_compilers_if_missing()
-        assert spack.compilers.config.all_compilers(init_config=False)
-    assert not spack.compilers.config.all_compilers(init_config=False)
+        spack.bootstrap.clingo._add_compilers_if_missing(spack.config.CONFIG, repo=mock_packages)
+        assert spack.compilers.config.all_compilers(
+            spack.config.CONFIG, repo=mock_packages, init_config=False
+        )
+    assert not spack.compilers.config.all_compilers(
+        no_packages_yaml, repo=mock_packages, init_config=False
+    )
 
 
 @pytest.mark.regression("25992")
@@ -182,11 +213,17 @@ def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml, mo
 def test_bootstrap_search_for_compilers_with_environment_active(
     no_packages_yaml, active_mock_environment, mock_packages
 ):
-    assert not spack.compilers.config.all_compilers(init_config=False)
+    assert not spack.compilers.config.all_compilers(
+        no_packages_yaml, repo=mock_packages, init_config=False
+    )
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.clingo._add_compilers_if_missing()
-        assert spack.compilers.config.all_compilers(init_config=False)
-    assert not spack.compilers.config.all_compilers(init_config=False)
+        spack.bootstrap.clingo._add_compilers_if_missing(spack.config.CONFIG, repo=mock_packages)
+        assert spack.compilers.config.all_compilers(
+            spack.config.CONFIG, repo=mock_packages, init_config=False
+        )
+    assert not spack.compilers.config.all_compilers(
+        no_packages_yaml, repo=mock_packages, init_config=False
+    )
 
 
 @pytest.mark.regression("26189")
@@ -360,10 +397,7 @@ def test_exactly_one_clingo_binary_matches_an_interpreter(metadata_file: pathlib
     """A host must select a single clingo binary."""
     data = json.loads(metadata_file.read_text(encoding="utf-8"))
     entries = [spack.spec.Spec(x["spec"]) for x in data["verified"]]
-    combinations = {
-        (str(x.architecture.platform), str(x.architecture.target), str(x["python"].versions))
-        for x in entries
-    }
+    combinations = {(str(x.platform), str(x.target), str(x["python"].versions)) for x in entries}
 
     for platform, target, python_version in sorted(combinations):
         root_spec = spack.bootstrap.core.clingo_root_spec(platform=platform, target=target)
