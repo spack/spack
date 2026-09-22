@@ -880,9 +880,9 @@ def commands(parser: ArgumentParser, args: Namespace) -> None:
         if args.format != "names" or any([args.aliases, args.update, args.header]):
             args.subparser.error("--update-completion can only be specified alone")
 
-        # This runs the command multiple times with different arguments.
+        # this runs the command multiple times with different arguments
         update_completion(parser, args)
 
     else:
-        # Run commands normally.
+        # run commands normally
         _commands(parser, args)
