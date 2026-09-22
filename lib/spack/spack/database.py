@@ -923,6 +923,9 @@ class Database:
         for hash_key, rec in data.items():
             rec.spec._mark_root_concrete()
 
+        # Pass 4: reconstruct the virtual data that the database does not record
+        spack.repo.reconstruct_virtuals([rec.spec for rec in data.values()], repo=spack.repo.PATH)
+
         self._data = data
         self._installed_prefixes = installed_prefixes
 
@@ -1618,7 +1621,6 @@ class Database:
         hashes: Optional[Iterable[str]] = None,
         in_buildcache: Optional[bool] = None,
         origin: Optional[str] = None,
-        repo=None,
     ) -> List["spack.spec.Spec"]:
         installed = normalize_query(installed)
 
@@ -1640,7 +1642,6 @@ class Database:
         start_date = start_date or datetime.datetime.min
         end_date = end_date or datetime.datetime.max
 
-        deferred = []
         for rec in matching_hashes.values():
             if origin and not (origin == rec.origin):
                 continue
@@ -1662,31 +1663,8 @@ class Database:
                 if not (start_date < inst_date < end_date):
                     continue
 
-            if query_spec is None or query_spec.concrete:
+            if query_spec is None or query_spec.concrete or rec.spec.satisfies(query_spec):
                 results.append(rec.spec)
-                continue
-
-            # check anon specs and exact name matches first
-            if not query_spec.name or rec.spec.name == query_spec.name:
-                if rec.spec.satisfies(query_spec):
-                    results.append(rec.spec)
-
-            # save potential virtual matches for later, but not if we already found a match
-            elif not results:
-                deferred.append(rec.spec)
-
-        # Checking for virtuals is expensive, so we save it for last and only if needed.
-        # If we get here, we didn't find anything in the DB that matched by name.
-        # If we did fine something, the query spec can't be virtual b/c we matched an actual
-        # package installation, so skip the virtual check entirely. If we *didn't* find anything,
-        # check all the deferred specs *if* the query is virtual.
-        if (
-            not results
-            and query_spec is not None
-            and deferred
-            and spack.repo.repo_or_default(repo).is_virtual(query_spec.name)
-        ):
-            results = [spec for spec in deferred if spec.satisfies(query_spec)]
 
         return results
 
@@ -1702,7 +1680,6 @@ class Database:
         hashes: Optional[List[str]] = None,
         in_buildcache: Optional[bool] = None,
         origin: Optional[str] = None,
-        repo=None,
     ) -> List["spack.spec.Spec"]:
         """Queries the local Spack database.
 
@@ -1749,7 +1726,6 @@ class Database:
                 hashes=hashes,
                 in_buildcache=in_buildcache,
                 origin=origin,
-                repo=repo,
             )
 
     def query(
@@ -1766,7 +1742,6 @@ class Database:
         origin: Optional[str] = None,
         install_tree: str = "all",
         sort: bool = True,
-        repo=None,
     ) -> List["spack.spec.Spec"]:
         """Queries the Spack database including all upstream databases.
 
@@ -1824,7 +1799,6 @@ class Database:
                     hashes=hashes,
                     in_buildcache=in_buildcache,
                     origin=origin,
-                    repo=repo,
                 )
             )
 
@@ -1849,7 +1823,6 @@ class Database:
                     hashes=hashes,
                     in_buildcache=in_buildcache,
                     origin=origin,
-                    repo=repo,
                 )
             )
 

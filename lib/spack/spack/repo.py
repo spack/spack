@@ -27,6 +27,7 @@ from typing import (
     Callable,
     Dict,
     Generator,
+    Iterable,
     Iterator,
     List,
     Mapping,
@@ -47,6 +48,7 @@ import spack.patch
 import spack.paths
 import spack.provider_index
 import spack.tag
+import spack.traverse
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.filesystem as fs
@@ -2154,6 +2156,104 @@ PATH = cast(RepoPath, Singleton(lambda: create_and_enable(spack.config.CONFIG)))
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
 sys.meta_path.append(REPOS_FINDER)
+
+
+#: A ``provides`` clause as (when spec, provided virtual spec)
+ProvidesClause = Tuple["spack.spec.Spec", "spack.spec.Spec"]
+
+
+def _provided_specs(
+    spec: "spack.spec.Spec", clauses: Iterable[ProvidesClause]
+) -> Tuple["spack.spec.Spec", ...]:
+    """Virtual specs ``spec`` provides, by name. Clauses for one virtual intersect, as in the
+    solver; disjoint ones provide nothing."""
+    matching: Dict[str, List[spack.spec.Spec]] = {}
+    for when_spec, vspec in clauses:
+        if spec.satisfies(when_spec):
+            matching.setdefault(vspec.name, []).append(vspec)
+
+    provided: List[spack.spec.Spec] = []
+    for name in sorted(matching):
+        first, *rest = matching[name]
+        result = first.copy()
+        try:
+            for vspec in rest:
+                result.constrain(vspec)
+        except spack.error.UnsatisfiableSpecError:
+            continue
+        provided.append(result)
+    return tuple(provided)
+
+
+def freeze_provided_virtuals(specs: Iterable["spack.spec.Spec"], *, repo: RepoPath) -> None:
+    """Freeze the provided virtuals of the nodes that are not concrete yet, in post order."""
+    # Post order: a `provides` when clause may constrain a dependency, which must be frozen first.
+    for spec in spack.traverse.traverse_nodes(list(specs), order="post", key=id):
+        if spec._provided_virtuals is not None:
+            continue
+
+        declared = repo.get_pkg_class(spec.fullname).provided
+        spec._provided_virtuals = _provided_specs(
+            spec, ((when, v) for when, vspecs in declared.items() for v in vspecs)
+        )
+
+
+def reconstruct_virtuals(
+    specs: Iterable["spack.spec.Spec"], *, repo: RepoPath, edges_lack_virtuals: bool = False
+) -> None:
+    """Fill in the virtual data that spec files do not record, from the cached
+    provider index and without package imports: the provided virtuals of every concrete node,
+    and the virtuals on edges of nodes before v4 (or all edges, with ``edges_lack_virtuals``).
+    Callers pass every node of the batch with its concreteness set."""
+    # Post order, as in freeze_provided_virtuals
+    nodes = list(spack.traverse.traverse_nodes(list(specs), order="post", key=id))
+
+    # Provider name -> provides clauses, keyed by name so other namespaces resolve too. A
+    # package absent from the configured repos provides nothing, without warning.
+    providers: Dict[str, List[ProvidesClause]] = {}
+    try:
+        index = repo.provider_index
+    except Exception as e:
+        tty.debug(f"cannot load the provider index, no virtuals are reconstructed: {e}")
+    else:
+        for vmap in index.providers.values():
+            for vspec, pspecs in vmap.items():
+                for pspec in pspecs:
+                    providers.setdefault(pspec.name, []).append((pspec, vspec))
+
+    for spec in nodes:
+        if spec.concrete:
+            spec._provided_virtuals = _provided_specs(spec, providers.get(spec.name, ()))
+
+    for spec in nodes:
+        if not spec.concrete:
+            continue
+
+        # Edge virtuals are recorded from spec format v4 on
+        if not edges_lack_virtuals and spec.original_spec_format() >= 4:
+            continue
+
+        try:
+            pkg_cls = repo.get_pkg_class(spec.fullname)
+        except Exception as e:
+            warnings.warn(f"cannot reconstruct virtual dependencies on {spec.name}: {e}")
+            continue
+
+        needed = {
+            name
+            for name, when_deps in pkg_cls.dependencies_by_name(when=True).items()
+            if repo.is_virtual(name) and any(spec.satisfies(w) for w in when_deps)
+        }
+        if not needed:
+            continue
+
+        # The provided virtuals were frozen above, so the child side needs no package instance.
+        for edge in spec.edges_to_dependencies():
+            if not edge.spec.concrete:
+                continue
+            virtuals_to_add = needed.intersection(s.name for s in edge.spec.provided_virtuals)
+            if virtuals_to_add:
+                edge.update_virtuals(virtuals_to_add)
 
 
 @contextlib.contextmanager

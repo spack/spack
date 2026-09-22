@@ -47,7 +47,7 @@ def check_json_round_trip(spec):
     assert spec.eq_dag(spec_from_json)
 
 
-def test_read_spec_from_signed_json():
+def test_read_spec_from_signed_json(mock_packages):
     spec_dir = os.path.join(spack.paths.test_path, "data", "mirrors", "signed_json")
     file_name = (
         "linux-ubuntu18.04-haswell-gcc-8.4.0-"
@@ -649,6 +649,20 @@ def test_pickle_preserves_identity_and_prefix(config, mock_packages):
 
     # Test that the specs are the same as dicts
     assert mpileaks_before.to_dict() == mpileaks_after.to_dict()
+
+
+def test_edge_virtuals_reconstructed_for_specfile_v3(config, mock_packages):
+    """Virtuals on edges are recorded from v4 on, so a v3 spec file needs them reconstructed."""
+    as_dict = spack.concretize.concretize_one("mpileaks ^mpich").to_dict()
+    as_dict["spec"]["_meta"]["version"] = 3
+    for node in as_dict["spec"]["nodes"]:
+        node.pop("annotations")
+        for dep in node.get("dependencies", ()):
+            dep["type"] = list(dep.pop("parameters")["deptypes"])
+
+    reread = Spec.from_dict(as_dict)
+    assert reread.original_spec_format() == 3
+    assert "mpi" in reread.edges_to_dependencies(name="mpich")[0].virtuals
 
 
 def test_load_specfile_with_no_nodes():
