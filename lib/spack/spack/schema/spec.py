@@ -247,6 +247,12 @@ spec_node = {
             "items": {"type": "string"},
             "description": "List of patches, similar to the patches variant under parameters",
         },
+        "provided_virtuals": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Virtual specs provided, e.g. mpi@3:, frozen at concretization. "
+            "Part of the DAG hash, since `provides` is stripped from the package hash.",
+        },
         "dependencies": dependencies,
         "build_spec": build_spec,
         "external": {

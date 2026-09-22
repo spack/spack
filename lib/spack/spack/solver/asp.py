@@ -3001,7 +3001,7 @@ def possible_compilers(
     # Compilers from the local store
     supported_compilers = spack.compilers.config.supported_compilers(repo=context.repo)
     for pkg_name in supported_compilers:
-        result.update(context.store.db.query(pkg_name, repo=context.repo))
+        result.update(context.store.db.query(pkg_name))
 
     return result, rejected
 
@@ -3337,11 +3337,14 @@ def post_process_concretization_result(
             for edge in s.edges_to_dependencies():
                 edge.direct = True
 
-    # inject patches -- note that we can't use set() to unique the
-    # roots here, because the specs aren't complete, and the hash
-    # function will loop forever.
+    # note that we can't use set() to unique the roots here, because the specs aren't
+    # complete, and the hash function will loop forever.
     roots = [spec.root for spec in specs.values()]
     roots = {id(r): r for r in roots}
+
+    # ``when="^mpi@2:"`` needs frozen virtuals; ``provides`` when clauses need direct edges
+    spack.repo.freeze_provided_virtuals(roots.values(), repo=context.repo)
+
     for root in roots.values():
         spack.spec._inject_patches_variant(root, repo=context.repo)
 
@@ -3354,7 +3357,7 @@ def post_process_concretization_result(
         _specs_with_commits(s, repo=context.repo)
 
     # mark concrete and assign hashes to all specs in the solve
-    spack.spec.finalize_concretization(roots.values(), repo=context.repo)
+    spack.spec.assign_hashes(roots.values(), repo=context.repo)
 
     # Unify hashes (this is to avoid duplicates of runtimes and compilers)
     unifier = ConcreteSpecsByHash()
@@ -3364,7 +3367,7 @@ def post_process_concretization_result(
         unifier.add(current_spec)
         specs[key] = unifier[current_spec.dag_hash()]
 
-    # needs to happen after finalize_concretization, as it looks up hashes
+    # needs to happen after assign_hashes, as it looks up hashes
     _ensure_no_deprecated(specs.values(), store=context.store)
 
     new_specs = execute_explicit_splices(specs, context=context)
