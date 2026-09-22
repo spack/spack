@@ -1940,7 +1940,7 @@ class Spec:
         self.namespace: Optional[str] = None
         self.abstract_hash: Optional[str] = None
 
-        # cached dag hash, and the package hash assigned by finalize_concretization
+        # cached dag hash, and the package hash, both assigned by assign_hashes
         self._hash: Optional[str] = None
         self._package_hash: Optional[str] = None
 
@@ -5897,7 +5897,7 @@ def eval_conditional(string):
     return eval(string, valid_variables)
 
 
-def finalize_concretization(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath") -> None:
+def assign_hashes(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath") -> None:
     """Assign package hashes to not-yet-concrete nodes, mark them concrete, and cache dag hashes.
 
     Nodes that were already concrete keep their hashes: old specs may have no package hash, and
@@ -5918,7 +5918,7 @@ def rehash_mutated(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath") -> Non
         parent._mark_root_concrete(False)
         parent.clear_caches()
     spack.repo.freeze_provided_virtuals(parents, repo=repo)
-    finalize_concretization(parents, repo=repo)
+    assign_hashes(parents, repo=repo)
 
 
 def _inject_patches_variant(root: Spec, *, repo: spack.repo.RepoPath) -> None:

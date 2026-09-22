@@ -953,8 +953,8 @@ class TestSpecSemantics:
         assert Spec.from_json(concrete.to_json()).dag_hash() == concrete.dag_hash()
 
     def test_provided_virtuals_recomputed_on_rehash(self):
-        """Un-marking dependents on rehash clears their provided virtuals; finalization recomputes
-        them while other nodes of the DAG are still concrete."""
+        """Un-marking dependents on rehash clears their provided virtuals; they are recomputed
+        while other nodes of the DAG are still concrete."""
         concrete = spack.concretize.concretize_one("mpileaks ^mpich")
         provider = concrete["mpich"]
         frozen = tuple(s.copy() for s in provider.provided_virtuals)
@@ -966,7 +966,7 @@ class TestSpecSemantics:
             provider.provided_virtuals
 
         spack.repo.freeze_provided_virtuals([concrete], repo=spack.repo.PATH)
-        spack.spec.finalize_concretization([concrete], repo=spack.repo.PATH)
+        spack.spec.assign_hashes([concrete], repo=spack.repo.PATH)
         assert provider.provided_virtuals == frozen
 
     def test_versioned_virtual_queries_on_concrete_specs_are_stateless(self, monkeypatch):
@@ -3278,7 +3278,7 @@ def test_highlighting_spec_parts(spec_str, expected_fmt, config, mock_packages):
 
 @pytest.mark.parametrize("spec_str", ["mpileaks", "mpileaks ^zmpi"])
 def test_mark_concrete_roundtrip_preserves_hashes(spec_str, config, mock_packages):
-    """Tests that clearing concreteness and re-finalizing a spec must preserve the DAG hash of the
+    """Tests that clearing concreteness and re-hashing a spec must preserve the DAG hash of the
     root and of every transitive dependency.
     """
     s = spack.concretize.concretize_one(spec_str)
@@ -3292,9 +3292,9 @@ def test_mark_concrete_roundtrip_preserves_hashes(spec_str, config, mock_package
     s._mark_concrete(False)
     assert all(node._hash is None for node in s.traverse())
 
-    # Re-finalize the DAG: the cleared hashes must recompute to the original values.
+    # Re-hash the DAG: the cleared hashes must recompute to the original values.
     spack.repo.freeze_provided_virtuals([s], repo=spack.repo.PATH)
-    spack.spec.finalize_concretization([s], repo=spack.repo.PATH)
+    spack.spec.assign_hashes([s], repo=spack.repo.PATH)
     roundtrip = {node.name: node.dag_hash() for node in s.traverse()}
     assert roundtrip == original
 
