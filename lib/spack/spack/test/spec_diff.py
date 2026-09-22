@@ -125,7 +125,7 @@ def test_diff_reports_recipe_change(mock_packages, config):
 
     # Drop the cached dag hashes so they are recomputed, then change one node's recipe only
     for node in spec_b.traverse():
-        node.clear_caches(ignore=("_package_hash",))
+        node.clear_caches(keep_package_hash=True)
     spec_b["callpath"]._package_hash = "0" * 32
 
     divergences = spec_diff.diff_concrete_dags(spec_a, spec_b)
@@ -141,7 +141,7 @@ def test_diff_does_not_prune_below_a_recipe_change(mock_packages, config):
     spec_b = spack.concretize.concretize_one("mpileaks")
 
     for node in spec_b.traverse():
-        node.clear_caches(ignore=("_package_hash",))
+        node.clear_caches(keep_package_hash=True)
     # `libelf` is reached through `callpath`, so pruning at `callpath` would hide it
     spec_b["callpath"]._package_hash = "0" * 32
     spec_b["libelf"]._package_hash = "1" * 32
@@ -159,7 +159,7 @@ def test_diff_reports_recipe_change_only_as_a_last_resort(mock_packages, config)
     spec_b = spack.concretize.concretize_one("mpileaks ^mpich@1.0")
 
     for node in spec_b.traverse():
-        node.clear_caches(ignore=("_package_hash",))
+        node.clear_caches(keep_package_hash=True)
     spec_b["mpich"]._package_hash = "0" * 32
 
     divergences = spec_diff.diff_concrete_dags(spec_a, spec_b)
@@ -199,7 +199,7 @@ def test_diff_tolerates_specs_without_a_package_hash(mock_packages, config):
 
     # Reproduce what reading a lockfile older than package hashes leaves behind
     for node in spec_b.traverse():
-        node.clear_caches(ignore=("_package_hash",))
+        node.clear_caches(keep_package_hash=True)
     spec_b["callpath"]._package_hash = None
 
     # The node carries no package hash at all, the way an old lockfile leaves it
@@ -217,7 +217,7 @@ def test_diff_reports_a_differing_external_path(mock_packages, config):
     spec_b = spack.concretize.concretize_one("externaltool")
 
     for node in spec_b.traverse():
-        node.clear_caches(ignore=("_package_hash",))
+        node.clear_caches(keep_package_hash=True)
     spec_b._external_path = "/opt/local"
 
     divergences = spec_diff.diff_concrete_dags(spec_a, spec_b)
@@ -238,7 +238,7 @@ def test_diff_reports_differing_extra_attributes(mock_packages, config):
     spec_b = spack.concretize.concretize_one("externaltool")
 
     for node in spec_b.traverse():
-        node.clear_caches(ignore=("_package_hash",))
+        node.clear_caches(keep_package_hash=True)
     spec_b.extra_attributes = {"compilers": {"c": "/usr/bin/gcc"}}
 
     divergences = spec_diff.diff_concrete_dags(spec_a, spec_b)
@@ -254,7 +254,7 @@ def test_diff_names_node_state_that_nothing_else_explains(mock_packages, config)
     spec_b = spack.concretize.concretize_one("mpileaks")
 
     for node in spec_b.traverse():
-        node.clear_caches(ignore=("_package_hash",))
+        node.clear_caches(keep_package_hash=True)
     # as reading an environment written by an older Spack would leave it
     spec_b["callpath"].annotations.original_spec_format = 4
 
@@ -286,7 +286,7 @@ def test_diff_reports_a_differing_namespace(mock_packages, config):
     spec_b = spack.concretize.concretize_one("mpileaks")
 
     for node in spec_b.traverse():
-        node.clear_caches(ignore=("_package_hash",))
+        node.clear_caches(keep_package_hash=True)
     spec_b["callpath"].namespace = "other.repo"
 
     divergences = spec_diff.diff_concrete_dags(spec_a, spec_b)
@@ -303,7 +303,7 @@ def test_diff_reports_a_differing_architecture_part(mock_packages, config):
     spec_b = spack.concretize.concretize_one("mpileaks")
 
     for node in spec_b.traverse():
-        node.clear_caches(ignore=("_package_hash",))
+        node.clear_caches(keep_package_hash=True)
     spec_b["callpath"].architecture.os = "ubuntu99"
 
     divergences = spec_diff.diff_concrete_dags(spec_a, spec_b)

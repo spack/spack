@@ -1261,9 +1261,10 @@ def _attribute_style(
         if attribute.key not in node.variants:
             node = divergence.node_a
         value = node.variants.get(attribute.key)
-        default = _variant_default(node, attribute.key) if value is not None else None
-        if default is not None and set(value.values) == set(default.values):
-            return spack.enums.PartStyle.NORMAL
+        if value is not None:
+            default = _variant_default(node, attribute.key)
+            if default is not None and set(value.values) == set(default.values):
+                return spack.enums.PartStyle.NORMAL
         return spack.enums.PartStyle.HIGHLIGHT
 
     return spack.enums.PartStyle.HIGHLIGHT
@@ -1414,7 +1415,7 @@ def _group_divergences(
         root = input_divergence.root
         for node in input_divergence.nodes:
             if _is_recipe_change(node):
-                key = (node.node_a.namespace, node.node_a.name)
+                key = (node.node_a.namespace or "", node.node_a.name)
                 recipes.setdefault(key, (node, []))[1].append(root)
             else:
                 node_key = (node.node_a.dag_hash(), node.node_b.dag_hash())
