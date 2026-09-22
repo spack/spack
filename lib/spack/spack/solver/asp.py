@@ -3337,11 +3337,14 @@ def post_process_concretization_result(
             for edge in s.edges_to_dependencies():
                 edge.direct = True
 
-    # inject patches -- note that we can't use set() to unique the
-    # roots here, because the specs aren't complete, and the hash
-    # function will loop forever.
+    # note that we can't use set() to unique the roots here, because the specs aren't
+    # complete, and the hash function will loop forever.
     roots = [spec.root for spec in specs.values()]
     roots = {id(r): r for r in roots}
+
+    # ``when="^mpi@2:"`` needs frozen virtuals; ``provides`` when clauses need direct edges
+    spack.repo.freeze_provided_virtuals(roots.values(), repo=context.repo)
+
     for root in roots.values():
         spack.spec._inject_patches_variant(root, repo=context.repo)
 

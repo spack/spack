@@ -4762,13 +4762,24 @@ def test_concretization_cache_reapplies_patches_on_hit(
     assert initial_sha256s <= new_sha256s
 
 
-def test_patch_condition_on_direct_dependency(use_concretization_cache):
-    """A patch with a condition on a direct dependency (e.g. ``%gcc@10:``) is applied both on
-    a fresh solve and on a cache hit, where specs are rebuilt from serialized solver output."""
-    fix_patch = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+FIX_PATCH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+FIX_MPI_PATCH = "56927eb86eaed2f8c6764c92f7a9a522391ef4d30bdac9a212b326f32a4dcb78"
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected",
+    [
+        ("patch-when-dependency %gcc@10.2.1 ^mpich@1.0", {FIX_PATCH}),
+        ("patch-when-dependency %gcc@10.2.1 ^mpich@3.0.4", {FIX_PATCH, FIX_MPI_PATCH}),
+    ],
+)
+def test_patch_condition_on_dependency(spec_str, expected, use_concretization_cache):
+    """A patch with a condition on a direct dependency (``%gcc@10:``) or a provided virtual
+    (``^mpi@2:``) is applied both on a fresh solve and on a cache hit, where specs are rebuilt
+    from serialized solver output."""
     for _ in range(2):
-        spec = spack.concretize.concretize_one("patch-when-compiler %gcc@10.2.1")
-        assert (fix_patch,) == spec.variants["patches"].value
+        spec = spack.concretize.concretize_one(spec_str)
+        assert set(spec.variants["patches"].value) == expected
         # concrete specs record every edge without the direct flag
         assert not any(e.direct for s in spec.traverse() for e in s.edges_to_dependencies())
 
