@@ -413,3 +413,36 @@ def test_dynamic_loader_ignores_relative_ld_library_path_entries(tmp_path):
         loaded = loader.load(exe)
 
     assert _resolved(loaded, exe) == [os.path.realpath(tmp_path / "default" / "libz.so.1")]
+
+
+@pytest.mark.not_on_windows("Uses shell scripts as mock executables")
+def test_by_path_detailed_assigns_files_by_version(mock_executable, mock_packages):
+    """Tests that when one directory yields several specs, each spec is detected from the files
+    whose version matches its own.
+    """
+    gcc_12 = mock_executable("gcc-12", output="echo 12.3.0")
+    gcc_13 = mock_executable("gcc-13", output="echo 13.2.0")
+    # A file without a version belongs to no spec
+    mock_executable("gcc", output="echo")
+
+    detected = spack.detection.path.by_path_detailed(
+        ["gcc"], repo=mock_packages, path_hints=[str(gcc_12.parent)]
+    )
+
+    files_by_version = {str(x.spec.versions): x.files for x in detected["gcc"]}
+    assert files_by_version == {"12.3.0": [str(gcc_12)], "13.2.0": [str(gcc_13)]}
+
+
+@pytest.mark.not_on_windows("Uses shell scripts as mock executables")
+def test_detect_leaves_out_files_rejected_by_the_package(mock_executable, mock_packages):
+    clang = mock_executable("clang", output="echo 'clang version 14.0.0'")
+    clangxx = mock_executable("clang++", output="echo 'clang version 14.0.0'")
+    clang_format = mock_executable("clang-format", output="echo 'clang version 14.0.0'")
+
+    detected = spack.detection.path.ExecutablesFinder().detect(
+        pkg=mock_packages.get_pkg_class("llvm"),
+        paths=[str(clang), str(clangxx), str(clang_format)],
+        repo_path=mock_packages,
+    )
+
+    assert [x.files for x in detected] == [[str(clang), str(clangxx)]]

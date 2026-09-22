@@ -13,7 +13,7 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
+from typing import Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Type
 
 import spack.error
 import spack.repo
@@ -221,6 +221,47 @@ def _group_by_prefix(paths: List[str]) -> Dict[str, Set[str]]:
     return groups
 
 
+class DetectedExternal(NamedTuple):
+    """A spec detected on the system, and the files it was detected from."""
+
+    spec: "spack.spec.Spec"
+    #: files matching the search patterns of the package that belong to the spec
+    files: List[str]
+
+
+def _files_of_specs(
+    pkg: Type["spack.package_base.PackageBase"],
+    prefix: str,
+    files: Iterable[str],
+    specs: List["spack.spec.Spec"],
+) -> List[List[str]]:
+    """Returns, for each spec detected in a directory, the files it was detected from.
+
+    Files rejected by ``filter_detected_exes`` are left out. When the directory yields more than
+    one spec, a file is assigned to the specs whose version intersects the one
+    ``determine_version`` returns for it.
+    """
+    filter_fn = getattr(pkg, "filter_detected_exes", None)
+    files = sorted(filter_fn(prefix, files) if filter_fn is not None else files)
+    if not specs:
+        return []
+    if len(specs) < 2 or not hasattr(pkg, "determine_version"):
+        return [files for _ in specs]
+
+    versions: Dict[str, Optional[str]] = {}
+    for path in files:
+        try:
+            versions[path] = pkg.determine_version(path)
+        except Exception as e:
+            spack.util.tty.debug(f"Cannot detect the version of '{path}' [{e}]")
+            versions[path] = None
+
+    return [
+        [path for path in files if versions[path] and spec.intersects(f"@={versions[path]}")]
+        for spec in specs
+    ]
+
+
 class Finder:
     """Inspects the file-system looking for packages. Guesses places where to look using PATH."""
 
@@ -256,6 +297,18 @@ class Finder:
         self, *, pkg: Type["spack.package_base.PackageBase"], paths: Iterable[str], repo_path
     ) -> List["spack.spec.Spec"]:
         """Given a list of files matching the search patterns, returns a list of detected specs.
+
+        Args:
+            pkg: package being detected
+            paths: files matching the package search patterns
+        """
+        return [x.spec for x in self.detect(pkg=pkg, paths=paths, repo_path=repo_path)]
+
+    def detect(
+        self, *, pkg: Type["spack.package_base.PackageBase"], paths: Iterable[str], repo_path
+    ) -> List[DetectedExternal]:
+        """Given a list of files matching the search patterns, returns the detected specs and the
+        files each of them was detected from.
 
         Args:
             pkg: package being detected
@@ -300,7 +353,8 @@ class Finder:
                     f"part of the package {pkg.name}: {files}"
                 )
 
-            for spec in specs:
+            files_of_specs = _files_of_specs(pkg, candidate_path, items_in_prefix, specs)
+            for spec, spec_files in zip(specs, files_of_specs):
                 try:
                     spack.spec.substitute_abstract_variants(spec, repo=repo_path)
                 except Exception as e:
@@ -335,7 +389,7 @@ class Finder:
                 if not spec.external_path:
                     spec.external_path = prefix
 
-                result.append(spec)
+                result.append(DetectedExternal(spec=spec, files=spec_files))
 
         return result
 
@@ -343,6 +397,22 @@ class Finder:
         self, *, pkg_name: str, repository, initial_guess: Optional[List[str]] = None
     ) -> List["spack.spec.Spec"]:
         """For a given package, returns a list of detected specs.
+
+        Args:
+            pkg_name: package being detected
+            repository: repository to retrieve the package
+            initial_guess: initial list of paths to search from the caller if None, default paths
+                are searched. If this is an empty list, nothing will be searched.
+        """
+        detected = self.find_detailed(
+            pkg_name=pkg_name, repository=repository, initial_guess=initial_guess
+        )
+        return [x.spec for x in detected]
+
+    def find_detailed(
+        self, *, pkg_name: str, repository, initial_guess: Optional[List[str]] = None
+    ) -> List[DetectedExternal]:
+        """For a given package, returns the detected specs and the files they were detected from.
 
         Args:
             pkg_name: package being detected
@@ -358,7 +428,7 @@ class Finder:
             initial_guess = self.default_path_hints()
             initial_guess.extend(common_windows_package_paths(pkg_cls))
         candidates = self.candidate_files(patterns=patterns, paths=initial_guess)
-        return self.detect_specs(pkg=pkg_cls, paths=candidates, repo_path=repository)
+        return self.detect(pkg=pkg_cls, paths=candidates, repo_path=repository)
 
 
 class ExecutablesFinder(Finder):
@@ -436,12 +506,38 @@ def by_path(
         path_hints: initial list of paths to be searched
         max_workers: maximum number of workers to search for packages in parallel
     """
+    detected = by_path_detailed(
+        packages_to_search, repo=repo, path_hints=path_hints, max_workers=max_workers
+    )
+    result: Dict[str, List[spack.spec.Spec]] = collections.defaultdict(list)
+    for name, entries in detected.items():
+        result[name] = [x.spec for x in entries]
+    return result
+
+
+def by_path_detailed(
+    packages_to_search: Iterable[str],
+    *,
+    repo: spack.repo.RepoPath,
+    path_hints: Optional[List[str]] = None,
+    max_workers: Optional[int] = None,
+) -> Dict[str, List[DetectedExternal]]:
+    """Return the specs that have been detected on the system, and the files they were detected
+    from, keyed by unqualified package name.
+
+    Args:
+        packages_to_search: list of packages to be detected. Each package can be either unqualified
+            of fully qualified
+        repo: repository used to retrieve the package classes
+        path_hints: initial list of paths to be searched
+        max_workers: maximum number of workers to search for packages in parallel
+    """
     # TODO: Packages should be able to define both .libraries and .executables in the future
     # TODO: determine_spec_details should get all relevant libraries and executables in one call
     executables_finder, libraries_finder = ExecutablesFinder(), LibrariesFinder()
     detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
 
-    result = collections.defaultdict(list)
+    result: Dict[str, List[DetectedExternal]] = collections.defaultdict(list)
     repository = spack.util.lang.ensure_unwrapped(repo)
 
     executor: concurrent.futures.Executor
@@ -452,13 +548,13 @@ def by_path(
     with executor:
         for pkg in packages_to_search:
             executable_future = executor.submit(
-                executables_finder.find,
+                executables_finder.find_detailed,
                 pkg_name=pkg,
                 initial_guess=path_hints,
                 repository=repository,
             )
             library_future = executor.submit(
-                libraries_finder.find,
+                libraries_finder.find_detailed,
                 pkg_name=pkg,
                 initial_guess=path_hints,
                 repository=repository,
