@@ -265,6 +265,7 @@ class ExternalSpecsParser:
         # Attach dependencies to externals
         self._create_edges()
         # Mark the specs as concrete
+        spack.repo.freeze_provided_virtuals(self.nodes, repo=self.repo)
         spack.spec.finalize_concretization(self.nodes, repo=self.repo)
 
     def _create_edges(self):

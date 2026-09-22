@@ -965,6 +965,7 @@ class TestSpecSemantics:
         with pytest.raises(SpecError):
             provider.provided_virtuals
 
+        spack.repo.freeze_provided_virtuals([concrete], repo=spack.repo.PATH)
         spack.spec.finalize_concretization([concrete], repo=spack.repo.PATH)
         assert provider.provided_virtuals == frozen
 
@@ -3292,6 +3293,7 @@ def test_mark_concrete_roundtrip_preserves_hashes(spec_str, config, mock_package
     assert all(node._hash is None for node in s.traverse())
 
     # Re-finalize the DAG: the cleared hashes must recompute to the original values.
+    spack.repo.freeze_provided_virtuals([s], repo=spack.repo.PATH)
     spack.spec.finalize_concretization([s], repo=spack.repo.PATH)
     roundtrip = {node.name: node.dag_hash() for node in s.traverse()}
     assert roundtrip == original

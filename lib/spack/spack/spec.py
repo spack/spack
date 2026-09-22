@@ -5901,13 +5901,11 @@ def finalize_concretization(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath
     """Assign package hashes to not-yet-concrete nodes, mark them concrete, and cache dag hashes.
 
     Nodes that were already concrete keep their hashes: old specs may have no package hash, and
-    we cannot compute one for them."""
+    we cannot compute one for them. Callers freeze provided virtuals first, since they hash."""
     specs = list(specs)
     for spec in spack.traverse.traverse_nodes(specs):
         if not spec.concrete and not spec._package_hash:
             spec._package_hash = repo.get_pkg_class(spec.fullname)(spec).content_hash(repo=repo)
-    # Before marking concrete and before any hash is computed, since the frozen versions hash.
-    spack.repo.freeze_provided_virtuals(specs, repo=repo)
     for spec in specs:
         spec._mark_concrete()
         spec.dag_hash()  # caches the hash of every node
@@ -5919,6 +5917,7 @@ def rehash_mutated(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath") -> Non
     for parent in parents:
         parent._mark_root_concrete(False)
         parent.clear_caches()
+    spack.repo.freeze_provided_virtuals(parents, repo=repo)
     finalize_concretization(parents, repo=repo)
 
 
