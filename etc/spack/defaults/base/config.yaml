@@ -167,7 +167,7 @@ config:
   # Windows.
   concurrent_packages: 0
 
-  # Which installer to use: "old" or "new".
+  # Which installer to use: "old" (deprecated) or "new".
   installer: new
 
   # Restrict filesystem and network access during builds. The stage directory,
