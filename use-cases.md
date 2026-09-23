@@ -48,13 +48,14 @@ When these settings are present, they are used as the location search paths for 
 This includes, as applicable:
 
 - install trees and associated installation state;
-- modules generated for new installs;
 - GPG data;
 - licenses;
 - managed environments;
 - bootstrap data;
 - repositories created or cloned without an explicit destination;
 - Spack state and miscellaneous caches.
+
+Module files are not included because Spack no longer maintains default module roots; module roots must be explicitly configured in `modules.yaml`.
 
 Explicit, resource-specific configuration still takes precedence. For example, an explicit `config:install_tree:root`, `config:environments_root`, `config:gpg_path`, license directory, repository destination, or bootstrap root remains authoritative rather than being replaced merely because `config:locations` is configured.
 
@@ -75,13 +76,14 @@ A fresh Spack checkout with no old resources should use the new shared XDG-style
 
 ## 2.1 Fresh Spack checkout
 
-A completely new checkout has no old installs, modules, environments, licenses, or GPG data.
+A completely new checkout has no old installs, environments, licenses, or GPG data.
 
 Expected behavior:
 
 - No layout scope is generated.
 - No migration state is written into the Spack prefix merely to mark initialization.
-- New installs, modules, environments, licenses, GPG data, bootstrap data, repositories, state, and caches use the new defaults under the user’s shared locations.
+- New installs, environments, licenses, GPG data, bootstrap data, repositories, state, and caches use the new defaults under the user’s shared locations.
+- Module files can be generated only after explicitly configuring module roots in `modules.yaml`.
 - The first and later commands use those defaults consistently.
 
 ## 2.2 Existing installs at a custom location
@@ -108,7 +110,7 @@ If packages were previously installed under `$spack/opt/spack`:
 - Existing installs are never moved, copied, or deleted.
 - The old install tree remains authoritative for those installs.
 - Modules associated with the old install tree remain at their original locations.
-- The layout scope records the old install and module paths as needed.
+- The layout scope records the old install tree path as needed.
 - New installs use the new defaults unless an explicit install-tree configuration says otherwise.
 - Spack does not maintain a default module root as of this PR. Module roots must be configured explicitly before generating new module files.
 
@@ -237,7 +239,7 @@ config:
 
 Expected behavior:
 
-- New installs, modules, environments, licenses, GPG data, bootstrap data, repositories, state, and caches are created under `x` by default.
+- New installs, environments, licenses, GPG data, bootstrap data, repositories, state, and caches are created under `x` by default.
 - The isolate scope writes the include override needed to select the isolated user scope and layout scope.
 - For a fresh non-`--self` isolation, generated `config.yaml` belongs in `x`; the isolate scope need not contain generated bootstrap, repository, or configuration files.
 - No layout scope is needed when no old resources exist.
