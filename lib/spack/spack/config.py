@@ -2268,55 +2268,29 @@ def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
     return {"data": [isolate_target], "state": [isolate_target], "cache": [isolate_target]}
 
 
-def _do_migrate(
-    is_isolate_command: bool,
-    config_path: Optional[str] = None,
-    isolate_target: Optional[str] = None,
-) -> None:
+def _do_migrate() -> None:
     """Perform auto-migration of Spack data from old to new locations.
 
-    Args:
-        is_isolate_command: True if running `spack isolate`, False otherwise.
-            Isolation records old resources but never relocates them.
-        config_path: Path for isolate configuration output. It is required for
-            isolation and must be omitted for normal migration.
-        isolate_target: Isolation target used for config:locations overrides. It
-            is required for isolation and must be omitted for normal migration.
+    Migrates portable resources (licenses, environments, GPG data) to new
+    XDG-style shared locations. Existing installs are retained in place.
+    Configuration is written to the layout scope.
     """
-    if is_isolate_command:
-        if config_path is None:
-            raise ValueError("config_path is required for isolate migration")
-        if isolate_target is None:
-            raise ValueError("isolate_target is required for isolate migration")
-    elif config_path is not None or isolate_target is not None:
-        raise ValueError("isolate-only migration arguments used for normal migration")
-
-    tty.debug(f"Auto-migration called (is_isolate_command={is_isolate_command})")
+    tty.debug("Auto-migration called")
 
     # Detect what old resources exist
     old_resources = _detect_old_resources()
 
-    # For normal migration, config_path is None and we write to layout scope.
-    # For isolate, config_path is provided by the caller: either the fresh
-    # target config or (when reusing an existing config) the layout scope.
+    # Write configuration to layout scope
     layout_scope_path = _layout_scope_path()
-    layout_config_path = os.path.join(layout_scope_path, "config.yaml")
-
-    if not is_isolate_command:
-        config_path = layout_config_path
-
-    assert config_path is not None  # Guaranteed by validation and assignment above
+    config_path = os.path.join(layout_scope_path, "config.yaml")
     filesystem.mkdirp(os.path.dirname(config_path))
 
-    # Config to write to the selected destination
+    # Config to write to the layout scope
     scope_config: Dict[str, Any] = {}
     migrated_resources: List[str] = []
     retained_resources: List[str] = []
     user_config_migrated = False
     package_repos_migrated = False
-    if is_isolate_command:
-        assert isolate_target is not None
-        scope_config["config"] = {"locations": _isolate_locations_config(isolate_target)}
 
     # 1. Handle installs.  Existing installs are always retained in their old
     # location, including during isolation.  Module trees are not migrated or
@@ -2360,12 +2334,6 @@ def _do_migrate(
                 scope_config["config"]["gpg_path"] = old_gpg_home
                 scope_config["config"]["gpg_keys_path"] = old_gpg_keys
                 retained_resources.append("GPG data (kept in its old location)")
-        elif is_isolate_command:
-            # Isolation never relocates existing GPG directories.
-            if "config" not in scope_config:
-                scope_config["config"] = {}
-            scope_config["config"]["gpg_path"] = old_gpg_home
-            scope_config["config"]["gpg_keys_path"] = old_gpg_keys
         elif (
             configured_gpg_home == target_gpg_home_norm
             and configured_gpg_keys == target_gpg_keys_norm
@@ -2398,13 +2366,6 @@ def _do_migrate(
             target_subdir: Subdirectory under $data_home for target
             migrate_fn: Function to perform the migration (returns True on success)
         """
-        # Isolation never relocates; record old path
-        if is_isolate_command:
-            if "config" not in scope_config:
-                scope_config["config"] = {}
-            scope_config["config"][config_key] = old_path
-            return
-
         # Check if user has custom configuration
         data_home = substitute_path_variables("$data_home")
         target_path = os.path.join(data_home, target_subdir)
@@ -2454,43 +2415,38 @@ def _do_migrate(
             _migrate_environments,
         )
 
-    # 5. Copy ~/.spack to ~/.config/spack (unless isolate command)
-    if not is_isolate_command:
-        user_config_migrated = _migrate_user_config()
-        package_repos_migrated = _migrate_package_repositories()
+    # 5. Copy ~/.spack to ~/.config/spack
+    user_config_migrated = _migrate_user_config()
+    package_repos_migrated = _migrate_package_repositories()
 
-    # Write config scope files to the selected configuration scope.
+    # Write config scope files to the layout scope
     if "config" in scope_config:
-        config_yaml_path = config_path
-        with open(config_yaml_path, "w", encoding="utf-8") as f:
+        with open(config_path, "w", encoding="utf-8") as f:
             syaml.dump({"config": scope_config["config"]}, f)
         tty.debug(f"Wrote config.yaml to {config_path}")
 
-    tty.debug(f"Created config scope for auto-migration: {layout_scope_path}")
+    tty.debug(f"Created layout scope for auto-migration: {layout_scope_path}")
 
-    if not is_isolate_command:
-        migration_summary = ["Spack automatically migrated old resources."]
-        if user_config_migrated:
-            migration_summary.append(
-                "  - Copied user configuration from ~/.spack to ~/.config/spack."
-            )
-        if package_repos_migrated:
-            migration_summary.append(
-                "  - Copied package repositories from ~/.spack to the shared state location."
-            )
-        if migrated_resources:
-            migration_summary.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
-        if retained_resources:
-            migration_summary.append("  - Retained: " + ", ".join(retained_resources) + ".")
-        migration_summary.extend(
-            [
-                "  - Existing installs and shared artifacts were not removed.",
-                "  - ~/.spack was retained because older Spack instances may still use it.",
-                "",
-                "To undo this migration, run `spack migrate undo`.",
-            ]
+    migration_summary = ["Spack automatically migrated old resources."]
+    if user_config_migrated:
+        migration_summary.append("  - Copied user configuration from ~/.spack to ~/.config/spack.")
+    if package_repos_migrated:
+        migration_summary.append(
+            "  - Copied package repositories from ~/.spack to the shared state location."
         )
-        tty.warn("\n".join(migration_summary))
+    if migrated_resources:
+        migration_summary.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
+    if retained_resources:
+        migration_summary.append("  - Retained: " + ", ".join(retained_resources) + ".")
+    migration_summary.extend(
+        [
+            "  - Existing installs and shared artifacts were not removed.",
+            "  - ~/.spack was retained because older Spack instances may still use it.",
+            "",
+            "To undo this migration, run `spack migrate undo`.",
+        ]
+    )
+    tty.warn("\n".join(migration_summary))
 
 
 def create_incremental() -> Generator[Configuration, None, None]:

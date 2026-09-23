@@ -18,25 +18,6 @@ level = "long"
 ISOLATE_SCOPE_PATH = os.path.join(spack.paths.etc_path, "isolate")
 
 
-# _get_scope_indices no longer needed - we don't modify etc/spack/include.yaml
-
-
-def _isolate_config_config(new_user_path, config_path):
-    build_stage_dirs = ["$tempdir/$user/spack-stage", os.path.join(new_user_path, "stage")]
-    test_stage_dir = os.path.join(new_user_path, "test-stage")
-    misc_cache_dir = os.path.join(new_user_path, "cache")
-    config_yaml = {
-        "config": {
-            "build_stage:": build_stage_dirs,
-            "test_stage:": test_stage_dir,
-            "misc_cache:": misc_cache_dir,
-            "locations": spack.config._isolate_locations_config(new_user_path),
-        }
-    }
-    with open(config_path, "w", encoding="utf-8") as f:
-        syaml.dump(config_yaml, f)
-
-
 def _isolate_repos_config(new_user_path):
     current_repos_config = spack.config.CONFIG.get("repos")
     new_repos_config = {}
@@ -84,7 +65,12 @@ def _isolate_include_config(new_user_path):
 
 def _setup_isolate_scope(
     new_user_path, overwrite: bool, target_config_existed: bool, reuse_old: bool
-) -> str:
+) -> tuple[str, str]:
+    """Set up the isolate scope directories and include.yaml.
+
+    Returns:
+        (config_path, final_user_path) - where to write config, and the user redirect path
+    """
     # Check if this is --self (isolate scope IS the user path)
     is_self = os.path.exists(ISOLATE_SCOPE_PATH) and os.path.samefile(
         new_user_path, ISOLATE_SCOPE_PATH
@@ -112,22 +98,21 @@ def _setup_isolate_scope(
     else:
         final_user_path = new_user_path
 
-    # Write configuration into the target when it does not already have a
-    # config.yaml. Existing target configuration is preserved only when the
-    # caller explicitly requests reuse of an old isolation target.
+    # Determine where to write generated config (isolation locations + old resources)
+    # If reusing an existing target config, write to layout scope to avoid overwriting it
+    # Otherwise, write to the isolate target's config.yaml
     config_path = (
         os.path.join(spack.config._layout_scope_path(), "config.yaml")
         if target_config_existed and reuse_old
         else os.path.join(new_user_path, "config.yaml")
     )
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    if not (target_config_existed and reuse_old):
-        _isolate_config_config(new_user_path, config_path)
+
     # Write include.yaml with include:: override to redirect user scope
     # For --self, this points to user-redirect/
     # For --path, this points to the external path
     _isolate_include_config(final_user_path)
-    return config_path
+
+    return config_path, final_user_path
 
 
 # _get_new_user_scope no longer needed - moved into _isolate_include_config
@@ -185,23 +170,57 @@ def _do_isolate(args):
     else:
         destination = _ensure_destination_setup(args.path, overwrite=False)
 
-    config_path = _setup_isolate_scope(
+    config_path, final_user_path = _setup_isolate_scope(
         destination, args.overwrite, target_config_existed, args.reuse_old
     )
 
-    if os.path.exists(config_path):
+    # If writing to layout scope (because we're reusing existing target config),
+    # ensure layout scope doesn't already exist to avoid conflicts
+    layout_config = os.path.join(spack.config._layout_scope_path(), "config.yaml")
+    if config_path == layout_config and os.path.exists(config_path):
         raise Exception(
-            f"Config path {config_path} already exists: "
-            "`spack isolate` doesn't have a place to generate "
-            "config without a conflict"
+            f"Layout scope config already exists at {config_path}. "
+            "Cannot write isolation config without overwriting it."
         )
 
-    if any(spack.config._detect_old_resources().values()):
-        spack.config._do_migrate(
-            is_isolate_command=True, config_path=config_path, isolate_target=destination
-        )
-        # No need to reload CONFIG here: this process exits immediately, and
-        # the generated scopes are loaded by the next Spack invocation.
+    # Build config with isolation locations
+    scope_config = {
+        "config": {
+            "build_stage:": ["$tempdir/$user/spack-stage", os.path.join(destination, "stage")],
+            "test_stage:": os.path.join(destination, "test-stage"),
+            "misc_cache:": os.path.join(destination, "cache"),
+            "locations": spack.config._isolate_locations_config(destination),
+        }
+    }
+
+    # Add old resource pointers if they exist
+    old_resources = spack.config._detect_old_resources()
+
+    if old_resources["installs"]:
+        scope_config["config"]["install_tree"] = {
+            "root": os.path.join(spack.paths.prefix, "opt", "spack")
+        }
+        tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
+
+    if old_resources["gpg_keys"]:
+        old_gpg_home = spack.paths.old_gpg_path
+        old_gpg_keys = spack.paths.old_gpg_keys_path
+        scope_config["config"]["gpg_path"] = old_gpg_home
+        scope_config["config"]["gpg_keys_path"] = old_gpg_keys
+        tty.debug(f"Keeping GPG data in {old_gpg_home} and {old_gpg_keys}")
+
+    if old_resources["licenses"]:
+        scope_config["config"]["license_dir"] = spack.paths.old_licenses_path
+        tty.debug(f"Keeping licenses in {spack.paths.old_licenses_path}")
+
+    if old_resources["environments"]:
+        scope_config["config"]["environments_root"] = spack.paths.old_envs_path
+        tty.debug(f"Keeping environments in {spack.paths.old_envs_path}")
+
+    # Write the config file
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    with open(config_path, "w", encoding="utf-8") as f:
+        syaml.dump(scope_config, f)
 
 
 def _undo_isolate():

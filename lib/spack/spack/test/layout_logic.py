@@ -211,7 +211,7 @@ def test_auto_migration_copies_user_config(mock_spack_instance, monkeypatch):
     (old_config / "config.yaml").write_text("config:\n  build_jobs: 3\n", encoding="utf-8")
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate(is_isolate_command=False)
+    spack.config._do_migrate()
 
     new_config = pathlib.Path(home_dir) / ".config" / "spack" / "config.yaml"
     assert new_config.read_text(encoding="utf-8") == "config:\n  build_jobs: 3\n"
@@ -469,7 +469,7 @@ def test_auto_migration_old_spack_internal_resources(
     monkeypatch.setattr(spack.config, "CONFIG", test_config)
 
     # Run migration which creates layout scope
-    spack.config._do_migrate(is_isolate_command=False)
+    spack.config._do_migrate()
 
     # Reinitialize config to pick up newly created layout scope
     test_config = spack.config.create()
@@ -489,7 +489,7 @@ def test_auto_migration_copies_package_repositories(mock_spack_instance, monkeyp
     (old_repos / "second" / "root.txt").write_text("second root", encoding="utf-8")
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate(is_isolate_command=False)
+    spack.config._do_migrate()
 
     new_repos = pathlib.Path(spack.paths.package_repos_path)
     assert (new_repos / "first" / "root.txt").read_text(encoding="utf-8") == "first root"
@@ -521,30 +521,11 @@ def test_auto_migration_skips_existing_package_repository_destination(
     (new_repo / "source").write_text("new", encoding="utf-8")
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate(is_isolate_command=False)
+    spack.config._do_migrate()
 
     assert (new_repo / "source").read_text(encoding="utf-8") == "new"
     assert not (new_repos / "second").exists()
     assert (old_repo / "source").read_text(encoding="utf-8") == "old"
-
-
-def test_auto_migration_skips_package_repositories_for_isolation(mock_spack_instance, monkeypatch):
-    """Isolation leaves legacy package repositories in place."""
-    home_dir, base_prefix = mock_spack_instance
-    old_repos = pathlib.Path(home_dir) / ".spack" / "package_repos"
-    old_repos.mkdir(parents=True)
-    (old_repos / "abc1234" / "repo.yaml").parent.mkdir()
-    (old_repos / "abc1234" / "repo.yaml").write_text("repo", encoding="utf-8")
-    target = pathlib.Path(home_dir) / "isolated"
-    config_path = target / "config.yaml"
-
-    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate(
-        is_isolate_command=True, config_path=str(config_path), isolate_target=str(target)
-    )
-
-    assert (old_repos / "abc1234" / "repo.yaml").exists()
-    assert not (target / "package_repos").exists()
 
 
 def test_auto_migration_is_not_repeated_after_layout_scope(mock_spack_instance, monkeypatch):
@@ -559,10 +540,10 @@ def test_auto_migration_is_not_repeated_after_layout_scope(mock_spack_instance, 
     (old_licenses / "license.dat").write_text("license", encoding="utf-8")
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    spack.config._do_migrate(is_isolate_command=False)
+    spack.config._do_migrate()
     assert not spack.config.should_auto_migrate()
     backup = pathlib.Path(base_prefix) / ".migration-backup" / "licenses" / "license.dat"
     backup_mtime = backup.stat().st_mtime_ns
 
-    spack.config._do_migrate(is_isolate_command=False)
+    spack.config._do_migrate()
     assert backup.stat().st_mtime_ns == backup_mtime
