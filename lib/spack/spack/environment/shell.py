@@ -39,7 +39,7 @@ def _make_spack_prompt(shell: str, prompt: str) -> str:
             "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
             ' | Split-Path -leaf; if(!"$Env:SPACK_OLD_PROMPT") '
             '{$Env:SPACK_OLD_PROMPT="[spack] PS $pth>"}; '
-            '"%s PS $pth>"}' % prompt
+            f'"{prompt} PS $pth>"}}\n'
         )
     else:
         bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
