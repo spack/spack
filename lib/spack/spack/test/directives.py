@@ -9,6 +9,7 @@ import pytest
 import spack.concretize
 import spack.dependency
 import spack.directives
+import spack.repo
 import spack.spec
 import spack.version
 from spack.directives import (
@@ -429,7 +430,12 @@ def test_directive_descriptor_init():
     # when `pkg.dependencies` is initialized, `depends_on` and `extends` should run, and also
     # `pkg.extendees` should be initialized
     dependencies = DirectiveDictDescriptor("dependencies")
-    assert dependencies.directives_to_run == ["depends_on", "drop_all_depends_on", "drop_depends_on", "extends"]
+    assert dependencies.directives_to_run == [
+        "depends_on",
+        "drop_all_depends_on",
+        "drop_depends_on",
+        "extends",
+    ]
     assert dependencies.dicts_to_init == ["dependencies", "extendees"]
 
     # when `pkg.provided` is initialized, so should `pkg.provided_together`, and only the

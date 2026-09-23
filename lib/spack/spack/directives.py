@@ -60,7 +60,6 @@ import os
 import re
 import warnings
 from abc import ABC, abstractmethod
-from functools import partial
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple, Type, Union
 
 import spack.deptypes as dt
