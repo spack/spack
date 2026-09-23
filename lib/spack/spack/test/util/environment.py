@@ -183,9 +183,9 @@ def test_shell_modifications_are_properly_escaped(shell):
         set_cmd = f"%{set_cmd}%"
         separator = f'"{os.pathsep}"'
         # bat uses double quotes for quoting and %% to escape % signs
-        assert f'{set_cmd} VAR "%%PATH%%"' in shell_mods
-        assert f'{append_cmd} VAR "%%ANOTHER_PATH%%" {separator}' in shell_mods
-        assert f'{set_cmd} RM_RF "$(rm -rf /)"' in shell_mods
+        assert f'{set_cmd} "VAR" "%%PATH%%"' in shell_mods
+        assert f'{append_cmd} "VAR" "%%ANOTHER_PATH%%" {separator}' in shell_mods
+        assert f'{set_cmd} "RM_RF" "$(rm -rf /)"' in shell_mods
     elif shell == "pwsh":
         separator = f"'{os.pathsep}'"
         assert f"{set_cmd} VAR '$PATH'" in shell_mods
@@ -204,7 +204,7 @@ def test_shell_modifications_are_properly_escaped(shell):
         ("csh", "_spack_env_append FOO path/to/bar :\n"),
         ("fish", "_spack_env_append FOO path/to/bar :\n"),
         ("pwsh", "_spack_env_append FOO path/to/bar ';'\n"),
-        ("bat", '%_spack_env_append% FOO "path/to/bar" ";"\n'),
+        ("bat", '%_spack_env_append% "FOO" "path/to/bar" ";"\n'),
     ],
 )
 def test_append_shell_cmd_string(shell, append_expected):
@@ -219,7 +219,7 @@ def test_append_shell_cmd_string(shell, append_expected):
         ("csh", "_spack_env_prepend FOO path/to/bar :\n"),
         ("fish", "_spack_env_prepend FOO path/to/bar :\n"),
         ("pwsh", "_spack_env_prepend FOO path/to/bar ';'\n"),
-        ("bat", '%_spack_env_prepend% FOO "path/to/bar" ";"\n'),
+        ("bat", '%_spack_env_prepend% "FOO" "path/to/bar" ";"\n'),
     ],
 )
 def test_prepend_shell_cmd_string(shell, prepend_expected):
@@ -234,7 +234,7 @@ def test_prepend_shell_cmd_string(shell, prepend_expected):
         ("csh", "_spack_env_prune_duplicates FOO :\n"),
         ("fish", "_spack_env_prune_duplicates FOO :\n"),
         ("pwsh", "_spack_env_prune_duplicates FOO ';'\n"),
-        ("bat", '%_spack_env_prune_duplicates% FOO ";"\n'),
+        ("bat", '%_spack_env_prune_duplicates% "FOO" ";"\n'),
     ],
 )
 def test_prune_dups_shell_cmd_string(shell, prune_dups_expected):
@@ -249,7 +249,7 @@ def test_prune_dups_shell_cmd_string(shell, prune_dups_expected):
         ("csh", "_spack_env_remove_first FOO path/to/bar :\n"),
         ("fish", "_spack_env_remove_first FOO path/to/bar :\n"),
         ("pwsh", "_spack_env_remove_first FOO path/to/bar ';'\n"),
-        ("bat", '%_spack_env_remove_first% FOO "path/to/bar" ";"\n'),
+        ("bat", '%_spack_env_remove_first% "FOO" "path/to/bar" ";"\n'),
     ],
 )
 def test_remove_first_shell_cmd_string(shell, remove_expected):
@@ -264,7 +264,7 @@ def test_remove_first_shell_cmd_string(shell, remove_expected):
         ("csh", "_spack_env_remove_last FOO path/to/bar :\n"),
         ("fish", "_spack_env_remove_last FOO path/to/bar :\n"),
         ("pwsh", "_spack_env_remove_last FOO path/to/bar ';'\n"),
-        ("bat", '%_spack_env_remove_last% FOO "path/to/bar" ";"\n'),
+        ("bat", '%_spack_env_remove_last% "FOO" "path/to/bar" ";"\n'),
     ],
 )
 def test_remove_last_shell_cmd_string(shell, remove_expected):
@@ -279,7 +279,7 @@ def test_remove_last_shell_cmd_string(shell, remove_expected):
         ("csh", "_spack_env_remove_value FOO path/to/bar :\n"),
         ("fish", "_spack_env_remove_value FOO path/to/bar :\n"),
         ("pwsh", "_spack_env_remove_value FOO path/to/bar ';'\n"),
-        ("bat", '%_spack_env_remove_value% FOO "path/to/bar" ";"\n'),
+        ("bat", '%_spack_env_remove_value% "FOO" "path/to/bar" ";"\n'),
     ],
 )
 def test_remove_value_shell_cmd_string(shell, remove_expected):
@@ -294,7 +294,7 @@ def test_remove_value_shell_cmd_string(shell, remove_expected):
         ("csh", "_spack_env_set FOO path/to/bar\n"),
         ("fish", "_spack_env_set FOO path/to/bar\n"),
         ("pwsh", "_spack_env_set FOO path/to/bar\n"),
-        ("bat", '%_spack_env_set% FOO "path/to/bar"\n'),
+        ("bat", '%_spack_env_set% "FOO" "path/to/bar"\n'),
     ],
 )
 def test_set_shell_cmd_string(shell, set_expected):
@@ -309,7 +309,7 @@ def test_set_shell_cmd_string(shell, set_expected):
         ("csh", "_spack_env_unset FOO\n"),
         ("fish", "_spack_env_unset FOO\n"),
         ("pwsh", "_spack_env_unset FOO\n"),
-        ("bat", "%_spack_env_unset% FOO\n"),
+        ("bat", '%_spack_env_unset% "FOO"\n'),
     ],
 )
 def test_unset_shell_cmd_string(shell, unset_expected):
@@ -355,8 +355,8 @@ def test_alias_shell_cmd_string(shell, alias):
         ),
         (
             "bat",
-            '%_spack_env_append% FOO "path/with/$dollarsign" ";"\n',
-            '%_spack_env_append% FOO "path/with/ space" ";"\n',
+            '%_spack_env_append% "FOO" "path/with/$dollarsign" ";"\n',
+            '%_spack_env_append% "FOO" "path/with/ space" ";"\n',
         ),
     ],
 )

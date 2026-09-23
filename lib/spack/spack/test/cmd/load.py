@@ -52,8 +52,10 @@ def test_manpath_trailing_colon(
     os.environ["MANPATH"] = "/usr/share/man" + os.pathsep + "/usr/local/share/man"
 
     load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
-
-    prepend_cmd = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} MANPATH"
+    var = "MANPATH"
+    if shell == "--bat":
+        var = f'"{var}"'
+    prepend_cmd = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} "
     manpath_prepends = [line for line in load_cmds.splitlines() if prepend_cmd in line]
     assert len(manpath_prepends) > 0, "Expected MANPATH prepends from loaded packages"
 
@@ -92,7 +94,8 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
                     continue
 
                 info = line.split()
-                if len(info) >= 3 and info[1] == variable:
+                var_check = info[1].strip("\"").lstrip("\"")
+                if len(info) >= 3 and var_check == variable:
                     # Strip quotes from value if present
                     val = info[2].strip('"').strip("'")
                     value.insert(0, val)
@@ -151,7 +154,7 @@ def test_load_includes_run_env(shell, install_mockery, mock_fetch, mock_archive,
     load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
 
     if "bat" in shell:
-        set_cmd = f'{_get_shell_cmd_invocation("_spack_env_set", shell)} FOOBAR "mpileaks"'
+        set_cmd = f'{_get_shell_cmd_invocation("_spack_env_set", shell)} "FOOBAR" "mpileaks"'
     else:
         set_cmd = f"{_get_shell_cmd_invocation('_spack_env_set', shell)} FOOBAR mpileaks"
 
@@ -230,8 +233,10 @@ def test_unload(shell, install_mockery, mock_fetch, mock_archive, mock_packages,
     )
 
     unload_cmds = _get_unload_cmds_from_script(mpileaks_spec, shell)
-
-    unset_cmd = f"{_get_shell_cmd_invocation('_spack_env_unset', shell)} FOOBAR"
+    var = "FOOBAR"
+    if shell == "--bat":
+        var = f'"{var}"'
+    unset_cmd = f"{_get_shell_cmd_invocation('_spack_env_unset', shell)} "
     assert unset_cmd in unload_cmds
 
 
