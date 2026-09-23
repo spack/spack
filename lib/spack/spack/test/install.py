@@ -1100,3 +1100,90 @@ def test_install_spliced_from_binary_drops_rpaths_of_removed_nodes(
     assert sorted(rpaths) == sorted(
         [spliced.prefix.lib, spliced["rpath-mid"].prefix.lib, spliced["rpath-other"].prefix.lib]
     )
+
+
+def _install_root_spliced_with_external_mid(
+    external_prefix: str, config: Configuration, mirror: str
+) -> Spec:
+    """Installs rpath-root from a binary cache, with rpath-mid spliced for an external at the
+    given prefix, and returns the spliced spec.
+
+    The RPATH of the original binary lists rpath-mid before rpath-other.
+    """
+    original_spec = spack.concretize.concretize_one("rpath-root")
+    with config.override(
+        "packages:rpath-mid",
+        {
+            "buildable": False,
+            "externals": [{"spec": "rpath-mid@1.0~leaf", "prefix": external_prefix}],
+        },
+    ):
+        replacement = spack.concretize.concretize_one("rpath-mid")
+
+    spack.installer_dispatch.create_installer([original_spec.package]).install()
+    rpaths = spack.util.elf.get_rpaths(os.path.join(original_spec.prefix.bin, "app")) or []
+    assert rpaths.index(original_spec["rpath-mid"].prefix.lib) < rpaths.index(
+        original_spec["rpath-other"].prefix.lib
+    )
+    SpackCommand("buildcache")("push", "--unsigned", "--update-index", mirror, str(original_spec))
+    SpackCommand("uninstall")("-ay")
+
+    spliced = original_spec.splice(replacement, transitive=True)
+    spack.installer_dispatch.create_installer([spliced.package], unsigned=True).install()
+    return spliced
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="RPATH relocation is tested on ELF only")
+@pytest.mark.requires_executables("gcc")
+def test_install_spliced_from_binary_puts_external_rpaths_last(
+    mutable_mock_env_path,
+    temporary_store: Store,
+    install_mockery,
+    mock_fetch,
+    temporary_mirror,
+    mutable_config: Configuration,
+    tmp_path: pathlib.Path,
+    installer_variant,
+):
+    """Tests that installing a spliced spec from a binary cache gives a spliced-in external the
+    RPATH entries a build would give it: its library directories, after those of Spack-built
+    dependencies.
+
+    The external has its library in lib/x86_64-linux-gnu, which does not follow from the layout
+    of the Spack-built node it replaces.
+    """
+    external_libdir = tmp_path / "external-mid" / "lib" / "x86_64-linux-gnu"
+    external_libdir.mkdir(parents=True)
+    (external_libdir / "librpath-mid.so").touch()
+
+    spliced = _install_root_spliced_with_external_mid(
+        str(tmp_path / "external-mid"), mutable_config, temporary_mirror
+    )
+
+    rpaths = spack.util.elf.get_rpaths(os.path.join(spliced.prefix.bin, "app"))
+    assert rpaths == [
+        spliced.prefix.lib,
+        spliced["rpath-other"].prefix.lib,
+        str(external_libdir),
+        str(tmp_path / "external-mid" / "lib"),
+    ]
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="RPATH relocation is tested on ELF only")
+@pytest.mark.requires_executables("gcc")
+def test_install_spliced_from_binary_has_no_rpaths_for_system_externals(
+    mutable_mock_env_path,
+    temporary_store: Store,
+    install_mockery,
+    mock_fetch,
+    temporary_mirror,
+    mutable_config: Configuration,
+    installer_variant,
+):
+    """Tests that installing a spliced spec from a binary cache adds no RPATH entry for a
+    spliced-in external in a system prefix, as a build would not.
+    """
+    spliced = _install_root_spliced_with_external_mid("/usr", mutable_config, temporary_mirror)
+
+    rpaths = spack.util.elf.get_rpaths(os.path.join(spliced.prefix.bin, "app"))
+    assert rpaths == [spliced.prefix.lib, spliced["rpath-other"].prefix.lib]
