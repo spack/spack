@@ -194,7 +194,7 @@ def _do_isolate(args):
                         "`spack isolate` doesn't have a place to generate "
                         "config without a conflict")
 
-    if args.reuse_old or any(spack.config._detect_old_resources().values()):
+    if any(spack.config._detect_old_resources().values()):
         spack.config._do_migrate(
             is_isolate_command=True,
             config_path=config_path,
