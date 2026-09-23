@@ -189,16 +189,12 @@ def _do_isolate(args):
         destination, args.overwrite, target_config_existed, args.reuse_old
     )
 
-    # Record old resources in the layout scope, but never relocate them while
-    # isolating.  The isolate scope controls new data; the layout scope keeps
-    # existing data reachable from its original locations.
-    if spack.config._is_spack_writable() and (
-        args.reuse_old
-        or (
-            not spack.config._has_layout_scope()
-            and any(spack.config._detect_old_resources().values())
-        )
-    ):
+    if os.path.exists(config_path):
+        raise Exception(f"Config path {config_path} already exists: "
+                        "`spack isolate` doesn't have a place to generate "
+                        "config without a conflict")
+
+    if args.reuse_old or any(spack.config._detect_old_resources().values()):
         spack.config._do_migrate(
             is_isolate_command=True,
             config_path=config_path,
