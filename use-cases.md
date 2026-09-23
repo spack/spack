@@ -234,12 +234,11 @@ In this case:
 - isolation must not move, copy, or delete old installs, modules, environments, licenses, or GPG data;
 - isolation does not establish or maintain a default module root; new module roots must be configured explicitly;
 - old resources remain at their original locations;
-- the layout scope records old-resource paths and completes resource evaluation;
-- the isolate target receives the new data/state/cache defaults;
-- old-resource redirects remain available through the layout scope;
+- old-resource paths are recorded in configuration alongside the new data/state/cache defaults;
+- for a fresh isolation target, both isolation locations and old-resource paths are written to the target's `config.yaml`;
+- for `--reuse-old` with an existing target `config.yaml`, isolation locations and old-resource paths are written to the layout scope instead to avoid overwriting the preserved configuration;
+- the isolate scope's `include.yaml` includes the layout scope, making old-resource redirects available when needed;
 - the resulting configuration uses the isolate scope and gives user or user-redirect configuration higher precedence than layout fallback values.
-
-If the isolation target already has a `config.yaml`, that file is preserved when the user explicitly requests `--reuse-old`. Generated current isolation locations and old-resource overrides are written to the appropriate generated scope rather than overwriting the preserved target configuration.
 
 ## 4.3 Reusing an old isolation target after pulling
 
