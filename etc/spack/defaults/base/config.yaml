@@ -152,19 +152,17 @@ config:
   # If set to 'urllib', Spack will use python built-in libs to fetch
   url_fetch_method: urllib
 
-  # The maximum number of jobs to use for the build. When using the old
-  # installer, this is the number of jobs per package. In the new installer,
-  # this is the global maximum number of jobs across all packages. When fewer
-  # cores are available, Spack will use fewer jobs. The `-j` command line
+  # The maximum number of jobs to use for the build, across all packages. With
+  # the deprecated old installer, this is the number of jobs per package. When
+  # fewer cores are available, Spack will use fewer jobs. The `-j` command line
   # argument overrides this option.
   build_jobs: 16
 
   # The maximum number of concurrent package builds a single Spack process
-  # will perform. The default value of 0 means no package parallelism when using
-  # the old installer, and unlimited package parallelism (other than the limit
-  # set by build_jobs) when using the new installer. Setting this to 1 will
-  # disable package parallelism in both installers. This option is ignored on
-  # Windows.
+  # will perform. The default value of 0 means unlimited package parallelism
+  # (other than the limit set by build_jobs), or no package parallelism with the
+  # deprecated old installer. Setting this to 1 disables package parallelism.
+  # This option is ignored on Windows.
   concurrent_packages: 0
 
   # Which installer to use: "old" (deprecated) or "new".

@@ -44,7 +44,6 @@ jobs:
       - name: Bootstrap clingo
         run: |
           . share/spack/setup-env.sh
-          spack config add config:installer:new
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           spack solve zlib
@@ -70,7 +69,6 @@ jobs:
       - name: Bootstrap clingo
         run: |
           . share/spack/setup-env.sh
-          spack config add config:installer:new
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           export PATH="$(brew --prefix bison)/bin:$(brew --prefix cmake)/bin:$PATH"
@@ -99,7 +97,6 @@ jobs:
       - name: Bootstrap GnuPG
         run: |
           . share/spack/setup-env.sh
-          spack config add config:installer:new
           spack solve zlib
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
@@ -156,7 +153,6 @@ jobs:
       - name: Bootstrap GnuPG
         run: |
           . share/spack/setup-env.sh
-          spack config add config:installer:new
           spack gpg list
           tree ~/.spack/bootstrap/store/
 
