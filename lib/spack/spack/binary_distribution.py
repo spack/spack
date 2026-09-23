@@ -61,6 +61,7 @@ import spack.store
 import spack.user_environment
 import spack.util.archive
 import spack.util.crypto
+import spack.util.elf
 import spack.util.filesystem as fsys
 import spack.util.gpg
 import spack.util.lang
@@ -1940,6 +1941,13 @@ class _SpliceAnalogs:
         return self.candidates[max(analogs, key=key)]
 
 
+def _drop_rpaths_under(prefixes: List[str]) -> spack.util.elf.RpathTransform:
+    """Return an rpath transform that drops the rpaths equal to, or under, any of the prefixes"""
+    encoded = {p.encode("utf-8") for p in prefixes}
+    subdirs = tuple(p + b"/" for p in encoded)
+    return lambda rpaths: [r for r in rpaths if r not in encoded and not r.startswith(subdirs)]
+
+
 def relocate_package(spec: spack.spec.Spec) -> None:
     """Relocate binaries and text files in the given spec prefix, based on its buildinfo file."""
     spec_prefix = str(spec.prefix)
@@ -1981,6 +1989,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # gets a mapping from the old prefix of its analog.
     relocation_specs = specs_to_relocate(spec, include_externals=True)
     splice_analogs = _SpliceAnalogs(spec) if spec.spliced else None
+    matched_old_hashes = set()
     for s in relocation_specs:
         analog = s
         if splice_analogs is not None and s.dag_hash() not in hash_to_old_prefix:
@@ -1988,8 +1997,20 @@ def relocate_package(spec: spack.spec.Spec) -> None:
 
         lookup_dag_hash = analog.dag_hash()
         if lookup_dag_hash in hash_to_old_prefix:
+            matched_old_hashes.add(lookup_dag_hash)
             old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
             prefix_to_prefix[old_dep_prefix] = str(s.prefix)
+
+    # Nodes of the build_spec without an analog in the spliced spec were removed by the splice
+    rpath_transform = None
+    if spec.spliced:
+        removed_prefixes = [
+            old_prefix
+            for dag_hash, old_prefix in hash_to_old_prefix.items()
+            if dag_hash not in matched_old_hashes
+        ]
+        if removed_prefixes:
+            rpath_transform = _drop_rpaths_under(removed_prefixes)
 
     # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix[old_layout_root] = str(spack.store.STORE.layout.root)
@@ -2016,7 +2037,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     if "macho" in platform.binary_formats:
         relocate.relocate_macho_binaries(binaries, prefix_to_prefix)
     elif "elf" in platform.binary_formats:
-        relocate.relocate_elf_binaries(binaries, prefix_to_prefix)
+        relocate.relocate_elf_binaries(binaries, prefix_to_prefix, rpath_transform)
 
     relocate.relocate_links(links, prefix_to_prefix)
     relocate.relocate_text(textfiles, prefix_to_prefix)
